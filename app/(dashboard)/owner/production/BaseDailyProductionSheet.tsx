@@ -645,25 +645,25 @@ export default function BaseDailyProductionSheet({
                 </Button>
             </div>
 
-            <Card className="border-saffron/20 bg-saffron-soft/25">
-                <CardContent className="flex flex-col gap-3 py-3 sm:flex-row sm:items-end sm:justify-between sm:py-4">
-                    <div className="grid grid-cols-2 gap-2 sm:gap-3">
+            <Card className="rounded-2xl border border-hairline bg-surface shadow-xs overflow-hidden">
+                <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-end sm:justify-between sm:p-5">
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4">
                         <div className="space-y-1.5">
-                            <Label htmlFor="base-daily-date">Date</Label>
-                            <Input id="base-daily-date" type="date" max={initialData.today} value={productionDate} disabled={isSaving} onChange={(event) => changeSelection(event.target.value, shift)} />
+                            <Label htmlFor="base-daily-date" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Date</Label>
+                            <Input id="base-daily-date" type="date" max={initialData.today} value={productionDate} disabled={isSaving} onChange={(event) => changeSelection(event.target.value, shift)} className="h-10 sm:h-11 rounded-xl border-hairline bg-surface text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom" />
                         </div>
                         <div className="space-y-1.5">
-                            <Label htmlFor="base-daily-shift">Shift</Label>
+                            <Label htmlFor="base-daily-shift" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Shift</Label>
                             <Select value={shift} disabled={isSaving} onValueChange={(value) => changeSelection(productionDate, value as 'day' | 'night')}>
-                                <SelectTrigger id="base-daily-shift"><SelectValue /></SelectTrigger>
-                                <SelectContent>
+                                <SelectTrigger id="base-daily-shift" className="h-10 sm:h-11 rounded-xl border-hairline bg-surface text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom"><SelectValue /></SelectTrigger>
+                                <SelectContent className="rounded-xl border-hairline bg-surface shadow-lg">
                                     <SelectItem value="day">Day shift</SelectItem>
                                     <SelectItem value="night">Night shift</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
                     </div>
-                    <div className="grid grid-cols-3 divide-x divide-saffron/15 rounded-lg border border-saffron/15 bg-surface/65 px-1 py-2 text-sm sm:min-w-[360px] sm:border-0 sm:bg-transparent sm:p-0">
+                    <div className="grid grid-cols-3 divide-x divide-hairline rounded-xl border border-hairline bg-surface-soft/40 px-2 py-2.5 text-sm sm:min-w-[360px] sm:bg-surface-soft/30 shadow-xs">
                         <Stat label="Accounted for" value={`${registerSummary.accounted}/${registerSummary.total}`} />
                         <Stat label="Pending" value={String(registerSummary.pending)} />
                         <Stat label="Total" value={formatMeters(summary.total_meters)} />
@@ -672,11 +672,11 @@ export default function BaseDailyProductionSheet({
             </Card>
 
             {currentBatch && (
-                <div className={`flex flex-col gap-3 rounded-lg border px-3 py-3 text-xs sm:flex-row sm:items-center sm:justify-between ${isSavedBatchProtected ? 'border-warning/30 bg-warning/5' : 'border-success/25 bg-success/5'}`}>
-                    <div className="flex items-start gap-2 text-body">
-                        {isSavedBatchProtected ? <Lock className="mt-0.5 h-4 w-4 shrink-0 text-warning" /> : <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />}
-                        <span>
-                            {isCurrentBatchLocked ? 'Finalized' : registerSummary.pending > 0 ? 'Saved · incomplete' : 'Saved'} for {formatDateOnly(productionDate)} · {shift === 'day' ? 'Day' : 'Night'} shift.{' '}
+                <div className={`flex flex-col gap-3 rounded-2xl border px-4 py-3.5 text-xs sm:flex-row sm:items-center sm:justify-between shadow-xs ${isSavedBatchProtected ? 'border-amber-200 bg-amber-50/50' : 'border-emerald-200 bg-emerald-50/50'}`}>
+                    <div className="flex items-start gap-2.5 text-body">
+                        {isSavedBatchProtected ? <Lock className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" /> : <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" />}
+                        <span className="leading-relaxed">
+                            <strong className="font-bold text-ink">{isCurrentBatchLocked ? 'Finalized' : registerSummary.pending > 0 ? 'Saved · incomplete' : 'Saved'}</strong> for {formatDateOnly(productionDate)} · {shift === 'day' ? 'Day' : 'Night'} shift.{' '}
                             {isCurrentBatchLocked
                                 ? 'All worker entries on this sheet are settled and protected.'
                                 : isSavedBatchProtected
@@ -686,12 +686,12 @@ export default function BaseDailyProductionSheet({
                     </div>
                     <div className="flex shrink-0 flex-wrap gap-2">
                         {currentBatchRevisions.length > 0 && (
-                            <Button variant="ghost" size="sm" onClick={() => setIsHistoryDialogOpen(true)}>
+                            <Button variant="ghost" size="sm" onClick={() => setIsHistoryDialogOpen(true)} className="h-8 rounded-xl border-hairline hover:bg-surface text-xs font-bold shadow-xs">
                                 <FileClock className="h-4 w-4" /> {correctionCount > 0 ? `${correctionCount} ${correctionCount === 1 ? 'correction' : 'corrections'}` : 'Saved receipt'}
                             </Button>
                         )}
                         {isSavedBatchProtected && (
-                            <Button variant="outline" size="sm" className="border-warning/40" onClick={() => setIsUnlockDialogOpen(true)}>
+                            <Button variant="outline" size="sm" className="h-8 rounded-xl border-amber-300 bg-surface text-amber-900 hover:bg-amber-100 text-xs font-bold shadow-xs" onClick={() => setIsUnlockDialogOpen(true)}>
                                 <LockOpen className="h-4 w-4" /> Edit saved log
                             </Button>
                         )}
@@ -700,38 +700,44 @@ export default function BaseDailyProductionSheet({
             )}
 
             {sheetWorkers.length === 0 ? (
-                <Card>
-                    <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
-                        <Users className="h-8 w-8 text-saffron-deep" />
+                <Card className="rounded-2xl border border-hairline bg-surface shadow-xs">
+                    <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
+                        <Users className="h-10 w-10 text-saffron-deep" />
                         <div>
-                            <p className="font-bold text-ink">Add a worker to record production</p>
+                            <p className="text-base font-bold text-ink">Add a worker to record production</p>
                             <p className="mt-1 max-w-md text-sm leading-relaxed text-body">Add workers in Workers and choose which shift they are available for.</p>
                         </div>
-                        <div className="flex flex-wrap justify-center gap-2"><Button onClick={onAddWorker}><Plus className="h-4 w-4" /> Add worker</Button><Button variant="outline" onClick={onAddMachine}><Plus className="h-4 w-4" /> Add machine</Button></div>
+                        <div className="flex flex-wrap justify-center gap-2 pt-2">
+                            <Button onClick={onAddWorker} className="rounded-xl bg-loom text-white font-bold shadow-xs hover:bg-loom-elevated"><Plus className="h-4 w-4" /> Add worker</Button>
+                            <Button variant="outline" onClick={onAddMachine} className="rounded-xl border-hairline hover:bg-surface-soft font-semibold"><Plus className="h-4 w-4" /> Add machine</Button>
+                        </div>
                     </CardContent>
                 </Card>
             ) : (
                 <>
-                    <Card>
-                        <CardHeader className="border-b border-hairline/70 pb-3 sm:pb-5">
+                    <Card className="rounded-2xl border border-hairline bg-surface shadow-xs overflow-hidden">
+                        <CardHeader className="border-b border-hairline bg-surface-soft/40 p-4 sm:p-5">
                             <div className="flex flex-wrap items-center justify-between gap-2">
-                                <CardTitle className="flex items-center gap-2 text-base"><ClipboardList className="h-4 w-4 text-saffron-deep" /> Machine sheet</CardTitle>
-                                <div className="flex flex-wrap gap-2"><Button variant="ghost" size="sm" disabled={draftStatus === 'none' || isSaving} onClick={discardDraft}>Discard draft</Button><Button variant="outline" size="sm" aria-pressed={showPending} onClick={togglePending}>{showPending ? 'Show all machines' : `Show pending (${registerSummary.pending + registerSummary.invalid})`}</Button></div>
+                                <CardTitle className="flex items-center gap-2 text-base font-bold text-ink"><ClipboardList className="h-4 w-4 text-saffron-deep" /> Machine sheet</CardTitle>
+                                <div className="flex flex-wrap gap-2">
+                                    <Button variant="ghost" size="sm" disabled={draftStatus === 'none' || isSaving} onClick={discardDraft} className="h-8 rounded-xl text-xs font-semibold text-muted-foreground hover:text-ink">Discard draft</Button>
+                                    <Button variant="outline" size="sm" aria-pressed={showPending} onClick={togglePending} className="h-8 rounded-xl border-hairline bg-surface text-xs font-semibold hover:bg-surface-soft shadow-xs">{showPending ? 'Show all machines' : `Show pending (${registerSummary.pending + registerSummary.invalid})`}</Button>
+                                </div>
                             </div>
-                            <CardDescription>Type a reading, then press Enter or ↓ for the next machine. Blank means pending; 0 means not running.</CardDescription>
-                            {showPending && <p className="text-sm text-body">Showing machines that needed attention when you opened this view. Rows stay in place as you type.</p>}
+                            <CardDescription className="text-xs text-muted-foreground">Type a reading, then press Enter or ↓ for the next machine. Blank means pending; 0 means not running.</CardDescription>
+                            {showPending && <p className="text-xs text-body font-medium">Showing machines that needed attention when you opened this view. Rows stay in place as you type.</p>}
                         </CardHeader>
                         <CardContent className="p-0">
-                            <div className="hidden grid-cols-[minmax(0,1fr)_minmax(0,1fr)_150px_170px] gap-3 border-b border-hairline bg-surface-soft/50 px-4 py-3 text-sm font-semibold text-muted-foreground md:grid">
+                            <div className="hidden grid-cols-[minmax(0,1fr)_minmax(0,1fr)_150px_170px] gap-3 border-b border-hairline bg-surface-soft/60 px-4 py-3 text-xs font-bold uppercase tracking-wider text-muted-foreground md:grid">
                                 <span>Machine / job</span><span>Worker</span><span className="text-right">Production (m)</span><span>Status</span>
                             </div>
                             <div className="divide-y divide-hairline">
                                 {machineContexts.map((context) => {
                                     if (showPending && !pendingMachineIds.includes(context.machineId)) return null
                                     if (!context.workerId) return (
-                                        <div key={context.machineId} className="flex flex-wrap items-center justify-between gap-3 bg-warning/5 px-4 py-3 text-sm">
-                                            <div><p className="font-semibold text-ink">{context.machineLabel}</p><p className="text-body">Pending · assign a worker before entering production.</p></div>
-                                            <Button variant="outline" size="sm" onClick={openConfiguration}>Assign worker in Machine Assignments</Button>
+                                        <div key={context.machineId} className="flex flex-wrap items-center justify-between gap-3 bg-amber-50/40 px-4 py-3 text-sm">
+                                            <div><p className="font-bold text-ink">{context.machineLabel}</p><p className="text-xs text-body">Pending · assign a worker before entering production.</p></div>
+                                            <Button variant="outline" size="sm" onClick={openConfiguration} className="rounded-xl border-hairline bg-surface text-xs font-semibold hover:bg-surface-soft shadow-xs">Assign worker in Machine Assignments</Button>
                                         </div>
                                     )
                                     const row = getRow(context.workerId!)
@@ -739,9 +745,16 @@ export default function BaseDailyProductionSheet({
                                     const state = machineState(context)
                                     const disabled = areInputsDisabled || settledWorkerIds.has(context.workerId!)
                                     return (
-                                        <div key={context.machineId} data-base-highlight={context.workerId === focusedWorker || context.jobId === navigation.job} className="data-[base-highlight=true]:bg-saffron-soft data-[base-highlight=true]:ring-1 data-[base-highlight=true]:ring-inset data-[base-highlight=true]:ring-saffron grid grid-cols-[minmax(0,1fr)_132px] items-center gap-x-3 gap-y-2 px-3 py-3 focus-within:bg-saffron-soft/40 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_150px_170px] md:px-4 md:py-2.5">
-                                            <div className="min-w-0"><p className="font-semibold text-ink">{context.machineLabel}</p><p className="truncate text-sm text-muted-foreground">{context.jobLabel ?? 'Job not assigned'}</p><p className="text-sm text-body md:hidden">{context.workerName}</p></div>
-                                            <div className="hidden text-sm text-body md:block"><span className="font-medium text-ink">{context.workerName}</span>{settledWorkerIds.has(context.workerId!) && <p className="text-xs text-muted-foreground">Paid · protected</p>}</div>
+                                        <div key={context.machineId} data-base-highlight={context.workerId === focusedWorker || context.jobId === navigation.job} className="data-[base-highlight=true]:bg-saffron-soft/60 data-[base-highlight=true]:ring-1 data-[base-highlight=true]:ring-inset data-[base-highlight=true]:ring-saffron grid grid-cols-[minmax(0,1fr)_132px] items-center gap-x-3 gap-y-2 px-3 py-3 focus-within:bg-saffron-soft/30 hover:bg-surface-soft/20 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_150px_170px] md:px-4 md:py-2.5 transition-colors">
+                                            <div className="min-w-0">
+                                                <p className="font-bold text-ink">{context.machineLabel}</p>
+                                                <p className="truncate text-xs text-muted-foreground">{context.jobLabel ?? 'Job not assigned'}</p>
+                                                <p className="text-xs text-body md:hidden">{context.workerName}</p>
+                                            </div>
+                                            <div className="hidden text-sm text-body md:block">
+                                                <span className="font-semibold text-ink">{context.workerName}</span>
+                                                {settledWorkerIds.has(context.workerId!) && <p className="text-xs text-muted-foreground">Paid · protected</p>}
+                                            </div>
                                             <div className="col-start-2 row-start-1 md:col-auto md:row-auto">
                                                 <Input
                                                     aria-label={`${context.machineLabel} ${context.workerName} metres`}
@@ -758,42 +771,42 @@ export default function BaseDailyProductionSheet({
                                                     onChange={(event) => handleMachineMetersChange(context, event.target.value)}
                                                     onKeyDown={handleMachineMetersKeyDown}
                                                     onFocus={(event) => { event.currentTarget.select(); event.currentTarget.scrollIntoView({ block: 'nearest' }) }}
-                                                    className="h-11 scroll-mb-56 scroll-mt-8 text-right text-base font-semibold tabular-nums md:h-10"
+                                                    className="h-11 scroll-mb-56 scroll-mt-8 rounded-xl border-hairline bg-surface text-right text-base font-bold tabular-nums text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom md:h-10"
                                                 />
-                                                {state === 'invalid' && <p id={`reading-error-${context.machineId}`} className="mt-1 text-sm text-destructive">Use 0–100,000, up to 2 decimals.</p>}
+                                                {state === 'invalid' && <p id={`reading-error-${context.machineId}`} className="mt-1 text-xs font-semibold text-destructive">Use 0–100,000, up to 2 decimals.</p>}
                                             </div>
-                                            <div className="col-span-2 flex flex-wrap items-center gap-2 text-sm md:col-span-1">
-                                                <span className={state === 'entered' ? 'text-success' : state === 'pending' || state === 'invalid' ? 'text-warning' : 'text-muted-foreground'}>{state === 'entered' ? 'Entered' : state === 'not_running' ? 'Not running' : state === 'absent' ? 'Worker absent' : state === 'invalid' ? 'Check reading' : 'Pending'}</span>
+                                            <div className="col-span-2 flex flex-wrap items-center gap-2 text-xs md:col-span-1">
+                                                <span className={`font-semibold ${state === 'entered' ? 'text-success' : state === 'pending' || state === 'invalid' ? 'text-warning' : 'text-muted-foreground'}`}>{state === 'entered' ? 'Entered' : state === 'not_running' ? 'Not running' : state === 'absent' ? 'Worker absent' : state === 'invalid' ? 'Check reading' : 'Pending'}</span>
                                                 {!disabled && row.status !== 'absent' && (
                                                     <Button type="button" variant="ghost" size="sm" aria-label={`${state === 'not_running' ? 'Clear' : 'Mark not running'} ${context.machineLabel}`} onClick={() => {
                                                         if (state === 'entered' && !window.confirm(tx('Replace this machine’s production with zero?'))) return
                                                         handleMachineMetersChange(context, state === 'not_running' ? '' : '0')
-                                                    }}>{state === 'not_running' ? 'Undo' : 'Not running'}</Button>
+                                                    }} className="h-7 rounded-lg px-2 text-xs text-muted-foreground hover:text-ink">{state === 'not_running' ? 'Undo' : 'Not running'}</Button>
                                                 )}
-                                                {!context.jobId && <Button variant="link" size="sm" onClick={openMachineJobs}>Assign a production job</Button>}
+                                                {!context.jobId && <Button variant="link" size="sm" onClick={openMachineJobs} className="h-7 px-1 text-xs font-bold text-loom hover:underline">Assign a production job</Button>}
                                             </div>
                                         </div>
                                     )
                                 })}
-                                {showPending && pendingMachineIds.length === 0 && <p className="px-4 py-6 text-center text-sm text-body">All machines are accounted for.</p>}
-                                {machineContexts.length === 0 && <div className="flex flex-col items-center gap-3 px-4 py-8 text-center text-sm text-body"><p>No active machines are available for this shift. Add a machine and assign a worker first.</p><Button variant="outline" size="sm" onClick={onAddMachine}><Plus className="h-4 w-4" /> Add machine</Button></div>}
+                                {showPending && pendingMachineIds.length === 0 && <p className="px-4 py-8 text-center text-sm text-body">All machines are accounted for.</p>}
+                                {machineContexts.length === 0 && <div className="flex flex-col items-center gap-3 px-4 py-10 text-center text-sm text-body"><p>No active machines are available for this shift. Add a machine and assign a worker first.</p><Button variant="outline" size="sm" onClick={onAddMachine} className="rounded-xl border-hairline hover:bg-surface-soft font-semibold"><Plus className="h-4 w-4" /> Add machine</Button></div>}
                             </div>
                         </CardContent>
                     </Card>
 
-                    <Card>
-                        <CardHeader className="border-b border-hairline/70 pb-3 sm:pb-5">
+                    <Card className="rounded-2xl border border-hairline bg-surface shadow-xs overflow-hidden">
+                        <CardHeader className="border-b border-hairline bg-surface-soft/40 p-4 sm:p-5">
                             <div className="flex items-center justify-between gap-3">
                                 <div className="min-w-0">
-                                    <CardTitle className="text-base">Worker payroll roll-up</CardTitle>
+                                    <CardTitle className="text-base font-bold text-ink">Worker payroll roll-up</CardTitle>
                                     <p className="mt-1 text-xs font-medium text-body md:hidden">{formatMeters(summary.total_meters)} · {summary.entered_count} recorded · {summary.outstanding_count} pending</p>
                                 </div>
-                                <Button type="button" variant="ghost" size="sm" aria-expanded={isPayrollExpanded} aria-controls="base-payroll-rollup" onClick={() => setIsPayrollExpanded((current) => !current)}>
+                                <Button type="button" variant="ghost" size="sm" aria-expanded={isPayrollExpanded} aria-controls="base-payroll-rollup" onClick={() => setIsPayrollExpanded((current) => !current)} className="h-8 rounded-xl border border-hairline bg-surface hover:bg-surface-soft text-xs font-semibold shadow-xs">
                                     {isPayrollExpanded ? 'Hide' : 'Review'}
                                     <ChevronDown className={`h-4 w-4 transition-transform ${isPayrollExpanded ? 'rotate-180' : ''}`} />
                                 </Button>
                             </div>
-                            <CardDescription className="hidden md:block">Calculated from the machine metres above. Use zero or absent only when a worker has no production this shift.</CardDescription>
+                            <CardDescription className="hidden md:block text-xs text-muted-foreground">Calculated from the machine metres above. Use zero or absent only when a worker has no production this shift.</CardDescription>
                         </CardHeader>
                         <CardContent id="base-payroll-rollup" className={`${isPayrollExpanded ? 'block' : 'hidden'} divide-y divide-hairline p-0`}>
                             {assignedWorkers.map((worker) => {
@@ -803,29 +816,35 @@ export default function BaseDailyProductionSheet({
                                 const rowGrossPay = getRowGrossPay(worker.id)
                                 return (
                                     <div key={worker.id} className="grid gap-3 px-4 py-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_150px_160px] md:items-center">
-                                        <div className="min-w-0"><p className="font-semibold text-ink">{worker.name}{!worker.is_active && <span className="ml-1 text-xs font-normal text-muted-foreground">· inactive</span>}</p><p className="text-xs text-muted-foreground">{contexts.length > 0 ? `${contexts.length} machine${contexts.length === 1 ? '' : 's'} · weaver rates applied` : 'No current machine assignment'}</p></div>
-                                        <div className="text-sm text-body">{contexts.length > 0 ? contexts.map((context) => <span key={context.machineId} className="mr-1 inline-flex"><Badge variant="outline">{context.machineLabel}</Badge></span>) : <span className="text-warning">Unassigned worker entry</span>}</div>
+                                        <div className="min-w-0">
+                                            <p className="font-bold text-ink">{worker.name}{!worker.is_active && <span className="ml-1 text-xs font-normal text-muted-foreground">· inactive</span>}</p>
+                                            <p className="text-xs text-muted-foreground">{contexts.length > 0 ? `${contexts.length} machine${contexts.length === 1 ? '' : 's'} · weaver rates applied` : 'No current machine assignment'}</p>
+                                        </div>
+                                        <div className="text-sm text-body">{contexts.length > 0 ? contexts.map((context) => <span key={context.machineId} className="mr-1 inline-flex"><Badge variant="outline" className="border-hairline bg-surface text-xs font-semibold">{context.machineLabel}</Badge></span>) : <span className="text-xs font-semibold text-warning">Unassigned worker entry</span>}</div>
                                         <Select value={row.status} onValueChange={(value) => handleStatusChange(worker.id, value as BaseDailyProductionStatus)} disabled={areInputsDisabled || settledWorkerIds.has(worker.id)}>
-                                            <SelectTrigger className="w-full" aria-label={`${worker.name} status`}><SelectValue /></SelectTrigger>
-                                            <SelectContent>
+                                            <SelectTrigger className="h-10 w-full rounded-xl border-hairline bg-surface text-xs font-bold text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom" aria-label={`${worker.name} status`}><SelectValue /></SelectTrigger>
+                                            <SelectContent className="rounded-xl border-hairline bg-surface shadow-lg">
                                                 <SelectItem value="blank">Not entered</SelectItem>
                                                 <SelectItem value="entered">Produced</SelectItem>
                                                 <SelectItem value="zero">Zero output</SelectItem>
                                                 <SelectItem value="absent">Absent / no production</SelectItem>
                                             </SelectContent>
                                         </Select>
-                                        <div className="text-left md:text-right"><p className="font-bold text-ink">{formatMeters(rowTotal)}</p><p className="text-xs text-body">{formatINR(rowGrossPay)}</p></div>
-                                        {row.savedUnallocatedMeters !== null && <div className="md:col-span-4 rounded-lg border border-warning/30 bg-warning/5 px-3 py-2 text-xs text-body"><AlertTriangle className="mr-1 inline h-3.5 w-3.5 text-warning" /> Previously saved as {formatMeters(row.savedUnallocatedMeters)} without an exact machine split. Enter the machine allocation before saving this correction.</div>}
+                                        <div className="text-left md:text-right">
+                                            <p className="text-sm sm:text-base font-black text-ink">{formatMeters(rowTotal)}</p>
+                                            <p className="text-xs font-semibold text-muted-foreground">{formatINR(rowGrossPay)}</p>
+                                        </div>
+                                        {row.savedUnallocatedMeters !== null && <div className="md:col-span-4 rounded-xl border border-amber-200 bg-amber-50/50 px-3 py-2 text-xs text-body"><AlertTriangle className="mr-1 inline h-3.5 w-3.5 text-warning" /> Previously saved as {formatMeters(row.savedUnallocatedMeters)} without an exact machine split. Enter the machine allocation before saving this correction.</div>}
                                     </div>
                                 )
                             })}
                             {unassignedWorkers.map((worker) => {
                                 const row = getRow(worker.id)
                                 return (
-                                    <div key={`${worker.id}-unassigned`} className="grid gap-3 bg-warning/5 px-4 py-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_150px_160px] md:items-center">
-                                        <div><p className="font-semibold text-ink">{worker.name}</p><p className="text-xs text-muted-foreground">No active machine assignment · no weaver rate</p></div>
+                                    <div key={`${worker.id}-unassigned`} className="grid gap-3 bg-amber-50/30 px-4 py-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_150px_160px] md:items-center">
+                                        <div><p className="font-bold text-ink">{worker.name}</p><p className="text-xs text-muted-foreground">No active machine assignment · no weaver rate</p></div>
                                         <div className="flex items-start gap-2 text-xs text-body"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />Assign a machine and production job before recording output so pay and job reporting are allocated correctly.</div>
-                                        <span className="text-xs text-muted-foreground">{toWorkerStatusLabel(row.status)}</span>
+                                        <span className="text-xs font-semibold text-muted-foreground">{toWorkerStatusLabel(row.status)}</span>
                                         <Input
                                             aria-label={`${worker.name} unassigned metres`}
                                             type="number"
@@ -836,7 +855,7 @@ export default function BaseDailyProductionSheet({
                                             value={row.meters}
                                             disabled={row.status === 'zero' || row.status === 'absent' || areInputsDisabled || settledWorkerIds.has(worker.id)}
                                             onChange={(event) => handleUnassignedMetersChange(worker.id, event.target.value)}
-                                            className="text-right font-semibold"
+                                            className="h-10 rounded-xl border-hairline bg-surface text-right text-sm font-bold tabular-nums text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom"
                                         />
                                     </div>
                                 )
@@ -847,16 +866,16 @@ export default function BaseDailyProductionSheet({
             )}
 
             {sheetWorkers.length > 0 && (
-                <div style={toolbarBounds ? { position: 'fixed', left: toolbarBounds.left, width: toolbarBounds.width } : undefined} className="sticky bottom-[calc(80px+env(safe-area-inset-bottom,0px))] z-20 flex items-center justify-between gap-3 rounded-xl border border-saffron/30 bg-surface/95 p-2.5 shadow-[var(--shadow-panel)] backdrop-blur sm:p-3 md:bottom-3">
+                <div style={toolbarBounds ? { position: 'fixed', left: toolbarBounds.left, width: toolbarBounds.width } : undefined} className="sticky bottom-[calc(80px+env(safe-area-inset-bottom,0px))] z-20 flex items-center justify-between gap-3 rounded-2xl border border-hairline bg-surface/95 p-3 sm:p-4 shadow-xl backdrop-blur md:bottom-3">
                     <div className="flex items-center gap-3 text-sm">
-                        <div className="hidden rounded-lg bg-saffron-soft p-2 text-saffron-deep sm:block"><Save className="h-4 w-4" /></div>
+                        <div className="hidden rounded-xl border border-hairline bg-surface-soft p-2.5 text-ink sm:block"><Save className="h-4 w-4" /></div>
                         <div>
-                            <p className="font-bold text-ink">{registerSummary.accounted}/{registerSummary.total} machines accounted for · {formatMeters(summary.total_meters)}</p>
-                            <p className="text-sm text-body">{registerSummary.pending} pending · {registerSummary.stopped} not running{registerSummary.invalid > 0 ? ` · ${registerSummary.invalid} to check` : ''}</p>
-                            <p role="status" className="min-h-4 text-xs text-muted-foreground">{draftStatus === 'local' ? 'Draft saved on this device · not yet submitted' : currentBatch ? 'Saved shift' : 'Not yet submitted'}</p>
+                            <p className="text-sm font-bold text-ink">{registerSummary.accounted}/{registerSummary.total} machines accounted for · {formatMeters(summary.total_meters)}</p>
+                            <p className="text-xs text-body">{registerSummary.pending} pending · {registerSummary.stopped} not running{registerSummary.invalid > 0 ? ` · ${registerSummary.invalid} to check` : ''}</p>
+                            <p role="status" className="min-h-4 text-xs font-medium text-muted-foreground">{draftStatus === 'local' ? 'Draft saved on this device · not yet submitted' : currentBatch ? 'Saved shift' : 'Not yet submitted'}</p>
                         </div>
                     </div>
-                    <Button onClick={() => handleSave()} disabled={isSaving || areInputsDisabled || unmatchedDraftMeters || invalidEnteredCount > 0 || registerSummary.invalid > 0 || summary.entered_count + summary.zero_count + summary.absent_count === 0} className="min-w-[132px] sm:min-w-[210px]">
+                    <Button onClick={() => handleSave()} disabled={isSaving || areInputsDisabled || unmatchedDraftMeters || invalidEnteredCount > 0 || registerSummary.invalid > 0 || summary.entered_count + summary.zero_count + summary.absent_count === 0} className="h-10 sm:h-11 min-w-[132px] sm:min-w-[210px] rounded-xl bg-loom hover:bg-loom-elevated text-white font-bold tracking-wide shadow-xs">
                         {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                         <span className="sm:hidden">{isSaving ? 'Saving…' : currentBatch ? 'Save correction' : 'Save shift'}</span>
                         <span className="hidden sm:inline">{isSaving ? 'Saving machine sheet…' : currentBatch ? 'Save production correction' : 'Save machine production'}</span>
@@ -865,26 +884,32 @@ export default function BaseDailyProductionSheet({
             )}
 
             <Dialog open={isReviewOpen} onOpenChange={open => { if (!isSaving) setIsReviewOpen(open) }}>
-                <DialogContent className="max-w-md">
-                    <DialogHeader><DialogTitle>Save an incomplete shift?</DialogTitle><DialogDescription>{registerSummary.pending} machines and {summary.outstanding_count} worker rows still have missing readings. Blank readings stay pending, not zero. Entered production will count towards worker pay.</DialogDescription></DialogHeader>
-                    <p className="text-sm font-semibold">{formatDateOnly(productionDate)} · {shift === 'day' ? 'Day' : 'Night'} · {formatMeters(summary.total_meters)}</p>
-                    <DialogFooter><Button variant="outline" disabled={isSaving} onClick={() => setIsReviewOpen(false)}>Keep entering</Button><Button disabled={isSaving} onClick={() => handleSave(true)}>{isSaving ? 'Saving…' : 'Save incomplete shift'}</Button></DialogFooter>
+                <DialogContent className="max-w-md rounded-2xl border border-hairline bg-surface p-6 shadow-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-bold text-ink">Save an incomplete shift?</DialogTitle>
+                        <DialogDescription className="text-sm text-body">{registerSummary.pending} machines and {summary.outstanding_count} worker rows still have missing readings. Blank readings stay pending, not zero. Entered production will count towards worker pay.</DialogDescription>
+                    </DialogHeader>
+                    <p className="rounded-xl border border-hairline bg-surface-soft/60 p-3 text-sm font-semibold text-ink">{formatDateOnly(productionDate)} · {shift === 'day' ? 'Day' : 'Night'} · {formatMeters(summary.total_meters)}</p>
+                    <DialogFooter className="pt-2">
+                        <Button variant="outline" disabled={isSaving} onClick={() => setIsReviewOpen(false)} className="rounded-xl border-hairline hover:bg-surface-soft font-semibold">Keep entering</Button>
+                        <Button disabled={isSaving} onClick={() => handleSave(true)} className="rounded-xl bg-loom text-white font-bold shadow-xs hover:bg-loom-elevated">{isSaving ? 'Saving…' : 'Save incomplete shift'}</Button>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
 
             <Dialog open={isUnlockDialogOpen} onOpenChange={setIsUnlockDialogOpen}>
-                <DialogContent className="max-w-md">
+                <DialogContent className="max-w-md rounded-2xl border border-hairline bg-surface p-6 shadow-2xl">
                     <DialogHeader>
-                        <DialogTitle>Edit this saved production log?</DialogTitle>
-                        <DialogDescription>
+                        <DialogTitle className="text-xl font-bold text-ink">Edit this saved production log?</DialogTitle>
+                        <DialogDescription className="text-sm text-body">
                             This sheet is already saved for {formatDateOnly(productionDate)} · {shift === 'day' ? 'Day' : 'Night'} shift. Any correction can change production totals and worker payroll.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="rounded-lg border border-warning/30 bg-warning/5 px-3 py-3 text-sm text-body">
+                    <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-3 text-xs leading-relaxed text-body">
                         Check the machine, worker, and metres carefully. Editing stays unlocked only for this saved shift and locks again after you save.
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="base-correction-reason">Reason for correction</Label>
+                        <Label htmlFor="base-correction-reason" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Reason for correction</Label>
                         <Textarea
                             id="base-correction-reason"
                             value={correctionReason}
@@ -892,14 +917,15 @@ export default function BaseDailyProductionSheet({
                             maxLength={240}
                             placeholder="Example: Meter reading corrected from the paper shift register"
                             autoFocus
+                            className="rounded-xl border-hairline bg-surface text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom"
                         />
                         <div className="flex justify-between gap-3 text-xs text-muted-foreground">
                             <span>This explanation stays with the production record.</span>
                             <span>{correctionReason.length}/240</span>
                         </div>
                     </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsUnlockDialogOpen(false)}>Keep locked</Button>
+                    <DialogFooter className="pt-2">
+                        <Button variant="outline" onClick={() => setIsUnlockDialogOpen(false)} className="rounded-xl border-hairline hover:bg-surface-soft font-semibold">Keep locked</Button>
                         <Button
                             disabled={correctionReason.trim().length < 3}
                             onClick={() => {
@@ -907,6 +933,7 @@ export default function BaseDailyProductionSheet({
                                 setUnlockedBatchId(currentBatch.id)
                                 setIsUnlockDialogOpen(false)
                             }}
+                            className="rounded-xl bg-loom text-white font-bold shadow-xs hover:bg-loom-elevated"
                         >
                             <LockOpen className="h-4 w-4" /> Unlock editing
                         </Button>
@@ -915,10 +942,10 @@ export default function BaseDailyProductionSheet({
             </Dialog>
 
             <Dialog open={isHistoryDialogOpen} onOpenChange={setIsHistoryDialogOpen}>
-                <DialogContent className="max-w-lg">
+                <DialogContent className="max-w-lg rounded-2xl border border-hairline bg-surface p-6 shadow-2xl">
                     <DialogHeader>
-                        <DialogTitle>Production audit trail</DialogTitle>
-                        <DialogDescription>
+                        <DialogTitle className="text-xl font-bold text-ink">Production audit trail</DialogTitle>
+                        <DialogDescription className="text-sm text-body">
                             Permanent receipts for {formatDateOnly(productionDate)} · {shift === 'day' ? 'Day' : 'Night'} shift. Corrections never overwrite their explanation.
                         </DialogDescription>
                     </DialogHeader>
@@ -928,29 +955,29 @@ export default function BaseDailyProductionSheet({
                             const afterMeters = revision.after_snapshot.total_meters
                             const delta = beforeMeters === null ? null : afterMeters - beforeMeters
                             return (
-                                <div key={revision.id} className="rounded-lg border border-hairline p-3">
+                                <div key={revision.id} className="rounded-xl border border-hairline bg-surface p-3.5 shadow-xs">
                                     <div className="flex items-start justify-between gap-3">
                                         <div>
-                                            <p className="font-semibold text-ink">{revision.change_kind === 'created' ? 'Original production saved' : `Correction ${revision.revision_number}`}</p>
+                                            <p className="font-bold text-ink">{revision.change_kind === 'created' ? 'Original production saved' : `Correction ${revision.revision_number}`}</p>
                                             <p className="mt-0.5 text-xs text-muted-foreground">{formatDateTime(revision.changed_at)}</p>
                                         </div>
-                                        <Badge variant={revision.change_kind === 'created' ? 'secondary' : 'warning'}>{revision.change_kind === 'created' ? 'Original' : 'Corrected'}</Badge>
+                                        <Badge variant={revision.change_kind === 'created' ? 'secondary' : 'warning'} className="font-bold text-[10px]">{revision.change_kind === 'created' ? 'Original' : 'Corrected'}</Badge>
                                     </div>
-                                    {revision.correction_reason && <p className="mt-3 text-sm leading-relaxed text-body">{revision.correction_reason}</p>}
+                                    {revision.correction_reason && <p className="mt-2.5 text-xs sm:text-sm leading-relaxed text-body">{revision.correction_reason}</p>}
                                     <p className="mt-1 text-xs text-muted-foreground">Changed by {revision.changed_by === initialData.actorId ? 'you' : revision.changed_by ? `owner ${revision.changed_by.slice(0, 8)}` : 'an earlier owner'}</p>
-                                    {baseProductionAuditChanges(revision.before_snapshot, revision.after_snapshot).map(change => <div key={change.key} className="mt-2 rounded-md border border-hairline p-2 text-xs"><p className="font-semibold">{workerById.get(change.line.workerId)?.name ?? 'Worker'} · {change.line.machine}{change.line.job ? ` · ${change.line.job}` : ''}</p><p>Metres: {formatMeters(change.before?.meters ?? 0)} → {formatMeters(change.after?.meters ?? 0)}</p><p>Rate: ₹{(change.before?.rate ?? 0).toFixed(2)}/m → ₹{(change.after?.rate ?? 0).toFixed(2)}/m</p><p>Earnings: ₹{(change.before?.pay ?? 0).toFixed(2)} → ₹{(change.after?.pay ?? 0).toFixed(2)}</p><p>Status: {change.before?.status ?? 'Not recorded'} → {change.after?.status ?? 'Removed'}</p></div>)}
-                                    <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md bg-surface-soft px-2.5 py-2 text-xs text-body">
+                                    {baseProductionAuditChanges(revision.before_snapshot, revision.after_snapshot).map(change => <div key={change.key} className="mt-2 rounded-lg border border-hairline bg-surface-soft/40 p-2.5 text-xs"><p className="font-bold text-ink">{workerById.get(change.line.workerId)?.name ?? 'Worker'} · {change.line.machine}{change.line.job ? ` · ${change.line.job}` : ''}</p><p className="mt-0.5 text-body">Metres: {formatMeters(change.before?.meters ?? 0)} → {formatMeters(change.after?.meters ?? 0)}</p><p className="text-body">Rate: ₹{(change.before?.rate ?? 0).toFixed(2)}/m → ₹{(change.after?.rate ?? 0).toFixed(2)}/m</p><p className="text-body">Earnings: ₹{(change.before?.pay ?? 0).toFixed(2)} → ₹{(change.after?.pay ?? 0).toFixed(2)}</p><p className="text-body">Status: {change.before?.status ?? 'Not recorded'} → {change.after?.status ?? 'Removed'}</p></div>)}
+                                    <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-surface-soft px-3 py-2 text-xs text-body font-medium">
                                         {beforeMeters === null
-                                            ? <span><strong className="text-ink">{formatMeters(afterMeters)}</strong> recorded</span>
-                                            : <span><strong className="text-ink">{formatMeters(beforeMeters)}</strong> → <strong className="text-ink">{formatMeters(afterMeters)}</strong></span>}
-                                        {delta !== null && <span className={delta === 0 ? 'text-muted-foreground' : delta > 0 ? 'text-success' : 'text-warning'}>{delta === 0 ? 'No total change' : `${delta > 0 ? '+' : ''}${formatMeters(delta)}`}</span>}
+                                            ? <span><strong className="font-black text-ink">{formatMeters(afterMeters)}</strong> recorded</span>
+                                            : <span><strong className="font-black text-ink">{formatMeters(beforeMeters)}</strong> → <strong className="font-black text-ink">{formatMeters(afterMeters)}</strong></span>}
+                                        {delta !== null && <span className={delta === 0 ? 'text-muted-foreground font-bold' : delta > 0 ? 'text-success font-bold' : 'text-warning font-bold'}>{delta === 0 ? 'No total change' : `${delta > 0 ? '+' : ''}${formatMeters(delta)}`}</span>}
                                         <span>{revision.after_snapshot.entered_count} produced · {revision.after_snapshot.zero_count} zero · {revision.after_snapshot.absent_count} absent</span>
                                     </div>
                                 </div>
                             )
                         })}
                     </div>
-                    <DialogFooter><Button variant="outline" onClick={() => setIsHistoryDialogOpen(false)}>Close</Button></DialogFooter>
+                    <DialogFooter className="pt-2"><Button variant="outline" onClick={() => setIsHistoryDialogOpen(false)} className="rounded-xl border-hairline hover:bg-surface-soft font-semibold">Close</Button></DialogFooter>
                 </DialogContent>
             </Dialog>
         </div>
@@ -976,5 +1003,5 @@ function toWorkerStatusLabel(status: BaseDailyProductionStatus) {
 }
 
 function Stat({ label, value }: { label: string; value: string }) {
-    return <div className="px-2 text-center sm:px-0 sm:text-left"><p className="text-xs text-muted-foreground">{label}</p><p className="mt-1 font-bold text-ink">{value}</p></div>
+    return <div className="px-2 text-center sm:px-0 sm:text-left"><p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{label}</p><p className="mt-1 text-sm sm:text-base font-black text-ink">{value}</p></div>
 }

@@ -41,21 +41,21 @@ export default function BaseMachineJobs({ initialData }: { initialData: BaseProd
     }
 
     return (
-        <Card id="machine-jobs" className="scroll-mt-6">
-            <CardHeader>
-                <CardTitle className="text-base">Machine jobs</CardTitle>
-                <CardDescription>Choose the job each machine is running. Then connect its worker in <Link href="/owner/assignments" className="font-medium text-saffron-deep underline underline-offset-2">Machine Assignments</Link>.</CardDescription>
+        <Card id="machine-jobs" className="scroll-mt-6 rounded-2xl border border-hairline bg-surface shadow-xs overflow-hidden">
+            <CardHeader className="border-b border-hairline bg-surface-soft/40 p-4 sm:p-5">
+                <CardTitle className="text-base font-bold text-ink">Machine jobs</CardTitle>
+                <CardDescription className="text-xs sm:text-sm text-muted-foreground">Choose the job each machine is running. Then connect its worker in <Link href="/owner/assignments" className="font-semibold text-loom hover:underline underline-offset-2">Machine Assignments</Link>.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
-                {machines.length === 0 && <p className="text-sm text-body">Add your machines in <Link href="/owner/machines?register=base" className="font-medium text-saffron-deep underline underline-offset-2">Machines</Link> to link them to a job.</p>}
+            <CardContent className="divide-y divide-hairline p-4 sm:p-5">
+                {machines.length === 0 && <p className="text-sm text-body">Add your machines in <Link href="/owner/machines?register=base" className="font-semibold text-loom hover:underline underline-offset-2">Machines</Link> to link them to a job.</p>}
                 {machines.map(machine => (
-                    <div key={machine.id} className="flex flex-col justify-between gap-2 border-t border-hairline/70 pt-3 sm:flex-row sm:items-center">
-                        <span className="text-sm font-medium text-ink">{machine.custom_label || machine.name}</span>
+                    <div key={machine.id} className="flex flex-col justify-between gap-2 py-3 first:pt-0 last:pb-0 sm:flex-row sm:items-center">
+                        <span className="text-sm font-bold text-ink">{machine.custom_label || machine.name}</span>
                         <div className="flex items-center gap-2 sm:w-80">
-                            {pendingMachineId === machine.id && <Loader2 className="h-4 w-4 shrink-0 animate-spin" />}
+                            {pendingMachineId === machine.id && <Loader2 className="h-4 w-4 shrink-0 animate-spin text-muted-foreground" />}
                             <Select value={contexts.get(machine.id) ?? 'none'} onValueChange={value => void changeJob(machine.id, value)} disabled={pendingMachineId !== null}>
-                                <SelectTrigger aria-label={`Production job for ${machine.custom_label || machine.name}`} className="w-full"><SelectValue /></SelectTrigger>
-                                <SelectContent>
+                                <SelectTrigger aria-label={`Production job for ${machine.custom_label || machine.name}`} className="h-10 w-full rounded-xl border-hairline bg-surface text-xs font-bold text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom"><SelectValue /></SelectTrigger>
+                                <SelectContent className="rounded-xl border-hairline bg-surface shadow-lg">
                                     <SelectItem value="none">No active job</SelectItem>
                                     {jobs.map(job => <SelectItem key={job.id} value={job.id}>{job.quality_label}{job.costing_version ? ` · v${job.costing_version}` : ''} · {new Intl.NumberFormat('en-IN', { maximumFractionDigits: 2 }).format(job.target_meters)} m target</SelectItem>)}
                                 </SelectContent>

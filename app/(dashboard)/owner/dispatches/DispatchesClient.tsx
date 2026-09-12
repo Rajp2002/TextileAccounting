@@ -598,27 +598,29 @@ function MetricCard({
     badge?: string
 }) {
     const toneClasses = {
-        orange: 'bg-orange-50 text-orange-600',
-        amber: 'bg-amber-100 text-amber-600',
-        emerald: 'bg-emerald-100 text-emerald-600',
-        rose: 'bg-rose-100 text-rose-600',
+        orange: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20',
+        amber: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20',
+        emerald: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
+        rose: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20',
     }
 
     return (
-        <Card className="border-none shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white dark:bg-zinc-900/50">
-            <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                    <div className={cn('p-2.5 rounded-xl', toneClasses[tone])}>
-                        <Icon className="h-5 w-5" />
-                    </div>
-                    {badge && <Badge variant="outline" className="bg-white/70 text-[11px] font-bold">{badge}</Badge>}
+        <Card className="rounded-2xl border border-hairline bg-surface p-5 sm:p-6 shadow-xs">
+            <div className="flex items-center justify-between">
+                <div className={cn('p-2.5 rounded-xl', toneClasses[tone])}>
+                    <Icon className="h-5 w-5" />
                 </div>
-                <div className="mt-4">
-                    <p className="text-sm font-bold text-muted-foreground/80 uppercase tracking-wider">{label}</p>
-                    <h3 className={cn('text-2xl font-black mt-1 tabular-nums', tone === 'rose' && 'text-rose-600')}>{value}</h3>
-                    <p className="mt-1 text-xs font-semibold text-muted-foreground">{helper}</p>
-                </div>
-            </CardContent>
+                {badge && (
+                    <Badge variant="outline" className="border-hairline bg-surface-soft text-[11px] font-bold text-ink">
+                        {badge}
+                    </Badge>
+                )}
+            </div>
+            <div className="mt-4">
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{label}</p>
+                <h3 className={cn('text-2xl font-black mt-1 tracking-tight tabular-nums text-ink', tone === 'rose' && 'text-rose-600 dark:text-rose-400')}>{value}</h3>
+                <p className="mt-1 text-xs font-semibold text-body">{helper}</p>
+            </div>
         </Card>
     )
 }
@@ -839,17 +841,17 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                <div className="flex flex-col gap-2">
-                    <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Dispatches</h1>
-                    <p className="text-muted-foreground font-medium">Monitor fabric shipments grouped by order — track progress and verify trader confirmations.</p>
+                <div className="space-y-1">
+                    <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink">Dispatches</h1>
+                    <p className="text-sm font-medium text-body">Monitor fabric shipments grouped by order — track progress and verify trader confirmations.</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                     <Button 
                         variant="outline"
                         onClick={() => setGlobalModalStep('select_order')}
-                        className="font-bold gap-2 shrink-0 h-11 px-6 rounded-xl shadow-sm transition-all active:scale-95"
+                        className="h-11 px-5 rounded-xl border-hairline bg-surface font-bold text-ink hover:bg-surface-soft gap-2 shrink-0 shadow-xs active:scale-95 transition-all"
                     >
-                        <Plus className="h-5 w-5" />
+                        <Plus className="h-4 w-4" />
                         New Dispatch
                     </Button>
                 </div>
@@ -892,14 +894,14 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
             </div>
 
             {/* Tab Switcher */}
-            <div className="flex border-b border-zinc-200 dark:border-zinc-800">
+            <div className="inline-flex p-1 rounded-xl border border-hairline bg-surface-soft shadow-xs gap-1">
                 <button
                     onClick={() => setActiveTab('dispatched')}
                     className={cn(
-                        "px-6 py-3 font-bold text-sm border-b-2 transition-all",
+                        "px-5 py-2 font-bold text-xs rounded-lg transition-all",
                         activeTab === 'dispatched'
-                            ? "border-indigo-600 text-indigo-600 dark:text-indigo-400 font-black"
-                            : "border-transparent text-muted-foreground hover:text-foreground"
+                            ? "bg-loom text-white shadow-xs"
+                            : "text-muted-foreground hover:text-ink hover:bg-surface/50"
                     )}
                 >
                     Dispatched Batches ({dispatches.length})
@@ -907,10 +909,10 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                 <button
                     onClick={() => setActiveTab('pending')}
                     className={cn(
-                        "px-6 py-3 font-bold text-sm border-b-2 transition-all",
+                        "px-5 py-2 font-bold text-xs rounded-lg transition-all",
                         activeTab === 'pending'
-                            ? "border-indigo-600 text-indigo-600 dark:text-indigo-400 font-black"
-                            : "border-transparent text-muted-foreground hover:text-foreground"
+                            ? "bg-loom text-white shadow-xs"
+                            : "text-muted-foreground hover:text-ink hover:bg-surface/50"
                     )}
                 >
                     Pending Dispatches ({pendingSales.length})
@@ -918,24 +920,24 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
             </div>
 
             {/* Filters bar */}
-            <div className="flex flex-col sm:flex-row gap-4 items-center">
+            <div className="flex flex-col sm:flex-row gap-3 items-center">
                 <div className="relative flex-1 w-full">
                     <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                         placeholder="Search by party or quality..."
-                        className="pl-10 h-11 bg-white dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm font-medium"
+                        className="pl-10 h-11 bg-surface border-hairline rounded-xl shadow-xs font-semibold text-ink focus:border-loom focus:ring-1 focus:ring-loom"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                     />
                 </div>
                 {activeTab === 'dispatched' && (
-                    <div className="flex gap-2 w-full sm:w-auto">
+                    <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                         <Button
-                            variant={pendingReceiptOnly ? 'default' : 'outline'}
+                            variant="outline"
                             onClick={() => setPendingReceiptOnly((prev) => !prev)}
                             className={cn(
-                                "h-11 px-5 rounded-xl font-bold transition-all",
-                                pendingReceiptOnly ? "shadow-md scale-105" : "bg-white dark:bg-zinc-900/50"
+                                "h-11 px-4 rounded-xl border-hairline font-bold text-xs shadow-xs transition-all",
+                                pendingReceiptOnly ? "bg-loom text-white hover:bg-loom-elevated border-loom" : "bg-surface hover:bg-surface-soft text-ink"
                             )}
                         >
                             {t('dispatch.filter.pendingReceipt')}
@@ -943,11 +945,11 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                         {(['all', 'in_transit', 'delivered', 'disputed'] as const).map((status) => (
                             <Button
                                 key={status}
-                                variant={statusFilter === status ? 'default' : 'outline'}
+                                variant="outline"
                                 onClick={() => setStatusFilter(status)}
                                 className={cn(
-                                    "h-11 px-5 rounded-xl font-bold capitalize transition-all",
-                                    statusFilter === status ? "shadow-md scale-105" : "bg-white dark:bg-zinc-900/50"
+                                    "h-11 px-4 rounded-xl border-hairline font-bold text-xs capitalize shadow-xs transition-all",
+                                    statusFilter === status ? "bg-loom text-white hover:bg-loom-elevated border-loom" : "bg-surface hover:bg-surface-soft text-ink"
                                 )}
                             >
                                 {status.replace('_', ' ')}
@@ -970,7 +972,7 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                                 exit={{ opacity: 0, scale: 0.97 }}
                                 transition={{ duration: 0.22 }}
                             >
-                                <Card className="border-none shadow-[0_4px_24px_rgb(0,0,0,0.04)] bg-white dark:bg-zinc-900/60 overflow-hidden p-5 sm:p-6 hover:shadow-[0_8px_32px_rgb(0,0,0,0.08)] transition-all duration-300">
+                                <Card className="rounded-2xl border border-hairline bg-surface p-5 sm:p-6 shadow-xs hover:border-hairline-strong transition-all overflow-hidden">
                                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
                                         <div className="space-y-1.5 flex-grow">
                                             <div className="flex items-center gap-2 flex-wrap">
@@ -1038,7 +1040,7 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                                                     setDispatchNotes('')
                                                     setDispatchIdempotencyKey(createClientIdempotencyKey('stock-dispatch'))
                                                 }}
-                                                className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold gap-2 shrink-0 h-10 px-4 rounded-xl shadow-md transition-all active:scale-95 text-xs"
+                                                className="bg-loom hover:bg-loom-elevated text-white font-bold gap-2 shrink-0 h-10 px-4 rounded-xl shadow-xs transition-all active:scale-95 text-xs"
                                             >
                                                 <Truck className="h-4 w-4" />
                                                 Confirm Dispatch
@@ -1144,13 +1146,13 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
             />
             {confirmingSale && (
                 <Dialog open={confirmingSale !== null} onOpenChange={(v) => { if (!v) setConfirmingSale(null) }}>
-                    <DialogContent className="max-w-md">
+                    <DialogContent className="max-w-md rounded-2xl border border-hairline bg-surface p-6 shadow-2xl">
                         <DialogHeader>
-                            <DialogTitle className="flex items-center gap-2">
-                                <Truck className="h-5 w-5 text-indigo-600" />
+                            <DialogTitle className="flex items-center gap-2 text-lg font-extrabold tracking-tight text-ink">
+                                <Truck className="h-5 w-5 text-loom" />
                                 Confirm Dispatch
                             </DialogTitle>
-                            <DialogDescription>
+                            <DialogDescription className="text-xs text-muted-foreground">
                                 Confirm dispatch details for sale to <strong>{confirmingSale.party_name}</strong>.
                                 Based on the dispatch date, the credit days of {confirmingSale.credit_days} days will start.
                             </DialogDescription>
@@ -1162,7 +1164,7 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                                     type="date"
                                     value={dispatchDate}
                                     onChange={(e) => setDispatchDate(e.target.value)}
-                                    className="h-11 border-slate-200"
+                                    className="h-11 rounded-xl border-hairline bg-surface font-semibold text-ink shadow-xs"
                                 />
                             </div>
                             <div className="grid gap-3 grid-cols-2">
@@ -1182,7 +1184,7 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                                             setDispatchTakas(String(calculatedTakas))
                                         }}
                                         placeholder="e.g. 200"
-                                        className="h-11 border-slate-200"
+                                        className="h-11 rounded-xl border-hairline bg-surface font-semibold text-ink shadow-xs"
                                     />
                                     <span className="text-[10px] text-slate-500 font-medium">
                                         Remaining: {(confirmingSale.pending_dispatch_meters ?? confirmingSale.meters_sold).toFixed(2)} m
@@ -1199,7 +1201,7 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                                         value={dispatchTakas}
                                         onChange={(e) => setDispatchTakas(e.target.value)}
                                         placeholder="e.g. 4"
-                                        className="h-11 border-slate-200"
+                                        className="h-11 rounded-xl border-hairline bg-surface font-semibold text-ink shadow-xs"
                                     />
                                     <span className="text-[10px] text-slate-500 font-medium">
                                         Total sold: {confirmingSale.taka_sold} {confirmingSale.unit_label}s
@@ -1213,7 +1215,7 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                                         value={transportName}
                                         onChange={(e) => setTransportName(e.target.value)}
                                         placeholder="e.g. VRL"
-                                        className="h-11 border-slate-200"
+                                        className="h-11 rounded-xl border-hairline bg-surface font-semibold text-ink shadow-xs"
                                     />
                                 </div>
                                 <div className="space-y-1.5">
@@ -1222,7 +1224,7 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                                         value={vehicleNumber}
                                         onChange={(e) => setVehicleNumber(e.target.value.toUpperCase())}
                                         placeholder="e.g. MH04GP1234"
-                                        className="h-11 border-slate-200"
+                                        className="h-11 rounded-xl border-hairline bg-surface font-semibold text-ink shadow-xs"
                                     />
                                 </div>
                             </div>
@@ -1233,7 +1235,7 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                                     value={challanNumber}
                                     onChange={(e) => setChallanNumber(e.target.value)}
                                     placeholder="e.g. CH-2342"
-                                    className="h-11 border-slate-200"
+                                    className="h-11 rounded-xl border-hairline bg-surface font-semibold text-ink shadow-xs"
                                 />
                             </div>
                             <div className="space-y-1.5">
@@ -1242,18 +1244,18 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                                     value={dispatchNotes}
                                     onChange={(e) => setDispatchNotes(e.target.value)}
                                     placeholder="Optional notes"
-                                    className="h-11 border-slate-200"
+                                    className="h-11 rounded-xl border-hairline bg-surface font-semibold text-ink shadow-xs"
                                 />
                             </div>
                         </div>
                         <DialogFooter className="gap-2">
-                            <Button variant="outline" onClick={() => setConfirmingSale(null)} disabled={confirmPending}>
+                            <Button variant="outline" onClick={() => setConfirmingSale(null)} disabled={confirmPending} className="h-10 px-4 rounded-xl border-hairline font-bold text-ink shadow-xs">
                                 Cancel
                             </Button>
                             <Button
                                 onClick={handleConfirmDispatch}
                                 disabled={confirmPending || !dispatchDate || !dispatchMeters}
-                                className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold gap-2"
+                                className="bg-loom hover:bg-loom-elevated text-white font-bold gap-2 rounded-xl shadow-xs h-10 px-5"
                             >
                                 {confirmPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Truck className="h-4 w-4" />}
                                 {confirmPending ? 'Confirming...' : 'Confirm Dispatch'}

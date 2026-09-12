@@ -434,8 +434,8 @@ export default async function BillingPage({
                         Active Workspace
                     </h3>
                 </div>
-                <Card className="overflow-hidden border-hairline bg-surface shadow-[var(--shadow-card)]">
-                    <div className="border-b border-hairline bg-surface-soft/60 px-6 py-4">
+                <Card className="overflow-hidden rounded-2xl border-hairline bg-surface shadow-xs">
+                    <div className="border-b border-hairline bg-surface-soft/40 px-6 py-4">
                         <div className="flex flex-wrap items-center justify-between gap-3">
                             <div className="flex items-center gap-3">
                                 <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-loom text-saffron shadow-xs">
@@ -479,29 +479,33 @@ export default async function BillingPage({
                     <CardContent className="p-6">
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                             {/* Card 1: Costing Desk */}
-                            <div className="rounded-xl border border-hairline bg-surface-soft/70 p-4 transition-colors hover:bg-surface-soft">
+                            <div className="rounded-xl border border-hairline bg-surface p-5 transition-all hover:border-hairline-strong shadow-xs">
                                 <div className="flex items-center gap-2 text-xs font-bold text-ink">
-                                    <Calculator className="h-4 w-4 text-saffron" />
+                                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-saffron-soft text-saffron-deep">
+                                        <Calculator className="h-4 w-4" />
+                                    </span>
                                     <span>Costing Desk</span>
                                 </div>
-                                <p className="mt-2 text-2xl font-black text-ink">
-                                    Unlimited <span className="text-xs font-normal text-subtle">costings & qualities</span>
+                                <p className="mt-3 text-2xl font-black tracking-tight text-ink">
+                                    Unlimited <span className="text-xs font-medium text-subtle">costings & qualities</span>
                                 </p>
-                                <p className="mt-1 text-xs text-subtle">
+                                <p className="mt-1.5 text-xs leading-relaxed text-subtle">
                                     Complete textile costing desk with reusable saved qualities and live Rate Book yarn linking.
                                 </p>
                             </div>
 
                             {/* Card 2: Saved Costings / Connected Production */}
-                            <div className="rounded-xl border border-hairline bg-surface-soft/70 p-4 transition-colors hover:bg-surface-soft">
+                            <div className="rounded-xl border border-hairline bg-surface p-5 transition-all hover:border-hairline-strong shadow-xs">
                                 <div className="flex items-center gap-2 text-xs font-bold text-ink">
-                                    {isBaseWorkspace ? <Zap className="h-4 w-4 text-info" /> : <FileText className="h-4 w-4 text-info" />}
+                                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-info-soft text-info">
+                                        {isBaseWorkspace ? <Zap className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
+                                    </span>
                                     <span>{isBaseWorkspace ? 'Connected Production' : 'Saved Costings'}</span>
                                 </div>
-                                <p className="mt-2 text-2xl font-black text-ink">
-                                    {isBaseWorkspace ? 'Full Access' : 'Unlimited'} <span className="text-xs font-normal text-subtle">{isBaseWorkspace ? 'job cards & looms' : 'view, recalculate & export'}</span>
+                                <p className="mt-3 text-2xl font-black tracking-tight text-ink">
+                                    {isBaseWorkspace ? 'Full Access' : 'Unlimited'} <span className="text-xs font-medium text-subtle">{isBaseWorkspace ? 'job cards & looms' : 'view, recalculate & export'}</span>
                                 </p>
-                                <p className="mt-1 text-xs text-subtle">
+                                <p className="mt-1.5 text-xs leading-relaxed text-subtle">
                                     {isBaseWorkspace
                                         ? 'Track planned vs produced metres, shift logs, machine maintenance, and job dispatches.'
                                         : 'Permanent costing records retained. Reopen to recalculate or export PDF sheets.'}
@@ -509,19 +513,21 @@ export default async function BillingPage({
                             </div>
 
                             {/* Card 3: Plan Status & Renewal */}
-                            <div className="rounded-xl border border-hairline bg-surface-soft/70 p-4 transition-colors hover:bg-surface-soft">
+                            <div className="rounded-xl border border-hairline bg-surface p-5 transition-all hover:border-hairline-strong shadow-xs">
                                 <div className="flex items-center gap-2 text-xs font-bold text-ink">
-                                    <CreditCard className="h-4 w-4 text-saffron-deep" />
+                                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-saffron-soft text-saffron-deep">
+                                        <CreditCard className="h-4 w-4" />
+                                    </span>
                                     <span>Plan Status</span>
                                 </div>
-                                <p className="mt-2 text-2xl font-black text-ink">
+                                <p className="mt-3 text-2xl font-black tracking-tight text-ink">
                                     {isLiteWorkspace ? 'Lite Tier' : isBaseWorkspace ? 'Base Tier' : isLegacyWorkspace ? 'Legacy' : 'Active'}{' '}
-                                    <span className="text-xs font-normal text-subtle">annual access</span>
+                                    <span className="text-xs font-medium text-subtle">annual access</span>
                                 </p>
                                 {canRenew && selfServeActiveTier && activeRenewalPrice ? (
-                                    <div className="mt-2 space-y-2">
-                                        <p className="text-xs text-body">
-                                            Renew {getBillingPlan(selfServeActiveTier).name} for {formatAmount(activeRenewalPrice.totalPaise)}.
+                                    <div className="mt-3 space-y-2">
+                                        <p className="text-xs font-medium text-body">
+                                            Renew {getBillingPlan(selfServeActiveTier).name} for <span className="font-bold text-ink">{formatAmount(activeRenewalPrice.totalPaise)}</span>.
                                         </p>
                                         <p className="text-[11px] text-subtle">GST included · manual annual renewal</p>
                                         {billingReadiness.canCreateOrder ? (
@@ -532,22 +538,22 @@ export default async function BillingPage({
                                                 buttonLabel={`Renew for ${formatAmount(activeRenewalPrice.totalPaise)}`}
                                                 successHref="/owner/billing"
                                                 successLabel="View payment history"
-                                                className="w-full text-xs py-2 h-auto"
+                                                className="w-full text-xs py-2.5 h-auto rounded-xl bg-loom text-white hover:bg-loom-elevated font-bold shadow-xs transition-colors"
                                             />
                                         ) : (
                                             <p className="text-[11px] text-warning font-semibold">{billingReadiness.publicMessage}</p>
                                         )}
                                     </div>
                                 ) : renewalIsUpcoming && subscription?.current_end ? (
-                                    <p className="mt-1 text-xs text-subtle">
+                                    <p className="mt-1.5 text-xs text-subtle">
                                         Renewal opens on {formatShortDate(renewalEligibleAt)}. GST included · manual annual renewal.
                                     </p>
                                 ) : isLiteWorkspace ? (
-                                    <p className="mt-1 text-xs text-subtle">
+                                    <p className="mt-1.5 text-xs text-subtle">
                                         Active annual access. Upgrade to Base anytime for connected loom jobs and piece-rate payroll.
                                     </p>
                                 ) : (
-                                    <p className="mt-1 text-xs text-subtle">
+                                    <p className="mt-1.5 text-xs text-subtle">
                                         Active annual access. Full connected factory, loom monitoring, and piece-rate worker payroll.
                                     </p>
                                 )}
@@ -564,9 +570,9 @@ export default async function BillingPage({
                         Available Plans & Upgrades
                     </h3>
                 </div>
-                <Card className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 p-6 border-hairline bg-surface shadow-[var(--shadow-card)]">
+                <Card className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 p-6 rounded-2xl border-hairline bg-surface shadow-xs">
                     <div className="flex items-start gap-4">
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-saffron/15 text-saffron-deep">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-loom text-saffron shadow-xs">
                             <Sparkles className="h-6 w-6" aria-hidden="true" />
                         </div>
                         <div>
@@ -574,7 +580,7 @@ export default async function BillingPage({
                                 <h2 className="text-lg font-bold tracking-tight text-ink">Choose your plan</h2>
                                 <Link
                                     href="/plans?from=billing"
-                                    className="inline-flex items-center rounded-full bg-saffron-soft px-2.5 py-0.5 text-[11px] font-bold text-saffron-deep hover:bg-saffron/25 transition-colors cursor-pointer"
+                                    className="inline-flex items-center rounded-full bg-saffron-soft border border-saffron/20 px-2.5 py-0.5 text-[11px] font-bold text-saffron-deep hover:bg-saffron/25 transition-colors cursor-pointer"
                                     title="Open standalone plan comparison page"
                                 >
                                     <span>
@@ -591,7 +597,7 @@ export default async function BillingPage({
                             </p>
                         </div>
                     </div>
-                    <Button asChild variant="saffron" className="shrink-0 font-semibold gap-2 px-5 py-2.5 h-auto text-sm" size="default">
+                    <Button asChild className="shrink-0 rounded-xl bg-loom font-bold text-white hover:bg-loom-elevated gap-2 px-5 py-2.5 h-auto text-sm shadow-xs transition-colors" size="default">
                         <Link href="/plans?from=billing">
                             <span>Explore plans</span>
                             <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -610,13 +616,13 @@ export default async function BillingPage({
                         Billing & Invoices
                     </h3>
                 </div>
-                <div className="rounded-xl border border-hairline bg-surface p-1 shadow-[var(--shadow-card)]">
+                <div className="rounded-2xl border border-hairline bg-surface p-1 shadow-xs">
                     <PaymentHistoryDialog entries={billingHistoryEntries} />
                 </div>
             </section>
 
             {/* 4. Referral Rewards Section */}
-            <details className="group overflow-hidden rounded-xl border border-hairline bg-surface shadow-xs">
+            <details className="group overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs">
                 <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-5 py-3.5 text-sm font-semibold text-ink hover:bg-surface-soft [&::-webkit-details-marker]:hidden">
                     Referral rewards
                     <ChevronDown className="h-4 w-4 text-subtle transition-transform group-open:rotate-180" />
@@ -630,7 +636,7 @@ export default async function BillingPage({
 
             {/* 5. Value Proposition Highlights */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <div className="flex items-start gap-3.5 rounded-2xl border border-hairline bg-surface p-5 shadow-[var(--shadow-card)]">
+                <div className="flex items-start gap-3.5 rounded-2xl border border-hairline bg-surface p-5 shadow-xs">
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-saffron-soft text-saffron-deep">
                         <Zap className="h-5 w-5" />
                     </span>
@@ -642,7 +648,7 @@ export default async function BillingPage({
                     </div>
                 </div>
 
-                <div className="flex items-start gap-3.5 rounded-2xl border border-hairline bg-surface p-5 shadow-[var(--shadow-card)]">
+                <div className="flex items-start gap-3.5 rounded-2xl border border-hairline bg-surface p-5 shadow-xs">
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-info-soft text-info">
                         <CreditCard className="h-5 w-5" />
                     </span>
@@ -654,7 +660,7 @@ export default async function BillingPage({
                     </div>
                 </div>
 
-                <div className="flex items-start gap-3.5 rounded-2xl border border-hairline bg-surface p-5 shadow-[var(--shadow-card)]">
+                <div className="flex items-start gap-3.5 rounded-2xl border border-hairline bg-surface p-5 shadow-xs">
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-success-soft text-success">
                         <ShieldCheck className="h-5 w-5" />
                     </span>
@@ -668,7 +674,7 @@ export default async function BillingPage({
             </div>
 
             {/* 6. Trust & Policy Footer Banner */}
-            <div className="flex items-center justify-center gap-2 rounded-xl border border-hairline bg-surface-soft p-3.5 text-center shadow-xs">
+            <div className="flex items-center justify-center gap-2 rounded-xl border border-hairline bg-surface-soft/60 p-3.5 text-center shadow-xs">
                 <Lock className="h-4 w-4 text-subtle" aria-hidden="true" />
                 <p className="text-xs font-medium text-body">
                     Secure Razorpay payment gateway · Transparent flat pricing · No lock-in, cancel or upgrade anytime

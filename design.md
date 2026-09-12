@@ -12,14 +12,55 @@ The product has three related surfaces:
 - **Auth:** same warm brand system, centered panel, calm onboarding/login flow.
 - **Landing:** sharper marketing contrast with white/zinc/orange, bold editorial type, and product mockups.
 
-## Design Principles
+## Global Premium Design Principles
 
-- **Factory-first utility:** screens should answer “what needs action?” quickly.
-- **Dense but readable:** use compact spacing and strong grouping, especially for owner/supervisor workflows.
-- **Mobile floor usage:** assume supervisors use the app on phones, sometimes as an installed PWA.
-- **Status over decoration:** badges, strips, counts, and icon cues should communicate state.
-- **Warm industrial brand:** use saffron/orange as the brand accent, balanced by loom navy/ink, canvas, ledger, and cotton tones.
-- **Accessible touch targets:** key actions should be at least `40px` high; mobile bottom nav and form inputs must remain easy to tap.
+This core framework governs all visual and interaction design across Weavly. The goal is not to add more UI, but to create a system that feels intentional, restrained, and recognizable as Weavly.
+
+1. **Brand Character: Warm Industrial**: Warm cream + charcoal/loom navy + saffron + quiet industrial structure. Avoid becoming generic white + gray + blue SaaS.
+2. **Content Must Dominate the Background**: Content and workflows come first; controls second; branded background canvas atmosphere third. Use opaque surfaces (`bg-surface`) to calm dense data.
+3. **Use One Primary Surface Per Workflow**: Avoid excessive cardization (`card > card > card > badge`). Toolbar + register + list live in one unified container.
+4. **Typography Before Decoration**: Establish hierarchy through font size, weight, spacing, and alignment before reaching for badges, borders, or shadows.
+5. **Saffron Is Precious**: Saffron is our strongest brand signal. Reserve it for brand anchors, selected indicators, and meaningful accents. Never use it everywhere.
+6. **Structural Actions Use Dark Navy**: Primary operational CTAs (`+ Add worker`, `+ Add machine`, `Save costing`, `Create dispatch`) use dark ink/navy (`loom`/`ink`), keeping saffron special.
+7. **Minimize Filled Badges**: Use plain typography (`Rapier`, `Day shift`, `Piece rate`) unless strong status or categorization is strictly needed.
+8. **Shadows Should Be Almost Invisible**: Rely on hairline borders (`border-hairline`) and very soft ambient shadows (`shadow-xs`). No dramatic drop shadows or glowing cards.
+9. **Standardize Radius**: Controls: `8px` (`rounded-lg`/`rounded-md`), Primary panels: `12–14px` (`rounded-xl`/`rounded-2xl`), Pills: `full` (`rounded-full`).
+10. **Standardize Control Height**: `40–44px` on desktop (`h-10`/`h-11`), `44px` minimum mobile touch target.
+11. **Standardize Spacing**: Use the fixed scale: `4, 8, 12, 16, 24, 32, 48px`. Avoid arbitrary values. Standard relationship: Title → `4px` → Subtitle → `24px` → Primary surface.
+12. **Keep Page Headers Consistent**: `Page title + short explanation` on the left, `Primary dark action` on the right.
+13. **Avoid Dashboardification**: No unnecessary KPI cards just to fill empty space. Only show metrics that directly advance the page's workflow.
+14. **Operational Pages Should Be Dense but Calm**: Prioritize fast scanning, predictable columns, familiar control placement, and visible actions over airy decorative trends.
+15. **Explicit Actions Beat Mystery Interactions**: Show explicit action buttons (`Edit`, `View`); do not rely on whole-row clicks or hover discoveries.
+16. **Avoid Unnecessary `...` Menus**: Don't hide 1 or 2 obvious actions behind overflow menus purely for aesthetics.
+17. **Use Icons as Anchors, Not Decoration**: Icons assist recognition; avoid multiple icons per row or illustrations everywhere.
+18. **Controls Must Never Look Browser-Native**: Shared styled inputs, custom selects, checkboxes, and radio buttons across all browsers.
+19. **Build Shared Primitives, Not Giant Abstractions**: Reusable focused primitives (`PageHeader`, `PrimaryButton`, `SearchInput`, `FilterSelect`, `RegisterSurface`, `EmptyState`, `SkeletonRow`). Keep domain behavior local.
+20. **Every Surface Needs Complete States**: Design `loading`, `loaded`, `empty`, `no-results`, and `error` states for every data-driven view.
+21. **Responsive Means Recompose, Not Shrink**: Rearrange desktop columns into stacked mobile hierarchies (`Identity + Status` → `Metadata` → `Actions`), not compressed tables.
+22. **Design for Gujarati and Hindi From the Start**: Fluid widths and text wrapping so translated phrases never break or truncate awkwardly.
+23. **Keep Animations Restrained**: Functional motion only (`120–200ms`) for menus, dialogs, disclosures, and focus feedback.
+24. **Maintain a Clear Color Hierarchy**: Navy/charcoal for structure/actions; warm cream/white for surfaces; saffron for brand; warm gray for hairline borders; semantic colors for actual status only.
+25. **Premium Does Not Mean More UI**: Before adding anything, ask: *Does this improve comprehension, task speed, or confidence?* If no, remove it. *Fewer elements, better resolved.*
+
+### Agent-Level Design Review Checklist
+
+Before considering any page or component complete:
+- [ ] Does the actual workflow visually dominate the background?
+- [ ] Is there one clear primary surface?
+- [ ] Are there unnecessary nested cards?
+- [ ] Are there too many badges?
+- [ ] Is saffron being overused?
+- [ ] Are primary actions dark and consistent?
+- [ ] Do all form controls look like Weavly controls?
+- [ ] Are radius and spacing values consistent?
+- [ ] Is typography doing enough hierarchy work?
+- [ ] Are there unnecessary KPI cards?
+- [ ] Are row actions explicit?
+- [ ] Does the page have loading/empty/no-results/error states?
+- [ ] Does mobile recompose properly?
+- [ ] Does the page work in English, Hindi, and Gujarati?
+- [ ] Could any decorative element be removed without reducing usability?
+*(Central Rule: If removing something makes the page cleaner without hurting usability, remove it).*
 
 ## Typography
 

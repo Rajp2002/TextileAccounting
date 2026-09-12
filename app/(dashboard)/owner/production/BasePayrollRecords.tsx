@@ -220,13 +220,13 @@ export default function BasePayrollRecords({
                 </Card>
             ) : selectedPeriod ? (
                 <>
-                    <Card>
+                    <Card className="rounded-2xl border border-hairline bg-surface shadow-xs">
                         <CardContent className="flex flex-col gap-3 py-4 lg:flex-row lg:items-end lg:justify-between">
                             <div className="grid flex-1 gap-3 sm:grid-cols-2">
                                 <div className="space-y-1.5">
                                     <label className="text-xs font-semibold text-body" htmlFor="payroll-history-period">Pay period</label>
                                     <Select value={selectedPeriod.key} onValueChange={(value) => { setSelectedKey(value); setSearch('') }}>
-                                        <SelectTrigger id="payroll-history-period" className="w-full"><SelectValue /></SelectTrigger>
+                                        <SelectTrigger id="payroll-history-period" className="w-full h-10 rounded-xl border border-hairline bg-surface text-sm"><SelectValue /></SelectTrigger>
                                         <SelectContent>
                                             {periods.map((period) => (
                                                 <SelectItem key={period.key} value={period.key}>
@@ -240,13 +240,13 @@ export default function BasePayrollRecords({
                                     <label className="text-xs font-semibold text-body" htmlFor="payroll-history-search">Find worker, machine, or costing</label>
                                     <div className="relative">
                                         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                                        <Input id="payroll-history-search" value={search} onChange={(event) => setSearch(event.target.value)} className="pl-9" placeholder="Search records" />
+                                        <Input id="payroll-history-search" value={search} onChange={(event) => setSearch(event.target.value)} className="h-10 rounded-xl border border-hairline bg-surface pl-9 text-sm text-ink placeholder:text-muted-foreground/70 focus:border-loom-subtle focus:ring-2 focus:ring-loom/10" placeholder="Search records" />
                                     </div>
                                 </div>
                             </div>
                             <div className="flex flex-wrap gap-2">
-                                <Button variant="outline" onClick={exportCsv}><FileSpreadsheet className="h-4 w-4" /> Export CSV</Button>
-                                <Button onClick={() => void exportPdf()} disabled={exportingPdf || selectedPeriod.workers.every(worker => worker.status === 'reversed')}><FileText className="h-4 w-4" /> {exportingPdf ? 'Preparing PDF…' : 'Export PDF'}</Button>
+                                <Button variant="outline" className="h-10 rounded-xl border-hairline bg-surface text-ink shadow-xs hover:border-hairline-strong hover:bg-surface-soft" onClick={exportCsv}><FileSpreadsheet className="h-4 w-4" /> Export CSV</Button>
+                                <Button className="h-10 rounded-xl bg-loom text-white shadow-xs hover:bg-loom-elevated" onClick={() => void exportPdf()} disabled={exportingPdf || selectedPeriod.workers.every(worker => worker.status === 'reversed')}><FileText className="h-4 w-4" /> {exportingPdf ? 'Preparing PDF…' : 'Export PDF'}</Button>
                             </div>
                         </CardContent>
                     </Card>

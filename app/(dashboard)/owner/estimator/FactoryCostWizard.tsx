@@ -745,7 +745,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                                 id="onboarding-yarn-review"
                                                 value={yarnReviewIntervalDays}
                                                 onChange={event => setYarnReviewIntervalDays(parseNumericInput(event.target.value, { min: 1 }) ?? 1)}
-                                                className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm font-bold text-slate-800"
+                                                className="h-11 w-full rounded-xl border border-hairline bg-surface px-3 text-sm font-semibold text-ink shadow-2xs focus-visible:border-saffron focus-visible:ring-saffron cursor-pointer"
                                             >
                                                 <option value={30}>Every 30 days</option>
                                                 <option value={60}>Every 60 days</option>

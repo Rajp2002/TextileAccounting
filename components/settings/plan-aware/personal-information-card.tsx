@@ -105,12 +105,14 @@ export function PersonalInformationCard({
     return (
         <section
             aria-labelledby="personal-info-heading"
-            className="rounded-2xl border border-hairline bg-[#FCFCFC] p-6 shadow-sm dark:bg-[#1A1A1A] sm:p-8"
+            className="rounded-2xl border border-hairline bg-surface p-6 shadow-xs sm:p-8"
         >
             <div className="flex flex-wrap items-start justify-between gap-2 border-b border-hairline/80 pb-4">
                 <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                        <User className="h-5 w-5 text-saffron" aria-hidden="true" />
+                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-saffron-soft text-saffron-deep">
+                            <User className="h-4 w-4" aria-hidden="true" />
+                        </span>
                         <h2 id="personal-info-heading" className="text-lg font-bold tracking-tight text-ink">
                             {tx('Personal information')}
                         </h2>
@@ -140,7 +142,7 @@ export function PersonalInformationCard({
                             disabled={isSubmitting}
                             aria-invalid={!!fieldError}
                             aria-describedby={fieldError ? nameErrorId : undefined}
-                            className="h-11 border-hairline bg-surface/90 text-sm focus-visible:border-saffron"
+                            className="h-11 rounded-xl border-hairline bg-surface text-sm focus-visible:border-loom"
                             placeholder={tx('Enter your full name')}
                             autoComplete="name"
                         />
@@ -165,10 +167,10 @@ export function PersonalInformationCard({
                                     onClick={() => handleLanguageChange(lang.code)}
                                     aria-pressed={language === lang.code}
                                     disabled={languageStatus === 'loading'}
-                                    className={`min-h-11 min-w-[80px] rounded-lg border px-3.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/40 ${
+                                    className={`min-h-11 min-w-[80px] rounded-xl border px-3.5 text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-loom/40 ${
                                         language === lang.code
-                                            ? 'border-saffron bg-saffron-soft/70 text-saffron-deep dark:bg-saffron/20'
-                                            : 'border-hairline bg-surface hover:bg-muted text-ink'
+                                            ? 'border-loom bg-loom text-white shadow-xs'
+                                            : 'border-hairline bg-surface hover:bg-surface-soft text-body'
                                     }`}
                                 >
                                     {lang.label}
@@ -197,7 +199,7 @@ export function PersonalInformationCard({
                                 </span>
                             )}
                         </div>
-                        <div className="flex min-h-11 items-center rounded-lg border border-hairline bg-surface-soft/60 px-3.5 py-2 text-sm text-ink break-all select-all">
+                        <div className="flex min-h-11 items-center rounded-xl border border-hairline bg-surface-soft/60 px-3.5 py-2 text-sm text-ink break-all select-all">
                             {email || tx('Not provided')}
                         </div>
                         <p className="text-xs text-muted-foreground">
@@ -210,7 +212,7 @@ export function PersonalInformationCard({
                         <Label className="text-sm font-semibold text-ink">
                             {tx('Account phone')}
                         </Label>
-                        <div className="flex min-h-11 items-center rounded-lg border border-hairline bg-surface-soft/60 px-3.5 py-2 text-sm text-ink select-all">
+                        <div className="flex min-h-11 items-center rounded-xl border border-hairline bg-surface-soft/60 px-3.5 py-2 text-sm text-ink select-all">
                             {phone || tx('Not provided')}
                         </div>
                         <p className="text-xs text-muted-foreground">
@@ -227,16 +229,15 @@ export function PersonalInformationCard({
                             variant="outline"
                             onClick={handleDiscard}
                             disabled={isSubmitting}
-                            className="min-h-11 px-4"
+                            className="min-h-11 rounded-xl px-4 font-medium"
                         >
                             {tx('Discard changes')}
                         </Button>
                     )}
                     <Button
                         type="submit"
-                        variant="saffron"
                         disabled={!isDirty || isSubmitting}
-                        className="min-h-11 px-5 font-semibold"
+                        className="min-h-11 rounded-xl bg-loom px-5 font-bold text-white shadow-xs hover:bg-loom-elevated transition-colors"
                     >
                         {isSubmitting ? (
                             <>

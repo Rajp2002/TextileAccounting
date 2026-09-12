@@ -665,7 +665,7 @@ function SavedQualityLibraryView({
                                                             </Link>
                                                         )}
                                                     </> : <>
-                                                        {!targetRecord.is_archived && !latest.is_archived && group.template?.is_active !== false && <Button variant="saffron" size="sm" onClick={() => onOpen(targetRecord)}><ArrowRight className="h-3.5 w-3.5" /> {tx('Use')}</Button>}
+                                                        {!targetRecord.is_archived && !latest.is_archived && group.template?.is_active !== false && <Button size="sm" onClick={() => onOpen(targetRecord)} className="rounded-lg bg-loom font-medium text-white hover:bg-loom-elevated hover:text-white"><ArrowRight className="h-3.5 w-3.5" /> {tx('Use')}</Button>}
                                                         <Button variant="outline" size="sm" onClick={() => onStartFrom(targetRecord)}><Copy className="h-3.5 w-3.5" /> {tx('Duplicate')}</Button>
                                                         <Button variant="outline" size="sm" onClick={() => onExport(targetRecord)}><Download className="h-3.5 w-3.5" /> {tx('Export')}</Button>
                                                         <Button variant="outline" size="sm" onClick={() => onSaveAsNewQuality(targetRecord)}><BookmarkPlus className="h-3.5 w-3.5" /> {tx('Save as separate quality')}</Button>
@@ -698,7 +698,7 @@ function SavedQualityLibraryView({
                                                             <Button variant="outline" size="sm" onClick={() => onStartFrom(activeRecord)}><Copy className="h-3.5 w-3.5" /> {tx('Duplicate')}</Button>
                                                             <Button variant="outline" size="sm" onClick={() => onExport(activeRecord)}><Eye className="h-3.5 w-3.5" /> {tx('Preview')}</Button>
                                                         </> : <>
-                                                            {!activeRecord.is_archived && group.template?.is_active !== false && <Button variant="saffron" size="sm" onClick={() => onOpen(activeRecord)} disabled={updatingId === activeRecord.id} aria-busy={updatingId === activeRecord.id}><ArrowRight className="h-3.5 w-3.5" /> {tx('Use')}</Button>}
+                                                            {!activeRecord.is_archived && group.template?.is_active !== false && <Button size="sm" onClick={() => onOpen(activeRecord)} disabled={updatingId === activeRecord.id} aria-busy={updatingId === activeRecord.id} className="rounded-lg bg-loom font-medium text-white hover:bg-loom-elevated hover:text-white"><ArrowRight className="h-3.5 w-3.5" /> {tx('Use')}</Button>}
                                                             <Button variant="outline" size="sm" onClick={() => onStartFrom(activeRecord)}><Copy className="h-3.5 w-3.5" /> {tx('Duplicate')}</Button>
                                                             <Button variant="outline" size="sm" onClick={() => onExport(activeRecord)}><Download className="h-3.5 w-3.5" /> {tx('Export')}</Button>
                                                             <Button variant="outline" size="sm" onClick={() => onSaveAsNewQuality(activeRecord)}><BookmarkPlus className="h-3.5 w-3.5" /> {tx('Save as separate quality')}</Button>
@@ -1495,8 +1495,12 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                 title={canUseQuotationWorkflow ? t('common.costings_quotations_title') : t('common.saved_costings_title')}
                 description={canUseQuotationWorkflow ? t('common.costings_quotations_description') : t('common.saved_costings_description')}
                 actions={(
-                    <Button variant="saffron" onClick={() => router.push('/owner/estimator')}>
-                        <Plus className="h-4 w-4" /> {canUseQuotationWorkflow ? t('common.new_estimate') : t('common.new_costing')}
+                    <Button
+                        onClick={() => router.push('/owner/estimator')}
+                        className="h-10 w-full sm:w-auto rounded-xl bg-loom px-4 font-medium text-white shadow-xs transition-all duration-150 hover:bg-loom-elevated hover:text-white motion-safe:hover:-translate-y-0.5 active:scale-[0.98] focus-visible:ring-saffron"
+                    >
+                        <Plus className="h-4 w-4" aria-hidden="true" />
+                        <span>{canUseQuotationWorkflow ? t('common.new_estimate') : t('common.new_costing')}</span>
                     </Button>
                 )}
             />
@@ -1533,7 +1537,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     </div>
                 </div>
             )}
-            {canUseQuotationWorkflow && <Toolbar className="w-full overflow-x-auto p-1">
+            {canUseQuotationWorkflow && <Toolbar className="w-full overflow-x-auto rounded-2xl border border-hairline bg-surface p-1.5 shadow-xs">
                     {['all', 'costings', 'draft', 'sent', 'accepted', 'rejected'].map(s => (
                         <button
                             key={s}
@@ -1541,9 +1545,9 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                 setFilterStatus(s)
                                 router.replace(`/owner/quotes${s !== 'all' ? `?status=${s}` : ''}`)
                             }}
-                            className={`min-h-10 px-4 flex items-center justify-center rounded-lg text-xs font-semibold capitalize whitespace-nowrap transition-colors ${
+                            className={`min-h-10 px-4 flex items-center justify-center rounded-xl text-xs font-semibold capitalize whitespace-nowrap transition-colors ${
                                 filterStatus === s
-                                    ? 'bg-primary text-primary-foreground shadow-[var(--shadow-button)]'
+                                    ? 'bg-loom text-white shadow-xs'
                                     : 'text-body hover:bg-surface-soft hover:text-ink'
                             }`}
                         >
@@ -1552,10 +1556,10 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     ))}
             </Toolbar>}
 
-            <Toolbar data-costing-tour="filters" className="overflow-visible">
+            <Toolbar data-costing-tour="filters" className="overflow-visible rounded-2xl border border-hairline bg-surface shadow-xs p-4">
                     <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(260px,1fr)_auto_auto_auto_auto]">
                         <div className="relative min-w-0">
-                            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
+                            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle/60" />
                             <Label htmlFor="saved-costings-search" className="sr-only">{canUseQuotationWorkflow ? t('common.search_party_quality_costing') : t('common.search_quality_costing')}</Label>
                             <Input
                                 id="saved-costings-search"
@@ -1563,21 +1567,21 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                 onChange={event => setSearchQuery(event.target.value)}
                                 placeholder="Search saved records…"
                                 aria-label={canUseQuotationWorkflow ? 'Search saved qualities, costings, quotations, and party names' : 'Search saved qualities and costings'}
-                                className="h-10 w-full min-w-0 pl-9"
+                                className="h-10 sm:h-11 w-full min-w-0 rounded-xl border-hairline bg-surface pl-10 pr-4 text-sm text-ink placeholder:text-subtle/50 focus-visible:border-saffron focus-visible:ring-saffron"
                             />
                         </div>
                         <details className="group relative z-20">
-                            <summary className="flex h-10 cursor-pointer list-none items-center justify-center gap-2 rounded-md border border-hairline bg-surface px-3 text-sm font-semibold text-ink hover:bg-surface-soft [&::-webkit-details-marker]:hidden">
+                            <summary className="flex h-10 sm:h-11 cursor-pointer list-none items-center justify-center gap-2 rounded-xl border border-hairline bg-surface px-3.5 text-sm font-semibold text-ink hover:bg-surface-soft [&::-webkit-details-marker]:hidden">
                                 Filters{marginFilter !== 'all' ? ' · 1' : ''}
-                                <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" />
+                                <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180 text-subtle/70" />
                             </summary>
-                            <div className="absolute right-0 mt-2 grid w-64 gap-3 rounded-xl border border-hairline bg-surface p-3 shadow-[var(--shadow-card)]">
+                            <div className="absolute right-0 mt-2 grid w-64 gap-3 rounded-xl border border-hairline bg-surface p-3 shadow-xs">
                                 <Label htmlFor="saved-costings-sort" className="text-xs font-semibold text-body">Sort by</Label>
-                                <select id="saved-costings-sort" value={costingSort} onChange={event => setCostingSort(event.target.value as SavedCostingSort)} className="h-10 rounded-md border border-hairline bg-surface px-3 text-sm font-medium text-ink">
+                                <select id="saved-costings-sort" value={costingSort} onChange={event => setCostingSort(event.target.value as SavedCostingSort)} className="h-10 rounded-xl border border-hairline bg-surface px-3 text-sm font-medium text-ink">
                                     <option value="recent">Recently updated</option><option value="oldest">Oldest updated</option><option value="margin_desc">Highest margin</option><option value="cost_asc">Lowest production cost</option>
                                 </select>
                                 <Label htmlFor="saved-costings-margin" className="text-xs font-semibold text-body">Margin</Label>
-                                <select id="saved-costings-margin" value={marginFilter} onChange={event => setMarginFilter(event.target.value as SavedCostingMarginFilter)} className="h-10 rounded-md border border-hairline bg-surface px-3 text-sm font-medium text-ink">
+                                <select id="saved-costings-margin" value={marginFilter} onChange={event => setMarginFilter(event.target.value as SavedCostingMarginFilter)} className="h-10 rounded-xl border border-hairline bg-surface px-3 text-sm font-medium text-ink">
                                     <option value="all">All margins</option><option value="negative">Negative margin</option><option value="under_10">Under 10%</option><option value="10_to_20">10–20%</option><option value="over_20">Over 20%</option>
                                 </select>
                             </div>
@@ -1585,7 +1589,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                         <Button
                             variant={comparisonMode ? 'secondary' : 'outline'}
                             onClick={() => { setComparisonMode(current => !current); setSelectedCostingIds([]) }}
-                            className="h-10"
+                            className="h-10 sm:h-11 rounded-xl"
                             aria-pressed={comparisonMode}
                         >
                             <GitCompareArrows className="h-4 w-4" /> {comparisonMode ? 'Done' : 'Compare'}
@@ -1593,12 +1597,12 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                         <Button
                             variant={showFavoritesOnly ? 'secondary' : 'outline'}
                             onClick={() => { setOpenQualityKey(null); setShowFavoritesOnly(current => !current); setSelectedCostingIds([]) }}
-                            className="h-10"
+                            className="h-10 sm:h-11 rounded-xl"
                             aria-pressed={showFavoritesOnly}
                         >
                             <Star className={`h-4 w-4 ${showFavoritesOnly ? 'fill-current' : ''}`} /> {showFavoritesOnly ? 'All costings' : 'Favourites'}
                         </Button>
-                        <Button variant={showArchived ? 'secondary' : 'outline'} onClick={() => { setOpenQualityKey(null); setShowArchived(current => !current); setSelectedCostingIds([]) }} className="h-10">
+                        <Button variant={showArchived ? 'secondary' : 'outline'} onClick={() => { setOpenQualityKey(null); setShowArchived(current => !current); setSelectedCostingIds([]) }} className="h-10 sm:h-11 rounded-xl">
                             {showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />} {showArchived ? t('common.active') : t('common.archived')}
                         </Button>
                     </div>

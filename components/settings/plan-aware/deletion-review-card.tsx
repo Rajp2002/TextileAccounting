@@ -86,12 +86,14 @@ export function DeletionReviewCard({ organizationName, accountEmail }: DeletionR
             {/* Small neutral card with restrained warning heading and Review deletion... button */}
             <section
                 aria-labelledby="account-deletion-heading"
-                className="rounded-2xl border border-hairline bg-[#FCFCFC] p-6 shadow-sm dark:bg-[#1A1A1A] sm:p-8"
+                className="rounded-2xl border border-hairline bg-surface p-6 shadow-xs sm:p-8"
             >
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                            <Trash2 className="h-4 w-4 text-subtle" aria-hidden="true" />
+                            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-soft text-subtle">
+                                <Trash2 className="h-4 w-4" aria-hidden="true" />
+                            </span>
                             <h2 id="account-deletion-heading" className="text-base font-semibold text-ink">
                                 {tx('Account & factory deletion')}
                             </h2>
@@ -105,7 +107,7 @@ export function DeletionReviewCard({ organizationName, accountEmail }: DeletionR
                         type="button"
                         variant="outline"
                         onClick={() => setReviewOpen(true)}
-                        className="min-h-11 shrink-0 border-hairline text-xs font-semibold hover:border-risk/40 hover:bg-risk/5 hover:text-risk"
+                        className="min-h-11 shrink-0 rounded-xl border border-hairline bg-surface px-4 text-xs font-semibold shadow-xs transition-colors hover:border-risk/40 hover:bg-risk-soft hover:text-risk"
                     >
                         {tx('Review deletion…')}
                     </Button>
@@ -145,7 +147,7 @@ export function DeletionReviewCard({ organizationName, accountEmail }: DeletionR
                                 onChange={e => setEnteredOrgName(e.target.value)}
                                 autoComplete="off"
                                 disabled={pending}
-                                className="h-10 border-hairline text-sm"
+                                className="h-10 rounded-xl border-hairline text-sm"
                                 placeholder={organizationName}
                             />
                         </div>
@@ -162,7 +164,7 @@ export function DeletionReviewCard({ organizationName, accountEmail }: DeletionR
                                 autoComplete="off"
                                 spellCheck={false}
                                 disabled={pending}
-                                className="h-10 border-hairline font-mono text-sm"
+                                className="h-10 rounded-xl border-hairline font-mono text-sm"
                                 placeholder={ACCOUNT_DELETION_CONFIRMATION_PHRASE}
                             />
                         </div>
@@ -174,7 +176,7 @@ export function DeletionReviewCard({ organizationName, accountEmail }: DeletionR
                             variant="outline"
                             onClick={() => handleOpenChange(false)}
                             disabled={pending}
-                            className="min-h-11"
+                            className="min-h-11 rounded-xl"
                         >
                             {tx('Cancel')}
                         </Button>
@@ -183,7 +185,7 @@ export function DeletionReviewCard({ organizationName, accountEmail }: DeletionR
                             variant="destructive"
                             onClick={handleDelete}
                             disabled={!canConfirm || pending}
-                            className="min-h-11 gap-2 font-semibold"
+                            className="min-h-11 rounded-xl gap-2 font-semibold"
                         >
                             {pending ? (
                                 <>

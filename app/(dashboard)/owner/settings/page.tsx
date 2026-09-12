@@ -182,7 +182,7 @@ function SettingsCategory({
     return (
         <div className="space-y-4">
             <div className="flex items-start gap-3 border-b border-hairline/80 pb-3">
-                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-saffron-soft text-saffron-deep">
+                <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-loom text-saffron shadow-xs">
                     <Icon className="h-4 w-4" />
                 </span>
                 <div>
@@ -200,7 +200,7 @@ function SettingsPanel({ id, className, children }: { id?: string; className?: s
         <div
             id={id}
             className={cn(
-                'premium-disclosure-card rounded-xl border border-hairline bg-surface shadow-[var(--shadow-card)]',
+                'premium-disclosure-card rounded-2xl border border-hairline bg-surface shadow-xs',
                 className
             )}
         >
@@ -562,16 +562,16 @@ export default function SettingsPage() {
                                                     if (!selected) updateProductExperienceMutation.mutate(option.value)
                                                 }}
                                                 className={cn(
-                                                    'rounded-xl border p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/40 disabled:cursor-wait disabled:opacity-70',
+                                                    'rounded-2xl border p-5 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-loom/40 disabled:cursor-wait disabled:opacity-70 shadow-xs',
                                                     selected
-                                                        ? 'border-saffron bg-saffron-soft/60'
-                                                        : 'border-hairline bg-canvas/70 hover:border-saffron/50 hover:bg-saffron-soft/25'
+                                                        ? 'border-loom bg-surface ring-1 ring-loom shadow-xs'
+                                                        : 'border-hairline bg-surface hover:border-hairline-strong hover:bg-surface-soft'
                                                 )}
                                             >
                                                 <div className="flex items-center justify-between gap-3">
                                                     <span className="font-semibold text-ink">{tx(option.title)}</span>
                                                     {selected ? (
-                                                        <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-success">
+                                                        <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-success">
                                                             <CheckCircle2 className="h-3 w-3" />
                                                             {tx('Active')}
                                                         </span>
@@ -584,7 +584,7 @@ export default function SettingsPage() {
                                         )
                                     })}
                                 </div>
-                                <p className="mt-4 rounded-lg border border-info/20 bg-info-soft/55 p-3 text-sm leading-relaxed text-info">
+                                <p className="mt-4 rounded-xl border border-info/20 bg-info-soft/40 p-3.5 text-xs font-medium leading-relaxed text-info">
                                     {tx('Existing production and factory records are never deleted. Open the broader operations workspace at any time to use them again.')}
                                 </p>
                             </SettingsPanel>
@@ -623,8 +623,8 @@ export default function SettingsPage() {
                 )}
             />
 
-            <Link href="/install" className="my-4 flex min-h-11 w-fit items-center gap-2 rounded-lg border border-hairline px-4 py-3 text-sm font-semibold hover:bg-muted">
-                <Smartphone className="h-4 w-4" aria-hidden="true" />
+            <Link href="/install" className="my-4 flex min-h-11 w-fit items-center gap-2 rounded-xl border border-hairline bg-surface px-4 py-2.5 text-sm font-semibold text-ink shadow-xs transition-colors hover:bg-surface-soft">
+                <Smartphone className="h-4 w-4 text-subtle" aria-hidden="true" />
                 Install Weavly on desktop or mobile
             </Link>
 
@@ -678,14 +678,14 @@ export default function SettingsPage() {
                                                 setIsEditingName(true)
                                                 setFactoryName(e.target.value)
                                             }}
-                                            className="flex-1 border-hairline bg-canvas/80"
+                                            className="flex-1 rounded-xl border-hairline bg-surface"
                                             placeholder="Enter business name"
                                             disabled={updateNameMutation.isPending}
                                         />
                                         {currentFactoryName !== org?.name && (
                                             <Button
-                                                variant="saffron"
                                                 size="sm"
+                                                className="rounded-xl bg-loom font-semibold text-white shadow-xs hover:bg-loom-elevated"
                                                 onClick={() => updateNameMutation.mutate(currentFactoryName)}
                                                 disabled={updateNameMutation.isPending}
                                             >
@@ -697,7 +697,7 @@ export default function SettingsPage() {
 
                                 {hasPremium && <div className="mt-5 space-y-3">
                                     <Label>Factory join code</Label>
-                                    <div className="rounded-lg border border-info/20 bg-info-soft/55 p-4">
+                                    <div className="rounded-xl border border-info/20 bg-info-soft/40 p-4">
                                         <div className="flex flex-wrap items-center gap-3">
                                             <p className="min-w-[150px] flex-1 truncate font-mono text-2xl font-bold tracking-[0.26em] text-info">
                                                 {org?.join_code || '—'}
@@ -706,7 +706,7 @@ export default function SettingsPage() {
                                                 <Button
                                                     variant="outline"
                                                     size="sm"
-                                                    className="border-info/25 bg-surface text-info hover:bg-info-soft"
+                                                    className="rounded-lg border-info/30 bg-surface text-xs font-semibold text-info hover:bg-info-soft"
                                                     onClick={copyJoinCode}
                                                     disabled={!org?.join_code}
                                                 >
@@ -718,7 +718,7 @@ export default function SettingsPage() {
                                                         <Button
                                                             variant="outline"
                                                             size="sm"
-                                                            className="border-saffron/30 bg-surface text-saffron-deep hover:bg-saffron-soft"
+                                                            className="rounded-lg border-hairline bg-surface text-xs font-semibold text-ink hover:bg-surface-soft"
                                                         >
                                                             <RefreshCw className="h-3.5 w-3.5" />
                                                             Regenerate
@@ -734,12 +734,12 @@ export default function SettingsPage() {
                                                                 This will invalidate the current code immediately. Any supervisor currently signing up with the old code will need the new one.
                                                             </DialogDescription>
                                                         </DialogHeader>
-                                                        <DialogFooter>
-                                                            <Button variant="outline" onClick={() => setRegenerateDialogOpen(false)}>
+                                                        <DialogFooter className="gap-2 sm:gap-0">
+                                                            <Button variant="outline" className="rounded-xl" onClick={() => setRegenerateDialogOpen(false)}>
                                                                 Cancel
                                                             </Button>
                                                             <Button
-                                                                variant="saffron"
+                                                                className="rounded-xl bg-loom text-white hover:bg-loom-elevated font-semibold shadow-xs"
                                                                 disabled={regenerateMutation.isPending}
                                                                 onClick={() => regenerateMutation.mutate()}
                                                             >
@@ -829,16 +829,16 @@ export default function SettingsPage() {
                                                         if (!selected) updateProductExperienceMutation.mutate(option.value)
                                                     }}
                                                     className={cn(
-                                                        'rounded-xl border p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/40 disabled:cursor-wait disabled:opacity-70',
+                                                        'rounded-2xl border p-5 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-loom/40 disabled:cursor-wait disabled:opacity-70 shadow-xs',
                                                         selected
-                                                            ? 'border-saffron bg-saffron-soft/60'
-                                                            : 'border-hairline bg-canvas/70 hover:border-saffron/50 hover:bg-saffron-soft/25'
+                                                            ? 'border-loom bg-surface ring-1 ring-loom shadow-xs'
+                                                            : 'border-hairline bg-surface hover:border-hairline-strong hover:bg-surface-soft'
                                                     )}
                                                 >
                                                     <div className="flex items-center justify-between gap-3">
                                                         <span className="font-semibold text-ink">{tx(option.title)}</span>
                                                         {selected ? (
-                                                            <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-success">
+                                                            <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-success">
                                                                 <CheckCircle2 className="h-3 w-3" />
                                                                 {tx('Active')}
                                                             </span>
@@ -851,7 +851,7 @@ export default function SettingsPage() {
                                             )
                                         })}
                                     </div>
-                                    <p className="mt-4 rounded-lg border border-info/20 bg-info-soft/55 p-3 text-sm leading-relaxed text-info">
+                                    <p className="mt-4 rounded-xl border border-info/20 bg-info-soft/40 p-3.5 text-xs font-medium leading-relaxed text-info">
                                         {tx('Existing production and factory records are never deleted. Open the broader operations workspace at any time to use them again.')}
                                     </p>
                                 </SettingsPanel>
@@ -1004,20 +1004,20 @@ export default function SettingsPage() {
                             <h3 className="text-base font-semibold text-ink">Useful Actions</h3>
                         </div>
                         <div className="mt-4 space-y-2">
-                            <Button variant="outline" className="w-full justify-start" onClick={copyJoinCode} disabled={!org?.join_code}>
+                            <Button variant="outline" className="w-full justify-start rounded-xl" onClick={copyJoinCode} disabled={!org?.join_code}>
                                 <Copy className="h-4 w-4" />
                                 Copy Join Code
                             </Button>
                             <a
                                 href="#security-team"
-                                className="flex min-h-10 items-center gap-2 rounded-lg border border-hairline bg-surface px-3 text-sm font-semibold text-ink shadow-xs transition-colors hover:bg-surface-soft"
+                                className="flex min-h-10 items-center gap-2 rounded-xl border border-hairline bg-surface px-3.5 py-2 text-sm font-semibold text-ink shadow-xs transition-colors hover:bg-surface-soft"
                             >
                                 <KeyRound className="h-4 w-4" />
                                 Generate Access Code
                             </a>
                             <a
                                 href="#cost-profile"
-                                className="flex min-h-10 items-center gap-2 rounded-lg border border-hairline bg-surface px-3 text-sm font-semibold text-ink shadow-xs transition-colors hover:bg-surface-soft"
+                                className="flex min-h-10 items-center gap-2 rounded-xl border border-hairline bg-surface px-3.5 py-2 text-sm font-semibold text-ink shadow-xs transition-colors hover:bg-surface-soft"
                             >
                                 <SlidersHorizontal className="h-4 w-4" />
                                 Review Cost Defaults
@@ -1032,15 +1032,15 @@ export default function SettingsPage() {
                         </div>
                         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{tx('Your Weavly costing workspace includes reusable Fabric Qualities, saved Cost Estimates, configurable Cost Estimate defaults, Rate Book references, and persistent account data.')}</p>
                         <div className="mt-4 space-y-2">
-                            <Link href="/owner/billing" className="flex min-h-10 items-center gap-2 rounded-lg border border-hairline bg-surface px-3 text-sm font-semibold text-ink shadow-xs transition-colors hover:bg-surface-soft">
+                            <Link href="/owner/billing" className="flex min-h-10 items-center gap-2 rounded-xl border border-hairline bg-surface px-3.5 py-2 text-sm font-semibold text-ink shadow-xs transition-colors hover:bg-surface-soft">
                                 <CreditCard className="h-4 w-4" />
                                 Subscription & Billing
                             </Link>
-                            <Link href="/owner/quotes" className="flex min-h-10 items-center gap-2 rounded-lg border border-hairline bg-surface px-3 text-sm font-semibold text-ink shadow-xs transition-colors hover:bg-surface-soft">
+                            <Link href="/owner/quotes" className="flex min-h-10 items-center gap-2 rounded-xl border border-hairline bg-surface px-3.5 py-2 text-sm font-semibold text-ink shadow-xs transition-colors hover:bg-surface-soft">
                                 <ShieldCheck className="h-4 w-4" />
                                  Saved Cost Estimates
                             </Link>
-                            <Link href="/forgot-password" className="flex min-h-10 items-center gap-2 rounded-lg border border-hairline bg-surface px-3 text-sm font-semibold text-ink shadow-xs transition-colors hover:bg-surface-soft">
+                            <Link href="/forgot-password" className="flex min-h-10 items-center gap-2 rounded-xl border border-hairline bg-surface px-3.5 py-2 text-sm font-semibold text-ink shadow-xs transition-colors hover:bg-surface-soft">
                                 <KeyRound className="h-4 w-4" />
                                 Password & Security
                             </Link>

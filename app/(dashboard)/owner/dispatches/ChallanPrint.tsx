@@ -8,17 +8,22 @@ export default function ChallanPrint({ d }: { d: Challan }) {
             className="challan-print-root bg-white p-6 text-black"
         >
             <style>{`@page { size: A4; margin: 14mm; } @media print { body:has(.challan-print-root) *:not(.challan-print-root):not(.challan-print-root *):not(:has(.challan-print-root)) { display:none!important; } *:has(.challan-print-root) { display:block!important; position:static!important; overflow:visible!important; height:auto!important; min-height:0!important; width:auto!important; margin:0!important; padding:0!important; transform:none!important; } .challan-print-root { position:static;width:100%;padding:0; } .no-print,.no-print * {display:none!important;} .challan-copy {break-after:page;} .challan-copy:last-child {break-after:auto;} table{width:100%;border-collapse:collapse;} thead {display:table-header-group;} tr,.signature {break-inside:avoid;} } .challan-copy {max-width:180mm;margin:0 auto 30px;font:12px/1.5 Arial,sans-serif;overflow-wrap:anywhere;} .challan-copy td,.challan-copy th {border:1px solid #ccc;padding:6px;text-align:left;} .challan-copy h1 {font-size:24px;font-weight:700;} .challan-copy h2 {font-size:14px;font-weight:700;} `}</style>
-            <div className="no-print mx-auto mb-6 max-w-3xl space-y-2">
-                <PrintButton />
-                <p>
-                    Choose “Save as PDF” in the print destination to download.
-                    Three labelled copies are included.
-                </p>
-                <p>
-                    This delivery record does not replace a tax invoice or e-way
-                    bill where required. Tax details below are entered
-                    references; this app does not calculate or file GST.
-                </p>
+            <div className="no-print mx-auto mb-6 max-w-3xl space-y-3 rounded-2xl border border-hairline bg-surface p-5 shadow-xs">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <PrintButton />
+                    <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Print Preview · 3 Copies</span>
+                </div>
+                <div className="space-y-1 text-xs text-body leading-relaxed border-t border-hairline pt-3">
+                    <p>
+                        Choose “Save as PDF” in the print destination to download.
+                        Three labelled copies are included.
+                    </p>
+                    <p className="text-muted-foreground">
+                        This delivery record does not replace a tax invoice or e-way
+                        bill where required. Tax details below are entered
+                        references; this app does not calculate or file GST.
+                    </p>
+                </div>
             </div>
             {[
                 'Original — Consignee',
