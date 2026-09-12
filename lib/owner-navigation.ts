@@ -1,4 +1,5 @@
 import { Archive, BarChart3, Calculator, ClipboardList, CreditCard, DollarSign, Factory, FileText, HandCoins, Package, Settings, SlidersHorizontal, Store, Tags, Truck, Users, Warehouse, Wrench, type LucideIcon } from 'lucide-react'
+import { resolveStockKind } from './stock-navigation'
 import { hasCapability, type PlanCapability, type SubscriptionTier } from './subscription-access'
 import { isWorkflowVisible, type ProductionMode, type WorkflowKey } from './production-mode'
 
@@ -15,7 +16,7 @@ const baseWorkflow = ({ tier, productionMode }: Context) => hasCapability(tier, 
 const capability = (value: PlanCapability) => ({ tier }: Context) => hasCapability(tier, value)
 const legacy = (workflow: WorkflowKey) => ({ tier, productionMode }: Context) => hasCapability(tier, 'legacy_full_suite') && isWorkflowVisible(productionMode, workflow)
 function item(id: string, name: string, path: string, icon: LucideIcon, section: OwnerNavigationItem['section'], order: number, allowed: OwnerNavigationItem['allowed'], freePath?: string): OwnerNavigationItem {
- return { id, name, translationKey: `navigation.${id}`, route: ({ tier }) => tier === 'free' && freePath ? freePath : hasCapability(tier, 'legacy_full_suite') && id === 'machines' ? '/owner/machines' : hasCapability(tier, 'legacy_full_suite') && id === 'workers' ? '/owner/fixed-workers' : path, icon, section, order, active: ownerRouteActive, allowed }
+ return { id, name, translationKey: `navigation.${id}`, route: ({ tier }) => tier === 'free' && freePath ? freePath : hasCapability(tier, 'legacy_full_suite') && id === 'machines' ? '/owner/machines' : hasCapability(tier, 'legacy_full_suite') && id === 'workers' ? '/owner/fixed-workers' : path, icon, section, order, active: id === 'stock' ? pathname => resolveStockKind(pathname) !== null : ownerRouteActive, allowed }
 }
 export const ownerNavigation: OwnerNavigationItem[] = [
  item('estimate', 'Cost Estimate', '/owner/estimator', Calculator, 'costing', 0, capability('estimator'), '/free'),
@@ -23,7 +24,7 @@ export const ownerNavigation: OwnerNavigationItem[] = [
  item('rates', 'Yarn Rate Book', '/owner/rates', Tags, 'costing', 2, capability('rate_book')),
  item('production', 'Production', '/owner/production', ClipboardList, 'production_stock', 0, baseWorkflow),
  item('assignments', 'Machine Assignments', '/owner/assignments', SlidersHorizontal, 'production_stock', 1, baseWorkflow),
- item('stock', 'Godown Stock', '/owner/stock', Warehouse, 'production_stock', 2, ({tier, productionMode}) => hasCapability(tier, 'legacy_full_suite') ? isWorkflowVisible(productionMode, 'stock') : hasCapability(tier, 'production')),
+ item('stock', 'Stock', '/owner/stock', Warehouse, 'production_stock', 2, ({tier, productionMode}) => hasCapability(tier, 'legacy_full_suite') ? isWorkflowVisible(productionMode, 'stock') : hasCapability(tier, 'production')),
  item('dispatches', 'Dispatches', '/owner/dispatches', Truck, 'production_stock', 3, ({tier, productionMode}) => hasCapability(tier, 'legacy_full_suite') ? isWorkflowVisible(productionMode, 'dispatches') : hasCapability(tier, 'production')),
  item('machines', 'Machines', '/owner/machines?register=base', Wrench, 'production_stock', 4, ({ tier, productionMode }) => hasCapability(tier, 'legacy_full_suite') ? isWorkflowVisible(productionMode, 'looms') : hasCapability(tier, 'production_management')),
  item('workers', 'Workers', '/owner/workers', Users, 'workforce', 0, ({ tier, productionMode }) => hasCapability(tier, 'legacy_full_suite') ? isWorkflowVisible(productionMode, 'workers') : hasCapability(tier, 'production_management')),
