@@ -37,7 +37,7 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
         redirect('/free')
     }
     return (
-        <div className="relative isolate min-h-screen overflow-x-hidden bg-background" data-owner-shell>
+        <div className="relative isolate min-h-svh overflow-x-hidden bg-background" data-owner-shell>
             <BrandBackground />
             <a href="#owner-main" className="sr-only fixed left-3 top-3 z-[100] rounded bg-surface p-3 text-ink focus:not-sr-only">Skip to content</a>
 
@@ -45,8 +45,8 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
                 <OwnerSidebarBoundary />
             </Suspense>
 
-            <div className="relative z-10 min-w-0 pb-[calc(72px+env(safe-area-inset-bottom,0px))] px-safe md:!pl-[248px] md:pr-0 md:pb-0">
-                <main id="owner-main" tabIndex={-1} className="dashboard-main mx-auto min-h-screen w-full min-w-0 max-w-7xl px-2 pb-4 pt-[calc(1rem+env(safe-area-inset-top,0px))] xs:px-3 md:px-6 md:py-6 lg:px-8">
+            <div className="mobile-workspace-content relative z-10 min-w-0 px-safe">
+                <main id="owner-main" tabIndex={-1} className="dashboard-main mx-auto min-h-svh w-full min-w-0 max-w-7xl px-3 pb-5 pt-[calc(1rem+env(safe-area-inset-top,0px))] xs:px-4 md:px-6 md:py-6 lg:px-8">
                     <Suspense fallback={<OwnerRouteLoading />}>
                         <OwnerRouteBoundary>{children}</OwnerRouteBoundary>
                     </Suspense>
@@ -165,7 +165,7 @@ async function OwnerSidebarBoundary() {
 function OwnerSidebarLoading() {
     return (
         <>
-            <aside
+            <aside data-workspace-sidebar="true"
                 aria-hidden="true"
                 className="hidden md:fixed md:inset-y-0 md:z-30 md:flex md:w-[248px] md:flex-col border-r border-white/10 bg-[#111111]"
             >
@@ -182,10 +182,11 @@ function OwnerSidebarLoading() {
 
             <nav
                 aria-hidden="true"
-                className="fixed inset-x-0 bottom-0 z-50 grid min-h-[64px] grid-cols-6 items-center gap-1 border-t border-border/70 bg-canvas/92 px-safe pt-2 pb-safe shadow-[0_-4px_18px_rgba(15,23,42,0.08)] backdrop-blur-xl md:hidden"
+                data-mobile-navigation="true"
+                className="mobile-navigation md:hidden"
             >
-                {Array.from({ length: 6 }, (_, index) => (
-                    <div key={index} className="flex flex-col items-center gap-1 px-1">
+                {Array.from({ length: 5 }, (_, index) => (
+                    <div key={index} className="mobile-navigation-item">
                         <div className="h-5 w-5 rounded-md bg-muted/70" />
                         <div className="h-2.5 w-12 max-w-full rounded bg-muted/70" />
                     </div>

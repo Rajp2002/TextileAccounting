@@ -52,16 +52,20 @@ function DialogContent({
   children,
   showCloseButton = true,
   hideOverlay = false,
+  mobilePresentation = "sheet",
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
   hideOverlay?: boolean
+  mobilePresentation?: "sheet" | "center"
 }) {
   return (
     <DialogPortal data-slot="dialog-portal">
       {!hideOverlay && <DialogOverlay />}
       <DialogPrimitive.Content
         data-slot="dialog-content"
+        data-mobile-presentation={hideOverlay ? "center" : mobilePresentation}
+        data-close-button={showCloseButton}
         className={cn(
           "bg-surface text-ink data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-h-[calc(100dvh-1rem)] max-w-[calc(100vw-1rem)] translate-x-[-50%] translate-y-[-50%] gap-4 overflow-y-auto rounded-xl border border-hairline p-4 shadow-[var(--shadow-modal)] duration-200 outline-none sm:max-h-[calc(100dvh-2rem)] sm:max-w-lg sm:rounded-2xl sm:p-6",
           className
@@ -72,7 +76,7 @@ function DialogContent({
         {showCloseButton && (
           <DialogPrimitive.Close
             data-slot="dialog-close"
-            className="ring-offset-background focus:ring-ring data-[state=open]:bg-saffron-soft data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-md opacity-70 transition-opacity hover:bg-surface-soft hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+            className="ring-offset-background focus:ring-ring absolute top-2 right-2 z-10 flex size-11 items-center justify-center rounded-full text-current opacity-80 transition-opacity hover:bg-surface-soft hover:opacity-100 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5"
           >
             <XIcon />
             <span className="sr-only">Close</span>
@@ -87,7 +91,7 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="dialog-header"
-      className={cn("flex flex-col gap-2 text-center sm:text-left", className)}
+      className={cn("flex flex-col gap-2 text-left", className)}
       {...props}
     />
   )
