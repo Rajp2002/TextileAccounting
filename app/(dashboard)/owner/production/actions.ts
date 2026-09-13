@@ -439,6 +439,104 @@ export async function setBaseMachineJobContext(input: {
     return { success: true, context: data }
 }
 
+export async function activateSavedCostingForProduction(input: { costingId: string }) {
+    await requireBaseProductionOwner()
+    const parsed = safeParse(z.object({ costingId: UuidSchema }), input)
+    if ('error' in parsed) return parsed
+
+    const supabase = await createServerClient()
+    const { data, error } = await supabase.rpc('activate_saved_costing_for_production', {
+        p_costing_id: parsed.data.costingId,
+    })
+
+    if (error) return databaseError(error, 'Saved quality could not be activated for production. Please try again.')
+
+    revalidatePath('/owner/production')
+    revalidatePath('/owner/quotes')
+    return { success: true, ...(data as Record<string, unknown>) }
+}
+
+export async function deactivateQualityProduction(input: { jobId: string }) {
+    await requireBaseProductionOwner()
+    const parsed = safeParse(z.object({ jobId: UuidSchema }), input)
+    if ('error' in parsed) return parsed
+
+    const supabase = await createServerClient()
+    const { data, error } = await supabase.rpc('deactivate_quality_production', {
+        p_job_id: parsed.data.jobId,
+    })
+
+    if (error) return databaseError(error, 'Quality could not be deactivated. Please try again.')
+
+    revalidatePath('/owner/production')
+    revalidatePath('/owner/quotes')
+    return { success: true, ...(data as Record<string, unknown>) }
+}
+
+export async function switchBaseMachineQuality(input: {
+    machineId: string
+    toJobId: string
+    effectiveFrom?: string
+}) {
+    await requireBaseProductionOwner()
+    const parsed = safeParse(
+        z.object({
+            machineId: UuidSchema,
+            toJobId: UuidSchema,
+            effectiveFrom: DateSchema.optional(),
+        }),
+        input,
+    )
+    if ('error' in parsed) return parsed
+
+    const today = getSuratTodayString()
+    const effectiveFrom = parsed.data.effectiveFrom || today
+
+    const supabase = await createServerClient()
+    const { data, error } = await supabase.rpc('switch_base_machine_quality', {
+        p_machine_id: parsed.data.machineId,
+        p_to_job_id: parsed.data.toJobId,
+        p_effective_from: effectiveFrom,
+    })
+
+    if (error) return databaseError(error, 'Quality could not be switched. Please try again.')
+
+    revalidatePath('/owner/production')
+    return { success: true, ...(data as Record<string, unknown>) }
+}
+
+export async function bulkAssignMachinesToQuality(input: {
+    jobId: string
+    machineIds: string[]
+    effectiveFrom?: string
+}) {
+    await requireBaseProductionOwner()
+    const parsed = safeParse(
+        z.object({
+            jobId: UuidSchema,
+            machineIds: z.array(UuidSchema).min(1, 'Select at least one machine.'),
+            effectiveFrom: DateSchema.optional(),
+        }),
+        input,
+    )
+    if ('error' in parsed) return parsed
+
+    const today = getSuratTodayString()
+    const effectiveFrom = parsed.data.effectiveFrom || today
+
+    const supabase = await createServerClient()
+    const { data, error } = await supabase.rpc('bulk_assign_machines_to_quality', {
+        p_job_id: parsed.data.jobId,
+        p_machine_ids: parsed.data.machineIds,
+        p_effective_from: effectiveFrom,
+    })
+
+    if (error) return databaseError(error, 'Machines could not be assigned. Please try again.')
+
+    revalidatePath('/owner/production')
+    return { success: true, ...(data as Record<string, unknown>) }
+}
+
 export async function saveBaseDailyProductionBatch(input: {
     productionDate: string
     shift: 'day' | 'night'

@@ -11,17 +11,21 @@ import {
     CheckCircle2,
     ClipboardList,
     Clock3,
+    Factory,
     History,
     ChevronLeft,
     ChevronRight,
     IndianRupee,
+    Layers,
     Loader2,
     Minus,
     Plus,
     ReceiptText,
     RotateCcw,
     Settings2,
+    Users,
     WalletCards,
+    Wrench,
 } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
@@ -71,6 +75,8 @@ import {
     settleBaseWorkerPayroll,
     updateBaseProductionJobStatus,
 } from './actions'
+import BaseActiveQualities from './BaseActiveQualities'
+import BaseMachineBoard from './BaseMachineBoard'
 import BaseAssignmentWorkspace from './BaseAssignmentWorkspace'
 import BaseMachineJobs from './BaseMachineJobs'
 import BaseDailyProductionSheet from './BaseDailyProductionSheet'
@@ -195,7 +201,8 @@ export default function BaseProductionClient({
     useLocalizedPageTitle(view === 'operations' ? `${tx('Worker–Machine Assignments')} | Weavly` : null)
     const searchParams = useSearchParams()
     const navigation = readBaseProductionNavigation(searchParams)
-    const [activeTab, setActiveTab] = useState(view === 'operations' ? 'assignments' : view === 'payroll' ? 'pay' : 'production')
+    const [activeTab, setActiveTab] = useState(view === 'operations' ? 'assignments' : view === 'payroll' ? 'pay' : (navigation.tab ?? 'jobs'))
+    const [isActivateModalOpen, setIsActivateModalOpen] = useState(Boolean(initialCostingId))
     const [productionSearch, setProductionSearch] = useState('')
     const [historyCount, setHistoryCount] = useState(12)
     const [payrollSearch, setPayrollSearch] = useState('')
@@ -203,7 +210,7 @@ export default function BaseProductionClient({
 
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
-        if (view === 'production') setActiveTab(navigation.tab ?? 'production')
+        if (view === 'production') setActiveTab(navigation.tab ?? 'jobs')
     }, [navigation.tab, navigation.date, navigation.shift, navigation.entry, view])
     const [dialog, setDialog] = useState<DialogName>(null)
     const [pendingAction, setPendingAction] = useState<string | null>(null)
@@ -284,8 +291,41 @@ export default function BaseProductionClient({
             ...(productionAllocationLabels.get(entry.id) ?? [])]
         return labels.join(' ').toLocaleLowerCase().includes(productionSearch.trim().toLocaleLowerCase())
     })
-    const activeJobs = initialData.jobs.filter((job) => job.status === 'planned' || job.status === 'active')
-    const activeWorkers = initialData.workers.filter((worker) => worker.is_active)
+    const activeJobs = useMemo(
+        () => initialData.jobs.filter((job) => job.status === 'planned' || job.status === 'active'),
+        [initialData.jobs]
+    )
+    const activeWorkers = useMemo(
+        () => initialData.workers.filter((worker) => worker.is_active),
+        [initialData.workers]
+    )
+    const activeMachines = useMemo(
+        () => initialData.machines.filter((machine) => machine.is_active),
+        [initialData.machines]
+    )
+    const runningMachineIds = useMemo(() => {
+        const set = new Set<string>()
+        for (const context of initialData.machineJobContexts) {
+            if (context.active && context.effective_from <= initialData.today && (!context.effective_to || context.effective_to >= initialData.today)) {
+                const job = initialData.jobs.find(j => j.id === context.job_id)
+                if (job && (job.status === 'planned' || job.status === 'active')) {
+                    set.add(context.machine_id)
+                }
+            }
+        }
+        return set
+    }, [initialData.machineJobContexts, initialData.jobs, initialData.today])
+    const runningMachinesCount = activeMachines.filter(m => runningMachineIds.has(m.id)).length
+    const availableMachinesCount = Math.max(0, activeMachines.length - runningMachinesCount)
+    const assignedWorkerIds = useMemo(() => {
+        const set = new Set<string>()
+        for (const assignment of initialData.assignments) {
+            if (assignment.active && assignment.effective_from <= initialData.today && (!assignment.effective_to || assignment.effective_to >= initialData.today)) {
+                set.add(assignment.worker_id)
+            }
+        }
+        return set
+    }, [initialData.assignments, initialData.today])
     const producedThisPeriod = initialData.entries
         .filter((entry) => entry.production_date >= initialData.payrollPeriod.start && entry.production_date <= initialData.payrollPeriod.end)
         .reduce((total, entry) => total + entry.meters, 0)
@@ -353,9 +393,7 @@ export default function BaseProductionClient({
     }
 
     function openNewJob() {
-        const costing = initialData.costings.find((item) => item.id === initialCostingId)
-        setJobDraft(emptyJobDraft(initialData.today, initialCostingId ?? '', costingTargetMeters(costing)))
-        setDialog('job')
+        setIsActivateModalOpen(true)
     }
 
     function openAdvance(workerId = activeWorkers[0]?.id ?? '') {
@@ -393,31 +431,7 @@ export default function BaseProductionClient({
 
     }
 
-    function handleJobSubmit(event: FormEvent<HTMLFormElement>) {
-        event.preventDefault()
-        const targetMeters = Number.parseFloat(jobDraft.targetMeters)
-        if (!jobDraft.costingId || !Number.isFinite(targetMeters) || targetMeters <= 0) {
-            toast.error('Choose a costing and enter a target greater than 0.')
-            return
-        }
 
-        void runAction(
-            'job-create',
-            () => createBaseProductionJob({
-                costingId: jobDraft.costingId,
-                targetMeters,
-                startDate: jobDraft.startDate,
-                dueDate: jobDraft.dueDate,
-                customerReference: jobDraft.customerReference,
-                notes: jobDraft.notes,
-            }),
-            'Production job created.',
-            () => {
-                closeDialog()
-                if (initialData.machines.length === 0) openSetup('machine')
-            },
-        )
-    }
 
     function handleAdvanceSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault()
@@ -526,22 +540,42 @@ export default function BaseProductionClient({
 
             {view === 'production' && (
                 <Card className="overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs">
-                    <div className="grid grid-cols-1 divide-y sm:grid-cols-2 sm:divide-y-0 sm:divide-x divide-hairline">
+                    <div className="grid grid-cols-2 divide-y sm:grid-cols-4 sm:divide-y-0 sm:divide-x divide-hairline">
                         <div className="p-4 sm:p-5">
                             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                                <ClipboardList className="h-4 w-4 text-muted-foreground" />
-                                <span>Open jobs</span>
+                                <Layers className="h-4 w-4 text-muted-foreground" />
+                                <span>Active Qualities</span>
                             </div>
-                            <p className="text-xl sm:text-2xl font-black tracking-tight text-ink">{openJobs}</p>
-                            <p className="mt-1 text-xs text-muted-foreground">Planned or active</p>
+                            <p className="text-xl sm:text-2xl font-black tracking-tight text-ink">{activeJobs.length}</p>
+                            <p className="mt-1 text-xs text-muted-foreground">In active production</p>
                         </div>
                         <div className="p-4 sm:p-5">
                             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                                <span>Produced this period</span>
+                                <Factory className="h-4 w-4 text-emerald-600" />
+                                <span>Machines Running</span>
                             </div>
-                            <p className="text-xl sm:text-2xl font-black tracking-tight text-ink">{formatMeters(producedThisPeriod)}</p>
-                            <p className="mt-1 text-xs text-muted-foreground">{formatDateOnly(initialData.payrollPeriod.start)} – {formatDateOnly(initialData.payrollPeriod.end)}</p>
+                            <p className="text-xl sm:text-2xl font-black tracking-tight text-ink">
+                                {runningMachinesCount} <span className="text-sm font-semibold text-muted-foreground">/ {activeMachines.length}</span>
+                            </p>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                                {activeMachines.length > 0 ? Math.round((runningMachinesCount / activeMachines.length) * 100) : 0}% capacity
+                            </p>
+                        </div>
+                        <div className="p-4 sm:p-5">
+                            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                                <Users className="h-4 w-4 text-muted-foreground" />
+                                <span>Workers Assigned</span>
+                            </div>
+                            <p className="text-xl sm:text-2xl font-black tracking-tight text-ink">{assignedWorkerIds.size}</p>
+                            <p className="mt-1 text-xs text-muted-foreground">Operating looms</p>
+                        </div>
+                        <div className="p-4 sm:p-5">
+                            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                                <Wrench className="h-4 w-4 text-muted-foreground" />
+                                <span>Looms Available</span>
+                            </div>
+                            <p className="text-xl sm:text-2xl font-black tracking-tight text-ink">{availableMachinesCount}</p>
+                            <p className="mt-1 text-xs text-muted-foreground">Ready for quality</p>
                         </div>
                     </div>
                 </Card>
@@ -683,112 +717,31 @@ export default function BaseProductionClient({
 
             {(view === 'production' || (view === 'payroll' && activeTab !== 'history')) && <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
                 {view === 'production' && <TabsList className="grid h-11 w-full max-w-md grid-cols-2 rounded-xl border border-hairline bg-surface-soft p-1 shadow-xs">
-                    <TabsTrigger value="jobs" className="rounded-lg text-xs sm:text-sm font-bold data-[state=active]:bg-loom data-[state=active]:text-white data-[state=active]:shadow-xs text-muted-foreground hover:text-ink transition-all">Jobs</TabsTrigger>
-                    <TabsTrigger value="production" className="rounded-lg text-xs sm:text-sm font-bold data-[state=active]:bg-loom data-[state=active]:text-white data-[state=active]:shadow-xs text-muted-foreground hover:text-ink transition-all">Daily production</TabsTrigger>
+                    <TabsTrigger value="jobs" className="rounded-lg text-xs sm:text-sm font-bold data-[state=active]:bg-loom data-[state=active]:text-white data-[state=active]:shadow-xs text-muted-foreground hover:text-ink transition-all">Overview & Looms</TabsTrigger>
+                    <TabsTrigger value="production" className="rounded-lg text-xs sm:text-sm font-bold data-[state=active]:bg-loom data-[state=active]:text-white data-[state=active]:shadow-xs text-muted-foreground hover:text-ink transition-all">Daily Sheet</TabsTrigger>
                 </TabsList>}
 
-                {view === 'production' && <TabsContent value="jobs" className="space-y-4">
-                    <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-                        <div>
-                            <h2 className="text-lg font-bold text-ink">Production jobs</h2>
-                            <p className="text-sm text-muted-foreground">Each job keeps the costing economics and a simple metre target.</p>
-                        </div>
-                        <Button size="sm" onClick={openNewJob} disabled={initialData.costings.length === 0} className="h-10 px-4 rounded-xl bg-loom text-white font-bold shadow-xs hover:bg-loom-elevated">
-                            <Plus className="h-4 w-4" /> New job
-                        </Button>
-                    </div>
-
-                    {initialData.costings.length === 0 && (
-                        <EmptyState
-                            title="Save a costing first"
-                            description="A Base production job starts from an active saved costing, so the planned economics stay visible."
-                            action={<Button asChild size="sm"><Link href="/owner/estimator">Create a costing</Link></Button>}
-                        />
-                    )}
-
-                    {initialData.jobs.length === 0 && initialData.costings.length > 0 && (
-                        <EmptyState
-                            title="No production jobs yet"
-                            description="Create the first job from a costing when you are ready to start recording output."
-                            action={<Button size="sm" onClick={openNewJob}><Plus className="h-4 w-4" /> Create job</Button>}
-                        />
-                    )}
-
-                    <BaseMachineJobs initialData={initialData} />
-
-                    <div className="grid gap-4 lg:grid-cols-2">
-                        {initialData.jobs.map((job) => {
-                            const summary = jobSummaries.get(job.id) ?? calculateBaseJobSummary(job, initialData.entries, initialData.allocations)
-                            const nextStatus = getNextStatus(job.status)
-                            const isJobPending = pendingAction === `job-status-${job.id}`
-
-                            return (
-                                <Card key={job.id} className="overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs hover:border-hairline-strong transition-all">
-                                    <CardHeader className="border-b border-hairline bg-surface-soft/40 p-4 sm:p-5">
-                                        <div className="flex items-start justify-between gap-3">
-                                            <div className="min-w-0">
-                                                <CardTitle className="truncate text-base font-bold text-ink">{job.quality_label}</CardTitle>
-                                                <CardDescription className="mt-1 text-xs text-muted-foreground">
-                                                    {job.customer_reference || 'Internal production job'} · Start date {formatDateOnly(job.start_date)}
-                                                </CardDescription>
-                                            </div>
-                                            <Badge variant={getStatusVariant(job.status)} className="capitalize font-bold text-[10px]">{job.status}</Badge>
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent className="space-y-4 p-4 sm:p-5 pt-4">
-                                        <div>
-                                            <div className="mb-1.5 flex items-center justify-between text-xs font-semibold text-body">
-                                                <span>{formatMeters(summary.produced_meters)} produced</span>
-                                                <span className="font-bold text-ink">{formatMeters(job.target_meters)} target</span>
-                                            </div>
-                                            <div
-                                                className="h-2 overflow-hidden rounded-full bg-surface-soft border border-hairline"
-                                                role="progressbar"
-                                                aria-label={`${summary.progress_percent}% complete`}
-                                                aria-valuemin={0}
-                                                aria-valuemax={100}
-                                                aria-valuenow={summary.progress_percent}
-                                            >
-                                                <div className="h-full rounded-full bg-saffron transition-all duration-500" style={{ width: `${Math.min(100, summary.progress_percent)}%` }} />
-                                            </div>
-                                            <p className="mt-1.5 text-xs text-muted-foreground">
-                                                {summary.progress_percent.toFixed(0)}% complete · {summary.excess_meters > 0 ? `${formatMeters(summary.excess_meters)} excess` : `${formatMeters(summary.remaining_meters)} remaining`}
-                                            </p>
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-3 rounded-xl border border-hairline bg-surface-soft/60 p-3.5 text-sm">
-                                            <div>
-                                                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Planned cost</p>
-                                                <p className="mt-1 text-base font-black text-ink">{formatINR(summary.planned_cost_total, { hideDecimals: true })}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Due date</p>
-                                                <p className="mt-1 text-base font-black text-ink">{job.due_date ? formatDateOnly(job.due_date) : 'No due date'}</p>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex flex-wrap gap-2 pt-1">
-                                            <Button size="sm" onClick={() => openRecord(job.id)} disabled={job.status === 'completed' || job.status === 'cancelled'} className="h-9 rounded-xl bg-loom text-white text-xs font-bold shadow-xs hover:bg-loom-elevated">
-                                                <ClipboardList className="h-4 w-4" /> Daily production
-                                            </Button>
-                                            {nextStatus && (
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    onClick={() => handleJobStatus(job.id, nextStatus)}
-                                                    disabled={isJobPending}
-                                                    className="h-9 rounded-xl border-hairline bg-surface text-ink text-xs font-bold hover:bg-surface-soft shadow-xs"
-                                                >
-                                                    {isJobPending ? <Loader2 className="h-4 w-4 animate-spin" /> : nextStatus === 'active' && job.status !== 'planned' ? <RotateCcw className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
-                                                    {getStatusActionLabel(job.status)}
-                                                </Button>
-                                            )}
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            )
-                        })}
-                    </div>
+                {view === 'production' && <TabsContent value="jobs" className="space-y-6">
+                    <BaseActiveQualities
+                        jobs={initialData.jobs}
+                        costings={initialData.costings}
+                        machines={initialData.machines}
+                        machineJobContexts={initialData.machineJobContexts}
+                        today={initialData.today}
+                        onActivateQuality={() => setIsActivateModalOpen(true)}
+                        onViewHistory={() => setActiveTab('production')}
+                        isActivateModalOpen={isActivateModalOpen}
+                        onOpenActivateModalChange={setIsActivateModalOpen}
+                    />
+                    <BaseMachineBoard
+                        machines={initialData.machines}
+                        jobs={initialData.jobs}
+                        workers={initialData.workers}
+                        assignments={initialData.assignments}
+                        machineJobContexts={initialData.machineJobContexts}
+                        today={initialData.today}
+                        onActivateQualityClick={() => setIsActivateModalOpen(true)}
+                    />
                 </TabsContent>}
 
                 {view === 'production' && <TabsContent value="production" className="space-y-4">
@@ -951,52 +904,6 @@ export default function BaseProductionClient({
                 </TabsContent>}
             </Tabs>}
 
-            <Dialog open={dialog === 'job'} onOpenChange={(open) => !open && closeDialog()}>
-                <DialogContent className="max-w-lg rounded-2xl border border-hairline bg-surface p-6 shadow-2xl">
-                    <DialogHeader>
-                        <DialogTitle className="text-xl font-bold text-ink">New production job</DialogTitle>
-                        <DialogDescription className="text-sm text-body">Start with an active saved costing. This creates a Base production job, not a formal party order.</DialogDescription>
-                    </DialogHeader>
-                    <form className="space-y-4" onSubmit={handleJobSubmit}>
-                        <div className="space-y-2">
-                            <Label htmlFor="base-job-costing" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Saved costing</Label>
-                            <Select value={jobDraft.costingId} onValueChange={(value) => setJobDraft((current) => ({ ...current, costingId: value, targetMeters: costingTargetMeters(initialData.costings.find((costing) => costing.id === value)) }))}>
-                                <SelectTrigger id="base-job-costing" className="h-10 sm:h-11 w-full rounded-xl border-hairline bg-surface text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom"><SelectValue placeholder="Select a saved costing" /></SelectTrigger>
-                                <SelectContent className="rounded-xl border-hairline bg-surface shadow-lg">{initialData.costings.map((costing) => <SelectItem key={costing.id} value={costing.id}>{costing.quality_label} · v{costing.version_number} · {formatINR(costing.production_cost_per_meter)}/m cost</SelectItem>)}</SelectContent>
-                            </Select>
-                        </div>
-                        <div className="grid gap-3 sm:grid-cols-2">
-                            <div className="space-y-2">
-                                <Label htmlFor="base-job-target" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Target metres</Label>
-                                <Input id="base-job-target" type="number" min="0.01" step="0.01" inputMode="decimal" value={jobDraft.targetMeters} onChange={(event) => setJobDraft((current) => ({ ...current, targetMeters: event.target.value }))} placeholder="1000" className="h-10 sm:h-11 rounded-xl border-hairline bg-surface text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom" />
-                                <p className="text-xs text-muted-foreground">Prefilled from the costing quantity when available; adjust for this production run.</p>
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="base-job-start" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Start date</Label>
-                                <Input id="base-job-start" type="date" value={jobDraft.startDate} onChange={(event) => setJobDraft((current) => ({ ...current, startDate: event.target.value }))} className="h-10 sm:h-11 rounded-xl border-hairline bg-surface text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom" />
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="base-job-due" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Due date <span className="font-normal text-muted-foreground">(optional)</span></Label>
-                            <Input id="base-job-due" type="date" min={jobDraft.startDate} value={jobDraft.dueDate} onChange={(event) => setJobDraft((current) => ({ ...current, dueDate: event.target.value }))} className="h-10 sm:h-11 rounded-xl border-hairline bg-surface text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom" />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="base-job-reference" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Customer / internal reference <span className="font-normal text-muted-foreground">(optional)</span></Label>
-                            <Input id="base-job-reference" value={jobDraft.customerReference} onChange={(event) => setJobDraft((current) => ({ ...current, customerReference: event.target.value }))} placeholder="e.g. Patel Traders · grey fabric" className="h-10 sm:h-11 rounded-xl border-hairline bg-surface text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom" />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="base-job-notes" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Notes <span className="font-normal text-muted-foreground">(optional)</span></Label>
-                            <Textarea id="base-job-notes" rows={2} value={jobDraft.notes} onChange={(event) => setJobDraft((current) => ({ ...current, notes: event.target.value }))} placeholder="Short job note" className="rounded-xl border-hairline bg-surface text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom" />
-                        </div>
-                        <DialogFooter className="pt-2">
-                            <Button type="button" variant="outline" onClick={closeDialog} className="rounded-xl border-hairline hover:bg-surface-soft font-semibold">Cancel</Button>
-                            <Button type="submit" disabled={pendingAction === 'job-create'} className="rounded-xl bg-loom text-white font-bold shadow-xs hover:bg-loom-elevated">
-                                {pendingAction === 'job-create' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} Create job
-                            </Button>
-                        </DialogFooter>
-                    </form>
-                </DialogContent>
-            </Dialog>
 
             <Dialog open={dialog === 'advance'} onOpenChange={(open) => !open && closeDialog()}>
                 <DialogContent className="max-w-md rounded-2xl border border-hairline bg-surface p-6 shadow-2xl">

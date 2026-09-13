@@ -661,7 +661,7 @@ function SavedQualityLibraryView({
                                                                 onClick={() => trackPlanEvent('production_cta_clicked', { source: 'saved_costing_detail' })}
                                                                 className="inline-flex h-9 items-center gap-1.5 rounded-md border border-saffron/30 bg-saffron-soft px-3 text-xs font-semibold text-saffron-deep hover:bg-saffron-soft/80"
                                                             >
-                                                                <Factory className="h-3.5 w-3.5" /> Start Production
+                                                                <Factory className="h-3.5 w-3.5" /> Activate for Production
                                                             </Link>
                                                         )}
                                                     </> : <>
@@ -678,7 +678,7 @@ function SavedQualityLibraryView({
                                                             onClick={() => trackPlanEvent('production_cta_clicked', { source: 'saved_costing_detail' })}
                                                             className="inline-flex h-9 items-center gap-1.5 rounded-md border border-saffron/30 bg-saffron-soft px-3 text-xs font-semibold text-saffron-deep hover:bg-saffron-soft/80"
                                                         >
-                                                            <Factory className="h-3.5 w-3.5" /> Start Production
+                                                            <Factory className="h-3.5 w-3.5" /> Activate for Production
                                                         </Link>
                                                     )}
                                                 </div>
@@ -711,7 +711,7 @@ function SavedQualityLibraryView({
                                                                 onClick={() => trackPlanEvent('production_cta_clicked', { source: 'saved_costing_breakdown' })}
                                                                 className="inline-flex h-9 items-center gap-1.5 rounded-md border border-saffron/30 bg-saffron-soft px-3 text-xs font-semibold text-saffron-deep hover:bg-saffron-soft/80"
                                                             >
-                                                                <Factory className="h-3.5 w-3.5" /> Start Production
+                                                                <Factory className="h-3.5 w-3.5" /> Activate for Production
                                                             </Link>
                                                         )}
                                                         <Button variant="outline" size="sm" onClick={() => onToggleArchived(activeRecord)} disabled={updatingId === activeRecord.id} aria-busy={updatingId === activeRecord.id}>
