@@ -13,6 +13,7 @@ interface WorkersPageHeaderProps {
   focus?: string | null
   hasFocusedWorker?: boolean
   onClearFocus?: () => void
+  totalCount?: number
 }
 
 export function WorkersPageHeader({
@@ -21,6 +22,7 @@ export function WorkersPageHeader({
   focus,
   hasFocusedWorker,
   onClearFocus,
+  totalCount,
 }: WorkersPageHeaderProps) {
   const { tx } = useTranslation()
 
@@ -60,9 +62,16 @@ export function WorkersPageHeader({
 
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-[28px]">
-            {tx('Workers')}
-          </h1>
+          <div className="flex items-baseline gap-2.5">
+            <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-[28px]">
+              {tx('Workers')}
+            </h1>
+            {typeof totalCount === 'number' && (
+              <span className="text-sm font-normal text-subtle">
+                · {totalCount === 1 ? tx('1 worker') : `${totalCount} ${tx('workers')}`}
+              </span>
+            )}
+          </div>
           <p className="mt-1 text-sm text-subtle">
             {tx('Add and manage your factory workforce.')}
           </p>

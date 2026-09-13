@@ -1,6 +1,8 @@
 import { readBaseSalaryHistory } from '@/lib/base-salary'
-import { toBaseNumber, type BaseProductionWorker, type BaseProductionMachine } from '@/lib/base-production-core'
-export function normalizeWorker(row: Record<string, unknown>): BaseProductionWorker { return {
+import { toBaseNumber } from '@/lib/base-production-core'
+import type { BaseProductionWorkerWithOperational } from '@/lib/worker-operational'
+
+export function normalizeWorker(row: Record<string, unknown>): BaseProductionWorkerWithOperational { return {
         updated_at: String(row.updated_at),
         pay_type: row.pay_type === 'fixed_monthly' ? 'fixed_monthly' : 'piece_rate',
         role: String(row.role ?? ''),
@@ -16,12 +18,21 @@ export function normalizeWorker(row: Record<string, unknown>): BaseProductionWor
             ? row.shift_availability
             : 'both',
         is_active: row.is_active !== false,
+        assignedMachineCount: typeof row.assignedMachineCount === 'number' ? row.assignedMachineCount : undefined,
     } }
-export function normalizeMachine(row: Record<string, unknown>): BaseProductionMachine { return {
+import type { BaseProductionMachineWithReadiness } from '@/lib/machine-readiness'
+
+export function normalizeMachine(row: Record<string, unknown>): BaseProductionMachineWithReadiness {
+    return {
         id: String(row.id),
         name: String(row.name || 'Unnamed machine'),
         machine_type: String(row.machine_type || 'other'),
         custom_label: toStringOrNull(row.custom_label),
         is_active: row.is_active !== false,
-    } }
+        assignedWorkerName: toStringOrNull(row.assignedWorkerName),
+        assignedCostingLabel: toStringOrNull(row.assignedCostingLabel),
+        hasWorker: typeof row.hasWorker === 'boolean' ? row.hasWorker : undefined,
+        hasCosting: typeof row.hasCosting === 'boolean' ? row.hasCosting : undefined,
+    }
+}
 function toStringOrNull(value: unknown) { return typeof value === 'string' && value.length > 0 ? value : null }

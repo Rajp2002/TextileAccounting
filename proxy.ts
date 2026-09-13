@@ -445,6 +445,8 @@ export async function updateSession(request: NextRequest) {
             !pathname.startsWith('/owner/stock') &&
             !pathname.startsWith('/owner/dispatches') &&
             !pathname.startsWith('/owner/operations') &&
+            !pathname.startsWith('/owner/assignments') &&
+            !pathname.startsWith('/owner/setup') &&
             !pathname.startsWith('/owner/payroll') &&
             !pathname.startsWith('/owner/machines') &&
             !pathname.startsWith('/owner/workers') &&

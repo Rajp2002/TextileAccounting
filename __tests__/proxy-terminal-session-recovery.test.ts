@@ -153,6 +153,31 @@ describe('Proxy post-login session handling', () => {
         expect(Number(response.cookies.get('last_activity')?.value)).toBeGreaterThanOrEqual(loginActivity)
     })
 
+    it('allows /owner/assignments directly for an owner before onboarding completion', async () => {
+        const loginActivity = Date.now()
+        authMock.getClaims.mockResolvedValue({
+            data: {
+                claims: {
+                    sub: 'owner-user-id',
+                    app_metadata: {
+                        role: 'owner',
+                        onboarding_complete: false,
+                    },
+                },
+            },
+            error: null,
+        })
+
+        const response = await updateSession(requestFor(
+            '/owner/assignments',
+            'GET',
+            loginActivity.toString(),
+        ))
+
+        expect(response.status).toBe(200)
+        expect(response.headers.get('location')).toBeNull()
+    })
+
     it('still expires a genuinely idle current session locally', async () => {
         authMock.getClaims.mockResolvedValue({
             data: {

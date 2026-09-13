@@ -3,6 +3,7 @@ import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { normalizeWorker } from '../app/(dashboard)/owner/production/registers/normalize'
 import { BASE_CONTINUITY_PHRASES } from '../lib/i18n/base-continuity-phrases'
+import type { BaseProductionWorkerWithOperational } from '../lib/worker-operational'
 
 const fixture = vi.hoisted(() => ({ query: '', action: vi.fn() }))
 vi.mock('next/navigation', () => ({
@@ -27,30 +28,43 @@ vi.mock('../app/(dashboard)/owner/production/actions', () => ({
 
 import WorkersRegister from '../app/(dashboard)/owner/production/registers/WorkersRegister'
 
-const pieceWorkerActive = normalizeWorker({
-  id: 'worker-1',
-  name: 'Rami Weaver',
-  pay_type: 'piece_rate',
-  shift_availability: 'day',
-  is_active: true,
-})
+const pieceWorkerActive: BaseProductionWorkerWithOperational = {
+  ...normalizeWorker({
+    id: 'worker-1',
+    name: 'Rami Weaver',
+    pay_type: 'piece_rate',
+    rate_per_meter: 4.5,
+    shift_availability: 'day',
+    is_active: true,
+  }),
+  assignedMachineCount: 3,
+}
 
-const fixedWorkerActive = normalizeWorker({
-  id: 'worker-2',
-  name: 'Suresh Master',
-  pay_type: 'fixed_monthly',
-  role: 'Weaving Master',
-  monthly_salary: '25000',
-  is_active: true,
-})
+const fixedWorkerActive: BaseProductionWorkerWithOperational = {
+  ...normalizeWorker({
+    id: 'worker-2',
+    name: 'Suresh Master',
+    pay_type: 'fixed_monthly',
+    role: 'Weaving Master',
+    monthly_salary: '25000',
+    start_date: '2026-01-01',
+    shift_availability: 'both',
+    is_active: true,
+  }),
+  assignedMachineCount: 0,
+}
 
-const inactivePieceWorker = normalizeWorker({
-  id: 'worker-3',
-  name: 'Kanti Operator',
-  pay_type: 'piece_rate',
-  shift_availability: 'night',
-  is_active: false,
-})
+const inactivePieceWorker: BaseProductionWorkerWithOperational = {
+  ...normalizeWorker({
+    id: 'worker-3',
+    name: 'Kanti Operator',
+    pay_type: 'piece_rate',
+    rate_per_meter: 0,
+    shift_availability: 'night',
+    is_active: false,
+  }),
+  assignedMachineCount: 0,
+}
 
 const mockWorkers = [pieceWorkerActive, fixedWorkerActive, inactivePieceWorker]
 
@@ -59,9 +73,9 @@ beforeEach(() => {
   fixture.action.mockClear()
 })
 
-describe('Workforce Register Premium UI Redesign', () => {
-  describe('Page Header & Workforce Register Surface', () => {
-    it('renders the refined page title, subtitle, and + Add worker button', () => {
+describe('Workforce Register Premium Redesign', () => {
+  describe('Page Header & Workforce Groups Structure', () => {
+    it('renders the page header with quiet total count, subtitle, and + Add worker button', () => {
       const html = renderToStaticMarkup(
         React.createElement(WorkersRegister, {
           workers: mockWorkers,
@@ -70,9 +84,25 @@ describe('Workforce Register Premium UI Redesign', () => {
       )
 
       expect(html).toContain('Workers')
+      expect(html).toContain('3 workers')
       expect(html).toContain('Add and manage your factory workforce.')
       expect(html).toContain('Add worker')
-      expect(html).not.toContain('Manage piece-rate and fixed-salary workers.')
+      // Old table wrapper heading removed
+      expect(html).not.toContain('Workforce register')
+    })
+
+    it('renders two distinct workforce sections: Piece Rate and Fixed Salary', () => {
+      const html = renderToStaticMarkup(
+        React.createElement(WorkersRegister, {
+          workers: mockWorkers,
+          today: '2026-09-12',
+        })
+      )
+
+      expect(html).toContain('Piece Rate')
+      expect(html).toContain('Paid based on production')
+      expect(html).toContain('Fixed Salary')
+      expect(html).toContain('Fixed monthly compensation')
     })
 
     it('renders a contextual return link when returnTo is provided', () => {
@@ -88,7 +118,7 @@ describe('Workforce Register Premium UI Redesign', () => {
       expect(html).toContain('Back to Machine Assignments')
     })
 
-    it('renders the focus alert banner when focus query parameter is set', () => {
+    it('renders the focus alert banner when worker query parameter is set', () => {
       fixture.query = 'worker=worker-1'
       const html = renderToStaticMarkup(
         React.createElement(WorkersRegister, {
@@ -100,40 +130,27 @@ describe('Workforce Register Premium UI Redesign', () => {
       expect(html).toContain('Worker filter active')
       expect(html).toContain('Clear filter')
     })
-
-    it('displays grammatical count in the register header: singular and plural', () => {
-      // Plural: 2 active workers by default
-      let html = renderToStaticMarkup(
-        React.createElement(WorkersRegister, {
-          workers: mockWorkers,
-          today: '2026-09-12',
-        })
-      )
-      expect(html).toContain('Workforce register')
-      expect(html).toContain('2 workers')
-
-      // Singular: 1 worker
-      html = renderToStaticMarkup(
-        React.createElement(WorkersRegister, {
-          workers: [pieceWorkerActive],
-          today: '2026-09-12',
-        })
-      )
-      expect(html).toContain('1 worker')
-
-      // Inactive shown: 3 workers
-      fixture.query = 'inactive=1'
-      html = renderToStaticMarkup(
-        React.createElement(WorkersRegister, {
-          workers: mockWorkers,
-          today: '2026-09-12',
-        })
-      )
-      expect(html).toContain('3 workers')
-    })
   })
 
-  describe('Toolbar, Search & Filtering', () => {
+  describe('Global Toolbar, Search & Filtering', () => {
+    it('contains search, shift filter, and worker status filter in toolbar', () => {
+      const html = renderToStaticMarkup(
+        React.createElement(WorkersRegister, {
+          workers: mockWorkers,
+          today: '2026-09-12',
+        })
+      )
+
+      expect(html).toContain('aria-label="Search workers"')
+      expect(html).toContain('placeholder="Search workers…"')
+      expect(html).toContain('aria-label="Shift filter"')
+      expect(html).toContain('All shifts')
+      expect(html).toContain('aria-label="Worker status filter"')
+      expect(html).toContain('Active workers')
+      expect(html).toContain('All workers')
+      expect(html).toContain('Inactive workers')
+    })
+
     it('defaults to showing active workers only and hides inactive workers', () => {
       const html = renderToStaticMarkup(
         React.createElement(WorkersRegister, {
@@ -147,8 +164,8 @@ describe('Workforce Register Premium UI Redesign', () => {
       expect(html).not.toContain('Kanti Operator')
     })
 
-    it('displays inactive workers when inactive=1 is set', () => {
-      fixture.query = 'inactive=1'
+    it('displays inactive workers when status=all or inactive=1', () => {
+      fixture.query = 'status=all'
       const html = renderToStaticMarkup(
         React.createElement(WorkersRegister, {
           workers: mockWorkers,
@@ -162,7 +179,8 @@ describe('Workforce Register Premium UI Redesign', () => {
       expect(html).toContain('Inactive')
     })
 
-    it('renders search input with icon, placeholder and accessible label', () => {
+    it('filters workers by shift availability', () => {
+      fixture.query = 'shift=night'
       const html = renderToStaticMarkup(
         React.createElement(WorkersRegister, {
           workers: mockWorkers,
@@ -170,46 +188,14 @@ describe('Workforce Register Premium UI Redesign', () => {
         })
       )
 
-      expect(html).toContain('aria-label="Search workers"')
-      expect(html).toContain('placeholder="Search workers…"')
-    })
-
-    it('renders custom pay type select with All pay types, Piece rate, Fixed salary', () => {
-      const html = renderToStaticMarkup(
-        React.createElement(WorkersRegister, {
-          workers: mockWorkers,
-          today: '2026-09-12',
-        })
-      )
-
-      expect(html).toContain('All pay types')
-      expect(html).toContain('Piece rate')
-      expect(html).toContain('Fixed salary')
-    })
-
-    it('filters by pay type correctly', () => {
-      fixture.query = 'payType=fixed_monthly'
-      let html = renderToStaticMarkup(
-        React.createElement(WorkersRegister, {
-          workers: mockWorkers,
-          today: '2026-09-12',
-        })
-      )
+      // Suresh is available for 'both', so night shift matches Suresh
       expect(html).toContain('Suresh Master')
+      // Rami is 'day' only
       expect(html).not.toContain('Rami Weaver')
-
-      fixture.query = 'payType=piece_rate'
-      html = renderToStaticMarkup(
-        React.createElement(WorkersRegister, {
-          workers: mockWorkers,
-          today: '2026-09-12',
-        })
-      )
-      expect(html).toContain('Rami Weaver')
-      expect(html).not.toContain('Suresh Master')
     })
 
-    it('filters by search input matching worker name and role', () => {
+    it('operates search across both groups and hides empty group', () => {
+      // Search matches only Fixed Salary
       fixture.query = 'search=Master'
       let html = renderToStaticMarkup(
         React.createElement(WorkersRegister, {
@@ -219,7 +205,9 @@ describe('Workforce Register Premium UI Redesign', () => {
       )
       expect(html).toContain('Suresh Master')
       expect(html).not.toContain('Rami Weaver')
+      expect(html).not.toContain('Piece Rate')
 
+      // Search matches only Piece Rate
       fixture.query = 'search=Rami'
       html = renderToStaticMarkup(
         React.createElement(WorkersRegister, {
@@ -229,11 +217,12 @@ describe('Workforce Register Premium UI Redesign', () => {
       )
       expect(html).toContain('Rami Weaver')
       expect(html).not.toContain('Suresh Master')
+      expect(html).not.toContain('Fixed Salary')
     })
   })
 
-  describe('Worker Row Hierarchy & Actions', () => {
-    it('renders worker identity with data-i18n-skip, shift/role, text-first pay type, and status', () => {
+  describe('Worker Cards & Operational Details', () => {
+    it('renders piece-rate card with assigned machines, rate setup, and View assignments deep link', () => {
       const html = renderToStaticMarkup(
         React.createElement(WorkersRegister, {
           workers: [pieceWorkerActive],
@@ -244,15 +233,25 @@ describe('Workforce Register Premium UI Redesign', () => {
       expect(html).toContain('data-i18n-skip="true"')
       expect(html).toContain('Rami Weaver')
       expect(html).toContain('Day shift')
-      expect(html).toContain('Piece rate')
       expect(html).toContain('Active')
+
+      // 2-column configuration: Machines & Rate setup
+      expect(html).toContain('Machines')
+      expect(html).toContain('3 assigned')
+      expect(html).toContain('Rate setup')
+      expect(html).toContain('Configured')
+
+      // Deep link to Machine Assignments
       expect(html).toContain('View assignments')
       expect(html).toContain('/owner/assignments?worker=worker-1')
+      expect(html).toContain('aria-label="View machine assignments for Rami Weaver"')
+
+      // Edit action
       expect(html).toContain('Edit')
       expect(html).toContain('aria-label="Edit Rami Weaver"')
     })
 
-    it('omits machine assignments link for fixed salary workers', () => {
+    it('renders fixed-salary card with salary config, payroll status, and View payroll link (without raw salary amounts)', () => {
       const html = renderToStaticMarkup(
         React.createElement(WorkersRegister, {
           workers: [fixedWorkerActive],
@@ -261,12 +260,26 @@ describe('Workforce Register Premium UI Redesign', () => {
       )
 
       expect(html).toContain('Suresh Master')
-      expect(html).toContain('Fixed salary')
-      expect(html).not.toContain('/owner/assignments?worker=worker-2')
-      expect(html).toContain('Edit')
+      expect(html).toContain('Weaving Master')
+      expect(html).toContain('Active')
+
+      // 2-column configuration: Salary & Payroll
+      expect(html).toContain('Salary')
+      expect(html).toContain('Configured')
+      expect(html).toContain('Payroll')
+      expect(html).toContain('Ready')
+
+      // Privacy: raw salary amount is NOT displayed on card overview
+      expect(html).not.toContain('25000')
+      expect(html).not.toContain('₹25,000')
+
+      // Action: View payroll
+      expect(html).toContain('View payroll')
+      expect(html).toContain('href="/owner/payroll"')
+      expect(html).toContain('aria-label="View payroll for Suresh Master"')
     })
 
-    it('does not make the worker row itself a clickable anchor', () => {
+    it('does not make the entire worker card clickable as a single navigation link', () => {
       const html = renderToStaticMarkup(
         React.createElement(WorkersRegister, {
           workers: [pieceWorkerActive],
@@ -281,7 +294,7 @@ describe('Workforce Register Premium UI Redesign', () => {
   })
 
   describe('Empty and No-Results States', () => {
-    it('renders compact initial empty state when factory has 0 workers', () => {
+    it('renders empty state when factory has 0 workers registered', () => {
       const html = renderToStaticMarkup(
         React.createElement(WorkersRegister, {
           workers: [],
@@ -289,14 +302,13 @@ describe('Workforce Register Premium UI Redesign', () => {
         })
       )
 
-      expect(html).toContain('0 workers')
-      expect(html).toContain('Add your first worker')
-      expect(html).toContain('Add workers to manage payroll and machine assignments.')
+      expect(html).toContain('No workers yet')
+      expect(html).toContain('Add workers to start building your factory workforce.')
       expect(html).toContain('Add worker')
     })
 
-    it('renders no-results state with Clear filters action when search returns 0', () => {
-      fixture.query = 'search=UnknownPerson'
+    it('renders no-results state with Clear filters when search returns 0 across both groups', () => {
+      fixture.query = 'search=NonExistentWorker'
       const html = renderToStaticMarkup(
         React.createElement(WorkersRegister, {
           workers: mockWorkers,
@@ -305,14 +317,26 @@ describe('Workforce Register Premium UI Redesign', () => {
       )
 
       expect(html).toContain('No workers found')
-      expect(html).toContain('No workers match your current search or filters.')
+      expect(html).toContain('Try another name or clear your filters.')
       expect(html).toContain('Clear filters')
-      expect(html).not.toContain('Add your first worker')
+      expect(html).not.toContain('No workers yet')
+    })
+
+    it('renders compact group empty state when one group has no workers', () => {
+      const html = renderToStaticMarkup(
+        React.createElement(WorkersRegister, {
+          workers: [pieceWorkerActive],
+          today: '2026-09-12',
+        })
+      )
+
+      expect(html).toContain('Rami Weaver')
+      expect(html).toContain('No fixed-salary workers')
     })
   })
 
   describe('Semantic Markup & Accessibility', () => {
-    it('renders accessible semantic markup with section labeling and list roles', () => {
+    it('renders accessible semantic markup with article cards and role=list', () => {
       const html = renderToStaticMarkup(
         React.createElement(WorkersRegister, {
           workers: mockWorkers,
@@ -320,35 +344,51 @@ describe('Workforce Register Premium UI Redesign', () => {
         })
       )
 
-      expect(html).toContain('aria-labelledby="workforce-register-heading"')
-      expect(html).toContain('id="workforce-register-heading"')
       expect(html).toContain('role="list"')
       expect(html).toContain('role="listitem"')
-      expect(html).not.toContain('role="tablist"')
+      expect(html).toContain('<article')
     })
   })
 
   describe('Localization Key Coverage', () => {
-    it('has Hindi and Gujarati translations for all refined workforce phrases', () => {
+    it('has Hindi and Gujarati translations for all redesigned workforce phrases', () => {
       const phrases = [
         'Add and manage your factory workforce.',
-        'Workforce register',
+        'Workers',
+        'Piece Rate',
+        'Fixed Salary',
+        'Paid based on production',
+        'Fixed monthly compensation',
         'Search workers…',
         'Search workers',
-        'All pay types',
-        'Piece rate',
-        'Fixed salary',
+        'All shifts',
+        'Shift filter',
+        'Worker status filter',
         'Active workers',
+        'Inactive workers',
         'All workers',
         'Add worker',
         '1 worker',
         'workers',
         'worker',
-        'Add workers to manage payroll and machine assignments.',
+        'Machines',
+        'Rate setup',
+        'Salary',
+        'Payroll',
+        'Configured',
+        'Not configured',
+        'Ready',
+        'Needs setup',
+        'View assignments',
+        'View payroll',
+        'Edit',
+        'No workers yet',
+        'Add workers to start building your factory workforce.',
         'No workers found',
-        'No workers match your current search or filters.',
+        'Try another name or clear your filters.',
         'Clear filters',
-        "We couldn't load your workers.",
+        'No piece-rate workers',
+        'No fixed-salary workers',
       ]
 
       const hi = BASE_CONTINUITY_PHRASES.hi as Record<string, string>

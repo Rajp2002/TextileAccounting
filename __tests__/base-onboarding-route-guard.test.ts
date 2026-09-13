@@ -18,6 +18,12 @@ describe('Base routes during estimator-only onboarding', () => {
             '/owner/quotes',
             '/owner/rates',
             '/owner/production',
+            '/owner/assignments',
+            '/owner/machines',
+            '/owner/workers',
+            '/owner/payroll',
+            '/owner/stock',
+            '/owner/dispatches',
             '/owner/settings',
         ]) {
             expect(incompleteOwnerGuard).toContain(`!pathname.startsWith('${route}')`)

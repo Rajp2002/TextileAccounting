@@ -7,13 +7,17 @@ import { MachineToolbar } from './MachineToolbar'
 import { MachineRow } from './MachineRow'
 import { MachineEmptyState } from './MachineEmptyState'
 
+import type { MachineStatusFilter } from './MachineToolbar'
+
 interface MachineRegisterPanelProps {
   machines: BaseProductionMachine[]
   visible: BaseProductionMachine[]
   search: string
   onSearchChange: (value: string) => void
-  inactive: boolean
-  onInactiveChange: (showInactive: boolean) => void
+  inactive?: boolean
+  onInactiveChange?: (showInactive: boolean) => void
+  statusFilter?: MachineStatusFilter
+  onStatusFilterChange?: (filter: MachineStatusFilter) => void
   onAdd: () => void
   onEdit: (machine: BaseProductionMachine) => void
 }
@@ -23,8 +27,10 @@ export function MachineRegisterPanel({
   visible,
   search,
   onSearchChange,
-  inactive,
+  inactive = true,
   onInactiveChange,
+  statusFilter = 'all',
+  onStatusFilterChange,
   onAdd,
   onEdit,
 }: MachineRegisterPanelProps) {
@@ -36,6 +42,8 @@ export function MachineRegisterPanel({
     : inactive
       ? machines.length
       : machines.filter(m => m.is_active).length
+
+  const activeStatusFilter: MachineStatusFilter = statusFilter || (inactive ? 'all' : 'active')
 
   return (
     <section
@@ -56,8 +64,10 @@ export function MachineRegisterPanel({
       <MachineToolbar
         search={search}
         onSearchChange={onSearchChange}
-        inactive={inactive}
-        onInactiveChange={onInactiveChange}
+        statusFilter={activeStatusFilter}
+        onStatusFilterChange={val => onStatusFilterChange?.(val) ?? onInactiveChange?.(val === 'all')}
+        totalCount={machines.length}
+        filteredCount={visible.length}
       />
 
       {/* Machine List / Empty State */}
@@ -72,12 +82,11 @@ export function MachineRegisterPanel({
       ) : (
         <MachineEmptyState
           totalCount={machines.length}
-          isFiltered={Boolean(search.trim() || !inactive)}
           hasSearch={Boolean(search.trim())}
-          isOnlyActive={!inactive}
+          statusFilter={activeStatusFilter}
           onAdd={onAdd}
           onClearSearch={() => onSearchChange('')}
-          onShowAll={() => onInactiveChange(true)}
+          onClearFilter={() => onStatusFilterChange?.('all') ?? onInactiveChange?.(true)}
         />
       )}
     </section>

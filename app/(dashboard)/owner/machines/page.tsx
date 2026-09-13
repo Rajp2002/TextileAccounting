@@ -9,7 +9,8 @@ export default async function MachinesPage({ searchParams }: { searchParams: Pro
  const { profile } = await requireRole(['owner'])
  const access = await getCachedOrgPlanAccess(profile.org_id)
  if ((await searchParams).register !== 'base' && hasCapability(access.effectiveTier, 'legacy_full_suite')) return <LegacyMachinesPage />
- const data = await loadMachinesRegister()
+ const today = getSuratTodayString()
+ const data = await loadMachinesRegister(today)
  if (!data) return null
- return <MachinesRegister key={data.orgId} machines={data.machines} today={getSuratTodayString()} />
+ return <MachinesRegister key={data.orgId} machines={data.machines} today={today} />
 }
