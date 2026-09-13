@@ -29,6 +29,13 @@ import {
     type BasePayrollPeriod,
     getBasePayrollPeriod,
 } from '@/lib/base-production-core'
+import {
+    type PayrollCycleConfig,
+    type PayrollCycleType,
+    DEFAULT_MONTHLY_CYCLE_RULE,
+    getPeriodContaining,
+    validateCycleRule,
+} from '@/lib/payroll-cycle-engine'
 
 export type BaseProductionInitialData = {
     orgId: string
@@ -36,6 +43,7 @@ export type BaseProductionInitialData = {
     factoryName?: string
     today: string
     payrollPeriod: { start: string; end: string }
+    payrollCycleConfig?: PayrollCycleConfig
     costings: BaseProductionCosting[]
     jobs: BaseProductionJob[]
     entries: BaseProductionEntry[]
@@ -99,7 +107,14 @@ function toRevisionSnapshot(value: unknown): BaseProductionRevisionSnapshot {
 
 export async function loadBaseProductionInitialData(orgId: string, today: string): Promise<BaseProductionInitialData> {
     const supabase = await createServerClient()
-    const payrollPeriod = getBasePayrollPeriod(today)
+
+    const cycleConfigPromise = supabase
+        .from('base_payroll_cycle_configs')
+        .select('id, org_id, cycle_type, rule, effective_from, effective_until, created_at, updated_at')
+        .eq('org_id', orgId)
+        .is('effective_until', null)
+        .order('created_at', { ascending: false })
+        .maybeSingle()
 
     const [
         organizationResult,
@@ -241,6 +256,8 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
         ).catch(() => ({ data: [], error: null })),
     ])
 
+    const payrollCycleConfigResult = await cycleConfigPromise
+
     if (organizationResult.error) {
         throw new Error(`Failed to load Base production organization: ${organizationResult.error.message ?? 'unknown database error'}`)
     }
@@ -262,6 +279,25 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
     const rawPayrollPeriods = (payrollPeriodsErr && (payrollPeriodsErr.code === 'PGRST205' || payrollPeriodsErr.code === '42P01' || payrollPeriodsErr.message?.includes('does not exist')))
         ? []
         : (requireRows(payrollPeriodsResult as any, 'payroll periods') as Record<string, any>[])
+
+    const rawCycleConfig = payrollCycleConfigResult?.data as Record<string, any> | null
+    const payrollCycleConfig: PayrollCycleConfig = rawCycleConfig ? {
+        id: String(rawCycleConfig.id),
+        orgId: String(rawCycleConfig.org_id),
+        cycleType: rawCycleConfig.cycle_type as PayrollCycleType,
+        rule: (validateCycleRule(rawCycleConfig.rule).normalizedRule ?? DEFAULT_MONTHLY_CYCLE_RULE),
+        effectiveFrom: String(rawCycleConfig.effective_from),
+        effectiveUntil: rawCycleConfig.effective_until ? String(rawCycleConfig.effective_until) : null,
+    } : {
+        cycleType: 'monthly',
+        rule: DEFAULT_MONTHLY_CYCLE_RULE,
+        effectiveFrom: '2020-01-01',
+        effectiveUntil: null,
+    }
+
+    const activeCycleRule = payrollCycleConfig.rule
+    const activePeriodBounds = getPeriodContaining(today, activeCycleRule)
+    const payrollPeriod = { start: activePeriodBounds.start, end: activePeriodBounds.end }
 
     const costings: BaseProductionCosting[] = rawCostings.map((row) => ({
         id: String(row.id),
@@ -478,6 +514,7 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
         factoryName: String(organizationResult.data?.name || 'Weavly'),
         today,
         payrollPeriod,
+        payrollCycleConfig,
         costings,
         jobs,
         entries,

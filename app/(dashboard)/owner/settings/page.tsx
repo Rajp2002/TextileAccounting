@@ -50,7 +50,9 @@ import { tierSatisfies } from '@/lib/subscription-access'
 import { RouteMilestones } from '@/components/performance/route-milestones'
 import { PageHeader } from '@/components/ui/page-header'
 import { PlanAwareSettingsView } from '@/components/settings/plan-aware/plan-aware-settings-view'
+import { PayrollCycleSettingsCard } from '@/components/settings/payroll/PayrollCycleSettingsCard'
 import { getFactoryCostProfile } from '@/app/(dashboard)/owner/estimator/actions'
+import { getBasePayrollCycleConfig } from '@/app/(dashboard)/owner/production/actions'
 
 const SettingsCardLoading = () => <div className="min-h-24 animate-pulse rounded-lg border border-hairline bg-surface-soft/55" />
 
@@ -286,6 +288,15 @@ export default function SettingsPage() {
         staleTime: 1000 * 60 * 5,
     })
 
+    const { data: payrollCycleData } = useQuery({
+        queryKey: ['base_payroll_cycle_config', userProfile?.org_id],
+        enabled: !!userProfile?.org_id,
+        queryFn: async () => {
+            return await getBasePayrollCycleConfig()
+        },
+        staleTime: 1000 * 60 * 5,
+    })
+
     const { data: authUser } = useQuery({
         queryKey: ['auth_user_details'],
         queryFn: async () => {
@@ -474,6 +485,7 @@ export default function SettingsPage() {
                         sizingMode: (costProfileData.default_sizing_mode ?? costProfileData.sizing_mode ?? 'in_house') as 'in_house' | 'outsourced',
                         updatedAt: costProfileData.updated_at,
                     } : null}
+                    payrollCycleConfig={payrollCycleData ?? null}
                     onFactoryNameChange={(newName) => {
                         setFactoryName(newName)
                         queryClient.setQueryData(['organization', userProfile?.org_id], (old: OrganizationSettings | undefined) =>
@@ -907,6 +919,12 @@ export default function SettingsPage() {
                                 <AccessCodeGenerator className="h-full" />
                             </SettingsSection>
                         </div>}
+
+                        {hasPremium && (
+                            <div className="pt-2">
+                                <PayrollCycleSettingsCard initialConfig={payrollCycleData ?? undefined} />
+                            </div>
+                        )}
 
                         {hasPremium && <SettingsSection id="automations" title="Communications & Automation" icon={MessageSquare}>
                             <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">

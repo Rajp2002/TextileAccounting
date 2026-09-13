@@ -16,6 +16,7 @@ import {
     ChevronRight,
     IndianRupee,
     Loader2,
+    Minus,
     Plus,
     ReceiptText,
     RotateCcw,
@@ -50,17 +51,23 @@ import {
     calculateBaseJobSummary,
     calculateBaseEntryGrossPay,
     calculateBasePayrollPeriodSummary,
-    getMonthPayrollBounds,
-    getAdjacentMonthKey,
     type BasePayrollPaymentMode,
     type BaseProductionCosting,
     type BaseProductionJobStatus,
     type BasePayrollPeriod,
 } from '@/lib/base-production-core'
+import {
+    type PayrollCycleRule,
+    DEFAULT_MONTHLY_CYCLE_RULE,
+    getPeriodContaining,
+    addDays,
+    formatDateLabel,
+} from '@/lib/payroll-cycle-engine'
 
 import {
     createBaseProductionJob,
     createBaseWorkerAdvance,
+    createBaseWorkerDeduction,
     settleBaseWorkerPayroll,
     updateBaseProductionJobStatus,
 } from './actions'
@@ -72,7 +79,7 @@ import BasePayrollRecords from './BasePayrollRecords'
 import BasePayrollSettlementWorkspace from './BasePayrollSettlementWorkspace'
 import type { BaseProductionInitialData } from './loaders'
 
-type DialogName = 'job' | 'advance' | null
+type DialogName = 'job' | 'advance' | 'deduction' | null
 
 type JobDraft = {
     costingId: string
@@ -86,6 +93,23 @@ type JobDraft = {
 type AdvanceDraft = {
     workerId: string
     amount: string
+    description: string
+}
+
+const DEDUCTION_REASONS = [
+    'Mistake / Damage',
+    'Water access / Utilities',
+    'Penalty / Absence',
+    'Mess / Canteen / Food',
+    'Other',
+] as const
+
+type DeductionReason = typeof DEDUCTION_REASONS[number]
+
+type DeductionDraft = {
+    workerId: string
+    amount: string
+    reason: DeductionReason
     description: string
 }
 
@@ -151,6 +175,10 @@ function emptyAdvanceDraft(workerId = ''): AdvanceDraft {
     return { workerId, amount: '', description: '' }
 }
 
+function emptyDeductionDraft(workerId = ''): DeductionDraft {
+    return { workerId, amount: '', reason: 'Mistake / Damage', description: '' }
+}
+
 export default function BaseProductionClient({
     initialData,
     initialCostingId = null,
@@ -174,6 +202,7 @@ export default function BaseProductionClient({
     const [payrollFilter, setPayrollFilter] = useState('all')
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         if (view === 'production') setActiveTab(navigation.tab ?? 'production')
     }, [navigation.tab, navigation.date, navigation.shift, navigation.entry, view])
     const [dialog, setDialog] = useState<DialogName>(null)
@@ -183,16 +212,24 @@ export default function BaseProductionClient({
     const [paymentMode, setPaymentMode] = useState<BasePayrollPaymentMode>('cash')
     const [jobDraft, setJobDraft] = useState<JobDraft>(() => emptyJobDraft(initialData.today, initialCostingId ?? ''))
     const [advanceDraft, setAdvanceDraft] = useState<AdvanceDraft>(emptyAdvanceDraft)
+    const [deductionDraft, setDeductionDraft] = useState<DeductionDraft>(emptyDeductionDraft)
     const [workspaceOpen, setWorkspaceOpen] = useState(false)
-    const [selectedMonthKey, setSelectedMonthKey] = useState(() => initialData.payrollPeriod.start.slice(0, 7))
+    const activeCycleRule = useMemo<PayrollCycleRule>(() => {
+        return initialData.payrollCycleConfig?.rule ?? DEFAULT_MONTHLY_CYCLE_RULE
+    }, [initialData.payrollCycleConfig])
 
-    const activePeriodBounds = useMemo(() => {
-        const defaultKey = initialData.payrollPeriod.start.slice(0, 7)
-        if (selectedMonthKey === defaultKey) {
-            return initialData.payrollPeriod
-        }
-        return getMonthPayrollBounds(`${selectedMonthKey}-01`)
-    }, [selectedMonthKey, initialData.payrollPeriod])
+    const [activePeriod, setActivePeriod] = useState<{ start: string; end: string }>(() => initialData.payrollPeriod)
+    const activePeriodBounds = activePeriod
+
+    const handlePreviousPeriod = () => {
+        const prev = getPeriodContaining(addDays(activePeriod.start, -1), activeCycleRule)
+        setActivePeriod({ start: prev.start, end: prev.end })
+    }
+
+    const handleNextPeriod = () => {
+        const next = getPeriodContaining(addDays(activePeriod.end, 1), activeCycleRule)
+        setActivePeriod({ start: next.start, end: next.end })
+    }
 
     const activePeriodRecord = useMemo(() => {
         return (initialData.payrollPeriods || []).find(
@@ -207,13 +244,17 @@ export default function BaseProductionClient({
         })
     }, [initialData.payables, activePeriodRecord])
 
-    const activeMonthLabel = useMemo(() => {
-        const [yearStr, monthStr] = selectedMonthKey.split('-')
-        const year = Number(yearStr)
-        const month = Number(monthStr)
-        if (!year || !month) return selectedMonthKey
-        return new Intl.DateTimeFormat('en-IN', { month: 'long', year: 'numeric' }).format(new Date(year, month - 1, 1))
-    }, [selectedMonthKey])
+    const activePeriodLabel = useMemo(() => {
+        if (activeCycleRule.type === 'monthly' && activeCycleRule.anchorDay === 1) {
+            const [yearStr, monthStr] = activePeriod.start.split('-')
+            const year = Number(yearStr)
+            const month = Number(monthStr)
+            if (year && month) {
+                return new Intl.DateTimeFormat('en-IN', { month: 'long', year: 'numeric' }).format(new Date(year, month - 1, 1))
+            }
+        }
+        return `${formatDateLabel(activePeriod.start)} – ${formatDateLabel(activePeriod.end)}`
+    }, [activePeriod, activeCycleRule])
 
     const workerById = useMemo(
         () => new Map(initialData.workers.map((worker) => [worker.id, worker])),
@@ -322,6 +363,11 @@ export default function BaseProductionClient({
         setDialog('advance')
     }
 
+    function openDeduction(workerId = activeWorkers[0]?.id ?? '') {
+        setDeductionDraft(emptyDeductionDraft(workerId))
+        setDialog('deduction')
+    }
+
     function openSetup(add?: 'worker' | 'machine', workerId?: string) {
         const params = new URLSearchParams({ returnTo: view === 'payroll' ? '/owner/payroll' : baseProductionHref(navigation) })
         if (add) { params.set('add', add); params.set('section', add === 'machine' ? 'machines' : 'workers') }
@@ -389,6 +435,27 @@ export default function BaseProductionClient({
                 description: advanceDraft.description,
             }),
             'Advance recorded.',
+            closeDialog,
+        )
+    }
+
+    function handleDeductionSubmit(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault()
+        const amount = Number.parseFloat(deductionDraft.amount)
+        if (!deductionDraft.workerId || !Number.isFinite(amount) || amount <= 0) {
+            toast.error('Choose a worker and enter a deduction greater than 0.')
+            return
+        }
+
+        void runAction(
+            'deduction-create',
+            () => createBaseWorkerDeduction({
+                workerId: deductionDraft.workerId,
+                amount,
+                reason: deductionDraft.reason,
+                description: deductionDraft.description,
+            }),
+            'Deduction recorded.',
             closeDialog,
         )
     }
@@ -488,21 +555,21 @@ export default function BaseProductionClient({
                                 <Button
                                     variant="ghost"
                                     size="icon-xs"
-                                    onClick={() => setSelectedMonthKey((curr) => getAdjacentMonthKey(curr, -1))}
+                                    onClick={handlePreviousPeriod}
                                     className="h-8 w-8 rounded-lg text-muted-foreground hover:text-ink"
-                                    aria-label="Previous month"
+                                    aria-label="Previous payroll period"
                                 >
                                     <ChevronLeft className="h-4 w-4" />
                                 </Button>
                                 <div className="px-2.5 py-1 text-sm font-bold text-ink sm:text-base">
-                                    {activeMonthLabel}
+                                    {activePeriodLabel}
                                 </div>
                                 <Button
                                     variant="ghost"
                                     size="icon-xs"
-                                    onClick={() => setSelectedMonthKey((curr) => getAdjacentMonthKey(curr, 1))}
+                                    onClick={handleNextPeriod}
                                     className="h-8 w-8 rounded-lg text-muted-foreground hover:text-ink"
-                                    aria-label="Next month"
+                                    aria-label="Next payroll period"
                                 >
                                     <ChevronRight className="h-4 w-4" />
                                 </Button>
@@ -805,6 +872,15 @@ export default function BaseProductionClient({
                                 const worker = workerById.get(payable.worker_id)
                                 const workerReadiness = readinessByWorker.get(payable.worker_id)
                                 const settlePending = pendingAction === `settle-${payable.worker_id}`
+                                const workerPendingItems = (initialData.advances || []).filter(
+                                    (item) => item.worker_id === payable.worker_id && item.status === 'pending'
+                                )
+                                const pendingDeductions = workerPendingItems.filter(
+                                    (item) => item.description?.startsWith('[Deduction') || item.description?.toLowerCase().startsWith('deduction:')
+                                )
+                                const pendingAdvances = workerPendingItems.filter(
+                                    (item) => !pendingDeductions.includes(item)
+                                )
                                 return (
                                     <Card key={payable.worker_id} className={`rounded-2xl border border-hairline bg-surface shadow-xs overflow-hidden transition-all ${!worker?.is_active ? 'opacity-75' : 'hover:border-hairline-strong'}`}>
                                         <CardHeader className="border-b border-hairline bg-surface-soft/40 p-4 sm:p-5">
@@ -833,14 +909,37 @@ export default function BaseProductionClient({
                                                 {payable.status === 'paid'
                                                     ? <>Paid on {formatDateOnly(payable.paid_at)} · {formatINR(payable.advance_recovery, { hideDecimals: true })} advance recovered.</>
                                                     : payable.pending_advance > 0
-                                                        ? <>{formatINR(payable.advance_recovery, { hideDecimals: true })} advance will be recovered this period from {formatINR(payable.pending_advance, { hideDecimals: true })} pending.{payable.remaining_debt > 0 ? ` ${formatINR(payable.remaining_debt, { hideDecimals: true })} carries forward.` : ''}</>
+                                                        ? pendingDeductions.length > 0 && pendingAdvances.length === 0
+                                                            ? <>{formatINR(payable.advance_recovery, { hideDecimals: true })} deduction will be recovered this period from {formatINR(payable.pending_advance, { hideDecimals: true })} pending.{payable.remaining_debt > 0 ? ` ${formatINR(payable.remaining_debt, { hideDecimals: true })} carries forward.` : ''}</>
+                                                            : pendingDeductions.length > 0 && pendingAdvances.length > 0
+                                                                ? <>{formatINR(payable.advance_recovery, { hideDecimals: true })} advance/deduction will be recovered this period from {formatINR(payable.pending_advance, { hideDecimals: true })} pending.{payable.remaining_debt > 0 ? ` ${formatINR(payable.remaining_debt, { hideDecimals: true })} carries forward.` : ''}</>
+                                                                : <>{formatINR(payable.advance_recovery, { hideDecimals: true })} advance will be recovered this period from {formatINR(payable.pending_advance, { hideDecimals: true })} pending.{payable.remaining_debt > 0 ? ` ${formatINR(payable.remaining_debt, { hideDecimals: true })} carries forward.` : ''}</>
                                                         : <>No advance to recover. Full gross pay is due this period.</>}
+                                                {pendingDeductions.length > 0 && payable.status !== 'paid' && (
+                                                    <div className="mt-2 flex flex-wrap gap-1.5 pt-1.5 border-t border-hairline/60">
+                                                        {pendingDeductions.map((deduction) => {
+                                                            const match = deduction.description?.match(/\[Deduction:\s*([^\]]+)\]\s*(.*)/)
+                                                            const label = match ? `${match[1]}${match[2] ? ` · ${match[2]}` : ''}` : deduction.description?.replace(/^\[Deduction\]\s*/, '') || 'Deduction'
+                                                            return (
+                                                                <span
+                                                                    key={deduction.id}
+                                                                    className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-700 dark:text-amber-400"
+                                                                    title={deduction.description || undefined}
+                                                                >
+                                                                    <span>-{formatINR(deduction.amount - deduction.recovered_amount, { hideDecimals: true })}</span>
+                                                                    <span className="truncate max-w-[160px]">({label})</span>
+                                                                </span>
+                                                            )
+                                                        })}
+                                                    </div>
+                                                )}
                                             </div>
                                             {workerReadiness && workerReadiness.verifiedLineCount > 0 && (
                                                 <p className="flex items-center gap-1.5 text-xs font-medium text-success"><CheckCircle2 className="h-3.5 w-3.5" /> {workerReadiness.verifiedLineCount} earning {workerReadiness.verifiedLineCount === 1 ? 'line' : 'lines'} reconciled{workerReadiness.legacyLineCount > 0 ? ` · ${workerReadiness.legacyLineCount} legacy` : ''}</p>
                                             )}
                                             <div className="flex flex-wrap gap-2 pt-1">
                                                 <Button size="sm" onClick={() => openAdvance(payable.worker_id)} disabled={!worker?.is_active} className="h-9 rounded-xl border-hairline bg-surface text-ink text-xs font-bold hover:bg-surface-soft shadow-xs"><Plus className="h-4 w-4" /> Add advance</Button>
+                                                <Button size="sm" onClick={() => openDeduction(payable.worker_id)} disabled={!worker?.is_active} className="h-9 rounded-xl border-hairline bg-surface text-ink text-xs font-bold hover:bg-surface-soft shadow-xs"><Minus className="h-4 w-4" /> Add deduction</Button>
                                                 {payable.status === 'unsettled' && payable.gross_pay > 0 && <Button size="sm" variant="outline" onClick={() => { setSettlementRequestId(crypto.randomUUID()); setSettlingWorkerId(payable.worker_id) }} disabled={settlePending || Boolean(workerReadiness?.issueCount)} className="h-9 rounded-xl bg-loom text-white text-xs font-bold shadow-xs hover:bg-loom-elevated">{settlePending ? <Loader2 className="h-4 w-4 animate-spin" /> : <WalletCards className="h-4 w-4" />} {workerReadiness?.issueCount ? 'Review before paying' : 'Mark paid'}</Button>}
                                             </div>
                                         </CardContent>
@@ -931,6 +1030,49 @@ export default function BaseProductionClient({
                 </DialogContent>
             </Dialog>
 
+            <Dialog open={dialog === 'deduction'} onOpenChange={(open) => !open && closeDialog()}>
+                <DialogContent className="max-w-md rounded-2xl border border-hairline bg-surface p-6 shadow-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-bold text-ink">Record worker deduction</DialogTitle>
+                        <DialogDescription className="text-sm text-body">Record a deduction for mistakes, damages, water/facility access, or other charges. It will be deducted during payroll settlement.</DialogDescription>
+                    </DialogHeader>
+                    <form className="space-y-4" onSubmit={handleDeductionSubmit}>
+                        <div className="space-y-2">
+                            <Label htmlFor="base-deduction-worker" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Worker</Label>
+                            <Select value={deductionDraft.workerId} onValueChange={(value) => setDeductionDraft((current) => ({ ...current, workerId: value }))}>
+                                <SelectTrigger id="base-deduction-worker" className="h-10 sm:h-11 w-full rounded-xl border-hairline bg-surface text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom"><SelectValue placeholder="Select a worker" /></SelectTrigger>
+                                <SelectContent className="rounded-xl border-hairline bg-surface shadow-lg">{activeWorkers.map((worker) => <SelectItem key={worker.id} value={worker.id}>{worker.name}</SelectItem>)}</SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="base-deduction-reason" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Reason / Category</Label>
+                            <Select value={deductionDraft.reason} onValueChange={(value) => setDeductionDraft((current) => ({ ...current, reason: value as DeductionReason }))}>
+                                <SelectTrigger id="base-deduction-reason" className="h-10 sm:h-11 w-full rounded-xl border-hairline bg-surface text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom"><SelectValue placeholder="Select a reason" /></SelectTrigger>
+                                <SelectContent className="rounded-xl border-hairline bg-surface shadow-lg">
+                                    {DEDUCTION_REASONS.map((reason) => (
+                                        <SelectItem key={reason} value={reason}>{reason}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="base-deduction-amount" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Amount</Label>
+                            <Input id="base-deduction-amount" type="number" min="0.01" step="0.01" inputMode="decimal" value={deductionDraft.amount} onChange={(event) => setDeductionDraft((current) => ({ ...current, amount: event.target.value }))} placeholder="0.00" className="h-10 sm:h-11 rounded-xl border-hairline bg-surface text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="base-deduction-description" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Notes <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                            <Textarea id="base-deduction-description" rows={2} value={deductionDraft.description} onChange={(event) => setDeductionDraft((current) => ({ ...current, description: event.target.value }))} placeholder="e.g. Cut piece on Loom 4, Water bill for September" className="rounded-xl border-hairline bg-surface text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom" />
+                        </div>
+                        <DialogFooter className="pt-2">
+                            <Button type="button" variant="outline" onClick={closeDialog} className="rounded-xl border-hairline hover:bg-surface-soft font-semibold">Cancel</Button>
+                            <Button type="submit" disabled={pendingAction === 'deduction-create'} className="rounded-xl bg-loom text-white font-bold shadow-xs hover:bg-loom-elevated">
+                                {pendingAction === 'deduction-create' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Minus className="h-4 w-4" />} Record deduction
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+
             <ConfirmActionDialog
                 open={Boolean(settlingWorkerId)}
                 onOpenChange={(open) => !open && setSettlingWorkerId(null)}
@@ -948,7 +1090,7 @@ export default function BaseProductionClient({
                     period={{
                         start: activePeriodBounds.start,
                         end: activePeriodBounds.end,
-                        label: activeMonthLabel,
+                        label: activePeriodLabel,
                     }}
                     payables={initialData.payables}
                     periodRecord={activePeriodRecord}

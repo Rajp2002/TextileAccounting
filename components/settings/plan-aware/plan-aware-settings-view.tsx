@@ -7,6 +7,8 @@ import type { SubscriptionTier } from '@/lib/subscription-access'
 import { PersonalInformationCard } from './personal-information-card'
 import { FactoryDetailsCard } from './factory-details-card'
 import { CostingDefaultsCard, type CostingDefaultsData } from './costing-defaults-card'
+import { PayrollCycleSettingsCard } from '../payroll/PayrollCycleSettingsCard'
+import { type PayrollCycleConfig } from '@/lib/payroll-cycle-engine'
 import { SecurityCard } from './security-card'
 import { DeletionReviewCard } from './deletion-review-card'
 import { useUnloadProtection } from './unsaved-changes-dialog'
@@ -29,6 +31,7 @@ export interface PlanAwareSettingsViewProps {
     tier: SubscriptionTier
     canEditDefaults: boolean
     initialDefaults?: CostingDefaultsData | null
+    payrollCycleConfig?: PayrollCycleConfig | null
     onProfileNameChange?: (name: string) => void
     onFactoryNameChange?: (name: string) => void
     onDefaultsChange?: (defaults: CostingDefaultsData) => void
@@ -40,6 +43,7 @@ export function PlanAwareSettingsView({
     tier,
     canEditDefaults,
     initialDefaults,
+    payrollCycleConfig,
     onProfileNameChange,
     onFactoryNameChange,
     onDefaultsChange,
@@ -49,8 +53,9 @@ export function PlanAwareSettingsView({
     const [personalDirty, setPersonalDirty] = useState(false)
     const [factoryDirty, setFactoryDirty] = useState(false)
     const [defaultsDirty, setDefaultsDirty] = useState(false)
+    const [payrollDirty, setPayrollDirty] = useState(false)
 
-    const isAnyDirty = personalDirty || factoryDirty || defaultsDirty
+    const isAnyDirty = personalDirty || factoryDirty || defaultsDirty || payrollDirty
     useUnloadProtection(isAnyDirty)
 
     // Fallback defaults object when entitled but no database row exists yet
@@ -111,9 +116,12 @@ export function PlanAwareSettingsView({
                         />
                     )}
 
-                    {/* Section 4: Production & Payroll (Conditional scope: Deferred per Section 9) */}
-
-                    {/* Section 5: Security (Universal) */}
+                    {/* Section 4: Production & Payroll */}
+                    <PayrollCycleSettingsCard
+                        initialConfig={payrollCycleConfig ?? undefined}
+                        isAuthorizedEditor={factory.isAuthorizedEditor ?? true}
+                        onDirtyChange={setPayrollDirty}
+                    />
                     <SecurityCard email={profile.email} />
 
                     {/* Section 6: Account & Factory Deletion (Universal) */}
