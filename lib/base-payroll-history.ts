@@ -1,5 +1,7 @@
 import type {
     BasePayrollPaymentMode,
+    BasePayrollPeriod,
+    BasePayrollPeriodStatus,
     BasePayrollSettlement,
     BasePayrollSettlementLine,
 } from './base-production-core'
@@ -53,6 +55,9 @@ export type BasePayrollHistoryPeriod = {
     key: string
     start: string
     end: string
+    status?: BasePayrollPeriodStatus | 'draft' | 'partial'
+    isSettled?: boolean
+    settledAt?: string | null
     workers: BasePayrollHistoryWorker[]
     machines: BasePayrollHistoryMachine[]
     totalMeters: number
@@ -61,6 +66,7 @@ export type BasePayrollHistoryPeriod = {
     totalNetPayout: number
     paymentModes: BasePayrollPaymentMode[]
     latestPaidAt: string
+    periodRecord?: BasePayrollPeriod | null
 }
 
 function round(value: number) {
@@ -70,6 +76,7 @@ function round(value: number) {
 export function buildBasePayrollHistory(
     settlements: BasePayrollSettlement[],
     lines: BasePayrollSettlementLine[],
+    periodRecords: BasePayrollPeriod[] = [],
 ): BasePayrollHistoryPeriod[] {
     const linesBySettlement = new Map<string, BasePayrollSettlementLine[]>()
     for (const line of lines) {
@@ -84,6 +91,19 @@ export function buildBasePayrollHistory(
         const current = settlementsByPeriod.get(key) ?? []
         current.push(settlement)
         settlementsByPeriod.set(key, current)
+    }
+
+    const periodRecordByKey = new Map<string, BasePayrollPeriod>()
+    for (const record of periodRecords) {
+        periodRecordByKey.set(`${record.period_start}:${record.period_end}`, record)
+    }
+
+    // Ensure settled periods appear even if all settlement lines are empty
+    for (const record of periodRecords) {
+        const key = `${record.period_start}:${record.period_end}`
+        if (!settlementsByPeriod.has(key)) {
+            settlementsByPeriod.set(key, [])
+        }
     }
 
     return [...settlementsByPeriod.entries()].map(([key, periodSettlements]) => {
@@ -162,12 +182,19 @@ export function buildBasePayrollHistory(
             }
         }
 
-        const start = periodSettlements[0]?.period_start ?? ''
-        const end = periodSettlements[0]?.period_end ?? ''
+        const [keyStart, keyEnd] = key.split(':')
+        const start = periodSettlements[0]?.period_start ?? keyStart ?? ''
+        const end = periodSettlements[0]?.period_end ?? keyEnd ?? ''
+        const periodRecord = periodRecordByKey.get(key) ?? null
+
         return {
             key,
             start,
             end,
+            status: periodRecord?.status ?? (workers.length > 0 ? 'in_progress' : 'open'),
+            isSettled: periodRecord?.status === 'settled',
+            settledAt: periodRecord?.settled_at ?? null,
+            periodRecord,
             workers,
             machines: [...machineGroups.values()].sort((a, b) => a.machineLabel.localeCompare(b.machineLabel)),
             totalMeters: round(workers.filter(worker => worker.status !== 'reversed').reduce((sum, worker) => sum + worker.meters, 0)),

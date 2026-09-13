@@ -210,11 +210,17 @@ export type NormalizedPayrollPdfData = {
  * - 'draft': No workers in the register have recorded paidAt dates
  */
 export function derivePayrollSettlementState(
-    period: BasePayrollHistoryPeriod & { status?: PayrollSettlementState | string },
+    period: BasePayrollHistoryPeriod,
 ): PayrollSettlementState {
     // 1. Explicit canonical period status takes direct precedence
-    if (period.status === 'settled' || period.status === 'partial' || period.status === 'draft') {
-        return period.status
+    if (period.status === 'settled') {
+        return 'settled'
+    }
+    if (period.status === 'partial' || period.status === 'in_progress' || period.status === 'ready_to_complete') {
+        return 'partial'
+    }
+    if (period.status === 'draft' || period.status === 'open') {
+        return 'draft'
     }
 
     const workers = period.workers || []

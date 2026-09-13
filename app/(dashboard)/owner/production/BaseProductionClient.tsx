@@ -12,6 +12,8 @@ import {
     ClipboardList,
     Clock3,
     History,
+    ChevronLeft,
+    ChevronRight,
     IndianRupee,
     Loader2,
     Plus,
@@ -47,9 +49,13 @@ import { trackPlanEvent } from '@/lib/plan-analytics'
 import {
     calculateBaseJobSummary,
     calculateBaseEntryGrossPay,
+    calculateBasePayrollPeriodSummary,
+    getMonthPayrollBounds,
+    getAdjacentMonthKey,
     type BasePayrollPaymentMode,
     type BaseProductionCosting,
     type BaseProductionJobStatus,
+    type BasePayrollPeriod,
 } from '@/lib/base-production-core'
 
 import {
@@ -63,6 +69,7 @@ import BaseMachineJobs from './BaseMachineJobs'
 import BaseDailyProductionSheet from './BaseDailyProductionSheet'
 import BasePayrollReadinessPanel from './BasePayrollReadinessPanel'
 import BasePayrollRecords from './BasePayrollRecords'
+import BasePayrollSettlementWorkspace from './BasePayrollSettlementWorkspace'
 import type { BaseProductionInitialData } from './loaders'
 
 type DialogName = 'job' | 'advance' | null
@@ -176,6 +183,37 @@ export default function BaseProductionClient({
     const [paymentMode, setPaymentMode] = useState<BasePayrollPaymentMode>('cash')
     const [jobDraft, setJobDraft] = useState<JobDraft>(() => emptyJobDraft(initialData.today, initialCostingId ?? ''))
     const [advanceDraft, setAdvanceDraft] = useState<AdvanceDraft>(emptyAdvanceDraft)
+    const [workspaceOpen, setWorkspaceOpen] = useState(false)
+    const [selectedMonthKey, setSelectedMonthKey] = useState(() => initialData.payrollPeriod.start.slice(0, 7))
+
+    const activePeriodBounds = useMemo(() => {
+        const defaultKey = initialData.payrollPeriod.start.slice(0, 7)
+        if (selectedMonthKey === defaultKey) {
+            return initialData.payrollPeriod
+        }
+        return getMonthPayrollBounds(`${selectedMonthKey}-01`)
+    }, [selectedMonthKey, initialData.payrollPeriod])
+
+    const activePeriodRecord = useMemo(() => {
+        return (initialData.payrollPeriods || []).find(
+            (p) => p.period_start === activePeriodBounds.start && p.period_end === activePeriodBounds.end
+        ) || null
+    }, [initialData.payrollPeriods, activePeriodBounds])
+
+    const activePeriodSummary = useMemo(() => {
+        return calculateBasePayrollPeriodSummary({
+            payables: initialData.payables,
+            periodRecord: activePeriodRecord ?? undefined,
+        })
+    }, [initialData.payables, activePeriodRecord])
+
+    const activeMonthLabel = useMemo(() => {
+        const [yearStr, monthStr] = selectedMonthKey.split('-')
+        const year = Number(yearStr)
+        const month = Number(monthStr)
+        if (!year || !month) return selectedMonthKey
+        return new Intl.DateTimeFormat('en-IN', { month: 'long', year: 'numeric' }).format(new Date(year, month - 1, 1))
+    }, [selectedMonthKey])
 
     const workerById = useMemo(
         () => new Map(initialData.workers.map((worker) => [worker.id, worker])),
@@ -419,48 +457,158 @@ export default function BaseProductionClient({
                 <BasePayrollRecords initialData={initialData} onBack={() => setActiveTab('pay')} />
             )}
 
-            {(view === 'production' || (view === 'payroll' && activeTab !== 'history')) && (
+            {view === 'production' && (
                 <Card className="overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs">
-                    {view === 'production' && (
-                        <div className="grid grid-cols-1 divide-y sm:grid-cols-2 sm:divide-y-0 sm:divide-x divide-hairline">
-                            <div className="p-4 sm:p-5">
-                                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                                    <ClipboardList className="h-4 w-4 text-muted-foreground" />
-                                    <span>Open jobs</span>
-                                </div>
-                                <p className="text-xl sm:text-2xl font-black tracking-tight text-ink">{openJobs}</p>
-                                <p className="mt-1 text-xs text-muted-foreground">Planned or active</p>
+                    <div className="grid grid-cols-1 divide-y sm:grid-cols-2 sm:divide-y-0 sm:divide-x divide-hairline">
+                        <div className="p-4 sm:p-5">
+                            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                                <ClipboardList className="h-4 w-4 text-muted-foreground" />
+                                <span>Open jobs</span>
                             </div>
-                            <div className="p-4 sm:p-5">
-                                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                                    <span>Produced this period</span>
-                                </div>
-                                <p className="text-xl sm:text-2xl font-black tracking-tight text-ink">{formatMeters(producedThisPeriod)}</p>
-                                <p className="mt-1 text-xs text-muted-foreground">{formatDateOnly(initialData.payrollPeriod.start)} – {formatDateOnly(initialData.payrollPeriod.end)}</p>
-                            </div>
+                            <p className="text-xl sm:text-2xl font-black tracking-tight text-ink">{openJobs}</p>
+                            <p className="mt-1 text-xs text-muted-foreground">Planned or active</p>
                         </div>
-                    )}
-                    {view === 'payroll' && (
-                        <div className="grid grid-cols-1 divide-y sm:grid-cols-2 sm:divide-y-0 sm:divide-x divide-hairline">
-                            <div className="p-4 sm:p-5">
-                                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                                    <WalletCards className="h-4 w-4 text-muted-foreground" />
-                                    <span>Worker payout</span>
-                                </div>
-                                <p className="text-xl sm:text-2xl font-black tracking-tight text-ink">{formatINR(unsettledPayable, { hideDecimals: true })}</p>
-                                <p className="mt-1 text-xs text-muted-foreground">Unsettled net pay</p>
+                        <div className="p-4 sm:p-5">
+                            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                                <span>Produced this period</span>
                             </div>
-                            <div className="p-4 sm:p-5">
-                                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                                    <IndianRupee className="h-4 w-4 text-muted-foreground" />
-                                    <span>Outstanding advances</span>
-                                </div>
-                                <p className="text-xl sm:text-2xl font-black tracking-tight text-ink">{formatINR(pendingAdvances, { hideDecimals: true })}</p>
-                                <p className="mt-1 text-xs text-muted-foreground">Before this period’s recovery</p>
-                            </div>
+                            <p className="text-xl sm:text-2xl font-black tracking-tight text-ink">{formatMeters(producedThisPeriod)}</p>
+                            <p className="mt-1 text-xs text-muted-foreground">{formatDateOnly(initialData.payrollPeriod.start)} – {formatDateOnly(initialData.payrollPeriod.end)}</p>
                         </div>
-                    )}
+                    </div>
+                </Card>
+            )}
+
+            {view === 'payroll' && activeTab !== 'history' && (
+                <Card className="overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs">
+                    <div className="flex flex-col gap-4 border-b border-hairline bg-surface-soft/40 p-4 sm:p-5 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex flex-wrap items-center gap-3">
+                            <div className="flex items-center rounded-xl border border-hairline bg-surface p-0.5 shadow-xs">
+                                <Button
+                                    variant="ghost"
+                                    size="icon-xs"
+                                    onClick={() => setSelectedMonthKey((curr) => getAdjacentMonthKey(curr, -1))}
+                                    className="h-8 w-8 rounded-lg text-muted-foreground hover:text-ink"
+                                    aria-label="Previous month"
+                                >
+                                    <ChevronLeft className="h-4 w-4" />
+                                </Button>
+                                <div className="px-2.5 py-1 text-sm font-bold text-ink sm:text-base">
+                                    {activeMonthLabel}
+                                </div>
+                                <Button
+                                    variant="ghost"
+                                    size="icon-xs"
+                                    onClick={() => setSelectedMonthKey((curr) => getAdjacentMonthKey(curr, 1))}
+                                    className="h-8 w-8 rounded-lg text-muted-foreground hover:text-ink"
+                                    aria-label="Next month"
+                                >
+                                    <ChevronRight className="h-4 w-4" />
+                                </Button>
+                            </div>
+
+                            <span className="text-xs font-medium text-muted-foreground">
+                                {formatDateOnly(activePeriodBounds.start)} – {formatDateOnly(activePeriodBounds.end)}
+                            </span>
+
+                            {activePeriodSummary.status === 'settled' ? (
+                                <Badge className="bg-emerald-600 font-bold text-xs text-white">
+                                    <CheckCircle2 className="mr-1 h-3.5 w-3.5" /> Settled
+                                </Badge>
+                            ) : activePeriodSummary.status === 'ready_to_complete' ? (
+                                <Badge className="bg-loom font-bold text-xs text-white">
+                                    Ready to Complete
+                                </Badge>
+                            ) : activePeriodSummary.status === 'in_progress' ? (
+                                <Badge variant="warning" className="font-bold text-xs">
+                                    In Progress ({activePeriodSummary.paidWorkers}/{activePeriodSummary.totalWorkers})
+                                </Badge>
+                            ) : (
+                                <Badge variant="secondary" className="font-bold text-xs">
+                                    Open
+                                </Badge>
+                            )}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <Button
+                                onClick={() => setWorkspaceOpen(true)}
+                                className="h-10 rounded-xl bg-loom px-4 font-bold text-white shadow-xs hover:bg-loom-elevated"
+                            >
+                                <WalletCards className="mr-2 h-4 w-4" />
+                                {activePeriodSummary.status === 'settled'
+                                    ? 'View Settled Payroll'
+                                    : activePeriodSummary.status === 'ready_to_complete'
+                                        ? 'Complete Payroll →'
+                                        : activePeriodSummary.status === 'in_progress'
+                                            ? 'Continue Settlement →'
+                                            : 'Settle Payroll →'}
+                            </Button>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 divide-y divide-hairline sm:grid-cols-3 sm:divide-y-0 sm:divide-x">
+                        <div className="p-4 sm:p-5">
+                            <div className="mb-1 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                                <ReceiptText className="h-4 w-4 text-muted-foreground" />
+                                <span>Total Payroll</span>
+                            </div>
+                            <p className="text-xl font-black tracking-tight text-ink sm:text-2xl">
+                                {formatINR(activePeriodSummary.totalGross, { hideDecimals: true })}
+                            </p>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                                {formatINR(activePeriodSummary.totalRecovery, { hideDecimals: true })} recovery · {formatINR(activePeriodSummary.totalNet, { hideDecimals: true })} net
+                            </p>
+                        </div>
+
+                        <div className="p-4 sm:p-5">
+                            <div className="mb-1 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-600">
+                                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                                <span>Paid so far</span>
+                            </div>
+                            <p className="text-xl font-black tracking-tight text-emerald-600 sm:text-2xl">
+                                {formatINR(activePeriodSummary.totalPaid, { hideDecimals: true })}
+                            </p>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                                {activePeriodSummary.paidWorkers} of {activePeriodSummary.totalWorkers} workers settled
+                            </p>
+                        </div>
+
+                        <div className="p-4 sm:p-5">
+                            <div className="mb-1 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                                <Clock3 className="h-4 w-4 text-muted-foreground" />
+                                <span>Remaining to settle</span>
+                            </div>
+                            <p className={`text-xl font-black tracking-tight sm:text-2xl ${activePeriodSummary.totalRemaining > 0 ? 'text-saffron-deep' : 'text-ink'}`}>
+                                {formatINR(activePeriodSummary.totalRemaining, { hideDecimals: true })}
+                            </p>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                                {activePeriodSummary.outstandingWorkers} workers outstanding
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="border-t border-hairline bg-surface-soft/30 px-4 py-3 sm:px-5">
+                        <div className="flex items-center justify-between text-xs font-semibold text-body mb-1.5">
+                            <span>Settlement Progress</span>
+                            <span className="font-bold text-ink">{activePeriodSummary.progressPercent}% settled</span>
+                        </div>
+                        <div
+                            className="h-2 w-full overflow-hidden rounded-full bg-surface-soft border border-hairline"
+                            role="progressbar"
+                            aria-valuenow={activePeriodSummary.progressPercent}
+                            aria-valuemin={0}
+                            aria-valuemax={100}
+                        >
+                            <div
+                                className={`h-full rounded-full transition-all duration-500 ${
+                                    activePeriodSummary.progressPercent === 100 ? 'bg-emerald-600' : 'bg-saffron'
+                                }`}
+                                style={{ width: `${activePeriodSummary.progressPercent}%` }}
+                            />
+                        </div>
+                    </div>
                 </Card>
             )}
 
@@ -792,6 +940,29 @@ export default function BaseProductionClient({
                 onConfirm={handleSettle}
                 isLoading={pendingAction === `settle-${settlingWorkerId}`}
             />
+
+            {view === 'payroll' && (
+                <BasePayrollSettlementWorkspace
+                    open={workspaceOpen}
+                    onOpenChange={setWorkspaceOpen}
+                    period={{
+                        start: activePeriodBounds.start,
+                        end: activePeriodBounds.end,
+                        label: activeMonthLabel,
+                    }}
+                    payables={initialData.payables}
+                    periodRecord={activePeriodRecord}
+                    workers={initialData.workers}
+                    readinessByWorker={readinessByWorker}
+                    defaultPaymentMode={paymentMode}
+                    onSuccess={() => {
+                        router.refresh()
+                    }}
+                    onViewRecords={() => {
+                        setActiveTab('history')
+                    }}
+                />
+            )}
         </div>
     )
 }

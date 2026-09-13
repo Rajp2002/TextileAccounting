@@ -26,6 +26,7 @@ import {
     type BaseWorkerMachineAssignment,
     type BaseWorkerAdvance,
     type BaseWorkerPayable,
+    type BasePayrollPeriod,
     getBasePayrollPeriod,
 } from '@/lib/base-production-core'
 
@@ -47,6 +48,7 @@ export type BaseProductionInitialData = {
     advances: BaseWorkerAdvance[]
     settlements: BasePayrollSettlement[]
     settlementLines: BasePayrollSettlementLine[]
+    payrollPeriods: BasePayrollPeriod[]
     payables: BaseWorkerPayable[]
     allocations: BaseProductionAllocation[]
 }
@@ -115,6 +117,7 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
         batchRevisionsResult,
         dailyEntriesResult,
         dailyAllocationsResult,
+        payrollPeriodsResult,
     ] = await Promise.all([
         supabase
             .from('organizations')
@@ -228,6 +231,14 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
             .order('created_at', { ascending: false })
             .order('id')
             .range(from, to)),
+        readCompleteBaseRows((from, to) => supabase
+            .from('base_payroll_periods')
+            .select('id, period_start, period_end, status, total_gross, total_recovery, total_net, total_workers, paid_workers, settled_at, settled_by, calculation_snapshot, resolved_worker_ids, notes, created_at, updated_at', from === 0 ? { count: 'exact' } : {})
+            .eq('org_id', orgId)
+            .order('period_end', { ascending: false })
+            .order('id')
+            .range(from, to)
+        ).catch(() => ({ data: [], error: null })),
     ])
 
     if (organizationResult.error) {
@@ -247,6 +258,10 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
     const rawBatchRevisions = requireRows(batchRevisionsResult, 'daily batch correction history')
     const rawDailyEntries = requireRows(dailyEntriesResult, 'daily entries')
     const rawDailyAllocations = requireRows(dailyAllocationsResult, 'daily production allocations')
+    const payrollPeriodsErr = payrollPeriodsResult.error as { code?: string; message?: string } | null
+    const rawPayrollPeriods = (payrollPeriodsErr && (payrollPeriodsErr.code === 'PGRST205' || payrollPeriodsErr.code === '42P01' || payrollPeriodsErr.message?.includes('does not exist')))
+        ? []
+        : (requireRows(payrollPeriodsResult as any, 'payroll periods') as Record<string, any>[])
 
     const costings: BaseProductionCosting[] = rawCostings.map((row) => ({
         id: String(row.id),
@@ -438,6 +453,26 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
     // legacy rows coherent while the write path repairs the stored status.
     const jobs = reconcileBaseProductionJobStatuses(storedJobs, entries, allocations)
 
+    const payrollPeriods: BasePayrollPeriod[] = (rawPayrollPeriods as Record<string, any>[]).map((row) => ({
+        id: String(row.id),
+        org_id: orgId,
+        period_start: toDate(row.period_start, payrollPeriod.start),
+        period_end: toDate(row.period_end, payrollPeriod.end),
+        status: (row.status === 'settled' || row.status === 'in_progress' || row.status === 'ready_to_complete') ? row.status : 'open',
+        total_gross: toBaseNumber(row.total_gross),
+        total_recovery: toBaseNumber(row.total_recovery),
+        total_net: toBaseNumber(row.total_net),
+        total_workers: Math.max(0, Number(row.total_workers) || 0),
+        paid_workers: Math.max(0, Number(row.paid_workers) || 0),
+        settled_at: row.settled_at ? String(row.settled_at) : null,
+        settled_by: row.settled_by ? String(row.settled_by) : null,
+        calculation_snapshot: row.calculation_snapshot ?? null,
+        resolved_worker_ids: Array.isArray(row.resolved_worker_ids) ? row.resolved_worker_ids.map(String) : [],
+        notes: toStringOrNull(row.notes),
+        created_at: String(row.created_at || new Date(0).toISOString()),
+        updated_at: String(row.updated_at || new Date(0).toISOString()),
+    }))
+
     return {
         orgId,
         factoryName: String(organizationResult.data?.name || 'Weavly'),
@@ -455,6 +490,7 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
         advances,
         settlements,
         settlementLines,
+        payrollPeriods,
         payables: calculateBaseWorkerPayables({ workers, entries, allocations, advances, settlements, periodEnd: today }),
         allocations,
     }

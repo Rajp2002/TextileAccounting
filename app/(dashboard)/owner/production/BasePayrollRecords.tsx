@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import {
     ChevronDown,
     ChevronRight,
+    CheckCircle2,
     Download,
     FileSpreadsheet,
     FileText,
@@ -14,6 +15,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -113,8 +115,8 @@ export default function BasePayrollRecords({
         finally { setReversing(false) }
     }
     const periods = useMemo(
-        () => buildBasePayrollHistory(initialData.settlements, initialData.settlementLines),
-        [initialData.settlementLines, initialData.settlements],
+        () => buildBasePayrollHistory(initialData.settlements, initialData.settlementLines, initialData.payrollPeriods),
+        [initialData.settlementLines, initialData.settlements, initialData.payrollPeriods],
     )
     const [selectedKey, setSelectedKey] = useState(periods[0]?.key ?? '')
     const [search, setSearch] = useState('')
@@ -224,13 +226,20 @@ export default function BasePayrollRecords({
                         <CardContent className="flex flex-col gap-3 py-4 lg:flex-row lg:items-end lg:justify-between">
                             <div className="grid flex-1 gap-3 sm:grid-cols-2">
                                 <div className="space-y-1.5">
-                                    <label className="text-xs font-semibold text-body" htmlFor="payroll-history-period">Pay period</label>
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-xs font-semibold text-body" htmlFor="payroll-history-period">Pay period</label>
+                                        {selectedPeriod.isSettled ? (
+                                            <Badge className="bg-emerald-600 text-white font-bold text-[10px]">
+                                                <CheckCircle2 className="h-3 w-3 mr-1" /> Settled
+                                            </Badge>
+                                        ) : null}
+                                    </div>
                                     <Select value={selectedPeriod.key} onValueChange={(value) => { setSelectedKey(value); setSearch('') }}>
                                         <SelectTrigger id="payroll-history-period" className="w-full h-10 rounded-xl border border-hairline bg-surface text-sm"><SelectValue /></SelectTrigger>
                                         <SelectContent>
                                             {periods.map((period) => (
                                                 <SelectItem key={period.key} value={period.key}>
-                                                    {formatDateOnly(period.start)} – {formatDateOnly(period.end)} · {formatCount(period.workers.length, 'record')}
+                                                    {formatDateOnly(period.start)} – {formatDateOnly(period.end)} · {formatCount(period.workers.length, 'record')}{period.isSettled ? ' · Settled' : ''}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>

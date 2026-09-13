@@ -94,6 +94,7 @@ const BaseSettlementSchema = z.object({
     workerId: UuidSchema,
     paymentMode: z.enum(['cash', 'bank_transfer', 'upi', 'cheque']),
     periodEnd: DateSchema,
+    note: z.string().trim().max(300, 'Note is too long').optional().or(z.literal('')),
     expected: z.object({
         client_request_id: UuidSchema,
         period_start: DateSchema,
@@ -102,6 +103,20 @@ const BaseSettlementSchema = z.object({
         net_payout: z.number().finite().nonnegative(),
         advance_balance_before: z.number().finite().nonnegative(),
     }),
+})
+
+const CompletePayrollPeriodSchema = z.object({
+    periodStart: DateSchema,
+    periodEnd: DateSchema,
+    calculationSnapshot: z.any(),
+    resolvedWorkerIds: z.array(z.string()).default([]),
+})
+
+const BaseCorrectionReasonSchema = z.string().trim().min(3, 'Briefly explain why this correction is needed.').max(240, 'Correction reason is too long.')
+
+const ReopenPayrollPeriodSchema = z.object({
+    periodId: UuidSchema,
+    reason: BaseCorrectionReasonSchema,
 })
 
 const BaseMachineTypeSchema = z.enum(['jacquard', 'power_loom', 'rapier', 'water_jet', 'air_jet', 'circular', 'other'])
@@ -180,8 +195,6 @@ const BaseDailyProductionSchema = z.object({
         context.addIssue({ code: 'custom', path: ['entries'], message: 'Enter production or mark at least one row zero/absent.' })
     }
 })
-
-const BaseCorrectionReasonSchema = z.string().trim().min(3, 'Briefly explain why this correction is needed.').max(240, 'Correction reason is too long.')
 
 async function requireBaseProductionOwner() {
     const result = await requireWritableOrg(['owner'])
@@ -797,6 +810,7 @@ export async function settleBaseWorkerPayroll(input: {
     workerId: string
     paymentMode: 'cash' | 'bank_transfer' | 'upi' | 'cheque'
     periodEnd: string
+    note?: string
     expected: { client_request_id: string; period_start: string; gross_pay: number; advance_deducted: number; net_payout: number; advance_balance_before: number }
 }) {
     await requireBaseProductionOwner()
@@ -804,12 +818,24 @@ export async function settleBaseWorkerPayroll(input: {
     if ('error' in parsed) return parsed
 
     const supabase = await createServerClient()
-    const { data, error } = await supabase.rpc('settle_base_worker_payroll_reviewed', {
+    const params: Record<string, unknown> = {
         p_worker_id: parsed.data.workerId,
         p_period_end: parsed.data.periodEnd,
         p_payment_mode: parsed.data.paymentMode,
         p_expected: parsed.data.expected,
-    })
+    }
+    if (parsed.data.note) {
+        params.p_note = parsed.data.note
+    }
+
+    let { data, error } = await supabase.rpc('settle_base_worker_payroll_reviewed', params)
+
+    if (error && params.p_note && error.message?.includes('p_note')) {
+        delete params.p_note
+        const retry = await supabase.rpc('settle_base_worker_payroll_reviewed', params)
+        data = retry.data
+        error = retry.error
+    }
 
     if (error) return databaseError(error, error.message || 'Payroll could not be settled. Please try again.')
 
@@ -830,4 +856,52 @@ export async function reverseBasePayrollSettlement(input: { settlementId: string
     revalidatePath('/owner/payroll')
     revalidatePath('/owner/operations')
     return { success: true }
+}
+
+export async function completeBasePayrollPeriod(input: {
+    periodStart: string
+    periodEnd: string
+    calculationSnapshot: unknown
+    resolvedWorkerIds?: string[]
+}) {
+    await requireBaseProductionOwner()
+    const parsed = safeParse(CompletePayrollPeriodSchema, input)
+    if ('error' in parsed) return parsed
+
+    const supabase = await createServerClient()
+    const { data, error } = await supabase.rpc('complete_base_payroll_period', {
+        p_period_start: parsed.data.periodStart,
+        p_period_end: parsed.data.periodEnd,
+        p_calculation_snapshot: parsed.data.calculationSnapshot,
+        p_resolved_worker_ids: parsed.data.resolvedWorkerIds ?? [],
+    })
+
+    if (error) return databaseError(error, error.message || 'Payroll period could not be completed. Please try again.')
+
+    revalidatePath('/owner/production')
+    revalidatePath('/owner/payroll')
+    revalidatePath('/owner/operations')
+    return { success: true, period: data }
+}
+
+export async function reopenBasePayrollPeriod(input: {
+    periodId: string
+    reason: string
+}) {
+    await requireBaseProductionOwner()
+    const parsed = safeParse(ReopenPayrollPeriodSchema, input)
+    if ('error' in parsed) return parsed
+
+    const supabase = await createServerClient()
+    const { data, error } = await supabase.rpc('reopen_base_payroll_period', {
+        p_period_id: parsed.data.periodId,
+        p_reason: parsed.data.reason,
+    })
+
+    if (error) return databaseError(error, error.message || 'Payroll period could not be reopened. Please try again.')
+
+    revalidatePath('/owner/production')
+    revalidatePath('/owner/payroll')
+    revalidatePath('/owner/operations')
+    return { success: true, period: data }
 }

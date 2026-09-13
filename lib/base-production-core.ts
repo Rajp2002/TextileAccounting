@@ -199,6 +199,49 @@ export type BasePayrollSettlement = {
     worker_name_snapshot?: string
     advance_balance_before?: number
     remaining_advance_balance?: number
+    note?: string | null
+    payroll_period_id?: string | null
+}
+
+export type BasePayrollPeriodStatus = 'open' | 'in_progress' | 'ready_to_complete' | 'settled'
+
+export type BasePayrollPeriod = {
+    id: string
+    org_id?: string
+    period_start: string
+    period_end: string
+    status: BasePayrollPeriodStatus
+    total_gross: number
+    total_recovery: number
+    total_net: number
+    total_workers: number
+    paid_workers: number
+    settled_at: string | null
+    settled_by: string | null
+    calculation_snapshot: any | null
+    resolved_worker_ids?: string[]
+    notes?: string | null
+    created_at?: string
+    updated_at?: string
+}
+
+export type BasePayrollPeriodSummary = {
+    status: BasePayrollPeriodStatus
+    totalGross: number
+    totalRecovery: number
+    totalNet: number
+    totalWorkers: number
+    paidWorkers: number
+    outstandingWorkers: number
+    resolvedWorkers: number
+    paidAmount: number
+    remainingAmount: number
+    totalPaid: number
+    totalRemaining: number
+    progressPercent: number
+    isReadyToComplete: boolean
+    isSettled: boolean
+    settledAt?: string | null
 }
 
 export type BasePayrollSettlementLine = {
@@ -241,8 +284,11 @@ export type BaseWorkerPayable = {
     remaining_debt: number
     net_payout: number
     status: 'unsettled' | 'paid'
+    payment_mode?: BasePayrollPaymentMode | null
     settlement_id: string | null
     paid_at: string | null
+    note?: string | null
+    is_resolved?: boolean
 }
 
 type NumericValue = number | string | null | undefined
@@ -482,8 +528,134 @@ export function calculateBaseWorkerPayables({
             remaining_debt: isPaid ? toRoundedNumber(pendingAdvance) : toBaseNumber(recovery.remainingDebt),
             net_payout: netPayout,
             status: isPaid ? 'paid' : 'unsettled',
+            payment_mode: paidSettlement?.payment_mode ?? null,
             settlement_id: paidSettlement?.id ?? null,
             paid_at: paidSettlement?.paid_at ?? null,
+            note: paidSettlement?.note ?? null,
         }
     })
 }
+
+export function getMonthPayrollBounds(dateOrMonth: string): { start: string; end: string; monthKey: string; label: string } {
+    const parts = dateOrMonth.slice(0, 7).split('-').map(Number)
+    const year = parts[0]
+    const month = parts[1]
+    if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12) {
+        throw new Error('Invalid month key or date')
+    }
+    const start = `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-01`
+    const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate()
+    const end = `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
+    const monthKey = `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}`
+    const label = new Intl.DateTimeFormat('en-IN', {
+        month: 'long',
+        year: 'numeric',
+        timeZone: 'Asia/Kolkata',
+    }).format(new Date(Date.UTC(year, month - 1, 1)))
+
+    return { start, end, monthKey, label }
+}
+
+export function getAdjacentMonthKey(monthKey: string, offset: number): string {
+    const [year, month] = monthKey.split('-').map(Number)
+    const date = new Date(Date.UTC(year, month - 1 + offset, 1))
+    return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`
+}
+
+export function calculateBasePayrollPeriodSummary({
+    payables,
+    periodRecord = null,
+    resolvedWorkerIds = [],
+}: {
+    payables: BaseWorkerPayable[]
+    periodRecord?: BasePayrollPeriod | null
+    resolvedWorkerIds?: string[]
+}): BasePayrollPeriodSummary {
+    const isSettled = periodRecord?.status === 'settled'
+
+    if (isSettled && periodRecord) {
+        const net = toBaseNumber(periodRecord.total_net)
+        return {
+            status: 'settled',
+            totalGross: toBaseNumber(periodRecord.total_gross),
+            totalRecovery: toBaseNumber(periodRecord.total_recovery),
+            totalNet: net,
+            totalWorkers: periodRecord.total_workers,
+            paidWorkers: periodRecord.paid_workers,
+            outstandingWorkers: 0,
+            resolvedWorkers: 0,
+            paidAmount: net,
+            remainingAmount: 0,
+            totalPaid: net,
+            totalRemaining: 0,
+            progressPercent: 100,
+            isReadyToComplete: false,
+            isSettled: true,
+            settledAt: periodRecord.settled_at ?? null,
+        }
+    }
+
+    const allResolved = new Set([
+        ...(periodRecord?.resolved_worker_ids ?? []),
+        ...resolvedWorkerIds,
+    ])
+
+    let totalGross = new Decimal(0)
+    let totalRecovery = new Decimal(0)
+    let totalNet = new Decimal(0)
+    let paidAmount = new Decimal(0)
+    let paidCount = 0
+    let resolvedCount = 0
+
+    for (const payable of payables) {
+        totalGross = totalGross.plus(toDecimal(payable.gross_pay))
+        totalRecovery = totalRecovery.plus(toDecimal(payable.advance_recovery))
+        totalNet = totalNet.plus(toDecimal(payable.net_payout))
+
+        if (payable.status === 'paid') {
+            paidAmount = paidAmount.plus(toDecimal(payable.net_payout))
+            paidCount += 1
+        } else if (payable.gross_pay === 0 && allResolved.has(payable.worker_id)) {
+            resolvedCount += 1
+        }
+    }
+
+    const totalWorkers = payables.length
+    const remainingWorkers = totalWorkers - paidCount - resolvedCount
+    const outstandingWorkers = Math.max(0, remainingWorkers)
+    const remainingAmount = Decimal.max(0, totalNet.minus(paidAmount))
+
+    let status: BasePayrollPeriodStatus = 'open'
+    if (totalWorkers > 0 && outstandingWorkers === 0) {
+        status = 'ready_to_complete'
+    } else if (paidCount > 0) {
+        status = 'in_progress'
+    }
+
+    const progressPercent = totalWorkers > 0
+        ? Math.min(100, Math.round(((paidCount + resolvedCount) / totalWorkers) * 100))
+        : 0
+
+    const roundedPaid = toRoundedNumber(paidAmount)
+    const roundedRemaining = toRoundedNumber(remainingAmount)
+
+    return {
+        status,
+        totalGross: toRoundedNumber(totalGross),
+        totalRecovery: toRoundedNumber(totalRecovery),
+        totalNet: toRoundedNumber(totalNet),
+        totalWorkers,
+        paidWorkers: paidCount,
+        outstandingWorkers,
+        resolvedWorkers: resolvedCount,
+        paidAmount: roundedPaid,
+        remainingAmount: roundedRemaining,
+        totalPaid: roundedPaid,
+        totalRemaining: roundedRemaining,
+        progressPercent,
+        isReadyToComplete: status === 'ready_to_complete',
+        isSettled: false,
+        settledAt: null,
+    }
+}
+
