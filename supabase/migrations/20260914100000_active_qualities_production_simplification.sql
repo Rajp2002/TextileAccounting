@@ -5,9 +5,11 @@
 -- deactivation while strictly maintaining piece-rate payroll integrity and
 -- worker-machine relationships.
 
+DROP FUNCTION IF EXISTS public.set_base_machine_job_context(uuid, uuid, date);
+
 CREATE OR REPLACE FUNCTION public.set_base_machine_job_context(
   p_machine_id uuid,
-  p_job_id uuid,
+  p_job_id uuid DEFAULT NULL,
   p_effective_from date DEFAULT (now() AT TIME ZONE 'Asia/Kolkata')::date
 )
 RETURNS jsonb
