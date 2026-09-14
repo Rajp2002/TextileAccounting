@@ -1,9 +1,8 @@
 'use client'
 
-import React, { useRef, useEffect, useCallback } from 'react'
-import { Trash2, Plus, AlertCircle, Undo2 } from 'lucide-react'
+import React, { useRef, useEffect } from 'react'
+import { Trash2, AlertCircle } from 'lucide-react'
 import { toast } from '@/lib/app-notifications'
-import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useTranslation } from '@/lib/i18n/context'
 

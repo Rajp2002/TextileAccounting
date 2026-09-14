@@ -3,13 +3,12 @@
 import React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowLeft, ArrowRight, Loader2, Sparkles } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { LanguageSwitcher } from '@/components/i18n/language-switcher'
 import { useTranslation } from '@/lib/i18n/context'
 import { OnboardingStepper } from './OnboardingStepper'
 import type { BaseOnboardingStep } from '@/lib/base-onboarding'
-import { cn } from '@/lib/utils'
 
 interface OnboardingShellProps {
     children: React.ReactNode

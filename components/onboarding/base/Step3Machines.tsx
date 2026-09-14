@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useMemo } from 'react'
-import { Cpu, Plus, Sparkles, X } from 'lucide-react'
+import { Cpu, Plus, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTranslation } from '@/lib/i18n/context'
 import {

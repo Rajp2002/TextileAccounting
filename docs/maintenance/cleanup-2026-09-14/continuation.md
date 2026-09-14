@@ -1,0 +1,70 @@
+# Cleanup continuation — B03
+
+Status: completed. B03 removes two unreferenced private callbacks and five unused import bindings (20 additional lines) from the production client. Full tests, focused tests, types and fresh build passed; lint has only the same existing errors. B01/B02 and all original user work are preserved.
+
+## Baseline and scope
+
+The user requested continuation under the original cleanup boundaries. Branch remains `main`, HEAD `77a511b66ba1c2c557e2cc2c656bbadf323a379f`, with no staged changes. B01/B02 are the task's existing edits; the original four user files remain untouched. A new snapshot of all 2,055 current source/document files, hashes, status, untracked inventory and staged/unstaged patches is at `/tmp/weavly-cleanup-continuation-4elnpix_`. No environment files were copied.
+
+SHA-256 comparison of every original file against the B02 final snapshot proves that the application, tests, configuration and user work exactly match the already verified baseline. The baseline is therefore the completed B02 run (267 files, 1,946 tests passed, one live skip; types/build passed; lint three errors and 150 warnings). No assumption about a branch name substitutes for this comparison. Repository instructions and npm scripts were rechecked; no new AGENTS.md or contributor guidance was found. No new tooling, production access, schema or configuration changes.
+
+## Candidate gate and batch manifest
+
+All B03 candidates are in `app/(dashboard)/owner/production/BaseProductionClient.tsx`. TypeScript and ESLint diagnostics from the matching baseline identify them. Exact-name searches cover the captured tracked/untracked nonsecret source, hidden configuration, scripts, templates, tests and documents. The only code occurrence of each callback name is its declaration; historical mentions in this task's audit are not consumers. The callbacks are lexical declarations inside the component, neither exported nor assigned to properties. There is no eval/reflection mechanism in the module. Function creation does not execute their bodies. Commit `727ba5d2` removed their JSX consumers. Current Active Qualities activation callbacks, Daily Sheet, deep-link parsing and setup navigation remain intact.
+
+| Candidate | Purpose and consumers/effects assessed | Decision, verification, reversal |
+| --- | --- | --- |
+| C17 `openNewJob` | Old job-card button callback. Its two former JSX call sites were removed by `727ba5d2`. It would set activation-modal state if called; it is not called or registered. Current `onActivateQuality={() => setIsActivateModalOpen(true)}` stays. | REMOVE-SAFE / B03. Remove declaration only; compare all retained component statements and JSX, run full regression/types/lint/fresh build. Reverse `patches/B03.patch`. |
+| C18 `openRecord` | Old card's production navigation callback. Its only JSX call site was removed by the same commit. Would check workers, toast and navigate if called; no reference or initialization call exists. `openSetup`, `baseProductionHref`, current tabs and URL contracts remain. | REMOVE-SAFE / B03; same checks and reversal. No supported route or validation removed. |
+| C19 `ClipboardList`, `IndianRupee`, `RotateCcw` import bindings | Unused lucide icons from old UI. Whole-file inspection and compiler/lint confirm no references. Many live lucide bindings remain in the same import, preserving module evaluation. No icon package/export removed. | REMOVE-SAFE / B03; same checks. Only these import specifiers change. |
+| C20 `calculateBaseJobSummary` import binding | Unused per-card calculation import. No invocation in this component. Other runtime imports from `base-production-core` remain; the calculation implementation and public export stay. The separate `calculateBaseJobSummaries` memo is intentionally retained. | REMOVE-SAFE / B03; same checks. No business calculation or evaluation of a live expression removed. |
+| C21 `type BasePayrollPeriod` import binding | Unused type-only binding. No reference, public type declaration, value import or emitted side effect depends on it. | REMOVE-SAFE / B03; same checks. |
+| C06 remainder: `handleJobStatus`, action imports | The unused handler is the only source consumer of `updateBaseProductionJobStatus`. Removing it and its import may affect framework server-action reachability for installed clients. | REVIEW, unchanged. A separately approved public-action compatibility review must establish old-client support and action-manifest behavior. Generic “continue” does not authorize public-interface retirement. |
+| C05 / C06 remaining data readers, state and memos | `costingTargetMeters`, `jobDraft`, `jobSummaries` and numeric aggregates involve record shapes, hooks, initializers or calculations. Unused result does not prove no effects. | REVIEW, unchanged. Need separate effect/compatibility analysis; no hook-order or financial calculation change in B03. |
+| C07/C08 register wrappers and keyboard hook | Re-inspected source/history: exported UI wrappers/hook with potential template/external consumers. Their replacement-looking names are insufficient evidence; deleting UI source also changes Tailwind's source scan. | REVIEW, unchanged; stronger consumer evidence and relevant rendered coverage needed. |
+
+B03 is one coherent old-production-card cleanup: two unreferenced callback declarations and five unused import specifiers. No files, tests, signatures of used functions, server actions, routes, styles, translations, public assets, hooks or computed values are removed. No new tests asserting absence will be added; existing supported-flow tests and structural verification are used. All B01/B02 edits and the original user work must remain intact.
+
+## Verification plan
+
+Use the same existing isolation runner as B02 in a fresh copy with no `.next` output, synthetic non-serving loopback Supabase configuration, telemetry off and no credentials. Required integrated commands include the full 267-file suite, configured TypeScript check, full lint and production build. Compare lint diagnostics against B02 (expect only seven unused-binding/callback warnings removed); compare source imports/exports, route manifests and server-action IDs. Reuse B02's public browser baseline and its explicit authenticated/mobile/fixture limitations; no new live operation or fixture repair is authorized.
+
+Before editing, full source-level reachability and history evidence establish that the callback bodies are never evaluated. After editing, an AST-based comparison must establish that every retained top-level statement, hook, calculation, handler and JSX return is unchanged, apart from the five named import bindings. Test meaningful production/assignment/payroll/navigation contracts with existing fixtures. A required new failure means reverse only B03, preserving B01/B02.
+
+## Validation ledger
+
+The baseline column uses the immediately preceding, byte-identical B02 application/test state. Its actual commands and results are recorded in `report.md`. B03 executes in `/tmp/weavly-cleanup-continuation-4elnpix_/final` (F3); the copy has no `.env*` and initially had no `.next`. Installed versions remain Next 16.2.12, TS 5.9.3, Vitest 4.1.8 and ESLint 9.39.2. Scripts are unchanged. Every package command below is prefixed by `node scripts/performance/isolated-command.mjs`, with synthetic non-serving loopback Supabase settings, live-test opt-in disabled and telemetry/credentials cleared. Builds generate only disposable outputs. Prebuild's full tests are run separately; `--ignore-scripts` does not change the repository's build/test gates.
+
+| Exact command after isolation prefix / scenario | B02 baseline | B03 integrated F3 | Evidence/limits |
+| --- | --- | --- | --- |
+| `npm test -- --maxWorkers=2` | PASS: 267 files, 1,946 passed, one live skip | PASS: same counts | Full app/test dependency graph; unit, mock, source/SQL-contract and isolated temporary-file checks. Six expected mocked auth/session warning events match after removing variable elapsed-time fields. |
+| `npm test -- __tests__/active-qualities-production-flow.test.ts __tests__/base-production-core.test.ts __tests__/base-production-continuity.test.ts __tests__/management-navigation.test.ts --maxWorkers=2` | PASS within full suite | PASS: four files, 40 tests | Current activation/loom wiring, production/payroll calculations, continuity and navigation contracts; no live DB writes. |
+| `node node_modules/typescript/bin/tsc --noEmit --incremental false` | PASS | PASS | Configured complete type graph, no settings changed. |
+| `npm run lint -- --format json --output-file ../final-lint.json` | FAIL: three errors, 150 warnings | FAIL: same three errors, 143 warnings | Exact diagnostic comparison has no additions; only seven named B03 warnings removed. Existing errors remain in FreeUsageCard, navigation-disclosure and use-gutter-dock. |
+| `npm run build --ignore-scripts` | PASS: 64 static pages | PASS: 64 static pages | Fresh production build, PWA generation and Next type gate. Google Fonts may be fetched read-only; no Sentry uploads or deployment. |
+| Source and generated contract inventories | PASS | PASS | Same source paths, module edges, dynamic imports, exports and orphan inventory. `app-paths-manifest` and `routes-manifest` equal. All 261 Node server-action filenames/export names and worker registrations match; no Edge actions. Opaque IDs regenerate across clean builds: the earlier B01/B02 pair also shares zero IDs while retaining the same exports. Installed Next code generates a fresh key when no cache/provided key exists (`encryption-utils-server.js:50–108`) and passes it as `serverReferenceHashSalt` (`webpack-config.js:417,443`). Exact-ID equality was an unsuitable build comparison; exported identities and worker registrations are unchanged. No key values were output or recorded. No key material recorded. |
+| Public HTTP/browser smoke | PASS in B02 | PASS | Same loopback-only scenarios as B02; not authenticated end-to-end coverage. |
+| Authenticated DB/tenant, payment/messaging, mobile visual, full PWA recovery | NOT RUN / BLOCKED as previously recorded | NOT RUN | Existing isolation/browser limitations unchanged; no production operations or harness fixes. |
+
+Additional exact commands from repository root: `node /tmp/weavly-cleanup-continuation-4elnpix_/verify-b03.cjs` PASS; `git diff --check` PASS; `git apply --reverse --check docs/maintenance/cleanup-2026-09-14/patches/B03.patch` PASS. The latter patch was also applied to a disposable file copy, restoring exactly the B02 SHA-256 bytes. `node /tmp/weavly-cleanup-20260914-6jfkbodn/inventory.cjs` from F3 generated the source inventory.
+
+The temporary AST verifier initially failed because its TypeScript factory reconstruction dropped import trailing commas; inspection showed only those printed comma differences. The verifier was corrected to preserve `NodeArray.hasTrailingComma`, after which the exact normalized comparison passed. Application source and tests were not changed to satisfy that diagnostic. Initial discovery searches also named two absent test files; the actual consumers were found by reference search before the focused test command. No test result is inferred from those failed file lookups.
+
+## Reversal and preservation
+
+`patches/B03.patch` contains only this batch. Reverse it before older batches when undoing the entire cleanup:
+
+```sh
+git apply --reverse --check docs/maintenance/cleanup-2026-09-14/patches/B03.patch
+git apply --reverse docs/maintenance/cleanup-2026-09-14/patches/B03.patch
+```
+
+If the check fails following later edits, stop and reconcile only the conflicting hunk. Do not reset the source file: it already contains B01, and the working tree also contains the user's independent build work. `manifest.json` records B03 before/after hashes and patch hash. This continuation adds only `continuation.md` and `patches/B03.patch`, updates the task-owned audit/report/manifest, and changes the already task-owned production client. No tests or original user files are changed, and no commit, staging, branch switch or deployment occurs. No batch has been reverted.
+
+## Final result
+
+B03 is retained. Final checks: 267 test files / 1,946 passed / one intentional live skip; 40 focused tests passed; standalone TypeScript and fresh build passed with 64 static pages. Lint remains FAIL on the same three baseline errors, with warnings 150 → 143. No new warning/error, source entry/export, route, server-action export, tracked generated output or public asset difference was introduced. Generated action IDs vary across independent builds as explained above. The complete remaining AST, including all live event callbacks, hooks, business calculations and JSX, is preserved.
+
+The built server ran from F3 using `node scripts/performance/isolated-command.mjs node node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 4322`. From repository root, `python3 /tmp/weavly-cleanup-continuation-4elnpix_/http-smoke.py 4322 final` passed all seven existing scenarios: login/offline 200, four protected pages 307 to login, Free status API 401. Browser checks passed for English/Hindi/Gujarati, Gujarati reload and Tab focus, production deep-link redirect and offline content. The 1280 × 720 English login screenshot is byte-identical to B02; captured browser errors/warnings are empty. Screenshot bytes were compared in memory, not added to repository files. The server and agent-created tab were closed.
+
+Authenticated login/session/logout, real tenant/RLS enforcement, live business workflows, mobile visual checks and true network-offline recovery remain unverified as previously disclosed. No guarantee of zero regressions is made. No tests were removed, weakened or added; no production service was used. All starting files outside the production client and the three task-owned closeout documents retain their continuation-start hashes; the earlier yarn cleanup and four original user files remain unchanged. Only `continuation.md` and `patches/B03.patch` are newly added in this pass. No staged changes, branch/HEAD change or reverted batch.

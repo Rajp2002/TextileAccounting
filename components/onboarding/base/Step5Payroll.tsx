@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Calendar, Clock, AlertCircle, Sparkles } from 'lucide-react'
+import { Calendar } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTranslation } from '@/lib/i18n/context'
 import type { PayrollCycleInput } from '@/lib/base-onboarding'

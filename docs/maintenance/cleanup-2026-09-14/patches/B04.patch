@@ -1,0 +1,110 @@
+--- a/app/(dashboard)/owner/production/BaseActiveQualities.tsx
++++ b/app/(dashboard)/owner/production/BaseActiveQualities.tsx
+@@ -5,12 +5,8 @@
+ import { useRouter } from 'next/navigation'
+ import { toast } from 'sonner'
+ import {
+-    Activity,
+     AlertCircle,
+-    ArrowRight,
+-    Check,
+     CheckCircle2,
+-    Clock3,
+     ExternalLink,
+     Factory,
+     History,
+@@ -19,14 +15,13 @@
+     MoreVertical,
+     Plus,
+     Search,
+-    SlidersHorizontal,
+     StopCircle,
+     Wrench,
+ } from 'lucide-react'
+
+ import { Badge } from '@/components/ui/badge'
+ import { Button } from '@/components/ui/button'
+-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
++import { Card } from '@/components/ui/card'
+ import {
+     Dialog,
+     DialogContent,
+--- a/app/(dashboard)/owner/production/BaseMachineBoard.tsx
++++ b/app/(dashboard)/owner/production/BaseMachineBoard.tsx
+@@ -5,30 +5,22 @@
+ import { useRouter } from 'next/navigation'
+ import { toast } from 'sonner'
+ import {
+-    AlertCircle,
+-    ArrowRight,
+     ArrowRightLeft,
+     Check,
+     CheckCircle2,
+-    Clock3,
+-    Layers,
+     Loader2,
+     Moon,
+     Plus,
+-    RefreshCw,
+     Search,
+     Sun,
+     Trash2,
+-    UserCheck,
+-    UserMinus,
+-    UserPlus,
+     Users,
+     Wrench,
+ } from 'lucide-react'
+
+ import { Badge } from '@/components/ui/badge'
+ import { Button } from '@/components/ui/button'
+-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
++import { Card } from '@/components/ui/card'
+ import {
+     Dialog,
+     DialogContent,
+--- a/app/(dashboard)/owner/production/BasePayrollSettlementWorkspace.tsx
++++ b/app/(dashboard)/owner/production/BasePayrollSettlementWorkspace.tsx
+@@ -3,21 +3,14 @@
+ import { useDeferredValue, useMemo, useState } from 'react'
+ import { useRouter } from 'next/navigation'
+ import {
+-    AlertCircle,
+     ArrowRight,
+     Check,
+     CheckCircle2,
+     ChevronDown,
+     ChevronRight,
+-    Clock,
+-    DollarSign,
+     Info,
+     Loader2,
+-    Lock,
+-    RotateCcw,
+     Search,
+-    ShieldAlert,
+-    SlidersHorizontal,
+     WalletCards,
+     X,
+ } from 'lucide-react'
+@@ -25,7 +18,6 @@
+
+ import { Badge } from '@/components/ui/badge'
+ import { Button } from '@/components/ui/button'
+-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+ import {
+     Dialog,
+     DialogContent,
+--- a/components/settings/payroll/PayrollCycleSettingsCard.tsx
++++ b/components/settings/payroll/PayrollCycleSettingsCard.tsx
+@@ -6,10 +6,7 @@
+     CheckCircle2,
+     Clock,
+     AlertCircle,
+-    ArrowRight,
+     Loader2,
+-    ShieldAlert,
+-    HelpCircle,
+ } from 'lucide-react'
+ import { Label } from '@/components/ui/label'
+ import { Input } from '@/components/ui/input'

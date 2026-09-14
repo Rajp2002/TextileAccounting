@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Sliders, Percent, HelpCircle, Layers, DollarSign } from 'lucide-react'
+import { Sliders, Percent, DollarSign } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTranslation } from '@/lib/i18n/context'
 import type { FactoryDefaultsInput } from '@/lib/base-onboarding'

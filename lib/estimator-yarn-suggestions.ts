@@ -1,5 +1,5 @@
 import { normalizeYarnName } from './yarn-rate-reconciliation'
-import { getEffectiveYarnDenier, type WarpRow, type WeftRow } from './estimator'
+import { getEffectiveYarnDenier } from './estimator'
 
 export interface SavedYarnOption {
     name: string

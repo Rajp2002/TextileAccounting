@@ -1,0 +1,29 @@
+--- a/app/(dashboard)/owner/production/BaseProductionClient.tsx
++++ b/app/(dashboard)/owner/production/BaseProductionClient.tsx
+@@ -134,26 +134,6 @@
+
+ function formatMeters(value: number) {
+     return `${new Intl.NumberFormat('en-IN', { maximumFractionDigits: 2 }).format(value)} m`
+-}
+-
+-function getStatusVariant(status: BaseProductionJobStatus): 'brand' | 'warning' | 'success' | 'secondary' {
+-    if (status === 'active') return 'brand'
+-    if (status === 'completed') return 'success'
+-    if (status === 'cancelled') return 'secondary'
+-    return 'warning'
+-}
+-
+-function getNextStatus(status: BaseProductionJobStatus): BaseProductionJobStatus | null {
+-    if (status === 'planned') return 'active'
+-    if (status === 'active') return 'completed'
+-    if (status === 'completed' || status === 'cancelled') return 'active'
+-    return null
+-}
+-
+-function getStatusActionLabel(status: BaseProductionJobStatus) {
+-    if (status === 'planned') return 'Start job'
+-    if (status === 'active') return 'Mark complete'
+-    return 'Reopen job'
+ }
+
+ function getActionError(result: unknown) {
