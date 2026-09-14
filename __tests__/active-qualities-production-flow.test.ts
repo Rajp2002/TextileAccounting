@@ -29,7 +29,7 @@ describe('Active Qualities Production Simplification Flow', () => {
         expect(migration).toContain("status = 'completed'")
         // Must close machine contexts but NOT delete worker assignments
         expect(migration).toContain('UPDATE public.base_machine_job_contexts')
-        expect(migration).not.toMatch(/DELETE FROM public\.base_worker_machine_assignments.*deactivate_quality_production/s)
+        expect(migration).not.toMatch(/DELETE FROM public\.base_worker_machine_assignments[\s\S]*deactivate_quality_production/)
 
         // Verifies atomic quality switch RPC
         expect(migration).toContain('CREATE OR REPLACE FUNCTION public.switch_base_machine_quality')
@@ -40,7 +40,7 @@ describe('Active Qualities Production Simplification Flow', () => {
 
         // Verifies updated set_base_machine_job_context does NOT delete worker assignments when job is cleared
         expect(migration).toContain('CREATE OR REPLACE FUNCTION public.set_base_machine_job_context')
-        expect(migration).not.toMatch(/DELETE FROM public\.base_worker_machine_assignments\s+WHERE machine_id = p_machine_id;/s)
+        expect(migration).not.toMatch(/DELETE FROM public\.base_worker_machine_assignments\s+WHERE machine_id = p_machine_id;/)
     })
 
     it('exports all simplified workflow server actions in production actions.ts', () => {

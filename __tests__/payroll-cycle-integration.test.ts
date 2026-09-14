@@ -50,6 +50,8 @@ describe('Payroll Cycle Engine — Historical Immutability & Accounting Protecti
                 production_date: '2026-08-15',
                 meters: 1000,
                 worker_rate_snapshot: 4.5,
+                notes: null,
+                created_at: '2026-08-15T10:00:00Z',
             },
         ]
 
@@ -64,7 +66,7 @@ describe('Payroll Cycle Engine — Historical Immutability & Accounting Protecti
             payment_mode: 'cash',
             paid_at: '2026-09-01T10:00:00Z',
             worker_name_snapshot: 'Ramesh Weaver',
-            status: 'settled',
+            status: 'paid',
         }
 
         // Calculate August payables
