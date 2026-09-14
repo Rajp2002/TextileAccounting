@@ -36,6 +36,17 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
         }
         redirect('/free')
     }
+    if (access.effectiveTier === 'base') {
+        const headerList = await headers()
+        const pathname = headerList.get('x-pathname') || ''
+        if (!pathname.startsWith('/owner/billing')) {
+            const { isBaseOnboardingComplete } = await import('@/lib/base-onboarding.server')
+            const isComplete = await isBaseOnboardingComplete(profile.org_id)
+            if (!isComplete) {
+                redirect('/onboarding/base')
+            }
+        }
+    }
     return (
         <div className="relative isolate min-h-svh overflow-x-hidden bg-background" data-owner-shell>
             <BrandBackground />

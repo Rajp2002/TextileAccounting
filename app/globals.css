@@ -574,6 +574,30 @@
     width: 100%;
   }
 
+  .estimator-workspace-main {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .estimator-left-rail {
+    width: 100%;
+    margin-bottom: 1.25rem;
+  }
+
+  .estimator-reference-rail {
+    width: 100%;
+    margin-top: 1.25rem;
+  }
+
+  .rates-left-rail-desktop {
+    display: none;
+  }
+
+  .saved-costings-left-rail {
+    width: 100%;
+    margin-bottom: 1.25rem;
+  }
+
   .configuration-page-frame {
     width: 100%;
   }
@@ -690,52 +714,6 @@
     }
   }
 
-  /* Use the margins beside the centered board, just like the estimator rails.
-     Below this breakpoint both rails rejoin the page without narrowing it. */
-  @media (min-width: 1660px) {
-    .configuration-page-frame {
-      width: min(100%, calc(100vw - 248px - 33rem));
-      max-width: 72rem;
-      margin-inline: auto;
-    }
-
-    .configuration-guide-rail,
-    .configuration-actions-rail {
-      position: fixed;
-      top: 6.5rem;
-      z-index: 30;
-      width: 14rem;
-      max-height: calc(100dvh - 7.5rem);
-      overflow-y: auto;
-      margin: 0;
-      scrollbar-width: thin;
-    }
-
-    .configuration-guide-rail {
-      left: calc(248px + 1rem);
-    }
-
-    .configuration-actions-rail {
-      right: 1rem;
-      flex-direction: column;
-    }
-  }
-
-  .estimator-workspace-main {
-    min-width: 0;
-    width: 100%;
-  }
-
-  .estimator-left-rail {
-    width: 100%;
-    margin-bottom: 1.25rem;
-  }
-
-  .estimator-reference-rail {
-    width: 100%;
-    margin-top: 1.25rem;
-  }
-
   /* The Live Cost toggle is fixed to the viewport. A transform on the route
      entrance wrapper would otherwise make it scroll with the estimator. */
   .premium-route-enter.estimator-mobile-form {
@@ -781,12 +759,6 @@
     }
   }
 
-  /* Rate Book Left Rail - pinned to top of left rail beside sidebar,
-     matching the Cost Estimator left rail pattern. */
-  .rates-left-rail-desktop {
-    display: none;
-  }
-
   @media (min-width: 1660px) {
     .rates-left-rail-desktop {
       display: block;
@@ -809,13 +781,6 @@
       left: calc(248px + 1.25rem);
       width: 14.5rem;
     }
-  }
-
-  /* Saved Costings Left Rail - positioned beside the sidebar,
-     matching the Cost Estimator and Rate Book left rail pattern. */
-  .saved-costings-left-rail {
-    width: 100%;
-    margin-bottom: 1.25rem;
   }
 
   @media (min-width: 1660px) {

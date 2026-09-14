@@ -378,7 +378,7 @@ export function PlanCard({
                     ? `${upgradeText(language, 'upgradeToBase')} · ${formatPaise(BILLING_PLANS.base.firstYearTotalPaise)}`
                     : `${upgradeText(language, 'chooseBase')} · ${formatPaise(BILLING_PLANS.base.firstYearTotalPaise)}`
                 }
-                successHref="/owner/estimator"
+                successHref="/onboarding/base"
                 className="w-full"
               />
             ) : (

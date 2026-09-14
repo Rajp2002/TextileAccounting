@@ -36,4 +36,17 @@ describe('Desktop Dimensions Responsive Scaling & Layout', () => {
     it('hides duplicate inline tour launcher on rates page when left rail is active', () => {
         expect(rates).toContain('className="lg:hidden min-[1660px]:hidden"')
     })
+
+    it('orders base mobile full-width rails before desktop media queries so reference rail never expands on zoom', () => {
+        const baseReferenceIndex = styles.indexOf('.estimator-reference-rail {\n    width: 100%;')
+        const desktopRailsQueryIndex = styles.indexOf('@media (min-width: 1024px) {\n    .estimator-workspace-shell')
+        expect(baseReferenceIndex).toBeGreaterThan(0)
+        expect(desktopRailsQueryIndex).toBeGreaterThan(0)
+        expect(baseReferenceIndex).toBeLessThan(desktopRailsQueryIndex)
+
+        // Ensure no subsequent unscoped width: 100% overrides the reference rail after the 1024px query
+        const afterDesktopStyles = styles.slice(desktopRailsQueryIndex)
+        expect(afterDesktopStyles).not.toMatch(/\.estimator-reference-rail\s*\{[^}]*width:\s*100%/)
+        expect(afterDesktopStyles).not.toMatch(/\.estimator-left-rail\s*\{[^}]*width:\s*100%/)
+    })
 })
