@@ -191,6 +191,14 @@
   --sidebar-accent-foreground: var(--weavly-ink);
   --sidebar-border: var(--weavly-hairline);
   --sidebar-ring: var(--weavly-focus-ring);
+
+  /* Navigation Disclosure Animation Tokens */
+  --nav-disclosure-expand-duration: 180ms;
+  --nav-disclosure-collapse-duration: 150ms;
+  --nav-chevron-duration: 160ms;
+  --nav-child-fade-duration: 140ms;
+  --nav-disclosure-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --nav-child-offset: 4px;
 }
 
 .dark {
@@ -1422,6 +1430,65 @@
   .navigation-pending {
     animation: none;
     opacity: 1;
+  }
+}
+
+/* ── Navigation Disclosure Motion System ── */
+.submenu-wrapper {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--nav-disclosure-collapse-duration) var(--nav-disclosure-ease);
+}
+
+.submenu-wrapper[data-open="true"] {
+  grid-template-rows: 1fr;
+  transition: grid-template-rows var(--nav-disclosure-expand-duration) var(--nav-disclosure-ease);
+}
+
+.submenu-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.submenu-content {
+  opacity: 0;
+  transform: translateY(calc(-1 * var(--nav-child-offset)));
+  transition: opacity var(--nav-child-fade-duration) var(--nav-disclosure-ease),
+              transform var(--nav-disclosure-collapse-duration) var(--nav-disclosure-ease);
+}
+
+.submenu-wrapper[data-open="true"] .submenu-content {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity var(--nav-child-fade-duration) var(--nav-disclosure-ease),
+              transform var(--nav-disclosure-expand-duration) var(--nav-disclosure-ease);
+}
+
+.nav-chevron {
+  transform: rotate(0deg);
+  transition: transform var(--nav-chevron-duration) var(--nav-disclosure-ease);
+}
+
+.nav-chevron[data-open="true"],
+button[aria-expanded="true"] .nav-chevron {
+  transform: rotate(90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .submenu-wrapper,
+  .submenu-wrapper[data-open="true"],
+  .submenu-content,
+  .submenu-wrapper[data-open="true"] .submenu-content,
+  .nav-chevron {
+    transition: none !important;
+    transition-duration: 0ms !important;
+    transition-delay: 0ms !important;
+  }
+  .submenu-wrapper[data-open="true"] .submenu-content {
+    transform: none !important;
+  }
+  button[aria-expanded="true"] .nav-chevron {
+    transform: rotate(90deg) !important;
   }
 }
 
