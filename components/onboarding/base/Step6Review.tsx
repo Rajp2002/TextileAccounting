@@ -2,7 +2,6 @@
 
 import React from 'react'
 import {
-    CheckCircle2,
     AlertCircle,
     Edit3,
     Sparkles,
@@ -12,7 +11,6 @@ import {
     Calendar,
     Sliders,
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import { useTranslation } from '@/lib/i18n/context'
 import type {
     BaseOnboardingDraft,

@@ -11,7 +11,6 @@ import {
     BookOpen,
     CalendarClock,
     CheckCircle2,
-    CircleDollarSign,
     ChevronDown,
     ChevronRight,
     History,

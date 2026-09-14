@@ -1,0 +1,794 @@
+{
+  "starting_branch": "main",
+  "starting_head": "77a511b66ba1c2c557e2cc2c656bbadf323a379f",
+  "staged_changes_at_start": false,
+  "pre_existing_files": {
+    "package.json": "5f4fe97dd7e1f9677bd7cc1181746999bc1408d7e12b41c82087e59d699ff011",
+    "__tests__/build-type-cache.test.ts": "fd4d40086762a76293c667b9bede3cd39372122017f6b943fe47c57ccda9f43f",
+    "scripts/reset-build-type-cache.mjs": "3ec6f08705e209120e9dd9503ef4f8f5e9820db49c77a6ffd47f886947f20d08",
+    "docs/deployment-typescript-cache-incident.md": "ff357835c38529940d6252ab1edddf25958cd031084972ef48e3aba4976dea4a"
+  },
+  "batches": [
+    {
+      "batch": "B01",
+      "file": "app/(dashboard)/owner/production/BaseProductionClient.tsx",
+      "removed": [
+        "getStatusVariant",
+        "getNextStatus",
+        "getStatusActionLabel"
+      ],
+      "before_sha256": "bf9b13034f85bf9108d28f7d9e555a6055a0e365f650a9c03904ff4dcdbd1338",
+      "after_sha256": "bf5913d06fed58744c526cef84e4ee18426bfe0fbbfe073e75c32526e254c9c9",
+      "patch": "docs/maintenance/cleanup-2026-09-14/patches/B01.patch",
+      "patch_sha256": "23cb14ecbf4017e3bba5cd058aa4f1c6294ca6fe7caefac59bf1ad61dabe9920",
+      "reverse_restores_starting_bytes": true,
+      "status": "verified"
+    },
+    {
+      "batch": "B02",
+      "file": "lib/estimator-yarn-suggestions.ts",
+      "removed": [
+        "type import WarpRow",
+        "type import WeftRow"
+      ],
+      "before_sha256": "267961b685c98139fc22f64583b79fbfcb2d40ddac5d0e1dd29320cf31dc0d43",
+      "after_sha256": "95bdeee5ef210bf761e7aef5d42168271524d09ec25e0b8f176d2498dcf1ecf5",
+      "patch": "docs/maintenance/cleanup-2026-09-14/patches/B02.patch",
+      "patch_sha256": "5e07fec3ddcd796127c77d9ee0bdbd08228b9456ef8009927d022fa9c2df62ee",
+      "reverse_restores_starting_bytes": true,
+      "status": "verified"
+    },
+    {
+      "batch": "B03",
+      "file": "app/(dashboard)/owner/production/BaseProductionClient.tsx",
+      "removed": [
+        "openNewJob",
+        "openRecord",
+        "import ClipboardList",
+        "import IndianRupee",
+        "import RotateCcw",
+        "import calculateBaseJobSummary",
+        "type import BasePayrollPeriod"
+      ],
+      "before_sha256": "bf5913d06fed58744c526cef84e4ee18426bfe0fbbfe073e75c32526e254c9c9",
+      "after_sha256": "d1395357ce614ffb15fd5c43f56e05672f506beaeef8b653d4ff0bb530907ccd",
+      "patch": "docs/maintenance/cleanup-2026-09-14/patches/B03.patch",
+      "patch_sha256": "6c218dddbf415881f4ecb6e84a785af17178d01a0d167556934cb164e3ce92ec",
+      "reverse_restores_pre_batch_bytes": true,
+      "status": "verified"
+    },
+    {
+      "batch": "B04",
+      "files": [
+        {
+          "batch": "B04",
+          "file": "app/(dashboard)/owner/production/BaseActiveQualities.tsx",
+          "removed": [
+            "Activity",
+            "ArrowRight",
+            "Check",
+            "Clock3",
+            "SlidersHorizontal",
+            "CardContent",
+            "CardDescription",
+            "CardHeader",
+            "CardTitle"
+          ],
+          "before_sha256": "831eedcffe445d61dd19e08daedf30df5f82d13352bea0dd5b44f5f021940c81",
+          "after_sha256": "b55896565248a3a8e2274276631a9b88f94dc28124d020b15ef7037c8dc145ea",
+          "source_import_edges_removed": [],
+          "emissions": [
+            {
+              "target": "client",
+              "sha256": "19a38411770b9030409661038ee0a18499ade6ecba7ea855c6feed9c524db9f1",
+              "equal": true
+            },
+            {
+              "target": "SSR",
+              "sha256": "c45d926ddb8e4d9a87d16e9c3d1530e016a13455d4bc1ab1342a8473e9ebddda",
+              "equal": true
+            }
+          ]
+        },
+        {
+          "batch": "B04",
+          "file": "app/(dashboard)/owner/production/BaseMachineBoard.tsx",
+          "removed": [
+            "AlertCircle",
+            "ArrowRight",
+            "Clock3",
+            "Layers",
+            "RefreshCw",
+            "UserCheck",
+            "UserMinus",
+            "UserPlus",
+            "CardContent",
+            "CardDescription",
+            "CardHeader",
+            "CardTitle"
+          ],
+          "before_sha256": "c84741dbbaaf79cece1fbaa980da64fb84497d574869e6e812d648cd84245aa6",
+          "after_sha256": "8629ddbcaa2c775057fbfc2cb862979ee5ea41cc71c360ce3df3dc841587b460",
+          "source_import_edges_removed": [],
+          "emissions": [
+            {
+              "target": "client",
+              "sha256": "22c6ef183cc3aec89f12e20ef8e475e0aa9c1a5b8a9e92c923139cd9d1fce4e0",
+              "equal": true
+            },
+            {
+              "target": "SSR",
+              "sha256": "4140c67fcbd3705b6070b97c0ec1a65ad1f9234b433362443ea49080a14c0d7b",
+              "equal": true
+            }
+          ]
+        },
+        {
+          "batch": "B04",
+          "file": "app/(dashboard)/owner/production/BasePayrollSettlementWorkspace.tsx",
+          "removed": [
+            "AlertCircle",
+            "Clock",
+            "DollarSign",
+            "Lock",
+            "RotateCcw",
+            "ShieldAlert",
+            "SlidersHorizontal",
+            "Card",
+            "CardContent",
+            "CardDescription",
+            "CardHeader",
+            "CardTitle"
+          ],
+          "before_sha256": "57b1c8fbc61b3ecc801552987681b2a9b6356284ad0f7d020ff07da9d9197916",
+          "after_sha256": "02d40c8647c84f6b7401356aba2eb0b02e263f7c947ceb462a0da75887c05420",
+          "source_import_edges_removed": [
+            "@/components/ui/card"
+          ],
+          "emissions": [
+            {
+              "target": "client",
+              "sha256": "845d4278f23a5d2dc40f70923622d92be7f7aeda56477baa322c09de927c121c",
+              "equal": true
+            },
+            {
+              "target": "SSR",
+              "sha256": "1606b4cba2a7405834adbcdd847687031fdc3339d34ca1a237ce7d50711a84e5",
+              "equal": true
+            }
+          ]
+        },
+        {
+          "batch": "B04",
+          "file": "components/settings/payroll/PayrollCycleSettingsCard.tsx",
+          "removed": [
+            "ArrowRight",
+            "ShieldAlert",
+            "HelpCircle"
+          ],
+          "before_sha256": "cd6f6309d971832b7462955d00a7831f6202d0cb5f219d718c07d42921ce9688",
+          "after_sha256": "52b55dd4fbdd324066951b47459cdf360f39748a1ad5b88f73ff231dc67db39a",
+          "source_import_edges_removed": [],
+          "emissions": [
+            {
+              "target": "client",
+              "sha256": "a1cf7cc3edaf3243bdf60e5c337bb6d48a43ffafd7eaec4adb89e70a404a03c6",
+              "equal": true
+            },
+            {
+              "target": "SSR",
+              "sha256": "5fb6710149dc530aca4ac31f980da9d3b010559c4ea6362675d4193ef48622b1",
+              "equal": true
+            }
+          ]
+        }
+      ],
+      "patch": "docs/maintenance/cleanup-2026-09-14/patches/B04.patch",
+      "patch_sha256": "65b4a548a1d023e06e513ca95ec92012417c78d5f6841ea306554ecc5173f38c",
+      "status": "verified",
+      "verification": {
+        "full_tests": {
+          "files": 267,
+          "passed": 1946,
+          "skipped_live": 1
+        },
+        "targeted_passed": 64,
+        "types": "PASS",
+        "fresh_build": "PASS",
+        "static_pages": 64,
+        "batch": "B04",
+        "lint": {
+          "errors": 3,
+          "warnings": 107,
+          "removed_from_B03": 36,
+          "added": 0
+        },
+        "routes_equal": true,
+        "server_action_exports_equal": {
+          "node": 261,
+          "edge": 0
+        },
+        "generated_css_equal": true,
+        "css_files": 2,
+        "source_exports_paths_dynamic_imports_equal": true,
+        "source_edges_removed": 1,
+        "source_edges_added": 0,
+        "state_preserved": true,
+        "working_source_matches_validation": true,
+        "test_warning_events_equal": true
+      },
+      "reverse_restores_pre_batch_bytes": true
+    },
+    {
+      "batch": "B05",
+      "files": [
+        {
+          "batch": "B05",
+          "file": "components/estimator/CostEstimateTutorial.tsx",
+          "removed": [
+            "Compass",
+            "Sparkles"
+          ],
+          "before_sha256": "3be745a68b52760f85610e9ae5c1f73a9981783130e885307bbe70337cf5f75b",
+          "after_sha256": "d63f5284da496261abd0b623a4963f53be1e87f023ba5f77231b461e6497f28d",
+          "source_import_edges_removed": [
+            "lucide-react"
+          ],
+          "emissions": [
+            {
+              "target": "client",
+              "sha256": "36ff4ad1c5ba2b1b48c23b0b3b72a4a460c3593da47fa03eebd0f460896c77f0",
+              "equal": true
+            },
+            {
+              "target": "SSR",
+              "sha256": "3a4988887f9fca1ea76514f73c9681d4966ab3212a00627c9433fe1fc8e7f912",
+              "equal": true
+            }
+          ]
+        },
+        {
+          "batch": "B05",
+          "file": "components/estimator/SavedCostingsTutorial.tsx",
+          "removed": [
+            "Compass",
+            "Sparkles"
+          ],
+          "before_sha256": "8bec9faf7c2b56eb0bfa48ede8e8c6248bb7abc4ed7f9290df5d57c282d8a0de",
+          "after_sha256": "60e37e2aba0700d1b80fd227efbe0a301b4bda2b1909876bb62b148b1abddb1f",
+          "source_import_edges_removed": [
+            "lucide-react"
+          ],
+          "emissions": [
+            {
+              "target": "client",
+              "sha256": "cb158ec41306a8a9d7b6df9c35e4d1f17933446b702ba1dfdb1c7df7b0a56343",
+              "equal": true
+            },
+            {
+              "target": "SSR",
+              "sha256": "dcedfdb6a61b6cf7a141e78e01cda700f596cb9db48adc8eae027fa2d9b23740",
+              "equal": true
+            }
+          ]
+        },
+        {
+          "batch": "B05",
+          "file": "components/rates/RateBookTutorial.tsx",
+          "removed": [
+            "Compass",
+            "Sparkles"
+          ],
+          "before_sha256": "dfc4132b957bc8e870c7dc2eb7ac5ce9a164b0b6005005f38b1a84dfd7e7f713",
+          "after_sha256": "dd5498e65e6f96fe3c9ca4344884a9f3e00bababae2a9320625c19da0156bb3f",
+          "source_import_edges_removed": [
+            "lucide-react"
+          ],
+          "emissions": [
+            {
+              "target": "client",
+              "sha256": "622109b801e486aefee57e5ab3b73eae70c39cb843211581f856635e68ac6bbe",
+              "equal": true
+            },
+            {
+              "target": "SSR",
+              "sha256": "6e0e7930b29864b7eb6b4d31bb39c67ee19efdab05319ae61306822b8b88590a",
+              "equal": true
+            }
+          ]
+        },
+        {
+          "batch": "B05",
+          "file": "app/(dashboard)/owner/rates/RatesClient.tsx",
+          "removed": [
+            "CircleDollarSign"
+          ],
+          "before_sha256": "fd75b7b357ea5e2cb57f25963b41e02b42412aab1750a1ccc688c5f50b462ef6",
+          "after_sha256": "2b4812f2e0afea9795079b7cb62d4dfb4d1f9af0d00fd2c11e3fb0106f7ff1be",
+          "source_import_edges_removed": [],
+          "emissions": [
+            {
+              "target": "client",
+              "sha256": "554a68f475519ead8180cd5ac966f209ad403ca4b0edec4da4b2715e11f7c403",
+              "equal": true
+            },
+            {
+              "target": "SSR",
+              "sha256": "1a5bac863e06e03c32f66a8673495ebb05dcdbcdf34bfd35a2004c32ebd8a313",
+              "equal": true
+            }
+          ]
+        }
+      ],
+      "patch": "docs/maintenance/cleanup-2026-09-14/patches/B05.patch",
+      "patch_sha256": "0b92755fb1a4355f40ae7646485277ba671bdc2fbe9c99152c8b37e5c964ccb2",
+      "status": "reverted",
+      "reason": "Existing estimator-left-rail source-contract test requires Compass and Sparkles in CostEstimateTutorial. Entire B05 reversed; test expectations preserved.",
+      "verification": {
+        "full_tests": "FAIL: 1945 passed, 1 failed, 1 skipped",
+        "types": "PASS",
+        "lint": "FAIL: baseline three errors, 100 warnings",
+        "build": "NOT RUN to completion; batch stopped after failed tests"
+      },
+      "reverse_restores_pre_batch_bytes": true
+    },
+    {
+      "batch": "B06",
+      "files": [
+        {
+          "batch": "B06",
+          "file": "components/onboarding/base/BaseOnboardingWizard.tsx",
+          "removed": [
+            "useCallback"
+          ],
+          "before_sha256": "5f096dcfa66e3181e4feea4b152c1efcbca413c594989e6db93607e93e0733d9",
+          "after_sha256": "427c2005cef4ab1d5aa9070697105e9c6598e2a0320b66dc489308c998d07feb",
+          "source_import_edges_removed": [],
+          "emissions": [
+            {
+              "target": "client",
+              "sha256": "abf40c9cb704e70608f707bf81f93795f7aa3827f2bd2f83c346e519a2edd4c6",
+              "equal": true
+            },
+            {
+              "target": "SSR",
+              "sha256": "f68c059300aca1bbf596235a40ee3fa65ad4e8dc4ed7fe30c127418b073fad87",
+              "equal": true
+            }
+          ]
+        },
+        {
+          "batch": "B06",
+          "file": "components/onboarding/base/BulkEntryGrid.tsx",
+          "removed": [
+            "useCallback",
+            "Plus",
+            "Undo2",
+            "Button"
+          ],
+          "before_sha256": "5b41b68f7227af6508857b06ccbb00997bcc180b822661bc71e6f49600ddf8b0",
+          "after_sha256": "75e068e89e4e22255d772e94e15917bf68613baebc67aac8fef7fa297d11362e",
+          "source_import_edges_removed": [
+            "@/components/ui/button"
+          ],
+          "emissions": [
+            {
+              "target": "client",
+              "sha256": "667fa7fb519e2a1f74a4c0da55e1760c45e7f76f0bd2708c6785d2d79779e13e",
+              "equal": true
+            },
+            {
+              "target": "SSR",
+              "sha256": "65518b658c2dcaffa70dab41ee52f035532fbdba03fb71e2e88dbaa670debd96",
+              "equal": true
+            }
+          ]
+        },
+        {
+          "batch": "B06",
+          "file": "components/onboarding/base/OnboardingShell.tsx",
+          "removed": [
+            "Sparkles",
+            "cn"
+          ],
+          "before_sha256": "98eaba0ea5afbf771d7b60f99b38e67639524f4db00db0fd26de3cca1641af34",
+          "after_sha256": "01298d85f2a5e1bbee30cc650458f579c3ea57f823141b4e9d46df92b848a00d",
+          "source_import_edges_removed": [
+            "@/lib/utils"
+          ],
+          "emissions": [
+            {
+              "target": "client",
+              "sha256": "c201f3f59f65bbb864ee33fbbbd6aa7df9bd1b298c11ce03b29db789014d7548",
+              "equal": true
+            },
+            {
+              "target": "SSR",
+              "sha256": "b6c341e8d6b526c0ae3a312d88ceb5c7a6d0c1605a42e9638667b6ca5b70e6e4",
+              "equal": true
+            }
+          ]
+        },
+        {
+          "batch": "B06",
+          "file": "components/onboarding/base/Step2Defaults.tsx",
+          "removed": [
+            "HelpCircle",
+            "Layers"
+          ],
+          "before_sha256": "1da9907755706ddbd9251cc7f54da450d4054ed6bb1af8d6a5b499de51a40b5f",
+          "after_sha256": "e301043ee9a17047e402c834fa686882853a418fe7442b5e5e8d94d90dd0bacf",
+          "source_import_edges_removed": [],
+          "emissions": [
+            {
+              "target": "client",
+              "sha256": "620d615f1f230b695bb99cf424fe7278a39795569a89b3aafcf817405f135fb1",
+              "equal": true
+            },
+            {
+              "target": "SSR",
+              "sha256": "bc9225c42e3a14c1dd7731609a47d7a53cf262a1a1357474fb659d5b108f4d3e",
+              "equal": true
+            }
+          ]
+        },
+        {
+          "batch": "B06",
+          "file": "components/onboarding/base/Step3Machines.tsx",
+          "removed": [
+            "Sparkles"
+          ],
+          "before_sha256": "e97e033f834d9b8e1812e671591387d6d892f067c733ac9605ee9881e877d083",
+          "after_sha256": "c7101fafbc326fa178527d40d1b4c82fa808db921b54bf480c1ba22738d24417",
+          "source_import_edges_removed": [],
+          "emissions": [
+            {
+              "target": "client",
+              "sha256": "187d0923614bd6d58984fc781dfbf15a1fa5947c2dd6a3bfc29294fca7c326e0",
+              "equal": true
+            },
+            {
+              "target": "SSR",
+              "sha256": "48587c07327738c5132a778d4bdbac592c956a311e8dee2fb7804bf93cb762a3",
+              "equal": true
+            }
+          ]
+        },
+        {
+          "batch": "B06",
+          "file": "components/onboarding/base/Step4Workers.tsx",
+          "removed": [
+            "UserCheck",
+            "Sparkles"
+          ],
+          "before_sha256": "cac0c54a229f5ec1252096b69848ffee3d5468c36e28f4d06f8dd0580f93252c",
+          "after_sha256": "dce9ba2d700245c93695cc56f2eb5e1984bc31f2d32c6f835c57c685c0c6504d",
+          "source_import_edges_removed": [],
+          "emissions": [
+            {
+              "target": "client",
+              "sha256": "282ec9a9bddfeac62003943df4b3942efccd6bf860d4f305ec8476edba640533",
+              "equal": true
+            },
+            {
+              "target": "SSR",
+              "sha256": "c66caf51c6c7b8f68331155070bfb3b76c6105cbaf1cf6d1dfdb2722f27b5b8e",
+              "equal": true
+            }
+          ]
+        },
+        {
+          "batch": "B06",
+          "file": "components/onboarding/base/Step5Payroll.tsx",
+          "removed": [
+            "Clock",
+            "AlertCircle",
+            "Sparkles"
+          ],
+          "before_sha256": "885966797051e37056ef65a38f5cdbfff30f4ea451c6395aa72ed0d6aac617c0",
+          "after_sha256": "85719dcac639c1fe36ef60215d52f04c40d6b720dabb7d5528c933f0dd90feb9",
+          "source_import_edges_removed": [],
+          "emissions": [
+            {
+              "target": "client",
+              "sha256": "15ec375624c61d6505dbbe44cba5cc692f1fee4afc6dcf9cdf02610e38fc6c25",
+              "equal": true
+            },
+            {
+              "target": "SSR",
+              "sha256": "002906ec1b54d1420f6fb26f582cc6f08f479e0fee0d26e40131a48b4c93bc56",
+              "equal": true
+            }
+          ]
+        },
+        {
+          "batch": "B06",
+          "file": "components/onboarding/base/Step6Review.tsx",
+          "removed": [
+            "CheckCircle2",
+            "cn"
+          ],
+          "before_sha256": "6b8c1acc7c6fb6e9499fd6d83d143ee9aaa563677d9dfa82640d7df982eea63b",
+          "after_sha256": "b1fb9b12aa46ec25fbc247028e6bf1cd44a0787d40414d37b2e20bbbc8a84f19",
+          "source_import_edges_removed": [
+            "@/lib/utils"
+          ],
+          "emissions": [
+            {
+              "target": "client",
+              "sha256": "e62e189429f1b901387bc4136d0b86738aa82605c61d620e3ecaf035e2719748",
+              "equal": true
+            },
+            {
+              "target": "SSR",
+              "sha256": "a83a02493c6b4b8e05da757e67b58653b5734146a1f910808dad2755695a0dbc",
+              "equal": true
+            }
+          ]
+        }
+      ],
+      "patch": "docs/maintenance/cleanup-2026-09-14/patches/B06.patch",
+      "patch_sha256": "b0edef3e538bc2d89992cbbb677c1b103e05a93df318ebfd334e17364156cf88",
+      "status": "verified",
+      "verification": {
+        "full_tests": {
+          "files": 267,
+          "passed": 1946,
+          "skipped_live": 1
+        },
+        "targeted_passed": 31,
+        "types": "PASS",
+        "fresh_build": "PASS",
+        "static_pages": 64,
+        "batch": "B06",
+        "lint": {
+          "errors": 3,
+          "warnings": 90,
+          "removed_from_B03": 53,
+          "added": 0
+        },
+        "routes_equal": true,
+        "server_action_exports_equal": {
+          "node": 261,
+          "edge": 0
+        },
+        "generated_css_equal": true,
+        "css_files": 2,
+        "source_exports_paths_dynamic_imports_equal": true,
+        "source_edges_removed": 4,
+        "source_edges_added": 0,
+        "state_preserved": true,
+        "working_source_matches_validation": true,
+        "test_warning_events_equal": true
+      },
+      "reverse_restores_pre_batch_bytes": true
+    },
+    {
+      "batch": "B07",
+      "files": [
+        {
+          "batch": "B07",
+          "file": "components/estimator/SavedCostingsTutorial.tsx",
+          "removed": [
+            "Compass",
+            "Sparkles"
+          ],
+          "before_sha256": "8bec9faf7c2b56eb0bfa48ede8e8c6248bb7abc4ed7f9290df5d57c282d8a0de",
+          "after_sha256": "60e37e2aba0700d1b80fd227efbe0a301b4bda2b1909876bb62b148b1abddb1f",
+          "source_import_edges_removed": [
+            "lucide-react"
+          ],
+          "emissions": [
+            {
+              "target": "client",
+              "sha256": "cb158ec41306a8a9d7b6df9c35e4d1f17933446b702ba1dfdb1c7df7b0a56343",
+              "equal": true
+            },
+            {
+              "target": "SSR",
+              "sha256": "dcedfdb6a61b6cf7a141e78e01cda700f596cb9db48adc8eae027fa2d9b23740",
+              "equal": true
+            }
+          ]
+        },
+        {
+          "batch": "B07",
+          "file": "components/rates/RateBookTutorial.tsx",
+          "removed": [
+            "Compass",
+            "Sparkles"
+          ],
+          "before_sha256": "dfc4132b957bc8e870c7dc2eb7ac5ce9a164b0b6005005f38b1a84dfd7e7f713",
+          "after_sha256": "dd5498e65e6f96fe3c9ca4344884a9f3e00bababae2a9320625c19da0156bb3f",
+          "source_import_edges_removed": [
+            "lucide-react"
+          ],
+          "emissions": [
+            {
+              "target": "client",
+              "sha256": "622109b801e486aefee57e5ab3b73eae70c39cb843211581f856635e68ac6bbe",
+              "equal": true
+            },
+            {
+              "target": "SSR",
+              "sha256": "6e0e7930b29864b7eb6b4d31bb39c67ee19efdab05319ae61306822b8b88590a",
+              "equal": true
+            }
+          ]
+        },
+        {
+          "batch": "B07",
+          "file": "app/(dashboard)/owner/rates/RatesClient.tsx",
+          "removed": [
+            "CircleDollarSign"
+          ],
+          "before_sha256": "fd75b7b357ea5e2cb57f25963b41e02b42412aab1750a1ccc688c5f50b462ef6",
+          "after_sha256": "2b4812f2e0afea9795079b7cb62d4dfb4d1f9af0d00fd2c11e3fb0106f7ff1be",
+          "source_import_edges_removed": [],
+          "emissions": [
+            {
+              "target": "client",
+              "sha256": "554a68f475519ead8180cd5ac966f209ad403ca4b0edec4da4b2715e11f7c403",
+              "equal": true
+            },
+            {
+              "target": "SSR",
+              "sha256": "1a5bac863e06e03c32f66a8673495ebb05dcdbcdf34bfd35a2004c32ebd8a313",
+              "equal": true
+            }
+          ]
+        }
+      ],
+      "patch": "docs/maintenance/cleanup-2026-09-14/patches/B07.patch",
+      "patch_sha256": "3ec688f6caad36f00f3b462678a571aa9aed4d10d6647faf481cb2e06ae27d03",
+      "status": "verified",
+      "verification": {
+        "full_tests": {
+          "files": 267,
+          "passed": 1946,
+          "skipped_live": 1
+        },
+        "targeted_passed": 38,
+        "types": "PASS",
+        "fresh_build": "PASS",
+        "static_pages": 64,
+        "batch": "B07",
+        "lint": {
+          "errors": 3,
+          "warnings": 85,
+          "removed_from_B03": 58,
+          "added": 0
+        },
+        "routes_equal": true,
+        "server_action_exports_equal": {
+          "node": 261,
+          "edge": 0
+        },
+        "generated_css_equal": true,
+        "css_files": 2,
+        "source_exports_paths_dynamic_imports_equal": true,
+        "source_edges_removed": 6,
+        "source_edges_added": 0,
+        "state_preserved": true,
+        "working_source_matches_validation": true,
+        "test_warning_events_equal": true
+      },
+      "reverse_restores_pre_batch_bytes": true
+    }
+  ],
+  "new_task_documents": [
+    "docs/maintenance/cleanup-2026-09-14/audit.md",
+    "docs/maintenance/cleanup-2026-09-14/report.md",
+    "docs/maintenance/cleanup-2026-09-14/manifest.json",
+    "docs/maintenance/cleanup-2026-09-14/continuation.md",
+    "docs/maintenance/cleanup-2026-09-14/final-pass.md",
+    "docs/maintenance/cleanup-2026-09-14/publication.md"
+  ],
+  "tests_changed": [],
+  "reverted_batches": [
+    "B05"
+  ],
+  "local_evidence": "/tmp/weavly-cleanup-20260914-6jfkbodn",
+  "verification": {
+    "tests": {
+      "files": 267,
+      "passed": 1946,
+      "skipped_live": 1
+    },
+    "lint": {
+      "baseline_errors": 3,
+      "final_errors": 3,
+      "baseline_warnings": 155,
+      "final_warnings": 85,
+      "new_diagnostics": 0
+    },
+    "typecheck": "PASS",
+    "fresh_build": "PASS",
+    "static_pages_generated": 64,
+    "route_manifests_equal": true,
+    "desktop_login_screenshots_byte_identical": true,
+    "http_smoke": "7 PASS, final B07 vs reused B03 baseline",
+    "authenticated_integration": "NOT RUN",
+    "mobile_visual": "BLOCKED",
+    "existing_payroll_browser_fixture": "BLOCKED",
+    "targeted_b03_tests": 40,
+    "latest_batch": "B07",
+    "server_action_exports_and_workers_equal": true,
+    "server_action_opaque_ids": "vary per clean build; identical exported actions preserved",
+    "targeted_b04_tests": 64,
+    "targeted_b06_tests": 31,
+    "targeted_b07_tests": 38,
+    "strict_unused_discovery": {
+      "status": "FAIL (discovery only)",
+      "baseline": 169,
+      "final": 105
+    },
+    "generated_css_byte_identical": true
+  },
+  "continuation_evidence": "/tmp/weavly-cleanup-continuation-4elnpix_",
+  "current_source_hashes": {
+    "app/(dashboard)/owner/production/BaseProductionClient.tsx": "d1395357ce614ffb15fd5c43f56e05672f506beaeef8b653d4ff0bb530907ccd",
+    "lib/estimator-yarn-suggestions.ts": "95bdeee5ef210bf761e7aef5d42168271524d09ec25e0b8f176d2498dcf1ecf5",
+    "app/(dashboard)/owner/production/BaseActiveQualities.tsx": "b55896565248a3a8e2274276631a9b88f94dc28124d020b15ef7037c8dc145ea",
+    "app/(dashboard)/owner/production/BaseMachineBoard.tsx": "8629ddbcaa2c775057fbfc2cb862979ee5ea41cc71c360ce3df3dc841587b460",
+    "app/(dashboard)/owner/production/BasePayrollSettlementWorkspace.tsx": "02d40c8647c84f6b7401356aba2eb0b02e263f7c947ceb462a0da75887c05420",
+    "components/settings/payroll/PayrollCycleSettingsCard.tsx": "52b55dd4fbdd324066951b47459cdf360f39748a1ad5b88f73ff231dc67db39a",
+    "components/onboarding/base/BaseOnboardingWizard.tsx": "427c2005cef4ab1d5aa9070697105e9c6598e2a0320b66dc489308c998d07feb",
+    "components/onboarding/base/BulkEntryGrid.tsx": "75e068e89e4e22255d772e94e15917bf68613baebc67aac8fef7fa297d11362e",
+    "components/onboarding/base/OnboardingShell.tsx": "01298d85f2a5e1bbee30cc650458f579c3ea57f823141b4e9d46df92b848a00d",
+    "components/onboarding/base/Step2Defaults.tsx": "e301043ee9a17047e402c834fa686882853a418fe7442b5e5e8d94d90dd0bacf",
+    "components/onboarding/base/Step3Machines.tsx": "c7101fafbc326fa178527d40d1b4c82fa808db921b54bf480c1ba22738d24417",
+    "components/onboarding/base/Step4Workers.tsx": "dce9ba2d700245c93695cc56f2eb5e1984bc31f2d32c6f835c57c685c0c6504d",
+    "components/onboarding/base/Step5Payroll.tsx": "85719dcac639c1fe36ef60215d52f04c40d6b720dabb7d5528c933f0dd90feb9",
+    "components/onboarding/base/Step6Review.tsx": "b1fb9b12aa46ec25fbc247028e6bf1cd44a0787d40414d37b2e20bbbc8a84f19",
+    "components/estimator/SavedCostingsTutorial.tsx": "60e37e2aba0700d1b80fd227efbe0a301b4bda2b1909876bb62b148b1abddb1f",
+    "components/rates/RateBookTutorial.tsx": "dd5498e65e6f96fe3c9ca4344884a9f3e00bababae2a9320625c19da0156bb3f",
+    "app/(dashboard)/owner/rates/RatesClient.tsx": "2b4812f2e0afea9795079b7cb62d4dfb4d1f9af0d00fd2c11e3fb0106f7ff1be"
+  },
+  "final_pass_evidence": "/var/folders/fg/zfs5p7f92n923glf5hxny7v40000gn/T/weavly-cleanup-final-audit-4j0273zl",
+  "retained_batches": [
+    "B01",
+    "B02",
+    "B03",
+    "B04",
+    "B06",
+    "B07"
+  ],
+  "final_pass_summary": {
+    "source_files_changed": 17,
+    "private_helpers_callbacks_removed": 5,
+    "unused_import_bindings_removed": 65,
+    "net_lines_removed": 71,
+    "retained_batches": [
+      "B01",
+      "B02",
+      "B03",
+      "B04",
+      "B06",
+      "B07"
+    ],
+    "reverted_batches": [
+      "B05"
+    ],
+    "b05_partial_requalification": "Five bindings independently requalified and verified under B07; CostEstimateTutorial unchanged.",
+    "cumulative_reversal_proven": true
+  },
+  "publication_patch_format": {
+    "change": "Encode blank context lines without optional leading space",
+    "source_hunks_unchanged": true,
+    "all_reversals_reverified": true
+  },
+  "publication_validation": {
+    "cwd": "/var/folders/fg/zfs5p7f92n923glf5hxny7v40000gn/T/weavly-cleanup-publication-ctykrj1g/commit-validation",
+    "tests": {
+      "files": 266,
+      "passed": 1945,
+      "skipped_live": 1
+    },
+    "types": "PASS",
+    "build": "PASS",
+    "lint": "FAIL: unchanged three errors and 85 warnings",
+    "css_routes_action_exports_match_B07": true,
+    "uncommitted_user_build_work_excluded": true
+  }
+}

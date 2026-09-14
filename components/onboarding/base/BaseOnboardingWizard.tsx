@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { toast } from '@/lib/app-notifications'
 import { useTranslation } from '@/lib/i18n/context'
 import type {

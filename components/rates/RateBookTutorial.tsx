@@ -6,7 +6,6 @@ import { dismissRatebookTutorial } from '@/app/(dashboard)/owner/rates/tutorial-
 import { useTranslation } from '@/lib/i18n/context'
 import { rateBookTutorialCopy, type RatebookTutorialField } from '@/lib/i18n/rate-book-tutorial'
 import { Button } from '@/components/ui/button'
-import { Compass, Sparkles } from 'lucide-react'
 import { findTourTarget, isTourTargetVisible } from '@/lib/tutorial-target'
 import { useMobileTour } from '@/hooks/use-mobile-tour'
 import { useTourViewportLock } from '@/hooks/use-tour-viewport-lock'

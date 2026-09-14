@@ -9,19 +9,16 @@ import { useTranslation } from '@/lib/i18n/context'
 import {
     ArrowLeft,
     CheckCircle2,
-    ClipboardList,
     Clock3,
     Factory,
     History,
     ChevronLeft,
     ChevronRight,
-    IndianRupee,
     Layers,
     Loader2,
     Minus,
     Plus,
     ReceiptText,
-    RotateCcw,
     Settings2,
     Users,
     WalletCards,
@@ -52,13 +49,11 @@ import { basePayrollReview } from '@/lib/base-payroll-review'
 import { baseProductionHref, readBaseProductionNavigation } from '@/lib/base-production-navigation'
 import { trackPlanEvent } from '@/lib/plan-analytics'
 import {
-    calculateBaseJobSummary,
     calculateBaseEntryGrossPay,
     calculateBasePayrollPeriodSummary,
     type BasePayrollPaymentMode,
     type BaseProductionCosting,
     type BaseProductionJobStatus,
-    type BasePayrollPeriod,
 } from '@/lib/base-production-core'
 import {
     type PayrollCycleRule,
@@ -134,26 +129,6 @@ function formatDateOnly(value: string | null | undefined) {
 
 function formatMeters(value: number) {
     return `${new Intl.NumberFormat('en-IN', { maximumFractionDigits: 2 }).format(value)} m`
-}
-
-function getStatusVariant(status: BaseProductionJobStatus): 'brand' | 'warning' | 'success' | 'secondary' {
-    if (status === 'active') return 'brand'
-    if (status === 'completed') return 'success'
-    if (status === 'cancelled') return 'secondary'
-    return 'warning'
-}
-
-function getNextStatus(status: BaseProductionJobStatus): BaseProductionJobStatus | null {
-    if (status === 'planned') return 'active'
-    if (status === 'active') return 'completed'
-    if (status === 'completed' || status === 'cancelled') return 'active'
-    return null
-}
-
-function getStatusActionLabel(status: BaseProductionJobStatus) {
-    if (status === 'planned') return 'Start job'
-    if (status === 'active') return 'Mark complete'
-    return 'Reopen job'
 }
 
 function getActionError(result: unknown) {
@@ -392,10 +367,6 @@ export default function BaseProductionClient({
         }
     }
 
-    function openNewJob() {
-        setIsActivateModalOpen(true)
-    }
-
     function openAdvance(workerId = activeWorkers[0]?.id ?? '') {
         setAdvanceDraft(emptyAdvanceDraft(workerId))
         setDialog('advance')
@@ -413,17 +384,6 @@ export default function BaseProductionClient({
         if (add === 'machine') params.set('register', 'base')
         params.delete('section')
         router.push(`/owner/${add === 'machine' ? 'machines' : 'workers'}?${params}`)
-    }
-
-    function openRecord(jobId?: string) {
-        if (activeWorkers.length === 0) {
-            toast.info('Add a worker in Workers, then assign them in Machine Assignments before recording production.')
-            openSetup()
-            return
-        }
-
-        router.push(baseProductionHref({ job: jobId, returnTo: '/owner/production?tab=jobs' }))
-        setActiveTab('production')
     }
 
     function closeDialog() {

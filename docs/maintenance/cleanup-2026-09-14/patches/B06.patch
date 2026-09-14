@@ -1,0 +1,103 @@
+--- a/components/onboarding/base/BaseOnboardingWizard.tsx
++++ b/components/onboarding/base/BaseOnboardingWizard.tsx
+@@ -1,6 +1,6 @@
+ 'use client'
+
+-import React, { useState, useEffect, useRef, useCallback } from 'react'
++import React, { useState, useEffect, useRef } from 'react'
+ import { toast } from '@/lib/app-notifications'
+ import { useTranslation } from '@/lib/i18n/context'
+ import type {
+--- a/components/onboarding/base/BulkEntryGrid.tsx
++++ b/components/onboarding/base/BulkEntryGrid.tsx
+@@ -1,9 +1,8 @@
+ 'use client'
+
+-import React, { useRef, useEffect, useCallback } from 'react'
+-import { Trash2, Plus, AlertCircle, Undo2 } from 'lucide-react'
++import React, { useRef, useEffect } from 'react'
++import { Trash2, AlertCircle } from 'lucide-react'
+ import { toast } from '@/lib/app-notifications'
+-import { Button } from '@/components/ui/button'
+ import { cn } from '@/lib/utils'
+ import { useTranslation } from '@/lib/i18n/context'
+
+--- a/components/onboarding/base/OnboardingShell.tsx
++++ b/components/onboarding/base/OnboardingShell.tsx
+@@ -3,13 +3,12 @@
+ import React from 'react'
+ import Image from 'next/image'
+ import Link from 'next/link'
+-import { ArrowLeft, ArrowRight, Loader2, Sparkles } from 'lucide-react'
++import { ArrowLeft, ArrowRight, Loader2 } from 'lucide-react'
+ import { Button } from '@/components/ui/button'
+ import { LanguageSwitcher } from '@/components/i18n/language-switcher'
+ import { useTranslation } from '@/lib/i18n/context'
+ import { OnboardingStepper } from './OnboardingStepper'
+ import type { BaseOnboardingStep } from '@/lib/base-onboarding'
+-import { cn } from '@/lib/utils'
+
+ interface OnboardingShellProps {
+     children: React.ReactNode
+--- a/components/onboarding/base/Step2Defaults.tsx
++++ b/components/onboarding/base/Step2Defaults.tsx
+@@ -1,7 +1,7 @@
+ 'use client'
+
+ import React from 'react'
+-import { Sliders, Percent, HelpCircle, Layers, DollarSign } from 'lucide-react'
++import { Sliders, Percent, DollarSign } from 'lucide-react'
+ import { cn } from '@/lib/utils'
+ import { useTranslation } from '@/lib/i18n/context'
+ import type { FactoryDefaultsInput } from '@/lib/base-onboarding'
+--- a/components/onboarding/base/Step3Machines.tsx
++++ b/components/onboarding/base/Step3Machines.tsx
+@@ -1,7 +1,7 @@
+ 'use client'
+
+ import React, { useState, useMemo } from 'react'
+-import { Cpu, Plus, Sparkles, X } from 'lucide-react'
++import { Cpu, Plus, X } from 'lucide-react'
+ import { cn } from '@/lib/utils'
+ import { useTranslation } from '@/lib/i18n/context'
+ import {
+--- a/components/onboarding/base/Step4Workers.tsx
++++ b/components/onboarding/base/Step4Workers.tsx
+@@ -1,7 +1,7 @@
+ 'use client'
+
+ import React, { useState, useMemo } from 'react'
+-import { Users, UserCheck, Sparkles } from 'lucide-react'
++import { Users } from 'lucide-react'
+ import { cn } from '@/lib/utils'
+ import { useTranslation } from '@/lib/i18n/context'
+ import {
+--- a/components/onboarding/base/Step5Payroll.tsx
++++ b/components/onboarding/base/Step5Payroll.tsx
+@@ -1,7 +1,7 @@
+ 'use client'
+
+ import React from 'react'
+-import { Calendar, Clock, AlertCircle, Sparkles } from 'lucide-react'
++import { Calendar } from 'lucide-react'
+ import { cn } from '@/lib/utils'
+ import { useTranslation } from '@/lib/i18n/context'
+ import type { PayrollCycleInput } from '@/lib/base-onboarding'
+--- a/components/onboarding/base/Step6Review.tsx
++++ b/components/onboarding/base/Step6Review.tsx
+@@ -2,7 +2,6 @@
+
+ import React from 'react'
+ import {
+-    CheckCircle2,
+     AlertCircle,
+     Edit3,
+     Sparkles,
+@@ -12,7 +11,6 @@
+     Calendar,
+     Sliders,
+ } from 'lucide-react'
+-import { cn } from '@/lib/utils'
+ import { useTranslation } from '@/lib/i18n/context'
+ import type {
+     BaseOnboardingDraft,

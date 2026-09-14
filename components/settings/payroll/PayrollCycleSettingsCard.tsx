@@ -6,10 +6,7 @@ import {
     CheckCircle2,
     Clock,
     AlertCircle,
-    ArrowRight,
     Loader2,
-    ShieldAlert,
-    HelpCircle,
 } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'

@@ -1,0 +1,65 @@
+--- a/app/(dashboard)/owner/production/BaseProductionClient.tsx
++++ b/app/(dashboard)/owner/production/BaseProductionClient.tsx
+@@ -9,19 +9,16 @@
+ import {
+     ArrowLeft,
+     CheckCircle2,
+-    ClipboardList,
+     Clock3,
+     Factory,
+     History,
+     ChevronLeft,
+     ChevronRight,
+-    IndianRupee,
+     Layers,
+     Loader2,
+     Minus,
+     Plus,
+     ReceiptText,
+-    RotateCcw,
+     Settings2,
+     Users,
+     WalletCards,
+@@ -52,13 +49,11 @@
+ import { baseProductionHref, readBaseProductionNavigation } from '@/lib/base-production-navigation'
+ import { trackPlanEvent } from '@/lib/plan-analytics'
+ import {
+-    calculateBaseJobSummary,
+     calculateBaseEntryGrossPay,
+     calculateBasePayrollPeriodSummary,
+     type BasePayrollPaymentMode,
+     type BaseProductionCosting,
+     type BaseProductionJobStatus,
+-    type BasePayrollPeriod,
+ } from '@/lib/base-production-core'
+ import {
+     type PayrollCycleRule,
+@@ -372,10 +367,6 @@
+         }
+     }
+
+-    function openNewJob() {
+-        setIsActivateModalOpen(true)
+-    }
+-
+     function openAdvance(workerId = activeWorkers[0]?.id ?? '') {
+         setAdvanceDraft(emptyAdvanceDraft(workerId))
+         setDialog('advance')
+@@ -393,17 +384,6 @@
+         if (add === 'machine') params.set('register', 'base')
+         params.delete('section')
+         router.push(`/owner/${add === 'machine' ? 'machines' : 'workers'}?${params}`)
+-    }
+-
+-    function openRecord(jobId?: string) {
+-        if (activeWorkers.length === 0) {
+-            toast.info('Add a worker in Workers, then assign them in Machine Assignments before recording production.')
+-            openSetup()
+-            return
+-        }
+-
+-        router.push(baseProductionHref({ job: jobId, returnTo: '/owner/production?tab=jobs' }))
+-        setActiveTab('production')
+     }
+
+     function closeDialog() {
