@@ -118,5 +118,5 @@ $function$;
 REVOKE ALL ON FUNCTION public.update_base_payroll_cycle(text, jsonb, date) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.update_base_payroll_cycle(text, jsonb, date) TO authenticated, service_role;
 
-REVOKE ALL ON FUNCTION public.complete_base_payroll_period(date, date, uuid, text) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.complete_base_payroll_period(date, date, uuid, text) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.complete_base_payroll_period(date, date, jsonb, text[]) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.complete_base_payroll_period(date, date, jsonb, text[]) TO authenticated, service_role;

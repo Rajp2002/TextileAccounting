@@ -109,7 +109,7 @@ describe('Base Onboarding — Database Migration for Same-Day Updates & Service 
 
     it('grants function execute permissions on update_base_payroll_cycle to service_role and authenticated', () => {
         expect(migration).toContain('GRANT EXECUTE ON FUNCTION public.update_base_payroll_cycle(text, jsonb, date) TO authenticated, service_role;')
-        expect(migration).toContain('GRANT EXECUTE ON FUNCTION public.complete_base_payroll_period(date, date, uuid, text) TO authenticated, service_role;')
+        expect(migration).toContain('GRANT EXECUTE ON FUNCTION public.complete_base_payroll_period(date, date, jsonb, text[]) TO authenticated, service_role;')
     })
 
     it('supports same-day in-place update in update_base_payroll_cycle RPC', () => {
