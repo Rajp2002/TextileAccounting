@@ -587,6 +587,51 @@ export async function saveBaseOnboardingPayrollAction(input: PayrollCycleInput) 
             return { error: validation.error || 'Invalid payroll cycle configuration' }
         }
 
+        const admin = createAdminClient()
+
+        // Check if an active configuration already exists for this org
+        const { data: existingConfig } = await supabase
+            .from('base_payroll_cycle_configs')
+            .select('id, effective_from')
+            .eq('org_id', profile.org_id)
+            .is('effective_until', null)
+            .maybeSingle()
+
+        // If an active config already exists starting today or later (e.g. same-day edit during onboarding),
+        // update it in-place to avoid date-monotonicity and unique active index collisions.
+        if (existingConfig && existingConfig.effective_from >= today) {
+            const { error: updateError } = await supabase
+                .from('base_payroll_cycle_configs')
+                .update({
+                    cycle_type: cycleType,
+                    rule: validation.normalizedRule,
+                    updated_at: new Date().toISOString(),
+                })
+                .eq('id', existingConfig.id)
+
+            if (!updateError) {
+                revalidatePath('/owner/production')
+                revalidatePath('/owner/payroll')
+                return { success: true }
+            }
+
+            // Fallback to admin update if authenticated client had an RLS constraint
+            const { error: adminUpdateError } = await admin
+                .from('base_payroll_cycle_configs')
+                .update({
+                    cycle_type: cycleType,
+                    rule: validation.normalizedRule,
+                    updated_at: new Date().toISOString(),
+                })
+                .eq('id', existingConfig.id)
+
+            if (!adminUpdateError) {
+                revalidatePath('/owner/production')
+                revalidatePath('/owner/payroll')
+                return { success: true }
+            }
+        }
+
         // Try calling the atomic RPC
         const { error: rpcError } = await supabase.rpc('update_base_payroll_cycle', {
             p_cycle_type: cycleType,
@@ -595,15 +640,19 @@ export async function saveBaseOnboardingPayrollAction(input: PayrollCycleInput) 
         })
 
         if (rpcError) {
-            // Fallback insert if RPC fails or mock environment
-            const admin = createAdminClient()
-            await admin
-                .from('base_payroll_cycle_configs')
-                .update({ effective_until: today, updated_at: new Date().toISOString() })
-                .eq('org_id', profile.org_id)
-                .is('effective_until', null)
+            console.warn('update_base_payroll_cycle RPC failed, falling back to direct write:', rpcError)
 
-            const { error: insertError } = await admin
+            // Close existing historical config if effective_from is before today
+            if (existingConfig && existingConfig.effective_from < today) {
+                const prevClose = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
+                await supabase
+                    .from('base_payroll_cycle_configs')
+                    .update({ effective_until: prevClose, updated_at: new Date().toISOString() })
+                    .eq('id', existingConfig.id)
+            }
+
+            // Try insert with authenticated client
+            const { error: insertError } = await supabase
                 .from('base_payroll_cycle_configs')
                 .insert({
                     org_id: profile.org_id,
@@ -615,7 +664,26 @@ export async function saveBaseOnboardingPayrollAction(input: PayrollCycleInput) 
                 })
 
             if (insertError) {
-                return { error: 'Failed to configure payroll cycle. Please try again.' }
+                console.warn('Authenticated insert failed, attempting admin fallback:', insertError)
+                const { error: adminInsertError } = await admin
+                    .from('base_payroll_cycle_configs')
+                    .insert({
+                        org_id: profile.org_id,
+                        cycle_type: cycleType,
+                        rule: validation.normalizedRule,
+                        effective_from: today,
+                        effective_until: null,
+                        created_by: user.id,
+                    })
+
+                if (adminInsertError) {
+                    console.error('All payroll cycle persistence methods failed:', {
+                        rpcError,
+                        insertError,
+                        adminInsertError,
+                    })
+                    return { error: 'Failed to configure payroll cycle. Please try again.' }
+                }
             }
         }
 

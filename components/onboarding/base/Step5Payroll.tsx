@@ -22,14 +22,16 @@ export function Step5Payroll({
     const { tx } = useTranslation()
     const today = getSuratTodayString()
 
-    const updateField = <K extends keyof PayrollCycleInput>(field: K, val: PayrollCycleInput[K]) => {
+    const updatePayroll = (fields: Partial<PayrollCycleInput>) => {
         onChangePayroll({
             ...payroll,
-            [field]: val,
+            ...fields,
         })
     }
 
     const currentType = payroll.cycleType || 'monthly'
+    const isFortnightly = currentType === 'interval_days' && (payroll.intervalDays === 14 || !payroll.intervalDays)
+    const isCustom = currentType === 'interval_days' && Boolean(payroll.intervalDays && payroll.intervalDays !== 14)
 
     return (
         <div className="mx-auto max-w-xl space-y-6">
@@ -52,7 +54,7 @@ export function Step5Payroll({
                 <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
                     <button
                         type="button"
-                        onClick={() => updateField('cycleType', 'monthly')}
+                        onClick={() => updatePayroll({ cycleType: 'monthly', anchorDay: payroll.anchorDay || 1 })}
                         className={cn(
                             'flex flex-col items-center justify-center rounded-xl border p-3 text-center transition-all',
                             currentType === 'monthly'
@@ -66,7 +68,7 @@ export function Step5Payroll({
 
                     <button
                         type="button"
-                        onClick={() => updateField('cycleType', 'weekly')}
+                        onClick={() => updatePayroll({ cycleType: 'weekly', anchorWeekday: payroll.anchorWeekday || 'monday' })}
                         className={cn(
                             'flex flex-col items-center justify-center rounded-xl border p-3 text-center transition-all',
                             currentType === 'weekly'
@@ -80,13 +82,14 @@ export function Step5Payroll({
 
                     <button
                         type="button"
-                        onClick={() => {
-                            updateField('cycleType', 'interval_days')
-                            updateField('intervalDays', 14)
-                        }}
+                        onClick={() => updatePayroll({
+                            cycleType: 'interval_days',
+                            intervalDays: 14,
+                            anchorDate: payroll.anchorDate || today,
+                        })}
                         className={cn(
                             'flex flex-col items-center justify-center rounded-xl border p-3 text-center transition-all',
-                            currentType === 'interval_days' && (payroll.intervalDays === 14 || !payroll.intervalDays)
+                            isFortnightly
                                 ? 'border-amber-600 bg-amber-50/70 text-amber-900 shadow-sm dark:bg-amber-950/40 dark:text-amber-200'
                                 : 'border-stone-200 bg-stone-50/40 text-stone-700 hover:border-stone-300 dark:border-stone-800 dark:bg-stone-800/30 dark:text-stone-300'
                         )}
@@ -97,13 +100,14 @@ export function Step5Payroll({
 
                     <button
                         type="button"
-                        onClick={() => {
-                            updateField('cycleType', 'interval_days')
-                            if (payroll.intervalDays === 14) updateField('intervalDays', 24)
-                        }}
+                        onClick={() => updatePayroll({
+                            cycleType: 'interval_days',
+                            intervalDays: (payroll.intervalDays && payroll.intervalDays !== 14) ? payroll.intervalDays : 24,
+                            anchorDate: payroll.anchorDate || today,
+                        })}
                         className={cn(
                             'flex flex-col items-center justify-center rounded-xl border p-3 text-center transition-all',
-                            currentType === 'interval_days' && payroll.intervalDays !== 14
+                            isCustom
                                 ? 'border-amber-600 bg-amber-50/70 text-amber-900 shadow-sm dark:bg-amber-950/40 dark:text-amber-200'
                                 : 'border-stone-200 bg-stone-50/40 text-stone-700 hover:border-stone-300 dark:border-stone-800 dark:bg-stone-800/30 dark:text-stone-300'
                         )}
@@ -128,8 +132,11 @@ export function Step5Payroll({
                                 type="number"
                                 min="1"
                                 max="31"
-                                value={payroll.anchorDay || 1}
-                                onChange={e => updateField('anchorDay', Number(e.target.value) || 1)}
+                                value={payroll.anchorDay ?? 1}
+                                onChange={e => {
+                                    const val = e.target.value === '' ? 1 : Number(e.target.value)
+                                    updatePayroll({ anchorDay: isNaN(val) ? 1 : Math.min(31, Math.max(1, val)) })
+                                }}
                                 className="h-10 w-24 rounded-lg border border-stone-300 bg-white px-3 text-center text-sm font-bold text-stone-900 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100"
                             />
                             <span className="text-xs text-stone-600 dark:text-stone-400">
@@ -150,7 +157,7 @@ export function Step5Payroll({
                         <select
                             id="anchor-weekday-select"
                             value={payroll.anchorWeekday || 'monday'}
-                            onChange={e => updateField('anchorWeekday', e.target.value as WeekdayName)}
+                            onChange={e => updatePayroll({ anchorWeekday: e.target.value as WeekdayName })}
                             className="mt-3 h-10 w-full rounded-lg border border-stone-300 bg-white px-3 text-sm font-medium text-stone-900 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100"
                         >
                             {WEEKDAYS.map(w => (
@@ -176,8 +183,11 @@ export function Step5Payroll({
                                 type="number"
                                 min="1"
                                 max="60"
-                                value={payroll.intervalDays || 14}
-                                onChange={e => updateField('intervalDays', Math.max(1, Number(e.target.value) || 14))}
+                                value={payroll.intervalDays ?? 14}
+                                onChange={e => {
+                                    const val = e.target.value === '' ? 14 : Number(e.target.value)
+                                    updatePayroll({ intervalDays: isNaN(val) ? 14 : Math.min(60, Math.max(1, val)) })
+                                }}
                                 className="mt-2 h-10 w-32 rounded-lg border border-stone-300 bg-white px-3 text-sm font-bold text-stone-900 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100"
                             />
                         </div>
@@ -193,7 +203,7 @@ export function Step5Payroll({
                                 id="anchor-date-input"
                                 type="date"
                                 value={payroll.anchorDate || today}
-                                onChange={e => updateField('anchorDate', e.target.value)}
+                                onChange={e => updatePayroll({ anchorDate: e.target.value || today })}
                                 className="mt-2 h-10 w-44 rounded-lg border border-stone-300 bg-white px-3 text-sm font-medium text-stone-900 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100"
                             />
                         </div>

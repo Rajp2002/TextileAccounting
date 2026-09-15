@@ -1115,29 +1115,52 @@ export async function saveBasePayrollCycleConfig(input: {
     })
 
     if (rpcError) {
-        // Fallback for mock/test environments where custom RPC might not be present
-        const prevCloseDate = addDays(effectiveDate, -1)
-        await supabase
+        // Check if existing active config started on effectiveDate (same-day modification)
+        const { data: existingConfig } = await supabase
             .from('base_payroll_cycle_configs')
-            .update({ effective_until: prevCloseDate, updated_at: new Date().toISOString() })
+            .select('id, effective_from')
             .eq('org_id', profile.org_id)
             .is('effective_until', null)
+            .maybeSingle()
 
-        const { data: insertData, error: insertError } = await supabase
-            .from('base_payroll_cycle_configs')
-            .insert({
-                org_id: profile.org_id,
-                cycle_type: parsed.data.cycleType,
-                rule: validation.normalizedRule,
-                effective_from: effectiveDate,
-                effective_until: null,
-                created_by: user.id,
-            })
-            .select('id')
-            .single()
+        if (existingConfig && existingConfig.effective_from === effectiveDate) {
+            const { error: updateError } = await supabase
+                .from('base_payroll_cycle_configs')
+                .update({
+                    cycle_type: parsed.data.cycleType,
+                    rule: validation.normalizedRule,
+                    updated_at: new Date().toISOString(),
+                })
+                .eq('id', existingConfig.id)
 
-        if (insertError) {
-            return databaseError(insertError, 'Failed to save payroll cycle configuration. Your existing settings have not changed.')
+            if (updateError) {
+                return databaseError(updateError, 'Failed to save payroll cycle configuration. Your existing settings have not changed.')
+            }
+        } else {
+            // Fallback for mock/test environments where custom RPC might not be present
+            const prevCloseDate = addDays(effectiveDate, -1)
+            await supabase
+                .from('base_payroll_cycle_configs')
+                .update({ effective_until: prevCloseDate, updated_at: new Date().toISOString() })
+                .eq('org_id', profile.org_id)
+                .is('effective_until', null)
+
+            const { data: insertData, error: insertError } = await supabase
+                .from('base_payroll_cycle_configs')
+                .insert({
+                    org_id: profile.org_id,
+                    cycle_type: parsed.data.cycleType,
+                    rule: validation.normalizedRule,
+                    effective_from: effectiveDate,
+                    effective_until: null,
+                    created_by: user.id,
+                })
+                .select('id')
+                .single()
+
+            if (insertError) {
+                return databaseError(insertError, 'Failed to save payroll cycle configuration. Your existing settings have not changed.')
+            }
         }
     }
 
