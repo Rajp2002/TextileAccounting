@@ -120,6 +120,12 @@ describe('Base Onboarding — Server Actions Contract', () => {
     it('enforces salary requirements on fixed workers', () => {
         expect(actionsSource).toContain('Please enter a positive monthly salary for fixed worker')
     })
+
+    it('handles missing base_onboarding column gracefully in completeBaseOnboardingAction', () => {
+        expect(actionsSource).toContain("updateError.code === '42703'")
+        expect(actionsSource).toContain('onboarding_complete: true')
+        expect(actionsSource).toContain('app_metadata: {')
+    })
 })
 
 describe('Base Onboarding — Navigation & Routing Guards', () => {

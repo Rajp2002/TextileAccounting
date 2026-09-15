@@ -5,7 +5,10 @@
 -- to update configurations in-place on same-day modifications.
 -- ============================================================
 
--- 1. Table Grants for service_role
+-- 1. Table Grants for service_role and base_onboarding state column
+ALTER TABLE public.organizations
+  ADD COLUMN IF NOT EXISTS base_onboarding JSONB DEFAULT NULL;
+
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.base_payroll_cycle_configs TO service_role;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.base_payroll_periods TO service_role;
 

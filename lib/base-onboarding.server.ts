@@ -78,16 +78,24 @@ export async function getFactoryReadiness(orgId: string): Promise<FactoryReadine
  */
 export async function isBaseOnboardingComplete(orgId: string): Promise<boolean> {
     const admin = createAdminClient()
-    const { data } = await admin
+    const { data, error } = await admin
         .from('organizations')
         .select('base_onboarding, onboarding_complete')
         .eq('id', orgId)
         .maybeSingle()
 
+    if (error && (error.code === '42703' || error.message?.includes('base_onboarding'))) {
+        const { data: fallbackData } = await admin
+            .from('organizations')
+            .select('onboarding_complete')
+            .eq('id', orgId)
+            .maybeSingle()
+        return fallbackData?.onboarding_complete === true
+    }
+
     if (!data) return false
     const baseOnboarding = data.base_onboarding as Record<string, unknown> | null
     if (baseOnboarding?.status === 'completed') return true
-    // Existing completed accounts prior to base onboarding versioning
-    if (data.onboarding_complete === true && !baseOnboarding) return true
+    if (data.onboarding_complete === true) return true
     return false
 }

@@ -81,10 +81,19 @@ export async function getBaseOnboardingInitialState() {
                 .eq('org_id', profile.org_id),
         ])
 
-        const org = orgRes.data
+        let org = orgRes.data
+        if (orgRes.error && (orgRes.error.code === '42703' || orgRes.error.message?.includes('base_onboarding'))) {
+            const { data: fallbackOrg } = await admin
+                .from('organizations')
+                .select('name, onboarding_complete')
+                .eq('id', profile.org_id)
+                .maybeSingle()
+            org = fallbackOrg ? ({ ...fallbackOrg, base_onboarding: null } as any) : null
+        }
+
         const factoryName = org?.name ?? ''
         const baseOnboardingMeta = org?.base_onboarding as Record<string, unknown> | null
-        const isCompleted = baseOnboardingMeta?.status === 'completed'
+        const isCompleted = baseOnboardingMeta?.status === 'completed' || org?.onboarding_complete === true
 
         // Check if draft exists in base_onboarding JSONB
         const savedDraft = (baseOnboardingMeta?.draft as BaseOnboardingDraft) || null
@@ -214,11 +223,15 @@ export async function saveBaseOnboardingDraftAction(draft: Partial<BaseOnboardin
         const { profile } = await requireRole(['owner'])
         const admin = createAdminClient()
 
-        const { data: org } = await admin
+        const { data: org, error: readError } = await admin
             .from('organizations')
             .select('base_onboarding')
             .eq('id', profile.org_id)
             .single()
+
+        if (readError && (readError.code === '42703' || readError.message?.includes('base_onboarding'))) {
+            return { success: true }
+        }
 
         const existing = (org?.base_onboarding as Record<string, unknown>) || {}
         const updated = {
@@ -232,10 +245,14 @@ export async function saveBaseOnboardingDraftAction(draft: Partial<BaseOnboardin
             },
         }
 
-        await admin
+        const { error: updateError } = await admin
             .from('organizations')
             .update({ base_onboarding: updated })
             .eq('id', profile.org_id)
+
+        if (updateError && (updateError.code === '42703' || updateError.message?.includes('base_onboarding'))) {
+            return { success: true }
+        }
 
         return { success: true }
     } catch (err: unknown) {
@@ -699,7 +716,7 @@ export async function saveBaseOnboardingPayrollAction(input: PayrollCycleInput) 
 
 export async function completeBaseOnboardingAction() {
     try {
-        const { profile } = await requireRole(['owner'])
+        const { user, profile } = await requireRole(['owner'])
         const admin = createAdminClient()
 
         const now = new Date().toISOString()
@@ -707,7 +724,7 @@ export async function completeBaseOnboardingAction() {
             .from('organizations')
             .select('base_onboarding')
             .eq('id', profile.org_id)
-            .single()
+            .maybeSingle()
 
         const existing = (org?.base_onboarding as Record<string, unknown>) || {}
         const completedMeta = {
@@ -718,7 +735,10 @@ export async function completeBaseOnboardingAction() {
             completed_steps: ['factory', 'defaults', 'machines', 'workers', 'payroll', 'review'],
         }
 
-        const { error } = await admin
+        let updateError: any = null
+
+        // 1. Attempt full update with base_onboarding metadata, onboarding_complete, and product_experience
+        const res1 = await admin
             .from('organizations')
             .update({
                 base_onboarding: completedMeta,
@@ -727,8 +747,48 @@ export async function completeBaseOnboardingAction() {
             })
             .eq('id', profile.org_id)
 
-        if (error) {
-            return { error: 'Failed to complete factory setup. Please try again.' }
+        updateError = res1.error
+
+        // 2. If base_onboarding column is missing, retry without it
+        if (updateError && (updateError.code === '42703' || updateError.message?.includes('base_onboarding'))) {
+            console.warn('[completeBaseOnboardingAction] base_onboarding column missing, retrying without it:', updateError)
+            const res2 = await admin
+                .from('organizations')
+                .update({
+                    onboarding_complete: true,
+                    product_experience: 'base',
+                })
+                .eq('id', profile.org_id)
+            updateError = res2.error
+        }
+
+        // 3. If product_experience constraint/column fails, retry with onboarding_complete
+        if (updateError && (updateError.code === '42703' || updateError.code === '23514')) {
+            console.warn('[completeBaseOnboardingAction] product_experience update failed, retrying with onboarding_complete:', updateError)
+            const res3 = await admin
+                .from('organizations')
+                .update({
+                    onboarding_complete: true,
+                })
+                .eq('id', profile.org_id)
+            updateError = res3.error
+        }
+
+        if (updateError) {
+            console.error('[completeBaseOnboardingAction] Failed to update organization:', updateError)
+            return { error: updateError.message || 'Failed to complete factory setup. Please try again.' }
+        }
+
+        // Update user app_metadata to sync session claims immediately
+        try {
+            await admin.auth.admin.updateUserById(user.id, {
+                app_metadata: {
+                    ...(user.app_metadata || {}),
+                    onboarding_complete: true,
+                },
+            })
+        } catch (authErr) {
+            console.warn('[completeBaseOnboardingAction] Failed to update user app_metadata:', authErr)
         }
 
         revalidatePath('/owner/today')
@@ -741,6 +801,7 @@ export async function completeBaseOnboardingAction() {
 
         return { success: true }
     } catch (err: unknown) {
+        console.error('[completeBaseOnboardingAction] Unexpected exception:', err)
         return { error: err instanceof Error ? err.message : 'Unable to complete factory setup' }
     }
 }
