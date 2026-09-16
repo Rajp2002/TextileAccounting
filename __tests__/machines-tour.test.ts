@@ -21,20 +21,42 @@ describe('Machines tour', () => {
         expect(getMachineReadiness({ ...machine, hasCosting: false }).status).toBe('needs_setup')
     })
     it('opens and closes the appropriate preview in either navigation direction', () => {
-        const expected = [null, null, null, null, null, null, null, 'add', 'add', 'add', null, 'edit', null, null, null]
+        const expected = [null, 'add', null, null, null, null]
         expect(machinesTourSteps.map(machinesTourEditor)).toEqual(expected)
         expect([...machinesTourSteps].reverse().map(machinesTourEditor)).toEqual([...expected].reverse())
     })
-    it('provides five sections and complete translated guidance and targets', () => {
-        expect([...new Set(machinesTourSteps.map(machinesTourSection))]).toEqual([0, 1, 2, 3, 4])
+    it('provides six sections and complete translated guidance and targets', () => {
+        expect([...new Set(machinesTourSteps.map(machinesTourSection))]).toEqual([0, 1, 2, 3, 4, 5])
         for (const language of ['en', 'gu', 'hi'] as const) {
             const copy = machinesTutorialCopy[language]
-            expect(copy.sections).toHaveLength(5)
+            expect(copy.sections).toHaveLength(6)
             expect(Object.keys(copy.fields).sort()).toEqual([...machinesTourSteps].sort())
             for (const step of machinesTourSteps) {
                 expect(machinesTourSelectors[step]).toBeTruthy()
                 expect(copy.fields[step].every(text => text.trim().length > 0)).toBe(true)
                 if (language !== 'en') expect(copy.fields[step][1]).toMatch(language === 'gu' ? /[\u0a80-\u0aff]/ : /[\u0900-\u097f]/)
+            }
+        }
+    })
+    it('teaches quality setup before worker assignment with current action labels', () => {
+        expect(machinesTourSteps.indexOf('production')).toBeLessThan(machinesTourSteps.indexOf('assignments'))
+        for (const language of ['en', 'gu', 'hi'] as const) {
+            const copy = machinesTutorialCopy[language]
+            for (const action of ['Overview & Looms', 'Activate Quality', 'Assign Looms', 'Cost Estimator']) {
+                expect(copy.fields.production[1]).toContain(action)
+            }
+            expect(copy.fields.assignments[1]).toContain('Assign')
+            const examples = makeMachinesTourExamples(copy.example)
+            expect(copy.fields.details[1]).toContain(examples[0].name)
+            expect(copy.fields.label[1]).toContain(examples[0].custom_label)
+            expect(copy.fields.readiness[1]).toContain(examples[1].name)
+            expect(examples[0].assignedWorkerName).toBe(copy.example.worker)
+            expect(examples[0].assignedCostingLabel).toBe(copy.example.fabric)
+            expect(copy.help).toHaveLength(4)
+            for (const [title, description] of copy.help) {
+                expect(title.trim()).not.toBe('')
+                expect(description.trim()).not.toBe('')
+                if (language !== 'en') expect(description).toMatch(language === 'gu' ? /[\u0a80-\u0aff]/ : /[\u0900-\u097f]/)
             }
         }
     })

@@ -128,7 +128,7 @@ export default function MachinesTutorial({ step, onStepChange, launcher, userId 
             <div ref={panel} role="dialog" aria-modal="true" aria-labelledby="machines-tour-title" aria-describedby="machines-tour-description" tabIndex={-1} className={`guided-tour-panel fixed z-[101] w-[320px] max-w-[calc(100vw-2rem)] max-h-[calc(100dvh-2rem)] flex flex-col rounded-2xl border border-amber-200/90 bg-surface p-4 text-ink shadow-2xl outline-none ${current?.bottom ? 'bottom-4' : 'top-4'} ${current?.left ? 'left-4' : 'right-4'}`}>
                 <div data-tour-description-scroll aria-live="polite">
                     <p className="text-[11px] font-bold text-saffron-deep">{copy.sample}</p>
-                    <p className="mt-2 text-xs font-semibold text-subtle">{machinesTourSection(step) + 1}/5 · {copy.sections[machinesTourSection(step)]}</p>
+                    <p className="mt-2 text-xs font-semibold text-subtle">{machinesTourSection(step) + 1}/{copy.sections.length} · {copy.sections[machinesTourSection(step)]}</p>
                     <h2 id="machines-tour-title" className="mt-3 text-lg font-bold">{copy.fields[step][0]}</h2>
                     <p id="machines-tour-description" className="mt-3 text-sm leading-relaxed">{copy.fields[step][1]}</p>
                 </div>

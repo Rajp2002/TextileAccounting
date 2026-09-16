@@ -11,6 +11,7 @@ import { MachineToolbar, type MachineStatusFilter } from '@/components/machines/
 import { MachineGrid } from '@/components/machines/MachineGrid'
 import { MachineEmptyState } from '@/components/machines/MachineEmptyState'
 import MachineEditor from './MachineEditor'
+import { NavigationLink } from '@/components/navigation/navigation-link'
 import { TourInvitation } from '@/components/tours/TourInvitation'
 import MachinesTutorial from '@/components/tours/MachinesTutorial'
 import { makeMachinesTourExamples, machinesTourEditor, type MachinesTourStep } from '@/lib/machines-tour'
@@ -30,7 +31,8 @@ export default function MachinesRegister({
   const { tx, language } = useTranslation()
   const [tourStep, setTourStep] = useState<MachinesTourStep | null>(null)
   const tourLauncher = useRef<HTMLDivElement>(null)
-  const examples = useMemo(() => makeMachinesTourExamples(), [])
+  const copy = machinesTutorialCopy[language]
+  const examples = useMemo(() => makeMachinesTourExamples(machinesTutorialCopy[language].example), [language])
   const preview = tourStep ? machinesTourEditor(tourStep) : null
   useLocalizedPageTitle(`${tx('Machines')} | Weavly`)
 
@@ -108,7 +110,7 @@ export default function MachinesRegister({
           {/* 1. Page Header */}
           <div data-machines-tour="header"><MachinesPageHeader onAdd={tourStep ? () => {} : add} returnTo={tourStep ? undefined : returnTo} /></div>
           {!isOpen && <div ref={tourLauncher} data-machines-tour="launcher">
-            <TourInvitation tourId="machines" userId={userId} orgId={orgId} userMetadata={userMetadata} onLaunch={() => setTourStep('search')} />
+            <TourInvitation tourId="machines" userId={userId} orgId={orgId} userMetadata={userMetadata} onLaunch={() => setTourStep('purpose')} />
           </div>}
           {tourStep && <p role="status" className="text-xs font-semibold text-saffron-deep">{machinesTutorialCopy[language].sample}</p>}
 
@@ -137,7 +139,29 @@ export default function MachinesRegister({
               onClearFilter={() => handleFilterChange('all')}
             />
           )}
-          {preview && <MachineEditor key={preview} today={today} tourPreview={{ machine: examples[0], editing: preview === 'edit' }}>{() => null}</MachineEditor>}
+          <section aria-labelledby="machines-setup-heading" className="rounded-2xl border border-hairline bg-surface p-4 sm:p-5" data-i18n-skip="true" lang={language}>
+            <h2 id="machines-setup-heading" className="text-sm font-semibold text-ink">{copy.setupTitle}</h2>
+            <div className="mt-3 grid gap-4 sm:grid-cols-2">
+              <div data-machines-tour="production-next">
+                <NavigationLink href={tourStep ? '#' : '/owner/production?tab=jobs'} onClick={event => { if (tourStep) event.preventDefault() }} className="inline-flex min-h-11 items-center text-sm font-medium text-saffron-deep underline">{copy.productionLink}</NavigationLink>
+                <p className="text-sm text-subtle">{copy.productionHelp}</p>
+              </div>
+              <div data-machines-tour="assignments-next">
+                <NavigationLink href={tourStep ? '#' : '/owner/assignments'} onClick={event => { if (tourStep) event.preventDefault() }} className="inline-flex min-h-11 items-center text-sm font-medium text-saffron-deep underline">{copy.assignmentsLink}</NavigationLink>
+                <p className="text-sm text-subtle">{copy.assignmentsHelp}</p>
+              </div>
+            </div>
+          </section>
+          <details className="rounded-2xl border border-hairline bg-surface p-4 sm:p-5" data-i18n-skip="true" lang={language}>
+            <summary className="cursor-pointer text-sm font-semibold text-ink">{copy.helpTitle}</summary>
+            <dl className="mt-4 space-y-4 text-sm">
+              {copy.help.map(([title, description]) => <div key={title}>
+                <dt className="font-medium text-ink">{title}</dt>
+                <dd className="mt-1 text-subtle">{description}</dd>
+              </div>)}
+            </dl>
+          </details>
+          {preview && <MachineEditor key={preview} today={today} tourPreview={{ machine: examples[0], editing: false }}>{() => null}</MachineEditor>}
           {tourStep && <MachinesTutorial step={tourStep} onStepChange={setTourStep} launcher={tourLauncher} userId={userId} />}
         </div>
       )}
