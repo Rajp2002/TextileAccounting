@@ -208,7 +208,7 @@ describe('Workforce Register Premium Redesign', () => {
       )
       expect(html).toContain('Suresh Master')
       expect(html).not.toContain('Rami Weaver')
-      expect(html).not.toContain('Piece Rate')
+      expect(html).not.toMatch(/<h2[^>]*>Piece Rate<\/h2>/)
 
       // Search matches only Piece Rate
       fixture.query = 'search=Rami'
@@ -220,12 +220,12 @@ describe('Workforce Register Premium Redesign', () => {
       )
       expect(html).toContain('Rami Weaver')
       expect(html).not.toContain('Suresh Master')
-      expect(html).not.toContain('Fixed Salary')
+      expect(html).not.toMatch(/<h2[^>]*>Fixed Salary<\/h2>/)
     })
   })
 
   describe('Worker Cards & Operational Details', () => {
-    it('renders piece-rate card with assigned machines, rate setup, and View assignments deep link', () => {
+    it('renders piece-rate card with assigned machines, quality wage source, and View assignments deep link', () => {
       const html = renderToStaticMarkup(
         React.createElement(WorkersRegister, {
           workers: [pieceWorkerActive],
@@ -238,11 +238,12 @@ describe('Workforce Register Premium Redesign', () => {
       expect(html).toContain('Day shift')
       expect(html).toContain('Active')
 
-      // 2-column configuration: Machines & Rate setup
+      // The register identifies the quality wage source, not a legacy worker-rate readiness flag.
       expect(html).toContain('Machines')
       expect(html).toContain('3 assigned')
-      expect(html).toContain('Rate setup')
-      expect(html).toContain('Configured')
+      expect(html).toContain('Wage source')
+      expect(html).toContain('Production quality')
+      expect(html).not.toContain('Rate setup')
 
       // Deep link to Machine Assignments
       expect(html).toContain('View assignments')

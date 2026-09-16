@@ -12,6 +12,8 @@ import {
 } from '@/lib/worker-operational'
 import { WorkerStatusBadge } from './WorkerStatusBadge'
 import { cn } from '@/lib/utils'
+import { workersTutorialCopy } from '@/lib/i18n/workers-tutorial'
+import { WorkerPayBasis } from './WorkerPayBasis'
 
 interface WorkerCardProps {
   worker: BaseProductionWorkerWithOperational
@@ -20,7 +22,8 @@ interface WorkerCardProps {
 }
 
 export function WorkerCard({ worker, onEdit, tourPreview = false }: WorkerCardProps) {
-  const { tx } = useTranslation()
+  const { tx, language = 'en' } = useTranslation()
+  const copy = workersTutorialCopy[language]
   const summary = getWorkerOperationalSummary(worker)
 
   const shiftLabel = tx(
@@ -99,18 +102,13 @@ export function WorkerCard({ worker, onEdit, tourPreview = false }: WorkerCardPr
                 </p>
               </div>
 
-              {/* Piece-Rate Col 2: Rate setup */}
+              {/* Piece-Rate Col 2: Authoritative wage source */}
               <div className="min-w-0 space-y-1">
-                <span className="text-xs font-medium text-subtle uppercase tracking-wider">
-                  {tx('Rate setup')}
+                <span data-i18n-skip="true" lang={language} className="text-xs font-medium text-subtle uppercase tracking-wider">
+                  {copy.wageLabel}
                 </span>
-                <p
-                  className={cn(
-                    'truncate text-sm font-medium',
-                    summary.hasRateConfigured ? 'text-ink' : 'text-subtle/70 font-normal italic'
-                  )}
-                >
-                  {tx(summary.rateStatusLabel)}
+                <p className="text-sm font-medium text-ink" data-i18n-skip="true" lang={language}>
+                  <WorkerPayBasis worker={worker} />
                 </p>
               </div>
             </>

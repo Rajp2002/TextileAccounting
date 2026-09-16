@@ -16,11 +16,12 @@ export type WorkerOperationalSummary = {
 }
 
 /**
- * Derives authoritative operational readiness indicators for worker cards.
+ * Derives worker metadata and salary readiness indicators for worker cards.
  *
  * Rules:
  * - Piece-rate workers:
- *   - Rate setup is "Configured" if worker.rate_per_meter > 0, otherwise "Not configured".
+ *   - Legacy rate metadata reflects worker.rate_per_meter; it is NOT Base production readiness.
+ *     Base production uses the quality wage, so worker cards display that source instead.
  *   - Machine assignments count is derived from active effective assignments.
  *
  * - Fixed-salary workers:
