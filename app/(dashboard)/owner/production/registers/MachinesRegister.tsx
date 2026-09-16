@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useRef } from 'react'
 import { useLocalizedPageTitle } from '@/hooks/use-localized-page-title'
 import { useSearchParams } from 'next/navigation'
 import { useTranslation } from '@/lib/i18n/context'
@@ -11,16 +11,27 @@ import { MachineToolbar, type MachineStatusFilter } from '@/components/machines/
 import { MachineGrid } from '@/components/machines/MachineGrid'
 import { MachineEmptyState } from '@/components/machines/MachineEmptyState'
 import MachineEditor from './MachineEditor'
+import { TourInvitation } from '@/components/tours/TourInvitation'
+import MachinesTutorial from '@/components/tours/MachinesTutorial'
+import { makeMachinesTourExamples, machinesTourEditor, type MachinesTourStep } from '@/lib/machines-tour'
+import { machinesTutorialCopy } from '@/lib/i18n/machines-tutorial'
 
 export default function MachinesRegister({
   machines,
-  today,
+  today, userId, orgId, userMetadata,
 }: {
   machines: BaseProductionMachineWithReadiness[]
   today: string
+  userId?: string
+  orgId?: string
+  userMetadata?: Record<string, unknown>
 }) {
   const params = useSearchParams()
-  const { tx } = useTranslation()
+  const { tx, language } = useTranslation()
+  const [tourStep, setTourStep] = useState<MachinesTourStep | null>(null)
+  const tourLauncher = useRef<HTMLDivElement>(null)
+  const examples = useMemo(() => makeMachinesTourExamples(), [])
+  const preview = tourStep ? machinesTourEditor(tourStep) : null
   useLocalizedPageTitle(`${tx('Machines')} | Weavly`)
 
   const returnTo = safeBaseReturnPath(params.get('returnTo'))
@@ -92,23 +103,29 @@ export default function MachinesRegister({
       initialOpen={params.get('add') === 'machine'}
       returnTo={returnTo}
     >
-      {({ add, edit }) => (
+      {({ add, edit, isOpen }) => (
         <div className="mx-auto w-full max-w-6xl space-y-6">
           {/* 1. Page Header */}
-          <MachinesPageHeader onAdd={add} returnTo={returnTo} />
+          <div data-machines-tour="header"><MachinesPageHeader onAdd={tourStep ? () => {} : add} returnTo={tourStep ? undefined : returnTo} /></div>
+          {!isOpen && <div ref={tourLauncher} data-machines-tour="launcher">
+            <TourInvitation tourId="machines" userId={userId} orgId={orgId} userMetadata={userMetadata} onLaunch={() => setTourStep('search')} />
+          </div>}
+          {tourStep && <p role="status" className="text-xs font-semibold text-saffron-deep">{machinesTutorialCopy[language].sample}</p>}
 
           {/* 2. Machine Toolbar */}
-          <MachineToolbar
-            search={search}
-            onSearchChange={handleSearchChange}
-            statusFilter={statusFilter}
-            onStatusFilterChange={handleFilterChange}
-            totalCount={machines.length}
-            filteredCount={visible.length}
-          />
+          <div data-machines-tour="toolbar"><MachineToolbar
+            search={tourStep ? '' : search}
+            onSearchChange={tourStep ? () => {} : handleSearchChange}
+            statusFilter={tourStep ? 'all' : statusFilter}
+            onStatusFilterChange={tourStep ? () => {} : handleFilterChange}
+            totalCount={tourStep ? examples.length : machines.length}
+            filteredCount={tourStep ? examples.length : visible.length}
+          /></div>
 
           {/* 3. Machine Card Grid or Empty State */}
-          {visible.length > 0 ? (
+          {tourStep ? (
+            <MachineGrid machines={examples} onEdit={() => {}} tourPreview />
+          ) : visible.length > 0 ? (
             <MachineGrid machines={visible} onEdit={edit} />
           ) : (
             <MachineEmptyState
@@ -120,6 +137,8 @@ export default function MachinesRegister({
               onClearFilter={() => handleFilterChange('all')}
             />
           )}
+          {preview && <MachineEditor key={preview} today={today} tourPreview={{ machine: examples[0], editing: preview === 'edit' }}>{() => null}</MachineEditor>}
+          {tourStep && <MachinesTutorial step={tourStep} onStepChange={setTourStep} launcher={tourLauncher} userId={userId} />}
         </div>
       )}
     </MachineEditor>

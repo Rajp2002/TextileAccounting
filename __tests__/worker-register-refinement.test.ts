@@ -13,6 +13,7 @@ vi.mock('next/navigation', () => ({
 }))
 vi.mock('@/lib/i18n/context', () => ({
   useTranslation: () => ({
+    language: 'en',
     tx: (text: string) => text,
     t: (text: string) => text,
   }),
@@ -25,6 +26,8 @@ vi.mock('../app/(dashboard)/owner/production/actions', () => ({
   createBaseProductionWorker: fixture.action,
   updateBaseProductionWorker: fixture.action,
 }))
+
+vi.mock('@/app/actions/tour-preferences', () => ({ recordTourEventAction: vi.fn() }))
 
 import WorkersRegister from '../app/(dashboard)/owner/production/registers/WorkersRegister'
 

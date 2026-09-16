@@ -11,10 +11,11 @@ import { cn } from '@/lib/utils'
 
 interface MachineCardProps {
   machine: BaseProductionMachineWithReadiness
+  tourPreview?: boolean
   onEdit: (machine: BaseProductionMachineWithReadiness) => void
 }
 
-export function MachineCard({ machine, onEdit }: MachineCardProps) {
+export function MachineCard({ machine, onEdit, tourPreview = false }: MachineCardProps) {
   const { tx } = useTranslation()
   const readiness = getMachineReadiness(machine)
   const displayName = machine.custom_label || machine.name
@@ -22,6 +23,7 @@ export function MachineCard({ machine, onEdit }: MachineCardProps) {
 
   return (
     <article
+      data-machines-tour-id={tourPreview ? machine.id : undefined}
       className={cn(
         'group flex flex-col justify-between rounded-2xl border border-hairline bg-surface p-5 shadow-xs transition-all duration-150',
         'hover:border-hairline-strong hover:shadow-sm motion-safe:hover:-translate-y-0.5'
@@ -30,7 +32,7 @@ export function MachineCard({ machine, onEdit }: MachineCardProps) {
       <div className="space-y-4">
         {/* A. Card Header: Identity + Status */}
         <div className="flex items-start justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-3">
+          <div data-machines-tour="identity" className="flex min-w-0 items-center gap-3">
             <div
               className={cn(
                 'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-colors',
@@ -58,7 +60,7 @@ export function MachineCard({ machine, onEdit }: MachineCardProps) {
             </div>
           </div>
 
-          <div className="shrink-0 pt-0.5">
+          <div data-machines-tour="readiness" className="shrink-0 pt-0.5">
             <MachineStatusBadge status={readiness.status} />
           </div>
         </div>
@@ -66,7 +68,7 @@ export function MachineCard({ machine, onEdit }: MachineCardProps) {
         {/* B. Operational Configuration Details */}
         <div className="grid grid-cols-2 gap-3 rounded-xl border border-hairline/60 bg-surface-soft/30 p-3.5">
           {/* Worker */}
-          <div className="min-w-0 space-y-1">
+          <div data-machines-tour="worker" className="min-w-0 space-y-1">
             <span className="text-xs font-medium text-subtle uppercase tracking-wider">
               {tx('Worker')}
             </span>
@@ -84,7 +86,7 @@ export function MachineCard({ machine, onEdit }: MachineCardProps) {
           </div>
 
           {/* Costing */}
-          <div className="min-w-0 space-y-1">
+          <div data-machines-tour="costing" className="min-w-0 space-y-1">
             <span className="text-xs font-medium text-subtle uppercase tracking-wider">
               {tx('Costing')}
             </span>
@@ -109,7 +111,9 @@ export function MachineCard({ machine, onEdit }: MachineCardProps) {
       <div className="mt-5 flex items-center justify-between gap-3 border-t border-hairline/60 pt-4">
         {/* Primary Action: View Assignment */}
         <NavigationLink
-          href={`/owner/assignments?machine=${machine.id}`}
+          data-machines-tour="assignments"
+          href={tourPreview ? "#" : `/owner/assignments?machine=${machine.id}`}
+          onClick={event => { if (tourPreview) event.preventDefault() }}
           className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-hairline/80 bg-surface px-3.5 text-xs sm:text-sm font-medium text-ink shadow-2xs transition-all hover:border-saffron hover:bg-saffron-soft hover:text-saffron-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
           aria-label={`${tx('View assignment for')} ${displayName}`}
         >
@@ -121,7 +125,8 @@ export function MachineCard({ machine, onEdit }: MachineCardProps) {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => onEdit(machine)}
+          data-machines-tour="edit"
+          onClick={() => { if (!tourPreview) onEdit(machine) }}
           className="min-h-10 rounded-xl px-3 text-xs sm:text-sm font-medium text-subtle hover:bg-surface-soft hover:text-ink focus-visible:ring-saffron"
           aria-label={`${tx('Edit')} ${displayName}`}
         >

@@ -24,9 +24,10 @@ function emptyMachineDraft(): MachineDraft {
     return { name: '', machineType: 'other', customLabel: '', isActive: true }
 }
 
-export default function MachineEditor({ initialOpen = false, returnTo, children }: {
+export default function MachineEditor({ initialOpen = false, returnTo, children, tourPreview }: {
  today: string; initialOpen?: boolean; returnTo?: string;
- children: (actions: { add: () => void; edit: (record: BaseProductionMachine) => void }) => ReactNode
+ tourPreview?: { machine: BaseProductionMachine; editing: boolean };
+ children: (actions: { isOpen: boolean; add: () => void; edit: (record: BaseProductionMachine) => void }) => ReactNode
 }) {
  const router = useRouter()
  const pathname = usePathname()
@@ -37,14 +38,15 @@ export default function MachineEditor({ initialOpen = false, returnTo, children 
   window.history.replaceState(null, '', `${pathname}${next.size ? `?${next}` : ''}`)
  }
  const { tx } = useTranslation()
- const [open, setOpen] = useState(initialOpen)
- const [editingMachineId, setEditingMachineId] = useState<string | null>(null)
- const [machineDraft, setMachineDraft] = useState<MachineDraft>(emptyMachineDraft)
+ const [open, setOpen] = useState(initialOpen || Boolean(tourPreview))
+ const [editingMachineId, setEditingMachineId] = useState<string | null>(tourPreview?.editing ? tourPreview.machine.id : null)
+ const [machineDraft, setMachineDraft] = useState<MachineDraft>(() => tourPreview ? { name: tourPreview.machine.name, machineType: tourPreview.machine.machine_type as MachineDraft['machineType'], customLabel: tourPreview.machine.custom_label ?? '', isActive: tourPreview.machine.is_active } : emptyMachineDraft())
  const [original, setOriginal] = useState(() => JSON.stringify(emptyMachineDraft()))
  const [pendingAction, setPendingAction] = useState<string | null>(null)
- const dirty = open && JSON.stringify(machineDraft) !== original
+ const dirty = !tourPreview && open && JSON.stringify(machineDraft) !== original
  useUnloadProtection(dirty)
  function closeDialog() {
+   if (tourPreview) return
    if (pendingAction) return
    if (dirty && !window.confirm(tx('Discard unsaved changes?'))) return
    clearAddIntent(); setOpen(false)
@@ -72,6 +74,7 @@ export default function MachineEditor({ initialOpen = false, returnTo, children 
     }
  function handleMachineSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault()
+        if (tourPreview) return
         if (editingMachineId) {
             void runAction(
                 'machine-update',
@@ -101,19 +104,20 @@ export default function MachineEditor({ initialOpen = false, returnTo, children 
     }
  return <>
  {children({
+   isOpen: open,
    add: () => { setEditingMachineId(null); setMachineDraft(emptyMachineDraft()); setOriginal(JSON.stringify(emptyMachineDraft())); setOpen(true) },
    edit: value => { openEditMachine(value) },
  })}
-             <Dialog open={open} onOpenChange={(open) => !open && closeDialog()}>
-                <DialogContent>
+             <Dialog modal={!tourPreview} open={open} onOpenChange={(open) => !open && closeDialog()}>
+                <DialogContent data-machines-tour-preview={tourPreview ? "true" : undefined} onOpenAutoFocus={event => { if (tourPreview) event.preventDefault() }} onCloseAutoFocus={event => { if (tourPreview) event.preventDefault() }} onInteractOutside={event => { if (tourPreview) event.preventDefault() }} onEscapeKeyDown={event => { if (tourPreview) event.preventDefault() }}>
                     <DialogHeader><DialogTitle>{editingMachineId ? 'Edit machine' : 'Add machine'}</DialogTitle><DialogDescription>Name your machine and choose its type.</DialogDescription></DialogHeader>
-                    <form className="space-y-4" onSubmit={handleMachineSubmit}>
-                        <div className="space-y-2"><Label htmlFor="base-machine-name">Machine name {!editingMachineId && <span className="font-normal text-muted-foreground">(optional)</span>}</Label><Input id="base-machine-name" autoFocus value={machineDraft.name} onChange={(event) => setMachineDraft((current) => ({ ...current, name: event.target.value }))} placeholder="Leave blank for Loom #1" required={Boolean(editingMachineId)} /></div>
-                        <div className="space-y-2"><Label htmlFor="base-machine-type">Machine type</Label><Select value={machineDraft.machineType} onValueChange={(value) => setMachineDraft((current) => ({ ...current, machineType: value as MachineDraft['machineType'] }))}><SelectTrigger id="base-machine-type" className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="jacquard">Jacquard</SelectItem><SelectItem value="power_loom">Power loom</SelectItem><SelectItem value="rapier">Rapier</SelectItem><SelectItem value="water_jet">Water jet</SelectItem><SelectItem value="air_jet">Air jet</SelectItem><SelectItem value="circular">Circular</SelectItem><SelectItem value="other">Other</SelectItem></SelectContent></Select></div>
-                        <div className="space-y-2"><Label htmlFor="base-machine-label">Custom label <span className="font-normal text-muted-foreground">(optional)</span></Label><Input id="base-machine-label" value={machineDraft.customLabel} onChange={(event) => setMachineDraft((current) => ({ ...current, customLabel: event.target.value }))} placeholder="e.g. Rapier #1" /></div>
-                        {editingMachineId && <label className="flex items-center gap-2 text-sm text-body"><input type="checkbox" checked={machineDraft.isActive} onChange={(event) => setMachineDraft((current) => ({ ...current, isActive: event.target.checked }))} /> Available for new assignments and daily context</label>}
+                    <form onSubmit={handleMachineSubmit}><fieldset disabled={Boolean(tourPreview)} className="space-y-4">
+                        <div data-machines-tour-field="name" className="space-y-2"><Label htmlFor="base-machine-name">Machine name {!editingMachineId && <span className="font-normal text-muted-foreground">(optional)</span>}</Label><Input id="base-machine-name" autoFocus={!tourPreview} value={machineDraft.name} onChange={(event) => setMachineDraft((current) => ({ ...current, name: event.target.value }))} placeholder="Leave blank for Loom #1" required={Boolean(editingMachineId)} /></div>
+                        <div data-machines-tour-field="type" className="space-y-2"><Label htmlFor="base-machine-type">Machine type</Label><Select value={machineDraft.machineType} onValueChange={(value) => setMachineDraft((current) => ({ ...current, machineType: value as MachineDraft['machineType'] }))}><SelectTrigger id="base-machine-type" className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="jacquard">Jacquard</SelectItem><SelectItem value="power_loom">Power loom</SelectItem><SelectItem value="rapier">Rapier</SelectItem><SelectItem value="water_jet">Water jet</SelectItem><SelectItem value="air_jet">Air jet</SelectItem><SelectItem value="circular">Circular</SelectItem><SelectItem value="other">Other</SelectItem></SelectContent></Select></div>
+                        <div data-machines-tour-field="label" className="space-y-2"><Label htmlFor="base-machine-label">Custom label <span className="font-normal text-muted-foreground">(optional)</span></Label><Input id="base-machine-label" value={machineDraft.customLabel} onChange={(event) => setMachineDraft((current) => ({ ...current, customLabel: event.target.value }))} placeholder="e.g. Rapier #1" /></div>
+                        {editingMachineId && <label data-machines-tour-field="availability" className="flex items-center gap-2 text-sm text-body"><input type="checkbox" checked={machineDraft.isActive} onChange={(event) => setMachineDraft((current) => ({ ...current, isActive: event.target.checked }))} /> Available for new assignments and daily context</label>}
                         <DialogFooter><Button type="button" variant="outline" onClick={closeDialog}>Cancel</Button><Button type="submit" disabled={pendingAction === (editingMachineId ? 'machine-update' : 'machine-create')}>{pendingAction === (editingMachineId ? 'machine-update' : 'machine-create') ? <Loader2 className="h-4 w-4 animate-spin" /> : editingMachineId ? <Edit3 className="h-4 w-4" /> : <Plus className="h-4 w-4" />} {returnTo ? tx('Save and return') : editingMachineId ? 'Save changes' : 'Add machine'}</Button></DialogFooter>
-                    </form>
+                    </fieldset></form>
                 </DialogContent>
             </Dialog>
  </>

@@ -12,6 +12,7 @@ interface WorkforceGroupProps {
   workers: BaseProductionWorkerWithOperational[]
   count?: number
   emptyText: string
+  tourPreview?: boolean
   onEdit: (worker: BaseProductionWorker) => void
 }
 
@@ -22,6 +23,7 @@ export function WorkforceGroup({
   count,
   emptyText,
   onEdit,
+  tourPreview = false,
 }: WorkforceGroupProps) {
   const { tx } = useTranslation()
 
@@ -55,7 +57,7 @@ export function WorkforceGroup({
         <ul role="list" className="flex flex-col space-y-3.5">
           {workers.map(worker => (
             <li key={worker.id} role="listitem">
-              <WorkerCard worker={worker} onEdit={onEdit} />
+              <WorkerCard worker={worker} onEdit={onEdit} tourPreview={tourPreview} />
             </li>
           ))}
         </ul>

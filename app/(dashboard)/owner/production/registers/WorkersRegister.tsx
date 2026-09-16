@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useRef } from 'react'
 import { useLocalizedPageTitle } from '@/hooks/use-localized-page-title'
 import { useSearchParams } from 'next/navigation'
 import { useTranslation } from '@/lib/i18n/context'
@@ -15,16 +15,28 @@ import {
 import { WorkforceGroup } from '@/components/workers/WorkforceGroup'
 import { WorkerEmptyState } from '@/components/workers/WorkerEmptyState'
 import WorkerEditor from './WorkerEditor'
+import { TourInvitation } from '@/components/tours/TourInvitation'
+import WorkersTutorial from '@/components/tours/WorkersTutorial'
+import { makeWorkersTourExamples, workersTourEditor, type WorkersTourStep } from '@/lib/workers-tour'
+import { workersTutorialCopy } from '@/lib/i18n/workers-tutorial'
 
 export default function WorkersRegister({
   workers,
-  today,
+  today, userId, orgId, userMetadata,
 }: {
   workers: BaseProductionWorkerWithOperational[]
   today: string
+  userId?: string
+  orgId?: string
+  userMetadata?: Record<string, unknown>
 }) {
   const params = useSearchParams()
-  const { tx } = useTranslation()
+  const { tx, language } = useTranslation()
+  const [tourStep, setTourStep] = useState<WorkersTourStep | null>(null)
+  const tourLauncher = useRef<HTMLDivElement>(null)
+  const sampleWorkers = useMemo(() => makeWorkersTourExamples(today), [today])
+  const preview = tourStep ? workersTourEditor(tourStep) : null
+  const tourCopy = workersTutorialCopy[language]
   useLocalizedPageTitle(`${tx('Workers')} | Weavly`)
 
   const focus = params.get('worker')
@@ -168,36 +180,51 @@ export default function WorkersRegister({
       initialOpen={params.get('add') === 'worker'}
       returnTo={returnTo}
     >
-      {({ add, edit }) => (
+      {({ add, edit, isOpen }) => (
         <div className="mx-auto w-full max-w-6xl space-y-6">
           {/* 1. Page Header */}
-          <WorkersPageHeader
-            onAdd={add}
-            returnTo={returnTo}
-            focus={focus}
+          <div data-workers-tour="header"><WorkersPageHeader
+            onAdd={tourStep ? () => {} : add}
+            returnTo={tourStep ? undefined : returnTo}
+            focus={tourStep ? null : focus}
             hasFocusedWorker={hasFocusedWorker}
             onClearFocus={() => {
               const next = new URLSearchParams(params)
               next.delete('worker')
               window.history.replaceState(null, '', `/owner/workers${next.size ? `?${next}` : ''}`)
             }}
-            totalCount={workers.length}
-          />
+            totalCount={tourStep ? sampleWorkers.length : workers.length}
+          /></div>
 
+          {!isOpen && <div ref={tourLauncher} data-workers-tour="launcher">
+            <TourInvitation tourId="workers" userId={userId} orgId={orgId} userMetadata={userMetadata} onLaunch={() => setTourStep('search')} />
+          </div>}
+          {tourStep && <p role="status" className="text-xs font-semibold text-saffron-deep">{tourCopy.sample}</p>}
           {/* 2. Global Toolbar */}
+          <div data-workers-tour="toolbar">
           <WorkerToolbar
-            search={search}
-            onSearchChange={handleSearchChange}
-            shiftFilter={shiftFilter}
-            onShiftFilterChange={handleShiftChange}
-            statusFilter={statusFilter}
-            onStatusFilterChange={handleStatusChange}
-            totalCount={workers.length}
-            filteredCount={visible.length}
-          />
+            search={tourStep ? '' : search}
+            onSearchChange={tourStep ? () => {} : handleSearchChange}
+            shiftFilter={tourStep ? 'all' : shiftFilter}
+            onShiftFilterChange={tourStep ? () => {} : handleShiftChange}
+            statusFilter={tourStep ? 'active' : statusFilter}
+            onStatusFilterChange={tourStep ? () => {} : handleStatusChange}
+            totalCount={tourStep ? sampleWorkers.length : workers.length}
+            filteredCount={tourStep ? sampleWorkers.length : visible.length}
+          /></div>
 
           {/* 3. Workforce Groups or Global Empty State */}
-          {visible.length > 0 ? (
+          {tourStep ? (
+            <div data-workers-tour="groups" className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              {sampleWorkers.map((worker, index) => (
+                <div key={worker.id} data-workers-tour={index === 0 ? 'piece' : 'salary-card'}>
+                  <WorkforceGroup title={tx(index === 0 ? 'Piece Rate' : 'Fixed Salary')}
+                    subtitle={tx(index === 0 ? 'Paid based on production' : 'Fixed monthly compensation')}
+                    workers={[worker]} emptyText="" onEdit={() => {}} tourPreview />
+                </div>
+              ))}
+            </div>
+          ) : visible.length > 0 ? (
             <div className={gridClasses}>
               {showPieceGroup && (
                 <WorkforceGroup
@@ -229,6 +256,8 @@ export default function WorkersRegister({
               onClearFilters={clearFilters}
             />
           )}
+          {preview && <WorkerEditor key={preview} today={today} tourPreview={{ worker: preview === 'piece' ? sampleWorkers[0] : sampleWorkers[1], editing: preview === 'edit' }}>{() => null}</WorkerEditor>}
+          {tourStep && <WorkersTutorial step={tourStep} onStepChange={setTourStep} launcher={tourLauncher} userId={userId} />}
         </div>
       )}
     </WorkerEditor>

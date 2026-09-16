@@ -1,4 +1,4 @@
-export type TourId = 'cost-estimate' | 'rate-book' | 'saved-costings' | 'configuration'
+export type TourId = 'cost-estimate' | 'rate-book' | 'saved-costings' | 'configuration' | 'workers' | 'machines' | 'payroll' | 'production' | 'dispatch' | 'fabric-stock' | 'yarn-stock'
 
 export type TourEmphasis = 'halo' | 'static'
 

@@ -14,6 +14,7 @@ import { ArrowUpRight, Check, Link2, Loader2, Moon, Plus, Search, Sun, Unlink, U
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
@@ -80,6 +81,7 @@ export default function BaseAssignmentWorkspace({
     const { language, tx } = useTranslation()
     const [tourStep, setTourStep] = useState<ConfigurationTourStep | null>(null)
     const tourLauncher = useRef<HTMLDivElement>(null)
+    const tourReturnScroll = useRef({ x: 0, y: 0 })
     const tourView = tourStep ? configurationTourView(tourStep) : null
     const initialData = useMemo(() => {
         if (!tourStep) return liveData
@@ -87,7 +89,16 @@ export default function BaseAssignmentWorkspace({
         const copy = configurationTutorialCopy[language]
         example.workers[0].name = copy.worker
         example.machines[0].name = copy.machine
-        if (example.machines[1]) example.machines[1].name = copy.inactiveMachine
+        if (example.workers[1]) example.workers[1].name = copy.secondWorker
+        for (const machine of example.machines.slice(1)) {
+            const names: Record<string, string> = {
+                'tour-configuration-inactive-machine': copy.inactiveMachine,
+                'tour-configuration-current': copy.currentMachine,
+                'tour-configuration-occupied': copy.occupiedMachine,
+                'tour-configuration-blocked': copy.blockedMachine,
+            }
+            machine.name = names[machine.id] ?? machine.name
+        }
         return { ...liveData, ...example }
     }, [liveData, tourStep, language])
     const [selectedShift, setShift] = useState<BaseProductionShift>(initialShift ?? 'day')
@@ -387,7 +398,7 @@ export default function BaseAssignmentWorkspace({
                 <div ref={tourLauncher}>
                     <TourInvitation tourId="configuration" userId={liveData.actorId} orgId={liveData.orgId} userMetadata={tourMetadata} align="full" onLaunch={() => {
                         if (pendingKey) return
-                        setPickerWorkerId(null)
+                        tourReturnScroll.current = { x: window.scrollX, y: window.scrollY }
                         setTourStep(configurationTourSteps[0])
                     }} />
                 </div>
@@ -878,7 +889,7 @@ export default function BaseAssignmentWorkspace({
             </aside>
 
             <Sheet modal={!tourStep} open={pickerWorkerId !== null} onOpenChange={(open) => { if (!open && !tourStep) setPickerWorkerId(null) }}>
-                <SheetContent data-configuration-tour="picker" data-tour-floating={tourStep ? '' : undefined} onOpenAutoFocus={event => { if (tourStep) event.preventDefault() }} onCloseAutoFocus={event => { if (tourStep) event.preventDefault() }} onInteractOutside={event => { if (tourStep) event.preventDefault() }} side="bottom" className="max-h-[82dvh] rounded-t-2xl border-t border-hairline bg-surface pb-6 shadow-xl">
+                <SheetContent data-configuration-tour="picker" data-configuration-picker-preview={tourStep ? "true" : undefined} onOpenAutoFocus={event => { if (tourStep) event.preventDefault() }} onCloseAutoFocus={event => { if (tourStep) event.preventDefault() }} onInteractOutside={event => { if (tourStep) event.preventDefault() }} side="bottom" className="max-h-[82dvh] rounded-t-2xl border-t border-hairline bg-surface pb-6 shadow-xl">
                     <SheetHeader className="pb-3 border-b border-hairline/60">
                         <SheetTitle className="text-lg font-bold text-ink">Assign {pickerWorker?.name ?? 'worker'}</SheetTitle>
                         <SheetDescription className="text-xs text-body">Choose a machine for the {shift} shift. Saving happens immediately.</SheetDescription>
@@ -895,10 +906,11 @@ export default function BaseAssignmentWorkspace({
                             return (
                                 <button
                                     key={machine.id}
+                                    data-configuration-picker-state={!hasActiveJob ? 'blocked' : isCurrent ? 'current' : assignedWorker ? 'occupied' : 'available'}
                                     type="button"
                                     className="flex w-full items-center justify-between gap-3 rounded-xl border border-hairline bg-surface p-3.5 text-left transition-all hover:border-hairline-strong hover:bg-surface-soft disabled:opacity-50 disabled:pointer-events-none shadow-xs"
                                     onClick={() => pickerWorkerId && void handleAssign(pickerWorkerId, machine.id)}
-                                    disabled={isOptionDisabled}
+                                    disabled={Boolean(tourStep) || isOptionDisabled}
                                 >
                                     <span>
                                         <span className="block font-semibold text-ink">{machineLabel(machine)}</span>
@@ -929,7 +941,19 @@ export default function BaseAssignmentWorkspace({
                     </SheetFooter>
                 </SheetContent>
             </Sheet>
-            {tourStep && <ConfigurationTutorial step={tourStep} onStepChange={setTourStep} launcher={tourLauncher} userId={liveData.actorId} />}
+            {tourStep === 'undo' && <div data-configuration-tour="undo" role="status" className="col-span-full flex items-center justify-between gap-3 rounded-xl border border-hairline bg-surface p-4 shadow-sm">
+                <div><p className="text-xs text-saffron-deep">{configurationTutorialCopy[language].sample}</p><p>{configurationTutorialCopy[language].savedLabel}</p></div>
+                <Button type="button" variant="outline" disabled>{configurationTutorialCopy[language].undoLabel}</Button>
+            </div>}
+            <Dialog modal={false} open={tourStep === 'replace'}>
+                <DialogContent data-configuration-tour="replace-preview" data-configuration-tour-preview={tourStep === 'replace' ? 'true' : undefined} showCloseButton={false} onOpenAutoFocus={event => event.preventDefault()} onCloseAutoFocus={event => event.preventDefault()} onInteractOutside={event => event.preventDefault()} onEscapeKeyDown={event => event.preventDefault()}>
+                    <DialogHeader><DialogTitle>{configurationTutorialCopy[language].replacementLabel}</DialogTitle><DialogDescription>{configurationTutorialCopy[language].sample}</DialogDescription></DialogHeader>
+                    <p className="font-semibold">{configurationTutorialCopy[language].machine}: {configurationTutorialCopy[language].worker} → {configurationTutorialCopy[language].secondWorker}</p>
+                    <p className="text-sm text-body">{configurationTutorialCopy[language].fields.replace[1]}</p>
+                    <div className="flex justify-end gap-2"><Button type="button" variant="outline" disabled>{configurationTutorialCopy[language].cancelLabel}</Button><Button type="button" disabled>{configurationTutorialCopy[language].replacementLabel}</Button></div>
+                </DialogContent>
+            </Dialog>
+            {tourStep && <ConfigurationTutorial step={tourStep} onStepChange={setTourStep} launcher={tourLauncher} returnScroll={tourReturnScroll} userId={liveData.actorId} />}
         </div>
     )
 }

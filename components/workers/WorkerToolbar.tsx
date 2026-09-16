@@ -74,6 +74,7 @@ export function WorkerToolbar({
         {/* Shift Filter Dropdown */}
         <div className="relative w-full sm:w-auto">
           <select
+            data-workers-tour="shift-filter"
             aria-label={tx('Shift filter')}
             value={shiftFilter}
             onChange={event => onShiftFilterChange?.(event.target.value as WorkerShiftFilter)}
@@ -93,6 +94,7 @@ export function WorkerToolbar({
         {/* Worker Status Filter Dropdown */}
         <div className="relative w-full sm:w-auto">
           <select
+            data-workers-tour="status-filter"
             aria-label={tx('Worker status filter')}
             value={resolvedStatus}
             onChange={event => {

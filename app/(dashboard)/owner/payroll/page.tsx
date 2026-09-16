@@ -1,3 +1,4 @@
+import PayrollGuidedTour from '@/components/payroll/PayrollGuidedTour'
 import { requireRole } from '@/lib/auth'
 import { createPerfTimer } from '@/lib/perf'
 import { getCachedOrgPlanAccess } from '@/lib/subscription'
@@ -19,7 +20,9 @@ export default async function PayrollPage({
 
     if (!hasCapability(planAccess.effectiveTier, 'legacy_full_suite')) {
         const initialData = await loadBaseProductionInitialData(profile.org_id, getSuratTodayString())
-        return <BaseProductionClient initialData={{ ...initialData, actorId: user.id }} view="payroll" />
+        return <PayrollGuidedTour variant="base" userId={user.id} orgId={profile.org_id} userMetadata={{ tour_preferences: user.user_metadata?.tour_preferences }}>
+            <BaseProductionClient initialData={{ ...initialData, actorId: user.id }} view="payroll" />
+        </PayrollGuidedTour>
     }
 
     const params = await searchParams
@@ -34,5 +37,7 @@ export default async function PayrollPage({
         note: 'server initial payroll shares cycle logs, settlements, and advances across meter and fixed ledgers; pay-date overview is deferred',
     })
 
-    return <PayrollClient initialData={initialData} />
+    return <PayrollGuidedTour variant="full" userId={user.id} orgId={profile.org_id} userMetadata={{ tour_preferences: user.user_metadata?.tour_preferences }}>
+        <PayrollClient initialData={initialData} />
+    </PayrollGuidedTour>
 }
