@@ -1,12 +1,12 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Button } from '@/components/ui/button'
 import { useTranslation } from '@/lib/i18n/context'
 import { rateBookTutorialCopy } from '@/lib/i18n/rate-book-tutorial'
-import { savedCostingsTutorialCopy } from '@/lib/i18n/saved-costings-tutorial'
-import { savedCostingTourSteps, type SavedCostingStep } from '@/lib/saved-costings-tour'
+import { savedCostingStepCopy, savedCostingsTutorialCopy } from '@/lib/i18n/saved-costings-tutorial'
+import { comparisonCostingSteps, savedCostingTourSteps, type SavedCostingEnding, type SavedCostingStep } from '@/lib/saved-costings-tour'
 import { findTourTarget } from '@/lib/tutorial-target'
 import { useMobileTour } from '@/hooks/use-mobile-tour'
 import { lockTourViewport } from '@/lib/tutorial-viewport-lock'
@@ -14,7 +14,7 @@ import { TourInvitation } from '@/components/tours/TourInvitation'
 import { persistTourCompleted } from '@/lib/tours/tour-preferences'
 
 const selectors: Partial<Record<SavedCostingStep, string>> = {
- find: '#saved-costings-search', filters: '[data-costing-tour="filters"]',
+ find: '[data-costing-tour="sample"]', filters: '[data-costing-tour="filters"]',
  select: '[data-costing-tour="sample"]', versions: '[data-costing-tour="versions"]',
  breakdown: '[data-costing-tour="breakdown"]', economics: '[data-costing-tour="economics"]', reuse: '[data-costing-tour="reuse"]',
  organize: '[data-costing-tour="versions"]', production: '[data-costing-tour="production"]',
@@ -30,30 +30,56 @@ function resolveTarget(step: SavedCostingStep) {
 }
 
 /** Controlled navigation lets the page derive sample dialogs without async data writes. */
-export function SavedCostingsTutorial({step, onStepChange, free = false, production = false, quotations = false, inline = false, userId, orgId, userMetadata}: {
- step: SavedCostingStep | null; onStepChange: (step: SavedCostingStep | null) => void
- free?: boolean; production?: boolean; quotations?: boolean; inline?: boolean
- userId?: string; orgId?: string; userMetadata?: Record<string, any> | null
+export function SavedCostingsTutorial({step, onStepChange, onComplete, free = false, production = false, quotations = false, inline = false, full = false, ending = 'empty', userId, orgId, userMetadata}: {
+ step: SavedCostingStep | null; onStepChange: (step: SavedCostingStep | null) => void; onComplete?: () => void
+ free?: boolean; production?: boolean; quotations?: boolean; inline?: boolean; full?: boolean; ending?: SavedCostingEnding
+ userId?: string; orgId?: string; userMetadata?: Record<string, unknown> | null
 }) {
- const {language, languageStatus} = useTranslation()
+ const {language, tx} = useTranslation()
  const copy = savedCostingsTutorialCopy[language]
  const controls = rateBookTutorialCopy[language]
- const steps = savedCostingTourSteps(free, production, quotations)
+ const [comparisonTour, setComparisonTour] = useState(false)
+ const steps = useMemo(() => comparisonTour && !free ? [...comparisonCostingSteps] : savedCostingTourSteps(free, production), [comparisonTour, free, production])
+ const field = step ? savedCostingStepCopy(language, step, {
+  free, full, quotations, ending,
+  openLabel: tx(full ? 'Open' : 'Use'),
+  previewLabel: free ? tx('View breakdown / Export') : tx(full ? 'Preview' : 'Export'),
+  newLabel: tx(quotations ? 'New Estimate' : 'New Costing'),
+ }) : null
+ const helpFields = free
+  ? [copy.fields.freeHelp, copy.fields.customer, copy.fields.share]
+  : [copy.fields.filters, copy.fields.breakdown, copy.fields.organize,
+     ...(!full ? [copy.fields.separateQuality] : []), copy.fields.customer, copy.fields.share,
+     ...(quotations ? [copy.fields.quotations] : [])]
  const index = step ? steps.indexOf(step) : -1
  const panel = useRef<HTMLDivElement>(null)
- const launcher = useRef<HTMLButtonElement>(null)
+ const launcher = useRef<HTMLDivElement>(null)
+ const returnFocus = useRef<HTMLElement | null>(null)
  const portal = useRef<HTMLDivElement>(null)
- const navigation = useRef({steps, index, onStepChange})
- useEffect(() => { navigation.current = {steps, index, onStepChange} })
+ const advance = useCallback(() => {
+  if (index === steps.length - 1) {
+   if (!comparisonTour) {
+    if (userId) void persistTourCompleted('saved-costings', userId)
+    onComplete?.()
+   }
+   onStepChange(null)
+  } else onStepChange(steps[index + 1] ?? null)
+ }, [comparisonTour, index, onComplete, onStepChange, steps, userId])
+ const navigation = useRef({steps, index, onStepChange, advance})
+ useEffect(() => { navigation.current = {steps, index, onStepChange, advance} })
  const [rect, setRect] = useState<{step: SavedCostingStep; bounds: DOMRect} | null>(null)
- const resolve = useCallback((current: SavedCostingStep) => selectors[current] ? resolveTarget(current) : {target: launcher.current, card: launcher.current}, [])
+ const resolve = useCallback((current: SavedCostingStep) => {
+  if (selectors[current]) return resolveTarget(current)
+  const target = returnFocus.current ?? launcher.current?.querySelector<HTMLButtonElement>('button') ?? null
+  return {target, card: target}
+ }, [])
  const mobile = useMobileTour(step ?? undefined, panel, resolve)
  const close = useCallback(() => onStepChange(null), [onStepChange])
  const active = step !== null
 
  useEffect(() => {
   if (!active || !panel.current) return
-  const trigger = launcher.current
+  const trigger = returnFocus.current ?? launcher.current?.querySelector<HTMLButtonElement>('button')
   const originalScroll = {x: window.scrollX, y: window.scrollY}
   const prior = new Map<HTMLElement, boolean>()
   const makeInert = () => {
@@ -76,12 +102,13 @@ export function SavedCostingsTutorial({step, onStepChange, free = false, product
   }
   const keyboard = (event: KeyboardEvent) => {
    if (event.ctrlKey || event.metaKey || event.altKey) return
-   const {steps: currentSteps, index: currentIndex, onStepChange: change} = navigation.current
-   if (event.key === 'Escape') {event.preventDefault(); event.stopImmediatePropagation(); return}
+   const {steps: currentSteps, index: currentIndex, onStepChange: change, advance: next} = navigation.current
+   if (event.key === 'Escape') {event.preventDefault(); event.stopImmediatePropagation(); change(null); return}
    if (['Enter', 'ArrowRight', 'ArrowLeft'].includes(event.key)) {
     if (event.key === 'Enter' && event.target instanceof HTMLButtonElement && ['skip', 'back'].includes(event.target.dataset.tourControl ?? '')) return
     event.preventDefault(); event.stopImmediatePropagation()
-    change(event.key === 'ArrowLeft' ? currentSteps[Math.max(0, currentIndex - 1)] : currentSteps[currentIndex + 1] ?? null)
+    if (event.key === 'ArrowLeft') change(currentSteps[Math.max(0, currentIndex - 1)])
+    else next()
    }
    if (event.key === 'Tab') {
     const buttons = Array.from(panel.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') ?? [])
@@ -131,35 +158,45 @@ export function SavedCostingsTutorial({step, onStepChange, free = false, product
  const spotlight = mobile.mobile ? mobile.rects?.field : rect?.step === step ? rect.bounds : null
  const bottom = spotlight && spotlight.top < 380 && spotlight.right > window.innerWidth - 300
  return <>
-  <div className={inline ? 'mb-4' : 'saved-costings-tour-launcher mb-4'}>
+  <div ref={launcher} data-costing-tour="guide" className={inline ? 'mb-4' : 'saved-costings-tour-launcher mb-4'}>
     <TourInvitation
       tourId="saved-costings"
       userId={userId}
       orgId={orgId}
       userMetadata={userMetadata}
-      onLaunch={() => onStepChange(steps[0])}
+      onLaunch={() => {
+       returnFocus.current = launcher.current?.querySelector<HTMLButtonElement>('[data-tour-control="take-tour"], [data-tour-control="quiet-tour"]') ?? null
+       setComparisonTour(false)
+       onStepChange(savedCostingTourSteps(free, production)[0])
+      }}
       align="full"
       className="border-amber-200/90 bg-amber-50/75 hover:bg-amber-100/70 shadow-xs"
     />
+    <div data-i18n-skip="true" lang={language} className="mt-2 space-y-2">
+      {!free && <Button type="button" variant="outline" className="h-auto min-h-11 w-full whitespace-normal text-left text-xs" onClick={event => {
+       returnFocus.current = event.currentTarget
+       setComparisonTour(true)
+       onStepChange(comparisonCostingSteps[0])
+      }}>{copy.compare}</Button>}
+      <details className="rounded-lg border border-hairline bg-surface p-3 text-xs">
+       <summary className="cursor-pointer font-semibold">{copy.help}</summary>
+       <div className="mt-3 max-h-[50dvh] space-y-4 overflow-y-auto">{helpFields.map(([title, description]) => <section key={title}>
+        <h3 className="font-semibold">{title}</h3><p className="mt-1 leading-relaxed">{description}</p>
+       </section>)}</div>
+      </details>
+    </div>
   </div>
   {step && createPortal(<div ref={portal} data-testid="saved-costings-tutorial" data-i18n-skip="true" lang={language} className="fixed inset-0 z-[100]" style={{pointerEvents: 'auto'}}>
    <div aria-hidden="true" className="guided-tour-backdrop absolute inset-0 bg-black/55 backdrop-blur-xs" style={spotlight ? {clipPath: `polygon(evenodd, 0% 0%,100% 0%,100% 100%,0% 100%,0% 0%,${spotlight.left}px ${spotlight.top}px,${spotlight.left}px ${spotlight.bottom}px,${spotlight.right}px ${spotlight.bottom}px,${spotlight.right}px ${spotlight.top}px,${spotlight.left}px ${spotlight.top}px)`} : undefined}/>
    {spotlight && <div className="guided-tour-highlight pointer-events-none fixed rounded-lg border-2 border-saffron ring-4 ring-saffron/30" style={{left: spotlight.left - 4, top: spotlight.top - 4, width: spotlight.width + 8, height: spotlight.height + 8}}/>}
    <div ref={panel} role="dialog" aria-modal="true" aria-labelledby="saved-costings-tour-title" aria-describedby="saved-costings-tour-description" tabIndex={-1} className={`guided-tour-panel fixed right-4 z-[101] flex w-[260px] max-w-[calc(100vw-2rem)] max-h-[calc(100dvh-2rem)] flex-col rounded-2xl border border-amber-200/90 bg-surface p-4 text-ink shadow-2xl outline-none ${bottom ? 'bottom-4' : 'top-4'}`}>
-    <div data-tour-description-scroll><div aria-live="polite"><span className="text-[11px] font-bold text-saffron-deep">{copy.sample}</span><h2 id="saved-costings-tour-title" className="mt-3 text-[17px] font-bold">{copy.fields[step][0]}</h2><p id="saved-costings-tour-description" className="mt-3 text-[13.5px] leading-relaxed">{copy.fields[step][1]}</p></div></div>
+    <div data-tour-description-scroll><div aria-live="polite"><span className="text-[11px] font-bold text-saffron-deep">{copy.sample}</span><h2 id="saved-costings-tour-title" className="mt-3 text-[17px] font-bold">{field?.[0]}</h2><p id="saved-costings-tour-description" className="mt-3 text-[13.5px] leading-relaxed">{field?.[1]}</p></div></div>
     <div role="progressbar" aria-label={controls.progress} aria-valuenow={index + 1} aria-valuemin={1} aria-valuemax={steps.length} className="mt-4 h-1.5 rounded-full bg-amber-100"><div className="h-full rounded-full bg-saffron" style={{width: `${(index + 1) / steps.length * 100}%`}}/></div>
     <div className="guided-tour-controls mt-3 flex items-center justify-between gap-1">
       <Button variant="ghost" size="sm" data-tour-control="skip" onClick={close}>{controls.skip}</Button>
       <span className="text-xs">{index + 1}/{steps.length}</span>
       <Button variant="outline" size="sm" data-tour-control="back" disabled={index === 0} onClick={() => onStepChange(steps[index - 1])}>{controls.back}</Button>
-      <Button size="sm" data-tour-control="next" className="bg-saffron text-white" onClick={() => {
-        if (index === steps.length - 1) {
-          if (userId) void persistTourCompleted('saved-costings', userId)
-          onStepChange(null)
-        } else {
-          onStepChange(steps[index + 1] ?? null)
-        }
-      }}>{index === steps.length - 1 ? controls.finish : controls.next}</Button>
+      <Button size="sm" data-tour-control="next" className="bg-saffron text-white" onClick={advance}>{index === steps.length - 1 ? controls.finish : controls.next}</Button>
     </div>
    </div>
   </div>, document.body)}

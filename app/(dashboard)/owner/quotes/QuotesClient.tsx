@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
 import { SavedCostingsTutorial } from '@/components/estimator/SavedCostingsTutorial'
-import { costingTourSurface, makeSavedCostingTourExamples, makeSavedCostingTourExport, type SavedCostingStep } from '@/lib/saved-costings-tour'
+import { savedCostingTourEnding, costingTourSurface, makeSavedCostingTourExamples, makeSavedCostingTourExport, type SavedCostingStep } from '@/lib/saved-costings-tour'
 import { savedCostingsTutorialCopy } from '@/lib/i18n/saved-costings-tutorial'
 import { useRouter } from 'next/navigation'
 import { buildCostingResult, calcFullTotals, makeDefaultEstimateState, parseCostingResultSnapshot, type CostingResultSnapshot } from '@/lib/estimator'
@@ -448,6 +448,8 @@ function SavedQualityLibraryView({
     onEnsureDetail,
     factoryInputsCapturedLabel,
     tourStep,
+    selectedRecordIdByGroup,
+    onSelectRecord,
 }: {
     groups: SavedQualityGroup[]
     canUseProduction: boolean
@@ -471,10 +473,11 @@ function SavedQualityLibraryView({
     onOpenUsage: (quote: QuoteRow, order: QuoteLinkedOrder) => void
     onEnsureDetail?: (quote: QuoteRow) => Promise<QuoteRow | null>
     factoryInputsCapturedLabel: string
+    selectedRecordIdByGroup: Record<string, string>
+    onSelectRecord: (groupKey: string, recordId: string) => void
     tourStep?: SavedCostingStep | null
 }) {
     const { t, tx } = useTranslation()
-    const [selectedRecordIdByGroup, setSelectedRecordIdByGroup] = useState<Record<string, string>>({})
 
     return (
         <div className="space-y-3">
@@ -506,7 +509,7 @@ function SavedQualityLibraryView({
                 const totalProduced = usages.reduce((sum, usage) => sum + getProducedMeters(usage.order), 0)
                 const openGroupDetails = () => onOpenDetails(group.key, group.records.length === 1 ? group.records[0] : null)
                 const handleInspectRecord = (record: QuoteRow) => {
-                    setSelectedRecordIdByGroup(prev => ({ ...prev, [group.key]: record.id }))
+                    onSelectRecord(group.key, record.id)
                     if (onEnsureDetail) {
                         void onEnsureDetail(record)
                     }
@@ -906,6 +909,8 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
     const { t, tx } = useTranslation()
     const { language } = useTranslation()
     const [tourStep, setTourStep] = useState<SavedCostingStep | null>(null)
+    const [selectedRecordIdByGroup, setSelectedRecordIdByGroup] = useState<Record<string, string>>({})
+    const selectRecord = (groupKey: string, recordId: string) => setSelectedRecordIdByGroup(prev => ({ ...prev, [groupKey]: recordId }))
     const [openQualityKey, setOpenQualityKey] = useState<string | null>(null)
     const [demoCostingDeleted, setDemoCostingDeleted] = useState(false)
     const [showCostingDeleteNudge, setShowCostingDeleteNudge] = useState(false)
@@ -921,18 +926,6 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                 setDemoCostingDeleted(true)
             }
         } catch {}
-    }, [])
-
-    const handleTourStepChange = useCallback((nextStep: SavedCostingStep | null) => {
-        if (nextStep === 'finish') {
-            setShowCostingDeleteNudge(true)
-        }
-        setTourStep(prev => {
-            if (prev !== null && nextStep === null) {
-                setShowCostingDeleteNudge(true)
-            }
-            return nextStep
-        })
     }, [])
 
     const handleDeleteDemoCosting = useCallback(() => {
@@ -1483,7 +1476,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
 
     return (
         <>
-            <SavedCostingsTutorial step={tourStep} onStepChange={handleTourStepChange} production={canUseProductionPipeline} quotations={canUseQuotationWorkflow} userId={userId} orgId={orgId} />
+            <SavedCostingsTutorial step={tourStep} onStepChange={setTourStep} onComplete={() => setShowCostingDeleteNudge(true)} production={canUseProductionPipeline} full={canUseProduction} ending={savedCostingTourEnding(quotes.filter(quote => isStandaloneCosting(quote.record_kind)).length)} quotations={canUseQuotationWorkflow} userId={userId} orgId={orgId} />
             <div className="premium-route-enter max-w-6xl mx-auto space-y-6">
             <RouteMilestones route="/owner/quotes" shellVisible primaryUsable secondaryReady />
             <div className="min-[1540px]:hidden">
@@ -1504,7 +1497,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     </Button>
                 )}
             />
-            {showCostingDeleteNudge && !demoCostingDeleted && quotes.length === 0 && (
+            {showCostingDeleteNudge && !tourStep && !demoCostingDeleted && quotes.length === 0 && initialTemplates.length === 0 && !searchQuery.trim() && !showArchived && ['all', 'costings', 'draft'].includes(filterStatus) && (
                 <div
                     role="status"
                     className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50/90 p-3.5 text-sm text-amber-950 shadow-xs animate-in fade-in-0 duration-200"
@@ -1639,6 +1632,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                 <div data-costing-tour="sample" className="space-y-3">
                     <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold" data-i18n-skip="true" lang={language}>{savedCostingsTutorialCopy[language].sample}</p>
                     <SavedQualityLibraryView
+                    selectedRecordIdByGroup={{}} onSelectRecord={() => {}}
                         groups={tourGroups} canUseProduction={canUseProduction} canUseProductionPipeline={canUseProductionPipeline}
                         openKey={tourSurface === 'library' ? 'tour-preview' : null}
                         tourStep={tourStep} comparisonMode={tourStep === 'compareSelect'}
@@ -1686,6 +1680,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     <div data-costing-tour="sample" className="space-y-3">
                         <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold" data-i18n-skip="true" lang={language}>{savedCostingsTutorialCopy[language].sample}</p>
                         <SavedQualityLibraryView
+                            selectedRecordIdByGroup={selectedRecordIdByGroup} onSelectRecord={selectRecord}
                             groups={tourGroups}
                             canUseProduction={canUseProduction}
                             canUseProductionPipeline={canUseProductionPipeline}
@@ -1749,6 +1744,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                 />
             ) : showQualityLibrary ? (
                 <SavedQualityLibraryView
+                    selectedRecordIdByGroup={selectedRecordIdByGroup} onSelectRecord={selectRecord}
                     groups={qualityGroups}
                     canUseProduction={canUseProduction}
                     canUseProductionPipeline={canUseProductionPipeline}

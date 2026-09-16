@@ -20,7 +20,7 @@ import type { EstimateState, EstimatorV3Totals, CostingResultSnapshot } from '@/
 import { createCostingExportModel } from '@/lib/estimator-export'
 import { CostingExportDialog } from '@/components/estimator/CostingExportDialog'
 import { SavedCostingsTutorial } from '@/components/estimator/SavedCostingsTutorial'
-import { costingTourSurface, makeSavedCostingTourExport, makeSavedCostingTourExamples, type SavedCostingStep } from '@/lib/saved-costings-tour'
+import { savedCostingTourEnding, costingTourSurface, makeSavedCostingTourExport, makeSavedCostingTourExamples, type SavedCostingStep } from '@/lib/saved-costings-tour'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -103,18 +103,6 @@ export default function SavedFreeCostings() {
     return () => {
       active = false
     }
-  }, [])
-
-  const handleStepChange = useCallback((nextStep: SavedCostingStep | null) => {
-    if (nextStep === 'finish') {
-      setShowDeleteNudge(true)
-    }
-    setTourStep(prev => {
-      if (prev === 'finish' && nextStep === null) {
-        setShowDeleteNudge(true)
-      }
-      return nextStep
-    })
   }, [])
 
   const handleDeleteDemo = useCallback(() => {
@@ -217,7 +205,7 @@ export default function SavedFreeCostings() {
   return (
     <>
       <aside className="saved-costings-left-rail" aria-label={tx('Saved Costings guides and tools')}>
-        <SavedCostingsTutorial free step={tourStep} onStepChange={handleStepChange} />
+        <SavedCostingsTutorial free ending={savedCostingTourEnding(rows.length, loading || error)} step={tourStep} onStepChange={setTourStep} onComplete={() => setShowDeleteNudge(true)} />
       </aside>
 
       <div className="premium-route-enter max-w-6xl mx-auto space-y-6" data-free-costing data-sentry-block>
@@ -232,7 +220,7 @@ export default function SavedFreeCostings() {
           )}
         />
 
-        {showDeleteNudge && !demoDeleted && (
+        {showDeleteNudge && !tourStep && !loading && !error && !demoDeleted && rows.length === 0 && demoMatchesFilters && (
           <div
             role="status"
             className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50/90 p-3.5 text-sm text-amber-950 shadow-xs animate-in fade-in-0 duration-200"
