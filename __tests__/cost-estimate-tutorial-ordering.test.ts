@@ -19,8 +19,15 @@ describe('Cost Estimate Tutorial Section Ordering & Placement', () => {
         expect(costEstimateTutorialCopy.en.sections[9]).toBe('Saved qualities')
     })
 
-    it('sets prepareTutorial to switch to detailed entryMode', () => {
-        expect(estimatorClientSource).toContain("const prepareTutorial = useCallback(() => { setEntryMode('detailed'); setShowAdvancedOverhead(false) }, [])")
+    it('temporarily switches to Detailed and restores the captured view', () => {
+        const preparation = estimatorClientSource.slice(estimatorClientSource.indexOf('const prepareTutorial = useCallback'), estimatorClientSource.indexOf('const [mobileCostingShortcutVisible]'))
+        expect(preparation).toContain("setEntryMode('detailed')")
+        expect(preparation).toContain('setEntryMode(previous.entryMode)')
+        for (const field of ['showAdvancedOverhead', 'liveEstimateOpen', 'showQualityLibrary', 'assumptionsExpanded']) {
+            expect(preparation).toContain(`previous.${field}`)
+        }
+        expect(tutorialComponentSource).toContain('restoreView.current?.()')
+        expect(tutorialComponentSource).toContain('if (!active) return')
     })
 
     it('moves YarnComponentCountFields out of QuickCostingView so it only exists in Detailed view', () => {

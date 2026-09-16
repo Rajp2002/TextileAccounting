@@ -178,8 +178,8 @@ const en = {
       "description": "Open assumptions to review active overhead rates, target margin, broker commission, order quantity, and process charges factored into this estimate."
     },
     "liveCostActions": {
-      "title": "Costing actions and orders",
-      "description": "Save this quotation as a draft or accepted deal, start a market production run, or create a party order directly from the live estimate."
+      "title": "Save the reviewed result",
+      "description": "Use the available save action after reviewing the inputs and result. Saved snapshots keep their original numbers when a reusable recipe or yarn rate changes."
     },
     "savedQualities": {
       "title": "Saved qualities",
@@ -380,8 +380,8 @@ const hi: TutorialCopy = {
       "description": "इस अनुमान में शामिल ओवरहेड दर, लक्षित मार्जिन, ब्रोकर कमीशन, ऑर्डर मात्रा और प्रक्रिया खर्चों की समीक्षा करने के लिए मान्यताएं खोलें।"
     },
     "liveCostActions": {
-      "title": "अनुमान सेव और ऑर्डर कार्य",
-      "description": "इस कोटेशन को ड्राफ्ट या स्वीकृत सौदे के रूप में सेव करें, मार्केट रन शुरू करें, या लाइव अनुमान से सीधे पार्टी ऑर्डर तैयार करें।"
+      "title": "जाँचा हुआ परिणाम सहेजें",
+      "description": "इनपुट और परिणाम जाँचकर उपलब्ध सेव विकल्प चुनें। दोबारा उपयोग वाली रेसिपी या यार्न दर बदलने पर सहेजे स्नैपशॉट के मूल आँकड़े नहीं बदलते।"
     },
     "savedQualities": {
       "title": "सेव की गई क्वालिटी",
@@ -579,8 +579,8 @@ const gu: TutorialCopy = {
       "description": "આ અંદાજમાં સામેલ ઓવરહેડ દર, લક્ષિત માર્જિન, દલાલી કમિશન, ઓર્ડર જથ્થો અને પ્રોસેસ ખર્ચની સમીક્ષા માટે ધારણાઓ ખોલો."
     },
     "liveCostActions": {
-      "title": "અંદાજ સેવ અને ઓર્ડર કાર્ય",
-      "description": "આ ક્વોટેશન ડ્રાફ્ટ કે મંજૂર ડીલ તરીકે સેવ કરો, માર્કેટ રન શરૂ કરો, અથવા લાઈવ અંદાજ પરથી સીધો પાર્ટી ઓર્ડર બનાવો."
+      "title": "તપાસેલું પરિણામ સાચવો",
+      "description": "ઇનપુટ અને પરિણામ તપાસીને ઉપલબ્ધ સેવ વિકલ્પ પસંદ કરો. ફરી વાપરવાની રેસિપી કે યાર્ન દર બદલવાથી સાચવેલા સ્નેપશોટના મૂળ આંકડા બદલાતા નથી."
     },
     "savedQualities": {
       "title": "સેવ કરેલી ક્વોલિટી",

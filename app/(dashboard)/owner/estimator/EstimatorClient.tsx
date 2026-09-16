@@ -3759,12 +3759,32 @@ export default function EstimatorClient({
 
     const [showAdvancedOverhead, setShowAdvancedOverhead] = useState(false)
     const [entryMode, setEntryMode] = useState<'quick' | 'detailed'>('quick')
-    const prepareTutorial = useCallback(() => { setEntryMode('detailed'); setShowAdvancedOverhead(false) }, [])
     const [isTutorialActive, setIsTutorialActive] = useState(false)
     const [liveEstimateOpen, setLiveEstimateOpen] = useState(false)
     const [assumptionsExpanded, setAssumptionsExpanded] = useState(false)
     const [showCostingSaveGuidance, setShowCostingSaveGuidance] = useState(true)
     const assumptionsManuallyToggledRef = useRef(false)
+    const tutorialViewRef = useRef({ entryMode, showAdvancedOverhead, liveEstimateOpen, showQualityLibrary, assumptionsExpanded })
+    const tutorialPreparingRef = useRef(false)
+    const skipRestoredAssumptionsEffect = useRef(false)
+    useEffect(() => {
+        tutorialViewRef.current = { entryMode, showAdvancedOverhead, liveEstimateOpen, showQualityLibrary, assumptionsExpanded }
+    }, [entryMode, showAdvancedOverhead, liveEstimateOpen, showQualityLibrary, assumptionsExpanded])
+    const prepareTutorial = useCallback(() => {
+        const previous = { ...tutorialViewRef.current }
+        tutorialPreparingRef.current = true
+        setEntryMode('detailed')
+        setShowAdvancedOverhead(false)
+        return () => {
+            tutorialPreparingRef.current = false
+            skipRestoredAssumptionsEffect.current = previous.entryMode !== 'detailed'
+            setEntryMode(previous.entryMode)
+            setShowAdvancedOverhead(previous.showAdvancedOverhead)
+            setLiveEstimateOpen(previous.liveEstimateOpen)
+            setShowQualityLibrary(previous.showQualityLibrary)
+            setAssumptionsExpanded(previous.assumptionsExpanded)
+        }
+    }, [])
     const [mobileCostingShortcutVisible] = useState(true)
     const mobileKeyboardVisible = useMobileKeyboard()
 
@@ -3796,6 +3816,11 @@ export default function EstimatorClient({
     }, [])
 
     useEffect(() => {
+        if (tutorialPreparingRef.current) return
+        if (skipRestoredAssumptionsEffect.current) {
+            skipRestoredAssumptionsEffect.current = false
+            return
+        }
         if (assumptionsManuallyToggledRef.current) return
         const isDesktop = window.matchMedia('(min-width: 768px)').matches
         setAssumptionsExpanded(entryMode === 'detailed' && isDesktop)
@@ -5795,6 +5820,11 @@ export default function EstimatorClient({
                         accountDismissed={tutorialDismissed}
                         enabled={state.isConfigured && !saving}
                         freePlan={freeMode}
+                        standalone={isStandaloneCostingSession}
+                        existingCosting={Boolean(sourceQuoteId && sourceRecordKind === 'costing')}
+                        marketMode={mode === 'market'}
+                        productionPipeline={canUseProductionPipeline}
+                        overheadMode={state.overheadMode}
                         orgId={orgId}
                         userId={userId}
                         onPrepare={prepareTutorial}
