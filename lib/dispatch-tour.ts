@@ -1,15 +1,29 @@
-export const dispatchTourSteps = ['overview', 'tabs', 'search', 'status', 'new', 'quality', 'rate', 'parties', 'terms', 'optional', 'lots', 'keyboard', 'totals', 'saveDraft', 'print', 'confirm', 'yarn', 'issued', 'receipt', 'acknowledged', 'difference', 'resolve', 'balance', 'payment', 'adjustment', 'due', 'changeTerms', 'refund', 'audit', 'reverseEntry', 'reverseDispatch', 'legacy', 'finish'] as const
+/** Core workflow; secondary controls remain available as contextual help. */
+export const dispatchTourSteps = ['overview', 'quality', 'parties', 'lots', 'saveDraft', 'confirm', 'receipt', 'difference', 'payment', 'balance', 'finish'] as const
 export type DispatchTourStep = typeof dispatchTourSteps[number]
+export const dispatchTourHelp = {
+    overview: ['status'],
+    quality: ['new', 'yarn'],
+    parties: ['rate', 'terms'],
+    lots: ['keyboard', 'totals'],
+    saveDraft: ['optional', 'print'],
+    confirm: ['issued', 'reverseDispatch'],
+    receipt: ['acknowledged'],
+    difference: ['resolve'],
+    payment: ['adjustment', 'reverseEntry'],
+    balance: ['due', 'changeTerms', 'refund'],
+    finish: ['tabs', 'search', 'audit', 'legacy'],
+} as const satisfies Record<DispatchTourStep, readonly string[]>
+export type DispatchTourHelpTopic = typeof dispatchTourHelp[DispatchTourStep][number]
+export type DispatchTourTopic = DispatchTourStep | DispatchTourHelpTopic
 export function dispatchTourSection(step: DispatchTourStep) {
     const i = dispatchTourSteps.indexOf(step)
-    return i < 4 ? 0 : i < 10 ? 1 : i < 15 ? 2 : i < 18 ? 3 : i < 22 ? 4 : i < 28 ? 5 : 6
+    return i === 0 ? 0 : i < 5 ? 1 : i === 5 ? 2 : i < 8 ? 3 : i < 10 ? 4 : 5
 }
 export function dispatchTourSurface(step: DispatchTourStep) {
-    if (['new', 'quality', 'rate', 'parties', 'terms', 'optional', 'lots', 'keyboard', 'totals', 'saveDraft'].includes(step)) return 'draft'
-    if (['confirm', 'yarn'].includes(step)) return 'confirm'
-    if (['receipt', 'acknowledged'].includes(step)) return 'receipt'
-    if (['resolve', 'payment', 'adjustment', 'changeTerms', 'refund', 'reverseDispatch', 'reverseEntry'].includes(step)) return step
-    if (['print', 'issued', 'difference', 'balance', 'due', 'audit'].includes(step)) return 'detail'
+    if (['quality', 'parties', 'lots', 'saveDraft'].includes(step)) return 'draft'
+    if (step === 'confirm' || step === 'receipt' || step === 'payment') return step
+    if (step === 'difference' || step === 'balance') return 'detail'
     return 'page'
 }
 export const dispatchTourSelector = (step: DispatchTourStep) => `[data-dispatch-tour="${step}"]`
