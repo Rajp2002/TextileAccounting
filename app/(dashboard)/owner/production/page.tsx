@@ -1,6 +1,8 @@
 import { requireRole } from '@/lib/auth'
 import { getSuratTodayString } from '@/lib/time'
 
+import ProductionGuidedTour from '@/components/production/ProductionGuidedTour'
+
 import BaseProductionClient from './BaseProductionClient'
 import { loadBaseProductionInitialData } from './loaders'
 
@@ -15,5 +17,9 @@ export default async function BaseProductionPage({
     const query = searchParams ? await searchParams : {}
     const initialCostingId = typeof query.costingId === 'string' ? query.costingId : null
 
-    return <BaseProductionClient initialData={{ ...initialData, actorId: user.id }} initialCostingId={initialCostingId} />
+    return (
+        <ProductionGuidedTour userId={user.id} orgId={profile.org_id} userMetadata={user.user_metadata}>
+            <BaseProductionClient initialData={{ ...initialData, actorId: user.id }} initialCostingId={initialCostingId} />
+        </ProductionGuidedTour>
+    )
 }

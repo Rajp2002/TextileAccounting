@@ -5,17 +5,18 @@ import { createPortal } from 'react-dom'
 import { Button } from '@/components/ui/button'
 import { useTranslation } from '@/lib/i18n/context'
 import { configurationTutorialCopy } from '@/lib/i18n/configuration-tutorial'
-import { configurationTourSelectors, configurationTourSteps, type ConfigurationTourStep } from '@/lib/configuration-tour'
+import { configurationTourSelectors, configurationTourSteps, configurationTourSection, type ConfigurationTourStep } from '@/lib/configuration-tour'
 import { findTourTarget } from '@/lib/tutorial-target'
 import { lockTourViewport } from '@/lib/tutorial-viewport-lock'
 import { useMobileTour } from '@/hooks/use-mobile-tour'
 import { persistTourCompleted } from '@/lib/tours/tour-preferences'
 
-export default function ConfigurationTutorial({ step, onStepChange, launcher, userId }: {
+export default function ConfigurationTutorial({ step, onStepChange, launcher, userId, returnScroll }: {
     step: ConfigurationTourStep
     onStepChange: (step: ConfigurationTourStep | null) => void
     launcher: RefObject<HTMLDivElement | null>
     userId?: string
+    returnScroll?: RefObject<{ x: number; y: number }>
 }) {
     const { language } = useTranslation()
     const copy = configurationTutorialCopy[language]
@@ -42,7 +43,7 @@ export default function ConfigurationTutorial({ step, onStepChange, launcher, us
     useEffect(() => {
         if (!panel.current) return
         const trigger = launcher.current?.querySelector<HTMLButtonElement>('[data-tour-control="take-tour"], [data-tour-control="quiet-tour"]')
-        const scroll = { x: window.scrollX, y: window.scrollY }
+        const scroll = returnScroll?.current ?? { x: window.scrollX, y: window.scrollY }
         const previous = new Map<HTMLElement, boolean>()
         const makeInert = () => {
             for (const element of Array.from(document.body.children)) {
@@ -92,7 +93,7 @@ export default function ConfigurationTutorial({ step, onStepChange, launcher, us
             window.scrollTo({ left: scroll.x, top: scroll.y, behavior: 'instant' })
             trigger?.focus({ preventScroll: true })
         }
-    }, [launcher])
+    }, [launcher, returnScroll])
 
     useEffect(() => {
         if (mobile.mobile) return
@@ -105,19 +106,21 @@ export default function ConfigurationTutorial({ step, onStepChange, launcher, us
                 if (target !== positioned) { target.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' }); positioned = target }
                 const rect = target.getBoundingClientRect()
                 const bounds = panel.current.getBoundingClientRect()
-                const left = rect.right > window.innerWidth - bounds.width - 32 && rect.left > window.innerWidth / 2
-                const bottom = !left && rect.top < bounds.height + 32 && rect.right > window.innerWidth - bounds.width - 32
+                const inPreview = Boolean(target.closest('[data-configuration-tour-preview="true"], [data-configuration-picker-preview="true"]'))
+                const left = !inPreview && rect.right > window.innerWidth - bounds.width - 32 && rect.left > window.innerWidth / 2
+                const bottom = !inPreview && !left && rect.top < bounds.height + 32 && rect.right > window.innerWidth - bounds.width - 32
                 setMeasurement({ step, rect, left, bottom })
             }
             if (performance.now() - start < 1500) frame = requestAnimationFrame(measure)
         }
-        const update = () => { positioned = null; cancelAnimationFrame(frame); frame = requestAnimationFrame(measure) }
+        const update = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(measure) }
         frame = requestAnimationFrame(measure)
         window.addEventListener('resize', update)
         window.addEventListener('scroll', update, true)
         return () => { cancelAnimationFrame(frame); window.removeEventListener('resize', update); window.removeEventListener('scroll', update, true) }
     }, [step, mobile.mobile, resolve, language])
 
+    const stepCopy = step === 'drag' && mobile.mobile ? copy.mobileAssign : copy.fields[step]
     const current = measurement?.step === step ? measurement : null
     const rect = mobile.mobile ? mobile.rects?.field : current?.rect
     return createPortal(
@@ -127,8 +130,9 @@ export default function ConfigurationTutorial({ step, onStepChange, launcher, us
             <div ref={panel} role="dialog" aria-modal="true" aria-labelledby="configuration-tour-title" aria-describedby="configuration-tour-description" tabIndex={-1} className={`guided-tour-panel fixed z-[101] w-[320px] max-w-[calc(100vw-2rem)] max-h-[calc(100dvh-2rem)] rounded-2xl border border-amber-200/90 bg-surface p-4 text-ink shadow-2xl outline-none ${current?.bottom ? 'bottom-4' : 'top-4'} ${current?.left ? 'left-4' : 'right-4'}`}>
                 <div data-tour-description-scroll aria-live="polite">
                     <p className="text-[11px] font-bold text-saffron-deep">{copy.sample}</p>
-                    <h2 id="configuration-tour-title" className="mt-3 text-lg font-bold">{copy.fields[step][0]}</h2>
-                    <p id="configuration-tour-description" className="mt-3 text-sm leading-relaxed">{copy.fields[step][1]}</p>
+                    <p className="mt-2 text-xs font-semibold text-subtle">{configurationTourSection(step) + 1}/{copy.sections.length} · {copy.sections[configurationTourSection(step)]}</p>
+                    <h2 id="configuration-tour-title" className="mt-3 text-lg font-bold">{stepCopy[0]}</h2>
+                    <p id="configuration-tour-description" className="mt-3 text-sm leading-relaxed">{stepCopy[1]}</p>
                 </div>
                 <div role="progressbar" aria-label={copy.progress} aria-valuenow={index + 1} aria-valuemin={1} aria-valuemax={configurationTourSteps.length} className="mt-4 h-1.5 rounded-full bg-amber-100"><div className="h-full rounded-full bg-saffron" style={{ width: `${(index + 1) / configurationTourSteps.length * 100}%` }} /></div>
                 <div className="guided-tour-controls mt-3 flex items-center justify-between gap-1">

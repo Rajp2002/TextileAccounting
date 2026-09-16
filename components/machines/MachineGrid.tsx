@@ -6,10 +6,11 @@ import { MachineCard } from './MachineCard'
 
 interface MachineGridProps {
   machines: BaseProductionMachineWithReadiness[]
+  tourPreview?: boolean
   onEdit: (machine: BaseProductionMachineWithReadiness) => void
 }
 
-export function MachineGrid({ machines, onEdit }: MachineGridProps) {
+export function MachineGrid({ machines, onEdit, tourPreview = false }: MachineGridProps) {
   return (
     <ul
       role="list"
@@ -18,7 +19,7 @@ export function MachineGrid({ machines, onEdit }: MachineGridProps) {
     >
       {machines.map(machine => (
         <li key={machine.id} role="listitem" className="min-w-0">
-          <MachineCard machine={machine} onEdit={onEdit} />
+          <MachineCard machine={machine} onEdit={onEdit} tourPreview={tourPreview} />
         </li>
       ))}
     </ul>

@@ -29,9 +29,10 @@ function emptyWorkerDraft(): WorkerDraft {
     return { name: '', shiftAvailability: 'both', isActive: true, payType: 'piece_rate', role: '', monthlySalary: '', startDate: '', endDate: '', salaryEffectiveFrom: '' }
 }
 
-export default function WorkerEditor({ today, initialOpen = false, returnTo, children }: {
+export default function WorkerEditor({ today, initialOpen = false, returnTo, children, tourPreview }: {
  today: string; initialOpen?: boolean; returnTo?: string;
- children: (actions: { add: () => void; edit: (record: BaseProductionWorker) => void }) => ReactNode
+ tourPreview?: { worker: BaseProductionWorker; editing: boolean };
+ children: (actions: { isOpen: boolean; add: () => void; edit: (record: BaseProductionWorker) => void }) => ReactNode
 }) {
  const router = useRouter()
  const pathname = usePathname()
@@ -42,15 +43,16 @@ export default function WorkerEditor({ today, initialOpen = false, returnTo, chi
   window.history.replaceState(null, '', `${pathname}${next.size ? `?${next}` : ''}`)
  }
  const { tx } = useTranslation()
- const [open, setOpen] = useState(initialOpen)
+ const [open, setOpen] = useState(initialOpen || Boolean(tourPreview))
  const [record, setRecord] = useState<BaseProductionWorker | null>(null)
- const [editingWorkerId, setEditingWorkerId] = useState<string | null>(null)
- const [workerDraft, setWorkerDraft] = useState<WorkerDraft>(emptyWorkerDraft)
+ const [editingWorkerId, setEditingWorkerId] = useState<string | null>(tourPreview?.editing ? tourPreview.worker.id : null)
+ const [workerDraft, setWorkerDraft] = useState<WorkerDraft>(() => tourPreview ? { ...emptyWorkerDraft(), name: tourPreview.worker.name, payType: tourPreview.worker.pay_type ?? 'piece_rate', role: tourPreview.worker.role ?? '', monthlySalary: String(tourPreview.worker.monthly_salary ?? ''), startDate: tourPreview.worker.start_date ?? '', salaryEffectiveFrom: today, shiftAvailability: tourPreview.worker.shift_availability } : emptyWorkerDraft())
  const [original, setOriginal] = useState(() => JSON.stringify(emptyWorkerDraft()))
  const [pendingAction, setPendingAction] = useState<string | null>(null)
- const dirty = open && JSON.stringify(workerDraft) !== original
+ const dirty = !tourPreview && open && JSON.stringify(workerDraft) !== original
  useUnloadProtection(dirty)
  function closeDialog() {
+   if (tourPreview) return
    if (pendingAction) return
    if (dirty && !window.confirm(tx('Discard unsaved changes?'))) return
    clearAddIntent(); setOpen(false)
@@ -83,6 +85,7 @@ export default function WorkerEditor({ today, initialOpen = false, returnTo, chi
     }
  function handleWorkerSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault()
+        if (tourPreview) return
         if (!workerDraft.name.trim()) {
             toast.error('Enter a worker name.')
             return
@@ -115,28 +118,29 @@ export default function WorkerEditor({ today, initialOpen = false, returnTo, chi
     }
  return <>
  {children({
+   isOpen: open,
    add: () => { setRecord(null); setEditingWorkerId(null); setWorkerDraft(emptyWorkerDraft()); setOriginal(JSON.stringify(emptyWorkerDraft())); setOpen(true) },
    edit: value => { setRecord(value); openEditWorker(value) },
  })}
-             <Dialog open={open} onOpenChange={(open) => !open && closeDialog()}>
-                <DialogContent className="max-h-[90dvh] overflow-y-auto">
+             <Dialog modal={!tourPreview} open={open} onOpenChange={(open) => !open && closeDialog()}>
+                <DialogContent data-workers-tour-preview={tourPreview ? "true" : undefined} onOpenAutoFocus={event => { if (tourPreview) event.preventDefault() }} onCloseAutoFocus={event => { if (tourPreview) event.preventDefault() }} onInteractOutside={event => { if (tourPreview) event.preventDefault() }} onEscapeKeyDown={event => { if (tourPreview) event.preventDefault() }} className="max-h-[90dvh] overflow-y-auto">
                     <DialogHeader><DialogTitle>{editingWorkerId ? 'Edit worker' : 'Add worker'}</DialogTitle><DialogDescription>Choose piece-rate pay for machine workers or a monthly salary for staff. Pay type cannot be changed later.</DialogDescription></DialogHeader>
-                    <form className="space-y-4" onSubmit={handleWorkerSubmit}>
-                        <div className="space-y-2"><Label htmlFor="base-worker-name">Worker name</Label><Input id="base-worker-name" autoFocus required maxLength={120} value={workerDraft.name} onChange={(event) => setWorkerDraft((current) => ({ ...current, name: event.target.value }))} placeholder="e.g. Ramesh" /></div>
-                        <div className="space-y-2"><Label htmlFor="base-worker-pay-type">Pay type</Label><Select disabled={Boolean(editingWorkerId)} value={workerDraft.payType} onValueChange={value => setWorkerDraft(current => ({ ...current, payType: value as WorkerDraft['payType'], startDate: current.startDate || today }))}><SelectTrigger id="base-worker-pay-type"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="piece_rate">Piece rate (per metre)</SelectItem><SelectItem value="fixed_monthly">Fixed monthly salary</SelectItem></SelectContent></Select></div>
+                    <form onSubmit={handleWorkerSubmit}><fieldset disabled={Boolean(tourPreview)} className="space-y-4">
+                        <div data-workers-tour-field="name" className="space-y-2"><Label htmlFor="base-worker-name">Worker name</Label><Input id="base-worker-name" autoFocus={!tourPreview} required maxLength={120} value={workerDraft.name} onChange={(event) => setWorkerDraft((current) => ({ ...current, name: event.target.value }))} placeholder="e.g. Ramesh" /></div>
+                        <div data-workers-tour-field="payType" className="space-y-2"><Label htmlFor="base-worker-pay-type">Pay type</Label><Select disabled={Boolean(editingWorkerId)} value={workerDraft.payType} onValueChange={value => setWorkerDraft(current => ({ ...current, payType: value as WorkerDraft['payType'], startDate: current.startDate || today }))}><SelectTrigger id="base-worker-pay-type"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="piece_rate">Piece rate (per metre)</SelectItem><SelectItem value="fixed_monthly">Fixed monthly salary</SelectItem></SelectContent></Select></div>
                         {workerDraft.payType === 'fixed_monthly' && <>
-                            <div className="space-y-2"><Label htmlFor="base-staff-role">Role</Label><Input id="base-staff-role" value={workerDraft.role} maxLength={80} onChange={event => setWorkerDraft(current => ({ ...current, role: event.target.value }))} placeholder="e.g. Supervisor" /></div>
-                            <div className="space-y-2"><Label htmlFor="base-staff-salary">Monthly salary (₹)</Label><Input id="base-staff-salary" type="number" min="0.01" max="10000000" step="0.01" required value={workerDraft.monthlySalary} onChange={event => setWorkerDraft(current => ({ ...current, monthlySalary: event.target.value }))} /></div>
-                            <div className="space-y-2"><Label htmlFor="base-staff-start">Joining date</Label><Input id="base-staff-start" type="date" required disabled={Boolean(editingWorkerId)} value={workerDraft.startDate} onChange={event => setWorkerDraft(current => ({ ...current, startDate: event.target.value }))} /></div>
+                            <div data-workers-tour-field="role" className="space-y-2"><Label htmlFor="base-staff-role">Role</Label><Input id="base-staff-role" value={workerDraft.role} maxLength={80} onChange={event => setWorkerDraft(current => ({ ...current, role: event.target.value }))} placeholder="e.g. Supervisor" /></div>
+                            <div data-workers-tour-field="salary" className="space-y-2"><Label htmlFor="base-staff-salary">Monthly salary (₹)</Label><Input id="base-staff-salary" type="number" min="0.01" max="10000000" step="0.01" required value={workerDraft.monthlySalary} onChange={event => setWorkerDraft(current => ({ ...current, monthlySalary: event.target.value }))} /></div>
+                            <div data-workers-tour-field="joining" className="space-y-2"><Label htmlFor="base-staff-start">Joining date</Label><Input id="base-staff-start" type="date" required disabled={Boolean(editingWorkerId)} value={workerDraft.startDate} onChange={event => setWorkerDraft(current => ({ ...current, startDate: event.target.value }))} /></div>
                             {editingWorkerId && <>
-                                <div className="space-y-2"><Label htmlFor="base-staff-effective">Salary change effective from</Label><Input id="base-staff-effective" type="date" min={today} value={workerDraft.salaryEffectiveFrom} onChange={event => setWorkerDraft(current => ({ ...current, salaryEffectiveFrom: event.target.value }))} /><p className="text-xs text-body">Used only when changing salary. Earlier earnings and paid records stay unchanged.</p></div>
-                                <div className="space-y-2"><Label htmlFor="base-staff-end">Last working day (optional)</Label><Input id="base-staff-end" type="date" min={workerDraft.startDate} value={workerDraft.endDate} onChange={event => setWorkerDraft(current => ({ ...current, endDate: event.target.value }))} /><p className="text-xs text-body">Salary accrues through this date. Required when deactivating staff.</p></div>
+                                <div data-workers-tour-field="effective" className="space-y-2"><Label htmlFor="base-staff-effective">Salary change effective from</Label><Input id="base-staff-effective" type="date" min={today} value={workerDraft.salaryEffectiveFrom} onChange={event => setWorkerDraft(current => ({ ...current, salaryEffectiveFrom: event.target.value }))} /><p className="text-xs text-body">Used only when changing salary. Earlier earnings and paid records stay unchanged.</p></div>
+                                <div data-workers-tour-field="lastDay" className="space-y-2"><Label htmlFor="base-staff-end">Last working day (optional)</Label><Input id="base-staff-end" type="date" min={workerDraft.startDate} value={workerDraft.endDate} onChange={event => setWorkerDraft(current => ({ ...current, endDate: event.target.value }))} /><p className="text-xs text-body">Salary accrues through this date. Required when deactivating staff.</p></div>
                             </>}
                         </>}
-                        {workerDraft.payType === 'piece_rate' && <div className="space-y-2"><Label htmlFor="base-worker-shift">Shift availability</Label><Select value={workerDraft.shiftAvailability} onValueChange={(value) => setWorkerDraft((current) => ({ ...current, shiftAvailability: value as BaseWorkerShiftAvailability }))}><SelectTrigger id="base-worker-shift" className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="day">Day shift</SelectItem><SelectItem value="night">Night shift</SelectItem><SelectItem value="both">Day & night</SelectItem></SelectContent></Select><p className="text-xs text-muted-foreground">You can edit this later. The assignment board only shows workers available for the selected shift.</p></div>}
-                        {editingWorkerId && <label className="flex items-center gap-2 text-sm text-body"><input type="checkbox" checked={workerDraft.isActive} onChange={(event) => setWorkerDraft((current) => ({ ...current, isActive: event.target.checked }))} /> Active worker</label>}
+                        {workerDraft.payType === 'piece_rate' && <div data-workers-tour-field="availability" className="space-y-2"><Label htmlFor="base-worker-shift">Shift availability</Label><Select value={workerDraft.shiftAvailability} onValueChange={(value) => setWorkerDraft((current) => ({ ...current, shiftAvailability: value as BaseWorkerShiftAvailability }))}><SelectTrigger id="base-worker-shift" className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="day">Day shift</SelectItem><SelectItem value="night">Night shift</SelectItem><SelectItem value="both">Day & night</SelectItem></SelectContent></Select><p className="text-xs text-muted-foreground">You can edit this later. The assignment board only shows workers available for the selected shift.</p></div>}
+                        {editingWorkerId && <label data-workers-tour-field="active" className="flex items-center gap-2 text-sm text-body"><input type="checkbox" checked={workerDraft.isActive} onChange={(event) => setWorkerDraft((current) => ({ ...current, isActive: event.target.checked }))} /> Active worker</label>}
                         <DialogFooter><Button type="button" variant="outline" onClick={closeDialog}>Cancel</Button><Button type="submit" disabled={pendingAction === 'worker-create' || pendingAction === 'worker-update'}>{pendingAction?.startsWith('worker-') ? <Loader2 className="h-4 w-4 animate-spin" /> : null}{returnTo ? tx('Save and return') : editingWorkerId ? 'Save changes' : 'Add worker'}</Button></DialogFooter>
-                    </form>
+                    </fieldset></form>
                 </DialogContent>
             </Dialog>
  </>

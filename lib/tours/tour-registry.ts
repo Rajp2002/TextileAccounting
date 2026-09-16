@@ -1,6 +1,41 @@
 import type { TourDefinition, TourId } from './tour-types'
 
 export const TOUR_REGISTRY: Record<TourId, TourDefinition> = {
+    'yarn-stock': {
+        id: 'yarn-stock', contentVersion: 'v1', invitationPolicyVersion: 'v1', emphasis: 'static',
+        allowedPlans: ['base', 'premium'], allowedRoles: ['owner'],
+        copyKeys: { benefit: 'yarnStockBenefit', replayTitle: 'replayYarnStock' },
+    },
+    'fabric-stock': {
+        id: 'fabric-stock', contentVersion: 'v1', invitationPolicyVersion: 'v1', emphasis: 'static',
+        allowedPlans: ['base', 'premium'], allowedRoles: ['owner'],
+        copyKeys: { benefit: 'fabricStockBenefit', replayTitle: 'replayFabricStock' },
+    },
+    dispatch: {
+        id: 'dispatch', contentVersion: 'v1', invitationPolicyVersion: 'v1', emphasis: 'static',
+        allowedPlans: ['base', 'premium'], allowedRoles: ['owner'],
+        copyKeys: { benefit: 'dispatchBenefit', replayTitle: 'replayDispatch' },
+    },
+    production: {
+        id: 'production', contentVersion: 'v1', invitationPolicyVersion: 'v1', emphasis: 'static',
+        allowedPlans: ['base', 'premium'], allowedRoles: ['owner'],
+        copyKeys: { benefit: 'productionBenefit', replayTitle: 'replayProduction' },
+    },
+    payroll: {
+        id: 'payroll', contentVersion: 'v1', invitationPolicyVersion: 'v1', emphasis: 'static',
+        allowedPlans: ['base', 'premium'], allowedRoles: ['owner'],
+        copyKeys: { benefit: 'payrollBenefit', replayTitle: 'replayPayroll' },
+    },
+    machines: {
+        id: 'machines', contentVersion: 'v1', invitationPolicyVersion: 'v1', emphasis: 'static',
+        allowedPlans: ['base', 'premium'], allowedRoles: ['owner'],
+        copyKeys: { benefit: 'machinesBenefit', replayTitle: 'replayMachines' },
+    },
+    workers: {
+        id: 'workers', contentVersion: 'v1', invitationPolicyVersion: 'v1', emphasis: 'static',
+        allowedPlans: ['base', 'premium'], allowedRoles: ['owner'],
+        copyKeys: { benefit: 'workersBenefit', replayTitle: 'replayWorkers' },
+    },
     configuration: {
         id: 'configuration', contentVersion: 'v1', invitationPolicyVersion: 'v1', emphasis: 'static',
         allowedPlans: ['base', 'premium'], allowedRoles: ['owner'],
@@ -45,7 +80,7 @@ export const TOUR_REGISTRY: Record<TourId, TourDefinition> = {
 }
 
 export const tourRegistry = TOUR_REGISTRY
-export const supportedTours: TourId[] = ['cost-estimate', 'rate-book', 'saved-costings', 'configuration']
+export const supportedTours: TourId[] = ['cost-estimate', 'rate-book', 'saved-costings', 'configuration', 'workers', 'machines', 'payroll', 'production', 'fabric-stock', 'yarn-stock', 'dispatch']
 
 export function getTourDefinition(tourId: TourId): TourDefinition {
     return TOUR_REGISTRY[tourId]

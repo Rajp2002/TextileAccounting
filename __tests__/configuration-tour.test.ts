@@ -54,3 +54,45 @@ describe('Configuration tour examples and navigation', () => {
         expect(isTourEligible('configuration', 'base', 'supervisor')).toBe(false)
     })
 })
+
+describe('Expanded assignment previews', () => {
+    it('shows four distinct picker states and keeps unavailable machines unassignable', () => {
+        for (const step of ['picker', 'pickerCurrent', 'pickerOccupied', 'pickerBlocked'] as const) {
+            const sample = makeConfigurationTourExample('2026-09-16', step)
+            expect(configurationTourView(step).pickerWorkerId).toBe(CONFIGURATION_SAMPLE_WORKER)
+            expect(sample.workers).toHaveLength(2)
+            expect(sample.machines).toHaveLength(4)
+            const states = sample.machines.map(machine => {
+                const job = sample.machineJobContexts.find(context => context.machine_id === machine.id)
+                const link = sample.assignments.find(assignment => assignment.machine_id === machine.id)
+                return !job ? 'blocked' : link?.worker_id === CONFIGURATION_SAMPLE_WORKER ? 'current' : link ? 'occupied' : 'available'
+            })
+            expect(states).toEqual(['available', 'current', 'occupied', 'blocked'])
+            expect(sample.assignments.every(link => sample.workers.some(worker => worker.id === link.worker_id))).toBe(true)
+        }
+    })
+    it('restores the simple board when going back or leaving the picker', () => {
+        for (const step of ['assign', 'drag'] as const) {
+            expect(configurationTourView(step).pickerWorkerId).toBeNull()
+            expect(makeConfigurationTourExample('2026-09-16', step).machines).toHaveLength(1)
+        }
+    })
+    it('previews replacement without changing the original link', () => {
+        const sample = makeConfigurationTourExample('2026-09-16', 'replace')
+        expect(sample.workers).toHaveLength(2)
+        expect(sample.assignments[0].worker_id).toBe(CONFIGURATION_SAMPLE_WORKER)
+        expect(configurationTourSelectors.replace).toContain('replace-preview')
+    })
+    it('shows Undo only after an illustrated saved link and provides localized mobile guidance', () => {
+        expect(makeConfigurationTourExample('2026-09-16', 'undo').assignments).toHaveLength(1)
+        expect(configurationTourSelectors.undo).toContain('undo')
+        expect(configurationTourSteps).toHaveLength(23)
+        for (const language of ['en', 'gu', 'hi'] as const) {
+            const copy = configurationTutorialCopy[language]
+            expect(copy.sections).toHaveLength(6)
+            expect(copy.mobileAssign.every(text => text.length > 0)).toBe(true)
+            expect(copy.undoLabel).toBeTruthy()
+            expect(copy.secondWorker).not.toBe(copy.worker)
+        }
+    })
+})

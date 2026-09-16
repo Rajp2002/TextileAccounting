@@ -4,9 +4,11 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { normalizeWorker, normalizeMachine } from '../app/(dashboard)/owner/production/registers/normalize'
 const fixture = vi.hoisted(() => ({ query: '', action: vi.fn() }))
 vi.mock('next/navigation', () => ({ useSearchParams: () => new URLSearchParams(fixture.query), usePathname: () => '/owner/workers', useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }))
-vi.mock('@/lib/i18n/context', () => ({ useTranslation: () => ({ tx: (text: string) => text, t: (text: string) => text }) }))
+vi.mock('@/lib/i18n/context', () => ({ useTranslation: () => ({ language: 'en', tx: (text: string) => text, t: (text: string) => text }) }))
 vi.mock('@/components/navigation/navigation-link', () => ({ NavigationLink: ({ children, ...props }: React.ComponentProps<'a'>) => React.createElement('a',props,children) }))
 vi.mock('../app/(dashboard)/owner/production/actions', () => ({ createBaseProductionWorker: fixture.action, updateBaseProductionWorker: fixture.action, createBaseProductionMachine: fixture.action, updateBaseProductionMachine: fixture.action }))
+vi.mock('@/app/actions/tour-preferences', () => ({ recordTourEventAction: vi.fn() }))
+
 import WorkersRegister from '../app/(dashboard)/owner/production/registers/WorkersRegister'
 import MachinesRegister from '../app/(dashboard)/owner/production/registers/MachinesRegister'
 const workers = [normalizeWorker({ id:'piece-worker',name:'Piece fixture',pay_type:'piece_rate',is_active:true }),normalizeWorker({ id:'staff-worker',name:'Staff fixture',pay_type:'fixed_monthly',monthly_salary:'10000',is_active:true })]

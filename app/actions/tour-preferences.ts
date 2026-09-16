@@ -66,7 +66,18 @@ export async function recordTourEventAction({
             return { success: false }
         }
 
-        if (tourId === 'configuration') {
+        // Stock tour preferences need no board refresh: new initialData resets
+        // the live history filters and could disturb an in-progress stock entry.
+        // Local preferences update immediately; account metadata persists above.
+        if (tourId === 'production') {
+            revalidatePath('/owner/production')
+        } else if (tourId === 'payroll') {
+            revalidatePath('/owner/payroll')
+        } else if (tourId === 'machines') {
+            revalidatePath('/owner/machines')
+        } else if (tourId === 'workers') {
+            revalidatePath('/owner/workers')
+        } else if (tourId === 'configuration') {
             revalidatePath('/owner/operations')
             revalidatePath('/owner/assignments')
         } else if (tourId === 'cost-estimate') {

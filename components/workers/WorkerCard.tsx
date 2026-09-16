@@ -15,10 +15,11 @@ import { cn } from '@/lib/utils'
 
 interface WorkerCardProps {
   worker: BaseProductionWorkerWithOperational
+  tourPreview?: boolean
   onEdit: (worker: BaseProductionWorker) => void
 }
 
-export function WorkerCard({ worker, onEdit }: WorkerCardProps) {
+export function WorkerCard({ worker, onEdit, tourPreview = false }: WorkerCardProps) {
   const { tx } = useTranslation()
   const summary = getWorkerOperationalSummary(worker)
 
@@ -78,7 +79,7 @@ export function WorkerCard({ worker, onEdit }: WorkerCardProps) {
         </div>
 
         {/* B. Operational Configuration Details */}
-        <div className="grid grid-cols-2 gap-3 rounded-xl border border-hairline/60 bg-surface-soft/30 p-3.5">
+        <div data-workers-tour="readiness" className="grid grid-cols-2 gap-3 rounded-xl border border-hairline/60 bg-surface-soft/30 p-3.5">
           {summary.isPieceRate ? (
             <>
               {/* Piece-Rate Col 1: Machines */}
@@ -167,7 +168,9 @@ export function WorkerCard({ worker, onEdit }: WorkerCardProps) {
         {/* Primary Contextual Action */}
         {summary.isPieceRate || summary.assignedMachineCount > 0 ? (
           <NavigationLink
-            href={`/owner/assignments?worker=${worker.id}`}
+            data-workers-tour="assignments"
+            href={tourPreview ? "#" : `/owner/assignments?worker=${worker.id}`}
+            onClick={event => { if (tourPreview) event.preventDefault() }}
             className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-hairline/80 bg-surface px-3.5 text-xs sm:text-sm font-medium text-ink shadow-2xs transition-all hover:border-saffron hover:bg-saffron-soft hover:text-saffron-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
             aria-label={`${tx('View machine assignments for')} ${worker.name}`}
           >
@@ -176,7 +179,9 @@ export function WorkerCard({ worker, onEdit }: WorkerCardProps) {
           </NavigationLink>
         ) : (
           <NavigationLink
-            href="/owner/payroll"
+            data-workers-tour="payroll"
+            href={tourPreview ? "#" : "/owner/payroll"}
+            onClick={event => { if (tourPreview) event.preventDefault() }}
             className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-hairline/80 bg-surface px-3.5 text-xs sm:text-sm font-medium text-ink shadow-2xs transition-all hover:border-saffron hover:bg-saffron-soft hover:text-saffron-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
             aria-label={`${tx('View payroll for')} ${worker.name}`}
           >
@@ -189,7 +194,8 @@ export function WorkerCard({ worker, onEdit }: WorkerCardProps) {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => onEdit(worker)}
+          data-workers-tour="edit"
+          onClick={() => { if (!tourPreview) onEdit(worker) }}
           className="min-h-10 rounded-xl px-3 text-xs sm:text-sm font-medium text-subtle hover:bg-surface-soft hover:text-ink focus-visible:ring-saffron"
           aria-label={`${tx('Edit')} ${worker.name}`}
         >

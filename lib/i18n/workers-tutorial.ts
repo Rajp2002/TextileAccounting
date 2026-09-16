@@ -1,0 +1,96 @@
+import type { Language } from './context'
+import type { WorkersTourStep } from '../workers-tour'
+import { configurationTutorialCopy } from './configuration-tutorial'
+
+type WorkersCopy = {
+    sample: string
+    sections: string[]
+    fields: Record<WorkersTourStep, readonly [string, string]>
+    skip: string; back: string; next: string; finish: string; progress: string
+}
+export const workersTutorialCopy: Record<Language, WorkersCopy> = {
+    en: {
+        ...configurationTutorialCopy.en,
+        sample: 'Tour samples · Nothing will be saved',
+        sections: ['Find workers', 'Your workforce', 'Readiness', 'Add a worker', 'Pay setup', 'Manage workers', 'Next steps'],
+        fields: {
+            search: ['Find a worker', 'Search by worker name or staff role. This tour uses sample workers; your real register and filters will return when you finish.'],
+            shiftFilter: ['Filter by availability', 'Choose Day shift or Night shift to include workers available for that shift. Day & night shows only workers available for both.'],
+            statusFilter: ['Find active or inactive workers', 'The register starts with active workers. Use All workers or Inactive workers when reviewing someone who has left.'],
+            groups: ['Two ways to pay', 'Piece Rate groups workers paid based on production. Fixed Salary groups staff paid a monthly salary. Each group has its own count.'],
+            pieceCard: ['Read a worker card', 'The card shows the worker’s name, shift availability and active status. Availability controls which shift they can be assigned to.'],
+            pieceReadiness: ['Check machine and rate setup', 'Machines shows the assignment count. Rate setup reports whether a worker rate is configured. The worker editor does not contain a per-metre rate field.'],
+            salaryReadiness: ['Check salary readiness', 'Salary shows whether pay is configured, without exposing the amount on the card. Payroll is Ready when salary and a joining date are present.'],
+            add: ['Add a worker', 'Use Add worker to register a new person. Next, we will open sample forms for both pay types without creating any records.'],
+            name: ['Worker name', 'Enter a recognisable name so you can find the worker in the register and assignment screens. This is a read-only sample form.'],
+            payType: ['Choose the pay type carefully', 'Choose Piece rate for production-based pay or Fixed monthly salary for staff. Pay type cannot be changed after the worker is created.'],
+            availability: ['Set shift availability', 'Choose Day shift, Night shift or Day & night. The assignment board only offers workers available for the selected shift. You can change this later.'],
+            salaryRole: ['Describe the staff role', 'For fixed-salary staff, enter a role such as Supervisor. You can also find staff by searching for this role.'],
+            salary: ['Set the monthly salary', 'Enter the monthly salary in rupees. This amount belongs to the staff pay setup; it stays hidden on the register card.'],
+            joining: ['Set the joining date', 'The joining date is required for salary calculation. Check it before saving: the existing worker editor does not let you change it later.'],
+            edit: ['Update an existing worker', 'Use Edit on a worker card to update their details. Next, we will preview the additional fields for existing fixed-salary staff.'],
+            effective: ['Schedule a salary change', 'When changing salary, choose an effective date of today or later. Earlier earnings and paid records stay unchanged.'],
+            lastDay: ['Record the last working day', 'Salary accrues through this date. A last working day is required when deactivating fixed-salary staff.'],
+            active: ['Manage active status', 'Clear Active worker when the person is no longer active. You can find inactive records using the status filter. This tour does not change anyone’s status.'],
+            assignments: ['Continue to machine assignments', 'View assignments opens the assignment board filtered to this worker. After the tour, use it to review their machine assignments.'],
+            payroll: ['Continue to payroll', 'For staff without machine assignments, View payroll opens the payroll page. It opens the overall payroll page, not a worker-filtered view.'],
+            finish: ['Ready to manage your workforce', 'Add workers, review their setup, and use assignments or payroll for the next task. Finish restores your register. You can replay this tour anytime.'],
+        },
+    },
+    gu: {
+        ...configurationTutorialCopy.gu,
+        sample: 'ટૂરના નમૂના · કંઈ સાચવવામાં આવશે નહીં',
+        sections: ['કારીગર શોધો', 'તમારા કારીગરો', 'તૈયારી', 'કારીગર ઉમેરો', 'પગાર ગોઠવણી', 'કારીગર વ્યવસ્થાપન', 'આગળનાં પગલાં'],
+        fields: {
+            search: ['કારીગર શોધો', 'કારીગરના નામ અથવા સ્ટાફની ભૂમિકાથી શોધો. ટૂરમાં નમૂનાના કારીગરો છે; પૂર્ણ થયા પછી તમારું રજિસ્ટર અને ફિલ્ટર પાછાં આવશે.'],
+            shiftFilter: ['ઉપલબ્ધતા પ્રમાણે ફિલ્ટર કરો', 'દિવસ કે રાત્રિની શિફ્ટ પસંદ કરવાથી તે શિફ્ટમાં ઉપલબ્ધ કારીગરો દેખાશે. દિવસ અને રાત્રિ પસંદ કરવાથી બંનેમાં ઉપલબ્ધ કારીગરો જ દેખાશે.'],
+            statusFilter: ['સક્રિય કે નિષ્ક્રિય કારીગરો શોધો', 'શરૂઆતમાં સક્રિય કારીગરો દેખાય છે. કામ છોડી ગયેલા કારીગરને જોવા બધા કારીગરો અથવા નિષ્ક્રિય કારીગરો પસંદ કરો.'],
+            groups: ['પગારની બે પદ્ધતિ', 'પીસ રેટમાં ઉત્પાદન પ્રમાણે વેતન મેળવનારા કારીગરો છે. નિશ્ચિત પગારમાં માસિક પગારવાળો સ્ટાફ છે. દરેક જૂથની પોતાની સંખ્યા છે.'],
+            pieceCard: ['કારીગરનું કાર્ડ સમજો', 'કાર્ડ પર નામ, શિફ્ટ ઉપલબ્ધતા અને સક્રિય સ્થિતિ દેખાય છે. ઉપલબ્ધતા પ્રમાણે શિફ્ટમાં ફાળવણી થઈ શકે છે.'],
+            pieceReadiness: ['મશીન અને દરની ગોઠવણી જુઓ', 'મશીનોમાં ફાળવણીની સંખ્યા દેખાય છે. દરની ગોઠવણી બતાવે છે કે કારીગરનો દર ગોઠવેલો છે કે નહીં. કારીગરના ફોર્મમાં પ્રતિ મીટર દરનું ક્ષેત્ર નથી.'],
+            salaryReadiness: ['પગારની તૈયારી જુઓ', 'પગારની રકમ બતાવ્યા વિના તેની ગોઠવણીની સ્થિતિ દેખાય છે. પગાર અને જોડાવાની તારીખ હોય ત્યારે પેરોલ તૈયાર દેખાય છે.'],
+            add: ['કારીગર ઉમેરો', 'નવી વ્યક્તિ માટે કારીગર ઉમેરો પસંદ કરો. હવે બંને પગાર પદ્ધતિનાં નમૂના ફોર્મ ખુલશે; કોઈ રેકોર્ડ બનશે નહીં.'],
+            name: ['કારીગરનું નામ', 'રજિસ્ટર અને ફાળવણીમાં સરળતાથી ઓળખાય એવું નામ લખો. આ માત્ર જોવા માટેનું નમૂના ફોર્મ છે.'],
+            payType: ['પગારની પદ્ધતિ ધ્યાનથી પસંદ કરો', 'ઉત્પાદન આધારિત વેતન માટે પીસ રેટ અથવા સ્ટાફ માટે નિશ્ચિત માસિક પગાર પસંદ કરો. કારીગર બનાવ્યા પછી પદ્ધતિ બદલી શકાતી નથી.'],
+            availability: ['શિફ્ટ ઉપલબ્ધતા ગોઠવો', 'દિવસ, રાત્રિ અથવા બંને પસંદ કરો. ફાળવણી બોર્ડ પસંદ કરેલી શિફ્ટમાં ઉપલબ્ધ કારીગરો જ બતાવે છે. આ પછીથી બદલી શકો છો.'],
+            salaryRole: ['સ્ટાફની ભૂમિકા લખો', 'નિશ્ચિત પગારવાળા સ્ટાફ માટે સુપરવાઇઝર જેવી ભૂમિકા લખો. આ ભૂમિકાથી પણ સ્ટાફ શોધી શકો છો.'],
+            salary: ['માસિક પગાર ગોઠવો', 'માસિક પગાર રૂપિયામાં લખો. આ રકમ સ્ટાફના પગારની ગોઠવણીમાં રહે છે; રજિસ્ટરના કાર્ડ પર દેખાતી નથી.'],
+            joining: ['જોડાવાની તારીખ ગોઠવો', 'પગારની ગણતરી માટે જોડાવાની તારીખ જરૂરી છે. સાચવતા પહેલાં તપાસો: હાલનું સંપાદન ફોર્મ પછીથી તેને બદલવા દેતું નથી.'],
+            edit: ['હાલના કારીગરની વિગતો બદલો', 'વિગતો બદલવા કાર્ડ પર સંપાદન પસંદ કરો. હવે હાલના નિશ્ચિત પગારવાળા સ્ટાફનાં વધારાનાં ક્ષેત્રો જોઈશું.'],
+            effective: ['પગારમાં ફેરફારની તારીખ', 'પગાર બદલતી વખતે આજની કે પછીની લાગુ તારીખ પસંદ કરો. અગાઉની કમાણી અને ચૂકવેલા રેકોર્ડ બદલાતા નથી.'],
+            lastDay: ['છેલ્લો કામનો દિવસ', 'આ તારીખ સુધી પગાર ગણાય છે. નિશ્ચિત પગારવાળા સ્ટાફને નિષ્ક્રિય કરતી વખતે છેલ્લો કામનો દિવસ જરૂરી છે.'],
+            active: ['સક્રિય સ્થિતિ સંભાળો', 'વ્યક્તિ હવે સક્રિય ન હોય ત્યારે સક્રિય કારીગરનું ચિહ્ન દૂર કરો. સ્થિતિ ફિલ્ટરથી નિષ્ક્રિય રેકોર્ડ શોધી શકો છો. ટૂર કોઈની સ્થિતિ બદલતી નથી.'],
+            assignments: ['મશીન ફાળવણી પર જાઓ', 'ફાળવણી જુઓ આ કારીગર માટે ફિલ્ટર કરેલું બોર્ડ ખોલે છે. ટૂર પછી મશીન ફાળવણી તપાસવા તેનો ઉપયોગ કરો.'],
+            payroll: ['પેરોલ પર જાઓ', 'મશીન ફાળવણી ન હોય તેવા સ્ટાફ માટે પેરોલ જુઓ પેરોલ પાનું ખોલે છે. આ આખું પેરોલ પાનું છે, કારીગર પ્રમાણે ફિલ્ટર કરેલું નથી.'],
+            finish: ['કારીગરોનું વ્યવસ્થાપન શરૂ કરો', 'કારીગરો ઉમેરો, ગોઠવણી તપાસો અને આગળ ફાળવણી કે પેરોલ વાપરો. પૂર્ણ કરવાથી તમારું રજિસ્ટર પાછું આવશે. ટૂર ફરી જોઈ શકો છો.'],
+        },
+    },
+    hi: {
+        ...configurationTutorialCopy.hi,
+        sample: 'टूर के नमूने · कुछ भी सहेजा नहीं जाएगा',
+        sections: ['कारीगर खोजें', 'आपके कारीगर', 'तैयारी', 'कारीगर जोड़ें', 'वेतन सेटअप', 'कारीगर प्रबंधन', 'अगले कदम'],
+        fields: {
+            search: ['कारीगर खोजें', 'कारीगर के नाम या स्टाफ की भूमिका से खोजें। टूर में नमूने हैं; समाप्त होने पर आपका रजिस्टर और फ़िल्टर वापस आ जाएंगे।'],
+            shiftFilter: ['उपलब्धता के अनुसार फ़िल्टर करें', 'दिन या रात की शिफ्ट चुनने पर उस शिफ्ट के लिए उपलब्ध कारीगर दिखेंगे। दिन और रात चुनने पर दोनों में उपलब्ध कारीगर ही दिखेंगे।'],
+            statusFilter: ['सक्रिय या निष्क्रिय कारीगर खोजें', 'शुरुआत में सक्रिय कारीगर दिखते हैं। काम छोड़ चुके व्यक्ति को देखने के लिए सभी या निष्क्रिय कारीगर चुनें।'],
+            groups: ['वेतन के दो तरीके', 'पीस रेट में उत्पादन के आधार पर वेतन पाने वाले कारीगर हैं। निश्चित वेतन में मासिक वेतन वाला स्टाफ है। हर समूह की अपनी गिनती है।'],
+            pieceCard: ['कारीगर का कार्ड समझें', 'कार्ड पर नाम, शिफ्ट उपलब्धता और सक्रिय स्थिति दिखती है। उपलब्धता तय करती है कि किस शिफ्ट में आवंटन हो सकता है।'],
+            pieceReadiness: ['मशीन और दर सेटअप देखें', 'मशीनों में आवंटन की गिनती दिखती है। दर सेटअप बताता है कि कारीगर की दर तय है या नहीं। कारीगर के फ़ॉर्म में प्रति मीटर दर का फ़ील्ड नहीं है।'],
+            salaryReadiness: ['वेतन की तैयारी देखें', 'राशि दिखाए बिना वेतन सेटअप की स्थिति दिखती है। वेतन और कार्यग्रहण तिथि मौजूद होने पर पेरोल तैयार दिखता है।'],
+            add: ['कारीगर जोड़ें', 'नए व्यक्ति के लिए कारीगर जोड़ें चुनें। अब दोनों वेतन प्रकारों के नमूना फ़ॉर्म खुलेंगे; कोई रिकॉर्ड नहीं बनेगा।'],
+            name: ['कारीगर का नाम', 'ऐसा नाम लिखें जिससे रजिस्टर और आवंटन में कारीगर आसानी से पहचाना जा सके। यह केवल देखने के लिए नमूना फ़ॉर्म है।'],
+            payType: ['वेतन प्रकार ध्यान से चुनें', 'उत्पादन आधारित वेतन के लिए पीस रेट या स्टाफ के लिए निश्चित मासिक वेतन चुनें। कारीगर बनने के बाद वेतन प्रकार नहीं बदल सकते।'],
+            availability: ['शिफ्ट उपलब्धता तय करें', 'दिन, रात या दोनों चुनें। आवंटन बोर्ड चुनी गई शिफ्ट के लिए उपलब्ध कारीगर ही दिखाता है। इसे बाद में बदल सकते हैं।'],
+            salaryRole: ['स्टाफ की भूमिका लिखें', 'निश्चित वेतन वाले स्टाफ के लिए सुपरवाइज़र जैसी भूमिका लिखें। इस भूमिका से भी स्टाफ खोज सकते हैं।'],
+            salary: ['मासिक वेतन तय करें', 'मासिक वेतन रुपये में लिखें। यह राशि स्टाफ के वेतन सेटअप में रहती है; रजिस्टर के कार्ड पर नहीं दिखती।'],
+            joining: ['कार्यग्रहण तिथि तय करें', 'वेतन की गणना के लिए यह तिथि ज़रूरी है। सहेजने से पहले जाँचें: मौजूदा संपादन फ़ॉर्म इसे बाद में बदलने नहीं देता।'],
+            edit: ['मौजूदा कारीगर का विवरण बदलें', 'विवरण बदलने के लिए कार्ड पर संपादन चुनें। अब मौजूदा निश्चित वेतन वाले स्टाफ के अतिरिक्त फ़ील्ड देखेंगे।'],
+            effective: ['वेतन बदलाव की तारीख', 'वेतन बदलते समय आज या बाद की प्रभावी तिथि चुनें। पिछली कमाई और भुगतान किए रिकॉर्ड नहीं बदलते।'],
+            lastDay: ['अंतिम कार्य दिवस दर्ज करें', 'इस तारीख तक वेतन जुड़ता है। निश्चित वेतन वाले स्टाफ को निष्क्रिय करते समय अंतिम कार्य दिवस ज़रूरी है।'],
+            active: ['सक्रिय स्थिति संभालें', 'व्यक्ति अब सक्रिय न हो तो सक्रिय कारीगर का निशान हटाएँ। स्थिति फ़िल्टर से निष्क्रिय रिकॉर्ड खोज सकते हैं। टूर किसी की स्थिति नहीं बदलता।'],
+            assignments: ['मशीन आवंटन पर जाएँ', 'आवंटन देखें इस कारीगर के लिए फ़िल्टर किया हुआ बोर्ड खोलता है। टूर के बाद मशीन आवंटन देखने के लिए इसका उपयोग करें।'],
+            payroll: ['पेरोल पर जाएँ', 'बिना मशीन आवंटन वाले स्टाफ के लिए पेरोल देखें पेरोल पृष्ठ खोलता है। यह पूरा पेरोल पृष्ठ है, कारीगर के अनुसार फ़िल्टर किया हुआ नहीं।'],
+            finish: ['कारीगर प्रबंधन शुरू करें', 'कारीगर जोड़ें, सेटअप जाँचें और आगे आवंटन या पेरोल इस्तेमाल करें। समाप्त करने पर आपका रजिस्टर वापस आएगा। टूर दोबारा देख सकते हैं।'],
+        },
+    },
+}
