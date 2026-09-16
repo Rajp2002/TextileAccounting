@@ -4,12 +4,21 @@ import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import { createPortal } from 'react-dom'
 import { Button } from '@/components/ui/button'
 import { useTranslation } from '@/lib/i18n/context'
-import { stockTutorialCopy } from '@/lib/i18n/stock-tutorial'
+import { stockTutorialCopy, fabricStockTutorialHelp } from '@/lib/i18n/stock-tutorial'
 import { stockTourSelector, stockTourSteps, stockTourSection, type StockTourStep, type StockTourKind } from '@/lib/stock-tour'
 import { findTourTarget } from '@/lib/tutorial-target'
 import { lockTourViewport } from '@/lib/tutorial-viewport-lock'
 import { useMobileTour } from '@/hooks/use-mobile-tour'
 import { persistTourCompleted } from '@/lib/tours/tour-preferences'
+
+/** Keyed by step so optional detail closes when the user advances or goes back. */
+function FabricStockHelp({ help }: { help: readonly [string, string] }) {
+    const [expanded, setExpanded] = useState(false)
+    return <div className="mt-3 border-t border-hairline pt-3">
+        <button type="button" className="text-left text-sm font-semibold text-saffron-deep underline" aria-expanded={expanded} aria-controls="fabric-stock-tour-help" onClick={() => setExpanded(value => !value)}>{help[0]}</button>
+        {expanded && <p id="fabric-stock-tour-help" className="mt-2 text-sm leading-relaxed">{help[1]}</p>}
+    </div>
+}
 
 export default function StockTutorial({ step, onStepChange, launcher, userId, kind, returnScroll }: {
     kind: StockTourKind
@@ -21,6 +30,7 @@ export default function StockTutorial({ step, onStepChange, launcher, userId, ki
 }) {
     const { language } = useTranslation()
     const copy = stockTutorialCopy[kind][language]
+    const help = kind === 'fabric-stock' ? fabricStockTutorialHelp[language][step] : undefined
     const steps = stockTourSteps(kind)
     const sections = [...new Set(steps.map(step => stockTourSection(step, kind)))]
     const index = steps.indexOf(step)
@@ -135,6 +145,7 @@ export default function StockTutorial({ step, onStepChange, launcher, userId, ki
                     <p className="mt-2 text-xs font-semibold text-subtle">{sections.indexOf(stockTourSection(step, kind)) + 1}/{sections.length} · {copy.sections[stockTourSection(step, kind)]}</p>
                     <h2 id="stock-tour-title" className="mt-3 text-lg font-bold">{copy.fields[step]![0]}</h2>
                     <p id="stock-tour-description" className="mt-3 text-sm leading-relaxed">{copy.fields[step]![1]}</p>
+                    {help && <FabricStockHelp key={step} help={help} />}
                 </div>
                 <div role="progressbar" aria-label={copy.progress} aria-valuenow={index + 1} aria-valuemin={1} aria-valuemax={steps.length} className="mt-4 h-1.5 rounded-full bg-amber-100"><div className="h-full rounded-full bg-saffron" style={{ width: `${(index + 1) / steps.length * 100}%` }} /></div>
                 <div className="guided-tour-controls mt-3 flex items-center justify-between gap-1">
