@@ -232,323 +232,216 @@ export const fabricStockPreviewCopy = {
   }
 }
 export const yarnStockTutorialCopy: Record<Language, StockTutorialCopy> = {
-en: { ...fabricStockTutorialCopy.en, sections: ["Understand yarn inventory", "Opening weight and receipts", "Link fabric costings", "Correct a balance", "Audit and export", "Trace movements"], fields: {
-  "balance": [
-    "What yarn remaining means",
-    "This includes unused yarn and yarn inside undispatched fabric. Production does not reduce it. Confirmed dispatch deducts linked costing weights."
-  ],
-  "tracking": [
-    "Start yarn tracking",
-    "The first weight entry starts tracking. Before the next dispatch, link the fabric costing and record all required yarn balances."
-  ],
-  "yarn": [
-    "One balance per yarn",
-    "Each yarn has a kilogram balance. Matching names share one balance across warp and weft. This sample is 100 opening + 20 received − 10 dispatched = 110 kg."
-  ],
-  "opening": [
-    "Opening weight",
-    "Record existing yarn once per yarn, including yarn in undispatched fabric. Exclude recorded receipts and yarn covered by legacy pending dispatches."
-  ],
-  "openingQuality": [
-    "Match the costing name",
-    "Use the yarn name from the costing. Suggested names help keep receipts and dispatch deductions in the same balance."
-  ],
-  "openingAmount": [
-    "Enter the opening kilograms",
-    "Enter the existing weight to add. Yarn weights support up to three decimal places."
-  ],
-  "openingReason": [
-    "Explain the opening entry",
-    "Enter a reason or count reference of at least three characters. Review before saving; this preview cannot save stock."
-  ],
-  "receipt": [
-    "Add newly received yarn",
-    "Add yarn records a new receipt, separate from the one-time opening weight."
-  ],
-  "receiptAmount": [
-    "Enter the receipt weight",
-    "Enter the newly received kilograms, not the total balance. A receipt must be greater than zero."
-  ],
-  "receiptSave": [
-    "Review the receipt",
-    "Include a receipt reference or reason. If saving is unconfirmed, keep the same details and retry before starting another entry."
-  ],
-  "formulas": [
-    "Yarn used by each fabric",
-    "Each fabric needs a linked saved costing. An unlinked quality needs setup before dispatch can deduct the right yarn."
-  ],
-  "link": [
-    "Link a costing",
-    "Open Link costing for the fabric quality. This sample preview never changes the real link."
-  ],
-  "costing": [
-    "Choose a compatible version",
-    "Choose a saved costing for this quality and check its version. If none has compatible yarn weights, save a fresh costing first."
-  ],
-  "weights": [
-    "Review kilograms per 100 metres",
-    "Review warp and weft weights, including costing allowances. A 10 kg per 100 m formula deducts 10 kg for 100 m dispatched."
-  ],
-  "linkReason": [
-    "Explain the formula choice",
-    "A reason is required when linking or changing the formula. Keep enough detail to explain the selected costing."
-  ],
-  "linkSave": [
-    "Changes apply going forward",
-    "The linked weights are fixed here. Relinking affects future dispatches; past deductions retain their original formula."
-  ],
-  "correction": [
-    "Correct a yarn count",
-    "Correct balance records a verified physical total, including yarn in fabric not yet dispatched."
-  ],
-  "counted": [
-    "Enter the total still owned",
-    "Enter the verified total, not a difference. Here 108 kg replaces 110 kg, recording a −2 kg correction."
-  ],
-  "correctionReason": [
-    "Explain and save the correction",
-    "A reason is required and the difference stays in history. The tour does not submit this correction."
-  ],
-  "auditDate": [
-    "Choose an audit date",
-    "View date shows entries recorded through that day in India time. A date before tracking began is not an opening-stock count."
-  ],
-  "historical": [
-    "Historical views are read-only",
-    "Opening, receipt, correction and costing-link controls are hidden in a dated view. These balances reflect when entries were recorded."
-  ],
-  "current": [
-    "Return to current stock",
-    "Clear the audit date and choose View date to return to current balances and editing controls."
-  ],
-  "export": [
-    "Export balances",
-    "Export balances CSV contains yarn balances and a total for the displayed date, with tracking information. It is not a movement-history export. No file is downloaded during this tour."
-  ],
-  "historyFilter": [
-    "Filter movement history",
-    "Select a yarn or All yarns. A card’s History button selects that yarn. Load more retrieves older movements for the same date and filter."
-  ],
-  "movement": [
-    "Trace a dispatch deduction",
-    "Review signed kilograms, balance after, sent metres and the saved formula. View dispatch opens the related dispatch; reversals appear as separate movements."
-  ],
-  "finish": [
-    "Yarn stock is ready",
-    "Record existing yarn and receipts, link fabric costings, then review dispatch deductions and dated balances. Replay the tour whenever needed."
-  ]
-}},
-gu: { ...fabricStockTutorialCopy.gu, sections: ["યાર્ન સ્ટોક સમજો", "શરૂઆત અને આવક", "કોસ્ટિંગ જોડો", "બેલેન્સ સુધારો", "ઓડિટ અને નિકાસ", "હિલચાલ જુઓ"], fields: {
-  "balance": [
-    "બાકી યાર્નનો અર્થ",
-    "વણાયા વગરનું યાર્ન અને મોકલવાના બાકી કાપડનું યાર્ન બંને સામેલ છે. ઉત્પાદનથી ઘટતું નથી. પુષ્ટિ થયેલો ડિસ્પેચ જોડાયેલા કોસ્ટિંગ પ્રમાણે વજન ઘટાડે છે."
-  ],
-  "tracking": [
-    "યાર્ન ટ્રેકિંગ શરૂ કરો",
-    "પ્રથમ વજન નોંધથી ટ્રેકિંગ શરૂ થાય છે. આગલા ડિસ્પેચ પહેલાં કાપડનું કોસ્ટિંગ જોડો અને જરૂરી યાર્ન બેલેન્સ નોંધો."
-  ],
-  "yarn": [
-    "દરેક યાર્નનું એક બેલેન્સ",
-    "વજન કિલોમાં છે. એક નામના તાણા અને વાણાનું બેલેન્સ એક છે. નમૂનો: 100 શરૂઆત + 20 આવક − 10 ડિસ્પેચ = 110 કિલો."
-  ],
-  "opening": [
-    "શરૂઆતનું વજન",
-    "મોકલવાના બાકી કાપડ સહિત હાલનું યાર્ન એક વાર નોંધો. નોંધેલી આવક અને જૂના બાકી ડિસ્પેચનું યાર્ન ફરી ઉમેરશો નહીં."
-  ],
-  "openingQuality": [
-    "કોસ્ટિંગનું નામ મેળવો",
-    "કોસ્ટિંગ જેવું યાર્ન નામ વાપરો. સૂચિત નામથી આવક અને કપાત એક બેલેન્સમાં રહે છે."
-  ],
-  "openingAmount": [
-    "શરૂઆતના કિલો નાખો",
-    "ઉમેરવાનું હાલનું વજન નાખો. વધુમાં વધુ ત્રણ દશાંશ રાખો."
-  ],
-  "openingReason": [
-    "શરૂઆતની નોંધ સમજાવો",
-    "ઓછામાં ઓછા ત્રણ અક્ષરનું કારણ અથવા સંદર્ભ નાખો. સાચવતાં પહેલાં તપાસો; નમૂનો સ્ટોક સાચવતો નથી."
-  ],
-  "receipt": [
-    "નવું મળેલું યાર્ન ઉમેરો",
-    "Add yarn નવી આવક નોંધે છે. તે એક વખતના શરૂઆતના વજનથી અલગ છે."
-  ],
-  "receiptAmount": [
-    "આવકનું વજન નાખો",
-    "નવું મળેલું વજન નાખો, કુલ બેલેન્સ નહીં. આવક શૂન્યથી વધારે હોવી જોઈએ."
-  ],
-  "receiptSave": [
-    "આવક તપાસો",
-    "રસીદ સંદર્ભ અથવા કારણ આપો. સાચવવાની પુષ્ટિ ન થાય તો નવી નોંધ પહેલાં એ જ વિગતો સાથે ફરી પ્રયાસ કરો."
-  ],
-  "formulas": [
-    "કાપડમાં વપરાતું યાર્ન",
-    "દરેક કાપડને સાચવેલું કોસ્ટિંગ જોડવું પડે. જોડાણ વગર યોગ્ય ડિસ્પેચ કપાત માટે પહેલાં ગોઠવણી જરૂરી છે."
-  ],
-  "link": [
-    "કોસ્ટિંગ જોડો",
-    "ક્વોલિટી માટે Link costing ખોલો. આ નમૂનો સાચું જોડાણ બદલતો નથી."
-  ],
-  "costing": [
-    "યોગ્ય વર્ઝન પસંદ કરો",
-    "આ ક્વોલિટીનું કોસ્ટિંગ પસંદ કરીને વર્ઝન તપાસો. યોગ્ય યાર્ન વજન ન હોય તો નવું કોસ્ટિંગ સાચવો."
-  ],
-  "weights": [
-    "100 મીટર દીઠ કિલો જુઓ",
-    "કોસ્ટિંગના ભથ્થા સહિત તાણા અને વાણાનું વજન તપાસો. 100 મીટર દીઠ 10 કિલો હોય તો 100 મીટરના ડિસ્પેચમાં 10 કિલો ઘટે છે."
-  ],
-  "linkReason": [
-    "સૂત્ર પસંદગીનું કારણ",
-    "સૂત્ર જોડવા અથવા બદલવા કારણ જરૂરી છે. પસંદ કરેલા કોસ્ટિંગનો સંદર્ભ સમજાવો."
-  ],
-  "linkSave": [
-    "ફેરફાર આગળ લાગુ પડે",
-    "જોડાયેલ વજન અહીં સ્થિર રહે છે. ફરી જોડવાથી આગળના ડિસ્પેચ બદલાય છે; જૂની કપાતનું સૂત્ર યથાવત રહે છે."
-  ],
-  "correction": [
-    "યાર્ન ગણતરી સુધારો",
-    "મોકલવાના બાકી કાપડનું યાર્ન સહિત ચકાસેલું કુલ વજન Correct balance માં નોંધો."
-  ],
-  "counted": [
-    "હાલની માલિકીનું કુલ",
-    "કુલ વજન નાખો, તફાવત નહીં. અહીં 110ની જગ્યાએ 108 કિલોથી −2 કિલોનો સુધારો થાય છે."
-  ],
-  "correctionReason": [
-    "કારણ સાથે સુધારો સાચવો",
-    "કારણ જરૂરી છે અને તફાવત ઇતિહાસમાં રહે છે. ટૂર આ સુધારો સબમિટ કરતો નથી."
-  ],
-  "auditDate": [
-    "ઓડિટ તારીખ પસંદ કરો",
-    "View date ભારતીય સમય મુજબ તે દિવસ સુધી નોંધાયેલી એન્ટ્રી બતાવે છે. ટ્રેકિંગ પહેલાંની તારીખ શરૂઆતની ગણતરી નથી."
-  ],
-  "historical": [
-    "જૂનું દૃશ્ય માત્ર વાંચવા",
-    "તારીખવાળા દૃશ્યમાં શરૂઆત, આવક, સુધારો અને કોસ્ટિંગ જોડાણ નિયંત્રણ છુપાય છે. બેલેન્સ નોંધના સમય પર આધારિત છે."
-  ],
-  "current": [
-    "હાલના સ્ટોક પર પાછા",
-    "તારીખ ખાલી કરીને View date પસંદ કરો. હાલનું બેલેન્સ અને ફેરફાર નિયંત્રણ પાછાં આવશે."
-  ],
-  "export": [
-    "બેલેન્સ નિકાસ કરો",
-    "CSV માં દેખાતી તારીખના યાર્ન બેલેન્સ, કુલ અને ટ્રેકિંગ માહિતી આવે છે; હિલચાલ ઇતિહાસ નહીં. ટૂરમાં ડાઉનલોડ થતું નથી."
-  ],
-  "historyFilter": [
-    "હિલચાલ ઇતિહાસ ગાળો",
-    "યાર્ન અથવા બધા યાર્ન પસંદ કરો. કાર્ડનું History તે યાર્ન પસંદ કરે છે. Load more એ જ તારીખ અને ફિલ્ટરની જૂની નોંધ લાવે છે."
-  ],
-  "movement": [
-    "ડિસ્પેચ કપાત તપાસો",
-    "કિલોનો ફેરફાર, નોંધ પછીનું બેલેન્સ, મોકલેલા મીટર અને સાચવેલું સૂત્ર જુઓ. View dispatch સંબંધિત ડિસ્પેચ ખોલે છે; પરત અલગ નોંધ છે."
-  ],
-  "finish": [
-    "યાર્ન સ્ટોક તૈયાર",
-    "હાલનું યાર્ન અને આવક નોંધો, કોસ્ટિંગ જોડો અને ડિસ્પેચ કપાત તથા તારીખવાળા બેલેન્સ તપાસો. જરૂર પડે ટૂર ફરી જુઓ."
-  ]
-}},
-hi: { ...fabricStockTutorialCopy.hi, sections: ["धागा स्टॉक समझें", "शुरुआत और आवक", "लागत जोड़ें", "शेष सुधारें", "ऑडिट और निर्यात", "गतिविधियाँ देखें"], fields: {
-  "balance": [
-    "शेष धागे का अर्थ",
-    "इसमें बचा धागा और न भेजे गए कपड़े का धागा शामिल है। उत्पादन इसे नहीं घटाता। पुष्टि वाला डिस्पैच जुड़ी लागत के वजन से कटौती करता है।"
-  ],
-  "tracking": [
-    "धागा ट्रैकिंग शुरू करें",
-    "पहली वजन प्रविष्टि ट्रैकिंग शुरू करती है। अगले डिस्पैच से पहले कपड़े की लागत जोड़ें और जरूरी धागों का शेष दर्ज करें।"
-  ],
-  "yarn": [
-    "हर धागे का एक शेष",
-    "वजन किलो में है। एक नाम के ताने और बाने का शेष साझा है। नमूना: 100 शुरुआती + 20 आवक − 10 डिस्पैच = 110 किलो।"
-  ],
-  "opening": [
-    "शुरुआती वजन",
-    "न भेजे गए कपड़े सहित मौजूदा धागा एक बार दर्ज करें। दर्ज आवक और पुराने लंबित डिस्पैच का धागा फिर न जोड़ें।"
-  ],
-  "openingQuality": [
-    "लागत का नाम मिलाएँ",
-    "लागत वाला धागा नाम रखें। सुझाए नाम से आवक और कटौती एक शेष में रहती हैं।"
-  ],
-  "openingAmount": [
-    "शुरुआती किलो डालें",
-    "जोड़ने वाला मौजूदा वजन डालें। अधिकतम तीन दशमलव रखें।"
-  ],
-  "openingReason": [
-    "शुरुआती प्रविष्टि समझाएँ",
-    "कम से कम तीन अक्षर का कारण या संदर्भ दें। सहेजने से पहले जाँचें; नमूना स्टॉक नहीं सहेजता।"
-  ],
-  "receipt": [
-    "नया मिला धागा जोड़ें",
-    "Add yarn नई आवक दर्ज करता है। यह एक बार के शुरुआती वजन से अलग है।"
-  ],
-  "receiptAmount": [
-    "आवक वजन डालें",
-    "नया मिला वजन डालें, कुल शेष नहीं। आवक शून्य से ज्यादा होनी चाहिए।"
-  ],
-  "receiptSave": [
-    "आवक जाँचें",
-    "रसीद संदर्भ या कारण दें। सेव की पुष्टि न हो तो नई प्रविष्टि से पहले उन्हीं विवरणों से फिर प्रयास करें।"
-  ],
-  "formulas": [
-    "कपड़े में इस्तेमाल धागा",
-    "हर कपड़े को सहेजी लागत जोड़नी है। बिना जुड़ाव के सही डिस्पैच कटौती के लिए पहले सेटअप चाहिए।"
-  ],
-  "link": [
-    "लागत जोड़ें",
-    "क्वालिटी के लिए Link costing खोलें। यह नमूना असली जुड़ाव नहीं बदलता।"
-  ],
-  "costing": [
-    "संगत संस्करण चुनें",
-    "इसी क्वालिटी की लागत चुनकर संस्करण जाँचें। संगत धागा वजन न हो तो नई लागत सहेजें।"
-  ],
-  "weights": [
-    "100 मीटर का वजन देखें",
-    "लागत के भत्तों सहित ताने और बाने का वजन जाँचें। 100 मीटर पर 10 किलो हो तो 100 मीटर डिस्पैच में 10 किलो कटेगा।"
-  ],
-  "linkReason": [
-    "सूत्र चयन का कारण",
-    "सूत्र जोड़ने या बदलने का कारण जरूरी है। चुनी लागत का संदर्भ समझाएँ।"
-  ],
-  "linkSave": [
-    "बदलाव आगे लागू होते हैं",
-    "जुड़ा वजन यहाँ तय रहता है। दोबारा जोड़ने से आगे के डिस्पैच बदलते हैं; पुरानी कटौती का सूत्र बना रहता है।"
-  ],
-  "correction": [
-    "धागा गिनती सुधारें",
-    "न भेजे गए कपड़े के धागे सहित सत्यापित कुल वजन Correct balance में दर्ज करें।"
-  ],
-  "counted": [
-    "अभी का कुल वजन",
-    "कुल वजन डालें, अंतर नहीं। यहाँ 110 की जगह 108 किलो से −2 किलो का सुधार होगा।"
-  ],
-  "correctionReason": [
-    "कारण सहित सुधार सहेजें",
-    "कारण जरूरी है और अंतर इतिहास में रहता है। टूर यह सुधार जमा नहीं करता।"
-  ],
-  "auditDate": [
-    "ऑडिट तारीख चुनें",
-    "View date भारतीय समय में उस दिन तक दर्ज प्रविष्टियाँ दिखाता है। ट्रैकिंग से पहले की तारीख शुरुआती गिनती नहीं है।"
-  ],
-  "historical": [
-    "पुराना दृश्य केवल पढ़ें",
-    "तारीख वाले दृश्य में शुरुआती, आवक, सुधार और लागत जोड़ने के नियंत्रण छिपते हैं। शेष प्रविष्टि दर्ज होने के समय पर आधारित है।"
-  ],
-  "current": [
-    "वर्तमान स्टॉक पर लौटें",
-    "तारीख खाली करके View date चुनें। वर्तमान शेष और बदलाव नियंत्रण लौटेंगे।"
-  ],
-  "export": [
-    "शेष निर्यात करें",
-    "CSV में दिखती तारीख के धागा शेष, कुल और ट्रैकिंग जानकारी आती है; गतिविधि इतिहास नहीं। टूर में डाउनलोड नहीं होता।"
-  ],
-  "historyFilter": [
-    "गतिविधि इतिहास छाँटें",
-    "धागा या सभी धागे चुनें। कार्ड का History वह धागा चुनता है। Load more उसी तारीख और फ़िल्टर की पुरानी प्रविष्टियाँ लाता है।"
-  ],
-  "movement": [
-    "डिस्पैच कटौती जाँचें",
-    "किलो बदलाव, प्रविष्टि के बाद शेष, भेजे मीटर और सहेजा सूत्र देखें। View dispatch संबंधित डिस्पैच खोलता है; वापसी अलग प्रविष्टि है।"
-  ],
-  "finish": [
-    "धागे का स्टॉक तैयार",
-    "मौजूदा धागा और आवक दर्ज करें, लागत जोड़ें और डिस्पैच कटौती व तारीख वाले शेष जाँचें। जरूरत पर टूर फिर देखें।"
-  ]
-}},
+en: { ...configurationTutorialCopy.en, sample: fabricStockTutorialCopy.en.sample, sections: [
+    "Count owned yarn",
+    "Record weights",
+    "Prepare dispatch",
+    "Reconcile"
+], fields: {
+    "balance": [
+        "Track all yarn still owned",
+        "Yarn remaining includes unused yarn plus yarn inside fabric not yet dispatched. Production does not reduce this balance. Confirmed dispatch deducts the yarn using the fabric’s linked costing."
+    ],
+    "yarn": [
+        "Count unused yarn + yarn in fabric",
+        "For this yarn: 80 kg unused + 20 kg in undispatched fabric = 100 kg owned. The 20 kg comes from 200 m × 10 kg / 100 m, using this fabric’s verified saved yarn formula. Repeat for each fabric and yarn."
+    ],
+    "opening": [
+        "Start with opening weight",
+        "The first weight entry starts tracking. Record existing yarn once per yarn with Opening weight. Use the costing’s yarn name and include yarn in undispatched fabric. Exclude already recorded receipts and yarn covered by legacy pending dispatches. Add a count reference, then Save."
+    ],
+    "receipt": [
+        "Add only the new receipt",
+        "Add yarn records newly received kilograms, not today’s total. Use the costing’s yarn name and a receipt reference: 100 kg opening + 20 kg received = 120 kg. Matching names share one balance across warp and weft."
+    ],
+    "link": [
+        "Link the right fabric costing",
+        "Choose this fabric quality’s saved costing version and check every yarn’s kg / 100 m. Save with a reason; relinking changes future deductions only. No compatible costing? Use Saved costing to open Cost Estimate, complete named warp and weft layers with calculated weights, save a fresh costing for the same quality, then return and link it."
+    ],
+    "movement": [
+        "Confirm dispatch to deduct yarn",
+        "Prepare the fabric’s costing link and enough stock for every required yarn before confirming in Dispatches. Here 100 m × 10 kg / 100 m deducts 10 kg: 120 − 10 = 110 kg. Production and dispatch drafts do not deduct yarn."
+    ],
+    "correction": [
+        "Correct the total still owned",
+        "Correct balance takes the verified total, including yarn in undispatched fabric. Enter 108 kg to replace 110 kg, not −2: saving records a −2 kg movement. Explain the count difference in the reason."
+    ],
+    "finish": [
+        "Check history, then prepare your next dispatch",
+        "Movement history shows signed changes and the balance after each entry; View dispatch opens the related document. Next, record any missing opening weights and receipts, then link every fabric’s costing before confirming your next dispatch in Dispatches. You can replay this tour."
+    ]
+} },
+gu: { ...configurationTutorialCopy.gu, sample: fabricStockTutorialCopy.gu.sample, sections: [
+    "માલિકીનું યાર્ન ગણો",
+    "વજન નોંધો",
+    "ડિસ્પેચ તૈયાર કરો",
+    "હિસાબ મેળવો"
+], fields: {
+    "balance": [
+        "માલિકીનું બધું બાકી યાર્ન",
+        "બાકી યાર્નમાં વણવપરાયેલું યાર્ન અને હજી મોકલાયું નથી તે કાપડનું યાર્ન સામેલ છે. ઉત્પાદનથી આ બેલેન્સ ઘટતું નથી. ડિસ્પેચની પુષ્ટિએ કાપડના જોડેલા કોસ્ટિંગ મુજબ યાર્ન કપાય છે."
+    ],
+    "yarn": [
+        "વણવપરાયેલું + કાપડમાં રહેલું યાર્ન",
+        "આ યાર્ન માટે: 80 કિલો વણવપરાયેલું + મોકલવાના બાકી કાપડમાં 20 કિલો = માલિકીના 100 કિલો. આ કાપડના ચકાસેલા સાચવેલા સૂત્ર મુજબ 200 મી × 10 કિલો / 100 મી = 20 કિલો. દરેક કાપડ અને યાર્ન માટે આમ ગણો."
+    ],
+    "opening": [
+        "શરૂઆતનું વજન નોંધો",
+        "પહેલી વજન નોંધથી ટ્રેકિંગ શરૂ થાય છે. શરૂઆતનું વજન વડે દરેક યાર્નનું હાલનું વજન એક વાર નોંધો. કોસ્ટિંગનું યાર્ન નામ વાપરો અને મોકલવાના બાકી કાપડનું યાર્ન ગણો. નોંધેલી આવક અને જૂના બાકી ડિસ્પેચનું યાર્ન છોડો. ગણતરીનો સંદર્ભ આપી સાચવો."
+    ],
+    "receipt": [
+        "માત્ર નવી આવક ઉમેરો",
+        "યાર્ન ઉમેરો વડે નવા મળેલા કિલો નોંધો, આજનું કુલ નહીં. કોસ્ટિંગનું યાર્ન નામ અને રસીદ સંદર્ભ વાપરો: 100 કિલો શરૂઆત + 20 કિલો આવક = 120 કિલો. એક નામના તાણા અને વાણાનું બેલેન્સ એક છે."
+    ],
+    "link": [
+        "યોગ્ય કાપડનું કોસ્ટિંગ જોડો",
+        "આ કાપડની ક્વોલિટીનું સાચવેલું કોસ્ટિંગ વર્ઝન પસંદ કરી દરેક યાર્નના કિલો / 100 મી તપાસો. કારણ આપી સાચવો; ફરી જોડવાથી માત્ર આગળની કપાત બદલાય. યોગ્ય કોસ્ટિંગ નથી? સાચવેલું કોસ્ટિંગથી ખર્ચ અંદાજ ખોલી નામવાળા તાણા અને વાણાના સ્તરો તથા ગણાયેલ વજન પૂર્ણ કરો, એ જ ક્વોલિટીનું નવું કોસ્ટિંગ સાચવો, પછી અહીં પાછા આવી જોડો."
+    ],
+    "movement": [
+        "ડિસ્પેચની પુષ્ટિએ યાર્ન કપાય",
+        "ડિસ્પેચમાં પુષ્ટિ પહેલાં કાપડનું કોસ્ટિંગ જોડો અને દરેક જરૂરી યાર્નનો પૂરતો સ્ટોક નોંધો. અહીં 100 મી × 10 કિલો / 100 મીથી 10 કિલો કપાય: 120 − 10 = 110 કિલો. ઉત્પાદન અને ડિસ્પેચ ડ્રાફ્ટથી યાર્ન કપાતું નથી."
+    ],
+    "correction": [
+        "માલિકીનું કુલ વજન સુધારો",
+        "બેલેન્સ સુધારોમાં મોકલવાના બાકી કાપડના યાર્ન સહિત ચકાસેલું કુલ વજન નાખો. 110 કિલોની જગ્યાએ 108 કિલો નાખો, −2 નહીં: સાચવવાથી −2 કિલોની નોંધ બને છે. ગણતરીના તફાવતનું કારણ લખો."
+    ],
+    "finish": [
+        "ઇતિહાસ તપાસી આગલો ડિસ્પેચ તૈયાર કરો",
+        "સ્ટોક ઇતિહાસમાં ચિહ્નવાળા ફેરફાર અને દરેક નોંધ પછીનું બેલેન્સ છે; ડિસ્પેચ જુઓ સંબંધિત દસ્તાવેજ ખોલે છે. હવે બાકી શરૂઆતનું વજન અને આવક નોંધો, દરેક કાપડનું કોસ્ટિંગ જોડો, પછી ડિસ્પેચમાં આગલા ડિસ્પેચની પુષ્ટિ કરો. ટૂર ફરી જોઈ શકો છો."
+    ]
+} },
+hi: { ...configurationTutorialCopy.hi, sample: fabricStockTutorialCopy.hi.sample, sections: [
+    "स्वामित्व का धागा गिनें",
+    "वजन दर्ज करें",
+    "डिस्पैच तैयार करें",
+    "हिसाब मिलाएँ"
+], fields: {
+    "balance": [
+        "स्वामित्व का सारा बचा धागा",
+        "शेष धागे में बचा हुआ धागा और भेजे नहीं गए कपड़े का धागा शामिल है। उत्पादन से यह शेष कम नहीं होता। डिस्पैच की पुष्टि पर कपड़े की जुड़ी लागत के अनुसार धागा घटता है।"
+    ],
+    "yarn": [
+        "बचा धागा + कपड़े में लगा धागा",
+        "इस धागे के लिए: 80 किलो बचा धागा + भेजे नहीं गए कपड़े में 20 किलो = स्वामित्व के 100 किलो। इस कपड़े के सत्यापित सहेजे सूत्र से 200 मी × 10 किलो / 100 मी = 20 किलो। हर कपड़े और धागे के लिए यही गणना करें।"
+    ],
+    "opening": [
+        "शुरुआती वजन दर्ज करें",
+        "पहली वजन प्रविष्टि से ट्रैकिंग शुरू होती है। शुरुआती वजन से हर धागे का मौजूदा वजन एक बार दर्ज करें। लागत वाला धागे का नाम रखें और भेजे नहीं गए कपड़े का धागा शामिल करें। दर्ज आवक और पुराने लंबित डिस्पैच का धागा छोड़ें। गिनती का संदर्भ देकर सहेजें।"
+    ],
+    "receipt": [
+        "केवल नई आवक जोड़ें",
+        "धागा जोड़ें से नए मिले किलो दर्ज करें, आज का कुल नहीं। लागत वाला धागे का नाम और रसीद संदर्भ रखें: 100 किलो शुरुआती + 20 किलो आवक = 120 किलो। एक नाम का ताना और बाना एक शेष साझा करते हैं।"
+    ],
+    "link": [
+        "सही कपड़े की लागत जोड़ें",
+        "इस कपड़े की क्वालिटी का सहेजा लागत संस्करण चुनकर हर धागे के किलो / 100 मी जाँचें। कारण देकर सहेजें; दोबारा जोड़ना केवल आगे की कटौती बदलता है। उपयुक्त लागत नहीं है? सहेजी लागत से लागत अनुमान खोलकर नाम वाले ताने और बाने की परतें और गणना किए वजन पूरे करें, उसी क्वालिटी की नई लागत सहेजें, फिर यहाँ लौटकर जोड़ें।"
+    ],
+    "movement": [
+        "डिस्पैच की पुष्टि पर धागा घटता है",
+        "डिस्पैच में पुष्टि से पहले कपड़े की लागत जोड़ें और हर आवश्यक धागे का पर्याप्त स्टॉक दर्ज करें। यहाँ 100 मी × 10 किलो / 100 मी से 10 किलो घटता है: 120 − 10 = 110 किलो। उत्पादन और डिस्पैच ड्राफ्ट धागा नहीं घटाते।"
+    ],
+    "correction": [
+        "स्वामित्व का कुल वजन सुधारें",
+        "शेष सुधारें में भेजे नहीं गए कपड़े के धागे सहित सत्यापित कुल डालें। 110 किलो की जगह 108 किलो डालें, −2 नहीं: सहेजने पर −2 किलो की प्रविष्टि बनती है। गिनती के अंतर का कारण लिखें।"
+    ],
+    "finish": [
+        "इतिहास जाँचकर अगला डिस्पैच तैयार करें",
+        "स्टॉक इतिहास में चिह्न वाले बदलाव और हर प्रविष्टि के बाद का शेष दिखता है; डिस्पैच देखें संबंधित दस्तावेज खोलता है। अब छूटे शुरुआती वजन और आवक दर्ज करें, हर कपड़े की लागत जोड़ें, फिर डिस्पैच में अगले डिस्पैच की पुष्टि करें। टूर फिर देख सकते हैं।"
+    ]
+} },
 }
+
+export const yarnStockTutorialHelp: Record<Language, Partial<Record<StockTourStep, readonly [string, string]>>> = {
+    "en": {
+        "yarn": [
+            "Which yarn weights should I count?",
+            "Use the verified saved formula that matches each undispatched fabric. Sum this yarn’s warp and weft kg / 100 m, multiply by that fabric’s remaining metres / 100, then add unused kilograms. Check the formula still matches the fabric if you have changed costing versions."
+        ],
+        "opening": [
+            "Entry details and legacy dispatches",
+            "Weights allow up to three decimals; reasons need at least three characters. Review legacy pending dispatch records before counting their yarn into opening weight. Do not count that yarn or recorded receipts twice. If opening is already recorded, use Add yarn for a new receipt or Correct balance for a verified total."
+        ],
+        "receipt": [
+            "What if saving is unconfirmed?",
+            "A receipt must be greater than zero. Keep the same details and retry an unconfirmed save before starting another entry, so you do not record the delivery twice."
+        ],
+        "link": [
+            "What is saved in the link?",
+            "Every warp and weft layer used must have a yarn name and positive calculated kg / 100 m in the saved costing. Review the weights including costing allowances. Linking fixes those weights here; relinking affects future dispatches only. Past deductions keep their original formula."
+        ],
+        "movement": [
+            "Read a movement or reversal",
+            "Balance after means the balance immediately after that entry, not necessarily today’s balance. View dispatch opens its document. A dispatch reversal appears as a separate movement."
+        ],
+        "correction": [
+            "If stock changes before you save",
+            "Refresh and review the latest balance before retrying a correction. Its reason and signed difference stay in Movement history. Count unused yarn and yarn in undispatched fabric together."
+        ],
+        "finish": [
+            "Dated balances, filters and CSV",
+            "Filter Movement history by yarn; a card’s History button selects it. Load more retrieves older entries for that filter and date. Audit date shows entries recorded through that day in India time, with editing controls hidden. Clear the date and choose View date to edit current stock. Dates before tracking are not opening counts. Export balances CSV contains displayed balances, total and tracking information, not movement history."
+        ]
+    },
+    "gu": {
+        "yarn": [
+            "કયા યાર્નનું વજન ગણવું?",
+            "મોકલવાના બાકી દરેક કાપડને મળતું ચકાસેલું સાચવેલું સૂત્ર વાપરો. આ યાર્નના તાણા અને વાણાના કિલો / 100 મી ઉમેરો, તે કાપડના બાકી મીટર / 100થી ગુણો અને વણવપરાયેલા કિલો ઉમેરો. કોસ્ટિંગ વર્ઝન બદલ્યું હોય તો સૂત્ર હજી કાપડ સાથે મળે છે તે તપાસો."
+        ],
+        "opening": [
+            "નોંધની વિગતો અને જૂના ડિસ્પેચ",
+            "વજનમાં ત્રણ દશાંશ સુધી અને કારણમાં ઓછામાં ઓછા ત્રણ અક્ષર રાખો. શરૂઆતમાં યાર્ન ગણતાં પહેલાં જૂના બાકી ડિસ્પેચની નોંધો તપાસો. તે યાર્ન કે નોંધેલી આવક બે વાર ન ગણો. શરૂઆત નોંધાઈ હોય તો નવી આવક માટે યાર્ન ઉમેરો અથવા ચકાસેલા કુલ માટે બેલેન્સ સુધારો વાપરો."
+        ],
+        "receipt": [
+            "સાચવવાની પુષ્ટિ ન થાય તો?",
+            "આવક શૂન્યથી વધુ હોવી જોઈએ. સાચવવાની પુષ્ટિ ન હોય તો નવી નોંધ કરતાં પહેલાં એ જ વિગતો રાખીને ફરી પ્રયાસ કરો, જેથી એક જ આવક બે વાર ન નોંધાય."
+        ],
+        "link": [
+            "લિંકમાં શું સાચવાય છે?",
+            "સાચવેલા કોસ્ટિંગમાં વપરાતા તાણા અને વાણાના દરેક સ્તરનું યાર્ન નામ અને શૂન્યથી વધુ ગણાયેલ કિલો / 100 મી જરૂરી છે. કોસ્ટિંગના ભથ્થાં સહિત વજન તપાસો. જોડેલું વજન અહીં સ્થિર રહે છે; ફરી જોડવાથી માત્ર આગળના ડિસ્પેચ બદલાય. જૂની કપાતમાં જૂનું સૂત્ર રહે છે."
+        ],
+        "movement": [
+            "હિલચાલ કે પરતની નોંધ વાંચો",
+            "નોંધ પછી બેલેન્સ એટલે તે નોંધ પછી તરતનું બેલેન્સ, જરૂરી નથી કે આજનું હોય. ડિસ્પેચ જુઓ તેનો દસ્તાવેજ ખોલે છે. ડિસ્પેચ પરતની અલગ નોંધ થાય છે."
+        ],
+        "correction": [
+            "સાચવતાં પહેલાં સ્ટોક બદલાય તો",
+            "સુધારો ફરી કરતાં પહેલાં રિફ્રેશ કરીને નવું બેલેન્સ તપાસો. કારણ અને ચિહ્નવાળો તફાવત સ્ટોક ઇતિહાસમાં રહે છે. વણવપરાયેલું અને મોકલવાના બાકી કાપડનું યાર્ન સાથે ગણો."
+        ],
+        "finish": [
+            "તારીખનું બેલેન્સ, ફિલ્ટર અને CSV",
+            "સ્ટોક ઇતિહાસ યાર્નથી ગાળો; કાર્ડનું સ્ટોક ઇતિહાસ તે યાર્ન પસંદ કરે છે. વધુ જુઓ એ જ તારીખ અને ફિલ્ટરની જૂની નોંધો લાવે છે. ઓડિટ તારીખ ભારતીય સમય મુજબ તે દિવસ સુધી નોંધાયેલ હિલચાલ બતાવે છે અને ફેરફારનાં નિયંત્રણો છુપાવે છે. હાલનો સ્ટોક સુધારવા તારીખ ખાલી કરી તારીખ જુઓ પસંદ કરો. ટ્રેકિંગ પહેલાંની તારીખ શરૂઆતની ગણતરી નથી. બેલેન્સ CSVમાં દેખાતાં બેલેન્સ, કુલ અને ટ્રેકિંગ વિગતો છે, હિલચાલ ઇતિહાસ નહીં."
+        ]
+    },
+    "hi": {
+        "yarn": [
+            "किस धागे का वजन गिनें?",
+            "भेजे नहीं गए हर कपड़े से मेल खाता सत्यापित सहेजा सूत्र इस्तेमाल करें। इस धागे के ताने और बाने के किलो / 100 मी जोड़ें, उस कपड़े के बचे मीटर / 100 से गुणा करें, फिर बचे हुए धागे के किलो जोड़ें। लागत संस्करण बदला हो तो जाँचें कि सूत्र अब भी कपड़े से मेल खाता है।"
+        ],
+        "opening": [
+            "प्रविष्टि के विवरण और पुराने डिस्पैच",
+            "वजन में तीन दशमलव तक और कारण में कम से कम तीन अक्षर रखें। शुरुआती वजन में धागा गिनने से पहले पुराने लंबित डिस्पैच की प्रविष्टियाँ जाँचें। वह धागा या दर्ज आवक दो बार न गिनें। शुरुआत दर्ज हो तो नई आवक के लिए धागा जोड़ें या सत्यापित कुल के लिए शेष सुधारें इस्तेमाल करें।"
+        ],
+        "receipt": [
+            "सहेजने की पुष्टि न हो तो?",
+            "आवक शून्य से अधिक होनी चाहिए। सहेजने की पुष्टि न हो तो नई प्रविष्टि शुरू करने से पहले उन्हीं विवरणों से दोबारा प्रयास करें, ताकि एक ही आवक दो बार दर्ज न हो।"
+        ],
+        "link": [
+            "जोड़ने पर क्या सहेजता है?",
+            "सहेजी लागत में इस्तेमाल हर ताने और बाने की परत का धागे का नाम और शून्य से अधिक गणना किए किलो / 100 मी जरूरी हैं। लागत के भत्तों सहित वजन जाँचें। जोड़ने पर वजन यहाँ स्थिर रहता है; दोबारा जोड़ना केवल आगे के डिस्पैच पर लागू होता है। पुरानी कटौतियाँ अपना मूल सूत्र रखती हैं।"
+        ],
+        "movement": [
+            "गतिविधि या वापसी पढ़ें",
+            "प्रविष्टि के बाद शेष उस प्रविष्टि के तुरंत बाद का शेष है, जरूरी नहीं आज का हो। डिस्पैच देखें उसका दस्तावेज खोलता है। डिस्पैच वापसी अलग प्रविष्टि के रूप में दिखती है।"
+        ],
+        "correction": [
+            "सहेजने से पहले स्टॉक बदले तो",
+            "सुधार दोबारा करने से पहले रीफ़्रेश करके नया शेष जाँचें। कारण और चिह्न वाला अंतर स्टॉक इतिहास में रहते हैं। बचा हुआ धागा और भेजे नहीं गए कपड़े का धागा साथ गिनें।"
+        ],
+        "finish": [
+            "तारीख का शेष, फ़िल्टर और CSV",
+            "स्टॉक इतिहास को धागे से छाँटें; कार्ड का स्टॉक इतिहास वही धागा चुनता है। और देखें उसी तारीख और फ़िल्टर की पुरानी प्रविष्टियाँ लाता है। ऑडिट तारीख भारतीय समय के अनुसार उस दिन तक दर्ज गतिविधियाँ दिखाती है और बदलाव के नियंत्रण छिपाती है। वर्तमान स्टॉक बदलने के लिए तारीख खाली करके तारीख देखें चुनें। ट्रैकिंग से पहले की तारीख शुरुआती गिनती नहीं है। शेष CSV में दिखते शेष, कुल और ट्रैकिंग विवरण हैं, गतिविधि इतिहास नहीं।"
+        ]
+    }
+}
+
 export const stockTutorialCopy: Record<StockTourKind, Record<Language, StockTutorialCopy>> = { 'fabric-stock': fabricStockTutorialCopy, 'yarn-stock': yarnStockTutorialCopy }

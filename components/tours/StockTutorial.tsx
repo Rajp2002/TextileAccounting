@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import { createPortal } from 'react-dom'
 import { Button } from '@/components/ui/button'
 import { useTranslation } from '@/lib/i18n/context'
-import { stockTutorialCopy, fabricStockTutorialHelp } from '@/lib/i18n/stock-tutorial'
+import { stockTutorialCopy, fabricStockTutorialHelp, yarnStockTutorialHelp } from '@/lib/i18n/stock-tutorial'
 import { stockTourSelector, stockTourSteps, stockTourSection, type StockTourStep, type StockTourKind } from '@/lib/stock-tour'
 import { findTourTarget } from '@/lib/tutorial-target'
 import { lockTourViewport } from '@/lib/tutorial-viewport-lock'
@@ -20,6 +20,14 @@ function FabricStockHelp({ help }: { help: readonly [string, string] }) {
     </div>
 }
 
+function YarnStockHelp({ help }: { help: readonly [string, string] }) {
+    const [expanded, setExpanded] = useState(false)
+    return <div className="mt-3 border-t border-hairline pt-3">
+        <button type="button" className="text-left text-sm font-semibold text-saffron-deep underline" aria-expanded={expanded} aria-controls="yarn-stock-tour-help" onClick={() => setExpanded(value => !value)}>{help[0]}</button>
+        {expanded && <p id="yarn-stock-tour-help" className="mt-2 text-sm leading-relaxed">{help[1]}</p>}
+    </div>
+}
+
 export default function StockTutorial({ step, onStepChange, launcher, userId, kind, returnScroll }: {
     kind: StockTourKind
     step: StockTourStep
@@ -31,6 +39,7 @@ export default function StockTutorial({ step, onStepChange, launcher, userId, ki
     const { language } = useTranslation()
     const copy = stockTutorialCopy[kind][language]
     const help = kind === 'fabric-stock' ? fabricStockTutorialHelp[language][step] : undefined
+    const yarnHelp = kind === 'yarn-stock' ? yarnStockTutorialHelp[language][step] : undefined
     const steps = stockTourSteps(kind)
     const sections = [...new Set(steps.map(step => stockTourSection(step, kind)))]
     const index = steps.indexOf(step)
@@ -146,6 +155,7 @@ export default function StockTutorial({ step, onStepChange, launcher, userId, ki
                     <h2 id="stock-tour-title" className="mt-3 text-lg font-bold">{copy.fields[step]![0]}</h2>
                     <p id="stock-tour-description" className="mt-3 text-sm leading-relaxed">{copy.fields[step]![1]}</p>
                     {help && <FabricStockHelp key={step} help={help} />}
+                    {yarnHelp && <YarnStockHelp key={step} help={yarnHelp} />}
                 </div>
                 <div role="progressbar" aria-label={copy.progress} aria-valuenow={index + 1} aria-valuemin={1} aria-valuemax={steps.length} className="mt-4 h-1.5 rounded-full bg-amber-100"><div className="h-full rounded-full bg-saffron" style={{ width: `${(index + 1) / steps.length * 100}%` }} /></div>
                 <div className="guided-tour-controls mt-3 flex items-center justify-between gap-1">

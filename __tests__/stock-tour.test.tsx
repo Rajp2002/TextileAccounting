@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
 import fs from 'node:fs'
 import { stockTourSteps, stockTourSection, fabricStockExample, yarnStockExample, fabricStockTourSteps, type StockTourKind } from '../lib/stock-tour'
-import { stockTutorialCopy, fabricStockTutorialHelp, fabricStockPreviewCopy } from '../lib/i18n/stock-tutorial'
+import { stockTutorialCopy, fabricStockTutorialHelp, fabricStockPreviewCopy, yarnStockTutorialHelp } from '../lib/i18n/stock-tutorial'
 import { isTourEligible } from '../lib/tours/tour-registry'
 const locale = vi.hoisted(() => ({ language: 'en' as 'en' | 'gu' | 'hi' }))
 vi.mock('@/lib/i18n/context', () => ({ useTranslation: () => ({ language: locale.language, t: (text: string) => text }) }))
@@ -16,6 +16,7 @@ vi.mock('@/components/ui/dialog', () => {
     const Container = ({ children }: { children: React.ReactNode }) => <div>{children}</div>
     return { Dialog: Container, DialogContent: Container, DialogDescription: Container, DialogHeader: Container, DialogTitle: Container }
 })
+import { yarnStockText } from '../lib/i18n/yarn-stock'
 import StockTourPreview from '../components/stock/StockTourPreview'
 import StockTutorial from '../components/tours/StockTutorial'
 const kinds: StockTourKind[] = ['fabric-stock', 'yarn-stock']
@@ -137,10 +138,84 @@ it('yarn examples reconcile receipt and dispatch quantities', () => {
     expect(s.dispatchedMetres / 100 * s.kgPer100).toBe(s.deduction)
     expect(s.opening + s.receipt - s.deduction).toBe(s.balance)
 })
-it('historical yarn previews hide mutation controls', () => {
-    const html = renderToStaticMarkup(<StockTourPreview kind="yarn-stock" step="historical" />)
-    expect(html).not.toContain('data-stock-tour="formulas"')
-    expect(html).not.toContain('Add yarn')
-    expect(html).not.toContain('Correct balance')
-    expect(html).toContain('100 kg')
+describe('refined yarn workflow', () => {
+    it('keeps the ownership count, stock changes and dispatch prerequisite in the core path', () => {
+        expect(stockTourSteps('yarn-stock')).toEqual(['balance', 'yarn', 'opening', 'receipt', 'link', 'movement', 'correction', 'finish'])
+        const s = yarnStockExample
+        expect(s.warpKgPer100 + s.weftKgPer100).toBe(s.kgPer100)
+        expect(s.undispatchedMetres / 100 * s.kgPer100).toBe(s.embodied)
+        expect(s.unused + s.embodied).toBe(s.opening)
+        expect(s.counted - s.balance).toBe(-2)
+    })
+    for (const language of ['en', 'gu', 'hi'] as const) it(`${language}: renders all core targets safely and preserves optional audit guidance`, () => {
+        locale.language = language
+        try {
+            for (const step of stockTourSteps('yarn-stock')) {
+                const html = renderToStaticMarkup(<StockTourPreview kind="yarn-stock" step={step} />)
+                expect(html.match(new RegExp(`data-stock-tour="${step}"`, 'g'))).toHaveLength(1)
+                expect(html).toContain(`lang="${language}"`)
+                expect(html).not.toMatch(/<(form|a)\b/)
+                for (const tag of html.match(/<(button|input|select|textarea)\b[^>]*>/g) ?? []) expect(tag).toContain('disabled=""')
+                expect(stockTutorialCopy['yarn-stock'][language].sections[stockTourSection(step, 'yarn-stock')]).toBeTruthy()
+            }
+            const help = yarnStockTutorialHelp[language]
+            expect(Object.keys(help)).toEqual(Object.keys(yarnStockTutorialHelp.en))
+            for (const [step, field] of Object.entries(help)) {
+                expect(stockTourSteps('yarn-stock')).toContain(step)
+                expect(field.every(value => value.trim().length > 0)).toBe(true)
+                if (language !== 'en') expect(field[1]).toMatch(language === 'gu' ? /[\u0a80-\u0aff]/ : /[\u0900-\u097f]/)
+            }
+            expect(help.finish![1]).toContain('CSV')
+            const html = renderToStaticMarkup(<StockTourPreview kind="yarn-stock" step="link" />)
+            expect(html).toContain(yarnStockText[language].noCostings)
+            expect(html).toContain('v2')
+        } finally { locale.language = 'en' }
+    })
+    it('renders optional help collapsed inside the Yarn tour panel only', () => {
+        vi.stubGlobal('document', { body: {} })
+        try {
+            for (const language of ['en', 'gu', 'hi'] as const) {
+                locale.language = language
+                for (const step of stockTourSteps('yarn-stock')) {
+                    const html = renderToStaticMarkup(<StockTutorial kind="yarn-stock" step={step} onStepChange={() => {}} launcher={{ current: null }} returnScroll={{ current: { x: 0, y: 0 } }} />)
+                    expect(html).toContain('aria-valuemax="8"')
+                    const help = yarnStockTutorialHelp[language][step]
+                    if (help) {
+                        expect(html).toContain('aria-expanded="false"')
+                        expect(html).toContain('aria-controls="yarn-stock-tour-help"')
+                        expect(html).toContain(help[0].replaceAll('&', '&amp;').replaceAll("'", '&#x27;'))
+                        expect(html).not.toContain(help[1])
+                    }
+                }
+            }
+            const fabric = renderToStaticMarkup(<StockTutorial kind="fabric-stock" step="opening" onStepChange={() => {}} launcher={{ current: null }} returnScroll={{ current: { x: 0, y: 0 } }} />)
+            expect(fabric).not.toContain('yarn-stock-tour-help')
+        } finally { locale.language = 'en'; vi.unstubAllGlobals() }
+    })
+    it('shows the worked ownership count and absolute correction in the preview', () => {
+        const owned = renderToStaticMarkup(<StockTourPreview kind="yarn-stock" step="yarn" />)
+        expect(owned).toContain('Unused yarn: 80 kg')
+        expect(owned).toContain('Yarn in undispatched fabric: 20 kg')
+        expect(owned).toContain('80 + 20 = 100 kg')
+        expect(owned).toContain('200 m × 10 kg / 100m = 20 kg')
+        const correction = renderToStaticMarkup(<StockTourPreview kind="yarn-stock" step="correction" />)
+        expect(correction).toContain('value="108"')
+        expect(correction).toContain('110 → 108 kg (-2 kg)')
+        const history = renderToStaticMarkup(<StockTourPreview kind="yarn-stock" step="finish" />)
+        expect(history).toContain('Correct balance · -2 kg · Balance after: 108 kg')
+        expect(history).toContain('Verified count')
+    })
+    it('keeps critical qualifications and recoverable actions discoverable', () => {
+        const copy = stockTutorialCopy['yarn-stock'].en.fields
+        expect(copy.opening![1]).toContain('legacy pending dispatches')
+        expect(copy.link![1]).toContain('Cost Estimate')
+        expect(copy.link![1]).toContain('same quality')
+        expect(copy.movement![1]).toContain('every required yarn')
+        expect(copy.finish![1]).toContain('before confirming')
+        const help = yarnStockTutorialHelp.en
+        expect(help.link![1]).toContain('Past deductions keep their original formula')
+        expect(help.receipt![1]).toContain('retry an unconfirmed save')
+        expect(help.finish![1]).toContain('Clear the date and choose View date')
+        expect(help.finish![1]).toContain('not movement history')
+    })
 })
