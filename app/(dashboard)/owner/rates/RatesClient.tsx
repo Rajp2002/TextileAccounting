@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { RateBookTutorial } from '@/components/rates/RateBookTutorial'
-import { RateBookTutorialLauncher } from '@/components/rates/RateBookTutorial'
+import { RateBookHelp, RateBookTutorialLauncher } from '@/components/rates/RateBookTutorial'
+import { rateBookTutorialCopy } from '@/lib/i18n/rate-book-tutorial'
 import { toast, userFacingError } from '@/lib/app-notifications'
 import {
     AlertTriangle,
@@ -823,7 +824,8 @@ function RateReviewRailWidget({
 }
 
 function RateBookReferenceCard() {
-    const { tx } = useTranslation()
+    const { tx, language } = useTranslation()
+    const copy = rateBookTutorialCopy[language] ?? rateBookTutorialCopy.en
     return (
         <Card className="border-hairline bg-surface/90 shadow-sm backdrop-blur-xs">
             <CardContent className="p-4 space-y-3">
@@ -831,19 +833,13 @@ function RateBookReferenceCard() {
                     <BookOpen className="h-4 w-4 text-saffron" aria-hidden="true" />
                     <span>{tx('Rate Book Principles')}</span>
                 </div>
-                <ul className="space-y-2 text-xs text-body leading-relaxed">
-                    <li className="flex items-start gap-2">
-                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-saffron" aria-hidden="true" />
-                        <span><strong className="font-semibold text-ink">{tx('Future Estimates:')}</strong> {tx('Confirmed rates apply to all newly created quotes automatically.')}</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-saffron" aria-hidden="true" />
-                        <span><strong className="font-semibold text-ink">{tx('Audit Integrity:')}</strong> {tx('Saved quality recipes and finalized costings stay unchanged.')}</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-saffron" aria-hidden="true" />
-                        <span><strong className="font-semibold text-ink">{tx('Auto-Discovery:')}</strong> {tx('Imported qualities flag new yarn rates for verification.')}</span>
-                    </li>
+                <ul data-i18n-skip="true" lang={language} className="space-y-2 text-xs text-body leading-relaxed">
+                    {copy.principles.map(principle => (
+                        <li key={principle} className="flex items-start gap-2">
+                            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-saffron" aria-hidden="true" />
+                            <span>{principle}</span>
+                        </li>
+                    ))}
                 </ul>
             </CardContent>
         </Card>
@@ -964,27 +960,9 @@ export default function RatesClient({
     const [isPending, startTransition] = useTransition()
     const [pendingAction, setPendingAction] = useState<PendingRateAction | null>(null)
 
-    const prepareTutorial = useCallback(() => {
-        setSearchQuery('')
-        setCategoryFilter('all')
-        setStatusFilter('all')
-        setShowArchived(false)
-    }, [])
-
-
-    const handleOpenRateDrawerFromTour = useCallback((open: boolean) => {
-        if (open) {
-            setSaveError(null)
-            setDraft(defaultDraft(defaultReviewIntervalDays))
-        } else {
-            setDraft(null)
-            setSaveError(null)
-        }
-    }, [defaultReviewIntervalDays])
-
     useEffect(() => {
         function handleKeyDown(event: KeyboardEvent) {
-            if (event.ctrlKey || event.metaKey || event.altKey) return
+            if (isTutorialActive || event.ctrlKey || event.metaKey || event.altKey) return
 
             const activeElement = document.activeElement
             const isInputFocused =
@@ -1014,7 +992,7 @@ export default function RatesClient({
 
         window.addEventListener('keydown', handleKeyDown)
         return () => window.removeEventListener('keydown', handleKeyDown)
-    }, [draft, showDueReviews, historyRate, reviewRate, archiveRate, deleteRate, showConflicts, quickEditRate, searchQuery])
+    }, [draft, showDueReviews, historyRate, reviewRate, archiveRate, deleteRate, showConflicts, quickEditRate, searchQuery, isTutorialActive])
 
     useEffect(() => {
         let cancelled = false
@@ -1096,22 +1074,6 @@ export default function RatesClient({
         }),
         [filteredRates, showArchived],
     )
-
-    const handleOpenQuickEditFromTour = useCallback((open: boolean) => {
-        if (open) {
-            const target = visibleRates.find(r => r.is_active !== false) ?? visibleRates[0] ?? activeYarnRates[0] ?? rates[0] ?? null
-            if (target) {
-                setQuickEditIsMobile(false)
-                setQuickEditRate(target)
-                setQuickEditValue(target.current_value)
-                setQuickEditSource(target.source ?? '')
-                setQuickEditError(null)
-            }
-        } else {
-            setQuickEditRate(null)
-            setQuickEditIsMobile(false)
-        }
-    }, [visibleRates, activeYarnRates, rates])
 
     const resultMotionKey = `${categoryFilter}|${statusFilter}|${showArchived ? 'archived' : 'active'}|${searchQuery.trim()}|${visibleRates.length}`
     const selectedCategoryLabel = categoryFilter === 'all' ? 'All' : categoryFilter === 'yarn_warp' ? 'Warp' : 'Weft'
@@ -1545,9 +1507,6 @@ export default function RatesClient({
                     orgId={orgId}
                     userId={userId}
                     requestTrigger={tutorialTrigger}
-                    onPrepare={prepareTutorial}
-                    onOpenQuickEdit={handleOpenQuickEditFromTour}
-                    onOpenRateDrawer={handleOpenRateDrawerFromTour}
                     onActiveChange={setIsTutorialActive}
                     onTourFinish={() => {
                         if (!demoYarnDeleted && rates.some(r => r.id === DEMO_YARN_RATE.id)) {
@@ -1569,7 +1528,7 @@ export default function RatesClient({
             <div className="min-[1540px]:hidden">
                 <ArchivePolicyNotice />
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1" data-ratebook-field="overview">
                 <PageHeader
                     icon={Tags}
                     title={t('common.yarn_rate_book')}
@@ -1600,6 +1559,8 @@ export default function RatesClient({
                     )}
                 />
             </div>
+
+            <RateBookHelp />
 
             {showDeleteNudge && !demoYarnDeleted && rates.some(r => r.id === DEMO_YARN_RATE.id) && (
                 <div
@@ -2043,7 +2004,7 @@ export default function RatesClient({
                                                     <p className="truncate font-bold text-ink">{rate.name}</p>
                                                     <p className="mt-1 text-xs text-subtle">{COST_RATE_CATEGORY_LABELS[rate.category]} {archived && '· Archived'}</p>
                                                 </div>
-                                                {archived ? <StatusBadge status="archived" className="text-[10px]" /> : <ReviewBadge rate={rate} compact />}
+                                                <div data-ratebook-field="reviewStatusBadge">{archived ? <StatusBadge status="archived" className="text-[10px]" /> : <ReviewBadge rate={rate} compact />}</div>
                                             </div>
 
                                             <div className="mt-3.5 flex items-baseline justify-between gap-3 border-y border-hairline/70 py-2.5">
@@ -2058,7 +2019,7 @@ export default function RatesClient({
                                                 )}
                                             </div>
 
-                                            <div className="mt-3 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-subtle">
+                                            <div data-ratebook-field="linkedQualitiesPopover" className="mt-3 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-subtle">
                                                 <span>Effective {formatDateOnly(rate.effective_date, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                                                 <span aria-hidden="true">·</span>
                                                 {usageNames.length ? (

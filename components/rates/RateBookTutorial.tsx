@@ -10,6 +10,7 @@ import { findTourTarget, isTourTargetVisible } from '@/lib/tutorial-target'
 import { useMobileTour } from '@/hooks/use-mobile-tour'
 import { useTourViewportLock } from '@/hooks/use-tour-viewport-lock'
 import { TourInvitation } from '@/components/tours/TourInvitation'
+import { RATE_BOOK_TOUR_STEPS, RATE_BOOK_HELP_FIELDS, formatRateBookTourText } from '@/lib/rate-book-tour'
 
 export type RatebookStep = {
     section: number
@@ -19,35 +20,6 @@ export type RatebookStep = {
     inSheet?: boolean
     inPopover?: boolean
 }
-
-const ORDERED_STEPS: { section: number; field: RatebookTutorialField; inSheet?: boolean; inPopover?: boolean }[] = [
-    // Section 0: Search & filters
-    { section: 0, field: 'yarnSearch' },
-    { section: 0, field: 'directionFilter' },
-    { section: 0, field: 'needsReviewFilter' },
-    { section: 0, field: 'confirmAll' },
-
-    // Section 1: Yarn rate row (separate section before row steps)
-    { section: 1, field: 'yarnRow' },
-
-    // Section 2: Rate details & trends
-    { section: 2, field: 'yarnNameCell' },
-    { section: 2, field: 'rateAndTrend' },
-    { section: 2, field: 'reviewStatusBadge' },
-    { section: 2, field: 'linkedQualitiesPopover' },
-
-    // Section 3: Fast inline actions
-    { section: 3, field: 'quickReviewAction' },
-    { section: 3, field: 'quickEditAction' },
-    { section: 3, field: 'quickEditPopover', inPopover: true },
-
-    // Section 4: Full rate editor
-    { section: 4, field: 'addRateAction' },
-    { section: 4, field: 'rateDrawerFields', inSheet: true },
-
-    // Section 5: Review rail
-    { section: 5, field: 'reviewRailWidget' },
-]
 
 function resolveStepElements(step: RatebookStep): { target: HTMLElement | null; card: HTMLElement | null } {
     let target = isTourTargetVisible(step.target) ? step.target : null
@@ -95,15 +67,30 @@ export function RateBookTutorialLauncher({
     )
 }
 
+export function RateBookHelp() {
+    const { language, tx } = useTranslation()
+    const copy = rateBookTutorialCopy[language] ?? rateBookTutorialCopy.en
+    return (
+        <details data-i18n-skip="true" lang={language} className="rounded-xl border border-hairline bg-surface p-4 text-sm">
+            <summary className="cursor-pointer font-semibold text-ink">{copy.helpTitle}</summary>
+            <div className="mt-3 space-y-3">
+                {RATE_BOOK_HELP_FIELDS.map(field => (
+                    <details key={field} className="rounded-lg bg-surface-soft p-3">
+                        <summary className="cursor-pointer font-medium text-ink">{formatRateBookTourText(copy.fields[field].title, tx)}</summary>
+                        <p className="mt-2 text-sm leading-relaxed text-body">{formatRateBookTourText(copy.fields[field].description, tx)}</p>
+                    </details>
+                ))}
+            </div>
+        </details>
+    )
+}
+
 export function RateBookTutorial({
     accountDismissed,
     enabled,
     orgId,
     userId,
     requestTrigger,
-    onPrepare,
-    onOpenQuickEdit,
-    onOpenRateDrawer,
     onActiveChange,
     onTourFinish,
 }: {
@@ -112,13 +99,10 @@ export function RateBookTutorial({
     orgId: string
     userId: string
     requestTrigger?: number
-    onPrepare?: () => void
-    onOpenQuickEdit?: (open: boolean) => void
-    onOpenRateDrawer?: (open: boolean) => void
     onActiveChange?: (active: boolean) => void
     onTourFinish?: () => void
 }) {
-    const { language, languageStatus } = useTranslation()
+    const { language, languageStatus, tx } = useTranslation()
     const copy = rateBookTutorialCopy[language] ?? rateBookTutorialCopy.en
     const [steps, setSteps] = useState<RatebookStep[]>([])
     const [index, setIndex] = useState(0)
@@ -181,55 +165,17 @@ export function RateBookTutorial({
         onActiveChange?.(isTutorialActive)
     }, [isTutorialActive, onActiveChange])
 
-    // Step preparation & collecting elements
+    // Explicit launch only. Keep every core lesson even if its target is absent.
+    // This walkthrough never opens an editor or changes the user's filters/data.
     useEffect(() => {
         if (!requested || !enabled || languageStatus === 'loading') return
-        onPrepare?.()
-        const timer = window.setTimeout(() => {
-            const root = document.querySelector('[data-ratebook-tutorial-root]')
-            if (!root) { setRequested(false); return }
+        setIndex(0)
+        setSteps(RATE_BOOK_TOUR_STEPS.map(item => ({ ...item, target: null, card: null })))
+        setRequested(false)
+    }, [requested, enabled, languageStatus])
 
-            const next: RatebookStep[] = ORDERED_STEPS.filter(item => {
-                if (item.inSheet) return Boolean(onOpenRateDrawer)
-                if (item.inPopover) return Boolean(onOpenQuickEdit && findTourTarget('[data-ratebook-field="quickEditAction"]'))
-                return Boolean(findTourTarget(`[data-ratebook-field="${item.field}"]`))
-            }).map(item => ({
-                section: item.section,
-                card: null,
-                target: null,
-                field: item.field,
-                inSheet: item.inSheet,
-                inPopover: item.inPopover,
-            }))
-
-            setIndex(0)
-            setSteps(next)
-            setRequested(false)
-        }, 120)
-        return () => window.clearTimeout(timer)
-    }, [requested, enabled, onPrepare, languageStatus, onOpenRateDrawer, onOpenQuickEdit])
-
-    // Orchestrating modal/popover/drawer states
-    const isPopoverStep = active?.field === 'quickEditPopover'
-    const isSheetStep = active?.field === 'rateDrawerFields'
-
-    useEffect(() => {
-        if (!active) {
-            onOpenQuickEdit?.(false)
-            onOpenRateDrawer?.(false)
-            return
-        }
-        if (isPopoverStep) {
-            onOpenQuickEdit?.(true)
-            onOpenRateDrawer?.(false)
-        } else if (isSheetStep) {
-            onOpenRateDrawer?.(true)
-            onOpenQuickEdit?.(false)
-        } else {
-            onOpenQuickEdit?.(false)
-            onOpenRateDrawer?.(false)
-        }
-    }, [active, isPopoverStep, isSheetStep, onOpenQuickEdit, onOpenRateDrawer])
+    const isPopoverStep = Boolean(active?.inPopover)
+    const isSheetStep = Boolean(active?.inSheet)
 
     const close = useCallback(() => {
         dismissed.current = true
@@ -240,26 +186,17 @@ export function RateBookTutorial({
         setPanelPlacement('top-right')
         setSteps([])
         setRects(null)
-        onOpenQuickEdit?.(false)
-        onOpenRateDrawer?.(false)
-        onTourFinish?.()
-        if (typeof document !== 'undefined') {
-            Array.from(document.body.children).forEach(el => {
-                if (el instanceof HTMLElement && el.inert) {
-                    el.inert = false
-                }
-            })
-        }
-    }, [key, syncDismissal, onOpenQuickEdit, onOpenRateDrawer, onTourFinish])
+    }, [key, syncDismissal])
 
     const handleNext = useCallback(() => {
         if (!steps.length) return
         if (index === steps.length - 1) {
             close()
+            onTourFinish?.()
         } else {
             setIndex(i => Math.min(steps.length - 1, i + 1))
         }
-    }, [close, index, steps.length])
+    }, [close, index, steps.length, onTourFinish])
 
     const handleBack = useCallback(() => {
         setIndex(i => Math.max(0, i - 1))
@@ -686,10 +623,10 @@ export function RateBookTutorial({
                                     <span className="text-xs font-semibold text-[var(--color-ink)]/75">· {copy.sections[active.section]}</span>
                                 </div>
                                 <h2 id="ratebook-tour-title" className="mt-3 text-base sm:text-[17px] font-bold tracking-tight text-[var(--color-ink)] leading-snug sm:leading-[1.4]">
-                                    {copy.fields[active.field]?.title}
+                                    {formatRateBookTourText(copy.fields[active.field].title, tx)}
                                 </h2>
                                 <p id="ratebook-tour-description" className="mt-3 text-xs sm:text-[13.5px] leading-relaxed sm:leading-[1.72] text-[var(--color-ink)]/90">
-                                    {copy.fields[active.field]?.description}
+                                    {formatRateBookTourText(copy.fields[active.field].description, tx)}
                                 </p>
                             </div>
                         </div>
