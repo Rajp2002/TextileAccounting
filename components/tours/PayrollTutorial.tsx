@@ -5,23 +5,25 @@ import { createPortal } from 'react-dom'
 import { Button } from '@/components/ui/button'
 import { useTranslation } from '@/lib/i18n/context'
 import { payrollTutorialCopy } from '@/lib/i18n/payroll-tutorial'
-import { payrollTourSelector, payrollTourSteps, payrollTourSection, type PayrollTourStep, type PayrollTourVariant } from '@/lib/payroll-tour'
+import { payrollTourSelector, payrollTourSteps, payrollTourSection, type PayrollTourStep, type PayrollTourVariant, type PayrollTourTrack } from '@/lib/payroll-tour'
 import { findTourTarget } from '@/lib/tutorial-target'
 import { lockTourViewport } from '@/lib/tutorial-viewport-lock'
 import { useMobileTour } from '@/hooks/use-mobile-tour'
 import { persistTourCompleted } from '@/lib/tours/tour-preferences'
 
-export default function PayrollTutorial({ step, onStepChange, launcher, userId, variant, returnScroll }: {
+export default function PayrollTutorial({ step, onStepChange, launcher, userId, variant, track, returnFocus, returnScroll }: {
     step: PayrollTourStep
     onStepChange: (step: PayrollTourStep | null) => void
     launcher: RefObject<HTMLDivElement | null>
     userId?: string
     variant: PayrollTourVariant
+    track: PayrollTourTrack
+    returnFocus: RefObject<HTMLElement | null>
     returnScroll: RefObject<{ x: number; y: number }>
 }) {
     const { language } = useTranslation()
     const copy = payrollTutorialCopy[language]
-    const steps = payrollTourSteps(variant)
+    const steps = payrollTourSteps(variant, track)
     const sections = [...new Set(steps.map(payrollTourSection))]
     const index = steps.indexOf(step)
     const panel = useRef<HTMLDivElement>(null)
@@ -35,7 +37,7 @@ export default function PayrollTutorial({ step, onStepChange, launcher, userId, 
     const close = () => onStepChange(null)
     const next = () => {
         if (index === steps.length - 1) {
-            void persistTourCompleted('payroll', userId)
+            if (track === 'core') void persistTourCompleted('payroll', userId)
             close()
         } else onStepChange(steps[index + 1])
     }
@@ -45,7 +47,8 @@ export default function PayrollTutorial({ step, onStepChange, launcher, userId, 
 
     useEffect(() => {
         if (!panel.current) return
-        const trigger = launcher.current?.querySelector<HTMLButtonElement>('[data-tour-control="take-tour"], [data-tour-control="quiet-tour"]')
+        const launchElement = returnFocus.current
+        const launcherContainer = launcher.current
         const scroll = returnScroll.current
         const previous = new Map<HTMLElement, boolean>()
         const makeInert = () => {
@@ -94,9 +97,10 @@ export default function PayrollTutorial({ step, onStepChange, launcher, userId, 
             document.removeEventListener('focusin', focus, true)
             previous.forEach((inert, element) => { element.inert = inert })
             window.scrollTo({ left: scroll.x, top: scroll.y, behavior: 'instant' })
+            const trigger = launchElement?.isConnected ? launchElement : launcherContainer?.querySelector<HTMLButtonElement>('[data-tour-control="take-tour"], [data-tour-control="quiet-tour"]')
             trigger?.focus({ preventScroll: true })
         }
-    }, [launcher, returnScroll])
+    }, [launcher, returnFocus, returnScroll])
 
     useEffect(() => {
         if (mobile.mobile) return
