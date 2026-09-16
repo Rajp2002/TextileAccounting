@@ -5,22 +5,23 @@ import { createPortal } from 'react-dom'
 import { Button } from '@/components/ui/button'
 import { useTranslation } from '@/lib/i18n/context'
 import { productionTutorialCopy } from '@/lib/i18n/production-tutorial'
-import { productionTourSelector, productionTourSteps, productionTourSection, type ProductionTourStep } from '@/lib/production-tour'
+import { productionTourSelector, productionTourSequence, productionTourSection, type ProductionTourStep } from '@/lib/production-tour'
 import { findTourTarget } from '@/lib/tutorial-target'
 import { lockTourViewport } from '@/lib/tutorial-viewport-lock'
 import { useMobileTour } from '@/hooks/use-mobile-tour'
 import { persistTourCompleted } from '@/lib/tours/tour-preferences'
 
-export default function ProductionTutorial({ step, onStepChange, launcher, userId, returnScroll }: {
+export default function ProductionTutorial({ step, onStepChange, launcher, returnFocus, userId, returnScroll }: {
     step: ProductionTourStep
     onStepChange: (step: ProductionTourStep | null) => void
     launcher: RefObject<HTMLDivElement | null>
+    returnFocus: RefObject<HTMLButtonElement | null>
     userId?: string
     returnScroll: RefObject<{ x: number; y: number }>
 }) {
     const { language } = useTranslation()
     const copy = productionTutorialCopy[language]
-    const steps = productionTourSteps
+    const steps = productionTourSequence(step)
     const sections = [...new Set(steps.map(productionTourSection))]
     const index = steps.indexOf(step)
     const panel = useRef<HTMLDivElement>(null)
@@ -34,7 +35,7 @@ export default function ProductionTutorial({ step, onStepChange, launcher, userI
     const close = () => onStepChange(null)
     const next = () => {
         if (index === steps.length - 1) {
-            void persistTourCompleted('production', userId)
+            if (step === 'finish') void persistTourCompleted('production', userId)
             close()
         } else onStepChange(steps[index + 1])
     }
@@ -44,7 +45,8 @@ export default function ProductionTutorial({ step, onStepChange, launcher, userI
 
     useEffect(() => {
         if (!panel.current) return
-        const trigger = launcher.current?.querySelector<HTMLButtonElement>('[data-tour-control="take-tour"], [data-tour-control="quiet-tour"]')
+        const launcherElement = launcher.current
+        const trigger = returnFocus.current ?? launcherElement?.querySelector<HTMLButtonElement>('[data-tour-control="take-tour"], [data-tour-control="quiet-tour"]')
         const scroll = returnScroll.current
         const previous = new Map<HTMLElement, boolean>()
         const makeInert = () => {
@@ -93,9 +95,10 @@ export default function ProductionTutorial({ step, onStepChange, launcher, userI
             document.removeEventListener('focusin', focus, true)
             previous.forEach((inert, element) => { element.inert = inert })
             window.scrollTo({ left: scroll.x, top: scroll.y, behavior: 'instant' })
-            trigger?.focus({ preventScroll: true })
+            const focusTarget = trigger?.isConnected ? trigger : launcherElement?.querySelector<HTMLButtonElement>('[data-tour-control="take-tour"], [data-tour-control="quiet-tour"]')
+            focusTarget?.focus({ preventScroll: true })
         }
-    }, [launcher, returnScroll])
+    }, [launcher, returnFocus, returnScroll])
 
     useEffect(() => {
         if (mobile.mobile) return

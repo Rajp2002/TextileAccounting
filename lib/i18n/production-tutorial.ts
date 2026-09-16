@@ -1,104 +1,72 @@
 import type { Language } from './context'
 import type { ProductionTourStep } from '../production-tour'
 import { configurationTutorialCopy } from './configuration-tutorial'
-type ProductionCopy = { sample: string; sections: string[]; fields: Record<ProductionTourStep, readonly [string, string]>; skip: string; back: string; next: string; finish: string; progress: string }
+type ProductionCopy = { sample: string; details: string; sections: string[]; fields: Record<ProductionTourStep, readonly [string, string]>; skip: string; back: string; next: string; finish: string; progress: string }
 export const productionTutorialCopy: Record<Language, ProductionCopy> = {
-en: { ...configurationTutorialCopy.en, sample: "Sample preview · your production is unchanged", sections: ["Production overview", "Activate a quality", "Allocate and manage looms", "Record a shift", "Review and save", "History and corrections"], fields: {
+en: { ...configurationTutorialCopy.en, sample: "Sample preview · your production is unchanged", sections: ["Prepare", "Record", "Manage setup", "History & corrections"], details: "Setup, history & corrections", fields: {
   "overview": [
-    "Your production workspace",
-    "Start with a saved costing, activate its quality, allocate looms, then record machine metres for each shift."
-  ],
-  "tabs": [
-    "Two production views",
-    "Overview & Looms manages qualities and loom setup. Daily Sheet records output and shows recent production."
-  ],
-  "qualities": [
-    "Active qualities",
-    "Each card identifies a production quality, its costing version, weaver wage and assigned looms."
+    "Turn shift output into stock and earnings",
+    "Record each loom’s shift output once. A saved shift adds fabric stock and worker earnings; Payroll handles payment. This sample leaves your real work unchanged."
   ],
   "activate": [
-    "Activate a saved quality",
-    "Open Activate Quality to choose an existing saved costing. This preview does not create a production job."
-  ],
-  "costing": [
-    "Choose the costing version",
-    "Search saved qualities and check the version before activation. Create and maintain the costing in Saved Costings."
-  ],
-  "wage": [
-    "Check the weaver wage",
-    "The quality’s weaver wage is used for machine production earnings. It is different from the fabric production cost per metre."
+    "Choose the quality and wage",
+    "In Overview & Looms → Activate Quality, check the costing version and Weaver wage before choosing Activate. Our sample uses ₹2/m for worker pay; the ₹40/m production cost is a different figure."
   ],
   "allocate": [
-    "Assign looms to the quality",
-    "Select the looms that should produce this quality. Existing worker–machine assignments remain unchanged."
+    "Connect the quality to its looms",
+    "Choose Assign Looms on the active quality, select available looms, then confirm the allocation. A loom needs an active quality before its output can be recorded."
   ],
   "loomStates": [
     "Understand loom availability",
     "Available looms can be selected. Currently assigned looms already use this quality. Looms producing another quality are disabled here; use Switch Quality on the loom board."
   ],
   "board": [
-    "Read the loom board",
-    "Each loom shows its current quality and operators. Running here means a quality is assigned, not a live measurement of machine activity."
-  ],
-  "filters": [
-    "Find a loom",
-    "Search by loom or worker and use All, Running or Available to narrow the board."
+    "Find a loom and check its setup",
+    "Running means a quality is assigned, not a live reading of machine activity. Search by loom or worker; All, Running and Available filter the board. Check the quality and each shift’s operator."
   ],
   "operators": [
-    "Check the shift operators",
-    "Review day and night operators separately. A machine needs a worker and production job before output can be allocated correctly."
+    "Connect an operator for each shift",
+    "Open Manage Workers on the loom, choose Day Shift or Night Shift, then Assign the operator. Machine Assignments also manages these connections. Check the quality and operator before entering output."
   ],
   "switchQuality": [
-    "Switch quality on a loom",
-    "Choose another active quality. The loom’s operator assignments remain unchanged. This preview does not switch a real loom."
+    "Move a loom to another quality version",
+    "First activate the required costing version in Overview & Looms → Activate Quality. Then choose it in Switch Quality on the loom. Operators stay assigned; previously saved sheets keep their original quality and wage."
   ],
   "deactivate": [
     "Deactivate a quality",
     "Deactivation stops this quality on its assigned looms. Worker–machine assignments and historical production remain intact."
   ],
-  "daily": [
-    "Open the Daily Sheet",
-    "Record production by machine, then review the automatically calculated worker totals."
-  ],
   "date": [
-    "Choose the production date",
-    "Check the date before entering readings. Saved sheets show their historical worker, quality and wage snapshots."
-  ],
-  "shift": [
-    "Choose the shift",
-    "Day and night have separate sheets. Confirm the shift and its assigned workers before entering metres."
+    "Choose the sheet to record",
+    "Open Daily Sheet and check Date and Shift first. Day and night have separate sheets and operators; saved sheets retain the workers, quality and wage used at that time."
   ],
   "print": [
     "Collect readings on paper",
     "Print collection sheet prepares a paper register for the selected date and shift. The tour does not open printing or download a file."
   ],
   "reading": [
-    "Enter machine metres",
-    "Enter each machine’s output against its worker and quality. Enter or the down arrow moves to the next machine in the live sheet."
+    "Enter this shift’s output",
+    "For the sample loom and operator, enter 120 m produced during this shift. Use shift output, not a cumulative meter reading. Enter or the down arrow moves to the next machine."
   ],
   "pending": [
-    "Blank means pending",
-    "A blank reading remains pending, even after an incomplete save. Show pending helps find machines still awaiting readings."
-  ],
-  "notRunning": [
-    "Zero means not running",
-    "Enter 0 or use Not running to account for a stopped machine. Clear it to return to a pending reading."
+    "Decide: pending or stopped?",
+    "Leave a reading blank only when it is still pending. Enter 0 or choose Not running for a stopped loom. Clearing 0 makes it pending again; Show pending finds unfinished readings."
   ],
   "rollup": [
-    "Review worker earnings",
-    "Worker totals combine machine output at the applicable weaver rates. Here, 120 m × ₹2/m = ₹240."
+    "Check the worker’s earnings",
+    "120 m × ₹2/m Weaver wage = ₹240 in gross earnings. Review the worker roll-up before saving. Payroll then applies advances and other adjustments before payment."
   ],
   "workerStatus": [
     "Zero output and absence",
     "Worker statuses include Not entered, Produced, Zero output and Absent / no production. Use zero or absent only when that worker has no production for the shift."
   ],
   "draft": [
-    "A draft is not submitted",
-    "Draft saved on this device preserves local work. It is not a saved production shift. Discard draft removes local changes."
+    "A local draft is not a saved shift",
+    "Draft saved on this device keeps unfinished work locally. It has not updated stock or payroll. Discard draft removes those local edits; Save machine production submits the shift."
   ],
   "save": [
-    "Review before saving",
-    "Check accounted machines, pending readings and total metres. Save machine production submits the shift and updates production earnings."
+    "Submit the checked shift",
+    "Review metres and pending rows, then use Save machine production. These 120 m add 120 m to Fabric Stock and ₹240 to gross earnings. Blank rows stay pending even if you choose Save incomplete shift."
   ],
   "incomplete": [
     "Saving an incomplete shift",
@@ -106,121 +74,93 @@ en: { ...configurationTutorialCopy.en, sample: "Sample preview · your productio
   ],
   "history": [
     "Find recent production",
-    "Search saved history by date, worker, machine or job. Older worker-only records may have no machine breakdown."
+    "In Daily Sheet, search Recent production by date, worker, machine or job, then choose View log. Older worker-only records may have no machine breakdown."
   ],
   "saved": [
     "Saved shifts and paid entries",
     "Saved sheets start locked. Edit production log unlocks eligible corrections; paid worker entries remain protected. If every worker is settled, the sheet stays protected."
   ],
   "correction": [
-    "Explain a correction",
-    "Enter a reason before unlocking a saved shift. Corrections can change metres and pay. Editing locks again after saving; protected paid entries cannot be changed."
+    "Give a correction reason",
+    "Use Edit production log and enter a reason to unlock eligible rows. Correcting 120 m to 125 m adds 5 m to stock and ₹10 to earnings. Saving locks the sheet again; paid entries stay protected."
   ],
   "audit": [
-    "Review the audit trail",
-    "The audit trail keeps the original save and each correction, including who changed it, the reason, and before-and-after metres, rates and earnings."
+    "Review before and after",
+    "The audit trail keeps the original save and each correction: who changed it, why, and the metres, rates and earnings before and after. Finish returns to your work; replay this walkthrough beside the main tour."
   ],
   "finish": [
-    "Ready to record production",
-    "Activate a quality, allocate looms and operators, record the right date and shift, then review and save. Replay this tour whenever needed."
+    "Take the next real action",
+    "After Finish, complete missing setup or open Daily Sheet to record a shift. After saving, check Fabric Stock and settle earnings in Payroll. Replay Setup, history & corrections beside the tour for later changes."
+  ],
+  "prerequisites": [
+    "Prepare missing records first",
+    "Create a saved costing in Cost Estimator; check its version in Saved Costings. Add operators in Workers and looms in Machines. Then return here to connect the quality, loom and operator."
   ]
 }},
-gu: { ...configurationTutorialCopy.gu, sample: "નમૂનો · તમારું ઉત્પાદન બદલાતું નથી", sections: ["ઉત્પાદન ઝાંખી", "ક્વોલિટી સક્રિય કરો", "લૂમ ફાળવણી", "શિફ્ટ નોંધો", "તપાસો અને સાચવો", "ઇતિહાસ અને સુધારા"], fields: {
+gu: { ...configurationTutorialCopy.gu, sample: "નમૂનો · તમારું ઉત્પાદન બદલાતું નથી", sections: ["તૈયારી", "ઉત્પાદન નોંધો", "સેટઅપ સંભાળો", "ઇતિહાસ અને સુધારા"], details: "સેટઅપ, ઇતિહાસ અને સુધારા", fields: {
   "overview": [
-    "તમારું ઉત્પાદન કાર્યસ્થળ",
-    "સાચવેલા કોસ્ટિંગથી શરૂ કરો, ક્વોલિટી સક્રિય કરો, લૂમ ફાળવો અને દરેક શિફ્ટના મશીન મીટર નોંધો."
-  ],
-  "tabs": [
-    "ઉત્પાદનના બે દૃશ્યો",
-    "Overview & Looms માં ક્વોલિટી અને લૂમ ગોઠવો. Daily Sheet માં ઉત્પાદન નોંધો અને તાજેતરના રેકોર્ડ જુઓ."
-  ],
-  "qualities": [
-    "સક્રિય ક્વોલિટી",
-    "દરેક કાર્ડમાં ક્વોલિટી, કોસ્ટિંગ વર્ઝન, વણકર મજૂરી અને ફાળવેલા લૂમ દેખાય છે."
+    "શિફ્ટના ઉત્પાદનથી સ્ટોક અને કમાણી",
+    "દરેક લૂમનું શિફ્ટ ઉત્પાદન એક વાર નોંધો. સાચવેલી શિફ્ટથી કાપડનો સ્ટોક અને કારીગરની કમાણી વધે છે; ચુકવણી Payroll માં થાય છે. આ નમૂનો તમારું વાસ્તવિક કામ બદલતો નથી."
   ],
   "activate": [
-    "સાચવેલી ક્વોલિટી સક્રિય કરો",
-    "Activate Quality ખોલીને સાચવેલું કોસ્ટિંગ પસંદ કરો. આ નમૂનો વાસ્તવિક ઉત્પાદન જોબ બનાવતો નથી."
-  ],
-  "costing": [
-    "કોસ્ટિંગ વર્ઝન પસંદ કરો",
-    "સાચવેલી ક્વોલિટી શોધો અને સક્રિય કરતાં પહેલાં વર્ઝન તપાસો. કોસ્ટિંગ Saved Costings માં બનાવો અને સંભાળો."
-  ],
-  "wage": [
-    "વણકર મજૂરી તપાસો",
-    "ક્વોલિટીની વણકર મજૂરીથી મશીન ઉત્પાદનની કમાણી ગણાય છે. આ કાપડના પ્રતિ મીટર ઉત્પાદન ખર્ચથી અલગ છે."
+    "ક્વોલિટી અને મજૂરી પસંદ કરો",
+    "Overview & Looms → Activate Quality માં કોસ્ટિંગ વર્ઝન અને Weaver wage તપાસીને Activate પસંદ કરો. નમૂનામાં કારીગરની મજૂરી ₹2/મી છે; ₹40/મી ઉત્પાદન ખર્ચ અલગ છે."
   ],
   "allocate": [
-    "ક્વોલિટીને લૂમ ફાળવો",
-    "આ ક્વોલિટી બનાવવા માટેના લૂમ પસંદ કરો. હાલની કારીગર–મશીન ફાળવણી યથાવત રહે છે."
+    "ક્વોલિટીને લૂમ સાથે જોડો",
+    "સક્રિય ક્વોલિટી પર Assign Looms પસંદ કરો, ઉપલબ્ધ લૂમ પસંદ કરીને ફાળવણીની પુષ્ટિ કરો. ઉત્પાદન નોંધવા લૂમ સાથે સક્રિય ક્વોલિટી જોડાયેલી હોવી જરૂરી છે."
   ],
   "loomStates": [
     "લૂમની ઉપલબ્ધતા સમજો",
     "ખાલી લૂમ પસંદ કરી શકાય છે. હાલમાં ફાળવેલા લૂમ આ ક્વોલિટી ચલાવે છે. બીજી ક્વોલિટી બનાવતા લૂમ અહીં પસંદ થતા નથી; બોર્ડ પર Switch Quality વાપરો."
   ],
   "board": [
-    "લૂમ બોર્ડ વાંચો",
-    "દરેક લૂમની ક્વોલિટી અને ઓપરેટર જુઓ. અહીં Running એટલે ક્વોલિટી ફાળવેલી છે, મશીન ખરેખર ચાલે છે તેનું જીવંત માપ નથી."
-  ],
-  "filters": [
-    "લૂમ શોધો",
-    "લૂમ અથવા કારીગરથી શોધો અને All, Running અથવા Available ફિલ્ટર વાપરો."
+    "લૂમ શોધીને સેટઅપ તપાસો",
+    "Running એટલે ક્વોલિટી ફાળવેલી છે, મશીન ચાલે છે તેનું જીવંત માપ નહીં. લૂમ કે કારીગરથી શોધો; All, Running અને Available થી બોર્ડ ફિલ્ટર કરો. ક્વોલિટી અને દરેક શિફ્ટનો ઓપરેટર તપાસો."
   ],
   "operators": [
-    "શિફ્ટના ઓપરેટર તપાસો",
-    "દિવસ અને રાતના ઓપરેટર અલગથી તપાસો. ઉત્પાદન યોગ્ય રીતે ફાળવવા મશીનને કારીગર અને ઉત્પાદન જોબ જરૂરી છે."
+    "દરેક શિફ્ટનો ઓપરેટર જોડો",
+    "લૂમ પર Manage Workers ખોલો, Day Shift અથવા Night Shift પસંદ કરીને ઓપરેટર માટે Assign કરો. Machine Assignments માં પણ આ જોડાણ સંભાળી શકાય છે. ઉત્પાદન પહેલાં ક્વોલિટી અને ઓપરેટર તપાસો."
   ],
   "switchQuality": [
-    "લૂમની ક્વોલિટી બદલો",
-    "બીજી સક્રિય ક્વોલિટી પસંદ કરો. ઓપરેટર ફાળવણી યથાવત રહે છે. આ નમૂનો વાસ્તવિક લૂમ બદલતો નથી."
+    "લૂમ પર ક્વોલિટીનું વર્ઝન બદલો",
+    "પહેલાં Overview & Looms → Activate Quality માં જરૂરી કોસ્ટિંગ વર્ઝન સક્રિય કરો. પછી લૂમ પર Switch Quality માં તેને પસંદ કરો. ઓપરેટર ફાળવણી રહે છે; જૂની સાચવેલી શીટમાં મૂળ ક્વોલિટી અને મજૂરી રહે છે."
   ],
   "deactivate": [
     "ક્વોલિટી નિષ્ક્રિય કરો",
     "નિષ્ક્રિય કરવાથી તેના લૂમ પર આ ક્વોલિટીનું ઉત્પાદન બંધ થાય છે. કારીગર ફાળવણી અને જૂના રેકોર્ડ યથાવત રહે છે."
   ],
-  "daily": [
-    "દૈનિક શીટ ખોલો",
-    "મશીન પ્રમાણે ઉત્પાદન નોંધો અને આપમેળે ગણાયેલા કારીગરના કુલ આંકડા તપાસો."
-  ],
   "date": [
-    "ઉત્પાદનની તારીખ પસંદ કરો",
-    "રીડિંગ પહેલાં તારીખ તપાસો. સાચવેલી શીટમાં તે સમયના કારીગર, ક્વોલિટી અને મજૂરી દેખાય છે."
-  ],
-  "shift": [
-    "શિફ્ટ પસંદ કરો",
-    "દિવસ અને રાતની અલગ શીટ છે. મીટર નોંધતાં પહેલાં શિફ્ટ અને તેના કારીગર તપાસો."
+    "નોંધવાની શીટ પસંદ કરો",
+    "Daily Sheet ખોલીને પહેલાં Date અને Shift તપાસો. દિવસ અને રાતની શીટ અને ઓપરેટર અલગ છે; સાચવેલી શીટમાં તે સમયના કારીગર, ક્વોલિટી અને મજૂરી રહે છે."
   ],
   "print": [
     "કાગળ પર રીડિંગ એકત્ર કરો",
     "Print collection sheet પસંદ કરેલી તારીખ અને શિફ્ટનું કાગળનું રજીસ્ટર તૈયાર કરે છે. ટૂરમાં પ્રિન્ટ કે ડાઉનલોડ થતું નથી."
   ],
   "reading": [
-    "મશીન મીટર નોંધો",
-    "મશીનના કારીગર અને ક્વોલિટી સામે ઉત્પાદન નોંધો. વાસ્તવિક શીટમાં Enter અથવા નીચેનો તીર આગલા મશીન પર લઈ જાય છે."
+    "આ શિફ્ટનું ઉત્પાદન નોંધો",
+    "નમૂનાના લૂમ અને ઓપરેટર માટે આ શિફ્ટમાં બનેલા 120 મી નોંધો. શિફ્ટનું ઉત્પાદન લખો, મીટરનું સંચિત રીડિંગ નહીં. Enter અથવા નીચેનો તીર આગલા મશીન પર લઈ જાય છે."
   ],
   "pending": [
-    "ખાલી એટલે બાકી",
-    "અધૂરી શીટ સાચવ્યા પછી પણ ખાલી રીડિંગ બાકી રહે છે. Show pending થી બાકી મશીનો શોધો."
-  ],
-  "notRunning": [
-    "શૂન્ય એટલે મશીન બંધ",
-    "બંધ મશીન માટે 0 નાખો અથવા Not running વાપરો. તેને સાફ કરવાથી રીડિંગ ફરી બાકી થાય છે."
+    "બાકી છે કે લૂમ બંધ છે?",
+    "રીડિંગ બાકી હોય ત્યારે જ ખાલી રાખો. બંધ લૂમ માટે 0 નાખો અથવા Not running પસંદ કરો. 0 સાફ કરવાથી ફરી બાકી થાય છે; Show pending થી અધૂરી નોંધો શોધો."
   ],
   "rollup": [
     "કારીગરની કમાણી તપાસો",
-    "મશીન ઉત્પાદન અને લાગુ વણકર દરથી કુલ કમાણી ગણાય છે. અહીં 120 મી × ₹2/મી = ₹240."
+    "120 મી × ₹2/મી Weaver wage = ₹240 કુલ કમાણી. સાચવતાં પહેલાં કારીગરના કુલ આંકડા તપાસો. Payroll માં ચુકવણી પહેલાં એડવાન્સ અને અન્ય ફેરફારો લાગુ પડે છે."
   ],
   "workerStatus": [
     "શૂન્ય ઉત્પાદન અને ગેરહાજરી",
     "કારીગર સ્થિતિમાં નોંધ્યું નથી, ઉત્પાદન થયું, શૂન્ય ઉત્પાદન અને ગેરહાજર સામેલ છે. શિફ્ટમાં ઉત્પાદન ન હોય ત્યારે જ શૂન્ય કે ગેરહાજર વાપરો."
   ],
   "draft": [
-    "ડ્રાફ્ટ સબમિટ થયેલો નથી",
-    "આ ઉપકરણ પર સાચવેલો ડ્રાફ્ટ સ્થાનિક કામ રાખે છે; તે સાચવેલી ઉત્પાદન શિફ્ટ નથી. Discard draft સ્થાનિક ફેરફારો દૂર કરે છે."
+    "સ્થાનિક ડ્રાફ્ટ સાચવેલી શિફ્ટ નથી",
+    "Draft saved on this device અધૂરું કામ આ ઉપકરણ પર રાખે છે. સ્ટોક કે પગાર હજી અપડેટ થયા નથી. Discard draft સ્થાનિક ફેરફારો દૂર કરે છે; Save machine production શિફ્ટ સબમિટ કરે છે."
   ],
   "save": [
-    "સાચવતાં પહેલાં તપાસો",
-    "ગણાયેલા મશીનો, બાકી રીડિંગ અને કુલ મીટર તપાસો. Save machine production શિફ્ટ સબમિટ કરીને કમાણી અપડેટ કરે છે."
+    "તપાસેલી શિફ્ટ સબમિટ કરો",
+    "મીટર અને બાકી પંક્તિઓ તપાસીને Save machine production કરો. આ 120 મીથી Fabric Stock માં 120 મી અને કુલ કમાણીમાં ₹240 ઉમેરાય છે. Save incomplete shift કર્યા પછી પણ ખાલી પંક્તિઓ બાકી રહે છે."
   ],
   "incomplete": [
     "અધૂરી શિફ્ટ સાચવવી",
@@ -228,7 +168,7 @@ gu: { ...configurationTutorialCopy.gu, sample: "નમૂનો · તમાર�
   ],
   "history": [
     "તાજેતરનું ઉત્પાદન શોધો",
-    "તારીખ, કારીગર, મશીન અથવા જોબથી ઇતિહાસ શોધો. જૂના કારીગર આધારિત રેકોર્ડમાં મશીન વિભાજન ન હોઈ શકે."
+    "Daily Sheet માં Recent production ને તારીખ, કારીગર, મશીન અથવા જોબથી શોધીને View log પસંદ કરો. જૂના કારીગર આધારિત રેકોર્ડમાં મશીન વિભાજન ન હોઈ શકે."
   ],
   "saved": [
     "સાચવેલી શિફ્ટ અને ચૂકવેલ એન્ટ્રી",
@@ -236,113 +176,85 @@ gu: { ...configurationTutorialCopy.gu, sample: "નમૂનો · તમાર�
   ],
   "correction": [
     "સુધારાનું કારણ આપો",
-    "શીટ ખોલતાં પહેલાં કારણ લખો. સુધારાથી મીટર અને પગાર બદલાઈ શકે છે. સાચવ્યા પછી ફરી લૉક થાય છે; ચૂકવેલ સુરક્ષિત એન્ટ્રી બદલાતી નથી."
+    "Edit production log માં કારણ આપીને મંજૂર પંક્તિઓ ખોલો. 120 મીને 125 મી કરવાથી સ્ટોકમાં 5 મી અને કમાણીમાં ₹10 ઉમેરાય છે. સાચવતાં શીટ ફરી લૉક થાય છે; ચૂકવેલી એન્ટ્રી સુરક્ષિત રહે છે."
   ],
   "audit": [
-    "ઓડિટ ઇતિહાસ તપાસો",
-    "મૂળ નોંધ અને દરેક સુધારો રહે છે: કોણે બદલ્યું, કારણ અને પહેલાં તથા પછીના મીટર, દર અને કમાણી."
+    "પહેલાં અને પછીના આંકડા તપાસો",
+    "ઓડિટ ઇતિહાસમાં મૂળ નોંધ અને દરેક સુધારો રહે છે: કોણે, શા માટે બદલ્યું અને પહેલાં તથા પછીના મીટર, દર અને કમાણી. Finish થી તમારા કામ પર પાછા જાઓ; મુખ્ય ટૂર પાસે આ માર્ગદર્શન ફરી જુઓ."
   ],
   "finish": [
-    "ઉત્પાદન નોંધવા તૈયાર",
-    "ક્વોલિટી સક્રિય કરો, લૂમ અને ઓપરેટર ફાળવો, યોગ્ય તારીખ અને શિફ્ટ નોંધો, તપાસીને સાચવો. જરૂર પડે ત્યારે ટૂર ફરી જુઓ."
+    "હવે વાસ્તવિક કામ શરૂ કરો",
+    "Finish પછી બાકી સેટઅપ પૂરું કરો અથવા શિફ્ટ નોંધવા Daily Sheet ખોલો. સાચવ્યા પછી Fabric Stock તપાસો અને Payroll માં ચુકવણી કરો. પછીના ફેરફારો માટે ટૂર પાસે સેટઅપ, ઇતિહાસ અને સુધારા ફરી જુઓ."
+  ],
+  "prerequisites": [
+    "પહેલાં જરૂરી રેકોર્ડ બનાવો",
+    "Cost Estimator માં કોસ્ટિંગ સાચવો; Saved Costings માં તેનું વર્ઝન તપાસો. Workers માં ઓપરેટર અને Machines માં લૂમ ઉમેરો. પછી અહીં આવી ક્વોલિટી, લૂમ અને ઓપરેટરને જોડો."
   ]
 }},
-hi: { ...configurationTutorialCopy.hi, sample: "नमूना · आपका उत्पादन नहीं बदलता", sections: ["उत्पादन अवलोकन", "क्वालिटी सक्रिय करें", "लूम आवंटन", "शिफ्ट दर्ज करें", "जाँचें और सहेजें", "इतिहास और सुधार"], fields: {
+hi: { ...configurationTutorialCopy.hi, sample: "नमूना · आपका उत्पादन नहीं बदलता", sections: ["तैयारी", "उत्पादन दर्ज करें", "सेटअप सँभालें", "इतिहास और सुधार"], details: "सेटअप, इतिहास और सुधार", fields: {
   "overview": [
-    "आपका उत्पादन कार्यस्थल",
-    "सहेजी गई लागत से शुरू करें, क्वालिटी सक्रिय करें, लूम आवंटित करें और हर शिफ्ट के मशीन मीटर दर्ज करें।"
-  ],
-  "tabs": [
-    "उत्पादन के दो दृश्य",
-    "Overview & Looms में क्वालिटी और लूम सेटअप सँभालें। Daily Sheet में उत्पादन दर्ज करें और हाल के रिकॉर्ड देखें।"
-  ],
-  "qualities": [
-    "सक्रिय क्वालिटी",
-    "हर कार्ड क्वालिटी, लागत संस्करण, बुनकर मजदूरी और आवंटित लूम दिखाता है।"
+    "शिफ्ट के उत्पादन से स्टॉक और कमाई",
+    "हर लूम का शिफ्ट उत्पादन एक बार दर्ज करें। सहेजी शिफ्ट से कपड़े का स्टॉक और कारीगर की कमाई बढ़ती है; भुगतान Payroll में होता है। यह नमूना आपका असली काम नहीं बदलता।"
   ],
   "activate": [
-    "सहेजी क्वालिटी सक्रिय करें",
-    "Activate Quality खोलकर सहेजी हुई लागत चुनें। यह नमूना असली उत्पादन जॉब नहीं बनाता।"
-  ],
-  "costing": [
-    "लागत संस्करण चुनें",
-    "सहेजी क्वालिटी खोजें और सक्रिय करने से पहले संस्करण जाँचें। लागत Saved Costings में बनाएँ और सँभालें।"
-  ],
-  "wage": [
-    "बुनकर मजदूरी जाँचें",
-    "क्वालिटी की बुनकर मजदूरी से मशीन उत्पादन की कमाई निकलती है। यह कपड़े की प्रति मीटर उत्पादन लागत से अलग है।"
+    "क्वालिटी और मजदूरी चुनें",
+    "Overview & Looms → Activate Quality में लागत संस्करण और Weaver wage जाँचकर Activate चुनें। नमूने में कारीगर की मजदूरी ₹2/मी है; ₹40/मी उत्पादन लागत अलग है।"
   ],
   "allocate": [
-    "क्वालिटी को लूम आवंटित करें",
-    "इस क्वालिटी को बनाने वाले लूम चुनें। मौजूदा कारीगर–मशीन आवंटन बना रहता है।"
+    "क्वालिटी को लूम से जोड़ें",
+    "सक्रिय क्वालिटी पर Assign Looms चुनें, उपलब्ध लूम चुनकर आवंटन की पुष्टि करें। उत्पादन दर्ज करने के लिए लूम से सक्रिय क्वालिटी जुड़ी होनी चाहिए।"
   ],
   "loomStates": [
     "लूम उपलब्धता समझें",
     "खाली लूम चुन सकते हैं। वर्तमान आवंटित लूम इसी क्वालिटी पर हैं। दूसरी क्वालिटी बनाने वाले लूम यहाँ नहीं चुन सकते; बोर्ड पर Switch Quality इस्तेमाल करें।"
   ],
   "board": [
-    "लूम बोर्ड पढ़ें",
-    "हर लूम की क्वालिटी और ऑपरेटर देखें। यहाँ Running का अर्थ क्वालिटी आवंटित होना है, मशीन चलने का लाइव माप नहीं।"
-  ],
-  "filters": [
-    "लूम खोजें",
-    "लूम या कारीगर से खोजें और All, Running या Available फ़िल्टर लगाएँ।"
+    "लूम खोजकर सेटअप जाँचें",
+    "Running मतलब क्वालिटी आवंटित है, मशीन चलने का लाइव माप नहीं। लूम या कारीगर से खोजें; All, Running और Available से बोर्ड फ़िल्टर करें। क्वालिटी और हर शिफ्ट का ऑपरेटर जाँचें।"
   ],
   "operators": [
-    "शिफ्ट ऑपरेटर जाँचें",
-    "दिन और रात के ऑपरेटर अलग जाँचें। उत्पादन सही आवंटित होने के लिए मशीन को कारीगर और उत्पादन जॉब चाहिए।"
+    "हर शिफ्ट का ऑपरेटर जोड़ें",
+    "लूम पर Manage Workers खोलें, Day Shift या Night Shift चुनकर ऑपरेटर के लिए Assign करें। Machine Assignments में भी ये संबंध सँभाल सकते हैं। उत्पादन से पहले क्वालिटी और ऑपरेटर जाँचें।"
   ],
   "switchQuality": [
-    "लूम की क्वालिटी बदलें",
-    "दूसरी सक्रिय क्वालिटी चुनें। ऑपरेटर आवंटन बना रहता है। यह नमूना असली लूम नहीं बदलता।"
+    "लूम पर क्वालिटी का संस्करण बदलें",
+    "पहले Overview & Looms → Activate Quality में जरूरी लागत संस्करण सक्रिय करें। फिर लूम पर Switch Quality में उसे चुनें। ऑपरेटर आवंटन बना रहता है; पुरानी सहेजी शीट में मूल क्वालिटी और मजदूरी रहती है।"
   ],
   "deactivate": [
     "क्वालिटी निष्क्रिय करें",
     "निष्क्रिय करने से उसके लूम पर यह क्वालिटी बनना बंद होता है। कारीगर आवंटन और पुराने उत्पादन रिकॉर्ड बने रहते हैं।"
   ],
-  "daily": [
-    "दैनिक शीट खोलें",
-    "मशीन के अनुसार उत्पादन दर्ज करें, फिर अपने आप निकले कारीगर कुल जाँचें।"
-  ],
   "date": [
-    "उत्पादन तारीख चुनें",
-    "रीडिंग से पहले तारीख जाँचें। सहेजी शीट उस समय के कारीगर, क्वालिटी और मजदूरी दिखाती है।"
-  ],
-  "shift": [
-    "शिफ्ट चुनें",
-    "दिन और रात की अलग शीट हैं। मीटर दर्ज करने से पहले शिफ्ट और उसके कारीगर जाँचें।"
+    "दर्ज करने वाली शीट चुनें",
+    "Daily Sheet खोलकर पहले Date और Shift जाँचें। दिन और रात की शीट और ऑपरेटर अलग हैं; सहेजी शीट में उस समय के कारीगर, क्वालिटी और मजदूरी रहती है।"
   ],
   "print": [
     "कागज़ पर रीडिंग लें",
     "Print collection sheet चुनी तारीख और शिफ्ट का कागज़ी रजिस्टर तैयार करता है। टूर में प्रिंट या डाउनलोड नहीं होता।"
   ],
   "reading": [
-    "मशीन मीटर दर्ज करें",
-    "मशीन के कारीगर और क्वालिटी के सामने उत्पादन दर्ज करें। असली शीट में Enter या नीचे का तीर अगली मशीन पर ले जाता है।"
+    "इस शिफ्ट का उत्पादन दर्ज करें",
+    "नमूने के लूम और ऑपरेटर के लिए इस शिफ्ट में बने 120 मी दर्ज करें। शिफ्ट का उत्पादन लिखें, मीटर की कुल जमा रीडिंग नहीं। Enter या नीचे का तीर अगली मशीन पर ले जाता है।"
   ],
   "pending": [
-    "खाली मतलब बाकी",
-    "अधूरी शीट सहेजने के बाद भी खाली रीडिंग बाकी रहती है। Show pending से बाकी मशीनें खोजें।"
-  ],
-  "notRunning": [
-    "शून्य मतलब मशीन बंद",
-    "बंद मशीन के लिए 0 डालें या Not running चुनें। साफ करने से रीडिंग फिर बाकी होती है।"
+    "बाकी है या लूम बंद है?",
+    "रीडिंग बाकी हो तभी खाली छोड़ें। बंद लूम के लिए 0 डालें या Not running चुनें। 0 मिटाने से फिर बाकी होता है; Show pending से अधूरी रीडिंग खोजें।"
   ],
   "rollup": [
     "कारीगर की कमाई जाँचें",
-    "मशीन उत्पादन और लागू बुनकर दरों से कुल कमाई निकलती है। यहाँ 120 मी × ₹2/मी = ₹240।"
+    "120 मी × ₹2/मी Weaver wage = ₹240 कुल कमाई। सहेजने से पहले कारीगर का कुल जाँचें। Payroll में भुगतान से पहले एडवांस और दूसरे समायोजन लागू होते हैं।"
   ],
   "workerStatus": [
     "शून्य उत्पादन और अनुपस्थिति",
     "स्थितियों में दर्ज नहीं, उत्पादन हुआ, शून्य उत्पादन और अनुपस्थित हैं। उस शिफ्ट में उत्पादन न होने पर ही शून्य या अनुपस्थित चुनें।"
   ],
   "draft": [
-    "ड्राफ्ट जमा नहीं हुआ है",
-    "इस उपकरण पर सहेजा ड्राफ्ट स्थानीय काम रखता है; यह सहेजी उत्पादन शिफ्ट नहीं है। Discard draft स्थानीय बदलाव हटाता है।"
+    "स्थानीय ड्राफ्ट सहेजी शिफ्ट नहीं है",
+    "Draft saved on this device अधूरा काम इस उपकरण पर रखता है। स्टॉक या वेतन अभी अपडेट नहीं हुआ। Discard draft स्थानीय बदलाव हटाता है; Save machine production शिफ्ट जमा करता है।"
   ],
   "save": [
-    "सहेजने से पहले जाँचें",
-    "हिसाब की गई मशीनें, बाकी रीडिंग और कुल मीटर जाँचें। Save machine production शिफ्ट जमा करके कमाई अपडेट करता है।"
+    "जाँची हुई शिफ्ट जमा करें",
+    "मीटर और बाकी पंक्तियाँ जाँचकर Save machine production चुनें। इन 120 मी से Fabric Stock में 120 मी और कुल कमाई में ₹240 जुड़ते हैं। Save incomplete shift के बाद भी खाली पंक्तियाँ बाकी रहती हैं।"
   ],
   "incomplete": [
     "अधूरी शिफ्ट सहेजना",
@@ -350,7 +262,7 @@ hi: { ...configurationTutorialCopy.hi, sample: "नमूना · आपका 
   ],
   "history": [
     "हाल का उत्पादन खोजें",
-    "तारीख, कारीगर, मशीन या जॉब से इतिहास खोजें। पुराने कारीगर रिकॉर्ड में मशीन विवरण न भी हो सकता है।"
+    "Daily Sheet में Recent production को तारीख, कारीगर, मशीन या जॉब से खोजकर View log चुनें। पुराने कारीगर रिकॉर्ड में मशीन विवरण न भी हो सकता है।"
   ],
   "saved": [
     "सहेजी शिफ्ट और भुगतान वाली एंट्री",
@@ -358,15 +270,19 @@ hi: { ...configurationTutorialCopy.hi, sample: "नमूना · आपका 
   ],
   "correction": [
     "सुधार का कारण दें",
-    "शीट खोलने से पहले कारण लिखें। सुधार मीटर और वेतन बदल सकता है। सहेजने पर फिर लॉक होता है; सुरक्षित भुगतान वाली एंट्री नहीं बदलतीं।"
+    "Edit production log में कारण देकर योग्य पंक्तियाँ खोलें। 120 मी को 125 मी करने से स्टॉक में 5 मी और कमाई में ₹10 जुड़ते हैं। सहेजने पर शीट फिर लॉक होती है; भुगतान वाली एंट्री सुरक्षित रहती हैं।"
   ],
   "audit": [
-    "ऑडिट इतिहास जाँचें",
-    "मूल सेव और हर सुधार रहता है: किसने बदला, कारण और पहले तथा बाद के मीटर, दर और कमाई।"
+    "पहले और बाद के आँकड़े जाँचें",
+    "ऑडिट इतिहास में मूल सेव और हर सुधार रहता है: किसने, क्यों बदला और पहले तथा बाद के मीटर, दर और कमाई। Finish से अपने काम पर लौटें; मुख्य टूर के पास यह मार्गदर्शन फिर देखें।"
   ],
   "finish": [
-    "उत्पादन दर्ज करने को तैयार",
-    "क्वालिटी सक्रिय करें, लूम और ऑपरेटर आवंटित करें, सही तारीख और शिफ्ट दर्ज करें, जाँचकर सहेजें। जरूरत पर टूर फिर देखें।"
+    "अब असली काम शुरू करें",
+    "Finish के बाद बाकी सेटअप पूरा करें या शिफ्ट दर्ज करने के लिए Daily Sheet खोलें। सहेजने के बाद Fabric Stock जाँचें और Payroll में भुगतान करें। बाद के बदलावों के लिए टूर के पास सेटअप, इतिहास और सुधार फिर देखें।"
+  ],
+  "prerequisites": [
+    "पहले जरूरी रिकॉर्ड बनाएँ",
+    "Cost Estimator में लागत सहेजें; Saved Costings में उसका संस्करण जाँचें। Workers में ऑपरेटर और Machines में लूम जोड़ें। फिर यहाँ लौटकर क्वालिटी, लूम और ऑपरेटर जोड़ें।"
   ]
 }},
 }

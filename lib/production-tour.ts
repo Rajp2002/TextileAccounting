@@ -1,14 +1,21 @@
-export const productionTourSteps = ['overview', 'tabs', 'qualities', 'activate', 'costing', 'wage', 'allocate', 'loomStates', 'board', 'filters', 'operators', 'switchQuality', 'deactivate', 'daily', 'date', 'shift', 'print', 'reading', 'pending', 'notRunning', 'rollup', 'workerStatus', 'draft', 'save', 'incomplete', 'history', 'saved', 'correction', 'audit', 'finish'] as const
-export type ProductionTourStep = typeof productionTourSteps[number]
+/** The first-use workflow; maintenance is a separately replayable walkthrough. */
+export const productionTourSteps = ['overview', 'prerequisites', 'activate', 'allocate', 'operators', 'date', 'reading', 'pending', 'rollup', 'draft', 'save', 'finish'] as const
+export const productionTourDetailSteps = ['board', 'loomStates', 'switchQuality', 'deactivate', 'print', 'workerStatus', 'incomplete', 'history', 'saved', 'correction', 'audit'] as const
+export type ProductionTourStep = typeof productionTourSteps[number] | typeof productionTourDetailSteps[number]
+export type ProductionTourField = ProductionTourStep | 'tabs' | 'qualities' | 'filters' | 'daily'
+export const productionTourAllSteps = [...productionTourSteps, ...productionTourDetailSteps] as const
+export function productionTourSequence(step: ProductionTourStep): readonly ProductionTourStep[] {
+    return (productionTourDetailSteps as readonly ProductionTourStep[]).includes(step) ? productionTourDetailSteps : productionTourSteps
+}
 export function productionTourSection(step: ProductionTourStep) {
-    const index = productionTourSteps.indexOf(step)
-    return index < 2 ? 0 : index < 6 ? 1 : index < 13 ? 2 : index < 20 ? 3 : index < 25 ? 4 : 5
+    if ((productionTourDetailSteps as readonly ProductionTourStep[]).includes(step)) return productionTourDetailSteps.indexOf(step as typeof productionTourDetailSteps[number]) < 4 ? 2 : 3
+    return (productionTourSteps as readonly ProductionTourStep[]).indexOf(step) < 5 ? 0 : 1
 }
 export function productionTourSurface(step: ProductionTourStep) {
-    if (['activate', 'costing', 'wage'].includes(step)) return 'activate'
+    if (step === 'activate') return 'activate'
     if (['allocate', 'loomStates'].includes(step)) return 'allocate'
     if (['switchQuality', 'deactivate', 'incomplete', 'correction', 'audit'].includes(step)) return step
-    return productionTourSteps.indexOf(step) < 13 ? 'overview' : 'daily'
+    return ['overview', 'prerequisites', 'board', 'operators'].includes(step) ? 'overview' : 'daily'
 }
 export const productionTourSelector = (step: ProductionTourStep) => `[data-production-tour="${step}"]`
 /** Display-only numbers. No business record identifiers or action payloads. */

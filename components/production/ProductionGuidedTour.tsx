@@ -1,10 +1,13 @@
 'use client'
 
 import { useRef, useState, type ReactNode } from 'react'
+import { Button } from '@/components/ui/button'
+import { useTranslation } from '@/lib/i18n/context'
+import { productionTutorialCopy } from '@/lib/i18n/production-tutorial'
 import { TourInvitation } from '@/components/tours/TourInvitation'
 import ProductionTutorial from '@/components/tours/ProductionTutorial'
 import ProductionTourPreview from './ProductionTourPreview'
-import { productionTourSteps, type ProductionTourStep } from '@/lib/production-tour'
+import { productionTourSteps, productionTourDetailSteps, type ProductionTourStep } from '@/lib/production-tour'
 
 /** Keep the live page mounted so leaving the isolated preview restores all user state. */
 export default function ProductionGuidedTour({ userId, orgId, userMetadata, children }: {
@@ -14,19 +17,28 @@ export default function ProductionGuidedTour({ userId, orgId, userMetadata, chil
     children: ReactNode
 }) {
     const [step, setStep] = useState<ProductionTourStep | null>(null)
+    const { language } = useTranslation()
+    const copy = productionTutorialCopy[language]
+    const returnFocus = useRef<HTMLButtonElement | null>(null)
     const launcher = useRef<HTMLDivElement>(null)
     const returnScroll = useRef({ x: 0, y: 0 })
     return <>
         <div ref={launcher} className="mx-auto mb-5 max-w-6xl">
             <TourInvitation tourId="production" userId={userId} orgId={orgId} userMetadata={userMetadata} onLaunch={() => {
+                returnFocus.current = launcher.current?.querySelector<HTMLButtonElement>('[data-tour-control="take-tour"], [data-tour-control="quiet-tour"]') ?? null
                 returnScroll.current = { x: window.scrollX, y: window.scrollY }
                 setStep(productionTourSteps[0])
             }} />
+            <Button type="button" variant="ghost" className="mt-1 h-auto min-h-11 whitespace-normal text-left text-xs text-muted-foreground" data-tour-control="production-details" onClick={event => {
+                returnFocus.current = event.currentTarget
+                returnScroll.current = { x: window.scrollX, y: window.scrollY }
+                setStep(productionTourDetailSteps[0])
+            }}>{copy.details}</Button>
         </div>
         <div hidden={step !== null}>{children}</div>
         {step && <>
             <ProductionTourPreview step={step} />
-            <ProductionTutorial step={step} onStepChange={setStep} launcher={launcher} returnScroll={returnScroll} userId={userId} />
+            <ProductionTutorial step={step} onStepChange={setStep} launcher={launcher} returnFocus={returnFocus} returnScroll={returnScroll} userId={userId} />
         </>}
     </>
 }
