@@ -1,98 +1,118 @@
 import { describe, expect, it } from 'vitest'
-import { configurationTourSteps, configurationTourSelectors, configurationTourView, makeConfigurationTourExample, CONFIGURATION_SAMPLE_MACHINE, CONFIGURATION_SAMPLE_WORKER } from '../lib/configuration-tour'
-import { configurationTutorialCopy } from '../lib/i18n/configuration-tutorial'
+import { configurationTourSteps, configurationTourSelectors, configurationTourSection, configurationTourView, makeConfigurationTourExample, CONFIGURATION_SAMPLE_MACHINE, CONFIGURATION_SAMPLE_WORKER } from '../lib/configuration-tour'
+import { configurationHelpTopics, configurationTutorialCopy } from '../lib/i18n/configuration-tutorial'
 import { isTourEligible } from '../lib/tours/tour-registry'
 import { UuidSchema } from '../lib/schemas'
+import { readBaseProductionNavigation } from '../lib/base-production-navigation'
+import { readFileSync } from 'node:fs'
 
-describe('Configuration tour examples and navigation', () => {
-    it('keeps examples isolated and invalid as persisted record IDs', () => {
+const workspace = readFileSync('app/(dashboard)/owner/production/BaseAssignmentWorkspace.tsx', 'utf8')
+const controller = readFileSync('components/tours/ConfigurationTutorial.tsx', 'utf8')
+
+describe('Assignment tour workflow', () => {
+    it('teaches prerequisites before selection and saving before the Daily Sheet handoff', () => {
+        expect(configurationTourSteps).toEqual(['purpose', 'dayShift', 'jobRequired', 'assign', 'picker', 'connected', 'finish'])
+        expect(configurationTourSelectors.connected).toContain('saved-preview')
+        expect(configurationTourSelectors.finish).toContain('daily-sheet')
+    })
+
+    it('isolates examples from persisted records and regenerates them on replay', () => {
         for (const step of configurationTourSteps) {
-            const example = makeConfigurationTourExample('2026-09-11', step)
-            for (const row of Object.values(example).flat()) {
+            const sample = makeConfigurationTourExample('2026-09-17', step)
+            for (const row of Object.values(sample).flat()) {
                 expect(row.id.startsWith('tour-configuration-')).toBe(true)
                 expect(UuidSchema.safeParse(row.id).success).toBe(false)
             }
-            expect(example.workers[0].shift_availability).toBe('both')
+            expect(sample.workers).toHaveLength(1)
+            expect(sample.machines).toHaveLength(1)
+            expect(sample.workers[0].shift_availability).toBe('both')
         }
-        const first = makeConfigurationTourExample('2026-09-11', 'workers')
+        const first = makeConfigurationTourExample('2026-09-17', 'assign')
         first.workers[0].name = 'Changed by caller'
-        expect(makeConfigurationTourExample('2026-09-11', 'workers').workers[0].name).toBe('Sample worker')
+        first.assignments.push({ id: 'mutated', worker_id: 'live-worker', machine_id: 'live-machine', shift: 'night', active: true, effective_from: '2026-09-17', effective_to: null })
+        expect(makeConfigurationTourExample('2026-09-17', 'assign').workers[0].name).toBe('Sample worker')
+        expect(makeConfigurationTourExample('2026-09-17', 'assign').assignments).toEqual([])
     })
-    it('illustrates a valid connection with a matching machine, worker, shift, and active job', () => {
-        const example = makeConfigurationTourExample('2026-09-11', 'connected')
-        expect(example.assignments).toEqual([expect.objectContaining({ worker_id: CONFIGURATION_SAMPLE_WORKER, machine_id: CONFIGURATION_SAMPLE_MACHINE, shift: 'day', active: true, effective_from: '2026-09-11' })])
-        expect(example.machineJobContexts[0].job_id).toBe(example.jobs[0].id)
-        expect(example.jobs[0].status).toBe('active')
-        expect(makeConfigurationTourExample('2026-09-11', 'jobRequired').machineJobContexts).toEqual([])
-        expect(makeConfigurationTourExample('2026-09-11', 'nightShift').assignments).toEqual([])
+
+    it('moves from a blocked loom to an eligible picker to a valid saved day link', () => {
+        expect(makeConfigurationTourExample('2026-09-17', 'jobRequired').machineJobContexts).toEqual([])
+        const picker = makeConfigurationTourExample('2026-09-17', 'picker')
+        expect(picker.assignments).toEqual([])
+        expect(picker.machineJobContexts[0]).toMatchObject({ machine_id: CONFIGURATION_SAMPLE_MACHINE, job_id: picker.jobs[0].id, active: true })
+        expect(picker.jobs[0].status).toBe('active')
+        for (const step of ['connected', 'finish'] as const) {
+            expect(makeConfigurationTourExample('2026-09-17', step).assignments).toEqual([expect.objectContaining({ worker_id: CONFIGURATION_SAMPLE_WORKER, machine_id: CONFIGURATION_SAMPLE_MACHINE, shift: 'day', active: true, effective_from: '2026-09-17' })])
+        }
     })
-    it('reverses sample states deterministically for Back, including picker cleanup and inactive examples', () => {
+
+    it('reverses preview states on Back without leaving the picker or saved link behind', () => {
         expect(configurationTourView('picker').pickerWorkerId).toBe(CONFIGURATION_SAMPLE_WORKER)
-        expect(configurationTourView('assign').pickerWorkerId).toBeNull()
+        for (const step of ['assign', 'connected', 'finish'] as const) expect(configurationTourView(step).pickerWorkerId).toBeNull()
+        expect(configurationTourView('jobRequired').mobileView).toBe('machines')
+        expect(configurationTourView('assign').mobileView).toBe('workers')
         expect(configurationTourView('connected').mobileView).toBe('machines')
-        expect(configurationTourView('drag').mobileView).toBe('workers')
-        expect(configurationTourView('nightShift').shift).toBe('night')
-        expect(configurationTourView('workers').shift).toBe('day')
-        expect(makeConfigurationTourExample('2026-09-11', 'inactive').machines.some(machine => !machine.is_active)).toBe(true)
-        expect(makeConfigurationTourExample('2026-09-11', 'remove').machines.every(machine => machine.is_active)).toBe(true)
+        expect(makeConfigurationTourExample('2026-09-17', 'picker').assignments).toEqual([])
     })
-    it('provides complete localized guidance and a target for every step', () => {
+
+    it('preserves opt-in launch, live state, interaction guards and completion only at Finish', () => {
+        expect(workspace).toContain('useState<ConfigurationTourStep | null>(null)')
+        expect(workspace).toContain('tourId="configuration"')
+        expect(workspace).toContain('if (!tourStep) return liveData')
+        expect(workspace).toContain("const workerSearch = tourStep ? '' : search")
+        expect(workspace).toContain('tourView?.shift ?? selectedShift')
+        expect(workspace).toContain('tourView?.mobileView ?? selectedMobileView')
+        expect(workspace).toContain('tourView?.showInactive ?? includeInactive')
+        expect(workspace).toContain('tourView ? tourView.pickerWorkerId : selectedPickerWorkerId')
+        expect(workspace).toContain('inert={tourStep !== null}')
+        for (const handler of ['handleAssign', 'handleUndoAssignment', 'handleRemove']) {
+            const functionBody = workspace.slice(workspace.indexOf(`async function ${handler}`))
+            expect(functionBody.slice(0, functionBody.indexOf('try {'))).toMatch(/if \(tourStep(?: \|\| pendingKey)?\) return/)
+        }
+        expect(controller).toContain("if (index === configurationTourSteps.length - 1) {\n            void persistTourCompleted('configuration', userId)")
+        expect(controller).toContain('trigger?.focus({ preventScroll: true })')
+        expect(controller).toContain('window.scrollTo({ left: scroll.x, top: scroll.y')
+    })
+
+    it('provides complete localized core and contextual help with current prerequisite labels', () => {
         for (const language of ['en', 'hi', 'gu'] as const) {
-            expect(Object.keys(configurationTutorialCopy[language].fields).sort()).toEqual([...configurationTourSteps].sort())
+            const copy = configurationTutorialCopy[language]
+            expect(Object.keys(copy.fields).sort()).toEqual([...configurationTourSteps].sort())
+            expect(Object.keys(copy.help).sort()).toEqual([...configurationHelpTopics].sort())
             for (const step of configurationTourSteps) {
                 expect(configurationTourSelectors[step]).toBeTruthy()
-                expect(configurationTutorialCopy[language].fields[step].every(text => text.trim().length > 0)).toBe(true)
+                expect(copy.fields[step].every(text => text.trim().length > 0)).toBe(true)
+                expect(copy.sections[configurationTourSection(step)]).toBeTruthy()
             }
+            for (const topic of configurationHelpTopics) expect(copy.help[topic].every(text => text.trim().length > 0)).toBe(true)
+            for (const label of ['Overview & Looms', 'Activate Quality', 'Assign Looms']) expect(copy.fields.jobRequired[1]).toContain(label)
+            expect(copy.fields.finish[1]).toContain('Daily Sheet')
+            expect(copy.helpLabel).toBeTruthy()
+            expect(copy.dailySheetLabel).toBeTruthy()
         }
-        expect(configurationTutorialCopy.en.fields.replace[1]).toContain('Confirm')
-        expect(configurationTutorialCopy.en.fields.finish[1]).toContain('removes every sample')
+        const copy = configurationTutorialCopy.en
+        expect(copy.fields.picker[1]).toContain('saves the link immediately')
+        expect(copy.fields.connected[1]).toContain('Undo')
+        expect(copy.fields.connected[1]).toContain('no production, stock or earnings')
+        expect(copy.fields.finish[1]).toContain('fabric stock and worker earnings for Payroll')
+        expect(copy.fields.finish[1]).toContain('removes every sample')
+        expect(JSON.stringify(copy)).not.toMatch(/Production → Jobs|Machine jobs/)
+        expect(workspace).toContain('configurationHelpTopics.map')
+        for (const step of configurationTourSteps) expect(copy.fields[step][1].split(/\s+/).length).toBeLessThanOrEqual(60)
     })
-    it('limits invitation eligibility to owner plans with Configuration', () => {
+
+    it('opens Daily Sheet with the selected shift and a safe return to assignments', () => {
+        const params = new URLSearchParams({ tab: 'production', shift: 'night', returnTo: '/owner/assignments?shift=night' })
+        expect(readBaseProductionNavigation(params)).toMatchObject({ tab: 'production', shift: 'night', returnTo: '/owner/assignments?shift=night' })
+        expect(readBaseProductionNavigation(new URLSearchParams('tab=jobs')).tab).toBe('jobs')
+        expect(readBaseProductionNavigation(new URLSearchParams('tab=unknown')).tab).toBeUndefined()
+        expect(readBaseProductionNavigation(new URLSearchParams()).tab).toBeUndefined()
+        expect(workspace).toContain("tab: 'production', shift, returnTo: configurationReturnTo")
+    })
+
+    it('retains Base and Premium owner eligibility', () => {
         expect(isTourEligible('configuration', 'base', 'owner')).toBe(true)
         expect(isTourEligible('configuration', 'premium', 'owner')).toBe(true)
         expect(isTourEligible('configuration', 'lite', 'owner')).toBe(false)
         expect(isTourEligible('configuration', 'base', 'supervisor')).toBe(false)
-    })
-})
-
-describe('Expanded assignment previews', () => {
-    it('shows four distinct picker states and keeps unavailable machines unassignable', () => {
-        for (const step of ['picker', 'pickerCurrent', 'pickerOccupied', 'pickerBlocked'] as const) {
-            const sample = makeConfigurationTourExample('2026-09-16', step)
-            expect(configurationTourView(step).pickerWorkerId).toBe(CONFIGURATION_SAMPLE_WORKER)
-            expect(sample.workers).toHaveLength(2)
-            expect(sample.machines).toHaveLength(4)
-            const states = sample.machines.map(machine => {
-                const job = sample.machineJobContexts.find(context => context.machine_id === machine.id)
-                const link = sample.assignments.find(assignment => assignment.machine_id === machine.id)
-                return !job ? 'blocked' : link?.worker_id === CONFIGURATION_SAMPLE_WORKER ? 'current' : link ? 'occupied' : 'available'
-            })
-            expect(states).toEqual(['available', 'current', 'occupied', 'blocked'])
-            expect(sample.assignments.every(link => sample.workers.some(worker => worker.id === link.worker_id))).toBe(true)
-        }
-    })
-    it('restores the simple board when going back or leaving the picker', () => {
-        for (const step of ['assign', 'drag'] as const) {
-            expect(configurationTourView(step).pickerWorkerId).toBeNull()
-            expect(makeConfigurationTourExample('2026-09-16', step).machines).toHaveLength(1)
-        }
-    })
-    it('previews replacement without changing the original link', () => {
-        const sample = makeConfigurationTourExample('2026-09-16', 'replace')
-        expect(sample.workers).toHaveLength(2)
-        expect(sample.assignments[0].worker_id).toBe(CONFIGURATION_SAMPLE_WORKER)
-        expect(configurationTourSelectors.replace).toContain('replace-preview')
-    })
-    it('shows Undo only after an illustrated saved link and provides localized mobile guidance', () => {
-        expect(makeConfigurationTourExample('2026-09-16', 'undo').assignments).toHaveLength(1)
-        expect(configurationTourSelectors.undo).toContain('undo')
-        expect(configurationTourSteps).toHaveLength(23)
-        for (const language of ['en', 'gu', 'hi'] as const) {
-            const copy = configurationTutorialCopy[language]
-            expect(copy.sections).toHaveLength(6)
-            expect(copy.mobileAssign.every(text => text.length > 0)).toBe(true)
-            expect(copy.undoLabel).toBeTruthy()
-            expect(copy.secondWorker).not.toBe(copy.worker)
-        }
     })
 })

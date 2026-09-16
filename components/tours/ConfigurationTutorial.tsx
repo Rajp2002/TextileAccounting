@@ -120,7 +120,7 @@ export default function ConfigurationTutorial({ step, onStepChange, launcher, us
         return () => { cancelAnimationFrame(frame); window.removeEventListener('resize', update); window.removeEventListener('scroll', update, true) }
     }, [step, mobile.mobile, resolve, language])
 
-    const stepCopy = step === 'drag' && mobile.mobile ? copy.mobileAssign : copy.fields[step]
+    const stepCopy = copy.fields[step]
     const current = measurement?.step === step ? measurement : null
     const rect = mobile.mobile ? mobile.rects?.field : current?.rect
     return createPortal(

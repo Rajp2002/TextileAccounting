@@ -44,7 +44,7 @@ export function readBaseProductionNavigation(params: Pick<URLSearchParams, 'get'
         date: validBaseDate(date) ? date : undefined,
         shift: params.get('shift') === 'night' ? 'night' : params.get('shift') === 'day' ? 'day' : undefined,
         entry: id('entry'), machine: id('machine'), worker: id('worker'), job: id('job'),
-        tab: params.get('tab') === 'jobs' ? 'jobs' : undefined,
+        tab: params.get('tab') === 'jobs' ? 'jobs' : params.get('tab') === 'production' ? 'production' : undefined,
         returnTo: safeBaseReturnPath(params.get('returnTo')),
     }
 }
