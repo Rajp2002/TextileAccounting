@@ -547,7 +547,7 @@ export function RateBookTutorial({
             )}
 
             {active && createPortal(
-                <div data-i18n-skip="true" lang={language} data-ratebook-portal="true" className="fixed inset-0 z-[100]" data-testid="rate-book-tutorial">
+                <div data-i18n-skip="true" lang={language} data-ratebook-portal="true" className="guided-tour-portal fixed inset-0 z-[100]" data-testid="rate-book-tutorial">
                     <div
                         aria-hidden="true"
                         onClick={(e) => {

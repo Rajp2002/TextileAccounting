@@ -654,7 +654,7 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
         {enabled && <Button type="button" data-i18n-skip="true" lang={language} variant="ghost" className="h-auto w-full whitespace-normal text-xs" onClick={() => { setGuide('fields'); setRequested(true) }}>
             {workflowCopy.fieldGuide}
         </Button>}
-        {active && createPortal(<div data-i18n-skip="true" lang={language} className="fixed inset-0 z-[100]" data-testid="cost-estimate-tutorial">
+        {active && createPortal(<div data-i18n-skip="true" lang={language} className="guided-tour-portal fixed inset-0 z-[100]" data-testid="cost-estimate-tutorial">
             <div
                 className="guided-tour-backdrop absolute inset-0 bg-black/55 backdrop-blur-sm transition-opacity duration-300"
                 style={{

@@ -130,7 +130,7 @@ export default function PayrollTutorial({ step, onStepChange, launcher, userId, 
     const current = measurement?.step === step ? measurement : null
     const rect = mobile.mobile ? mobile.rects?.field : current?.rect
     return createPortal(
-        <div ref={portal} data-testid="payroll-tutorial" data-i18n-skip="true" lang={language} className="fixed inset-0 z-[100]">
+        <div ref={portal} data-testid="payroll-tutorial" data-i18n-skip="true" lang={language} className="guided-tour-portal fixed inset-0 z-[100]">
             <div aria-hidden="true" className="guided-tour-backdrop absolute inset-0 bg-black/55 backdrop-blur-xs" style={rect ? { clipPath: `polygon(evenodd,0% 0%,100% 0%,100% 100%,0% 100%,0% 0%,${rect.left}px ${rect.top}px,${rect.left}px ${rect.bottom}px,${rect.right}px ${rect.bottom}px,${rect.right}px ${rect.top}px,${rect.left}px ${rect.top}px)` } : undefined} />
             {rect && <div aria-hidden="true" className="guided-tour-highlight pointer-events-none fixed rounded-xl border-2 border-saffron ring-4 ring-saffron/30" style={{ left: rect.left - 4, top: rect.top - 4, width: rect.width + 8, height: rect.height + 8 }} />}
             <div ref={panel} role="dialog" aria-modal="true" aria-labelledby="payroll-tour-title" aria-describedby="payroll-tour-description" tabIndex={-1} className={`guided-tour-panel fixed z-[101] w-[320px] max-w-[calc(100vw-2rem)] max-h-[calc(100dvh-2rem)] flex flex-col rounded-2xl border border-amber-200/90 bg-surface p-4 text-ink shadow-2xl outline-none ${current?.bottom ? 'bottom-4' : 'top-4'} ${current?.left ? 'left-4' : 'right-4'}`}>

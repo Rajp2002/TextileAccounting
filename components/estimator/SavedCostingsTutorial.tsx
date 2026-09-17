@@ -186,7 +186,7 @@ export function SavedCostingsTutorial({step, onStepChange, onComplete, free = fa
       </details>
     </div>
   </div>
-  {step && createPortal(<div ref={portal} data-testid="saved-costings-tutorial" data-i18n-skip="true" lang={language} className="fixed inset-0 z-[100]" style={{pointerEvents: 'auto'}}>
+  {step && createPortal(<div ref={portal} data-testid="saved-costings-tutorial" data-i18n-skip="true" lang={language} className="guided-tour-portal fixed inset-0 z-[100]" style={{pointerEvents: 'auto'}}>
    <div aria-hidden="true" className="guided-tour-backdrop absolute inset-0 bg-black/55 backdrop-blur-xs" style={spotlight ? {clipPath: `polygon(evenodd, 0% 0%,100% 0%,100% 100%,0% 100%,0% 0%,${spotlight.left}px ${spotlight.top}px,${spotlight.left}px ${spotlight.bottom}px,${spotlight.right}px ${spotlight.bottom}px,${spotlight.right}px ${spotlight.top}px,${spotlight.left}px ${spotlight.top}px)`} : undefined}/>
    {spotlight && <div className="guided-tour-highlight pointer-events-none fixed rounded-lg border-2 border-saffron ring-4 ring-saffron/30" style={{left: spotlight.left - 4, top: spotlight.top - 4, width: spotlight.width + 8, height: spotlight.height + 8}}/>}
    <div ref={panel} role="dialog" aria-modal="true" aria-labelledby="saved-costings-tour-title" aria-describedby="saved-costings-tour-description" tabIndex={-1} className={`guided-tour-panel fixed right-4 z-[101] flex w-[260px] max-w-[calc(100vw-2rem)] max-h-[calc(100dvh-2rem)] flex-col rounded-2xl border border-amber-200/90 bg-surface p-4 text-ink shadow-2xl outline-none ${bottom ? 'bottom-4' : 'top-4'}`}>

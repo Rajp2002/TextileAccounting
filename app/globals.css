@@ -546,24 +546,28 @@
      scales down gracefully on laptops and smaller desktop viewports without cramping or collision. */
   @media (min-width: 1024px) and (max-width: 1279px) {
     :root {
+      --app-desktop-zoom: 0.74;
       zoom: 0.74;
     }
   }
 
   @media (min-width: 1280px) and (max-width: 1439px) {
     :root {
+      --app-desktop-zoom: 0.80;
       zoom: 0.80;
     }
   }
 
   @media (min-width: 1440px) and (max-width: 1659px) {
     :root {
+      --app-desktop-zoom: 0.88;
       zoom: 0.88;
     }
   }
 
   @media (min-width: 1660px) and (max-width: 1799px) {
     :root {
+      --app-desktop-zoom: 0.94;
       zoom: 0.94;
     }
   }
@@ -1493,14 +1497,23 @@ button[aria-expanded="true"] .nav-chevron {
   }
 }
 
-/* Reserve a separate reading area for worker and machine editor tour previews. */
+/* DOM measurements use viewport pixels. Cancel the app zoom only on tour
+   portals so highlights, cutouts and reading panels use that same space. */
+.guided-tour-portal { zoom: calc(1 / var(--app-desktop-zoom, 1)); }
+
+/* Reserve a separate reading area for editor previews. Keep translate variable-based:
+   CSS optimization can otherwise fold it into transform and discard it alongside
+   transform:none, allowing the dialog utilities or phone sheet rule to win. */
 @media (min-width: 768px) {
   [data-workers-tour-preview="true"], [data-machines-tour-preview="true"], [data-stock-tour-preview="true"], [data-dispatch-tour-preview="true"], [data-production-tour-preview="true"], [data-payroll-tour-preview="true"], [data-configuration-tour-preview="true"] {
     left: max(16px, calc((100vw - 864px) / 2));
     width: calc(100vw - 368px);
     max-width: 512px;
-    translate: 0 -50%;
-    transform: none;
+    --tw-translate-x: 0px !important;
+    --tw-translate-y: -50% !important;
+    --tour-preview-translate: 0 -50%;
+    translate: var(--tour-preview-translate) !important;
+    transform: none !important;
   }
 }
 @media (max-width: 767px), (max-height: 500px) and (pointer: coarse) {
@@ -1510,7 +1523,10 @@ button[aria-expanded="true"] .nav-chevron {
     left: 8px !important;
     width: calc(100vw - 16px) !important;
     max-height: calc(54dvh - 88px) !important;
-    translate: none !important;
+    --tw-translate-x: 0px !important;
+    --tw-translate-y: 0px !important;
+    --tour-preview-translate: 0px 0px;
+    translate: var(--tour-preview-translate) !important;
     transform: none !important;
   }
 }
@@ -1523,7 +1539,7 @@ button[aria-expanded="true"] .nav-chevron {
 [data-configuration-tour-preview="true"] [data-slot="dialog-header"] { position: static; }
 
 /* Picker rows scroll independently above the tour reading panel. */
-[data-configuration-picker-preview="true"] { bottom: auto !important; translate: none !important; transform: none !important; }
+[data-configuration-picker-preview="true"] { bottom: auto !important; --tw-translate-x: 0px !important; --tw-translate-y: 0px !important; --tour-preview-translate: 0px 0px; translate: var(--tour-preview-translate) !important; transform: none !important; }
 [data-configuration-picker-preview="true"] [data-slot="sheet-footer"] { display: none; }
 [data-configuration-picker-preview="true"] > .overflow-y-auto { min-height: 0; }
 @media (min-width: 768px) {
