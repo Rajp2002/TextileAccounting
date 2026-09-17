@@ -4,7 +4,7 @@ import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { TourInvitation } from '@/components/tours/TourInvitation'
 import { useTranslation } from '@/lib/i18n/context'
-import { configurationTutorialCopy } from '@/lib/i18n/configuration-tutorial'
+import { configurationHelpTopics, configurationTutorialCopy } from '@/lib/i18n/configuration-tutorial'
 import { configurationTourSteps, configurationTourView, makeConfigurationTourExample, type ConfigurationTourStep } from '@/lib/configuration-tour'
 import { useCallback, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { useRouter } from 'next/navigation'
@@ -14,7 +14,6 @@ import { ArrowUpRight, Check, Link2, Loader2, Moon, Plus, Search, Sun, Unlink, U
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
@@ -79,6 +78,7 @@ export default function BaseAssignmentWorkspace({
 }) {
     const router = useRouter()
     const { language, tx } = useTranslation()
+    const tourCopy = configurationTutorialCopy[language]
     const [tourStep, setTourStep] = useState<ConfigurationTourStep | null>(null)
     const tourLauncher = useRef<HTMLDivElement>(null)
     const tourReturnScroll = useRef({ x: 0, y: 0 })
@@ -89,16 +89,6 @@ export default function BaseAssignmentWorkspace({
         const copy = configurationTutorialCopy[language]
         example.workers[0].name = copy.worker
         example.machines[0].name = copy.machine
-        if (example.workers[1]) example.workers[1].name = copy.secondWorker
-        for (const machine of example.machines.slice(1)) {
-            const names: Record<string, string> = {
-                'tour-configuration-inactive-machine': copy.inactiveMachine,
-                'tour-configuration-current': copy.currentMachine,
-                'tour-configuration-occupied': copy.occupiedMachine,
-                'tour-configuration-blocked': copy.blockedMachine,
-            }
-            machine.name = names[machine.id] ?? machine.name
-        }
         return { ...liveData, ...example }
     }, [liveData, tourStep, language])
     const [selectedShift, setShift] = useState<BaseProductionShift>(initialShift ?? 'day')
@@ -402,6 +392,16 @@ export default function BaseAssignmentWorkspace({
                         setTourStep(configurationTourSteps[0])
                     }} />
                 </div>
+                <details data-i18n-skip="true" lang={language} className="mt-3 rounded-xl border border-hairline bg-surface p-3 text-sm">
+                    <summary className="cursor-pointer font-semibold text-ink">{tourCopy.helpLabel}</summary>
+                    <p className="mt-2 text-xs text-body">{tourCopy.helpIntro}</p>
+                    <div className="mt-2 space-y-2">
+                        {configurationHelpTopics.map(topic => <details key={topic} className="border-t border-hairline pt-2">
+                            <summary className="cursor-pointer text-sm font-medium text-ink">{tourCopy.help[topic][0]}</summary>
+                            <p className="mt-2 text-xs leading-relaxed text-body">{tourCopy.help[topic][1]}</p>
+                        </details>)}
+                    </div>
+                </details>
             </aside>
             <div className="min-w-0 space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-3">
@@ -870,6 +870,11 @@ export default function BaseAssignmentWorkspace({
                 </label>
             </div>
             <aside aria-label="Management links" className="configuration-actions-rail flex flex-wrap gap-2">
+                <Button asChild variant="outline" size="sm" className="justify-start rounded-xl border-hairline bg-surface text-ink shadow-xs">
+                    <Link data-configuration-tour="daily-sheet" data-i18n-skip="true" lang={language} onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href={`/owner/production?${new URLSearchParams({ tab: 'production', shift, returnTo: configurationReturnTo })}`}>
+                        {tourCopy.dailySheetLabel} <ArrowUpRight className="h-4 w-4" />
+                    </Link>
+                </Button>
                 <Button asChild variant="outline" size="sm" className="justify-start rounded-xl border-hairline bg-surface text-ink shadow-xs hover:border-hairline-strong hover:bg-surface-soft">
                     <Link data-configuration-tour="add-worker" onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href={setupHref('worker')}>
                         <Plus className="h-4 w-4" /> Add worker
@@ -941,18 +946,14 @@ export default function BaseAssignmentWorkspace({
                     </SheetFooter>
                 </SheetContent>
             </Sheet>
-            {tourStep === 'undo' && <div data-configuration-tour="undo" role="status" className="col-span-full flex items-center justify-between gap-3 rounded-xl border border-hairline bg-surface p-4 shadow-sm">
-                <div><p className="text-xs text-saffron-deep">{configurationTutorialCopy[language].sample}</p><p>{configurationTutorialCopy[language].savedLabel}</p></div>
-                <Button type="button" variant="outline" disabled>{configurationTutorialCopy[language].undoLabel}</Button>
+            {tourStep === 'connected' && <div data-configuration-tour="saved-preview" data-i18n-skip="true" lang={language} role="status" className="col-span-full flex items-center justify-between gap-3 rounded-xl border border-hairline bg-surface p-4 shadow-sm">
+                <div>
+                    <p className="text-xs text-saffron-deep">{tourCopy.sample}</p>
+                    <p className="font-semibold">{tourCopy.savedLabel}</p>
+                    <p className="text-sm text-body">{tourCopy.worker} → {tourCopy.machine} · {tourCopy.dayShiftLabel}</p>
+                </div>
+                <Button type="button" variant="outline" disabled>{tourCopy.undoLabel}</Button>
             </div>}
-            <Dialog modal={false} open={tourStep === 'replace'}>
-                <DialogContent data-configuration-tour="replace-preview" data-configuration-tour-preview={tourStep === 'replace' ? 'true' : undefined} showCloseButton={false} onOpenAutoFocus={event => event.preventDefault()} onCloseAutoFocus={event => event.preventDefault()} onInteractOutside={event => event.preventDefault()} onEscapeKeyDown={event => event.preventDefault()}>
-                    <DialogHeader><DialogTitle>{configurationTutorialCopy[language].replacementLabel}</DialogTitle><DialogDescription>{configurationTutorialCopy[language].sample}</DialogDescription></DialogHeader>
-                    <p className="font-semibold">{configurationTutorialCopy[language].machine}: {configurationTutorialCopy[language].worker} → {configurationTutorialCopy[language].secondWorker}</p>
-                    <p className="text-sm text-body">{configurationTutorialCopy[language].fields.replace[1]}</p>
-                    <div className="flex justify-end gap-2"><Button type="button" variant="outline" disabled>{configurationTutorialCopy[language].cancelLabel}</Button><Button type="button" disabled>{configurationTutorialCopy[language].replacementLabel}</Button></div>
-                </DialogContent>
-            </Dialog>
             {tourStep && <ConfigurationTutorial step={tourStep} onStepChange={setTourStep} launcher={tourLauncher} returnScroll={tourReturnScroll} userId={liveData.actorId} />}
         </div>
     )

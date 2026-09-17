@@ -22,7 +22,7 @@ describe('Machines tour editor preview', () => {
     it('shows a disabled add form with all machine fields and no availability control', () => {
         const html = render()
         expect(html).toContain('<fieldset disabled=""')
-        for (const field of ['name', 'type', 'label']) expect(html).toContain(`data-machines-tour-field="${field}"`)
+        for (const field of ['details', 'name', 'type', 'label']) expect(html).toContain(`data-machines-tour-field="${field}"`)
         expect(html).not.toContain('data-machines-tour-field="availability"')
         expect(html).not.toContain('autofocus')
         expect(html).toContain('Sample Rapier')

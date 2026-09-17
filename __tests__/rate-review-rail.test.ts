@@ -1,3 +1,4 @@
+import { rateBookTutorialCopy } from '../lib/i18n/rate-book-tutorial'
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -61,9 +62,10 @@ describe('Rate Review Right Rail layout & interaction', () => {
     it('shows rate review metrics, principles, and commercial memory rules', () => {
         expect(rates).toContain('Rate Review')
         expect(rates).toContain('Rate Book Principles')
-        expect(rates).toContain('Future Estimates:')
-        expect(rates).toContain('Audit Integrity:')
-        expect(rates).toContain('Auto-Discovery:')
+        expect(rates).toContain('copy.principles.map')
+        expect(rateBookTutorialCopy.en.principles.join(' ')).toContain('updates matching yarn prices in linked Saved Qualities')
+        expect(rateBookTutorialCopy.en.principles.join(' ')).toContain('Historical costing snapshots keep their original numbers')
+        expect(rateBookTutorialCopy.en.principles.join(' ')).toContain('supplier-price check')
     })
 
     it('summarizes pending rates without rendering individual rail rows', () => {

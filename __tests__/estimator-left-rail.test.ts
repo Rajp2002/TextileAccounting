@@ -36,8 +36,10 @@ describe('Estimator Left Rail & Guided Tour CTA', () => {
     })
 
     it('gives the guided tour button an interactive subtle muted background and clear affordance', () => {
-        expect(tutorialComponent).toContain('Compass')
-        expect(tutorialComponent).toContain('Sparkles')
+        expect(tutorialComponent).toContain('<TourInvitation')
+        const invitation = read('components/tours/TourInvitation.tsx')
+        expect(invitation).toContain('Compass')
+        expect(invitation).toContain('Sparkles')
         expect(tutorialComponent).toContain('bg-amber-50/75')
         expect(tutorialComponent).toContain('border-amber-200/90')
         expect(tutorialComponent).toContain('hover:bg-amber-100/70')

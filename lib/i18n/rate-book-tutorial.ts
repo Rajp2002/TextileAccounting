@@ -3,12 +3,12 @@ import type { Language } from './context'
 // Explicit copy: never infer a tutorial title from potentially untranslated DOM labels.
 const en = {
   "sections": [
-    "Search & filters",
-    "Yarn rate row",
-    "Rate details & trends",
-    "Fast inline actions",
-    "Full rate editor",
-    "Review rail"
+    "Maintain prices",
+    "Find the yarn",
+    "Check usage",
+    "Update a price",
+    "Set the dates",
+    "Use the result"
   ],
   "sectionProgress": "Section {current} of {total}",
   "replay": "How Rate Book works · Guided tour",
@@ -17,17 +17,17 @@ const en = {
   "next": "Next",
   "finish": "Finish",
   "progress": "Tutorial progress",
-  "hint": "Take a look first. You can manage and update your rates after the tour.",
+  "hint": "Read-only tour: your rates, filters and editor values stay as they are.",
   "syncFailed": "Tutorial dismissed. We couldn’t save this to your account yet.",
   "retry": "Retry saving preference",
   "fields": {
     "overview": {
-      "title": "Yarn Rate Book Overview",
-      "description": "Your centralized pricing catalog for yarn market rates. Every new fabric estimate and quotation pulls current yarn rates directly from here."
+      "title": "Maintain your own yarn prices",
+      "description": "Keep supplier-checked ₹/kg prices ready for future estimates. Start with a supplier quote or invoice; you maintain these rates yourself, rather than receiving an automatic market feed."
     },
     "immutabilityNotice": {
-      "title": "Pricing Safety & Immutability",
-      "description": "Rate updates only affect newly created quotes. Your existing costings, saved quality recipes, and historical order records stay 100% locked and audit-safe."
+      "title": "Recheck the next estimate",
+      "description": "Saving a rate updates matching yarn prices in linked Saved Qualities for future estimates. Historical costing snapshots keep their original numbers. After Finish, find a yarn and check its supplier price; then review a fresh estimate in Cost Estimator."
     },
     "activeRatesCount": {
       "title": "Active Yarn Rates & Balance",
@@ -38,20 +38,20 @@ const en = {
       "description": "Shows when rates were last confirmed against supplier bills or broker rate cards, ensuring quotations don't rely on stale market figures."
     },
     "yarnSearch": {
-      "title": "Instant Search (/)",
-      "description": "Quickly find yarns by name (e.g. 30/1000 MUALTI), count/denier, broker name, purchase source, or any saved fabric quality that uses them. Press / anytime to focus."
+      "title": "Find one yarn to maintain",
+      "description": "Search by yarn name, source or fabric. No matching entry? Use {addRate} with the yarn name used in your quality and the correct Warp or Weft direction."
     },
     "directionFilter": {
-      "title": "Warp & Weft Direction Filters",
-      "description": "Filter by All, Warp, or Weft with real-time counters to focus on specific yarn varieties during price reviews."
+      "title": "Find the rates needing attention",
+      "description": "Use All, Warp or Weft to narrow the list. Needs Review includes overdue prices and yarns discovered from saved qualities or costings that still need owner confirmation. Clear filters to see other yarns."
     },
     "needsReviewFilter": {
       "title": "Needs Review Filter",
       "description": "Instantly filters to yarns where the review interval has lapsed or newly discovered rates were imported from fabric recipes."
     },
     "confirmAll": {
-      "title": "Confirm All as Current",
-      "description": "When multiple rates are due for verification, click Confirm All to instantly verify every pending price in a single click without opening individual forms."
+      "title": "Verify every pending rate first",
+      "description": "Confirm All as Current records a review for every pending rate. Use it only after checking all included supplier prices. Confirming a review does not change the price."
     },
     "archivedToggle": {
       "title": "Active vs Archived Rates",
@@ -62,28 +62,28 @@ const en = {
       "description": "Each row represents an active yarn monitored in your mill. It combines current price, market trend, review urgency, and linked fabric recipes into a single scannable line."
     },
     "yarnNameCell": {
-      "title": "Yarn Identity & Defaults",
-      "description": "Displays the standardized yarn name and direction. Items marked as 'Default for new costings' pre-populate automatically in new fabric calculations."
+      "title": "Check the yarn identity",
+      "description": "Check the saved yarn name and its Warp or Weft direction before updating a price. Use the qualities badge to inspect usage; a matching-looking name alone is not proof of which qualities will be updated."
     },
     "rateAndTrend": {
-      "title": "Current Rate & Price Trend",
-      "description": "Displays the current rate in ₹/kg. The trend badge displays the rupee and percentage difference compared to the previous recorded price."
+      "title": "Read the change from your last price",
+      "description": "The current price is in ₹/kg. The change badge compares it with the previous recorded value: ₹200 to ₹220 is +₹20 (+10%). Initial rate means there is no previous value to compare."
     },
     "reviewStatusBadge": {
-      "title": "Review Urgency & Effective Date",
-      "description": "Color-coded badges (Needs Review, Overdue, Due Soon, Current) highlight review status alongside the date this price took effect."
+      "title": "Separate price dates from review dates",
+      "description": "In {advancedEdit}, {effectiveDate} records when the price applies; {reviewDate} records when you checked it. {reviewEvery} sets the next reminder from that review date. These dates do not rewrite old costings or schedule a later price change."
     },
     "linkedQualitiesPopover": {
-      "title": "Linked Fabric Qualities",
-      "description": "Click the qualities badge to see every saved fabric recipe that depends on this yarn. Know exactly which products are impacted before updating prices."
+      "title": "Check which qualities use it",
+      "description": "Open the qualities badge to check usage before changing a rate. For example, a quality using “Polyester 75D” needs the matching yarn name. If usage is missing, check that yarn in Saved Qualities; adding a rate alone does not link a recipe."
     },
     "quickReviewAction": {
-      "title": "1-Click Rate Confirmation",
-      "description": "If the current supplier price has not changed, click Confirm to record a verified review and reset the reminder clock without opening any forms."
+      "title": "Confirm only a checked price",
+      "description": "When the supplier price is unchanged, use the row’s review action to confirm it without changing the value. Confirm All as Current applies to all pending reviews, so check every included rate first. Rate Review opens the pending list."
     },
     "quickEditAction": {
-      "title": "Quick Inline Rate Editor",
-      "description": "Click Edit rate to open a compact popover right in the table row. Update prices in seconds without leaving your list."
+      "title": "Record the supplier’s new price",
+      "description": "Example only: your supplier changes ₹200/kg to ₹220/kg. Open {editRate}, enter 220, add a source note, then choose {saveRate}. The +₹20 (+10%) preview compares your saved prices; it is not a live market trend."
     },
     "quickEditPopover": {
       "title": "Inline Price & Trend Preview",
@@ -94,28 +94,34 @@ const en = {
       "description": "Click Add Yarn Rate to register new yarn varieties into your catalog with customized review cadences and supplier notes."
     },
     "rateDrawerFields": {
-      "title": "Full Rate Details & Rename Policy",
-      "description": "Manage name, category, rate, supplier source, and review intervals (30 to 365 days). Once a yarn is linked to fabric recipes, its name is locked to preserve formula integrity."
+      "title": "Use {advancedEdit} for full details",
+      "description": "{advancedEdit} contains dates, Source, notes and {reviewEvery} (30–365 days). Existing yarn names are locked; to rename one, add a replacement rate and intentionally update Saved Qualities. A discovery source stays tied to the original quality or costing."
     },
     "reviewRailWidget": {
-      "title": "Proactive Review Monitor",
-      "description": "The review rail keeps pending rate reviews visible and provides quick access to the batch review workflow whenever supplier prices change."
+      "title": "Check discovered yarns and conflicts",
+      "description": "Saving a quality or costing can discover a yarn for owner review. If different prices are found, review their usages before choosing the current rate. This is discovery from your records, not supplier verification."
     },
     "activityAndArchive": {
-      "title": "Audit History & Soft Archival",
-      "description": "Inspect complete price change logs with Surat timestamps and user attribution. Inactive rates can be soft-archived to protect quotation integrity."
+      "title": "Keep history when retiring a yarn",
+      "description": "Use the row menu’s {activity} to inspect recorded prices and reviews. {archiveRate} removes an unused yarn from the active list without changing Saved Qualities or historical costings. Find it under {archivedRates} and choose {restoreRate} when needed."
     }
-  }
+  },
+  "helpTitle": "Rate Book help: reviews, trends and maintenance",
+  "principles": [
+    "Saving a rate updates matching yarn prices in linked Saved Qualities for future estimates.",
+    "Historical costing snapshots keep their original numbers.",
+    "Yarns discovered from saved qualities or costings need your supplier-price check."
+  ]
 }
 
 const hi: typeof en = {
   "sections": [
-    "खोज और फ़िल्टर",
-    "यार्न रेट पंक्ति",
-    "रेट विवरण और रुझान",
-    "त्वरित इनलाइन कार्य",
-    "विस्तृत रेट संपादक",
-    "रिव्यू रेल"
+    "भाव बनाए रखें",
+    "धागा खोजें",
+    "उपयोग जाँचें",
+    "भाव बदलें",
+    "तारीखें तय करें",
+    "परिणाम उपयोग करें"
   ],
   "sectionProgress": "अनुभाग {current} का {total}",
   "replay": "रेट बुक कैसे काम करता है · गाइडेड टूर",
@@ -124,17 +130,17 @@ const hi: typeof en = {
   "next": "आगे",
   "finish": "समाप्त",
   "progress": "ट्यूटोरियल प्रगति",
-  "hint": "पहले देख लें। टूर समाप्त होने के बाद आप अपने रेट्स अपडेट कर सकते हैं।",
+  "hint": "यह केवल देखने का टूर है: आपके रेट, फ़िल्टर और संपादक के मान वैसे ही रहेंगे।",
   "syncFailed": "टूर बंद हुआ। आपकी प्राथमिकता अभी खाते में सुरक्षित नहीं हो सकी।",
   "retry": "पुनः प्रयास करें",
   "fields": {
     "overview": {
-      "title": "यार्न रेट बुक परिचय",
-      "description": "यार्न (धागे) के बाज़ार भाव की आपकी केंद्रीय कैटलॉग। हर नए कपड़े की लागत और कोटेशन सीधे यहीं से वर्तमान रेट्स लेते हैं।"
+      "title": "अपने यार्न के भाव बनाए रखें",
+      "description": "आगे के अनुमानों के लिए सप्लायर से जाँचे हुए ₹/किग्रा भाव रखें। सप्लायर का कोटेशन या बिल लेकर शुरू करें। ये भाव आप बनाए रखते हैं; बाज़ार से अपने-आप अपडेट नहीं आते।"
     },
     "immutabilityNotice": {
-      "title": "मूल्य सुरक्षा और अपरिवर्तनीयता",
-      "description": "रेट अपडेट केवल नए कोटेशन को प्रभावित करते हैं। आपकी पुरानी लागत गणनाएं और सेव की गई क्वालिटी रेसिपी पूरी तरह सुरक्षित और अपरिवर्तित रहती हैं।"
+      "title": "अगला अनुमान जाँचें",
+      "description": "रेट सेव करने पर जुड़ी सेव की गई क्वालिटीज़ में मेल खाते यार्न के भाव आगे के अनुमानों के लिए बदलते हैं। पुराने कॉस्टिंग स्नैपशॉट अपने मूल आँकड़े रखते हैं। समाप्त के बाद एक धागा खोजकर सप्लायर का भाव जाँचें; फिर लागत अनुमानक में नया अनुमान देखें।"
     },
     "activeRatesCount": {
       "title": "सक्रिय यार्न रेट्स और संतुलन",
@@ -145,20 +151,20 @@ const hi: typeof en = {
       "description": "दर्शाता है कि सप्लायर बिलों से धागे के भाव की अंतिम पुष्टि कब की गई थी, ताकि कोटेशन पुराने भावों पर न बनें।"
     },
     "yarnSearch": {
-      "title": "त्वरित खोज (/)",
-      "description": "धागे के नाम (जैसे 30/1000 MUALTI), काउंट/डेनियर, ब्रोकर या सप्लायर के नाम से तुरंत खोजें। खोजने के लिए कभी भी / दबाएं।"
+      "title": "एक धागा खोजें",
+      "description": "यार्न के नाम, स्रोत या कपड़े से खोजें। प्रविष्टि नहीं मिली? {addRate} में क्वालिटी में इस्तेमाल किया गया नाम और सही ताना या बाना दिशा चुनें।"
     },
     "directionFilter": {
-      "title": "ताना (Warp) और बाना (Weft) फ़िल्टर",
-      "description": "रेट समीक्षा के दौरान विशिष्ट धागों पर ध्यान केंद्रित करने के लिए All, Warp या Weft फ़िल्टर का उपयोग करें।"
+      "title": "समीक्षा वाले भाव खोजें",
+      "description": "सभी, ताना या बाना से सूची सीमित करें। समीक्षा आवश्यक में पुराने भाव और सेव की गई क्वालिटी या कॉस्टिंग से मिले अपुष्ट धागे आते हैं। अन्य धागे देखने के लिए फ़िल्टर हटाएँ।"
     },
     "needsReviewFilter": {
       "title": "समीक्षा योग्य (Needs Review) फ़िल्टर",
       "description": "उन धागों को तुरंत अलग करें जिनकी समीक्षा की तारीख बीत चुकी है या जो नई फैब्रिक क्वालिटी से सिस्टम में आए हैं।"
     },
     "confirmAll": {
-      "title": "सभी की वर्तमान के रूप में पुष्टि करें",
-      "description": "जब कई रेट्स की समीक्षा बाकी हो, तो अलग-अलग फॉर्म खोले बिना एक ही क्लिक में सभी लंबित भावों की एक साथ पुष्टि करने के लिए Confirm All दबाएं।"
+      "title": "पहले हर लंबित भाव जाँचें",
+      "description": "सभी को वर्तमान के रूप में पुष्टि करें हर लंबित रेट की समीक्षा दर्ज करता है। सभी सप्लायर भाव जाँचने के बाद ही इसे चुनें। समीक्षा की पुष्टि से मूल्य नहीं बदलता।"
     },
     "archivedToggle": {
       "title": "सक्रिय बनाम आर्काइव रेट्स",
@@ -169,28 +175,28 @@ const hi: typeof en = {
       "description": "प्रत्येक पंक्ति आपकी मिल में ट्रैक किए जा रहे एक धागे का प्रतिनिधित्व करती है। यह वर्तमान भाव, बाज़ार रुझान, समीक्षा स्थिति और जुड़े कपड़ों की जानकारी एक साथ दिखाती है।"
     },
     "yarnNameCell": {
-      "title": "धागे का विवरण और डिफ़ॉल्ट",
-      "description": "धागे का नाम और प्रकार देखें। 'Default for new costings' वाले धागे नए कपड़े की गणना में अपने-आप चुने जाते हैं।"
+      "title": "धागे की पहचान जाँचें",
+      "description": "भाव बदलने से पहले यार्न का सेव किया नाम और ताना या बाना दिशा जाँचें। क्वालिटी बैज से उपयोग देखें; केवल मिलता-जुलता नाम यह साबित नहीं करता कि कौन-सी क्वालिटीज़ अपडेट होंगी।"
     },
     "rateAndTrend": {
-      "title": "वर्तमान रेट और मूल्य रुझान",
-      "description": "वर्तमान रेट ₹/किग्रा में देखें। ट्रेंड बैज पिछले रिकॉर्ड किए गए भाव की तुलना में रुपए और प्रतिशत का अंतर दिखाता है।"
+      "title": "पिछले दर्ज भाव से अंतर देखें",
+      "description": "वर्तमान भाव ₹/किग्रा में है। बैज पिछले दर्ज मूल्य से तुलना करता है: ₹200 से ₹220 यानी +₹20 (+10%)। शुरुआती रेट का मतलब तुलना के लिए कोई पिछला मूल्य नहीं है।"
     },
     "reviewStatusBadge": {
-      "title": "समीक्षा स्थिति और प्रभावी तिथि",
-      "description": "रंग-कोडित बैज (Needs Review, Overdue, Due Soon, Current) समीक्षा की तात्कालिकता और मूल्य लागू होने की तारीख दिखाते हैं।"
+      "title": "भाव और समीक्षा की तारीख अलग रखें",
+      "description": "{advancedEdit} में {effectiveDate} बताती है कि भाव कब से लागू है; {reviewDate} बताती है कि आपने कब जाँचा। {reviewEvery} उससे अगला रिमाइंडर तय करता है। ये तारीखें पुराने कॉस्टिंग नहीं बदलतीं और भविष्य के लिए भाव बदलने का समय निर्धारित नहीं करतीं।"
     },
     "linkedQualitiesPopover": {
-      "title": "जुड़ी हुई फैब्रिक क्वालिटीज़",
-      "description": "क्वालिटी बैज पर क्लिक करके देखें कि कौन-से कपड़े इस धागे का उपयोग करते हैं, ताकि रेट बदलने से पहले प्रभाव का पता रहे।"
+      "title": "जुड़ी क्वालिटीज़ जाँचें",
+      "description": "भाव बदलने से पहले क्वालिटी बैज खोलकर उपयोग देखें। उदाहरण: “Polyester 75D” वाली क्वालिटी के लिए यार्न का नाम मेल खाना चाहिए। उपयोग न दिखे तो सेव की गई क्वालिटीज़ में धागा जाँचें; केवल रेट जोड़ने से रेसिपी नहीं जुड़ती।"
     },
     "quickReviewAction": {
-      "title": "1-क्लिक रेट पुष्टि",
-      "description": "यदि सप्लायर का रेट नहीं बदला है, तो बिना कोई फॉर्म खोले पुष्टि करने और रिमाइंडर घड़ी रीसेट करने के लिए Confirm दबाएं।"
+      "title": "जाँचे हुए भाव की ही पुष्टि करें",
+      "description": "सप्लायर का भाव नहीं बदला तो पंक्ति की समीक्षा क्रिया से पुष्टि करें; मूल्य नहीं बदलेगा। सभी को वर्तमान के रूप में पुष्टि करें सभी लंबित रेट पर लागू होता है, इसलिए पहले हर भाव जाँचें। रेट समीक्षा से लंबित सूची खोलें।"
     },
     "quickEditAction": {
-      "title": "त्वरित इनलाइन रेट संपादक",
-      "description": "टेबल में सीधे कॉम्पैक्ट पॉपओवर खोलने के लिए Edit rate दबाएं। बिना सूची छोड़े कुछ ही सेकंड में रेट अपडेट करें।"
+      "title": "सप्लायर का नया भाव दर्ज करें",
+      "description": "सिर्फ उदाहरण: सप्लायर का भाव ₹200/किग्रा से ₹220/किग्रा हुआ। {editRate} खोलें, 220 और स्रोत नोट दर्ज करें, फिर {saveRate} चुनें। +₹20 (+10%) आपके दर्ज भावों का अंतर है, लाइव बाज़ार रुझान नहीं।"
     },
     "quickEditPopover": {
       "title": "इनलाइन मूल्य और ट्रेंड पूर्वावलोकन",
@@ -201,28 +207,34 @@ const hi: typeof en = {
       "description": "कैटलॉग में नए धागे जोड़ने, उनकी समीक्षा अवधि और सप्लायर विवरण दर्ज करने के लिए Add Yarn Rate पर क्लिक करें।"
     },
     "rateDrawerFields": {
-      "title": "पूर्ण विवरण और नाम सुरक्षा नियम",
-      "description": "नाम, श्रेणी, रेट, स्रोत और समीक्षा अवधि (30 से 365 दिन) प्रबंधित करें। रेसिपी से जुड़े धागे का नाम फॉर्मूला सुरक्षा के लिए लॉक रहता है।"
+      "title": "पूरा विवरण {advancedEdit} में देखें",
+      "description": "{advancedEdit} में तारीखें, स्रोत, नोट और {reviewEvery} (30–365 दिन) हैं। मौजूदा यार्न का नाम लॉक है; नया नाम चाहिए तो नया रेट जोड़कर सेव की गई क्वालिटीज़ बदलें। खोज का स्रोत मूल क्वालिटी या कॉस्टिंग से जुड़ा रहता है।"
     },
     "reviewRailWidget": {
-      "title": "सक्रिय समीक्षा मॉनिटर",
-      "description": "रिव्यू रेल लंबित समीक्षाओं पर नज़र रखता है और बाज़ार भाव बदलने पर बैच रिव्यू की त्वरित सुविधा देता है।"
+      "title": "मिले हुए धागे और अलग भाव जाँचें",
+      "description": "क्वालिटी या कॉस्टिंग सेव करने से नया यार्न समीक्षा के लिए मिल सकता है। अलग-अलग भाव मिले तो वर्तमान भाव चुनने से पहले उनके उपयोग देखें। यह आपके रिकॉर्ड से मिली जानकारी है, सप्लायर की पुष्टि नहीं।"
     },
     "activityAndArchive": {
-      "title": "ऑडिट इतिहास और सुरक्षित आर्काइव",
-      "description": "सूरत टाइमस्टैम्प और उपयोगकर्ता विवरण के साथ मूल्य परिवर्तन का पूरा इतिहास देखें। अप्रयुक्त धागों को सुरक्षित रूप से आर्काइव करें।"
+      "title": "धागा हटाते समय इतिहास रखें",
+      "description": "पंक्ति मेनू की {activity} में दर्ज भाव और समीक्षाएँ देखें। {archiveRate} से धागा सक्रिय सूची से हटता है; सेव की गई क्वालिटीज़ और पुराने कॉस्टिंग नहीं बदलते। {archivedRates} में उसे ढूँढकर {restoreRate} चुनें।"
     }
-  }
+  },
+  "helpTitle": "रेट बुक सहायता: समीक्षा, भाव का अंतर और रखरखाव",
+  "principles": [
+    "रेट सेव करने पर जुड़ी सेव की गई क्वालिटीज़ के मेल खाते यार्न भाव आगे के अनुमानों के लिए बदलते हैं।",
+    "पुराने कॉस्टिंग स्नैपशॉट अपने मूल आँकड़े रखते हैं।",
+    "सेव की गई क्वालिटी या कॉस्टिंग से मिले यार्न का भाव सप्लायर से जाँचना ज़रूरी है।"
+  ]
 }
 
 const gu: typeof en = {
   "sections": [
-    "શોધ અને ફિલ્ટર્સ",
-    "યાર્ન રેટ પંક્તિ",
-    "રેટ વિગતો અને વલણો",
-    "ઝડપી ઇનલાઇન ક્રિયાઓ",
-    "વિગતવાર રેટ સંપાદક",
-    "રિવ્યૂ રેલ"
+    "ભાવ જાળવો",
+    "દોરો શોધો",
+    "ઉપયોગ તપાસો",
+    "ભાવ બદલો",
+    "તારીખો નક્કી કરો",
+    "પરિણામ વાપરો"
   ],
   "sectionProgress": "વિભાગ {current} / {total}",
   "replay": "રેટ બુક કેવી રીતે કાર્ય કરે છે · ગાઇડેડ ટૂર",
@@ -231,17 +243,17 @@ const gu: typeof en = {
   "next": "આગળ",
   "finish": "પૂર્ણ",
   "progress": "ટ્યુટોરિયલ પ્રગતિ",
-  "hint": "પહેલાં જોઈ લો. ટૂર પૂર્ણ થયા પછી તમે તમારા રેટ્સ મેનેજ અને અપડેટ કરી શકશો.",
+  "hint": "આ માત્ર જોવાનો ટૂર છે: તમારા રેટ, ફિલ્ટર અને સંપાદકના મૂલ્યો જેમ છે તેમ રહેશે.",
   "syncFailed": "ટૂર બંધ કરવામાં આવી. તમારી પસંદગી હજુ ખાતામાં સાચવી શકાઈ નથી.",
   "retry": "ફરી પ્રયાસ કરો",
   "fields": {
     "overview": {
-      "title": "યાર્ન રેટ બુક પરિચય",
-      "description": "યાર્ન (દોરા) ના બજાર ભાવોની તમારી કેન્દ્રીય કેટલોગ. કાપડના દરેક નવા અંદાજ અને ક્વોટેશન માટેના વર્તમાન રેટ સીધા અહીંથી લેવાય છે."
+      "title": "તમારા યાર્નના ભાવ જાળવો",
+      "description": "આગળના અંદાજ માટે સપ્લાયર પાસે ચકાસેલા ₹/કિગ્રા ભાવ રાખો. સપ્લાયરનું ક્વોટેશન કે બિલ લઈને શરૂ કરો. આ ભાવ તમે જાળવો છો; બજારમાંથી આપમેળે અપડેટ આવતા નથી."
     },
     "immutabilityNotice": {
-      "title": "કિંમત સુરક્ષા અને અપરિવર્તનીયતા",
-      "description": "રેટ અપડેટ્સ માત્ર નવા ક્વોટેશનને અસર કરે છે. તમારા અગાઉના કોસ્ટિંગ અને સેવ કરેલી ક્વોલિટી રેસિપી સંપૂર્ણપણે સુરક્ષિત અને અપરિવર્તિત રહે છે."
+      "title": "આગળનો અંદાજ તપાસો",
+      "description": "રેટ સેવ કરતાં જોડાયેલી સેવ કરેલી ક્વોલિટીમાં મળતા યાર્નના ભાવ આગળના અંદાજ માટે બદલાય છે. જૂનાં કોસ્ટિંગ સ્નેપશોટ મૂળ આંકડા જ રાખે છે. પૂર્ણ પછી એક દોરો શોધીને સપ્લાયરનો ભાવ ચકાસો; પછી ખર્ચ અંદાજકમાં નવો અંદાજ જુઓ."
     },
     "activeRatesCount": {
       "title": "સક્રિય યાર્ન રેટ્સ અને સંતુલન",
@@ -252,20 +264,20 @@ const gu: typeof en = {
       "description": "દર્શાવે છે કે સપ્લાયર બિલ સાથે દોરાના ભાવની છેલ્લી ચકાસણી ક્યારે થઈ હતી, જેથી જૂના ભાવો પર ક્વોટેશન ન બને."
     },
     "yarnSearch": {
-      "title": "ત્વરિત શોધ (/)",
-      "description": "દોરાના નામ (દા.ત. 30/1000 MUALTI), કાઉન્ટ/ડેનિયર, બ્રોકર કે સપ્લાયરના નામથી ઝડપથી શોધો. શોધવા માટે ગમે ત્યારે / દબાવો."
+      "title": "એક દોરો શોધો",
+      "description": "યાર્નના નામ, સ્રોત કે કાપડથી શોધો. નોંધ ન મળી? {addRate} દ્વારા ક્વોલિટીમાં વપરાતું નામ અને યોગ્ય તાણા કે વાણા દિશા પસંદ કરો."
     },
     "directionFilter": {
-      "title": "તાણા (Warp) અને વાણા (Weft) ફિલ્ટર્સ",
-      "description": "રેટ રિવ્યૂ દરમિયાન ચોક્કસ દોરાઓ પર ધ્યાન આપવા માટે All, Warp અથવા Weft ફિલ્ટરનો ઉપયોગ કરો."
+      "title": "સમીક્ષા જોઈતા ભાવ શોધો",
+      "description": "બધા, તાણા કે વાણા વડે યાદી નાની કરો. સમીક્ષા જરૂરીમાં જૂના ભાવ અને સેવ કરેલી ક્વોલિટી કે કોસ્ટિંગમાંથી મળેલા અચકાસેલા દોરા આવે છે. બીજા દોરા જોવા ફિલ્ટર દૂર કરો."
     },
     "needsReviewFilter": {
       "title": "સમીક્ષા લાયક (Needs Review) ફિલ્ટર",
       "description": "જે દોરાઓની સમીક્ષાની તારીખ વીતી ગઈ હોય અથવા નવી ક્વોલિટીમાંથી ઉમેરાયા હોય તેમને તરત અલગ તારવો."
     },
     "confirmAll": {
-      "title": "બધાને વર્તમાન તરીકે પુષ્ટિ કરો",
-      "description": "જ્યારે ઘણા રેટ્સની સમીક્ષા બાકી હોય, ત્યારે અલગ-અલગ ફોર્મ ખોલ્યા વિના એક જ ક્લિકમાં તમામ બાકી ભાવોની એકસાથે પુષ્ટિ કરવા માટે Confirm All દબાવો."
+      "title": "પહેલાં દરેક બાકી ભાવ તપાસો",
+      "description": "બધાને વર્તમાન તરીકે પુષ્ટિ કરો દરેક બાકી રેટની સમીક્ષા નોંધે છે. બધા સપ્લાયર ભાવ ચકાસ્યા પછી જ તેનો ઉપયોગ કરો. સમીક્ષાની પુષ્ટિથી કિંમત બદલાતી નથી."
     },
     "archivedToggle": {
       "title": "સક્રિય વિરુદ્ધ આર્કાઇવ રેટ્સ",
@@ -276,28 +288,28 @@ const gu: typeof en = {
       "description": "દરેક પંક્તિ તમારી મિલમાં ટ્રેક થતાં એક દોરાનું પ્રતિનિધિત્વ કરે છે. તે વર્તમાન ભાવ, બજાર વલણ, સમીક્ષા સ્થિતિ અને જોડાયેલા કાપડની માહિતી એકસાથે દર્શાવે છે."
     },
     "yarnNameCell": {
-      "title": "દોરાની વિગત અને ડિફોલ્ટ",
-      "description": "દોરાનું નામ અને પ્રકાર જુઓ. 'Default for new costings' વાળા દોરા નવા કાપડના હિસાબમાં આપોઆપ પસંદ થઈ જાય છે."
+      "title": "દોરાની ઓળખ તપાસો",
+      "description": "ભાવ બદલતાં પહેલાં યાર્નનું સેવ કરેલું નામ અને તાણા કે વાણા દિશા તપાસો. ક્વોલિટી બેજથી ઉપયોગ જુઓ; માત્ર સરખું લાગતું નામ કઈ ક્વોલિટી બદલાશે તેનો પુરાવો નથી."
     },
     "rateAndTrend": {
-      "title": "વર્તમાન રેટ અને ભાવ વલણ",
-      "description": "વર્તમાન રેટ ₹/કિલોમાં જુઓ. ટ્રેન્ડ બેજ અગાઉ નોંધાયેલા ભાવની સરખામણીમાં રૂપિયા અને ટકાવારીનો તફાવત દર્શાવે છે."
+      "title": "પાછલા નોંધેલા ભાવથી તફાવત જુઓ",
+      "description": "વર્તમાન ભાવ ₹/કિગ્રામાં છે. બેજ અગાઉ નોંધેલી કિંમત સાથે સરખાવે છે: ₹200થી ₹220 એટલે +₹20 (+10%). શરૂઆતનો રેટ એટલે સરખામણી માટે અગાઉની કિંમત નથી."
     },
     "reviewStatusBadge": {
-      "title": "સમીક્ષા સ્થિતિ અને અમલી તારીખ",
-      "description": "કલર-કોડેડ બેજ (Needs Review, Overdue, Due Soon, Current) સમીક્ષાની તાકીદ અને ભાવ લાગુ થયાની તારીખ દર્શાવે છે."
+      "title": "ભાવ અને {reviewDate} અલગ રાખો",
+      "description": "{advancedEdit}માં {effectiveDate} ભાવ ક્યારથી લાગુ છે તે બતાવે છે; {reviewDate} તમે ક્યારે ચકાસ્યો તે બતાવે છે. {reviewEvery} તેનાથી આગલું રિમાઇન્ડર નક્કી કરે છે. આ તારીખો જૂનાં કોસ્ટિંગ બદલતી નથી કે ભવિષ્યમાં ભાવ બદલવાનો સમય નક્કી કરતી નથી."
     },
     "linkedQualitiesPopover": {
-      "title": "જોડાયેલી ફેબ્રિક ક્વોલિટીઝ",
-      "description": "ક્વોલિટી બેજ પર ક્લિક કરીને જુઓ કે કયા કાપડ આ દોરાનો ઉપયોગ કરે છે, જેથી ભાવ બદલતા પહેલાં અસરનો ખ્યાલ આવે."
+      "title": "જોડાયેલી ક્વોલિટી તપાસો",
+      "description": "ભાવ બદલતાં પહેલાં ક્વોલિટી બેજ ખોલીને ઉપયોગ જુઓ. ઉદાહરણ: “Polyester 75D” વાપરતી ક્વોલિટી માટે યાર્નનું નામ મળવું જોઈએ. ઉપયોગ ન દેખાય તો સેવ કરેલી ક્વોલિટીમાં દોરો તપાસો; માત્ર રેટ ઉમેરવાથી રેસિપી જોડાતી નથી."
     },
     "quickReviewAction": {
-      "title": "1-ક્લિક રેટ પુષ્ટિ",
-      "description": "જો સપ્લાયરનો રેટ બદલાયો ન હોય, તો ફોર્મ ખોલ્યા વિના પુષ્ટિ કરવા અને રિમાઇન્ડર ઘડિયાળ રીસેટ કરવા Confirm દબાવો."
+      "title": "ચકાસેલા ભાવની જ પુષ્ટિ કરો",
+      "description": "સપ્લાયરનો ભાવ ન બદલાયો હોય તો પંક્તિની સમીક્ષા ક્રિયાથી પુષ્ટિ કરો; કિંમત બદલાશે નહીં. બધાને વર્તમાન તરીકે પુષ્ટિ કરો બધા બાકી રેટ પર લાગુ પડે છે, તેથી પહેલાં દરેક ભાવ તપાસો. રેટ સમીક્ષાથી બાકી યાદી ખોલો."
     },
     "quickEditAction": {
-      "title": "ઝડપી ઇનલાઇન રેટ સંપાદક",
-      "description": "ટેબલની અંદર જ કોમ્પેક્ટ પોપઓવર ખોલવા Edit rate દબાવો. યાદી છોડ્યા વિના સેકન્ડોમાં રેટ અપડેટ કરો."
+      "title": "સપ્લાયરનો નવો ભાવ નોંધો",
+      "description": "માત્ર ઉદાહરણ: સપ્લાયરનો ભાવ ₹200/કિગ્રાથી ₹220/કિગ્રા થયો. {editRate} ખોલો, 220 અને સ્રોતની નોંધ દાખલ કરો, પછી {saveRate} પસંદ કરો. +₹20 (+10%) તમારા નોંધેલા ભાવનો તફાવત છે, લાઇવ બજારનું વલણ નહીં."
     },
     "quickEditPopover": {
       "title": "ઇનલાઇન ભાવ અને ટ્રેન્ડ પૂર્વાવલોકન",
@@ -308,18 +320,24 @@ const gu: typeof en = {
       "description": "કેટલોગમાં નવા દોરા ઉમેરવા, તેમની સમીક્ષા અવધિ અને સપ્લાયર વિગતો નોંધવા માટે Add Yarn Rate પર ક્લિક કરો."
     },
     "rateDrawerFields": {
-      "title": "સંપૂર્ણ વિગતો અને નામ સુરક્ષા નિયમ",
-      "description": "નામ, કેટેગરી, રેટ, સ્ત્રોત અને સમીક્ષા અવધિ (30 થી 365 દિવસ) મેનેજ કરો. રેસિપી સાથે જોડાયેલા દોરાનું નામ ફોર્મ્યુલા સુરક્ષા માટે લૉક રહે છે."
+      "title": "{advancedEdit}માં પૂરી વિગતો જુઓ",
+      "description": "{advancedEdit}માં તારીખો, સ્રોત, નોંધો અને {reviewEvery} (30–365 દિવસ) છે. હાલના યાર્નનું નામ લોક છે; નવું નામ જોઈએ તો નવો રેટ ઉમેરીને સેવ કરેલી ક્વોલિટી બદલો. શોધનો સ્રોત મૂળ ક્વોલિટી કે કોસ્ટિંગ સાથે જોડાયેલો રહે છે."
     },
     "reviewRailWidget": {
-      "title": "સક્રિય સમીક્ષા મોનિટર",
-      "description": "રિવ્યૂ રેલ બાકી સમીક્ષાઓ પર નજર રાખે છે અને બજાર ભાવ બદલાય ત્યારે બેચ રિવ્યૂની ઝડપી સુવિધા આપે છે."
+      "title": "મળેલા દોરા અને જુદા ભાવ તપાસો",
+      "description": "ક્વોલિટી કે કોસ્ટિંગ સેવ કરવાથી નવો યાર્ન સમીક્ષા માટે મળી શકે છે. જુદા ભાવ મળે તો વર્તમાન ભાવ પસંદ કરતાં પહેલાં તેમના ઉપયોગ જુઓ. આ તમારા રેકોર્ડમાંથી મળેલી માહિતી છે, સપ્લાયરની પુષ્ટિ નહીં."
     },
     "activityAndArchive": {
-      "title": "ઓડિટ ઇતિહાસ અને સુરક્ષિત આર્કાઇવ",
-      "description": "સુરત ટાઇમસ્ટેમ્પ અને વપરાશકર્તા વિગતો સાથે ભાવ ફેરફારનો સંપૂર્ણ ઇતિહાસ જુઓ. બિનઉપયોગી દોરાઓને સુરક્ષિત રીતે આર્કાઇવ કરો."
+      "title": "દોરો દૂર કરતી વખતે ઇતિહાસ રાખો",
+      "description": "પંક્તિ મેનૂની {activity}માં નોંધેલા ભાવ અને સમીક્ષાઓ જુઓ. {archiveRate} દોરાને સક્રિય યાદીમાંથી દૂર કરે છે; સેવ કરેલી ક્વોલિટી અને જૂનાં કોસ્ટિંગ બદલાતાં નથી. {archivedRates}માં તેને શોધીને {restoreRate} પસંદ કરો."
     }
-  }
+  },
+  "helpTitle": "રેટ બુક સહાય: સમીક્ષા, ભાવનો તફાવત અને જાળવણી",
+  "principles": [
+    "રેટ સેવ કરતાં જોડાયેલી સેવ કરેલી ક્વોલિટીના મળતા યાર્ન ભાવ આગળના અંદાજ માટે બદલાય છે.",
+    "જૂનાં કોસ્ટિંગ સ્નેપશોટ મૂળ આંકડા જ રાખે છે.",
+    "સેવ કરેલી ક્વોલિટી કે કોસ્ટિંગમાંથી મળેલા યાર્નનો ભાવ સપ્લાયર પાસે ચકાસવો જરૂરી છે."
+  ]
 }
 
 export type RatebookTutorialCopy = typeof en

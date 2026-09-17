@@ -17,7 +17,7 @@ import { WorkerEmptyState } from '@/components/workers/WorkerEmptyState'
 import WorkerEditor from './WorkerEditor'
 import { TourInvitation } from '@/components/tours/TourInvitation'
 import WorkersTutorial from '@/components/tours/WorkersTutorial'
-import { makeWorkersTourExamples, workersTourEditor, type WorkersTourStep } from '@/lib/workers-tour'
+import { makeWorkersTourExamples, workersTourEditor, workersHelpSteps, type WorkersTourStep, type WorkersTourPath } from '@/lib/workers-tour'
 import { workersTutorialCopy } from '@/lib/i18n/workers-tutorial'
 
 export default function WorkersRegister({
@@ -33,9 +33,10 @@ export default function WorkersRegister({
   const params = useSearchParams()
   const { tx, language } = useTranslation()
   const [tourStep, setTourStep] = useState<WorkersTourStep | null>(null)
+  const [tourPath, setTourPath] = useState<WorkersTourPath>('piece')
   const tourLauncher = useRef<HTMLDivElement>(null)
   const sampleWorkers = useMemo(() => makeWorkersTourExamples(today), [today])
-  const preview = tourStep ? workersTourEditor(tourStep) : null
+  const preview = tourStep ? workersTourEditor(tourStep, tourPath) : null
   const tourCopy = workersTutorialCopy[language]
   useLocalizedPageTitle(`${tx('Workers')} | Weavly`)
 
@@ -197,8 +198,17 @@ export default function WorkersRegister({
           /></div>
 
           {!isOpen && <div ref={tourLauncher} data-workers-tour="launcher">
-            <TourInvitation tourId="workers" userId={userId} orgId={orgId} userMetadata={userMetadata} onLaunch={() => setTourStep('search')} />
+            <TourInvitation tourId="workers" userId={userId} orgId={orgId} userMetadata={userMetadata} onLaunch={() => setTourStep('purpose')} />
           </div>}
+          <details hidden={Boolean(tourStep)} data-i18n-skip="true" lang={language} className="rounded-xl border border-hairline bg-surface p-4 text-sm">
+            <summary className="cursor-pointer font-semibold text-ink">{tourCopy.helpTitle}</summary>
+            <dl className="mt-3 grid gap-4 sm:grid-cols-2">
+              {workersHelpSteps.map(topic => <div key={topic}>
+                <dt className="font-medium text-ink">{tourCopy.fields[topic][0]}</dt>
+                <dd className="mt-1 text-subtle">{tourCopy.fields[topic][1]}</dd>
+              </div>)}
+            </dl>
+          </details>
           {tourStep && <p role="status" className="text-xs font-semibold text-saffron-deep">{tourCopy.sample}</p>}
           {/* 2. Global Toolbar */}
           <div data-workers-tour="toolbar">
@@ -257,7 +267,7 @@ export default function WorkersRegister({
             />
           )}
           {preview && <WorkerEditor key={preview} today={today} tourPreview={{ worker: preview === 'piece' ? sampleWorkers[0] : sampleWorkers[1], editing: preview === 'edit' }}>{() => null}</WorkerEditor>}
-          {tourStep && <WorkersTutorial step={tourStep} onStepChange={setTourStep} launcher={tourLauncher} userId={userId} />}
+          {tourStep && <WorkersTutorial path={tourPath} onPathChange={setTourPath} step={tourStep} onStepChange={setTourStep} launcher={tourLauncher} userId={userId} />}
         </div>
       )}
     </WorkerEditor>

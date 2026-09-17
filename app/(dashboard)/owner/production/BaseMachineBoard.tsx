@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { WorkerPayBasis } from '@/components/workers/WorkerPayBasis'
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -692,7 +693,7 @@ export default function BaseMachineBoard({
                                             <div>
                                                 <p className="font-bold text-sm text-ink">{currentWorker.name}</p>
                                                 <p className="text-xs text-muted-foreground">
-                                                    Rate: ₹{currentWorker.rate_per_meter}/m
+                                                    <WorkerPayBasis worker={currentWorker} quality={currentJobByMachine.get(managingMachine.id)} />
                                                 </p>
                                             </div>
                                             {currentAssignmentId && (
@@ -757,7 +758,7 @@ export default function BaseMachineBoard({
                                             <div className="min-w-0">
                                                 <p className="truncate text-xs font-bold text-ink">{worker.name}</p>
                                                 <p className="text-[11px] text-muted-foreground">
-                                                    Rate: ₹{worker.rate_per_meter}/m
+                                                    <WorkerPayBasis worker={worker} quality={managingMachine ? currentJobByMachine.get(managingMachine.id) : undefined} />
                                                 </p>
                                             </div>
 

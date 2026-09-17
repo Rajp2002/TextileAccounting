@@ -6,13 +6,14 @@ import { dismissCostEstimateTutorial } from '@/app/(dashboard)/owner/estimator/t
 import { useTranslation } from '@/lib/i18n/context'
 import { costEstimateTutorialCopy, isTutorialField, type TutorialField } from '@/lib/i18n/cost-estimate-tutorial'
 import { Button } from '@/components/ui/button'
-import { Compass, Sparkles } from 'lucide-react'
 import { findTourTarget, isTourTargetVisible } from '@/lib/tutorial-target'
 import { useMobileTour } from '@/hooks/use-mobile-tour'
 import { useTourViewportLock } from '@/hooks/use-tour-viewport-lock'
 import { TourInvitation } from '@/components/tours/TourInvitation'
+import { buildEstimatorCoreTour, type EstimatorTourContext, type EstimatorCoreCopyKey } from '@/lib/estimator-tour'
+import { costEstimateWorkflowCopy } from '@/lib/i18n/cost-estimate-workflow'
 
-type Step = { section: number; target: HTMLElement | null; card: HTMLElement | null; field: TutorialField; inModal?: boolean }
+type Step = { section: number; target: HTMLElement | null; card: HTMLElement | null; field: TutorialField; inModal?: boolean; coreCopy?: EstimatorCoreCopyKey }
 
 function resolveStepElements(step: Step): { target: HTMLElement | null; card: HTMLElement | null } {
     let target = isTourTargetVisible(step.target) ? step.target : null
@@ -54,17 +55,25 @@ function resolveStepElements(step: Step): { target: HTMLElement | null; card: HT
     return { target, card }
 }
 
-export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed, onPrepare, onOpenLiveCostModal, onOpenMonthlyExpensesModal, onOpenQualityLibraryModal, onActiveChange, freePlan = false, requestTrigger }: {
-    accountDismissed: boolean; enabled: boolean; orgId: string; userId: string; onPrepare: () => void
+export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed, onPrepare, onOpenLiveCostModal, onOpenMonthlyExpensesModal, onOpenQualityLibraryModal, onActiveChange, freePlan = false, standalone = true, existingCosting = false, marketMode = false, productionPipeline = false, overheadMode = 'direct', requestTrigger }: {
+    accountDismissed: boolean; enabled: boolean; orgId: string; userId: string; onPrepare: () => (() => void) | void
     onOpenLiveCostModal?: (open: boolean) => void
     onOpenMonthlyExpensesModal?: (open: boolean) => void
     onOpenQualityLibraryModal?: (open: boolean) => void
     onActiveChange?: (active: boolean) => void
     freePlan?: boolean
+    standalone?: boolean
+    existingCosting?: boolean
+    marketMode?: boolean
+    productionPipeline?: boolean
+    overheadMode?: EstimatorTourContext['overheadMode']
     requestTrigger?: number
 }) {
     const { language, languageStatus } = useTranslation()
     const copy = costEstimateTutorialCopy[language]
+    const workflowCopy = costEstimateWorkflowCopy[language]
+    const [guide, setGuide] = useState<'core' | 'fields'>('core')
+    const restoreView = useRef<(() => void) | void>(undefined)
     const [steps, setSteps] = useState<Step[]>([])
     const [index, setIndex] = useState(0)
     const [requested, setRequested] = useState(false)
@@ -84,6 +93,7 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
 
     useEffect(() => {
         if (requestTrigger && requestTrigger > 0) {
+            setGuide('core')
             setRequested(true)
         }
     }, [requestTrigger])
@@ -124,6 +134,8 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
     useEffect(() => {
         return () => {
             tutorialRows.current.forEach(row => row.dispatchEvent(new CustomEvent('tutorial-expand-row', { detail: false })))
+            restoreView.current?.()
+            restoreView.current = undefined
         }
     }, [])
 
@@ -137,12 +149,7 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
     const isQualityModalStep = Boolean(active?.inModal && ['savedQualityPicker'].includes(active.field)) || Boolean(active?.field && ['savedQualityPicker'].includes(active.field))
 
     useEffect(() => {
-        if (!active) {
-            onOpenLiveCostModal?.(false)
-            onOpenMonthlyExpensesModal?.(false)
-            onOpenQualityLibraryModal?.(false)
-            return
-        }
+        if (!active) return
         if (isLiveCostModalStep) {
             onOpenLiveCostModal?.(true)
         } else {
@@ -173,13 +180,18 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
 
     useEffect(() => {
         if (!requested || !enabled || languageStatus === 'loading') return
-        onPrepare()
+        if (!restoreView.current) restoreView.current = onPrepare()
         let observer: MutationObserver | undefined
         // Quick view can change on replay. Wait for its commit, then expand rows
         // and observe their actual DOM mount rather than guessing a render delay.
         const timer = window.setTimeout(() => {
             const root = document.querySelector('[data-costing-tutorial-root]')
-            if (!root) { setRequested(false); return }
+            if (!root) {
+                restoreView.current?.()
+                restoreView.current = undefined
+                setRequested(false)
+                return
+            }
             tutorialRows.current = Array.from(root.querySelectorAll<HTMLElement>('[data-estimator-row]'))
             const collect = () => {
                 if (tutorialRows.current.some(row => row.querySelector('[aria-expanded]')?.getAttribute('aria-expanded') !== 'true')) return
@@ -235,7 +247,16 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
                 })
                 observer?.disconnect()
                 setIndex(0)
-                setSteps(next)
+                const coreSteps: Step[] = buildEstimatorCoreTour({ freePlan, standalone, existingCosting, marketMode, productionPipeline, overheadMode }).map((step, section) => ({
+                    section,
+                    field: step.field,
+                    coreCopy: step.copy,
+                    // Keep teaching steps even when an optional section is not rendered.
+                    target: findTourTarget(`[data-estimator-field="${step.field}"]`),
+                    card: null,
+                    inModal: ['savedQualityPicker', 'liveCostMetrics', 'liveCostActions'].includes(step.field),
+                }))
+                setSteps(guide === 'core' ? coreSteps : next)
                 setRequested(false)
             }
             observer = new MutationObserver(collect)
@@ -244,7 +265,7 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
             collect()
         }, 150)
         return () => { window.clearTimeout(timer); observer?.disconnect() }
-    }, [requested, enabled, onPrepare, languageStatus])
+    }, [requested, enabled, onPrepare, languageStatus, guide, freePlan, standalone, existingCosting, marketMode, productionPipeline, overheadMode])
 
     const close = useCallback(() => {
         tutorialRows.current.forEach(row => row.dispatchEvent(new CustomEvent('tutorial-expand-row', { detail: false })))
@@ -261,6 +282,8 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
         onOpenLiveCostModal?.(false)
         onOpenMonthlyExpensesModal?.(false)
         onOpenQualityLibraryModal?.(false)
+        restoreView.current?.()
+        restoreView.current = undefined
     }, [key, syncDismissal, onOpenLiveCostModal, onOpenMonthlyExpensesModal, onOpenQualityLibraryModal])
 
     const handleNext = useCallback(() => {
@@ -605,9 +628,13 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
         }
     }, [active, mobileTour.mobile])
 
-    const [replayTitle, replaySubtitle] = copy.replay.includes(' · ')
-        ? copy.replay.split(' · ')
-        : [copy.replay, '']
+    const saveStep = buildEstimatorCoreTour({ freePlan, standalone, existingCosting, marketMode, productionPipeline, overheadMode }).find(step => step.field === 'liveCostActions')!
+    const activeCopy = active && (active.coreCopy
+        ? workflowCopy.steps[active.coreCopy]
+        : active.field === 'liveCostActions' ? workflowCopy.steps[saveStep.copy]
+        : freePlan && active.field === 'liveCostMetrics' ? workflowCopy.steps.reviewFree
+        : active.field === 'liveCostShortcut' ? workflowCopy.steps.purpose
+        : copy.fields[active.field])
 
     return <>
         {syncFailed && <div data-i18n-skip="true" lang={language} role="status" className="flex flex-wrap items-center gap-2 rounded-xl border border-amber-200/80 bg-amber-50/60 p-2.5 text-xs text-[var(--color-muted)]">
@@ -620,11 +647,14 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
                 userId={userId}
                 orgId={orgId}
                 align="full"
-                onLaunch={() => setRequested(true)}
+                onLaunch={() => { setGuide('core'); setRequested(true) }}
                 className="estimator-touch-target border-amber-200/90 bg-amber-50/75 hover:bg-amber-100/70 shadow-xs"
             />
         )}
-        {active && createPortal(<div data-i18n-skip="true" lang={language} className="fixed inset-0 z-[100]" data-testid="cost-estimate-tutorial">
+        {enabled && <Button type="button" data-i18n-skip="true" lang={language} variant="ghost" className="h-auto w-full whitespace-normal text-xs" onClick={() => { setGuide('fields'); setRequested(true) }}>
+            {workflowCopy.fieldGuide}
+        </Button>}
+        {active && createPortal(<div data-i18n-skip="true" lang={language} className="guided-tour-portal fixed inset-0 z-[100]" data-testid="cost-estimate-tutorial">
             <div
                 className="guided-tour-backdrop absolute inset-0 bg-black/55 backdrop-blur-sm transition-opacity duration-300"
                 style={{
@@ -677,10 +707,10 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
                         }`}>
                             {copy.sectionProgress.replace('{current}', String(visibleSections.indexOf(active.section) + 1)).replace('{total}', String(visibleSections.length))}
                         </span>
-                        <span className="text-xs font-semibold text-[var(--color-ink)]/70">· {copy.sections[active.section]}</span>
+                        <span className="text-xs font-semibold text-[var(--color-ink)]/70">· {active.coreCopy ? workflowCopy.coreGuide : copy.sections[active.section]}</span>
                     </div>
-                    <h2 id="cost-tour-title" className="mt-2 text-base sm:text-lg font-semibold text-[var(--color-ink)] leading-snug sm:leading-[1.4]">{copy.fields[active.field].title}</h2>
-                    <p id="cost-tour-description" className="mt-2 text-sm leading-relaxed sm:leading-[1.72] text-[var(--color-ink)]/90">{copy.fields[active.field].description}</p>
+                    <h2 id="cost-tour-title" className="mt-2 text-base sm:text-lg font-semibold text-[var(--color-ink)] leading-snug sm:leading-[1.4]">{activeCopy?.title}</h2>
+                    <p id="cost-tour-description" className="mt-2 text-sm leading-relaxed sm:leading-[1.72] text-[var(--color-ink)]/90">{activeCopy?.description}</p>
                 </div>
                 <p className="hidden sm:block mt-3 text-xs text-[var(--color-muted)] leading-relaxed sm:leading-[1.65]">{copy.hint}</p>
                 <div className="mt-3.5 h-1.5 w-full overflow-hidden rounded-full bg-orange-100 dark:bg-orange-950/50" role="progressbar" aria-valuenow={index + 1} aria-valuemin={1} aria-valuemax={steps.length} aria-label={copy.progress}>

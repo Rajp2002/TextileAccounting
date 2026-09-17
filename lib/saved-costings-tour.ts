@@ -1,15 +1,21 @@
 import { makeDefaultEstimateState, calcFullTotals, buildCostingResult } from './estimator'
 import { createCostingExportModel } from './estimator-export'
 
-export const paidCostingSteps = ['find', 'filters', 'select', 'versions', 'breakdown', 'economics', 'reuse', 'organize', 'internal', 'customer', 'share', 'compareSelect', 'comparison', 'comparisonDetails', 'finish'] as const
-export const freeCostingSteps = ['snapshots', 'searchAndFilters', 'search', 'freeFilters', 'freeSelect', 'internal', 'customer', 'share', 'finish'] as const
-export type SavedCostingStep = typeof paidCostingSteps[number] | typeof freeCostingSteps[number] | 'production' | 'quotations'
-export function savedCostingTourSteps(free: boolean, production = false, quotations = false): SavedCostingStep[] {
+export const paidCostingSteps = ['find', 'versions', 'economics', 'reuse', 'internal', 'finish'] as const
+export const freeCostingSteps = ['snapshots', 'freeSelect', 'internal', 'finish'] as const
+export const comparisonCostingSteps = ['compareSelect', 'comparison', 'comparisonDetails', 'finish'] as const
+export type SavedCostingStep = typeof paidCostingSteps[number] | typeof freeCostingSteps[number] | typeof comparisonCostingSteps[number]
+    | 'filters' | 'select' | 'breakdown' | 'organize' | 'customer' | 'share' | 'production' | 'quotations'
+    | 'searchAndFilters' | 'search' | 'freeFilters'
+export function savedCostingTourSteps(free: boolean, production = false): SavedCostingStep[] {
     if (free) return [...freeCostingSteps]
     const steps: SavedCostingStep[] = [...paidCostingSteps]
-    if (production) steps.splice(steps.indexOf('organize'), 0, 'production')
-    if (quotations) steps.splice(steps.indexOf('finish'), 0, 'quotations')
+    if (production) steps.splice(steps.indexOf('finish'), 0, 'production')
     return steps
+}
+export type SavedCostingEnding = 'existing' | 'empty' | 'unavailable'
+export function savedCostingTourEnding(count: number, unavailable = false): SavedCostingEnding {
+    return unavailable ? 'unavailable' : count > 0 ? 'existing' : 'empty'
 }
 export function costingTourSurface(step: SavedCostingStep | null) {
     if (step === 'internal' || step === 'customer' || step === 'share') return 'export'

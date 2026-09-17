@@ -1,7 +1,7 @@
 import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
-import { makeWorkersTourExamples } from '../lib/workers-tour'
+import { makeWorkersTourExamples, workersTourEditor, workersTourPaths, workersTourSelectors } from '../lib/workers-tour'
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }), usePathname: () => '/owner/workers', useSearchParams: () => new URLSearchParams() }))
 vi.mock('@/lib/i18n/context', () => ({ useTranslation: () => ({ tx: (text: string) => text }) }))
@@ -38,7 +38,20 @@ describe('Workers tour uses the real editor with disabled preview fields', () =>
         expect(html).toContain('Edit worker')
         expect(html).toContain('<fieldset disabled=""')
     })
-    it('keeps the normal editor writable', () => {
+    it('mounts every form target in each selected path inside a disabled sample editor', () => {
+        for (const path of ['piece', 'salary'] as const) {
+            for (const step of workersTourPaths[path]) {
+                const preview = workersTourEditor(step, path)
+                if (!preview) continue
+                const html = render(preview === 'piece' ? piece : salary, preview === 'edit')
+                const selector = workersTourSelectors[step].slice(1, -1)
+                expect(html).toContain(selector)
+                expect(html).toContain('<fieldset disabled=""')
+                expect(html).not.toContain('autofocus')
+            }
+        }
+    })
+    it('keeps the normal editor writable' , () => {
         const html = renderToStaticMarkup(<WorkerEditor today="2026-09-16" initialOpen>{() => null}</WorkerEditor>)
         expect(html).not.toContain('<fieldset disabled')
         expect(html).toContain('autofocus')

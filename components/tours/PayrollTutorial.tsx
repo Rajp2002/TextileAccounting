@@ -5,23 +5,25 @@ import { createPortal } from 'react-dom'
 import { Button } from '@/components/ui/button'
 import { useTranslation } from '@/lib/i18n/context'
 import { payrollTutorialCopy } from '@/lib/i18n/payroll-tutorial'
-import { payrollTourSelector, payrollTourSteps, payrollTourSection, type PayrollTourStep, type PayrollTourVariant } from '@/lib/payroll-tour'
+import { payrollTourSelector, payrollTourSteps, payrollTourSection, type PayrollTourStep, type PayrollTourVariant, type PayrollTourTrack } from '@/lib/payroll-tour'
 import { findTourTarget } from '@/lib/tutorial-target'
 import { lockTourViewport } from '@/lib/tutorial-viewport-lock'
 import { useMobileTour } from '@/hooks/use-mobile-tour'
 import { persistTourCompleted } from '@/lib/tours/tour-preferences'
 
-export default function PayrollTutorial({ step, onStepChange, launcher, userId, variant, returnScroll }: {
+export default function PayrollTutorial({ step, onStepChange, launcher, userId, variant, track, returnFocus, returnScroll }: {
     step: PayrollTourStep
     onStepChange: (step: PayrollTourStep | null) => void
     launcher: RefObject<HTMLDivElement | null>
     userId?: string
     variant: PayrollTourVariant
+    track: PayrollTourTrack
+    returnFocus: RefObject<HTMLElement | null>
     returnScroll: RefObject<{ x: number; y: number }>
 }) {
     const { language } = useTranslation()
     const copy = payrollTutorialCopy[language]
-    const steps = payrollTourSteps(variant)
+    const steps = payrollTourSteps(variant, track)
     const sections = [...new Set(steps.map(payrollTourSection))]
     const index = steps.indexOf(step)
     const panel = useRef<HTMLDivElement>(null)
@@ -35,7 +37,7 @@ export default function PayrollTutorial({ step, onStepChange, launcher, userId, 
     const close = () => onStepChange(null)
     const next = () => {
         if (index === steps.length - 1) {
-            void persistTourCompleted('payroll', userId)
+            if (track === 'core') void persistTourCompleted('payroll', userId)
             close()
         } else onStepChange(steps[index + 1])
     }
@@ -45,7 +47,8 @@ export default function PayrollTutorial({ step, onStepChange, launcher, userId, 
 
     useEffect(() => {
         if (!panel.current) return
-        const trigger = launcher.current?.querySelector<HTMLButtonElement>('[data-tour-control="take-tour"], [data-tour-control="quiet-tour"]')
+        const launchElement = returnFocus.current
+        const launcherContainer = launcher.current
         const scroll = returnScroll.current
         const previous = new Map<HTMLElement, boolean>()
         const makeInert = () => {
@@ -94,9 +97,10 @@ export default function PayrollTutorial({ step, onStepChange, launcher, userId, 
             document.removeEventListener('focusin', focus, true)
             previous.forEach((inert, element) => { element.inert = inert })
             window.scrollTo({ left: scroll.x, top: scroll.y, behavior: 'instant' })
+            const trigger = launchElement?.isConnected ? launchElement : launcherContainer?.querySelector<HTMLButtonElement>('[data-tour-control="take-tour"], [data-tour-control="quiet-tour"]')
             trigger?.focus({ preventScroll: true })
         }
-    }, [launcher, returnScroll])
+    }, [launcher, returnFocus, returnScroll])
 
     useEffect(() => {
         if (mobile.mobile) return
@@ -126,7 +130,7 @@ export default function PayrollTutorial({ step, onStepChange, launcher, userId, 
     const current = measurement?.step === step ? measurement : null
     const rect = mobile.mobile ? mobile.rects?.field : current?.rect
     return createPortal(
-        <div ref={portal} data-testid="payroll-tutorial" data-i18n-skip="true" lang={language} className="fixed inset-0 z-[100]">
+        <div ref={portal} data-testid="payroll-tutorial" data-i18n-skip="true" lang={language} className="guided-tour-portal fixed inset-0 z-[100]">
             <div aria-hidden="true" className="guided-tour-backdrop absolute inset-0 bg-black/55 backdrop-blur-xs" style={rect ? { clipPath: `polygon(evenodd,0% 0%,100% 0%,100% 100%,0% 100%,0% 0%,${rect.left}px ${rect.top}px,${rect.left}px ${rect.bottom}px,${rect.right}px ${rect.bottom}px,${rect.right}px ${rect.top}px,${rect.left}px ${rect.top}px)` } : undefined} />
             {rect && <div aria-hidden="true" className="guided-tour-highlight pointer-events-none fixed rounded-xl border-2 border-saffron ring-4 ring-saffron/30" style={{ left: rect.left - 4, top: rect.top - 4, width: rect.width + 8, height: rect.height + 8 }} />}
             <div ref={panel} role="dialog" aria-modal="true" aria-labelledby="payroll-tour-title" aria-describedby="payroll-tour-description" tabIndex={-1} className={`guided-tour-panel fixed z-[101] w-[320px] max-w-[calc(100vw-2rem)] max-h-[calc(100dvh-2rem)] flex flex-col rounded-2xl border border-amber-200/90 bg-surface p-4 text-ink shadow-2xl outline-none ${current?.bottom ? 'bottom-4' : 'top-4'} ${current?.left ? 'left-4' : 'right-4'}`}>
