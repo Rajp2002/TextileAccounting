@@ -103,6 +103,30 @@ export default function BasePayrollSettlementWorkspace({
     )
 
     // Sync when external props change and workspace is opened/closed
+    const [prevExternalPayables, setPrevExternalPayables] = useState(externalPayables)
+    if (externalPayables !== prevExternalPayables) {
+        setPrevExternalPayables(externalPayables)
+        setLocalPayables(externalPayables)
+    }
+
+    const [prevExternalPeriodRecord, setPrevExternalPeriodRecord] = useState(externalPeriodRecord)
+    if (externalPeriodRecord !== prevExternalPeriodRecord) {
+        setPrevExternalPeriodRecord(externalPeriodRecord)
+        setLocalPeriodRecord(externalPeriodRecord ?? null)
+        const externalIds = externalPeriodRecord?.resolved_worker_ids ?? []
+        setResolvedWorkerIds((prev) => Array.from(new Set([...externalIds, ...prev])))
+    }
+
+    const [prevOpen, setPrevOpen] = useState(open)
+    if (open !== prevOpen) {
+        setPrevOpen(open)
+        if (open) {
+            setLocalPayables(externalPayables)
+            setLocalPeriodRecord(externalPeriodRecord ?? null)
+            const externalIds = externalPeriodRecord?.resolved_worker_ids ?? []
+            setResolvedWorkerIds((prev) => Array.from(new Set([...externalIds, ...prev])))
+        }
+    }
     const workerById = useMemo(
         () => new Map(workers.map((w) => [w.id, w])),
         [workers]
@@ -482,7 +506,7 @@ export default function BasePayrollSettlementWorkspace({
                                 {formatINR(summary.paidAmount, { hideDecimals: true })}
                             </p>
                             <p className="mt-0.5 text-[10px] sm:text-xs text-muted-foreground">
-                                {summary.paidWorkers} settled
+                                {summary.paidWorkers} paid{summary.resolvedWorkers > 0 ? ` · ${summary.resolvedWorkers} resolved` : ''}
                             </p>
                         </div>
                         <div className="pl-2 sm:pl-4">
@@ -502,7 +526,7 @@ export default function BasePayrollSettlementWorkspace({
                     <div className="mt-4 space-y-1.5">
                         <div className="flex items-center justify-between text-xs text-muted-foreground font-semibold">
                             <span>
-                                {summary.paidWorkers + summary.resolvedWorkers} of {summary.totalWorkers} workers settled
+                                {summary.paidWorkers + summary.resolvedWorkers} of {summary.totalWorkers} workers settled{summary.resolvedWorkers > 0 ? ` (${summary.paidWorkers} paid, ${summary.resolvedWorkers} resolved)` : ''}
                             </span>
                             <span>{summary.progressPercent}%</span>
                         </div>
