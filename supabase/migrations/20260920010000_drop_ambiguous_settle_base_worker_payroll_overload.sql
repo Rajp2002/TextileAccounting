@@ -1,0 +1,21 @@
+-- ============================================================
+-- MIGRATION: Drop Ambiguous settle_base_worker_payroll_reviewed Overload
+-- 
+-- 20260913180000_base_payroll_period_settlement introduced a 5-argument version:
+--   settle_base_worker_payroll_reviewed(uuid, date, text, jsonb, text DEFAULT NULL)
+-- but did not drop the legacy 4-argument version:
+--   settle_base_worker_payroll_reviewed(uuid, date, text, jsonb)
+--
+-- Because PostgreSQL does not replace functions when parameter signatures differ,
+-- both functions coexisted. When callers omit p_note (or pass 4 arguments),
+-- PostgREST and PostgreSQL throw 42725 (ambiguous function call):
+--   "Could not choose the best candidate function between:
+--    public.settle_base_worker_payroll_reviewed(p_worker_id => uuid, p_period_end => date, p_payment_mode => text, p_expected => jsonb),
+--    public.settle_base_worker_payroll_reviewed(p_worker_id => uuid, p_period_end => date, p_payment_mode => text, p_expected => jsonb, p_note => text)"
+--
+-- Dropping the legacy 4-argument function eliminates ambiguity completely,
+-- while the 5-argument function continues to support both 4-argument (via DEFAULT NULL)
+-- and 5-argument calls.
+-- ============================================================
+
+DROP FUNCTION IF EXISTS public.settle_base_worker_payroll_reviewed(uuid, date, text, jsonb);

@@ -1017,14 +1017,12 @@ export async function settleBaseWorkerPayroll(input: {
         p_period_end: parsed.data.periodEnd,
         p_payment_mode: parsed.data.paymentMode,
         p_expected: parsed.data.expected,
-    }
-    if (parsed.data.note) {
-        params.p_note = parsed.data.note
+        p_note: parsed.data.note ?? null,
     }
 
     let { data, error } = await supabase.rpc('settle_base_worker_payroll_reviewed', params)
 
-    if (error && params.p_note && error.message?.includes('p_note')) {
+    if (error && (error.message?.includes('p_note') || error.message?.includes('Could not find the function'))) {
         delete params.p_note
         const retry = await supabase.rpc('settle_base_worker_payroll_reviewed', params)
         data = retry.data
