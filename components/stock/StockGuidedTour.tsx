@@ -18,12 +18,22 @@ export default function StockGuidedTour({ kind, userId, orgId, userMetadata, chi
     const launcher = useRef<HTMLDivElement>(null)
     const returnScroll = useRef({ x: 0, y: 0 })
     return <>
-        <div ref={launcher} className="mx-auto mb-5 max-w-6xl">
-            <TourInvitation tourId={kind} userId={userId} orgId={orgId} userMetadata={userMetadata} onLaunch={() => {
-                returnScroll.current = { x: window.scrollX, y: window.scrollY }
-                setStep(stockTourSteps(kind)[0])
-            }} />
-        </div>
+        <aside className="stock-left-rail guided-tour-left-rail space-y-2" aria-label={kind === 'yarn-stock' ? 'Yarn Stock guides and tools' : 'Fabric Stock guides and tools'}>
+            <div ref={launcher}>
+                <TourInvitation
+                    tourId={kind}
+                    userId={userId}
+                    orgId={orgId}
+                    userMetadata={userMetadata}
+                    align="full"
+                    className="w-full estimator-touch-target border-amber-200/90 bg-amber-50/75 hover:bg-amber-100/70 shadow-xs"
+                    onLaunch={() => {
+                        returnScroll.current = { x: window.scrollX, y: window.scrollY }
+                        setStep(stockTourSteps(kind)[0])
+                    }}
+                />
+            </div>
+        </aside>
         <div hidden={step !== null}>{children}</div>
         {step && <>
             <StockTourPreview kind={kind} step={step} />

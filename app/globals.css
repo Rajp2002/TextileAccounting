@@ -602,6 +602,17 @@
     margin-bottom: 1.25rem;
   }
 
+  .guided-tour-left-rail,
+  .production-left-rail,
+  .workers-left-rail,
+  .machines-left-rail,
+  .payroll-left-rail,
+  .stock-left-rail,
+  .dispatch-left-rail {
+    width: 100%;
+    margin-bottom: 1.25rem;
+  }
+
   .configuration-page-frame {
     width: 100%;
   }
@@ -675,6 +686,26 @@
       z-index: 30;
       width: 14rem;
       max-height: calc(100vh - 7.5rem);
+      overflow-y: auto;
+      margin-top: 0;
+      margin-bottom: 0;
+      padding-bottom: 0.25rem;
+      scrollbar-width: thin;
+    }
+
+    .guided-tour-left-rail,
+    .production-left-rail,
+    .workers-left-rail,
+    .machines-left-rail,
+    .payroll-left-rail,
+    .stock-left-rail,
+    .dispatch-left-rail {
+      position: fixed;
+      top: 6rem;
+      left: calc(248px + 1rem);
+      z-index: 30;
+      width: 14rem;
+      max-height: calc(100vh - 7rem);
       overflow-y: auto;
       margin-top: 0;
       margin-bottom: 0;
@@ -805,6 +836,41 @@
 
   @media (min-width: 1800px) {
     .saved-costings-left-rail {
+      left: calc(248px + 1.25rem);
+      width: 14.5rem;
+    }
+  }
+
+  @media (min-width: 1660px) {
+    .guided-tour-left-rail,
+    .production-left-rail,
+    .workers-left-rail,
+    .machines-left-rail,
+    .payroll-left-rail,
+    .stock-left-rail,
+    .dispatch-left-rail {
+      position: fixed;
+      top: 6rem;
+      left: calc(248px + 1rem);
+      z-index: 30;
+      width: 14rem;
+      max-height: calc(100vh - 7rem);
+      overflow-y: auto;
+      margin-top: 0;
+      margin-bottom: 0;
+      padding-bottom: 0.25rem;
+      scrollbar-width: thin;
+    }
+  }
+
+  @media (min-width: 1800px) {
+    .guided-tour-left-rail,
+    .production-left-rail,
+    .workers-left-rail,
+    .machines-left-rail,
+    .payroll-left-rail,
+    .stock-left-rail,
+    .dispatch-left-rail {
       left: calc(248px + 1.25rem);
       width: 14.5rem;
     }

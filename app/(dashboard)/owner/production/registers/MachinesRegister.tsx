@@ -109,9 +109,21 @@ export default function MachinesRegister({
         <div className="mx-auto w-full max-w-6xl space-y-6">
           {/* 1. Page Header */}
           <div data-machines-tour="header"><MachinesPageHeader onAdd={tourStep ? () => {} : add} returnTo={tourStep ? undefined : returnTo} /></div>
-          {!isOpen && <div ref={tourLauncher} data-machines-tour="launcher">
-            <TourInvitation tourId="machines" userId={userId} orgId={orgId} userMetadata={userMetadata} onLaunch={() => setTourStep('purpose')} />
-          </div>}
+          {!isOpen && (
+            <aside className="machines-left-rail guided-tour-left-rail space-y-3" aria-label="Machines guides and tools">
+              <div ref={tourLauncher} data-machines-tour="launcher">
+                <TourInvitation
+                  tourId="machines"
+                  userId={userId}
+                  orgId={orgId}
+                  userMetadata={userMetadata}
+                  align="full"
+                  className="w-full estimator-touch-target border-amber-200/90 bg-amber-50/75 hover:bg-amber-100/70 shadow-xs"
+                  onLaunch={() => setTourStep('purpose')}
+                />
+              </div>
+            </aside>
+          )}
           {tourStep && <p role="status" className="text-xs font-semibold text-saffron-deep">{machinesTutorialCopy[language].sample}</p>}
 
           {/* 2. Machine Toolbar */}
