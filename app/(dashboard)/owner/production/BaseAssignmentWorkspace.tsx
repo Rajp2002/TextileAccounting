@@ -386,11 +386,19 @@ export default function BaseAssignmentWorkspace({
             {(focusWorkerId || focusMachineId) && <div role="status" className="col-span-full rounded border p-3"><p>{(focusWorkerId && !liveData.workers.some(worker => worker.id === focusWorkerId)) || (focusMachineId && !liveData.machines.some(machine => machine.id === focusMachineId)) ? 'This record is unavailable.' : focusWorkerId ? 'Worker filter active' : 'Machine filter active'}</p><Link className="inline-flex min-h-11 items-center underline" href={`/owner/assignments?shift=${shift}`}>View all assignments</Link></div>}
             <aside className="configuration-guide-rail" aria-label="Machine Assignments guide">
                 <div ref={tourLauncher}>
-                    <TourInvitation tourId="configuration" userId={liveData.actorId} orgId={liveData.orgId} userMetadata={tourMetadata} align="full" onLaunch={() => {
-                        if (pendingKey) return
-                        tourReturnScroll.current = { x: window.scrollX, y: window.scrollY }
-                        setTourStep(configurationTourSteps[0])
-                    }} />
+                    <TourInvitation
+                        tourId="configuration"
+                        userId={liveData.actorId}
+                        orgId={liveData.orgId}
+                        userMetadata={tourMetadata}
+                        align="full"
+                        className="w-full estimator-touch-target border-amber-200/90 bg-amber-50/75 hover:bg-amber-100/70 shadow-xs"
+                        onLaunch={() => {
+                            if (pendingKey) return
+                            tourReturnScroll.current = { x: window.scrollX, y: window.scrollY }
+                            setTourStep(configurationTourSteps[0])
+                        }}
+                    />
                 </div>
                 <details data-i18n-skip="true" lang={language} className="mt-3 rounded-xl border border-hairline bg-surface p-3 text-sm">
                     <summary className="cursor-pointer font-semibold text-ink">{tourCopy.helpLabel}</summary>

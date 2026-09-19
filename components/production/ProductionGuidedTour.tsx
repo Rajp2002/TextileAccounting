@@ -23,18 +23,36 @@ export default function ProductionGuidedTour({ userId, orgId, userMetadata, chil
     const launcher = useRef<HTMLDivElement>(null)
     const returnScroll = useRef({ x: 0, y: 0 })
     return <>
-        <div ref={launcher} className="mx-auto mb-5 max-w-6xl">
-            <TourInvitation tourId="production" userId={userId} orgId={orgId} userMetadata={userMetadata} onLaunch={() => {
-                returnFocus.current = launcher.current?.querySelector<HTMLButtonElement>('[data-tour-control="take-tour"], [data-tour-control="quiet-tour"]') ?? null
-                returnScroll.current = { x: window.scrollX, y: window.scrollY }
-                setStep(productionTourSteps[0])
-            }} />
-            <Button type="button" variant="ghost" className="mt-1 h-auto min-h-11 whitespace-normal text-left text-xs text-muted-foreground" data-tour-control="production-details" onClick={event => {
-                returnFocus.current = event.currentTarget
-                returnScroll.current = { x: window.scrollX, y: window.scrollY }
-                setStep(productionTourDetailSteps[0])
-            }}>{copy.details}</Button>
-        </div>
+        <aside className="production-left-rail guided-tour-left-rail space-y-2" aria-label="Production guides and tools">
+            <div ref={launcher}>
+                <TourInvitation
+                    tourId="production"
+                    userId={userId}
+                    orgId={orgId}
+                    userMetadata={userMetadata}
+                    align="full"
+                    className="w-full estimator-touch-target border-amber-200/90 bg-amber-50/75 hover:bg-amber-100/70 shadow-xs"
+                    onLaunch={() => {
+                        returnFocus.current = launcher.current?.querySelector<HTMLButtonElement>('[data-tour-control="take-tour"], [data-tour-control="quiet-tour"]') ?? null
+                        returnScroll.current = { x: window.scrollX, y: window.scrollY }
+                        setStep(productionTourSteps[0])
+                    }}
+                />
+                <Button
+                    type="button"
+                    variant="ghost"
+                    className="mt-1 h-auto min-h-11 w-full whitespace-normal text-left text-xs text-muted-foreground hover:text-ink"
+                    data-tour-control="production-details"
+                    onClick={event => {
+                        returnFocus.current = event.currentTarget
+                        returnScroll.current = { x: window.scrollX, y: window.scrollY }
+                        setStep(productionTourDetailSteps[0])
+                    }}
+                >
+                    {copy.details}
+                </Button>
+            </div>
+        </aside>
         <div hidden={step !== null}>{children}</div>
         {step && <>
             <ProductionTourPreview step={step} />

@@ -1476,7 +1476,9 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
 
     return (
         <>
-            <SavedCostingsTutorial step={tourStep} onStepChange={setTourStep} onComplete={() => setShowCostingDeleteNudge(true)} production={canUseProductionPipeline} full={canUseProduction} ending={savedCostingTourEnding(quotes.filter(quote => isStandaloneCosting(quote.record_kind)).length)} quotations={canUseQuotationWorkflow} userId={userId} orgId={orgId} />
+            <aside className="saved-costings-left-rail space-y-3" aria-label={tx('Saved Costings guides and tools')}>
+                <SavedCostingsTutorial step={tourStep} onStepChange={setTourStep} onComplete={() => setShowCostingDeleteNudge(true)} production={canUseProductionPipeline} full={canUseProduction} ending={savedCostingTourEnding(quotes.filter(quote => isStandaloneCosting(quote.record_kind)).length)} quotations={canUseQuotationWorkflow} userId={userId} orgId={orgId} />
+            </aside>
             <div className="premium-route-enter max-w-6xl mx-auto space-y-6">
             <RouteMilestones route="/owner/quotes" shellVisible primaryUsable secondaryReady />
             <div className="min-[1540px]:hidden">

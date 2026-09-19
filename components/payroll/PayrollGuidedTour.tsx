@@ -31,13 +31,32 @@ export default function PayrollGuidedTour({ variant, userId, orgId, userMetadata
         setStep(payrollTourSteps(variant, nextTrack)[0])
     }
     return <>
-        <div ref={launcher} className="mx-auto mb-5 max-w-6xl">
-            <TourInvitation tourId="payroll" userId={userId} orgId={orgId} userMetadata={userMetadata} onLaunch={() => launch('core')} />
-            <div data-i18n-skip="true" lang={language} className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
-                <Button type="button" variant="ghost" size="sm" data-tour-control="payroll-help" onClick={() => launch('help')}>{copy.help}</Button>
-                <p className="text-xs text-subtle">{copy.helpDescription[variant]}</p>
+        <aside className="payroll-left-rail guided-tour-left-rail space-y-2" aria-label="Payroll guides and tools">
+            <div ref={launcher}>
+                <TourInvitation
+                    tourId="payroll"
+                    userId={userId}
+                    orgId={orgId}
+                    userMetadata={userMetadata}
+                    align="full"
+                    className="w-full estimator-touch-target border-amber-200/90 bg-amber-50/75 hover:bg-amber-100/70 shadow-xs"
+                    onLaunch={() => launch('core')}
+                />
+                <div data-i18n-skip="true" lang={language} className="mt-2 space-y-1">
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-auto min-h-9 w-full justify-start text-xs font-semibold text-subtle hover:text-ink"
+                        data-tour-control="payroll-help"
+                        onClick={() => launch('help')}
+                    >
+                        {copy.help}
+                    </Button>
+                    <p className="text-xs text-subtle px-1">{copy.helpDescription[variant]}</p>
+                </div>
             </div>
-        </div>
+        </aside>
         <div hidden={step !== null}>{children}</div>
         {step && <>
             <PayrollTourPreview step={step} variant={variant} />

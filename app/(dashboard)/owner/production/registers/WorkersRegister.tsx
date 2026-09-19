@@ -197,9 +197,21 @@ export default function WorkersRegister({
             totalCount={tourStep ? sampleWorkers.length : workers.length}
           /></div>
 
-          {!isOpen && <div ref={tourLauncher} data-workers-tour="launcher">
-            <TourInvitation tourId="workers" userId={userId} orgId={orgId} userMetadata={userMetadata} onLaunch={() => setTourStep('purpose')} />
-          </div>}
+          {!isOpen && (
+            <aside className="workers-left-rail guided-tour-left-rail space-y-3" aria-label="Workers guides and tools">
+              <div ref={tourLauncher} data-workers-tour="launcher">
+                <TourInvitation
+                  tourId="workers"
+                  userId={userId}
+                  orgId={orgId}
+                  userMetadata={userMetadata}
+                  align="full"
+                  className="w-full estimator-touch-target border-amber-200/90 bg-amber-50/75 hover:bg-amber-100/70 shadow-xs"
+                  onLaunch={() => setTourStep('purpose')}
+                />
+              </div>
+            </aside>
+          )}
           <details hidden={Boolean(tourStep)} data-i18n-skip="true" lang={language} className="rounded-xl border border-hairline bg-surface p-4 text-sm">
             <summary className="cursor-pointer font-semibold text-ink">{tourCopy.helpTitle}</summary>
             <dl className="mt-3 grid gap-4 sm:grid-cols-2">
