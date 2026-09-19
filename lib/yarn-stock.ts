@@ -18,9 +18,9 @@ export type YarnBalance = { id: string; yarn_name: string; yarn_key: string; wei
 export type YarnQuality = { id: string; quality_label: string; quality_key: string; meters: number; recipe: YarnRecipe | null; costing_id: string | null; version: number }
 export type YarnCosting = { id: string; quality_label: string; quality_key: string; version_number: number; saved_at: string; recipe: YarnRecipe }
 export type YarnMovement = {
-    id: string; yarn_id: string; yarn_name: string; kind: 'opening' | 'receipt' | 'correction' | 'dispatch' | 'dispatch_reversal'
+    id: string; yarn_id: string; yarn_name: string; kind: 'opening' | 'receipt' | 'correction' | 'production_consumption' | 'production_reversal' | 'dispatch' | 'dispatch_reversal' | 'audit_adjustment'
     kg_delta: number; balance_after: number; reason: string; created_at: string; created_by: string | null
-    challan_id: string | null; recipe_snapshot: { recipe: YarnRecipe; sent_meters: number; costing_id: string; version: number } | null
+    challan_id: string | null; recipe_snapshot: { recipe: YarnRecipe; sent_meters?: number; meters?: number; costing_id: string; version: number } | null
 }
 export type YarnCursor = { at: string; id: string }
 export type YarnBoard = {

@@ -77,7 +77,15 @@ export default function QualityStockClient({ initialData }: { initialData: Quali
     return <div className="space-y-6" data-i18n-skip="true">
         <header className="flex flex-wrap items-start justify-between gap-4">
             <div><h1 className="text-3xl font-semibold">{tx('title')}</h1><p className="mt-2 max-w-2xl text-sm text-muted-foreground">{tx('subtitle')}</p></div>
-            <div className="flex gap-2"><Button variant="outline" disabled={busy} onClick={() => void load()}><RefreshCw className={`mr-2 h-4 w-4 ${busy ? 'animate-spin' : ''}`} />{tx('refresh')}</Button><Button onClick={() => open('opening')}>{tx('opening')}</Button></div>
+            <div className="flex gap-2">
+                <Button asChild variant="outline" className="border-loom/30 text-loom hover:bg-loom/5 gap-1.5 font-medium">
+                    <Link href="/owner/stock/audit">
+                        <Warehouse className="h-4 w-4" />
+                        Audit Inventory
+                    </Link>
+                </Button>
+                <Button variant="outline" disabled={busy} onClick={() => void load()}><RefreshCw className={`mr-2 h-4 w-4 ${busy ? 'animate-spin' : ''}`} />{tx('refresh')}</Button><Button onClick={() => open('opening')}>{tx('opening')}</Button>
+            </div>
         </header>
         {notice && <p role="status" className="rounded-lg bg-emerald-50 p-3 text-emerald-800">{notice}</p>}
         {error && <p role="alert" className="rounded-lg bg-rose-50 p-3 text-rose-800">{error} <button className="underline" onClick={() => void load()}>{tx('retry')}</button></p>}

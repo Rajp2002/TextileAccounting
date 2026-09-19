@@ -17,6 +17,7 @@ export const yarnStockText = {
         saved: 'Yarn inventory saved.', retrySame: 'Save is unconfirmed. Keep these details and retry before starting another entry.',
         validation: 'Enter a name, valid kg (up to three decimals) and a reason of at least three characters.',
         loadError: 'Yarn inventory could not be loaded. Retry.', dispatch: 'Dispatch', dispatch_reversal: 'Dispatch reversed',
+        production_consumption: 'Production', production_reversal: 'Production reversed', audit_adjustment: 'Audit adjustment',
         viewDispatch: 'View dispatch', missing: 'Record opening weight if not already included in receipts.',
     },
     hi: {
@@ -37,6 +38,7 @@ export const yarnStockText = {
         saved: 'धागे का स्टॉक सहेजा गया।', retrySame: 'सहेजने की पुष्टि नहीं हुई। नई प्रविष्टि से पहले इन्हीं विवरणों से दोबारा प्रयास करें।',
         validation: 'नाम, मान्य वजन (तीन दशमलव तक) और कम से कम तीन अक्षरों का कारण दर्ज करें।',
         loadError: 'धागे का स्टॉक नहीं खुला। दोबारा प्रयास करें।', dispatch: 'डिस्पैच', dispatch_reversal: 'डिस्पैच वापस',
+        production_consumption: 'उत्पादन', production_reversal: 'उत्पादन वापसी', audit_adjustment: 'ऑडिट समायोजन',
         viewDispatch: 'डिस्पैच देखें', missing: 'यदि आवक में शामिल नहीं है तो शुरुआती वजन दर्ज करें।',
     },
     gu: {
@@ -57,6 +59,7 @@ export const yarnStockText = {
         saved: 'યાર્નનો સ્ટોક સાચવ્યો.', retrySame: 'સાચવવાની પુષ્ટિ થઈ નથી. નવી નોંધ પહેલાં આ જ વિગતો સાથે ફરી પ્રયાસ કરો.',
         validation: 'નામ, માન્ય વજન (ત્રણ દશાંશ સુધી) અને ઓછામાં ઓછા ત્રણ અક્ષરનું કારણ નોંધો.',
         loadError: 'યાર્નનો સ્ટોક ખૂલી શક્યો નથી. ફરી પ્રયાસ કરો.', dispatch: 'ડિસ્પેચ', dispatch_reversal: 'ડિસ્પેચ પરત',
+        production_consumption: 'ઉત્પાદન', production_reversal: 'ઉત્પાદન પરત', audit_adjustment: 'ઓડિટ એડજસ્ટમેન્ટ',
         viewDispatch: 'ડિસ્પેચ જુઓ', missing: 'આવકમાં સામેલ ન હોય તો શરૂઆતનું વજન નોંધો.',
     },
 }

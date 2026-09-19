@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import { ClipboardCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -101,7 +102,15 @@ export default function YarnStockClient({ initialData }: { initialData: YarnBoar
     const names = [...new Set([...data.yarns.map(row => row.yarn_name), ...data.costings.flatMap(row => row.recipe.map(layer => layer.yarn_name))])].sort()
     return <div className="space-y-6" data-i18n-skip="true">
         <header className="flex flex-wrap justify-between gap-4"><div><h1 className="text-3xl font-semibold">{text.title}</h1><p className="mt-2 max-w-3xl text-sm text-muted-foreground">{text.help}</p></div>
-            <div className="flex flex-wrap gap-2"><Button variant="outline" disabled={busy} onClick={() => void load()}>{text.refresh}</Button>{current && <><Button variant="outline" disabled={Boolean(request)} onClick={() => open({ kind: 'opening' })}>{text.opening}</Button><Button disabled={Boolean(request)} onClick={() => open({ kind: 'receipt' })}>{text.receipt}</Button></>}</div>
+            <div className="flex flex-wrap gap-2">
+                <Button asChild variant="outline" className="border-loom/30 text-loom hover:bg-loom/5 gap-1.5 font-medium">
+                    <Link href="/owner/stock/audit">
+                        <ClipboardCheck className="h-4 w-4" />
+                        Audit Inventory
+                    </Link>
+                </Button>
+                <Button variant="outline" disabled={busy} onClick={() => void load()}>{text.refresh}</Button>{current && <><Button variant="outline" disabled={Boolean(request)} onClick={() => open({ kind: 'opening' })}>{text.opening}</Button><Button disabled={Boolean(request)} onClick={() => open({ kind: 'receipt' })}>{text.receipt}</Button></>}
+            </div>
         </header>
         {notice && <p role="status" className="rounded-lg bg-emerald-50 p-3 text-emerald-800">{text.saved}</p>}
         {error && <p role="alert" className="rounded-lg bg-rose-50 p-3 text-rose-800">{error} <button className="underline" onClick={() => void load()}>{text.retry}</button></p>}
