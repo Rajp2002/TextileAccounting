@@ -31,3 +31,15 @@
 Existing deployment artifacts do not shrink when repository code changes. The optimized configuration affects subsequent builds. Historical usage and recovery retention can keep dashboard totals elevated after cleanup; a reduced cloud quota reading was not observed during the initial cleanup.
 
 References: [Vercel storage](https://vercel.com/docs/deployment-storage), [retention exceptions](https://vercel.com/docs/deployment-retention), [Next.js output tracing](https://nextjs.org/docs/app/api-reference/config/next-config-js/output).
+
+## Follow-up: shared instrumentation and middleware traces
+
+The first change did not cover `instrumentation.js.nft.json` or `middleware.js.nft.json`. Inspection of the installed Vercel Next.js builder confirmed that it appends instrumentation dependencies to every Node function, including middleware. Added a post-build step to remove only generated `.next/server/**/*.map` references from all output trace manifests, after Next.js/Sentry upload completion. Map files remain on disk; runtime JavaScript and external dependency maps remain untouched. A regression test verifies these boundaries and idempotence.
+
+On the same existing local build, unique traced bytes decreased from 32,175,411 to 20,940,981 (zero traced source-map bytes, zero missing dependencies). This controlled local comparison excludes platform packaging and is not a billing estimate.
+
+Production deployment `dpl_6RsQ2WitfcGbQVmda6J2rkQQ7eWP` exposed 303 lambda route outputs but only three unique packaged functions: pages 7,439,547 bytes, API 3,306,270 bytes, middleware 4,209,018 bytes. Pages/API deploy to `bom1`; middleware deploys to eight regions. This corrects the earlier implication that all function storage uses only one region. Summing routes would greatly overcount shared packages. Summing unique packages per reported region gives 44,417,961 bytes, still not Vercel's historical usage metric.
+
+Four further obsolete previews were deleted: `dpl_JA1UG9esewnwJAp6pc38X4rj2D5Z` and `dpl_9wTHaYpTRoddPkt7JTZSSfBLoVEM` have commits ancestral to main; `dpl_5BSvmEjZgsX4kMasatbkW21QimaL` and `dpl_BW7ivL7rBajmfrc9gCire49H8UBt` correspond to merged PRs #106 and #104. Production rollback history was preserved.
+
+The refreshed 30-day dashboard still showed 11.73 GB / 10 GB Functions Storage and 9.59 GB / 10 GB Deployment Storage. Today's view showed zero before reporting useful data; it is not evidence of zero storage or compliance. Code changes cannot retroactively subtract historical daily maxima, and there is no documented public API to force-purge the recovery period. Do not claim the quota is resolved until refreshed account usage confirms it.

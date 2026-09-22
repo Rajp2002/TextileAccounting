@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "prebuild": "npm run test",
-    "build": "node scripts/reset-build-type-cache.mjs && next build --webpack",
+    "build": "node scripts/reset-build-type-cache.mjs && next build --webpack && node scripts/prune-runtime-source-maps.mjs",
     "start": "next start",
     "lint": "eslint --max-warnings=0",
     "qa:provisioning-smoke": "node --env-file=.env.qa.local scripts/qa/provisioning-smoke.mjs --expected-project-ref=eutycrtzzxmlkcpipgod",
