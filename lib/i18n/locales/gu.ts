@@ -1,5 +1,7 @@
 export const gu = {
  navigation: {
+  "production_overview": "ઝાંખી",
+  "production_daily_sheet": "દૈનિક શીટ",
   "estimate": "ખર્ચ અંદાજક",
   "costings": "સાચવેલી કોસ્ટિંગ",
   "rates": "યાર્ન રેટ બુક",

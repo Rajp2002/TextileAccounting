@@ -3,7 +3,7 @@ import { useLocalizedPageTitle } from '@/hooks/use-localized-page-title'
 
 import Link from 'next/link'
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { useTranslation } from '@/lib/i18n/context'
 import {
@@ -40,7 +40,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
 import { formatINR } from '@/lib/finance'
 import { buildBasePayrollReadiness } from '@/lib/base-payroll-readiness'
@@ -172,21 +171,19 @@ export default function BaseProductionClient({
     tourMetadata?: Record<string, unknown>
 }) {
     const router = useRouter()
+    const pathname = usePathname()
     const { tx } = useTranslation()
     useLocalizedPageTitle(view === 'operations' ? `${tx('Worker–Machine Assignments')} | Weavly` : null)
     const searchParams = useSearchParams()
     const navigation = readBaseProductionNavigation(searchParams)
-    const [activeTab, setActiveTab] = useState(view === 'operations' ? 'assignments' : view === 'payroll' ? 'pay' : (navigation.tab ?? 'jobs'))
+    const [payrollTab, setPayrollTab] = useState('pay')
+    const activeTab = view === 'production' ? (pathname.endsWith('/daily-sheet') ? 'production' : 'jobs') : payrollTab
     const [isActivateModalOpen, setIsActivateModalOpen] = useState(Boolean(initialCostingId))
     const [productionSearch, setProductionSearch] = useState('')
     const [historyCount, setHistoryCount] = useState(12)
     const [payrollSearch, setPayrollSearch] = useState('')
     const [payrollFilter, setPayrollFilter] = useState('all')
 
-    useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        if (view === 'production') setActiveTab(navigation.tab ?? 'jobs')
-    }, [navigation.tab, navigation.date, navigation.shift, navigation.entry, view])
     const [dialog, setDialog] = useState<DialogName>(null)
     const [pendingAction, setPendingAction] = useState<string | null>(null)
     const [settlingWorkerId, setSettlingWorkerId] = useState<string | null>(null)
@@ -485,7 +482,7 @@ export default function BaseProductionClient({
                         <Button
                             variant="outline"
                             className={activeTab === 'history' ? 'rounded-xl border-loom bg-loom text-white shadow-xs hover:bg-loom-elevated hover:text-white' : 'rounded-xl border-hairline bg-surface text-ink shadow-xs hover:border-hairline-strong hover:bg-surface-soft'}
-                            onClick={() => setActiveTab(activeTab === 'history' ? 'pay' : 'history')}
+                            onClick={() => setPayrollTab(activeTab === 'history' ? 'pay' : 'history')}
                         >
                             <History className="h-4 w-4" />
                             {activeTab === 'history' ? 'Current payroll' : 'Payroll records'}
@@ -495,7 +492,7 @@ export default function BaseProductionClient({
             </div>
 
             {view === 'payroll' && activeTab === 'history' && (
-                <BasePayrollRecords initialData={initialData} onBack={() => setActiveTab('pay')} />
+                <BasePayrollRecords initialData={initialData} onBack={() => setPayrollTab('pay')} />
             )}
 
             {view === 'production' && (
@@ -675,13 +672,8 @@ export default function BaseProductionClient({
 
             {view === 'operations' && <BaseAssignmentWorkspace key={`${initialData.orgId}:${navigation.worker ?? "all"}:${navigation.machine ?? "all"}:${navigation.shift ?? "day"}`} initialData={initialData} focusWorkerId={searchParams.get("worker") ?? undefined} focusMachineId={searchParams.get("machine") ?? undefined} initialShift={navigation.shift} tourMetadata={tourMetadata} />}
 
-            {(view === 'production' || (view === 'payroll' && activeTab !== 'history')) && <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-                {view === 'production' && <TabsList className="grid h-11 w-full max-w-md grid-cols-2 rounded-xl border border-hairline bg-surface-soft p-1 shadow-xs">
-                    <TabsTrigger value="jobs" className="rounded-lg text-xs sm:text-sm font-bold data-[state=active]:bg-loom data-[state=active]:text-white data-[state=active]:shadow-xs text-muted-foreground hover:text-ink transition-all">Overview & Looms</TabsTrigger>
-                    <TabsTrigger value="production" className="rounded-lg text-xs sm:text-sm font-bold data-[state=active]:bg-loom data-[state=active]:text-white data-[state=active]:shadow-xs text-muted-foreground hover:text-ink transition-all">Daily Sheet</TabsTrigger>
-                </TabsList>}
-
-                {view === 'production' && <TabsContent value="jobs" className="space-y-6">
+            {(view === 'production' || (view === 'payroll' && activeTab !== 'history')) && <div className="space-y-4">
+                {view === 'production' && activeTab === 'jobs' && <div className="space-y-6">
                     <BaseActiveQualities
                         jobs={initialData.jobs}
                         costings={initialData.costings}
@@ -689,7 +681,7 @@ export default function BaseProductionClient({
                         machineJobContexts={initialData.machineJobContexts}
                         today={initialData.today}
                         onActivateQuality={() => setIsActivateModalOpen(true)}
-                        onViewHistory={() => setActiveTab('production')}
+                        onViewHistory={() => router.push('/owner/production/daily-sheet')}
                         isActivateModalOpen={isActivateModalOpen}
                         onOpenActivateModalChange={setIsActivateModalOpen}
                     />
@@ -702,9 +694,9 @@ export default function BaseProductionClient({
                         today={initialData.today}
                         onActivateQualityClick={() => setIsActivateModalOpen(true)}
                     />
-                </TabsContent>}
+                </div>}
 
-                {view === 'production' && <TabsContent value="production" className="space-y-4">
+                {view === 'production' && activeTab === 'production' && <div className="space-y-4">
                     <BaseDailyProductionSheet initialData={initialData} navigation={navigation} onAddWorker={() => openSetup('worker')} onAddMachine={() => openSetup('machine')} />
 
                     <Card className="overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs">
@@ -745,9 +737,9 @@ export default function BaseProductionClient({
                             )}
                         </CardContent>
                     </Card>
-                </TabsContent>}
+                </div>}
 
-                {view === 'payroll' && <TabsContent value="pay" className="space-y-4">
+                {view === 'payroll' && <div className="space-y-4">
                     <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
                         <div>
                             <h2 className="text-lg font-bold text-ink">Worker pay</h2>
@@ -861,8 +853,8 @@ export default function BaseProductionClient({
                             })}
                         </div>
                     )}
-                </TabsContent>}
-            </Tabs>}
+                </div>}
+            </div>}
 
 
             <Dialog open={dialog === 'advance'} onOpenChange={(open) => !open && closeDialog()}>
@@ -968,7 +960,7 @@ export default function BaseProductionClient({
                         router.refresh()
                     }}
                     onViewRecords={() => {
-                        setActiveTab('history')
+                        setPayrollTab('history')
                     }}
                 />
             )}

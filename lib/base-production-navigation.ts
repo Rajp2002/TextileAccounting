@@ -18,7 +18,7 @@ export function validBaseDate(value: string | null | undefined): value is string
 export function safeBaseReturnPath(value: string | null | undefined) {
     if (!value || /[\\#\r\n]/.test(value)) return undefined
     const [path, query = ''] = value.split('?')
-    if (!['/owner/production', '/owner/payroll', '/owner/assignments', '/owner/workers', '/owner/machines', '/owner/operations', '/owner/setup'].includes(path)) return undefined
+    if (!['/owner/production', '/owner/production/daily-sheet', '/owner/payroll', '/owner/assignments', '/owner/workers', '/owner/machines', '/owner/operations', '/owner/setup'].includes(path)) return undefined
     const params = new URLSearchParams(query)
     const safe = new URLSearchParams()
     for (const key of ['worker', 'machine', 'job', 'entry']) {

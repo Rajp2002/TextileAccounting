@@ -1,5 +1,7 @@
 export const en = {
  navigation: {
+  "production_overview": "Overview",
+  "production_daily_sheet": "Daily Sheet",
   "estimate": "Cost Estimator",
   "costings": "Saved Costings",
   "rates": "Yarn Rate Book",
