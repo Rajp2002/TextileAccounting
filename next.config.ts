@@ -129,6 +129,12 @@ const withPWA = withPWAInit({
 })
 
 const nextConfig: NextConfig = {
+  // Sentry uploads these build artifacts separately. Keep them on disk for
+  // upload, but do not copy server debugging maps into every runtime bundle.
+  // Scope this to generated maps; application files and dependencies stay traced.
+  outputFileTracingExcludes: {
+    '/*': ['./.next/server/**/*.map'],
+  },
   async headers() {
     return [
       { source: '/(.*)', headers: securityHeaders },
