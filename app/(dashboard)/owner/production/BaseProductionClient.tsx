@@ -9,7 +9,6 @@ import { useTranslation } from '@/lib/i18n/context'
 import {
     ArrowLeft,
     CheckCircle2,
-    ChevronDown,
     Clock3,
     Factory,
     History,
@@ -183,7 +182,7 @@ export default function BaseProductionClient({
     const [isActivateModalOpen, setIsActivateModalOpen] = useState(Boolean(initialCostingId))
     const [productionSearch, setProductionSearch] = useState('')
     const [historyCount, setHistoryCount] = useState(12)
-    const [isHistoryExpanded, setIsHistoryExpanded] = useState(false)
+    const [isHistoryOpen, setIsHistoryOpen] = useState(false)
     const [payrollSearch, setPayrollSearch] = useState('')
     const [payrollFilter, setPayrollFilter] = useState('all')
 
@@ -699,64 +698,49 @@ export default function BaseProductionClient({
                     />
                 </div>}
 
-                {view === 'production' && activeTab === 'production' && <div className="space-y-4">
-                    <BaseDailyProductionSheet initialData={initialData} navigation={navigation} onAddWorker={() => openSetup('worker')} onAddMachine={() => openSetup('machine')} />
+                {view === 'production' && activeTab === 'production' && <div>
+                    <BaseDailyProductionSheet initialData={initialData} navigation={navigation} onAddWorker={() => openSetup('worker')} onAddMachine={() => openSetup('machine')} onOpenHistory={() => setIsHistoryOpen(true)} />
 
-                    <Card className="gap-0 overflow-hidden rounded-2xl border border-hairline bg-surface p-0 shadow-xs">
-                        <CardHeader className="p-0">
-                            <button
-                                type="button"
-                                aria-expanded={isHistoryExpanded}
-                                aria-controls="base-production-history"
-                                onClick={() => setIsHistoryExpanded((expanded) => !expanded)}
-                                className="flex w-full items-center justify-between gap-3 p-3 text-left transition-colors hover:bg-surface-soft/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-saffron sm:p-4"
-                            >
-                                <span className="flex min-w-0 items-center gap-2.5">
-                                    <Clock3 className="h-4 w-4 shrink-0 text-muted-foreground" />
-                                    <span className="min-w-0">
-                                        <span className="block text-sm font-bold text-ink">Recent production</span>
-                                        <span className="block text-xs text-muted-foreground">Find or reopen a saved shift.</span>
-                                    </span>
-                                </span>
-                                <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-body">
-                                    {isHistoryExpanded ? 'Hide history' : 'Show history'}
-                                    <ChevronDown className={`h-4 w-4 transition-transform ${isHistoryExpanded ? 'rotate-180' : ''}`} />
-                                </span>
-                            </button>
-                        </CardHeader>
-                        <CardContent id="base-production-history" className={`${isHistoryExpanded ? 'border-t border-hairline p-4 sm:p-5' : 'hidden'} space-y-3`}>
-                            <div>
-                                <Label htmlFor="base-production-search" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Find date, worker, machine, or job</Label>
-                                <Input id="base-production-search" className="mt-1.5 h-10 sm:h-11 rounded-xl border border-hairline bg-surface text-ink shadow-xs" value={productionSearch} onChange={event => { setProductionSearch(event.target.value); setHistoryCount(12) }} placeholder="Search production history" />
+                    <Dialog open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
+                        <DialogContent className="flex max-h-[min(85svh,820px)] w-[calc(100vw-2rem)] max-w-3xl flex-col gap-0 overflow-hidden rounded-2xl border-hairline bg-surface p-0 sm:max-w-3xl">
+                            <DialogHeader className="shrink-0 border-b border-hairline px-5 py-5 pr-14 sm:px-6">
+                                <DialogTitle className="text-xl font-bold tracking-tight text-ink">Recent production</DialogTitle>
+                                <DialogDescription>Find a saved shift by date, worker, machine, or job.</DialogDescription>
+                            </DialogHeader>
+                            <div className="shrink-0 border-b border-hairline bg-surface-soft/40 px-5 py-4 sm:px-6">
+                                <Label htmlFor="base-production-search" className="text-xs font-bold text-body">Search production</Label>
+                                <Input id="base-production-search" className="mt-1.5 h-10 rounded-xl border border-hairline bg-surface text-ink shadow-xs" value={productionSearch} onChange={event => { setProductionSearch(event.target.value); setHistoryCount(12) }} placeholder="Date, worker, machine, or job" />
                             </div>
-                            {visibleProduction.length === 0 ? (
-                                <EmptyState compact title="No production recorded" description="Your saved worker totals will appear here." />
-                            ) : (
-                                <div className="divide-y divide-hairline rounded-xl border border-hairline bg-surface overflow-hidden">
-                                    {visibleProduction.slice(0, historyCount).map((entry) => {
-                                        const isLegacyWorkerTotal = entry.meters > 0 && entry.allocation_mode !== 'machine_breakdown' && !entry.machine_id
-                                        return (
-                                            <div key={entry.id} className="flex flex-col gap-2 p-3 sm:p-3.5 text-sm sm:flex-row sm:items-center sm:justify-between hover:bg-surface-soft/40 transition-colors">
-                                                <div className="min-w-0">
-                                                    <p className="truncate font-bold text-ink">{workerById.get(entry.worker_id)?.name ?? 'Worker'} · {entry.job_label ?? jobById.get(entry.job_id)?.quality_label ?? (isLegacyWorkerTotal ? 'Legacy worker total' : 'Production')}</p>
-                                                    <p className="text-xs text-muted-foreground mt-0.5">{formatDateOnly(entry.production_date)}{entry.shift ? ` · ${entry.shift} shift` : ''}{entry.machine_label ? ` · ${entry.machine_label}` : ''}{isLegacyWorkerTotal ? ' · payroll included at saved rate' : ''}</p>
+                            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4 sm:p-5">
+                                {visibleProduction.length === 0 ? (
+                                    <EmptyState compact title="No production recorded" description="Your saved worker totals will appear here." />
+                                ) : (
+                                    <div className="divide-y divide-hairline overflow-hidden rounded-xl border border-hairline bg-surface">
+                                        {visibleProduction.slice(0, historyCount).map((entry) => {
+                                            const isLegacyWorkerTotal = entry.meters > 0 && entry.allocation_mode !== 'machine_breakdown' && !entry.machine_id
+                                            return (
+                                                <div key={entry.id} className="flex flex-col gap-2 p-3 text-sm transition-colors hover:bg-surface-soft/40 sm:flex-row sm:items-center sm:justify-between sm:p-3.5">
+                                                    <div className="min-w-0">
+                                                        <p className="truncate font-bold text-ink">{workerById.get(entry.worker_id)?.name ?? 'Worker'} · {entry.job_label ?? jobById.get(entry.job_id)?.quality_label ?? (isLegacyWorkerTotal ? 'Legacy worker total' : 'Production')}</p>
+                                                        <p className="mt-0.5 text-xs text-muted-foreground">{formatDateOnly(entry.production_date)}{entry.shift ? ` · ${entry.shift} shift` : ''}{entry.machine_label ? ` · ${entry.machine_label}` : ''}{isLegacyWorkerTotal ? ' · payroll included at saved rate' : ''}</p>
+                                                    </div>
+                                                    <div className="flex shrink-0 items-center gap-3">
+                                                        <div className="font-black text-ink">{entry.entry_status === 'zero' ? '0 m' : entry.entry_status === 'absent' ? 'Absent' : `${formatMeters(entry.meters)} · ${formatINR(calculateBaseEntryGrossPay(entry, initialData.allocations.filter((allocation) => allocation.entry_id === entry.id)))}`}</div>
+                                                        <Button asChild variant="outline" size="sm" className="h-8 rounded-lg border-hairline bg-surface text-xs font-medium hover:bg-surface-soft"><Link onClick={() => setIsHistoryOpen(false)} href={baseProductionHref({ date: entry.production_date, shift: entry.shift, entry: entry.id, worker: entry.worker_id })}>View log</Link></Button>
+                                                    </div>
                                                 </div>
-                                                <div className="flex items-center gap-3 shrink-0">
-                                                    <div className="font-black text-ink">{entry.entry_status === 'zero' ? '0 m' : entry.entry_status === 'absent' ? 'Absent' : `${formatMeters(entry.meters)} · ${formatINR(calculateBaseEntryGrossPay(entry, initialData.allocations.filter((allocation) => allocation.entry_id === entry.id)))}`}</div>
-                                                    <Button asChild variant="outline" size="sm" className="h-8 rounded-lg border-hairline bg-surface text-xs font-medium hover:bg-surface-soft"><Link href={baseProductionHref({ date: entry.production_date, shift: entry.shift, entry: entry.id, worker: entry.worker_id })}>View log</Link></Button>
-                                                </div>
-                                            </div>
-                                        )
-                                    })}
-                                </div>
-                            )}
-                            {visibleProduction.length > historyCount && (
-                                <Button variant="outline" className="w-full h-10 rounded-xl border-hairline bg-surface text-xs font-bold shadow-xs hover:bg-surface-soft" onClick={() => setHistoryCount(count => count + 24)}>
-                                    Show more production ({visibleProduction.length - historyCount} remaining)
-                                </Button>
-                            )}
-                        </CardContent>
-                    </Card>
+                                            )
+                                        })}
+                                    </div>
+                                )}
+                                {visibleProduction.length > historyCount && (
+                                    <Button variant="outline" className="h-10 w-full rounded-xl border-hairline bg-surface text-xs font-bold shadow-xs hover:bg-surface-soft" onClick={() => setHistoryCount(count => count + 24)}>
+                                        Show more production ({visibleProduction.length - historyCount} remaining)
+                                    </Button>
+                                )}
+                            </div>
+                        </DialogContent>
+                    </Dialog>
                 </div>}
 
                 {view === 'payroll' && <div className="space-y-4">
