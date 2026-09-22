@@ -255,6 +255,11 @@
     @apply border-border outline-ring/50;
   }
 
+  /* Main is a programmatic route-change target, not a visible interactive control. */
+  .dashboard-main:focus {
+    outline: none;
+  }
+
   html, body {
     @apply bg-background text-foreground;
     min-width: 0;

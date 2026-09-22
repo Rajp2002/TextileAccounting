@@ -627,7 +627,21 @@ export default function BaseDailyProductionSheet({
     }
 
     if (navigation.entry && (!selectedEntry || !selectedEntry.batch_id)) {
-        return <Card><CardHeader><CardTitle>{selectedEntry ? 'Legacy production record' : 'Record not found'}</CardTitle><CardDescription>{selectedEntry ? 'This older worker total has no machine sheet. Its saved production and pay remain included.' : 'This record is unavailable in your workspace.'}</CardDescription></CardHeader><CardContent className="space-y-3">{selectedEntry && <p>{workerById.get(selectedEntry.worker_id)?.name ?? 'Worker'} · {formatDateOnly(selectedEntry.production_date)} · {formatMeters(selectedEntry.meters)} · saved rate ₹{selectedEntry.worker_rate_snapshot.toFixed(2)}/m</p>}<Button asChild variant="outline"><Link href="/owner/production">Open daily production</Link></Button></CardContent></Card>
+        return (
+            <div className="space-y-4">
+                <h1 className="text-xl font-black tracking-tight text-ink sm:text-2xl">Daily sheet</h1>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>{selectedEntry ? 'Legacy production record' : 'Record not found'}</CardTitle>
+                        <CardDescription>{selectedEntry ? 'This older worker total has no machine sheet. Its saved production and pay remain included.' : 'This record is unavailable in your workspace.'}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                        {selectedEntry && <p>{workerById.get(selectedEntry.worker_id)?.name ?? 'Worker'} · {formatDateOnly(selectedEntry.production_date)} · {formatMeters(selectedEntry.meters)} · saved rate ₹{selectedEntry.worker_rate_snapshot.toFixed(2)}/m</p>}
+                        <Button asChild variant="outline"><Link href="/owner/production">Open daily production</Link></Button>
+                    </CardContent>
+                </Card>
+            </div>
+        )
     }
 
     return (
@@ -635,41 +649,46 @@ export default function BaseDailyProductionSheet({
             {unmatchedDraftMeters && <p role="alert" className="rounded-lg border border-warning/40 bg-warning/5 p-3 text-sm">Some draft metres no longer match the current worker assignments. Restore the assignment in Machine Assignments or discard the local draft before saving; no metres have been silently removed.</p>}
             {navigation.job && <p className="rounded-lg border border-saffron/30 bg-saffron-soft p-3 text-sm">Selected job: <strong>{jobById.get(navigation.job)?.quality_label ?? 'Unavailable job'}</strong>. Its machine rows are highlighted; the full shift stays visible.</p>}
             {(draftStatus === 'error' || draftStatus === 'conflict') && <div role="alert" className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-warning/30 bg-warning/5 p-3 text-sm"><p>{draftStatus === 'conflict' ? 'The saved shift changed after this draft. Your local draft is retained; reload the saved version before editing.' : 'Draft could not be saved on this device. Keep this page open and save the shift before leaving.'}</p><Button variant="outline" size="sm" onClick={discardDraft}>Discard local draft</Button></div>}
-            <div className="flex items-start justify-between gap-3">
-                <div>
-                    <h2 className="text-lg font-bold text-ink">Daily machine production</h2>
-                    <p className="mt-0.5 text-sm text-body">Enter metres once per machine from the supervisor’s sheet. Use shift output, not cumulative meter readings.</p>
+            <div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
+                <div className="min-w-0">
+                    <h1 className="text-xl font-black tracking-tight text-ink sm:text-2xl">Daily sheet</h1>
+                    <p className="mt-1 text-sm text-body">Enter shift metres, not cumulative meter readings. Press Enter or ↓ to move to the next machine.</p>
                 </div>
-                <Button variant="outline" size="sm" className="shrink-0" onClick={printCollectionSheet} disabled={machineContexts.length === 0}>
-                    <Printer className="h-4 w-4" /> <span className="hidden sm:inline">Print collection sheet</span><span className="sm:hidden">Print</span>
-                </Button>
+                <div className="grid grid-cols-2 gap-2 sm:flex sm:items-end sm:gap-3">
+                    <div className="space-y-1">
+                        <Label htmlFor="base-daily-date" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Date</Label>
+                        <Input id="base-daily-date" type="date" max={initialData.today} value={productionDate} disabled={isSaving} onChange={(event) => changeSelection(event.target.value, shift)} className="h-10 w-full rounded-xl border-hairline bg-surface text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom sm:w-[150px]" />
+                    </div>
+                    <div className="space-y-1">
+                        <Label htmlFor="base-daily-shift" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Shift</Label>
+                        <Select value={shift} disabled={isSaving} onValueChange={(value) => changeSelection(productionDate, value as 'day' | 'night')}>
+                            <SelectTrigger id="base-daily-shift" className="h-10 w-full rounded-xl border-hairline bg-surface text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom sm:w-[132px]"><SelectValue /></SelectTrigger>
+                            <SelectContent className="rounded-xl border-hairline bg-surface shadow-lg">
+                                <SelectItem value="day">Day shift</SelectItem>
+                                <SelectItem value="night">Night shift</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <Button variant="outline" size="sm" className="col-span-2 h-10 rounded-xl sm:col-span-1" onClick={printCollectionSheet} disabled={machineContexts.length === 0}>
+                        <Printer className="h-4 w-4" /> Print sheet
+                    </Button>
+                </div>
             </div>
 
-            <Card className="rounded-2xl border border-hairline bg-surface shadow-xs overflow-hidden">
-                <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-end sm:justify-between sm:p-5">
-                    <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                        <div className="space-y-1.5">
-                            <Label htmlFor="base-daily-date" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Date</Label>
-                            <Input id="base-daily-date" type="date" max={initialData.today} value={productionDate} disabled={isSaving} onChange={(event) => changeSelection(event.target.value, shift)} className="h-10 sm:h-11 rounded-xl border-hairline bg-surface text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom" />
-                        </div>
-                        <div className="space-y-1.5">
-                            <Label htmlFor="base-daily-shift" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Shift</Label>
-                            <Select value={shift} disabled={isSaving} onValueChange={(value) => changeSelection(productionDate, value as 'day' | 'night')}>
-                                <SelectTrigger id="base-daily-shift" className="h-10 sm:h-11 rounded-xl border-hairline bg-surface text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom"><SelectValue /></SelectTrigger>
-                                <SelectContent className="rounded-xl border-hairline bg-surface shadow-lg">
-                                    <SelectItem value="day">Day shift</SelectItem>
-                                    <SelectItem value="night">Night shift</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-3 divide-x divide-hairline rounded-xl border border-hairline bg-surface-soft/40 px-2 py-2.5 text-sm sm:min-w-[360px] sm:bg-surface-soft/30 shadow-xs">
-                        <Stat label="Accounted for" value={`${registerSummary.accounted}/${registerSummary.total}`} />
-                        <Stat label="Pending" value={String(registerSummary.pending)} />
-                        <Stat label="Total" value={formatMeters(summary.total_meters)} />
-                    </div>
-                </CardContent>
-            </Card>
+            <dl className="grid grid-cols-3 divide-x divide-hairline rounded-xl border border-hairline bg-surface-soft/40 px-2 py-2.5 text-center shadow-xs sm:ml-auto sm:w-full sm:max-w-[420px]">
+                <div className="min-w-0 px-1.5 sm:px-2">
+                    <dt className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:text-xs">Accounted for</dt>
+                    <dd className="mt-0.5 text-sm font-black tabular-nums text-ink sm:text-base">{registerSummary.accounted}/{registerSummary.total}</dd>
+                </div>
+                <div className="min-w-0 px-1.5 sm:px-2">
+                    <dt className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:text-xs">Pending</dt>
+                    <dd className="mt-0.5 text-sm font-black tabular-nums text-ink sm:text-base">{registerSummary.pending}</dd>
+                </div>
+                <div className="min-w-0 px-1.5 sm:px-2">
+                    <dt className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:text-xs">Total</dt>
+                    <dd className="mt-0.5 text-sm font-black tabular-nums text-ink sm:text-base">{formatMeters(summary.total_meters)}</dd>
+                </div>
+            </dl>
 
             {currentBatch && (
                 <div className={`flex flex-col gap-3 rounded-2xl border px-4 py-3.5 text-xs sm:flex-row sm:items-center sm:justify-between shadow-xs ${isSavedBatchProtected ? 'border-amber-200 bg-amber-50/50' : 'border-emerald-200 bg-emerald-50/50'}`}>
@@ -715,16 +734,16 @@ export default function BaseDailyProductionSheet({
                 </Card>
             ) : (
                 <>
-                    <Card className="rounded-2xl border border-hairline bg-surface shadow-xs overflow-hidden">
+                    <Card className="gap-0 overflow-hidden rounded-2xl border border-hairline bg-surface p-0 shadow-xs">
                         <CardHeader className="border-b border-hairline bg-surface-soft/40 p-4 sm:p-5">
                             <div className="flex flex-wrap items-center justify-between gap-2">
                                 <CardTitle className="flex items-center gap-2 text-base font-bold text-ink"><ClipboardList className="h-4 w-4 text-saffron-deep" /> Machine sheet</CardTitle>
                                 <div className="flex flex-wrap gap-2">
-                                    <Button variant="ghost" size="sm" disabled={draftStatus === 'none' || isSaving} onClick={discardDraft} className="h-8 rounded-xl text-xs font-semibold text-muted-foreground hover:text-ink">Discard draft</Button>
-                                    <Button variant="outline" size="sm" aria-pressed={showPending} onClick={togglePending} className="h-8 rounded-xl border-hairline bg-surface text-xs font-semibold hover:bg-surface-soft shadow-xs">{showPending ? 'Show all machines' : `Show pending (${registerSummary.pending + registerSummary.invalid})`}</Button>
+                                    {draftStatus === 'local' && <Button variant="ghost" size="sm" disabled={isSaving} onClick={discardDraft} className="h-8 rounded-xl text-xs font-semibold text-muted-foreground hover:text-ink">Discard draft</Button>}
+                                    {(registerSummary.pending + registerSummary.invalid > 0 || showPending) && <Button variant="outline" size="sm" aria-pressed={showPending} onClick={togglePending} className="h-8 rounded-xl border-hairline bg-surface text-xs font-semibold hover:bg-surface-soft shadow-xs">{showPending ? 'Show all machines' : `Show pending (${registerSummary.pending + registerSummary.invalid})`}</Button>}
                                 </div>
                             </div>
-                            <CardDescription className="text-xs text-muted-foreground">Type a reading, then press Enter or ↓ for the next machine. Blank means pending; 0 means not running.</CardDescription>
+                            <CardDescription className="text-xs text-muted-foreground">Leave blank if a reading is pending; enter 0 if the machine did not run.</CardDescription>
                             {showPending && <p className="text-xs text-body font-medium">Showing machines that needed attention when you opened this view. Rows stay in place as you type.</p>}
                         </CardHeader>
                         <CardContent className="p-0">
@@ -794,19 +813,18 @@ export default function BaseDailyProductionSheet({
                         </CardContent>
                     </Card>
 
-                    <Card className="rounded-2xl border border-hairline bg-surface shadow-xs overflow-hidden">
-                        <CardHeader className="border-b border-hairline bg-surface-soft/40 p-4 sm:p-5">
-                            <div className="flex items-center justify-between gap-3">
+                    {(assignedWorkers.length > 0 || unassignedWorkers.length > 0) && <Card className="gap-0 overflow-hidden rounded-2xl border border-hairline bg-surface p-0 shadow-xs">
+                        <CardHeader className="border-b border-hairline bg-surface-soft/30 p-0">
+                            <div className="flex items-center justify-between gap-3 p-3 sm:p-4">
                                 <div className="min-w-0">
-                                    <CardTitle className="text-base font-bold text-ink">Worker payroll roll-up</CardTitle>
-                                    <p className="mt-1 text-xs font-medium text-body md:hidden">{formatMeters(summary.total_meters)} · {summary.entered_count} recorded · {summary.outstanding_count} pending</p>
+                                    <CardTitle className="text-sm font-bold text-ink">Worker review</CardTitle>
+                                    <CardDescription className="mt-0.5 text-xs text-muted-foreground">Check totals and pay, or mark a worker zero or absent.</CardDescription>
                                 </div>
-                                <Button type="button" variant="ghost" size="sm" aria-expanded={isPayrollExpanded} aria-controls="base-payroll-rollup" onClick={() => setIsPayrollExpanded((current) => !current)} className="h-8 rounded-xl border border-hairline bg-surface hover:bg-surface-soft text-xs font-semibold shadow-xs">
+                                <Button type="button" variant="ghost" size="sm" aria-expanded={isPayrollExpanded} aria-controls="base-payroll-rollup" onClick={() => setIsPayrollExpanded((current) => !current)} className="h-8 shrink-0 rounded-xl border border-hairline bg-surface text-xs font-semibold shadow-xs hover:bg-surface-soft">
                                     {isPayrollExpanded ? 'Hide' : 'Review'}
                                     <ChevronDown className={`h-4 w-4 transition-transform ${isPayrollExpanded ? 'rotate-180' : ''}`} />
                                 </Button>
                             </div>
-                            <CardDescription className="hidden md:block text-xs text-muted-foreground">Calculated from the machine metres above. Use zero or absent only when a worker has no production this shift.</CardDescription>
                         </CardHeader>
                         <CardContent id="base-payroll-rollup" className={`${isPayrollExpanded ? 'block' : 'hidden'} divide-y divide-hairline p-0`}>
                             {assignedWorkers.map((worker) => {
@@ -861,7 +879,7 @@ export default function BaseDailyProductionSheet({
                                 )
                             })}
                         </CardContent>
-                    </Card>
+                    </Card>}
                 </>
             )}
 
@@ -871,14 +889,17 @@ export default function BaseDailyProductionSheet({
                         <div className="hidden rounded-xl border border-hairline bg-surface-soft p-2.5 text-ink sm:block"><Save className="h-4 w-4" /></div>
                         <div>
                             <p className="text-sm font-bold text-ink">{registerSummary.accounted}/{registerSummary.total} machines accounted for · {formatMeters(summary.total_meters)}</p>
-                            <p className="text-xs text-body">{registerSummary.pending} pending · {registerSummary.stopped} not running{registerSummary.invalid > 0 ? ` · ${registerSummary.invalid} to check` : ''}</p>
-                            <p role="status" className="min-h-4 text-xs font-medium text-muted-foreground">{draftStatus === 'local' ? 'Draft saved on this device · not yet submitted' : currentBatch ? 'Saved shift' : 'Not yet submitted'}</p>
+                            <p role="status" className="min-h-4 text-xs font-medium text-body">
+                                {draftStatus === 'local' ? 'Draft saved on this device' : currentBatch ? 'Saved shift' : 'Not submitted'}
+                                {registerSummary.pending > 0 ? ` · ${registerSummary.pending} pending` : ''}
+                                {registerSummary.stopped > 0 ? ` · ${registerSummary.stopped} not running` : ''}
+                                {registerSummary.invalid > 0 ? ` · ${registerSummary.invalid} to check` : ''}
+                            </p>
                         </div>
                     </div>
-                    <Button onClick={() => handleSave()} disabled={isSaving || areInputsDisabled || unmatchedDraftMeters || invalidEnteredCount > 0 || registerSummary.invalid > 0 || summary.entered_count + summary.zero_count + summary.absent_count === 0} className="h-10 sm:h-11 min-w-[132px] sm:min-w-[210px] rounded-xl bg-loom hover:bg-loom-elevated text-white font-bold tracking-wide shadow-xs">
+                    <Button onClick={() => handleSave()} disabled={isSaving || areInputsDisabled || unmatchedDraftMeters || invalidEnteredCount > 0 || registerSummary.invalid > 0 || summary.entered_count + summary.zero_count + summary.absent_count === 0} className="h-10 sm:h-11 min-w-[132px] sm:min-w-[160px] rounded-xl bg-loom hover:bg-loom-elevated text-white font-bold tracking-wide shadow-xs">
                         {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                        <span className="sm:hidden">{isSaving ? 'Saving…' : currentBatch ? 'Save correction' : 'Save shift'}</span>
-                        <span className="hidden sm:inline">{isSaving ? 'Saving machine sheet…' : currentBatch ? 'Save production correction' : 'Save machine production'}</span>
+                        <span>{isSaving ? 'Saving…' : currentBatch ? 'Save correction' : 'Save shift'}</span>
                     </Button>
                 </div>
             )}
@@ -1000,8 +1021,4 @@ function toWorkerStatusLabel(status: BaseDailyProductionStatus) {
     if (status === 'zero') return 'Zero output'
     if (status === 'absent') return 'Absent / no production'
     return 'Not entered'
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-    return <div className="px-2 text-center sm:px-0 sm:text-left"><p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{label}</p><p className="mt-1 text-sm sm:text-base font-black text-ink">{value}</p></div>
 }
