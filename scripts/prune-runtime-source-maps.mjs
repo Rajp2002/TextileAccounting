@@ -1,11 +1,9 @@
-import { readdir, readFile, writeFile } from 'node:fs/promises'
+import { mkdir, readdir, readFile, rename, writeFile } from 'node:fs/promises'
 import path from 'node:path'
-import { pathToFileURL } from 'node:url'
 
 // Next's route-level exclusions do not cover instrumentation or middleware.
-// Vercel adds the instrumentation trace to every Node function. Run only after
-// next build (and Sentry's uploads) completes. Keep maps on disk for debugging;
-// remove only generated server-map references from deployment trace manifests.
+// Vercel adds the instrumentation trace to every Node function. Its adapter
+// packages output before a shell postbuild runs, so use Next's compiler hook.
 export async function pruneRuntimeSourceMaps(buildDirectory) {
   const serverDirectory = path.resolve(buildDirectory, 'server')
   const changes = []
@@ -35,7 +33,26 @@ export async function pruneRuntimeSourceMaps(buildDirectory) {
   return changes
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
-  console.log('[build] Excluded generated server source maps from runtime traces:',
-    await pruneRuntimeSourceMaps(path.resolve('.next')))
+export async function archiveRuntimeSourceMaps(buildDirectory) {
+  const serverDirectory = path.resolve(buildDirectory, 'server')
+  const archiveDirectory = path.resolve(buildDirectory, 'debug-source-maps', 'server')
+  const changes = await pruneRuntimeSourceMaps(buildDirectory)
+  let archived = 0
+  async function visit(directory) {
+    for (const entry of await readdir(directory, { withFileTypes: true })) {
+      const file = path.join(directory, entry.name)
+      if (entry.isDirectory()) await visit(file)
+      else if (entry.name.endsWith('.map')) {
+        const destination = path.join(archiveDirectory, path.relative(serverDirectory, file))
+        await mkdir(path.dirname(destination), { recursive: true })
+        await rename(file, destination)
+        archived++
+      }
+    }
+  }
+  // Webpack/Sentry uploads have completed. Move debugging artifacts outside
+  // runtime output before Next's final tracing and Vercel's packaging run.
+  // Runtime JS, debug IDs and third-party dependency files remain unchanged.
+  await visit(serverDirectory)
+  return { archived, traces: changes }
 }

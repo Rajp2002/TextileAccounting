@@ -2,7 +2,7 @@ import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import { afterEach, expect, it } from 'vitest'
-import { pruneRuntimeSourceMaps } from '../scripts/prune-runtime-source-maps.mjs'
+import { archiveRuntimeSourceMaps, pruneRuntimeSourceMaps } from '../scripts/prune-runtime-source-maps.mjs'
 
 const temporaryDirectories: string[] = []
 afterEach(async () => {
@@ -29,4 +29,10 @@ it('keeps runtime files, dependency maps and on-disk upload maps while pruning g
   expect(JSON.parse(await readFile(rootTrace, 'utf8')).files).toEqual(['../node_modules/next/server.js'])
   expect(await readFile(sourceMap, 'utf8')).toBe('upload artifact')
   expect(await pruneRuntimeSourceMaps(build)).toEqual([])
+  await writeFile(path.join(build, 'server', 'instrumentation.js'), 'runtime code')
+  expect((await archiveRuntimeSourceMaps(build)).archived).toBe(1)
+  expect(await readFile(path.join(build, 'debug-source-maps/server/instrumentation.js.map'), 'utf8')).toBe('upload artifact')
+  await expect(readFile(sourceMap)).rejects.toMatchObject({ code: 'ENOENT' })
+  expect(await readFile(path.join(build, 'server', 'instrumentation.js'), 'utf8')).toBe('runtime code')
+  expect((await archiveRuntimeSourceMaps(build)).archived).toBe(0)
 })

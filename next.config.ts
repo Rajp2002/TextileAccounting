@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 import withPWAInit from "@ducanh2912/next-pwa";
 import type { RuntimeCaching } from "workbox-build";
+import { archiveRuntimeSourceMaps } from './scripts/prune-runtime-source-maps.mjs';
 
 // ─── Security Headers ─────────────────────────────────────────────────────────
 const cspHeader = `
@@ -129,6 +130,11 @@ const withPWA = withPWAInit({
 })
 
 const nextConfig: NextConfig = {
+  compiler: {
+    async runAfterProductionCompile({ distDir }) {
+      console.log('[build] Archived uploaded server source maps:', await archiveRuntimeSourceMaps(distDir))
+    },
+  },
   // Sentry uploads these build artifacts separately. Keep them on disk for
   // upload, but do not copy server debugging maps into every runtime bundle.
   // Scope this to generated maps; application files and dependencies stay traced.
