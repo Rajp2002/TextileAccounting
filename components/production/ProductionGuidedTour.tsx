@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState, type ReactNode } from 'react'
+import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { useTranslation } from '@/lib/i18n/context'
 import { productionTutorialCopy } from '@/lib/i18n/production-tutorial'
@@ -17,13 +18,15 @@ export default function ProductionGuidedTour({ userId, orgId, userMetadata, chil
     children: ReactNode
 }) {
     const [step, setStep] = useState<ProductionTourStep | null>(null)
+    const pathname = usePathname()
+    const isDailySheet = pathname === '/owner/production/daily-sheet'
     const { language } = useTranslation()
     const copy = productionTutorialCopy[language]
     const returnFocus = useRef<HTMLButtonElement | null>(null)
     const launcher = useRef<HTMLDivElement>(null)
     const returnScroll = useRef({ x: 0, y: 0 })
     return <>
-        <aside className="production-left-rail guided-tour-left-rail space-y-2" aria-label="Production guides and tools">
+        {!isDailySheet && <aside className="production-left-rail guided-tour-left-rail space-y-2" aria-label="Production guides and tools">
             <div ref={launcher}>
                 <TourInvitation
                     tourId="production"
@@ -52,7 +55,7 @@ export default function ProductionGuidedTour({ userId, orgId, userMetadata, chil
                     {copy.details}
                 </Button>
             </div>
-        </aside>
+        </aside>}
         <div hidden={step !== null}>{children}</div>
         {step && <>
             <ProductionTourPreview step={step} />

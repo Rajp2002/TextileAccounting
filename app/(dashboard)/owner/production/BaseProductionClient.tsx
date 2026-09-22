@@ -9,6 +9,7 @@ import { useTranslation } from '@/lib/i18n/context'
 import {
     ArrowLeft,
     CheckCircle2,
+    ChevronDown,
     Clock3,
     Factory,
     History,
@@ -178,9 +179,11 @@ export default function BaseProductionClient({
     const navigation = readBaseProductionNavigation(searchParams)
     const [payrollTab, setPayrollTab] = useState('pay')
     const activeTab = view === 'production' ? (pathname.endsWith('/daily-sheet') ? 'production' : 'jobs') : payrollTab
+    const isDailySheetView = view === 'production' && activeTab === 'production'
     const [isActivateModalOpen, setIsActivateModalOpen] = useState(Boolean(initialCostingId))
     const [productionSearch, setProductionSearch] = useState('')
     const [historyCount, setHistoryCount] = useState(12)
+    const [isHistoryExpanded, setIsHistoryExpanded] = useState(false)
     const [payrollSearch, setPayrollSearch] = useState('')
     const [payrollFilter, setPayrollFilter] = useState('all')
 
@@ -454,7 +457,7 @@ export default function BaseProductionClient({
     }
 
     return (
-        <div className={`space-y-5 pb-8 ${view === 'operations' ? 'configuration-page-frame' : ''}`}>
+        <div className={`${isDailySheetView ? 'space-y-4' : 'space-y-5'} pb-8 ${view === 'operations' ? 'configuration-page-frame' : ''}`}>
             {navigation.returnTo && (
                 <Button asChild variant="outline" size="sm" className="h-9 rounded-xl border-hairline bg-surface text-ink shadow-xs hover:border-hairline-strong hover:bg-surface-soft hover:text-ink">
                     <Link href={navigation.returnTo} className="inline-flex items-center gap-1.5">
@@ -463,7 +466,7 @@ export default function BaseProductionClient({
                     </Link>
                 </Button>
             )}
-            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+            {!isDailySheetView && <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
                 <div>
                     <p className="text-xs font-bold uppercase tracking-[0.18em] text-saffron-deep">Weavly Base</p>
                     <h1 className="mt-1 text-2xl font-black tracking-tight text-ink sm:text-3xl">
@@ -489,13 +492,13 @@ export default function BaseProductionClient({
                         </Button>
                     )}
                 </div>
-            </div>
+            </div>}
 
             {view === 'payroll' && activeTab === 'history' && (
                 <BasePayrollRecords initialData={initialData} onBack={() => setPayrollTab('pay')} />
             )}
 
-            {view === 'production' && (
+            {view === 'production' && !isDailySheetView && (
                 <Card className="overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs">
                     <div className="grid grid-cols-2 divide-y sm:grid-cols-4 sm:divide-y-0 sm:divide-x divide-hairline">
                         <div className="p-4 sm:p-5">
@@ -699,12 +702,29 @@ export default function BaseProductionClient({
                 {view === 'production' && activeTab === 'production' && <div className="space-y-4">
                     <BaseDailyProductionSheet initialData={initialData} navigation={navigation} onAddWorker={() => openSetup('worker')} onAddMachine={() => openSetup('machine')} />
 
-                    <Card className="overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs">
-                        <CardHeader className="border-b border-hairline p-4 sm:p-5">
-                            <CardTitle className="flex items-center gap-2 text-base font-bold text-ink"><Clock3 className="h-4 w-4 text-muted-foreground" /> Recent production</CardTitle>
-                            <CardDescription className="text-xs text-muted-foreground">Latest saved machine production. Worker totals and pay use the saved weaver rate for each machine allocation.</CardDescription>
+                    <Card className="gap-0 overflow-hidden rounded-2xl border border-hairline bg-surface p-0 shadow-xs">
+                        <CardHeader className="p-0">
+                            <button
+                                type="button"
+                                aria-expanded={isHistoryExpanded}
+                                aria-controls="base-production-history"
+                                onClick={() => setIsHistoryExpanded((expanded) => !expanded)}
+                                className="flex w-full items-center justify-between gap-3 p-3 text-left transition-colors hover:bg-surface-soft/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-saffron sm:p-4"
+                            >
+                                <span className="flex min-w-0 items-center gap-2.5">
+                                    <Clock3 className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                    <span className="min-w-0">
+                                        <span className="block text-sm font-bold text-ink">Recent production</span>
+                                        <span className="block text-xs text-muted-foreground">Find or reopen a saved shift.</span>
+                                    </span>
+                                </span>
+                                <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-body">
+                                    {isHistoryExpanded ? 'Hide history' : 'Show history'}
+                                    <ChevronDown className={`h-4 w-4 transition-transform ${isHistoryExpanded ? 'rotate-180' : ''}`} />
+                                </span>
+                            </button>
                         </CardHeader>
-                        <CardContent className="p-4 sm:p-5 space-y-3">
+                        <CardContent id="base-production-history" className={`${isHistoryExpanded ? 'border-t border-hairline p-4 sm:p-5' : 'hidden'} space-y-3`}>
                             <div>
                                 <Label htmlFor="base-production-search" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Find date, worker, machine, or job</Label>
                                 <Input id="base-production-search" className="mt-1.5 h-10 sm:h-11 rounded-xl border border-hairline bg-surface text-ink shadow-xs" value={productionSearch} onChange={event => { setProductionSearch(event.target.value); setHistoryCount(12) }} placeholder="Search production history" />
