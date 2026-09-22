@@ -9,7 +9,7 @@ import { buildMachineCollectionSheet, compareMachineLabels, machineReadingState,
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { useTranslation } from '@/lib/i18n/context'
-import { AlertTriangle, CheckCircle2, ChevronDown, ClipboardList, FileClock, Loader2, Lock, LockOpen, Plus, Printer, Save, Users } from 'lucide-react'
+import { AlertTriangle, ArrowUpRight, CheckCircle2, ChevronDown, Clock3, ClipboardList, FileClock, Loader2, Lock, LockOpen, Plus, Printer, Save, Users } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -102,11 +102,13 @@ export default function BaseDailyProductionSheet({
     initialData,
     onAddWorker,
     onAddMachine,
+    onOpenHistory,
     navigation = {},
 }: {
     initialData: BaseProductionInitialData
     onAddWorker: () => void
     onAddMachine: () => void
+    onOpenHistory: () => void
     navigation?: BaseProductionNavigation
 }) {
     const router = useRouter()
@@ -645,50 +647,62 @@ export default function BaseDailyProductionSheet({
     }
 
     return (
-        <div ref={sheetRef} className="space-y-4 pb-28">
+        <div className="grid min-w-0 gap-4 pb-28 2xl:grid-cols-[minmax(0,1fr)_284px] 2xl:gap-6 2xl:pb-0">
+            <aside aria-label="Daily sheet controls" className="order-1 flex min-w-0 flex-col gap-4 2xl:order-2 2xl:sticky 2xl:top-6 2xl:h-[calc(100svh-3rem)] 2xl:self-start">
+                <div className="rounded-2xl border border-hairline bg-surface p-4 shadow-sm 2xl:p-5">
+                    <p className="mb-4 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Shift details</p>
+                    <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end 2xl:grid-cols-1">
+                        <div className="space-y-1.5">
+                            <Label htmlFor="base-daily-date" className="text-xs font-bold text-body">Date</Label>
+                            <Input id="base-daily-date" type="date" max={initialData.today} value={productionDate} disabled={isSaving} onChange={(event) => changeSelection(event.target.value, shift)} className="h-10 w-full rounded-xl border-hairline bg-surface text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom" />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label htmlFor="base-daily-shift" className="text-xs font-bold text-body">Shift</Label>
+                            <Select value={shift} disabled={isSaving} onValueChange={(value) => changeSelection(productionDate, value as 'day' | 'night')}>
+                                <SelectTrigger id="base-daily-shift" className="h-10 w-full rounded-xl border-hairline bg-surface text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom"><SelectValue /></SelectTrigger>
+                                <SelectContent className="rounded-xl border-hairline bg-surface shadow-lg">
+                                    <SelectItem value="day">Day shift</SelectItem>
+                                    <SelectItem value="night">Night shift</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <Button variant="outline" className="h-10 rounded-xl border-hairline bg-surface font-semibold shadow-xs hover:bg-surface-soft 2xl:w-full" onClick={printCollectionSheet} disabled={machineContexts.length === 0}>
+                            <Printer className="h-4 w-4" /> Print sheet
+                        </Button>
+                    </div>
+                </div>
+
+                <div className="rounded-2xl border border-hairline bg-surface p-4 shadow-sm 2xl:p-5">
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Shift progress</p>
+                    <div className="mt-3 flex items-baseline gap-2">
+                        <span className="text-3xl font-black tracking-tight tabular-nums text-ink">{registerSummary.accounted}<span className="text-lg text-muted-foreground">/{registerSummary.total}</span></span>
+                        <span className="text-xs font-medium text-body">machines accounted for</span>
+                    </div>
+                    <div role="progressbar" aria-label="Machines accounted for" aria-valuenow={registerSummary.accounted} aria-valuemin={0} aria-valuemax={Math.max(registerSummary.total, 1)} className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-soft">
+                        <div className="h-full rounded-full bg-loom transition-[width]" style={{ width: `${registerSummary.total ? registerSummary.accounted / registerSummary.total * 100 : 0}%` }} />
+                    </div>
+                    <dl className="mt-4 grid grid-cols-2 divide-x divide-hairline border-t border-hairline pt-4">
+                        <div className="pr-3"><dt className="text-xs text-muted-foreground">Pending</dt><dd className="mt-1 text-base font-bold tabular-nums text-ink">{registerSummary.pending}</dd></div>
+                        <div className="pl-3"><dt className="text-xs text-muted-foreground">Production</dt><dd className="mt-1 text-base font-bold tabular-nums text-ink">{formatMeters(summary.total_meters)}</dd></div>
+                    </dl>
+                </div>
+
+                <button type="button" onClick={onOpenHistory} className="group mt-auto hidden w-full items-center gap-3 rounded-2xl border border-hairline bg-surface p-4 text-left shadow-sm transition-colors hover:border-saffron hover:bg-saffron-soft/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron 2xl:flex">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-saffron-soft text-saffron-deep"><Clock3 className="h-5 w-5" /></span>
+                    <span className="min-w-0 flex-1"><span className="block text-sm font-bold text-ink">Recent production</span><span className="block text-xs text-body">Find a saved shift</span></span>
+                    <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                </button>
+            </aside>
+
+            <div ref={sheetRef} className="order-2 flex min-w-0 flex-col 2xl:order-1 2xl:min-h-[calc(100svh-3rem)] 2xl:pb-20">
             {unmatchedDraftMeters && <p role="alert" className="rounded-lg border border-warning/40 bg-warning/5 p-3 text-sm">Some draft metres no longer match the current worker assignments. Restore the assignment in Machine Assignments or discard the local draft before saving; no metres have been silently removed.</p>}
             {navigation.job && <p className="rounded-lg border border-saffron/30 bg-saffron-soft p-3 text-sm">Selected job: <strong>{jobById.get(navigation.job)?.quality_label ?? 'Unavailable job'}</strong>. Its machine rows are highlighted; the full shift stays visible.</p>}
             {(draftStatus === 'error' || draftStatus === 'conflict') && <div role="alert" className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-warning/30 bg-warning/5 p-3 text-sm"><p>{draftStatus === 'conflict' ? 'The saved shift changed after this draft. Your local draft is retained; reload the saved version before editing.' : 'Draft could not be saved on this device. Keep this page open and save the shift before leaving.'}</p><Button variant="outline" size="sm" onClick={discardDraft}>Discard local draft</Button></div>}
-            <div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
-                <div className="min-w-0">
-                    <h1 className="text-xl font-black tracking-tight text-ink sm:text-2xl">Daily sheet</h1>
-                    <p className="mt-1 text-sm text-body">Enter shift metres, not cumulative meter readings. Press Enter or ↓ to move to the next machine.</p>
-                </div>
-                <div className="grid grid-cols-2 gap-2 sm:flex sm:items-end sm:gap-3">
-                    <div className="space-y-1">
-                        <Label htmlFor="base-daily-date" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Date</Label>
-                        <Input id="base-daily-date" type="date" max={initialData.today} value={productionDate} disabled={isSaving} onChange={(event) => changeSelection(event.target.value, shift)} className="h-10 w-full rounded-xl border-hairline bg-surface text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom sm:w-[150px]" />
-                    </div>
-                    <div className="space-y-1">
-                        <Label htmlFor="base-daily-shift" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Shift</Label>
-                        <Select value={shift} disabled={isSaving} onValueChange={(value) => changeSelection(productionDate, value as 'day' | 'night')}>
-                            <SelectTrigger id="base-daily-shift" className="h-10 w-full rounded-xl border-hairline bg-surface text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom sm:w-[132px]"><SelectValue /></SelectTrigger>
-                            <SelectContent className="rounded-xl border-hairline bg-surface shadow-lg">
-                                <SelectItem value="day">Day shift</SelectItem>
-                                <SelectItem value="night">Night shift</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <Button variant="outline" size="sm" className="col-span-2 h-10 rounded-xl sm:col-span-1" onClick={printCollectionSheet} disabled={machineContexts.length === 0}>
-                        <Printer className="h-4 w-4" /> Print sheet
-                    </Button>
-                </div>
+            <div className="border-b border-hairline/70 pb-4">
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-saffron-deep">Production register</p>
+                <h1 className="mt-1 text-2xl font-black tracking-tight text-ink">Daily sheet</h1>
+                <p className="mt-1 text-sm text-body">Enter shift metres, not cumulative meter readings. Press Enter or ↓ to move to the next machine.</p>
             </div>
-
-            <dl className="grid grid-cols-3 divide-x divide-hairline rounded-xl border border-hairline bg-surface-soft/40 px-2 py-2.5 text-center shadow-xs sm:ml-auto sm:w-full sm:max-w-[420px]">
-                <div className="min-w-0 px-1.5 sm:px-2">
-                    <dt className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:text-xs">Accounted for</dt>
-                    <dd className="mt-0.5 text-sm font-black tabular-nums text-ink sm:text-base">{registerSummary.accounted}/{registerSummary.total}</dd>
-                </div>
-                <div className="min-w-0 px-1.5 sm:px-2">
-                    <dt className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:text-xs">Pending</dt>
-                    <dd className="mt-0.5 text-sm font-black tabular-nums text-ink sm:text-base">{registerSummary.pending}</dd>
-                </div>
-                <div className="min-w-0 px-1.5 sm:px-2">
-                    <dt className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:text-xs">Total</dt>
-                    <dd className="mt-0.5 text-sm font-black tabular-nums text-ink sm:text-base">{formatMeters(summary.total_meters)}</dd>
-                </div>
-            </dl>
 
             {currentBatch && (
                 <div className={`flex flex-col gap-3 rounded-2xl border px-4 py-3.5 text-xs sm:flex-row sm:items-center sm:justify-between shadow-xs ${isSavedBatchProtected ? 'border-amber-200 bg-amber-50/50' : 'border-emerald-200 bg-emerald-50/50'}`}>
@@ -718,6 +732,7 @@ export default function BaseDailyProductionSheet({
                 </div>
             )}
 
+            <div className="flex flex-1 flex-col justify-center gap-4 py-5 2xl:py-8">
             {sheetWorkers.length === 0 ? (
                 <Card className="rounded-2xl border border-hairline bg-surface shadow-xs">
                     <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
@@ -734,24 +749,30 @@ export default function BaseDailyProductionSheet({
                 </Card>
             ) : (
                 <>
-                    <Card className="gap-0 overflow-hidden rounded-2xl border border-hairline bg-surface p-0 shadow-xs">
-                        <CardHeader className="border-b border-hairline bg-surface-soft/40 p-4 sm:p-5">
-                            <div className="flex flex-wrap items-center justify-between gap-2">
-                                <CardTitle className="flex items-center gap-2 text-base font-bold text-ink"><ClipboardList className="h-4 w-4 text-saffron-deep" /> Machine sheet</CardTitle>
+                    <Card className="gap-0 overflow-hidden rounded-[22px] border border-hairline border-t-[3px] border-t-saffron-deep bg-surface p-0 shadow-lg shadow-ink/5">
+                        <CardHeader className="border-b border-hairline bg-surface px-4 py-4 sm:px-5 sm:py-5">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                                <div className="flex items-center gap-3">
+                                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-saffron-soft text-saffron-deep"><ClipboardList className="h-5 w-5" /></span>
+                                    <div>
+                                        <CardTitle className="text-lg font-bold tracking-tight text-ink">Machine sheet</CardTitle>
+                                        <p className="text-xs text-muted-foreground">{machineContexts.length} {machineContexts.length === 1 ? 'machine' : 'machines'} on this shift</p>
+                                    </div>
+                                </div>
                                 <div className="flex flex-wrap gap-2">
                                     {draftStatus === 'local' && <Button variant="ghost" size="sm" disabled={isSaving} onClick={discardDraft} className="h-8 rounded-xl text-xs font-semibold text-muted-foreground hover:text-ink">Discard draft</Button>}
                                     {(registerSummary.pending + registerSummary.invalid > 0 || showPending) && <Button variant="outline" size="sm" aria-pressed={showPending} onClick={togglePending} className="h-8 rounded-xl border-hairline bg-surface text-xs font-semibold hover:bg-surface-soft shadow-xs">{showPending ? 'Show all machines' : `Show pending (${registerSummary.pending + registerSummary.invalid})`}</Button>}
                                 </div>
                             </div>
-                            <CardDescription className="text-xs text-muted-foreground">Leave blank if a reading is pending; enter 0 if the machine did not run.</CardDescription>
+                            <CardDescription className="text-xs text-body">Leave a reading blank if it is pending. Enter 0 if the machine did not run.</CardDescription>
                             {showPending && <p className="text-xs text-body font-medium">Showing machines that needed attention when you opened this view. Rows stay in place as you type.</p>}
                         </CardHeader>
                         <CardContent className="p-0">
-                            <div className="hidden grid-cols-[minmax(0,1fr)_minmax(0,1fr)_150px_170px] gap-3 border-b border-hairline bg-surface-soft/60 px-4 py-3 text-xs font-bold uppercase tracking-wider text-muted-foreground md:grid">
-                                <span>Machine / job</span><span>Worker</span><span className="text-right">Production (m)</span><span>Status</span>
+                            <div className="hidden grid-cols-[minmax(0,1.1fr)_minmax(0,.8fr)_145px_160px] gap-3 border-b border-hairline bg-surface-soft/70 px-5 py-2.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground md:grid">
+                                <span>Machine / job</span><span>Worker</span><span className="text-right">Metres</span><span>Status / action</span>
                             </div>
-                            <div className="divide-y divide-hairline">
-                                {machineContexts.map((context) => {
+                            <div role="region" aria-label="Machine readings" className="divide-y divide-hairline overflow-y-auto overscroll-contain lg:max-h-[max(14rem,calc(100svh-30rem))]">
+                                {machineContexts.map((context, index) => {
                                     if (showPending && !pendingMachineIds.includes(context.machineId)) return null
                                     if (!context.workerId) return (
                                         <div key={context.machineId} className="flex flex-wrap items-center justify-between gap-3 bg-amber-50/40 px-4 py-3 text-sm">
@@ -764,11 +785,14 @@ export default function BaseDailyProductionSheet({
                                     const state = machineState(context)
                                     const disabled = areInputsDisabled || settledWorkerIds.has(context.workerId!)
                                     return (
-                                        <div key={context.machineId} data-base-highlight={context.workerId === focusedWorker || context.jobId === navigation.job} className="data-[base-highlight=true]:bg-saffron-soft/60 data-[base-highlight=true]:ring-1 data-[base-highlight=true]:ring-inset data-[base-highlight=true]:ring-saffron grid grid-cols-[minmax(0,1fr)_132px] items-center gap-x-3 gap-y-2 px-3 py-3 focus-within:bg-saffron-soft/30 hover:bg-surface-soft/20 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_150px_170px] md:px-4 md:py-2.5 transition-colors">
-                                            <div className="min-w-0">
-                                                <p className="font-bold text-ink">{context.machineLabel}</p>
-                                                <p className="truncate text-xs text-muted-foreground">{context.jobLabel ?? 'Job not assigned'}</p>
-                                                <p className="text-xs text-body md:hidden">{context.workerName}</p>
+                                        <div key={context.machineId} data-base-highlight={context.workerId === focusedWorker || context.jobId === navigation.job} className="data-[base-highlight=true]:bg-saffron-soft/60 data-[base-highlight=true]:ring-1 data-[base-highlight=true]:ring-inset data-[base-highlight=true]:ring-saffron grid grid-cols-[minmax(0,1fr)_132px] items-center gap-x-3 gap-y-2 px-4 py-3.5 transition-colors focus-within:bg-saffron-soft/30 hover:bg-surface-soft/40 md:grid-cols-[minmax(0,1.1fr)_minmax(0,.8fr)_145px_160px] md:px-5">
+                                            <div className="flex min-w-0 items-center gap-3">
+                                                <span className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-soft text-xs font-bold tabular-nums text-muted-foreground sm:flex">{String(index + 1).padStart(2, '0')}</span>
+                                                <div className="min-w-0">
+                                                    <p className="truncate font-bold text-ink">{context.machineLabel}</p>
+                                                    <p className="truncate text-xs text-muted-foreground">{context.jobLabel ?? 'Job not assigned'}</p>
+                                                    <p className="text-xs text-body md:hidden">{context.workerName}</p>
+                                                </div>
                                             </div>
                                             <div className="hidden text-sm text-body md:block">
                                                 <span className="font-semibold text-ink">{context.workerName}</span>
@@ -794,8 +818,8 @@ export default function BaseDailyProductionSheet({
                                                 />
                                                 {state === 'invalid' && <p id={`reading-error-${context.machineId}`} className="mt-1 text-xs font-semibold text-destructive">Use 0–100,000, up to 2 decimals.</p>}
                                             </div>
-                                            <div className="col-span-2 flex flex-wrap items-center gap-2 text-xs md:col-span-1">
-                                                <span className={`font-semibold ${state === 'entered' ? 'text-success' : state === 'pending' || state === 'invalid' ? 'text-warning' : 'text-muted-foreground'}`}>{state === 'entered' ? 'Entered' : state === 'not_running' ? 'Not running' : state === 'absent' ? 'Worker absent' : state === 'invalid' ? 'Check reading' : 'Pending'}</span>
+                                            <div className="col-span-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs md:col-span-1 md:flex-col md:items-start">
+                                                <span className={`inline-flex rounded-full px-2 py-0.5 font-bold ${state === 'entered' ? 'bg-emerald-50 text-emerald-700' : state === 'pending' || state === 'invalid' ? 'bg-amber-50 text-amber-800' : 'bg-surface-soft text-body'}`}>{state === 'entered' ? 'Entered' : state === 'not_running' ? 'Not running' : state === 'absent' ? 'Worker absent' : state === 'invalid' ? 'Check reading' : 'Pending'}</span>
                                                 {!disabled && row.status !== 'absent' && (
                                                     <Button type="button" variant="ghost" size="sm" aria-label={`${state === 'not_running' ? 'Clear' : 'Mark not running'} ${context.machineLabel}`} onClick={() => {
                                                         if (state === 'entered' && !window.confirm(tx('Replace this machine’s production with zero?'))) return
@@ -882,6 +906,7 @@ export default function BaseDailyProductionSheet({
                     </Card>}
                 </>
             )}
+            </div>
 
             {sheetWorkers.length > 0 && (
                 <div style={toolbarBounds ? { position: 'fixed', left: toolbarBounds.left, width: toolbarBounds.width } : undefined} className="sticky bottom-[calc(80px+env(safe-area-inset-bottom,0px))] z-20 flex items-center justify-between gap-3 rounded-2xl border border-hairline bg-surface/95 p-3 sm:p-4 shadow-xl backdrop-blur md:bottom-3">
@@ -903,6 +928,13 @@ export default function BaseDailyProductionSheet({
                     </Button>
                 </div>
             )}
+            </div>
+
+            <button type="button" onClick={onOpenHistory} className="order-3 flex w-full items-center gap-3 rounded-2xl border border-hairline bg-surface p-4 text-left shadow-sm transition-colors hover:border-saffron hover:bg-saffron-soft/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron 2xl:hidden">
+                <Clock3 className="h-5 w-5 shrink-0 text-saffron-deep" />
+                <span className="min-w-0 flex-1"><span className="block text-sm font-bold text-ink">Recent production</span><span className="block text-xs text-body">Find a saved shift</span></span>
+                <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+            </button>
 
             <Dialog open={isReviewOpen} onOpenChange={open => { if (!isSaving) setIsReviewOpen(open) }}>
                 <DialogContent className="max-w-md rounded-2xl border border-hairline bg-surface p-6 shadow-2xl">
