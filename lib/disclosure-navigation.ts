@@ -4,7 +4,7 @@ import { visibleOwnerNavigation, type OwnerNavigationItem } from './owner-naviga
 import { resolveStockKind, stockDestinations } from './stock-navigation'
 
 export type NavigationDestination = OwnerNavigationItem & { href: string }
-export type DisclosureId = 'costing' | 'stock' | 'workforce'
+export type DisclosureId = 'costing' | 'production' | 'stock' | 'workforce'
 export type NavigationGroup = {
     kind: 'group'; id: DisclosureId; translationKey: string;
     icon: OwnerNavigationItem['icon']; children: NavigationDestination[]
@@ -16,11 +16,16 @@ type Sections = ReturnType<typeof visibleOwnerNavigation>
 // Product presentation scope, not an authorization decision. Feature grants remain upstream.
 export function usesCollapsibleNavigation(tier: SubscriptionTier) { return tier === 'base' }
 export function groupOwnerNavigation(sections: Sections, tier: SubscriptionTier) {
-    if (!usesCollapsibleNavigation(tier)) return sections.map(section => ({
-        ...section, nodes: section.items.map(item => ({ ...item, kind: 'link' as const })), showHeading: true,
-    }))
     return sections.map(section => {
         let nodes: NavigationNode[] = section.items.map(item => ({ ...item, kind: 'link' as const }))
+        nodes = nodes.map(item => item.id !== 'production' || item.kind !== 'link' ? item : {
+            kind: 'group', id: 'production', translationKey: 'navigation.production', icon: item.icon,
+            children: [
+                { ...item, id: 'production_overview', name: 'Overview', href: '/owner/production', translationKey: 'navigation.production_overview', active: pathname => pathname === '/owner/production' },
+                { ...item, id: 'production_daily_sheet', name: 'Daily Sheet', href: '/owner/production/daily-sheet', translationKey: 'navigation.production_daily_sheet', active: pathname => pathname === '/owner/production/daily-sheet' },
+            ],
+        })
+        if (!usesCollapsibleNavigation(tier)) return { ...section, nodes, showHeading: true }
         if (section.id === 'costing') {
             const children = ['estimate', 'rates', 'costings'].flatMap(id => section.items.filter(item => item.id === id))
             if (children.length && !(children.length === 1 && children[0].id === 'estimate')) {

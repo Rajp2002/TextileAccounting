@@ -394,7 +394,7 @@ describe('Base Production Core boundary contracts', () => {
         expect(sidebar).toContain("'/owner/assignments'")
         expect(operationsPage).toContain('view="operations"')
         expect(payrollPage).toContain('view="payroll"')
-        expect(client).toContain("view === 'production' && <TabsList")
+        expect(client).not.toContain("<TabsList")
         expect(client).toContain('grid-cols-2')
     })
 })

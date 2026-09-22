@@ -1,5 +1,7 @@
 export const hi = {
  navigation: {
+  "production_overview": "अवलोकन",
+  "production_daily_sheet": "दैनिक शीट",
   "estimate": "लागत अनुमानक",
   "costings": "सेव की गई कॉस्टिंग",
   "rates": "यार्न रेट बुक",

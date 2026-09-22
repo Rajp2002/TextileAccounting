@@ -98,11 +98,11 @@ describe('Active Qualities Production Simplification Flow', () => {
         expect(client).toContain('Looms Available')
         expect(client).toContain('Workers Assigned')
 
-        // Tabs and components
+        // Separate route content and components
         expect(client).toContain('<BaseActiveQualities')
         expect(client).toContain('<BaseMachineBoard')
-        expect(client).toContain("Overview & Looms")
-        expect(client).toContain("Daily Sheet")
+        expect(client).not.toContain("<TabsList")
+        expect(client).toContain("/daily-sheet")
 
         // No residual manual job creation form
         expect(client).not.toContain('New production job')

@@ -7,12 +7,12 @@ const grouped = (tier: 'base' | 'free' | 'premium' | 'none' = 'base') => groupOw
 describe('grouped navigation policy and destinations', () => {
  it('groups the seven destinations in approved order', () => {
   expect(grouped().flatMap(s => s.nodes).filter(n => n.kind === 'group').map(n => [n.id, n.kind === 'group' && n.children.map(c => c.id)])).toEqual([
-   ['costing', ['estimate','rates','costings']], ['stock',['fabric','yarn']], ['workforce',['workers','payroll']],
+   ['costing', ['estimate','rates','costings']], ['production', ['production_overview', 'production_daily_sheet']], ['stock',['fabric','yarn']], ['workforce',['workers','payroll']],
   ])
  })
  it('keeps Production and Account destinations and relative order intact', () => {
   for (const id of ['production_stock','utilities']) {
-   const before = sections().find(s => s.id === id)!.items.filter(n => n.id !== 'stock')
+   const before = sections().find(s => s.id === id)!.items.filter(n => n.id !== 'stock' && n.id !== 'production')
    const after = grouped().find(s => s.id === id)!.nodes.filter(n => n.kind === 'link')
    expect(after.map(n => [n.id, n.kind === 'link' && n.href])).toEqual(before.map(n => [n.id,n.href]))
   }
@@ -21,10 +21,10 @@ describe('grouped navigation policy and destinations', () => {
   const input = sections('free').map(s => s.id === 'costing' ? {...s, items:s.items.filter(i => i.id === 'estimate')} : s)
   expect(groupOwnerNavigation(input, 'base')[0].nodes.map(n => [n.id,n.kind])).toEqual([['estimate','link']])
  })
- it.each(['free','lite','premium','trial','none'] as const)('keeps %s navigation flat with existing grants and order', tier => {
+ it.each(['free','lite','premium','trial','none'] as const)('keeps %s other navigation flat with existing grants and order', tier => {
   const before = visibleOwnerNavigation({tier,productionMode:'market_run'})
   const after = groupOwnerNavigation(before,tier)
-  expect(after.flatMap(s=>s.nodes).every(n=>n.kind==='link')).toBe(true)
+  expect(after.flatMap(s=>s.nodes).every(n=>n.id === 'production' ? n.kind === 'group' : n.kind === 'link')).toBe(true)
   expect(after.map(s=>s.nodes.map(n=>n.id))).toEqual(before.map(s=>s.items.map(n=>n.id)))
  })
  it('keeps one-child workforce within Base presentation', () => {
@@ -35,6 +35,10 @@ describe('grouped navigation policy and destinations', () => {
  it('separates Yarn Rate Book ownership from Yarn Stock and includes detail paths', () => {
   const groups = grouped().flatMap(s => s.nodes).filter(n => n.kind === 'group')
   const active = (path: string) => groups.filter(n => n.kind === 'group' && n.children.some(c => c.active(path,c.href))).map(n => n.id)
+  expect(active('/owner/production')).toEqual(['production'])
+  expect(active('/owner/production/daily-sheet')).toEqual(['production'])
+  const production = groups.find(n => n.id === 'production')!
+  expect(production.children.filter(c => c.active('/owner/production/daily-sheet', c.href)).map(c => c.id)).toEqual(['production_daily_sheet'])
   expect(active('/owner/rates')).toEqual(['costing'])
   expect(active('/owner/stock/yarn')).toEqual(['stock'])
   expect(active('/owner/quotes/example')).toEqual(['costing'])
@@ -49,7 +53,7 @@ describe('grouped navigation policy and destinations', () => {
 })
 describe('local one-open-group state', () => {
  const initial: DisclosureState = { location:'/owner/stock', scope:'workspace-a', expanded:null }
- it.each(['costing','stock','workforce'] as const)('toggles %s without changing location', id => {
+ it.each(['costing','production','stock','workforce'] as const)('toggles %s without changing location', id => {
   const open = toggleDisclosure(initial,id)
   expect(open).toEqual({...initial, expanded:id})
   expect(toggleDisclosure(open,id)).toEqual(initial)
