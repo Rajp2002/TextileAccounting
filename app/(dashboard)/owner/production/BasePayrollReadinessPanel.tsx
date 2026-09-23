@@ -22,11 +22,11 @@ export default function BasePayrollReadinessPanel({ readiness }: { readiness: Ba
     const hasIssues = readiness.issueCount > 0
 
     return (
-        <Card className={hasIssues ? 'rounded-2xl border border-amber-200 bg-amber-50/40 shadow-xs overflow-hidden' : 'rounded-2xl border border-hairline bg-surface shadow-xs overflow-hidden'}>
+        <Card className={hasIssues ? 'rounded-2xl border border-warning/30 bg-warning-soft/40 shadow-xs overflow-hidden' : 'rounded-2xl border border-hairline bg-surface shadow-xs overflow-hidden'}>
             <CardHeader className="p-4 sm:p-5">
                 <div className="flex items-start justify-between gap-3">
                     <div className="flex min-w-0 items-start gap-3">
-                        <div className={`rounded-xl p-2.5 shadow-xs ${hasIssues ? 'border border-amber-200 bg-surface text-amber-800' : 'border border-emerald-200 bg-emerald-50 text-emerald-800'}`}>
+                        <div className={`rounded-xl p-2.5 shadow-xs ${hasIssues ? 'border border-warning/30 bg-surface text-warning' : 'border border-success-soft bg-success-soft text-success'}`}>
                             {hasIssues ? <AlertTriangle className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
                         </div>
                         <div>
@@ -66,9 +66,9 @@ export default function BasePayrollReadinessPanel({ readiness }: { readiness: Ba
                     {hasIssues && (
                         <div className="space-y-2">
                             {readiness.workers.flatMap((worker) => worker.issues).map((item) => (
-                                <div key={`${item.entryId}:${item.code}`} className="flex items-start justify-between gap-3 rounded-xl border border-amber-200 bg-surface p-3 text-xs shadow-xs">
+                                <div key={`${item.entryId}:${item.code}`} className="flex items-start justify-between gap-3 rounded-xl border border-warning/30 bg-surface p-3 text-xs shadow-xs">
                                     <div><p className="font-bold text-ink">{item.message}</p><p className="mt-0.5 text-xs text-muted-foreground">{formatDateOnly(item.productionDate)}{item.shift ? ` · ${item.shift} shift` : ''}</p></div>
-                                    <Button asChild variant="outline" size="xs" className="shrink-0 h-7 rounded-lg border-amber-300 bg-surface text-xs font-bold text-amber-900 hover:bg-amber-50 shadow-xs"><Link href={baseProductionHref({ date: item.productionDate, shift: item.shift === 'day' || item.shift === 'night' ? item.shift : undefined, entry: item.entryId, returnTo: '/owner/payroll' })}>Review</Link></Button>
+                                    <Button asChild variant="outline" size="xs" className="shrink-0 h-7 rounded-lg bg-surface text-xs font-bold shadow-xs"><Link href={baseProductionHref({ date: item.productionDate, shift: item.shift === 'day' || item.shift === 'night' ? item.shift : undefined, entry: item.entryId, returnTo: '/owner/payroll' })}>Review</Link></Button>
                                 </div>
                             ))}
                         </div>

@@ -25,7 +25,7 @@ export function MachineCard({ machine, onEdit, tourPreview = false }: MachineCar
     <article
       data-machines-tour-id={tourPreview ? machine.id : undefined}
       className={cn(
-        'group flex flex-col justify-between rounded-2xl border border-hairline bg-surface p-5 shadow-xs transition-all duration-150',
+        'group flex flex-col justify-between rounded-2xl border border-hairline bg-surface p-4 shadow-xs transition-all duration-150',
         'hover:border-hairline-strong hover:shadow-sm motion-safe:hover:-translate-y-0.5'
       )}
     >
@@ -35,25 +35,25 @@ export function MachineCard({ machine, onEdit, tourPreview = false }: MachineCar
           <div data-machines-tour="identity" className="flex min-w-0 items-center gap-3">
             <div
               className={cn(
-                'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-colors',
+                'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition-colors',
                 readiness.isActive
-                  ? 'border-hairline/80 bg-surface-soft/80 text-subtle'
-                  : 'border-hairline/50 bg-muted/15 text-subtle/60'
+                  ? 'border-hairline/80 bg-surface-soft text-subtle'
+                  : 'border-hairline/70 bg-surface-soft/60 text-subtle/70'
               )}
               aria-hidden="true"
             >
-              <Cog className="h-5 w-5" />
+              <Cog className="h-4 w-4" />
             </div>
 
             <div className="min-w-0 flex-1">
               <h3
                 data-i18n-skip="true"
-                className="truncate text-base sm:text-lg font-semibold tracking-tight text-ink"
+                className="truncate text-base font-semibold tracking-tight text-ink"
               >
                 {displayName}
               </h3>
               {formattedType && (
-                <p className="truncate text-xs sm:text-[13px] capitalize text-subtle">
+                <p className="truncate text-xs capitalize text-subtle">
                   {tx(formattedType)}
                 </p>
               )}
@@ -66,10 +66,10 @@ export function MachineCard({ machine, onEdit, tourPreview = false }: MachineCar
         </div>
 
         {/* B. Operational Configuration Details */}
-        <div className="grid grid-cols-2 gap-3 rounded-xl border border-hairline/60 bg-surface-soft/30 p-3.5">
+        <div className="grid grid-cols-2 gap-3 rounded-xl border border-hairline/70 bg-surface-soft/75 p-3">
           {/* Worker */}
           <div data-machines-tour="worker" className="min-w-0 space-y-1">
-            <span className="text-xs font-medium text-subtle uppercase tracking-wider">
+            <span className="text-[11px] font-medium uppercase tracking-wider text-subtle">
               {tx('Worker')}
             </span>
             <p
@@ -87,7 +87,7 @@ export function MachineCard({ machine, onEdit, tourPreview = false }: MachineCar
 
           {/* Costing */}
           <div data-machines-tour="costing" className="min-w-0 space-y-1">
-            <span className="text-xs font-medium text-subtle uppercase tracking-wider">
+            <span className="text-[11px] font-medium uppercase tracking-wider text-subtle">
               {tx('Costing')}
             </span>
             <p
@@ -108,13 +108,13 @@ export function MachineCard({ machine, onEdit, tourPreview = false }: MachineCar
       </div>
 
       {/* C. Card Actions */}
-      <div className="mt-5 flex items-center justify-between gap-3 border-t border-hairline/60 pt-4">
+      <div className="mt-4 flex items-center justify-between gap-3 border-t border-hairline/60 pt-3">
         {/* Primary Action: View Assignment */}
         <NavigationLink
           data-machines-tour="assignments"
           href={tourPreview ? "#" : `/owner/assignments?machine=${machine.id}`}
           onClick={event => { if (tourPreview) event.preventDefault() }}
-          className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-hairline/80 bg-surface px-3.5 text-xs sm:text-sm font-medium text-ink shadow-2xs transition-all hover:border-saffron hover:bg-saffron-soft hover:text-saffron-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+          className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-hairline/80 bg-surface px-3 text-xs font-medium text-ink shadow-2xs transition-all hover:border-saffron hover:bg-saffron-soft hover:text-saffron-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
           aria-label={`${tx('View assignment for')} ${displayName}`}
         >
           <SlidersHorizontal className="h-3.5 w-3.5 text-saffron-deep" aria-hidden="true" />

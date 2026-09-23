@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Plus } from 'lucide-react'
+import { UserPlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { NavigationLink } from '@/components/navigation/navigation-link'
 import { useTranslation } from '@/lib/i18n/context'
@@ -62,8 +62,8 @@ export function WorkersPageHeader({
 
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <div className="flex items-baseline gap-2.5">
-            <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-[28px]">
+          <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
+            <h1 className="text-xl font-bold leading-tight text-ink">
               {tx('Workers')}
             </h1>
             {typeof totalCount === 'number' && (
@@ -80,9 +80,9 @@ export function WorkersPageHeader({
         <div className="shrink-0">
           <Button
             onClick={onAdd}
-            className="h-10 w-full sm:w-auto rounded-xl bg-loom px-4 font-medium text-white shadow-xs transition-all duration-150 hover:bg-loom-elevated hover:text-white motion-safe:hover:-translate-y-0.5 active:scale-[0.98] focus-visible:ring-saffron"
+            className="h-10 w-full rounded-lg bg-loom px-4 font-medium text-white shadow-xs hover:bg-loom-elevated hover:text-white focus-visible:ring-saffron sm:w-auto"
           >
-            <Plus className="h-4 w-4" aria-hidden="true" />
+            <UserPlus className="h-4 w-4" aria-hidden="true" />
             <span>{tx('Add worker')}</span>
           </Button>
         </div>

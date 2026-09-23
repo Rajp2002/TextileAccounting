@@ -28,8 +28,8 @@ export function MachinesPageHeader({ onAdd, returnTo }: MachinesPageHeaderProps)
         </div>
       )}
 
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="min-w-0">
+      <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 sm:min-h-12 sm:grid-cols-[1fr_auto_1fr]">
+        <div className="min-w-0 sm:col-start-2 sm:row-start-1 sm:text-center">
           <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-[28px]">
             {tx('Machines')}
           </h1>
@@ -38,10 +38,10 @@ export function MachinesPageHeader({ onAdd, returnTo }: MachinesPageHeaderProps)
           </p>
         </div>
 
-        <div className="shrink-0">
+        <div className="shrink-0 sm:col-start-3 sm:row-start-1 sm:justify-self-end">
           <Button
             onClick={onAdd}
-            className="h-10 w-full sm:w-auto rounded-xl bg-loom px-4 font-medium text-white shadow-xs transition-all duration-150 hover:bg-loom-elevated hover:text-white motion-safe:hover:-translate-y-0.5 active:scale-[0.98] focus-visible:ring-saffron"
+            className="h-10 rounded-xl px-4"
           >
             <Plus className="h-4 w-4" aria-hidden="true" />
             <span>{tx('Add machine')}</span>

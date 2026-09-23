@@ -26,6 +26,8 @@ import {
     DialogTitle,
     DialogDescription,
 } from '@/components/ui/dialog'
+import { EmptyState, Toolbar } from '@/components/ui/page-header'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useTranslation } from '@/lib/i18n/context'
 import {
     paymentStatus,
@@ -45,6 +47,48 @@ const blank = (): ChallanDraft => ({
     document: { date: new Date().toLocaleDateString('en-CA') },
     lines: [{ lot: '', meters: 0 }],
 })
+function formatDocumentDate(value: string) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return value
+    const date = new Date(value + 'T00:00:00Z')
+    if (Number.isNaN(date.getTime())) return value
+    return new Intl.DateTimeFormat('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        timeZone: 'UTC',
+    }).format(date)
+}
+function formatMeters(value: number) {
+    return Number(value).toLocaleString('en-IN', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    })
+}
+function deliveryBadgeVariant(status: Challan['delivery_status']) {
+    switch (status) {
+        case 'received':
+            return 'success'
+        case 'sent':
+            return 'info'
+        case 'reversed':
+            return 'risk'
+        default:
+            return 'secondary'
+    }
+}
+function paymentBadgeVariant(status: string) {
+    switch (status) {
+        case 'settled':
+            return 'success'
+        case 'partial':
+        case 'unpaid':
+            return 'warning'
+        case 'credit':
+            return 'info'
+        default:
+            return 'secondary'
+    }
+}
 export default function ChallansClient({
     initialData,
     qualities,
@@ -217,17 +261,20 @@ export default function ChallansClient({
     return (
         <div
             data-i18n-skip="true"
-            className="mx-auto max-w-6xl space-y-6 p-4 md:p-8"
+            className="premium-route-enter mx-auto w-full max-w-3xl space-y-6 p-4 md:px-8 md:py-8"
         >
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink">{tx('title')}</h1>
-                    <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
+            <header className="grid grid-cols-1 items-center gap-4 border-b border-hairline/80 pb-5 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+                <div className="min-w-0 text-center sm:col-start-2 sm:row-start-1">
+                    <h1 className="text-2xl font-bold leading-tight tracking-tight text-ink sm:text-3xl">
+                        {tx('title')}
+                    </h1>
+                    <p className="mt-1 text-sm leading-relaxed text-body">
                         {tx('intro')}
                     </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="w-full sm:col-start-3 sm:row-start-1 sm:w-auto sm:justify-self-end">
                     <Button
+                        variant="saffron"
                         disabled={busy || !!pending}
                         onClick={() => {
                             setSelected(null)
@@ -235,132 +282,181 @@ export default function ChallansClient({
                             draftId.current = crypto.randomUUID()
                             setError('')
                         }}
-                        className="h-10 px-4 rounded-xl bg-loom text-white font-bold shadow-xs hover:bg-loom-elevated transition-all"
+                        className="h-10 w-full rounded-xl px-4 sm:w-auto"
                     >
-                        <Plus className="h-4 w-4" /> {tx('new')}
+                        <Plus className="h-4 w-4" aria-hidden="true" />
+                        {tx('new')}
                     </Button>
                 </div>
-            </div>
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex flex-wrap items-center gap-2.5">
-                    <div className="flex h-10 items-center rounded-xl border border-hairline bg-surface-soft p-1 shadow-xs">
-                        <button
-                            type="button"
-                            onClick={() => load(false)}
-                            disabled={busy}
-                            className={`rounded-lg px-3.5 py-1 text-xs sm:text-sm font-bold transition-all ${!history ? 'bg-loom text-white shadow-xs' : 'text-muted-foreground hover:text-ink'}`}
-                        >
+            </header>
+            <Toolbar className="grid gap-3 p-3 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center">
+                <Tabs
+                    value={history ? 'history' : 'active'}
+                    onValueChange={(value) => {
+                        void load(value === 'history')
+                    }}
+                    className="w-full sm:w-auto"
+                >
+                    <TabsList aria-label={tx('dispatchViews')} className="h-10 w-full sm:w-fit">
+                        <TabsTrigger value="active" disabled={busy} className="min-w-[5.5rem] px-4 text-xs sm:text-sm">
                             {tx('active')}
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => load(true)}
-                            disabled={busy}
-                            className={`rounded-lg px-3.5 py-1 text-xs sm:text-sm font-bold transition-all ${history ? 'bg-loom text-white shadow-xs' : 'text-muted-foreground hover:text-ink'}`}
-                        >
+                        </TabsTrigger>
+                        <TabsTrigger value="history" disabled={busy} className="min-w-[5.5rem] px-4 text-xs sm:text-sm">
                             {tx('history')}
-                        </button>
-                    </div>
-                    <div className="flex items-center gap-1.5">
+                        </TabsTrigger>
+                    </TabsList>
+                </Tabs>
+                <form
+                    className="flex min-w-0 gap-2"
+                    onSubmit={(event) => {
+                        event.preventDefault()
+                        void load()
+                    }}
+                >
+                    <div className="relative min-w-0 flex-1">
+                        <Search
+                            className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle/60"
+                            aria-hidden="true"
+                        />
                         <Input
-                            className="h-10 w-48 sm:w-64 rounded-xl border-hairline bg-surface text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom text-xs sm:text-sm"
+                            className="h-10 w-full rounded-xl border-hairline bg-surface pl-10 pr-3 text-sm text-ink placeholder:text-subtle/60 focus-visible:border-saffron focus-visible:ring-saffron"
                             aria-label={tx('search')}
                             placeholder={tx('search')}
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                         />
-                        <Button
-                            variant="outline"
-                            onClick={() => load()}
-                            disabled={busy}
-                            className="h-10 rounded-xl border-hairline bg-surface hover:bg-surface-soft font-semibold text-xs shadow-xs px-3"
-                        >
-                            <Search className="h-3.5 w-3.5" />
-                            <span className="hidden sm:inline">{tx('searchButton')}</span>
-                        </Button>
                     </div>
-                </div>
-                <Link
-                    className="text-xs font-bold text-loom hover:underline flex items-center gap-1.5"
-                    href="/owner/dispatches/legacy"
-                >
-                    <Truck className="h-3.5 w-3.5" />
-                    {tx('legacy')}
-                </Link>
-            </div>
+                    <Button
+                        type="submit"
+                        variant="outline"
+                        disabled={busy}
+                        className="h-10 shrink-0 rounded-xl px-3"
+                    >
+                        <Search className="h-4 w-4" aria-hidden="true" />
+                        <span>{tx('searchButton')}</span>
+                    </Button>
+                </form>
+                <Button asChild variant="ghost" size="sm" className="h-9 w-full rounded-xl px-3 text-xs text-subtle sm:w-auto">
+                    <Link href="/owner/dispatches/legacy">
+                        <Truck className="h-3.5 w-3.5" aria-hidden="true" />
+                        {tx('legacy')}
+                    </Link>
+                </Button>
+            </Toolbar>
             {error && (
                 <p
                     role="alert"
-                    className="rounded-xl border border-rose-200 bg-rose-50/70 p-3 text-xs sm:text-sm font-medium text-rose-800"
+                    className="rounded-xl border border-risk/25 bg-risk-soft/55 p-3 text-sm font-medium text-risk"
                 >
                     {error}
                 </p>
             )}
             {pending && !busy && (
-                <Button onClick={() => save(pending.action, pending.payload)} className="rounded-xl bg-loom text-white font-bold text-xs shadow-xs">
+                <Button variant="secondary" onClick={() => save(pending.action, pending.payload)} className="h-9 rounded-xl text-xs">
                     {tx('retryButton')}
                 </Button>
             )}
-            <div className="grid gap-3">
-                {rows.map((d) => {
-                    const isDisputed = ['review', 'disputed'].includes(d.difference_status)
-                    return (
-                        <button
-                            key={d.id}
-                            className={`w-full rounded-2xl border text-left p-4 sm:p-5 shadow-xs transition-all ${selected?.id === d.id ? 'border-loom ring-1 ring-loom bg-surface' : 'border-hairline bg-surface hover:border-hairline-strong hover:bg-surface-soft/40'}`}
-                            onClick={() => view(d.id)}
-                            disabled={busy || !!pending}
-                        >
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <section aria-labelledby="challan-list-heading" className="space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                    <h2 id="challan-list-heading" className="text-[11px] font-semibold uppercase tracking-[0.14em] text-subtle">
+                        {tx(history ? 'historyHeading' : 'activeHeading')}
+                    </h2>
+                    <span className="text-xs font-medium tabular-nums text-subtle">
+                        {t('challan.recordCount', { count: rows.length })}
+                    </span>
+                </div>
+                <div className="grid gap-3">
+                    {rows.map((d) => {
+                        const isDisputed = ['review', 'disputed'].includes(d.difference_status)
+                        const isSelected = selected?.id === d.id
+                        const balanceLabel = Number(d.balance) < 0 ? tx('credit') : tx('balance')
+                        return (
+                            <button
+                                key={d.id}
+                                type="button"
+                                aria-pressed={isSelected}
+                                className={isSelected
+                                    ? 'grid w-full grid-cols-1 gap-x-6 gap-y-4 rounded-2xl border border-saffron/70 bg-surface p-4 text-left shadow-sm ring-1 ring-saffron/25 transition-colors sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:p-5'
+                                    : 'grid w-full grid-cols-1 gap-x-6 gap-y-4 rounded-2xl border border-hairline bg-surface p-4 text-left shadow-xs transition-colors hover:border-hairline-strong hover:bg-surface-soft/40 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:p-5'}
+                                onClick={() => view(d.id)}
+                                disabled={busy || !!pending}
+                            >
                                 <div className="min-w-0">
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                        <span className="font-mono text-xs font-bold tracking-tight text-ink/70">{d.number}</span>
-                                        <span className="font-bold text-ink text-base truncate">{d.document.customer_name}</span>
-                                    </div>
-                                    <p className="mt-1 text-xs text-muted-foreground">
-                                        <span className="font-semibold text-ink/80">{d.quality_label}</span> · <span className="font-bold tabular-nums text-ink">{d.sent_meters} m</span> · {d.document.date}
+                                    <p className="font-mono text-[11px] font-semibold tracking-[0.08em] text-subtle">
+                                        {d.number}
+                                    </p>
+                                    <h3 className="mt-1 truncate text-base font-semibold leading-tight tracking-tight text-ink">
+                                        {d.document.customer_name}
+                                    </h3>
+                                    <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-body">
+                                        <span className="font-medium text-ink">{d.quality_label}</span>
+                                        <span aria-hidden="true" className="text-subtle/60">·</span>
+                                        <span className="tabular-nums">{formatMeters(d.sent_meters)} m</span>
+                                        <span aria-hidden="true" className="text-subtle/60">·</span>
+                                        <time dateTime={d.document.date}>{formatDocumentDate(d.document.date)}</time>
                                     </p>
                                 </div>
-                                <div className="flex flex-wrap sm:flex-col sm:items-end gap-1.5 shrink-0 text-xs">
-                                    <div className="flex items-center gap-1.5">
-                                        <Badge variant={d.delivery_status === 'sent' ? 'warning' : d.delivery_status === 'received' ? 'success' : 'outline'} className="text-[10px] font-bold">
+                                <div className="flex min-w-0 flex-col gap-2 sm:items-end">
+                                    <div className="flex flex-wrap items-center gap-1.5 sm:justify-end">
+                                        <Badge variant={deliveryBadgeVariant(d.delivery_status)} className="text-[10px] font-semibold">
                                             {tx(d.delivery_status)}
                                         </Badge>
-                                        <Badge variant={paymentStatus(d) === 'settled' ? 'success' : paymentStatus(d) === 'partial' ? 'warning' : 'outline'} className="text-[10px] font-bold">
+                                        <Badge variant={paymentBadgeVariant(paymentStatus(d))} className="text-[10px] font-semibold">
                                             {tx(paymentStatus(d))}
                                         </Badge>
                                     </div>
-                                    <p className="text-xs font-bold tabular-nums text-ink">
-                                        <span className="font-medium text-muted-foreground">{Number(d.balance) < 0 ? tx('credit') : tx('balance')}:</span> ₹{money(Math.abs(d.balance))}
-                                    </p>
-                                    {(dueLabel(d) || d.payment_due_date) && (
-                                        <p className="text-[11px] text-muted-foreground font-medium">
-                                            {dueLabel(d)}
-                                            {d.payment_due_date ? `${dueLabel(d) ? ' · ' : ''}${d.payment_due_date}` : ''}
+                                    <div className="sm:text-right">
+                                        <p className="text-[15px] font-bold leading-tight tabular-nums text-ink">
+                                            <span className="sr-only">{balanceLabel}: </span>
+                                            ₹{money(Math.abs(d.balance))}
                                         </p>
-                                    )}
+                                        <p className="mt-1 text-[11px] font-medium leading-snug text-subtle">
+                                            {Number(d.balance) <= 0
+                                                ? Number(d.balance) < 0 ? tx('credit') : tx('paidInFull')
+                                                : <>
+                                                    {dueLabel(d)}
+                                                    {d.payment_due_date && ' · ' + formatDocumentDate(d.payment_due_date)}
+                                                </>}
+                                        </p>
+                                    </div>
                                 </div>
-                            </div>
-                            {isDisputed && (
-                                <div className="mt-3 flex items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50/60 px-3 py-1.5 text-xs font-semibold text-amber-900">
-                                    <AlertTriangle className="h-3.5 w-3.5 text-amber-700 shrink-0" />
-                                    <span>{tx(d.difference_status)}</span>
-                                </div>
-                            )}
-                        </button>
-                    )
-                })}
-            </div>
-            {!rows.length && (
-                <div className="rounded-2xl border border-dashed border-hairline bg-surface-soft/40 p-10 text-center text-muted-foreground">
-                    <p className="text-sm font-semibold text-body">{tx('empty')}</p>
+                                {isDisputed && (
+                                    <div className="col-span-full flex items-center gap-1.5 rounded-xl border border-warning/25 bg-warning-soft/55 px-3 py-1.5 text-xs font-semibold text-warning">
+                                        <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                                        <span>{tx(d.difference_status)}</span>
+                                    </div>
+                                )}
+                            </button>
+                        )
+                    })}
                 </div>
-            )}
-            {rows.length > 0 && rows.length % 50 === 0 && (
-                <Button onClick={() => load(history, true)} disabled={busy} className="rounded-xl border-hairline bg-surface hover:bg-surface-soft font-semibold text-xs shadow-xs">
-                    {tx('more')}
-                </Button>
-            )}
+                {!rows.length && (
+                    <EmptyState
+                        icon={history ? History : Truck}
+                        title={tx('empty')}
+                        action={!history && !search.trim() && (
+                            <Button
+                                variant="saffron"
+                                disabled={busy || !!pending}
+                                onClick={() => {
+                                    setSelected(null)
+                                    setDraft(blank())
+                                    draftId.current = crypto.randomUUID()
+                                    setError('')
+                                }}
+                            >
+                                <Plus className="h-4 w-4" aria-hidden="true" />
+                                {tx('new')}
+                            </Button>
+                        )}
+                    />
+                )}
+                {rows.length > 0 && rows.length % 50 === 0 && (
+                    <Button variant="outline" onClick={() => load(history, true)} disabled={busy} className="h-10 rounded-xl text-xs">
+                        {tx('more')}
+                    </Button>
+                )}
+            </section>
             <Dialog
                 open={!!draft}
                 onOpenChange={(open) => {

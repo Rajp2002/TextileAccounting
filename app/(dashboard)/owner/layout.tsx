@@ -25,9 +25,9 @@ import { AuthBoundaryCleanup } from '@/components/auth/auth-boundary-cleanup'
 export default async function OwnerLayout({ children }: { children: React.ReactNode }) {
     const { profile } = await requireRole(['owner'], { allowFreeAccount: true })
     const access = await getCachedOrgPlanAccess(profile.org_id)
+    const requestHeaders = await headers()
+    const pathname = requestHeaders.get('x-pathname') || ''
     if (access.effectiveTier === 'free' || access.freeAccount) {
-        const headerList = await headers()
-        const pathname = headerList.get('x-pathname') || ''
         if (pathname.startsWith('/owner/billing')) {
             redirect('/free/billing')
         }
@@ -37,8 +37,6 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
         redirect('/free')
     }
     if (access.effectiveTier === 'base') {
-        const headerList = await headers()
-        const pathname = headerList.get('x-pathname') || ''
         if (!pathname.startsWith('/owner/billing')) {
             const { isBaseOnboardingComplete } = await import('@/lib/base-onboarding.server')
             const isComplete = await isBaseOnboardingComplete(profile.org_id)
@@ -49,7 +47,7 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
     }
     return (
         <div className="relative isolate min-h-svh overflow-x-hidden bg-background" data-owner-shell>
-            <BrandBackground />
+            <BrandBackground variant={pathname.startsWith('/owner/billing') ? 'billing' : pathname.startsWith('/owner/payroll') ? 'payroll' : 'app'} />
             <a href="#owner-main" className="sr-only fixed left-3 top-3 z-[100] rounded bg-surface p-3 text-ink focus:not-sr-only">Skip to content</a>
 
             <Suspense fallback={<OwnerSidebarLoading />}>

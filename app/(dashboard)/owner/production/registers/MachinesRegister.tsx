@@ -11,6 +11,7 @@ import { MachineToolbar, type MachineStatusFilter } from '@/components/machines/
 import { MachineGrid } from '@/components/machines/MachineGrid'
 import { MachineEmptyState } from '@/components/machines/MachineEmptyState'
 import MachineEditor from './MachineEditor'
+import { ChevronDown } from 'lucide-react'
 import { NavigationLink } from '@/components/navigation/navigation-link'
 import { TourInvitation } from '@/components/tours/TourInvitation'
 import MachinesTutorial from '@/components/tours/MachinesTutorial'
@@ -106,9 +107,14 @@ export default function MachinesRegister({
       returnTo={returnTo}
     >
       {({ add, edit, isOpen }) => (
-        <div className="mx-auto w-full max-w-6xl space-y-6">
+        <div className="machines-workspace-shell mx-auto w-full space-y-6">
           {/* 1. Page Header */}
-          <div data-machines-tour="header"><MachinesPageHeader onAdd={tourStep ? () => {} : add} returnTo={tourStep ? undefined : returnTo} /></div>
+          <div data-machines-tour="header">
+            <MachinesPageHeader
+              onAdd={tourStep ? () => {} : add}
+              returnTo={tourStep ? undefined : returnTo}
+            />
+          </div>
           {!isOpen && (
             <aside className="machines-left-rail guided-tour-left-rail space-y-3" aria-label="Machines guides and tools">
               <div ref={tourLauncher} data-machines-tour="launcher">
@@ -127,14 +133,16 @@ export default function MachinesRegister({
           {tourStep && <p role="status" className="text-xs font-semibold text-saffron-deep">{machinesTutorialCopy[language].sample}</p>}
 
           {/* 2. Machine Toolbar */}
-          <div data-machines-tour="toolbar"><MachineToolbar
-            search={tourStep ? '' : search}
-            onSearchChange={tourStep ? () => {} : handleSearchChange}
-            statusFilter={tourStep ? 'all' : statusFilter}
-            onStatusFilterChange={tourStep ? () => {} : handleFilterChange}
-            totalCount={tourStep ? examples.length : machines.length}
-            filteredCount={tourStep ? examples.length : visible.length}
-          /></div>
+          <div data-machines-tour="toolbar">
+            <MachineToolbar
+              search={tourStep ? '' : search}
+              onSearchChange={tourStep ? () => {} : handleSearchChange}
+              statusFilter={tourStep ? 'all' : statusFilter}
+              onStatusFilterChange={tourStep ? () => {} : handleFilterChange}
+              totalCount={tourStep ? examples.length : machines.length}
+              filteredCount={tourStep ? examples.length : visible.length}
+            />
+          </div>
 
           {/* 3. Machine Card Grid or Empty State */}
           {tourStep ? (
@@ -151,28 +159,56 @@ export default function MachinesRegister({
               onClearFilter={() => handleFilterChange('all')}
             />
           )}
-          <section aria-labelledby="machines-setup-heading" className="rounded-2xl border border-hairline bg-surface p-4 sm:p-5" data-i18n-skip="true" lang={language}>
-            <h2 id="machines-setup-heading" className="text-sm font-semibold text-ink">{copy.setupTitle}</h2>
-            <div className="mt-3 grid gap-4 sm:grid-cols-2">
-              <div data-machines-tour="production-next">
-                <NavigationLink href={tourStep ? '#' : '/owner/production?tab=jobs'} onClick={event => { if (tourStep) event.preventDefault() }} className="inline-flex min-h-11 items-center text-sm font-medium text-saffron-deep underline">{copy.productionLink}</NavigationLink>
-                <p className="text-sm text-subtle">{copy.productionHelp}</p>
-              </div>
-              <div data-machines-tour="assignments-next">
-                <NavigationLink href={tourStep ? '#' : '/owner/assignments'} onClick={event => { if (tourStep) event.preventDefault() }} className="inline-flex min-h-11 items-center text-sm font-medium text-saffron-deep underline">{copy.assignmentsLink}</NavigationLink>
-                <p className="text-sm text-subtle">{copy.assignmentsHelp}</p>
-              </div>
-            </div>
-          </section>
-          <details className="rounded-2xl border border-hairline bg-surface p-4 sm:p-5" data-i18n-skip="true" lang={language}>
-            <summary className="cursor-pointer text-sm font-semibold text-ink">{copy.helpTitle}</summary>
-            <dl className="mt-4 space-y-4 text-sm">
-              {copy.help.map(([title, description]) => <div key={title}>
-                <dt className="font-medium text-ink">{title}</dt>
-                <dd className="mt-1 text-subtle">{description}</dd>
-              </div>)}
-            </dl>
-          </details>
+          {!isOpen && (
+            <aside className="machines-reference-rail space-y-3" aria-label={copy.setupTitle}>
+              <section
+                aria-labelledby="machines-setup-heading"
+                className="rounded-3xl border border-warning/25 bg-warning-soft/90 p-4 shadow-xs"
+                data-i18n-skip="true"
+                lang={language}
+              >
+                <h2 id="machines-setup-heading" className="text-sm font-semibold text-ink">{copy.setupTitle}</h2>
+                <div className="mt-3 space-y-4">
+                  <div data-machines-tour="production-next">
+                    <NavigationLink
+                      href={tourStep ? '#' : '/owner/production?tab=jobs'}
+                      onClick={event => { if (tourStep) event.preventDefault() }}
+                      className="inline-flex min-h-11 items-center text-sm font-medium text-warning underline underline-offset-2 hover:text-ink"
+                    >
+                      {copy.productionLink}
+                    </NavigationLink>
+                    <p className="text-xs leading-relaxed text-body">{copy.productionHelp}</p>
+                  </div>
+                  <div data-machines-tour="assignments-next">
+                    <NavigationLink
+                      href={tourStep ? '#' : '/owner/assignments'}
+                      onClick={event => { if (tourStep) event.preventDefault() }}
+                      className="inline-flex min-h-11 items-center text-sm font-medium text-warning underline underline-offset-2 hover:text-ink"
+                    >
+                      {copy.assignmentsLink}
+                    </NavigationLink>
+                    <p className="text-xs leading-relaxed text-body">{copy.assignmentsHelp}</p>
+                  </div>
+                </div>
+              </section>
+              <details
+                className="group rounded-2xl border border-info/20 bg-info-soft/90 p-4 shadow-xs"
+                data-i18n-skip="true"
+                lang={language}
+              >
+                <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 text-sm font-semibold text-info focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-info [&::-webkit-details-marker]:hidden">
+                  <span>{copy.helpTitle}</span>
+                  <ChevronDown className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
+                </summary>
+                <dl className="mt-3 space-y-4 text-xs leading-relaxed">
+                  {copy.help.map(([title, description]) => <div key={title}>
+                    <dt className="font-semibold text-ink">{title}</dt>
+                    <dd className="mt-1 text-body">{description}</dd>
+                  </div>)}
+                </dl>
+              </details>
+            </aside>
+          )}
           {preview && <MachineEditor key={preview} today={today} tourPreview={{ machine: examples[0], editing: false }}>{() => null}</MachineEditor>}
           {tourStep && <MachinesTutorial step={tourStep} onStepChange={setTourStep} launcher={tourLauncher} userId={userId} />}
         </div>

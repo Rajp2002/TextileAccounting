@@ -4,6 +4,7 @@ import React from 'react'
 import { useTranslation } from '@/lib/i18n/context'
 import type { BaseProductionWorker } from '@/lib/base-production-core'
 import type { BaseProductionWorkerWithOperational } from '@/lib/worker-operational'
+import { Badge } from '@/components/ui/badge'
 import { WorkerCard } from './WorkerCard'
 
 interface WorkforceGroupProps {
@@ -34,19 +35,19 @@ export function WorkforceGroup({
       : `${resolvedCount} ${tx('workers')}`
 
   return (
-    <section className="flex flex-col space-y-3.5">
+    <section className="flex min-w-0 flex-col gap-3.5">
       {/* Group Header */}
-      <div className="flex items-start justify-between gap-3 border-b border-hairline/60 pb-3">
+      <div className="flex items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2.5">
-            <h2 className="text-base sm:text-lg font-semibold tracking-tight text-ink">
+            <h2 className="text-base font-semibold leading-[1.3] text-ink sm:text-lg">
               {title}
             </h2>
-            <span className="inline-flex items-center rounded-full bg-surface-soft px-2.5 py-0.5 text-xs font-medium text-subtle border border-hairline/60">
+            <Badge variant="secondary" className="px-2.5 py-1 text-xs font-medium text-subtle">
               {countLabel}
-            </span>
+            </Badge>
           </div>
-          <p className="mt-0.5 text-xs sm:text-sm text-subtle">
+          <p className="mt-1 text-xs text-subtle sm:text-sm">
             {subtitle}
           </p>
         </div>
@@ -54,7 +55,7 @@ export function WorkforceGroup({
 
       {/* Group Content */}
       {workers.length > 0 ? (
-        <ul role="list" className="flex flex-col space-y-3.5">
+        <ul role="list" className="flex flex-col gap-3">
           {workers.map(worker => (
             <li key={worker.id} role="listitem">
               <WorkerCard worker={worker} onEdit={onEdit} tourPreview={tourPreview} />
