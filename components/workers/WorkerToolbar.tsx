@@ -51,7 +51,7 @@ export function WorkerToolbar({
         />
         <Input
           type="search"
-          className="h-10 sm:h-11 w-full rounded-xl border-hairline bg-surface pl-10 pr-9 text-sm text-ink placeholder:text-subtle/50 shadow-2xs focus-visible:border-saffron focus-visible:ring-saffron"
+          className="h-10 w-full rounded-lg border-hairline bg-surface pl-10 pr-9 text-sm text-ink placeholder:text-subtle/70 shadow-2xs focus-visible:border-saffron focus-visible:ring-saffron"
           aria-label={tx('Search workers')}
           placeholder={tx('Search workers…')}
           value={search}
@@ -70,7 +70,7 @@ export function WorkerToolbar({
       </div>
 
       {/* Right controls: Shift filter + Status filter + subtle count */}
-      <div className="flex flex-wrap items-center gap-3 shrink-0">
+      <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
         {/* Shift Filter Dropdown */}
         <div className="relative w-full sm:w-auto">
           <select
@@ -78,17 +78,14 @@ export function WorkerToolbar({
             aria-label={tx('Shift filter')}
             value={shiftFilter}
             onChange={event => onShiftFilterChange?.(event.target.value as WorkerShiftFilter)}
-            className="h-10 sm:h-11 w-full sm:w-auto appearance-none rounded-xl border border-hairline bg-surface pl-4 pr-10 text-sm font-medium text-ink shadow-2xs transition-colors hover:border-hairline-strong focus-visible:border-saffron focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron cursor-pointer"
+            className="h-10 w-full cursor-pointer appearance-none rounded-full border border-hairline bg-surface pl-4 pr-10 text-sm font-medium text-ink shadow-2xs transition-colors hover:border-hairline-strong focus-visible:border-saffron focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron sm:w-auto"
           >
             <option value="all">{tx('All shifts')}</option>
             <option value="day">{tx('Day shift')}</option>
             <option value="night">{tx('Night shift')}</option>
             <option value="both">{tx('Day & night')}</option>
           </select>
-          <ChevronDown
-            className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle/60"
-            aria-hidden="true"
-          />
+          <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle/70" aria-hidden="true" />
         </div>
 
         {/* Worker Status Filter Dropdown */}
@@ -102,21 +99,18 @@ export function WorkerToolbar({
               onStatusFilterChange?.(val)
               onInactiveChange?.(val === 'all')
             }}
-            className="h-10 sm:h-11 w-full sm:w-auto appearance-none rounded-xl border border-hairline bg-surface pl-4 pr-10 text-sm font-medium text-ink shadow-2xs transition-colors hover:border-hairline-strong focus-visible:border-saffron focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron cursor-pointer"
+            className="h-10 w-full cursor-pointer appearance-none rounded-full border border-hairline bg-surface pl-4 pr-10 text-sm font-medium text-ink shadow-2xs transition-colors hover:border-hairline-strong focus-visible:border-saffron focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron sm:w-auto"
           >
             <option value="active">{tx('Active workers')}</option>
             <option value="all">{tx('All workers')}</option>
             <option value="inactive">{tx('Inactive workers')}</option>
           </select>
-          <ChevronDown
-            className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle/60"
-            aria-hidden="true"
-          />
+          <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle/70" aria-hidden="true" />
         </div>
 
         {/* Subtle worker count */}
         {typeof totalCount === 'number' && typeof filteredCount === 'number' && (
-          <span className="hidden sm:inline-block text-xs font-medium text-subtle whitespace-nowrap px-1">
+          <span className="hidden whitespace-nowrap px-1 text-xs font-medium text-subtle sm:inline-block">
             {filteredCount === totalCount
               ? `${totalCount} ${totalCount === 1 ? tx('worker') : tx('workers')}`
               : `${filteredCount} / ${totalCount} ${tx('workers')}`}

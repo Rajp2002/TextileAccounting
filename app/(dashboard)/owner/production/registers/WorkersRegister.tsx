@@ -172,8 +172,8 @@ export default function WorkersRegister({
   // Layout grid column classes based on whether one or both groups are visible
   const isSingleGroupVisible = (showPieceGroup && !showFixedGroup) || (!showPieceGroup && showFixedGroup)
   const gridClasses = isSingleGroupVisible
-    ? 'grid grid-cols-1 gap-6 items-start max-w-2xl mx-auto'
-    : 'grid grid-cols-1 lg:grid-cols-2 gap-6 items-start'
+    ? 'mx-auto grid w-full max-w-2xl grid-cols-1 items-start gap-6'
+    : 'mx-auto grid w-full max-w-5xl grid-cols-1 items-start gap-8 lg:grid-cols-2'
 
   return (
     <WorkerEditor
@@ -223,21 +223,22 @@ export default function WorkersRegister({
           </details>
           {tourStep && <p role="status" className="text-xs font-semibold text-saffron-deep">{tourCopy.sample}</p>}
           {/* 2. Global Toolbar */}
-          <div data-workers-tour="toolbar">
-          <WorkerToolbar
-            search={tourStep ? '' : search}
-            onSearchChange={tourStep ? () => {} : handleSearchChange}
-            shiftFilter={tourStep ? 'all' : shiftFilter}
-            onShiftFilterChange={tourStep ? () => {} : handleShiftChange}
-            statusFilter={tourStep ? 'active' : statusFilter}
-            onStatusFilterChange={tourStep ? () => {} : handleStatusChange}
-            totalCount={tourStep ? sampleWorkers.length : workers.length}
-            filteredCount={tourStep ? sampleWorkers.length : visible.length}
-          /></div>
+          <div data-workers-tour="toolbar" className="mx-auto w-full max-w-3xl">
+            <WorkerToolbar
+              search={tourStep ? '' : search}
+              onSearchChange={tourStep ? () => {} : handleSearchChange}
+              shiftFilter={tourStep ? 'all' : shiftFilter}
+              onShiftFilterChange={tourStep ? () => {} : handleShiftChange}
+              statusFilter={tourStep ? 'active' : statusFilter}
+              onStatusFilterChange={tourStep ? () => {} : handleStatusChange}
+              totalCount={tourStep ? sampleWorkers.length : workers.length}
+              filteredCount={tourStep ? sampleWorkers.length : visible.length}
+            />
+          </div>
 
           {/* 3. Workforce Groups or Global Empty State */}
           {tourStep ? (
-            <div data-workers-tour="groups" className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div data-workers-tour="groups" className="mx-auto grid w-full max-w-5xl grid-cols-1 items-start gap-8 lg:grid-cols-2">
               {sampleWorkers.map((worker, index) => (
                 <div key={worker.id} data-workers-tour={index === 0 ? 'piece' : 'salary-card'}>
                   <WorkforceGroup title={tx(index === 0 ? 'Piece Rate' : 'Fixed Salary')}
