@@ -470,6 +470,19 @@
     box-shadow: var(--shadow-card);
   }
 
+  .machines-workspace-shell {
+    width: 100%;
+  }
+
+  .machine-card-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .machines-reference-rail {
+    width: 100%;
+    margin-top: 1.25rem;
+  }
+
   .shadow-weavly-card {
     box-shadow: var(--shadow-card);
   }
@@ -646,6 +659,25 @@
      across all desktop viewports (from 1024px upwards), with bounded workspace width
      so center cards never collide with the rails or Live Cost pill. */
   @media (min-width: 1024px) {
+    .machines-workspace-shell {
+      width: min(100%, calc(100vw - 248px - 31rem));
+      max-width: 72rem;
+      margin-inline: auto;
+    }
+
+    .machines-reference-rail {
+      position: fixed;
+      top: 6rem;
+      right: 1rem;
+      z-index: 30;
+      width: 14rem;
+      max-height: calc(100vh - 7rem);
+      overflow-y: auto;
+      margin-top: 0;
+      padding-bottom: 0.25rem;
+      scrollbar-width: thin;
+    }
+
     .estimator-workspace-shell {
       width: min(100%, calc(100vw - 248px - 31rem));
       max-width: 72rem;
@@ -778,6 +810,12 @@
     }
   }
 
+  @media (min-width: 1380px) {
+    .machine-card-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
   /* The Live Cost toggle is fixed to the viewport. A transform on the route
      entrance wrapper would otherwise make it scroll with the estimator. */
   .premium-route-enter.estimator-mobile-form {
@@ -814,6 +852,11 @@
   }
 
   @media (min-width: 1800px) {
+    .machines-reference-rail {
+      right: 1.25rem;
+      width: 14.5rem;
+    }
+
     .estimator-left-rail {
       left: calc(248px + 1.25rem);
     }

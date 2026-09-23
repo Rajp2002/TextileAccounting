@@ -4,6 +4,7 @@ import React from 'react'
 import { useTranslation } from '@/lib/i18n/context'
 import type { MachineReadinessStatus } from '@/lib/machine-readiness'
 import { cn } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
 
 interface MachineStatusBadgeProps {
   status: MachineReadinessStatus
@@ -15,12 +16,10 @@ export function MachineStatusBadge({ status, className }: MachineStatusBadgeProp
   const isActive = status === 'active'
 
   return (
-    <span
+    <Badge
+      variant={isActive ? 'success' : 'warning'}
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium border transition-colors',
-        isActive
-          ? 'border-success/30 bg-success-soft/60 text-success'
-          : 'border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-400',
+        'gap-1.5 px-2.5 py-0.5 text-xs font-medium',
         className
       )}
     >
@@ -32,6 +31,6 @@ export function MachineStatusBadge({ status, className }: MachineStatusBadgeProp
         aria-hidden="true"
       />
       <span>{isActive ? tx('Active') : tx('Needs setup')}</span>
-    </span>
+    </Badge>
   )
 }
