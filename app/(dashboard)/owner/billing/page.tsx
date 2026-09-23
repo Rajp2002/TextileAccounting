@@ -12,7 +12,7 @@ import { ReferralCard } from '@/components/billing/ReferralCard'
 import { getReferralStatsAction } from '../actions'
 import {
     AlertCircle, ChevronDown, Clock, XCircle,
-    ShieldCheck, Star, Zap, Timer, Lock, CreditCard,
+    Star, Zap, Timer, Lock, CreditCard,
     Sparkles, ArrowRight, Calculator, FileText,
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
@@ -386,7 +386,7 @@ export default async function BillingPage({
     const organizationName = profile.full_name ?? 'Weavly workspace'
 
     return (
-        <div className="premium-route-enter mx-auto w-full max-w-6xl space-y-8 px-4 pb-20 sm:px-6 lg:px-0">
+        <div className="premium-route-enter mx-auto w-full max-w-6xl space-y-6 px-4 pb-20 sm:px-6 lg:px-0">
             <RouteMilestones route="/owner/billing" shellVisible primaryUsable secondaryReady />
             <PlanAnalyticsBeacon eventName="base_pricing_viewed" properties={{ current_tier: tier }} />
 
@@ -394,7 +394,7 @@ export default async function BillingPage({
                 icon={CreditCard}
                 eyebrow="Account"
                 title="Subscription & Billing"
-                description="View your active workspace status, explore available plans, and manage billing history."
+                description="Manage your plan, renewal, and payment history."
                 meta={
                     <StatusBadge
                         status={isActive ? 'active' : 'info'}
@@ -429,134 +429,92 @@ export default async function BillingPage({
 
             {/* 1. Active Workspace Section */}
             <section aria-labelledby="active-workspace-heading" className="space-y-3">
-                <div className="flex items-center justify-between">
-                    <h3 id="active-workspace-heading" className="text-xs font-bold uppercase tracking-wider text-subtle">
-                        Active Workspace
-                    </h3>
-                </div>
+                <h3 id="active-workspace-heading" className="text-sm font-semibold text-ink">
+                    Active workspace
+                </h3>
                 <Card className="overflow-hidden rounded-2xl border-hairline bg-surface shadow-xs">
-                    <div className="border-b border-hairline bg-surface-soft/40 px-6 py-4">
-                        <div className="flex flex-wrap items-center justify-between gap-3">
-                            <div className="flex items-center gap-3">
-                                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-loom text-saffron shadow-xs">
-                                    {isBaseWorkspace ? <Zap className="h-5 w-5" aria-hidden="true" /> : <Calculator className="h-5 w-5" aria-hidden="true" />}
-                                </span>
-                                <div>
-                                    <div className="flex items-center gap-2">
-                                        <h2 className="text-base font-bold tracking-tight text-ink">
-                                            {isLiteWorkspace
-                                                ? 'Weavly Lite workspace'
-                                                : isBaseWorkspace
-                                                    ? 'Weavly Base workspace'
-                                                    : isLegacyWorkspace
-                                                        ? 'Legacy operations workspace'
-                                                        : 'Workspace not active'}
-                                        </h2>
-                                        <StatusBadge status={isActive ? 'active' : 'info'} label={isActive ? 'Active' : 'Not active'} />
-                                    </div>
-                                    <p className="text-xs text-subtle">Organization: {organizationName}</p>
+                    <div className="flex flex-col gap-5 border-b border-hairline px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                        <div className="flex min-w-0 items-center gap-3">
+                            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-loom text-saffron">
+                                {isBaseWorkspace ? <Zap className="h-5 w-5" aria-hidden="true" /> : <Calculator className="h-5 w-5" aria-hidden="true" />}
+                            </span>
+                            <div className="min-w-0">
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <h2 className="text-base font-semibold tracking-tight text-ink">
+                                        {isLiteWorkspace
+                                            ? 'Weavly Lite workspace'
+                                            : isBaseWorkspace
+                                                ? 'Weavly Base workspace'
+                                                : isLegacyWorkspace
+                                                    ? 'Legacy operations workspace'
+                                                    : 'Workspace not active'}
+                                    </h2>
+                                    <StatusBadge status={isActive ? 'active' : 'info'} label={isActive ? 'Active' : 'Not active'} />
                                 </div>
-                            </div>
-                            <div className="text-right">
-                                <p className="text-[10px] font-bold uppercase tracking-wider text-subtle">Plan Type</p>
-                                <p className="text-xs font-semibold text-ink">
-                                    {isLiteWorkspace
-                                        ? 'Lite Tier · Complete costing desk'
-                                        : isBaseWorkspace
-                                            ? 'Base Tier · Connected factory & payroll'
-                                            : isLegacyWorkspace
-                                                ? 'Legacy Tier · Operations desk'
-                                                : 'No active subscription'}
-                                </p>
-                                {subscription?.current_end && (
-                                    <p className="text-[11px] text-subtle mt-0.5">
-                                        {canRenew ? 'Renewal available' : `Renews: ${formatShortDate(subscription.current_end)}`}
-                                    </p>
-                                )}
+                                <p className="mt-0.5 truncate text-xs text-subtle">Organization: {organizationName}</p>
                             </div>
                         </div>
-                    </div>
-                    <CardContent className="p-6">
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                            {/* Card 1: Costing Desk */}
-                            <div className="rounded-xl border border-hairline bg-surface p-5 transition-all hover:border-hairline-strong shadow-xs">
-                                <div className="flex items-center gap-2 text-xs font-bold text-ink">
-                                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-saffron-soft text-saffron-deep">
-                                        <Calculator className="h-4 w-4" />
-                                    </span>
-                                    <span>Costing Desk</span>
-                                </div>
-                                <p className="mt-3 text-2xl font-black tracking-tight text-ink">
-                                    Unlimited <span className="text-xs font-medium text-subtle">costings & qualities</span>
+
+                        <div className="flex flex-col gap-3 sm:items-end">
+                            <div className="sm:text-right">
+                                <p className="text-[10px] font-semibold uppercase tracking-wider text-subtle">Current plan</p>
+                                <p className="text-sm font-semibold text-ink">
+                                    {isLiteWorkspace ? 'Weavly Lite' : isBaseWorkspace ? 'Weavly Base' : isLegacyWorkspace ? 'Legacy operations' : 'No active subscription'}
+                                    {isActive && <span className="font-normal text-subtle"> · Annual access</span>}
                                 </p>
-                                <p className="mt-1.5 text-xs leading-relaxed text-subtle">
-                                    Complete textile costing desk with reusable saved qualities and live Rate Book yarn linking.
+                                <p className="mt-0.5 text-xs text-subtle">
+                                    {subscription?.current_end
+                                        ? canRenew
+                                            ? `Renewal available · access through ${formatShortDate(subscription.current_end)}`
+                                            : renewalIsUpcoming
+                                                ? `Renewal opens ${formatShortDate(renewalEligibleAt)}`
+                                                : `Renews ${formatShortDate(subscription.current_end)}`
+                                        : isActive ? 'Active annual access' : 'Choose a plan to activate this workspace'}
                                 </p>
                             </div>
-
-                            {/* Card 2: Saved Costings / Connected Production */}
-                            <div className="rounded-xl border border-hairline bg-surface p-5 transition-all hover:border-hairline-strong shadow-xs">
-                                <div className="flex items-center gap-2 text-xs font-bold text-ink">
-                                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-info-soft text-info">
-                                        {isBaseWorkspace ? <Zap className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
-                                    </span>
-                                    <span>{isBaseWorkspace ? 'Connected Production' : 'Saved Costings'}</span>
-                                </div>
-                                <p className="mt-3 text-2xl font-black tracking-tight text-ink">
-                                    {isBaseWorkspace ? 'Full Access' : 'Unlimited'} <span className="text-xs font-medium text-subtle">{isBaseWorkspace ? 'job cards & looms' : 'view, recalculate & export'}</span>
-                                </p>
-                                <p className="mt-1.5 text-xs leading-relaxed text-subtle">
-                                    {isBaseWorkspace
-                                        ? 'Track planned vs produced metres, shift logs, machine maintenance, and job dispatches.'
-                                        : 'Permanent costing records retained. Reopen to recalculate or export PDF sheets.'}
-                                </p>
-                            </div>
-
-                            {/* Card 3: Plan Status & Renewal */}
-                            <div className="rounded-xl border border-hairline bg-surface p-5 transition-all hover:border-hairline-strong shadow-xs">
-                                <div className="flex items-center gap-2 text-xs font-bold text-ink">
-                                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-saffron-soft text-saffron-deep">
-                                        <CreditCard className="h-4 w-4" />
-                                    </span>
-                                    <span>Plan Status</span>
-                                </div>
-                                <p className="mt-3 text-2xl font-black tracking-tight text-ink">
-                                    {isLiteWorkspace ? 'Lite Tier' : isBaseWorkspace ? 'Base Tier' : isLegacyWorkspace ? 'Legacy' : 'Active'}{' '}
-                                    <span className="text-xs font-medium text-subtle">annual access</span>
-                                </p>
-                                {canRenew && selfServeActiveTier && activeRenewalPrice ? (
-                                    <div className="mt-3 space-y-2">
-                                        <p className="text-xs font-medium text-body">
-                                            Renew {getBillingPlan(selfServeActiveTier).name} for <span className="font-bold text-ink">{formatAmount(activeRenewalPrice.totalPaise)}</span>.
-                                        </p>
-                                        <p className="text-[11px] text-subtle">GST included · manual annual renewal</p>
-                                        {billingReadiness.canCreateOrder ? (
-                                            <SubscribeButton
-                                                planTier={selfServeActiveTier}
-                                                tierName={getBillingPlan(selfServeActiveTier).name}
-                                                displayAmount={formatAmount(activeRenewalPrice.totalPaise)}
-                                                buttonLabel={`Renew for ${formatAmount(activeRenewalPrice.totalPaise)}`}
-                                                successHref="/owner/billing"
-                                                successLabel="View payment history"
-                                                className="w-full text-xs py-2.5 h-auto rounded-xl bg-loom text-white hover:bg-loom-elevated font-bold shadow-xs transition-colors"
-                                            />
-                                        ) : (
-                                            <p className="text-[11px] text-warning font-semibold">{billingReadiness.publicMessage}</p>
-                                        )}
-                                    </div>
-                                ) : renewalIsUpcoming && subscription?.current_end ? (
-                                    <p className="mt-1.5 text-xs text-subtle">
-                                        Renewal opens on {formatShortDate(renewalEligibleAt)}. GST included · manual annual renewal.
-                                    </p>
-                                ) : isLiteWorkspace ? (
-                                    <p className="mt-1.5 text-xs text-subtle">
-                                        Active annual access. Upgrade to Base anytime for connected loom jobs and piece-rate payroll.
-                                    </p>
+                            {canRenew && selfServeActiveTier && activeRenewalPrice && (
+                                billingReadiness.canCreateOrder ? (
+                                    <SubscribeButton
+                                        planTier={selfServeActiveTier}
+                                        tierName={getBillingPlan(selfServeActiveTier).name}
+                                        displayAmount={formatAmount(activeRenewalPrice.totalPaise)}
+                                        buttonLabel={`Renew for ${formatAmount(activeRenewalPrice.totalPaise)}`}
+                                        successHref="/owner/billing"
+                                        successLabel="View payment history"
+                                        className="h-auto w-full rounded-lg bg-loom px-4 py-2 text-xs font-semibold text-white shadow-none transition-colors hover:bg-loom-elevated sm:w-auto"
+                                    />
                                 ) : (
-                                    <p className="mt-1.5 text-xs text-subtle">
-                                        Active annual access. Full connected factory, loom monitoring, and piece-rate worker payroll.
+                                    <p className="text-xs font-semibold text-warning">{billingReadiness.publicMessage}</p>
+                                )
+                            )}
+                        </div>
+                    </div>
+
+                    <CardContent className="p-0">
+                        <div className="grid grid-cols-1 divide-y divide-hairline sm:grid-cols-2 sm:divide-x sm:divide-y-0">
+                            <div className="flex items-start gap-3 px-5 py-4 sm:px-6">
+                                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-saffron-soft text-saffron-deep">
+                                    <Calculator className="h-4 w-4" aria-hidden="true" />
+                                </span>
+                                <div>
+                                    <p className="text-sm font-semibold text-ink">Costing desk</p>
+                                    <p className="mt-0.5 text-sm leading-relaxed text-body">
+                                        <span className="font-medium text-ink">Unlimited costings.</span> Reusable qualities and live Rate Book linking.
                                     </p>
-                                )}
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-3 px-5 py-4 sm:px-6">
+                                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-info-soft text-info">
+                                    {isBaseWorkspace ? <Zap className="h-4 w-4" aria-hidden="true" /> : <FileText className="h-4 w-4" aria-hidden="true" />}
+                                </span>
+                                <div>
+                                    <p className="text-sm font-semibold text-ink">{isBaseWorkspace ? 'Connected production' : 'Saved costings'}</p>
+                                    <p className="mt-0.5 text-sm leading-relaxed text-body">
+                                        {isBaseWorkspace
+                                            ? 'Job cards, loom tracking, maintenance, dispatches, and piece-rate payroll.'
+                                            : 'Saved snapshots stay available to reopen, recalculate, or export.'}
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </CardContent>
@@ -565,60 +523,35 @@ export default async function BillingPage({
 
             {/* 2. Choose your plan Section (redirects to standalone upgrade wall page) */}
             <section aria-labelledby="view-plans-heading" className="space-y-3">
-                <div className="flex items-center justify-between">
-                    <h3 id="view-plans-heading" className="text-xs font-bold uppercase tracking-wider text-subtle">
-                        Available Plans & Upgrades
-                    </h3>
-                </div>
-                <Card className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 p-6 rounded-2xl border-hairline bg-surface shadow-xs">
-                    <div className="flex items-start gap-4">
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-loom text-saffron shadow-xs">
-                            <Sparkles className="h-6 w-6" aria-hidden="true" />
+                <Card className="flex flex-col items-start justify-between gap-4 rounded-2xl border-hairline bg-surface p-5 shadow-xs sm:flex-row sm:items-center sm:px-6">
+                    <div className="flex min-w-0 items-start gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-saffron-soft text-saffron-deep">
+                            <Sparkles className="h-5 w-5" aria-hidden="true" />
                         </div>
-                        <div>
-                            <div className="flex items-center gap-2.5">
-                                <h2 className="text-lg font-bold tracking-tight text-ink">Choose your plan</h2>
-                                <Link
-                                    href="/plans?from=billing"
-                                    className="inline-flex items-center rounded-full bg-saffron-soft border border-saffron/20 px-2.5 py-0.5 text-[11px] font-bold text-saffron-deep hover:bg-saffron/25 transition-colors cursor-pointer"
-                                    title="Open standalone plan comparison page"
-                                >
-                                    <span>
-                                        {subscriptionTier === 'lite'
-                                            ? 'Upgrade to Base'
-                                            : subscriptionTier === 'base'
-                                                ? 'Compare plans'
-                                                : 'Explore plans'}
-                                    </span>
-                                </Link>
-                            </div>
-                            <p className="mt-1 text-sm text-body leading-relaxed max-w-2xl">
-                                Upgrade your plan. Compare Weavly Free, Lite, and Base with full interactive feature previews, instant activation, and GST tax invoices on our standalone plans page.
+                        <div className="min-w-0">
+                            <h2 id="view-plans-heading" className="text-base font-semibold tracking-tight text-ink">Compare plan options</h2>
+                            <p className="mt-1 max-w-2xl text-sm leading-relaxed text-body">
+                                Compare features and pricing for Weavly Free, Lite, and Base.
                             </p>
+                            <p className="mt-1.5 text-xs text-subtle">GST included · Annual renewals are manual · Secure Razorpay checkout</p>
                         </div>
                     </div>
-                    <Button asChild className="shrink-0 rounded-xl bg-loom font-bold text-white hover:bg-loom-elevated gap-2 px-5 py-2.5 h-auto text-sm shadow-xs transition-colors" size="default">
+                    <Button asChild className="h-auto w-full shrink-0 gap-2 rounded-lg bg-loom px-4 py-2.5 text-sm font-semibold text-white shadow-none transition-colors hover:bg-loom-elevated sm:w-auto" size="default">
                         <Link href="/plans?from=billing">
-                            <span>Explore plans</span>
+                            <span>{subscriptionTier === 'lite' ? 'Upgrade to Base' : subscriptionTier === 'base' ? 'Compare plans' : 'Explore plans'}</span>
                             <ArrowRight className="h-4 w-4" aria-hidden="true" />
                         </Link>
                     </Button>
                 </Card>
             </section>
 
-            {/* Notice for tax invoice & receipt */}
-            <BillingDocumentNotice compact />
-
             {/* 3. Billing & Invoices Section (Payment history and Download receipt) */}
             <section aria-labelledby="billing-history-heading" className="space-y-3">
-                <div className="flex items-center justify-between">
-                    <h3 id="billing-history-heading" className="text-xs font-bold uppercase tracking-wider text-subtle">
-                        Billing & Invoices
-                    </h3>
-                </div>
-                <div className="rounded-2xl border border-hairline bg-surface p-1 shadow-xs">
-                    <PaymentHistoryDialog entries={billingHistoryEntries} />
-                </div>
+                <h3 id="billing-history-heading" className="text-sm font-semibold text-ink">
+                    Billing &amp; invoices
+                </h3>
+                <PaymentHistoryDialog entries={billingHistoryEntries} />
+                <BillingDocumentNotice compact />
             </section>
 
             {/* 4. Referral Rewards Section */}
@@ -633,53 +566,6 @@ export default async function BillingPage({
                     </Suspense>
                 </div>
             </details>
-
-            {/* 5. Value Proposition Highlights */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <div className="flex items-start gap-3.5 rounded-2xl border border-hairline bg-surface p-5 shadow-xs">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-saffron-soft text-saffron-deep">
-                        <Zap className="h-5 w-5" />
-                    </span>
-                    <div>
-                        <h4 className="text-sm font-bold text-ink">Instant Plan Activation</h4>
-                        <p className="mt-1 text-xs leading-relaxed text-body">
-                            Upgrades activate instantly in your account. All your existing saved costing snapshots and qualities are seamlessly retained.
-                        </p>
-                    </div>
-                </div>
-
-                <div className="flex items-start gap-3.5 rounded-2xl border border-hairline bg-surface p-5 shadow-xs">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-info-soft text-info">
-                        <CreditCard className="h-5 w-5" />
-                    </span>
-                    <div>
-                        <h4 className="text-sm font-bold text-ink">Official GST Invoices</h4>
-                        <p className="mt-1 text-xs leading-relaxed text-body">
-                            All prices are 18% GST-inclusive. Official GST tax invoices with your business details are generated immediately upon checkout.
-                        </p>
-                    </div>
-                </div>
-
-                <div className="flex items-start gap-3.5 rounded-2xl border border-hairline bg-surface p-5 shadow-xs">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-success-soft text-success">
-                        <ShieldCheck className="h-5 w-5" />
-                    </span>
-                    <div>
-                        <h4 className="text-sm font-bold text-ink">Secure Razorpay Processing</h4>
-                        <p className="mt-1 text-xs leading-relaxed text-body">
-                            Enterprise-grade 256-bit encrypted checkout supporting UPI, net banking, debit cards, and credit cards across India.
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            {/* 6. Trust & Policy Footer Banner */}
-            <div className="flex items-center justify-center gap-2 rounded-xl border border-hairline bg-surface-soft/60 p-3.5 text-center shadow-xs">
-                <Lock className="h-4 w-4 text-subtle" aria-hidden="true" />
-                <p className="text-xs font-medium text-body">
-                    Secure Razorpay payment gateway · Transparent flat pricing · No lock-in, cancel or upgrade anytime
-                </p>
-            </div>
 
             {/* Contract preservation helper */}
             <PlanSelectionContractReference

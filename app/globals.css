@@ -583,6 +583,16 @@
     width: 100%;
   }
 
+  .payroll-workspace-shell {
+    width: 100%;
+  }
+
+  .payroll-records-action {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1rem;
+  }
+
   .estimator-workspace-main {
     min-width: 0;
     width: 100%;
@@ -637,6 +647,12 @@
      so center cards never collide with the rails or Live Cost pill. */
   @media (min-width: 1024px) {
     .estimator-workspace-shell {
+      width: min(100%, calc(100vw - 248px - 31rem));
+      max-width: 72rem;
+      margin-inline: auto;
+    }
+
+    .payroll-workspace-shell {
       width: min(100%, calc(100vw - 248px - 31rem));
       max-width: 72rem;
       margin-inline: auto;
@@ -724,6 +740,14 @@
       left: calc(248px + 1rem);
       width: 14rem;
       z-index: 30;
+    }
+
+    .payroll-records-action {
+      position: fixed;
+      right: 1rem;
+      bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+      z-index: 35;
+      margin: 0;
     }
 
     .configuration-page-frame {

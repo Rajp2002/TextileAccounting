@@ -39,7 +39,7 @@ export default function PayrollGuidedTour({ variant, userId, orgId, userMetadata
                     orgId={orgId}
                     userMetadata={userMetadata}
                     align="full"
-                    className="w-full estimator-touch-target border-amber-200/90 bg-amber-50/75 hover:bg-amber-100/70 shadow-xs"
+                    className="w-full estimator-touch-target border-saffron-soft/90 bg-saffron-soft/75 text-saffron-deep shadow-xs hover:bg-saffron-soft"
                     onLaunch={() => launch('core')}
                 />
                 <div data-i18n-skip="true" lang={language} className="mt-2 space-y-1">

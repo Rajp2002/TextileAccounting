@@ -5,12 +5,8 @@ import {
   ArrowRight,
   Calculator,
   Clock,
-  CreditCard,
   FileText,
-  Lock,
-  ShieldCheck,
   Sparkles,
-  Zap,
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -35,78 +31,59 @@ export default function FreeBillingClient({
   const { tier } = useFreeWorkspace()
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-16">
+    <div className="mx-auto max-w-6xl space-y-6 pb-16">
       <PageHeader
         title={tx('Subscription & Billing')}
-        description={tx('View your active workspace status, explore available plans, and manage billing history.')}
+        description={tx('Manage your plan and payment history.')}
         meta={<StatusBadge status="active" label={tier === 'free' ? 'Weavly Free' : 'Active'} />}
       />
 
       {/* 1. Active Workspace Section */}
       <section aria-labelledby="active-workspace-heading" className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 id="active-workspace-heading" className="text-xs font-bold uppercase tracking-wider text-subtle">
-            {tx('Active Workspace')}
-          </h3>
-        </div>
+        <h3 id="active-workspace-heading" className="text-sm font-semibold text-ink">
+          {tx('Active workspace')}
+        </h3>
         <Card className="overflow-hidden border-hairline bg-surface shadow-[var(--shadow-card)]">
-          <div className="border-b border-hairline bg-surface-soft/60 px-6 py-4">
+          <div className="flex flex-col gap-4 border-b border-hairline px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-loom text-saffron shadow-xs">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-loom text-saffron">
                   <Calculator className="h-5 w-5" aria-hidden="true" />
                 </span>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h2 className="text-base font-bold tracking-tight text-ink">Weavly Free workspace</h2>
+                    <h2 className="text-base font-semibold tracking-tight text-ink">Weavly Free workspace</h2>
                     <StatusBadge status="active" label="Active" />
                   </div>
-                  <p className="text-xs text-subtle">Organization: {organizationName}</p>
+                  <p className="mt-0.5 text-xs text-subtle">Organization: {organizationName}</p>
                 </div>
-              </div>
-              <div className="text-right">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-subtle">Plan Type</p>
-                <p className="text-xs font-semibold text-ink">Free Tier · 2 costings / month</p>
               </div>
             </div>
+            <div className="sm:text-right">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-subtle">Current plan</p>
+              <p className="text-sm font-semibold text-ink">Weavly Free</p>
+              <p className="mt-0.5 text-xs text-subtle">No subscription payment required</p>
+            </div>
           </div>
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <div className="rounded-xl border border-hairline bg-surface-soft/70 p-4 transition-colors hover:bg-surface-soft">
-                <div className="flex items-center gap-2 text-xs font-bold text-ink">
-                  <Clock className="h-4 w-4 text-saffron" />
-                  <span>Monthly Allowance</span>
+          <CardContent className="p-0">
+            <div className="grid grid-cols-1 divide-y divide-hairline sm:grid-cols-2 sm:divide-x sm:divide-y-0">
+              <div className="flex items-start gap-3 px-5 py-4 sm:px-6">
+                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-saffron-soft text-saffron-deep">
+                  <Clock className="h-4 w-4" aria-hidden="true" />
+                </span>
+                <div>
+                  <p className="text-sm font-semibold text-ink">Monthly allowance</p>
+                  <p className="mt-0.5 text-sm leading-relaxed text-body"><span className="font-medium text-ink">2 new costings per month.</span> The allowance resets on the first.</p>
                 </div>
-                <p className="mt-2 text-2xl font-black text-ink">
-                  2 <span className="text-xs font-normal text-subtle">costings / mo</span>
-                </p>
-                <p className="mt-1 text-xs text-subtle">
-                  Resets on the first of every month. Calculations save automatically as permanent snapshots.
-                </p>
               </div>
-              <div className="rounded-xl border border-hairline bg-surface-soft/70 p-4 transition-colors hover:bg-surface-soft">
-                <div className="flex items-center gap-2 text-xs font-bold text-ink">
-                  <FileText className="h-4 w-4 text-info" />
-                  <span>Saved Costings</span>
+              <div className="flex items-start gap-3 px-5 py-4 sm:px-6">
+                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-info-soft text-info">
+                  <FileText className="h-4 w-4" aria-hidden="true" />
+                </span>
+                <div>
+                  <p className="text-sm font-semibold text-ink">Saved costings</p>
+                  <p className="mt-0.5 text-sm leading-relaxed text-body">Saved snapshots stay available to reopen or export without using the monthly allowance.</p>
                 </div>
-                <p className="mt-2 text-2xl font-black text-ink">
-                  Unlimited <span className="text-xs font-normal text-subtle">view & export</span>
-                </p>
-                <p className="mt-1 text-xs text-subtle">
-                  Fixed snapshots are retained indefinitely. 0 quota used to view or export PDF.
-                </p>
-              </div>
-              <div className="rounded-xl border border-hairline bg-surface-soft/70 p-4 transition-colors hover:bg-surface-soft">
-                <div className="flex items-center gap-2 text-xs font-bold text-ink">
-                  <Zap className="h-4 w-4 text-saffron-deep" />
-                  <span>Plan Status</span>
-                </div>
-                <p className="mt-2 text-2xl font-black text-ink">
-                  Free Tier <span className="text-xs font-normal text-subtle">active</span>
-                </p>
-                <p className="mt-1 text-xs text-subtle">
-                  Upgrade anytime to unlock saved quality recipes, dynamic rate books, and production.
-                </p>
               </div>
             </div>
           </CardContent>
@@ -115,34 +92,22 @@ export default function FreeBillingClient({
 
       {/* 2. View Plans Section (redirects to standalone upgrade wall page) */}
       <section aria-labelledby="view-plans-heading" className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 id="view-plans-heading" className="text-xs font-bold uppercase tracking-wider text-subtle">
-            Available Plans & Upgrades
-          </h3>
-        </div>
-        <Card className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 p-6 border-hairline bg-surface shadow-[var(--shadow-card)]">
-          <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-saffron/15 text-saffron-deep">
-              <Sparkles className="h-6 w-6" aria-hidden="true" />
+        <Card className="flex flex-col items-start justify-between gap-4 rounded-2xl border-hairline bg-surface p-5 shadow-[var(--shadow-card)] sm:flex-row sm:items-center sm:px-6">
+          <div className="flex min-w-0 items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-saffron-soft text-saffron-deep">
+              <Sparkles className="h-5 w-5" aria-hidden="true" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg font-bold tracking-tight text-ink">Explore Weavly Plans</h2>
-                <Link
-                  href="/plans?from=billing"
-                  className="rounded-full bg-saffron-soft px-2.5 py-0.5 text-[10px] font-bold text-saffron-deep hover:bg-saffron/25 transition-colors cursor-pointer"
-                >
-                  Recommended
-                </Link>
-              </div>
-              <p className="mt-1 text-sm text-body leading-relaxed max-w-2xl">
-                Compare Weavly Free, Lite, and Base with full interactive feature previews, instant activation, and GST tax invoices on our standalone plans page.
+            <div className="min-w-0">
+              <h2 id="view-plans-heading" className="text-base font-semibold tracking-tight text-ink">Compare plan options</h2>
+              <p className="mt-1 max-w-2xl text-sm leading-relaxed text-body">
+                Compare features and pricing for Weavly Free, Lite, and Base.
               </p>
+              <p className="mt-1.5 text-xs text-subtle">GST included · Annual renewals are manual · Secure Razorpay checkout</p>
             </div>
           </div>
-          <Button asChild variant="saffron" className="shrink-0 font-semibold gap-2 px-5 py-2.5 h-auto text-sm" size="default">
+          <Button asChild className="h-auto w-full shrink-0 gap-2 rounded-lg bg-loom px-4 py-2.5 text-sm font-semibold text-white shadow-none transition-colors hover:bg-loom-elevated sm:w-auto" size="default">
             <Link href="/plans?from=billing">
-              <span>{upgradeText(language, 'compareAllPlans')}</span>
+              <span>{tier === 'lite' ? 'Upgrade to Base' : upgradeText(language, 'compareAllPlans')}</span>
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
           </Button>
@@ -151,62 +116,12 @@ export default function FreeBillingClient({
 
       {/* 3. View Billing History Section (opens modal where user views their billing records) */}
       <section aria-labelledby="billing-history-heading" className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 id="billing-history-heading" className="text-xs font-bold uppercase tracking-wider text-subtle">
-            Billing & Invoices
-          </h3>
-        </div>
-        <div className="rounded-xl border border-hairline bg-surface p-1 shadow-[var(--shadow-card)]">
-          <PaymentHistoryDialog entries={billingHistory} />
-        </div>
+        <h3 id="billing-history-heading" className="text-sm font-semibold text-ink">
+          Billing &amp; invoices
+        </h3>
+        <PaymentHistoryDialog entries={billingHistory} />
       </section>
 
-      {/* Value Proposition Highlights */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="flex items-start gap-3.5 rounded-2xl border border-hairline bg-surface p-5 shadow-[var(--shadow-card)]">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-saffron-soft text-saffron-deep">
-            <Zap className="h-5 w-5" />
-          </span>
-          <div>
-            <h4 className="text-sm font-bold text-ink">Instant Plan Activation</h4>
-            <p className="mt-1 text-xs leading-relaxed text-body">
-              Upgrading to Lite or Base activates instantly in your account. All your existing saved costing snapshots are seamlessly retained.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-start gap-3.5 rounded-2xl border border-hairline bg-surface p-5 shadow-[var(--shadow-card)]">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-info-soft text-info">
-            <CreditCard className="h-5 w-5" />
-          </span>
-          <div>
-            <h4 className="text-sm font-bold text-ink">Official GST Invoices</h4>
-            <p className="mt-1 text-xs leading-relaxed text-body">
-              All prices are 18% GST-inclusive. Official GST tax invoices with your business details are generated immediately upon checkout.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-start gap-3.5 rounded-2xl border border-hairline bg-surface p-5 shadow-[var(--shadow-card)]">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-success-soft text-success">
-            <ShieldCheck className="h-5 w-5" />
-          </span>
-          <div>
-            <h4 className="text-sm font-bold text-ink">Secure Razorpay Processing</h4>
-            <p className="mt-1 text-xs leading-relaxed text-body">
-              Enterprise-grade 256-bit encrypted checkout supporting UPI, net banking, debit cards, and credit cards across India.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Trust & Policy Footer Banner */}
-      <div className="flex items-center justify-center gap-2 rounded-xl border border-hairline bg-surface-soft p-3.5 text-center shadow-xs">
-        <Lock className="h-4 w-4 text-subtle" aria-hidden="true" />
-        <p className="text-xs font-medium text-body">
-          Secure Razorpay payment gateway · Transparent flat pricing · No lock-in, cancel or upgrade anytime
-        </p>
-      </div>
     </div>
   )
 }
