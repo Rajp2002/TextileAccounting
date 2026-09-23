@@ -1,64 +1,48 @@
 import { describe, expect, it } from 'vitest'
-import { readFileSync, existsSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 const root = process.cwd()
 const read = (path: string) => readFileSync(join(root, path), 'utf8')
 
-describe('Standardized Subscription & Billing for Paid Plans (Lite & Base)', () => {
+describe('Paid plan subscription and billing pages', () => {
     const ownerBilling = read('app/(dashboard)/owner/billing/page.tsx')
     const freeBilling = read('app/free/billing/FreeBillingClient.tsx')
     const planChooser = read('components/plans/PlanChooserClient.tsx')
 
-    it('1. Owner billing page renders standard sections matching Free plan architecture', () => {
-        // Page Header
-        expect(ownerBilling).toContain('Subscription & Billing')
-        expect(ownerBilling).toContain('View your active workspace status, explore available plans, and manage billing history.')
+    it('1. Owner billing page renders the current workspace, plan comparison, and billing sections', () => {
+        expect(ownerBilling).toContain('title="Subscription & Billing"')
+        expect(ownerBilling).toContain('description="Manage your plan, renewal, and payment history."')
 
-        // Section 1: Active Workspace
+        // Active workspace and included capabilities
         expect(ownerBilling).toContain('id="active-workspace-heading"')
-        expect(ownerBilling).toContain('Active Workspace')
+        expect(ownerBilling).toContain('Active workspace')
         expect(ownerBilling).toContain('Weavly Lite workspace')
         expect(ownerBilling).toContain('Weavly Base workspace')
-        expect(ownerBilling).toContain('Costing Desk')
-        expect(ownerBilling).toContain('Saved Costings')
-        expect(ownerBilling).toContain('Connected Production')
-        expect(ownerBilling).toContain('Plan Status')
+        expect(ownerBilling).toContain('Current plan')
+        expect(ownerBilling).toContain('Costing desk')
+        expect(ownerBilling).toContain('Saved costings')
+        expect(ownerBilling).toContain('Connected production')
 
-        // Section 2: Choose your plan (Available Plans & Upgrades)
+        // Standalone plan comparison and billing history
         expect(ownerBilling).toContain('id="view-plans-heading"')
-        expect(ownerBilling).toContain('Available Plans & Upgrades')
-        expect(ownerBilling).toContain('Choose your plan')
-
-        // Section 3: Billing & Invoices
+        expect(ownerBilling).toContain('Compare plan options')
+        expect(ownerBilling).toContain('Annual renewals are manual')
         expect(ownerBilling).toContain('id="billing-history-heading"')
-        expect(ownerBilling).toContain('Billing & Invoices')
+        expect(ownerBilling).toContain('Billing &amp; invoices')
         expect(ownerBilling).toContain('<PaymentHistoryDialog entries={billingHistoryEntries}')
-
-        // Section 4: Referral rewards
+        expect(ownerBilling).toContain('<BillingDocumentNotice compact />')
         expect(ownerBilling).toContain('Referral rewards')
-
-        // Section 5: Value proposition highlights
-        expect(ownerBilling).toContain('Instant Plan Activation')
-        expect(ownerBilling).toContain('Official GST Invoices')
-        expect(ownerBilling).toContain('Secure Razorpay Processing')
-
-        // Section 6: Trust & Policy footer banner
-        expect(ownerBilling).toContain('Secure Razorpay payment gateway · Transparent flat pricing · No lock-in, cancel or upgrade anytime')
     })
 
-    it('2. Choose your plan has both a CTA button and pill linking to /plans?from=billing', () => {
-        // Owner billing has CTA link to /plans?from=billing
-        expect(ownerBilling).toContain('<Link href="/plans?from=billing"')
-        expect(ownerBilling).toContain('Explore plans')
-
-        // Owner billing has clickable pill link to /plans?from=billing
+    it('2. Paid and free billing pages link to the standalone plan comparison', () => {
         expect(ownerBilling).toContain('href="/plans?from=billing"')
-        expect(ownerBilling).toContain("subscriptionTier === 'lite'\n                                            ? 'Upgrade to Base'")
+        expect(ownerBilling).toContain("subscriptionTier === 'lite' ? 'Upgrade to Base'")
+        expect(ownerBilling).toContain("subscriptionTier === 'base' ? 'Compare plans'")
+        expect(ownerBilling).toContain("'Explore plans'")
 
-        // Free billing has both CTA and clickable pill to /plans?from=billing
         expect(freeBilling).toContain('<Link href="/plans?from=billing"')
-        expect(freeBilling).toContain('Recommended')
+        expect(freeBilling).toContain('Compare plan options')
         expect(freeBilling).toContain('compareAllPlans')
     })
 

@@ -39,9 +39,11 @@ describe('Desktop Dimensions Responsive Scaling & Layout', () => {
 
     it('orders base mobile full-width rails before desktop media queries so reference rail never expands on zoom', () => {
         const baseReferenceIndex = styles.indexOf('.estimator-reference-rail {\n    width: 100%;')
-        const desktopRailsQueryIndex = styles.indexOf('@media (min-width: 1024px) {\n    .estimator-workspace-shell')
+        const desktopRailsQueryIndex = styles.indexOf('@media (min-width: 1024px) {', baseReferenceIndex)
+        const estimatorWorkspaceIndex = styles.indexOf('.estimator-workspace-shell {', desktopRailsQueryIndex)
         expect(baseReferenceIndex).toBeGreaterThan(0)
-        expect(desktopRailsQueryIndex).toBeGreaterThan(0)
+        expect(desktopRailsQueryIndex).toBeGreaterThan(baseReferenceIndex)
+        expect(estimatorWorkspaceIndex).toBeGreaterThan(desktopRailsQueryIndex)
         expect(baseReferenceIndex).toBeLessThan(desktopRailsQueryIndex)
 
         // Ensure no subsequent unscoped width: 100% overrides the reference rail after the 1024px query
