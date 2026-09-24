@@ -647,11 +647,11 @@ export default function BaseDailyProductionSheet({
     }
 
     return (
-        <div className="grid min-w-0 gap-4 pb-28 2xl:grid-cols-[minmax(0,1fr)_284px] 2xl:gap-6 2xl:pb-0">
-            <aside aria-label="Daily sheet controls" className="order-1 flex min-w-0 flex-col gap-4 2xl:order-2 2xl:sticky 2xl:top-6 2xl:h-[calc(100svh-3rem)] 2xl:self-start">
-                <div className="rounded-2xl border border-hairline bg-surface p-4 shadow-sm 2xl:p-5">
+        <div className="production-daily-sheet-workspace relative min-w-0 pb-28 min-[1380px]:pb-0">
+            <aside aria-label="Daily sheet controls" className="production-daily-sheet-rail flex min-w-0 flex-col gap-4">
+                <div className="rounded-2xl border border-hairline/80 bg-surface/95 p-4 shadow-[var(--shadow-card)] backdrop-blur-sm 2xl:p-5">
                     <p className="mb-4 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Shift details</p>
-                    <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end 2xl:grid-cols-1">
+                    <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end min-[1380px]:grid-cols-1">
                         <div className="space-y-1.5">
                             <Label htmlFor="base-daily-date" className="text-xs font-bold text-body">Date</Label>
                             <Input id="base-daily-date" type="date" max={initialData.today} value={productionDate} disabled={isSaving} onChange={(event) => changeSelection(event.target.value, shift)} className="h-10 w-full rounded-xl border-hairline bg-surface text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom" />
@@ -666,13 +666,13 @@ export default function BaseDailyProductionSheet({
                                 </SelectContent>
                             </Select>
                         </div>
-                        <Button variant="outline" className="h-10 rounded-xl border-hairline bg-surface font-semibold shadow-xs hover:bg-surface-soft 2xl:w-full" onClick={printCollectionSheet} disabled={machineContexts.length === 0}>
+                        <Button variant="outline" className="h-10 rounded-xl border-hairline bg-surface font-semibold shadow-xs hover:bg-surface-soft min-[1380px]:w-full" onClick={printCollectionSheet} disabled={machineContexts.length === 0}>
                             <Printer className="h-4 w-4" /> Print sheet
                         </Button>
                     </div>
                 </div>
 
-                <div className="rounded-2xl border border-hairline bg-surface p-4 shadow-sm 2xl:p-5">
+                <div className="rounded-2xl border border-hairline/80 bg-surface/95 p-4 shadow-[var(--shadow-card)] backdrop-blur-sm 2xl:p-5">
                     <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Shift progress</p>
                     <div className="mt-3 flex items-baseline gap-2">
                         <span className="text-3xl font-black tracking-tight tabular-nums text-ink">{registerSummary.accounted}<span className="text-lg text-muted-foreground">/{registerSummary.total}</span></span>
@@ -687,14 +687,14 @@ export default function BaseDailyProductionSheet({
                     </dl>
                 </div>
 
-                <button type="button" onClick={onOpenHistory} className="group mt-auto hidden w-full items-center gap-3 rounded-2xl border border-hairline bg-surface p-4 text-left shadow-sm transition-colors hover:border-saffron hover:bg-saffron-soft/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron 2xl:flex">
+                <button type="button" onClick={onOpenHistory} className="production-daily-sheet-history-desktop group mt-auto w-full items-center gap-3 rounded-2xl border border-hairline/80 bg-surface/95 p-4 text-left shadow-[var(--shadow-card)] backdrop-blur-sm transition-colors hover:border-saffron hover:bg-saffron-soft/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron">
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-saffron-soft text-saffron-deep"><Clock3 className="h-5 w-5" /></span>
                     <span className="min-w-0 flex-1"><span className="block text-sm font-bold text-ink">Recent production</span><span className="block text-xs text-body">Find a saved shift</span></span>
                     <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
                 </button>
             </aside>
 
-            <div ref={sheetRef} className="order-2 flex min-w-0 flex-col 2xl:order-1 2xl:min-h-[calc(100svh-3rem)] 2xl:pb-20">
+            <div ref={sheetRef} className="flex min-w-0 flex-col 2xl:min-h-[calc(100svh-3rem)] 2xl:pb-20">
             {unmatchedDraftMeters && <p role="alert" className="rounded-lg border border-warning/40 bg-warning/5 p-3 text-sm">Some draft metres no longer match the current worker assignments. Restore the assignment in Machine Assignments or discard the local draft before saving; no metres have been silently removed.</p>}
             {navigation.job && <p className="rounded-lg border border-saffron/30 bg-saffron-soft p-3 text-sm">Selected job: <strong>{jobById.get(navigation.job)?.quality_label ?? 'Unavailable job'}</strong>. Its machine rows are highlighted; the full shift stays visible.</p>}
             {(draftStatus === 'error' || draftStatus === 'conflict') && <div role="alert" className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-warning/30 bg-warning/5 p-3 text-sm"><p>{draftStatus === 'conflict' ? 'The saved shift changed after this draft. Your local draft is retained; reload the saved version before editing.' : 'Draft could not be saved on this device. Keep this page open and save the shift before leaving.'}</p><Button variant="outline" size="sm" onClick={discardDraft}>Discard local draft</Button></div>}
@@ -930,7 +930,7 @@ export default function BaseDailyProductionSheet({
             )}
             </div>
 
-            <button type="button" onClick={onOpenHistory} className="order-3 flex w-full items-center gap-3 rounded-2xl border border-hairline bg-surface p-4 text-left shadow-sm transition-colors hover:border-saffron hover:bg-saffron-soft/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron 2xl:hidden">
+            <button type="button" onClick={onOpenHistory} className="production-daily-sheet-history-mobile mt-4 w-full items-center gap-3 rounded-2xl border border-hairline bg-surface p-4 text-left shadow-sm transition-colors hover:border-saffron hover:bg-saffron-soft/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron">
                 <Clock3 className="h-5 w-5 shrink-0 text-saffron-deep" />
                 <span className="min-w-0 flex-1"><span className="block text-sm font-bold text-ink">Recent production</span><span className="block text-xs text-body">Find a saved shift</span></span>
                 <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground" />
