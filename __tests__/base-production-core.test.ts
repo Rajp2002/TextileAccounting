@@ -352,7 +352,7 @@ describe('Base Production Core boundary contracts', () => {
         expect(operationalMigration).toContain('UNION ALL')
         expect(actions).toContain("supabase.rpc('save_base_daily_production_reviewed'")
         expect(actions).toContain("supabase.rpc('upsert_base_worker_machine_assignment'")
-        expect(dailySheet).toContain('Enter shift metres, not cumulative meter readings.')
+        expect(dailySheet).not.toContain('Enter shift metres, not cumulative meter readings.')
         expect(dailySheet).toContain('Save shift')
         expect(dailySheet).toContain('Editing is locked to prevent accidental changes.')
         expect(dailySheet).toContain('Edit saved log')
