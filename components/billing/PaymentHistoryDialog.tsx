@@ -144,10 +144,13 @@ function BillingHistoryRow({ entry }: { entry: BillingHistoryEntry }) {
 }
 
 export function PaymentHistoryDialog({ entries }: { entries: BillingHistoryEntry[] }) {
-    const latest = entries[0] ?? null
+    const latestPaid = entries.find((entry) => entry.receiptPaymentId)
+        ?? entries.find((entry) => entry.status === 'captured')
+        ?? null
+    const latest = latestPaid ?? entries[0] ?? null
     const recordLabel = `${entries.length} ${entries.length === 1 ? 'record' : 'records'}`
     const latestSummary = latest
-        ? `Latest ${formatShortDate(latest.date)}${latest.amountPaise !== null ? ` · ${formatAmount(latest.amountPaise)}` : ''}`
+        ? `${latestPaid ? 'Latest payment' : 'Latest activity'} ${formatShortDate(latest.date)}${latest.amountPaise !== null ? ` · ${formatAmount(latest.amountPaise)}` : ''}`
         : 'Successful payments and receipts will appear here'
 
     return (

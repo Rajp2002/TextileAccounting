@@ -63,6 +63,16 @@ export function BrandBackground({ className, variant = 'app' }: BrandBackgroundP
                             style={{ clipPath: blobPolygon }}
                         />
                     </div>
+
+                    {variant === 'billing' && (
+                        <div
+                            className="absolute inset-0 opacity-70 dark:opacity-20"
+                            style={{
+                                backgroundImage: 'linear-gradient(to right, rgba(169, 71, 19, 0.065) 1px, transparent 1px), linear-gradient(to bottom, rgba(169, 71, 19, 0.065) 1px, transparent 1px)',
+                                backgroundSize: '36px 36px',
+                            }}
+                        />
+                    )}
                 </>
             )}
         </div>
