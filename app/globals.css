@@ -634,6 +634,13 @@
     width: 100%;
   }
 
+  .payroll-period-rail {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
   .payroll-records-action {
     display: flex;
     justify-content: flex-end;
@@ -691,12 +698,6 @@
   /* Desktop rails reserve space around the main workspace when room allows. */
   @media (min-width: 1024px) {
     .estimator-workspace-shell {
-      width: min(100%, calc(100vw - 248px - 31rem));
-      max-width: 72rem;
-      margin-inline: auto;
-    }
-
-    .payroll-workspace-shell {
       width: min(100%, calc(100vw - 248px - 31rem));
       max-width: 72rem;
       margin-inline: auto;
@@ -786,14 +787,6 @@
       z-index: 30;
     }
 
-    .payroll-records-action {
-      position: fixed;
-      right: 1rem;
-      bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
-      z-index: 35;
-      margin: 0;
-    }
-
     .configuration-page-frame {
       width: min(100%, calc(100vw - 248px - 33rem));
       max-width: 72rem;
@@ -823,6 +816,15 @@
   }
 
   @media (min-width: 1024px) and (max-width: 1379.98px) {
+    .payroll-left-rail {
+      position: static;
+      width: 100%;
+      max-width: 14rem;
+      max-height: none;
+      overflow: visible;
+      margin-bottom: 1.25rem;
+    }
+
     .workers-workspace-shell .workers-left-rail {
       position: static;
       width: 100%;
@@ -852,6 +854,33 @@
   }
 
   @media (min-width: 1380px) {
+    .payroll-workspace-shell {
+      width: min(100%, calc(100vw - 248px - 31rem));
+      max-width: 72rem;
+      margin-inline: auto;
+    }
+
+    .payroll-period-rail {
+      position: fixed;
+      top: 5.5rem;
+      right: 1rem;
+      z-index: 30;
+      width: 14rem;
+      max-height: calc(100dvh - 8rem);
+      overflow-y: auto;
+      scrollbar-width: thin;
+    }
+
+    .payroll-records-action {
+      position: fixed;
+      right: 1rem;
+      bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+      z-index: 30;
+      width: 14rem;
+      justify-content: center;
+      margin: 0;
+    }
+
     .workers-workspace-shell {
       width: min(100%, calc(100vw - 248px - 31rem));
       max-width: 72rem;
@@ -989,6 +1018,12 @@
   }
 
   @media (min-width: 1800px) {
+    .payroll-period-rail,
+    .payroll-records-action {
+      right: 1.25rem;
+      width: 14.5rem;
+    }
+
     .workers-reference-rail {
       right: 1.25rem;
       width: 14.5rem;

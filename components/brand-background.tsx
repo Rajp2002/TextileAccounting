@@ -16,7 +16,7 @@ export function BrandBackground({ className, variant = 'app' }: BrandBackgroundP
         <div
             className={cn(
                 'weavly-app-bg pointer-events-none fixed inset-0 z-0 overflow-hidden',
-                (variant === 'machines' || variant === 'dispatches' || variant === 'workers') && 'weavly-app-bg-machines',
+                (variant === 'machines' || variant === 'dispatches' || variant === 'workers' || variant === 'payroll') && 'weavly-app-bg-machines',
                 className
             )}
             aria-hidden="true"

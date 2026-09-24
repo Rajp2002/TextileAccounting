@@ -419,9 +419,9 @@ export default function BasePayrollSettlementWorkspace({
                         </div>
                         <div>
                             <div className="flex items-center gap-2 flex-wrap">
-                                <h2 className="text-base sm:text-xl font-black tracking-tight text-ink">
+                                <DialogTitle className="text-base sm:text-xl font-black tracking-tight text-ink">
                                     Settle payroll
-                                </h2>
+                                </DialogTitle>
                                 <Badge
                                     variant={
                                         summary.isSettled
@@ -443,9 +443,9 @@ export default function BasePayrollSettlementWorkspace({
                                             : 'Open'}
                                 </Badge>
                             </div>
-                            <p className="mt-0.5 text-xs text-muted-foreground truncate">
+                            <DialogDescription className="mt-0.5 truncate text-xs text-muted-foreground">
                                 {period.label} · {formatDateOnly(period.start)} – {formatDateOnly(period.end)} · {totalCount} workers
-                            </p>
+                            </DialogDescription>
                         </div>
                     </div>
                     <Button

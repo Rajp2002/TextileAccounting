@@ -42,18 +42,19 @@ export default function PayrollGuidedTour({ variant, userId, orgId, userMetadata
                     className="w-full estimator-touch-target border-saffron-soft/90 bg-saffron-soft/75 text-saffron-deep shadow-xs hover:bg-saffron-soft"
                     onLaunch={() => launch('core')}
                 />
-                <div data-i18n-skip="true" lang={language} className="mt-2 space-y-1">
+                <div data-i18n-skip="true" lang={language} className="mt-1">
                     <Button
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="h-auto min-h-9 w-full justify-start text-xs font-semibold text-subtle hover:text-ink"
+                        className="min-h-9 w-full justify-start rounded-lg px-3 text-xs font-medium text-body hover:bg-surface/70 hover:text-ink"
                         data-tour-control="payroll-help"
+                        aria-describedby="payroll-help-description"
                         onClick={() => launch('help')}
                     >
                         {copy.help}
                     </Button>
-                    <p className="text-xs text-subtle px-1">{copy.helpDescription[variant]}</p>
+                    <p id="payroll-help-description" className="sr-only">{copy.helpDescription[variant]}</p>
                 </div>
             </div>
         </aside>

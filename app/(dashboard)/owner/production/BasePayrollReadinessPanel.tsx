@@ -22,16 +22,16 @@ export default function BasePayrollReadinessPanel({ readiness }: { readiness: Ba
     const hasIssues = readiness.issueCount > 0
 
     return (
-        <Card className={hasIssues ? 'rounded-2xl border border-warning/30 bg-warning-soft/40 shadow-xs overflow-hidden' : 'rounded-2xl border border-hairline bg-surface shadow-xs overflow-hidden'}>
-            <CardHeader className="p-4 sm:p-5">
+        <Card className={hasIssues ? 'gap-0 overflow-hidden rounded-2xl border border-warning/30 bg-warning-soft/40 py-0 shadow-[var(--shadow-card)]' : 'gap-0 overflow-hidden rounded-2xl border border-hairline bg-surface py-0 shadow-[var(--shadow-card)]'}>
+            <CardHeader className="p-4">
                 <div className="flex items-start justify-between gap-3">
-                    <div className="flex min-w-0 items-start gap-3">
-                        <div className={`rounded-xl p-2.5 shadow-xs ${hasIssues ? 'border border-warning/30 bg-surface text-warning' : 'border border-success-soft bg-success-soft text-success'}`}>
+                    <div className="flex min-w-0 items-start gap-2.5">
+                        <div className={`rounded-xl p-2 shadow-xs ${hasIssues ? 'border border-warning/30 bg-surface text-warning' : 'border border-success-soft bg-success-soft text-success'}`}>
                             {hasIssues ? <AlertTriangle className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
                         </div>
                         <div>
-                            <CardTitle className="text-base font-bold text-ink">Payroll readiness</CardTitle>
-                            <CardDescription className="mt-1 text-xs sm:text-sm text-muted-foreground">
+                            <CardTitle className="text-sm font-semibold text-ink">Payroll readiness</CardTitle>
+                            <CardDescription className="mt-0.5 text-xs leading-relaxed text-body">
                                 {hasIssues
                                     ? `${readiness.issueCount} production ${readiness.issueCount === 1 ? 'issue needs' : 'issues need'} attention before payment.`
                                     : hasProduction
@@ -40,15 +40,15 @@ export default function BasePayrollReadinessPanel({ readiness }: { readiness: Ba
                             </CardDescription>
                         </div>
                     </div>
-                    <Badge variant={hasIssues ? 'warning' : 'success'} className="shrink-0 font-bold text-[10px]">
+                    <Badge variant={hasIssues ? 'warning' : 'success'} className="shrink-0 text-[10px] font-semibold">
                         {hasIssues ? 'Review required' : hasProduction ? 'Reconciled' : 'Up to date'}
                     </Badge>
                 </div>
             </CardHeader>
 
             {hasProduction && (
-                <CardContent className="space-y-4 border-t border-hairline bg-surface-soft/20 p-4 sm:p-5">
-                    <div className="grid grid-cols-3 divide-x divide-hairline rounded-xl border border-hairline bg-surface py-2.5 text-center shadow-xs">
+                <CardContent className="space-y-2.5 border-t border-hairline bg-surface-soft/15 p-3.5 sm:p-4">
+                    <div className="grid grid-cols-3 divide-x divide-hairline rounded-xl border border-hairline/80 bg-surface py-2 text-center">
                         <Metric label="Verified earnings" value={readiness.verifiedLineCount + readiness.salaryLineCount} />
                         <Metric label="Machine lines" value={readiness.machineLineCount} />
                         <Metric label="Ready workers" value={readiness.readyWorkerCount} />
@@ -57,7 +57,7 @@ export default function BasePayrollReadinessPanel({ readiness }: { readiness: Ba
                     {readiness.salaryLineCount > 0 && <p className="text-xs text-body font-medium">{readiness.salaryLineCount} salary {readiness.salaryLineCount === 1 ? 'segment' : 'segments'} included. Fixed staff do not need production entries.</p>}
 
                     {readiness.legacyLineCount > 0 && (
-                        <div className="flex items-start gap-2.5 rounded-xl border border-hairline bg-surface p-3 text-xs leading-relaxed text-body shadow-xs">
+                        <div className="flex items-start gap-2 border-l-2 border-saffron/35 pl-2 text-xs leading-relaxed text-body">
                             <History className="mt-0.5 h-3.5 w-3.5 shrink-0 text-saffron-deep" />
                             <p><strong className="font-bold text-ink">{readiness.legacyLineCount} legacy worker {readiness.legacyLineCount === 1 ? 'total is' : 'totals are'} included.</strong> Pay uses the saved worker rate; the original machine breakdown was not captured.</p>
                         </div>
@@ -80,5 +80,5 @@ export default function BasePayrollReadinessPanel({ readiness }: { readiness: Ba
 }
 
 function Metric({ label, value }: { label: string; value: number }) {
-    return <div className="px-2"><p className="text-base sm:text-lg font-black text-ink">{value}</p><p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{label}</p></div>
+    return <div className="px-2"><p className="text-base font-semibold text-ink">{value}</p><p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</p></div>
 }

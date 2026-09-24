@@ -457,7 +457,7 @@ export default function BaseProductionClient({
     }
 
     return (
-        <div className={`${isDailySheetView ? 'space-y-4' : 'space-y-5'} ${view === 'payroll' ? 'payroll-workspace-shell pb-28' : 'pb-8'} ${view === 'operations' ? 'configuration-page-frame' : ''}`}>
+        <div className={`${isDailySheetView ? 'space-y-4' : 'space-y-5'} ${view === 'payroll' ? 'payroll-workspace-shell pb-10' : 'pb-8'} ${view === 'operations' ? 'configuration-page-frame' : ''}`}>
             {navigation.returnTo && (
                 <Button asChild variant="outline" size="sm" className="h-9 rounded-xl border-hairline bg-surface text-ink shadow-xs hover:border-hairline-strong hover:bg-surface-soft hover:text-ink">
                     <Link href={navigation.returnTo} className="inline-flex items-center gap-1.5">
@@ -466,13 +466,13 @@ export default function BaseProductionClient({
                     </Link>
                 </Button>
             )}
-            {!isDailySheetView && <div className={`flex flex-col justify-between gap-4 ${view === 'payroll' ? 'border-b border-hairline pb-5 xl:flex-row xl:items-end' : 'sm:flex-row sm:items-start'}`}>
+            {!isDailySheetView && <header className={`flex flex-col justify-between gap-4 ${view === 'payroll' ? 'border-b border-hairline/70 pb-5 text-center sm:pb-6' : 'sm:flex-row sm:items-start'}`}>
                 <div>
                     {view !== 'payroll' && <p className="text-xs font-bold uppercase tracking-[0.18em] text-saffron-deep">Weavly Base</p>}
-                    <h1 className={`${view === 'payroll' ? '' : 'mt-1'} text-2xl font-black tracking-tight text-ink sm:text-3xl`}>
+                    <h1 className={`${view === 'payroll' ? 'text-[1.75rem] font-bold sm:text-[2rem]' : 'mt-1 text-2xl font-black sm:text-3xl'} tracking-tight text-ink`}>
                         {view === 'operations' ? 'Worker–Machine Assignments' : view === 'payroll' ? 'Payroll' : 'Production'}
                     </h1>
-                    <p className="mt-2 max-w-2xl text-sm leading-relaxed text-body">
+                    <p className={view === 'payroll' ? 'sr-only' : 'mt-2 max-w-2xl text-sm leading-relaxed text-body'}>
                         {view === 'operations'
                             ? 'Assign workers to machines and manage existing assignments.'
                             : view === 'payroll'
@@ -480,53 +480,41 @@ export default function BaseProductionClient({
                                 : 'Create production jobs from saved costings and record daily machine metres.'}
                     </p>
                 </div>
-                {view === 'payroll' && activeTab === 'history' && (
-                    <Button variant="outline" className="rounded-xl" onClick={() => setPayrollTab('pay')}>
-                        <WalletCards className="h-4 w-4" /> Current payroll
-                    </Button>
-                )}
-                {view === 'payroll' && activeTab !== 'history' && (
-                    <div className="flex min-w-0 flex-col gap-2 xl:items-end">
-                        <div className="flex flex-wrap items-center gap-2">
-                            <div className="flex items-center rounded-xl border border-hairline bg-surface p-0.5 shadow-xs" role="group" aria-label="Payroll period selector">
-                                <Button
-                                    variant="ghost"
-                                    size="icon-xs"
-                                    onClick={handlePreviousPeriod}
-                                    className="h-9 w-9 rounded-lg text-muted-foreground hover:text-ink"
-                                    aria-label="Previous payroll period"
-                                >
-                                    <ChevronLeft className="h-4 w-4" />
-                                </Button>
-                                <span className="min-w-32 px-2 text-center text-sm font-bold text-ink sm:text-base">
-                                    {activePeriodLabel}
-                                </span>
-                                <Button
-                                    variant="ghost"
-                                    size="icon-xs"
-                                    onClick={handleNextPeriod}
-                                    className="h-9 w-9 rounded-lg text-muted-foreground hover:text-ink"
-                                    aria-label="Next payroll period"
-                                >
-                                    <ChevronRight className="h-4 w-4" />
-                                </Button>
+            </header>}
+
+            {view === 'payroll' && (
+                <aside className="payroll-period-rail" aria-label="Payroll period and settlement">
+                    {activeTab === 'history' ? (
+                        <Button variant="outline" className="min-h-11 w-full rounded-xl border-hairline bg-surface shadow-[var(--shadow-card)]" onClick={() => setPayrollTab('pay')}>
+                            <WalletCards className="h-4 w-4" /> Current payroll
+                        </Button>
+                    ) : (
+                        <>
+                            <div className="rounded-2xl border border-hairline/80 bg-surface/95 p-3 shadow-[var(--shadow-card)]">
+                                <div className="mb-2.5 flex flex-wrap items-center justify-between gap-1.5">
+                                    <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-subtle">Pay period</p>
+                                    {activePeriodSummary.status === 'settled' ? (
+                                        <Badge variant="success" className="text-[10px] font-semibold">Settled</Badge>
+                                    ) : activePeriodSummary.status === 'ready_to_complete' ? (
+                                        <Badge variant="brand" className="text-[10px] font-semibold">Ready to complete</Badge>
+                                    ) : activePeriodSummary.status === 'in_progress' ? (
+                                        <Badge variant="warning" className="text-[10px] font-semibold">In progress · {activePeriodSummary.paidWorkers}/{activePeriodSummary.totalWorkers}</Badge>
+                                    ) : (
+                                        <Badge variant="secondary" className="text-[10px] font-semibold">Open</Badge>
+                                    )}
+                                </div>
+                                <div className="flex h-11 items-center rounded-xl border border-hairline bg-surface-soft/35 p-0.5" role="group" aria-label="Payroll period selector">
+                                    <Button variant="ghost" size="icon-xs" onClick={handlePreviousPeriod} className="h-9 w-7 shrink-0 rounded-lg text-subtle hover:text-ink" aria-label="Previous payroll period">
+                                        <ChevronLeft className="h-4 w-4" />
+                                    </Button>
+                                    <span className="min-w-0 flex-1 truncate px-1 text-center text-xs font-semibold text-ink">{activePeriodLabel}</span>
+                                    <Button variant="ghost" size="icon-xs" onClick={handleNextPeriod} className="h-9 w-7 shrink-0 rounded-lg text-subtle hover:text-ink" aria-label="Next payroll period">
+                                        <ChevronRight className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                                <p className="mt-2 text-center text-xs font-medium text-subtle">{formatDateOnly(activePeriodBounds.start)} – {formatDateOnly(activePeriodBounds.end)}</p>
                             </div>
-                            {activePeriodSummary.status === 'settled' ? (
-                                <Badge variant="success" className="font-bold">Settled</Badge>
-                            ) : activePeriodSummary.status === 'ready_to_complete' ? (
-                                <Badge variant="brand" className="font-bold">Ready to complete</Badge>
-                            ) : activePeriodSummary.status === 'in_progress' ? (
-                                <Badge variant="warning" className="font-bold">
-                                    In progress · {activePeriodSummary.paidWorkers}/{activePeriodSummary.totalWorkers}
-                                </Badge>
-                            ) : (
-                                <Badge variant="secondary" className="font-bold">Open</Badge>
-                            )}
-                            <Button
-                                variant="saffron"
-                                onClick={() => setWorkspaceOpen(true)}
-                                className="h-10 rounded-xl px-4 font-bold"
-                            >
+                            <Button onClick={() => setWorkspaceOpen(true)} className="min-h-11 w-full rounded-xl bg-loom px-4 font-semibold text-white shadow-[var(--shadow-button)] hover:bg-loom-elevated hover:text-white focus-visible:ring-saffron/40">
                                 <WalletCards className="h-4 w-4" />
                                 {activePeriodSummary.status === 'settled'
                                     ? 'View settled payroll'
@@ -536,13 +524,10 @@ export default function BaseProductionClient({
                                             ? 'Continue settlement'
                                             : 'Settle payroll'}
                             </Button>
-                        </div>
-                        <p className="text-xs font-medium text-muted-foreground xl:text-right">
-                            {formatDateOnly(activePeriodBounds.start)} – {formatDateOnly(activePeriodBounds.end)}
-                        </p>
-                    </div>
-                )}
-            </div>}
+                        </>
+                    )}
+                </aside>
+            )}
 
             {view === 'payroll' && activeTab === 'history' && (
                 <BasePayrollRecords initialData={initialData} onBack={() => setPayrollTab('pay')} />
@@ -592,9 +577,9 @@ export default function BaseProductionClient({
             )}
 
             {view === 'payroll' && activeTab !== 'history' && (
-                <Card className="overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs">
+                <Card className="gap-0 overflow-hidden rounded-2xl border border-hairline bg-surface py-0 shadow-[var(--shadow-card)]">
                     <div className="grid grid-cols-1 divide-y divide-hairline sm:grid-cols-3 sm:divide-y-0 sm:divide-x">
-                        <div className="p-4 sm:p-5">
+                        <div className="p-4">
                             <div className="mb-1 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
                                 <ReceiptText className="h-4 w-4 text-muted-foreground" />
                                 <span>Total Payroll</span>
@@ -607,7 +592,7 @@ export default function BaseProductionClient({
                             </p>
                         </div>
 
-                        <div className="p-4 sm:p-5">
+                        <div className="p-4">
                             <div className="mb-1 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-success">
                                 <CheckCircle2 className="h-4 w-4 text-success" />
                                 <span>Paid so far</span>
@@ -620,7 +605,7 @@ export default function BaseProductionClient({
                             </p>
                         </div>
 
-                        <div className="p-4 sm:p-5">
+                        <div className="p-4">
                             <div className="mb-1 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
                                 <Clock3 className="h-4 w-4 text-muted-foreground" />
                                 <span>Remaining to settle</span>
@@ -634,13 +619,13 @@ export default function BaseProductionClient({
                         </div>
                     </div>
 
-                    <div className="border-t border-hairline bg-surface-soft/30 px-4 py-3 sm:px-5">
-                        <div className="flex items-center justify-between text-xs font-semibold text-body mb-1.5">
+                    <div className="border-t border-hairline bg-surface-soft/25 px-4 py-2.5">
+                        <div className="mb-1 flex items-center justify-between text-xs font-semibold text-body">
                             <span>Settlement Progress</span>
                             <span className="font-bold text-ink">{activePeriodSummary.progressPercent}% settled</span>
                         </div>
                         <div
-                            className="h-2 w-full overflow-hidden rounded-full bg-surface-soft border border-hairline"
+                            className="h-1.5 w-full overflow-hidden rounded-full border border-hairline bg-surface-soft"
                             role="progressbar"
                             aria-valuenow={activePeriodSummary.progressPercent}
                             aria-valuemin={0}
@@ -729,17 +714,17 @@ export default function BaseProductionClient({
                 </div>}
 
                 {view === 'payroll' && <div className="space-y-4">
-                    <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
-                        <div>
-                            <h2 className="text-lg font-bold text-ink">Worker pay</h2>
-                            <p className="text-sm text-body">Outstanding earnings through {formatDateOnly(activePeriodBounds.end)}. Earlier unpaid work is included.</p>
+                    <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+                        <div className="min-w-0">
+                            <h2 className="text-lg font-semibold text-ink">Worker pay</h2>
+                            <p className="mt-0.5 max-w-[21rem] text-xs leading-relaxed text-body">Outstanding earnings through {formatDateOnly(activePeriodBounds.end)}. Earlier unpaid work is included.</p>
                         </div>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex shrink-0 flex-wrap items-center gap-2">
                             <Select value={paymentMode} onValueChange={(value) => setPaymentMode(value as BasePayrollPaymentMode)}>
-                                <SelectTrigger className="w-[170px]" aria-label="Payment mode"><SelectValue /></SelectTrigger>
+                                <SelectTrigger className="h-10 w-[150px] rounded-xl border-hairline bg-surface shadow-xs" aria-label="Payment mode"><SelectValue /></SelectTrigger>
                                 <SelectContent><SelectItem value="cash">Paid by cash</SelectItem><SelectItem value="bank_transfer">Bank transfer</SelectItem><SelectItem value="upi">UPI</SelectItem><SelectItem value="cheque">Cheque</SelectItem></SelectContent>
                             </Select>
-                            <Button variant="outline" onClick={() => openSetup()}><Settings2 className="h-4 w-4" /> Manage workers</Button>
+                            <Button variant="outline" onClick={() => openSetup()} className="h-10 rounded-xl border-hairline bg-surface shadow-xs"><Settings2 className="h-4 w-4" /> Manage workers</Button>
                         </div>
                     </div>
 
@@ -748,14 +733,6 @@ export default function BaseProductionClient({
                         <div><Label htmlFor="base-payroll-search" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Find worker</Label><Input id="base-payroll-search" className="mt-1 h-10 sm:h-11 rounded-xl border-hairline bg-surface text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom" value={payrollSearch} onChange={event => setPayrollSearch(event.target.value)} placeholder="Worker name" /></div>
                         <div><Label htmlFor="base-payroll-filter" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Payment status</Label><Select value={payrollFilter} onValueChange={setPayrollFilter}><SelectTrigger id="base-payroll-filter" className="mt-1 h-10 sm:h-11 rounded-xl border-hairline bg-surface text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom"><SelectValue /></SelectTrigger><SelectContent className="rounded-xl border-hairline bg-surface shadow-lg"><SelectItem value="all">All workers</SelectItem><SelectItem value="ready">Ready to pay</SelectItem><SelectItem value="review">Needs review</SelectItem><SelectItem value="paid">Paid</SelectItem><SelectItem value="empty">No earnings</SelectItem></SelectContent></Select></div>
                     </div>
-
-                    <details className="group rounded-xl border border-hairline bg-surface shadow-xs">
-                        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-body outline-none transition-colors hover:bg-surface-soft/50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-saffron [&::-webkit-details-marker]:hidden">
-                            <span className="flex items-center gap-2.5"><ReceiptText className="h-4 w-4 text-saffron-deep" /> How pay is calculated</span>
-                            <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
-                        </summary>
-                        <p className="border-t border-hairline px-4 py-3 text-xs leading-relaxed text-body sm:text-sm">Piece-rate pay uses saved machine rates. Fixed salaries accrue by calendar day, including joining/leaving dates and effective-dated salary changes. Recovery is capped at the lower of the outstanding advance balance or 50% of gross pay; any remaining balance carries forward.</p>
-                    </details>
 
                     {initialData.workers.length === 0 ? (
                         <EmptyState title="No workers yet" description="Add workers in Workers before recording metres or settling payroll." action={<Button size="sm" variant="saffron" onClick={() => openSetup()} className="rounded-xl font-bold"><Settings2 className="h-4 w-4" /> Manage workers</Button>} />
@@ -777,8 +754,8 @@ export default function BaseProductionClient({
                                     (item) => !pendingDeductions.includes(item)
                                 )
                                 return (
-                                    <Card key={payable.worker_id} className={`rounded-2xl border border-hairline bg-surface shadow-xs overflow-hidden transition-all ${!worker?.is_active ? 'opacity-75' : 'hover:border-hairline-strong'}`}>
-                                        <CardHeader className="border-b border-hairline bg-surface-soft/40 p-4 sm:p-5">
+                                    <Card key={payable.worker_id} className={`gap-0 overflow-hidden rounded-2xl border border-hairline bg-surface py-0 shadow-[var(--shadow-card)] transition-all ${!worker?.is_active ? 'opacity-75' : 'hover:border-hairline-strong hover:shadow-[var(--shadow-panel)]'}`}>
+                                        <CardHeader className="border-b border-hairline bg-surface-soft/30 p-4">
                                             <div className="flex items-start justify-between gap-3">
                                                 <div className="min-w-0">
                                                     <CardTitle className="truncate text-base font-bold text-ink">{payable.worker_name}</CardTitle>
@@ -791,7 +768,7 @@ export default function BaseProductionClient({
                                                 </div>
                                             </div>
                                         </CardHeader>
-                                        <CardContent className="space-y-4 p-4 sm:p-5">
+                                        <CardContent className="space-y-3.5 p-4">
                                             <p className="text-xs font-semibold text-muted-foreground">{formatDateOnly(payable.period_start)} – {formatDateOnly(payable.period_end)}</p>
                                             <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
                                                 <Metric label={payable.pay_type === 'fixed_monthly' ? 'Pay basis' : 'Metres'} value={payable.pay_type === 'fixed_monthly' ? 'Monthly salary' : formatMeters(payable.meters)} />
@@ -799,7 +776,7 @@ export default function BaseProductionClient({
                                                 <Metric label="Recovery" value={formatINR(payable.advance_recovery, { hideDecimals: true })} />
                                                 <Metric label="Net pay" value={formatINR(payable.net_payout, { hideDecimals: true })} emphasis />
                                             </div>
-                                            <div className="rounded-xl border border-hairline bg-surface-soft/60 p-3 text-xs leading-relaxed text-body">
+                                            <div className="rounded-xl border border-hairline/70 bg-surface-soft/55 p-3 text-xs leading-relaxed text-body">
                                                 {payable.pay_type === 'fixed_monthly' && payable.status !== 'paid' && <div className="mb-2 space-y-1">{payable.salary_lines?.map(line => <p key={line.start}>{formatDateOnly(line.start)} – {formatDateOnly(line.end)}: {formatINR(line.monthlySalary)} × {line.days}/{line.monthDays} days = {formatINR(line.grossPay)}</p>)}</div>}
                                                 {payable.status === 'paid'
                                                     ? <>Paid on {formatDateOnly(payable.paid_at)} · {formatINR(payable.advance_recovery, { hideDecimals: true })} advance recovered.</>
@@ -844,6 +821,13 @@ export default function BaseProductionClient({
                             })}
                         </div>
                     )}
+                    <details className="group rounded-xl border border-hairline bg-surface/90 shadow-xs">
+                        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-body outline-none transition-colors hover:bg-surface-soft/50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-saffron [&::-webkit-details-marker]:hidden">
+                            <span className="flex items-center gap-2.5"><ReceiptText className="h-4 w-4 text-saffron-deep" /> How pay is calculated</span>
+                            <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
+                        </summary>
+                        <p className="border-t border-hairline px-4 py-3 text-xs leading-relaxed text-body sm:text-sm">Piece-rate pay uses saved machine rates. Fixed salaries accrue by calendar day, including joining/leaving dates and effective-dated salary changes. Recovery is capped at the lower of the outstanding advance balance or 50% of gross pay; any remaining balance carries forward.</p>
+                    </details>
                 </div>}
             </div>}
 
