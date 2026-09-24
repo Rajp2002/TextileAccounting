@@ -4,18 +4,19 @@ const blobPolygon = 'polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 8
 
 type BrandBackgroundProps = {
     className?: string
-    variant?: 'app' | 'auth' | 'billing' | 'payroll'
+    variant?: 'app' | 'auth' | 'billing' | 'payroll' | 'machines'
 }
 
 export function BrandBackground({ className, variant = 'app' }: BrandBackgroundProps) {
     const isAuth = variant === 'auth'
-    const isQuiet = variant === 'billing' || variant === 'payroll'
+    const isQuiet = variant === 'billing' || variant === 'payroll' || variant === 'machines'
     const blobOpacity = isQuiet ? 'opacity-20 dark:opacity-10' : 'opacity-40 dark:opacity-35'
 
     return (
         <div
             className={cn(
                 'weavly-app-bg pointer-events-none fixed inset-0 z-0 overflow-hidden',
+                variant === 'machines' && 'weavly-app-bg-machines',
                 className
             )}
             aria-hidden="true"

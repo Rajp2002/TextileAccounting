@@ -19,7 +19,8 @@ export function MachineStatusBadge({ status, className }: MachineStatusBadgeProp
     <Badge
       variant={isActive ? 'success' : 'warning'}
       className={cn(
-        'gap-1.5 px-2.5 py-0.5 text-xs font-medium',
+        'gap-1.5 border-success/15 px-2.5 py-0.5 text-[11px] font-semibold',
+        !isActive && 'border-warning/20',
         className
       )}
     >

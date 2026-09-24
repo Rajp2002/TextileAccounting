@@ -16,7 +16,7 @@ export function MachinesPageHeader({ onAdd, returnTo }: MachinesPageHeaderProps)
   const { tx } = useTranslation()
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {returnTo && (
         <div>
           <NavigationLink
@@ -28,12 +28,12 @@ export function MachinesPageHeader({ onAdd, returnTo }: MachinesPageHeaderProps)
         </div>
       )}
 
-      <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 sm:min-h-12 sm:grid-cols-[1fr_auto_1fr]">
+      <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-hairline/70 pb-5 sm:min-h-16 sm:grid-cols-[1fr_auto_1fr] sm:pb-6">
         <div className="min-w-0 sm:col-start-2 sm:row-start-1 sm:text-center">
-          <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-[28px]">
+          <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-ink sm:text-[2rem]">
             {tx('Machines')}
           </h1>
-          <p className="mt-1 text-sm text-subtle">
+          <p className="mt-1 text-sm leading-relaxed text-subtle">
             {tx('Add and manage the machines in your factory.')}
           </p>
         </div>
@@ -41,7 +41,7 @@ export function MachinesPageHeader({ onAdd, returnTo }: MachinesPageHeaderProps)
         <div className="shrink-0 sm:col-start-3 sm:row-start-1 sm:justify-self-end">
           <Button
             onClick={onAdd}
-            className="h-10 rounded-xl px-4"
+            className="min-h-11 rounded-xl bg-loom px-4 text-white shadow-[var(--shadow-button)] hover:bg-loom-elevated hover:text-white focus-visible:ring-saffron/40"
           >
             <Plus className="h-4 w-4" aria-hidden="true" />
             <span>{tx('Add machine')}</span>

@@ -25,8 +25,9 @@ export function MachineCard({ machine, onEdit, tourPreview = false }: MachineCar
     <article
       data-machines-tour-id={tourPreview ? machine.id : undefined}
       className={cn(
-        'group flex flex-col justify-between rounded-2xl border border-hairline bg-surface p-4 shadow-xs transition-all duration-150',
-        'hover:border-hairline-strong hover:shadow-sm motion-safe:hover:-translate-y-0.5'
+        'group flex h-full flex-col justify-between overflow-hidden rounded-2xl border bg-surface/95 p-4 shadow-[var(--shadow-card)] transition-[border-color,box-shadow,transform] duration-200 sm:p-[18px]',
+        'hover:border-saffron/35 hover:shadow-[var(--shadow-panel)] motion-safe:hover:-translate-y-0.5',
+        readiness.isActive ? 'border-hairline/85' : 'border-warning/35'
       )}
     >
       <div className="space-y-4">
@@ -35,25 +36,25 @@ export function MachineCard({ machine, onEdit, tourPreview = false }: MachineCar
           <div data-machines-tour="identity" className="flex min-w-0 items-center gap-3">
             <div
               className={cn(
-                'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition-colors',
+                'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-colors',
                 readiness.isActive
-                  ? 'border-hairline/80 bg-surface-soft text-subtle'
-                  : 'border-hairline/70 bg-surface-soft/60 text-subtle/70'
+                  ? 'border-saffron/20 bg-saffron-soft/45 text-saffron-deep'
+                  : 'border-warning/20 bg-warning-soft/55 text-warning'
               )}
               aria-hidden="true"
             >
-              <Cog className="h-4 w-4" />
+              <Cog className="h-[18px] w-[18px]" />
             </div>
 
             <div className="min-w-0 flex-1">
               <h3
                 data-i18n-skip="true"
-                className="truncate text-base font-semibold tracking-tight text-ink"
+                className="truncate text-[15px] font-bold leading-snug tracking-tight text-ink"
               >
                 {displayName}
               </h3>
               {formattedType && (
-                <p className="truncate text-xs capitalize text-subtle">
+                <p className="mt-0.5 truncate text-xs capitalize text-subtle">
                   {tx(formattedType)}
                 </p>
               )}
@@ -66,18 +67,19 @@ export function MachineCard({ machine, onEdit, tourPreview = false }: MachineCar
         </div>
 
         {/* B. Operational Configuration Details */}
-        <div className="grid grid-cols-2 gap-3 rounded-xl border border-hairline/70 bg-surface-soft/75 p-3">
+        <div className="grid grid-cols-2 divide-x divide-hairline/70 rounded-xl border border-hairline/70 bg-surface-soft/45 py-3">
           {/* Worker */}
-          <div data-machines-tour="worker" className="min-w-0 space-y-1">
-            <span className="text-[11px] font-medium uppercase tracking-wider text-subtle">
+          <div data-machines-tour="worker" className="min-w-0 space-y-1 px-3">
+            <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-subtle">
               {tx('Worker')}
             </span>
             <p
               data-i18n-skip={readiness.hasWorker ? 'true' : undefined}
               className={cn(
-                'truncate text-sm font-medium',
+                'truncate text-sm font-semibold',
                 readiness.hasWorker ? 'text-ink' : 'text-subtle/70 font-normal italic'
               )}
+              title={readiness.workerName ?? undefined}
             >
               {readiness.hasWorker && readiness.workerName
                 ? readiness.workerName
@@ -86,16 +88,17 @@ export function MachineCard({ machine, onEdit, tourPreview = false }: MachineCar
           </div>
 
           {/* Costing */}
-          <div data-machines-tour="costing" className="min-w-0 space-y-1">
-            <span className="text-[11px] font-medium uppercase tracking-wider text-subtle">
+          <div data-machines-tour="costing" className="min-w-0 space-y-1 px-3">
+            <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-subtle">
               {tx('Costing')}
             </span>
             <p
               data-i18n-skip={readiness.hasCosting ? 'true' : undefined}
               className={cn(
-                'truncate text-sm font-medium',
+                'truncate text-sm font-semibold',
                 readiness.hasCosting ? 'text-ink' : 'text-subtle/70 font-normal italic'
               )}
+              title={readiness.costingLabel ?? undefined}
             >
               {readiness.hasCosting && readiness.costingLabel
                 ? readiness.costingLabel
@@ -108,13 +111,13 @@ export function MachineCard({ machine, onEdit, tourPreview = false }: MachineCar
       </div>
 
       {/* C. Card Actions */}
-      <div className="mt-4 flex items-center justify-between gap-3 border-t border-hairline/60 pt-3">
+      <div className="mt-4 flex items-center justify-between gap-3 border-t border-hairline/70 pt-3">
         {/* Primary Action: View Assignment */}
         <NavigationLink
           data-machines-tour="assignments"
           href={tourPreview ? "#" : `/owner/assignments?machine=${machine.id}`}
           onClick={event => { if (tourPreview) event.preventDefault() }}
-          className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-hairline/80 bg-surface px-3 text-xs font-medium text-ink shadow-2xs transition-all hover:border-saffron hover:bg-saffron-soft hover:text-saffron-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+          className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-hairline/80 bg-surface px-3 text-xs font-semibold text-ink transition-colors hover:border-saffron/45 hover:bg-saffron-soft/45 hover:text-saffron-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/40"
           aria-label={`${tx('View assignment for')} ${displayName}`}
         >
           <SlidersHorizontal className="h-3.5 w-3.5 text-saffron-deep" aria-hidden="true" />
@@ -127,7 +130,7 @@ export function MachineCard({ machine, onEdit, tourPreview = false }: MachineCar
           size="sm"
           data-machines-tour="edit"
           onClick={() => { if (!tourPreview) onEdit(machine) }}
-          className="min-h-10 rounded-xl px-3 text-xs sm:text-sm font-medium text-subtle hover:bg-surface-soft hover:text-ink focus-visible:ring-saffron"
+          className="min-h-10 rounded-xl px-3 text-xs font-semibold text-subtle hover:bg-surface-soft hover:text-ink focus-visible:ring-saffron/40 sm:text-sm"
           aria-label={`${tx('Edit')} ${displayName}`}
         >
           <Edit3 className="h-3.5 w-3.5 mr-1" aria-hidden="true" />

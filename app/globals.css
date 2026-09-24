@@ -464,6 +464,15 @@
       36px 36px;
   }
 
+  .weavly-app-bg-machines {
+    background-image:
+      radial-gradient(ellipse 44% 32% at 52% -8%, rgba(226, 112, 37, 0.11), transparent 72%),
+      radial-gradient(ellipse 38% 36% at 86% 88%, rgba(226, 112, 37, 0.08), transparent 72%),
+      linear-gradient(rgba(126, 91, 47, 0.032) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(126, 91, 47, 0.032) 1px, transparent 1px);
+    background-size: auto, auto, 36px 36px, 36px 36px;
+  }
+
   .weavly-canvas {
     background: color-mix(in srgb, var(--color-canvas) 94%, transparent);
     border: 1px solid var(--color-hairline);
@@ -654,30 +663,8 @@
     margin-top: 1.25rem;
   }
 
-  /* Desktop Rails & Gutter Reservation:
-     Pins the Guided Tour pill to the left rail and reference tools to the right rail
-     across all desktop viewports (from 1024px upwards), with bounded workspace width
-     so center cards never collide with the rails or Live Cost pill. */
+  /* Desktop rails reserve space around the main workspace when room allows. */
   @media (min-width: 1024px) {
-    .machines-workspace-shell {
-      width: min(100%, calc(100vw - 248px - 31rem));
-      max-width: 72rem;
-      margin-inline: auto;
-    }
-
-    .machines-reference-rail {
-      position: fixed;
-      top: 6rem;
-      right: 1rem;
-      z-index: 30;
-      width: 14rem;
-      max-height: calc(100vh - 7rem);
-      overflow-y: auto;
-      margin-top: 0;
-      padding-bottom: 0.25rem;
-      scrollbar-width: thin;
-    }
-
     .estimator-workspace-shell {
       width: min(100%, calc(100vw - 248px - 31rem));
       max-width: 72rem;
@@ -810,7 +797,37 @@
     }
   }
 
+  @media (min-width: 1024px) and (max-width: 1379.98px) {
+    .machines-workspace-shell .machines-left-rail {
+      position: static;
+      width: 100%;
+      max-width: 14rem;
+      max-height: none;
+      overflow: visible;
+      margin-bottom: 1.25rem;
+    }
+  }
+
   @media (min-width: 1380px) {
+    .machines-workspace-shell {
+      width: min(100%, calc(100vw - 248px - 31rem));
+      max-width: 72rem;
+      margin-inline: auto;
+    }
+
+    .machines-reference-rail {
+      position: fixed;
+      top: 6rem;
+      right: 1rem;
+      z-index: 30;
+      width: 14rem;
+      max-height: calc(100vh - 7rem);
+      overflow-y: auto;
+      margin-top: 0;
+      padding-bottom: 0.25rem;
+      scrollbar-width: thin;
+    }
+
     .machine-card-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }

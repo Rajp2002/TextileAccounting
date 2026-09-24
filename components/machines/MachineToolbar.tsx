@@ -27,7 +27,7 @@ export function MachineToolbar({
   const { tx } = useTranslation()
 
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-2.5 rounded-2xl border border-hairline/80 bg-surface/90 p-2.5 shadow-[var(--shadow-card)] backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between sm:p-3">
       {/* Search Input (Takes majority of width) */}
       <div className="relative min-w-0 flex-1">
         <Search
@@ -36,7 +36,7 @@ export function MachineToolbar({
         />
         <Input
           type="search"
-          className="h-10 sm:h-11 w-full rounded-xl border-hairline bg-surface pl-10 pr-9 text-sm text-ink placeholder:text-subtle/50 shadow-2xs focus-visible:border-saffron focus-visible:ring-saffron"
+          className="h-11 w-full rounded-xl border-hairline/80 bg-canvas/80 pl-10 pr-9 text-sm text-ink placeholder:text-subtle/60 shadow-none focus-visible:border-saffron focus-visible:ring-saffron/30"
           aria-label={tx('Search machines')}
           placeholder={tx('Search machines...')}
           value={search}
@@ -55,13 +55,13 @@ export function MachineToolbar({
       </div>
 
       {/* Right controls: Status filter + subtle count */}
-      <div className="flex items-center gap-3 shrink-0">
+      <div className="flex shrink-0 items-center justify-between gap-2.5 sm:justify-end">
         <div className="relative w-full sm:w-auto">
           <select
             aria-label={tx('Status filter')}
             value={statusFilter}
             onChange={event => onStatusFilterChange(event.target.value as MachineStatusFilter)}
-            className="h-10 sm:h-11 w-full sm:w-auto appearance-none rounded-xl border border-hairline bg-surface pl-4 pr-10 text-sm font-medium text-ink shadow-2xs transition-colors hover:border-hairline-strong focus-visible:border-saffron focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron cursor-pointer"
+            className="h-11 w-full cursor-pointer appearance-none rounded-xl border border-hairline/80 bg-canvas/80 pl-4 pr-10 text-sm font-medium text-ink transition-colors hover:border-hairline-strong focus-visible:border-saffron focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/30 sm:w-auto"
           >
             <option value="all">{tx('All machines')}</option>
             <option value="active">{tx('Active machines')}</option>
@@ -74,7 +74,7 @@ export function MachineToolbar({
         </div>
 
         {typeof totalCount === 'number' && typeof filteredCount === 'number' && (
-          <span className="hidden sm:inline-block text-xs font-medium text-subtle whitespace-nowrap px-1">
+          <span className="inline-flex min-h-8 items-center whitespace-nowrap rounded-full border border-hairline/70 bg-surface-soft/55 px-3 text-xs font-semibold tabular-nums text-subtle">
             {filteredCount === totalCount
               ? `${totalCount} ${totalCount === 1 ? tx('machine') : tx('machines')}`
               : `${filteredCount} / ${totalCount} ${tx('machines')}`}

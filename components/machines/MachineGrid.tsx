@@ -15,7 +15,7 @@ export function MachineGrid({ machines, onEdit, tourPreview = false }: MachineGr
     <ul
       role="list"
       aria-label="Machines list"
-      className="machine-card-grid grid grid-cols-1 gap-x-4 gap-y-8"
+      className="machine-card-grid grid grid-cols-1 gap-4 sm:gap-5"
     >
       {machines.map(machine => (
         <li key={machine.id} role="listitem" className="min-w-0">
