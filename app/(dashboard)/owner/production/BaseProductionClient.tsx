@@ -457,7 +457,7 @@ export default function BaseProductionClient({
     }
 
     return (
-        <div className={`${isDailySheetView ? 'space-y-4' : 'space-y-5'} ${view === 'payroll' ? 'payroll-workspace-shell pb-10' : 'pb-8'} ${view === 'operations' ? 'configuration-page-frame' : ''}`}>
+        <div className={`${isDailySheetView ? 'space-y-4' : 'space-y-5'} ${view === 'payroll' ? 'payroll-workspace-shell pb-10' : 'pb-8'} ${view === 'production' && !isDailySheetView ? 'production-overview-workspace' : ''} ${view === 'operations' ? 'configuration-page-frame' : ''}`}>
             {navigation.returnTo && (
                 <Button asChild variant="outline" size="sm" className="h-9 rounded-xl border-hairline bg-surface text-ink shadow-xs hover:border-hairline-strong hover:bg-surface-soft hover:text-ink">
                     <Link href={navigation.returnTo} className="inline-flex items-center gap-1.5">
@@ -480,6 +480,17 @@ export default function BaseProductionClient({
                     {view === 'payroll' && <p className="sr-only">Review earnings and settle worker pay for each period.</p>}
                 </div>
             </header>}
+
+            {view === 'production' && activeTab === 'jobs' && (
+                <aside className="production-activate-rail" aria-label="Production actions">
+                    <div className="production-activate-action">
+                        <Button onClick={() => setIsActivateModalOpen(true)} className="min-h-12 rounded-xl bg-loom px-5 text-[0.9375rem] font-semibold text-white shadow-[var(--shadow-button)] hover:bg-loom-elevated hover:text-white focus-visible:ring-saffron/40">
+                            <Plus className="size-[1.125rem]" aria-hidden="true" />
+                            <span>Activate Quality</span>
+                        </Button>
+                    </div>
+                </aside>
+            )}
 
             {view === 'payroll' && (
                 <aside className="payroll-period-rail" aria-label="Payroll period and settlement">

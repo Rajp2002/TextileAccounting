@@ -94,6 +94,7 @@ export default function BaseActiveQualities({
     machines,
     machineJobContexts,
     today,
+    onActivateQuality,
     onViewHistory,
     isActivateModalOpen = false,
     onOpenActivateModalChange,
@@ -404,8 +405,8 @@ export default function BaseActiveQualities({
 
                 <Button
                     size="sm"
-                    onClick={() => onOpenActivateModalChange?.(true)}
-                    className="h-9 px-3.5 rounded-xl bg-loom text-white font-bold shadow-xs hover:bg-loom-elevated"
+                    onClick={onActivateQuality ?? (() => onOpenActivateModalChange?.(true))}
+                    className="production-inline-activate h-9 px-3.5 rounded-xl bg-loom text-white font-bold shadow-xs hover:bg-loom-elevated"
                 >
                     <Plus className="mr-1.5 h-4 w-4" /> Activate Quality
                 </Button>
@@ -421,15 +422,6 @@ export default function BaseActiveQualities({
                     <p className="mt-1 text-xs text-muted-foreground max-w-sm mx-auto">
                         Activate a quality from your Saved Costings shortlist to start assigning looms and tracking production.
                     </p>
-                    <div className="mt-4 flex justify-center gap-2">
-                        <Button
-                            size="sm"
-                            onClick={() => onOpenActivateModalChange?.(true)}
-                            className="rounded-xl bg-loom text-white font-bold shadow-xs hover:bg-loom-elevated"
-                        >
-                            <Plus className="mr-1.5 h-4 w-4" /> Activate Quality
-                        </Button>
-                    </div>
                 </Card>
             )}
 
