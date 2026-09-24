@@ -40,13 +40,14 @@ export function OwnerRouteLoading() {
     const pathname = usePathname()
     const title = titleForPath(pathname)
     const route = routeForPath(pathname)
+    const centeredTitle = route === '/owner/workers' || route === '/owner/machines'
 
     return (
         <div className="w-full space-y-6 pt-2 pb-8" role="status" aria-busy="true" aria-label={`Loading ${title}`}>
             <RouteMilestones route={route} shellVisible primaryUsable={false} />
-            <div className="space-y-2 border-b border-hairline/80 pb-5">
+            <div className={`space-y-2 border-b border-hairline/80 pb-5 ${centeredTitle ? 'text-center' : ''}`}>
                 <h1 className="text-3xl font-bold tracking-tight text-ink">{title}</h1>
-                <div className="h-4 w-64 max-w-full animate-pulse rounded-md bg-surface-soft motion-reduce:animate-none" />
+                <div className={`h-4 w-64 max-w-full animate-pulse rounded-md bg-surface-soft motion-reduce:animate-none ${centeredTitle ? 'mx-auto' : ''}`} />
             </div>
             <div className="grid gap-4 md:grid-cols-2">
                 {[0, 1, 2, 3].map(index => (

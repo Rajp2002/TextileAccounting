@@ -2,7 +2,7 @@ import { BaseRouteLoading } from '@/components/navigation/base-route-loading'
 
 export default function Loading() {
   return (
-    <BaseRouteLoading route="/owner/workers" title="Workers">
+    <BaseRouteLoading route="/owner/workers" title="Workers" centeredTitle>
       <div className="mx-auto w-full max-w-6xl space-y-6" aria-hidden="true">
         {/* Page Header Skeleton */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">

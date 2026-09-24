@@ -23,6 +23,7 @@ type PageHeaderProps = {
     icon?: LucideIcon
     actions?: React.ReactNode
     meta?: React.ReactNode
+    centered?: boolean
     className?: string
     id?: string
 }
@@ -35,21 +36,22 @@ export function PageHeader({
     icon: Icon,
     actions,
     meta,
+    centered = false,
     className,
     id,
 }: PageHeaderProps) {
     return (
-        <header id={id} className={cn('flex flex-col gap-4 border-b border-hairline/80 pb-5 sm:flex-row sm:items-end sm:justify-between', className)}>
-            <div className="flex min-w-0 items-start gap-3">
+        <header id={id} className={cn('flex flex-col gap-4 border-b border-hairline/80 pb-5 sm:flex-row sm:items-end sm:justify-between', centered && 'items-center text-center sm:justify-center', className)}>
+            <div className={cn('flex min-w-0 items-start gap-3', centered && 'w-full justify-center')}>
                 {Icon && (
                     <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-saffron/30 bg-saffron-soft/70 text-saffron-deep">
                         <Icon className="h-5 w-5" aria-hidden="true" />
                     </span>
                 )}
-                <div className="min-w-0">
+                <div className={cn('min-w-0', centered && 'w-full')}>
                     {eyebrow && <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-saffron-deep">{eyebrow}</p>}
-                    <h1 className="text-xl font-bold leading-tight text-ink sm:text-2xl">{title}</h1>
-                    {description && <div className="mt-1 max-w-3xl text-sm leading-relaxed text-body">{description}</div>}
+                    <h1 className={cn('text-xl font-bold leading-tight text-ink sm:text-2xl', centered && 'text-[1.75rem] tracking-tight sm:text-[2rem]')}>{title}</h1>
+                    {description && <div className={cn('mt-1 max-w-3xl text-sm leading-relaxed text-body', centered && 'mx-auto')}>{description}</div>}
                 </div>
             </div>
             {(meta || actions) && (
