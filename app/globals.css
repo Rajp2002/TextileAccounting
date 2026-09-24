@@ -483,6 +483,14 @@
     width: 100%;
   }
 
+  .dispatch-workspace-shell {
+    width: 100%;
+  }
+
+  .dispatch-action-rail {
+    display: none;
+  }
+
   .machine-card-grid {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -810,6 +818,15 @@
       overflow: visible;
       margin-bottom: 1.25rem;
     }
+
+    .dispatch-left-rail {
+      position: static;
+      width: 100%;
+      max-width: 14rem;
+      max-height: none;
+      overflow: visible;
+      margin-bottom: 1.25rem;
+    }
   }
 
   @media (min-width: 1380px) {
@@ -852,6 +869,26 @@
     .machine-card-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+
+    .dispatch-workspace-shell {
+      width: min(100%, calc(100vw - 248px - 31rem));
+      max-width: 72rem;
+      margin-inline: auto;
+    }
+
+    .dispatch-inline-action {
+      display: none;
+    }
+
+    .dispatch-action-rail {
+      position: fixed;
+      top: 6rem;
+      right: 1rem;
+      z-index: 30;
+      display: flex;
+      width: 14rem;
+      justify-content: center;
+    }
   }
 
   /* The Live Cost toggle is fixed to the viewport. A transform on the route
@@ -891,6 +928,11 @@
 
   @media (min-width: 1800px) {
     .machines-reference-rail {
+      right: 1.25rem;
+      width: 14.5rem;
+    }
+
+    .dispatch-action-rail {
       right: 1.25rem;
       width: 14.5rem;
     }

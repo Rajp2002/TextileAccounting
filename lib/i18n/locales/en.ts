@@ -69,6 +69,8 @@ export const en = {
     "title": "Delivery challans",
     "intro": "Independent dispatches, receipts and payments.",
     "new": "New dispatch",
+    "guideTitle": "Dispatch guide",
+    "guideAction": "Start guide",
     "dispatchViews": "Dispatch views",
     "active": "Active",
     "history": "History",

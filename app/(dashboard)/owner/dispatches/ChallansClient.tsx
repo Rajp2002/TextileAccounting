@@ -26,7 +26,7 @@ import {
     DialogTitle,
     DialogDescription,
 } from '@/components/ui/dialog'
-import { EmptyState, Toolbar } from '@/components/ui/page-header'
+import { EmptyState } from '@/components/ui/page-header'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useTranslation } from '@/lib/i18n/context'
 import {
@@ -41,6 +41,16 @@ import type { StockQuality } from '@/lib/quality-stock'
 import { getChallan, listChallans, mutateChallan } from './challan-actions'
 import { businessDate, challanDueStatus } from '@/lib/challan-payment-terms'
 import ChallanDraftEditor from './ChallanDraftEditor'
+
+function NewDispatchButton({ onClick, disabled, label }: { onClick: () => void; disabled: boolean; label: string }) {
+    return (
+        <Button variant="saffron" disabled={disabled} onClick={onClick} className="min-h-11 rounded-xl px-4">
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            {label}
+        </Button>
+    )
+}
+
 const blank = (): ChallanDraft => ({
     quality_id: '',
     selling_rate: 0,
@@ -242,6 +252,12 @@ export default function ChallansClient({
         )
         setError('')
     }
+    function beginDraft() {
+        setSelected(null)
+        setDraft(blank())
+        draftId.current = crypto.randomUUID()
+        setError('')
+    }
     const field = (key: string, type = 'text', required = false) => (
         <label key={key} className="grid gap-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground">
             <span>{tx(key === 'evidence' ? 'evidenceLink' : key)}{required ? ' *' : ''}</span>
@@ -261,35 +277,21 @@ export default function ChallansClient({
     return (
         <div
             data-i18n-skip="true"
-            className="ui-route-enter mx-auto w-full max-w-3xl space-y-6 p-4 md:px-8 md:py-8"
+            className="dispatch-workspace-shell mx-auto w-full space-y-5 pb-10 sm:space-y-6"
         >
-            <header className="grid grid-cols-1 items-center gap-4 border-b border-hairline/80 pb-5 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
-                <div className="min-w-0 text-center sm:col-start-2 sm:row-start-1">
-                    <h1 className="text-2xl font-bold leading-tight tracking-tight text-ink sm:text-3xl">
-                        {tx('title')}
-                    </h1>
-                    <p className="mt-1 text-sm leading-relaxed text-body">
-                        {tx('intro')}
-                    </p>
-                </div>
-                <div className="w-full sm:col-start-3 sm:row-start-1 sm:w-auto sm:justify-self-end">
-                    <Button
-                        variant="saffron"
-                        disabled={busy || !!pending}
-                        onClick={() => {
-                            setSelected(null)
-                            setDraft(blank())
-                            draftId.current = crypto.randomUUID()
-                            setError('')
-                        }}
-                        className="h-10 w-full rounded-xl px-4 sm:w-auto"
-                    >
-                        <Plus className="h-4 w-4" aria-hidden="true" />
-                        {tx('new')}
-                    </Button>
+            <header className="relative border-b border-hairline/70 pb-5 text-center sm:pb-6">
+                <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-ink sm:text-[2rem]">
+                    {tx('title')}
+                </h1>
+                <p className="sr-only">{tx('intro')}</p>
+                <div className="dispatch-inline-action mt-3 flex justify-end sm:absolute sm:right-0 sm:top-0 sm:mt-0">
+                    <NewDispatchButton onClick={beginDraft} disabled={busy || !!pending} label={tx('new')} />
                 </div>
             </header>
-            <Toolbar className="grid gap-3 p-3 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center">
+            <aside className="dispatch-action-rail" aria-label={tx('new')}>
+                <NewDispatchButton onClick={beginDraft} disabled={busy || !!pending} label={tx('new')} />
+            </aside>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <Tabs
                     value={history ? 'history' : 'active'}
                     onValueChange={(value) => {
@@ -297,17 +299,17 @@ export default function ChallansClient({
                     }}
                     className="w-full sm:w-auto"
                 >
-                    <TabsList aria-label={tx('dispatchViews')} className="h-10 w-full sm:w-fit">
-                        <TabsTrigger value="active" disabled={busy} className="min-w-[5.5rem] px-4 text-xs sm:text-sm">
+                    <TabsList aria-label={tx('dispatchViews')} className="h-11 w-full rounded-xl border-hairline/80 bg-surface/85 p-1 sm:w-fit">
+                        <TabsTrigger value="active" disabled={busy} className="min-w-[5.5rem] rounded-lg px-4 text-xs data-[state=active]:border-loom data-[state=active]:bg-loom data-[state=active]:text-white sm:text-sm">
                             {tx('active')}
                         </TabsTrigger>
-                        <TabsTrigger value="history" disabled={busy} className="min-w-[5.5rem] px-4 text-xs sm:text-sm">
+                        <TabsTrigger value="history" disabled={busy} className="min-w-[5.5rem] rounded-lg px-4 text-xs data-[state=active]:border-loom data-[state=active]:bg-loom data-[state=active]:text-white sm:text-sm">
                             {tx('history')}
                         </TabsTrigger>
                     </TabsList>
                 </Tabs>
                 <form
-                    className="flex min-w-0 gap-2"
+                    className="flex min-w-0 flex-1 gap-2"
                     onSubmit={(event) => {
                         event.preventDefault()
                         void load()
@@ -319,7 +321,8 @@ export default function ChallansClient({
                             aria-hidden="true"
                         />
                         <Input
-                            className="h-10 w-full rounded-xl border-hairline bg-surface pl-10 pr-3 text-sm text-ink placeholder:text-subtle/60 focus-visible:border-saffron focus-visible:ring-saffron"
+                            type="search"
+                            className="h-11 w-full rounded-xl border-hairline/80 bg-surface/95 pl-10 pr-3 text-sm text-ink shadow-xs placeholder:text-subtle/60 focus-visible:border-saffron focus-visible:ring-saffron/30"
                             aria-label={tx('search')}
                             placeholder={tx('search')}
                             value={search}
@@ -330,19 +333,14 @@ export default function ChallansClient({
                         type="submit"
                         variant="outline"
                         disabled={busy}
-                        className="h-10 shrink-0 rounded-xl px-3"
+                        aria-label={tx('searchButton')}
+                        className="h-11 shrink-0 rounded-xl px-3 text-xs sm:text-sm"
                     >
                         <Search className="h-4 w-4" aria-hidden="true" />
-                        <span>{tx('searchButton')}</span>
+                        <span className="hidden sm:inline">{tx('searchButton')}</span>
                     </Button>
                 </form>
-                <Button asChild variant="ghost" size="sm" className="h-9 w-full rounded-xl px-3 text-xs text-subtle sm:w-auto">
-                    <Link href="/owner/dispatches/legacy">
-                        <Truck className="h-3.5 w-3.5" aria-hidden="true" />
-                        {tx('legacy')}
-                    </Link>
-                </Button>
-            </Toolbar>
+            </div>
             {error && (
                 <p
                     role="alert"
@@ -365,7 +363,7 @@ export default function ChallansClient({
                         {t('challan.recordCount', { count: rows.length })}
                     </span>
                 </div>
-                <div className="grid gap-3">
+                <div className="grid gap-2.5">
                     {rows.map((d) => {
                         const isDisputed = ['review', 'disputed'].includes(d.difference_status)
                         const isSelected = selected?.id === d.id
@@ -376,8 +374,8 @@ export default function ChallansClient({
                                 type="button"
                                 aria-pressed={isSelected}
                                 className={isSelected
-                                    ? 'grid w-full grid-cols-1 gap-x-6 gap-y-4 rounded-2xl border border-saffron/70 bg-surface p-4 text-left shadow-sm ring-1 ring-saffron/25 transition-colors sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:p-5'
-                                    : 'grid w-full grid-cols-1 gap-x-6 gap-y-4 rounded-2xl border border-hairline bg-surface p-4 text-left shadow-xs transition-colors hover:border-hairline-strong hover:bg-surface-soft/40 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:p-5'}
+                                    ? 'grid w-full grid-cols-1 gap-x-6 gap-y-3 rounded-2xl border border-saffron/60 bg-surface/95 p-4 text-left shadow-[var(--shadow-card)] ring-1 ring-saffron/20 transition-[border-color,box-shadow,transform] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center'
+                                    : 'grid w-full grid-cols-1 gap-x-6 gap-y-3 rounded-2xl border border-hairline/85 bg-surface/95 p-4 text-left shadow-[var(--shadow-card)] transition-[border-color,box-shadow,transform] hover:border-saffron/35 hover:shadow-[var(--shadow-panel)] motion-safe:hover:-translate-y-0.5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center'}
                                 onClick={() => view(d.id)}
                                 disabled={busy || !!pending}
                             >
@@ -385,7 +383,7 @@ export default function ChallansClient({
                                     <p className="font-mono text-[11px] font-semibold tracking-[0.08em] text-subtle">
                                         {d.number}
                                     </p>
-                                    <h3 className="mt-1 truncate text-base font-semibold leading-tight tracking-tight text-ink">
+                                    <h3 className="mt-1 truncate text-[15px] font-bold leading-tight tracking-tight text-ink">
                                         {d.document.customer_name}
                                     </h3>
                                     <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-body">
@@ -398,10 +396,10 @@ export default function ChallansClient({
                                 </div>
                                 <div className="flex min-w-0 flex-col gap-2 sm:items-end">
                                     <div className="flex flex-wrap items-center gap-1.5 sm:justify-end">
-                                        <Badge variant={deliveryBadgeVariant(d.delivery_status)} className="text-[10px] font-semibold">
+                                        <Badge variant={deliveryBadgeVariant(d.delivery_status)} className="border-current/10 text-[10px] font-semibold">
                                             {tx(d.delivery_status)}
                                         </Badge>
-                                        <Badge variant={paymentBadgeVariant(paymentStatus(d))} className="text-[10px] font-semibold">
+                                        <Badge variant={paymentBadgeVariant(paymentStatus(d))} className="border-current/10 text-[10px] font-semibold">
                                             {tx(paymentStatus(d))}
                                         </Badge>
                                     </div>
@@ -435,19 +433,7 @@ export default function ChallansClient({
                         icon={history ? History : Truck}
                         title={tx('empty')}
                         action={!history && !search.trim() && (
-                            <Button
-                                variant="saffron"
-                                disabled={busy || !!pending}
-                                onClick={() => {
-                                    setSelected(null)
-                                    setDraft(blank())
-                                    draftId.current = crypto.randomUUID()
-                                    setError('')
-                                }}
-                            >
-                                <Plus className="h-4 w-4" aria-hidden="true" />
-                                {tx('new')}
-                            </Button>
+                            <NewDispatchButton onClick={beginDraft} disabled={busy || !!pending} label={tx('new')} />
                         )}
                     />
                 )}

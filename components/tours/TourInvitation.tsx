@@ -10,13 +10,14 @@ import { useTourInvitation } from '@/hooks/use-tour-invitation'
 export interface TourInvitationProps {
     tourId: TourId
     userId?: string
-    userMetadata?: Record<string, any> | null
+    userMetadata?: Record<string, unknown> | null
     orgId?: string
     onLaunch?: () => void | Promise<void>
     className?: string
     align?: 'start' | 'end' | 'full'
     /** Optional test locator */
     dataTestId?: string
+    guideCard?: { title: string; actionLabel: string }
 }
 
 export function TourInvitation({
@@ -28,6 +29,7 @@ export function TourInvitation({
     className = '',
     align = 'start',
     dataTestId,
+    guideCard,
 }: TourInvitationProps) {
     const { language } = useTranslation()
     const copy = tourInvitationCopy[language] ?? tourInvitationCopy.en
@@ -58,6 +60,32 @@ export function TourInvitation({
 
     const tourName = copy.tourNames[tourId] || 'Tour'
     const tourAriaLabel = copy.tourAriaLabel.replace('{name}', tourName)
+
+    if (guideCard) {
+        return (
+            <section
+                data-testid={dataTestId ?? `tour-guide-${tourId}`}
+                data-tour-id={tourId}
+                className={`rounded-2xl border border-amber-200/90 bg-amber-50/75 p-3.5 text-slate-800 shadow-[var(--shadow-card)] ${className}`}
+            >
+                <h2 className="text-sm font-semibold leading-tight">{guideCard.title}</h2>
+                <p id={benefitId} className="mt-1.5 text-xs leading-relaxed text-slate-700">{copy.benefits[tourId]}</p>
+                <button
+                    ref={launcherRef}
+                    type="button"
+                    onClick={() => void handleLaunch()}
+                    disabled={isStarting}
+                    aria-describedby={benefitId}
+                    aria-label={`${guideCard.actionLabel} · ${tourAriaLabel}`}
+                    data-tour-control={presentation === 'invitation' ? 'take-tour' : 'quiet-tour'}
+                    className={`mt-3 inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-lg bg-amber-500 px-3 text-xs font-bold text-amber-950 shadow-xs transition-colors hover:bg-amber-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron disabled:opacity-50 ${isHaloActive ? 'tour-halo-active' : ''}`}
+                >
+                    {isStarting ? copy.loading : guideCard.actionLabel}
+                    <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                </button>
+            </section>
+        )
+    }
 
     if (presentation === 'invitation') {
         return (
