@@ -6,7 +6,7 @@ import { useSearchParams } from 'next/navigation'
 import { useTranslation } from '@/lib/i18n/context'
 import { safeBaseReturnPath } from '@/lib/base-production-navigation'
 import type { BaseProductionWorkerWithOperational } from '@/lib/worker-operational'
-import { WorkersPageHeader } from '@/components/workers/WorkersPageHeader'
+import { WorkerAddButton, WorkersPageHeader } from '@/components/workers/WorkersPageHeader'
 import {
   WorkerToolbar,
   type WorkerShiftFilter,
@@ -19,6 +19,7 @@ import { TourInvitation } from '@/components/tours/TourInvitation'
 import WorkersTutorial from '@/components/tours/WorkersTutorial'
 import { makeWorkersTourExamples, workersTourEditor, workersHelpSteps, type WorkersTourStep, type WorkersTourPath } from '@/lib/workers-tour'
 import { workersTutorialCopy } from '@/lib/i18n/workers-tutorial'
+import { ChevronDown, CircleHelp } from 'lucide-react'
 
 export default function WorkersRegister({
   workers,
@@ -182,7 +183,7 @@ export default function WorkersRegister({
       returnTo={returnTo}
     >
       {({ add, edit, isOpen }) => (
-        <div className="mx-auto w-full max-w-6xl space-y-6">
+        <div className="workers-workspace-shell mx-auto w-full space-y-5 pb-10 sm:space-y-6">
           {/* 1. Page Header */}
           <div data-workers-tour="header"><WorkersPageHeader
             onAdd={tourStep ? () => {} : add}
@@ -198,7 +199,7 @@ export default function WorkersRegister({
           /></div>
 
           {!isOpen && (
-            <aside className="workers-left-rail guided-tour-left-rail space-y-3" aria-label="Workers guides and tools">
+            <aside className="workers-left-rail guided-tour-left-rail space-y-3" aria-label="Workers guided tour">
               <div ref={tourLauncher} data-workers-tour="launcher">
                 <TourInvitation
                   tourId="workers"
@@ -212,18 +213,9 @@ export default function WorkersRegister({
               </div>
             </aside>
           )}
-          <details hidden={Boolean(tourStep)} data-i18n-skip="true" lang={language} className="rounded-xl border border-hairline bg-surface p-4 text-sm">
-            <summary className="cursor-pointer font-semibold text-ink">{tourCopy.helpTitle}</summary>
-            <dl className="mt-3 grid gap-4 sm:grid-cols-2">
-              {workersHelpSteps.map(topic => <div key={topic}>
-                <dt className="font-medium text-ink">{tourCopy.fields[topic][0]}</dt>
-                <dd className="mt-1 text-subtle">{tourCopy.fields[topic][1]}</dd>
-              </div>)}
-            </dl>
-          </details>
           {tourStep && <p role="status" className="text-xs font-semibold text-saffron-deep">{tourCopy.sample}</p>}
           {/* 2. Global Toolbar */}
-          <div data-workers-tour="toolbar" className="mx-auto w-full max-w-3xl">
+          <div data-workers-tour="toolbar" className="w-full">
             <WorkerToolbar
               search={tourStep ? '' : search}
               onSearchChange={tourStep ? () => {} : handleSearchChange}
@@ -278,6 +270,32 @@ export default function WorkersRegister({
               onAdd={add}
               onClearFilters={clearFilters}
             />
+          )}
+          {!isOpen && (
+            <aside className="workers-reference-rail" aria-label={tourCopy.helpTitle}>
+              <div className="workers-reference-action">
+                <WorkerAddButton onAdd={tourStep ? () => {} : add} />
+              </div>
+              <div className="workers-reference-bottom">
+                <details
+                  hidden={Boolean(tourStep)}
+                  data-i18n-skip="true"
+                  lang={language}
+                  className="group overflow-hidden rounded-2xl border border-info/20 bg-info-soft/90 shadow-[var(--shadow-card)]"
+                >
+                  <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 text-sm font-semibold leading-snug text-info focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-info/40 [&::-webkit-details-marker]:hidden">
+                    <span className="flex items-start gap-2"><CircleHelp className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />{tourCopy.helpTitle}</span>
+                    <ChevronDown className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
+                  </summary>
+                  <dl className="workers-help-list grid max-h-[min(60vh,32rem)] gap-4 overflow-y-auto border-t border-info/15 bg-surface/90 px-4 py-4 text-xs leading-relaxed sm:grid-cols-2">
+                    {workersHelpSteps.map(topic => <div key={topic}>
+                      <dt className="font-semibold text-ink">{tourCopy.fields[topic][0]}</dt>
+                      <dd className="mt-1 text-body">{tourCopy.fields[topic][1]}</dd>
+                    </div>)}
+                  </dl>
+                </details>
+              </div>
+            </aside>
           )}
           {preview && <WorkerEditor key={preview} today={today} tourPreview={{ worker: preview === 'piece' ? sampleWorkers[0] : sampleWorkers[1], editing: preview === 'edit' }}>{() => null}</WorkerEditor>}
           {tourStep && <WorkersTutorial path={tourPath} onPathChange={setTourPath} step={tourStep} onStepChange={setTourStep} launcher={tourLauncher} userId={userId} />}

@@ -47,7 +47,7 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
     }
     return (
         <div className="relative isolate min-h-svh overflow-x-hidden bg-background" data-owner-shell>
-            <BrandBackground variant={pathname.startsWith('/owner/billing') ? 'billing' : pathname.startsWith('/owner/payroll') ? 'payroll' : pathname.startsWith('/owner/machines') ? 'machines' : pathname === '/owner/dispatches' ? 'dispatches' : 'app'} />
+            <BrandBackground variant={pathname.startsWith('/owner/billing') ? 'billing' : pathname.startsWith('/owner/payroll') ? 'payroll' : pathname.startsWith('/owner/machines') ? 'machines' : pathname === '/owner/dispatches' ? 'dispatches' : pathname === '/owner/workers' ? 'workers' : 'app'} />
             <a href="#owner-main" className="sr-only fixed left-3 top-3 z-[100] rounded bg-surface p-3 text-ink focus:not-sr-only">Skip to content</a>
 
             <Suspense fallback={<OwnerSidebarLoading />}>

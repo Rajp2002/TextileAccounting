@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { NavigationLink } from '@/components/navigation/navigation-link'
 import { useTranslation } from '@/lib/i18n/context'
 import { managementReturnLabel } from '@/lib/management-navigation'
+import { cn } from '@/lib/utils'
 
 interface WorkersPageHeaderProps {
   onAdd: () => void
@@ -27,7 +28,7 @@ export function WorkersPageHeader({
   const { tx } = useTranslation()
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {returnTo && (
         <div>
           <NavigationLink
@@ -60,33 +61,41 @@ export function WorkersPageHeader({
         </div>
       )}
 
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <header className="flex flex-col gap-4 border-b border-hairline/70 pb-5 sm:flex-row sm:items-start sm:justify-between sm:pb-6">
         <div className="min-w-0">
           <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-            <h1 className="text-xl font-bold leading-tight text-ink">
+            <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-ink sm:text-[2rem]">
               {tx('Workers')}
             </h1>
             {typeof totalCount === 'number' && (
-              <span className="text-sm font-normal text-subtle">
+              <span className="text-sm font-medium text-subtle">
                 · {totalCount === 1 ? tx('1 worker') : `${totalCount} ${tx('workers')}`}
               </span>
             )}
           </div>
-          <p className="mt-1 text-sm text-subtle">
+          <p className="mt-1 text-sm leading-relaxed text-body">
             {tx('Add and manage your factory workforce.')}
           </p>
         </div>
 
-        <div className="shrink-0">
-          <Button
-            onClick={onAdd}
-            className="h-10 w-full rounded-lg bg-loom px-4 font-medium text-white shadow-xs hover:bg-loom-elevated hover:text-white focus-visible:ring-saffron sm:w-auto"
-          >
-            <UserPlus className="h-4 w-4" aria-hidden="true" />
-            <span>{tx('Add worker')}</span>
-          </Button>
+        <div className="workers-inline-add shrink-0">
+          <WorkerAddButton onAdd={onAdd} className="w-full sm:w-auto" />
         </div>
       </header>
     </div>
+  )
+}
+
+export function WorkerAddButton({ onAdd, className }: { onAdd: () => void; className?: string }) {
+  const { tx } = useTranslation()
+
+  return (
+    <Button
+      onClick={onAdd}
+      className={cn('min-h-11 rounded-xl bg-loom px-4 font-medium text-white shadow-[var(--shadow-button)] hover:bg-loom-elevated hover:text-white focus-visible:ring-saffron/40', className)}
+    >
+      <UserPlus className="h-4 w-4" aria-hidden="true" />
+      <span>{tx('Add worker')}</span>
+    </Button>
   )
 }

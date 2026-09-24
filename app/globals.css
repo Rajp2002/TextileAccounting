@@ -483,6 +483,19 @@
     width: 100%;
   }
 
+  .workers-workspace-shell {
+    width: 100%;
+  }
+
+  .workers-reference-rail {
+    width: 100%;
+    margin-top: 1.25rem;
+  }
+
+  .workers-reference-action {
+    display: none;
+  }
+
   .dispatch-workspace-shell {
     width: 100%;
   }
@@ -810,6 +823,15 @@
   }
 
   @media (min-width: 1024px) and (max-width: 1379.98px) {
+    .workers-workspace-shell .workers-left-rail {
+      position: static;
+      width: 100%;
+      max-width: 14rem;
+      max-height: none;
+      overflow: visible;
+      margin-bottom: 1.25rem;
+    }
+
     .machines-workspace-shell .machines-left-rail {
       position: static;
       width: 100%;
@@ -830,6 +852,46 @@
   }
 
   @media (min-width: 1380px) {
+    .workers-workspace-shell {
+      width: min(100%, calc(100vw - 248px - 31rem));
+      max-width: 72rem;
+      margin-inline: auto;
+    }
+
+    .workers-inline-add {
+      display: none;
+    }
+
+    .workers-reference-rail {
+      position: fixed;
+      top: 2rem;
+      bottom: 1rem;
+      right: 1rem;
+      z-index: 30;
+      display: flex;
+      width: 14rem;
+      flex-direction: column;
+      gap: 1.5rem;
+      overflow-y: auto;
+      margin-top: 0;
+      padding-bottom: 0.25rem;
+      scrollbar-width: thin;
+    }
+
+    .workers-reference-action {
+      display: flex;
+      flex: none;
+      justify-content: center;
+    }
+
+    .workers-reference-bottom {
+      margin-top: auto;
+    }
+
+    .workers-help-list {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
     .machines-workspace-shell {
       width: min(100%, calc(100vw - 248px - 31rem));
       max-width: 72rem;
@@ -927,6 +989,11 @@
   }
 
   @media (min-width: 1800px) {
+    .workers-reference-rail {
+      right: 1.25rem;
+      width: 14.5rem;
+    }
+
     .machines-reference-rail {
       right: 1.25rem;
       width: 14.5rem;
