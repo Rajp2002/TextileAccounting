@@ -6,8 +6,6 @@ import type { OrgPlanAccess, SubscriptionTier } from '@/lib/subscription-access'
 const DEFAULT_ACCESS: OrgPlanAccess = {
     subscriptionTier: 'none',
     effectiveTier: 'none',
-    productExperience: 'full_suite',
-    canSwitchExperience: false,
 }
 
 const OwnerPlanContext = createContext<OrgPlanAccess>(DEFAULT_ACCESS)

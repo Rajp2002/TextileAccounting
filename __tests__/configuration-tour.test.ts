@@ -109,9 +109,9 @@ describe('Assignment tour workflow', () => {
         expect(workspace).toContain("tab: 'production', shift, returnTo: configurationReturnTo")
     })
 
-    it('retains Base and Premium owner eligibility', () => {
+    it('limits eligibility to Base owners', () => {
         expect(isTourEligible('configuration', 'base', 'owner')).toBe(true)
-        expect(isTourEligible('configuration', 'premium', 'owner')).toBe(true)
+        expect(isTourEligible('configuration', 'premium', 'owner')).toBe(false)
         expect(isTourEligible('configuration', 'lite', 'owner')).toBe(false)
         expect(isTourEligible('configuration', 'base', 'supervisor')).toBe(false)
     })

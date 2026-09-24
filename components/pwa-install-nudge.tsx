@@ -17,7 +17,7 @@ export function PwaInstallNudge() {
     const pathname = usePathname()
     const { language } = useTranslation()
     const [visible, setVisible] = useState(false)
-    const workspace = pathname.startsWith('/owner/') || pathname.startsWith('/supervisor/')
+    const workspace = pathname.startsWith('/owner/')
     const text = copy[language]
 
     useEffect(() => {

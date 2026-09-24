@@ -19,7 +19,6 @@ describe('P1 Billing Orders Static Analysis Tests', () => {
     it('verifies billing-constants.ts contains the correct pricing values', () => {
         expect(BILLING_PLANS.lite).toMatchObject({ firstYearTotalPaise: 299900, renewalTotalPaise: 149900 })
         expect(BILLING_PLANS.base).toMatchObject({ firstYearTotalPaise: 999900, renewalTotalPaise: 499900 })
-        expect(BILLING_PLANS.premium).toMatchObject({ firstYearTotalPaise: 2950000, renewalTotalPaise: 826000 })
         const content = readProjectFile('lib/billing-constants.ts')
         expect(content).toContain("BILLING_MODEL = 'upfront_first_year_plus_annual_renewal'")
     })
@@ -289,19 +288,18 @@ describe('P1 Billing Orders Static Analysis Tests', () => {
         })
     })
 
-    it('blocks an active legacy operations downgrade and uses renewal prices for current tiers', () => {
+    it('blocks an early Base renewal and uses current renewal prices', () => {
         const now = new Date('2026-07-10T00:00:00.000Z')
-        const activePremium: BillingSubscriptionRow = {
-            id: 'premium-paid',
-            plan_tier: 'premium',
+        const activeBase: BillingSubscriptionRow = {
+            id: 'base-paid',
+            plan_tier: 'base',
             status: 'active',
             current_end: '2026-12-31T00:00:00.000Z',
         }
-        expect(resolveBillingPurchase([activePremium], [], 'base', now)).toMatchObject({
+        expect(resolveBillingPurchase([activeBase], [], 'base', now)).toMatchObject({
             allowed: false,
         })
         expect(getBillingPrice('base', 'renewal').totalPaise).toBe(499900)
-        expect(getBillingPrice('premium', 'renewal').totalPaise).toBe(826000)
     })
 
     it('binds plan, purchase type, amount split, currency, model, and access days in order context', () => {

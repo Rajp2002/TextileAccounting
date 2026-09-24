@@ -27,7 +27,6 @@ describe('Sprint 7 Base UX polish contracts', () => {
             'app/(dashboard)/owner/estimator/EstimatorClient.tsx',
             'app/(dashboard)/owner/quotes/QuotesClient.tsx',
             'app/(dashboard)/owner/rates/RatesClient.tsx',
-            'app/(dashboard)/owner/settings/page.tsx',
             'components/settings/factory-cost-profile.tsx',
             'components/settings/template-manager.tsx',
             'components/estimator/CostingExportDialog.tsx',

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { generatePaymentReceiptPdf } from '@/lib/generate-payment-receipt'
-import { isBillingPurchaseType, isBillingPlanTier } from '@/lib/billing-constants'
+import { isBillingPurchaseType } from '@/lib/billing-constants'
 
 export const dynamic = 'force-dynamic'
 
@@ -38,16 +38,22 @@ export async function GET(
 
   const { data: subscription } = await supabase
     .from('org_subscriptions')
-    .select('plan_tier, checkout_purchase_type, current_start, current_end')
+    .select('plan_tier, plan_id, checkout_purchase_type, current_start, current_end')
     .eq('id', payment.subscription_id)
     .eq('org_id', profile.org_id)
     .maybeSingle()
 
   const planTier = subscription?.plan_tier
-  const purchaseType = subscription?.checkout_purchase_type
-  if (!subscription || !isBillingPlanTier(planTier) || !isBillingPurchaseType(purchaseType)) {
+  const purchaseType = isBillingPurchaseType(subscription?.checkout_purchase_type)
+    ? subscription.checkout_purchase_type
+    : null
+  if (!subscription || !planTier) {
     return NextResponse.json({ error: 'Payment receipt details are incomplete.' }, { status: 409 })
   }
+
+  const { data: recordedPlan } = subscription.plan_id
+    ? await supabase.from('subscription_plans').select('name').eq('id', subscription.plan_id).maybeSingle()
+    : { data: null }
 
   const { data: organization } = await supabase
     .from('organizations')
@@ -58,6 +64,7 @@ export async function GET(
   const pdf = generatePaymentReceiptPdf({
     organizationName: organization?.name || 'Weavly customer',
     planTier,
+    planName: recordedPlan?.name || 'Previous Weavly plan',
     purchaseType,
     amountPaise: Number(payment.amount_paise),
     paymentId: payment.razorpay_payment_id,

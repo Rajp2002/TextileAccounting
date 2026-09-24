@@ -854,7 +854,7 @@ export function AdminDashboardUI({
                     <Card>
                         <CardHeader>
                             <CardTitle>Tenant Isolation Manager</CardTitle>
-                            <CardDescription>Full Suite control: isolate a factory workspace during a suspected security incident.</CardDescription>
+                            <CardDescription>Isolate a factory workspace during a suspected security incident.</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <Table>
@@ -928,7 +928,7 @@ export function AdminDashboardUI({
 
                     <Card>
                         <CardHeader>
-                            <CardTitle>Legacy Full Suite Lockdown Reports</CardTitle>
+                            <CardTitle>Lockdown Reports</CardTitle>
                             <CardDescription>Internal assessment drafts created by tenant isolation. These are not prescribed government forms.</CardDescription>
                         </CardHeader>
                         <CardContent>

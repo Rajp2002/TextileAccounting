@@ -129,7 +129,6 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
-import { ContextualMachineDialog } from '@/components/onboarding/contextual-machine-dialog'
 import { safeBaseReturnPath } from '@/lib/base-production-navigation'
 const FactoryCostWizard = dynamic(() => import('./FactoryCostWizard'), {
     ssr: false,
@@ -3568,8 +3567,6 @@ export default function EstimatorClient({
     const [saving,    setSaving]    = useState(false)
     const [savingQuote, setSavingQuote] = useState(false)
     const saveQuoteLockRef = useRef(false)
-    const [showMachineSetup, setShowMachineSetup] = useState(false)
-    const machineSetupContinuationRef = useRef<(() => void) | null>(null)
     const [savingTemplate, setSavingTemplate] = useState(false)
     const [templates, setTemplates] = useState<EstimatorTemplate[]>(initialTemplates ?? [])
     const [templatesLoaded, setTemplatesLoaded] = useState(initialTemplates !== undefined)
@@ -3659,7 +3656,7 @@ export default function EstimatorClient({
         if (estimatorOpenedRef.current) return
         estimatorOpenedRef.current = true
         void trackPlanEvent('estimator_opened', {
-            workspace: canUseProduction ? 'full_suite' : 'standalone_costing',
+            workspace: 'standalone_costing',
         })
     }, [canUseProduction])
 
@@ -4108,7 +4105,7 @@ export default function EstimatorClient({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
-    // Saved qualities, premium-only worker inputs, party suggestions, and
+    // Saved qualities, ui-only worker inputs, party suggestions, and
     // review badges are independent of the blank editor. Hydrate them after
     // the primary task is interactive and never replace values entered by the
     // owner while the secondary request is in flight.
@@ -5014,23 +5011,6 @@ export default function EstimatorClient({
         toast.success(tx('Quality archived. It remains available in History and can be restored.'))
     }
 
-    const requestMachineSetup = (continuation: () => void) => {
-        machineSetupContinuationRef.current = continuation
-        setShowMachineSetup(true)
-    }
-
-    const handleMachineSetupOpenChange = (open: boolean) => {
-        setShowMachineSetup(open)
-        if (!open) machineSetupContinuationRef.current = null
-    }
-
-    const handleMachineAdded = () => {
-        const continuation = machineSetupContinuationRef.current
-        machineSetupContinuationRef.current = null
-        setShowMachineSetup(false)
-        continuation?.()
-    }
-
     const handleSaveQuote = async (
         targetMode: 'quote' | 'market' = mode,
         status: 'draft' | 'accepted' = 'draft',
@@ -5145,12 +5125,6 @@ export default function EstimatorClient({
                     templateId:              appliedTemplate?.id,
                 })
                 if ('error' in res) {
-                    if ('setupRequired' in res && res.setupRequired === 'machine') {
-                        requestMachineSetup(() => {
-                            void handleSaveQuote(targetMode, status, true, recordKindOverride, qualityUpdateDecision, true)
-                        })
-                        return
-                    }
                     toast.error(tx(userFacingError(res.error, 'The Market Run could not be started. Try again.')))
                 } else {
                     clearDraft()
@@ -5165,7 +5139,7 @@ export default function EstimatorClient({
                     setSourceRecordKind(null)
                     quoteRequestIdRef.current = null
                     toast.success(tx('Market Run started and costing saved'))
-                    router.push(`/owner/market-runs/${res.marketRunId}`)
+                    router.push('/owner/production')
                 }
             } else {
                 void trackPlanEvent('save_attempted', {
@@ -5329,12 +5303,6 @@ export default function EstimatorClient({
             })
 
             if ('error' in result) {
-                if ('setupRequired' in result && result.setupRequired === 'machine') {
-                    requestMachineSetup(() => {
-                        void handleStartPartyOrder(true)
-                    })
-                    return
-                }
                 toast.error(tx(userFacingError(result.error, 'Party Order could not be started. Try again.')))
                 return
             }
@@ -5351,7 +5319,7 @@ export default function EstimatorClient({
             setSourceRecordKind(null)
             quoteRequestIdRef.current = null
             toast.success(tx('Party order started and costing saved'))
-            router.push(`/owner/orders?orderId=${result.orderId}`)
+            router.push('/owner/production')
         } catch (error) {
             console.error('Failed to start party order:', error)
             toast.error(tx(userFacingError(error, 'Party Order could not be started. Check the estimate and try again.')))
@@ -5490,7 +5458,8 @@ export default function EstimatorClient({
     )
 
     return (
-        <div ref={estimatorGutterRef} data-free-costing={freeMode || undefined} data-sentry-block={freeMode || undefined} className="premium-route-enter estimator-mobile-form space-y-5 pb-floating-button md:pb-20 relative">
+        <div ref={estimatorGutterRef} data-free-costing={freeMode || undefined} data-sentry-block={freeMode || undefined} className="ui-route-enter estimator-mobile-form space-y-5 pb-floating-button md:pb-20 relative">
+            <span hidden data-signin-ready="true" />
             <RouteMilestones
                 route="/owner/estimator"
                 shellVisible
@@ -5843,7 +5812,7 @@ export default function EstimatorClient({
                         aria-hidden="true"
                         className="hidden"
                     >
-                <div className={`${hudShellClass} premium-focus-surface`}>
+                <div className={`${hudShellClass} ui-focus-surface`}>
                     <div className="mb-4 border-b border-[var(--color-hairline)] pb-3">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                             <div className="min-w-0 flex-1">
@@ -5877,8 +5846,8 @@ export default function EstimatorClient({
                                 )}
                             </div>
                             <div className="flex shrink-0 items-center gap-1 self-start rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-0.5" role="tablist" aria-label={entryMode === 'quick' ? tx('Essential construction inputs · same calculation engine') : tx('Full technical inputs & factory assumptions · same calculation engine')}>
-                                <button type="button" role="tab" aria-selected={entryMode === 'quick'} aria-controls="estimator-form-panel" title={tx('Essential construction inputs · same calculation engine')} onClick={() => handleEntryModeChange('quick')} className={`premium-segment estimator-touch-target rounded-lg px-3 text-[11px] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] ${entryMode === 'quick' ? 'bg-[var(--color-surface)] text-[var(--color-yarn-orange-dark)] shadow-sm' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'}`}>Quick</button>
-                                <button type="button" role="tab" aria-selected={entryMode === 'detailed'} aria-controls="estimator-form-panel" title={tx('Full technical inputs & factory assumptions · same calculation engine')} onClick={() => handleEntryModeChange('detailed')} className={`premium-segment estimator-touch-target rounded-lg px-3 text-[11px] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] ${entryMode === 'detailed' ? 'bg-[var(--color-surface)] text-[var(--color-yarn-orange-dark)] shadow-sm' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'}`}>Detailed</button>
+                                <button type="button" role="tab" aria-selected={entryMode === 'quick'} aria-controls="estimator-form-panel" title={tx('Essential construction inputs · same calculation engine')} onClick={() => handleEntryModeChange('quick')} className={`ui-segment estimator-touch-target rounded-lg px-3 text-[11px] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] ${entryMode === 'quick' ? 'bg-[var(--color-surface)] text-[var(--color-yarn-orange-dark)] shadow-sm' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'}`}>Quick</button>
+                                <button type="button" role="tab" aria-selected={entryMode === 'detailed'} aria-controls="estimator-form-panel" title={tx('Full technical inputs & factory assumptions · same calculation engine')} onClick={() => handleEntryModeChange('detailed')} className={`ui-segment estimator-touch-target rounded-lg px-3 text-[11px] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] ${entryMode === 'detailed' ? 'bg-[var(--color-surface)] text-[var(--color-yarn-orange-dark)] shadow-sm' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'}`}>Detailed</button>
                             </div>
                         </div>
                     </div>
@@ -6056,7 +6025,7 @@ export default function EstimatorClient({
                                         <span className="truncate">{tx('Start Party Order')}</span>
                                     </Button>}
 
-                                    {/* Base keeps costing as the primary action; Full Suite retains quote acceptance styling. */}
+                                    {/* Costing remains the primary action. */}
                                     <Button
                                         id="legacy-btn-save-accept"
                                         data-testid="legacy-save-costing-action"
@@ -6287,7 +6256,7 @@ export default function EstimatorClient({
                         id="active-quality"
                         data-slot="card"
                         aria-labelledby="active-quality-title"
-                        className="premium-focus-surface rounded-[14px] border border-[var(--color-hairline)] bg-white/95 px-4 py-3 shadow-[var(--shadow-card)] sm:px-5"
+                        className="ui-focus-surface rounded-[14px] border border-[var(--color-hairline)] bg-white/95 px-4 py-3 shadow-[var(--shadow-card)] sm:px-5"
                     >
                         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                             <div className="min-w-0">
@@ -6313,8 +6282,8 @@ export default function EstimatorClient({
                                     data-tutorial-section={1}
                                     data-estimator-field="entryMode"
                                 >
-                                    <button type="button" role="tab" aria-selected={entryMode === 'quick'} aria-controls="estimator-form-panel" title={tx('Quick Costing · same calculation engine')} onClick={() => handleEntryModeChange('quick')} className={`premium-segment estimator-touch-target rounded-lg px-3 text-[11px] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] ${entryMode === 'quick' ? 'bg-[var(--color-surface)] text-[var(--color-yarn-orange-dark)] shadow-sm' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'}`}>Quick</button>
-                                    <button type="button" role="tab" aria-selected={entryMode === 'detailed'} aria-controls="estimator-form-panel" title={tx('Full technical inputs & factory assumptions · same calculation engine')} onClick={() => handleEntryModeChange('detailed')} className={`premium-segment estimator-touch-target rounded-lg px-3 text-[11px] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] ${entryMode === 'detailed' ? 'bg-[var(--color-surface)] text-[var(--color-yarn-orange-dark)] shadow-sm' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'}`}>Detailed</button>
+                                    <button type="button" role="tab" aria-selected={entryMode === 'quick'} aria-controls="estimator-form-panel" title={tx('Quick Costing · same calculation engine')} onClick={() => handleEntryModeChange('quick')} className={`ui-segment estimator-touch-target rounded-lg px-3 text-[11px] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] ${entryMode === 'quick' ? 'bg-[var(--color-surface)] text-[var(--color-yarn-orange-dark)] shadow-sm' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'}`}>Quick</button>
+                                    <button type="button" role="tab" aria-selected={entryMode === 'detailed'} aria-controls="estimator-form-panel" title={tx('Full technical inputs & factory assumptions · same calculation engine')} onClick={() => handleEntryModeChange('detailed')} className={`ui-segment estimator-touch-target rounded-lg px-3 text-[11px] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] ${entryMode === 'detailed' ? 'bg-[var(--color-surface)] text-[var(--color-yarn-orange-dark)] shadow-sm' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'}`}>Detailed</button>
                                 </div>
                             </div>
                         </div>
@@ -6414,7 +6383,7 @@ export default function EstimatorClient({
                     data-estimator-field="savedQualityPicker"
                     aria-labelledby="saved-qualities-title"
                     aria-busy={!templatesLoaded}
-                    className="premium-focus-surface mt-4 overflow-hidden rounded-[16px] border border-[var(--color-hairline)] bg-white/95 shadow-[var(--shadow-card)]"
+                    className="ui-focus-surface mt-4 overflow-hidden rounded-[16px] border border-[var(--color-hairline)] bg-white/95 shadow-[var(--shadow-card)]"
                 >
                     <div className="border-b border-[var(--color-hairline)] bg-[var(--color-warning-amber-soft)]/70 px-4 py-4 sm:px-5 sm:py-5">
                         <div className="flex items-start gap-3">
@@ -6560,7 +6529,7 @@ export default function EstimatorClient({
                 </Sheet>
 
                 {entryMode === 'quick' && !showAdvancedOverhead ? (
-                    <div key="quick" className="premium-content-swap">
+                    <div key="quick" className="ui-content-swap">
                     <QuickCostingView
                         constructionFields={constructionFields}
                         state={state}
@@ -6596,7 +6565,7 @@ export default function EstimatorClient({
                 ) : (
                 <div
                     key="detailed"
-                    className="premium-content-swap space-y-7"
+                    className="ui-content-swap space-y-7"
                     data-enter-navigate-container="true"
                     onKeyDown={handleEnterKeyNavigation}
                 >
@@ -7814,12 +7783,6 @@ export default function EstimatorClient({
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-
-            <ContextualMachineDialog
-                open={showMachineSetup}
-                onOpenChange={handleMachineSetupOpenChange}
-                onMachineAdded={handleMachineAdded}
-            />
 
             {showExportDialog && (
                 <CostingExportDialog

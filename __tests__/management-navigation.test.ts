@@ -23,13 +23,11 @@ describe('shared owner navigation', () => {
   expect(groups(tier)[0].items.map(item => item.id)).toEqual(tier === 'free' ? ['estimate','costings'] : ['estimate','costings','rates'])
  })
  it('does not render any destination until an entitlement resolves', () => expect(groups('none')).toEqual([]))
- it('retains legacy data routes and workflow visibility without exposing Base workflows', () => {
-  const items = groups('premium').flatMap(group => group.items)
+ it('keeps Base production routes visible', () => {
+  const items = groups('base').flatMap(group => group.items)
   expect(items.find(item => item.id === 'machines')?.href).toBe('/owner/machines')
-  expect(items.find(item => item.id === 'workers')?.href).toBe('/owner/fixed-workers')
-  expect(items.some(item => item.id === 'assignments')).toBe(false)
-  expect(items.some(item => item.id === 'market_runs')).toBe(true)
-  expect(items.some(item => item.id === 'orders')).toBe(false)
+  expect(items.find(item => item.id === 'workers')?.href).toBe('/owner/workers')
+  expect(items.some(item => item.id === 'assignments')).toBe(true)
  })
  it('matches parents precisely without selecting adjacent modules', () => {
   expect(ownerRouteActive('/owner/workers/123/edit','/owner/workers')).toBe(true)
@@ -39,7 +37,7 @@ describe('shared owner navigation', () => {
   expect(ownerRouteActive('/owner/machines','/owner/machines?register=base')).toBe(true)
  })
  it.each([en,hi,gu])('provides translation keys for every visible item', locale => {
-  for (const group of groups('premium').concat(groups('base'))) {
+  for (const group of groups('lite').concat(groups('base'))) {
    expect(locale.navigation.sections[group.id]).toBeTruthy()
    for (const item of group.items) expect(locale.navigation[item.id as keyof typeof locale.navigation]).toBeTruthy()
   }

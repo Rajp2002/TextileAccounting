@@ -68,7 +68,7 @@ export default function LandingPricing() {
                         <div className="mt-7 border border-zinc-200 bg-zinc-50 p-5 lg:min-h-44">
                             <p className="text-sm font-bold text-zinc-600">No subscription fee</p>
                             <p className="mt-3 text-5xl font-black tracking-tight text-zinc-950">₹0</p>
-                            <p className="mt-2 text-sm text-zinc-600">No card required. No paid trial countdown.</p>
+                            <p className="mt-2 text-sm text-zinc-600">No card required.</p>
                         </div>
                         <div className="mt-3 border border-zinc-200 p-5 lg:min-h-40">
                             <p className="text-sm font-bold text-zinc-950">2 costings per month</p>

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { groupOwnerNavigation, isCurrentNavigationPage, resolveDisclosureState, toggleDisclosure, type DisclosureState } from '../lib/disclosure-navigation'
 import { visibleOwnerNavigation } from '../lib/owner-navigation'
-const sections = (tier: 'base' | 'free' | 'premium' | 'none' = 'base') => visibleOwnerNavigation({ tier, productionMode: 'market_run' })
-const grouped = (tier: 'base' | 'free' | 'premium' | 'none' = 'base') => groupOwnerNavigation(sections(tier), tier)
+const sections = (tier: 'base' | 'lite' | 'free' | 'none' = 'base') => visibleOwnerNavigation({ tier, productionMode: 'market_run' })
+const grouped = (tier: 'base' | 'lite' | 'free' | 'none' = 'base') => groupOwnerNavigation(sections(tier), tier)
 
 describe('grouped navigation policy and destinations', () => {
  it('groups the seven destinations in approved order', () => {
@@ -21,7 +21,7 @@ describe('grouped navigation policy and destinations', () => {
   const input = sections('free').map(s => s.id === 'costing' ? {...s, items:s.items.filter(i => i.id === 'estimate')} : s)
   expect(groupOwnerNavigation(input, 'base')[0].nodes.map(n => [n.id,n.kind])).toEqual([['estimate','link']])
  })
- it.each(['free','lite','premium','trial','none'] as const)('keeps %s other navigation flat with existing grants and order', tier => {
+ it.each(['free','lite','none'] as const)('keeps %s other navigation flat with existing grants and order', tier => {
   const before = visibleOwnerNavigation({tier,productionMode:'market_run'})
   const after = groupOwnerNavigation(before,tier)
   expect(after.flatMap(s=>s.nodes).every(n=>n.id === 'production' ? n.kind === 'group' : n.kind === 'link')).toBe(true)

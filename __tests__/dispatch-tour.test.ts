@@ -55,7 +55,7 @@ describe('Dispatch tour', () => {
     it('registers a separate tour for eligible owners', () => {
         expect(supportedTours).toContain('dispatch')
         expect(isTourEligible('dispatch', 'base', 'owner')).toBe(true)
-        expect(isTourEligible('dispatch', 'premium', 'owner')).toBe(true)
+        expect(isTourEligible('dispatch', 'premium', 'owner')).toBe(false)
         expect(isTourEligible('dispatch', 'lite', 'owner')).toBe(false)
         expect(isTourEligible('dispatch', 'base', 'supervisor')).toBe(false)
     })

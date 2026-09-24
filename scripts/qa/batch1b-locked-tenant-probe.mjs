@@ -69,8 +69,6 @@ async function createDisposableOwner(admin, anon, locked) {
         .insert({
             name: `Batch 1B ${locked ? 'Locked' : 'Unlocked'} ${suffix}`,
             owner_id: userData.user.id,
-            join_code: `B1B${suffix.slice(0, 5).toUpperCase()}`,
-            join_code_expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
             onboarding_complete: true,
             production_mode: 'market_run',
             is_locked_down: locked,

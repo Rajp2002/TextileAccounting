@@ -31,7 +31,7 @@ export function PlanChooserHeader({ effectiveTier = 'unassigned', isUnassigned =
     backHref = isFree ? '/free/estimator' : '/owner/estimator'
     backLabel = upgradeText(language, 'backToEstimator')
   } else if (from === 'workspace') {
-    backHref = isFree ? '/free' : '/owner/today'
+    backHref = isFree ? '/free' : '/owner/estimator'
     backLabel = upgradeText(language, 'backToWorkspace')
   } else if (from && from.startsWith('/') && !from.startsWith('//') && !from.includes(':')) {
     if (from.startsWith('/owner') || from.startsWith('/free')) {
@@ -40,7 +40,7 @@ export function PlanChooserHeader({ effectiveTier = 'unassigned', isUnassigned =
     }
   } else if (!isUnassigned && effectiveTier !== 'unassigned') {
     // Direct navigation by an existing user with active workspace
-    backHref = isFree ? '/free' : '/owner/today'
+    backHref = isFree ? '/free' : '/owner/estimator'
     backLabel = upgradeText(language, 'backToWorkspace')
   }
 

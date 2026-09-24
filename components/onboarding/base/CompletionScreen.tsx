@@ -113,7 +113,7 @@ export function CompletionScreen({
                 )}
 
                 <Button asChild variant="outline" size="sm" className="w-full gap-2 bg-white dark:bg-stone-900">
-                    <Link href="/owner/today">
+                    <Link href="/owner/estimator">
                         <LayoutDashboard className="h-4 w-4" />
                         <span>{tx('Go to Dashboard')}</span>
                     </Link>

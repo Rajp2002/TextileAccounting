@@ -114,7 +114,7 @@ export function TemplateManager({ className }: { className?: string }) {
 
     return (
         <>
-        <Card className={cn("premium-disclosure-card rounded-lg border-hairline bg-surface/95 shadow-[var(--shadow-card)]", className)}>
+        <Card className={cn("ui-disclosure-card rounded-lg border-hairline bg-surface/95 shadow-[var(--shadow-card)]", className)}>
             <CardHeader className="gap-3 border-b border-hairline/70 pb-4">
                 <div className="flex items-center gap-2">
                     <FileText className="h-4 w-4 text-info" />
@@ -138,20 +138,20 @@ export function TemplateManager({ className }: { className?: string }) {
                     </div>
                 )}
                 {activeQualities.length === 0 ? (
-                    <div id="quality-library-list" className="premium-content-swap rounded-lg border border-dashed border-hairline bg-canvas/55 py-10 text-center">
+                    <div id="quality-library-list" className="ui-content-swap rounded-lg border border-dashed border-hairline bg-canvas/55 py-10 text-center">
                         <p className="text-sm italic text-muted-foreground">
                             {t('estimator.quality.settingsEmpty')}
                         </p>
                     </div>
                 ) : (
-                    <div id="quality-library-list" className="premium-content-swap grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                    <div id="quality-library-list" className="ui-content-swap grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                         {activeQualities.map(quality => {
                             const summary = qualitySummary(quality)
                             const isV3 = !!(quality.warp_rows && quality.warp_rows.length > 0)
                             return (
                                 <div
                                     key={quality.id}
-                                    className="premium-surface group rounded-lg border border-hairline bg-canvas/55 p-3"
+                                    className="ui-surface group rounded-lg border border-hairline bg-canvas/55 p-3"
                                 >
                                     <div className="mb-2 flex items-start justify-between">
                                         <div>

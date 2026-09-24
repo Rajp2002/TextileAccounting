@@ -47,8 +47,7 @@ function formatAmount(paise: number): string {
 function getBillingPlanName(planTier: string | null | undefined): string {
     if (planTier === 'lite') return 'Weavly Lite'
     if (planTier === 'base') return 'Weavly Base'
-    if (planTier === 'premium') return 'Weavly legacy operations'
-    return 'Weavly payment'
+    return 'Previous Weavly plan'
 }
 
 function getPurchaseTypeLabel(purchaseType: string | null | undefined): string {

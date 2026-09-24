@@ -1516,7 +1516,7 @@ export default function RatesClient({
                 />
             </aside>
 
-            <div className="premium-route-enter mx-auto w-full max-w-7xl space-y-6" data-ratebook-tutorial-root="true">
+            <div className="ui-route-enter mx-auto w-full max-w-7xl space-y-6" data-ratebook-tutorial-root="true">
             <PlanAnalyticsBeacon eventName="rate_book_viewed" />
             {/* Rate Book is part of both Lite and Base and is the source of truth for yarn prices. */}
             <RouteMilestones
@@ -1614,7 +1614,7 @@ export default function RatesClient({
             )}
 
             {conflicts.length > 0 && (
-                <div className="premium-status-enter flex flex-col gap-4 rounded-xl border border-warning/35 bg-warning-soft p-4 text-ink sm:flex-row sm:items-center sm:justify-between">
+                <div className="ui-status-enter flex flex-col gap-4 rounded-xl border border-warning/35 bg-warning-soft p-4 text-ink sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex gap-3">
                         <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
                         <div>
@@ -1780,7 +1780,7 @@ export default function RatesClient({
                     <EmptyState
                         key={`empty-${resultMotionKey}`}
                         icon={Tags}
-                        className="premium-content-swap rounded-none border-0 bg-transparent shadow-none"
+                        className="ui-content-swap rounded-none border-0 bg-transparent shadow-none"
                         title={
                             searchQuery.trim()
                                 ? `No yarn rates match “${searchQuery.trim()}”`
@@ -1823,7 +1823,7 @@ export default function RatesClient({
                     <>
                         {/* Review-state branches remain explicit for source-level regression checks; their rendered surfaces use Weavly semantic tokens. */}
                         {/* reviewState === 'overdue' ? 'bg-red-50/70' : reviewState === 'due_soon' ? 'bg-amber-50/70' */}
-                        <div key={`table-${resultMotionKey}`} className="premium-content-swap hidden lg:block">
+                        <div key={`table-${resultMotionKey}`} className="ui-content-swap hidden lg:block">
                             <table className="w-full table-fixed text-left text-[12px]">
                                 <colgroup>
                                     <col className="w-[24%]" />
@@ -1976,7 +1976,7 @@ export default function RatesClient({
                                 </tbody>
                             </table>
                         </div>
-                        <div key={`cards-${resultMotionKey}`} className="premium-content-swap space-y-3 p-3 lg:hidden">
+                        <div key={`cards-${resultMotionKey}`} className="ui-content-swap space-y-3 p-3 lg:hidden">
                             {visibleRates.map((rate, index) => {
                                 const reviewState = getRateReviewStatus(rate)
                                 const archived = rate.is_active === false
@@ -1996,7 +1996,7 @@ export default function RatesClient({
                                     <Card
                                         key={rate.id}
                                         data-ratebook-field="yarnRow"
-                                        className={`premium-surface overflow-hidden rounded-2xl border border-hairline border-l-4 bg-surface ${cardAccent}`}
+                                        className={`ui-surface overflow-hidden rounded-2xl border border-hairline border-l-4 bg-surface ${cardAccent}`}
                                     >
                                         <CardContent className="p-4">
                                             <div className="flex items-start justify-between gap-3">

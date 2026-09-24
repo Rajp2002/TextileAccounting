@@ -120,7 +120,7 @@ export async function eraseWorkerPII(workerId: number, workerType: 'meter' | 'fi
         return { error: 'Failed to process erasure request. Please try again.' }
     }
 
-    revalidatePath(workerType === 'meter' ? '/owner/workers' : '/owner/fixed-workers')
+    revalidatePath('/owner/workers')
     revalidatePath('/owner/payroll')
     return { success: true, erasure: data }
 }

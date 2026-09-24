@@ -67,8 +67,6 @@ async function createTenant(label) {
     const organization = await requireData(await admin.from('organizations').insert({
         name: `${runId}-${label}`,
         owner_id: auth.data.user.id,
-        join_code: crypto.randomBytes(4).toString('hex').toUpperCase(),
-        join_code_expires_at: new Date(Date.now() + 86400000).toISOString(),
         onboarding_complete: true,
         production_mode: 'both',
     }).select('id, name').single(), `Create ${label} organization`)

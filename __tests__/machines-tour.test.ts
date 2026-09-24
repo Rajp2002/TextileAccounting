@@ -62,7 +62,7 @@ describe('Machines tour', () => {
     })
     it('limits eligibility to production-plan owners', () => {
         expect(isTourEligible('machines', 'base', 'owner')).toBe(true)
-        expect(isTourEligible('machines', 'premium', 'owner')).toBe(true)
+        expect(isTourEligible('machines', 'premium', 'owner')).toBe(false)
         expect(isTourEligible('machines', 'lite', 'owner')).toBe(false)
         expect(isTourEligible('machines', 'free', 'owner')).toBe(false)
         expect(isTourEligible('machines', 'base', 'supervisor')).toBe(false)

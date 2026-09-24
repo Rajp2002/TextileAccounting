@@ -177,11 +177,7 @@ export default function LoginForm({ recoveryDestination }: { recoveryDestination
                     <p>
                         Don&apos;t have an account?{' '}
                         <Link href="/signup" className="font-medium text-saffron-deep hover:underline">
-                            Start as owner
-                        </Link>
-                        {' '}or{' '}
-                        <Link href="/join" className="font-medium text-saffron-deep hover:underline">
-                            join with a code
+                            Sign up
                         </Link>
                     </p>
                 </div>

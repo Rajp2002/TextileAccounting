@@ -3,7 +3,7 @@ import { getCachedOrgPlanAccess } from '@/lib/subscription'
 import { hasCapability, type PlanCapability, type SubscriptionTier } from '@/lib/subscription-access'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Calculator, ArrowRight, ArrowLeft, Lock, Zap } from 'lucide-react'
+import { ArrowRight, ArrowLeft, Lock, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { createPerfTimer } from '@/lib/perf'
 import { getBillingPrice } from '@/lib/billing-constants'
@@ -12,10 +12,7 @@ import { UpgradeWall } from '@/components/billing/UpgradeWall'
 import PlanAnalyticsLink from '@/components/billing/PlanAnalyticsLink'
 
 interface AccessGateProps {
-    /** Preferred capability boundary for new routes. */
-    requiredCapability?: PlanCapability
-    /** Compatibility prop for the older route declarations. */
-    requiredTier?: 'base' | 'premium'
+    requiredCapability: PlanCapability
     /** Optional route label for performance logs and upgrade context. */
     routeName?: string
     children: React.ReactNode
@@ -24,12 +21,10 @@ interface AccessGateProps {
 /**
  * Server component that gates a capability while keeping plan inheritance in
  * one place. Lite and Base share the same costing capabilities; Base adds the
- * production capabilities. Legacy premium routes remain readable for old
- * accounts but are not part of the new self-serve catalog.
+ * production capabilities.
  */
 export default async function AccessGate({
     requiredCapability,
-    requiredTier,
     routeName = '/owner/* access-gate',
     children,
 }: AccessGateProps) {
@@ -42,7 +37,7 @@ export default async function AccessGate({
         () => getCachedOrgPlanAccess(session.profile.org_id),
         1,
     )
-    const capability = requiredCapability ?? (requiredTier === 'premium' ? 'legacy_full_suite' : 'estimator')
+    const capability = requiredCapability
     const tier = planAccess.effectiveTier
     perf.log({ required_capability: capability })
 
@@ -54,77 +49,28 @@ export default async function AccessGate({
         return <>{children}</>
     }
 
-    if (
-        capability === 'legacy_full_suite'
-        && planAccess.subscriptionTier === 'premium'
-        && planAccess.productExperience === 'base'
-    ) {
-        return <LegacyWorkspaceWall routeName={routeName} />
-    }
-
     if (capability === 'production' || capability === 'production_management' || capability === 'production_tracking' || capability === 'production_linked') {
         return <ProductionUpgradeWall currentTier={tier} routeName={routeName} />
     }
 
-    return <LegacyCapabilityWall routeName={routeName} />
+    return <UnavailableCapabilityWall routeName={routeName} />
 }
 
 function routeLabel(routeName: string): string {
     const routeLabels: Record<string, string> = {
-        '/owner/today': 'Factory Today',
-        '/owner/analytics': 'Analytics',
-        '/owner/orders': 'Party Orders',
-        '/owner/market-runs': 'Market Runs',
-        '/owner/stock': 'Godown Stock',
+        '/owner/stock': 'Stock',
         '/owner/dispatches': 'Dispatches',
-        '/owner/commercials': 'Commercials',
         '/owner/payroll': 'Payroll',
         '/owner/workers': 'Workers',
         '/owner/assignments': 'Machine Assignments',
         '/owner/operations': 'Machine Assignments',
         '/owner/setup': 'Workers',
-        '/owner/advances': 'Worker Advances',
-        '/owner/fixed-workers': 'Fixed Workers',
         '/owner/machines': 'Machines',
-        '/owner/archive': 'Archive',
-        '/owner/system-health': 'System Health',
     }
     return routeLabels[routeName] ?? 'This factory feature'
 }
 
-function LegacyWorkspaceWall({ routeName }: { routeName: string }) {
-    const featureName = routeLabel(routeName)
-
-    return (
-        <div className="flex min-h-[60vh] items-center justify-center p-6">
-            <div className="w-full max-w-md space-y-6 text-center">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-orange-50 shadow-sm">
-                    <Calculator className="h-8 w-8 text-orange-600" />
-                </div>
-                <div>
-                    <h2 className="text-2xl font-bold text-gray-900">Costing workspace is active</h2>
-                    <p className="mt-2 text-sm leading-relaxed text-gray-500">
-                        {featureName} is hidden while this account uses the costing workspace. Existing factory records remain unchanged.
-                    </p>
-                </div>
-                <Link href="/owner/estimator" className="block">
-                    <Button variant="outline" size="lg" className="w-full gap-2 rounded-xl">
-                        <ArrowLeft className="h-4 w-4" />
-                        Back to Cost Estimates
-                    </Button>
-                </Link>
-                <Link href="/owner/settings#workspace-experience" className="block">
-                    <Button size="lg" className="w-full gap-2 rounded-xl bg-amber-600 text-white hover:bg-amber-700">
-                        Open workspace settings
-                        <ArrowRight className="h-4 w-4" />
-                    </Button>
-                </Link>
-            </div>
-        </div>
-    )
-}
-
-function LegacyCapabilityWall({ routeName }: { routeName: string }) {
+function UnavailableCapabilityWall({ routeName }: { routeName: string }) {
     const featureName = routeLabel(routeName)
 
     return (

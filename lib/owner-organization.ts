@@ -19,7 +19,7 @@ export const getCachedOwnerOrganization = cache(async (ownerId: string, organiza
 
     return admin
         .from('organizations')
-        .select('id, name, production_mode, join_code, join_code_expires_at, onboarding_complete, is_locked_down')
+        .select('id, name, production_mode, onboarding_complete, is_locked_down')
         .eq('id', organizationId)
         .eq('owner_id', ownerId)
         .maybeSingle()

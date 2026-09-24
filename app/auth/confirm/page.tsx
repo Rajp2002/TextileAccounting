@@ -35,10 +35,10 @@ function ConfirmContent() {
             if (!onboardingComplete) {
                 router.push('/onboarding')
             } else {
-                router.push('/owner/today')
+                router.push('/owner/estimator')
             }
         } else if (role === 'supervisor') {
-            router.push('/supervisor/production')
+            router.push('/feature-archived')
         } else {
             router.push('/login')
         }
@@ -95,9 +95,9 @@ function ConfirmContent() {
                 const role = user.app_metadata?.role ?? user.app_metadata?.user_role
                 const onboardingComplete = user.app_metadata?.onboarding_complete === true
                 if (role === 'owner') {
-                    router.push(onboardingComplete ? '/owner/today' : '/onboarding')
+                    router.push(onboardingComplete ? '/owner/estimator' : '/onboarding')
                 } else if (role === 'supervisor') {
-                    router.push('/supervisor/production')
+                    router.push('/feature-archived')
                 } else {
                     router.push('/login')
                 }

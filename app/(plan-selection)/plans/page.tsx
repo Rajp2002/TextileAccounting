@@ -30,7 +30,7 @@ export default async function PlansPage(props: PlansPageProps) {
       : undefined
 
   const access = await getOrgPlanAccess(profile.org_id)
-  const paid = ['lite', 'base', 'premium', 'trial'].includes(access.effectiveTier)
+  const paid = access.effectiveTier === 'lite' || access.effectiveTier === 'base'
   const isOnboarding = user.app_metadata.plan_selection_pending === true || from === 'onboarding'
 
   let currentPlan: UpgradePlan | 'unassigned' = 'unassigned'

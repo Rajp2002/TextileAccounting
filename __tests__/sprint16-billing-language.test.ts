@@ -65,7 +65,6 @@ describe('Sprint 16 billing and language policy', () => {
       read('app/(dashboard)/owner/estimator/EstimatorClient.tsx'),
       read('app/(dashboard)/owner/quotes/QuotesClient.tsx'),
       read('app/(dashboard)/owner/rates/RatesClient.tsx'),
-      read('app/(dashboard)/owner/archive/page.tsx'),
     ]) expect(source).toContain('ArchivePolicyNotice')
   })
 

@@ -19,7 +19,7 @@ export interface TourDefinition {
     contentVersion: string
     invitationPolicyVersion: string
     emphasis: TourEmphasis
-    allowedPlans: ('free' | 'lite' | 'base' | 'premium')[]
+    allowedPlans: ('free' | 'lite' | 'base')[]
     allowedRoles: string[]
     copyKeys: {
         benefit: string

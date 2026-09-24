@@ -22,8 +22,8 @@ await sql('UPDATE public.free_rollout SET estimation_enabled=false, policy_versi
 await sql(`
 INSERT INTO auth.users(id,email,raw_app_meta_data,raw_user_meta_data)
 VALUES ('${subject}','${subject}@free.test','{}','{}'), ('${otherUser}','${otherUser}@free.test','{}','{}');
-INSERT INTO public.organizations(id,name,owner_id,product_experience,onboarding_complete)
-VALUES ('${org}','FREE-FOUNDATION-TEST','${subject}','base',true), ('${otherOrg}','FREE-FOUNDATION-OTHER','${otherUser}','base',true);
+INSERT INTO public.organizations(id,name,owner_id,onboarding_complete)
+VALUES ('${org}','FREE-FOUNDATION-TEST','${subject}',true), ('${otherOrg}','FREE-FOUNDATION-OTHER','${otherUser}',true);
 INSERT INTO public.profiles(id,org_id,role,full_name)
 VALUES ('${subject}','${org}','owner','Free Test'), ('${otherUser}','${otherOrg}','owner','Other Test');
 INSERT INTO public.free_account_subjects(id,beta_allowed,verified_at) VALUES ('${subject}',true,now()), ('${otherUser}',true,now());

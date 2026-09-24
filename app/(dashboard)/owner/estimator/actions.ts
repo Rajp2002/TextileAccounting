@@ -12,10 +12,8 @@ import { currentBaseMonthlySalary, mergeBaseSalaryOverhead, readBaseSalaryHistor
 import type { BaseProductionWorker } from '@/lib/base-production-core'
 import { getSuratTodayString } from '@/lib/time'
 import { executeQuoteConversion } from '@/lib/quotes/convert-accepted-quote-to-order'
-import { getMarketRunDisplayStatus } from '@/lib/market-runs'
-import { getCachedOrgTier, getOrgTier, tierSatisfies } from '@/lib/subscription'
+import { getCachedOrgTier } from '@/lib/subscription'
 import { getNewEstimateRecordKind, normalizeCostingRecordKind, shouldCreateImmutableRevision } from '@/lib/costing-workspace'
-import { getEstimatorWorkflowConfig, getOrganizationProductionMode } from '@/lib/production-mode'
 import { buildSavedQualityRecipeState, type SavedQualityCostingReuse } from '@/lib/saved-costings'
 import { auditHistoricalCosting } from '@/lib/costing-reconciliation'
 import type { FactoryProfileId } from '@/lib/factory-cost-profiles'
@@ -290,11 +288,8 @@ function getInitialQualitySnapshotRequestId(templateId: string): string {
     return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-5${hex.slice(13, 16)}-a${hex.slice(17, 20)}-${hex.slice(20, 32)}`
 }
 
-async function requirePremiumTier(orgId: string): Promise<string | null> {
-    const tier = await getOrgTier(orgId)
-    return tierSatisfies(tier, 'premium')
-        ? null
-        : 'This action requires the broader factory workflow. Your costing workspace cannot create this record.'
+async function requireFactoryWorkflow(_orgId: string): Promise<string> {
+    return 'This factory workflow is unavailable on Free, Lite, and Base.'
 }
 
 function getAuthoritativeQuoteTotals(
@@ -447,7 +442,7 @@ export async function getFixedWorkersForOverhead(): Promise<{
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
-    const tierError = await requirePremiumTier(profile.org_id)
+    const tierError = await requireFactoryWorkflow(profile.org_id)
     if (tierError) return { error: tierError }
 
     const { data, error } = await supabase
@@ -706,12 +701,10 @@ export async function getEstimatorTemplates(options?: { includeArchived?: boolea
 
     const templates = data ?? []
     if (options?.summary) return { data: templates }
-    // Base is a repeat-costing product: when a quality is reopened, its
-    // current recipe/rate rows should combine with the latest linked costing
-    // assumptions. Full Suite keeps its existing quality-vs-quotation
-    // separation and does not receive this Base-only enrichment.
+    // Reopened qualities combine current recipe/rate rows with their latest
+    // linked costing assumptions in the Lite and Base workspaces.
     const effectiveTier = await getCachedOrgTier(profile.org_id)
-    if (effectiveTier !== 'base' || templates.length === 0) return { data: templates }
+    if ((effectiveTier !== 'base' && effectiveTier !== 'lite') || templates.length === 0) return { data: templates }
 
     const templateIds = templates.map(template => template.id).filter(Boolean)
     const { data: costings, error: costingError } = await supabase
@@ -759,14 +752,12 @@ export async function getEstimatorTemplates(options?: { includeArchived?: boolea
 
 /**
  * Secondary estimator data. The blank estimator only needs the factory
- * profile/defaults to calculate its first summary; saved qualities, premium
- * worker inputs, party suggestions, and review badges can hydrate after the
+ * profile/defaults to calculate its first summary; saved qualities and review badges can hydrate after the
  * primary editor is interactive.
  */
 export async function getEstimatorSecondaryData() {
     const { profile } = await requireRole(['owner'])
-    const effectiveTier = await getCachedOrgTier(profile.org_id)
-    const canUseProduction = tierSatisfies(effectiveTier, 'premium')
+    const canUseProduction = false
     const supabase = await createServerClient()
 
     const [templatesResult, workersResult, partiesResult, ratesResult, yarnRatesResult] = await Promise.all([
@@ -849,10 +840,9 @@ export async function saveAsFabricTemplate(data: {
         warpRows: data.warpRows,
         weftRows: data.weftRows,
     }
-    const effectiveTier = await getOrgTier(profile.org_id)
     const requireCapacity = requiresFactoryCapacity(
         snapshotEstimate,
-        tierSatisfies(effectiveTier, 'premium'),
+        false,
     )
     const snapshotTotals = getAuthoritativeQuoteTotals(snapshotEstimate)
     const snapshotBoundaryError = getFirstEstimatorValidationMessage(validateEstimatorQuoteBoundary({
@@ -1505,13 +1495,9 @@ export async function saveEstimatorQuoteV3(params: {
     const { user, profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
     const admin = createAdminClient()
-    const [tier, productionModeResult] = await Promise.all([
-        getOrgTier(profile.org_id),
-        getOrganizationProductionMode(supabase, profile.org_id),
-    ])
-    const canUseProduction = tierSatisfies(tier, 'premium')
+    const canUseProduction = false
     const newRecordKind = getNewEstimateRecordKind(canUseProduction, params.recordKind)
-    const allowsPartyOrders = getEstimatorWorkflowConfig(productionModeResult.productionMode).allowsPartyOrders
+    const allowsPartyOrders = false
 
     if (newRecordKind === 'quotation' && !allowsPartyOrders) {
         return { error: 'Party quotations are unavailable in Market Run only mode.' }
@@ -1760,7 +1746,7 @@ export async function saveEstimatorQuoteV3(params: {
     // Base Cost Estimates always use the transactional revision boundary. It
     // is what makes “Save New Costing Version” predictable when two tabs or a
     // double-click reach the server together. Quotation save semantics below
-    // remain separate for Full Suite.
+    // remain separate from saved costings.
     if (newRecordKind === 'costing') {
         const { data: costingResult, error: costingError } = await supabase.rpc(
             'save_estimator_costing_revision_v2',
@@ -1937,7 +1923,7 @@ export async function convertAcceptedQuoteToOrder(data: {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
-    const tierError = await requirePremiumTier(profile.org_id)
+    const tierError = await requireFactoryWorkflow(profile.org_id)
     if (tierError) return { error: tierError }
 
     const targetMeters = Number(data.total_target_meters)
@@ -1957,11 +1943,11 @@ export async function convertAcceptedQuoteToOrder(data: {
 
     if ('error' in result) return result
 
-    revalidatePath('/owner/orders')
-    revalidatePath('/owner/analytics')
+    revalidatePath('/owner/production')
+    revalidatePath('/owner/production')
     revalidatePath('/owner/quotes')
     revalidatePath('/owner/machines')
-    revalidatePath('/supervisor/machines')
+    revalidatePath('/owner/production')
     return { success: true, orderId: result.orderId }
 }
 
@@ -2000,7 +1986,7 @@ export async function startPartyOrderFromEstimator(input: StartPartyOrderInput) 
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
-    const tierError = await requirePremiumTier(profile.org_id)
+    const tierError = await requireFactoryWorkflow(profile.org_id)
     if (tierError) return { error: tierError }
 
     // ── Input validation ─────────────────────────────────────────────────────
@@ -2131,11 +2117,11 @@ export async function startPartyOrderFromEstimator(input: StartPartyOrderInput) 
         return { error: rpcResult?.error ?? 'Failed to create order.' }
     }
 
-    revalidatePath('/owner/orders')
-    revalidatePath('/owner/analytics')
+    revalidatePath('/owner/production')
+    revalidatePath('/owner/production')
     revalidatePath('/owner/quotes')
     revalidatePath('/owner/machines')
-    revalidatePath('/supervisor/machines')
+    revalidatePath('/owner/production')
 
     return {
         success: true,
@@ -2147,7 +2133,7 @@ export async function startPartyOrderFromEstimator(input: StartPartyOrderInput) 
 // ─── Party Rate Memory ────────────────────────────────────────────────────────
 
 /**
- * Return recent distinct party names for the inline Base/Full Suite chooser.
+ * Return recent distinct party names for the inline quotation chooser.
  * The names come only from tenant-scoped estimator history; creating a new name
  * remains a simple free-text action.
  */
@@ -2226,7 +2212,7 @@ export async function getMonthlyOutputSuggestion(): Promise<{
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
-    const tierError = await requirePremiumTier(profile.org_id)
+    const tierError = await requireFactoryWorkflow(profile.org_id)
     if (tierError) return { error: tierError }
 
     const now = new Date()
@@ -2596,7 +2582,7 @@ export async function createMarketRunFromEstimator(params: {
     const supabase = await createServerClient()
     const admin = createAdminClient()
 
-    const tierError = await requirePremiumTier(profile.org_id)
+    const tierError = await requireFactoryWorkflow(profile.org_id)
     if (tierError) return { error: tierError }
 
     const targetMeters = Number(params.targetMeters)
@@ -2814,208 +2800,10 @@ export async function createMarketRunFromEstimator(params: {
             },
         }, { onConflict: 'order_id' })
 
-    revalidatePath('/owner/market-runs')
-    revalidatePath('/owner/orders')
-    revalidatePath('/owner/analytics')
+    revalidatePath('/owner/production')
+    revalidatePath('/owner/production')
+    revalidatePath('/owner/production')
     revalidatePath('/owner/machines')
-    revalidatePath('/supervisor/machines')
+    revalidatePath('/owner/production')
     return { success: true, marketRunId: marketRun.id }
-}
-
-// ─── Market Run — Read ────────────────────────────────────────────────────────
-
-export async function getMarketRuns(options: { includeArchived?: boolean } = {}) {
-    const { profile } = await requireRole(['owner'])
-    const supabase = await createServerClient()
-
-    const { data, error } = await supabase
-        .from('market_run_summary')
-        .select('*')
-        .eq('org_id', profile.org_id)
-        .order('created_at', { ascending: false })
-
-    if (error) return { error: error.message }
-    const rows = data ?? []
-    if (options.includeArchived) return { data: rows }
-
-    return {
-        data: rows.filter((run) => {
-            const displayStatus = getMarketRunDisplayStatus({
-                storedStatus: run.status,
-                producedQuantity: run.total_meters_produced,
-                availableQuantity: run.meters_in_godown,
-                soldQuantity: run.total_meters_sold,
-            })
-            return !['sold_out', 'closed'].includes(displayStatus)
-        }),
-    }
-}
-
-export async function getMarketRunDetail(marketRunId: string) {
-    const { profile } = await requireRole(['owner'])
-    const supabase = await createServerClient()
-
-    const { data: run, error } = await supabase
-        .from('market_run_summary')
-        .select('*')
-        .eq('market_run_id', marketRunId)
-        .eq('org_id', profile.org_id)
-        .single()
-
-    if (error || !run) return { error: error?.message ?? 'Market run not found.' }
-
-    const { data: quote, error: quoteError } = await supabase
-        .from('estimator_quotes')
-        .select('*')
-        .eq('id', run.quote_id)
-        .eq('org_id', profile.org_id)
-        .maybeSingle()
-
-    if (quoteError) return { error: quoteError.message }
-
-    // Fetch both direct market run sales and stock sales from fabric_stock_sales
-    const [salesRes, stockSalesRes] = await Promise.all([
-        supabase
-            .from('market_run_sales')
-            .select(`
-                *,
-                parties ( id, name, phone )
-            `)
-            .eq('market_run_id', marketRunId)
-            .eq('org_id', profile.org_id),
-        supabase
-            .from('fabric_stock_sales')
-            .select(`
-                id,
-                sale_date,
-                meters_sold,
-                price_per_meter,
-                cost_per_meter,
-                dispatch_status,
-                party_name,
-                party_phone,
-                notes,
-                fabric_stock_lots!inner (
-                    market_run_id
-                )
-            `)
-            .eq('fabric_stock_lots.market_run_id', marketRunId)
-            .eq('org_id', profile.org_id)
-    ])
-
-    if (salesRes.error) return { error: salesRes.error.message }
-    if (stockSalesRes.error) return { error: stockSalesRes.error.message }
-
-    const directSales = (salesRes.data ?? []).map((s) => ({
-        id: s.id,
-        market_run_id: marketRunId,
-        party_id: s.party_id,
-        invoice_id: s.invoice_id,
-        meters_sold: Number(s.meters_sold),
-        price_per_meter: Number(s.price_per_meter),
-        cost_per_meter: Number(s.cost_per_meter),
-        status: s.status as 'pending' | 'dispatched' | 'settled',
-        sale_date: s.sale_date,
-        notes: s.notes,
-        parties: Array.isArray(s.parties) ? s.parties[0] : s.parties
-    }))
-
-    const stockSalesMapped = (stockSalesRes.data ?? []).map((ss) => ({
-        id: ss.id,
-        market_run_id: marketRunId,
-        party_id: '',
-        invoice_id: null,
-        meters_sold: Number(ss.meters_sold),
-        price_per_meter: Number(ss.price_per_meter),
-        cost_per_meter: Number(ss.cost_per_meter),
-        status: (ss.dispatch_status === 'received'
-            ? 'settled'
-            : (ss.dispatch_status === 'dispatched' || ss.dispatch_status === 'discrepancy')
-                ? 'dispatched'
-                : 'pending') as 'pending' | 'dispatched' | 'settled',
-        sale_date: ss.sale_date,
-        notes: ss.notes,
-        parties: {
-            id: '',
-            name: ss.party_name || 'Stock Sale',
-            phone: ss.party_phone,
-        }
-    }))
-
-    const combinedSales = [...directSales, ...stockSalesMapped].sort(
-        (a, b) => new Date(b.sale_date).getTime() - new Date(a.sale_date).getTime()
-    )
-
-    return { data: { run, quote: quote ?? null, sales: combinedSales } }
-}
-
-// ─── Market Run — Record a Sale ───────────────────────────────────────────────
-
-export async function createMarketRunSaleAction(params: {
-    marketRunId:   string
-    partyId:       string
-    metersSold:    number
-    pricePerMeter: number
-    saleDate:      string
-    invoiceNumber: string
-    dueDays?:      number     // days from sale date → due date
-    notes?:        string
-}) {
-    await requireRole(['owner'])
-    void params
-    return {
-        error: 'Direct market-run sale is disabled. Sell from Godown Stock so the sale creates exactly one commercial receivable.',
-    }
-}
-
-// ─── Market Run — Update Status ───────────────────────────────────────────────
-
-export async function updateMarketRunStatus(
-    marketRunId: string,
-    status: 'production' | 'in_godown' | 'partially_sold' | 'sold_out' | 'closed'
-) {
-    const { profile } = await requireRole(['owner'])
-    const supabase = await createServerClient()
-
-    const { error } = await supabase
-        .from('market_runs')
-        .update({ status })
-        .eq('id', marketRunId)
-        .eq('org_id', profile.org_id)
-
-    if (error) return { error: error.message }
-
-    if (status === 'closed') {
-        const { data: backingOrders } = await supabase
-            .from('orders')
-            .select('id')
-            .eq('market_run_id', marketRunId)
-            .eq('org_id', profile.org_id)
-
-        if (backingOrders && backingOrders.length > 0) {
-            const orderIds = backingOrders.map(o => o.id)
-
-            // Set backing orders to completed
-            await supabase
-                .from('orders')
-                .update({ status: 'completed' })
-                .in('id', orderIds)
-                .eq('org_id', profile.org_id)
-
-            // Unlink all machines assigned to these orders and set them to inactive
-            await supabase
-                .from('machines')
-                .update({ current_order_id: null, status: 'inactive' })
-                .in('current_order_id', orderIds)
-                .eq('org_id', profile.org_id)
-        }
-    }
-
-    revalidatePath(`/owner/market-runs/${marketRunId}`)
-    revalidatePath('/owner/market-runs')
-    revalidatePath('/owner/archive')
-    revalidatePath('/owner/stock')
-    revalidatePath('/owner/machines')
-    revalidatePath('/supervisor/machines')
-    return { success: true }
 }

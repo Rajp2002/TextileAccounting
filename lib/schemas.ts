@@ -114,24 +114,6 @@ export const UpdateOrgNameSchema = z.object({
 })
 
 export const ProductionModeSchema = z.enum(['market_run', 'order_based', 'both'])
-export const ProductExperienceSchema = z.enum(['base', 'full_suite'])
-
-/**
- * JoinOrgSchema — supervisor join form (F1 spec §4)
- * Used by joinOrganization() server action.
- */
-export const JoinOrgSchema = z.object({
-    joinCode:       z.string().trim().length(8, 'Code must be exactly 8 characters'),
-    supervisorName: z.string().trim().min(2, 'Name must be at least 2 characters').max(80, 'Name too long'),
-    email:          z.string().trim().email('Invalid email address').max(254),
-    password:       PasswordSchema,
-    confirmPassword: z.string().min(1, 'Confirm your password'),
-    phone:          z.string().trim().regex(/^\d{10}$/, 'Phone must be exactly 10 digits'),
-}).superRefine((data, ctx) => {
-    if (data.password !== data.confirmPassword) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['confirmPassword'], message: 'Passwords do not match' })
-    }
-})
 
 /**
  * SignInSchema — login form (F1 spec §4)

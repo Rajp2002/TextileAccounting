@@ -56,8 +56,6 @@ async function createFixture(admin) {
         const org = await admin.from('organizations').insert({
             name: `B16 WhatsApp ${suffix}`,
             owner_id: userId,
-            join_code: `B16${crypto.randomBytes(4).toString('hex').toUpperCase()}`,
-            join_code_expires_at: new Date(Date.now() + 3_600_000).toISOString(),
             onboarding_complete: true,
             production_mode: 'both',
             access_code_hash: crypto.createHash('sha256').update('B16ABC').digest('hex'),

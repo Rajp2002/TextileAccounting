@@ -25,11 +25,11 @@ describe('Base Estimator Go-readiness hardening', () => {
     }
 
     expect(hasPaidBaseHistory([expiredBase], now)).toBe(true)
-    expect(resolveOrgPlanAccess('none', 'base', true)).toMatchObject({
+    expect(resolveOrgPlanAccess('none', true)).toMatchObject({
       subscriptionTier: 'none',
       effectiveTier: 'lite',
     })
-    expect(resolveOrgPlanAccess('none', 'base', false).effectiveTier).toBe('none')
+    expect(resolveOrgPlanAccess('none', false).effectiveTier).toBe('none')
   })
 
   it('rejects invalid factory economics before persistence', () => {

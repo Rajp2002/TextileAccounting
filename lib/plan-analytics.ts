@@ -55,7 +55,7 @@ export function isPlanAnalyticsEvent(value: unknown): value is PlanAnalyticsEven
 }
 
 const journeyRules: Record<string, Record<string, readonly (string | boolean)[]>> = {
-  estimator_opened: { workspace: ['full_suite', 'standalone_costing'] },
+  estimator_opened: { workspace: ['standalone_costing'] },
   blank_start: {}, saved_quality_start: {},
   saved_quality_selected: { has_rates: [true, false] },
   current_rate_applied: { rate_source: ['saved_recipe_rates', 'proposed_recipe_rates'] },

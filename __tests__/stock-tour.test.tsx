@@ -38,7 +38,7 @@ for (const kind of kinds) describe(kind, () => {
             if (language !== 'en') expect(field[1]).toMatch(language === 'gu' ? /[\u0a80-\u0aff]/ : /[\u0900-\u097f]/)
         }
         expect(isTourEligible(kind, 'base', 'owner')).toBe(true)
-        expect(isTourEligible(kind, 'premium', 'owner')).toBe(true)
+        expect(isTourEligible(kind, 'premium', 'owner')).toBe(false)
         expect(isTourEligible(kind, 'lite', 'owner')).toBe(false)
         expect(isTourEligible(kind, 'base', 'supervisor')).toBe(false)
     })

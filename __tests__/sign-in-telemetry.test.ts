@@ -15,7 +15,7 @@ describe('sign-in timing telemetry', () => {
     it('accepts random trace identifiers and restricts reported destinations', () => {
         expect(isSignInTraceId('89b0ec11-6db8-4b64-8695-b538c59c49c1')).toBe(true)
         expect(isSignInTraceId('short')).toBe(false)
-        expect(normalizeSignInDestination('/owner/today?from=login')).toBe('/owner/today')
+        expect(normalizeSignInDestination('/owner/estimator?from=login')).toBe('/owner/estimator')
         expect(normalizeSignInDestination('/private/customer/record')).toBe('/other')
     })
 
@@ -51,10 +51,8 @@ describe('sign-in timing telemetry', () => {
     })
 
     it('places readiness markers after landing data is available', () => {
-        expect(read('app/(dashboard)/owner/today/FactoryTodayClient.tsx'))
+        expect(read('app/(dashboard)/owner/estimator/EstimatorClient.tsx'))
             .toContain('data-signin-ready="true"')
-        expect(read('app/(dashboard)/supervisor/dashboard/page.tsx'))
-            .toContain('!loading && <span hidden data-signin-ready="true" />')
         expect(read('app/(dashboard)/admin/page.tsx'))
             .toContain('data-signin-ready="true"')
     })

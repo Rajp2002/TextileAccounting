@@ -1,7 +1,5 @@
 /** Pure subscription access resolution shared by server code and unit tests. */
-export type SubscriptionTier = 'none' | 'free' | 'trial' | 'lite' | 'base' | 'premium'
-// `base` is the shared Lite/Base workspace, not a production entitlement.
-export type ProductExperience = 'base' | 'full_suite'
+export type SubscriptionTier = 'none' | 'free' | 'lite' | 'base'
 
 /**
  * Customer-facing capabilities are deliberately broader than plan names. This
@@ -22,7 +20,6 @@ export type PlanCapability =
   | 'production_management'
   | 'production_tracking'
   | 'production_linked'
-  | 'legacy_full_suite'
 
 const LITE_CAPABILITIES = [
   'estimator',
@@ -44,7 +41,6 @@ const BASE_CAPABILITIES = [
   'production_linked',
 ] as const satisfies readonly PlanCapability[]
 
-/** Internal legacy access is retained for existing accounts only. */
 export const PLAN_CAPABILITIES = {
   none: [] as const,
   // Free grants are explicit operational records, never inferred from a
@@ -53,19 +49,15 @@ export const PLAN_CAPABILITIES = {
   free: ['estimator', 'account_settings', 'saved_costings', 'export_document'] as const,
   lite: LITE_CAPABILITIES,
   base: BASE_CAPABILITIES,
-  trial: [...BASE_CAPABILITIES, 'legacy_full_suite'] as const,
-  premium: [...BASE_CAPABILITIES, 'legacy_full_suite'] as const,
 } satisfies Record<SubscriptionTier, readonly PlanCapability[]>
 
 export type OrgPlanAccess = {
-  /** Paid/trial entitlement retained for billing and conversion eligibility. */
+  /** Paid entitlement retained for billing and conversion eligibility. */
   subscriptionTier: SubscriptionTier
   /** Explicit historical Free identity, retained even when suspended or upgraded. */
   freeAccount?: boolean
   /** Tier the product should enforce for navigation, routes, and actions. */
   effectiveTier: SubscriptionTier
-  productExperience: ProductExperience
-  canSwitchExperience: boolean
 }
 
 type SubscriptionAccessRow = {
@@ -101,45 +93,13 @@ export function hasCapability(actual: SubscriptionTier, capability: PlanCapabili
   return (PLAN_CAPABILITIES[actual] as readonly PlanCapability[]).includes(capability)
 }
 
-/**
- * Compatibility helper for older costing/full-suite call sites. New code
- * should use hasCapability() so a Base production check cannot accidentally
- * become a Lite costing check.
- */
-export function tierSatisfies(actual: SubscriptionTier, required: 'base' | 'premium'): boolean {
-  return required === 'premium'
-    ? hasCapability(actual, 'legacy_full_suite')
-    : hasCapability(actual, 'existing_costing_tools')
-}
-
-export function normalizeProductExperience(value: unknown): ProductExperience {
-  return value === 'base' ? 'base' : 'full_suite'
-}
-
-/**
- * A Full Suite customer may deliberately use the Base Plan workspace without
- * changing or destroying their paid subscription. The selected experience can
- * only reduce access; it can never elevate a Base subscription to Full Suite.
- */
 export function resolveOrgPlanAccess(
   subscriptionTier: SubscriptionTier,
-  productExperienceValue: unknown,
   retainLiteAfterBaseExpiry = false,
 ): OrgPlanAccess {
-  const hasFullSuiteEntitlement = tierSatisfies(subscriptionTier, 'premium')
-  const fallbackTier = retainLiteAfterBaseExpiry && subscriptionTier === 'none' ? 'lite' : subscriptionTier
-  const productExperience = fallbackTier === 'free' || fallbackTier === 'lite' || fallbackTier === 'base'
-    ? 'base'
-    : normalizeProductExperience(productExperienceValue)
-
   return {
     subscriptionTier,
-    effectiveTier: productExperience === 'base' && hasFullSuiteEntitlement
-      ? 'base'
-      : fallbackTier,
-    productExperience,
-    // Initial rollout conversion is limited to activated paid Full Suite orgs.
-    canSwitchExperience: subscriptionTier === 'premium',
+    effectiveTier: retainLiteAfterBaseExpiry && subscriptionTier === 'none' ? 'lite' : subscriptionTier,
   }
 }
 
@@ -182,7 +142,7 @@ function isSubscriptionRowCurrent(row: SubscriptionAccessRow, nowMs: number): bo
 
   const endMs = new Date(row.current_end).getTime()
   if (!Number.isFinite(endMs)) return false
-  const gracePeriodMs = row.plan_tier === 'trial' ? 0 : 24 * 60 * 60 * 1000
+  const gracePeriodMs = 24 * 60 * 60 * 1000
   return endMs + gracePeriodMs >= nowMs
 }
 
@@ -194,12 +154,12 @@ export function resolveEffectiveSubscription<T extends SubscriptionAccessRow>(
   rows: T[],
   nowMs = Date.now()
 ): { tier: SubscriptionTier; subscription: T | null } {
-  const rank: Record<SubscriptionTier, number> = { none: 0, free: 0, lite: 1, base: 2, trial: 3, premium: 4 }
+  const rank: Record<SubscriptionTier, number> = { none: 0, free: 0, lite: 1, base: 2 }
   const current = rows
     .filter((row) => isSubscriptionRowCurrent(row, nowMs))
     .map((row) => ({
       row,
-      tier: (['lite', 'base', 'trial', 'premium'].includes(row.plan_tier ?? '')
+      tier: (['lite', 'base'].includes(row.plan_tier ?? '')
         ? row.plan_tier
         : 'none') as SubscriptionTier,
     }))

@@ -48,7 +48,7 @@ describe('Base Plan privacy-request workflow', () => {
     it('makes the request route readily available in public and owner surfaces', () => {
         expect(privacy).toContain('href="/privacy-request"')
         expect(footer).toContain("{ name: 'Privacy Request', href: '/privacy-request' }")
-        expect(ownerSettings.match(/href="\/privacy-request"/g)).toHaveLength(2)
+        expect(ownerSettings.match(/href="\/privacy-request"/g)).toHaveLength(1)
     })
 
     it('supersedes the incorrect seven-day clock with auditable Base operations', () => {

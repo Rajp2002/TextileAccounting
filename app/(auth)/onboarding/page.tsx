@@ -1,22 +1,10 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { getOnboardingStatus } from '@/app/(auth)/actions/auth'
 import { getUserClaims } from '@/lib/auth'
-import OnboardingChecklist from './checklist'
 import { getOrgTier } from '@/lib/subscription'
 
-/**
- * /onboarding — legacy factory setup (server component)
- *
- * This page is a small blocking gate for legacy factory owners. Lite/Base go
- * directly to the estimator and owners without an active plan go to Billing.
- * Looms, workers, and payroll are deliberately deferred to the workflows that
- * need them.
- *
- * The production mode choice is required so the owner lands in the right
- * workflow; operational master data is not required to reach first value.
- */
+/** Redirect owners to their selected plan's current workspace. */
 export default async function OnboardingPage() {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -43,13 +31,8 @@ export default async function OnboardingPage() {
         orgId = profile?.org_id ?? undefined
     }
 
-    // Supervisors don't go through onboarding — send them to their home screen
-    if (role === 'supervisor') {
-        redirect('/supervisor/production')
-    }
+    if (role === 'supervisor') redirect('/feature-archived')
 
-    // Factory setup only belongs to the legacy factory workspace. Keep Lite/Base
-    // states out of this page, including direct/stale links to /onboarding.
     if (role === 'owner' && orgId) {
         const tier = await getOrgTier(orgId)
         if (tier === 'free' || user.app_metadata.free_signup === true && tier === 'none') redirect('/free')
@@ -57,21 +40,5 @@ export default async function OnboardingPage() {
         if (tier === 'lite' || tier === 'base') redirect('/owner/estimator')
     }
 
-    if (role === 'owner' && userClaims.onboarding_complete === true) {
-        redirect('/owner/today')
-    }
-
-    // If role is still unknown (very rare edge case), show the checklist safely
-    // rather than bouncing the user to an unknown route and causing a blank page.
-    // getOnboardingStatus() will redirect to /login if there's truly no session.
-
-    // Fetch real-time status (SSR — accurate on page load)
-    const status = await getOnboardingStatus()
-
-    // NOTE: we intentionally do NOT redirect here when isComplete=true.
-    // The middleware handles that guard via JWT claims (onboarding_complete flag).
-    // If we redirect here, Next.js router.refresh() after server actions re-triggers
-    // this redirect before the JWT has been refreshed — causing a blank page.
-
-    return <OnboardingChecklist initialStatus={status} />
+    redirect('/plans?from=onboarding')
 }

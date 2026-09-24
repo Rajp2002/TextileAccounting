@@ -1,13 +1,14 @@
 import 'server-only'
 
 import { jsPDF } from 'jspdf'
-import { getBillingPrice, getBillingPlan, type BillingPurchaseType, type BillingPlanTier } from './billing-constants'
+import { getBillingPrice, getBillingPlan, isBillingPlanTier, type BillingPurchaseType } from './billing-constants'
 import { LEGAL_OPERATOR } from './legal-operator'
 
 export type PaymentReceiptInput = {
   organizationName: string
-  planTier: BillingPlanTier
-  purchaseType: BillingPurchaseType
+  planTier: string
+  planName: string
+  purchaseType: BillingPurchaseType | null
   amountPaise: number
   paymentId: string
   orderId: string | null
@@ -37,9 +38,11 @@ function formatAmount(paise: number): string {
  */
 export function generatePaymentReceiptPdf(input: PaymentReceiptInput): Buffer {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' })
-  const plan = getBillingPlan(input.planTier)
-  const expectedPrice = getBillingPrice(input.planTier, input.purchaseType)
-  const hasCatalogBreakdown = expectedPrice.totalPaise === input.amountPaise
+  const currentPlan = isBillingPlanTier(input.planTier) ? getBillingPlan(input.planTier) : null
+  const expectedPrice = isBillingPlanTier(input.planTier) && input.purchaseType
+    ? getBillingPrice(input.planTier, input.purchaseType)
+    : null
+  const hasCatalogBreakdown = expectedPrice?.totalPaise === input.amountPaise
   const pageWidth = doc.internal.pageSize.getWidth()
 
   doc.setProperties({
@@ -67,8 +70,10 @@ export function generatePaymentReceiptPdf(input: PaymentReceiptInput): Buffer {
 
   const details: Array<[string, string]> = [
     ['Customer', input.organizationName],
-    ['Plan', plan.name],
-    ['Payment type', input.purchaseType === 'renewal' ? 'Annual renewal' : 'First-year payment'],
+    ['Plan', currentPlan?.name ?? input.planName],
+    ['Payment type', input.purchaseType === 'renewal'
+      ? 'Annual renewal'
+      : input.purchaseType === 'initial_purchase' ? 'First-year payment' : 'Subscription payment'],
     ['Paid on', formatDate(input.paidAt)],
     ['Payment method', input.method || 'Not provided'],
     ['Payment reference', input.paymentId],
@@ -97,7 +102,7 @@ export function generatePaymentReceiptPdf(input: PaymentReceiptInput): Buffer {
   doc.text(formatAmount(input.amountPaise), pageWidth - 18, y, { align: 'right' })
   y += 12
 
-  if (hasCatalogBreakdown) {
+  if (hasCatalogBreakdown && expectedPrice) {
     doc.setFontSize(10)
     doc.setFont('helvetica', 'normal')
     doc.setTextColor(71, 85, 105)

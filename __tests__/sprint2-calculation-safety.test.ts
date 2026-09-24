@@ -3,7 +3,7 @@ import { buildCostingResult, calcFullTotals, makeDefaultEstimateState } from '..
 import { getEstimatorReadiness, getYarnDensityWarning, validateCostingResultBoundary, validateEstimatorSnapshot, validateFactoryCostProfile } from '../lib/estimator-validation'
 import { parseNonNegativeInput, parseNumericInput } from '../lib/numeric-input'
 import { isValidIndianPhone, normalizeIndianPhone } from '../lib/phone'
-import { CreateOrgSchema, JoinOrgSchema, PasswordSchema } from '../lib/schemas'
+import { CreateOrgSchema, PasswordSchema } from '../lib/schemas'
 
 describe('Sprint 2 calculation safety', () => {
   it('hard-blocks impossible denier values and preserves the common-range warning', () => {
@@ -90,15 +90,6 @@ describe('Sprint 2 calculation safety', () => {
     })
     expect(owner.success).toBe(false)
 
-    const join = JoinOrgSchema.safeParse({
-      joinCode: 'MILL4X2A',
-      supervisorName: 'Amit Shah',
-      email: 'amit@example.com',
-      password: 'Password1!',
-      confirmPassword: 'Password1!',
-      phone: '9876543210',
-    })
-    expect(join.success).toBe(true)
   })
 
   it('does not treat an invalid result as displayable money', () => {

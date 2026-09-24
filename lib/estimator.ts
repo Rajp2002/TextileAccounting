@@ -1131,7 +1131,7 @@ export function buildCostingResult(
         referenceRate: null,
         // Quantity changes order totals, never the per-metre price. Keeping
         // this explicit prevents an order quantity from becoming a hidden
-        // price input in either standalone or Full Suite costing.
+        // price input in either costing.
         priceImpactPerM: 0,
         priceImpactTotal: null,
       },

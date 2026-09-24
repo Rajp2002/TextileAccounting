@@ -32,7 +32,7 @@ export default async function BaseOnboardingPage() {
     }
 
     if (role === 'supervisor') {
-        redirect('/supervisor/production')
+        redirect('/feature-archived')
     }
 
     if (!orgId || role !== 'owner') {

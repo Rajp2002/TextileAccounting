@@ -208,13 +208,13 @@ describe('Estimator production-readiness regressions', () => {
     expect(result.subscription?.status).toBe('active')
   })
 
-  it('selects premium when concurrent current base and premium rows exist', () => {
+  it('selects Base when a retired plan row is also current', () => {
     const result = resolveEffectiveSubscription([
       { status: 'active', plan_tier: 'base', current_end: null, created_at: '2026-07-10T04:00:00Z' },
       { status: 'authenticated', plan_tier: 'premium', current_end: null, created_at: '2026-07-09T04:00:00Z' },
     ])
 
-    expect(result.tier).toBe('premium')
+    expect(result.tier).toBe('base')
   })
 
   it('announces save-as-new quality failures next to the name field', () => {

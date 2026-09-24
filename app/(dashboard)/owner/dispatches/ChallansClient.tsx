@@ -261,7 +261,7 @@ export default function ChallansClient({
     return (
         <div
             data-i18n-skip="true"
-            className="premium-route-enter mx-auto w-full max-w-3xl space-y-6 p-4 md:px-8 md:py-8"
+            className="ui-route-enter mx-auto w-full max-w-3xl space-y-6 p-4 md:px-8 md:py-8"
         >
             <header className="grid grid-cols-1 items-center gap-4 border-b border-hairline/80 pb-5 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
                 <div className="min-w-0 text-center sm:col-start-2 sm:row-start-1">

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useId } from 'react'
-import { Factory, Copy, Check, Loader2 } from 'lucide-react'
+import { Factory, Loader2 } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -12,7 +12,6 @@ import { updateFactoryDetails } from '@/app/(dashboard)/owner/settings/actions'
 
 interface FactoryDetailsCardProps {
     initialFactoryName: string
-    joinCode?: string | null
     isAuthorizedEditor?: boolean
     onFactoryNameUpdated?: (newName: string) => void
     onDirtyChange?: (dirty: boolean) => void
@@ -20,7 +19,6 @@ interface FactoryDetailsCardProps {
 
 export function FactoryDetailsCard({
     initialFactoryName,
-    joinCode,
     isAuthorizedEditor = true,
     onFactoryNameUpdated,
     onDirtyChange,
@@ -33,7 +31,6 @@ export function FactoryDetailsCard({
     const [savedFactoryName, setSavedFactoryName] = useState(initialFactoryName)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [fieldError, setFieldError] = useState<string | null>(null)
-    const [copied, setCopied] = useState(false)
 
     const isDirty = factoryName.trim() !== savedFactoryName.trim()
 
@@ -85,18 +82,6 @@ export function FactoryDetailsCard({
             toast.error(tx(message))
         } finally {
             setIsSubmitting(false)
-        }
-    }
-
-    const handleCopyJoinCode = async () => {
-        if (!joinCode) return
-        try {
-            await navigator.clipboard.writeText(joinCode)
-            setCopied(true)
-            toast.success(tx('Join code copied!'))
-            setTimeout(() => setCopied(false), 2000)
-        } catch {
-            toast.error(tx('Failed to copy join code'))
         }
     }
 
@@ -163,42 +148,6 @@ export function FactoryDetailsCard({
                         </p>
                     </div>
 
-                    {/* Join Code (if present) */}
-                    {joinCode && (
-                        <div className="space-y-2">
-                            <Label className="text-sm font-semibold text-ink">
-                                {tx('Factory join code')}
-                            </Label>
-                            <div className="flex min-h-11 items-center justify-between gap-2 rounded-xl border border-info/20 bg-info-soft/40 px-3.5 py-1.5">
-                                <span className="font-mono text-base font-bold tracking-widest text-info select-all">
-                                    {joinCode}
-                                </span>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={handleCopyJoinCode}
-                                    className="min-h-9 rounded-lg gap-1.5 border-info/30 bg-surface text-xs font-semibold text-info hover:bg-info-soft"
-                                    aria-label={tx('Copy factory join code')}
-                                >
-                                    {copied ? (
-                                        <>
-                                            <Check className="h-3.5 w-3.5 text-success" aria-hidden="true" />
-                                            {tx('Copied')}
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Copy className="h-3.5 w-3.5" aria-hidden="true" />
-                                            {tx('Copy')}
-                                        </>
-                                    )}
-                                </Button>
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                {tx('Supervisors use this code to connect their device to this factory.')}
-                            </p>
-                        </div>
-                    )}
                 </div>
 
                 {/* Form Actions */}

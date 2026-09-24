@@ -3,42 +3,42 @@ import type { TourDefinition, TourId } from './tour-types'
 export const TOUR_REGISTRY: Record<TourId, TourDefinition> = {
     'yarn-stock': {
         id: 'yarn-stock', contentVersion: 'v1', invitationPolicyVersion: 'v1', emphasis: 'static',
-        allowedPlans: ['base', 'premium'], allowedRoles: ['owner'],
+        allowedPlans: ['base'], allowedRoles: ['owner'],
         copyKeys: { benefit: 'yarnStockBenefit', replayTitle: 'replayYarnStock' },
     },
     'fabric-stock': {
         id: 'fabric-stock', contentVersion: 'v1', invitationPolicyVersion: 'v1', emphasis: 'static',
-        allowedPlans: ['base', 'premium'], allowedRoles: ['owner'],
+        allowedPlans: ['base'], allowedRoles: ['owner'],
         copyKeys: { benefit: 'fabricStockBenefit', replayTitle: 'replayFabricStock' },
     },
     dispatch: {
         id: 'dispatch', contentVersion: 'v1', invitationPolicyVersion: 'v1', emphasis: 'static',
-        allowedPlans: ['base', 'premium'], allowedRoles: ['owner'],
+        allowedPlans: ['base'], allowedRoles: ['owner'],
         copyKeys: { benefit: 'dispatchBenefit', replayTitle: 'replayDispatch' },
     },
     production: {
         id: 'production', contentVersion: 'v1', invitationPolicyVersion: 'v1', emphasis: 'static',
-        allowedPlans: ['base', 'premium'], allowedRoles: ['owner'],
+        allowedPlans: ['base'], allowedRoles: ['owner'],
         copyKeys: { benefit: 'productionBenefit', replayTitle: 'replayProduction' },
     },
     payroll: {
         id: 'payroll', contentVersion: 'v1', invitationPolicyVersion: 'v1', emphasis: 'static',
-        allowedPlans: ['base', 'premium'], allowedRoles: ['owner'],
+        allowedPlans: ['base'], allowedRoles: ['owner'],
         copyKeys: { benefit: 'payrollBenefit', replayTitle: 'replayPayroll' },
     },
     machines: {
         id: 'machines', contentVersion: 'v1', invitationPolicyVersion: 'v1', emphasis: 'static',
-        allowedPlans: ['base', 'premium'], allowedRoles: ['owner'],
+        allowedPlans: ['base'], allowedRoles: ['owner'],
         copyKeys: { benefit: 'machinesBenefit', replayTitle: 'replayMachines' },
     },
     workers: {
         id: 'workers', contentVersion: 'v1', invitationPolicyVersion: 'v1', emphasis: 'static',
-        allowedPlans: ['base', 'premium'], allowedRoles: ['owner'],
+        allowedPlans: ['base'], allowedRoles: ['owner'],
         copyKeys: { benefit: 'workersBenefit', replayTitle: 'replayWorkers' },
     },
     configuration: {
         id: 'configuration', contentVersion: 'v1', invitationPolicyVersion: 'v1', emphasis: 'static',
-        allowedPlans: ['base', 'premium'], allowedRoles: ['owner'],
+        allowedPlans: ['base'], allowedRoles: ['owner'],
         copyKeys: { benefit: 'configurationBenefit', replayTitle: 'replayConfiguration' },
     },
     'cost-estimate': {
@@ -46,7 +46,7 @@ export const TOUR_REGISTRY: Record<TourId, TourDefinition> = {
         contentVersion: 'v1',
         invitationPolicyVersion: 'v1',
         emphasis: 'halo',
-        allowedPlans: ['free', 'lite', 'base', 'premium'],
+        allowedPlans: ['free', 'lite', 'base'],
         allowedRoles: ['owner'],
         copyKeys: {
             benefit: 'estimatorBenefit',
@@ -58,7 +58,7 @@ export const TOUR_REGISTRY: Record<TourId, TourDefinition> = {
         contentVersion: 'v1',
         invitationPolicyVersion: 'v1',
         emphasis: 'static',
-        allowedPlans: ['lite', 'base', 'premium'],
+        allowedPlans: ['lite', 'base'],
         allowedRoles: ['owner'],
         copyKeys: {
             benefit: 'rateBookBenefit',
@@ -70,7 +70,7 @@ export const TOUR_REGISTRY: Record<TourId, TourDefinition> = {
         contentVersion: 'v1',
         invitationPolicyVersion: 'v1',
         emphasis: 'static',
-        allowedPlans: ['free', 'lite', 'base', 'premium'],
+        allowedPlans: ['free', 'lite', 'base'],
         allowedRoles: ['owner'],
         copyKeys: {
             benefit: 'savedCostingsBenefit',

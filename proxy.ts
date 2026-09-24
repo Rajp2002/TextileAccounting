@@ -14,8 +14,8 @@ import {
 } from '@/lib/supabase/auth-cookie'
 
 function getRoleHomePath(role?: string): string {
-    if (role === 'owner') return '/owner/today'
-    if (role === 'supervisor') return '/supervisor/dashboard'
+    if (role === 'owner') return '/owner/estimator'
+    if (role === 'supervisor') return '/feature-archived'
     if (role === 'admin') return '/admin'
     return '/login'
 }
@@ -56,7 +56,6 @@ function isAuthRoute(pathname: string): boolean {
     return (
         pathname.startsWith('/login') ||
         pathname.startsWith('/signup') ||
-        pathname.startsWith('/join') ||
         pathname.startsWith('/forgot-password') ||
         pathname.startsWith('/auth')
     )
@@ -77,7 +76,6 @@ function isPublicRoute(pathname: string): boolean {
         pathname === '/install' ||
         pathname.startsWith('/login') ||
         pathname.startsWith('/signup') ||
-        pathname.startsWith('/join') ||
         isPasswordRecoveryRoute(pathname) ||
         pathname.startsWith('/auth') ||
         pathname.startsWith('/verify') ||
@@ -400,9 +398,9 @@ export async function updateSession(request: NextRequest) {
             if (!onboardingComplete) {
                 return NextResponse.redirect(new URL('/onboarding', request.url))
             }
-            return NextResponse.redirect(new URL('/owner/today', request.url))
+            return NextResponse.redirect(new URL('/owner/estimator', request.url))
         } else if (role === 'supervisor') {
-            return NextResponse.redirect(new URL('/supervisor/dashboard', request.url))
+            return NextResponse.redirect(new URL('/feature-archived', request.url))
         } else if (role === 'admin') {
             return NextResponse.redirect(new URL('/admin', request.url))
         }
@@ -427,7 +425,7 @@ export async function updateSession(request: NextRequest) {
         }
 
         if (pathname === '/owner') {
-            return NextResponse.redirect(new URL('/owner/today', request.url))
+            return NextResponse.redirect(new URL('/owner/estimator', request.url))
         }
 
         if (
@@ -456,7 +454,7 @@ export async function updateSession(request: NextRequest) {
         }
 
         if (role === 'owner' && onboardingComplete && pathname === '/onboarding') {
-            return NextResponse.redirect(new URL('/owner/today', request.url))
+            return NextResponse.redirect(new URL('/owner/estimator', request.url))
         }
 
         if (pathname.startsWith('/admin')) {
@@ -472,10 +470,8 @@ export async function updateSession(request: NextRequest) {
             return NextResponse.redirect(new URL(getRoleHomePath(role), request.url))
         }
 
-        const ownerSupervisorRouteAllowed = pathname === '/supervisor/dashboard'
-
-        // 3. Supervisor restricted routes (Admins can access for support/audit)
-        if (pathname.startsWith('/supervisor') && role === 'owner' && !ownerSupervisorRouteAllowed) {
+        // 3. Retired supervisor routes are no longer part of the product.
+        if (pathname.startsWith('/supervisor')) {
             return NextResponse.redirect(new URL(getRoleHomePath(role), request.url))
         }
     }
