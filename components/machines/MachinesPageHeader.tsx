@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { NavigationLink } from '@/components/navigation/navigation-link'
 import { useTranslation } from '@/lib/i18n/context'
 import { managementReturnLabel } from '@/lib/management-navigation'
+import { cn } from '@/lib/utils'
 
 interface MachinesPageHeaderProps {
   onAdd: () => void
@@ -28,26 +29,29 @@ export function MachinesPageHeader({ onAdd, returnTo }: MachinesPageHeaderProps)
         </div>
       )}
 
-      <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-hairline/70 pb-5 sm:min-h-16 sm:grid-cols-[1fr_auto_1fr] sm:pb-6">
-        <div className="min-w-0 sm:col-start-2 sm:row-start-1 sm:text-center">
-          <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-ink sm:text-[2rem]">
-            {tx('Machines')}
-          </h1>
-          <p className="mt-1 text-sm leading-relaxed text-subtle">
-            {tx('Add and manage the machines in your factory.')}
-          </p>
-        </div>
-
-        <div className="shrink-0 sm:col-start-3 sm:row-start-1 sm:justify-self-end">
-          <Button
-            onClick={onAdd}
-            className="min-h-11 rounded-xl bg-loom px-4 text-white shadow-[var(--shadow-button)] hover:bg-loom-elevated hover:text-white focus-visible:ring-saffron/40"
-          >
-            <Plus className="h-4 w-4" aria-hidden="true" />
-            <span>{tx('Add machine')}</span>
-          </Button>
+      <header className="relative border-b border-hairline/70 pb-5 text-center sm:pb-6">
+        <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-ink sm:text-[2rem]">
+          {tx('Machines')}
+        </h1>
+        <p className="sr-only">{tx('Add and manage the machines in your factory.')}</p>
+        <div className="machines-inline-add mt-3 flex justify-end sm:absolute sm:right-0 sm:top-0 sm:mt-0">
+          <MachineAddButton onAdd={onAdd} />
         </div>
       </header>
     </div>
+  )
+}
+
+export function MachineAddButton({ onAdd, className }: { onAdd: () => void; className?: string }) {
+  const { tx } = useTranslation()
+
+  return (
+    <Button
+      onClick={onAdd}
+      className={cn('min-h-11 rounded-xl bg-loom px-4 text-white shadow-[var(--shadow-button)] hover:bg-loom-elevated hover:text-white focus-visible:ring-saffron/40', className)}
+    >
+      <Plus className="h-4 w-4" aria-hidden="true" />
+      <span>{tx('Add machine')}</span>
+    </Button>
   )
 }

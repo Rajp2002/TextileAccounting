@@ -6,12 +6,12 @@ import { useSearchParams } from 'next/navigation'
 import { useTranslation } from '@/lib/i18n/context'
 import { safeBaseReturnPath } from '@/lib/base-production-navigation'
 import { getMachineReadiness, type BaseProductionMachineWithReadiness } from '@/lib/machine-readiness'
-import { MachinesPageHeader } from '@/components/machines/MachinesPageHeader'
+import { MachineAddButton, MachinesPageHeader } from '@/components/machines/MachinesPageHeader'
 import { MachineToolbar, type MachineStatusFilter } from '@/components/machines/MachineToolbar'
 import { MachineGrid } from '@/components/machines/MachineGrid'
 import { MachineEmptyState } from '@/components/machines/MachineEmptyState'
 import MachineEditor from './MachineEditor'
-import { ArrowUpRight, ChevronDown, CircleHelp, ListChecks } from 'lucide-react'
+import { ChevronDown, CircleHelp } from 'lucide-react'
 import { NavigationLink } from '@/components/navigation/navigation-link'
 import { TourInvitation } from '@/components/tours/TourInvitation'
 import MachinesTutorial from '@/components/tours/MachinesTutorial'
@@ -160,56 +160,58 @@ export default function MachinesRegister({
             />
           )}
           {!isOpen && (
-            <aside className="machines-reference-rail space-y-3" aria-label={copy.setupTitle}>
-              <section
-                aria-labelledby="machines-setup-heading"
-                className="overflow-hidden rounded-2xl border border-hairline/80 bg-surface/95 shadow-[var(--shadow-card)]"
-                data-i18n-skip="true"
-                lang={language}
-              >
-                <div className="flex items-center gap-2.5 border-b border-hairline/70 bg-saffron-soft/30 px-4 py-3.5">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-saffron/20 bg-surface text-saffron-deep"><ListChecks className="h-4 w-4" aria-hidden="true" /></span>
+            <aside className="machines-reference-rail" aria-label={copy.setupTitle}>
+              <div className="machines-reference-action">
+                <MachineAddButton onAdd={tourStep ? () => {} : add} />
+              </div>
+              <div className="machines-reference-bottom space-y-3">
+                <section
+                  aria-labelledby="machines-setup-heading"
+                  className="rounded-[1.75rem] border border-warning/20 bg-warning-soft/90 px-4 py-4 text-center shadow-[var(--shadow-card)]"
+                  data-i18n-skip="true"
+                  lang={language}
+                >
                   <h2 id="machines-setup-heading" className="text-sm font-semibold leading-snug text-ink">{copy.setupTitle}</h2>
-                </div>
-                <div className="divide-y divide-hairline/70 px-4">
-                  <div data-machines-tour="production-next" className="py-3.5">
-                    <NavigationLink
-                      href={tourStep ? '#' : '/owner/production?tab=jobs'}
-                      onClick={event => { if (tourStep) event.preventDefault() }}
-                      className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold leading-snug text-saffron-deep underline underline-offset-4 hover:text-ink focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/40"
-                    >
-                      {copy.productionLink}<ArrowUpRight className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                    </NavigationLink>
-                    <p className="text-xs leading-relaxed text-body">{copy.productionHelp}</p>
+                  <div className="mt-2 divide-y divide-warning/15">
+                    <div data-machines-tour="production-next" className="py-2.5">
+                      <NavigationLink
+                        href={tourStep ? '#' : '/owner/production?tab=jobs'}
+                        onClick={event => { if (tourStep) event.preventDefault() }}
+                        className="inline-flex min-h-10 items-center text-xs font-semibold leading-snug text-saffron-deep underline underline-offset-4 hover:text-ink focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/40"
+                      >
+                        {copy.productionLink}
+                      </NavigationLink>
+                      <p className="text-xs leading-relaxed text-body">{copy.productionHelp}</p>
+                    </div>
+                    <div data-machines-tour="assignments-next" className="pt-2.5">
+                      <NavigationLink
+                        href={tourStep ? '#' : '/owner/assignments'}
+                        onClick={event => { if (tourStep) event.preventDefault() }}
+                        className="inline-flex min-h-10 items-center text-xs font-semibold leading-snug text-saffron-deep underline underline-offset-4 hover:text-ink focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/40"
+                      >
+                        {copy.assignmentsLink}
+                      </NavigationLink>
+                      <p className="text-xs leading-relaxed text-body">{copy.assignmentsHelp}</p>
+                    </div>
                   </div>
-                  <div data-machines-tour="assignments-next" className="py-3.5">
-                    <NavigationLink
-                      href={tourStep ? '#' : '/owner/assignments'}
-                      onClick={event => { if (tourStep) event.preventDefault() }}
-                      className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold leading-snug text-saffron-deep underline underline-offset-4 hover:text-ink focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/40"
-                    >
-                      {copy.assignmentsLink}<ArrowUpRight className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                    </NavigationLink>
-                    <p className="text-xs leading-relaxed text-body">{copy.assignmentsHelp}</p>
-                  </div>
-                </div>
-              </section>
-              <details
-                className="group overflow-hidden rounded-2xl border border-info/20 bg-surface/95 shadow-[var(--shadow-card)]"
-                data-i18n-skip="true"
-                lang={language}
-              >
-                <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-2 bg-info-soft/45 px-4 py-3 text-sm font-semibold text-info focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-info/40 [&::-webkit-details-marker]:hidden">
-                  <span className="flex items-center gap-2"><CircleHelp className="h-4 w-4 shrink-0" aria-hidden="true" />{copy.helpTitle}</span>
-                  <ChevronDown className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
-                </summary>
-                <dl className="space-y-4 border-t border-info/15 px-4 py-4 text-xs leading-relaxed">
-                  {copy.help.map(([title, description]) => <div key={title}>
-                    <dt className="font-semibold text-ink">{title}</dt>
-                    <dd className="mt-1 text-body">{description}</dd>
-                  </div>)}
-                </dl>
-              </details>
+                </section>
+                <details
+                  className="group overflow-hidden rounded-2xl border border-info/20 bg-info-soft/90 shadow-[var(--shadow-card)]"
+                  data-i18n-skip="true"
+                  lang={language}
+                >
+                  <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 text-sm font-semibold text-info focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-info/40 [&::-webkit-details-marker]:hidden">
+                    <span className="flex items-center gap-2"><CircleHelp className="h-4 w-4 shrink-0" aria-hidden="true" />{copy.helpTitle}</span>
+                    <ChevronDown className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
+                  </summary>
+                  <dl className="space-y-4 border-t border-info/15 bg-surface/80 px-4 py-4 text-xs leading-relaxed">
+                    {copy.help.map(([title, description]) => <div key={title}>
+                      <dt className="font-semibold text-ink">{title}</dt>
+                      <dd className="mt-1 text-body">{description}</dd>
+                    </div>)}
+                  </dl>
+                </details>
+              </div>
             </aside>
           )}
           {preview && <MachineEditor key={preview} today={today} tourPreview={{ machine: examples[0], editing: false }}>{() => null}</MachineEditor>}

@@ -492,6 +492,10 @@
     margin-top: 1.25rem;
   }
 
+  .machines-reference-action {
+    display: none;
+  }
+
   .shadow-weavly-card {
     box-shadow: var(--shadow-card);
   }
@@ -815,17 +819,34 @@
       margin-inline: auto;
     }
 
+    .machines-inline-add {
+      display: none;
+    }
+
     .machines-reference-rail {
       position: fixed;
-      top: 6rem;
+      top: 5.5rem;
+      bottom: 1rem;
       right: 1rem;
       z-index: 30;
       width: 14rem;
-      max-height: calc(100vh - 7rem);
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
       overflow-y: auto;
       margin-top: 0;
       padding-bottom: 0.25rem;
       scrollbar-width: thin;
+    }
+
+    .machines-reference-action {
+      display: flex;
+      flex: none;
+      justify-content: center;
+    }
+
+    .machines-reference-bottom {
+      margin-top: auto;
     }
 
     .machine-card-grid {
