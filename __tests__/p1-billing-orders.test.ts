@@ -56,7 +56,7 @@ describe('P1 Billing Orders Static Analysis Tests', () => {
         expect(content).toContain('<UpgradeWall')
         expect(upgradeText('en', 'liteFit')).toBe('Your complete costing desk')
         expect(UPGRADE_PLAN_FEATURES.base).toEqual([...UPGRADE_PLAN_FEATURES.lite, 'production', 'payroll'])
-        expect(content).toContain('manual annual renewal')
+        expect(content).toContain('Annual renewals are manual')
         expect(content).toContain('activeRenewalPrice')
         expect(content).toContain("subscriptionTier === 'lite'")
         expect(content).toContain('Payment history')

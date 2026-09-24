@@ -105,8 +105,8 @@ describe('Guided Tour Left Rail Placement Across All Sections', () => {
         expect(payrollTour).toContain('<TourInvitation')
         expect(payrollTour).toContain('tourId="payroll"')
         expect(payrollTour).toContain('align="full"')
-        expect(payrollTour).toContain('border-amber-200/90')
-        expect(payrollTour).toContain('bg-amber-50/75')
+        expect(payrollTour).toContain('border-saffron-soft/90')
+        expect(payrollTour).toContain('bg-saffron-soft/75')
     })
 
     // 9 & 10. Fabric Stock & Yarn Stock
