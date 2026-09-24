@@ -893,8 +893,8 @@
 
     .workers-reference-rail {
       position: fixed;
-      top: 2rem;
-      bottom: 1rem;
+      top: 6.5rem;
+      bottom: 8rem;
       right: 1rem;
       z-index: 30;
       display: flex;
@@ -911,6 +911,12 @@
       display: flex;
       flex: none;
       justify-content: center;
+    }
+
+    .workers-reference-action button,
+    .machines-reference-action button,
+    .dispatch-action-rail button {
+      width: 100%;
     }
 
     .workers-reference-bottom {
@@ -934,7 +940,7 @@
     .machines-reference-rail {
       position: fixed;
       top: 5.5rem;
-      bottom: 1rem;
+      bottom: 1.5rem;
       right: 1rem;
       z-index: 30;
       width: 14rem;
@@ -982,6 +988,23 @@
     }
   }
 
+  @media (min-width: 1660px) {
+    .payroll-workspace-shell,
+    .workers-workspace-shell,
+    .machines-workspace-shell,
+    .dispatch-workspace-shell {
+      width: min(100%, calc(100vw - 248px - 36rem));
+    }
+
+    .payroll-period-rail,
+    .payroll-records-action,
+    .workers-reference-rail,
+    .machines-reference-rail,
+    .dispatch-action-rail {
+      width: 16rem;
+    }
+  }
+
   /* The Live Cost toggle is fixed to the viewport. A transform on the route
      entrance wrapper would otherwise make it scroll with the estimator. */
   .ui-route-enter.estimator-mobile-form {
@@ -1018,25 +1041,32 @@
   }
 
   @media (min-width: 1800px) {
+    .payroll-workspace-shell,
+    .workers-workspace-shell,
+    .machines-workspace-shell,
+    .dispatch-workspace-shell {
+      width: min(100%, calc(100vw - 248px - 39rem));
+    }
+
     .payroll-period-rail,
     .payroll-records-action {
       right: 1.25rem;
-      width: 14.5rem;
+      width: 17rem;
     }
 
     .workers-reference-rail {
       right: 1.25rem;
-      width: 14.5rem;
+      width: 17rem;
     }
 
     .machines-reference-rail {
       right: 1.25rem;
-      width: 14.5rem;
+      width: 17rem;
     }
 
     .dispatch-action-rail {
       right: 1.25rem;
-      width: 14.5rem;
+      width: 17rem;
     }
 
     .estimator-left-rail {

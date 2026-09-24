@@ -195,7 +195,6 @@ export default function WorkersRegister({
               next.delete('worker')
               window.history.replaceState(null, '', `/owner/workers${next.size ? `?${next}` : ''}`)
             }}
-            totalCount={tourStep ? sampleWorkers.length : workers.length}
           /></div>
 
           {!isOpen && (
@@ -283,11 +282,11 @@ export default function WorkersRegister({
                   lang={language}
                   className="group overflow-hidden rounded-2xl border border-info/20 bg-info-soft/90 shadow-[var(--shadow-card)]"
                 >
-                  <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 text-sm font-semibold leading-snug text-info focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-info/40 [&::-webkit-details-marker]:hidden">
-                    <span className="flex items-start gap-2"><CircleHelp className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />{tourCopy.helpTitle}</span>
-                    <ChevronDown className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
+                  <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-5 py-3.5 text-[0.9375rem] font-semibold leading-snug text-info focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-info/40 [&::-webkit-details-marker]:hidden">
+                    <span className="flex items-start gap-2.5"><CircleHelp className="mt-0.5 size-[1.125rem] shrink-0" aria-hidden="true" />{tourCopy.helpTitle}</span>
+                    <ChevronDown className="size-[1.125rem] shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
                   </summary>
-                  <dl className="workers-help-list grid max-h-[min(60vh,32rem)] gap-4 overflow-y-auto border-t border-info/15 bg-surface/90 px-4 py-4 text-xs leading-relaxed sm:grid-cols-2">
+                  <dl className="workers-help-list grid max-h-[min(60vh,32rem)] gap-4 overflow-y-auto border-t border-info/15 bg-surface/90 px-5 py-5 text-sm leading-relaxed sm:grid-cols-2">
                     {workersHelpSteps.map(topic => <div key={topic}>
                       <dt className="font-semibold text-ink">{tourCopy.fields[topic][0]}</dt>
                       <dd className="mt-1 text-body">{tourCopy.fields[topic][1]}</dd>

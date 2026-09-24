@@ -164,34 +164,34 @@ export default function MachinesRegister({
               <div className="machines-reference-action">
                 <MachineAddButton onAdd={tourStep ? () => {} : add} />
               </div>
-              <div className="machines-reference-bottom space-y-3">
+              <div className="machines-reference-bottom space-y-5">
                 <section
                   aria-labelledby="machines-setup-heading"
-                  className="rounded-[1.75rem] border border-warning/20 bg-warning-soft/90 px-4 py-4 text-center shadow-[var(--shadow-card)]"
+                  className="rounded-[1.75rem] border border-warning/20 bg-warning-soft/90 px-5 py-5 text-center shadow-[var(--shadow-card)]"
                   data-i18n-skip="true"
                   lang={language}
                 >
-                  <h2 id="machines-setup-heading" className="text-sm font-semibold leading-snug text-ink">{copy.setupTitle}</h2>
-                  <div className="mt-2 divide-y divide-warning/15">
-                    <div data-machines-tour="production-next" className="py-2.5">
+                  <h2 id="machines-setup-heading" className="text-base font-semibold leading-snug text-ink">{copy.setupTitle}</h2>
+                  <div className="mt-3 divide-y divide-warning/15">
+                    <div data-machines-tour="production-next" className="py-3">
                       <NavigationLink
                         href={tourStep ? '#' : '/owner/production?tab=jobs'}
                         onClick={event => { if (tourStep) event.preventDefault() }}
-                        className="inline-flex min-h-10 items-center text-xs font-semibold leading-snug text-saffron-deep underline underline-offset-4 hover:text-ink focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/40"
+                        className="inline-flex min-h-10 items-center text-sm font-semibold leading-snug text-saffron-deep underline underline-offset-4 hover:text-ink focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/40"
                       >
                         {copy.productionLink}
                       </NavigationLink>
-                      <p className="text-xs leading-relaxed text-body">{copy.productionHelp}</p>
+                      <p className="text-sm leading-relaxed text-body">{copy.productionHelp}</p>
                     </div>
-                    <div data-machines-tour="assignments-next" className="pt-2.5">
+                    <div data-machines-tour="assignments-next" className="pt-3">
                       <NavigationLink
                         href={tourStep ? '#' : '/owner/assignments'}
                         onClick={event => { if (tourStep) event.preventDefault() }}
-                        className="inline-flex min-h-10 items-center text-xs font-semibold leading-snug text-saffron-deep underline underline-offset-4 hover:text-ink focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/40"
+                        className="inline-flex min-h-10 items-center text-sm font-semibold leading-snug text-saffron-deep underline underline-offset-4 hover:text-ink focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/40"
                       >
                         {copy.assignmentsLink}
                       </NavigationLink>
-                      <p className="text-xs leading-relaxed text-body">{copy.assignmentsHelp}</p>
+                      <p className="text-sm leading-relaxed text-body">{copy.assignmentsHelp}</p>
                     </div>
                   </div>
                 </section>
@@ -200,11 +200,11 @@ export default function MachinesRegister({
                   data-i18n-skip="true"
                   lang={language}
                 >
-                  <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 text-sm font-semibold text-info focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-info/40 [&::-webkit-details-marker]:hidden">
-                    <span className="flex items-center gap-2"><CircleHelp className="h-4 w-4 shrink-0" aria-hidden="true" />{copy.helpTitle}</span>
-                    <ChevronDown className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
+                  <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-5 py-3.5 text-[0.9375rem] font-semibold text-info focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-info/40 [&::-webkit-details-marker]:hidden">
+                    <span className="flex items-center gap-2.5"><CircleHelp className="size-[1.125rem] shrink-0" aria-hidden="true" />{copy.helpTitle}</span>
+                    <ChevronDown className="size-[1.125rem] shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
                   </summary>
-                  <dl className="space-y-4 border-t border-info/15 bg-surface/80 px-4 py-4 text-xs leading-relaxed">
+                  <dl className="space-y-4 border-t border-info/15 bg-surface/80 px-5 py-5 text-sm leading-relaxed">
                     {copy.help.map(([title, description]) => <div key={title}>
                       <dt className="font-semibold text-ink">{title}</dt>
                       <dd className="mt-1 text-body">{description}</dd>

@@ -14,7 +14,6 @@ interface WorkersPageHeaderProps {
   focus?: string | null
   hasFocusedWorker?: boolean
   onClearFocus?: () => void
-  totalCount?: number
 }
 
 export function WorkersPageHeader({
@@ -23,7 +22,6 @@ export function WorkersPageHeader({
   focus,
   hasFocusedWorker,
   onClearFocus,
-  totalCount,
 }: WorkersPageHeaderProps) {
   const { tx } = useTranslation()
 
@@ -61,25 +59,13 @@ export function WorkersPageHeader({
         </div>
       )}
 
-      <header className="flex flex-col gap-4 border-b border-hairline/70 pb-5 sm:flex-row sm:items-start sm:justify-between sm:pb-6">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-            <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-ink sm:text-[2rem]">
-              {tx('Workers')}
-            </h1>
-            {typeof totalCount === 'number' && (
-              <span className="text-sm font-medium text-subtle">
-                · {totalCount === 1 ? tx('1 worker') : `${totalCount} ${tx('workers')}`}
-              </span>
-            )}
-          </div>
-          <p className="mt-1 text-sm leading-relaxed text-body">
-            {tx('Add and manage your factory workforce.')}
-          </p>
-        </div>
-
-        <div className="workers-inline-add shrink-0">
-          <WorkerAddButton onAdd={onAdd} className="w-full sm:w-auto" />
+      <header className="relative border-b border-hairline/70 pb-5 text-center sm:pb-6">
+        <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-ink sm:text-[2rem]">
+          {tx('Workers')}
+        </h1>
+        <p className="sr-only">{tx('Add and manage your factory workforce.')}</p>
+        <div className="workers-inline-add mt-3 flex justify-end sm:absolute sm:right-0 sm:top-0 sm:mt-0">
+          <WorkerAddButton onAdd={onAdd} />
         </div>
       </header>
     </div>
@@ -92,9 +78,9 @@ export function WorkerAddButton({ onAdd, className }: { onAdd: () => void; class
   return (
     <Button
       onClick={onAdd}
-      className={cn('min-h-11 rounded-xl bg-loom px-4 font-medium text-white shadow-[var(--shadow-button)] hover:bg-loom-elevated hover:text-white focus-visible:ring-saffron/40', className)}
+      className={cn('min-h-12 rounded-xl bg-loom px-5 text-[0.9375rem] font-semibold text-white shadow-[var(--shadow-button)] hover:bg-loom-elevated hover:text-white focus-visible:ring-saffron/40', className)}
     >
-      <UserPlus className="h-4 w-4" aria-hidden="true" />
+      <UserPlus className="size-[1.125rem]" aria-hidden="true" />
       <span>{tx('Add worker')}</span>
     </Button>
   )
