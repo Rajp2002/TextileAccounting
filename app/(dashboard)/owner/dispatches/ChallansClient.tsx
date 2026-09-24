@@ -44,8 +44,8 @@ import ChallanDraftEditor from './ChallanDraftEditor'
 
 function NewDispatchButton({ onClick, disabled, label }: { onClick: () => void; disabled: boolean; label: string }) {
     return (
-        <Button variant="saffron" disabled={disabled} onClick={onClick} className="min-h-11 rounded-xl px-4">
-            <Plus className="h-4 w-4" aria-hidden="true" />
+        <Button variant="saffron" disabled={disabled} onClick={onClick} className="min-h-12 rounded-xl px-5 text-[0.9375rem] font-semibold">
+            <Plus className="size-[1.125rem]" aria-hidden="true" />
             {label}
         </Button>
     )

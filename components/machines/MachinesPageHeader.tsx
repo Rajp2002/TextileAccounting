@@ -48,9 +48,9 @@ export function MachineAddButton({ onAdd, className }: { onAdd: () => void; clas
   return (
     <Button
       onClick={onAdd}
-      className={cn('min-h-11 rounded-xl bg-loom px-4 text-white shadow-[var(--shadow-button)] hover:bg-loom-elevated hover:text-white focus-visible:ring-saffron/40', className)}
+      className={cn('min-h-12 rounded-xl bg-loom px-5 text-[0.9375rem] font-semibold text-white shadow-[var(--shadow-button)] hover:bg-loom-elevated hover:text-white focus-visible:ring-saffron/40', className)}
     >
-      <Plus className="h-4 w-4" aria-hidden="true" />
+      <Plus className="size-[1.125rem]" aria-hidden="true" />
       <span>{tx('Add machine')}</span>
     </Button>
   )

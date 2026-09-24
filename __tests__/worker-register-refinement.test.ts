@@ -78,7 +78,7 @@ beforeEach(() => {
 
 describe('Workforce Register Premium Redesign', () => {
   describe('Page Header & Workforce Groups Structure', () => {
-    it('renders the page header with quiet total count, subtitle, and + Add worker button', () => {
+    it('renders a centered page title with the worker count in the toolbar', () => {
       const html = renderToStaticMarkup(
         React.createElement(WorkersRegister, {
           workers: mockWorkers,
@@ -86,9 +86,11 @@ describe('Workforce Register Premium Redesign', () => {
         })
       )
 
-      expect(html).toContain('Workers')
+      const header = html.match(/<header[^>]*>[\s\S]*?<\/header>/)?.[0]
+      expect(header).toContain('text-center')
+      expect(header).toMatch(/<h1[^>]*>Workers<\/h1>/)
+      expect(header).not.toContain('3 workers')
       expect(html).toContain('3 workers')
-      expect(html).toContain('Add and manage your factory workforce.')
       expect(html).toContain('Add worker')
       // Old table wrapper heading removed
       expect(html).not.toContain('Workforce register')

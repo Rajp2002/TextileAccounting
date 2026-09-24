@@ -485,37 +485,37 @@ export default function BaseProductionClient({
             {view === 'payroll' && (
                 <aside className="payroll-period-rail" aria-label="Payroll period and settlement">
                     {activeTab === 'history' ? (
-                        <Button variant="outline" className="min-h-11 w-full rounded-xl border-hairline bg-surface shadow-[var(--shadow-card)]" onClick={() => setPayrollTab('pay')}>
+                        <Button variant="outline" className="min-h-12 w-full rounded-xl border-hairline bg-surface px-5 text-[0.9375rem] shadow-[var(--shadow-card)]" onClick={() => setPayrollTab('pay')}>
                             <WalletCards className="h-4 w-4" /> Current payroll
                         </Button>
                     ) : (
                         <>
-                            <div className="rounded-2xl border border-hairline/80 bg-surface/95 p-3 shadow-[var(--shadow-card)]">
-                                <div className="mb-2.5 flex flex-wrap items-center justify-between gap-1.5">
-                                    <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-subtle">Pay period</p>
+                            <div className="rounded-2xl border border-hairline/80 bg-surface/95 p-4 shadow-[var(--shadow-card)]">
+                                <div className="mb-3 flex flex-wrap items-center justify-between gap-1.5">
+                                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-subtle">Pay period</p>
                                     {activePeriodSummary.status === 'settled' ? (
-                                        <Badge variant="success" className="text-[10px] font-semibold">Settled</Badge>
+                                        <Badge variant="success" className="text-xs font-semibold">Settled</Badge>
                                     ) : activePeriodSummary.status === 'ready_to_complete' ? (
-                                        <Badge variant="brand" className="text-[10px] font-semibold">Ready to complete</Badge>
+                                        <Badge variant="brand" className="text-xs font-semibold">Ready to complete</Badge>
                                     ) : activePeriodSummary.status === 'in_progress' ? (
-                                        <Badge variant="warning" className="text-[10px] font-semibold">In progress · {activePeriodSummary.paidWorkers}/{activePeriodSummary.totalWorkers}</Badge>
+                                        <Badge variant="warning" className="text-xs font-semibold">In progress · {activePeriodSummary.paidWorkers}/{activePeriodSummary.totalWorkers}</Badge>
                                     ) : (
-                                        <Badge variant="secondary" className="text-[10px] font-semibold">Open</Badge>
+                                        <Badge variant="secondary" className="text-xs font-semibold">Open</Badge>
                                     )}
                                 </div>
-                                <div className="flex h-11 items-center rounded-xl border border-hairline bg-surface-soft/35 p-0.5" role="group" aria-label="Payroll period selector">
-                                    <Button variant="ghost" size="icon-xs" onClick={handlePreviousPeriod} className="h-9 w-7 shrink-0 rounded-lg text-subtle hover:text-ink" aria-label="Previous payroll period">
-                                        <ChevronLeft className="h-4 w-4" />
+                                <div className="flex h-12 items-center rounded-xl border border-hairline bg-surface-soft/35 p-0.5" role="group" aria-label="Payroll period selector">
+                                    <Button variant="ghost" size="icon-xs" onClick={handlePreviousPeriod} className="h-10 w-9 shrink-0 rounded-lg text-subtle hover:text-ink" aria-label="Previous payroll period">
+                                        <ChevronLeft className="size-[1.125rem]" />
                                     </Button>
-                                    <span className="min-w-0 flex-1 truncate px-1 text-center text-xs font-semibold text-ink">{activePeriodLabel}</span>
-                                    <Button variant="ghost" size="icon-xs" onClick={handleNextPeriod} className="h-9 w-7 shrink-0 rounded-lg text-subtle hover:text-ink" aria-label="Next payroll period">
-                                        <ChevronRight className="h-4 w-4" />
+                                    <span className="min-w-0 flex-1 truncate px-1 text-center text-sm font-semibold text-ink">{activePeriodLabel}</span>
+                                    <Button variant="ghost" size="icon-xs" onClick={handleNextPeriod} className="h-10 w-9 shrink-0 rounded-lg text-subtle hover:text-ink" aria-label="Next payroll period">
+                                        <ChevronRight className="size-[1.125rem]" />
                                     </Button>
                                 </div>
-                                <p className="mt-2 text-center text-xs font-medium text-subtle">{formatDateOnly(activePeriodBounds.start)} – {formatDateOnly(activePeriodBounds.end)}</p>
+                                <p className="mt-2.5 text-center text-sm font-medium text-subtle">{formatDateOnly(activePeriodBounds.start)} – {formatDateOnly(activePeriodBounds.end)}</p>
                             </div>
-                            <Button onClick={() => setWorkspaceOpen(true)} className="min-h-11 w-full rounded-xl bg-loom px-4 font-semibold text-white shadow-[var(--shadow-button)] hover:bg-loom-elevated hover:text-white focus-visible:ring-saffron/40">
-                                <WalletCards className="h-4 w-4" />
+                            <Button onClick={() => setWorkspaceOpen(true)} className="min-h-12 w-full rounded-xl bg-loom px-5 text-[0.9375rem] font-semibold text-white shadow-[var(--shadow-button)] hover:bg-loom-elevated hover:text-white focus-visible:ring-saffron/40">
+                                <WalletCards className="size-[1.125rem]" />
                                 {activePeriodSummary.status === 'settled'
                                     ? 'View settled payroll'
                                     : activePeriodSummary.status === 'ready_to_complete'
@@ -833,8 +833,8 @@ export default function BaseProductionClient({
 
             {view === 'payroll' && activeTab !== 'history' && (
                 <div className="payroll-records-action">
-                    <Button variant="outline" className="h-10 rounded-xl" onClick={() => setPayrollTab('history')}>
-                        <History className="h-4 w-4" /> Payroll records <ChevronRight className="h-4 w-4" />
+                    <Button variant="outline" className="min-h-12 w-full rounded-xl px-5 text-[0.9375rem] font-semibold" onClick={() => setPayrollTab('history')}>
+                        <History className="size-[1.125rem]" /> Payroll records <ChevronRight className="size-[1.125rem]" />
                     </Button>
                 </div>
             )}
