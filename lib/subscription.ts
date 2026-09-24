@@ -18,19 +18,15 @@ export {
     hasPaidBaseHistory,
     resolveEffectiveSubscription,
     resolveOrgPlanAccess,
-    tierSatisfies,
     type OrgPlanAccess,
-    type ProductExperience,
     type SubscriptionTier,
 } from './subscription-access'
 
 /**
  * Subscription tier hierarchy:
  *   'none'    — no active subscription (blocked)
- *   'trial'   — legacy trial access for already-created rows; new trials are retired
  *   'lite'    — paid Lite plan (complete costing management)
  *   'base'    — paid Base plan (Lite + owner-only Production Core)
- *   'premium' — retained legacy operations entitlement
  */
 // ─── getOrgTier ───────────────────────────────────────────────────────────────
 
@@ -47,7 +43,7 @@ export async function getOrgPlanAccess(orgId: string): Promise<OrgPlanAccess> {
 
     const { data, error } = await admin
         .from('organizations')
-        .select('product_experience, org_subscriptions(status, plan_tier, current_start, current_end, razorpay_payment_id, created_at)')
+        .select('org_subscriptions(status, plan_tier, current_start, current_end, razorpay_payment_id, created_at)')
         .eq('id', orgId)
         .maybeSingle()
 
@@ -57,7 +53,6 @@ export async function getOrgPlanAccess(orgId: string): Promise<OrgPlanAccess> {
     const subscriptionTier = resolveEffectiveSubscription(subscriptionRows).tier
     const access = resolveOrgPlanAccess(
         subscriptionTier,
-        data?.product_experience,
         subscriptionTier === 'none' && hasPaidBaseHistory(subscriptionRows),
     )
     if (access.effectiveTier !== 'none') return access
@@ -66,7 +61,7 @@ export async function getOrgPlanAccess(orgId: string): Promise<OrgPlanAccess> {
     // An activated paid history never silently falls back to Free on expiry.
     const hadPaidAccess = hasEstablishedPaidHistory(subscriptionRows)
     return hadPaidAccess ? { ...access, freeAccount: true }
-        : { ...resolveOrgPlanAccess('free', 'base'), freeAccount: true }
+        : { ...resolveOrgPlanAccess('free'), freeAccount: true }
 }
 
 export async function getOrgTier(orgId: string): Promise<SubscriptionTier> {
@@ -151,7 +146,7 @@ export async function getSubscriptionStatus(orgId: string): Promise<string> {
 }
 
 /**
- * @deprecated Use tierSatisfies() instead.
+ * @deprecated Use plan capabilities instead.
  */
 export function isSubscriptionActive(status: string): boolean {
     return ['active', 'authenticated'].includes(status)

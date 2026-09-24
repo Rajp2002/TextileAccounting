@@ -102,7 +102,7 @@ export function ReferralCard({ stats }: { stats: ReferralStats | null }) {
     const [copied, setCopied] = useState(false)
     const [copyFailed, setCopyFailed] = useState(false)
 
-    // The server intentionally returns no code for trials, unpaid accounts,
+    // The server intentionally returns no code for unpaid accounts,
     // expired Base accounts and retained legacy operations accounts.
     if (!stats || !stats.eligible || !stats.code) return null
 
@@ -159,7 +159,7 @@ export function ReferralCard({ stats }: { stats: ReferralStats | null }) {
     }
 
     return (
-        <Card className="premium-surface overflow-hidden border-loom-elevated bg-loom text-white shadow-[var(--shadow-panel)]">
+        <Card className="ui-surface overflow-hidden border-loom-elevated bg-loom text-white shadow-[var(--shadow-panel)]">
             <CardHeader className="border-b border-white/10 pb-4">
                 <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10">
@@ -203,7 +203,7 @@ export function ReferralCard({ stats }: { stats: ReferralStats | null }) {
                         aria-valuenow={Math.min(currentYearCredits, cap)}
                     >
                         <div
-                            className="premium-progress-fill relative h-full w-full origin-left rounded-full bg-saffron"
+                            className="ui-progress-fill relative h-full w-full origin-left rounded-full bg-saffron"
                             style={{ transform: `scaleX(${progress / 100})` }}
                         >
                             <div className="absolute inset-0 bg-white/20" />
@@ -236,7 +236,7 @@ export function ReferralCard({ stats }: { stats: ReferralStats | null }) {
                                     title={copied ? 'Copied' : 'Copy referral code'}
                                     aria-label={copied ? 'Referral code copied' : 'Copy referral code'}
                                 >
-                                    {copied ? <CheckCircle2 className="premium-success-pop h-4.5 w-4.5" /> : <Copy className="h-4.5 w-4.5 opacity-60" />}
+                                    {copied ? <CheckCircle2 className="ui-success-pop h-4.5 w-4.5" /> : <Copy className="h-4.5 w-4.5 opacity-60" />}
                                 </Button>
                                 <Button
                                     onClick={shareWhatsApp}

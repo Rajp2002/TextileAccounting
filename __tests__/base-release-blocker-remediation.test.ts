@@ -30,14 +30,8 @@ describe('Base release blocker remediation', () => {
     expect(actions).toContain("p_quote_payload: attestation.payload")
   })
 
-  it('canonicalizes Base-only production routes before rendering a Full Suite shell', () => {
-    const todayPage = read('app/(dashboard)/owner/today/page.tsx')
-    const supervisorLayout = read('app/(dashboard)/supervisor/layout.tsx')
-
-    expect(todayPage).toContain("redirect('/owner/estimator')")
-    expect(todayPage).toContain("tierSatisfies(tier, 'premium')")
-    expect(supervisorLayout).toContain("profile.role === 'owner'")
-    expect(supervisorLayout).toContain("redirect('/owner/estimator')")
+  it('routes current owners through the estimator', () => {
+    expect(read('app/(auth)/onboarding/page.tsx')).toContain("redirect('/owner/estimator')")
   })
 
   it('restores the visible direct weaving rate with a saved quality or draft', () => {

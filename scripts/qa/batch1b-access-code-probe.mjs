@@ -94,8 +94,6 @@ async function createDisposableOrg(admin, ownerId) {
         .insert({
             name: `Batch1B Access Probe ${suffix}`,
             owner_id: ownerId,
-            join_code: `B1B${suffix.slice(0, 5)}`,
-            join_code_expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
             onboarding_complete: true,
             production_mode: 'market_run',
             last_code_plain: null,

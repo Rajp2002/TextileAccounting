@@ -13,7 +13,6 @@ const activeContactSurfaces = [
     'lib/generate-payment-receipt.ts',
     'app/(auth)/actions/auth.ts',
     'app/locked/page.tsx',
-    'components/settings/EmergencyLockdown.tsx',
 ]
 
 describe('customer-facing contact channels', () => {

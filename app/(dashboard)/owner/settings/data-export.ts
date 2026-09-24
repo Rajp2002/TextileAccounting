@@ -13,7 +13,6 @@ const SENSITIVE_EXPORT_FIELD_NAMES = new Set([
     'client_ip',
     'cookie',
     'esi_number',
-    'join_code',
     'last_code_plain',
     'password',
     'pf_number',

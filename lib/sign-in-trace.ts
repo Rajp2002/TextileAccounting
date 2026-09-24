@@ -4,11 +4,11 @@ export const SIGN_IN_TRACE_STORAGE_KEY = 'weavly:signin-trace'
 export type SignInClientStage = 'route_painted' | 'dashboard_ready' | 'readiness_timeout'
 
 const SIGN_IN_DESTINATIONS = new Set([
-    '/owner/today',
     '/owner/estimator',
+    '/free',
     '/owner/billing',
     '/onboarding',
-    '/supervisor/dashboard',
+    '/feature-archived',
     '/admin',
 ])
 

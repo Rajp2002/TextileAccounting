@@ -37,8 +37,6 @@ async function SettingsDataLoader({ children }: { children: React.ReactNode }) {
                 organization={{
                     org_id: profile.org_id,
                     name: organization?.name ?? 'Weavly',
-                    join_code: organization?.join_code ?? null,
-                    join_code_expires_at: organization?.join_code_expires_at ?? null,
                     production_mode: normalizeProductionMode(organization?.production_mode),
                 }}
             >

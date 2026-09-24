@@ -12,7 +12,7 @@ The product has three related surfaces:
 - **Auth:** same warm brand system, centered panel, calm onboarding/login flow.
 - **Landing:** sharper marketing contrast with white/zinc/orange, bold editorial type, and product mockups.
 
-## Global Premium Design Principles
+## Global Design Principles
 
 This core framework governs all visual and interaction design across Weavly. The goal is not to add more UI, but to create a system that feels intentional, restrained, and recognizable as Weavly.
 
@@ -40,7 +40,7 @@ This core framework governs all visual and interaction design across Weavly. The
 22. **Design for Gujarati and Hindi From the Start**: Fluid widths and text wrapping so translated phrases never break or truncate awkwardly.
 23. **Keep Animations Restrained**: Functional motion only (`120–200ms`) for menus, dialogs, disclosures, and focus feedback.
 24. **Maintain a Clear Color Hierarchy**: Navy/charcoal for structure/actions; warm cream/white for surfaces; saffron for brand; warm gray for hairline borders; semantic colors for actual status only.
-25. **Premium Does Not Mean More UI**: Before adding anything, ask: *Does this improve comprehension, task speed, or confidence?* If no, remove it. *Fewer elements, better resolved.*
+25. **More UI Is Not Better UI**: Before adding anything, ask: *Does this improve comprehension, task speed, or confidence?* If no, remove it. *Fewer elements, better resolved.*
 
 ### Agent-Level Design Review Checklist
 

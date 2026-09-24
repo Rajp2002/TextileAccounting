@@ -10,11 +10,6 @@ const migration = fs.readFileSync(
     'utf8'
 )
 
-const authActions = fs.readFileSync(
-    path.join(process.cwd(), 'app/(auth)/actions/auth.ts'),
-    'utf8'
-)
-
 describe('AUTH-012 organization tenant isolation', () => {
     it('removes every known public or owner-wide organization read policy', () => {
         expect(migration).toContain('DROP POLICY IF EXISTS "Lookup org by join code"')
@@ -32,13 +27,4 @@ describe('AUTH-012 organization tenant isolation', () => {
         )
     })
 
-    it('keeps pre-auth join-code lookup behind the trusted server action', () => {
-        const validateJoinCode = authActions.slice(
-            authActions.indexOf('export async function validateJoinCode'),
-            authActions.indexOf('// ─── joinOrganization')
-        )
-
-        expect(validateJoinCode).toContain('createAdminClient()')
-        expect(validateJoinCode).toContain(".eq('join_code', normalized)")
-    })
 })

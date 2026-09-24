@@ -523,7 +523,7 @@ function SavedQualityLibraryView({
                             if (target instanceof Element && target.closest('button, [data-slot="dialog-content"], [data-slot="dialog-overlay"]')) return
                             openGroupDetails()
                         }}
-                        className={`premium-disclosure-card cursor-pointer ${isOpen ? 'border-saffron/30 bg-surface shadow-[var(--shadow-panel)]' : 'border-hairline bg-surface shadow-[var(--shadow-card)]'}`}
+                        className={`ui-disclosure-card cursor-pointer ${isOpen ? 'border-saffron/30 bg-surface shadow-[var(--shadow-panel)]' : 'border-hairline bg-surface shadow-[var(--shadow-card)]'}`}
                     >
                         <CardContent className="p-0">
                             <div className="flex flex-col gap-4 p-4 sm:flex-row sm:flex-wrap sm:items-center sm:p-5 lg:flex-nowrap">
@@ -624,7 +624,7 @@ function SavedQualityLibraryView({
                                             </DialogClose>
                                         </DialogHeader>
 
-                                        <div className="premium-disclosure-content w-full min-w-0 bg-surface-soft/60 p-4 sm:p-5">
+                                        <div className="ui-disclosure-content w-full min-w-0 bg-surface-soft/60 p-4 sm:p-5">
                                     {!activeRecord || activeDetailLoading || !activeResult ? (
                                         <div className="flex w-full flex-col items-center justify-center rounded-xl border border-dashed border-hairline bg-surface px-6 py-10 text-center">
                                             {activeDetailLoading ? <Loader2 className="h-6 w-6 animate-spin text-info" /> : (activeRecord ?? latest) ? <AlertTriangle className="h-6 w-6 text-warning" /> : <FileText className="h-6 w-6 text-subtle" />}
@@ -820,7 +820,7 @@ function SavedQualityLibraryView({
                                                             }}
                                                             className={`rounded-lg border p-3 transition-colors duration-150 motion-reduce:transition-none cursor-pointer ${
                                                                 selected
-                                                                    ? 'premium-selected-row border-info/30 bg-info-soft/60'
+                                                                    ? 'ui-selected-row border-info/30 bg-info-soft/60'
                                                                     : isInspected
                                                                         ? 'border-saffron/40 bg-saffron-soft/20 shadow-sm ring-1 ring-saffron/30'
                                                                         : 'border-hairline bg-surface hover:bg-surface-soft/70'
@@ -1252,9 +1252,8 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
         }
     }
 
-    const openAppliedProduction = (quote: QuoteRow, order: QuoteLinkedOrder) => {
-        const marketRunId = quote.market_run_id || order.market_run_id
-        router.push(marketRunId ? `/owner/market-runs/${marketRunId}` : `/owner/orders?orderId=${order.id}`)
+    const openAppliedProduction = (_quote: QuoteRow, _order: QuoteLinkedOrder) => {
+        router.push('/owner/production')
     }
 
     const handleStatusChange = async (id: string, newStatus: 'draft' | 'sent' | 'accepted' | 'rejected') => {
@@ -1328,7 +1327,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
 
         toast.success(tx('Accepted quote converted into an active order'))
         setQuoteToConvert(null)
-        router.push(`/owner/orders?orderId=${res.orderId}`)
+        router.push('/owner/production')
     }
 
     const restoreQuoteToEstimator = (quote: QuoteRow, mode: 'edit' | 'duplicate' = 'edit') => {
@@ -1479,12 +1478,12 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             <aside className="saved-costings-left-rail space-y-3" aria-label={tx('Saved Costings guides and tools')}>
                 <SavedCostingsTutorial step={tourStep} onStepChange={setTourStep} onComplete={() => setShowCostingDeleteNudge(true)} production={canUseProductionPipeline} full={canUseProduction} ending={savedCostingTourEnding(quotes.filter(quote => isStandaloneCosting(quote.record_kind)).length)} quotations={canUseQuotationWorkflow} userId={userId} orgId={orgId} />
             </aside>
-            <div className="premium-route-enter max-w-6xl mx-auto space-y-6">
+            <div className="ui-route-enter max-w-6xl mx-auto space-y-6">
             <RouteMilestones route="/owner/quotes" shellVisible primaryUsable secondaryReady />
             <div className="min-[1540px]:hidden">
                 <ArchivePolicyNotice />
             </div>
-            {detailLoadingId && <p role="status" aria-live="polite" className="premium-status-enter rounded-lg border border-info/25 bg-info-soft px-3 py-2 text-xs font-semibold text-info">{tx('Selection saved. Loading the complete snapshot for comparison…')}</p>}
+            {detailLoadingId && <p role="status" aria-live="polite" className="ui-status-enter rounded-lg border border-info/25 bg-info-soft px-3 py-2 text-xs font-semibold text-info">{tx('Selection saved. Loading the complete snapshot for comparison…')}</p>}
             <PageHeader
                 icon={History}
                 title={canUseQuotationWorkflow ? t('common.costings_quotations_title') : t('common.saved_costings_title')}
@@ -1602,7 +1601,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                         </Button>
                     </div>
                     {comparisonMode && selectedCostings.length === 2 ? (
-                        <div className="premium-status-enter mt-3 flex flex-col gap-3 rounded-lg border border-info/25 bg-info-soft/60 p-3 sm:flex-row sm:items-center sm:justify-between" role="status" aria-live="polite" aria-busy={Boolean(detailLoadingId)}>
+                        <div className="ui-status-enter mt-3 flex flex-col gap-3 rounded-lg border border-info/25 bg-info-soft/60 p-3 sm:flex-row sm:items-center sm:justify-between" role="status" aria-live="polite" aria-busy={Boolean(detailLoadingId)}>
                             <div>
                                 <p className="text-xs font-bold text-info">Two costings selected</p>
                                 <p className="mt-1 text-xs leading-relaxed text-body">{detailLoadingId ? 'Preparing the complete saved numbers…' : 'Compare them when you need to explain a change in cost, selling price, margin, or quantity.'}</p>

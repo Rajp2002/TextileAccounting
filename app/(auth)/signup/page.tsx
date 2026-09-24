@@ -396,12 +396,6 @@ function SignupForm() {
                             Log in
                         </Link>
                     </p>
-                    <p className="text-center text-sm text-gray-500">
-                        Joining as a supervisor?{' '}
-                        <Link href="/join" className="text-amber-700 hover:underline font-medium">
-                            Enter your join code →
-                        </Link>
-                    </p>
                 </div>
             </form>
         </AuthLayout>

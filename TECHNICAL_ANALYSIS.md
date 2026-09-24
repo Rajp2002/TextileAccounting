@@ -1,5 +1,7 @@
 # Weavly Technical Analysis
 
+> Historical June 2026 architecture snapshot. For current Free, Lite, and Base routes and entitlements, see [the documentation index](docs/general/README.md) and the application source.
+
 Last analyzed from the active codebase on June 1, 2026. Updated to reflect the Commercials party identity pivot, stock-sale party selection, and May 31 bug fixes/performance improvements.
 
 ## Stack

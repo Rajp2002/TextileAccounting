@@ -64,7 +64,7 @@ describe('permanent account deletion guardrails', () => {
     })
 
     it('wires the dangerous control into owner settings and removes the partial legacy action', () => {
-        expect(settings).toContain("import { DeleteAccountCard } from '@/components/settings/delete-account-card'")
+        expect(settings).toContain("import('@/components/settings/delete-account-card')")
         expect(settings).toContain('<DeleteAccountCard organizationName={org?.name || \'\'} />')
         expect(oldExportAction).not.toContain('deleteOrganizationData')
     })

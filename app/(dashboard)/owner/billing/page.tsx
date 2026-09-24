@@ -9,10 +9,10 @@ import { BillingAttemptStatus } from '@/components/billing/BillingAttemptStatus'
 import { BillingDocumentNotice } from '@/components/billing/BillingDocumentNotice'
 import { PaymentHistoryDialog, type BillingHistoryEntry, type BillingHistoryStatus } from '@/components/billing/PaymentHistoryDialog'
 import { ReferralCard } from '@/components/billing/ReferralCard'
-import { getReferralStatsAction } from '../actions'
+import { getReferralStats } from '@/lib/referral'
 import {
     AlertCircle, ChevronDown, Clock, XCircle,
-    Star, Zap, Timer, Lock, CreditCard,
+    Star, Zap, Lock, CreditCard,
     Sparkles, ArrowRight, Calculator, FileText,
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
@@ -24,7 +24,6 @@ import {
     getBillingPlan,
     getBillingPrice,
     isSelfServePlanTier,
-    type BillingPlanTier,
     type PurchasablePlanTier,
 } from '@/lib/billing-constants'
 import {
@@ -169,24 +168,11 @@ function AccessStateCallout({
     isPending: boolean
     isRetryable: boolean
 }) {
-    if (subscriptionTier === 'lite' || subscriptionTier === 'base' || subscriptionTier === 'premium') return null
+    if (subscriptionTier === 'lite' || subscriptionTier === 'base') return null
 
-    const expiredPlan = subscription?.plan_tier === 'lite' || subscription?.plan_tier === 'base' || subscription?.plan_tier === 'premium'
+    const expiredPlan = subscription?.plan_tier === 'lite' || subscription?.plan_tier === 'base'
         ? getBillingPlan(subscription.plan_tier)
         : null
-
-    if (subscriptionTier === 'trial') {
-        return (
-            <Card className="overflow-hidden border-warning/30 bg-surface">
-                <div className="h-1.5 w-full bg-warning" />
-                <CardContent className="space-y-3 p-5">
-                    <div className="flex items-center gap-2 text-warning"><Timer className="h-4 w-4" aria-hidden="true" /><p className="text-xs font-bold uppercase tracking-wider">Legacy trial access</p></div>
-                    <h2 className="text-xl font-bold tracking-tight text-ink">Temporary access</h2>
-                    <p className="text-sm leading-relaxed text-body">Access is available until {formatDate(subscription?.current_end ?? null)}. Choose Weavly Lite or Weavly Base on the plans page when you are ready for a paid plan.</p>
-                </CardContent>
-            </Card>
-        )
-    }
 
     const state = isActivating
         ? { icon: Clock, label: 'Payment received', title: 'Access is being activated.', text: 'We received a verified payment and are confirming access. Refresh in a few seconds; do not pay again.' }
@@ -235,10 +221,11 @@ function ReferralUnavailable() {
 }
 
 async function DeferredReferralSection() {
-    let stats: Awaited<ReturnType<typeof getReferralStatsAction>> | null = null
+    let stats: Awaited<ReturnType<typeof getReferralStats>> | null = null
     let failed = false
     try {
-        stats = await getReferralStatsAction()
+        const { profile } = await requireRole(['owner'])
+        stats = await getReferralStats(profile.org_id)
     } catch {
         failed = true
     }
@@ -283,7 +270,7 @@ export default async function BillingPage({
     searchParams?: Promise<{ from?: string | string[]; plan?: string | string[] }>
 }) {
     const { profile, user } = await requireRole(['owner'])
-    if (!profile.org_id) redirect('/owner/today')
+    if (!profile.org_id) redirect('/owner/estimator')
 
     const queryPromise: Promise<{ from?: string | string[]; plan?: string | string[] }> = searchParams
         ? searchParams
@@ -328,8 +315,8 @@ export default async function BillingPage({
     const subscriptionById = new Map(
         billingSubscriptions.map((row) => [row.id, row])
     )
-    const activePaidTier = subscriptionTier === 'lite' || subscriptionTier === 'base' || subscriptionTier === 'premium' ? subscriptionTier : null
-    const latestSubscriptionTier = subscription?.plan_tier === 'lite' || subscription?.plan_tier === 'base' || subscription?.plan_tier === 'premium'
+    const activePaidTier = subscriptionTier === 'lite' || subscriptionTier === 'base' ? subscriptionTier : null
+    const latestSubscriptionTier = subscription?.plan_tier === 'lite' || subscription?.plan_tier === 'base'
         ? subscription.plan_tier
         : null
     const latestSelfServeTier: PurchasablePlanTier | null = latestSubscriptionTier === 'lite' || latestSubscriptionTier === 'base'
@@ -372,8 +359,7 @@ export default async function BillingPage({
     const cardPlanTiers: readonly PurchasablePlanTier[] = subscriptionTier === 'lite'
         ? ['base']
         : visiblePlanTiers
-    const canShowPlanCards = subscriptionTier !== 'premium'
-        && !isActivating
+    const canShowPlanCards = !isActivating
         && (subscriptionTier === 'lite' ? purchaseDecisions.base.allowed : !renewalAvailable)
     const billingReadiness = getBillingReadiness()
     const hadPaidAccess = hasEstablishedPaidHistory(billingSubscriptions)
@@ -381,12 +367,11 @@ export default async function BillingPage({
 
     const isLiteWorkspace = tier === 'lite'
     const isBaseWorkspace = tier === 'base'
-    const isLegacyWorkspace = subscriptionTier === 'premium' && !isBaseWorkspace && !isLiteWorkspace
-    const isActive = ['lite', 'base', 'premium', 'trial'].includes(subscriptionTier)
+    const isActive = subscriptionTier === 'lite' || subscriptionTier === 'base'
     const organizationName = profile.full_name ?? 'Weavly workspace'
 
     return (
-        <div className="premium-route-enter mx-auto w-full max-w-6xl space-y-6 px-4 pb-20 sm:px-6 lg:px-0">
+        <div className="ui-route-enter mx-auto w-full max-w-6xl space-y-6 px-4 pb-20 sm:px-6 lg:px-0">
             <RouteMilestones route="/owner/billing" shellVisible primaryUsable secondaryReady />
             <PlanAnalyticsBeacon eventName="base_pricing_viewed" properties={{ current_tier: tier }} />
 
@@ -398,7 +383,7 @@ export default async function BillingPage({
                 meta={
                     <StatusBadge
                         status={isActive ? 'active' : 'info'}
-                        label={isBaseWorkspace ? 'Weavly Base' : isLiteWorkspace ? 'Weavly Lite' : isLegacyWorkspace ? 'Legacy Operations' : 'Active'}
+                        label={isBaseWorkspace ? 'Weavly Base' : isLiteWorkspace ? 'Weavly Lite' : 'Inactive'}
                     />
                 }
             />
@@ -445,9 +430,7 @@ export default async function BillingPage({
                                             ? 'Weavly Lite workspace'
                                             : isBaseWorkspace
                                                 ? 'Weavly Base workspace'
-                                                : isLegacyWorkspace
-                                                    ? 'Legacy operations workspace'
-                                                    : 'Workspace not active'}
+                                                : 'Workspace not active'}
                                     </h2>
                                     <StatusBadge status={isActive ? 'active' : 'info'} label={isActive ? 'Active' : 'Not active'} />
                                 </div>
@@ -459,7 +442,7 @@ export default async function BillingPage({
                             <div className="sm:text-right">
                                 <p className="text-[10px] font-semibold uppercase tracking-wider text-subtle">Current plan</p>
                                 <p className="text-sm font-semibold text-ink">
-                                    {isLiteWorkspace ? 'Weavly Lite' : isBaseWorkspace ? 'Weavly Base' : isLegacyWorkspace ? 'Legacy operations' : 'No active subscription'}
+                                    {isLiteWorkspace ? 'Weavly Lite' : isBaseWorkspace ? 'Weavly Base' : 'No active subscription'}
                                     {isActive && <span className="font-normal text-subtle"> · Annual access</span>}
                                 </p>
                                 <p className="mt-0.5 text-xs text-subtle">

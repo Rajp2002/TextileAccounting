@@ -143,9 +143,9 @@ function isCurrentlyActive(row: BillingSubscriptionRow, nowMs: number): boolean 
 
 /**
  * Resolve checkout pricing from server-owned subscription and payment history.
- * Trial rows never count as a paid purchase. A same-tier paid history receives
+ * A same-tier paid history receives
  * renewal pricing; a first purchase of the target tier receives first-year
- * pricing. Active Premium access cannot be downgraded through checkout.
+ * pricing.
  */
 export function resolveBillingPurchase(
   subscriptions: BillingSubscriptionRow[],
@@ -162,24 +162,14 @@ export function resolveBillingPurchase(
 
   const paidRows = subscriptions.filter((row) => rowHasPaidHistory(row, capturedSubscriptionIds))
   const activePaidRows = paidRows.filter((row) => isCurrentlyActive(row, nowMs))
-  const hasActivePremium = activePaidRows.some((row) => row.plan_tier === 'premium')
   const hasActiveBase = activePaidRows.some((row) => row.plan_tier === 'base')
 
-  if (targetTier === 'lite' && (hasActiveBase || hasActivePremium)) {
+  if (targetTier === 'lite' && hasActiveBase) {
     return {
       allowed: false,
       purchaseType: 'renewal',
       periodStart: now.toISOString(),
       reason: 'A Lite subscription can be selected after the current Base period ends.',
-    }
-  }
-
-  if (targetTier === 'base' && hasActivePremium) {
-    return {
-      allowed: false,
-      purchaseType: 'initial_purchase',
-      periodStart: now.toISOString(),
-      reason: 'This account already has legacy operations access. A Base subscription can be selected after that access ends.',
     }
   }
 

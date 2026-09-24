@@ -1,5 +1,7 @@
 # Weavly Testing Guide
 
+> Historical June 2026 test plan. It covers routes and scenarios that have since been retired. For current Free, Lite, and Base scope, see [the documentation index](docs/general/README.md) and the active test suite.
+
 Last updated June 1, 2026.
 
 > The current full pre-pilot manual is [`docs/PRE_PILOT_COMPREHENSIVE_TESTING_GUIDE.md`](docs/PRE_PILOT_COMPREHENSIVE_TESTING_GUIDE.md). This file remains the shorter Phase 1 testing summary.

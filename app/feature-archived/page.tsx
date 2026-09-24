@@ -12,15 +12,15 @@ export default function FeatureArchivedPage() {
                         <Archive className="h-6 w-6 text-slate-500" />
                     </div>
                     <div className="space-y-2">
-                        <h1 className="text-xl font-black text-slate-900">Feature archived for Phase 1</h1>
+                        <h1 className="text-xl font-black text-slate-900">Feature unavailable</h1>
                         <p className="text-sm font-medium text-slate-500">
-                            This module is preserved for a future release, but it is not active in the focused Phase 1 workflow.
+                            This workspace is no longer available. Owners can continue in the current Free, Lite, or Base workspace.
                         </p>
                     </div>
                     <Button asChild className="gap-2">
-                        <Link href="/owner/analytics">
+                        <Link href="/owner/estimator">
                             <ArrowLeft className="h-4 w-4" />
-                            Back to production overview
+                            Go to estimator
                         </Link>
                     </Button>
                 </CardContent>

@@ -737,13 +737,12 @@ export async function completeBaseOnboardingAction() {
 
         let updateError: any = null
 
-        // 1. Attempt full update with base_onboarding metadata, onboarding_complete, and product_experience
+        // 1. Attempt full update with base_onboarding metadata and onboarding_complete
         const res1 = await admin
             .from('organizations')
             .update({
                 base_onboarding: completedMeta,
                 onboarding_complete: true,
-                product_experience: 'base',
             })
             .eq('id', profile.org_id)
 
@@ -756,22 +755,9 @@ export async function completeBaseOnboardingAction() {
                 .from('organizations')
                 .update({
                     onboarding_complete: true,
-                    product_experience: 'base',
                 })
                 .eq('id', profile.org_id)
             updateError = res2.error
-        }
-
-        // 3. If product_experience constraint/column fails, retry with onboarding_complete
-        if (updateError && (updateError.code === '42703' || updateError.code === '23514')) {
-            console.warn('[completeBaseOnboardingAction] product_experience update failed, retrying with onboarding_complete:', updateError)
-            const res3 = await admin
-                .from('organizations')
-                .update({
-                    onboarding_complete: true,
-                })
-                .eq('id', profile.org_id)
-            updateError = res3.error
         }
 
         if (updateError) {
@@ -791,7 +777,7 @@ export async function completeBaseOnboardingAction() {
             console.warn('[completeBaseOnboardingAction] Failed to update user app_metadata:', authErr)
         }
 
-        revalidatePath('/owner/today')
+        revalidatePath('/owner/production')
         revalidatePath('/owner/production')
         revalidatePath('/owner/machines')
         revalidatePath('/owner/workers')

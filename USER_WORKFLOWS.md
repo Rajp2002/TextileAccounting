@@ -1,8 +1,10 @@
 # Weavly User Workflows
 
+> Historical June 2026 workflow snapshot. It describes routes and roles that have since been retired. For current Free, Lite, and Base scope, see [the documentation index](docs/general/README.md).
+
 Last updated June 1, 2026.
 
-This document explains how users progress through Weavly in the active product. It is written from the user's workflow outward: what they are trying to do, what pain point it replaces, how they interact with the app, and what records are created.
+This document records how users progressed through an earlier version of Weavly. It is written from the user's workflow outward: what they were trying to do, what pain point it replaced, how they interacted with the app, and what records were created.
 
 ## 1. Owner Setup Workflow
 

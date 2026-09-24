@@ -20,7 +20,7 @@ describe('Rate Review Right Rail layout & interaction', () => {
     })
 
     it('keeps viewport-positioned review controls outside the transformed route wrapper', () => {
-        const routeWrapperStart = rates.indexOf('<div className="premium-route-enter')
+        const routeWrapperStart = rates.indexOf('<div className="ui-route-enter')
         const viewportControlsStart = rates.indexOf('<aside className="rates-review-rail-desktop')
         const floatingControlStart = rates.indexOf('<RateReviewFloatingButton')
         const routeWrapperEnd = rates.indexOf('\n            </div>\n\n            {/* Keep viewport-positioned review controls')

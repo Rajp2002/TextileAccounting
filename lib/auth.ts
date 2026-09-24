@@ -18,8 +18,8 @@ type AuthClaims = {
 }
 
 export function getRoleHomePath(role?: string) {
-    if (role === 'owner') return '/owner/today'
-    if (role === 'supervisor') return '/supervisor/dashboard'
+    if (role === 'owner') return '/owner/estimator'
+    if (role === 'supervisor') return '/feature-archived'
     if (role === 'admin') return '/admin'
     return '/login'
 }

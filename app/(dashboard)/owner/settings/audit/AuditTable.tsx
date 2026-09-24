@@ -378,7 +378,7 @@ export default function AuditTable() {
                            ))}
                         </div>
 
-                        {/* ── Premium Pagination ── */}
+                        {/* ── Pagination ── */}
                         <div className="flex items-center justify-between gap-4 mt-12 bg-white/50 backdrop-blur-md p-4 rounded-3xl border border-gray-100 shadow-sm">
                             <Button
                                 variant="outline"

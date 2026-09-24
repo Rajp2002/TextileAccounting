@@ -16,7 +16,7 @@ async function request(path,{method='GET',body,token,expected=200}={}){
 const suffix=randomUUID().slice(0,8),password=`FreeTest!${randomBytes(12).toString('hex')}`
 const user=await request('/auth/v1/admin/users',{method:'POST',body:{email:`free-${suffix}@weavly.test`,password,email_confirm:true,app_metadata:{free_signup:true}},expected:200})
 const id=user.id,org=randomUUID()
-await request('/rest/v1/organizations',{method:'POST',body:{id:org,name:`FREE-BROWSER-${suffix}`,owner_id:id,product_experience:'base',onboarding_complete:true},expected:201})
+await request('/rest/v1/organizations',{method:'POST',body:{id:org,name:`FREE-BROWSER-${suffix}`,owner_id:id,onboarding_complete:true},expected:201})
 await request('/rest/v1/profiles',{method:'POST',body:{id,org_id:org,role:'owner',full_name:'Free Browser Test',email:user.email,phone:'9876543210'},expected:201})
 await request('/auth/v1/admin/users/'+id,{method:'PUT',body:{app_metadata:{free_signup:true,role:'owner',org_id:org,onboarding_complete:true}}})
 await request('/rest/v1/free_rollout?singleton=eq.true',{method:'PATCH',body:{enrollment_enabled:true,estimation_enabled:true,tour_enabled:true},expected:204})

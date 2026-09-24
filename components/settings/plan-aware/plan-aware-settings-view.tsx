@@ -25,7 +25,6 @@ export interface PlanAwareSettingsViewProps {
     factory: {
         id: string
         name: string
-        joinCode?: string | null
         isAuthorizedEditor?: boolean
     }
     tier: SubscriptionTier
@@ -101,7 +100,6 @@ export function PlanAwareSettingsView({
                     {/* Section 2: Factory Details (Where factory exists) */}
                     <FactoryDetailsCard
                         initialFactoryName={factory.name}
-                        joinCode={factory.joinCode}
                         isAuthorizedEditor={factory.isAuthorizedEditor ?? true}
                         onFactoryNameUpdated={onFactoryNameChange}
                         onDirtyChange={setFactoryDirty}
@@ -117,11 +115,11 @@ export function PlanAwareSettingsView({
                     )}
 
                     {/* Section 4: Production & Payroll */}
-                    <PayrollCycleSettingsCard
+                    {tier === 'base' && <PayrollCycleSettingsCard
                         initialConfig={payrollCycleConfig ?? undefined}
                         isAuthorizedEditor={factory.isAuthorizedEditor ?? true}
                         onDirtyChange={setPayrollDirty}
-                    />
+                    />}
                     <SecurityCard email={profile.email} />
 
                     {/* Section 6: Account & Factory Deletion (Universal) */}

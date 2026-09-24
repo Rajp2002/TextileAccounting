@@ -1,7 +1,7 @@
 import { getFactoryCostProfile } from './actions'
 import EstimatorClient from './EstimatorClient'
 import { requireRole } from '@/lib/auth'
-import { getCachedOrgPlanAccess, tierSatisfies } from '@/lib/subscription'
+import { getCachedOrgPlanAccess } from '@/lib/subscription'
 import { hasCapability } from '@/lib/subscription-access'
 import { normalizeProductionMode } from '@/lib/production-mode'
 import { getCachedOwnerOrganization } from '@/lib/owner-organization'
@@ -13,7 +13,7 @@ export default async function EstimatorPage() {
     // query before the estimator reads can start.
     const planAccess = await getCachedOrgPlanAccess(profile.org_id)
     const subscriptionTier = planAccess.effectiveTier
-    const canUseProduction = tierSatisfies(subscriptionTier, 'premium')
+    const canUseProduction = false
     const canUseProductionPipeline = hasCapability(subscriptionTier, 'production')
 
     const [profileRes, organizationRes] = await Promise.all([

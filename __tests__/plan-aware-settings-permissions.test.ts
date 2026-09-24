@@ -21,7 +21,6 @@ describe('Plan-Aware Settings & Factory Defaults Permissions (ST01–ST18)', () 
         expect(hasCapability('free', 'costing_defaults')).toBe(false)
         expect(hasCapability('lite', 'costing_defaults')).toBe(true)
         expect(hasCapability('base', 'costing_defaults')).toBe(true)
-        expect(hasCapability('premium', 'costing_defaults')).toBe(true)
     })
 
     it('ST02: saveCostingDefaults action validates plan capability before updating', () => {
@@ -97,8 +96,8 @@ describe('Plan-Aware Settings & Factory Defaults Permissions (ST01–ST18)', () 
 
     it('ST10: Lite and Base pass canEditDefaults={true} and wire factory defaults', () => {
         expect(settingsPage).toContain('PlanAwareSettingsView')
-        expect(settingsPage).toContain('tier={subscriptionTier}')
-        expect(settingsPage).toContain('canEditDefaults={true}')
+        expect(settingsPage).toContain('tier={tier}')
+        expect(settingsPage).toContain('canEditDefaults')
         expect(settingsPage).toContain('yarnShortagePct: Number(costProfileData.yarn_shortage_pct ?? 0)')
         expect(settingsPage).toContain('defaultMarginPct: Number(costProfileData.default_margin_pct ?? 10)')
     })

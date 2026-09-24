@@ -782,7 +782,6 @@ const BASE_PLAN_ENGLISH_TERMS = new Set([
   'trader',
   'margin',
   'gst',
-  'full suite',
 ])
 
 const BASE_PLAN_DOMAIN_TRANSLATIONS: Record<LocalLanguage, Record<string, string>> = {
@@ -817,7 +816,6 @@ const BASE_PLAN_DOMAIN_TRANSLATIONS: Record<LocalLanguage, Record<string, string
     invoices: 'इनवॉइस',
     run: 'रन',
     runs: 'रन',
-    trial: 'ट्रायल',
     subscription: 'सब्सक्रिप्शन',
   },
   gu: {
@@ -851,7 +849,6 @@ const BASE_PLAN_DOMAIN_TRANSLATIONS: Record<LocalLanguage, Record<string, string
     invoices: 'ઇન્વોઇસ',
     run: 'રન',
     runs: 'રન',
-    trial: 'ટ્રાયલ',
     subscription: 'સબ્સ્ક્રિપ્શન',
   },
 }
@@ -869,8 +866,6 @@ const DOMAIN_TERMS = [
   "rate per m",
   "piece-rate",
   "piece rate",
-  "free trial",
-  "trial",
   "subscription",
   "commercials",
   "commercial",

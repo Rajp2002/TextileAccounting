@@ -18,17 +18,17 @@ describe('B17 Razorpay lifecycle boundaries', () => {
         for (const status of ['pending', 'paused', 'halted', 'cancelled', 'completed']) {
             const result = resolveEffectiveSubscription([{
                 status,
-                plan_tier: 'premium',
+                plan_tier: 'base',
                 current_end: '2026-08-14T00:00:00.000Z',
             }], now)
-            expect(result.tier, status).toBe('premium')
+            expect(result.tier, status).toBe('base')
         }
     })
 
     it('removes entitlement after provider expiry without deleting business data', () => {
         const result = resolveEffectiveSubscription([{
             status: 'expired',
-            plan_tier: 'premium',
+            plan_tier: 'base',
             current_end: '2027-08-14T00:00:00.000Z',
         }], Date.parse('2026-07-14T00:00:00.000Z'))
         expect(result).toEqual({ tier: 'none', subscription: null })

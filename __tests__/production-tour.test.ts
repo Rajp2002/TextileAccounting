@@ -59,7 +59,8 @@ describe('Production tour', () => {
     })
     it('registers production for eligible owners', () => {
         expect(supportedTours).toContain('production')
-        for (const plan of ['base', 'premium']) expect(isTourEligible('production', plan, 'owner')).toBe(true)
+        expect(isTourEligible('production', 'base', 'owner')).toBe(true)
+        expect(isTourEligible('production', 'lite', 'owner')).toBe(false)
         expect(isTourEligible('production', 'lite', 'owner')).toBe(false)
         expect(isTourEligible('production', 'base', 'supervisor')).toBe(false)
     })

@@ -12,11 +12,9 @@ describe('Base Settings cold-load regression', () => {
     const actions = read('app/(dashboard)/owner/estimator/actions.ts')
     const estimator = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
 
-    it('keeps both Base configuration panels mounted on the Settings route', () => {
-        expect(settings).toContain('<FactoryCostProfile standaloneEstimator={!hasPremium} />')
-        expect(settings).toContain('<TemplateManager />')
-        expect(settings).not.toMatch(/hasPremium\s*&&\s*<SettingsSection id="cost-profile"/)
-        expect(settings).not.toMatch(/hasPremium\s*&&\s*<SettingsSection id="qualities"/)
+    it('mounts the current plan settings on the Settings route', () => {
+        expect(settings).toContain('<PlanAwareSettingsView')
+        expect(settings).toContain('initialDefaults={costProfileData')
     })
 
     it('turns cold-load failures into visible retry states instead of empty panels', () => {

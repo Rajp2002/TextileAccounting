@@ -20,7 +20,7 @@ describe('Estimator-only product presentation', () => {
         const lite = visibleOwnerNavigation({ tier: 'lite', productionMode: 'market_run' }).flatMap(group => group.items)
         expect(lite.map(item => item.href)).toEqual(['/owner/estimator', '/owner/quotes', '/owner/rates', '/owner/settings', '/owner/billing'])
         const base = visibleOwnerNavigation({ tier: 'base', productionMode: 'market_run' }).flatMap(group => group.items)
-        expect(base.map(item => item.href)).toEqual(expect.arrayContaining(['/owner/production', '/owner/assignments', '/owner/workers', '/owner/machines?register=base', '/owner/payroll']))
+        expect(base.map(item => item.href)).toEqual(expect.arrayContaining(['/owner/production', '/owner/assignments', '/owner/workers', '/owner/machines', '/owner/payroll']))
     })
 
     it('presents rates as a single-purpose yarn rate book', () => {
@@ -78,18 +78,10 @@ describe('Estimator-only product presentation', () => {
         expect(estimator).toContain('saveEstimatorQuoteV3(saveRequest)')
     })
 
-    it('does not mount legacy operations settings for the Lite costing workspace', () => {
+    it('uses current plan settings and keeps payroll configuration in Base', () => {
         expect(settingsLayout).toContain('requiredCapability="account_data"')
-        expect(settings).toContain("subscriptionTier === 'lite' || subscriptionTier === 'base'")
-        expect(settings).toContain("subscriptionTier === 'lite' ? 'Weavly Lite' : 'Weavly Base'")
-        expect(settings).toContain('Manage saved qualities')
-        expect(settings).toContain('{hasPremium && <div')
-        expect(settings).toContain('{hasPremium && <SettingsSection id="automations"')
-        expect(settings).toContain("hasPremium ? 'Production Cost Estimates & Templates' : 'Estimator Defaults'")
-        expect(settings).toContain('Weavly Estimator')
-        expect(settings).toContain('<FactoryCostProfile standaloneEstimator={!hasPremium} />')
-        expect(settings).toContain('Password & Security')
-        expect(settings).toContain('</aside> : <aside className="sticky top-6 space-y-4">')
+        expect(settings).toContain('<PlanAwareSettingsView')
+        expect(read('components/settings/plan-aware/plan-aware-settings-view.tsx')).toContain("tier === 'base' && <PayrollCycleSettingsCard")
         expect(costProfile).toContain('Save for new Cost Estimates')
     })
 

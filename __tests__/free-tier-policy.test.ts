@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { hasCapability, hasEstablishedPaidHistory, resolveEffectiveSubscription, resolveOrgPlanAccess, tierSatisfies } from '../lib/subscription-access'
+import { hasCapability, hasEstablishedPaidHistory, resolveEffectiveSubscription, resolveOrgPlanAccess } from '../lib/subscription-access'
 import { freeQuotaWindow } from '../lib/free-tier-policy'
 
 describe('Free entitlement foundation', () => {
@@ -18,11 +18,9 @@ describe('Free entitlement foundation', () => {
     expect(hasCapability('free', 'account_settings')).toBe(true)
     expect(hasCapability('free', 'saved_costings')).toBe(true)
     expect(hasCapability('free', 'export_document')).toBe(true)
-    for (const capability of ['qualities', 'rate_book', 'existing_costing_tools', 'account_data', 'production', 'legacy_full_suite'] as const) {
+    for (const capability of ['qualities', 'rate_book', 'existing_costing_tools', 'account_data', 'production'] as const) {
       expect(hasCapability('free', capability)).toBe(false)
     }
-    expect(tierSatisfies('free', 'base')).toBe(false)
-    expect(tierSatisfies('free', 'premium')).toBe(false)
   })
   it('does not infer Free from absent, unknown, or expired subscriptions', () => {
     expect(resolveEffectiveSubscription([]).tier).toBe('none')
@@ -31,15 +29,13 @@ describe('Free entitlement foundation', () => {
     }
     expect(resolveEffectiveSubscription([{ plan_tier: 'free', status: 'active', current_end: null }]).tier).toBe('none')
   })
-  it('preserves Lite, Base, legacy and retained paid Base access', () => {
-    for (const tier of ['lite', 'base', 'trial', 'premium'] as const) {
-      expect(tierSatisfies(tier, 'base')).toBe(true)
+  it('preserves Lite, Base, and retained paid Base access', () => {
+    for (const tier of ['lite', 'base'] as const) {
       expect(hasCapability(tier, 'rate_book')).toBe(true)
       expect(hasCapability(tier, 'export_document')).toBe(true)
     }
-    expect(resolveOrgPlanAccess('none', 'base', true).effectiveTier).toBe('lite')
-    expect(resolveOrgPlanAccess('free', 'full_suite').effectiveTier).toBe('free')
-    expect(resolveOrgPlanAccess('free', 'full_suite').productExperience).toBe('base')
+    expect(resolveOrgPlanAccess('none', true).effectiveTier).toBe('lite')
+    expect(resolveOrgPlanAccess('free').effectiveTier).toBe('free')
   })
 })
 

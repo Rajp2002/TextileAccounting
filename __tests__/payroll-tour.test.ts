@@ -68,7 +68,7 @@ describe('Payroll tour content and variants', () => {
     })
     it('limits eligibility to production-plan owners', () => {
         expect(isTourEligible('payroll', 'base', 'owner')).toBe(true)
-        expect(isTourEligible('payroll', 'premium', 'owner')).toBe(true)
+        expect(isTourEligible('payroll', 'premium', 'owner')).toBe(false)
         expect(isTourEligible('payroll', 'lite', 'owner')).toBe(false)
         expect(isTourEligible('payroll', 'base', 'supervisor')).toBe(false)
     })

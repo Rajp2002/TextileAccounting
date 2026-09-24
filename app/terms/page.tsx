@@ -94,7 +94,7 @@ export default function TermsOfServicePage() {
                     <li>The current Free allowance is two successful new calculations per month for the verified owner. It resets on the first day of every month at 12:00 am India Standard Time (Asia/Kolkata). Unused allowance does not roll over; switching devices or workspaces does not create an extra allowance.</li>
                     <li>A successful calculation saves its inputs and result to your account and uses one allowance. A new calculation after changing inputs uses another allowance. Validation failures and retries of the same completed request do not use an additional allowance.</li>
                     <li>Viewing saved costings, exporting their Cost Sheets, and using the example-data walkthrough do not use the monthly allowance.</li>
-                    <li>Free has no subscription fee, card requirement, or paid trial expiry. Enrollment and continued use are subject to account verification, availability, and these Terms. Changes to the Free offer will be disclosed in the product and these Terms.</li>
+                    <li>Free has no subscription fee, card requirement, or time limit. Enrollment and continued use are subject to account verification, availability, and these Terms. Changes to the Free offer will be disclosed in the product and these Terms.</li>
                     <li>When the allowance is exhausted, wait for the next reset or choose Lite or Base. A paid upgrade requires your explicit purchase; reaching the Free limit never triggers a charge.</li>
                 </ul>
             </PolicySection>

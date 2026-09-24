@@ -76,21 +76,21 @@ describe('sign-in critical-path performance', () => {
         const authActions = read('app/(auth)/actions/auth.ts')
         const signInBody = authActions.slice(
             authActions.indexOf('export async function signIn'),
-            authActions.indexOf('// ─── regenerateJoinCode')
+            authActions.length
         )
         const ownerBranch = signInBody.slice(signInBody.indexOf("if (userRole === 'owner')"))
 
         expect(signInBody).toContain('parseJWT(data.session.access_token)')
         expect(signInBody).toContain('orgId = profile.org_id ?? undefined')
         expect(ownerBranch).not.toContain(".from('profiles')")
-        expect(ownerBranch).toContain("return succeed('/owner/today')")
+        expect(ownerBranch).toContain("return succeed('/owner/estimator')")
     })
 
     it('refreshes inactivity state in the successful login response', () => {
         const authActions = read('app/(auth)/actions/auth.ts')
         const signInBody = authActions.slice(
             authActions.indexOf('export async function signIn'),
-            authActions.indexOf('// ─── regenerateJoinCode')
+            authActions.length
         )
 
         expect(authActions).toContain("import { cookies, headers } from 'next/headers'")
@@ -100,17 +100,17 @@ describe('sign-in critical-path performance', () => {
         )
     })
 
-    it('routes Lite and Base owners to the estimator and retained legacy owners to Factory Today', () => {
+    it('routes Lite and Base owners to the estimator', () => {
         const authActions = read('app/(auth)/actions/auth.ts')
         const signInBody = authActions.slice(
             authActions.indexOf('export async function signIn'),
-            authActions.indexOf('// ─── regenerateJoinCode')
+            authActions.length
         )
         const ownerBranch = signInBody.slice(signInBody.indexOf("if (userRole === 'owner')"))
         const incompleteBranch = ownerBranch.indexOf('if (!onboardingComplete)')
         const tierLookup = ownerBranch.indexOf("telemetry.measure('tier_lookup'")
         const baseDestination = ownerBranch.lastIndexOf("return succeed('/owner/estimator')")
-        const completedDestination = ownerBranch.lastIndexOf("return succeed('/owner/today')")
+        const completedDestination = ownerBranch.lastIndexOf("return succeed('/owner/estimator')")
 
         expect(incompleteBranch).toBeGreaterThan(-1)
         expect(tierLookup).toBeGreaterThan(-1)
@@ -118,9 +118,7 @@ describe('sign-in critical-path performance', () => {
         expect(completedDestination).toBeGreaterThan(tierLookup)
         expect(ownerBranch).toContain("if (tier === 'lite' || tier === 'base') return succeed('/owner/estimator')")
 
-        const todayLayout = read('app/(dashboard)/owner/today/layout.tsx')
-        expect(todayLayout).toContain('requiredTier="premium"')
-        expect(todayLayout).toContain('routeName="/owner/today"')
-        expect(todayLayout).not.toContain('insufficientRedirect')
+        const estimatorPage = read('app/(dashboard)/owner/estimator/page.tsx')
+        expect(estimatorPage).toContain("requireRole(['owner'])")
     })
 })

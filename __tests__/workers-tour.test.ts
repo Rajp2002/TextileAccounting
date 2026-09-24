@@ -63,7 +63,7 @@ describe('Workers guided tour', () => {
     })
     it('offers the tour only to owners on production plans', () => {
         expect(isTourEligible('workers', 'base', 'owner')).toBe(true)
-        expect(isTourEligible('workers', 'premium', 'owner')).toBe(true)
+        expect(isTourEligible('workers', 'premium', 'owner')).toBe(false)
         expect(isTourEligible('workers', 'lite', 'owner')).toBe(false)
         expect(isTourEligible('workers', 'free', 'owner')).toBe(false)
         expect(isTourEligible('workers', 'base', 'supervisor')).toBe(false)

@@ -58,11 +58,8 @@ async function setup() {
     const organization = await requireData(await admin.from('organizations').insert({
         name: `${runId} MILL`,
         owner_id: user.user.id,
-        product_experience: 'base',
         onboarding_complete: true,
         production_mode: 'both',
-        join_code: crypto.randomBytes(4).toString('hex').toUpperCase(),
-        join_code_expires_at: new Date(Date.now() + 2 * 86400000).toISOString(),
     }).select('id, name').single(), 'Create pilot organization')
 
     await requireData(await admin.from('profiles').insert({

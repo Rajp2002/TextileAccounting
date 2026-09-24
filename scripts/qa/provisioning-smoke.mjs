@@ -31,7 +31,6 @@ const factoryName = `RUNTIMEQA-PROVISIONING-${runSuffix}`
 const ownerName = `Runtime QA Owner ${runSuffix}`
 const password = `Qa!${crypto.randomBytes(18).toString('base64url')}`
 const phone = `9${crypto.randomInt(1_000_000_000).toString().padStart(9, '0')}`
-const joinCode = crypto.randomBytes(4).toString('hex').toUpperCase()
 
 const admin = createClient(supabaseUrl, serviceRoleKey, {
     auth: { autoRefreshToken: false, persistSession: false },
@@ -61,8 +60,6 @@ try {
         .from('organizations')
         .insert({
             name: factoryName,
-            join_code: joinCode,
-            join_code_expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
             owner_id: userId,
             onboarding_complete: false,
         })

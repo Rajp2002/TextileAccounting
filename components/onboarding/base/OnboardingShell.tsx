@@ -45,7 +45,7 @@ export function OnboardingShell({
             <header className="sticky top-0 z-30 border-b border-stone-200 bg-white/90 backdrop-blur-md dark:border-stone-800 dark:bg-stone-900/90">
                 <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
                     <div className="flex items-center gap-3">
-                        <Link href="/owner/today" className="flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-amber-500 rounded-lg">
+                        <Link href="/owner/estimator" className="flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-amber-500 rounded-lg">
                             <Image
                                 src="/images/WeavlyLogo.png"
                                 alt="Weavly"

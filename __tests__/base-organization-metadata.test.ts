@@ -15,10 +15,10 @@ describe('Base organization metadata reconciliation', () => {
     expect(migration).not.toContain('12b58c71-bf3f-445f-b3f2-51a7f22a5587')
   })
 
-  it('makes a fresh Base fixture explicit about its product state', () => {
+  it('creates a Base fixture without retired organization metadata', () => {
     const fixture = read('scripts/qa/base-estimator-pilot-fixture.mjs')
 
-    expect(fixture).toContain("product_experience: 'base'")
+    expect(fixture).not.toContain('product_experience')
     expect(fixture).toContain("onboarding_complete: true")
   })
 })

@@ -208,7 +208,7 @@ export default function SavedFreeCostings() {
         <SavedCostingsTutorial free ending={savedCostingTourEnding(rows.length, loading || error)} step={tourStep} onStepChange={setTourStep} onComplete={() => setShowDeleteNudge(true)} />
       </aside>
 
-      <div className="premium-route-enter max-w-6xl mx-auto space-y-6" data-free-costing data-sentry-block>
+      <div className="ui-route-enter max-w-6xl mx-auto space-y-6" data-free-costing data-sentry-block>
         <PageHeader
           icon={History}
           title={freeText(language, 'savedCostings')}

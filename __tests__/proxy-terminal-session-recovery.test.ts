@@ -88,7 +88,7 @@ describe('Proxy terminal Auth session recovery', () => {
             { code: 'refresh_token_not_found', status: 400 },
         ))
 
-        const response = await updateSession(requestFor('/owner/today'))
+        const response = await updateSession(requestFor('/owner/estimator'))
 
         expect(response.status).toBe(307)
         expect(response.headers.get('location')).toBe('https://textile-accounting.vercel.app/login')
@@ -249,7 +249,7 @@ describe('PWA idle-session cold start', () => {
     it('still validates and checks revocation when reopening an active session', async () => {
         const response = await updateSession(requestFor('/login', 'GET', Date.now().toString()))
         expect(response.status).toBe(307)
-        expect(response.headers.get('location')).toBe('https://textile-accounting.vercel.app/owner/today')
+        expect(response.headers.get('location')).toBe('https://textile-accounting.vercel.app/owner/estimator')
         expect(authMock.getClaims).toHaveBeenCalledOnce()
         expect(revocationMock).toHaveBeenCalledWith('owner-user-id')
         expect(authMock.signOut).not.toHaveBeenCalled()

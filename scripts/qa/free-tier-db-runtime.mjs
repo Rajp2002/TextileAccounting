@@ -11,7 +11,7 @@ const user=randomUUID(),org=randomUUID(),other=randomUUID(),otherOrg=randomUUID(
 const claims=(id=user)=>`SET ROLE authenticated; SET request.jwt.claim.sub='${id}'; SET request.jwt.claims='${JSON.stringify({sub:id,role:'authenticated'})}';`
 try {
  sql(`INSERT INTO auth.users(id,email) VALUES('${user}','${user}@runtime.test'),('${other}','${other}@runtime.test');
- INSERT INTO public.organizations(id,name,owner_id,product_experience) VALUES('${org}','FREE-RUNTIME-TEST','${user}','base'),('${otherOrg}','FREE-RUNTIME-OTHER','${other}','base');
+ INSERT INTO public.organizations(id,name,owner_id) VALUES('${org}','FREE-RUNTIME-TEST','${user}'),('${otherOrg}','FREE-RUNTIME-OTHER','${other}');
  INSERT INTO public.profiles(id,org_id,role,full_name) VALUES('${user}','${org}','owner','Runtime Test'),('${other}','${otherOrg}','owner','Other Runtime Test');
  UPDATE public.free_rollout SET enrollment_enabled=true,estimation_enabled=true;`)
  deny(`SET ROLE service_role;SELECT public.provision_free_account('${user}','${org}',NULL);`,'FREE_VERIFICATION_REQUIRED')

@@ -17,7 +17,7 @@ export async function completePlanSelection(plan: 'free' | 'paid'): Promise<{ hr
 
     // C2: Active paid access must escape stale onboarding gate
     // Never downgrade active paid to Free, regardless of client 'plan' argument
-    if (['lite', 'base', 'premium', 'trial'].includes(access.effectiveTier)) {
+    if (access.effectiveTier === 'lite' || access.effectiveTier === 'base') {
         if (user.app_metadata.plan_selection_pending === true) {
             const admin = createAdminClient()
             const { error: updateError } = await admin.auth.admin.updateUserById(user.id, {

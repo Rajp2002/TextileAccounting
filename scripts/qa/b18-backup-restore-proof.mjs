@@ -98,8 +98,6 @@ async function seedFixture(admin, suffix) {
     await required(admin.from('organizations').insert({
         id: orgId, name: `B18 Recovery ${suffix}`, owner_id: owner.id,
         onboarding_complete: true, production_mode: 'both',
-        join_code: `B18${suffix.slice(0, 6).toUpperCase()}`,
-        join_code_expires_at: new Date(Date.now() + 3600000).toISOString(),
     }), 'seed organization')
     await required(admin.from('profiles').insert(users.map((user) => ({
         id: user.id, org_id: orgId, role: user.role,
@@ -213,8 +211,6 @@ async function restoreFixture(admin, backup, suffix) {
     const owner = users.find((user) => user.role === 'owner')
     await required(admin.from('organizations').insert({
         ...backup.organization, owner_id: owner.id,
-        join_code: `B18R${suffix.slice(0, 5).toUpperCase()}`,
-        join_code_expires_at: new Date(Date.now() + 3600000).toISOString(),
     }), 'restore organization')
     await required(admin.from('profiles').insert(users.map((user) => ({
         id: user.id, org_id: backup.organization.id, role: user.role,

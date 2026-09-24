@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic'
  * POST /api/billing/verify-payment
  *
  * Verifies Razorpay signature and canonical order/payment details before
- * atomically activating or renewing the bound Estimator/Full Suite plan.
+ * atomically activating or renewing the bound Lite or Base plan.
  */
 export async function POST(req: NextRequest) {
     // 1. Auth check

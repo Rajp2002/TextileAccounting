@@ -25,7 +25,7 @@ export async function freeContext(options: { allowInactive?: boolean } = {}) {
     .eq('id',session.profile.org_id).single()
   if (error || !org || org.owner_id !== session.user.id || org.owner_id !== grant.subjectId || org.is_locked_down) throw new Error('FREE_ACCESS_DENIED')
   const access = await getOrgPlanAccess(session.profile.org_id)
-  const paid = ['lite','base','premium','trial'].includes(access.effectiveTier)
+  const paid = access.effectiveTier === 'lite' || access.effectiveTier === 'base'
   if (!options.allowInactive && !paid && (access.effectiveTier !== 'free' || grant.state !== 'active')) throw new Error('FREE_ACCESS_INACTIVE')
   return { ...session, grant, paid, access, org }
 }

@@ -16,8 +16,6 @@ export type SettingsBootstrapProfile = {
 export type SettingsBootstrapOrganization = {
     org_id: string
     name: string
-    join_code: string | null
-    join_code_expires_at: string | null
     production_mode: ProductionMode | null
 }
 

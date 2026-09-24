@@ -36,6 +36,5 @@ describe('BILL-008 referral application boundary', () => {
         expect(signupSource).toContain('const finishOrganizationCreation = async (orgId: string) =>')
         expect(signupSource).toContain('if (result.success) await applySignupReferral(orgId)')
         expect(signupSource).toContain('return finishOrganizationCreation(org.id)')
-        expect(signupSource).toContain('return finishOrganizationCreation(org2!.id)')
     })
 })
