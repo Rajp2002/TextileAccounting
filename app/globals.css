@@ -487,6 +487,22 @@
     width: 100%;
   }
 
+  .production-overview-workspace {
+    width: 100%;
+  }
+
+  .production-activate-rail {
+    display: none;
+  }
+
+  .production-activate-action {
+    display: none;
+  }
+
+  .production-inline-activate {
+    display: inline-flex;
+  }
+
   .workers-reference-rail {
     width: 100%;
     margin-top: 1.25rem;
@@ -645,6 +661,25 @@
     display: flex;
     justify-content: flex-end;
     margin-top: 1rem;
+  }
+
+  .production-daily-sheet-workspace {
+    width: 100%;
+  }
+
+  .production-daily-sheet-rail {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .production-daily-sheet-history-desktop {
+    display: none;
+  }
+
+  .production-daily-sheet-history-mobile {
+    display: flex;
   }
 
   .estimator-workspace-main {
@@ -854,6 +889,32 @@
   }
 
   @media (min-width: 1380px) {
+    .production-daily-sheet-workspace {
+      width: min(100%, calc(100vw - 248px - 31rem));
+      max-width: 72rem;
+      margin-inline: auto;
+    }
+
+    .production-daily-sheet-rail {
+      position: fixed;
+      top: 1.25rem;
+      right: 1rem;
+      bottom: 1.25rem;
+      z-index: 30;
+      width: 14rem;
+      max-height: calc(100dvh - 2.5rem);
+      overflow-y: auto;
+      scrollbar-width: thin;
+    }
+
+    .production-daily-sheet-history-desktop {
+      display: flex;
+    }
+
+    .production-daily-sheet-history-mobile {
+      display: none;
+    }
+
     .payroll-workspace-shell {
       width: min(100%, calc(100vw - 248px - 31rem));
       max-width: 72rem;
@@ -887,8 +948,43 @@
       margin-inline: auto;
     }
 
+    .production-overview-workspace {
+      width: min(100%, calc(100vw - 248px - 31rem));
+      max-width: 72rem;
+      margin-inline: auto;
+    }
+
     .workers-inline-add {
       display: none;
+    }
+
+    .production-inline-activate {
+      display: none;
+    }
+
+    .production-activate-rail {
+      position: fixed;
+      top: 6.5rem;
+      right: 1rem;
+      bottom: 8rem;
+      z-index: 30;
+      display: flex;
+      width: 14rem;
+      flex-direction: column;
+      gap: 1.5rem;
+      overflow-y: auto;
+      padding-bottom: 0.25rem;
+      scrollbar-width: thin;
+    }
+
+    .production-activate-action {
+      display: flex;
+      flex: none;
+      justify-content: center;
+    }
+
+    .production-activate-action button {
+      width: 100%;
     }
 
     .workers-reference-rail {
@@ -996,6 +1092,22 @@
       width: min(100%, calc(100vw - 248px - 36rem));
     }
 
+    .production-overview-workspace {
+      width: min(100%, calc(100vw - 248px - 36rem));
+    }
+
+    .production-activate-rail {
+      width: 16rem;
+    }
+
+    .production-daily-sheet-workspace {
+      width: min(100%, calc(100vw - 248px - 36rem));
+    }
+
+    .production-daily-sheet-rail {
+      width: 16rem;
+    }
+
     .payroll-period-rail,
     .payroll-records-action,
     .workers-reference-rail,
@@ -1048,8 +1160,26 @@
       width: min(100%, calc(100vw - 248px - 39rem));
     }
 
+    .production-overview-workspace {
+      width: min(100%, calc(100vw - 248px - 39rem));
+    }
+
     .payroll-period-rail,
     .payroll-records-action {
+      right: 1.25rem;
+      width: 17rem;
+    }
+
+    .production-daily-sheet-workspace {
+      width: min(100%, calc(100vw - 248px - 39rem));
+    }
+
+    .production-daily-sheet-rail {
+      right: 1.25rem;
+      width: 17rem;
+    }
+
+    .production-activate-rail {
       right: 1.25rem;
       width: 17rem;
     }

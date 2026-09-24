@@ -412,7 +412,7 @@ export default function BaseAssignmentWorkspace({
                 </details>
             </aside>
             <div className="min-w-0 space-y-3">
-                <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-hairline/70 bg-surface/80 p-2 shadow-xs sm:px-3">
                     <div data-configuration-tour="shift" role="group" aria-label="Assignment shift" className="inline-flex rounded-full border border-hairline bg-surface p-1 shadow-xs">
                         <Button
                             type="button"
@@ -452,8 +452,8 @@ export default function BaseAssignmentWorkspace({
                     </span>
                 </div>
 
-            <Card data-configuration-tour="board" className="hidden overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs md:block">
-                <CardHeader className="border-b border-hairline/80 px-6 py-4">
+            <Card data-configuration-tour="board" className="hidden overflow-hidden rounded-2xl border border-hairline/80 bg-surface shadow-[var(--shadow-card)] md:block">
+                <CardHeader className="border-b border-hairline/80 bg-gradient-to-r from-surface to-surface-soft/35 px-6 py-4">
                     <CardTitle className="flex items-center gap-2 text-base font-bold text-ink">
                         <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-hairline bg-surface-soft text-loom">
                             <Link2 className="h-4 w-4" />
@@ -877,26 +877,27 @@ export default function BaseAssignmentWorkspace({
                     Show inactive
                 </label>
             </div>
-            <aside aria-label="Management links" className="configuration-actions-rail flex flex-wrap gap-2">
-                <Button asChild variant="outline" size="sm" className="justify-start rounded-xl border-hairline bg-surface text-ink shadow-xs">
+            <aside aria-label="Management links" className="configuration-actions-rail flex flex-wrap gap-2 rounded-2xl border border-hairline/80 bg-surface/95 p-3 shadow-[var(--shadow-card)] backdrop-blur-sm">
+                <Button asChild variant="default" size="sm" className="h-12 w-full justify-between rounded-xl border border-loom bg-loom px-4 text-sm font-semibold text-white shadow-sm hover:border-loom-elevated hover:bg-loom-elevated hover:text-white focus-visible:ring-loom/30">
                     <Link data-configuration-tour="daily-sheet" data-i18n-skip="true" lang={language} onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href={`/owner/production?${new URLSearchParams({ tab: 'production', shift, returnTo: configurationReturnTo })}`}>
                         {tourCopy.dailySheetLabel} <ArrowUpRight className="h-4 w-4" />
                     </Link>
                 </Button>
-                <Button asChild variant="outline" size="sm" className="justify-start rounded-xl border-hairline bg-surface text-ink shadow-xs hover:border-hairline-strong hover:bg-surface-soft">
+                <Button asChild variant="outline" size="sm" className="h-11 w-full justify-start rounded-xl border-hairline bg-surface px-4 text-sm font-semibold text-ink shadow-xs hover:border-hairline-strong hover:bg-surface-soft hover:text-ink">
                     <Link data-configuration-tour="add-worker" onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href={setupHref('worker')}>
                         <Plus className="h-4 w-4" /> Add worker
                     </Link>
                 </Button>
-                <Button asChild variant="outline" size="sm" className="justify-start rounded-xl border-hairline bg-surface text-ink shadow-xs hover:border-hairline-strong hover:bg-surface-soft">
+                <Button asChild variant="outline" size="sm" className="h-11 w-full justify-start rounded-xl border-hairline bg-surface px-4 text-sm font-semibold text-ink shadow-xs hover:border-hairline-strong hover:bg-surface-soft hover:text-ink">
                     <Link data-configuration-tour="add-machine" onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href={setupHref('machine')}>
                         <Plus className="h-4 w-4" /> Add machine
                     </Link>
                 </Button>
-                <Link data-configuration-tour="setup" onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href={setupHref('worker').replace('add=worker&', '')} className="inline-flex min-h-9 items-center gap-1 px-3 text-xs font-medium text-muted-foreground hover:text-ink">
+                <div className="my-1 h-px w-full bg-hairline/80" aria-hidden="true" />
+                <Link data-configuration-tour="setup" onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href={setupHref('worker').replace('add=worker&', '')} className="inline-flex min-h-10 w-full items-center justify-between rounded-lg px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-surface-soft hover:text-ink">
                     Manage workers <ArrowUpRight className="h-3.5 w-3.5" />
                 </Link>
-                <Link onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href={setupHref('machine').replace('add=machine&', '')} className="inline-flex min-h-9 items-center gap-1 px-3 text-xs font-medium text-muted-foreground hover:text-ink">
+                <Link onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href={setupHref('machine').replace('add=machine&', '')} className="inline-flex min-h-10 w-full items-center justify-between rounded-lg px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-surface-soft hover:text-ink">
                     Manage machines <ArrowUpRight className="h-3.5 w-3.5" />
                 </Link>
             </aside>

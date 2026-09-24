@@ -457,7 +457,7 @@ export default function BaseProductionClient({
     }
 
     return (
-        <div className={`${isDailySheetView ? 'space-y-4' : 'space-y-5'} ${view === 'payroll' ? 'payroll-workspace-shell pb-10' : 'pb-8'} ${view === 'operations' ? 'configuration-page-frame' : ''}`}>
+        <div className={`${isDailySheetView ? 'space-y-4' : 'space-y-5'} ${view === 'payroll' ? 'payroll-workspace-shell pb-10' : 'pb-8'} ${view === 'production' && !isDailySheetView ? 'production-overview-workspace' : ''} ${view === 'operations' ? 'configuration-page-frame' : ''}`}>
             {navigation.returnTo && (
                 <Button asChild variant="outline" size="sm" className="h-9 rounded-xl border-hairline bg-surface text-ink shadow-xs hover:border-hairline-strong hover:bg-surface-soft hover:text-ink">
                     <Link href={navigation.returnTo} className="inline-flex items-center gap-1.5">
@@ -466,21 +466,31 @@ export default function BaseProductionClient({
                     </Link>
                 </Button>
             )}
-            {!isDailySheetView && <header className={`flex flex-col justify-between gap-4 ${view === 'payroll' ? 'border-b border-hairline/70 pb-5 text-center sm:pb-6' : 'sm:flex-row sm:items-start'}`}>
-                <div>
-                    {view !== 'payroll' && <p className="text-xs font-bold uppercase tracking-[0.18em] text-saffron-deep">Weavly Base</p>}
-                    <h1 className={`${view === 'payroll' ? 'text-[1.75rem] font-bold sm:text-[2rem]' : 'mt-1 text-2xl font-black sm:text-3xl'} tracking-tight text-ink`}>
+            {!isDailySheetView && <header className={view === 'payroll'
+                ? 'flex flex-col justify-between gap-4 border-b border-hairline/70 pb-5 text-center sm:pb-6'
+                : view === 'operations'
+                    ? 'flex flex-col items-center text-center'
+                    : view === 'production'
+                        ? 'flex flex-col items-center border-b border-hairline/70 pb-5 text-center sm:pb-6'
+                        : 'flex flex-col justify-between gap-4 sm:flex-row sm:items-start'}>
+                <div className={view === 'operations' || view === 'production' ? 'flex flex-col items-center' : undefined}>
+                    <h1 className={`${view === 'payroll' ? 'text-[1.75rem] font-bold sm:text-[2rem]' : 'text-2xl font-black sm:text-3xl'} tracking-tight text-ink`}>
                         {view === 'operations' ? 'Worker–Machine Assignments' : view === 'payroll' ? 'Payroll' : 'Production'}
                     </h1>
-                    <p className={view === 'payroll' ? 'sr-only' : 'mt-2 max-w-2xl text-sm leading-relaxed text-body'}>
-                        {view === 'operations'
-                            ? 'Assign workers to machines and manage existing assignments.'
-                            : view === 'payroll'
-                                ? 'Review earnings and settle worker pay for each period.'
-                                : 'Create production jobs from saved costings and record daily machine metres.'}
-                    </p>
+                    {view === 'payroll' && <p className="sr-only">Review earnings and settle worker pay for each period.</p>}
                 </div>
             </header>}
+
+            {view === 'production' && activeTab === 'jobs' && (
+                <aside className="production-activate-rail" aria-label="Production actions">
+                    <div className="production-activate-action">
+                        <Button onClick={() => setIsActivateModalOpen(true)} className="min-h-12 rounded-xl bg-loom px-5 text-[0.9375rem] font-semibold text-white shadow-[var(--shadow-button)] hover:bg-loom-elevated hover:text-white focus-visible:ring-saffron/40">
+                            <Plus className="size-[1.125rem]" aria-hidden="true" />
+                            <span>Activate Quality</span>
+                        </Button>
+                    </div>
+                </aside>
+            )}
 
             {view === 'payroll' && (
                 <aside className="payroll-period-rail" aria-label="Payroll period and settlement">
