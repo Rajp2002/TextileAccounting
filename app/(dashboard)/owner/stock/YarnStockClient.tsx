@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useTranslation } from '@/lib/i18n/context'
 import { yarnStockText } from '@/lib/i18n/yarn-stock'
-import { YarnMutationSchema, totalYarnKg, yarnAuditCsv, type YarnBalance, type YarnBoard, type YarnMutation, type YarnQuality } from '@/lib/yarn-stock'
+import { YarnMutationSchema, totalYarnKg, yarnAuditCsv, yarnMovementUsage, type YarnBalance, type YarnBoard, type YarnMutation, type YarnQuality } from '@/lib/yarn-stock'
 import { getYarnStockBoard, mutateYarnStock } from './yarn-actions'
 
 type Entry = { kind: 'opening' | 'receipt' | 'correction'; yarn?: YarnBalance } | { kind: 'recipe'; quality: YarnQuality }
@@ -37,7 +37,6 @@ export default function YarnStockClient({ initialData }: { initialData: YarnBoar
             if (!parsed.success) { sessionStorage.removeItem(storageKey); return }
             const pending = parsed.data
             // Recover external session state after hydration; reading during render would mismatch SSR.
-            // eslint-disable-next-line react-hooks/set-state-in-effect
             setRequest(pending); setReason(pending.payload.reason)
             if (pending.action === 'recipe') {
                 const quality = initialData.qualities.find(row => row.id === pending.payload.quality_id)
@@ -121,7 +120,22 @@ export default function YarnStockClient({ initialData }: { initialData: YarnBoar
             <div className="flex flex-wrap gap-2">{current && <><Button size="sm" variant="outline" disabled={Boolean(request)} onClick={() => open({ kind: 'receipt', yarn })}>{text.receipt}</Button><Button size="sm" variant="outline" disabled={Boolean(request)} onClick={() => open({ kind: 'correction', yarn })}>{text.correction}</Button></>}<Button size="sm" variant="ghost" disabled={busy} onClick={() => void load(data.as_of ?? '', yarn.id)}>{text.history}</Button></div></CardContent></Card>)}</div>}
         {current && <section className="space-y-3"><h2 className="text-xl font-semibold">{text.formulas}</h2><p className="max-w-3xl text-sm text-muted-foreground">{text.formulaHelp}</p><div className="grid gap-3 sm:grid-cols-2">{data.qualities.map(quality => <Card key={quality.id}><CardContent className="space-y-3 p-5"><h3 className="font-semibold">{quality.quality_label}</h3>{quality.recipe ? <ul className="space-y-1 text-sm">{quality.recipe.map((row, index) => <li key={index}>{row.yarn_name} · {text[row.role]} · {kg(row.kg_per_100m)} {text.per100}</li>)}</ul> : <p className="text-sm text-amber-700">{text.unlinked}</p>}<Button size="sm" variant="outline" disabled={Boolean(request)} onClick={() => open({ kind: 'recipe', quality })}>{text.link}</Button></CardContent></Card>)}</div></section>}
         <section className="space-y-3" aria-busy={busy}><div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-xl font-semibold">{text.history}</h2><Label htmlFor="yarn-history-filter" className="sr-only">{text.name}</Label><select id="yarn-history-filter" value={filter} disabled={busy} className="max-w-full rounded-md border bg-background p-2 text-sm" onChange={e => void load(data.as_of ?? '', e.target.value)}><option value="">{text.all}</option>{data.yarns.map(row => <option key={row.id} value={row.id}>{row.yarn_name}</option>)}</select></div>
-            {data.movements.length === 0 ? <p className="rounded-xl border border-dashed p-6 text-muted-foreground">{text.noHistory}</p> : <ol className="divide-y rounded-xl border">{data.movements.map(row => <li key={row.id} className="flex flex-wrap justify-between gap-3 p-4"><div className="min-w-0 space-y-1"><p className="break-words font-medium">{row.yarn_name} · {text[row.kind]}</p><p className="max-w-xl break-words text-sm">{row.reason}</p><p className="text-xs text-muted-foreground">{dateTime(row.created_at)}</p>{row.recipe_snapshot && <p className="text-xs text-muted-foreground">{row.recipe_snapshot.sent_meters} m · {row.recipe_snapshot.recipe.filter(layer => layer.yarn_key === data.yarns.find(yarn => yarn.id === row.yarn_id)?.yarn_key).map(layer => `${kg(layer.kg_per_100m)} ${text.per100}`).join(' + ')}</p>}{row.challan_id && <Link className="text-xs underline" href={`/owner/dispatches/${row.challan_id}/print`}>{text.viewDispatch}</Link>}</div><div className="text-right tabular-nums"><p className={row.kg_delta < 0 ? 'text-rose-700' : 'text-emerald-700'}>{row.kg_delta > 0 ? '+' : ''}{kg(row.kg_delta)} kg</p><p className="text-xs text-muted-foreground">{text.balance}: {kg(row.balance_after)} kg</p></div></li>)}</ol>}
+            {data.movements.length === 0 ? <p className="rounded-xl border border-dashed p-6 text-muted-foreground">{text.noHistory}</p> : <ol className="divide-y rounded-xl border">{data.movements.map(row => {
+                const usage = yarnMovementUsage(row, data.yarns)
+                return <li key={row.id} className="flex flex-wrap justify-between gap-3 p-4">
+                    <div className="min-w-0 space-y-1">
+                        <p className="break-words font-medium">{row.yarn_name} · {text[row.kind]}</p>
+                        <p className="max-w-xl break-words text-sm">{row.reason}</p>
+                        <p className="text-xs text-muted-foreground">{dateTime(row.created_at)}</p>
+                        {usage && <p className="text-xs text-muted-foreground">{kg(usage.meters)} m · {kg(usage.kgPer100m)} {text.per100}</p>}
+                        {row.challan_id && <Link className="text-xs underline" href={`/owner/dispatches/${row.challan_id}/print`}>{text.viewDispatch}</Link>}
+                    </div>
+                    <div className="text-right tabular-nums">
+                        <p className={row.kg_delta < 0 ? 'text-rose-700' : 'text-emerald-700'}>{row.kg_delta > 0 ? '+' : ''}{kg(row.kg_delta)} kg</p>
+                        <p className="text-xs text-muted-foreground">{text.balance}: {kg(row.balance_after)} kg</p>
+                    </div>
+                </li>
+            })}</ol>}
             {data.nextCursor && <Button variant="outline" disabled={busy} onClick={() => void load(data.as_of ?? '', filter, true)}>{text.more}</Button>}
         </section>
         <Dialog open={Boolean(entry)} onOpenChange={value => { if (!value && !saving && !request) setEntry(null) }}><DialogContent showCloseButton={false} data-i18n-skip="true"><DialogHeader><DialogTitle>{entry?.kind === 'recipe' ? `${text.link} · ${entry.quality.quality_label}` : entry ? text[entry.kind] : ''}</DialogTitle><DialogDescription>{entry?.kind === 'recipe' ? text.formulaHelp : entry?.kind === 'opening' ? text.openingHelp : entry?.kind === 'correction' ? text.correctionHelp : text.receiptHelp}</DialogDescription></DialogHeader>

@@ -22,8 +22,8 @@ export default function YarnStockTourPreview({ step }: { step: StockTourStep }) 
     const surface = stockTourSurface(step)
     const opening = surface === 'opening'
     const receipt = surface === 'receipt'
-    const beforeDispatch = ['balance', 'yarn', 'opening', 'receipt', 'link'].includes(step)
-    const balance = step === 'finish' ? sample.counted : ['receipt', 'link'].includes(step) ? sample.opening + sample.receipt : beforeDispatch ? sample.opening : sample.balance
+    const beforeProduction = ['balance', 'opening', 'receipt', 'link'].includes(step)
+    const balance = step === 'finish' ? sample.counted : ['receipt', 'link'].includes(step) ? sample.opening + sample.receipt : beforeProduction ? sample.opening : sample.balance
     const target = (id: StockTourStep, children: ReactNode) => <div data-stock-tour={id} className="space-y-3 rounded-xl border border-hairline bg-surface p-4">{children}</div>
     const action = (label: string) => <Button type="button" disabled variant="outline">{label}</Button>
     const field = (label: string, value: string) => <label className="block space-y-1 text-sm">{label}<Input disabled readOnly value={value} /></label>
@@ -49,10 +49,10 @@ export default function YarnStockTourPreview({ step }: { step: StockTourStep }) 
         {target('balance', <><p>{text.total} · {text.current}</p><strong className="text-3xl">{balance} kg</strong><p className="text-sm">{text.help}</p></>)}
         {target('yarn', <>
             <h2 className="font-bold">{yarn}</h2>
-            {step === 'yarn' ? <><p>{labels.unused}: {sample.unused} kg</p><p>{labels.embodied}: {sample.embodied} kg</p><p>{quality} · v2 · {sample.undispatchedMetres} m × {sample.kgPer100} {text.per100} = {sample.embodied} kg</p>{weights}<p className="text-xl font-bold">{sample.unused} + {sample.embodied} = {sample.opening} kg</p></> : <p className="text-2xl">{balance} kg</p>}
+            {step === 'yarn' ? <><p>{labels.unused}: {sample.unused} kg</p><p>{labels.embodied}: {sample.embodied} kg</p><p>{quality} · v2 · {sample.undispatchedMetres} m × {sample.kgPer100} {text.per100} = {sample.embodied} kg</p>{weights}<p className="text-xl font-bold">{sample.unused} + {sample.embodied} = {sample.opening + sample.receipt} kg</p></> : <p className="text-2xl">{balance} kg</p>}
             <div className="flex flex-wrap gap-2">{action(text.receipt)}{action(text.correction)}{action(text.history)}</div>
         </>)}
-        {target('movement', <><h2 className="font-bold">{text.history}</h2>{step === 'finish' && <div><p>{text.correction} · {sample.counted - sample.balance} kg · {text.balance}: {sample.counted} kg</p><p className="text-sm">{labels.reference}</p></div>}{!beforeDispatch && <div className="space-y-2"><p>{yarn} · {text.dispatch} · −{sample.deduction} kg</p><p>{sample.dispatchedMetres} m × {sample.kgPer100} {text.per100} = {sample.deduction} kg</p><p>{text.balance}: {sample.balance} kg</p>{action(text.viewDispatch)}</div>}{(!beforeDispatch || ['receipt', 'link'].includes(step)) && <p>{text.receipt} · +{sample.receipt} kg · {text.balance}: {sample.opening + sample.receipt} kg</p>}<p>{text.opening} · +{sample.opening} kg · {text.balance}: {sample.opening} kg</p></>)}
+        {target('movement', <><h2 className="font-bold">{text.history}</h2>{step === 'finish' && <div><p>{text.correction} · {sample.counted - sample.balance} kg · {text.balance}: {sample.counted} kg</p><p className="text-sm">{labels.reference}</p></div>}{!beforeProduction && <div className="space-y-2"><p>{yarn} · {text.production_consumption} · −{sample.deduction} kg</p><p>{sample.producedMetres} m × {sample.kgPer100} {text.per100} = {sample.deduction} kg</p><p>{text.balance}: {sample.balance} kg</p></div>}{(!beforeProduction || ['receipt', 'link'].includes(step)) && <p>{text.receipt} · +{sample.receipt} kg · {text.balance}: {sample.opening + sample.receipt} kg</p>}<p>{text.opening} · +{sample.opening} kg · {text.balance}: {sample.opening} kg</p></>)}
         {step === 'finish' && target('finish', <><h2 className="font-bold">{text.formulas}</h2><p>{quality} · v2</p>{weights}{action(text.link)}<p>{text.started}: 2026-09-14</p>{field(text.audit, '')}<div className="flex flex-wrap gap-2">{action(text.apply)}{action(text.export)}{action(text.more)}</div></>)}
         {surface !== 'page' && <Dialog open modal={false}><DialogContent data-stock-tour-preview="true" showCloseButton={false} onOpenAutoFocus={event => event.preventDefault()} onCloseAutoFocus={event => event.preventDefault()}>
             <DialogHeader><DialogTitle>{surface === 'link' ? text.link : opening ? text.opening : receipt ? text.receipt : text.correction}</DialogTitle><DialogDescription>{copy.sample}</DialogDescription></DialogHeader>

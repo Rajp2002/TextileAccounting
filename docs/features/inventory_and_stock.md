@@ -1,6 +1,6 @@
 # Quality stock
 
-**Yarn inventory:** Stock now has a separate Yarn tab. Yarn remains in the owned kg balance through production and is deducted using the linked saved costing only when fabric is dispatched. See [yarn inventory until dispatch](yarn_inventory.md) for opening stock, receipts, formulas, audit dates and release details.
+**Yarn inventory:** Stock has a separate Yarn tab for unused yarn physically in stock. Recorded production deducts yarn using its saved costing; dispatch reduces fabric stock without a second yarn deduction. [Yarn inventory until dispatch](yarn_inventory.md) documents the superseded September 12 design. The current behavior is defined by `20260920000000_unified_inventory_audit_architecture.sql`.
 
 Updated September 8, 2026. This replaces the old Full Suite stock feature; historical migrations and business records are retained.
 

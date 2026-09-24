@@ -133,18 +133,19 @@ it('preserves live state and keeps previews isolated', () => {
     }
 })
 
-it('yarn examples reconcile receipt and dispatch quantities', () => {
+it('yarn examples reconcile receipt and production quantities', () => {
     const s = yarnStockExample
-    expect(s.dispatchedMetres / 100 * s.kgPer100).toBe(s.deduction)
+    expect(s.producedMetres / 100 * s.kgPer100).toBe(s.deduction)
     expect(s.opening + s.receipt - s.deduction).toBe(s.balance)
 })
 describe('refined yarn workflow', () => {
-    it('keeps the ownership count, stock changes and dispatch prerequisite in the core path', () => {
+    it('keeps the raw yarn count, stock changes and production prerequisite in the core path', () => {
         expect(stockTourSteps('yarn-stock')).toEqual(['balance', 'yarn', 'opening', 'receipt', 'link', 'movement', 'correction', 'finish'])
         const s = yarnStockExample
         expect(s.warpKgPer100 + s.weftKgPer100).toBe(s.kgPer100)
         expect(s.undispatchedMetres / 100 * s.kgPer100).toBe(s.embodied)
-        expect(s.unused + s.embodied).toBe(s.opening)
+        expect(s.unused).toBe(s.balance)
+        expect(s.unused + s.embodied).toBe(s.opening + s.receipt)
         expect(s.counted - s.balance).toBe(-2)
     })
     for (const language of ['en', 'gu', 'hi'] as const) it(`${language}: renders all core targets safely and preserves optional audit guidance`, () => {
@@ -192,28 +193,27 @@ describe('refined yarn workflow', () => {
             expect(fabric).not.toContain('yarn-stock-tour-help')
         } finally { locale.language = 'en'; vi.unstubAllGlobals() }
     })
-    it('shows the worked ownership count and absolute correction in the preview', () => {
+    it('shows separate unused and embodied yarn and an absolute correction in the preview', () => {
         const owned = renderToStaticMarkup(<StockTourPreview kind="yarn-stock" step="yarn" />)
-        expect(owned).toContain('Unused yarn: 80 kg')
+        expect(owned).toContain('Unused yarn: 100 kg')
         expect(owned).toContain('Yarn in undispatched fabric: 20 kg')
-        expect(owned).toContain('80 + 20 = 100 kg')
+        expect(owned).toContain('100 + 20 = 120 kg')
         expect(owned).toContain('200 m × 10 kg / 100m = 20 kg')
         const correction = renderToStaticMarkup(<StockTourPreview kind="yarn-stock" step="correction" />)
-        expect(correction).toContain('value="108"')
-        expect(correction).toContain('110 → 108 kg (-2 kg)')
+        expect(correction).toContain('value="98"')
+        expect(correction).toContain('100 → 98 kg (-2 kg)')
         const history = renderToStaticMarkup(<StockTourPreview kind="yarn-stock" step="finish" />)
-        expect(history).toContain('Correct balance · -2 kg · Balance after: 108 kg')
+        expect(history).toContain('Correct balance · -2 kg · Balance after: 98 kg')
         expect(history).toContain('Verified count')
     })
     it('keeps critical qualifications and recoverable actions discoverable', () => {
         const copy = stockTutorialCopy['yarn-stock'].en.fields
-        expect(copy.opening![1]).toContain('legacy pending dispatches')
-        expect(copy.link![1]).toContain('Cost Estimate')
-        expect(copy.link![1]).toContain('same quality')
-        expect(copy.movement![1]).toContain('every required yarn')
-        expect(copy.finish![1]).toContain('before confirming')
+        expect(copy.opening![1]).toContain('unused yarn physically in stock')
+        expect(copy.link![1]).toContain('fresh costing')
+        expect(copy.movement![1]).toContain('before production')
+        expect(copy.finish![1]).toContain('before recording production')
         const help = yarnStockTutorialHelp.en
-        expect(help.link![1]).toContain('Past deductions keep their original formula')
+        expect(help.link![1]).toContain('past consumption keeps its original rate')
         expect(help.receipt![1]).toContain('retry an unconfirmed save')
         expect(help.finish![1]).toContain('Clear the date and choose View date')
         expect(help.finish![1]).toContain('not movement history')

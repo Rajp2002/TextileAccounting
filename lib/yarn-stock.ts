@@ -20,7 +20,7 @@ export type YarnCosting = { id: string; quality_label: string; quality_key: stri
 export type YarnMovement = {
     id: string; yarn_id: string; yarn_name: string; kind: 'opening' | 'receipt' | 'correction' | 'production_consumption' | 'production_reversal' | 'dispatch' | 'dispatch_reversal' | 'audit_adjustment'
     kg_delta: number; balance_after: number; reason: string; created_at: string; created_by: string | null
-    challan_id: string | null; recipe_snapshot: { recipe: YarnRecipe; sent_meters?: number; meters?: number; costing_id: string; version: number } | null
+    challan_id: string | null; recipe_snapshot: { recipe?: YarnRecipe; sent_meters?: number; meters?: number; kg_per_100m?: number; costing_id?: string | null; version?: number } | null
 }
 export type YarnCursor = { at: string; id: string }
 export type YarnBoard = {
@@ -40,11 +40,33 @@ export function yarnHistoryPage(rows: YarnMovement[]) {
 export function totalYarnKg(rows: YarnBalance[]) {
     return rows.reduce((total, row) => total.plus(row.weight_kg), new Decimal(0)).toNumber()
 }
+
+// Dispatch movements retain the whole recipe; production movements retain the
+// rate for this yarn. Both are valid ledger snapshots and need different reads.
+export function yarnMovementUsage(row: Pick<YarnMovement, 'yarn_id' | 'recipe_snapshot'>, yarns: YarnBalance[]) {
+    const snapshot = row.recipe_snapshot
+    if (!snapshot || typeof snapshot !== 'object' || Array.isArray(snapshot)) return null
+    const meters = snapshot.sent_meters ?? snapshot.meters
+    if (typeof meters !== 'number' || !Number.isFinite(meters) || meters < 0) return null
+
+    if (typeof snapshot.kg_per_100m === 'number' && Number.isFinite(snapshot.kg_per_100m) && snapshot.kg_per_100m > 0) {
+        return { meters, kgPer100m: snapshot.kg_per_100m }
+    }
+
+    if (!Array.isArray(snapshot.recipe)) return null
+    const yarnKey = yarns.find(yarn => yarn.id === row.yarn_id)?.yarn_key
+    if (!yarnKey) return null
+    const rates = snapshot.recipe
+        .filter(layer => layer && typeof layer === 'object' && layer.yarn_key === yarnKey && typeof layer.kg_per_100m === 'number' && Number.isFinite(layer.kg_per_100m))
+        .map(layer => layer.kg_per_100m)
+    if (rates.length === 0) return null
+    return { meters, kgPer100m: rates.reduce((sum, rate) => sum + rate, 0) }
+}
 // Escape spreadsheet formulas as well as CSV quotes in user-entered yarn names.
 export function yarnAuditCsv(board: YarnBoard) {
     const cell = (value: string | number) => `"${String(value).replace(/^[\s]*[=+@-]/, match => `'${match}`).replaceAll('"', '""')}"`
     return '\uFEFF' + [
-        ['Yarn inventory (includes yarn in undispatched fabric)', 'Weight kg', 'As of (Asia/Kolkata)', 'Tracking started'],
+        ['Unused yarn physically in stock', 'Weight kg', 'As of (Asia/Kolkata)', 'Tracking started'],
         ...board.yarns.map(row => [row.yarn_name, row.weight_kg, board.as_of ?? 'Current at export', board.started_at ?? 'Not started']),
         ['Total', totalYarnKg(board.yarns), board.as_of ?? 'Current at export', board.started_at ?? 'Not started'],
     ].map(row => row.map(cell).join(',')).join('\r\n')
