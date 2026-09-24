@@ -470,17 +470,15 @@ export default function BaseProductionClient({
                 ? 'flex flex-col justify-between gap-4 border-b border-hairline/70 pb-5 text-center sm:pb-6'
                 : view === 'operations'
                     ? 'flex flex-col items-center text-center'
-                    : 'flex flex-col justify-between gap-4 sm:flex-row sm:items-start'}>
-                <div className={view === 'operations' ? 'flex flex-col items-center' : undefined}>
+                    : view === 'production'
+                        ? 'flex flex-col items-center border-b border-hairline/70 pb-5 text-center sm:pb-6'
+                        : 'flex flex-col justify-between gap-4 sm:flex-row sm:items-start'}>
+                <div className={view === 'operations' || view === 'production' ? 'flex flex-col items-center' : undefined}>
                     {view === 'production' && <p className="text-xs font-bold uppercase tracking-[0.18em] text-saffron-deep">Weavly Base</p>}
                     <h1 className={`${view === 'payroll' ? 'text-[1.75rem] font-bold sm:text-[2rem]' : view === 'operations' ? 'text-2xl font-black sm:text-3xl' : 'mt-1 text-2xl font-black sm:text-3xl'} tracking-tight text-ink`}>
                         {view === 'operations' ? 'Worker–Machine Assignments' : view === 'payroll' ? 'Payroll' : 'Production'}
                     </h1>
-                    {view !== 'operations' && <p className={view === 'payroll' ? 'sr-only' : 'mt-2 max-w-2xl text-sm leading-relaxed text-body'}>
-                        {view === 'payroll'
-                            ? 'Review earnings and settle worker pay for each period.'
-                            : 'Create production jobs from saved costings and record daily machine metres.'}
-                    </p>}
+                    {view === 'payroll' && <p className="sr-only">Review earnings and settle worker pay for each period.</p>}
                 </div>
             </header>}
 
