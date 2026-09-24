@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { YarnMutationSchema, YarnFilterSchema, totalYarnKg, yarnAuditCsv, yarnHistoryPage, type YarnBoard, type YarnMovement } from '@/lib/yarn-stock'
+import { YarnMutationSchema, YarnFilterSchema, totalYarnKg, yarnAuditCsv, yarnHistoryPage, yarnMovementUsage, type YarnBoard, type YarnMovement } from '@/lib/yarn-stock'
 import { calcFullTotals, makeDefaultEstimateState, buildCostingResult } from '@/lib/estimator'
 
 const requestId = '10000000-0000-4000-8000-000000000001'
@@ -32,6 +32,7 @@ describe('yarn inventory entry and audit', () => {
         ], costings: [], qualities: [], movements: [], nextCursor: null } satisfies YarnBoard
         expect(totalYarnKg(board.yarns)).toBe(0.3)
         const csv = yarnAuditCsv(board)
+        expect(csv).toContain('Unused yarn physically in stock')
         expect(csv).toContain('"\'=HYPERLINK(""unsafe"")"')
         expect(csv).toContain('"Yarn, two","0.2","2026-03-31"')
         expect(csv).toContain('"Total","0.3"')
@@ -41,5 +42,15 @@ describe('yarn inventory entry and audit', () => {
         expect(yarnHistoryPage(rows)).toMatchObject({ nextCursor: { id: '49' } })
         expect(yarnHistoryPage(rows).movements).toHaveLength(50)
         expect(yarnHistoryPage(rows.slice(0, 50)).nextCursor).toBeNull()
+    })
+    it('shows both production and dispatch movement snapshots without assuming a recipe array', () => {
+        const yarns = [{ id: 'yarn-1', yarn_name: 'Warp', yarn_key: 'warp', weight_kg: 80, opening_recorded: true }]
+        expect(yarnMovementUsage({ yarn_id: 'yarn-1', recipe_snapshot: { meters: 346, kg_per_100m: 5.866666666666666 } }, yarns))
+            .toEqual({ meters: 346, kgPer100m: 5.866666666666666 })
+        expect(yarnMovementUsage({ yarn_id: 'yarn-1', recipe_snapshot: { sent_meters: 100, recipe: [
+            { yarn_name: 'Warp', yarn_key: 'warp', kg_per_100m: 3, role: 'warp' },
+            { yarn_name: 'Warp', yarn_key: 'warp', kg_per_100m: 2, role: 'weft' },
+        ] } }, yarns)).toEqual({ meters: 100, kgPer100m: 5 })
+        expect(yarnMovementUsage({ yarn_id: 'yarn-1', recipe_snapshot: { meters: 100 } }, yarns)).toBeNull()
     })
 })

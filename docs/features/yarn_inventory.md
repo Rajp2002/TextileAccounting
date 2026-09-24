@@ -1,5 +1,7 @@
 # Yarn inventory until fabric dispatch
 
+> Historical design, superseded by `20260920000000_unified_inventory_audit_architecture.sql`. Current Yarn Stock shows unused yarn physically in stock. Recording production deducts yarn and creates a production lot; dispatch deducts fabric metres only. Audit Inventory reports yarn embodied in remaining fabric separately. The details below describe the former dispatch deduction model.
+
 Implemented locally on September 12, 2026. No production migration or deployment was performed.
 
 Owners with production access open **Stock → Yarn**, separate from fabric stock. The balance is the total yarn still owned: unused yarn plus yarn in fabric that has not left on a confirmed dispatch. Production, machine allocation, draft challans, printing, customer receipt differences and payments do not reduce it.

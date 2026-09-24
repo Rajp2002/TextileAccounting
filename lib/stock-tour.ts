@@ -19,4 +19,4 @@ export const stockTourSelector = (step: StockTourStep) => `[data-stock-tour="${s
 /** Display-only examples, never business record payloads. */
 export const fabricStockExample = { preStartPhysical: 650, historicalCommitted: 150, opening: 500, production: 200, dispatch: 100, balance: 600, counted: 590, correction: -10 } as const
 
-export const yarnStockExample = { unused: 80, embodied: 20, undispatchedMetres: 200, warpKgPer100: 6, weftKgPer100: 4, opening: 100, receipt: 20, dispatchedMetres: 100, kgPer100: 10, deduction: 10, balance: 110, counted: 108 } as const
+export const yarnStockExample = { unused: 100, embodied: 20, undispatchedMetres: 200, warpKgPer100: 6, weftKgPer100: 4, opening: 100, receipt: 20, producedMetres: 200, kgPer100: 10, deduction: 20, balance: 100, counted: 98 } as const
