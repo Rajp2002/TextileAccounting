@@ -1530,13 +1530,7 @@ export default function RatesClient({
             </div>
             <div className="space-y-1" data-ratebook-field="overview">
                 <PageHeader
-                    icon={Tags}
                     title={t('common.yarn_rate_book')}
-                    description={(
-                        <span>
-                            {tx('Keep current yarn rates for future estimates. Saved costing snapshots stay unchanged.')}
-                        </span>
-                    )}
                     actions={(
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                             <div className="lg:hidden min-[1660px]:hidden">

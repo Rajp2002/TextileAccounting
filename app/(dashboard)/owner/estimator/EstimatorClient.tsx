@@ -5467,9 +5467,7 @@ export default function EstimatorClient({
                 secondaryReady={templatesLoaded}
             />
             <PageHeader
-                icon={Calculator}
                 title={mode === 'market' ? tx('Market estimate') : tx('Cost estimate')}
-                description={tx(freeMode ? 'Enter your costing inputs, then calculate and save a snapshot to view or export later.' : 'Build a reusable fabric cost estimate from yarn, loom, factory, and pricing inputs. Save the result when it is ready.')}
                 actions={(
                     <Button variant="outline" onClick={() => router.push(freeMode ? '/free/costings' : '/owner/quotes')}>
                         <History className="h-4 w-4" /> {tx('Saved costings')}

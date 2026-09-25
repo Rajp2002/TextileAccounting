@@ -84,7 +84,10 @@ export default function SettingsPage() {
 
     if (profileLoading || orgLoading) {
         return <div className="settings-page-frame settings-readable space-y-5">
-            <Skeleton className="h-8 w-48" />
+            <div className="space-y-2 border-b border-hairline/80 pb-6 text-center">
+                <Skeleton className="mx-auto size-9 rounded-xl" />
+                <Skeleton className="mx-auto h-8 w-48" />
+            </div>
             <Skeleton className="h-64 rounded-lg" />
             <Skeleton className="h-56 rounded-lg" />
         </div>

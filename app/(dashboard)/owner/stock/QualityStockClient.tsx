@@ -75,9 +75,9 @@ export default function QualityStockClient({ initialData }: { initialData: Quali
     }
     const qualities = data.qualities.filter(row => row.quality_label.toLocaleLowerCase().includes(search.toLocaleLowerCase()))
     return <div className="space-y-6" data-i18n-skip="true">
-        <header className="flex flex-wrap items-start justify-between gap-4">
-            <div><h1 className="text-3xl font-semibold">{tx('title')}</h1><p className="mt-2 max-w-2xl text-sm text-muted-foreground">{tx('subtitle')}</p></div>
-            <div className="flex gap-2">
+        <header className="grid gap-4 border-b border-hairline/80 pb-5 text-center sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center sm:pb-6">
+            <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-ink sm:col-start-2 sm:row-start-1 sm:text-[2rem]">{tx('title')}</h1>
+            <div className="flex flex-wrap justify-center gap-2 sm:col-start-3 sm:row-start-1 sm:justify-self-end">
                 <Button asChild variant="outline" className="border-loom/30 text-loom hover:bg-loom/5 gap-1.5 font-medium">
                     <Link href="/owner/stock/audit">
                         <Warehouse className="h-4 w-4" />

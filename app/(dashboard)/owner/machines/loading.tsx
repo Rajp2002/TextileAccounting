@@ -4,15 +4,6 @@ export default function Loading() {
   return (
     <BaseRouteLoading route="/owner/machines" title="Machines" centeredTitle>
       <div className="mx-auto w-full max-w-6xl space-y-6" aria-hidden="true">
-        {/* Header Skeleton */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="space-y-1.5">
-            <div className="h-7 sm:h-8 w-36 animate-pulse rounded-md bg-surface-soft motion-reduce:animate-none" />
-            <div className="h-4 w-64 animate-pulse rounded-md bg-surface-soft/70 motion-reduce:animate-none" />
-          </div>
-          <div className="h-10 w-32 animate-pulse rounded-xl bg-surface-soft motion-reduce:animate-none" />
-        </div>
-
         {/* Toolbar Skeleton */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="h-10 sm:h-11 flex-1 animate-pulse rounded-xl bg-surface-soft motion-reduce:animate-none" />

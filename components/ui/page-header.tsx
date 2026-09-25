@@ -36,13 +36,21 @@ export function PageHeader({
     icon: Icon,
     actions,
     meta,
-    centered = false,
+    centered = true,
     className,
     id,
 }: PageHeaderProps) {
     return (
-        <header id={id} className={cn('flex flex-col gap-4 border-b border-hairline/80 pb-5 sm:flex-row sm:items-end sm:justify-between', centered && 'items-center text-center sm:justify-center', className)}>
-            <div className={cn('flex min-w-0 items-start gap-3', centered && 'w-full justify-center')}>
+        <header
+            id={id}
+            className={cn(
+                centered
+                    ? 'grid grid-cols-1 gap-4 border-b border-hairline/80 pb-5 text-center sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center'
+                    : 'flex flex-col gap-4 border-b border-hairline/80 pb-5 sm:flex-row sm:items-end sm:justify-between',
+                className,
+            )}
+        >
+            <div className={cn('flex min-w-0 items-start gap-3', centered && 'w-full justify-center sm:col-start-2 sm:row-start-1')}>
                 {Icon && (
                     <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-saffron/30 bg-saffron-soft/70 text-saffron-deep">
                         <Icon className="h-5 w-5" aria-hidden="true" />
@@ -55,7 +63,10 @@ export function PageHeader({
                 </div>
             </div>
             {(meta || actions) && (
-                <div className="flex shrink-0 flex-wrap items-center gap-2 sm:justify-end">
+                <div className={cn(
+                    'flex shrink-0 flex-wrap items-center gap-2',
+                    centered ? 'justify-center sm:col-start-3 sm:row-start-1 sm:justify-self-end' : 'sm:justify-end',
+                )}>
                     {meta}
                     {actions}
                 </div>

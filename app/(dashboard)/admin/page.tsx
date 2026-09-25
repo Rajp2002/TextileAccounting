@@ -48,16 +48,11 @@ export default async function AdminDashboardPage() {
     return (
         <div className="p-6 lg:p-10 space-y-8">
             <span hidden data-signin-ready="true" />
-            <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-                        Compliance Dashboard
-                    </h1>
-                    <p className="text-zinc-500 dark:text-zinc-400 mt-1">
-                        Compliance and security operations
-                    </p>
-                </div>
-                <div className="flex items-center gap-3">
+            <header className="grid gap-4 border-b border-hairline/80 pb-5 text-center sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center">
+                <h1 className="text-[1.75rem] font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:col-start-2 sm:row-start-1 sm:text-[2rem]">
+                    Compliance Dashboard
+                </h1>
+                <div className="flex items-center justify-center gap-3 sm:col-start-3 sm:row-start-1 sm:justify-self-end">
                     <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
                         hasLockedFactory
                         ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400' 

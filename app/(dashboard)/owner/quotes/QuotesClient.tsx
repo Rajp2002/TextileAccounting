@@ -1485,9 +1485,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             </div>
             {detailLoadingId && <p role="status" aria-live="polite" className="ui-status-enter rounded-lg border border-info/25 bg-info-soft px-3 py-2 text-xs font-semibold text-info">{tx('Selection saved. Loading the complete snapshot for comparison…')}</p>}
             <PageHeader
-                icon={History}
                 title={canUseQuotationWorkflow ? t('common.costings_quotations_title') : t('common.saved_costings_title')}
-                description={canUseQuotationWorkflow ? t('common.costings_quotations_description') : t('common.saved_costings_description')}
                 actions={(
                     <Button
                         onClick={() => router.push('/owner/estimator')}

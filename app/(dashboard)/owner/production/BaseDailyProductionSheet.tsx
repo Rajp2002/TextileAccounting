@@ -631,7 +631,7 @@ export default function BaseDailyProductionSheet({
     if (navigation.entry && (!selectedEntry || !selectedEntry.batch_id)) {
         return (
             <div className="space-y-4">
-                <h1 className="text-xl font-black tracking-tight text-ink sm:text-2xl">Daily sheet</h1>
+                <h1 className="text-center text-[1.75rem] font-bold leading-tight tracking-tight text-ink sm:text-[2rem]">Daily sheet</h1>
                 <Card>
                     <CardHeader>
                         <CardTitle>{selectedEntry ? 'Legacy production record' : 'Record not found'}</CardTitle>
@@ -699,8 +699,7 @@ export default function BaseDailyProductionSheet({
             {navigation.job && <p className="rounded-lg border border-saffron/30 bg-saffron-soft p-3 text-sm">Selected job: <strong>{jobById.get(navigation.job)?.quality_label ?? 'Unavailable job'}</strong>. Its machine rows are highlighted; the full shift stays visible.</p>}
             {(draftStatus === 'error' || draftStatus === 'conflict') && <div role="alert" className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-warning/30 bg-warning/5 p-3 text-sm"><p>{draftStatus === 'conflict' ? 'The saved shift changed after this draft. Your local draft is retained; reload the saved version before editing.' : 'Draft could not be saved on this device. Keep this page open and save the shift before leaving.'}</p><Button variant="outline" size="sm" onClick={discardDraft}>Discard local draft</Button></div>}
             <div className="border-b border-hairline/70 pb-4 text-center">
-                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-saffron-deep">Production register</p>
-                <h1 className="mt-1 text-2xl font-black tracking-tight text-ink">Daily sheet</h1>
+                <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-ink sm:text-[2rem]">Daily sheet</h1>
             </div>
 
             {currentBatch && (

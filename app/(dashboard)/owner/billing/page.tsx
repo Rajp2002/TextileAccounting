@@ -365,16 +365,7 @@ export default async function BillingPage() {
             <PlanAnalyticsBeacon eventName="base_pricing_viewed" properties={{ current_tier: tier }} />
 
             <PageHeader
-                icon={CreditCard}
-                eyebrow="Account"
                 title="Subscription & Billing"
-                description="Manage your plan, renewal, and payment history."
-                meta={
-                    <StatusBadge
-                        status={isActive ? 'active' : 'info'}
-                        label={isActive ? isBaseWorkspace ? 'Weavly Base' : 'Weavly Lite' : 'Inactive'}
-                    />
-                }
             />
 
             {/* In-progress or recovery alerts */}
