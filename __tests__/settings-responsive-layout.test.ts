@@ -6,10 +6,12 @@ const root = process.cwd()
 const read = (path: string) => readFileSync(join(root, path), 'utf8')
 
 describe('Settings responsive layout', () => {
-    it('keeps the estimator rail inside the dashboard content width', () => {
+    it('keeps Settings centred in the dashboard content column at every width', () => {
         const styles = read('app/globals.css')
-        expect(styles).toContain('@media (min-width: 1700px)')
-        expect(styles).toMatch(/@media \(min-width: 1700px\)[\s\S]*?\.settings-page-frame \{[\s\S]*?width: 100%;[\s\S]*?margin-left: 0;/)
+        expect(styles).toMatch(/\.settings-page-frame \{\s*width: 100%;/)
+        // The main column already starts after the sidebar; a second guard
+        // pushed Settings off-centre once the document was no longer zoomed.
+        expect(styles).not.toContain('--settings-sidebar-guard')
         expect(styles).not.toContain('--settings-frame-width')
     })
 })

@@ -20,7 +20,7 @@ describe('Rate Review Right Rail layout & interaction', () => {
     })
 
     it('keeps viewport-positioned review controls outside the transformed route wrapper', () => {
-        const routeWrapperStart = rates.indexOf('<div className="ui-route-enter')
+        const routeWrapperStart = rates.indexOf('<div className="rates-workspace ui-route-enter')
         const viewportControlsStart = rates.indexOf('<aside className="rates-review-rail-desktop')
         const floatingControlStart = rates.indexOf('<RateReviewFloatingButton')
         const routeWrapperEnd = rates.indexOf('\n            </div>\n\n            {/* Keep viewport-positioned review controls')
@@ -40,7 +40,7 @@ describe('Rate Review Right Rail layout & interaction', () => {
         const archiveStart = rates.indexOf('<ArchivePolicyNotice />', archiveRailStart)
         const archiveRailEnd = rates.indexOf('</aside>', archiveRailStart)
 
-        expect(rates).toContain('<div className="min-[1540px]:hidden">')
+        expect(rates).toContain('<div className="rail-inline-actions">')
         expect(routeArchiveStart).toBeGreaterThanOrEqual(0)
         expect(reviewRailStart).toBeGreaterThan(routeArchiveStart)
         expect(referenceStart).toBeGreaterThan(reviewRailStart)
@@ -49,7 +49,7 @@ describe('Rate Review Right Rail layout & interaction', () => {
         expect(archiveStart).toBeGreaterThan(archiveRailStart)
         expect(archiveStart).toBeLessThan(archiveRailEnd)
         expect(styles).toContain('.rates-archive-policy-rail-desktop')
-        expect(styles).toContain('bottom: 1.25rem')
+        expect(styles).toMatch(/\.rates-archive-policy-rail-desktop,[\s\S]*?\{[\s\S]*?position:\s*fixed;[\s\S]*?bottom:\s*var\(--rail-bottom\);/)
     })
 
     it('provides accessible modal triggers for rates due for review', () => {

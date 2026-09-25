@@ -1,6 +1,6 @@
 'use client'
 
-import { BookOpen, Sparkles } from 'lucide-react'
+import { BookOpen } from 'lucide-react'
 import { useTranslation } from '@/lib/i18n/context'
 import {
   Dialog,
@@ -13,6 +13,8 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { railButton, railIcon } from '@/components/ui/rail'
+import { cn } from '@/lib/utils'
 
 function parseTerm(explanation: string) {
   const parts = explanation.split(' — ')
@@ -50,19 +52,14 @@ export function BasePlanFactoryGlossary() {
       <DialogTrigger asChild>
         <button
           type="button"
-          className="estimator-touch-target group flex w-full cursor-pointer items-center justify-between gap-3 rounded-2xl border border-slate-200/90 bg-white/95 px-4 py-3 min-h-[50px] text-left text-sm font-semibold text-slate-800 shadow-xs transition-all duration-150 hover:border-amber-300 hover:bg-amber-50/40 hover:shadow-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] active:scale-[0.99]"
+          className={cn('estimator-touch-target', railButton)}
           aria-label={t('base_plan.glossary_title')}
         >
-          <div className="flex min-w-0 items-center gap-2.5">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-100/80 text-amber-700 transition-colors group-hover:bg-amber-200/80">
-              <BookOpen className="h-4 w-4" aria-hidden="true" />
-            </span>
-            <span className="font-bold text-slate-900 whitespace-nowrap">{t('base_plan.glossary_title')}</span>
-          </div>
-          <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600 transition-colors group-hover:bg-amber-100 group-hover:text-amber-800">
-            <Sparkles className="h-3 w-3" aria-hidden="true" />
-            <span>11</span>
+          <span className="flex min-w-0 items-center gap-2.5">
+            <BookOpen className={railIcon} aria-hidden="true" />
+            <span className="min-w-0">{t('base_plan.glossary_title')}</span>
           </span>
+          <span className="shrink-0 text-xs font-medium tabular-nums text-muted-foreground">11</span>
         </button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-2xl">

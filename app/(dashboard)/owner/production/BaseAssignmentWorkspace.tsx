@@ -9,7 +9,8 @@ import { configurationTourSteps, configurationTourView, makeConfigurationTourExa
 import { useCallback, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { ArrowUpRight, Check, CircleHelp, Link2, Loader2, Moon, Plus, Search, Sparkles, Sun, Unlink, Users, Wrench } from 'lucide-react'
+import { ArrowUpRight, Check, CircleHelp, Link2, Loader2, Moon, Plus, Search, Sun, Unlink, Users, Wrench } from 'lucide-react'
+import { railButton, railIcon } from '@/components/ui/rail'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -393,7 +394,7 @@ export default function BaseAssignmentWorkspace({
                         orgId={liveData.orgId}
                         userMetadata={tourMetadata}
                         align="full"
-                        className="w-full estimator-touch-target border-amber-200/90 bg-amber-50/75 hover:bg-amber-100/70 shadow-xs"
+                        className="w-full"
                         onLaunch={() => {
                             if (pendingKey) return
                             tourReturnScroll.current = { x: window.scrollX, y: window.scrollY }
@@ -406,18 +407,15 @@ export default function BaseAssignmentWorkspace({
                         <DialogTrigger asChild>
                             <button
                                 type="button"
-                                className="estimator-touch-target group flex w-full cursor-pointer items-center justify-between gap-2.5 rounded-2xl border border-hairline/80 bg-surface/95 px-4 py-3 min-h-[48px] text-left text-sm font-semibold text-ink shadow-xs transition-all duration-150 hover:border-amber-300 hover:bg-amber-50/40 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron active:scale-[0.99]"
+                                className={cn('estimator-touch-target', railButton)}
                                 aria-label={tourCopy.helpLabel}
                             >
-                                <div className="flex min-w-0 items-center gap-2.5">
-                                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-amber-100/80 text-amber-700 transition-colors group-hover:bg-amber-200/80">
-                                        <CircleHelp className="h-4 w-4" aria-hidden="true" />
-                                    </span>
-                                    <span className="font-bold text-slate-900 text-xs truncate">{tourCopy.helpLabel}</span>
-                                </div>
-                                <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 transition-colors group-hover:bg-amber-100 group-hover:text-amber-800">
-                                    <Sparkles className="h-3 w-3" aria-hidden="true" />
-                                    <span>{configurationHelpTopics.length}</span>
+                                <span className="flex min-w-0 items-center gap-2.5">
+                                    <CircleHelp className={railIcon} aria-hidden="true" />
+                                    <span className="min-w-0">{tourCopy.helpLabel}</span>
+                                </span>
+                                <span className="shrink-0 text-xs font-medium tabular-nums text-muted-foreground">
+                                    {configurationHelpTopics.length}
                                 </span>
                             </button>
                         </DialogTrigger>

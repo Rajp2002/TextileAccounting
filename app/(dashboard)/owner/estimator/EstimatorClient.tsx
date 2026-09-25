@@ -904,7 +904,7 @@ function ComponentCountField({
                         }
                     }}
                     onBlur={() => commitValue(draftValue)}
-                    className={`h-11 rounded-[9px] border bg-[var(--color-canvas-white)] px-24 text-center text-xs sm:text-sm font-mono font-semibold text-[var(--color-yarn-orange)] shadow-[0_1px_2px_rgba(30,37,40,0.035)] transition-all placeholder:text-[var(--color-muted)] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${hasInvalidDraft ? 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)]' : 'border-[var(--color-hairline)] hover:border-[var(--color-hairline-strong)]'}`}
+                    className={`h-11 rounded-[9px] border bg-[var(--color-canvas-white)] px-24 text-center text-xs sm:text-sm font-mono font-semibold text-[var(--color-yarn-orange)] shadow-[0_1px_2px_rgba(30,37,40,0.035)] transition-all placeholder:text-[var(--color-placeholder)] placeholder:font-normal focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${hasInvalidDraft ? 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)]' : 'border-[var(--color-hairline)] hover:border-[var(--color-hairline-strong)]'}`}
                 />
                 <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-[var(--color-muted)]">
                     {unit}
@@ -1057,7 +1057,7 @@ function StepperField({
     const decrement = () => onChange(Math.max(0, Number((value - step).toFixed(2))))
     const increment = () => onChange(Number((value + step).toFixed(2)))
     const isGhostValue = ghostValue !== undefined && value === ghostValue
-    const placeholderClass = 'placeholder:text-[var(--color-muted)]'
+    const placeholderClass = 'placeholder:text-[var(--color-placeholder)] placeholder:font-normal'
     const valueClass = 'text-[var(--color-yarn-orange)]'
     return (
         <div data-estimator-field={fieldKey} className="min-w-0 space-y-2">
@@ -1130,7 +1130,7 @@ function NumField({
     const displayPlaceholder = isGhostValue || (value === 0 && !preserveZero)
         ? formatEstimatorPlaceholder(placeholder ?? (ghostValue !== undefined ? String(ghostValue) : '0'), placeholderKind)
         : placeholder
-    const placeholderClass = 'placeholder:text-[var(--color-muted)]'
+    const placeholderClass = 'placeholder:text-[var(--color-placeholder)] placeholder:font-normal'
     return (
         <div className="space-y-1.5 min-w-0" data-estimator-field={fieldKey}>
             <Label htmlFor={inputId} className="flex items-end h-8 text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] leading-tight">{label}</Label>
@@ -1322,7 +1322,7 @@ function WidthField({
                         }
                     }}
                     aria-invalid={isEmpty || undefined}
-                    className={`h-11 text-xs sm:text-sm font-mono font-semibold text-center px-12 sm:px-16 placeholder:text-[var(--color-muted)] focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/15 transition-all shadow-[0_1px_2px_rgba(30,37,40,0.035)] group-hover:border-[var(--color-hairline-strong)] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-[9px] text-[var(--color-yarn-orange)] ${isEmpty ? 'bg-[var(--color-warning-amber-soft)] border-[var(--color-warning-amber)] text-[var(--color-warning-amber)] placeholder:text-[var(--color-warning-amber)]' : 'bg-white border-[var(--color-hairline)]'}`}
+                    className={`h-11 text-xs sm:text-sm font-mono font-semibold text-center px-12 sm:px-16 placeholder:text-[var(--color-placeholder)] placeholder:font-normal focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/15 transition-all shadow-[0_1px_2px_rgba(30,37,40,0.035)] group-hover:border-[var(--color-hairline-strong)] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-[9px] text-[var(--color-yarn-orange)] ${isEmpty ? 'bg-[var(--color-warning-amber-soft)] border-[var(--color-warning-amber)] text-[var(--color-warning-amber)] placeholder:text-[var(--color-warning-amber)]' : 'bg-white border-[var(--color-hairline)]'}`}
                 />
                 <span className="absolute right-3.5 sm:right-4 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-bold pointer-events-none">
                     {unit}
@@ -2251,7 +2251,7 @@ function LayerNameField({
                         setHighlightedIndex(-1)
                     }}
                     onKeyDown={handleKeyDown}
-                    className={`h-11 rounded-[9px] border font-semibold placeholder:text-[var(--color-muted)] focus:border-[var(--color-yarn-orange)] focus:ring-[var(--color-yarn-orange)]/10 ${
+                    className={`h-11 rounded-[9px] border font-semibold placeholder:text-[var(--color-placeholder)] placeholder:font-normal focus:border-[var(--color-yarn-orange)] focus:ring-[var(--color-yarn-orange)]/10 ${
                         suggestions.length > 0 ? 'pr-8 ' : ''
                     }${
                         value?.trim() ? 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)] text-[var(--color-yarn-orange)]' : 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)]'
@@ -2852,7 +2852,7 @@ function WeavingRateFields({
                                 if (inputMode === 'perMeter') event.currentTarget.select()
                             }}
                             aria-invalid={isRateEmpty || undefined}
-                            className={`h-11 rounded-[9px] border px-16 text-center text-xs font-semibold placeholder:text-[var(--color-muted)] shadow-[0_1px_2px_rgba(30,37,40,0.035)] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${isRateEmpty ? 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)] placeholder:text-[var(--color-warning-amber)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)] text-[var(--color-yarn-orange)]'}`}
+                            className={`h-11 rounded-[9px] border px-16 text-center text-xs font-semibold placeholder:text-[var(--color-placeholder)] placeholder:font-normal shadow-[0_1px_2px_rgba(30,37,40,0.035)] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${isRateEmpty ? 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)] placeholder:text-[var(--color-warning-amber)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)] text-[var(--color-yarn-orange)]'}`}
                         />
                         <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-[var(--color-muted)]">
                             {inputMode === 'perMeter' ? '₹/m' : 'paise/pick'}
@@ -6349,7 +6349,7 @@ export default function EstimatorClient({
                                         onChange={e => setTemplateSearch(e.target.value)}
                                         placeholder={t('estimator.quality.searchPlaceholder').replace('{count}', String(templates.length))}
                                         aria-label={tx('Search saved qualities')}
-                                        className="h-12 w-full rounded-[11px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] pl-10 pr-10 text-[13px] font-medium text-[var(--color-ink)] placeholder:font-normal placeholder:text-[var(--color-muted)] focus:border-[var(--color-yarn-orange)] focus:outline-none focus:ring-2 focus:ring-[var(--color-yarn-orange)]/15"
+                                        className="h-12 w-full rounded-[11px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] pl-10 pr-10 text-[13px] font-medium text-[var(--color-ink)] placeholder:font-normal placeholder:text-[var(--color-placeholder)] placeholder:font-normal focus:border-[var(--color-yarn-orange)] focus:outline-none focus:ring-2 focus:ring-[var(--color-yarn-orange)]/15"
                                     />
                                     {templateSearch && (
                                         <button
@@ -7264,7 +7264,7 @@ export default function EstimatorClient({
                                                         onChange={e => dispatch({ type: 'SET', field: 'overheadOverridePerM', value: parseNonNegativeInput(e.target.value) })}
                                                         aria-label="Direct factory overhead per metre"
                                                         aria-invalid={state.overheadOverridePerM == null || state.overheadOverridePerM <= 0 || undefined}
-                                                        className={`h-10 w-full rounded-[9px] pl-8 pr-4 text-sm font-medium placeholder:text-[var(--color-muted)] [appearance:textfield] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/30 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${state.overheadOverridePerM == null || state.overheadOverridePerM <= 0 ? 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)] placeholder:text-[var(--color-warning-amber)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)] text-[var(--color-yarn-orange)]'}`}
+                                                        className={`h-10 w-full rounded-[9px] pl-8 pr-4 text-sm font-medium placeholder:text-[var(--color-placeholder)] placeholder:font-normal [appearance:textfield] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/30 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${state.overheadOverridePerM == null || state.overheadOverridePerM <= 0 ? 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)] placeholder:text-[var(--color-warning-amber)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)] text-[var(--color-yarn-orange)]'}`}
                                                     />
                                                 </div>
                                             </div>
@@ -7393,7 +7393,7 @@ export default function EstimatorClient({
                                                                                 placeholder={!isPreset && item.label === 'New Item' ? 'Item name' : undefined}
                                                                                 disabled={isPreset}
                                                                                 onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM', id: item.id, field: 'label', value: e.target.value })}
-                                                                                className={`h-7 border-0 bg-transparent p-0 text-[13px] font-medium placeholder:text-[var(--color-muted)] focus:ring-0 ${isPreset ? 'text-[var(--color-ink)]' : 'text-[var(--color-muted)]'}`}
+                                                                                className={`h-7 border-0 bg-transparent p-0 text-[13px] font-medium placeholder:text-[var(--color-placeholder)] placeholder:font-normal focus:ring-0 ${isPreset ? 'text-[var(--color-ink)]' : 'text-[var(--color-muted)]'}`}
                                                                             />
                                                                         </div>
 
@@ -7404,7 +7404,7 @@ export default function EstimatorClient({
                                                                                 value={item.monthlyAmount === 0 ? '' : item.monthlyAmount}
                                                                                 placeholder="e.g. 25,000"
                                                                                 onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM', id: item.id, field: 'monthlyAmount', value: parseNonNegativeInput(e.target.value) ?? 0 })}
-                                                                                className="h-8 min-w-[120px] rounded-[7px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] pl-6 pr-9 text-right text-[11px] font-medium text-[var(--color-yarn-orange)] placeholder:text-[var(--color-muted)] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                                                                className="h-8 min-w-[120px] rounded-[7px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] pl-6 pr-9 text-right text-[11px] font-medium text-[var(--color-yarn-orange)] placeholder:text-[var(--color-placeholder)] placeholder:font-normal [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                                                                             />
                                                                             <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-[var(--color-muted)] font-medium pointer-events-none">/mo</span>
                                                                         </div>
@@ -7435,7 +7435,7 @@ export default function EstimatorClient({
                                                                 placeholder="e.g. 90,000"
                                                                 onChange={e => dispatch({ type: 'SET', field: 'monthlyOutputM', value: parseNonNegativeInput(e.target.value) ?? 0 })}
                                                                 aria-invalid={state.overheadMode === 'monthly_expenses' && (!state.monthlyOutputM || state.monthlyOutputM <= 0) || undefined}
-                                                                className={`h-10 rounded-[9px] pr-9 text-center text-sm font-medium placeholder:text-[var(--color-muted)] [appearance:textfield] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${state.overheadMode === 'monthly_expenses' && (!state.monthlyOutputM || state.monthlyOutputM <= 0) ? 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)] placeholder:text-[var(--color-warning-amber)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)] text-[var(--color-yarn-orange)]'}`}
+                                                                className={`h-10 rounded-[9px] pr-9 text-center text-sm font-medium placeholder:text-[var(--color-placeholder)] placeholder:font-normal [appearance:textfield] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${state.overheadMode === 'monthly_expenses' && (!state.monthlyOutputM || state.monthlyOutputM <= 0) ? 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)] placeholder:text-[var(--color-warning-amber)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)] text-[var(--color-yarn-orange)]'}`}
                                                             />
                                                             <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-[var(--color-muted)] font-medium pointer-events-none">m/mo</span>
                                                         </div>

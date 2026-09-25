@@ -3,6 +3,8 @@
 import { useRef, useState, type ReactNode } from 'react'
 import { ChevronRight, HelpCircle, ReceiptText } from 'lucide-react'
 import { TourInvitation } from '@/components/tours/TourInvitation'
+import { railButton, railIcon } from '@/components/ui/rail'
+import { cn } from '@/lib/utils'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { useTranslation } from '@/lib/i18n/context'
 import { payrollTutorialCopy } from '@/lib/i18n/payroll-tutorial'
@@ -40,7 +42,7 @@ export default function PayrollGuidedTour({ variant, userId, orgId, userMetadata
                     orgId={orgId}
                     userMetadata={userMetadata}
                     align="full"
-                    className="w-full estimator-touch-target border-saffron-soft/90 bg-saffron-soft/75 text-saffron-deep shadow-xs hover:bg-saffron-soft"
+                    className="w-full"
                     onLaunch={() => launch('core')}
                 />
                 <div data-i18n-skip="true" lang={language} className="mt-3">
@@ -49,15 +51,13 @@ export default function PayrollGuidedTour({ variant, userId, orgId, userMetadata
                         data-tour-control="payroll-help"
                         aria-describedby="payroll-help-description"
                         onClick={() => launch('help')}
-                        className="estimator-touch-target group flex w-full cursor-pointer items-center justify-between gap-2.5 rounded-2xl border border-hairline/80 bg-surface/95 px-4 py-3 min-h-[48px] text-left text-sm font-semibold text-ink shadow-xs transition-all duration-150 hover:border-saffron-soft hover:bg-saffron-soft/30 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron active:scale-[0.99]"
+                        className={cn('estimator-touch-target', railButton)}
                     >
-                        <div className="flex min-w-0 items-center gap-2.5">
-                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-saffron-soft text-saffron-deep transition-colors group-hover:bg-saffron-soft/80">
-                                <HelpCircle className="h-4 w-4" aria-hidden="true" />
-                            </span>
-                            <span className="truncate text-xs font-bold text-slate-900">{copy.help}</span>
-                        </div>
-                        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+                        <span className="flex min-w-0 items-center gap-2.5">
+                            <HelpCircle className={railIcon} aria-hidden="true" />
+                            <span className="min-w-0">{copy.help}</span>
+                        </span>
+                        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
                     </button>
                     <p id="payroll-help-description" className="sr-only">{copy.helpDescription[variant]}</p>
                 </div>
@@ -66,15 +66,13 @@ export default function PayrollGuidedTour({ variant, userId, orgId, userMetadata
                         <DialogTrigger asChild>
                             <button
                                 type="button"
-                                className="estimator-touch-target group flex w-full cursor-pointer items-center justify-between gap-2.5 rounded-2xl border border-hairline/80 bg-surface/95 px-4 py-3 min-h-[48px] text-left text-sm font-semibold text-ink shadow-xs transition-all duration-150 hover:border-saffron hover:bg-saffron-soft/20 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron active:scale-[0.99]"
+                                className={cn('estimator-touch-target', railButton)}
                             >
-                                <div className="flex min-w-0 items-center gap-2.5">
-                                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-saffron-soft text-saffron-deep transition-colors group-hover:bg-saffron-soft/80">
-                                        <ReceiptText className="h-4 w-4" aria-hidden="true" />
-                                    </span>
-                                    <span className="font-bold text-slate-900 text-xs truncate">How pay is calculated</span>
-                                </div>
-                                <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+                                <span className="flex min-w-0 items-center gap-2.5">
+                                    <ReceiptText className={railIcon} aria-hidden="true" />
+                                    <span className="min-w-0">How pay is calculated</span>
+                                </span>
+                                <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
                             </button>
                         </DialogTrigger>
                         <DialogContent className="sm:max-w-lg rounded-2xl border border-hairline bg-surface p-6 shadow-2xl">

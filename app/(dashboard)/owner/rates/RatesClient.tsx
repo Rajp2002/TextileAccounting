@@ -30,6 +30,8 @@ import {
     X,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { railPrimaryAction } from '@/components/ui/rail'
+import { cn } from '@/lib/utils'
 import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
@@ -864,7 +866,7 @@ function RateReviewFloatingButton({
             onClick={onOpenModal}
             aria-haspopup="dialog"
             aria-label={tx(`Open ${dueCount} rates due for review`)}
-            className="min-[1540px]:hidden fixed bottom-6 right-6 z-40 inline-flex items-center gap-2.5 rounded-full bg-saffron px-4 py-3 text-sm font-bold text-white shadow-[0_10px_30px_rgba(217,119,6,0.4)] transition-all hover:bg-saffron-deep hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron focus-visible:ring-offset-2"
+            className="rail-inline-actions fixed bottom-[calc(var(--mobile-nav-height)+0.75rem)] right-4 z-40 inline-flex min-h-11 items-center gap-2.5 rounded-full bg-saffron px-4 py-3 text-sm font-bold text-white shadow-[var(--shadow-panel)] transition-colors hover:bg-saffron-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron focus-visible:ring-offset-2 md:bottom-6 md:right-6"
         >
             <CalendarClock className="h-5 w-5" aria-hidden="true" />
             <span>{tx(dueCount === 1 ? '1 Rate Needs Review' : `${dueCount} Rates Need Review`)}</span>
@@ -1517,7 +1519,7 @@ export default function RatesClient({
                 <RateBookHelp />
             </aside>
 
-            <div className="ui-route-enter mx-auto w-full max-w-7xl space-y-6" data-ratebook-tutorial-root="true">
+            <div className="rates-workspace ui-route-enter mx-auto w-full max-w-7xl space-y-6" data-ratebook-tutorial-root="true">
             <PlanAnalyticsBeacon eventName="rate_book_viewed" />
             {/* Rate Book is part of both Lite and Base and is the source of truth for yarn prices. */}
             <RouteMilestones
@@ -1526,7 +1528,7 @@ export default function RatesClient({
                 primaryUsable
                 secondaryReady={!usageLoading}
             />
-            <div className="min-[1540px]:hidden">
+            <div className="rail-inline-actions">
                 <ArchivePolicyNotice />
             </div>
             <div className="space-y-1" data-ratebook-field="overview">
@@ -1534,7 +1536,7 @@ export default function RatesClient({
                     title={t('common.yarn_rate_book')}
                     actions={(
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                            <div className="lg:hidden min-[1660px]:hidden">
+                            <div className="lg:hidden">
                                 <RateBookTutorialLauncher
                                     onClick={handleLaunchTutorial}
                                     disabled={isPending}
@@ -1545,7 +1547,7 @@ export default function RatesClient({
                             <Button
                                 data-ratebook-field="addRateAction"
                                 onClick={() => { setSaveError(null); setDraft(defaultDraft(defaultReviewIntervalDays)) }}
-                                className="h-10 w-full sm:w-auto rounded-xl bg-loom px-4 font-medium text-white shadow-xs transition-all duration-150 hover:bg-loom-elevated hover:text-white motion-safe:hover:-translate-y-0.5 active:scale-[0.98] focus-visible:ring-saffron min-[1540px]:hidden"
+                                className="rail-inline-actions h-10 w-full sm:w-auto rounded-xl bg-loom px-4 font-medium text-white shadow-xs hover:bg-loom-elevated hover:text-white focus-visible:ring-saffron"
                             >
                                 <Plus className="h-4 w-4" aria-hidden="true" />
                                 <span>{tx('Add Yarn Rate')}</span>
@@ -2288,18 +2290,10 @@ export default function RatesClient({
             {/* Keep viewport-positioned review controls outside the animated route wrapper. */}
             <aside className="rates-review-rail-desktop space-y-4" aria-label={tx('Rate review and reference')}>
                 <div>
-                    <button
-                        type="button"
-                        onClick={() => { setSaveError(null); setDraft(defaultDraft(defaultReviewIntervalDays)) }}
-                        className="group flex w-full cursor-pointer items-center justify-between gap-3 rounded-2xl border border-hairline/80 bg-surface/95 p-3.5 sm:p-4 text-left shadow-[var(--shadow-card)] backdrop-blur-sm transition-all hover:border-loom/40 hover:bg-surface-soft/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-loom active:scale-[0.99]"
-                    >
-                        <div className="flex items-center gap-2.5">
-                            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-loom text-white transition-transform group-hover:scale-105">
-                                <Plus className="h-4 w-4" aria-hidden="true" />
-                            </span>
-                            <span className="text-sm font-bold text-ink truncate">{tx('Add Yarn Rate')}</span>
-                        </div>
-                    </button>
+                    <Button onClick={() => { setSaveError(null); setDraft(defaultDraft(defaultReviewIntervalDays)) }} className={cn(railPrimaryAction, 'w-full')}>
+                        <Plus className="h-4 w-4" aria-hidden="true" />
+                        <span>{tx('Add Yarn Rate')}</span>
+                    </Button>
                 </div>
                 <div data-ratebook-section={6} data-ratebook-field="reviewRailWidget">
                     <RateReviewRailWidget

@@ -34,7 +34,7 @@ export default function ProductionGuidedTour({ userId, orgId, userMetadata, chil
                     orgId={orgId}
                     userMetadata={userMetadata}
                     align="full"
-                    className="w-full estimator-touch-target border-amber-200/90 bg-amber-50/75 hover:bg-amber-100/70 shadow-xs"
+                    className="w-full"
                     onLaunch={() => {
                         returnFocus.current = launcher.current?.querySelector<HTMLButtonElement>('[data-tour-control="take-tour"], [data-tour-control="quiet-tour"]') ?? null
                         returnScroll.current = { x: window.scrollX, y: window.scrollY }

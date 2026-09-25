@@ -11,7 +11,9 @@ import { useMobileTour } from '@/hooks/use-mobile-tour'
 import { useTourViewportLock } from '@/hooks/use-tour-viewport-lock'
 import { TourInvitation } from '@/components/tours/TourInvitation'
 import { buildEstimatorCoreTour, type EstimatorTourContext, type EstimatorCoreCopyKey } from '@/lib/estimator-tour'
-import { BookOpen, Sparkles } from 'lucide-react'
+import { BookOpen, ChevronRight } from 'lucide-react'
+import { railButton, railIcon } from '@/components/ui/rail'
+import { cn } from '@/lib/utils'
 import { costEstimateWorkflowCopy } from '@/lib/i18n/cost-estimate-workflow'
 
 type Step = { section: number; target: HTMLElement | null; card: HTMLElement | null; field: TutorialField; inModal?: boolean; coreCopy?: EstimatorCoreCopyKey }
@@ -649,7 +651,7 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
                 orgId={orgId}
                 align="full"
                 onLaunch={() => { setGuide('core'); setRequested(true) }}
-                className="estimator-touch-target min-h-[46px] rounded-2xl border-amber-200/90 bg-amber-50/75 hover:bg-amber-100/70 shadow-xs text-sm"
+                className="w-full"
             />
         )}
         {enabled && (
@@ -658,19 +660,15 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
                 data-i18n-skip="true"
                 lang={language}
                 onClick={() => { setGuide('fields'); setRequested(true) }}
-                className="estimator-touch-target group flex w-full cursor-pointer items-center justify-between gap-2.5 rounded-2xl border border-amber-200/90 bg-amber-50/75 px-3.5 py-2.5 min-h-[46px] text-left text-xs font-semibold text-slate-800 shadow-xs transition-all duration-150 hover:border-amber-300 hover:bg-amber-100/70 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron active:scale-[0.99]"
+                className={cn('estimator-touch-target', railButton)}
             >
-                <div className="flex min-w-0 items-center gap-2.5">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700 transition-colors group-hover:bg-amber-200">
-                        <BookOpen className="h-4 w-4" aria-hidden="true" />
-                    </span>
-                    <span className="truncate text-xs font-bold text-slate-900">
+                <span className="flex min-w-0 items-center gap-2.5">
+                    <BookOpen className={railIcon} aria-hidden="true" />
+                    <span className="min-w-0">
                         {workflowCopy.fieldGuide}
                     </span>
-                </div>
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-amber-100/90 text-amber-700 transition-colors group-hover:bg-amber-200">
-                    <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
                 </span>
+                <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
             </button>
         )}
         {active && createPortal(<div data-i18n-skip="true" lang={language} className="guided-tour-portal fixed inset-0 z-[100]" data-testid="cost-estimate-tutorial">

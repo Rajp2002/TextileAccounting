@@ -28,22 +28,22 @@ describe('Estimator Left Rail & Guided Tour CTA', () => {
 
     it('defines responsive positioning for .estimator-left-rail in globals.css matching the layout system', () => {
         expect(styles).toContain('.estimator-left-rail')
-        expect(styles).toMatch(/\.estimator-left-rail\s*\{[^}]*width:\s*100%/)
-        expect(styles).toMatch(/@media\s*\(min-width:\s*1660px\)\s*\{[\s\S]*?\.estimator-left-rail\s*\{[\s\S]*?position:\s*fixed/)
-        expect(styles).toMatch(/@media\s*\(min-width:\s*1660px\)\s*\{[\s\S]*?\.estimator-left-rail\s*\{[\s\S]*?top:\s*6rem/)
-        expect(styles).toMatch(/@media\s*\(min-width:\s*1660px\)\s*\{[\s\S]*?\.estimator-left-rail\s*\{[\s\S]*?left:\s*calc\(248px\s*\+\s*1rem\)/)
-        expect(styles).toMatch(/@media\s*\(min-width:\s*1660px\)\s*\{[\s\S]*?\.estimator-left-rail\s*\{[\s\S]*?width:\s*18rem/)
+        expect(styles).toMatch(/\.estimator-left-rail,[^{]*\{[^}]*width:\s*100%/)
+        expect(styles).toMatch(/@media\s*\(min-width:\s*1440px\)\s*\{[\s\S]*?\.estimator-left-rail,[\s\S]*?position:\s*fixed;[\s\S]*?top:\s*var\(--rail-top\);[\s\S]*?left:\s*var\(--rail-left\);[\s\S]*?width:\s*var\(--rail-w\);/)
     })
 
     it('gives the guided tour button an interactive subtle muted background and clear affordance', () => {
         expect(tutorialComponent).toContain('<TourInvitation')
         const invitation = read('components/tours/TourInvitation.tsx')
+        const rail = read('components/ui/rail.ts')
         expect(invitation).toContain('Compass')
-        expect(invitation).toContain('Sparkles')
-        expect(tutorialComponent).toContain('bg-amber-50/75')
-        expect(tutorialComponent).toContain('border-amber-200/90')
-        expect(tutorialComponent).toContain('hover:bg-amber-100/70')
+        expect(invitation).toContain('railSurface')
+        expect(rail).toContain('hover:bg-surface-soft')
+        expect(rail).toContain('shadow-xs')
+        // The guide card owns its look; callers only size it.
+        const invitationStart = tutorialComponent.indexOf('<TourInvitation')
+        expect(tutorialComponent.slice(invitationStart, tutorialComponent.indexOf('/>', invitationStart))).not.toContain('amber')
         expect(tutorialComponent).toContain('estimator-touch-target')
-        expect(tutorialComponent).toContain('shadow-xs')
+        expect(tutorialComponent).toContain('railButton')
     })
 })

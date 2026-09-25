@@ -28,6 +28,7 @@ import {
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { railPrimaryAction } from '@/components/ui/rail'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
     Dialog,
@@ -484,8 +485,8 @@ export default function BaseProductionClient({
             {view === 'production' && activeTab === 'jobs' && (
                 <aside className="production-activate-rail" aria-label="Production actions">
                     <div className="production-activate-action">
-                        <Button onClick={() => setIsActivateModalOpen(true)} className="min-h-12 rounded-xl bg-loom px-5 text-[0.9375rem] font-semibold text-white shadow-[var(--shadow-button)] hover:bg-loom-elevated hover:text-white focus-visible:ring-saffron/40">
-                            <Plus className="size-[1.125rem]" aria-hidden="true" />
+                        <Button onClick={() => setIsActivateModalOpen(true)} className={railPrimaryAction}>
+                            <Plus className="size-4" aria-hidden="true" />
                             <span>Activate Quality</span>
                         </Button>
                     </div>
@@ -495,7 +496,7 @@ export default function BaseProductionClient({
             {view === 'payroll' && (
                 <aside className="payroll-period-rail" aria-label="Payroll period and settlement">
                     {activeTab === 'history' ? (
-                        <Button variant="outline" className="min-h-12 w-full rounded-xl border-hairline bg-surface px-5 text-[0.9375rem] shadow-[var(--shadow-card)]" onClick={() => setPayrollTab('pay')}>
+                        <Button variant="outline" className="min-h-11 w-full rounded-lg px-4" onClick={() => setPayrollTab('pay')}>
                             <WalletCards className="h-4 w-4" /> Current payroll
                         </Button>
                     ) : (
@@ -837,8 +838,8 @@ export default function BaseProductionClient({
 
             {view === 'payroll' && activeTab !== 'history' && (
                 <div className="payroll-records-action">
-                    <Button variant="outline" className="min-h-12 w-full rounded-xl px-5 text-[0.9375rem] font-semibold" onClick={() => setPayrollTab('history')}>
-                        <History className="size-[1.125rem]" /> Payroll records <ChevronRight className="size-[1.125rem]" />
+                    <Button variant="outline" className="min-h-11 w-full rounded-lg px-4" onClick={() => setPayrollTab('history')}>
+                        <History className="size-4" aria-hidden="true" /> Payroll records <ChevronRight className="size-4" aria-hidden="true" />
                     </Button>
                 </div>
             )}

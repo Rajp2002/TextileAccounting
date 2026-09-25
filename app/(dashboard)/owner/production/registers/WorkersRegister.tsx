@@ -20,6 +20,8 @@ import WorkersTutorial from '@/components/tours/WorkersTutorial'
 import { makeWorkersTourExamples, workersTourEditor, workersHelpSteps, type WorkersTourStep, type WorkersTourPath } from '@/lib/workers-tour'
 import { workersTutorialCopy } from '@/lib/i18n/workers-tutorial'
 import { ChevronDown, CircleHelp } from 'lucide-react'
+import { railIcon, railSurface } from '@/components/ui/rail'
+import { cn } from '@/lib/utils'
 
 export default function WorkersRegister({
   workers,
@@ -206,7 +208,7 @@ export default function WorkersRegister({
                   orgId={orgId}
                   userMetadata={userMetadata}
                   align="full"
-                  className="w-full estimator-touch-target border-amber-200/90 bg-amber-50/75 hover:bg-amber-100/70 shadow-xs"
+                  className="w-full"
                   onLaunch={() => setTourStep('purpose')}
                 />
               </div>
@@ -280,13 +282,13 @@ export default function WorkersRegister({
                   hidden={Boolean(tourStep)}
                   data-i18n-skip="true"
                   lang={language}
-                  className="group overflow-hidden rounded-2xl border border-info/20 bg-info-soft/90 shadow-[var(--shadow-card)]"
+                  className={cn('group overflow-hidden', railSurface)}
                 >
-                  <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-5 py-3.5 text-[0.9375rem] font-semibold leading-snug text-info focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-info/40 [&::-webkit-details-marker]:hidden">
-                    <span className="flex items-start gap-2.5"><CircleHelp className="mt-0.5 size-[1.125rem] shrink-0" aria-hidden="true" />{tourCopy.helpTitle}</span>
-                    <ChevronDown className="size-[1.125rem] shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
+                  <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-3.5 py-2.5 text-sm font-semibold leading-snug text-ink hover:bg-surface-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-saffron/50 [&::-webkit-details-marker]:hidden">
+                    <span className="flex items-start gap-2.5"><CircleHelp className={cn(railIcon, 'mt-0.5')} aria-hidden="true" />{tourCopy.helpTitle}</span>
+                    <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" />
                   </summary>
-                  <dl className="workers-help-list grid max-h-[min(60vh,32rem)] gap-4 overflow-y-auto border-t border-info/15 bg-surface/90 px-5 py-5 text-sm leading-relaxed sm:grid-cols-2">
+                  <dl className="workers-help-list grid max-h-[min(60vh,32rem)] gap-4 overflow-y-auto border-t border-hairline px-4 py-4 text-sm leading-relaxed sm:grid-cols-2">
                     {workersHelpSteps.map(topic => <div key={topic}>
                       <dt className="font-semibold text-ink">{tourCopy.fields[topic][0]}</dt>
                       <dd className="mt-1 text-body">{tourCopy.fields[topic][1]}</dd>

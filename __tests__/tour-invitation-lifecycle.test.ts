@@ -98,10 +98,13 @@ describe('Tour Invitation Lifecycle & Contract', () => {
     expect(dismissedStatus.isSuppressed).toBe(true)
   })
 
-  it('preserves left-rail styling tokens for estimator backward-compatibility', () => {
-    expect(componentSource).toContain('border-amber-200/90')
-    expect(componentSource).toContain('bg-amber-50/75')
-    expect(componentSource).toContain('hover:bg-amber-100/70')
-    expect(componentSource).toContain('shadow-xs')
+  it('uses the shared quiet rail styling for every launcher presentation', () => {
+    const rail = fs.readFileSync(path.resolve(__dirname, '../components/ui/rail.ts'), 'utf8')
+    expect(componentSource).toContain('railSurface')
+    expect(componentSource).toContain('railButton')
+    expect(componentSource).not.toContain('amber')
+    expect(rail).toContain('border-hairline')
+    expect(rail).toContain('hover:bg-surface-soft')
+    expect(rail).toContain('shadow-xs')
   })
 })

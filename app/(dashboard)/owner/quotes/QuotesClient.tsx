@@ -18,6 +18,8 @@ import {
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { railPrimaryAction } from '@/components/ui/rail'
+import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -1478,9 +1480,9 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             <aside className="saved-costings-left-rail space-y-3" aria-label={tx('Saved Costings guides and tools')}>
                 <SavedCostingsTutorial step={tourStep} onStepChange={setTourStep} onComplete={() => setShowCostingDeleteNudge(true)} production={canUseProductionPipeline} full={canUseProduction} ending={savedCostingTourEnding(quotes.filter(quote => isStandaloneCosting(quote.record_kind)).length)} quotations={canUseQuotationWorkflow} userId={userId} orgId={orgId} />
             </aside>
-            <div className="ui-route-enter max-w-6xl mx-auto space-y-6">
+            <div className="saved-costings-workspace ui-route-enter max-w-6xl mx-auto space-y-6">
             <RouteMilestones route="/owner/quotes" shellVisible primaryUsable secondaryReady />
-            <div className="min-[1540px]:hidden">
+            <div className="rail-inline-actions">
                 <ArchivePolicyNotice />
             </div>
             {detailLoadingId && <p role="status" aria-live="polite" className="ui-status-enter rounded-lg border border-info/25 bg-info-soft px-3 py-2 text-xs font-semibold text-info">{tx('Selection saved. Loading the complete snapshot for comparison…')}</p>}
@@ -1489,7 +1491,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                 actions={(
                     <Button
                         onClick={() => router.push('/owner/estimator')}
-                        className="h-10 w-full sm:w-auto rounded-xl bg-loom px-4 font-medium text-white shadow-xs transition-all duration-150 hover:bg-loom-elevated hover:text-white motion-safe:hover:-translate-y-0.5 active:scale-[0.98] focus-visible:ring-saffron min-[1540px]:hidden"
+                        className="rail-inline-actions h-10 w-full sm:w-auto rounded-xl bg-loom px-4 font-medium text-white shadow-xs hover:bg-loom-elevated hover:text-white focus-visible:ring-saffron"
                     >
                         <Plus className="h-4 w-4" aria-hidden="true" />
                         <span>{canUseQuotationWorkflow ? t('common.new_estimate') : t('common.new_costing')}</span>
@@ -2118,19 +2120,11 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             </div>
 
             {/* Top action: New Costing pill */}
-            <aside className="saved-costings-action-rail-desktop hidden min-[1540px]:block fixed top-[6.5rem] right-5 z-30 w-[17rem]" aria-label={tx('Costing actions')}>
-                <button
-                    type="button"
-                    onClick={() => router.push('/owner/estimator')}
-                    className="group flex w-full cursor-pointer items-center justify-between gap-3 rounded-2xl border border-hairline/80 bg-surface/95 p-3.5 sm:p-4 text-left shadow-[var(--shadow-card)] backdrop-blur-sm transition-all hover:border-loom/40 hover:bg-surface-soft/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-loom active:scale-[0.99]"
-                >
-                    <div className="flex items-center gap-2.5">
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-loom text-white transition-transform group-hover:scale-105">
-                            <Plus className="h-4 w-4" aria-hidden="true" />
-                        </span>
-                        <span className="text-sm font-bold text-ink truncate">{canUseQuotationWorkflow ? t('common.new_estimate') : t('common.new_costing')}</span>
-                    </div>
-                </button>
+            <aside className="saved-costings-action-rail-desktop" aria-label={tx('Costing actions')}>
+                <Button onClick={() => router.push('/owner/estimator')} className={cn(railPrimaryAction, 'w-full')}>
+                    <Plus className="h-4 w-4" aria-hidden="true" />
+                    <span>{canUseQuotationWorkflow ? t('common.new_estimate') : t('common.new_costing')}</span>
+                </Button>
             </aside>
 
             {/* Keep the archive policy in the unused right margin on wide screens. */}

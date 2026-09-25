@@ -137,10 +137,9 @@ describe('RatesClient Integration & Overlay Stability', () => {
         const styles = fs.readFileSync(stylesPath, 'utf8')
 
         expect(styles).toContain('.rates-left-rail-desktop')
-        expect(styles).toMatch(/@media\s*\(min-width:\s*1660px\)\s*\{[\s\S]*?\.rates-left-rail-desktop\s*\{[\s\S]*?position:\s*fixed/)
-        expect(styles).toMatch(/@media\s*\(min-width:\s*1660px\)\s*\{[\s\S]*?\.rates-left-rail-desktop\s*\{[\s\S]*?top:\s*6\.5rem/)
-        expect(styles).toMatch(/@media\s*\(min-width:\s*1660px\)\s*\{[\s\S]*?\.rates-left-rail-desktop\s*\{[\s\S]*?left:\s*calc\(248px\s*\+\s*1rem\)/)
-        expect(styles).toMatch(/@media\s*\(min-width:\s*1660px\)\s*\{[\s\S]*?\.rates-left-rail-desktop\s*\{[\s\S]*?width:\s*18rem/)
+        // Inline above the Rate Book from 1024px, pinned beside it from 1440px.
+        expect(styles).toMatch(/@media\s*\(min-width:\s*1024px\)\s*\{[\s\S]*?\.rates-left-rail-desktop\s*\{[\s\S]*?display:\s*block/)
+        expect(styles).toMatch(/@media\s*\(min-width:\s*1440px\)\s*\{[\s\S]*?\.rates-left-rail-desktop,[\s\S]*?position:\s*fixed;[\s\S]*?top:\s*var\(--rail-top\);[\s\S]*?left:\s*var\(--rail-left\);[\s\S]*?width:\s*var\(--rail-w\);/)
     })
 
     it('dismissRatebookTutorial updates user metadata and revalidates /owner/rates', async () => {

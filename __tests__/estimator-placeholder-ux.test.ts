@@ -42,7 +42,7 @@ describe('Estimator placeholder clarity', () => {
         const estimator = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
 
         expect(estimator).toContain('data-testid={`${accent}-component-count`}')
-        expect(estimator).toContain('text-[var(--color-yarn-orange)] shadow-[0_1px_2px_rgba(30,37,40,0.035)] transition-all placeholder:text-[var(--color-muted)]')
+        expect(estimator).toContain('text-[var(--color-yarn-orange)] shadow-[0_1px_2px_rgba(30,37,40,0.035)] transition-all placeholder:text-[var(--color-placeholder)] placeholder:font-normal')
     })
 
     it('preserves zero in Warp Crimp instead of ghosting 0 into e.g. 0', () => {
@@ -70,7 +70,7 @@ describe('Estimator placeholder clarity', () => {
 
         // NumField: input value is saffron, placeholder is grey
         expect(estimator).toContain('function NumField(')
-        expect(estimator).toContain("const placeholderClass = 'placeholder:text-[var(--color-muted)]'")
+        expect(estimator).toContain("const placeholderClass = 'placeholder:text-[var(--color-placeholder)] placeholder:font-normal'")
         expect(estimator).not.toContain("? 'placeholder:text-[var(--color-yarn-orange)]'")
 
         // StepperField: input value is saffron, placeholder is grey
@@ -80,7 +80,8 @@ describe('Estimator placeholder clarity', () => {
         // ComponentCountField: input is saffron, placeholder is grey
         expect(estimator).toContain('function ComponentCountField(')
         expect(estimator).toContain('text-[var(--color-yarn-orange)]')
-        expect(estimator).toContain('placeholder:text-[var(--color-muted)]')
+        expect(estimator).toContain('placeholder:text-[var(--color-placeholder)]')
+        expect(estimator).not.toContain('placeholder:text-[var(--color-muted)]')
     })
 
     it('ensures component count and stepper field labels adhere to standard text-[var(--color-muted)]', () => {

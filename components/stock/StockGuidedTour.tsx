@@ -26,7 +26,7 @@ export default function StockGuidedTour({ kind, userId, orgId, userMetadata, chi
                     orgId={orgId}
                     userMetadata={userMetadata}
                     align="full"
-                    className="w-full estimator-touch-target border-amber-200/90 bg-amber-50/75 hover:bg-amber-100/70 shadow-xs"
+                    className="w-full"
                     onLaunch={() => {
                         returnScroll.current = { x: window.scrollX, y: window.scrollY }
                         setStep(stockTourSteps(kind)[0])
@@ -34,7 +34,7 @@ export default function StockGuidedTour({ kind, userId, orgId, userMetadata, chi
                 />
             </div>
         </aside>
-        <div hidden={step !== null}>{children}</div>
+        <div className="stock-workspace-shell" hidden={step !== null}>{children}</div>
         {step && <>
             <StockTourPreview kind={kind} step={step} />
             <StockTutorial kind={kind} step={step} onStepChange={setStep} launcher={launcher} returnScroll={returnScroll} userId={userId} />

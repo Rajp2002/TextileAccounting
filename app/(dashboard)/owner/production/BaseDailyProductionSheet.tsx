@@ -647,7 +647,7 @@ export default function BaseDailyProductionSheet({
     }
 
     return (
-        <div className="production-daily-sheet-workspace relative min-w-0 pb-28 min-[1380px]:pb-0">
+        <div className="production-daily-sheet-workspace relative min-w-0 pb-28 min-[1280px]:pb-0">
             <aside aria-label="Daily sheet controls" className="production-daily-sheet-rail flex min-w-0 flex-col gap-4">
                 <div className="rounded-2xl border border-hairline/80 bg-surface/95 p-4 shadow-[var(--shadow-card)] backdrop-blur-sm 2xl:p-5">
                     <p className="mb-4 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Shift details</p>

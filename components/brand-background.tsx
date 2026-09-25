@@ -7,16 +7,20 @@ type BrandBackgroundProps = {
     variant?: 'app' | 'auth' | 'billing' | 'payroll' | 'machines' | 'dispatches' | 'workers'
 }
 
+/**
+ * Warm Weavly atmosphere behind the workspace. Operational routes share one
+ * calm, static treatment so tables, forms, and numbers always stay in front;
+ * the saffron shapes are a hint of brand, not something to watch.
+ */
 export function BrandBackground({ className, variant = 'app' }: BrandBackgroundProps) {
     const isAuth = variant === 'auth'
-    const isQuiet = variant === 'billing' || variant === 'payroll' || variant === 'machines' || variant === 'dispatches' || variant === 'workers'
-    const blobOpacity = isQuiet ? 'opacity-20 dark:opacity-10' : 'opacity-40 dark:opacity-35'
+    const blobOpacity = 'opacity-[0.16] dark:opacity-10'
 
     return (
         <div
             className={cn(
                 'weavly-app-bg pointer-events-none fixed inset-0 z-0 overflow-hidden',
-                (variant === 'machines' || variant === 'dispatches' || variant === 'workers' || variant === 'payroll') && 'weavly-app-bg-machines',
+                !isAuth && 'weavly-app-bg-machines',
                 className
             )}
             aria-hidden="true"
@@ -28,37 +32,28 @@ export function BrandBackground({ className, variant = 'app' }: BrandBackgroundP
 
             {!isAuth && (
                 <>
-                    <div className={cn(isQuiet ? 'absolute inset-x-0 -top-40 transform-gpu blur-xl sm:-top-80' : 'animate-blob-drift-1 absolute inset-x-0 -top-40 transform-gpu blur-xl will-change-transform sm:-top-80')}>
+                    <div className="absolute inset-x-0 -top-40 transform-gpu blur-xl sm:-top-80">
                         <div
                             className={cn('relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#f97316] to-[#c2410c] sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]', blobOpacity)}
                             style={{ clipPath: blobPolygon }}
                         />
                     </div>
 
-                    <div
-                        className={cn(isQuiet ? 'absolute inset-x-0 top-[24%] transform-gpu blur-xl' : 'animate-blob-drift-2 absolute inset-x-0 top-[24%] transform-gpu blur-xl will-change-transform')}
-                        style={{ animationDelay: '-5s' }}
-                    >
+                    <div className="absolute inset-x-0 top-[24%] transform-gpu blur-xl">
                         <div
                             className={cn('relative left-[calc(50%+11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 -rotate-[20deg] bg-gradient-to-tl from-[#f97316] to-[#c2410c] sm:left-[calc(50%+20rem)] sm:w-[72.1875rem]', blobOpacity)}
                             style={{ clipPath: blobPolygon }}
                         />
                     </div>
 
-                    <div
-                        className={cn(isQuiet ? 'absolute inset-x-0 top-[52%] transform-gpu blur-xl' : 'animate-blob-drift-3 absolute inset-x-0 top-[52%] transform-gpu blur-xl will-change-transform')}
-                        style={{ animationDelay: '-11s' }}
-                    >
+                    <div className="absolute inset-x-0 top-[52%] transform-gpu blur-xl">
                         <div
                             className={cn('relative left-[calc(50%-15rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[15deg] bg-gradient-to-tr from-[#c2410c] to-[#f97316] sm:left-[calc(50%-25rem)] sm:w-[72.1875rem]', blobOpacity)}
                             style={{ clipPath: blobPolygon }}
                         />
                     </div>
 
-                    <div
-                        className={cn(isQuiet ? 'absolute inset-x-0 top-[78%] transform-gpu blur-xl' : 'animate-blob-drift-4 absolute inset-x-0 top-[78%] transform-gpu blur-xl will-change-transform')}
-                        style={{ animationDelay: '-17s' }}
-                    >
+                    <div className="absolute inset-x-0 top-[78%] transform-gpu blur-xl">
                         <div
                             className={cn('relative left-[calc(50%+15rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[45deg] bg-gradient-to-tr from-[#f97316] to-[#ea580c] sm:left-[calc(50%+25rem)] sm:w-[72.1875rem]', blobOpacity)}
                             style={{ clipPath: blobPolygon }}

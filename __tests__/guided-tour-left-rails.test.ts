@@ -4,6 +4,11 @@ import { join } from 'node:path'
 
 const root = process.cwd()
 const read = (path: string) => readFileSync(join(root, path), 'utf8')
+/** The props passed to the guide card: callers size it, the card owns its look. */
+const invitationProps = (source: string) => {
+    const start = source.indexOf('<TourInvitation')
+    return source.slice(start, source.indexOf('/>', start))
+}
 
 describe('Guided Tour Left Rail Placement Across All Sections', () => {
     const styles = read('app/globals.css')
@@ -17,8 +22,7 @@ describe('Guided Tour Left Rail Placement Across All Sections', () => {
         expect(estimator).toContain('<CostEstimateTutorial')
         expect(tutorial).toContain('<TourInvitation')
         expect(tutorial).toContain('align="full"')
-        expect(tutorial).toContain('border-amber-200/90')
-        expect(tutorial).toContain('bg-amber-50/75')
+        expect(invitationProps(tutorial)).not.toContain('amber')
     })
 
     // 2. Saved Costings
@@ -33,7 +37,7 @@ describe('Guided Tour Left Rail Placement Across All Sections', () => {
         expect(savedTutorial).toContain('<TourInvitation')
         expect(savedTutorial).toContain('tourId="saved-costings"')
         expect(savedTutorial).toContain('align="full"')
-        expect(savedTutorial).toContain('border-amber-200/90')
+        expect(invitationProps(savedTutorial)).not.toContain('amber')
     })
 
     // 3. Rate Book
@@ -55,8 +59,7 @@ describe('Guided Tour Left Rail Placement Across All Sections', () => {
         expect(assignments).toContain('<TourInvitation')
         expect(assignments).toContain('tourId="configuration"')
         expect(assignments).toContain('align="full"')
-        expect(assignments).toContain('border-amber-200/90')
-        expect(assignments).toContain('bg-amber-50/75')
+        expect(invitationProps(assignments)).not.toContain('amber')
     })
 
     // 5. Production
@@ -67,8 +70,7 @@ describe('Guided Tour Left Rail Placement Across All Sections', () => {
         expect(productionTour).toContain('<TourInvitation')
         expect(productionTour).toContain('tourId="production"')
         expect(productionTour).toContain('align="full"')
-        expect(productionTour).toContain('border-amber-200/90')
-        expect(productionTour).toContain('bg-amber-50/75')
+        expect(invitationProps(productionTour)).not.toContain('amber')
     })
 
     // 6. Workers Register
@@ -80,8 +82,7 @@ describe('Guided Tour Left Rail Placement Across All Sections', () => {
         expect(workersRegister).toContain('<TourInvitation')
         expect(workersRegister).toContain('tourId="workers"')
         expect(workersRegister).toContain('align="full"')
-        expect(workersRegister).toContain('border-amber-200/90')
-        expect(workersRegister).toContain('bg-amber-50/75')
+        expect(invitationProps(workersRegister)).not.toContain('amber')
     })
 
     // 7. Machines Register
@@ -93,8 +94,7 @@ describe('Guided Tour Left Rail Placement Across All Sections', () => {
         expect(machinesRegister).toContain('<TourInvitation')
         expect(machinesRegister).toContain('tourId="machines"')
         expect(machinesRegister).toContain('align="full"')
-        expect(machinesRegister).toContain('border-amber-200/90')
-        expect(machinesRegister).toContain('bg-amber-50/75')
+        expect(invitationProps(machinesRegister)).not.toContain('amber')
     })
 
     // 8. Payroll
@@ -105,8 +105,7 @@ describe('Guided Tour Left Rail Placement Across All Sections', () => {
         expect(payrollTour).toContain('<TourInvitation')
         expect(payrollTour).toContain('tourId="payroll"')
         expect(payrollTour).toContain('align="full"')
-        expect(payrollTour).toContain('border-saffron-soft/90')
-        expect(payrollTour).toContain('bg-saffron-soft/75')
+        expect(payrollTour).not.toContain('bg-saffron-soft/75')
     })
 
     // 9 & 10. Fabric Stock & Yarn Stock
@@ -117,8 +116,7 @@ describe('Guided Tour Left Rail Placement Across All Sections', () => {
         expect(stockTour).toContain('<TourInvitation')
         expect(stockTour).toContain('tourId={kind}')
         expect(stockTour).toContain('align="full"')
-        expect(stockTour).toContain('border-amber-200/90')
-        expect(stockTour).toContain('bg-amber-50/75')
+        expect(invitationProps(stockTour)).not.toContain('amber')
     })
 
     // 11. Dispatches
@@ -129,8 +127,7 @@ describe('Guided Tour Left Rail Placement Across All Sections', () => {
         expect(dispatchTour).toContain('<TourInvitation')
         expect(dispatchTour).toContain('tourId="dispatch"')
         expect(dispatchTour).toContain('align="full"')
-        expect(dispatchTour).toContain('border-amber-200/90')
-        expect(dispatchTour).toContain('bg-amber-50/75')
+        expect(invitationProps(dispatchTour)).not.toContain('amber')
     })
 
     // CSS verification
@@ -154,14 +151,17 @@ describe('Guided Tour Left Rail Placement Across All Sections', () => {
             expect(styles).toContain(`.${rail}`)
         }
 
-        // Desktop media query (min-width: 1024px) fixes rails to left of workspace
-        expect(styles).toMatch(/@media\s*\(min-width:\s*1024px\)\s*\{[\s\S]*?\.guided-tour-left-rail[\s\S]*?position:\s*fixed/)
-        expect(styles).toMatch(/@media\s*\(min-width:\s*1024px\)\s*\{[\s\S]*?\.guided-tour-left-rail[\s\S]*?top:\s*6rem/)
-        expect(styles).toMatch(/@media\s*\(min-width:\s*1024px\)\s*\{[\s\S]*?\.guided-tour-left-rail[\s\S]*?left:\s*calc\(248px\s*\+\s*1rem\)/)
-        expect(styles).toMatch(/@media\s*\(min-width:\s*1024px\)\s*\{[\s\S]*?\.guided-tour-left-rail[\s\S]*?width:\s*18rem/)
+        // Every left rail shares one fixed placement beside the workspace from 1440px.
+        const tier = styles.slice(styles.indexOf('@media (min-width: 1440px) {'))
+        const block = tier.slice(0, tier.indexOf('}', tier.indexOf('.dispatch-left-rail {')))
+        for (const rail of rails) expect(block).toContain(`.${rail}`)
+        expect(block).toContain('position: fixed;')
+        expect(block).toContain('top: var(--rail-top);')
+        expect(block).toContain('left: var(--rail-left);')
+        expect(block).toContain('width: var(--rail-w);')
 
-        // Large desktop media query (min-width: 1800px) calibrates positioning
-        expect(styles).toMatch(/@media\s*\(min-width:\s*1800px\)\s*\{[\s\S]*?\.guided-tour-left-rail[\s\S]*?left:\s*calc\(248px\s*\+\s*1\.25rem\)/)
-        expect(styles).toMatch(/@media\s*\(min-width:\s*1800px\)\s*\{[\s\S]*?\.guided-tour-left-rail[\s\S]*?width:\s*18\.5rem/)
+        // Rail width scales with the viewport through the shared token only.
+        expect(styles).toMatch(/@media\s*\(min-width:\s*1680px\)\s*\{\s*:root\s*\{\s*--rail-w:\s*16rem;/)
+        expect(styles).toMatch(/@media\s*\(min-width:\s*1920px\)\s*\{\s*:root\s*\{\s*--rail-w:\s*17rem;/)
     })
 })

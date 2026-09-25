@@ -3,6 +3,7 @@
 import React from 'react'
 import { UserPlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { railPrimaryAction } from '@/components/ui/rail'
 import { NavigationLink } from '@/components/navigation/navigation-link'
 import { useTranslation } from '@/lib/i18n/context'
 import { managementReturnLabel } from '@/lib/management-navigation'
@@ -78,9 +79,9 @@ export function WorkerAddButton({ onAdd, className }: { onAdd: () => void; class
   return (
     <Button
       onClick={onAdd}
-      className={cn('min-h-12 rounded-xl bg-loom px-5 text-[0.9375rem] font-semibold text-white shadow-[var(--shadow-button)] hover:bg-loom-elevated hover:text-white focus-visible:ring-saffron/40', className)}
+      className={cn(railPrimaryAction, className)}
     >
-      <UserPlus className="size-[1.125rem]" aria-hidden="true" />
+      <UserPlus className="size-4" aria-hidden="true" />
       <span>{tx('Add worker')}</span>
     </Button>
   )

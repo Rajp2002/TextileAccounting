@@ -102,9 +102,13 @@
   --color-hairline: #DED2BD;
   --color-hairline-strong: #CBB894;
   --color-ink: #1E2528;
-  --color-body: #1E2528;
-  --color-muted: #1E2528;
-  --color-subtle: #35413B;
+  /* Secondary text steps down from ink but stays at AAA contrast (≥ 7:1)
+     on the warm canvas, so hierarchy never costs legibility. */
+  --color-body: #2C3331;
+  --color-muted: #454C48;
+  --color-subtle: #4B5350;
+  /* Hints must read as hints, never as an entered value (4.9:1 on white). */
+  --color-placeholder: #6E7269;
   --color-yarn-orange: #D96B1C;
   --color-yarn-orange-dark: #9E4212;
   --color-factory-green: #285C3B;
@@ -134,9 +138,9 @@
   --weavly-loom-navy-elevated: #22313A;
 
   --weavly-ink: #1E2528;
-  --weavly-body: #1E2528;
-  --weavly-muted: #1E2528;
-  --weavly-subtle: #35413B;
+  --weavly-body: #2C3331;
+  --weavly-muted: #454C48;
+  --weavly-subtle: #4B5350;
 
   --weavly-hairline: #DED2BD;
   --weavly-hairline-strong: #CBB894;
@@ -314,7 +318,7 @@
     [class*="text-zinc-400"],
     [class*="text-zinc-500"]
   ) {
-    color: var(--color-ink);
+    color: var(--color-muted);
   }
 
   /* Preserve light text when a dark navigation, solid modal, or summary panel is
@@ -479,84 +483,6 @@
     box-shadow: var(--shadow-card);
   }
 
-  .machines-workspace-shell {
-    width: 100%;
-  }
-
-  .workers-workspace-shell {
-    width: 100%;
-  }
-
-  .production-overview-workspace {
-    width: 100%;
-  }
-
-  .production-activate-rail {
-    display: none;
-  }
-
-  .production-activate-action {
-    display: none;
-  }
-
-  .production-inline-activate {
-    display: inline-flex;
-  }
-
-  .workers-reference-rail {
-    width: 100%;
-    margin-top: 1.25rem;
-  }
-
-  .workers-reference-action {
-    display: none;
-  }
-
-  .dispatch-workspace-shell {
-    width: 100%;
-  }
-
-  .dispatch-action-rail {
-    display: none;
-  }
-
-  .machine-card-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .machines-reference-rail {
-    width: 100%;
-    margin-top: 1.25rem;
-  }
-
-  .machines-reference-action {
-    display: none;
-  }
-
-  .billing-workspace-shell {
-    width: 100%;
-  }
-
-  .billing-right-rail {
-    width: 100%;
-    margin-top: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .billing-rail-top {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .billing-rail-bottom {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
   .shadow-weavly-card {
     box-shadow: var(--shadow-card);
   }
@@ -573,7 +499,6 @@
   }
 
   .settings-page-frame {
-    --settings-sidebar-guard: max(0px, calc(248px - ((100vw - 1120px) / 2)));
     width: 100%;
     padding-bottom: 2.5rem;
   }
@@ -622,70 +547,112 @@
     font-weight: 500;
   }
 
-  .settings-layout-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    align-items: start;
-    gap: 1.25rem;
+  /* ── Workspace composition ──────────────────────────────────────────────
+     Every rail route shares one composition:
+
+       sidebar | left rail | workspace | right rail
+
+     The left rail holds the route's guide. The right rail holds the route's
+     primary action and reference material, with bottom-anchored notices.
+     Rails leave the page flow only when a comfortable workspace still fits
+     beside them, and everything below that recomposes inline:
+
+       < 1280px   one column; guide above, actions/reference inline
+       ≥ 1280px   workspace + right rail
+       ≥ 1440px   left rail + workspace + right rail
+
+     All offsets derive from the tokens below, so both rails sit the same
+     distance from the centred workspace on every route instead of drifting
+     to the viewport edges, and text renders at its real size. */
+  :root {
+    --shell-sidebar-w: 0px;
+    --shell-area: calc(100vw - var(--shell-sidebar-w));
+    --main-pad: 0.75rem;
+    --main-max: 80rem;
+    --workspace-max: 72rem;
+    --rail-w: 14rem;
+    --rail-gap: 1.25rem;
+    --rail-edge: 1.5rem;
+    --rail-top: 1.5rem;
+    --rail-bottom: 1.5rem;
+    --rail-span: calc(var(--rail-w) + var(--rail-gap));
+    /* Symmetric composition: the workspace is centred and both rails hug it. */
+    --workspace-w: min(var(--workspace-max), calc(var(--shell-area) - 2 * var(--rail-edge) - 2 * var(--rail-span)));
+    --rail-outer: calc((var(--shell-area) - var(--workspace-w)) / 2 - var(--rail-span));
+    /* Right edge of the dashboard content column (main is capped at 80rem). */
+    --main-inset: calc((var(--shell-area) - min(var(--shell-area), var(--main-max))) / 2 + var(--main-pad));
+    --rail-left: calc(var(--shell-sidebar-w) + var(--rail-outer));
+    --rail-right: var(--main-inset);
   }
 
-  .settings-right-rail {
+  @media (min-width: 768px) {
+    :root {
+      --shell-sidebar-w: 248px;
+      --main-pad: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    :root {
+      --main-pad: 2rem;
+    }
+  }
+
+  /* Billing reads as short assurance notes; give its rail a little more room. */
+  :root:has(.billing-right-rail) {
+    --rail-w: 17rem;
+  }
+
+  /* Inline (single column) presentation. These are the base rules; the tier
+     media queries below lift rails out of the flow when there is room. */
+  .estimator-workspace-shell,
+  .stock-workspace-shell,
+  .payroll-workspace-shell,
+  .workers-workspace-shell,
+  .machines-workspace-shell,
+  .dispatch-workspace-shell,
+  .production-overview-workspace,
+  .production-daily-sheet-workspace,
+  .configuration-page-frame,
+  .saved-costings-workspace,
+  .rates-workspace,
+  .billing-workspace-shell {
+    width: 100%;
+  }
+
+  .estimator-workspace-main {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .estimator-left-rail,
+  .saved-costings-left-rail,
+  .guided-tour-left-rail,
+  .production-left-rail,
+  .workers-left-rail,
+  .machines-left-rail,
+  .payroll-left-rail,
+  .stock-left-rail,
+  .dispatch-left-rail {
+    width: 100%;
+    margin-bottom: 1.25rem;
+  }
+
+  .configuration-guide-rail {
+    margin-bottom: 1.25rem;
+    max-width: 32rem;
+  }
+
+  .rates-left-rail-desktop {
     display: none;
   }
 
-  /* Desktop Adaptive Proportional Scaling:
-     Ensures the ideal visual interface (sidebar + fixed left rail + centered canvas + fixed right rail)
-     scales down gracefully on laptops and smaller desktop viewports without cramping or collision. */
-  @media (min-width: 1024px) and (max-width: 1279px) {
-    :root {
-      --app-desktop-zoom: 0.74;
-      zoom: 0.74;
-    }
-  }
-
-  @media (min-width: 1280px) and (max-width: 1439px) {
-    :root {
-      --app-desktop-zoom: 0.80;
-      zoom: 0.80;
-    }
-  }
-
-  @media (min-width: 1440px) and (max-width: 1659px) {
-    :root {
-      --app-desktop-zoom: 0.88;
-      zoom: 0.88;
-    }
-  }
-
-  @media (min-width: 1660px) and (max-width: 1799px) {
-    :root {
-      --app-desktop-zoom: 0.94;
-      zoom: 0.94;
-    }
-  }
-
-  /* The estimator keeps its full canvas width on mobile. On desktop the reference
-     and guide rails use dedicated viewport gutters with reserved margins. */
-  .estimator-workspace-shell {
+  .estimator-reference-rail,
+  .workers-reference-rail,
+  .machines-reference-rail,
+  .configuration-actions-rail {
     width: 100%;
-  }
-
-  .payroll-workspace-shell {
-    width: 100%;
-  }
-
-  .stock-workspace-shell {
-    width: 100%;
-  }
-
-  .stock-movement-rail-desktop {
-    display: none;
-  }
-
-  .stock-movement-rail-mobile {
-    display: block;
-    width: 100%;
-    margin-top: 1.5rem;
+    margin-top: 1.25rem;
   }
 
   .payroll-period-rail {
@@ -701,10 +668,6 @@
     margin-top: 1rem;
   }
 
-  .production-daily-sheet-workspace {
-    width: 100%;
-  }
-
   .production-daily-sheet-rail {
     display: flex;
     width: 100%;
@@ -712,132 +675,283 @@
     gap: 1rem;
   }
 
-  .production-daily-sheet-history-desktop {
-    display: none;
+  .billing-right-rail {
+    width: 100%;
+    margin-top: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .billing-rail-top,
+  .billing-rail-bottom {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .stock-movement-rail-mobile {
+    display: block;
+    width: 100%;
+    margin-top: 1.5rem;
   }
 
   .production-daily-sheet-history-mobile {
     display: flex;
   }
 
-  .estimator-workspace-main {
-    min-width: 0;
-    width: 100%;
+  .production-inline-activate {
+    display: inline-flex;
   }
 
-  .estimator-left-rail {
-    width: 100%;
-    margin-bottom: 1.25rem;
-  }
-
-  .estimator-reference-rail {
-    width: 100%;
-    margin-top: 1.25rem;
-  }
-
-  .rates-left-rail-desktop {
+  /* Desktop-only rail pieces; their inline counterparts cover narrow screens. */
+  .production-activate-rail,
+  .production-activate-action,
+  .workers-reference-action,
+  .machines-reference-action,
+  .dispatch-action-rail,
+  .rates-review-rail-desktop,
+  .rates-archive-policy-rail-desktop,
+  .saved-costings-action-rail-desktop,
+  .saved-costings-archive-rail-desktop,
+  .stock-movement-rail-desktop,
+  .production-daily-sheet-history-desktop {
     display: none;
   }
 
-  .saved-costings-left-rail {
-    width: 100%;
-    margin-bottom: 1.25rem;
+  .machine-card-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  .guided-tour-left-rail,
-  .production-left-rail,
-  .workers-left-rail,
-  .machines-left-rail,
-  .payroll-left-rail,
-  .stock-left-rail,
-  .dispatch-left-rail {
-    width: 100%;
-    margin-bottom: 1.25rem;
-  }
-
-  .configuration-page-frame {
-    width: 100%;
-  }
-
-  .configuration-guide-rail {
-    margin-bottom: 1.25rem;
-    max-width: 32rem;
-  }
-
-  .configuration-actions-rail {
-    margin-top: 1.25rem;
-  }
-
-  /* Desktop rails reserve space around the main workspace when room allows. */
   @media (min-width: 1024px) {
-    .estimator-workspace-shell {
-      width: min(100%, calc(100vw - 248px - 31rem));
-      max-width: 72rem;
-      margin-inline: auto;
+    .machine-card-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .stock-workspace-shell {
-      width: min(100%, calc(100vw - 248px - 31rem));
-      max-width: 72rem;
-      margin-inline: auto;
-    }
-
-    .estimator-left-rail {
-      position: fixed;
-      top: 6rem;
-      left: calc(248px + 1rem);
-      z-index: 30;
-      width: 18rem;
-      max-height: calc(100vh - 7rem);
-      overflow-y: auto;
-      margin-top: 0;
-      margin-bottom: 0;
-      padding-bottom: 0.25rem;
-      scrollbar-width: thin;
-    }
-
-    .estimator-reference-rail {
-      position: fixed;
-      top: 6rem;
-      right: 1rem;
-      z-index: 30;
-      width: 16.5rem;
-      max-height: calc(100vh - 7rem);
-      overflow-y: auto;
-      margin-top: 0;
-      padding-bottom: 0.25rem;
-      scrollbar-width: thin;
-    }
-
+    /* Phones reach the Rate Book guide from the page header instead. */
     .rates-left-rail-desktop {
       display: block;
+      width: 100%;
+      margin-bottom: 1.25rem;
+    }
+  }
+
+  /* ── Tier 2: workspace + right rail (≥ 1280px) ───────────────────────── */
+  @media (min-width: 1280px) {
+    :root {
+      --rail-edge: var(--main-pad);
+    }
+
+    .estimator-workspace-shell,
+    .stock-workspace-shell,
+    .payroll-workspace-shell,
+    .workers-workspace-shell,
+    .machines-workspace-shell,
+    .dispatch-workspace-shell,
+    .production-overview-workspace,
+    .production-daily-sheet-workspace,
+    .configuration-page-frame,
+    .saved-costings-workspace,
+    .rates-workspace,
+    .billing-workspace-shell {
+      width: auto;
+      max-width: none;
+      margin-left: 0;
+      margin-right: 0;
+    }
+
+    /* Top-anchored right rails. */
+    .estimator-reference-rail,
+    .rates-review-rail-desktop,
+    .saved-costings-action-rail-desktop,
+    .dispatch-action-rail,
+    .payroll-period-rail,
+    .configuration-actions-rail {
       position: fixed;
-      top: 6.5rem;
-      left: calc(248px + 1rem);
+      top: var(--rail-top);
+      right: var(--rail-right);
       z-index: 30;
-      width: 18rem;
-      max-height: calc(100vh - 7.5rem);
+      width: var(--rail-w);
+      max-height: calc(100dvh - var(--rail-top) - var(--rail-bottom) - 5rem);
+      margin: 0;
       overflow-y: auto;
-      margin-top: 0;
-      margin-bottom: 0;
-      padding-bottom: 0.25rem;
+      overscroll-behavior: contain;
       scrollbar-width: thin;
     }
 
-    .saved-costings-left-rail {
+    /* Full-height right rails: action at the top, reference at the bottom. */
+    .production-activate-rail,
+    .workers-reference-rail,
+    .machines-reference-rail,
+    .production-daily-sheet-rail,
+    .billing-right-rail {
       position: fixed;
-      top: 6.5rem;
-      left: calc(248px + 1rem);
+      top: var(--rail-top);
+      bottom: var(--rail-bottom);
+      right: var(--rail-right);
       z-index: 30;
-      width: 18rem;
-      max-height: calc(100vh - 7.5rem);
+      display: flex;
+      width: var(--rail-w);
+      flex-direction: column;
+      gap: 1.5rem;
+      margin: 0;
       overflow-y: auto;
-      margin-top: 0;
-      margin-bottom: 0;
-      padding-bottom: 0.25rem;
+      overscroll-behavior: contain;
       scrollbar-width: thin;
     }
 
+    .production-daily-sheet-rail {
+      gap: 1rem;
+    }
+
+    .billing-right-rail {
+      justify-content: space-between;
+    }
+
+    /* Bottom-anchored right rail notices. */
+    .rates-archive-policy-rail-desktop,
+    .saved-costings-archive-rail-desktop,
+    .stock-movement-rail-desktop,
+    .payroll-records-action {
+      position: fixed;
+      right: var(--rail-right);
+      bottom: var(--rail-bottom);
+      z-index: 30;
+      display: block;
+      width: var(--rail-w);
+      margin: 0;
+    }
+
+    .rates-review-rail-desktop,
+    .saved-costings-action-rail-desktop,
+    .production-daily-sheet-history-desktop {
+      display: block;
+    }
+
+    .production-daily-sheet-history-desktop {
+      display: flex;
+    }
+
+    .payroll-records-action {
+      display: flex;
+      justify-content: center;
+    }
+
+    .dispatch-action-rail,
+    .production-activate-action,
+    .workers-reference-action,
+    .machines-reference-action {
+      display: flex;
+      flex: none;
+      justify-content: center;
+    }
+
+    .production-activate-action button,
+    .workers-reference-action button,
+    .machines-reference-action button,
+    .dispatch-action-rail button,
+    .payroll-records-action button {
+      width: 100%;
+    }
+
+    .workers-reference-bottom,
+    .machines-reference-bottom,
+    .billing-rail-bottom {
+      margin-top: auto;
+    }
+
+    .billing-rail-bottom {
+      padding-top: 1rem;
+    }
+
+    .workers-help-list {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    /* Inline counterparts of the right rail. */
+    .workers-inline-add,
+    .machines-inline-add,
+    .dispatch-inline-action,
+    .production-inline-activate,
+    .stock-movement-rail-mobile,
+    .production-daily-sheet-history-mobile,
+    .rail-inline-actions {
+      display: none;
+    }
+  }
+
+  /* Reserve the right gutter only on routes that render a right rail. */
+  @media (min-width: 1280px) and (max-width: 1439.98px) {
+    :root:has(:is(
+      .estimator-reference-rail,
+      .rates-review-rail-desktop,
+      .rates-archive-policy-rail-desktop,
+      .saved-costings-action-rail-desktop,
+      .saved-costings-archive-rail-desktop,
+      .dispatch-action-rail,
+      .payroll-period-rail,
+      .payroll-records-action,
+      .configuration-actions-rail,
+      .production-activate-rail,
+      .workers-reference-rail,
+      .machines-reference-rail,
+      .production-daily-sheet-rail,
+      .stock-movement-rail-desktop,
+      .billing-right-rail
+    )) :is(
+      .estimator-workspace-shell,
+      .stock-workspace-shell,
+      .payroll-workspace-shell,
+      .workers-workspace-shell,
+      .machines-workspace-shell,
+      .dispatch-workspace-shell,
+      .production-overview-workspace,
+      .production-daily-sheet-workspace,
+      .configuration-page-frame,
+      .saved-costings-workspace,
+      .rates-workspace,
+      .billing-workspace-shell
+    ) {
+      margin-right: var(--rail-span);
+    }
+  }
+
+  /* ── Tier 3: left rail + workspace + right rail (≥ 1440px) ───────────── */
+  @media (min-width: 1440px) {
+    :root {
+      --rail-edge: 1.5rem;
+      --rail-right: var(--rail-outer);
+    }
+
+    /* Routes without a guide keep the wider two-column composition. */
+    .production-daily-sheet-workspace,
+    .billing-workspace-shell {
+      margin-right: var(--rail-span);
+    }
+
+    .estimator-workspace-shell,
+    .stock-workspace-shell,
+    .payroll-workspace-shell,
+    .workers-workspace-shell,
+    .machines-workspace-shell,
+    .dispatch-workspace-shell,
+    .production-overview-workspace,
+    .configuration-page-frame,
+    .saved-costings-workspace,
+    .rates-workspace {
+      width: min(100%, var(--workspace-w));
+      margin-inline: auto;
+    }
+
+    .production-daily-sheet-rail,
+    .billing-right-rail {
+      right: var(--main-inset);
+    }
+
+    .estimator-left-rail,
+    .saved-costings-left-rail,
+    .rates-left-rail-desktop,
+    .configuration-guide-rail,
     .guided-tour-left-rail,
     .production-left-rail,
     .workers-left-rail,
@@ -846,323 +960,57 @@
     .stock-left-rail,
     .dispatch-left-rail {
       position: fixed;
-      top: 6rem;
-      left: calc(248px + 1rem);
+      top: var(--rail-top);
+      left: var(--rail-left);
       z-index: 30;
-      width: 18rem;
-      max-height: calc(100vh - 7rem);
-      overflow-y: auto;
-      margin-top: 0;
-      margin-bottom: 0;
-      padding-bottom: 0.25rem;
-      scrollbar-width: thin;
-    }
-
-    .saved-costings-tour-launcher {
-      position: fixed;
-      top: 6.5rem;
-      left: calc(248px + 1rem);
-      width: 18rem;
-      z-index: 30;
-    }
-
-    .configuration-page-frame {
-      width: min(100%, calc(100vw - 248px - 31rem));
-      max-width: 86rem;
-      margin-inline: auto;
-    }
-
-    .configuration-guide-rail {
-      position: fixed;
-      top: 6.5rem;
-      left: calc(248px + 1rem);
-      z-index: 30;
-      width: 18rem;
-      max-height: calc(100dvh - 7.5rem);
-      overflow-y: auto;
+      display: block;
+      width: var(--rail-w);
+      max-width: none;
+      max-height: calc(100dvh - var(--rail-top) - var(--rail-bottom));
       margin: 0;
-      scrollbar-width: thin;
-    }
-
-    .configuration-actions-rail {
-      position: fixed;
-      top: 6.5rem;
-      right: 1rem;
-      z-index: 30;
-      width: 14rem;
-      max-height: calc(100dvh - 7.5rem);
       overflow-y: auto;
-      margin: 0;
+      overscroll-behavior: contain;
       scrollbar-width: thin;
-      flex-direction: column;
     }
   }
 
-  @media (min-width: 1024px) and (max-width: 1379.98px) {
-    .payroll-left-rail {
-      position: static;
-      width: 100%;
-      max-width: 18rem;
-      max-height: none;
-      overflow: visible;
-      margin-bottom: 1.25rem;
+  @media (min-width: 1680px) {
+    :root {
+      --rail-w: 16rem;
+      --rail-gap: 1.5rem;
     }
 
-    .workers-workspace-shell .workers-left-rail {
-      position: static;
-      width: 100%;
-      max-width: 18rem;
-      max-height: none;
-      overflow: visible;
-      margin-bottom: 1.25rem;
-    }
-
-    .machines-workspace-shell .machines-left-rail {
-      position: static;
-      width: 100%;
-      max-width: 18rem;
-      max-height: none;
-      overflow: visible;
-      margin-bottom: 1.25rem;
-    }
-
-    .dispatch-left-rail {
-      position: static;
-      width: 100%;
-      max-width: 18rem;
-      max-height: none;
-      overflow: visible;
-      margin-bottom: 1.25rem;
+    :root:has(.billing-right-rail) {
+      --rail-w: 18rem;
     }
   }
 
-  @media (min-width: 1380px) {
-    .production-daily-sheet-workspace {
-      width: min(100%, calc(100vw - 248px - 17rem));
-      max-width: 86rem;
-      margin-inline: auto;
+  @media (min-width: 1920px) {
+    :root {
+      --rail-w: 17rem;
+      --rail-gap: 2rem;
+      --rail-edge: 2rem;
     }
 
-    .production-daily-sheet-rail {
-      position: fixed;
-      top: 1.25rem;
-      right: 1rem;
-      bottom: 1.25rem;
-      z-index: 30;
-      width: 14rem;
-      max-height: calc(100dvh - 2.5rem);
-      overflow-y: auto;
-      scrollbar-width: thin;
-    }
-
-    .production-daily-sheet-history-desktop {
-      display: flex;
-    }
-
-    .production-daily-sheet-history-mobile {
-      display: none;
-    }
-
-    .payroll-workspace-shell {
-      width: min(100%, calc(100vw - 248px - 31rem));
-      max-width: 72rem;
-      margin-inline: auto;
-    }
-
-    .payroll-period-rail {
-      position: fixed;
-      top: 5.5rem;
-      right: 1rem;
-      z-index: 30;
-      width: 14rem;
-      max-height: calc(100dvh - 8rem);
-      overflow-y: auto;
-      scrollbar-width: thin;
-    }
-
-    .payroll-records-action {
-      position: fixed;
-      right: 1rem;
-      bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
-      z-index: 30;
-      width: 14rem;
-      justify-content: center;
-      margin: 0;
-    }
-
-    .workers-workspace-shell {
-      width: min(100%, calc(100vw - 248px - 31rem));
-      max-width: 72rem;
-      margin-inline: auto;
-    }
-
-    .production-overview-workspace {
-      width: min(100%, calc(100vw - 248px - 31rem));
-      max-width: 72rem;
-      margin-inline: auto;
-    }
-
-    .workers-inline-add {
-      display: none;
-    }
-
-    .production-inline-activate {
-      display: none;
-    }
-
-    .production-activate-rail {
-      position: fixed;
-      top: 6.5rem;
-      right: 1rem;
-      bottom: 8rem;
-      z-index: 30;
-      display: flex;
-      width: 14rem;
-      flex-direction: column;
-      gap: 1.5rem;
-      overflow-y: auto;
-      padding-bottom: 0.25rem;
-      scrollbar-width: thin;
-    }
-
-    .production-activate-action {
-      display: flex;
-      flex: none;
-      justify-content: center;
-    }
-
-    .production-activate-action button {
-      width: 100%;
-    }
-
-    .workers-reference-rail {
-      position: fixed;
-      top: 6.5rem;
-      bottom: 1.5rem;
-      right: 1rem;
-      z-index: 30;
-      display: flex;
-      width: 14rem;
-      flex-direction: column;
-      gap: 1.5rem;
-      overflow-y: auto;
-      margin-top: 0;
-      padding-bottom: 0.25rem;
-      scrollbar-width: thin;
-    }
-
-    .workers-reference-action {
-      display: flex;
-      flex: none;
-      justify-content: center;
-    }
-
-    .workers-reference-action button,
-    .machines-reference-action button,
-    .dispatch-action-rail button {
-      width: 100%;
-    }
-
-    .workers-reference-bottom {
-      margin-top: auto;
-    }
-
-    .workers-help-list {
-      grid-template-columns: minmax(0, 1fr);
-    }
-
-    .machines-workspace-shell {
-      width: min(100%, calc(100vw - 248px - 31rem));
-      max-width: 72rem;
-      margin-inline: auto;
-    }
-
-    .machines-inline-add {
-      display: none;
-    }
-
-    .machines-reference-rail {
-      position: fixed;
-      top: 5.5rem;
-      bottom: 1.5rem;
-      right: 1rem;
-      z-index: 30;
-      width: 14rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-      overflow-y: auto;
-      margin-top: 0;
-      padding-bottom: 0.25rem;
-      scrollbar-width: thin;
-    }
-
-    .machines-reference-action {
-      display: flex;
-      flex: none;
-      justify-content: center;
-    }
-
-    .machines-reference-bottom {
-      margin-top: auto;
-    }
-
-    .machine-card-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .dispatch-workspace-shell {
-      width: min(100%, calc(100vw - 248px - 31rem));
-      max-width: 72rem;
-      margin-inline: auto;
-    }
-
-    .dispatch-inline-action {
-      display: none;
-    }
-
-    .dispatch-action-rail {
-      position: fixed;
-      top: 6rem;
-      right: 1rem;
-      z-index: 30;
-      display: flex;
-      width: 14rem;
-      justify-content: center;
+    :root:has(.billing-right-rail) {
+      --rail-w: 19rem;
     }
   }
 
-  @media (min-width: 1660px) {
-    .payroll-workspace-shell,
-    .workers-workspace-shell,
-    .machines-workspace-shell,
-    .dispatch-workspace-shell,
-    .stock-workspace-shell {
-      width: min(100%, calc(100vw - 248px - 36rem));
-    }
+  /* A rail inside another rail route (for example a page nested in a tour
+     wrapper) must not reserve the gutters twice. */
+  :is(.stock-workspace-shell, .payroll-workspace-shell, .production-overview-workspace, .configuration-page-frame) :is(.stock-workspace-shell, .payroll-workspace-shell, .production-overview-workspace, .configuration-page-frame) {
+    width: 100%;
+    max-width: none;
+    margin-inline: 0;
+  }
 
-    .production-overview-workspace {
-      width: min(100%, calc(100vw - 248px - 36rem));
-    }
-
-    .production-activate-rail {
-      width: 16rem;
-    }
-
-    .production-daily-sheet-workspace {
-      width: min(100%, calc(100vw - 248px - 36rem));
-    }
-
-    .production-daily-sheet-rail {
-      width: 16rem;
-    }
-
-    .payroll-period-rail,
-    .payroll-records-action,
-    .workers-reference-rail,
-    .machines-reference-rail,
-    .dispatch-action-rail {
-      width: 16rem;
+  /* Dock the estimator's Live Cost shortcut under the right rail so it moves
+     with the composition instead of drifting to the viewport corner. */
+  @media (min-width: 1280px) {
+    [data-testid="mobile-live-estimate-shortcut"] {
+      right: var(--rail-right);
+      bottom: var(--rail-bottom);
     }
   }
 
@@ -1172,376 +1020,10 @@
     animation: none;
   }
 
-  @media (min-width: 1660px) {
-    .estimator-left-rail {
-      position: fixed;
-      top: 6rem;
-      left: calc(248px + 1rem);
-      z-index: 30;
-      width: 18rem;
-      max-height: calc(100vh - 7rem);
-      overflow-y: auto;
-      margin-top: 0;
-      margin-bottom: 0;
-      padding-bottom: 0.25rem;
-      scrollbar-width: thin;
-    }
-
-    .estimator-reference-rail {
-      position: fixed;
-      top: 6rem;
-      right: 1.25rem;
-      z-index: 30;
-      width: 17rem;
-      max-height: calc(100vh - 7rem);
-      overflow-y: auto;
-      margin-top: 0;
-      padding-bottom: 0.25rem;
-      scrollbar-width: thin;
-    }
-  }
-
-  @media (min-width: 1800px) {
-    .payroll-workspace-shell,
-    .workers-workspace-shell,
-    .machines-workspace-shell,
-    .dispatch-workspace-shell,
-    .stock-workspace-shell {
-      width: min(100%, calc(100vw - 248px - 39rem));
-    }
-
-    .production-overview-workspace {
-      width: min(100%, calc(100vw - 248px - 39rem));
-    }
-
-    .payroll-period-rail,
-    .payroll-records-action {
-      right: 1.25rem;
-      width: 17rem;
-    }
-
-    .production-daily-sheet-workspace {
-      width: min(100%, calc(100vw - 248px - 21rem));
-      max-width: 96rem;
-    }
-
-    .production-daily-sheet-rail {
-      right: 1.25rem;
-      width: 17rem;
-    }
-
-    .production-activate-rail {
-      right: 1.25rem;
-      width: 17rem;
-    }
-
-    .workers-reference-rail {
-      right: 1.25rem;
-      width: 17rem;
-    }
-
-    .machines-reference-rail {
-      right: 1.25rem;
-      width: 17rem;
-    }
-
-    .dispatch-action-rail {
-      right: 1.25rem;
-      width: 17rem;
-    }
-
-    .estimator-left-rail {
-      left: calc(248px + 1.25rem);
-      width: 18.5rem;
-    }
-
-    .estimator-reference-rail {
-      right: 2.5rem;
-      width: 18rem;
-    }
-  }
-
-  @media (min-width: 1660px) {
-    .rates-left-rail-desktop {
-      display: block;
-      position: fixed;
-      top: 6.5rem;
-      left: calc(248px + 1rem);
-      z-index: 30;
-      width: 18rem;
-      max-height: calc(100vh - 7.5rem);
-      overflow-y: auto;
-      margin-top: 0;
-      margin-bottom: 0;
-      padding-bottom: 0.25rem;
-      scrollbar-width: thin;
-    }
-  }
-
-  @media (min-width: 1800px) {
-    .rates-left-rail-desktop {
-      left: calc(248px + 1.25rem);
-      width: 18.5rem;
-    }
-  }
-
-  @media (min-width: 1660px) {
-    .saved-costings-left-rail {
-      position: fixed;
-      top: 6.5rem;
-      left: calc(248px + 1rem);
-      z-index: 30;
-      width: 18rem;
-      max-height: calc(100vh - 7.5rem);
-      overflow-y: auto;
-      margin-top: 0;
-      margin-bottom: 0;
-      padding-bottom: 0.25rem;
-      scrollbar-width: thin;
-    }
-  }
-
-  @media (min-width: 1800px) {
-    .saved-costings-left-rail {
-      left: calc(248px + 1.25rem);
-      width: 18.5rem;
-    }
-  }
-
-  @media (min-width: 1660px) {
-    .guided-tour-left-rail,
-    .production-left-rail,
-    .workers-left-rail,
-    .machines-left-rail,
-    .payroll-left-rail,
-    .stock-left-rail,
-    .dispatch-left-rail {
-      position: fixed;
-      top: 6rem;
-      left: calc(248px + 1rem);
-      z-index: 30;
-      width: 18rem;
-      max-height: calc(100vh - 7rem);
-      overflow-y: auto;
-      margin-top: 0;
-      margin-bottom: 0;
-      padding-bottom: 0.25rem;
-      scrollbar-width: thin;
-    }
-  }
-
-  @media (min-width: 1800px) {
-    .guided-tour-left-rail,
-    .production-left-rail,
-    .workers-left-rail,
-    .machines-left-rail,
-    .payroll-left-rail,
-    .stock-left-rail,
-    .dispatch-left-rail {
-      left: calc(248px + 1.25rem);
-      width: 18.5rem;
-    }
-  }
-
   .saved-costings-left-rail .saved-costings-tour-launcher {
     position: static;
     width: 100%;
     margin-bottom: 0;
-  }
-
-  /* Rate Book Right Rail - positioned in right viewport margin. The rail is
-     rendered outside the animated route wrapper so fixed positioning remains
-     anchored to the viewport instead of the centered Rate Book content. */
-  .rates-review-rail-desktop {
-    display: none;
-  }
-
-  @media (min-width: 1540px) {
-    .rates-review-rail-desktop {
-      display: block;
-      position: fixed;
-      top: 6.5rem;
-      right: 1.25rem;
-      z-index: 30;
-      width: 17rem;
-      max-height: calc(100vh - 7.5rem);
-      overflow-y: auto;
-      scrollbar-width: thin;
-    }
-  }
-
-  @media (min-width: 1800px) {
-    .rates-review-rail-desktop {
-      right: 2.5rem;
-      width: 18.5rem;
-    }
-  }
-
-  /* Keep the Rate Book archive policy at the bottom edge of the desktop rail. */
-  .rates-archive-policy-rail-desktop {
-    display: none;
-  }
-
-  @media (min-width: 1540px) {
-    .rates-archive-policy-rail-desktop {
-      display: block;
-      position: fixed;
-      right: 1.25rem;
-      bottom: 1.25rem;
-      z-index: 30;
-      width: 17rem;
-    }
-  }
-
-  @media (min-width: 1800px) {
-    .rates-archive-policy-rail-desktop {
-      right: 2.5rem;
-      width: 18.5rem;
-    }
-  }
-
-  /* Saved Costings uses the spare right margin for its archive policy. Keep
-     the policy at the bottom of the desktop rail without transforming it with
-     the route entrance wrapper. */
-  .saved-costings-archive-rail-desktop {
-    display: none;
-  }
-
-  @media (min-width: 1540px) {
-    .saved-costings-archive-rail-desktop {
-      display: block;
-      position: fixed;
-      right: 1.25rem;
-      bottom: 1.25rem;
-      z-index: 30;
-      width: 17rem;
-    }
-  }
-
-  @media (min-width: 1800px) {
-    .saved-costings-archive-rail-desktop {
-      right: 2.5rem;
-      width: 18.5rem;
-    }
-  }
-
-  /* Fabric Stock Movement History desktop pill pinned to the bottom of the right rail */
-  .stock-movement-rail-desktop {
-    display: none;
-  }
-
-  @media (min-width: 1380px) {
-    .stock-movement-rail-desktop {
-      display: block;
-      position: fixed;
-      right: 1.25rem;
-      bottom: 1.5rem;
-      z-index: 30;
-      width: 17rem;
-    }
-
-    .stock-movement-rail-mobile {
-      display: none;
-    }
-  }
-
-  @media (min-width: 1800px) {
-    .stock-movement-rail-desktop {
-      right: 2.5rem;
-      width: 18.5rem;
-    }
-  }
-
-  /* Billing payment history uses the spare right viewport margin on wide
-     desktop. Keep the viewport-positioned rail outside the animated route
-     wrapper so its fixed position stays anchored to the browser window. */
-  .billing-payment-history-rail-desktop {
-    display: none;
-  }
-
-  @media (min-width: 1540px) {
-    .billing-payment-history-rail-desktop {
-      display: block;
-      position: fixed;
-      top: 6.5rem;
-      right: 1.25rem;
-      z-index: 30;
-      width: 17rem;
-    }
-  }
-
-  @media (min-width: 1800px) {
-    .billing-payment-history-rail-desktop {
-      right: 2.5rem;
-      width: 18.5rem;
-    }
-  }
-
-  /* Dedicated Billing Desktop Right Rail:
-     Anchored to the right viewport margin on desktop with trust pills at the top
-     and policy/referral pills at the bottom. */
-  @media (min-width: 1280px) {
-    .billing-workspace-shell {
-      width: min(100%, calc(100vw - 248px - 22rem));
-      max-width: 60rem;
-      margin-inline: auto;
-    }
-
-    .billing-right-rail {
-      position: fixed;
-      top: 5.5rem;
-      bottom: 1.5rem;
-      right: 1.25rem;
-      z-index: 30;
-      width: 18.5rem;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      overflow-y: auto;
-      margin-top: 0;
-      padding-bottom: 0.25rem;
-      scrollbar-width: thin;
-    }
-
-    .billing-rail-bottom {
-      margin-top: auto;
-      padding-top: 1rem;
-    }
-  }
-
-  @media (min-width: 1800px) {
-    .billing-workspace-shell {
-      width: min(100%, calc(100vw - 248px - 25rem));
-      max-width: 64rem;
-    }
-
-    .billing-right-rail {
-      right: 2.5rem;
-      width: 20rem;
-    }
-  }
-
-  @media (min-width: 768px) and (max-width: 1699.98px) {
-    .settings-page-frame {
-      margin-left: var(--settings-sidebar-guard);
-      width: calc(100% - var(--settings-sidebar-guard));
-    }
-  }
-
-  @media (min-width: 1700px) {
-    .settings-page-frame {
-      width: 100%;
-      max-width: none;
-      margin-left: 0;
-    }
-
-    .settings-layout-grid {
-      grid-template-columns: minmax(0, 1fr) 292px;
-    }
-
-    .settings-right-rail {
-      display: block;
-    }
   }
 
   /* Safe Area Padding Utilities for Mobile Apps */
@@ -1788,9 +1270,11 @@
    * Motion is limited to compositor-friendly opacity and transform changes;
    * state is always communicated by colour, text, or ARIA as well.
    */
+  /* Opacity only: a transform here would also become the containing block
+     for viewport-fixed rails rendered inside the route. */
   @keyframes ui-route-enter {
-    from { opacity: 0; transform: translate3d(0, 8px, 0); }
-    to { opacity: 1; transform: translate3d(0, 0, 0); }
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 
   @keyframes ui-content-swap {
@@ -1799,9 +1283,8 @@
   }
 
   @keyframes ui-success-pop {
-    0% { opacity: 0.2; transform: scale(0.72); }
-    62% { opacity: 1; transform: scale(1.08); }
-    100% { opacity: 1; transform: scale(1); }
+    from { opacity: 0.2; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
   }
 
   @keyframes ui-selection-confirm {
@@ -1810,7 +1293,7 @@
   }
 
   .ui-route-enter {
-    animation: ui-route-enter 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: ui-route-enter 180ms ease-out both;
   }
 
   .ui-content-swap,
@@ -1820,17 +1303,16 @@
   }
 
   .ui-success-pop {
-    animation: ui-success-pop 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: ui-success-pop 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
   .ui-surface,
   .ui-disclosure-card,
   .ui-focus-surface {
     transition:
-      transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
-      border-color 180ms ease,
-      box-shadow 180ms ease,
-      background-color 180ms ease;
+      border-color 160ms ease,
+      box-shadow 160ms ease,
+      background-color 160ms ease;
   }
 
   .ui-focus-surface:focus-within,
@@ -1840,12 +1322,7 @@
   }
 
   .ui-segment {
-    transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1), background-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
-  }
-
-  .ui-segment[aria-selected="true"],
-  .ui-segment[aria-pressed="true"] {
-    transform: scale(1.025);
+    transition: background-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
   }
 
   .ui-selected-row {
@@ -1862,16 +1339,11 @@
     transform-origin: center;
   }
 
+  /* Hover confirms the surface is interactive without moving it. */
   @media (hover: hover) and (pointer: fine) {
-    .ui-surface:hover {
-      transform: translate3d(0, -2px, 0);
-      border-color: color-mix(in srgb, var(--color-saffron) 30%, var(--color-hairline));
-      box-shadow: var(--shadow-panel);
-    }
-
+    .ui-surface:hover,
     .ui-disclosure-card:hover {
-      border-color: color-mix(in srgb, var(--color-saffron) 24%, var(--color-hairline));
-      box-shadow: var(--shadow-panel);
+      border-color: var(--color-hairline-strong);
     }
   }
 
@@ -1892,12 +1364,6 @@
     .ui-segment,
     .ui-progress-fill {
       transition-duration: 0.01ms !important;
-    }
-
-    .ui-surface:hover,
-    .ui-segment[aria-selected="true"],
-    .ui-segment[aria-pressed="true"] {
-      transform: none;
     }
   }
 }
@@ -1973,14 +1439,6 @@
 @media (max-width: 767px) and (max-height: 650px) {
   [data-configuration-picker-preview="true"] { gap: 8px; padding-bottom: 12px; }
   [data-configuration-picker-preview="true"] [data-slot="sheet-footer"] { display: none; }
-}
-
-/* Same upper left rail and narrow-screen inline placement as Rate Book. */
-@media (min-width: 1660px) {
-  .saved-costings-tour-launcher { position: fixed; top: 6.5rem; left: calc(248px + 1rem); width: 18rem; z-index: 30; }
-}
-@media (min-width: 1800px) {
-  .saved-costings-tour-launcher { left: calc(248px + 1.25rem); width: 18.5rem; }
 }
 
 /* Reserve the desktop reading panel beside tour-controlled previews. */
@@ -2100,10 +1558,6 @@ button[aria-expanded="true"] .nav-chevron {
     display: none !important;
   }
 }
-
-/* DOM measurements use viewport pixels. Cancel the app zoom only on tour
-   portals so highlights, cutouts and reading panels use that same space. */
-.guided-tour-portal { zoom: calc(1 / var(--app-desktop-zoom, 1)); }
 
 /* Reserve a separate reading area for editor previews. Keep translate variable-based:
    CSS optimization can otherwise fold it into transform and discard it alongside

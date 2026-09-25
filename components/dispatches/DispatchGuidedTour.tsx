@@ -28,7 +28,7 @@ export default function DispatchGuidedTour({ userId, orgId, userMetadata, childr
                     userMetadata={userMetadata}
                     align="full"
                     guideCard={{ title: t('challan.guideTitle'), actionLabel: t('challan.guideAction') }}
-                    className="w-full border-amber-200/90 bg-amber-50/75"
+                    className="w-full"
                     onLaunch={() => {
                         returnScroll.current = { x: window.scrollX, y: window.scrollY }
                         setStep(dispatchTourSteps[0])

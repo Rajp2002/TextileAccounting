@@ -125,7 +125,7 @@ describe('fabric core workflow and contextual detail', () => {
 })
 it('preserves live state and keeps previews isolated', () => {
     const wrapper = fs.readFileSync('components/stock/StockGuidedTour.tsx', 'utf8')
-    expect(wrapper).toContain('<div hidden={step !== null}>{children}</div>')
+    expect(wrapper).toContain('<div className="stock-workspace-shell" hidden={step !== null}>{children}</div>')
     for (const file of ['FabricStockTourPreview', 'YarnStockTourPreview']) {
         const source = fs.readFileSync(`components/stock/${file}.tsx`, 'utf8')
         expect(source).not.toMatch(/from ['"].*(actions|supabase|next\/navigation|loaders)/)

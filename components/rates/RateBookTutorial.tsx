@@ -544,7 +544,7 @@ export function RateBookTutorial({
                     orgId={orgId}
                     align="full"
                     onLaunch={() => setRequested(true)}
-                    className="estimator-touch-target border-amber-200/90 bg-amber-50/75 hover:bg-amber-100/70 shadow-xs"
+                    className="w-full"
                 />
             )}
 

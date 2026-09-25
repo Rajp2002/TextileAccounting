@@ -11,7 +11,9 @@ import { MachineToolbar, type MachineStatusFilter } from '@/components/machines/
 import { MachineGrid } from '@/components/machines/MachineGrid'
 import { MachineEmptyState } from '@/components/machines/MachineEmptyState'
 import MachineEditor from './MachineEditor'
-import { ChevronDown, CircleHelp } from 'lucide-react'
+import { ChevronDown, CircleHelp, Cog } from 'lucide-react'
+import { railIcon, railSurface } from '@/components/ui/rail'
+import { cn } from '@/lib/utils'
 import { NavigationLink } from '@/components/navigation/navigation-link'
 import { TourInvitation } from '@/components/tours/TourInvitation'
 import MachinesTutorial from '@/components/tours/MachinesTutorial'
@@ -124,7 +126,7 @@ export default function MachinesRegister({
                   orgId={orgId}
                   userMetadata={userMetadata}
                   align="full"
-                  className="w-full estimator-touch-target rounded-xl border-amber-200/90 bg-amber-50/75 shadow-[var(--shadow-card)] hover:bg-amber-100/70"
+                  className="w-full"
                   onLaunch={() => setTourStep('purpose')}
                 />
               </div>
@@ -164,15 +166,15 @@ export default function MachinesRegister({
               <div className="machines-reference-action">
                 <MachineAddButton onAdd={tourStep ? () => {} : add} />
               </div>
-              <div className="machines-reference-bottom space-y-5">
+              <div className="machines-reference-bottom space-y-3">
                 <section
                   aria-labelledby="machines-setup-heading"
-                  className="rounded-[1.75rem] border border-warning/20 bg-warning-soft/90 px-5 py-5 text-center shadow-[var(--shadow-card)]"
+                  className={cn('px-4 py-4', railSurface)}
                   data-i18n-skip="true"
                   lang={language}
                 >
-                  <h2 id="machines-setup-heading" className="text-base font-semibold leading-snug text-ink">{copy.setupTitle}</h2>
-                  <div className="mt-3 divide-y divide-warning/15">
+                  <h2 id="machines-setup-heading" className="flex items-center gap-2 text-sm font-semibold leading-snug text-ink"><Cog className={railIcon} aria-hidden="true" />{copy.setupTitle}</h2>
+                  <div className="mt-2 divide-y divide-hairline">
                     <div data-machines-tour="production-next" className="py-3">
                       <NavigationLink
                         href={tourStep ? '#' : '/owner/production?tab=jobs'}
@@ -196,15 +198,15 @@ export default function MachinesRegister({
                   </div>
                 </section>
                 <details
-                  className="group overflow-hidden rounded-2xl border border-info/20 bg-info-soft/90 shadow-[var(--shadow-card)]"
+                  className={cn('group overflow-hidden', railSurface)}
                   data-i18n-skip="true"
                   lang={language}
                 >
-                  <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-5 py-3.5 text-[0.9375rem] font-semibold text-info focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-info/40 [&::-webkit-details-marker]:hidden">
-                    <span className="flex items-center gap-2.5"><CircleHelp className="size-[1.125rem] shrink-0" aria-hidden="true" />{copy.helpTitle}</span>
-                    <ChevronDown className="size-[1.125rem] shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
+                  <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-3.5 py-2.5 text-sm font-semibold leading-snug text-ink hover:bg-surface-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-saffron/50 [&::-webkit-details-marker]:hidden">
+                    <span className="flex items-center gap-2.5"><CircleHelp className={railIcon} aria-hidden="true" />{copy.helpTitle}</span>
+                    <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" />
                   </summary>
-                  <dl className="space-y-4 border-t border-info/15 bg-surface/80 px-5 py-5 text-sm leading-relaxed">
+                  <dl className="max-h-[min(60vh,32rem)] space-y-4 overflow-y-auto border-t border-hairline px-4 py-4 text-sm leading-relaxed">
                     {copy.help.map(([title, description]) => <div key={title}>
                       <dt className="font-semibold text-ink">{title}</dt>
                       <dd className="mt-1 text-body">{description}</dd>

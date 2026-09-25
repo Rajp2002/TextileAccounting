@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { railPrimaryAction } from '@/components/ui/rail'
 import { Input } from '@/components/ui/input'
 import {
     Dialog,
@@ -44,8 +45,8 @@ import ChallanDraftEditor from './ChallanDraftEditor'
 
 function NewDispatchButton({ onClick, disabled, label }: { onClick: () => void; disabled: boolean; label: string }) {
     return (
-        <Button variant="saffron" disabled={disabled} onClick={onClick} className="min-h-12 rounded-xl px-5 text-[0.9375rem] font-semibold">
-            <Plus className="size-[1.125rem]" aria-hidden="true" />
+        <Button disabled={disabled} onClick={onClick} className={railPrimaryAction}>
+            <Plus className="size-4" aria-hidden="true" />
             {label}
         </Button>
     )
