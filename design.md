@@ -68,7 +68,8 @@ The app uses:
 
 - **Primary font:** Inter via `--font-inter`
 - **Mono font:** Geist Mono via `--font-geist-mono`
-- **Base body size:** `14px`
+- **Base body size:** `14px` (the root font size, so `1rem = 14px` throughout the app)
+- Text always renders at its real size. Do not scale the document (`zoom`, `transform: scale`) to fit more columns; recompose the layout instead.
 
 Use these patterns:
 
@@ -97,8 +98,10 @@ Prefer Tailwind tokens backed by CSS variables instead of hard-coded hex values.
 | `cotton` | `--weavly-cotton-beige` | `#EAD8B8` | Textile neutral |
 | `loom` | `--weavly-loom-navy` | `#18252E` | Dark industrial surfaces |
 | `ink` | `--weavly-ink` | `#1E2528` | Headings and strong text |
-| `body` | `--weavly-body` | `#3F4542` | Main body text |
-| `subtle` | `--weavly-subtle` | `#6B6D64` | Low emphasis text that remains readable at compact sizes |
+| `body` | `--weavly-body` | `#2C3331` | Main body text, one gentle step below ink |
+| `muted-foreground` | `--weavly-muted` | `#454C48` | Secondary text; ≥ 8:1 on the canvas (AAA) |
+| `subtle` | `--weavly-subtle` | `#4B5350` | Low emphasis text that remains readable at compact sizes (≥ 7:1) |
+| — | `--color-placeholder` | `#6E7269` | Input placeholders only, so hints never read as entered values |
 | `hairline` | `--weavly-hairline` | `#DED2BD` | Borders |
 | `hairline-strong` | `--weavly-hairline-strong` | `#CBB894` | Hover/strong borders |
 
@@ -132,7 +135,7 @@ Keep this separation. Do not bring large marketing hero typography into operatio
 
 ## Backgrounds And Elevation
 
-Dashboard/auth backgrounds use `BrandBackground`, which applies `.weavly-app-bg`: warm canvas with faint textile-grid and saffron/amber radial warmth.
+Dashboard/auth backgrounds use `BrandBackground`, which applies `.weavly-app-bg`: warm canvas with faint textile-grid and saffron/amber radial warmth. Operational routes all use the same static, quiet treatment (low-opacity saffron shapes, no drifting animation) so content always sits in front of the atmosphere.
 
 Preferred shadows:
 
@@ -196,6 +199,8 @@ Sizes:
 - `icon-sm`: `size-9`
 
 Buttons should include lucide icons when the action benefits from quick recognition. Keep button labels short and operational.
+
+Hover feedback is colour only: buttons and cards never lift, scale, or turn saffron on hover. `default` darkens to `loom-elevated`; `outline`, `secondary`, and `ghost` move to `surface-soft` with a `hairline-strong` border.
 
 ### Cards
 
@@ -276,6 +281,22 @@ Mobile dashboards use a fixed bottom nav:
 Supervisor screens also use a sticky mobile header with the logo and menu/install controls. Owner screens rely mostly on bottom navigation plus a sheet menu.
 
 ## Layout Patterns
+
+### Workspace Composition (Rails)
+
+Rail routes share one composition, defined once in `app/globals.css` ("Workspace composition"):
+
+```
+sidebar | left rail | workspace | right rail
+```
+
+- **Left rail:** the route's guide (`TourInvitation align="full"`) and help/walkthrough controls.
+- **Right rail:** the route's primary action at the top (same line as the page title), reference material below, and notices such as the archive policy anchored to the bottom.
+- **Tiers:** below `1280px` everything is one column (guide above, actions in the page header, reference inline). From `1280px` the right rail is pinned beside the workspace. From `1440px` both rails are pinned and the workspace is centred between them.
+- **Tokens:** every offset comes from `--rail-w`, `--rail-gap`, `--rail-top`, `--rail-bottom`, `--workspace-w`, `--rail-left`, and `--rail-right`. Never hard-code `left: calc(248px + …)` or a route-specific breakpoint; add the route's shell and rail classes to the grouped selectors instead.
+- **Inline counterparts:** content that must disappear when a rail is pinned uses `rail-inline-actions` (hidden from `1280px`).
+- **Presentation:** use `components/ui/rail.ts` (`railSurface`, `railButton`, `railIcon`, `railPrimaryAction`) so guides, help, and actions read as one family. Rail primary actions are ink, never saffron. Help and reference panels are neutral surfaces, not info/warning fills.
+- **Guide card:** the guide card stacks inside a rail and becomes a single row (container query) when shown inline above a page.
 
 ### Dashboard Page Header
 
@@ -415,11 +436,8 @@ Primary references:
 - `components/ui/badge.tsx`
 - `components/ui/input.tsx`
 - `components/navigation/owner-sidebar.tsx`
-- `components/navigation/supervisor-nav.tsx`
 - `components/auth/auth-layout.tsx`
 - `app/(dashboard)/owner/layout.tsx`
-- `app/(dashboard)/supervisor/layout.tsx`
-- `app/(dashboard)/owner/today/FactoryTodayClient.tsx`
-- `app/(dashboard)/supervisor/dashboard/page.tsx`
+- `components/ui/rail.ts`
 - `components/landing/header.tsx`
 - `components/landing/hero.tsx`

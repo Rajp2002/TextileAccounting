@@ -1643,7 +1643,7 @@ export default function RatesClient({
 
                 <Toolbar data-ratebook-section={1} data-ratebook-section-card="true" className="flex flex-col gap-3 rounded-none border-0 border-b border-hairline p-4 shadow-none md:flex-row md:items-center md:justify-between">
                     <div className="flex flex-1 flex-wrap items-center gap-3">
-                        <div data-ratebook-field="yarnSearch" className="relative min-w-0 flex-1 sm:max-w-xs md:max-w-sm">
+                        <div data-ratebook-field="yarnSearch" className="relative min-w-[min(100%,14rem)] flex-1 sm:max-w-xs md:max-w-sm">
                             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" aria-hidden="true" />
                             <Label htmlFor="yarn-rates-search" className="sr-only">{tx('Search yarn rates')}</Label>
                             <Input

@@ -914,6 +914,27 @@
     ) {
       margin-right: var(--rail-span);
     }
+
+    /* Guides rendered outside their route's shell sit inline above it here;
+       keep them clear of the pinned right rail as well. */
+    :root:has(:is(
+      .rates-review-rail-desktop,
+      .saved-costings-action-rail-desktop,
+      .dispatch-action-rail,
+      .payroll-period-rail,
+      .production-activate-rail,
+      .stock-movement-rail-desktop
+    )) :is(
+      .saved-costings-left-rail,
+      .rates-left-rail-desktop,
+      .production-left-rail,
+      .payroll-left-rail,
+      .stock-left-rail,
+      .dispatch-left-rail
+    ) {
+      width: auto;
+      margin-right: var(--rail-span);
+    }
   }
 
   /* ── Tier 3: left rail + workspace + right rail (≥ 1440px) ───────────── */
