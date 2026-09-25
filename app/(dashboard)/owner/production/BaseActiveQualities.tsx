@@ -427,7 +427,7 @@ export default function BaseActiveQualities({
 
             {/* Active Qualities Cards Grid */}
             {activeJobs.length > 0 && (
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] gap-4">
                     {activeJobs.map((job) => {
                         const assignedMachines = runningMachinesByJobId.get(job.id) ?? []
                         const machineCount = assignedMachines.length

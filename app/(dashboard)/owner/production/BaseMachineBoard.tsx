@@ -392,7 +392,7 @@ export default function BaseMachineBoard({
 
             {/* Machine Cards Grid */}
             {activeMachines.length > 0 && (
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] gap-4">
                     {filteredMachines.map((machine) => {
                         const runningJob = currentJobByMachine.get(machine.id)
                         const isRunning = Boolean(runningJob)
@@ -471,7 +471,7 @@ export default function BaseMachineBoard({
                                             </div>
 
                                             {/* Actions */}
-                                            <div className="flex items-center gap-2 pt-1">
+                                            <div className="flex flex-wrap items-center gap-2 pt-1">
                                                 <Button
                                                     variant="outline"
                                                     size="sm"
