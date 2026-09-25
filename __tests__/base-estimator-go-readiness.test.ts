@@ -117,8 +117,9 @@ describe('Base Estimator Go-readiness hardening', () => {
 
     const savedCostings = source('app/(dashboard)/owner/quotes/QuotesClient.tsx')
     expect(savedCostings).toContain('canUseProduction && <section')
-    expect(savedCostings).toContain("t('common.saved_costings_description')")
-    expect(source('lib/i18n/locales/en.ts')).toContain('saved_costings_description: "Reuse saved qualities, review costing history, and compare prices in one place."')
+    const savedCostingsHeader = savedCostings.match(/<PageHeader\b([\s\S]*?)\/>/)?.[0] ?? ''
+    expect(savedCostingsHeader).toContain('title={canUseQuotationWorkflow ?')
+    expect(savedCostingsHeader).not.toContain('description=')
     expect(savedCostings).toContain('expand a quality to review its costing history')
   })
 

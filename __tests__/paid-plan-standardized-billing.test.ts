@@ -11,8 +11,7 @@ describe('Paid plan subscription and billing pages', () => {
     const planChooser = read('components/plans/PlanChooserClient.tsx')
 
     it('1. Owner billing page renders the current workspace, plan comparison, and billing sections', () => {
-        expect(ownerBilling).toContain('title="Subscription & Billing"')
-        expect(ownerBilling).toContain('description="Manage your plan, renewal, and payment history."')
+        expect(ownerBilling).toMatch(/<PageHeader\s+title="Subscription & Billing"\s*\/>/)
 
         // Active workspace and included capabilities
         expect(ownerBilling).toContain('id="active-workspace-heading"')
