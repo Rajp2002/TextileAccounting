@@ -1482,9 +1482,6 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             </aside>
             <div className="saved-costings-workspace ui-route-enter max-w-6xl mx-auto space-y-6">
             <RouteMilestones route="/owner/quotes" shellVisible primaryUsable secondaryReady />
-            <div className="rail-inline-actions">
-                <ArchivePolicyNotice />
-            </div>
             {detailLoadingId && <p role="status" aria-live="polite" className="ui-status-enter rounded-lg border border-info/25 bg-info-soft px-3 py-2 text-xs font-semibold text-info">{tx('Selection saved. Loading the complete snapshot for comparison…')}</p>}
             <PageHeader
                 title={canUseQuotationWorkflow ? t('common.costings_quotations_title') : t('common.saved_costings_title')}
@@ -2117,6 +2114,9 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             )}
             </div>
             )}
+            <div className="rail-inline-actions">
+                <ArchivePolicyNotice />
+            </div>
             </div>
 
             {/* Top action: New Costing pill */}

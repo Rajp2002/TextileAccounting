@@ -11,7 +11,8 @@ import { findTourTarget } from '@/lib/tutorial-target'
 import { useMobileTour } from '@/hooks/use-mobile-tour'
 import { lockTourViewport } from '@/lib/tutorial-viewport-lock'
 import { TourInvitation } from '@/components/tours/TourInvitation'
-import { railButton, railSurface } from '@/components/ui/rail'
+import { ChevronDown, ChevronRight, CircleHelp, GitCompareArrows } from 'lucide-react'
+import { railButton, railIcon, railSurface } from '@/components/ui/rail'
 import { cn } from '@/lib/utils'
 import { persistTourCompleted } from '@/lib/tours/tour-preferences'
 
@@ -174,18 +175,20 @@ export function SavedCostingsTutorial({step, onStepChange, onComplete, free = fa
       align="full"
       className="w-full"
     />
-    <div data-i18n-skip="true" lang={language} className="mt-2 space-y-2">
+    <div data-i18n-skip="true" lang={language} className="@container mt-2">
+     <div className="grid items-start gap-2 @lg:grid-cols-2">
       {!free && <Button type="button" variant="outline" className={cn(railButton, 'h-auto whitespace-normal')} onClick={event => {
        returnFocus.current = event.currentTarget
        setComparisonTour(true)
        onStepChange(comparisonCostingSteps[0])
-      }}>{copy.compare}</Button>}
-      <details className={cn(railSurface, 'p-3.5 text-xs')}>
-       <summary className="flex min-h-6 cursor-pointer select-none items-center text-sm font-semibold text-ink">{copy.help}</summary>
-       <div className="mt-3 max-h-[40dvh] space-y-3 overflow-y-auto pr-1">{helpFields.map(([title, description]) => <section key={title}>
+      }}><span className="flex min-w-0 items-center gap-2.5"><GitCompareArrows className={railIcon} aria-hidden="true" /><span className="min-w-0">{copy.compare}</span></span><ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" /></Button>}
+      <details className={cn(railSurface, 'group text-xs')}>
+       <summary className="flex min-h-11 cursor-pointer select-none list-none items-center justify-between gap-2.5 px-3.5 py-2.5 text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden"><span className="flex min-w-0 items-center gap-2.5"><CircleHelp className={railIcon} aria-hidden="true" /><span className="min-w-0">{copy.help}</span></span><ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" /></summary>
+       <div className="max-h-[40dvh] space-y-3 overflow-y-auto border-t border-hairline px-3.5 py-3">{helpFields.map(([title, description]) => <section key={title}>
         <h3 className="font-semibold text-ink">{title}</h3><p className="mt-1 leading-relaxed text-body">{description}</p>
        </section>)}</div>
       </details>
+     </div>
     </div>
   </div>
   {step && createPortal(<div ref={portal} data-testid="saved-costings-tutorial" data-i18n-skip="true" lang={language} className="guided-tour-portal fixed inset-0 z-[100]" style={{pointerEvents: 'auto'}}>

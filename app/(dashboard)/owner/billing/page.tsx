@@ -12,6 +12,7 @@ import {
     Star, Zap, Lock, CreditCard, ReceiptText,
     Sparkles, ArrowRight, Calculator, FileText, ShieldCheck,
 } from 'lucide-react'
+import { railSurface } from '@/components/ui/rail'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { redirect } from 'next/navigation'
@@ -529,23 +530,23 @@ export default async function BillingPage() {
             {/* Desktop right rail with top assurance pills and bottom receipt & referral pills */}
             <aside className="billing-right-rail" aria-label="Billing details and rewards">
                 <div className="billing-rail-top">
-                    <section aria-label="Billing essentials" className="space-y-3">
-                        <div className="flex items-start gap-3 rounded-2xl border border-hairline bg-surface p-4 shadow-[var(--shadow-card)]">
-                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-saffron-soft text-saffron-deep"><Zap className="h-4 w-4" aria-hidden="true" /></span>
+                    <section aria-label="Billing essentials" className={`${railSurface} divide-y divide-hairline`}>
+                        <div className="flex items-start gap-3 p-4">
+                            <Zap className="mt-0.5 h-4 w-4 shrink-0 text-saffron-deep" aria-hidden="true" />
                             <div>
                                 <h2 className="text-sm font-semibold text-ink">Verified plan activation</h2>
                                 <p className="mt-1 text-xs leading-relaxed text-body">Paid access begins after payment verification. Your saved costings and workspace settings stay in place.</p>
                             </div>
                         </div>
-                        <div className="flex items-start gap-3 rounded-2xl border border-hairline bg-surface p-4 shadow-[var(--shadow-card)]">
-                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-info-soft text-info"><ReceiptText className="h-4 w-4" aria-hidden="true" /></span>
+                        <div className="flex items-start gap-3 p-4">
+                            <ReceiptText className="mt-0.5 h-4 w-4 shrink-0 text-saffron-deep" aria-hidden="true" />
                             <div>
                                 <h2 className="text-sm font-semibold text-ink">Clear billing documents</h2>
                                 <p className="mt-1 text-xs leading-relaxed text-body">Download a PDF receipt for captured payments from your history. GST tax invoices are not issued for this pilot.</p>
                             </div>
                         </div>
-                        <div className="flex items-start gap-3 rounded-2xl border border-hairline bg-surface p-4 shadow-[var(--shadow-card)]">
-                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-success-soft text-success"><ShieldCheck className="h-4 w-4" aria-hidden="true" /></span>
+                        <div className="flex items-start gap-3 p-4">
+                            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-saffron-deep" aria-hidden="true" />
                             <div>
                                 <h2 className="text-sm font-semibold text-ink">Secure Razorpay checkout</h2>
                                 <p className="mt-1 text-xs leading-relaxed text-body">Pay with the methods available at checkout. Weavly does not store your full card or banking details.</p>
@@ -557,8 +558,8 @@ export default async function BillingPage() {
                 <div className="billing-rail-bottom">
                     <BillingDocumentNotice compact />
 
-                    <details className="group overflow-hidden rounded-2xl border border-hairline bg-surface shadow-[var(--shadow-card)]">
-                        <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-5 py-3.5 text-sm font-semibold text-ink outline-none hover:bg-surface-soft focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-saffron/50 [&::-webkit-details-marker]:hidden">
+                    <details className={`${railSurface} group overflow-hidden`}>
+                        <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-ink outline-none hover:bg-surface-soft focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-saffron/50 [&::-webkit-details-marker]:hidden">
                             Referral rewards
                             <ChevronDown className="h-4 w-4 text-subtle transition-transform group-open:rotate-180" aria-hidden="true" />
                         </summary>

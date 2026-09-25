@@ -563,7 +563,7 @@ function DueForReviewDialog({
                                     size="sm"
                                     onClick={onConfirmAll}
                                     disabled={isConfirmingAll}
-                                    className="h-8 rounded-full border-0 bg-success px-3.5 text-xs font-bold text-white shadow-none hover:bg-success/90 hover:text-white"
+                                    className="h-8 rounded-full border-0 bg-loom px-3.5 text-xs font-bold text-white shadow-none hover:bg-loom-elevated hover:text-white"
                                 >
                                     {isConfirmingAll ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />}
                                     {isConfirmingAll ? 'Confirming all…' : `Confirm All (${rates.length}) as Current`}
@@ -634,7 +634,7 @@ function DueForReviewDialog({
                                             onClick={() => onReview(rate)}
                                             disabled={pendingActionId === rate.id || isConfirmingAll}
                                             aria-label={`Review ${rate.name}`}
-                                            className="h-9 rounded-full border-0 bg-success px-4 text-white shadow-none hover:bg-success/90 hover:text-white"
+                                            className="h-9 rounded-full border-0 bg-loom px-4 text-white shadow-none hover:bg-loom-elevated hover:text-white"
                                         >
                                             {pendingActionId === rate.id ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-1.5 h-4 w-4" />} Review
                                         </Button>
@@ -1528,9 +1528,6 @@ export default function RatesClient({
                 primaryUsable
                 secondaryReady={!usageLoading}
             />
-            <div className="rail-inline-actions">
-                <ArchivePolicyNotice />
-            </div>
             <div className="space-y-1" data-ratebook-field="overview">
                 <PageHeader
                     title={t('common.yarn_rate_book')}
@@ -1741,7 +1738,7 @@ export default function RatesClient({
                                 type="button"
                                 onClick={handleConfirmAll}
                                 disabled={isPending}
-                                className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border-0 bg-success px-3.5 text-xs sm:text-sm font-bold text-white shadow-none hover:bg-success/90 hover:text-white"
+                                className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border-0 bg-loom px-3.5 text-xs sm:text-sm font-bold text-white shadow-none hover:bg-loom-elevated hover:text-white"
                             >
                                 {pendingAction?.id === 'all-review' ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
                                 <span>{pendingAction?.id === 'all-review' ? tx('Confirming…') : tx(`Confirm All (${dueReviewRates.length}) as Current`)}</span>
@@ -1875,7 +1872,7 @@ export default function RatesClient({
                                                                     onClick={() => handleQuickReview(rate)}
                                                                     disabled={isPending}
                                                                     aria-label={`${reviewLabel} for ${rate.name}`}
-                                                                    className="h-8 w-full rounded-full border-0 px-3 text-xs font-semibold text-white shadow-none motion-safe:hover:scale-100 motion-safe:hover:translate-y-0 bg-success hover:bg-success/90 hover:text-white justify-center"
+                                                                    className="h-8 w-full justify-center rounded-full border-0 bg-loom px-3 text-xs font-semibold text-white shadow-none hover:bg-loom-elevated hover:text-white"
                                                                 >
                                                                     {actionKind === 'review' ? (
                                                                         <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -1925,7 +1922,7 @@ export default function RatesClient({
                                                                                 setQuickEditError(null)
                                                                             }}
                                                                             aria-label={`Edit rate for ${rate.name}`}
-                                                                            className="h-8 w-full rounded-full border-saffron/35 bg-saffron-soft/55 px-3 text-xs font-semibold text-saffron-deep shadow-none motion-safe:hover:scale-100 motion-safe:hover:translate-y-0 hover:border-saffron hover:bg-saffron-soft hover:text-saffron-deep justify-center cursor-pointer"
+                                                                            className="h-8 w-full cursor-pointer justify-center rounded-full border-hairline bg-surface px-3 text-xs font-semibold text-ink shadow-none hover:border-hairline-strong hover:bg-surface-soft hover:text-ink"
                                                                         >
                                                                             <Pencil className="h-3.5 w-3.5" />
                                                                             <span>{tx('Edit rate')}</span>
@@ -2032,7 +2029,7 @@ export default function RatesClient({
                                                         onClick={() => handleQuickReview(rate)}
                                                         disabled={isPending}
                                                         aria-label={tx(`${reviewLabel} for ${rate.name}`)}
-                                                        className="h-10 min-w-0 flex-1 rounded-xl border-0 bg-success px-3 text-sm text-white shadow-none hover:bg-success/90 hover:text-white"
+                                                        className="h-10 min-w-0 flex-1 rounded-xl border-0 bg-loom px-3 text-sm text-white shadow-none hover:bg-loom-elevated hover:text-white"
                                                     >
                                                         {actionKind === 'review' ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
                                                         <span className="truncate">{tx(actionKind === 'review' ? 'Confirming…' : reviewLabel)}</span>
@@ -2076,7 +2073,7 @@ export default function RatesClient({
                                                                     setQuickEditSource(rate.source ?? '')
                                                                     setQuickEditError(null)
                                                                 }}
-                                                                className="h-10 min-w-0 flex-1 rounded-xl border-saffron/35 bg-saffron-soft/55 px-3 text-sm text-saffron-deep shadow-none hover:border-saffron hover:bg-saffron-soft hover:text-saffron-deep cursor-pointer"
+                                                                className="h-10 min-w-0 flex-1 cursor-pointer rounded-xl border-hairline bg-surface px-3 text-sm text-ink shadow-none hover:border-hairline-strong hover:bg-surface-soft hover:text-ink"
                                                             >
                                                                 <Pencil className="h-4 w-4" /> <span className="truncate">{tx('Edit rate')}</span>
                                                             </Button>
@@ -2285,6 +2282,9 @@ export default function RatesClient({
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+            <div className="rail-inline-actions">
+                <ArchivePolicyNotice />
+            </div>
             </div>
 
             {/* Keep viewport-positioned review controls outside the animated route wrapper. */}

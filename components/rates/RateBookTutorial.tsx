@@ -5,7 +5,10 @@ import { createPortal } from 'react-dom'
 import { dismissRatebookTutorial } from '@/app/(dashboard)/owner/rates/tutorial-actions'
 import { useTranslation } from '@/lib/i18n/context'
 import { rateBookTutorialCopy, type RatebookTutorialField } from '@/lib/i18n/rate-book-tutorial'
+import { ChevronDown, CircleHelp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { railIcon, railSurface } from '@/components/ui/rail'
+import { cn } from '@/lib/utils'
 import { findTourTarget, isTourTargetVisible } from '@/lib/tutorial-target'
 import { useMobileTour } from '@/hooks/use-mobile-tour'
 import { useTourViewportLock } from '@/hooks/use-tour-viewport-lock'
@@ -71,11 +74,12 @@ export function RateBookHelp() {
     const { language, tx } = useTranslation()
     const copy = rateBookTutorialCopy[language] ?? rateBookTutorialCopy.en
     return (
-        <details data-i18n-skip="true" lang={language} className="group rounded-2xl border border-hairline/80 bg-surface/95 p-3.5 sm:p-4 text-xs shadow-[var(--shadow-card)] backdrop-blur-sm transition-all">
-            <summary className="cursor-pointer font-bold text-ink select-none flex items-center justify-between gap-2">
-                <span>{copy.helpTitle}</span>
+        <details data-i18n-skip="true" lang={language} className={cn(railSurface, 'group text-xs')}>
+            <summary className="flex min-h-11 cursor-pointer select-none list-none items-center justify-between gap-2.5 px-3.5 py-2.5 text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden">
+                <span className="flex min-w-0 items-center gap-2.5"><CircleHelp className={railIcon} aria-hidden="true" /><span className="min-w-0">{copy.helpTitle}</span></span>
+                <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" />
             </summary>
-            <div className="mt-3 max-h-[35vh] space-y-2.5 overflow-y-auto pr-1">
+            <div className="max-h-[35vh] space-y-2.5 overflow-y-auto border-t border-hairline px-3.5 py-3">
                 {RATE_BOOK_HELP_FIELDS.map(field => (
                     <details key={field} className="rounded-xl border border-hairline/60 bg-surface-soft/60 p-2.5 text-xs">
                         <summary className="cursor-pointer font-semibold text-ink">{formatRateBookTourText(copy.fields[field].title, tx)}</summary>

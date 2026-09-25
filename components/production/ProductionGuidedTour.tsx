@@ -2,7 +2,10 @@
 
 import { useRef, useState, type ReactNode } from 'react'
 import { usePathname } from 'next/navigation'
+import { ChevronRight, ListChecks } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { railButton, railIcon } from '@/components/ui/rail'
+import { cn } from '@/lib/utils'
 import { useTranslation } from '@/lib/i18n/context'
 import { productionTutorialCopy } from '@/lib/i18n/production-tutorial'
 import { TourInvitation } from '@/components/tours/TourInvitation'
@@ -43,8 +46,8 @@ export default function ProductionGuidedTour({ userId, orgId, userMetadata, chil
                 />
                 <Button
                     type="button"
-                    variant="ghost"
-                    className="mt-1 h-auto min-h-11 w-full whitespace-normal text-left text-xs text-muted-foreground hover:text-ink"
+                    variant="outline"
+                    className={cn(railButton, 'mt-2 h-auto whitespace-normal')}
                     data-tour-control="production-details"
                     onClick={event => {
                         returnFocus.current = event.currentTarget
@@ -52,7 +55,11 @@ export default function ProductionGuidedTour({ userId, orgId, userMetadata, chil
                         setStep(productionTourDetailSteps[0])
                     }}
                 >
-                    {copy.details}
+                    <span className="flex min-w-0 items-center gap-2.5">
+                        <ListChecks className={railIcon} aria-hidden="true" />
+                        <span className="min-w-0">{copy.details}</span>
+                    </span>
+                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
                 </Button>
             </div>
         </aside>}
