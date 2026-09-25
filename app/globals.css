@@ -1010,7 +1010,7 @@
     .workers-reference-rail {
       position: fixed;
       top: 6.5rem;
-      bottom: 8rem;
+      bottom: 1.5rem;
       right: 1rem;
       z-index: 30;
       display: flex;

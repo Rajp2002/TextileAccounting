@@ -831,13 +831,7 @@ export default function BaseProductionClient({
                             })}
                         </div>
                     )}
-                    <details className="group rounded-xl border border-hairline bg-surface/90 shadow-xs">
-                        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-body outline-none transition-colors hover:bg-surface-soft/50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-saffron [&::-webkit-details-marker]:hidden">
-                            <span className="flex items-center gap-2.5"><ReceiptText className="h-4 w-4 text-saffron-deep" /> How pay is calculated</span>
-                            <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
-                        </summary>
-                        <p className="border-t border-hairline px-4 py-3 text-xs leading-relaxed text-body sm:text-sm">Piece-rate pay uses saved machine rates. Fixed salaries accrue by calendar day, including joining/leaving dates and effective-dated salary changes. Recovery is capped at the lower of the outstanding advance balance or 50% of gross pay; any remaining balance carries forward.</p>
-                    </details>
+                    <p className="sr-only">Piece-rate pay uses saved machine rates. Fixed salaries accrue by calendar day, including joining/leaving dates and effective-dated salary changes. Recovery is capped at the lower of the outstanding advance balance or 50% of gross pay; any remaining balance carries forward.</p>
                 </div>}
             </div>}
 

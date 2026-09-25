@@ -20,6 +20,23 @@ export interface TourInvitationProps {
     guideCard?: { title: string; actionLabel: string }
 }
 
+function getGuideTitle(tourId: TourId, lang: 'en' | 'gu' | 'hi'): string {
+    const name = tourInvitationCopy[lang]?.tourNames[tourId] || 'Tour'
+    switch (lang) {
+        case 'gu': return `${name} માર્ગદર્શિકા`
+        case 'hi': return `${name} मार्गदर्शिका`
+        default: return `${name} guide`
+    }
+}
+
+function getGuideAction(lang: 'en' | 'gu' | 'hi'): string {
+    switch (lang) {
+        case 'gu': return 'માર્ગદર્શિકા શરૂ કરો'
+        case 'hi': return 'मार्गदर्शिका शुरू करें'
+        default: return 'Start guide'
+    }
+}
+
 export function TourInvitation({
     tourId,
     userId,
@@ -61,27 +78,41 @@ export function TourInvitation({
     const tourName = copy.tourNames[tourId] || 'Tour'
     const tourAriaLabel = copy.tourAriaLabel.replace('{name}', tourName)
 
-    if (guideCard) {
+    const effectiveGuideCard = guideCard ?? (align === 'full' ? {
+        title: getGuideTitle(tourId, language),
+        actionLabel: getGuideAction(language),
+    } : null)
+
+    if (effectiveGuideCard) {
         return (
             <section
                 data-testid={dataTestId ?? `tour-guide-${tourId}`}
                 data-tour-id={tourId}
-                className={`rounded-2xl border border-amber-200/90 bg-amber-50/75 p-3.5 text-slate-800 shadow-[var(--shadow-card)] ${className}`}
+                className={`rounded-2xl border border-amber-200/90 bg-gradient-to-b from-amber-50/95 via-amber-50/80 to-amber-100/40 p-4 text-slate-800 shadow-[var(--shadow-card)] backdrop-blur-sm transition-all hover:border-amber-300 hover:shadow-md ${className}`}
             >
-                <h2 className="text-sm font-semibold leading-tight">{guideCard.title}</h2>
-                <p id={benefitId} className="mt-1.5 text-xs leading-relaxed text-slate-700">{copy.benefits[tourId]}</p>
+                <div className="flex items-center gap-2.5">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-amber-200/80 text-amber-900 shadow-2xs border border-amber-300/60">
+                        <Compass className="h-4 w-4" aria-hidden="true" />
+                    </span>
+                    <h2 className="text-sm font-bold tracking-tight text-slate-900 leading-tight">
+                        {effectiveGuideCard.title}
+                    </h2>
+                </div>
+                <p id={benefitId} className="mt-2 text-xs leading-relaxed text-slate-700/95 font-medium">
+                    {copy.benefits[tourId]}
+                </p>
                 <button
                     ref={launcherRef}
                     type="button"
                     onClick={() => void handleLaunch()}
                     disabled={isStarting}
                     aria-describedby={benefitId}
-                    aria-label={`${guideCard.actionLabel} · ${tourAriaLabel}`}
+                    aria-label={`${effectiveGuideCard.actionLabel} · ${tourAriaLabel}`}
                     data-tour-control={presentation === 'invitation' ? 'take-tour' : 'quiet-tour'}
-                    className={`mt-3 inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-lg bg-amber-500 px-3 text-xs font-bold text-amber-950 shadow-xs transition-colors hover:bg-amber-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron disabled:opacity-50 ${isHaloActive ? 'tour-halo-active' : ''}`}
+                    className={`mt-3.5 inline-flex min-h-11 min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 text-xs sm:text-[0.8125rem] font-bold text-amber-950 shadow-xs transition-all hover:bg-amber-400 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron active:scale-[0.99] disabled:opacity-50 ${isHaloActive ? 'tour-halo-active' : ''}`}
                 >
-                    {isStarting ? copy.loading : guideCard.actionLabel}
-                    <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                    <span>{isStarting ? copy.loading : effectiveGuideCard.actionLabel}</span>
+                    <Sparkles className="h-4 w-4 text-amber-950" aria-hidden="true" />
                 </button>
             </section>
         )

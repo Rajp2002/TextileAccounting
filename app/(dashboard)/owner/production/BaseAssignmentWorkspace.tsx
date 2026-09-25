@@ -9,11 +9,12 @@ import { configurationTourSteps, configurationTourView, makeConfigurationTourExa
 import { useCallback, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { ArrowUpRight, Check, Link2, Loader2, Moon, Plus, Search, Sun, Unlink, Users, Wrench } from 'lucide-react'
+import { ArrowUpRight, Check, CircleHelp, Link2, Loader2, Moon, Plus, Search, Sparkles, Sun, Unlink, Users, Wrench } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
@@ -400,16 +401,61 @@ export default function BaseAssignmentWorkspace({
                         }}
                     />
                 </div>
-                <details data-i18n-skip="true" lang={language} className="mt-3 rounded-xl border border-hairline bg-surface p-3 text-sm">
-                    <summary className="cursor-pointer font-semibold text-ink">{tourCopy.helpLabel}</summary>
-                    <p className="mt-2 text-xs text-body">{tourCopy.helpIntro}</p>
-                    <div className="mt-2 space-y-2">
-                        {configurationHelpTopics.map(topic => <details key={topic} className="border-t border-hairline pt-2">
-                            <summary className="cursor-pointer text-sm font-medium text-ink">{tourCopy.help[topic][0]}</summary>
-                            <p className="mt-2 text-xs leading-relaxed text-body">{tourCopy.help[topic][1]}</p>
-                        </details>)}
+                <div data-i18n-skip="true" lang={language} className="mt-3">
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <button
+                                type="button"
+                                className="estimator-touch-target group flex w-full cursor-pointer items-center justify-between gap-2.5 rounded-2xl border border-hairline/80 bg-surface/95 px-4 py-3 min-h-[48px] text-left text-sm font-semibold text-ink shadow-xs transition-all duration-150 hover:border-amber-300 hover:bg-amber-50/40 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron active:scale-[0.99]"
+                                aria-label={tourCopy.helpLabel}
+                            >
+                                <div className="flex min-w-0 items-center gap-2.5">
+                                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-amber-100/80 text-amber-700 transition-colors group-hover:bg-amber-200/80">
+                                        <CircleHelp className="h-4 w-4" aria-hidden="true" />
+                                    </span>
+                                    <span className="font-bold text-slate-900 text-xs truncate">{tourCopy.helpLabel}</span>
+                                </div>
+                                <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 transition-colors group-hover:bg-amber-100 group-hover:text-amber-800">
+                                    <Sparkles className="h-3 w-3" aria-hidden="true" />
+                                    <span>{configurationHelpTopics.length}</span>
+                                </span>
+                            </button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-y-auto rounded-2xl border border-hairline bg-surface p-6 shadow-2xl">
+                            <DialogHeader>
+                                <div className="flex items-center gap-3">
+                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700 shadow-xs border border-amber-200/60">
+                                        <CircleHelp className="h-5 w-5" aria-hidden="true" />
+                                    </div>
+                                    <div>
+                                        <DialogTitle className="text-xl font-bold text-ink">
+                                            {tourCopy.helpLabel}
+                                        </DialogTitle>
+                                        <DialogDescription className="mt-1 text-sm text-body">
+                                            {tourCopy.helpIntro}
+                                        </DialogDescription>
+                                    </div>
+                                </div>
+                            </DialogHeader>
+                            <div className="mt-4 space-y-3 divide-y divide-hairline">
+                                {configurationHelpTopics.map(topic => (
+                                    <div key={topic} className="pt-3 first:pt-0">
+                                        <h3 className="text-sm font-semibold text-ink">{tourCopy.help[topic][0]}</h3>
+                                        <p className="mt-1 text-xs sm:text-sm leading-relaxed text-body">{tourCopy.help[topic][1]}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </DialogContent>
+                    </Dialog>
+                    <div className="sr-only" aria-hidden="true">
+                        {configurationHelpTopics.map(topic => (
+                            <div key={`sr-${topic}`}>
+                                <span>{tourCopy.help[topic][0]}</span>
+                                <span>{tourCopy.help[topic][1]}</span>
+                            </div>
+                        ))}
                     </div>
-                </details>
+                </div>
             </aside>
             <div className="min-w-0 space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-hairline/70 bg-surface/80 p-2 shadow-xs sm:px-3">

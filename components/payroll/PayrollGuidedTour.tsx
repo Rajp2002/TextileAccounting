@@ -1,8 +1,9 @@
 'use client'
 
 import { useRef, useState, type ReactNode } from 'react'
+import { ChevronRight, HelpCircle, ReceiptText } from 'lucide-react'
 import { TourInvitation } from '@/components/tours/TourInvitation'
-import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { useTranslation } from '@/lib/i18n/context'
 import { payrollTutorialCopy } from '@/lib/i18n/payroll-tutorial'
 import PayrollTutorial from '@/components/tours/PayrollTutorial'
@@ -42,19 +43,78 @@ export default function PayrollGuidedTour({ variant, userId, orgId, userMetadata
                     className="w-full estimator-touch-target border-saffron-soft/90 bg-saffron-soft/75 text-saffron-deep shadow-xs hover:bg-saffron-soft"
                     onLaunch={() => launch('core')}
                 />
-                <div data-i18n-skip="true" lang={language} className="mt-1">
-                    <Button
+                <div data-i18n-skip="true" lang={language} className="mt-3">
+                    <button
                         type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="min-h-9 w-full justify-start rounded-lg px-3 text-xs font-medium text-body hover:bg-surface/70 hover:text-ink"
                         data-tour-control="payroll-help"
                         aria-describedby="payroll-help-description"
                         onClick={() => launch('help')}
+                        className="estimator-touch-target group flex w-full cursor-pointer items-center justify-between gap-2.5 rounded-2xl border border-hairline/80 bg-surface/95 px-4 py-3 min-h-[48px] text-left text-sm font-semibold text-ink shadow-xs transition-all duration-150 hover:border-saffron-soft hover:bg-saffron-soft/30 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron active:scale-[0.99]"
                     >
-                        {copy.help}
-                    </Button>
+                        <div className="flex min-w-0 items-center gap-2.5">
+                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-saffron-soft text-saffron-deep transition-colors group-hover:bg-saffron-soft/80">
+                                <HelpCircle className="h-4 w-4" aria-hidden="true" />
+                            </span>
+                            <span className="truncate text-xs font-bold text-slate-900">{copy.help}</span>
+                        </div>
+                        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+                    </button>
                     <p id="payroll-help-description" className="sr-only">{copy.helpDescription[variant]}</p>
+                </div>
+                <div className="mt-3">
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <button
+                                type="button"
+                                className="estimator-touch-target group flex w-full cursor-pointer items-center justify-between gap-2.5 rounded-2xl border border-hairline/80 bg-surface/95 px-4 py-3 min-h-[48px] text-left text-sm font-semibold text-ink shadow-xs transition-all duration-150 hover:border-saffron hover:bg-saffron-soft/20 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron active:scale-[0.99]"
+                            >
+                                <div className="flex min-w-0 items-center gap-2.5">
+                                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-saffron-soft text-saffron-deep transition-colors group-hover:bg-saffron-soft/80">
+                                        <ReceiptText className="h-4 w-4" aria-hidden="true" />
+                                    </span>
+                                    <span className="font-bold text-slate-900 text-xs truncate">How pay is calculated</span>
+                                </div>
+                                <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+                            </button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-lg rounded-2xl border border-hairline bg-surface p-6 shadow-2xl">
+                            <DialogHeader>
+                                <div className="flex items-center gap-3">
+                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-saffron-soft text-saffron-deep shadow-xs border border-saffron/20">
+                                        <ReceiptText className="h-5 w-5" aria-hidden="true" />
+                                    </div>
+                                    <div>
+                                        <DialogTitle className="text-xl font-bold text-ink">
+                                            How pay is calculated
+                                        </DialogTitle>
+                                        <DialogDescription className="text-sm text-body">
+                                            Payroll settlement calculation and advance recovery rules
+                                        </DialogDescription>
+                                    </div>
+                                </div>
+                            </DialogHeader>
+                            <div className="mt-4 space-y-3.5">
+                                <div className="rounded-xl border border-hairline/70 bg-surface-soft/60 p-3.5">
+                                    <h4 className="text-xs font-bold uppercase tracking-wider text-saffron-deep">1. Piece-rate earnings</h4>
+                                    <p className="mt-1 text-sm leading-relaxed text-body">
+                                        Piece-rate pay uses saved machine rates multiplied by verified metres produced per machine.
+                                    </p>
+                                </div>
+                                <div className="rounded-xl border border-hairline/70 bg-surface-soft/60 p-3.5">
+                                    <h4 className="text-xs font-bold uppercase tracking-wider text-saffron-deep">2. Fixed salaries</h4>
+                                    <p className="mt-1 text-sm leading-relaxed text-body">
+                                        Fixed salaries accrue by calendar day, accounting for joining/leaving dates and effective-dated salary adjustments.
+                                    </p>
+                                </div>
+                                <div className="rounded-xl border border-hairline/70 bg-surface-soft/60 p-3.5">
+                                    <h4 className="text-xs font-bold uppercase tracking-wider text-saffron-deep">3. Advance recovery</h4>
+                                    <p className="mt-1 text-sm leading-relaxed text-body">
+                                        Recovery is capped at the lower of the outstanding advance balance or 50% of gross pay; any remaining balance carries forward to the next pay cycle.
+                                    </p>
+                                </div>
+                            </div>
+                        </DialogContent>
+                    </Dialog>
                 </div>
             </div>
         </aside>
