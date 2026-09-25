@@ -71,13 +71,15 @@ export function RateBookHelp() {
     const { language, tx } = useTranslation()
     const copy = rateBookTutorialCopy[language] ?? rateBookTutorialCopy.en
     return (
-        <details data-i18n-skip="true" lang={language} className="rounded-xl border border-hairline bg-surface p-4 text-sm">
-            <summary className="cursor-pointer font-semibold text-ink">{copy.helpTitle}</summary>
-            <div className="mt-3 space-y-3">
+        <details data-i18n-skip="true" lang={language} className="group rounded-2xl border border-hairline/80 bg-surface/95 p-3.5 sm:p-4 text-xs shadow-[var(--shadow-card)] backdrop-blur-sm transition-all">
+            <summary className="cursor-pointer font-bold text-ink select-none flex items-center justify-between gap-2">
+                <span>{copy.helpTitle}</span>
+            </summary>
+            <div className="mt-3 max-h-[35vh] space-y-2.5 overflow-y-auto pr-1">
                 {RATE_BOOK_HELP_FIELDS.map(field => (
-                    <details key={field} className="rounded-lg bg-surface-soft p-3">
-                        <summary className="cursor-pointer font-medium text-ink">{formatRateBookTourText(copy.fields[field].title, tx)}</summary>
-                        <p className="mt-2 text-sm leading-relaxed text-body">{formatRateBookTourText(copy.fields[field].description, tx)}</p>
+                    <details key={field} className="rounded-xl border border-hairline/60 bg-surface-soft/60 p-2.5 text-xs">
+                        <summary className="cursor-pointer font-semibold text-ink">{formatRateBookTourText(copy.fields[field].title, tx)}</summary>
+                        <p className="mt-1.5 leading-relaxed text-body">{formatRateBookTourText(copy.fields[field].description, tx)}</p>
                     </details>
                 ))}
             </div>

@@ -651,7 +651,7 @@ export default function BaseDailyProductionSheet({
             <aside aria-label="Daily sheet controls" className="production-daily-sheet-rail flex min-w-0 flex-col gap-4">
                 <div className="rounded-2xl border border-hairline/80 bg-surface/95 p-4 shadow-[var(--shadow-card)] backdrop-blur-sm 2xl:p-5">
                     <p className="mb-4 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Shift details</p>
-                    <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end min-[1380px]:grid-cols-1">
+                    <div className="grid grid-cols-1 gap-3">
                         <div className="space-y-1.5">
                             <Label htmlFor="base-daily-date" className="text-xs font-bold text-body">Date</Label>
                             <Input id="base-daily-date" type="date" max={initialData.today} value={productionDate} disabled={isSaving} onChange={(event) => changeSelection(event.target.value, shift)} className="h-10 w-full rounded-xl border-hairline bg-surface text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom" />
@@ -666,7 +666,7 @@ export default function BaseDailyProductionSheet({
                                 </SelectContent>
                             </Select>
                         </div>
-                        <Button variant="outline" className="h-10 rounded-xl border-hairline bg-surface font-semibold shadow-xs hover:bg-surface-soft min-[1380px]:w-full" onClick={printCollectionSheet} disabled={machineContexts.length === 0}>
+                        <Button variant="outline" className="h-10 w-full rounded-xl border-hairline bg-surface font-semibold shadow-xs hover:bg-surface-soft mt-1" onClick={printCollectionSheet} disabled={machineContexts.length === 0}>
                             <Printer className="h-4 w-4" /> Print sheet
                         </Button>
                     </div>
@@ -686,6 +686,27 @@ export default function BaseDailyProductionSheet({
                         <div className="pl-3"><dt className="text-xs text-muted-foreground">Production</dt><dd className="mt-1 text-base font-bold tabular-nums text-ink">{formatMeters(summary.total_meters)}</dd></div>
                     </dl>
                 </div>
+
+                {(assignedWorkers.length > 0 || unassignedWorkers.length > 0) && (
+                    <button
+                        type="button"
+                        aria-expanded={isPayrollExpanded}
+                        aria-controls="base-payroll-rollup"
+                        onClick={() => setIsPayrollExpanded(true)}
+                        className="group w-full flex items-center justify-between gap-3 rounded-2xl border border-hairline/80 bg-surface/95 p-4 text-left shadow-[var(--shadow-card)] backdrop-blur-sm transition-all hover:border-loom/40 hover:bg-surface-soft/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-loom"
+                    >
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-loom/10 text-loom group-hover:bg-loom group-hover:text-white transition-colors">
+                            <Users className="h-5 w-5" />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                            <span className="block text-sm font-bold text-ink">Worker review</span>
+                            <span className="block text-xs text-body truncate">
+                                {assignedWorkers.length} {assignedWorkers.length === 1 ? 'worker' : 'workers'} · Check totals & pay
+                            </span>
+                        </span>
+                        <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                    </button>
+                )}
 
                 <button type="button" onClick={onOpenHistory} className="production-daily-sheet-history-desktop group mt-auto w-full items-center gap-3 rounded-2xl border border-hairline/80 bg-surface/95 p-4 text-left shadow-[var(--shadow-card)] backdrop-blur-sm transition-colors hover:border-saffron hover:bg-saffron-soft/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron">
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-saffron-soft text-saffron-deep"><Clock3 className="h-5 w-5" /></span>
@@ -835,73 +856,81 @@ export default function BaseDailyProductionSheet({
                         </CardContent>
                     </Card>
 
-                    {(assignedWorkers.length > 0 || unassignedWorkers.length > 0) && <Card className="gap-0 overflow-hidden rounded-2xl border border-hairline bg-surface p-0 shadow-xs">
-                        <CardHeader className="border-b border-hairline bg-surface-soft/30 p-0">
-                            <div className="flex items-center justify-between gap-3 p-3 sm:p-4">
-                                <div className="min-w-0">
-                                    <CardTitle className="text-sm font-bold text-ink">Worker review</CardTitle>
-                                    <CardDescription className="mt-0.5 text-xs text-muted-foreground">Check totals and pay, or mark a worker zero or absent.</CardDescription>
+                    {(assignedWorkers.length > 0 || unassignedWorkers.length > 0) && (
+                        <Dialog open={isPayrollExpanded} onOpenChange={setIsPayrollExpanded}>
+                            <DialogContent className="sm:max-w-3xl max-h-[85vh] flex flex-col p-0 overflow-hidden rounded-2xl border-hairline bg-surface shadow-2xl">
+                                <DialogHeader className="border-b border-hairline bg-surface-soft/40 p-5">
+                                    <div className="flex items-center gap-3">
+                                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-loom/10 text-loom">
+                                            <Users className="h-5 w-5" />
+                                        </span>
+                                        <div>
+                                            <DialogTitle className="text-lg font-bold text-ink">Worker review</DialogTitle>
+                                            <DialogDescription className="text-xs text-muted-foreground">
+                                                Check totals and pay, or mark a worker zero or absent.
+                                            </DialogDescription>
+                                        </div>
+                                    </div>
+                                </DialogHeader>
+                                <div id="base-payroll-rollup" className={`${isPayrollExpanded ? 'block' : 'hidden'} divide-y divide-hairline overflow-y-auto p-0 flex-1 max-h-[60vh]`}>
+                                    {assignedWorkers.map((worker) => {
+                                        const row = getRow(worker.id)
+                                        const contexts = contextsByWorker.get(worker.id) ?? []
+                                        const rowTotal = getRowTotal(worker.id)
+                                        const rowGrossPay = getRowGrossPay(worker.id)
+                                        return (
+                                            <div key={worker.id} className="grid gap-3 px-4 py-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_150px_160px] md:items-center">
+                                                <div className="min-w-0">
+                                                    <p className="font-bold text-ink">{worker.name}{!worker.is_active && <span className="ml-1 text-xs font-normal text-muted-foreground">· inactive</span>}</p>
+                                                    <p className="text-xs text-muted-foreground">{contexts.length > 0 ? `${contexts.length} machine${contexts.length === 1 ? '' : 's'} · weaver rates applied` : 'No current machine assignment'}</p>
+                                                </div>
+                                                <div className="text-sm text-body">{contexts.length > 0 ? contexts.map((context) => <span key={context.machineId} className="mr-1 inline-flex"><Badge variant="outline" className="border-hairline bg-surface text-xs font-semibold">{context.machineLabel}</Badge></span>) : <span className="text-xs font-semibold text-warning">Unassigned worker entry</span>}</div>
+                                                <Select value={row.status} onValueChange={(value) => handleStatusChange(worker.id, value as BaseDailyProductionStatus)} disabled={areInputsDisabled || settledWorkerIds.has(worker.id)}>
+                                                    <SelectTrigger className="h-10 w-full rounded-xl border-hairline bg-surface text-xs font-bold text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom" aria-label={`${worker.name} status`}><SelectValue /></SelectTrigger>
+                                                    <SelectContent className="rounded-xl border-hairline bg-surface shadow-lg">
+                                                        <SelectItem value="blank">Not entered</SelectItem>
+                                                        <SelectItem value="entered">Produced</SelectItem>
+                                                        <SelectItem value="zero">Zero output</SelectItem>
+                                                        <SelectItem value="absent">Absent / no production</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                                <div className="text-left md:text-right">
+                                                    <p className="text-sm sm:text-base font-black text-ink">{formatMeters(rowTotal)}</p>
+                                                    <p className="text-xs font-semibold text-muted-foreground">{formatINR(rowGrossPay)}</p>
+                                                </div>
+                                                {row.savedUnallocatedMeters !== null && <div className="md:col-span-4 rounded-xl border border-amber-200 bg-amber-50/50 px-3 py-2 text-xs text-body"><AlertTriangle className="mr-1 inline h-3.5 w-3.5 text-warning" /> Previously saved as {formatMeters(row.savedUnallocatedMeters)} without an exact machine split. Enter the machine allocation before saving this correction.</div>}
+                                            </div>
+                                        )
+                                    })}
+                                    {unassignedWorkers.map((worker) => {
+                                        const row = getRow(worker.id)
+                                        return (
+                                            <div key={`${worker.id}-unassigned`} className="grid gap-3 bg-amber-50/30 px-4 py-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_150px_160px] md:items-center">
+                                                <div><p className="font-bold text-ink">{worker.name}</p><p className="text-xs text-muted-foreground">No active machine assignment · no weaver rate</p></div>
+                                                <div className="flex items-start gap-2 text-xs text-body"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />Assign a machine and production job before recording output so pay and job reporting are allocated correctly.</div>
+                                                <span className="text-xs font-semibold text-muted-foreground">{toWorkerStatusLabel(row.status)}</span>
+                                                <Input
+                                                    aria-label={`${worker.name} unassigned metres`}
+                                                    type="number"
+                                                    min="0.01"
+                                                    step="0.01"
+                                                    inputMode="decimal"
+                                                    placeholder="Metres"
+                                                    value={row.meters}
+                                                    disabled={row.status === 'zero' || row.status === 'absent' || areInputsDisabled || settledWorkerIds.has(worker.id)}
+                                                    onChange={(event) => handleUnassignedMetersChange(worker.id, event.target.value)}
+                                                    className="h-10 rounded-xl border-hairline bg-surface text-right text-sm font-bold tabular-nums text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom"
+                                                />
+                                            </div>
+                                        )
+                                    })}
                                 </div>
-                                <Button type="button" variant="ghost" size="sm" aria-expanded={isPayrollExpanded} aria-controls="base-payroll-rollup" onClick={() => setIsPayrollExpanded((current) => !current)} className="h-8 shrink-0 rounded-xl border border-hairline bg-surface text-xs font-semibold shadow-xs hover:bg-surface-soft">
-                                    {isPayrollExpanded ? 'Hide' : 'Review'}
-                                    <ChevronDown className={`h-4 w-4 transition-transform ${isPayrollExpanded ? 'rotate-180' : ''}`} />
-                                </Button>
-                            </div>
-                        </CardHeader>
-                        <CardContent id="base-payroll-rollup" className={`${isPayrollExpanded ? 'block' : 'hidden'} divide-y divide-hairline p-0`}>
-                            {assignedWorkers.map((worker) => {
-                                const row = getRow(worker.id)
-                                const contexts = contextsByWorker.get(worker.id) ?? []
-                                const rowTotal = getRowTotal(worker.id)
-                                const rowGrossPay = getRowGrossPay(worker.id)
-                                return (
-                                    <div key={worker.id} className="grid gap-3 px-4 py-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_150px_160px] md:items-center">
-                                        <div className="min-w-0">
-                                            <p className="font-bold text-ink">{worker.name}{!worker.is_active && <span className="ml-1 text-xs font-normal text-muted-foreground">· inactive</span>}</p>
-                                            <p className="text-xs text-muted-foreground">{contexts.length > 0 ? `${contexts.length} machine${contexts.length === 1 ? '' : 's'} · weaver rates applied` : 'No current machine assignment'}</p>
-                                        </div>
-                                        <div className="text-sm text-body">{contexts.length > 0 ? contexts.map((context) => <span key={context.machineId} className="mr-1 inline-flex"><Badge variant="outline" className="border-hairline bg-surface text-xs font-semibold">{context.machineLabel}</Badge></span>) : <span className="text-xs font-semibold text-warning">Unassigned worker entry</span>}</div>
-                                        <Select value={row.status} onValueChange={(value) => handleStatusChange(worker.id, value as BaseDailyProductionStatus)} disabled={areInputsDisabled || settledWorkerIds.has(worker.id)}>
-                                            <SelectTrigger className="h-10 w-full rounded-xl border-hairline bg-surface text-xs font-bold text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom" aria-label={`${worker.name} status`}><SelectValue /></SelectTrigger>
-                                            <SelectContent className="rounded-xl border-hairline bg-surface shadow-lg">
-                                                <SelectItem value="blank">Not entered</SelectItem>
-                                                <SelectItem value="entered">Produced</SelectItem>
-                                                <SelectItem value="zero">Zero output</SelectItem>
-                                                <SelectItem value="absent">Absent / no production</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                        <div className="text-left md:text-right">
-                                            <p className="text-sm sm:text-base font-black text-ink">{formatMeters(rowTotal)}</p>
-                                            <p className="text-xs font-semibold text-muted-foreground">{formatINR(rowGrossPay)}</p>
-                                        </div>
-                                        {row.savedUnallocatedMeters !== null && <div className="md:col-span-4 rounded-xl border border-amber-200 bg-amber-50/50 px-3 py-2 text-xs text-body"><AlertTriangle className="mr-1 inline h-3.5 w-3.5 text-warning" /> Previously saved as {formatMeters(row.savedUnallocatedMeters)} without an exact machine split. Enter the machine allocation before saving this correction.</div>}
-                                    </div>
-                                )
-                            })}
-                            {unassignedWorkers.map((worker) => {
-                                const row = getRow(worker.id)
-                                return (
-                                    <div key={`${worker.id}-unassigned`} className="grid gap-3 bg-amber-50/30 px-4 py-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_150px_160px] md:items-center">
-                                        <div><p className="font-bold text-ink">{worker.name}</p><p className="text-xs text-muted-foreground">No active machine assignment · no weaver rate</p></div>
-                                        <div className="flex items-start gap-2 text-xs text-body"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />Assign a machine and production job before recording output so pay and job reporting are allocated correctly.</div>
-                                        <span className="text-xs font-semibold text-muted-foreground">{toWorkerStatusLabel(row.status)}</span>
-                                        <Input
-                                            aria-label={`${worker.name} unassigned metres`}
-                                            type="number"
-                                            min="0.01"
-                                            step="0.01"
-                                            inputMode="decimal"
-                                            placeholder="Metres"
-                                            value={row.meters}
-                                            disabled={row.status === 'zero' || row.status === 'absent' || areInputsDisabled || settledWorkerIds.has(worker.id)}
-                                            onChange={(event) => handleUnassignedMetersChange(worker.id, event.target.value)}
-                                            className="h-10 rounded-xl border-hairline bg-surface text-right text-sm font-bold tabular-nums text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom"
-                                        />
-                                    </div>
-                                )
-                            })}
-                        </CardContent>
-                    </Card>}
+                                <DialogFooter className="border-t border-hairline bg-surface-soft/20 p-4">
+                                    <Button onClick={() => setIsPayrollExpanded(false)} className="rounded-xl bg-loom text-white font-semibold">Done</Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
+                    )}
                 </>
             )}
             </div>

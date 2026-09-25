@@ -173,15 +173,15 @@ export function SavedCostingsTutorial({step, onStepChange, onComplete, free = fa
       className="border-amber-200/90 bg-amber-50/75 hover:bg-amber-100/70 shadow-xs"
     />
     <div data-i18n-skip="true" lang={language} className="mt-2 space-y-2">
-      {!free && <Button type="button" variant="outline" className="h-auto min-h-11 w-full whitespace-normal text-left text-xs" onClick={event => {
+      {!free && <Button type="button" variant="outline" className="h-auto min-h-11 w-full rounded-2xl border-amber-200/90 bg-amber-50/75 p-3 text-left text-xs font-bold text-slate-900 shadow-xs transition-all duration-150 hover:border-amber-300 hover:bg-amber-100/70 hover:shadow-sm active:scale-[0.99] whitespace-normal" onClick={event => {
        returnFocus.current = event.currentTarget
        setComparisonTour(true)
        onStepChange(comparisonCostingSteps[0])
       }}>{copy.compare}</Button>}
-      <details className="rounded-lg border border-hairline bg-surface p-3 text-xs">
-       <summary className="cursor-pointer font-semibold">{copy.help}</summary>
-       <div className="mt-3 max-h-[50dvh] space-y-4 overflow-y-auto">{helpFields.map(([title, description]) => <section key={title}>
-        <h3 className="font-semibold">{title}</h3><p className="mt-1 leading-relaxed">{description}</p>
+      <details className="rounded-2xl border border-hairline/80 bg-surface/95 p-3.5 text-xs shadow-[var(--shadow-card)] backdrop-blur-sm">
+       <summary className="cursor-pointer font-bold text-ink select-none">{copy.help}</summary>
+       <div className="mt-3 max-h-[40dvh] space-y-3 overflow-y-auto pr-1">{helpFields.map(([title, description]) => <section key={title}>
+        <h3 className="font-semibold text-ink">{title}</h3><p className="mt-1 leading-relaxed text-body">{description}</p>
        </section>)}</div>
       </details>
     </div>

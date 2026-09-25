@@ -650,6 +650,20 @@
     width: 100%;
   }
 
+  .stock-workspace-shell {
+    width: 100%;
+  }
+
+  .stock-movement-rail-desktop {
+    display: none;
+  }
+
+  .stock-movement-rail-mobile {
+    display: block;
+    width: 100%;
+    margin-top: 1.5rem;
+  }
+
   .payroll-period-rail {
     display: flex;
     width: 100%;
@@ -733,6 +747,12 @@
   /* Desktop rails reserve space around the main workspace when room allows. */
   @media (min-width: 1024px) {
     .estimator-workspace-shell {
+      width: min(100%, calc(100vw - 248px - 31rem));
+      max-width: 72rem;
+      margin-inline: auto;
+    }
+
+    .stock-workspace-shell {
       width: min(100%, calc(100vw - 248px - 31rem));
       max-width: 72rem;
       margin-inline: auto;
@@ -823,8 +843,8 @@
     }
 
     .configuration-page-frame {
-      width: min(100%, calc(100vw - 248px - 33rem));
-      max-width: 72rem;
+      width: min(100%, calc(100vw - 248px - 31rem));
+      max-width: 86rem;
       margin-inline: auto;
     }
 
@@ -890,8 +910,8 @@
 
   @media (min-width: 1380px) {
     .production-daily-sheet-workspace {
-      width: min(100%, calc(100vw - 248px - 31rem));
-      max-width: 72rem;
+      width: min(100%, calc(100vw - 248px - 17rem));
+      max-width: 86rem;
       margin-inline: auto;
     }
 
@@ -1088,7 +1108,8 @@
     .payroll-workspace-shell,
     .workers-workspace-shell,
     .machines-workspace-shell,
-    .dispatch-workspace-shell {
+    .dispatch-workspace-shell,
+    .stock-workspace-shell {
       width: min(100%, calc(100vw - 248px - 36rem));
     }
 
@@ -1156,7 +1177,8 @@
     .payroll-workspace-shell,
     .workers-workspace-shell,
     .machines-workspace-shell,
-    .dispatch-workspace-shell {
+    .dispatch-workspace-shell,
+    .stock-workspace-shell {
       width: min(100%, calc(100vw - 248px - 39rem));
     }
 
@@ -1171,7 +1193,8 @@
     }
 
     .production-daily-sheet-workspace {
-      width: min(100%, calc(100vw - 248px - 39rem));
+      width: min(100%, calc(100vw - 248px - 21rem));
+      max-width: 96rem;
     }
 
     .production-daily-sheet-rail {
@@ -1355,6 +1378,10 @@
   }
 
   @media (min-width: 1540px) {
+    .saved-costings-left-rail {
+      display: none;
+    }
+
     .saved-costings-archive-rail-desktop {
       display: block;
       position: fixed;
@@ -1367,6 +1394,33 @@
 
   @media (min-width: 1800px) {
     .saved-costings-archive-rail-desktop {
+      right: 2.5rem;
+      width: 18.5rem;
+    }
+  }
+
+  /* Fabric Stock Movement History desktop pill pinned to the bottom of the right rail */
+  .stock-movement-rail-desktop {
+    display: none;
+  }
+
+  @media (min-width: 1380px) {
+    .stock-movement-rail-desktop {
+      display: block;
+      position: fixed;
+      right: 1.25rem;
+      bottom: 1.5rem;
+      z-index: 30;
+      width: 17rem;
+    }
+
+    .stock-movement-rail-mobile {
+      display: none;
+    }
+  }
+
+  @media (min-width: 1800px) {
+    .stock-movement-rail-desktop {
       right: 2.5rem;
       width: 18.5rem;
     }

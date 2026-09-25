@@ -50,16 +50,16 @@ export function BasePlanFactoryGlossary() {
       <DialogTrigger asChild>
         <button
           type="button"
-          className="estimator-touch-target group flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border border-slate-200/90 bg-white/95 px-4 py-2.5 text-left text-sm font-semibold text-slate-800 shadow-xs transition-all duration-150 hover:border-amber-300 hover:bg-amber-50/40 hover:shadow-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] active:scale-[0.99]"
+          className="estimator-touch-target group flex w-full cursor-pointer items-center justify-between gap-3 rounded-2xl border border-slate-200/90 bg-white/95 px-4 py-3 min-h-[50px] text-left text-sm font-semibold text-slate-800 shadow-xs transition-all duration-150 hover:border-amber-300 hover:bg-amber-50/40 hover:shadow-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] active:scale-[0.99]"
           aria-label={t('base_plan.glossary_title')}
         >
           <div className="flex min-w-0 items-center gap-2.5">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-100/80 text-amber-700 transition-colors group-hover:bg-amber-200/80">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-100/80 text-amber-700 transition-colors group-hover:bg-amber-200/80">
               <BookOpen className="h-4 w-4" aria-hidden="true" />
             </span>
             <span className="truncate font-bold text-slate-900">{t('base_plan.glossary_title')}</span>
           </div>
-          <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 transition-colors group-hover:bg-amber-100 group-hover:text-amber-800">
+          <span className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600 transition-colors group-hover:bg-amber-100 group-hover:text-amber-800">
             <Sparkles className="h-3 w-3" aria-hidden="true" />
             <span>11</span>
           </span>

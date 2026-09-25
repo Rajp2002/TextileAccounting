@@ -5468,11 +5468,6 @@ export default function EstimatorClient({
             />
             <PageHeader
                 title={mode === 'market' ? tx('Market estimate') : tx('Cost estimate')}
-                actions={(
-                    <Button variant="outline" onClick={() => router.push(freeMode ? '/free/costings' : '/owner/quotes')}>
-                        <History className="h-4 w-4" /> {tx('Saved costings')}
-                    </Button>
-                )}
             />
             {freeMode && (
                 <FreeTransactionRecovery

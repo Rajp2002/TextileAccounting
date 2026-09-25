@@ -479,7 +479,12 @@ export default function BaseAssignmentWorkspace({
                         </div>
                         <MachineTypeFilters machineTypes={machineTypes} selected={selectedMachineTypes} onToggle={toggleMachineType} onShowAll={() => setSelectedMachineTypes([])} />
                     </div>
-                    <div ref={boardRef} data-configuration-tour-connections className={`relative grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-16 ${draggingWorkerId ? 'select-none' : ''}`}>
+                    <div
+                        ref={boardRef}
+                        data-configuration-tour-connections
+                        onScroll={updateConnectorPositions}
+                        className={`relative grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-12 lg:gap-16 max-h-[calc(100vh-17rem)] overflow-y-auto overscroll-contain pr-2 ${draggingWorkerId ? 'select-none' : ''}`}
+                    >
                         <svg className="pointer-events-none absolute inset-0 z-0 h-full w-full overflow-visible" aria-hidden="true">
                             {visibleWorkers.flatMap((worker) => {
                                 const palette = workerColorMap.get(worker.id) ?? DEFAULT_PALETTE

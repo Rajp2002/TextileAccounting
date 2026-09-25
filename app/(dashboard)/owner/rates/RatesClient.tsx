@@ -1544,7 +1544,7 @@ export default function RatesClient({
                             <Button
                                 data-ratebook-field="addRateAction"
                                 onClick={() => { setSaveError(null); setDraft(defaultDraft(defaultReviewIntervalDays)) }}
-                                className="h-10 w-full sm:w-auto rounded-xl bg-loom px-4 font-medium text-white shadow-xs transition-all duration-150 hover:bg-loom-elevated hover:text-white motion-safe:hover:-translate-y-0.5 active:scale-[0.98] focus-visible:ring-saffron"
+                                className="h-10 w-full sm:w-auto rounded-xl bg-loom px-4 font-medium text-white shadow-xs transition-all duration-150 hover:bg-loom-elevated hover:text-white motion-safe:hover:-translate-y-0.5 active:scale-[0.98] focus-visible:ring-saffron min-[1540px]:hidden"
                             >
                                 <Plus className="h-4 w-4" aria-hidden="true" />
                                 <span>{tx('Add Yarn Rate')}</span>
@@ -1553,8 +1553,6 @@ export default function RatesClient({
                     )}
                 />
             </div>
-
-            <RateBookHelp />
 
             {showDeleteNudge && !demoYarnDeleted && rates.some(r => r.id === DEMO_YARN_RATE.id) && (
                 <div
@@ -2288,6 +2286,20 @@ export default function RatesClient({
 
             {/* Keep viewport-positioned review controls outside the animated route wrapper. */}
             <aside className="rates-review-rail-desktop space-y-4" aria-label={tx('Rate review and reference')}>
+                <div>
+                    <button
+                        type="button"
+                        onClick={() => { setSaveError(null); setDraft(defaultDraft(defaultReviewIntervalDays)) }}
+                        className="group flex w-full cursor-pointer items-center justify-between gap-3 rounded-2xl border border-hairline/80 bg-surface/95 p-3.5 sm:p-4 text-left shadow-[var(--shadow-card)] backdrop-blur-sm transition-all hover:border-loom/40 hover:bg-surface-soft/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-loom active:scale-[0.99]"
+                    >
+                        <div className="flex items-center gap-2.5">
+                            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-loom text-white transition-transform group-hover:scale-105">
+                                <Plus className="h-4 w-4" aria-hidden="true" />
+                            </span>
+                            <span className="text-sm font-bold text-ink truncate">{tx('Add Yarn Rate')}</span>
+                        </div>
+                    </button>
+                </div>
                 <div data-ratebook-section={6} data-ratebook-field="reviewRailWidget">
                     <RateReviewRailWidget
                         dueReviewRates={dueReviewRates}
@@ -2299,6 +2311,16 @@ export default function RatesClient({
                 <div data-ratebook-field="immutabilityNotice">
                     <RateBookReferenceCard />
                 </div>
+                <div className="hidden min-[1540px]:block space-y-3">
+                    <RateBookTutorialLauncher
+                        onClick={handleLaunchTutorial}
+                        disabled={isPending}
+                        userId={userId}
+                        orgId={orgId}
+                        className="w-full"
+                    />
+                </div>
+                <RateBookHelp />
             </aside>
 
             {/* Pin the archive policy to the bottom edge of the desktop rail. */}

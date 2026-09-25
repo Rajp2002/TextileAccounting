@@ -22,16 +22,16 @@ export function ArchivePolicyNotice() {
       <DialogTrigger asChild>
         <button
           type="button"
-          className="estimator-touch-target group flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border border-indigo-200/80 bg-indigo-50/70 px-4 py-2.5 text-left text-sm font-semibold text-indigo-950 shadow-xs transition-all duration-150 hover:border-indigo-300 hover:bg-indigo-100/70 hover:shadow-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-indigo-500 active:scale-[0.99]"
+          className="estimator-touch-target group flex w-full cursor-pointer items-center justify-between gap-3 rounded-2xl border border-indigo-200/80 bg-indigo-50/70 px-4 py-3 min-h-[50px] text-left text-sm font-semibold text-indigo-950 shadow-xs transition-all duration-150 hover:border-indigo-300 hover:bg-indigo-100/70 hover:shadow-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-indigo-500 active:scale-[0.99]"
           aria-label={t('base_plan.archive.title')}
         >
           <div className="flex min-w-0 items-center gap-2.5">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 transition-colors group-hover:bg-indigo-200">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700 transition-colors group-hover:bg-indigo-200">
               <ArchiveRestore className="h-4 w-4" aria-hidden="true" />
             </span>
             <span className="truncate font-bold text-indigo-950">{t('base_plan.archive.title')}</span>
           </div>
-          <span className="inline-flex items-center gap-1 rounded-md bg-indigo-100/80 px-2 py-0.5 text-[11px] font-medium text-indigo-700 transition-colors group-hover:bg-indigo-200/80">
+          <span className="inline-flex items-center gap-1 rounded-lg bg-indigo-100/80 px-2.5 py-1 text-xs font-medium text-indigo-700 transition-colors group-hover:bg-indigo-200/80">
             <Info className="h-3 w-3" aria-hidden="true" />
             <span>Policy</span>
           </span>
