@@ -57,9 +57,9 @@ export function BasePlanFactoryGlossary() {
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-100/80 text-amber-700 transition-colors group-hover:bg-amber-200/80">
               <BookOpen className="h-4 w-4" aria-hidden="true" />
             </span>
-            <span className="truncate font-bold text-slate-900">{t('base_plan.glossary_title')}</span>
+            <span className="font-bold text-slate-900 whitespace-nowrap">{t('base_plan.glossary_title')}</span>
           </div>
-          <span className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600 transition-colors group-hover:bg-amber-100 group-hover:text-amber-800">
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600 transition-colors group-hover:bg-amber-100 group-hover:text-amber-800">
             <Sparkles className="h-3 w-3" aria-hidden="true" />
             <span>11</span>
           </span>

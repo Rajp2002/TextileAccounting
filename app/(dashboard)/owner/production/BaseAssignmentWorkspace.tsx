@@ -452,7 +452,7 @@ export default function BaseAssignmentWorkspace({
                     </span>
                 </div>
 
-            <Card data-configuration-tour="board" className="hidden overflow-hidden rounded-2xl border border-hairline/80 bg-surface shadow-[var(--shadow-card)] md:block">
+            <Card data-configuration-tour="board" className="hidden overflow-hidden rounded-2xl border border-hairline/80 bg-surface shadow-[var(--shadow-card)] md:flex md:flex-col min-h-[calc(100vh-14.5rem)]">
                 <CardHeader className="border-b border-hairline/80 bg-gradient-to-r from-surface to-surface-soft/35 px-6 py-4">
                     <CardTitle className="flex items-center gap-2 text-base font-bold text-ink">
                         <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-hairline bg-surface-soft text-loom">
@@ -464,7 +464,7 @@ export default function BaseAssignmentWorkspace({
                         Drag a connector or choose Assign. Each machine has one worker per shift.
                     </CardDescription>
                 </CardHeader>
-                <CardContent className="p-6">
+                <CardContent className="p-6 flex flex-1 flex-col min-h-0">
                     <div className="mb-5 grid grid-cols-2 gap-4">
                         <div className="relative">
                             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -483,7 +483,7 @@ export default function BaseAssignmentWorkspace({
                         ref={boardRef}
                         data-configuration-tour-connections
                         onScroll={updateConnectorPositions}
-                        className={`relative grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-12 lg:gap-16 max-h-[calc(100vh-17rem)] overflow-y-auto overscroll-contain pr-2 ${draggingWorkerId ? 'select-none' : ''}`}
+                        className={`relative grid flex-1 min-h-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-12 lg:gap-16 overflow-y-auto overscroll-contain pr-2 ${draggingWorkerId ? 'select-none' : ''}`}
                     >
                         <svg className="pointer-events-none absolute inset-0 z-0 h-full w-full overflow-visible" aria-hidden="true">
                             {visibleWorkers.flatMap((worker) => {
@@ -699,7 +699,7 @@ export default function BaseAssignmentWorkspace({
                 </CardContent>
             </Card>
 
-            <Card data-configuration-tour="board" className="gap-3 rounded-2xl border border-hairline bg-surface shadow-xs md:hidden">
+            <Card data-configuration-tour="board" className="gap-3 rounded-2xl border border-hairline bg-surface shadow-xs md:hidden min-h-[calc(100vh-14.5rem)] flex flex-col">
                 <CardHeader className="border-b border-hairline/70 p-4 pb-3">
                     <CardTitle className="flex items-center gap-2 text-base font-bold text-ink">
                         <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-hairline bg-surface-soft text-loom">
@@ -872,15 +872,6 @@ export default function BaseAssignmentWorkspace({
                 )}
             </Card>
 
-                <label data-configuration-tour="inactive" className="inline-flex min-h-9 w-fit cursor-pointer items-center gap-2 text-xs font-medium text-body hover:text-ink">
-                    <input
-                        type="checkbox"
-                        className="h-4 w-4 rounded border-hairline text-loom focus:ring-loom/20 accent-loom cursor-pointer"
-                        checked={showInactive}
-                        onChange={event => setShowInactive(event.target.checked)}
-                    />
-                    Show inactive
-                </label>
             </div>
             <aside aria-label="Management links" className="configuration-actions-rail flex flex-wrap gap-2 rounded-2xl border border-hairline/80 bg-surface/95 p-3 shadow-[var(--shadow-card)] backdrop-blur-sm">
                 <Button asChild variant="default" size="sm" className="h-12 w-full justify-between rounded-xl border border-loom bg-loom px-4 text-sm font-semibold text-white shadow-sm hover:border-loom-elevated hover:bg-loom-elevated hover:text-white focus-visible:ring-loom/30">

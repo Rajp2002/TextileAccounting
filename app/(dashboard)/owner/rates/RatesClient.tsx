@@ -1514,6 +1514,7 @@ export default function RatesClient({
                         }
                     }}
                 />
+                <RateBookHelp />
             </aside>
 
             <div className="ui-route-enter mx-auto w-full max-w-7xl space-y-6" data-ratebook-tutorial-root="true">
@@ -2311,16 +2312,6 @@ export default function RatesClient({
                 <div data-ratebook-field="immutabilityNotice">
                     <RateBookReferenceCard />
                 </div>
-                <div className="hidden min-[1540px]:block space-y-3">
-                    <RateBookTutorialLauncher
-                        onClick={handleLaunchTutorial}
-                        disabled={isPending}
-                        userId={userId}
-                        orgId={orgId}
-                        className="w-full"
-                    />
-                </div>
-                <RateBookHelp />
             </aside>
 
             {/* Pin the archive policy to the bottom edge of the desktop rail. */}

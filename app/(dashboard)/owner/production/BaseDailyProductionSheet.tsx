@@ -751,7 +751,7 @@ export default function BaseDailyProductionSheet({
                 </div>
             )}
 
-            <div className="flex flex-1 flex-col justify-center gap-4 py-5 2xl:py-8">
+            <div className="flex flex-1 flex-col gap-4 py-3 sm:py-4 min-h-0">
             {sheetWorkers.length === 0 ? (
                 <Card className="rounded-2xl border border-hairline bg-surface shadow-xs">
                     <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
@@ -768,7 +768,7 @@ export default function BaseDailyProductionSheet({
                 </Card>
             ) : (
                 <>
-                    <Card className="gap-0 overflow-hidden rounded-[22px] border border-hairline border-t-[3px] border-t-saffron-deep bg-surface p-0 shadow-lg shadow-ink/5">
+                    <Card className="gap-0 overflow-hidden rounded-[22px] border border-hairline border-t-[3px] border-t-saffron-deep bg-surface p-0 shadow-lg shadow-ink/5 flex flex-1 flex-col min-h-[calc(100vh-17.5rem)] 2xl:min-h-[calc(100vh-16rem)]">
                         <CardHeader className="border-b border-hairline bg-surface px-4 py-4 sm:px-5 sm:py-5">
                             <div className="flex flex-wrap items-center justify-between gap-3">
                                 <div className="flex items-center gap-3">
@@ -786,11 +786,11 @@ export default function BaseDailyProductionSheet({
                             <CardDescription className="text-xs text-body">Leave a reading blank if it is pending. Enter 0 if the machine did not run.</CardDescription>
                             {showPending && <p className="text-xs text-body font-medium">Showing machines that needed attention when you opened this view. Rows stay in place as you type.</p>}
                         </CardHeader>
-                        <CardContent className="p-0">
+                        <CardContent className="p-0 flex flex-1 flex-col min-h-0">
                             <div className="hidden grid-cols-[minmax(0,1.1fr)_minmax(0,.8fr)_145px_160px] gap-3 border-b border-hairline bg-surface-soft/70 px-5 py-2.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground md:grid">
                                 <span>Machine / job</span><span>Worker</span><span className="text-right">Metres</span><span>Status / action</span>
                             </div>
-                            <div role="region" aria-label="Machine readings" className="divide-y divide-hairline overflow-y-auto overscroll-contain lg:max-h-[max(14rem,calc(100svh-30rem))]">
+                            <div role="region" aria-label="Machine readings" className="divide-y divide-hairline overflow-y-auto overscroll-contain flex-1 min-h-0 max-h-[calc(100vh-25rem)] 2xl:max-h-[calc(100vh-24rem)]">
                                 {machineContexts.map((context, index) => {
                                     if (showPending && !pendingMachineIds.includes(context.machineId)) return null
                                     if (!context.workerId) return (

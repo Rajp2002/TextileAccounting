@@ -29,9 +29,9 @@ export function ArchivePolicyNotice() {
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700 transition-colors group-hover:bg-indigo-200">
               <ArchiveRestore className="h-4 w-4" aria-hidden="true" />
             </span>
-            <span className="truncate font-bold text-indigo-950">{t('base_plan.archive.title')}</span>
+            <span className="font-bold text-indigo-950 whitespace-nowrap">{t('base_plan.archive.title')}</span>
           </div>
-          <span className="inline-flex items-center gap-1 rounded-lg bg-indigo-100/80 px-2.5 py-1 text-xs font-medium text-indigo-700 transition-colors group-hover:bg-indigo-200/80">
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-indigo-100/80 px-2.5 py-1 text-xs font-medium text-indigo-700 transition-colors group-hover:bg-indigo-200/80">
             <Info className="h-3 w-3" aria-hidden="true" />
             <span>Policy</span>
           </span>
