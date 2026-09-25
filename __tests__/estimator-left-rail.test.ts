@@ -32,7 +32,7 @@ describe('Estimator Left Rail & Guided Tour CTA', () => {
         expect(styles).toMatch(/@media\s*\(min-width:\s*1660px\)\s*\{[\s\S]*?\.estimator-left-rail\s*\{[\s\S]*?position:\s*fixed/)
         expect(styles).toMatch(/@media\s*\(min-width:\s*1660px\)\s*\{[\s\S]*?\.estimator-left-rail\s*\{[\s\S]*?top:\s*6rem/)
         expect(styles).toMatch(/@media\s*\(min-width:\s*1660px\)\s*\{[\s\S]*?\.estimator-left-rail\s*\{[\s\S]*?left:\s*calc\(248px\s*\+\s*1rem\)/)
-        expect(styles).toMatch(/@media\s*\(min-width:\s*1660px\)\s*\{[\s\S]*?\.estimator-left-rail\s*\{[\s\S]*?width:\s*14rem/)
+        expect(styles).toMatch(/@media\s*\(min-width:\s*1660px\)\s*\{[\s\S]*?\.estimator-left-rail\s*\{[\s\S]*?width:\s*18rem/)
     })
 
     it('gives the guided tour button an interactive subtle muted background and clear affordance', () => {

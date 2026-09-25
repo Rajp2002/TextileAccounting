@@ -140,7 +140,7 @@ describe('RatesClient Integration & Overlay Stability', () => {
         expect(styles).toMatch(/@media\s*\(min-width:\s*1660px\)\s*\{[\s\S]*?\.rates-left-rail-desktop\s*\{[\s\S]*?position:\s*fixed/)
         expect(styles).toMatch(/@media\s*\(min-width:\s*1660px\)\s*\{[\s\S]*?\.rates-left-rail-desktop\s*\{[\s\S]*?top:\s*6\.5rem/)
         expect(styles).toMatch(/@media\s*\(min-width:\s*1660px\)\s*\{[\s\S]*?\.rates-left-rail-desktop\s*\{[\s\S]*?left:\s*calc\(248px\s*\+\s*1rem\)/)
-        expect(styles).toMatch(/@media\s*\(min-width:\s*1660px\)\s*\{[\s\S]*?\.rates-left-rail-desktop\s*\{[\s\S]*?width:\s*14rem/)
+        expect(styles).toMatch(/@media\s*\(min-width:\s*1660px\)\s*\{[\s\S]*?\.rates-left-rail-desktop\s*\{[\s\S]*?width:\s*18rem/)
     })
 
     it('dismissRatebookTutorial updates user metadata and revalidates /owner/rates', async () => {

@@ -763,7 +763,7 @@
       top: 6rem;
       left: calc(248px + 1rem);
       z-index: 30;
-      width: 14rem;
+      width: 18rem;
       max-height: calc(100vh - 7rem);
       overflow-y: auto;
       margin-top: 0;
@@ -791,7 +791,7 @@
       top: 6.5rem;
       left: calc(248px + 1rem);
       z-index: 30;
-      width: 14rem;
+      width: 18rem;
       max-height: calc(100vh - 7.5rem);
       overflow-y: auto;
       margin-top: 0;
@@ -805,7 +805,7 @@
       top: 6.5rem;
       left: calc(248px + 1rem);
       z-index: 30;
-      width: 14rem;
+      width: 18rem;
       max-height: calc(100vh - 7.5rem);
       overflow-y: auto;
       margin-top: 0;
@@ -825,7 +825,7 @@
       top: 6rem;
       left: calc(248px + 1rem);
       z-index: 30;
-      width: 14rem;
+      width: 18rem;
       max-height: calc(100vh - 7rem);
       overflow-y: auto;
       margin-top: 0;
@@ -838,7 +838,7 @@
       position: fixed;
       top: 6.5rem;
       left: calc(248px + 1rem);
-      width: 14rem;
+      width: 18rem;
       z-index: 30;
     }
 
@@ -848,24 +848,28 @@
       margin-inline: auto;
     }
 
-    .configuration-guide-rail,
-    .configuration-actions-rail {
+    .configuration-guide-rail {
       position: fixed;
       top: 6.5rem;
+      left: calc(248px + 1rem);
       z-index: 30;
-      width: 14rem;
+      width: 18rem;
       max-height: calc(100dvh - 7.5rem);
       overflow-y: auto;
       margin: 0;
       scrollbar-width: thin;
     }
 
-    .configuration-guide-rail {
-      left: calc(248px + 1rem);
-    }
-
     .configuration-actions-rail {
+      position: fixed;
+      top: 6.5rem;
       right: 1rem;
+      z-index: 30;
+      width: 14rem;
+      max-height: calc(100dvh - 7.5rem);
+      overflow-y: auto;
+      margin: 0;
+      scrollbar-width: thin;
       flex-direction: column;
     }
   }
@@ -874,7 +878,7 @@
     .payroll-left-rail {
       position: static;
       width: 100%;
-      max-width: 14rem;
+      max-width: 18rem;
       max-height: none;
       overflow: visible;
       margin-bottom: 1.25rem;
@@ -883,7 +887,7 @@
     .workers-workspace-shell .workers-left-rail {
       position: static;
       width: 100%;
-      max-width: 14rem;
+      max-width: 18rem;
       max-height: none;
       overflow: visible;
       margin-bottom: 1.25rem;
@@ -892,7 +896,7 @@
     .machines-workspace-shell .machines-left-rail {
       position: static;
       width: 100%;
-      max-width: 14rem;
+      max-width: 18rem;
       max-height: none;
       overflow: visible;
       margin-bottom: 1.25rem;
@@ -901,7 +905,7 @@
     .dispatch-left-rail {
       position: static;
       width: 100%;
-      max-width: 14rem;
+      max-width: 18rem;
       max-height: none;
       overflow: visible;
       margin-bottom: 1.25rem;
@@ -1150,7 +1154,7 @@
       top: 6rem;
       left: calc(248px + 1rem);
       z-index: 30;
-      width: 14rem;
+      width: 18rem;
       max-height: calc(100vh - 7rem);
       overflow-y: auto;
       margin-top: 0;
@@ -1224,6 +1228,7 @@
 
     .estimator-left-rail {
       left: calc(248px + 1.25rem);
+      width: 18.5rem;
     }
 
     .estimator-reference-rail {
@@ -1239,7 +1244,7 @@
       top: 6.5rem;
       left: calc(248px + 1rem);
       z-index: 30;
-      width: 14rem;
+      width: 18rem;
       max-height: calc(100vh - 7.5rem);
       overflow-y: auto;
       margin-top: 0;
@@ -1252,7 +1257,7 @@
   @media (min-width: 1800px) {
     .rates-left-rail-desktop {
       left: calc(248px + 1.25rem);
-      width: 14.5rem;
+      width: 18.5rem;
     }
   }
 
@@ -1262,7 +1267,7 @@
       top: 6.5rem;
       left: calc(248px + 1rem);
       z-index: 30;
-      width: 14rem;
+      width: 18rem;
       max-height: calc(100vh - 7.5rem);
       overflow-y: auto;
       margin-top: 0;
@@ -1275,7 +1280,7 @@
   @media (min-width: 1800px) {
     .saved-costings-left-rail {
       left: calc(248px + 1.25rem);
-      width: 14.5rem;
+      width: 18.5rem;
     }
   }
 
@@ -1291,7 +1296,7 @@
       top: 6rem;
       left: calc(248px + 1rem);
       z-index: 30;
-      width: 14rem;
+      width: 18rem;
       max-height: calc(100vh - 7rem);
       overflow-y: auto;
       margin-top: 0;
@@ -1310,7 +1315,7 @@
     .stock-left-rail,
     .dispatch-left-rail {
       left: calc(248px + 1.25rem);
-      width: 14.5rem;
+      width: 18.5rem;
     }
   }
 
@@ -1379,10 +1384,6 @@
   }
 
   @media (min-width: 1540px) {
-    .saved-costings-left-rail {
-      display: none;
-    }
-
     .saved-costings-archive-rail-desktop {
       display: block;
       position: fixed;
@@ -1908,10 +1909,10 @@
 
 /* Same upper left rail and narrow-screen inline placement as Rate Book. */
 @media (min-width: 1660px) {
-  .saved-costings-tour-launcher { position: fixed; top: 6.5rem; left: calc(248px + 1rem); width: 14rem; z-index: 30; }
+  .saved-costings-tour-launcher { position: fixed; top: 6.5rem; left: calc(248px + 1rem); width: 18rem; z-index: 30; }
 }
 @media (min-width: 1800px) {
-  .saved-costings-tour-launcher { left: calc(248px + 1.25rem); width: 14.5rem; }
+  .saved-costings-tour-launcher { left: calc(248px + 1.25rem); width: 18.5rem; }
 }
 
 /* Reserve the desktop reading panel beside tour-controlled previews. */

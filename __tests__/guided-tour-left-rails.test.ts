@@ -158,10 +158,10 @@ describe('Guided Tour Left Rail Placement Across All Sections', () => {
         expect(styles).toMatch(/@media\s*\(min-width:\s*1024px\)\s*\{[\s\S]*?\.guided-tour-left-rail[\s\S]*?position:\s*fixed/)
         expect(styles).toMatch(/@media\s*\(min-width:\s*1024px\)\s*\{[\s\S]*?\.guided-tour-left-rail[\s\S]*?top:\s*6rem/)
         expect(styles).toMatch(/@media\s*\(min-width:\s*1024px\)\s*\{[\s\S]*?\.guided-tour-left-rail[\s\S]*?left:\s*calc\(248px\s*\+\s*1rem\)/)
-        expect(styles).toMatch(/@media\s*\(min-width:\s*1024px\)\s*\{[\s\S]*?\.guided-tour-left-rail[\s\S]*?width:\s*14rem/)
+        expect(styles).toMatch(/@media\s*\(min-width:\s*1024px\)\s*\{[\s\S]*?\.guided-tour-left-rail[\s\S]*?width:\s*18rem/)
 
         // Large desktop media query (min-width: 1800px) calibrates positioning
         expect(styles).toMatch(/@media\s*\(min-width:\s*1800px\)\s*\{[\s\S]*?\.guided-tour-left-rail[\s\S]*?left:\s*calc\(248px\s*\+\s*1\.25rem\)/)
-        expect(styles).toMatch(/@media\s*\(min-width:\s*1800px\)\s*\{[\s\S]*?\.guided-tour-left-rail[\s\S]*?width:\s*14\.5rem/)
+        expect(styles).toMatch(/@media\s*\(min-width:\s*1800px\)\s*\{[\s\S]*?\.guided-tour-left-rail[\s\S]*?width:\s*18\.5rem/)
     })
 })

@@ -2135,9 +2135,6 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
 
             {/* Keep the archive policy in the unused right margin on wide screens. */}
             <aside className="saved-costings-archive-rail-desktop space-y-3" aria-label={tx('Saved Costings archive policy')}>
-                <div className="hidden min-[1540px]:block">
-                    <SavedCostingsTutorial step={tourStep} onStepChange={setTourStep} onComplete={() => setShowCostingDeleteNudge(true)} production={canUseProductionPipeline} full={canUseProduction} ending={savedCostingTourEnding(quotes.filter(quote => isStandaloneCosting(quote.record_kind)).length)} quotations={canUseQuotationWorkflow} userId={userId} orgId={orgId} inline />
-                </div>
                 <ArchivePolicyNotice />
             </aside>
 
