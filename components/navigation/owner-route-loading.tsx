@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 import { RouteMilestones } from '@/components/performance/route-milestones'
+import { pageTitleLayoutClass } from '@/components/navigation/page-title-layout'
 
 const ROUTE_TITLES: Array<[string, string]> = [
     ['/free/costings', 'Saved Costings'],
@@ -24,8 +25,16 @@ const ROUTE_TITLES: Array<[string, string]> = [
     ['/owner/billing', 'Subscription & Billing'],
 ]
 
+const ROUTE_TITLE_OVERRIDES: Array<[string, string]> = [
+    ['/owner/production/daily-sheet', 'Daily sheet'],
+    ['/owner/stock/audit', 'Inventory Audit & Material Position'],
+    ['/owner/settings/audit', 'Audit Trail'],
+    ['/owner/data-export', 'Export your complete organization data'],
+]
+
 function titleForPath(pathname: string | null) {
-    return ROUTE_TITLES.find(([prefix]) => pathname === prefix || pathname?.startsWith(`${prefix}/`))?.[1]
+    return ROUTE_TITLE_OVERRIDES.find(([prefix]) => pathname === prefix || pathname?.startsWith(`${prefix}/`))?.[1]
+        ?? ROUTE_TITLES.find(([prefix]) => pathname === prefix || pathname?.startsWith(`${prefix}/`))?.[1]
         ?? 'Weavly'
 }
 
@@ -40,14 +49,11 @@ export function OwnerRouteLoading() {
     const pathname = usePathname()
     const title = titleForPath(pathname)
     const route = routeForPath(pathname)
-    const centeredTitle = route === '/owner/workers' || route === '/owner/machines'
-
     return (
         <div className="w-full space-y-6 pt-2 pb-8" role="status" aria-busy="true" aria-label={`Loading ${title}`}>
             <RouteMilestones route={route} shellVisible primaryUsable={false} />
-            <div className={`space-y-2 border-b border-hairline/80 pb-5 ${centeredTitle ? 'text-center' : ''}`}>
-                <h1 className="text-3xl font-bold tracking-tight text-ink">{title}</h1>
-                <div className={`h-4 w-64 max-w-full animate-pulse rounded-md bg-surface-soft motion-reduce:animate-none ${centeredTitle ? 'mx-auto' : ''}`} />
+            <div className={`${pageTitleLayoutClass(pathname ?? route)} border-b border-hairline/80 pb-5 text-center`}>
+                <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-ink sm:text-[2rem]">{title}</h1>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
                 {[0, 1, 2, 3].map(index => (

@@ -204,33 +204,26 @@ export default function InventoryAuditClient({ initialData }: Props) {
     return (
         <div className="space-y-6 pb-12">
             {/* Header */}
-            <div className="flex flex-wrap items-center justify-between gap-4 border-b pb-4">
-                <div className="flex items-center gap-3">
-                    <Button variant="ghost" size="icon" asChild className="rounded-xl">
-                        <Link href="/owner/stock">
-                            <ArrowLeft className="h-5 w-5" />
-                        </Link>
-                    </Button>
-                    <div>
-                        <div className="flex items-center gap-2">
-                            <h1 className="text-2xl font-bold text-ink">Inventory Audit & Material Position</h1>
-                            {isFinalized ? (
-                                <Badge variant="secondary" className="bg-emerald-50 text-emerald-800 border-emerald-200">
-                                    <Lock className="mr-1 h-3 w-3" /> Finalized
-                                </Badge>
-                            ) : (
-                                <Badge variant="outline" className="border-amber-300 text-amber-800 bg-amber-50">
-                                    Draft / Working
-                                </Badge>
-                            )}
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                            Reconcile operational stock and derive total raw material embodied across loose yarn and finished fabric.
-                        </p>
-                    </div>
+            <header className="grid gap-4 border-b border-hairline/80 pb-4 text-center sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center">
+                <Button variant="ghost" size="icon" asChild className="justify-self-start rounded-xl" aria-label="Back to stock">
+                    <Link href="/owner/stock">
+                        <ArrowLeft className="h-5 w-5" />
+                    </Link>
+                </Button>
+                <div className="flex flex-wrap items-center justify-center gap-2 sm:col-start-2 sm:row-start-1">
+                    <h1 className="text-[1.4rem] font-bold tracking-tight text-ink sm:text-2xl">Inventory Audit & Material Position</h1>
+                    {isFinalized ? (
+                        <Badge variant="secondary" className="border-emerald-200 bg-emerald-50 text-emerald-800">
+                            <Lock className="mr-1 h-3 w-3" /> Finalized
+                        </Badge>
+                    ) : (
+                        <Badge variant="outline" className="border-amber-300 bg-amber-50 text-amber-800">
+                            Draft / Working
+                        </Badge>
+                    )}
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center justify-center gap-2 sm:col-start-3 sm:row-start-1 sm:justify-self-end">
                     {/* Date picker */}
                     <div className="flex items-center gap-1.5 rounded-xl border px-3 py-1.5 bg-surface text-xs font-medium">
                         <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
@@ -265,7 +258,7 @@ export default function InventoryAuditClient({ initialData }: Props) {
                         </Button>
                     )}
                 </div>
-            </div>
+            </header>
 
             {/* Summary KPI Cards */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

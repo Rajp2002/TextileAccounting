@@ -71,18 +71,15 @@ export function PlanAwareSettingsView({
         <div className="min-h-screen py-6 sm:py-10">
             <div className="mx-auto w-full max-w-[960px] space-y-8 px-4 sm:px-6 lg:px-8">
                 {/* Page Header */}
-                <header className="space-y-2 border-b border-hairline/80 pb-6">
-                    <div className="flex items-center gap-2.5">
+                <header className="space-y-2 border-b border-hairline/80 pb-6 text-center">
+                    <div className="flex flex-col items-center gap-2.5">
                         <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-saffron-soft text-saffron-deep dark:bg-saffron/20">
                             <SlidersHorizontal className="h-5 w-5" aria-hidden="true" />
                         </span>
-                        <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">
+                        <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-ink sm:text-[2rem]">
                             {t('settings.title') || 'Settings'}
                         </h1>
                     </div>
-                    <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
-                        {tx('Manage your account and the way your factory works.')}
-                    </p>
                 </header>
 
                 {/* Ordered Sections Stack */}

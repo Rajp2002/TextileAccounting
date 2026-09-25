@@ -3,7 +3,6 @@
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import {
-  History,
   Plus,
   Search,
   Layers3,
@@ -210,9 +209,7 @@ export default function SavedFreeCostings() {
 
       <div className="ui-route-enter max-w-6xl mx-auto space-y-6" data-free-costing data-sentry-block>
         <PageHeader
-          icon={History}
           title={freeText(language, 'savedCostings')}
-          description={tx('View and export your completed costings without using your monthly allowance. These are fixed snapshots, not reusable saved qualities.')}
           actions={(
             <Button variant="saffron" onClick={() => router.push('/free')}>
               <Plus className="h-4 w-4" /> {tx('New Costing')}

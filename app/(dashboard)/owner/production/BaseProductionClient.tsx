@@ -474,7 +474,7 @@ export default function BaseProductionClient({
                         ? 'flex flex-col items-center border-b border-hairline/70 pb-5 text-center sm:pb-6'
                         : 'flex flex-col justify-between gap-4 sm:flex-row sm:items-start'}>
                 <div className={view === 'operations' || view === 'production' ? 'flex flex-col items-center' : undefined}>
-                    <h1 className={`${view === 'payroll' ? 'text-[1.75rem] font-bold sm:text-[2rem]' : 'text-2xl font-black sm:text-3xl'} tracking-tight text-ink`}>
+                    <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-ink sm:text-[2rem]">
                         {view === 'operations' ? 'Worker–Machine Assignments' : view === 'payroll' ? 'Payroll' : 'Production'}
                     </h1>
                     {view === 'payroll' && <p className="sr-only">Review earnings and settle worker pay for each period.</p>}

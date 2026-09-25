@@ -1,10 +1,11 @@
 import { RouteMilestones } from '@/components/performance/route-milestones'
 import { PageHeader } from '@/components/ui/page-header'
+import { pageTitleLayoutClass } from '@/components/navigation/page-title-layout'
 
 export function BaseRouteLoading({
     route,
     title,
-    centeredTitle = false,
+    centeredTitle = true,
     children,
 }: {
     route: string
@@ -18,7 +19,7 @@ export function BaseRouteLoading({
             <PageHeader
                 title={title}
                 centered={centeredTitle}
-                description={<div className={`h-4 w-72 max-w-full animate-pulse rounded-md bg-surface-soft motion-reduce:animate-none ${centeredTitle ? 'mx-auto' : ''}`} />}
+                className={pageTitleLayoutClass(route)}
             />
             {children}
         </div>

@@ -1,5 +1,15 @@
+'use client'
+
+import { usePathname } from 'next/navigation'
 import { BaseWorkspaceLoading } from '@/components/production/base-workspace-loading'
 
 export default function Loading() {
-    return <BaseWorkspaceLoading route="/owner/production" title="Production" summaryCards={2} />
+    const pathname = usePathname()
+    const isDailySheet = pathname?.startsWith('/owner/production/daily-sheet')
+
+    return <BaseWorkspaceLoading
+        route={isDailySheet ? '/owner/production/daily-sheet' : '/owner/production'}
+        title={isDailySheet ? 'Daily sheet' : 'Production'}
+        summaryCards={isDailySheet ? 0 : 2}
+    />
 }

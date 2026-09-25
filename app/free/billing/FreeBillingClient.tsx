@@ -34,8 +34,6 @@ export default function FreeBillingClient({
     <div className="mx-auto max-w-6xl space-y-6 pb-16">
       <PageHeader
         title={tx('Subscription & Billing')}
-        description={tx('Manage your plan and payment history.')}
-        meta={<StatusBadge status="active" label={tier === 'free' ? 'Weavly Free' : 'Active'} />}
       />
 
       {/* 1. Active Workspace Section */}

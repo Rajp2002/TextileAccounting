@@ -100,8 +100,9 @@ export default function YarnStockClient({ initialData }: { initialData: YarnBoar
     const selected = options.find(row => row.id === costing)
     const names = [...new Set([...data.yarns.map(row => row.yarn_name), ...data.costings.flatMap(row => row.recipe.map(layer => layer.yarn_name))])].sort()
     return <div className="space-y-6" data-i18n-skip="true">
-        <header className="flex flex-wrap justify-between gap-4"><div><h1 className="text-3xl font-semibold">{text.title}</h1><p className="mt-2 max-w-3xl text-sm text-muted-foreground">{text.help}</p></div>
-            <div className="flex flex-wrap gap-2">
+        <header className="grid gap-4 border-b border-hairline/80 pb-5 text-center sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center sm:pb-6">
+            <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-ink sm:col-start-2 sm:row-start-1 sm:text-[2rem]">{text.title}</h1>
+            <div className="flex flex-wrap justify-center gap-2 sm:col-start-3 sm:row-start-1 sm:justify-self-end">
                 <Button asChild variant="outline" className="border-loom/30 text-loom hover:bg-loom/5 gap-1.5 font-medium">
                     <Link href="/owner/stock/audit">
                         <ClipboardCheck className="h-4 w-4" />

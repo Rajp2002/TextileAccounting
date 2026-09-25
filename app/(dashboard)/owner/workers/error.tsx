@@ -10,13 +10,10 @@ export default function RegisterError({ reset }: { reset: () => void }) {
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-[28px]">
+      <header className="border-b border-hairline/80 pb-5 text-center">
+        <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-ink sm:text-[2rem]">
           {tx('Workers')}
         </h1>
-        <p className="text-sm text-subtle">
-          {tx('Add and manage your factory workforce.')}
-        </p>
       </header>
 
       <section

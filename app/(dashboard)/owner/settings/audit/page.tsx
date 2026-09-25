@@ -6,10 +6,9 @@ import { History } from 'lucide-react'
 
 export default function AuditTrailPage() {
     return (
-        <div className="space-y-6 max-w-6xl pb-10">
-            <div className="flex flex-col gap-1">
-                <h1 className="text-3xl font-bold tracking-tight text-gray-900">Audit Trail</h1>
-                <p className="text-gray-500">Monitor production, payroll, and profile changes in one place.</p>
+        <div className="mx-auto w-full max-w-6xl space-y-6 pb-10">
+            <div className="border-b border-hairline/80 pb-5 text-center">
+                <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-ink sm:text-[2rem]">Audit Trail</h1>
             </div>
 
             <Card className="shadow-sm border-gray-200 overflow-hidden">
