@@ -32,9 +32,12 @@ describe('Batch 10 estimator quote/order snapshots', () => {
         expect(estimatorActions.match(/const workerRatePerM = calcWorkerRateSnapshot\(/g)?.length).toBeGreaterThanOrEqual(3)
         expect(functionBody(estimatorActions, 'startPartyOrderFromEstimator')).not.toContain('input.workerRatePerM')
         expect(functionBody(estimatorActions, 'createMarketRunFromEstimator')).not.toContain('params.workerRatePerM')
-        expect(estimatorActions).toContain('worker_rate_per_m:        workerRatePerM')
-        expect(estimatorActions).toContain('worker_rate_per_m: workerRatePerM')
-        expect(estimatorActions).toContain('worker_rate_per_m:   workerRatePerM')
+        // Package 2C: both live costing saves pass the snapshot to the shared
+        // payload builder; the retired market-run path still writes it inline.
+        expect(readProjectFile('lib/estimator-quote-payload.ts')).toContain('worker_rate_per_m: input.workerRatePerM')
+        expect(functionBody(estimatorActions, 'saveEstimatorQuoteV3')).toContain('        workerRatePerM,\n')
+        expect(functionBody(estimatorActions, 'saveAsFabricTemplate')).toContain('        workerRatePerM,\n')
+        expect(functionBody(estimatorActions, 'createMarketRunFromEstimator')).toContain('worker_rate_per_m:        workerRatePerM')
         expect(estimatorClient).not.toContain('calcWorkerRateSnapshot(state.weftRows, state.perPickCostPaisa ?? 0)')
     })
 
@@ -45,7 +48,8 @@ describe('Batch 10 estimator quote/order snapshots', () => {
 
         expect(estimatorActions).toContain('landedCostPerM: result.landedCostPerM')
         expect(estimatorActions).toContain('const result = buildCostingResult(estimate, totals)')
-        expect(saveQuote).toContain('landed_cost_per_meter:    authoritative.result.landedCostPerM')
+        expect(saveQuote).toContain('        result: authoritative.result,\n')
+        expect(readProjectFile('lib/estimator-quote-payload.ts')).toContain('landed_cost_per_meter: result.landedCostPerM')
         expect(startOrder).toContain('p_landed_cost_per_meter: authoritative.landedCostPerM')
         expect(startOrder).not.toContain('p_landed_cost_per_meter: authoritative.productionCostPerM')
     })
@@ -94,7 +98,8 @@ describe('Estimator persistence safety', () => {
         const estimatorClient = readProjectFile('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
 
         expect(saveQuote).toContain(".eq('client_request_id', params.clientRequestId)")
-        expect(saveQuote).toContain('client_request_id:        params.clientRequestId')
+        expect(saveQuote).toContain('clientRequestId: params.clientRequestId,')
+        expect(readProjectFile('lib/estimator-quote-payload.ts')).toContain('client_request_id: input.clientRequestId')
         expect(saveQuote).toContain(".eq('updated_at', params.expectedSourceUpdatedAt!)")
         expect(saveQuote).toContain('idempotentReplay: true')
         expect(estimatorClient).toContain('createClientRequestUuid()')

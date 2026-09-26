@@ -18,6 +18,7 @@ import { buildSavedQualityRecipeState, type SavedQualityCostingReuse } from '@/l
 import { auditHistoricalCosting } from '@/lib/costing-reconciliation'
 import type { FactoryProfileId } from '@/lib/factory-cost-profiles'
 import { buildCostingInputFingerprint } from '@/lib/costing-save-trust'
+import { buildEstimatorQuotePayload } from '@/lib/estimator-quote-payload'
 import { getRateReviewStatus } from '@/lib/cost-rates'
 import { findCostingSaveReceipt } from '@/lib/costing-save-receipt'
 import {
@@ -926,68 +927,30 @@ export async function saveAsFabricTemplate(data: {
         gsm: 80,
         is_active: true,
     }
-    const quotePayload = {
-        org_id: profile.org_id,
-        record_kind: 'costing',
-        party_name: normalizeTemplateName(data.partyName || '') || null,
-        quality_label: normalizedName,
-        template_id: null,
-        warp_instruction: null,
-        weft_instruction: null,
-        warp_rows: snapshotEstimate.warpRows,
-        weft_rows: snapshotEstimate.weftRows,
-        per_pick_cost_paise: snapshotEstimate.perPickCostPaisa,
-        tape_length_m: snapshotEstimate.tapeLengthM,
-        warp_crimp_pct: snapshotEstimate.warpCrimpPct ?? 0,
-        yarn_shortage_pct: snapshotEstimate.yarnShortagePct ?? 0,
-        warping_rate_per_kg: snapshotEstimate.warpingRatePerKg,
-        sizing_rate_per_kg: snapshotEstimate.sizingRatePerKg,
-        winding_rate_per_kg: snapshotEstimate.windingRatePerKg,
-        processing_rate_per_m: snapshotEstimate.processingRatePerM,
-        finishing_rate_per_m: snapshotEstimate.finishingRatePerM,
-        overhead_items: snapshotEstimate.overheadItems,
-        monthly_output_m: snapshotEstimate.monthlyOutputM,
-        overhead_override_per_m: snapshotEstimate.overheadMode === 'direct' ? snapshotEstimate.overheadOverridePerM ?? null : null,
-        overhead_pct: 0,
-        commission_pct: snapshotEstimate.commissionPct,
-        transport_per_m: snapshotEstimate.transportPerM,
-        order_quantity_m: snapshotEstimate.orderQuantityM,
-        profit_margin_pct: snapshotEstimate.profitPct,
-        enabled_sections: snapshotEstimate.enabledSections,
-        loom_type: snapshotEstimate.loomType ?? null,
-        estimator_rpm: snapshotEstimate.loomRpm ?? null,
-        estimator_power_kw: snapshotEstimate.loomPowerKw ?? null,
-        hours_per_shift: snapshotEstimate.hoursPerShift,
-        sizing_mode: snapshotEstimate.sizingMode,
-        loom_count: snapshotEstimate.loomCount,
-        monthly_working_days: snapshotEstimate.monthlyWorkingDays,
-        avg_output_per_loom_per_day: snapshotEstimate.avgOutputPerLoomPerDay,
-        calculation_version: snapshotTotals.result.calculationVersion,
-        rounding_policy: snapshotTotals.result.roundingPolicy,
-        production_cost_per_meter: snapshotTotals.result.productionCostPerM,
-        overhead_per_meter: snapshotTotals.result.overheadPerM,
-        commission_cost_per_meter: snapshotTotals.result.commissionPerM,
-        break_even_price_per_meter: snapshotTotals.result.breakEvenPricePerM,
-        expected_profit_per_meter: snapshotTotals.result.profitPerM,
-        expected_profit_total: snapshotTotals.result.expectedProfitTotal,
-        actual_margin_percent: snapshotTotals.result.actualMarginPct,
-        costing_result_snapshot: snapshotTotals.result,
-        reconciliation_status: 'verified',
-        reconciliation_note: null,
-        reconciled_at: new Date().toISOString(),
-        landed_cost_per_meter: snapshotTotals.result.landedCostPerM,
-        quote_price_per_meter: snapshotTotals.result.suggestedSellingPricePerM,
-        intended_margin_percent: snapshotTotals.result.targetMarginPct,
-        meters: snapshotEstimate.orderQuantityM ?? 0,
+    const quotePayload = buildEstimatorQuotePayload({
+        orgId: profile.org_id,
+        recordKind: 'costing',
+        partyName: normalizeTemplateName(data.partyName || '') || null,
+        qualityLabel: normalizedName,
+        templateId: null,
+        warpInstruction: null,
+        weftInstruction: null,
+        estimate: snapshotEstimate,
+        result: snapshotTotals.result,
+        // The first costing of a new saved quality keeps its estimate's commercial inputs.
+        commercial: {
+            commissionPct: snapshotEstimate.commissionPct,
+            transportPerM: snapshotEstimate.transportPerM,
+            orderQuantityM: snapshotEstimate.orderQuantityM,
+            profitPct: snapshotEstimate.profitPct,
+        },
         status: 'draft',
-        client_request_id: initialRequestId,
-        worker_rate_per_m: workerRatePerM,
-        costing_input_fingerprint: costingInputFingerprint,
-        factory_profile_updated_at: factoryProfile?.updated_at ?? null,
-        ppi: Math.round(snapshotEstimate.weftRows[0]?.picks ?? 68),
-        yarn_denier: Math.round(snapshotEstimate.warpRows[0] ? getEffectiveYarnDenier(snapshotEstimate.warpRows[0]) : 75),
-        yarn_rate_per_kg: snapshotEstimate.warpRows[0]?.yarnRate ?? 0,
-    }
+        clientRequestId: initialRequestId,
+        workerRatePerM,
+        costingInputFingerprint,
+        factoryProfileUpdatedAt: factoryProfile?.updated_at ?? null,
+        reconciledAt: new Date().toISOString(),
+    })
 
     const attestation = await attestCanonicalCostingPayload(user.id, profile.org_id, quotePayload)
     if (!attestation.payload) return { error: attestation.error ?? 'The costing payload could not be verified.' }
@@ -1619,79 +1582,34 @@ export async function saveEstimatorQuoteV3(params: {
         })
         : null
 
-    const quotePayload = {
-            org_id:               profile.org_id,
-            record_kind:          newRecordKind,
-            party_name:           params.partyName?.trim() || null,
-            quality_label:        params.qualityLabel.trim(),
-            template_id:          params.templateId ?? null,
-            warp_instruction:     params.warpInstruction?.trim() || null,
-            weft_instruction:     params.weftInstruction?.trim() || null,
-            // V3 full recipe snapshots
-            warp_rows:            estimate.warpRows,
-            weft_rows:            estimate.weftRows,
-            per_pick_cost_paise:  estimate.perPickCostPaisa,
-            tape_length_m:        estimate.tapeLengthM,
-            warp_crimp_pct:       estimate.warpCrimpPct ?? 0,
-            yarn_shortage_pct:    estimate.yarnShortagePct ?? 0,
-            warping_rate_per_kg:  estimate.warpingRatePerKg,
-            sizing_rate_per_kg:   estimate.sizingRatePerKg,
-            winding_rate_per_kg:  estimate.windingRatePerKg,
-            processing_rate_per_m: estimate.processingRatePerM,
-            finishing_rate_per_m: estimate.finishingRatePerM,
-            // Overhead V2: store the selected method inputs; no percentage metric is persisted.
-            overhead_items:       estimate.overheadItems,
-            monthly_output_m:     estimate.monthlyOutputM,
-            overhead_override_per_m: estimate.overheadMode === 'direct' ? estimate.overheadOverridePerM ?? null : null,
-            overhead_pct:         0,
-            // Persist commercial scalar fields from the same rounded result
-            // that drives the saved costing snapshot. The recipe remains the
-            // source of inputs; the canonical result is the source of truth
-            // for every price-changing value written beside it.
-            commission_pct:       authoritative.result.commissionPct,
-            transport_per_m:      authoritative.result.transportPerM,
-            order_quantity_m:     authoritative.result.quantityM,
-            profit_margin_pct:    authoritative.result.targetMarginPct,
-            enabled_sections:     estimate.enabledSections,
-            // Loom type + sizing mode audit trail (Gap 2 fix)
-            loom_type:            estimate.loomType ?? null,
-            estimator_rpm:        estimate.loomRpm ?? null,
-            estimator_power_kw:   estimate.loomPowerKw ?? null,
-            hours_per_shift:      estimate.hoursPerShift,
-            sizing_mode:          estimate.sizingMode,
-            loom_count:           estimate.loomCount,
-            monthly_working_days: estimate.monthlyWorkingDays,
-            avg_output_per_loom_per_day: estimate.avgOutputPerLoomPerDay,
-            // Result snapshots
-            calculation_version:      authoritative.result.calculationVersion,
-            rounding_policy:          authoritative.result.roundingPolicy,
-            production_cost_per_meter: authoritative.result.productionCostPerM,
-            overhead_per_meter:       authoritative.result.overheadPerM,
-            commission_cost_per_meter: authoritative.result.commissionPerM,
-            break_even_price_per_meter: authoritative.result.breakEvenPricePerM,
-            expected_profit_per_meter: authoritative.result.profitPerM,
-            expected_profit_total:     authoritative.result.expectedProfitTotal,
-            actual_margin_percent:     authoritative.result.actualMarginPct,
-            costing_result_snapshot:   authoritative.result,
-            reconciliation_status:     'verified',
-            reconciliation_note:       null,
-            reconciled_at:             new Date().toISOString(),
-            landed_cost_per_meter:    authoritative.result.landedCostPerM,
-            quote_price_per_meter:    authoritative.result.suggestedSellingPricePerM,
-            intended_margin_percent:  authoritative.result.targetMarginPct,
-            meters:                   authoritative.result.quantityM ?? 0,
-            status:                   params.status ?? 'draft',
-            client_request_id:        params.clientRequestId,
-            costing_input_fingerprint: costingInputFingerprint,
-            factory_profile_updated_at: factoryProfileUpdatedAt,
-            ...quotationDocumentPayload,
-            // Weaver wage rate snapshot — flows downstream to shift_assignments
-            worker_rate_per_m:    workerRatePerM,
-            // Legacy required fields with sane defaults
-            ppi:     Math.round(estimate.weftRows[0]?.picks ?? 68),
-            yarn_denier: Math.round(estimate.warpRows[0] ? getEffectiveYarnDenier(estimate.warpRows[0]) : 75),
-            yarn_rate_per_kg: estimate.warpRows[0]?.yarnRate ?? 0,
-    }
+    const quotePayload = buildEstimatorQuotePayload({
+        orgId: profile.org_id,
+        recordKind: newRecordKind,
+        partyName: params.partyName?.trim() || null,
+        qualityLabel: params.qualityLabel.trim(),
+        templateId: params.templateId ?? null,
+        warpInstruction: params.warpInstruction?.trim() || null,
+        weftInstruction: params.weftInstruction?.trim() || null,
+        estimate,
+        result: authoritative.result,
+        // Persist commercial scalar fields from the same rounded result that
+        // drives the saved costing snapshot. The recipe remains the source of
+        // inputs; the canonical result is the source of truth for every
+        // price-changing value written beside it.
+        commercial: {
+            commissionPct: authoritative.result.commissionPct,
+            transportPerM: authoritative.result.transportPerM,
+            orderQuantityM: authoritative.result.quantityM,
+            profitPct: authoritative.result.targetMarginPct,
+        },
+        status: params.status ?? 'draft',
+        clientRequestId: params.clientRequestId,
+        workerRatePerM,
+        costingInputFingerprint,
+        factoryProfileUpdatedAt,
+        reconciledAt: new Date().toISOString(),
+        extra: quotationDocumentPayload,
+    })
 
     const costingAttestation = newRecordKind === 'costing'
         ? await attestCanonicalCostingPayload(user.id, profile.org_id, quotePayload)

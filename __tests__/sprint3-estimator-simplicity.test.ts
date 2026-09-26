@@ -67,6 +67,6 @@ describe('Sprint 3 estimator simplicity and textile workflow', () => {
     expect(migration).toContain('ALTER COLUMN overhead_pct SET DEFAULT 0')
     expect(migration).toContain('Legacy compatibility column')
     expect(actions).toContain('overhead_mode: profileData.overhead_mode')
-    expect(actions).toContain('overhead_pct:         0')
+    expect(read('lib/estimator-quote-payload.ts')).toContain('overhead_pct: 0,')
   })
 })

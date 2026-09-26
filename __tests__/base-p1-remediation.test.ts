@@ -32,11 +32,15 @@ describe('Base P1 pilot remediation', () => {
     expect(client).toContain("if (!saveAsStandaloneCosting && !resolvedPartyName)")
     expect(client).toContain("if (!saveAsStandaloneCosting && (!state.orderQuantityM || state.orderQuantityM <= 0))")
     expect(client).toContain('placeholder="e.g. 5000"')
-    expect(actions).toContain('party_name:           params.partyName?.trim() || null')
+    // Package 2C: the estimator_quotes row is built by lib/estimator-quote-payload.ts;
+    // the call sites still decide the party and quantity sources.
+    const payloadBuilder = read('lib/estimator-quote-payload.ts')
+    expect(actions).toContain('partyName: params.partyName?.trim() || null')
     expect(actions).toContain("if (newRecordKind === 'quotation' && !params.partyName?.trim())")
-    expect(actions).toContain('order_quantity_m:     authoritative.result.quantityM')
-    expect(actions).toContain('meters:                   authoritative.result.quantityM ?? 0')
-    expect(actions).toContain("party_name: normalizeTemplateName(data.partyName || '') || null")
+    expect(actions).toContain('orderQuantityM: authoritative.result.quantityM')
+    expect(payloadBuilder).toContain('order_quantity_m: commercial.orderQuantityM')
+    expect(payloadBuilder).toContain('meters: commercial.orderQuantityM ?? 0')
+    expect(actions).toContain("partyName: normalizeTemplateName(data.partyName || '') || null")
   })
 
   it('exports customer, quantity, total, margin, and profit from the same Base state', () => {

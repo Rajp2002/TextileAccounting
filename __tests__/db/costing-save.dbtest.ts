@@ -30,7 +30,7 @@ vi.mock('@/lib/supabase/admin', () => ({
     createAdminClient: () => createTestSupabase(ctx.db as Db, { kind: 'service' }, ctx.calls as RpcCall[]),
 }))
 
-const { saveEstimatorQuoteV3 } = await import('@/app/(dashboard)/owner/estimator/actions')
+const { saveAsFabricTemplate, saveEstimatorQuoteV3 } = await import('@/app/(dashboard)/owner/estimator/actions')
 
 let db: Db
 let lite: Actor
@@ -156,5 +156,43 @@ describe('paid costing save, end to end in PostgreSQL', () => {
         await asSuperuser(db)
         const { rows } = await db.query('SELECT consumed_at IS NULL AS unused FROM public.estimator_costing_attestations WHERE org_id = $1', [unpaid.orgId])
         expect(rows).toEqual([{ unused: true }])
+    })
+})
+
+// Package 2C: the second live costing save. "Save as quality" creates the
+// saved quality and its first costing through one RPC.
+describe('new saved quality with its first costing, end to end in PostgreSQL', () => {
+    it('INVARIANT: the quality and an attested version-1 costing are created together', async () => {
+        ctx.actor = lite
+        const estimate = f1State({ profitPct: 12 })
+        const result = await saveAsFabricTemplate({
+            name: '  Cotton   Poplin ', partyName: ' Shah   Textiles ',
+            warpRows: estimate.warpRows, weftRows: estimate.weftRows, tapeLengthM: estimate.tapeLengthM,
+            warpCrimpPct: estimate.warpCrimpPct, perPickCostPaisa: estimate.perPickCostPaisa, yarnShortagePct: estimate.yarnShortagePct,
+            overheadMode: estimate.overheadMode, overheadOverridePerM: estimate.overheadOverridePerM,
+            loomType: estimate.loomType, loomRpm: estimate.loomRpm, loomPowerKw: estimate.loomPowerKw,
+            warpingMode: estimate.warpingMode, sizingMode: estimate.sizingMode, hoursPerShift: estimate.hoursPerShift, estimate,
+        })
+        expect(result).toMatchObject({ success: true, versionNumber: 1 })
+        expect((ctx.calls as RpcCall[]).map(call => `${call.identity}:${call.fn}`)).toEqual([
+            'service:register_estimator_costing_attestation',
+            'user:create_saved_quality_with_initial_costing_v1',
+        ])
+
+        await asSuperuser(db)
+        const { rows } = await db.query(
+            `SELECT t.name, q.record_kind, q.party_name, q.quality_label, q.version_number,
+                    q.server_attestation_id IS NOT NULL AS attested, q.quote_price_per_meter::float8 AS price,
+                    q.order_quantity_m::float8 AS quantity, q.meters::float8 AS meters
+               FROM public.estimator_templates t JOIN public.estimator_quotes q ON q.template_id = t.id
+              WHERE t.org_id = $1 AND t.name = 'Cotton Poplin'`,
+            [lite.orgId],
+        )
+        // CHARACTERIZATION (E26 P2-O6): this path collapses inner spaces in the
+        // party name; saveEstimatorQuoteV3 only trims it.
+        expect(rows).toEqual([{
+            name: 'Cotton Poplin', record_kind: 'costing', party_name: 'Shah Textiles', quality_label: 'Cotton Poplin',
+            version_number: 1, attested: true, price: PRICE[12], quantity: 5000, meters: 5000,
+        }])
     })
 })
