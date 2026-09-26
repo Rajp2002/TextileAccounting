@@ -1371,3 +1371,55 @@ Phase 3 was approved by the owner. **Each batch is proposed with its evidence an
 **Recovery:**
 - `git revert <3A commit>`;
 - or restore single files with `git checkout 05587ce5 -- <path>`.
+
+## E29. Batch 3C: dead modules and the tests that only exercised them (2026-09-27)
+
+Approved by the owner (2026-09-27); deleted.
+
+### Deleted modules (13 from the E28 inventory, plus 3 tooling files)
+
+| Module | Consumers before deletion | Handling |
+| --- | --- | --- |
+| `owner/production/BaseMachineJobs.tsx` | one text assertion (`base-production-core.test.ts`) | assertion removed |
+| `components/settings/factory-cost-profile.tsx` (1,094 lines) | text contracts in 9 test files | dead-file assertions removed (below) |
+| `components/settings/template-manager.tsx` | 2 test files | dead-file assertions removed |
+| `components/settings/monthly-overhead-calculator.tsx` | 1 test file; QA preview `scripts/qa/base-fixed-salary-preview.jsx` | component tests removed; the preview's `?view=overhead` mode removed (operations and payroll views kept) |
+| `lib/base-job-summaries.ts` + `scripts/performance/job-summaries-{benchmark.mjs,fixture.ts}` | its own test and benchmark | removed together |
+| `lib/base-plan-policy.ts` | `sprint16-billing-language` | the live locale glossary check is kept, with its 11 terms inlined; the two assertions on the module's own constants removed |
+| `lib/dispatch/archive.ts`, `lib/market-runs.ts`, `lib/free-browser-cache.ts`, `lib/payroll-cycle.ts`, `lib/production-log-validation.ts` | their own test files | test files deleted; `b10-india-calendar-boundaries` keeps its `lib/time` cases and loses the two `payroll-cycle` cases |
+| `lib/machine-operator-payroll.ts` | `machine-operator-payroll.test.ts` | helper tests removed; the migration contract (historical SQL) kept |
+| `lib/estimator-capacity.ts` | one case in `estimator-production-readiness` | case removed; no live loom-output calculation exists |
+| `scripts/ci/lint-changed.mjs` | `ci-lint-changed.test.ts` | removed together (CI has used `npm run lint` since `3e8b8725`) |
+
+**Test files deleted (8, 73 tests):**
+- `base-job-summaries`, `market-runs`, `free-browser-cache`, `dispatch-archive`, `payroll-cycle`;
+- `p1-production-log-strictness` (its "payroll/stock safety" cases asserted local objects only);
+- `ci-lint-changed`;
+- `ux-007-settings-control-names`.
+
+**Cases removed from kept files: 11.**
+
+**Suite:** 235 → 227 files, 2,036 → 1,952 tests. Every removed test exercised only deleted code.
+
+### Coverage that was illusory (recorded, not re-pointed)
+
+The contracts on `factory-cost-profile.tsx` and `template-manager.tsx` pinned the retired settings screen: accessible labels, save-scope wording ("Save for new Cost Estimates"), the target-margin and yarn-review fields, cold-load retry states, and archive confirmations. Settings has rendered `PlanAwareSettingsView` since `25933ba5`.
+
+**None of the asserted strings exists in live code** (VERIFIED by search), so these tests never protected the current screens.
+
+**Follow-up for Phase 4/6:** check the plan-aware settings cards for the same intents: accessible names on rate inputs and switches, save-scope messaging, and load-error retry states. Add live tests where they are missing.
+
+### Gates with 3C applied
+
+Worktree = `main` @ `6ba75687` + 3C.
+
+| Check | Result |
+| --- | --- |
+| `npm run lint` | exit 0 |
+| tsc | PASS |
+| Default vitest | 227 files / 1,952 passed / 1 skipped |
+| `npm run test:db` | 11 files / 60 passed |
+| Production build (credential-free copy) | PASS (compiled 77 s; 53/53 static pages) |
+| Remaining path references to deleted files | none outside docs and QA evidence; one explanatory comment in `sprint16-billing-language` |
+
+**Recovery:** `git revert <3C commit>`, or `git checkout 6ba75687 -- <path>`.

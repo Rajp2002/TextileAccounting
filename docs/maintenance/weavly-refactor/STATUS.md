@@ -6,14 +6,25 @@ Updated 2026-09-26 (night). **Phase 2 in progress.**
 - **2C:** committed and pushed.
 - **2D:** committed and pushed. CI passed.
 - **Phase 3:** the inventory is done (68 unreachable source files, E28).
-- **Batch 3A** (30 dead files, 3,047 lines): approved, committed and pushed with this change.
-- **Current batch: 3C.**
+- **Batch 3A:** committed and pushed (`c36eb72d`, `6ba75687`). CI passed.
+- **Batch 3C:** approved, committed and pushed with this change (E29).
+- **Paused.** The owner deferred batch 3B (session limits).
 - Details: EVIDENCE E24–E27.
 
-## Decisions needed
+## Next session
 
-- None pending. Batch 3C is in preparation.
-- **Phase 5 note:** CLAUDE.md's "Baseline" section still describes lint as red. It is now clean, and CI runs `npm run lint`.
+1. **Batch 3B** (deferred by the owner): the 8 unused `components/ui` primitives from the E28 inventory, plus any npm packages they free. Show the package list before changing `package.json` or the lockfile.
+2. **Then, per the approved order:**
+   - 3F: dead factory-workflow branches in `estimator/actions.ts`, including the market-run payload copy.
+   - 3D: offline sync.
+   - 3E: auth, billing and compliance orphans, reviewed file by file with the owner.
+3. **Open follow-ups:**
+   - live-settings test coverage (E29);
+   - P2-O1…O5;
+   - OS-5, AS-05, OS-12, CS-2, CS-1;
+   - `custom_access_token_hook` grants;
+   - leaked-password protection.
+4. **Phase 5 note:** CLAUDE.md's "Baseline" section still describes lint as red. It is now clean, and CI runs `npm run lint`.
 
 ## Decisions recorded (user, 2026-09-26)
 
@@ -22,6 +33,8 @@ Updated 2026-09-26 (night). **Phase 2 in progress.**
 - **2C:** committed and pushed.
 - **P2-O6 (party-name spacing):** delegated by the owner to Claude. Decision: **no change**. Inner repeated spaces are rare, and aligning the two paths would change stored party names and exact-match party lookups for a cosmetic gain. Pinned as CHARACTERIZATION.
 - **2D:** committed and pushed.
+- **Batch 3C:** approved and deleted (2026-09-27).
+- **Batch 3B:** deferred by the owner (2026-09-27).
 - **Batch 3A:** approved and deleted. `BaseSetupWorkspace.tsx` (rollback adapter) was deleted by owner decision.
 - **Batch order approved:** 3C → 3B → 3F → 3D → 3E. Each batch still lands only after its own approval.
 - **Phase 3:** approved by the owner (2026-09-27). Each deletion batch still needs its own approval under the deletion protocol (BRIEF rule 7).
