@@ -23,8 +23,8 @@ Make the existing Weavly application simpler, more consistent, maintainable, sec
 | Phase | Purpose | Status |
 | --- | --- | --- |
 | 0 | Discovery, risk map, baseline, Phase 1 proposal | complete, gate reached 2026-09-26 |
-| 1 | Regression protection and quality gates (packages 1A–1F in STATUS) | 1F and 1A complete 2026-09-26; 1B proposed |
-| 2 | Targeted consistency/maintainability, one subsystem per package | not started |
+| 1 | Regression protection and quality gates (packages 1A–1F in STATUS) | complete 2026-09-26 (1F, 1A, 1B-1, 1B-2); fix packages F1–F3 applied |
+| 2 | Targeted consistency/maintainability, one subsystem per package | started 2026-09-26; plan and 2A in EVIDENCE E23 |
 | 3 | Proven-unused code, dependencies, assets, legacy docs (deletion protocol) | not started |
 | 4 | Measured performance and interaction quality | not started |
 | 5 | Canonical documentation and agent instructions | not started |

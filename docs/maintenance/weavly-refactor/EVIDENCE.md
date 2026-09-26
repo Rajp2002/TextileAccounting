@@ -394,6 +394,7 @@ Release claims touching these areas are **blocked** until they are resolved or e
 | 8 | CS-2 | Reopen/re-save drift | Medium | Partly verified | Characterize; fix may need persisting `warping_mode`/`overhead_mode` (contract change) |
 | 9 | OS-4, OS-12 | Payroll/advance idempotency | Medium-Low | **OS-4 narrowed and reproduced (E19):** only a replay after reversal re-settles; plain retries are idempotent | **OS-4 fixed in F2 (E21)**; migration awaits production approval. OS-12 open |
 | 10 | AS-02, AS-05 | Free email verification; locked-org writes | Medium / Low–Med | Investigator | Product decisions |
+| 10b | OS-13 | Payroll cycle settings fallback | Low–Med (integrity) | Code and policy verified; not reproduced (E23) | When `update_base_payroll_cycle` refuses, `updateBasePayrollCycleAction` writes the table directly, skipping the RPC's lock and effective-date ordering; the two writes are not atomic. Proposed: RPC-only, like AS-01 |
 | 11 | OS-6…OS-11, AS-03, AS-06…AS-12, CS-4…CS-10 | various | Low–Med | mixed | Backlog, after the harness exists |
 
 ## E13. Scored backlog
@@ -961,3 +962,84 @@ The local files were renamed to these versions.
   - 8 Free tables with RLS and no policy (INFO).
 
 **Rollback:** `evidence/f3-rollback.sql`. It recreates the three policies, unpins the function and removes the two history rows. The unpin was verified on a disposable database.
+
+## E23. Phase 2 plan and package 2A: lint warnings (2026-09-26)
+
+### Phase 2 plan
+
+Phase 2 was started by the owner. It works one subsystem per package, and each package is behavior-preserving and gated.
+
+| Package | Scope | Risk | Extra approval |
+| --- | --- | --- | --- |
+| **2A** | Clear the 80 lint warnings (unused bindings, `any`) | Low | no |
+| 2B | The 3 react-hooks lint errors (`FreeUsageCard`, `navigation-disclosure`, `use-gutter-dock`; the rails shell is protected) | Medium | no |
+| 2C | One builder for the `estimator_quotes` save payload (D1, built 3× in `estimator/actions.ts`) | Medium (costing core; 1A/1B tests) | no |
+| 2D | Shared tour runner for the 7 near-duplicate tutorials (M3) | Medium (DOM anchors) | no |
+| 2E | Native `confirm()` popups (11) → `ConfirmActionDialog` (M4) | Low | **yes, visible UX** |
+| 2F | Estimator decomposition in slices (M1/M2), after 2C | High | later |
+
+### Package 2A result
+
+Lint went from **3 errors / 80 warnings to 3 errors / 0 warnings**. The 3 errors are left for 2B. 32 files changed (+79/−130).
+
+**Removed:**
+- Unused imports.
+- Unused locals, which were pure computations or unused `useState`/`useMemo`.
+- Unused destructured props. The prop types are kept, and the callers still pass them.
+- Unused parameters:
+  - `requireFactoryWorkflow(_orgId)`: 1 definition and 5 call sites.
+  - `getSafePayrollCycleEffectiveDateAction(ruleInput)`: 1 caller, whose argument was ignored.
+  - `openAppliedProduction(_quote, _order)`.
+  - `index` in two `map` callbacks.
+
+**Kept on purpose:**
+- `requireRole` calls whose results are unused. Only the destructured binding was dropped.
+- `.select('id').single()` on an insert whose data is unused.
+- The `includeInactive` name, which a tour contract asserts.
+
+**`any` replaced with exact types:**
+- Rows from explicit `.select()` lists: `PayrollPeriodRow`, `PayrollCycleConfigRow`, `ProtectedPeriodSummary`.
+- `PayrollCycleRule`.
+- Structural error and result types.
+- `unknown` for metadata records.
+- `BasePayrollPeriod.calculation_snapshot` is now `unknown`. No consumer depended on `any`: tsc passes.
+
+**Error messages:** `catch (error: any)` became `unknown`, with the same `?.message || fallback` expression, so messages are unchanged.
+
+**Tests:**
+- Unused imports removed.
+- Two unused rule literals in `payroll-cycle-integration.test.ts` now carry `expect(validateCycleRule(...).valid).toBe(true)`. This strengthens the test.
+- Two unused file reads were removed. Their files are already covered: one is imported by the test, the other has an explicit `existsSync` assertion (`plan-aware-settings-permissions.test.ts:106-111`).
+- No assertion was weakened.
+
+**Checked before removal:** each removed name was searched in `__tests__`. The contract hits (`pendingAdvances`, `ChevronDown`, `accent`, `includeInactive`) refer to other occurrences that remain.
+
+### Observations found while clearing warnings (not changed; behavior preserved)
+
+| ID | Finding | Evidence |
+| --- | --- | --- |
+| OS-13 | Payroll cycle settings fallback bypasses the RPC's checks and is non-atomic (escalated, E12 row 10b) | See the details below this table |
+| P2-O1 | The rate-book tutorial launcher ignores `disabled`, so it stays clickable while a rate change is pending | `RatesClient.tsx:1539` passes `disabled={isPending}`; `RateBookTutorialLauncher` never forwarded it |
+| P2-O2 | `BaseMachineBoard` receives `onActivateQualityClick` but never renders an action for it | The parent is `BaseProductionClient.tsx`. Leftover, or a missing entry point (INFERRED) |
+| P2-O3 | Base onboarding `Step6Review` receives `readiness` but does not display it | Leftover, or a missing summary (INFERRED) |
+| P2-O4 | `BaseAssignmentWorkspace`'s `includeInactive` state has no setter in use (no toggle); only the tour view overrides it | `BaseAssignmentWorkspace.tsx:99` |
+| P2-O5 | Job-creation leftovers in `BaseProductionClient` are removed. `BaseMachineJobs.tsx`, `createBaseProductionJob`, `updateBaseProductionJobStatus` and `lib/base-job-summaries.ts` now have no application importers | Phase 3 candidates under the deletion protocol |
+
+**OS-13 details:**
+- **The action:** `app/(dashboard)/owner/production/actions.ts` `updateBasePayrollCycleAction`.
+- **Where the RPC falls short:** it handles the same-day in-place case itself, but refuses an effective date before the current one.
+- **What the fallback does** when the RPC errors: it closes the active config, then inserts a new one, as two separate writes with the user client.
+- **Why those writes succeed:** production RLS allows Base owners to write directly (`base_payroll_cycle_configs_owner_write`, ALL, `private.base_production_core_access(org_id)`; `authenticated` has INSERT/UPDATE).
+- **Consequence:** the RPC's ordering rule and advisory lock are bypassed on the fallback path. The action's own protected-period check still applies.
+
+### Gates
+
+Worktree = `main` @ `2794f4a0` + 2A.
+
+| Check | Result |
+| --- | --- |
+| tsc | PASS |
+| Full lint | 3 errors / **0 warnings** |
+| Default vitest | 232 files / 2,023 passed / 1 skipped |
+| `npm run test:db` | 10 files / 56 passed |
+| Build | NOT RUN (type-only and dead-binding changes) |
