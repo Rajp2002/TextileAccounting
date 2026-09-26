@@ -19,9 +19,13 @@ export function assertLoopback(host) {
     if (!LOOPBACK_HOSTS.has(host)) throw new Error(`Refusing non-loopback database host: ${host}`)
 }
 
+// Like PostgREST, hand timestamps and dates to callers as strings, not Dates.
+const RAW_TEXT_TYPES = new Set([1082, 1114, 1184]) // date, timestamp, timestamptz
+const types = { getTypeParser: (oid, format) => (RAW_TEXT_TYPES.has(oid) ? value => value : pg.types.getTypeParser(oid, format)) }
+
 export function connect({ host, port, database = 'postgres' }) {
     assertLoopback(host)
-    return new pg.Client({ host, port, user: 'postgres', database })
+    return new pg.Client({ host, port, user: 'postgres', database, types })
 }
 
 function processEnv() {
@@ -106,12 +110,15 @@ export async function installSupabaseStubs(client) {
         CREATE FUNCTION cron.unschedule(text) RETURNS boolean LANGUAGE sql AS $$WITH removed AS (DELETE FROM cron.job WHERE jobname = $1 RETURNING 1) SELECT count(*) > 0 FROM removed$$;
         CREATE FUNCTION cron.alter_job(job_id bigint, schedule text DEFAULT NULL, command text DEFAULT NULL, database text DEFAULT NULL, username text DEFAULT NULL, active boolean DEFAULT NULL)
             RETURNS void LANGUAGE sql AS $$UPDATE cron.job SET active = coalesce(alter_job.active, cron.job.active) WHERE jobid = job_id$$;
-        -- Supabase's documented defaults for existing projects: objects created in
-        -- public are granted to the API roles, and migrations revoke selectively.
+        -- Supabase defaults for projects of this age: objects created in public are
+        -- granted to the API roles, and migrations revoke selectively. Tables and
+        -- sequences match production's pg_default_acl. Production's current
+        -- function default is service_role only, but its existing functions were
+        -- created under this broader default, which the replay reproduces.
         GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
-        ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO anon, authenticated, service_role;
+        ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON TABLES TO anon, authenticated, service_role;
         ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO anon, authenticated, service_role;
-        ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO anon, authenticated, service_role;
+        ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON SEQUENCES TO anon, authenticated, service_role;
     `)
 }
 
