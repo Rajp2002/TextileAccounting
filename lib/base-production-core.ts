@@ -218,7 +218,7 @@ export type BasePayrollPeriod = {
     paid_workers: number
     settled_at: string | null
     settled_by: string | null
-    calculation_snapshot: any | null
+    calculation_snapshot: unknown
     resolved_worker_ids?: string[]
     notes?: string | null
     created_at?: string

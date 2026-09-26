@@ -1836,7 +1836,7 @@ export default function RatesClient({
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-hairline">
-                                    {visibleRates.map((rate, index) => {
+                                    {visibleRates.map((rate) => {
                                         const reviewState = getRateReviewStatus(rate)
                                         const archived = rate.is_active === false
                                         const actionKind = pendingAction?.id === rate.id ? pendingAction.kind : null
@@ -1971,7 +1971,7 @@ export default function RatesClient({
                             </table>
                         </div>
                         <div key={`cards-${resultMotionKey}`} className="ui-content-swap space-y-3 p-3 lg:hidden">
-                            {visibleRates.map((rate, index) => {
+                            {visibleRates.map((rate) => {
                                 const reviewState = getRateReviewStatus(rate)
                                 const archived = rate.is_active === false
                                 const actionKind = pendingAction?.id === rate.id ? pendingAction.kind : null

@@ -11,7 +11,6 @@ describe('Costing Defaults Initialization & Runtime Guarantees (ST19–ST35)', (
     const estimatorClient = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
     const estimatorActions = read('app/(dashboard)/owner/estimator/actions.ts')
     const estimatorPage = read('app/(dashboard)/owner/estimator/page.tsx')
-    const savedCostingsLib = read('lib/saved-costings.ts')
 
     it('ST19: buildEstimatorBaseline hydrates all CD01–CD05 factory defaults', () => {
         // CD01: yarn wastage %

@@ -9,7 +9,6 @@ import { useTranslation } from '@/lib/i18n/context'
 import {
     ArrowLeft,
     CheckCircle2,
-    ChevronDown,
     Clock3,
     Factory,
     History,
@@ -45,7 +44,6 @@ import { Textarea } from '@/components/ui/textarea'
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
 import { formatINR } from '@/lib/finance'
 import { buildBasePayrollReadiness } from '@/lib/base-payroll-readiness'
-import { calculateBaseJobSummaries } from '@/lib/base-job-summaries'
 import { basePayrollReview } from '@/lib/base-payroll-review'
 import { baseProductionHref, readBaseProductionNavigation } from '@/lib/base-production-navigation'
 import { trackPlanEvent } from '@/lib/plan-analytics'
@@ -53,8 +51,6 @@ import {
     calculateBaseEntryGrossPay,
     calculateBasePayrollPeriodSummary,
     type BasePayrollPaymentMode,
-    type BaseProductionCosting,
-    type BaseProductionJobStatus,
 } from '@/lib/base-production-core'
 import {
     type PayrollCycleRule,
@@ -65,16 +61,13 @@ import {
 } from '@/lib/payroll-cycle-engine'
 
 import {
-    createBaseProductionJob,
     createBaseWorkerAdvance,
     createBaseWorkerDeduction,
     settleBaseWorkerPayroll,
-    updateBaseProductionJobStatus,
 } from './actions'
 import BaseActiveQualities from './BaseActiveQualities'
 import BaseMachineBoard from './BaseMachineBoard'
 import BaseAssignmentWorkspace from './BaseAssignmentWorkspace'
-import BaseMachineJobs from './BaseMachineJobs'
 import BaseDailyProductionSheet from './BaseDailyProductionSheet'
 import BasePayrollReadinessPanel from './BasePayrollReadinessPanel'
 import BasePayrollRecords from './BasePayrollRecords'
@@ -82,15 +75,6 @@ import BasePayrollSettlementWorkspace from './BasePayrollSettlementWorkspace'
 import type { BaseProductionInitialData } from './loaders'
 
 type DialogName = 'job' | 'advance' | 'deduction' | null
-
-type JobDraft = {
-    costingId: string
-    targetMeters: string
-    startDate: string
-    dueDate: string
-    customerReference: string
-    notes: string
-}
 
 type AdvanceDraft = {
     workerId: string
@@ -138,21 +122,6 @@ function getActionError(result: unknown) {
     return typeof error === 'string' ? error : 'The action could not be completed.'
 }
 
-function costingTargetMeters(costing: BaseProductionCosting | undefined) {
-    return costing?.order_quantity_m && costing.order_quantity_m > 0 ? String(costing.order_quantity_m) : ''
-}
-
-function emptyJobDraft(today: string, costingId = '', targetMeters = ''): JobDraft {
-    return {
-        costingId,
-        targetMeters,
-        startDate: today,
-        dueDate: '',
-        customerReference: '',
-        notes: '',
-    }
-}
-
 function emptyAdvanceDraft(workerId = ''): AdvanceDraft {
     return { workerId, amount: '', description: '' }
 }
@@ -193,7 +162,6 @@ export default function BaseProductionClient({
     const [settlingWorkerId, setSettlingWorkerId] = useState<string | null>(null)
     const [settlementRequestId, setSettlementRequestId] = useState('')
     const [paymentMode, setPaymentMode] = useState<BasePayrollPaymentMode>('cash')
-    const [jobDraft, setJobDraft] = useState<JobDraft>(() => emptyJobDraft(initialData.today, initialCostingId ?? ''))
     const [advanceDraft, setAdvanceDraft] = useState<AdvanceDraft>(emptyAdvanceDraft)
     const [deductionDraft, setDeductionDraft] = useState<DeductionDraft>(emptyDeductionDraft)
     const [workspaceOpen, setWorkspaceOpen] = useState(false)
@@ -247,10 +215,6 @@ export default function BaseProductionClient({
         () => new Map(initialData.jobs.map((job) => [job.id, job])),
         [initialData.jobs],
     )
-    const jobSummaries = useMemo(
-        () => calculateBaseJobSummaries(initialData.jobs, initialData.entries, initialData.allocations),
-        [initialData.allocations, initialData.entries, initialData.jobs],
-    )
     const productionAllocationLabels = useMemo(() => {
         const labels = new Map<string, string[]>()
         for (const allocation of initialData.allocations) {
@@ -302,14 +266,6 @@ export default function BaseProductionClient({
         }
         return set
     }, [initialData.assignments, initialData.today])
-    const producedThisPeriod = initialData.entries
-        .filter((entry) => entry.production_date >= initialData.payrollPeriod.start && entry.production_date <= initialData.payrollPeriod.end)
-        .reduce((total, entry) => total + entry.meters, 0)
-    const openJobs = activeJobs.length
-    const pendingAdvances = initialData.payables.reduce((total, payable) => total + payable.pending_advance, 0)
-    const unsettledPayable = initialData.payables
-        .filter((payable) => payable.status === 'unsettled')
-        .reduce((total, payable) => total + payable.net_payout, 0)
     const settlingWorker = initialData.payables.find((payable) => payable.worker_id === settlingWorkerId)
     const payrollReadiness = useMemo(() => buildBasePayrollReadiness({
         payables: initialData.payables,
@@ -432,14 +388,6 @@ export default function BaseProductionClient({
             }),
             'Deduction recorded.',
             closeDialog,
-        )
-    }
-
-    function handleJobStatus(jobId: string, status: BaseProductionJobStatus) {
-        void runAction(
-            `job-status-${jobId}`,
-            () => updateBaseProductionJobStatus({ jobId, status }),
-            status === 'completed' ? 'Job marked complete.' : status === 'active' ? 'Job is active.' : 'Job reopened.',
         )
     }
 

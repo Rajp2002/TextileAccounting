@@ -3,7 +3,7 @@ import { getSuratTodayString } from '@/lib/time'
 import { loadMachinesRegister } from '../production/registers/loaders'
 import MachinesRegister from '../production/registers/MachinesRegister'
 export default async function MachinesPage() {
- const { profile, user } = await requireRole(['owner'])
+ const { user } = await requireRole(['owner'])
  const today = getSuratTodayString()
  const data = await loadMachinesRegister(today)
  if (!data) return null

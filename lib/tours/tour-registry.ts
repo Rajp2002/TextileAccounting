@@ -90,6 +90,6 @@ export function isTourEligible(tourId: TourId, planTier?: string, role?: string)
     const def = TOUR_REGISTRY[tourId]
     if (!def) return false
     if (role && !def.allowedRoles.includes(role)) return false
-    if (planTier && !def.allowedPlans.includes(planTier as any)) return false
+    if (planTier && !def.allowedPlans.includes(planTier as TourDefinition['allowedPlans'][number])) return false
     return true
 }

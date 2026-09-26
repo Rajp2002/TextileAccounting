@@ -14,7 +14,7 @@ import { claimSessionAnimation, isReducedMotionPreferred } from '@/lib/tours/ses
 export interface UseTourInvitationProps {
     tourId: TourId
     userId?: string
-    userMetadata?: Record<string, any> | null
+    userMetadata?: Record<string, unknown> | null
     orgId?: string
     onLaunch?: () => void | Promise<void>
 }

@@ -1,12 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import {
-    validateCycleRule,
-    WEEKDAYS,
-    type WeekdayName,
-} from '@/lib/payroll-cycle-engine'
-import type { PayrollCycleInput } from '@/lib/base-onboarding'
+import { validateCycleRule } from '@/lib/payroll-cycle-engine'
 
 const root = process.cwd()
 function readProjectFile(path: string) {

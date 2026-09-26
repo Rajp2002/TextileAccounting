@@ -15,7 +15,7 @@ export async function recordTourEventAction({
 }: {
     tourId: TourId
     action: 'shown' | 'dismissed' | 'started' | 'completed'
-}): Promise<{ success: boolean; data?: Record<string, any> }> {
+}): Promise<{ success: boolean; data?: Record<string, unknown> }> {
     try {
         const { user } = await requireRole(['owner'], { allowFreeAccount: true })
         const existingTourPrefs = (user.user_metadata?.tour_preferences as Record<string, TourPreferenceRecord>) ?? {}
@@ -44,7 +44,7 @@ export async function recordTourEventAction({
             [tourId]: updatedRecord,
         }
 
-        const updateData: Record<string, any> = {
+        const updateData: Record<string, unknown> = {
             tour_preferences: newTourPrefs,
         }
 

@@ -14,7 +14,6 @@ describe('Plan-Aware Settings & Factory Defaults Permissions (ST01–ST18)', () 
     const costingDefaultsCard = read('components/settings/plan-aware/costing-defaults-card.tsx')
     const personalInfoCard = read('components/settings/plan-aware/personal-information-card.tsx')
     const factoryDetailsCard = read('components/settings/plan-aware/factory-details-card.tsx')
-    const securityCard = read('components/settings/plan-aware/security-card.tsx')
     const deletionReviewCard = read('components/settings/plan-aware/deletion-review-card.tsx')
 
     it('ST01: Enforces entitlement matrix for costing_defaults capability', () => {

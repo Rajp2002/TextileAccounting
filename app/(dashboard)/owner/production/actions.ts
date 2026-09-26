@@ -12,12 +12,9 @@ import { getSuratTodayString } from '@/lib/time'
 import {
     validateCycleRule,
     getEarliestSafeCycleChangeDate,
-    previewPeriods,
-    formatCycleExplanation,
     addDays,
-    type PayrollCycleRule,
     type PayrollCycleType,
-    type PayrollCycleConfig,
+    type ProtectedPeriodSummary,
     DEFAULT_MONTHLY_CYCLE_RULE,
 } from '@/lib/payroll-cycle-engine'
 
@@ -1128,7 +1125,7 @@ export async function saveBasePayrollCycleConfig(input: {
         .in('status', ['settled', 'in_progress', 'ready_to_complete'])
 
     const safeResult = getEarliestSafeCycleChangeDate({
-        protectedPeriods: (protectedPeriodRows as any[]) || [],
+        protectedPeriods: (protectedPeriodRows as ProtectedPeriodSummary[] | null) || [],
         today: getSuratTodayString(),
     })
 
@@ -1140,7 +1137,7 @@ export async function saveBasePayrollCycleConfig(input: {
     }
 
     // Call update_base_payroll_cycle RPC
-    const { data: rpcData, error: rpcError } = await supabase.rpc('update_base_payroll_cycle', {
+    const { error: rpcError } = await supabase.rpc('update_base_payroll_cycle', {
         p_cycle_type: parsed.data.cycleType,
         p_rule: validation.normalizedRule,
         p_effective_from: effectiveDate,
@@ -1177,7 +1174,7 @@ export async function saveBasePayrollCycleConfig(input: {
                 .eq('org_id', profile.org_id)
                 .is('effective_until', null)
 
-            const { data: insertData, error: insertError } = await supabase
+            const { error: insertError } = await supabase
                 .from('base_payroll_cycle_configs')
                 .insert({
                     org_id: profile.org_id,
@@ -1245,7 +1242,7 @@ export async function getBasePayrollCycleConfig() {
     }
 }
 
-export async function getSafePayrollCycleEffectiveDateAction(ruleInput?: unknown) {
+export async function getSafePayrollCycleEffectiveDateAction() {
     const { profile } = await requireBaseProductionOwner()
     const supabase = await createServerClient()
 
@@ -1256,7 +1253,7 @@ export async function getSafePayrollCycleEffectiveDateAction(ruleInput?: unknown
         .in('status', ['settled', 'in_progress', 'ready_to_complete'])
 
     const safeResult = getEarliestSafeCycleChangeDate({
-        protectedPeriods: (protectedPeriodRows as any[]) || [],
+        protectedPeriods: (protectedPeriodRows as ProtectedPeriodSummary[] | null) || [],
         today: getSuratTodayString(),
     })
 

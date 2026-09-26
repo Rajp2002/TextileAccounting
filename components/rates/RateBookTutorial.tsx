@@ -48,7 +48,6 @@ function resolveStepElements(step: RatebookStep): { target: HTMLElement | null; 
 
 export function RateBookTutorialLauncher({
     onClick,
-    disabled = false,
     className = '',
     userId,
     orgId,
@@ -516,10 +515,6 @@ export function RateBookTutorial({
             window.removeEventListener('resize', handleManualScrollOrResize)
         }
     }, [active, isPopoverStep, isSheetStep, mobileTour.mobile])
-
-    const [replayTitle, replaySubtitle] = copy.replay.includes(' · ')
-        ? copy.replay.split(' · ')
-        : [copy.replay, '']
 
     const sheetPanelStyle: React.CSSProperties | undefined =
         isSheetStep && spotlight?.card && !mobileTour.mobile

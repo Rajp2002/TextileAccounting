@@ -4,7 +4,6 @@ import { join } from 'node:path'
 import { BILLING_PLANS } from '@/lib/billing-constants'
 import {
   UPGRADE_FEATURE_IMAGES,
-  UPGRADE_PLAN_FEATURES,
   upgradeText,
 } from '@/lib/upgrade-wall'
 import { CARD_FEATURE_PREVIEWS } from '@/components/plans/PlanCard'

@@ -22,7 +22,6 @@ import {
   persistTourCompleted,
 } from '../lib/tours/tour-preferences'
 import { recordTourEventAction } from '../app/actions/tour-preferences'
-import type { TourId } from '../lib/tours/tour-types'
 
 describe('Tour Preferences Adapter & Server Action', () => {
   let mockLocalStorage: Record<string, string> = {}

@@ -288,7 +288,7 @@ function getInitialQualitySnapshotRequestId(templateId: string): string {
     return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-5${hex.slice(13, 16)}-a${hex.slice(17, 20)}-${hex.slice(20, 32)}`
 }
 
-async function requireFactoryWorkflow(_orgId: string): Promise<string> {
+async function requireFactoryWorkflow(): Promise<string> {
     return 'This factory workflow is unavailable on Free, Lite, and Base.'
 }
 
@@ -442,7 +442,7 @@ export async function getFixedWorkersForOverhead(): Promise<{
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
-    const tierError = await requireFactoryWorkflow(profile.org_id)
+    const tierError = await requireFactoryWorkflow()
     if (tierError) return { error: tierError }
 
     const { data, error } = await supabase
@@ -1923,7 +1923,7 @@ export async function convertAcceptedQuoteToOrder(data: {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
-    const tierError = await requireFactoryWorkflow(profile.org_id)
+    const tierError = await requireFactoryWorkflow()
     if (tierError) return { error: tierError }
 
     const targetMeters = Number(data.total_target_meters)
@@ -1986,7 +1986,7 @@ export async function startPartyOrderFromEstimator(input: StartPartyOrderInput) 
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
-    const tierError = await requireFactoryWorkflow(profile.org_id)
+    const tierError = await requireFactoryWorkflow()
     if (tierError) return { error: tierError }
 
     // ── Input validation ─────────────────────────────────────────────────────
@@ -2212,7 +2212,7 @@ export async function getMonthlyOutputSuggestion(): Promise<{
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
-    const tierError = await requireFactoryWorkflow(profile.org_id)
+    const tierError = await requireFactoryWorkflow()
     if (tierError) return { error: tierError }
 
     const now = new Date()
@@ -2582,7 +2582,7 @@ export async function createMarketRunFromEstimator(params: {
     const supabase = await createServerClient()
     const admin = createAdminClient()
 
-    const tierError = await requireFactoryWorkflow(profile.org_id)
+    const tierError = await requireFactoryWorkflow()
     if (tierError) return { error: tierError }
 
     const targetMeters = Number(params.targetMeters)

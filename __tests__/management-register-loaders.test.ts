@@ -7,7 +7,7 @@ vi.mock('@/lib/supabase/server', () => ({ createClient: async () => ({ from: fix
 import { loadWorkersRegister, loadMachinesRegister } from '../app/(dashboard)/owner/production/registers/loaders'
  beforeEach(() => {
   fixture.tier = 'base'; fixture.orgId = 'tenant-one'; fixture.error = null; vi.clearAllMocks()
-  const chain: any = {
+  const chain: Record<string, ReturnType<typeof vi.fn>> = {
     select: vi.fn(() => chain),
     eq: fixture.eq,
     in: vi.fn(() => chain),

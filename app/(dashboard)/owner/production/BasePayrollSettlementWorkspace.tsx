@@ -239,7 +239,7 @@ export default function BasePayrollSettlementWorkspace({
             }
 
             // Optimistic update
-            const settlementData = (result as { settlement?: any })?.settlement
+            const settlementData = (result as { settlement?: { settlement_id?: string } })?.settlement
             const newSettlementId = settlementData?.settlement_id || requestId
             const paidAtStr = new Date().toISOString()
 
@@ -262,9 +262,9 @@ export default function BasePayrollSettlementWorkspace({
             setPayingWorkerId(null)
             setPaymentNote('')
             onSuccess?.()
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('[settle] payment confirmation failed', error)
-            toast.error(error?.message || 'Payment could not be recorded. Try again.')
+            toast.error((error as { message?: string } | null)?.message || 'Payment could not be recorded. Try again.')
         } finally {
             setIsPaying(false)
         }
@@ -318,9 +318,9 @@ export default function BasePayrollSettlementWorkspace({
             setReversalReason('')
             setPaymentNotMade(false)
             onSuccess?.()
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('[reopen] reversal failed', error)
-            toast.error(error?.message || 'Payment could not be reopened.')
+            toast.error((error as { message?: string } | null)?.message || 'Payment could not be reopened.')
         } finally {
             setIsReversing(false)
         }
@@ -379,7 +379,7 @@ export default function BasePayrollSettlementWorkspace({
             }
 
             setLocalPeriodRecord({
-                id: (result as any)?.period?.period_id || crypto.randomUUID(),
+                id: (result as { period?: { period_id?: string } } | null)?.period?.period_id || crypto.randomUUID(),
                 period_start: period.start,
                 period_end: period.end,
                 status: 'settled',
@@ -400,9 +400,9 @@ export default function BasePayrollSettlementWorkspace({
             toast.success(`${period.label} payroll completely settled and preserved!`)
             onSuccess?.()
             router.refresh()
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('[complete] payroll finalization failed', error)
-            toast.error(error?.message || 'Payroll could not be completed. Try again.')
+            toast.error((error as { message?: string } | null)?.message || 'Payroll could not be completed. Try again.')
         } finally {
             setIsCompleting(false)
         }

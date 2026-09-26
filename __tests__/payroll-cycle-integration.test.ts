@@ -6,18 +6,14 @@ import {
     validateCycleRule,
     getPeriodContaining,
     generatePeriods,
-    previewPeriods,
-    formatCycleExplanation,
     getEarliestSafeCycleChangeDate,
     addDays,
-    diffInDays,
 } from '@/lib/payroll-cycle-engine'
 import {
     calculateBaseWorkerPayables,
     type BaseProductionWorker,
     type BaseProductionEntry,
     type BasePayrollSettlement,
-    type BaseWorkerAdvance,
 } from '@/lib/base-production-core'
 import { calculateBaseSalaryLines } from '@/lib/base-salary'
 
@@ -85,6 +81,7 @@ describe('Payroll Cycle Engine — Historical Immutability & Accounting Protecti
 
         // Now the owner changes cycle to Monthly starting on the 26th
         const newRule: PayrollCycleRule = { type: 'monthly', anchorDay: 26 }
+        expect(validateCycleRule(newRule).valid).toBe(true)
 
         // The safe effective date service guarantees that settled August is protected
         const safeResult = getEarliestSafeCycleChangeDate({
@@ -126,6 +123,7 @@ describe('Payroll Cycle Engine — Historical Immutability & Accounting Protecti
             interval: 24,
             anchorDate: '2026-09-01',
         }
+        expect(validateCycleRule(new24DayRule).valid).toBe(true)
 
         const safeCheck = getEarliestSafeCycleChangeDate({
             protectedPeriods: [activePeriod],

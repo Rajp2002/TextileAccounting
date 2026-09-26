@@ -4,7 +4,7 @@ import React, { useState, useId, useMemo } from 'react'
 import Link from 'next/link'
 import { ChevronDown, ChevronUp, RefreshCw, Loader2, AlertCircle } from 'lucide-react'
 import { useTranslation } from '@/lib/i18n/context'
-import { freeText, freeErrorText } from '@/lib/i18n/free-tier'
+import { freeText } from '@/lib/i18n/free-tier'
 import { Button } from '@/components/ui/button'
 
 export interface FreeUsageCardProps {

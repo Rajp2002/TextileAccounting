@@ -27,7 +27,6 @@ import {
     type BaseWorkerAdvance,
     type BaseWorkerPayable,
     type BasePayrollPeriod,
-    getBasePayrollPeriod,
 } from '@/lib/base-production-core'
 import {
     type PayrollCycleConfig,
@@ -62,6 +61,35 @@ export type BaseProductionInitialData = {
 }
 
 type QueryError = { message?: string } | null
+
+// Columns selected from base_payroll_periods and base_payroll_cycle_configs.
+type PayrollPeriodRow = {
+    id: string
+    period_start: string | null
+    period_end: string | null
+    status: string | null
+    total_gross: number | string | null
+    total_recovery: number | string | null
+    total_net: number | string | null
+    total_workers: number | null
+    paid_workers: number | null
+    settled_at: string | null
+    settled_by: string | null
+    calculation_snapshot: unknown
+    resolved_worker_ids: unknown
+    notes: string | null
+    created_at: string | null
+    updated_at: string | null
+}
+
+type PayrollCycleConfigRow = {
+    id: string
+    org_id: string
+    cycle_type: string
+    rule: unknown
+    effective_from: string
+    effective_until: string | null
+}
 
 function requireRows<T>(result: { data: T[] | null; error: QueryError }, label: string): T[] {
     if (result.error) throw new Error(`Failed to load Base production ${label}: ${result.error.message ?? 'unknown database error'}`)
@@ -276,11 +304,11 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
     const rawDailyEntries = requireRows(dailyEntriesResult, 'daily entries')
     const rawDailyAllocations = requireRows(dailyAllocationsResult, 'daily production allocations')
     const payrollPeriodsErr = payrollPeriodsResult.error as { code?: string; message?: string } | null
-    const rawPayrollPeriods = (payrollPeriodsErr && (payrollPeriodsErr.code === 'PGRST205' || payrollPeriodsErr.code === '42P01' || payrollPeriodsErr.message?.includes('does not exist')))
+    const rawPayrollPeriods: PayrollPeriodRow[] = (payrollPeriodsErr && (payrollPeriodsErr.code === 'PGRST205' || payrollPeriodsErr.code === '42P01' || payrollPeriodsErr.message?.includes('does not exist')))
         ? []
-        : (requireRows(payrollPeriodsResult as any, 'payroll periods') as Record<string, any>[])
+        : requireRows(payrollPeriodsResult as { data: PayrollPeriodRow[] | null; error: QueryError }, 'payroll periods')
 
-    const rawCycleConfig = payrollCycleConfigResult?.data as Record<string, any> | null
+    const rawCycleConfig = payrollCycleConfigResult?.data as PayrollCycleConfigRow | null
     const payrollCycleConfig: PayrollCycleConfig = rawCycleConfig ? {
         id: String(rawCycleConfig.id),
         orgId: String(rawCycleConfig.org_id),
@@ -489,7 +517,7 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
     // legacy rows coherent while the write path repairs the stored status.
     const jobs = reconcileBaseProductionJobStatuses(storedJobs, entries, allocations)
 
-    const payrollPeriods: BasePayrollPeriod[] = (rawPayrollPeriods as Record<string, any>[]).map((row) => ({
+    const payrollPeriods: BasePayrollPeriod[] = rawPayrollPeriods.map((row) => ({
         id: String(row.id),
         org_id: orgId,
         period_start: toDate(row.period_start, payrollPeriod.start),

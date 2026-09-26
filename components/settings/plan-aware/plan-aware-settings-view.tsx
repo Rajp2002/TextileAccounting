@@ -47,7 +47,7 @@ export function PlanAwareSettingsView({
     onFactoryNameChange,
     onDefaultsChange,
 }: PlanAwareSettingsViewProps) {
-    const { t, tx } = useTranslation()
+    const { t } = useTranslation()
 
     const [personalDirty, setPersonalDirty] = useState(false)
     const [factoryDirty, setFactoryDirty] = useState(false)

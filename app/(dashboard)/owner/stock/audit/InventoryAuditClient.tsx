@@ -7,17 +7,14 @@ import { toast } from 'sonner'
 import {
     ArrowLeft,
     Calendar,
-    CheckCircle2,
     ClipboardCheck,
     Download,
     Eye,
     EyeOff,
-    HelpCircle,
     Info,
     Layers,
     Lock,
     Package,
-    RefreshCw,
     Scale,
     Warehouse,
 } from 'lucide-react'
@@ -33,7 +30,6 @@ import {
     generateMaterialPositionCsv,
     type FabricAuditItem,
     type InventoryAuditBoard,
-    type MaterialPositionItem,
     type YarnAuditItem,
 } from '@/lib/inventory-audit'
 import {

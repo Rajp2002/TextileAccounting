@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
 
@@ -15,7 +15,6 @@ vi.mock('@/lib/supabase/server', () => ({
 vi.mock('next/cache', () => ({ revalidatePath: mocks.revalidatePath }))
 
 import { getTourStatus } from '../lib/tours/tour-preferences'
-import { getTourDefinition } from '../lib/tours/tour-registry'
 
 describe('Tour Invitation Lifecycle & Contract', () => {
   const componentPath = path.resolve(__dirname, '../components/tours/TourInvitation.tsx')

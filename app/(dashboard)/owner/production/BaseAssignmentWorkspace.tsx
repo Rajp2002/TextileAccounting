@@ -96,7 +96,7 @@ export default function BaseAssignmentWorkspace({
     const [selectedShift, setShift] = useState<BaseProductionShift>(initialShift ?? 'day')
     const [search, setWorkerSearch] = useState('')
     const [machineTypeFilter, setSelectedMachineTypes] = useState<string[]>([])
-    const [includeInactive, setShowInactive] = useState(false)
+    const [includeInactive] = useState(false)
     const [draggingWorkerId, setDraggingWorkerId] = useState<string | null>(null)
     const [dragPoint, setDragPoint] = useState<ConnectorPoint | null>(null)
     const [hoveredWorkerId, setHoveredWorkerId] = useState<string | null>(null)

@@ -28,7 +28,6 @@ interface Step6ReviewProps {
 
 export function Step6Review({
     draft,
-    readiness,
     onEditStep,
     error,
 }: Step6ReviewProps) {

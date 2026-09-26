@@ -75,7 +75,6 @@ export default function BaseMachineBoard({
     assignments,
     machineJobContexts,
     today,
-    onActivateQualityClick,
 }: BaseMachineBoardProps) {
     const router = useRouter()
     const [search, setSearch] = useState('')

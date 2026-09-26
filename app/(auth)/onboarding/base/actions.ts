@@ -17,6 +17,7 @@ import {
 import { getFactoryReadiness } from '@/lib/base-onboarding.server'
 import {
     validateCycleRule,
+    type PayrollCycleRule,
     type MonthlyCycleRule,
     type WeeklyCycleRule,
     type IntervalDaysCycleRule,
@@ -88,7 +89,7 @@ export async function getBaseOnboardingInitialState() {
                 .select('name, onboarding_complete')
                 .eq('id', profile.org_id)
                 .maybeSingle()
-            org = fallbackOrg ? ({ ...fallbackOrg, base_onboarding: null } as any) : null
+            org = fallbackOrg ? { ...fallbackOrg, base_onboarding: null } : null
         }
 
         const factoryName = org?.name ?? ''
@@ -169,8 +170,8 @@ export async function getBaseOnboardingInitialState() {
         }
 
         if (payrollRes.data) {
-            const cycleType = payrollRes.data.cycle_type as any
-            const rule = payrollRes.data.rule as any
+            const cycleType = payrollRes.data.cycle_type as PayrollCycleInput['cycleType'] | null
+            const rule = payrollRes.data.rule as { anchorDay?: number; anchorWeekday?: string; interval?: number; anchorDate?: string } | null
             draft.payroll = {
                 cycleType: cycleType || 'monthly',
                 anchorDay: rule?.anchorDay || 1,
@@ -572,7 +573,7 @@ export async function saveBaseOnboardingPayrollAction(input: PayrollCycleInput) 
         const supabase = await createClient()
         const today = getSuratTodayString()
 
-        let cycleRule: any
+        let cycleRule: PayrollCycleRule
         const cycleType = input.cycleType || 'monthly'
 
         if (cycleType === 'monthly') {
@@ -649,7 +650,7 @@ export async function completeBaseOnboardingAction() {
             completed_steps: ['factory', 'defaults', 'machines', 'workers', 'payroll', 'review'],
         }
 
-        let updateError: any = null
+        let updateError: { code?: string; message?: string } | null = null
 
         // 1. Attempt full update with base_onboarding metadata and onboarding_complete
         const res1 = await admin

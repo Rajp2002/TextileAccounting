@@ -253,7 +253,7 @@ export function PayrollCycleSettingsCard({
         setConfirmModalOpen(true)
 
         try {
-            const res = await getSafePayrollCycleEffectiveDateAction(ruleValidation.normalizedRule)
+            const res = await getSafePayrollCycleEffectiveDateAction()
             if (res && res.success) {
                 setSafeEffectiveInfo({
                     safeEffectiveDate: res.safeEffectiveDate,

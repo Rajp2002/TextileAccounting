@@ -1036,7 +1036,6 @@ function StepperField({
     unit = '%',
     step = 0.5,
     hint,
-    accent = 'warp',
     ghostValue,
     ghostPlaceholder,
     placeholderKind = 'example',

@@ -1254,7 +1254,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
         }
     }
 
-    const openAppliedProduction = (_quote: QuoteRow, _order: QuoteLinkedOrder) => {
+    const openAppliedProduction = () => {
         router.push('/owner/production')
     }
 
@@ -1765,7 +1765,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     auditingId={updatingId}
                     onToggleFavorite={quote => { void handleLibraryState(quote, { isFavorite: !quote.is_favorite }) }}
                     onToggleArchived={requestArchiveState}
-                    onOpenUsage={(quote, order) => { setOpenQualityKey(null); openAppliedProduction(quote, order) }}
+                    onOpenUsage={() => { setOpenQualityKey(null); openAppliedProduction() }}
                     onEnsureDetail={ensureQuoteDetail}
                     factoryInputsCapturedLabel={t('estimator.sprint1.baseline_captured')}
                 />

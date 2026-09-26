@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest'
 import {
     PayrollCycleRule,
     validateCycleRule,
-    getBoundaryOnOrBefore,
     getNextBoundary,
     getPreviousBoundary,
     getPeriodContaining,

@@ -62,7 +62,7 @@ export interface TourStatus {
  */
 export function getTourStatus(
     tourId: TourId,
-    userMetadata?: Record<string, any> | null,
+    userMetadata?: Record<string, unknown> | null,
     userId?: string,
     orgId?: string
 ): TourStatus {
