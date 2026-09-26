@@ -46,7 +46,6 @@ describe('Sprint 3 estimator simplicity and textile workflow', () => {
 
   it('keeps Base entry focused on quality and keeps customer only for quotation context/export', () => {
     const client = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
-    const settings = read('components/settings/factory-cost-profile.tsx')
     const english = read('lib/i18n/locales/en.ts')
 
     expect(client).toContain('Quick Costing')
@@ -54,7 +53,6 @@ describe('Sprint 3 estimator simplicity and textile workflow', () => {
     expect(client).toContain('const showPartyField = canUseProduction && !isStandaloneCostingSession')
     expect(client).toContain('defaultCustomerName={showPartyField ? partyName : \'\'}')
     expect(client).not.toContain('totals.effectiveOverheadPct')
-    expect(settings).not.toContain('label="Overhead %"')
     expect(english).toContain('add_blend: "Add warp yarn component"')
     expect(english).toContain('add_weft: "Add weft yarn component"')
   })

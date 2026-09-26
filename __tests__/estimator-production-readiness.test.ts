@@ -12,7 +12,6 @@ import {
   validateEstimatorSnapshot,
 } from '../lib/estimator-validation'
 import { resolveEffectiveSubscription } from '../lib/subscription-access'
-import { calcDailyOutputM } from '../lib/estimator-capacity'
 
 const estimatorClientSource = readFileSync(
   join(process.cwd(), 'app/(dashboard)/owner/estimator/EstimatorClient.tsx'),
@@ -59,12 +58,6 @@ describe('Estimator production-readiness regressions', () => {
     expect(estimatorActionsSource).toMatch(
       /validateEstimatorSnapshot\(snapshot, \{\s*requireTapeLength: false,?\s*\}\)/,
     )
-  })
-
-  it('converts loom output from inches per minute to metres per day', () => {
-    const output = calcDailyOutputM(700, 60, 12, 85)
-    expect(output).not.toBeNull()
-    expect(output!).toBeCloseTo(181.356, 3)
   })
 
   it('calculates beam capacity by dividing consumed tape by the crimp factor', () => {

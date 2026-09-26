@@ -112,33 +112,14 @@ describe('monthly overhead derivation', () => {
     expect(calcFullTotals(applied).overheadPerM).toBeCloseTo(12.7777777778, 8)
   })
 
-  it('keeps calculator drafts separate from the dedicated apply mutation', () => {
-    const component = readFileSync(join(root, 'components/settings/monthly-overhead-calculator.tsx'), 'utf8')
-    const settings = readFileSync(join(root, 'components/settings/factory-cost-profile.tsx'), 'utf8')
+  it('keeps the dedicated apply mutation bounded and conflict-checked', () => {
     const actions = readFileSync(join(root, 'app/(dashboard)/owner/estimator/actions.ts'), 'utf8')
 
-    expect(component).toContain('const [items, setItems]')
-    expect(component).toContain("type CalculatorView = 'summary' | 'edit' | 'confirm'")
-    expect(component).toContain('aria-invalid={invalidAmountIds.includes(item.id) || undefined}')
-    expect(component).toContain('MAX_MONTHLY_OVERHEAD_AMOUNT')
-    expect(component).toContain('MAX_STANDARD_MONTHLY_PRODUCTION_METRES')
-    expect(component).toContain('parsed <= 0')
-    expect(component).toContain('tabIndex={-1}')
-    expect(component).toContain("view === 'summary' || view === 'edit'")
-    expect(component).toContain('grid grid-cols-2')
-    expect(settings).toContain('applyMonthlyDerivedOverhead')
     expect(actions).toContain("overhead_mode: 'monthly_expenses'")
     expect(actions).toContain('overhead_override_per_m: derivedOverheadPerMetre')
     expect(actions).toContain(".eq('updated_at', data.expectedUpdatedAt)")
     expect(actions).toContain("amount > MAX_MONTHLY_OVERHEAD_AMOUNT")
     expect(actions).toContain("productionMetres > MAX_STANDARD_MONTHLY_PRODUCTION_METRES")
-  })
-
-  it('does not introduce monthly history or actual-production reporting', () => {
-    const component = readFileSync(join(root, 'components/settings/monthly-overhead-calculator.tsx'), 'utf8')
-    expect(component).not.toContain('Recent Months')
-    expect(component).not.toContain('Actual Monthly Production')
-    expect(component).not.toContain('month selector')
   })
 
   it('upgrades an older saved expense set without losing its amounts or custom rows', () => {
@@ -153,21 +134,5 @@ describe('monthly overhead derivation', () => {
     expect(upgraded.find(item => item.label === 'Maintenance & Repairs')?.monthlyAmount).toBe(120_000)
     expect(upgraded.find(item => item.label === 'Security')?.monthlyAmount).toBe(45_000)
     expect(upgraded.filter(item => item.isPreset)).toHaveLength(7)
-  })
-
-  it('summarizes saved monthly assumptions before reactivating them from manual mode', () => {
-    const component = readFileSync(join(root, 'components/settings/monthly-overhead-calculator.tsx'), 'utf8')
-    const settings = readFileSync(join(root, 'components/settings/factory-cost-profile.tsx'), 'utf8')
-
-    expect(settings).toContain("initialView={overheadMode === 'direct' && hasSavedMonthlyConfiguration ? 'summary' : 'edit'}")
-    expect(settings).toContain("tx('Factory setup')")
-    expect(settings).toContain("tx('Core costing defaults')")
-    expect(settings).toContain("tx('Capacity reference')")
-    expect(component).toContain("view === 'summary'")
-    expect(component).toContain("tx('Total monthly expenses')")
-    expect(component).toContain("tx('Standard monthly production')")
-    expect(component).toContain("tx('Derived costing overhead')")
-    expect(component).toContain("setView('edit')")
-    expect(component).toContain("tx('Edit details')")
   })
 })

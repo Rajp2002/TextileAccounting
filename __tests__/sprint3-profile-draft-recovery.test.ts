@@ -72,15 +72,12 @@ describe('Sprint 3 profile selection and draft recovery', () => {
 
   it('makes setup scope, save scope, and draft recovery explicit in the UI code', () => {
     const wizard = read('app/(dashboard)/owner/estimator/FactoryCostWizard.tsx')
-    const settings = read('components/settings/factory-cost-profile.tsx')
     const estimator = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
     const autosave = read('hooks/useAutosave.ts')
 
     expect(wizard).toContain('Choose your factory type')
     expect(wizard).toContain('preview until you save it')
     expect(wizard).not.toContain('13.5')
-    expect(settings).toContain('Save for new Cost Estimates')
-    expect(settings).toContain('Existing saved costings keep the numbers captured when they were saved.')
     expect(estimator).toContain('Unsaved Cost Estimate')
     expect(estimator).toContain('Cost Estimate draft discarded')
     expect(autosave).toContain('suppressAutosaveUntilChanged')

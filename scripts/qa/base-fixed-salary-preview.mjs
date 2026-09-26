@@ -1,5 +1,5 @@
 // Isolated UI fixture using real components, mocked navigation/actions, and no backend.
-// node scripts/qa/base-fixed-salary-preview.mjs → http://127.0.0.1:4319/?view=operations|payroll|overhead
+// node scripts/qa/base-fixed-salary-preview.mjs → http://127.0.0.1:4319/?view=operations|payroll
 import { createServer } from 'vite'
 import tailwind from '@tailwindcss/postcss'
 import { readFileSync } from 'node:fs'

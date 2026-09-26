@@ -27,8 +27,6 @@ describe('Sprint 7 Base UX polish contracts', () => {
             'app/(dashboard)/owner/estimator/EstimatorClient.tsx',
             'app/(dashboard)/owner/quotes/QuotesClient.tsx',
             'app/(dashboard)/owner/rates/RatesClient.tsx',
-            'components/settings/factory-cost-profile.tsx',
-            'components/settings/template-manager.tsx',
             'components/estimator/CostingExportDialog.tsx',
             'components/settings/organization-data-export-button.tsx',
             'components/billing/SubscribeButton.tsx',
@@ -39,12 +37,7 @@ describe('Sprint 7 Base UX polish contracts', () => {
 
     it('keeps high-risk archive lifecycle controls in the owning surfaces', () => {
         expect(read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')).toContain('<ConfirmActionDialog')
-        expect(read('components/settings/template-manager.tsx')).toContain('Manage saved qualities in Saved Costings')
-        expect(read('components/settings/template-manager.tsx')).not.toContain('<ConfirmActionDialog')
         expect(read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')).not.toContain('window.confirm')
-        expect(read('components/settings/template-manager.tsx')).not.toContain('confirm(`Archive quality')
-        expect(read('components/settings/factory-cost-profile.tsx')).toContain('<ConfirmActionDialog')
-        expect(read('components/settings/factory-cost-profile.tsx')).not.toContain('window.confirm')
     })
 
     it('keeps the three prices distinct and explains disabled comparison/export actions', () => {

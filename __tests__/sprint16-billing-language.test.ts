@@ -1,7 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { BASE_PLAN_FACTORY_GLOSSARY, BASE_PLAN_LANGUAGE_POLICY } from '../lib/base-plan-policy'
 import { BILLING_DOCUMENT_POLICY } from '../lib/billing-document-policy'
 import { formatDateOnly } from '../lib/format'
 import { formatSuratDateTime } from '../lib/time'
@@ -30,24 +29,13 @@ describe('Sprint 16 billing and language policy', () => {
   })
 
   it('promises all three Base Plan languages and preserves factory terminology', () => {
-    expect(BASE_PLAN_LANGUAGE_POLICY.supportedLanguages).toEqual(['en', 'hi', 'gu'])
-    expect(BASE_PLAN_LANGUAGE_POLICY.surfaces).toEqual(expect.arrayContaining([
-      'navigation',
-      'estimator',
-      'saved_costings',
-      'quotations',
-      'rate_book',
-      'settings',
-      'billing',
-      'export',
-      'validation',
-      'status_and_toasts',
-    ]))
-
+    // Factory terms kept in their familiar form (formerly lib/base-plan-policy.ts,
+    // removed as unused in Phase 3C).
+    const glossaryTerms = ['warp', 'weft', 'PPI', 'crimp', 'waste', 'pick rate', 'costing', 'quotation', 'trader', 'margin', 'GST']
     for (const locale of ['en', 'hi', 'gu']) {
       const source = read(`lib/i18n/locales/${locale}.ts`)
       expect(source).toContain('base_plan:')
-      for (const { term } of BASE_PLAN_FACTORY_GLOSSARY) expect(source.toLowerCase()).toContain(term.toLowerCase())
+      for (const term of glossaryTerms) expect(source.toLowerCase()).toContain(term.toLowerCase())
     }
 
     expect(read('components/estimator/BasePlanFactoryGlossary.tsx')).toContain('base_plan.glossary')

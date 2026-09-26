@@ -5,7 +5,6 @@ import { join } from 'node:path'
 const read = (path: string) => readFileSync(join(process.cwd(), path), 'utf8')
 
 describe('yarn review and selling-margin preferences', () => {
-  const settings = read('components/settings/factory-cost-profile.tsx')
   const onboarding = read('app/(dashboard)/owner/estimator/FactoryCostWizard.tsx')
   const estimator = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
   const rates = read('app/(dashboard)/owner/rates/RatesClient.tsx')
@@ -13,9 +12,7 @@ describe('yarn review and selling-margin preferences', () => {
   const sidebar = read('components/navigation/owner-sidebar.tsx')
   const migration = read('supabase/migrations/20260723113000_yarn_review_and_margin_defaults.sql')
 
-  it('captures both defaults in settings and first-run setup', () => {
-    expect(settings).toContain('Target Margin')
-    expect(settings).toContain('yarn_review_interval_days')
+  it('captures both defaults in first-run setup', () => {
     expect(onboarding).toContain('Target margin')
     expect(onboarding).toContain('Review yarn rates')
   })

@@ -18,7 +18,6 @@ describe('Base P1 production coverage contracts', () => {
 
     it('keeps warp/weft blend add-remove controls and optional section activation explicit', () => {
         const estimator = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
-        const settings = read('components/settings/factory-cost-profile.tsx')
 
         expect(estimator).toContain("case 'ADD_WARP_ROW'")
         expect(estimator).toContain("case 'ADD_WEFT_ROW'")
@@ -28,9 +27,6 @@ describe('Base P1 production coverage contracts', () => {
         expect(estimator).toContain("t('estimator.warp.add_blend')")
         expect(estimator).toContain("t('estimator.weft.add_weft')")
         expect(estimator).toContain("type: 'ENABLE_SECTION'")
-        expect(settings).toContain('function OptionalAssumptionDisclosure')
-        expect(settings).toContain('onCheckedChange={onEnabledChange}')
-        expect(settings).toContain('enabled_sections: sections')
     })
 
     it('exposes costing archive and restore in the Base quality library', () => {

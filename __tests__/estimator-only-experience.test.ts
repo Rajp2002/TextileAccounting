@@ -12,7 +12,6 @@ describe('Estimator-only product presentation', () => {
     const settings = read('app/(dashboard)/owner/settings/page.tsx')
     const settingsLayout = read('app/(dashboard)/owner/settings/layout.tsx')
     const gate = read('components/billing/AccessGate.tsx')
-    const costProfile = read('components/settings/factory-cost-profile.tsx')
     const rateBook = read('app/(dashboard)/owner/rates/RatesClient.tsx')
     const rateActions = read('app/(dashboard)/owner/rates/actions.ts')
 
@@ -82,7 +81,6 @@ describe('Estimator-only product presentation', () => {
         expect(settingsLayout).toContain('requiredCapability="account_data"')
         expect(settings).toContain('<PlanAwareSettingsView')
         expect(read('components/settings/plan-aware/plan-aware-settings-view.tsx')).toContain("tier === 'base' && <PayrollCycleSettingsCard")
-        expect(costProfile).toContain('Save for new Cost Estimates')
     })
 
     it('saves Base edits through the authoritative versioned quote path', () => {
