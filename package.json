@@ -10,7 +10,8 @@
     "lint": "eslint --max-warnings=0",
     "qa:provisioning-smoke": "node --env-file=.env.qa.local scripts/qa/provisioning-smoke.mjs --expected-project-ref=eutycrtzzxmlkcpipgod",
     "qa:batch7-release-runtime": "node scripts/qa/batch7-release-runtime-evidence.mjs",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:db": "vitest run --config vitest.db.config.ts"
   },
   "dependencies": {
     "@ducanh2912/next-pwa": "^10.2.9",
