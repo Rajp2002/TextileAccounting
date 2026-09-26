@@ -1232,3 +1232,142 @@ Worktree = `main` @ `7a15df69` + 2D.
 | tsc | PASS |
 | Default vitest | 235 files / 2,036 passed / 1 skipped |
 | `npm run test:db` | 11 files / 60 passed |
+
+## E28. Phase 3 inventory and batch 3A (2026-09-27)
+
+Phase 3 was approved by the owner. **Each batch is proposed with its evidence and lands only after its own approval** (BRIEF rule 7).
+
+### Method (VERIFIED)
+
+- **Reachability.** All static imports, re-exports and literal dynamic `import()`/`require()` were resolved (`@/` alias and relative paths), then followed transitively from every framework entry point:
+  - `app/**/{page,layout,route,loading,error,not-found,template,default,global-error,manifest,…}`;
+  - `proxy.ts`, `instrumentation*`, `next.config.ts`, `sentry.*`;
+  - `worker/`.
+
+  Result: 547 source files; **68 unreachable** (~7,750 lines).
+- **String references.** For each unreachable file, its path and bare name were searched across every tracked text file, split by area: tests, scripts, app, config, `supabase/`, docs. Over half the suite reads sources by path, so import counts alone are not enough. Config path hits were only tracked QA evidence (`output/qa/*.json`), which is historical and is not edited.
+- **Dynamic loading.** No template-string or variable `import()`/`require()` exists in `app`, `components`, `lib`, `hooks`, `worker`, `proxy.ts` or `next.config.ts`.
+- **Tooling.** The scripts ran from the scratchpad; they are not committed.
+
+### Inventory and batches
+
+| Batch | Contents | Why separate |
+| --- | --- | --- |
+| **3A** | No importers anywhere; referenced only by docs or QA evidence; not security, billing, compliance, auth or UI primitives | Lowest risk |
+| 3B | Unused `components/ui` primitives, plus any dependencies they free | Dependency change |
+| 3C | Dead modules still read or imported by tests or scripts | Their tests and contracts go with them |
+| 3D | Offline-sync provider and hooks | PWA and drafts area, test-consumed |
+| 3E | Auth, billing, compliance, access codes and tracking tokens | C10/C11; needs owner review |
+| 3F *(not in the table)* | Dead branches inside live files: the `requireFactoryWorkflow` callers in `estimator/actions.ts`, including the market-run payload | Symbol-level; needs UI caller analysis |
+
+| File | Lines | Batch | Importers (app/test/script/other) | Path references outside docs and QA evidence |
+| --- | --- | --- | --- | --- |
+| `app/(auth)/actions.ts` | 10 | 3E | 0/0/0/0 | test: `auth-login-performance.test.ts`, `auth-reset-flow.test.ts`, `bill-008-referral-boundary.test.ts`, `customer-contact-channels.test.ts`; app: `ForgotPasswordForm.tsx`, `login-form.tsx`, `actions.ts`, `page.tsx` |
+| `app/(auth)/signup/actions.ts` | 25 | 3E | 0/0/0/0 | none |
+| `app/(dashboard)/owner/actions/compliance.ts` | 127 | 3E | 2/0/0/0 | app: `ComplianceNotice.tsx`, `LanguageRequestDialog.tsx` |
+| `app/(dashboard)/owner/billing/actions.ts` | 71 | 3E | 1/0/0/0 | app: `BillingProfileForm.tsx` |
+| `app/(dashboard)/owner/production/BaseMachineJobs.tsx` | 70 | 3C | 0/0/0/0 | test: `base-production-core.test.ts` |
+| `app/(dashboard)/owner/production/BaseSetupWorkspace.tsx` | 12 | **3A** | 0/0/0/0 | none |
+| `app/(dashboard)/owner/settings/audit/ComplianceRegistry.tsx` | 183 | 3E | 0/0/0/0 | none |
+| `components/AccessCodeBanner.tsx` | 102 | 3E | 0/0/0/0 | none |
+| `components/DailyEntry.tsx` | 73 | **3A** | 0/0/0/0 | none |
+| `components/RoleBanner.tsx` | 36 | **3A** | 0/0/0/0 | none |
+| `components/advances/WorkerExitDialog.tsx` | 95 | **3A** | 0/0/0/0 | none |
+| `components/billing/AutoRenewToggle.tsx` | 121 | 3E | 0/0/0/0 | none |
+| `components/billing/BillingProfileForm.tsx` | 54 | 3E | 0/0/0/0 | none |
+| `components/billing/FreeBillingAction.tsx` | 97 | 3E | 0/0/0/0 | none |
+| `components/compliance/ComplianceNotice.tsx` | 182 | 3E | 0/0/0/0 | none |
+| `components/compliance/LanguageRequestDialog.tsx` | 112 | 3E | 1/0/0/0 | none |
+| `components/cost-analysis-details.tsx` | 351 | **3A** | 0/0/0/0 | none |
+| `components/machines/MachineRegisterPanel.tsx` | 95 | **3A** | 0/0/0/0 | none |
+| `components/machines/MachineRow.tsx` | 106 | **3A** | 1/0/0/0 | none |
+| `components/offline-sync-provider.tsx` | 22 | 3D | 0/0/0/0 | none |
+| `components/onboarding/PlanSelection.tsx` | 99 | 3E | 0/0/0/0 | none |
+| `components/onboarding/loomi-avatar.tsx` | 44 | **3A** | 0/0/0/0 | none |
+| `components/settings/factory-cost-profile.tsx` | 1094 | 3C | 0/0/0/0 | test: `base-p1-coverage.test.ts`, `base-settings-cold-load.test.ts`, `estimator-only-experience.test.ts`, `monthly-overhead-calculator.test.ts` |
+| `components/settings/monthly-overhead-calculator.tsx` | 418 | 3C | 1/0/0/0 | test: `monthly-overhead-calculator.test.ts`; app: `factory-cost-profile.tsx`; script: `base-fixed-salary-preview.jsx` |
+| `components/settings/template-manager.tsx` | 202 | 3C | 0/0/0/0 | test: `base-settings-cold-load.test.ts`, `sprint7-ux-polish.test.ts` |
+| `components/ui/amount.tsx` | 64 | 3B | 1/0/0/0 | app: `WorkerExitDialog.tsx` |
+| `components/ui/avatar.tsx` | 110 | 3B | 0/0/0/0 | none |
+| `components/ui/calendar.tsx` | 115 | 3B | 0/0/0/0 | none |
+| `components/ui/checkbox.tsx` | 28 | 3B | 0/0/0/0 | none |
+| `components/ui/form.tsx` | 179 | 3B | 0/0/0/0 | none |
+| `components/ui/input-otp.tsx` | 78 | 3B | 0/0/0/0 | none |
+| `components/ui/radio-group.tsx` | 45 | 3B | 0/0/0/0 | none |
+| `components/ui/scroll-area.tsx` | 59 | 3B | 0/0/0/0 | none |
+| `components/workers/WorkerRegisterPanel.tsx` | 99 | **3A** | 0/0/0/0 | none |
+| `components/workers/WorkerRow.tsx` | 133 | **3A** | 1/0/0/0 | none |
+| `hooks/use-enter-key-navigation.ts` | 30 | **3A** | 0/0/0/0 | none |
+| `hooks/use-offline-sync.ts` | 29 | 3D | 1/0/0/0 | test: `sprint22-auth-boundary.test.ts`; app: `offline-sync-provider.tsx` |
+| `hooks/use-online-status.ts` | 25 | 3D | 2/0/0/0 | app: `offline-sync-provider.tsx`, `use-offline-sync.ts` |
+| `hooks/use-transliterate.ts` | 14 | **3A** | 0/0/0/0 | none |
+| `lib/access-codes.ts` | 123 | 3E | 0/0/0/0 | none |
+| `lib/actions/order-assignment.ts` | 78 | **3A** | 0/0/0/0 | none |
+| `lib/base-job-summaries.ts` | 27 | 3C | 0/1/0/0 | test: `base-job-summaries.test.ts`; script: `job-summaries-benchmark.mjs` |
+| `lib/base-plan-policy.ts` | 43 | 3C | 0/1/0/0 | test: `sprint16-billing-language.test.ts` |
+| `lib/commercials/date-buckets.ts` | 63 | **3A** | 0/0/0/0 | none |
+| `lib/commercials/receivables.ts` | 157 | **3A** | 0/0/0/0 | none |
+| `lib/dashboard-trend.ts` | 38 | **3A** | 0/0/0/0 | none |
+| `lib/dispatch/archive.ts` | 27 | 3C | 0/1/0/0 | test: `dispatch-archive.test.ts` |
+| `lib/estimator-capacity.ts` | 15 | 3C | 0/1/0/0 | test: `estimator-production-readiness.test.ts` |
+| `lib/factory-today-checklist.ts` | 125 | **3A** | 0/0/0/0 | none |
+| `lib/free-browser-cache.ts` | 20 | 3C | 0/1/0/0 | test: `free-browser-cache.test.ts` |
+| `lib/generate-payslip.ts` | 369 | **3A** | 0/0/0/0 | none |
+| `lib/machine-operator-payroll.ts` | 285 | 3C | 0/1/0/0 | test: `machine-operator-payroll.test.ts` |
+| `lib/market-runs.ts` | 50 | 3C | 0/1/0/0 | test: `market-runs.test.ts` |
+| `lib/master-data-loom-guardrails.ts` | 122 | **3A** | 0/0/0/0 | none |
+| `lib/owner-analytics.ts` | 302 | **3A** | 0/0/0/0 | none |
+| `lib/payroll-cycle.ts` | 179 | 3C | 0/2/0/0 | test: `b10-india-calendar-boundaries.test.ts`, `base-onboarding-payroll-step.test.ts`, `payroll-cycle-engine.test.ts`, `payroll-cycle-integration.test.ts`; app: `actions.ts`, `BaseProductionClient.tsx`, `actions.ts`, `loaders.ts` |
+| `lib/payroll-manual-adjustments.ts` | 153 | **3A** | 0/0/0/0 | none |
+| `lib/payroll-read-models.ts` | 18 | **3A** | 0/0/0/0 | none |
+| `lib/payroll-statutory.ts` | 69 | **3A** | 0/0/0/0 | none |
+| `lib/production-drafts.ts` | 53 | **3A** | 0/0/0/0 | none |
+| `lib/production-log-validation.ts` | 177 | 3C | 0/1/0/0 | test: `p1-production-log-strictness.test.ts` |
+| `lib/production-worker-assignment-policy.ts` | 91 | **3A** | 1/0/0/0 | none |
+| `lib/tracking-token.ts` | 10 | 3E | 0/0/0/0 | none |
+| `lib/transliterate.ts` | 184 | **3A** | 1/0/0/0 | app: `use-transliterate.ts` |
+| `lib/wage-config.ts` | 26 | **3A** | 0/0/0/0 | none |
+| `lib/whatsapp-provider.ts` | 15 | **3A** | 0/0/0/0 | none |
+| `lib/whatsapp.ts` | 58 | **3A** | 0/0/0/0 | none |
+| `lib/worker-validation.ts` | 68 | **3A** | 0/0/0/0 | none |
+
+### Batch 3A (approved by the owner 2026-09-27; deleted)
+
+**30 files, 3,047 lines.**
+
+**Import edges touching the batch are all internal:**
+- `MachineRegisterPanel` → `MachineRow`;
+- `WorkerRegisterPanel` → `WorkerRow`;
+- `use-transliterate` → `lib/transliterate`;
+- `factory-today-checklist` → `production-worker-assignment-policy`.
+
+**What the files are:**
+- **Superseded register panels:** machines and workers, with their row components. The current registers live in `owner/production/registers/*`. Prior-cleanup lead C07.
+- **Pre-Base leftovers:**
+  - owner analytics, dashboard trend and the factory-today checklist;
+  - the commercials receivables helpers;
+  - the order-assignment action;
+  - payslip generation, statutory payroll, manual-adjustment and read-model helpers;
+  - wage config, production drafts and the loom guardrails;
+  - worker validation;
+  - WhatsApp payslip sending (the live WhatsApp code is `supabase/functions/_shared/whatsapp.ts`, which is untouched).
+- **Unused UI:** `RoleBanner`, `loomi-avatar`, `cost-analysis-details`, `WorkerExitDialog`, `DailyEntry` (still on mock data), `use-enter-key-navigation` (lead C08), and the transliteration hook with its library.
+- **`BaseSetupWorkspace.tsx`:** its own comment calls it a "rollback composition only" that canonical routes never mount. Git history covers that rollback. **The owner decided to delete it (2026-09-27).**
+
+**Roles, plans and languages:**
+- None of the files is mounted by any route, so no role, plan or language path renders them.
+- Server actions in unreachable modules are never referenced by client code, so they are not registered.
+
+**Gates with 3A removed** (worktree = `main` @ `05587ce5` minus 3A):
+
+| Check | Result |
+| --- | --- |
+| `npm run lint` | exit 0 |
+| tsc | PASS |
+| Default vitest | 235 files / 2,036 passed / 1 skipped (unchanged: no test consumed these files) |
+| `npm run test:db` | 11 files / 60 passed |
+| Production build (credential-free copy, isolated wrapper) | PASS: compiled in 79 s; 53 static pages generated; PWA custom worker built; exit 0 |
+
+**Recovery:**
+- `git revert <3A commit>`;
+- or restore single files with `git checkout 05587ce5 -- <path>`.

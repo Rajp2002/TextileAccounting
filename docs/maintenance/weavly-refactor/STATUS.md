@@ -4,13 +4,15 @@ Updated 2026-09-26 (night). **Phase 2 in progress.**
 - **2B and OS-13 are committed and pushed with this change**, together with the CI change to the full lint gate.
 - **Lint is fully green.**
 - **2C:** committed and pushed.
-- **2D is committed and pushed with this change.**
-- **Phase 3 approved and starting.** It works in batches under the deletion protocol.
+- **2D:** committed and pushed. CI passed.
+- **Phase 3:** the inventory is done (68 unreachable source files, E28).
+- **Batch 3A** (30 dead files, 3,047 lines): approved, committed and pushed with this change.
+- **Current batch: 3C.**
 - Details: EVIDENCE E24–E27.
 
 ## Decisions needed
 
-- None pending. The Phase 3 inventory is in progress.
+- None pending. Batch 3C is in preparation.
 - **Phase 5 note:** CLAUDE.md's "Baseline" section still describes lint as red. It is now clean, and CI runs `npm run lint`.
 
 ## Decisions recorded (user, 2026-09-26)
@@ -20,6 +22,8 @@ Updated 2026-09-26 (night). **Phase 2 in progress.**
 - **2C:** committed and pushed.
 - **P2-O6 (party-name spacing):** delegated by the owner to Claude. Decision: **no change**. Inner repeated spaces are rare, and aligning the two paths would change stored party names and exact-match party lookups for a cosmetic gain. Pinned as CHARACTERIZATION.
 - **2D:** committed and pushed.
+- **Batch 3A:** approved and deleted. `BaseSetupWorkspace.tsx` (rollback adapter) was deleted by owner decision.
+- **Batch order approved:** 3C → 3B → 3F → 3D → 3E. Each batch still lands only after its own approval.
 - **Phase 3:** approved by the owner (2026-09-27). Each deletion batch still needs its own approval under the deletion protocol (BRIEF rule 7).
 - **CI for 2C** (`7a15df69`): passed.
 - **CI with the full lint gate:** passed on `ce4c3ff0`.
