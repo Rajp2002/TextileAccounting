@@ -3,13 +3,14 @@
 Updated 2026-09-26 (night). **Phase 2 in progress.**
 - **2B and OS-13 are committed and pushed with this change**, together with the CI change to the full lint gate.
 - **Lint is fully green.**
-- **2C is committed and pushed with this change.**
-- **Current package: 2D** (shared tour runner), approved.
-- Details: EVIDENCE E24–E26.
+- **2C:** committed and pushed.
+- **2D is committed and pushed with this change.**
+- **Phase 3 approved and starting.** It works in batches under the deletion protocol.
+- Details: EVIDENCE E24–E27.
 
 ## Decisions needed
 
-- None pending. 2D is in progress.
+- None pending. The Phase 3 inventory is in progress.
 - **Phase 5 note:** CLAUDE.md's "Baseline" section still describes lint as red. It is now clean, and CI runs `npm run lint`.
 
 ## Decisions recorded (user, 2026-09-26)
@@ -18,7 +19,9 @@ Updated 2026-09-26 (night). **Phase 2 in progress.**
 - **CI:** now enforces the full `npm run lint` (owner-approved). The changed-file ratchet script `scripts/ci/lint-changed.mjs` and its test remain but are no longer used by CI (a Phase 3 candidate).
 - **2C:** committed and pushed.
 - **P2-O6 (party-name spacing):** delegated by the owner to Claude. Decision: **no change**. Inner repeated spaces are rare, and aligning the two paths would change stored party names and exact-match party lookups for a cosmetic gain. Pinned as CHARACTERIZATION.
-- **2D:** approved.
+- **2D:** committed and pushed.
+- **Phase 3:** approved by the owner (2026-09-27). Each deletion batch still needs its own approval under the deletion protocol (BRIEF rule 7).
+- **CI for 2C** (`7a15df69`): passed.
 - **CI with the full lint gate:** passed on `ce4c3ff0`.
 - **2A:** committed and pushed (`0a17a722`, `41990fb2`). CI passed.
 - **Phase 2:** started by the owner.
@@ -38,7 +41,17 @@ Updated 2026-09-26 (night). **Phase 2 in progress.**
   - AS-02 (Free auto-confirm) is accepted for now.
   - OS-5 and AS-05 scope: the owner is unsure.
 
-## Gate results (2C)
+## Gate results (2D)
+
+| Check | Result |
+| --- | --- |
+| Old-vs-new browser comparison (3 tours, 10 scenarios) | Identical (E27) |
+| `npm run lint` | exit 0 |
+| tsc | PASS |
+| Default `npm test` | 235 files / 2,036 passed / 1 skipped |
+| `npm run test:db` | 11 files / 60 passed |
+
+## Earlier gate results (2C)
 
 | Check | Result |
 | --- | --- |

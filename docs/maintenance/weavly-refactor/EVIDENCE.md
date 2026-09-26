@@ -1171,3 +1171,64 @@ Worktree = `main` @ `ce4c3ff0` + 2C.
 | tsc | PASS |
 | Default vitest | 234 files / 2,033 passed / 1 skipped |
 | `npm run test:db` | 11 files / 60 passed |
+
+## E27. Package 2D: shared guided-tour hooks (2026-09-27)
+
+Owner-approved. Resolves maintainability lead M3 (E5).
+
+### Change
+
+The seven page tours in `components/tours/` (Configuration, Machines, Workers, Payroll, Production, Stock, Dispatch) each carried two copies of the same effects: the modal trap and the panel placement. These now live in `hooks/use-guided-tour.ts`.
+
+- **`useGuidedTourModal`:**
+  - makes the rest of the page inert (including elements added later) and blocks pointer input outside the panel;
+  - locks the viewport, keeps focus in the panel with Tab cycling, closes on Escape, and moves steps with arrows and Enter;
+  - restores inertness, scroll and focus on close.
+- **`useGuidedTourPlacement`:** scrolls the target into view, re-measures for 1.5 s and on resize or scroll, and moves the panel to the left or bottom when it would cover the target, except inside the tour's own preview.
+- **Per-tour differences stay explicit in each tour:**
+  - the return scroll (`returnScroll` or the scroll position at open);
+  - the preview selector;
+  - one of three named focus-return strategies (`captureFocusReturn`, exported for tests), each reproducing the pre-merge code exactly:
+    - `launcher`: Machines, Workers, Configuration, Stock, Dispatch;
+    - `return-focus-at-close`: Payroll;
+    - `return-focus-or-launcher`: Production.
+- **Kept per tour:** steps, copy, completion rules and panel markup.
+- **Hook order:** the hooks are called where the old effects were, so the effect order is unchanged, and each component's `useState` calls keep their relative order. The Dispatch panel test mocks `useState` by call order and passes unchanged.
+- **Size:** the 7 tutorials went from 1,077 to 527 lines (+46/−585, git diff). With the 158-line hook, the total is 685.
+
+### Verification
+
+- **Structural (VERIFIED).** A scripted transformation first asserted that each file's two effects were identical to the Machines version, except for the known variant lines (focus capture, scroll source, dependencies) and the preview selector. It aborted on any other difference. None were found.
+- **Old vs new in a real browser (VERIFIED).**
+  - **Setup:** pre-change copies of Machines, Payroll and Production (one per focus strategy) and the new versions, bundled with Vite in the worktree's ignored `scratch/`. Only `useTranslation` and `persistTourCompleted` were stubbed. The page ran in the built-in browser at a 1280×800 viewport.
+  - **Recorded per run:**
+    - on open: focus, inert map, blocked outside click;
+    - while open: Tab/Shift+Tab cycle; ArrowRight, ArrowLeft and Enter step changes; inertness of a body child added mid-tour; panel corner;
+    - on Escape: step, focus target, restored inert map, restored scroll, completion calls.
+  - **Scenarios (10):**
+    - Machines ×3, plus Machines with the launcher button replaced mid-tour;
+    - Payroll with a starting control, and with that control removed and the launcher replaced;
+    - Payroll without a starting control;
+    - Production without a starting control, with the launcher replaced, and with a starting control.
+  - Old and new were run in alternating order.
+  - **Result:** all 10 records identical. No console errors. The harness was deleted.
+  - **Note:** a first attempt ran with the pane hidden (0×0 viewport). There, one panel-corner reading differed once for each version independently of the change, a measurement artefact. With a real viewport every run matched.
+
+### Tests
+
+- **New:** `__tests__/guided-tour-focus.test.ts` (3) pins the three focus-return strategies with stand-in elements, including disconnected elements and a launcher that re-renders.
+- **Source-contract tests updated deliberately (3 tests):** `configuration-tour`, `payroll-tour-preview` and `production-tour-preview` asserted the moved focus and scroll lines inside each tutorial. They now assert:
+  - the tutorial's hook call and strategy name;
+  - the implementation lines in `hooks/use-guided-tour.ts`.
+- All 262 tour tests pass, including the SSR render tests for Stock, Payroll, Production and Dispatch.
+
+### Gates
+
+Worktree = `main` @ `7a15df69` + 2D.
+
+| Check | Result |
+| --- | --- |
+| `npm run lint` | exit 0 |
+| tsc | PASS |
+| Default vitest | 235 files / 2,036 passed / 1 skipped |
+| `npm run test:db` | 11 files / 60 passed |
