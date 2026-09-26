@@ -5,7 +5,7 @@ import { getOrgPlanAccess } from './subscription'
 import { finishFreeProvisioning, getFreeGrant, getFreeRollout } from './free-account'
 import { createAdminClient } from './supabase/admin'
 import { freeQuotaWindow } from './free-tier-policy'
-import { issueFreeRequest, verifyFreeRequest, bindFreeEffectiveInputs } from './free-request-identity'
+import { issueFreeRequest, verifyFreeRequest, bindFreeEffectiveInputs, resolveFreeSigningKeys } from './free-request-identity'
 import { calcFullTotals, buildCostingResult, COSTING_CALCULATION_VERSION } from './estimator'
 import { parseFreeEstimate, canonicalFreeInputs } from './free-estimator-input'
 import { getEstimatorReadiness, validateEstimatorSnapshot, requiresFactoryCapacity } from './estimator-validation'
@@ -30,18 +30,17 @@ export async function freeContext(options: { allowInactive?: boolean } = {}) {
   return { ...session, grant, paid, access, org }
 }
 function signing() {
-  const keyId = process.env.WEAVLY_FREE_SIGNING_KEY_ID ?? 'launch'
-  let keys: Record<string, string> = {}
   try {
-    keys = JSON.parse(process.env.WEAVLY_FREE_SIGNING_KEYS ?? '{}')
-  } catch {}
-  if (!keys[keyId]) {
-    const fallback = process.env.NODE_ENV === 'production'
-      ? 'default-production-signing-key-minimum-32-chars!'
-      : 'weavly-free-local-dev-signing-key-32-bytes!'
-    keys[keyId] = fallback
+    return resolveFreeSigningKeys({
+      NODE_ENV: process.env.NODE_ENV,
+      WEAVLY_FREE_SIGNING_KEY_ID: process.env.WEAVLY_FREE_SIGNING_KEY_ID,
+      WEAVLY_FREE_SIGNING_KEYS: process.env.WEAVLY_FREE_SIGNING_KEYS,
+    })
+  } catch (error) {
+    // Setting names only; never log key material.
+    console.error('Free signing is unavailable: WEAVLY_FREE_SIGNING_KEYS must be a JSON object with a key of at least 32 bytes for WEAVLY_FREE_SIGNING_KEY_ID (default "launch").')
+    throw error
   }
-  return { keyId, keys }
 }
 export async function freeStatus() {
   const context = await freeContext({ allowInactive:true })

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { bindFreeEffectiveInputs, issueFreeRequest, verifyFreeRequest } from '../lib/free-request-identity'
+import { bindFreeEffectiveInputs, issueFreeRequest, resolveFreeSigningKeys, verifyFreeRequest } from '../lib/free-request-identity'
 const keys = { launch: 'test-only-key-at-least-thirty-two-bytes-long' }
 const subjectId = 'a0000000-0000-4000-8000-000000000001'
 const serverTime = new Date('2026-09-08T18:00:00Z')
@@ -42,5 +42,32 @@ describe('Free in-memory request identities', () => {
     expect(bindFreeEffectiveInputs(identity, { density: 75, rate: 101 }, keys)).not.toBe(binding)
     expect(bindFreeEffectiveInputs({ ...identity, subjectId: 'other' }, { rate: 100, density: 75 }, keys)).not.toBe(binding)
     expect(() => bindFreeEffectiveInputs(identity, { rate: NaN }, keys)).toThrow('FREE_INPUT_BINDING_INVALID')
+  })
+})
+
+// Fix package F2 (CS-3): production used to fall back to a key written in the
+// source, so anyone with the repository could mint Free request tokens.
+describe('Free signing keyring (CS-3 fixed)', () => {
+  const strong = 'k'.repeat(32)
+  it('INVARIANT: production refuses a missing, unparseable or short active key', () => {
+    const invalid = [undefined, '', 'not json', '"a string"', '[]', '{}', JSON.stringify({ launch: 'k'.repeat(31) }), JSON.stringify({ launch: 42 }), JSON.stringify({ other: strong })]
+    for (const WEAVLY_FREE_SIGNING_KEYS of invalid) {
+      expect(() => resolveFreeSigningKeys({ NODE_ENV: 'production', WEAVLY_FREE_SIGNING_KEYS })).toThrow('FREE_SIGNING_KEY_UNAVAILABLE')
+    }
+    expect(() => resolveFreeSigningKeys({ NODE_ENV: 'production', WEAVLY_FREE_SIGNING_KEY_ID: 'next', WEAVLY_FREE_SIGNING_KEYS: JSON.stringify({ launch: strong }) }))
+      .toThrow('FREE_SIGNING_KEY_UNAVAILABLE')
+  })
+  it('INVARIANT: production signs with the configured key and keeps older keys for verification', () => {
+    const configured = { launch: strong, next: 'n'.repeat(40) }
+    expect(resolveFreeSigningKeys({ NODE_ENV: 'production', WEAVLY_FREE_SIGNING_KEY_ID: 'next', WEAVLY_FREE_SIGNING_KEYS: JSON.stringify(configured) }))
+      .toEqual({ keyId: 'next', keys: configured })
+    expect(resolveFreeSigningKeys({ NODE_ENV: 'production', WEAVLY_FREE_SIGNING_KEYS: JSON.stringify({ launch: strong }) }))
+      .toEqual({ keyId: 'launch', keys: { launch: strong } })
+  })
+  it('CHARACTERIZATION: outside production a built-in key is used only when none is configured', () => {
+    const fallback = resolveFreeSigningKeys({ NODE_ENV: 'development' })
+    expect(fallback.keyId).toBe('launch')
+    expect(Buffer.byteLength(fallback.keys.launch)).toBeGreaterThanOrEqual(32)
+    expect(resolveFreeSigningKeys({ NODE_ENV: 'test', WEAVLY_FREE_SIGNING_KEYS: JSON.stringify({ launch: strong }) }).keys).toEqual({ launch: strong })
   })
 })

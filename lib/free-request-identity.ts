@@ -13,11 +13,37 @@ export type FreeRequestIdentity = {
 }
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const MAX_LIFETIME_MS = 30 * 86400000
+const MIN_KEY_BYTES = 32
+// Development and test only. Production never falls back to a built-in key.
+const DEVELOPMENT_KEY = 'weavly-free-local-dev-signing-key-32-bytes!'
 
 function keyFor(keys: Keyring, id: string): string {
   const key = Object.hasOwn(keys, id) ? keys[id] : undefined
-  if (!key || Buffer.byteLength(key) < 32) throw new Error('FREE_SIGNING_KEY_UNAVAILABLE')
+  if (!key || Buffer.byteLength(key) < MIN_KEY_BYTES) throw new Error('FREE_SIGNING_KEY_UNAVAILABLE')
   return key
+}
+
+/**
+ * Reads the signing keyring from server-only settings. In production a
+ * missing, unparseable or short active key refuses signing
+ * (FREE_SIGNING_KEY_UNAVAILABLE) instead of using a built-in key.
+ */
+export function resolveFreeSigningKeys(env: {
+  NODE_ENV?: string; WEAVLY_FREE_SIGNING_KEY_ID?: string; WEAVLY_FREE_SIGNING_KEYS?: string
+}): { keyId: string; keys: Keyring } {
+  const keyId = env.WEAVLY_FREE_SIGNING_KEY_ID ?? 'launch'
+  let keys: Record<string, string> = {}
+  try {
+    const parsed: unknown = JSON.parse(env.WEAVLY_FREE_SIGNING_KEYS ?? '{}')
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) keys = { ...parsed as Record<string, string> }
+  } catch {}
+  if (env.NODE_ENV === 'production') {
+    const key = Object.hasOwn(keys, keyId) ? keys[keyId] : undefined
+    if (typeof key !== 'string' || Buffer.byteLength(key) < MIN_KEY_BYTES) throw new Error('FREE_SIGNING_KEY_UNAVAILABLE')
+    return { keyId, keys }
+  }
+  if (!keys[keyId]) keys[keyId] = DEVELOPMENT_KEY
+  return { keyId, keys }
 }
 function mac(key: string, domain: string, payload: string) {
   return createHmac('sha256', key).update(domain).update('\0').update(payload).digest()

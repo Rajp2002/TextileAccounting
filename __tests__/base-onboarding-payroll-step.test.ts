@@ -79,23 +79,36 @@ describe('Base Onboarding — Step 5 Payroll Presets & Input Atomicity', () => {
 
 describe('Base Onboarding — Payroll Persistence Contract & Same-Day Updates', () => {
     const actionsSource = readProjectFile('app/(auth)/onboarding/base/actions.ts')
+    const actionBody = (name: string) => {
+        const start = actionsSource.indexOf(`export async function ${name}(`)
+        const next = actionsSource.indexOf('export async function', start + 1)
+        return actionsSource.slice(start, next === -1 ? undefined : next)
+    }
+    const payrollAction = actionBody('saveBaseOnboardingPayrollAction')
 
-    it('checks for existing active configurations before updating', () => {
-        expect(actionsSource).toContain("from('base_payroll_cycle_configs')")
-        expect(actionsSource).toContain(".is('effective_until', null)")
+    // Refactor fix package F2 (AS-01): the earlier contract required a
+    // service-role fallback, which let a refused write bypass the Base and
+    // lock checks. Same-day edits are handled in place by the RPC
+    // (20260915120000, asserted below), so the action now uses only the RPC.
+    it('persists through the atomic update_base_payroll_cycle RPC effective today', () => {
+        expect(payrollAction).toContain(".rpc('update_base_payroll_cycle', {")
+        expect(payrollAction).toContain('p_effective_from: today,')
+        expect(payrollAction).toContain('rule: validation.normalizedRule')
     })
 
-    it('handles same-day modifications in-place to preserve date monotonicity', () => {
-        expect(actionsSource).toContain('existingConfig.effective_from >= today')
-        expect(actionsSource).toContain('.update({')
-        expect(actionsSource).toContain('cycle_type: cycleType,')
-        expect(actionsSource).toContain('rule: validation.normalizedRule,')
+    it('has no service-role fallback or direct table write', () => {
+        expect(payrollAction).not.toContain('createAdminClient')
+        expect(payrollAction).not.toContain("from('base_payroll_cycle_configs')")
     })
 
-    it('includes authenticated and admin client fallbacks with error diagnostics', () => {
-        expect(actionsSource).toContain('const admin = createAdminClient()')
-        expect(actionsSource).toContain('console.warn(')
-        expect(actionsSource).toContain('console.error(')
+    it('checks the organization lock in every mutating onboarding action', () => {
+        for (const name of [
+            'saveBaseOnboardingDraftAction', 'saveBaseOnboardingFactoryAction', 'saveBaseOnboardingDefaultsAction',
+            'saveBaseOnboardingMachinesBulkAction', 'saveBaseOnboardingWorkersBulkAction',
+            'saveBaseOnboardingPayrollAction', 'completeBaseOnboardingAction',
+        ]) {
+            expect(actionBody(name), name).toContain("requireWritableOrg(['owner'])")
+        }
     })
 })
 

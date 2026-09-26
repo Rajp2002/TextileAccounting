@@ -3,7 +3,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { asSuperuser, asUser, freshDatabase, pgError, seedOwnerOrg, type Db } from './helpers'
 
 // Refactor Package 1B-2: Base piece-rate settlement through the real RPCs
-// (E10 O-INV-14, O-INV-17, O-INV-18; suspected defect OS-4).
+// (E10 O-INV-14, O-INV-17, O-INV-18). Fix package F2 (OS-4) restores the
+// reversed-request guard that 20260913180000 dropped.
 
 let db: Db
 type Owner = { userId: string; orgId: string }
@@ -89,18 +90,26 @@ describe('Base piece-rate settlement', () => {
         expect(await settlements(worker)).toEqual([])
     })
 
-    it('KNOWN DEFECT OS-4: after a reversal, re-sending the original request settles the worker again', async () => {
+    it('INVARIANT OS-4: after a reversal, re-sending the original request is refused; a newly reviewed request can pay', async () => {
         const { owner, worker } = await workerWithProduction()
         const expected = reviewed()
         const first = await settle(owner, worker, expected)
         await asUser(db, owner.userId, owner.orgId)
         await db.query("SELECT public.reverse_base_payroll_settlement($1, 'Paid by mistake', true)", [first.settlement_id])
 
-        // The 2026-09-01 function refused this with "This payment request was
-        // reversed. Reload payroll before recording another payment." The
-        // 2026-09-13 reviewed wrapper no longer reads client_request_id.
-        const replay = await settle(owner, worker, expected)
-        expect(replay.settlement_id).not.toBe(first.settlement_id)
+        const replay = await pgError(settle(owner, worker, expected))
+        expect(replay).toEqual({ code: '40001', message: 'This payment request was reversed. Reload payroll before recording another payment.' })
+        expect(await settlements(worker)).toEqual([{ status: 'reversed', gross: 200 }])
+
+        const repaid = await settle(owner, worker, reviewed())
+        expect(repaid.settlement_id).not.toBe(first.settlement_id)
         expect(await settlements(worker)).toEqual([{ status: 'reversed', gross: 200 }, { status: 'paid', gross: 200 }])
+    })
+
+    it('INVARIANT OS-4: a payment without a request identifier is refused', async () => {
+        const { owner, worker } = await workerWithProduction()
+        const error = await pgError(settle(owner, worker, reviewed({ client_request_id: undefined })))
+        expect(error).toEqual({ code: '22023', message: 'Review the worker payroll before payment' })
+        expect(await settlements(worker)).toEqual([])
     })
 })

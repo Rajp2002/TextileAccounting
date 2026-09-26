@@ -6,7 +6,7 @@ vi.mock('../lib/free-account',()=>({getFreeGrant:mocks.grant,getFreeRollout:mock
 vi.mock('../lib/subscription',()=>({getOrgPlanAccess:mocks.access}))
 vi.mock('../lib/rate-limit',()=>({checkAuthRateLimit:mocks.rate}))
 vi.mock('../lib/supabase/admin',()=>({createAdminClient:()=>({rpc:mocks.rpc,from:()=>({select:()=>({eq:()=>({single:async()=>({data:{owner_id:'11111111-1111-4111-8111-111111111111',is_locked_down:false,name:'test'}})})})})})}))
-import {calculateFreeSubmission} from '../lib/free-service'
+import {calculateFreeSubmission,freeError} from '../lib/free-service'
 import {makeFreeEstimate} from '../lib/free-estimator-defaults'
 import {issueFreeRequest} from '../lib/free-request-identity'
 import {calcFullTotals,COSTING_CALCULATION_VERSION} from '../lib/estimator'
@@ -50,5 +50,16 @@ describe('Free service response and authorization boundary',()=>{
   const estimate=valid();estimate.warpRows[0].yarnRate=1500
   const result=await calculateFreeSubmission({estimate,requestToken:token()});expect(result.needsAcknowledgement).toBe(true);expect(mocks.rpc).not.toHaveBeenCalled()
   await calculateFreeSubmission({estimate,requestToken:token(),warningsAcknowledged:true});expect(mocks.rpc).toHaveBeenCalledOnce()
+ })
+ it('INVARIANT CS-3: production without a valid signing key refuses before any debit and logs setting names only',async()=>{
+  vi.stubEnv('NODE_ENV','production');delete process.env.WEAVLY_FREE_SIGNING_KEYS
+  const log=vi.spyOn(console,'error').mockImplementation(()=>{})
+  try{
+   await expect(calculateFreeSubmission({estimate:valid(),requestToken:token()})).rejects.toThrow('FREE_SIGNING_KEY_UNAVAILABLE');expect(mocks.rpc).not.toHaveBeenCalled()
+   log.mockClear();process.env.WEAVLY_FREE_SIGNING_KEYS=JSON.stringify({test:'short-secret-value'})
+   await expect(calculateFreeSubmission({estimate:valid(),requestToken:token()})).rejects.toThrow('FREE_SIGNING_KEY_UNAVAILABLE');expect(mocks.rpc).not.toHaveBeenCalled()
+   expect(log).toHaveBeenCalledOnce();expect(String(log.mock.calls[0][0])).toContain('WEAVLY_FREE_SIGNING_KEYS');expect(JSON.stringify(log.mock.calls)).not.toContain('short-secret-value')
+   const response=freeError(new Error('FREE_SIGNING_KEY_UNAVAILABLE'));expect(response.status).toBe(503);expect(await response.json()).toEqual({code:'FREE_TEMPORARY_ERROR'})
+  }finally{log.mockRestore();vi.unstubAllEnvs()}
  })
 })

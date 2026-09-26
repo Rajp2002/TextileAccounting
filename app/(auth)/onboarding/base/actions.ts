@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
-import { requireRole } from '@/lib/auth'
+import { requireRole, requireWritableOrg } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getCachedOrgPlanAccess } from '@/lib/subscription'
@@ -220,7 +220,7 @@ export async function getBaseOnboardingInitialState() {
 
 export async function saveBaseOnboardingDraftAction(draft: Partial<BaseOnboardingDraft>) {
     try {
-        const { profile } = await requireRole(['owner'])
+        const { profile } = await requireWritableOrg(['owner'])
         const admin = createAdminClient()
 
         const { data: org, error: readError } = await admin
@@ -269,7 +269,7 @@ const FactoryContextSchema = z.object({
 
 export async function saveBaseOnboardingFactoryAction(input: { name: string; ownerContact?: string }) {
     try {
-        const { user, profile } = await requireRole(['owner'])
+        const { user, profile } = await requireWritableOrg(['owner'])
         const parsed = FactoryContextSchema.safeParse(input)
         if (!parsed.success) {
             return { error: parsed.error.issues[0]?.message || 'Invalid factory details' }
@@ -309,7 +309,7 @@ const DefaultsSchema = z.object({
 
 export async function saveBaseOnboardingDefaultsAction(input: FactoryDefaultsInput) {
     try {
-        const { profile } = await requireRole(['owner'])
+        const { profile } = await requireWritableOrg(['owner'])
         const parsed = DefaultsSchema.safeParse(input)
         if (!parsed.success) {
             return { error: parsed.error.issues[0]?.message || 'Invalid defaults provided' }
@@ -365,7 +365,7 @@ export async function saveBaseOnboardingMachinesBulkAction(
     machines: Array<{ name: string; machineType: string; customLabel?: string }>
 ) {
     try {
-        const { user, profile } = await requireRole(['owner'])
+        const { user, profile } = await requireWritableOrg(['owner'])
         const supabase = await createClient()
 
         // Prune empty rows and trim
@@ -460,7 +460,7 @@ export async function saveBaseOnboardingWorkersBulkAction(
     }>
 ) {
     try {
-        const { user, profile } = await requireRole(['owner'])
+        const { user, profile } = await requireWritableOrg(['owner'])
         const supabase = await createClient()
         const today = getSuratTodayString()
 
@@ -568,7 +568,7 @@ export async function saveBaseOnboardingWorkersBulkAction(
 
 export async function saveBaseOnboardingPayrollAction(input: PayrollCycleInput) {
     try {
-        const { user, profile } = await requireRole(['owner'])
+        await requireWritableOrg(['owner'])
         const supabase = await createClient()
         const today = getSuratTodayString()
 
@@ -604,52 +604,9 @@ export async function saveBaseOnboardingPayrollAction(input: PayrollCycleInput) 
             return { error: validation.error || 'Invalid payroll cycle configuration' }
         }
 
-        const admin = createAdminClient()
-
-        // Check if an active configuration already exists for this org
-        const { data: existingConfig } = await supabase
-            .from('base_payroll_cycle_configs')
-            .select('id, effective_from')
-            .eq('org_id', profile.org_id)
-            .is('effective_until', null)
-            .maybeSingle()
-
-        // If an active config already exists starting today or later (e.g. same-day edit during onboarding),
-        // update it in-place to avoid date-monotonicity and unique active index collisions.
-        if (existingConfig && existingConfig.effective_from >= today) {
-            const { error: updateError } = await supabase
-                .from('base_payroll_cycle_configs')
-                .update({
-                    cycle_type: cycleType,
-                    rule: validation.normalizedRule,
-                    updated_at: new Date().toISOString(),
-                })
-                .eq('id', existingConfig.id)
-
-            if (!updateError) {
-                revalidatePath('/owner/production')
-                revalidatePath('/owner/payroll')
-                return { success: true }
-            }
-
-            // Fallback to admin update if authenticated client had an RLS constraint
-            const { error: adminUpdateError } = await admin
-                .from('base_payroll_cycle_configs')
-                .update({
-                    cycle_type: cycleType,
-                    rule: validation.normalizedRule,
-                    updated_at: new Date().toISOString(),
-                })
-                .eq('id', existingConfig.id)
-
-            if (!adminUpdateError) {
-                revalidatePath('/owner/production')
-                revalidatePath('/owner/payroll')
-                return { success: true }
-            }
-        }
-
-        // Try calling the atomic RPC
+        // The RPC checks owner and Base access and handles same-day edits in
+        // place (20260915120000). There is deliberately no service-role
+        // fallback: a refused write must not bypass those checks.
         const { error: rpcError } = await supabase.rpc('update_base_payroll_cycle', {
             p_cycle_type: cycleType,
             p_rule: validation.normalizedRule,
@@ -657,51 +614,8 @@ export async function saveBaseOnboardingPayrollAction(input: PayrollCycleInput) 
         })
 
         if (rpcError) {
-            console.warn('update_base_payroll_cycle RPC failed, falling back to direct write:', rpcError)
-
-            // Close existing historical config if effective_from is before today
-            if (existingConfig && existingConfig.effective_from < today) {
-                const prevClose = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
-                await supabase
-                    .from('base_payroll_cycle_configs')
-                    .update({ effective_until: prevClose, updated_at: new Date().toISOString() })
-                    .eq('id', existingConfig.id)
-            }
-
-            // Try insert with authenticated client
-            const { error: insertError } = await supabase
-                .from('base_payroll_cycle_configs')
-                .insert({
-                    org_id: profile.org_id,
-                    cycle_type: cycleType,
-                    rule: validation.normalizedRule,
-                    effective_from: today,
-                    effective_until: null,
-                    created_by: user.id,
-                })
-
-            if (insertError) {
-                console.warn('Authenticated insert failed, attempting admin fallback:', insertError)
-                const { error: adminInsertError } = await admin
-                    .from('base_payroll_cycle_configs')
-                    .insert({
-                        org_id: profile.org_id,
-                        cycle_type: cycleType,
-                        rule: validation.normalizedRule,
-                        effective_from: today,
-                        effective_until: null,
-                        created_by: user.id,
-                    })
-
-                if (adminInsertError) {
-                    console.error('All payroll cycle persistence methods failed:', {
-                        rpcError,
-                        insertError,
-                        adminInsertError,
-                    })
-                    return { error: 'Failed to configure payroll cycle. Please try again.' }
-                }
-            }
+            console.error('update_base_payroll_cycle failed during onboarding:', rpcError.message)
+            return { error: 'Failed to configure payroll cycle. Please try again.' }
         }
 
         revalidatePath('/owner/production')
@@ -716,7 +630,7 @@ export async function saveBaseOnboardingPayrollAction(input: PayrollCycleInput) 
 
 export async function completeBaseOnboardingAction() {
     try {
-        const { user, profile } = await requireRole(['owner'])
+        const { user, profile } = await requireWritableOrg(['owner'])
         const admin = createAdminClient()
 
         const now = new Date().toISOString()
