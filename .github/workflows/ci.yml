@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   verify:
-    name: Types, tests and changed-file lint
+    name: Types, tests and lint
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
@@ -27,9 +27,6 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@v4
-        with:
-          # Full history so the lint step can diff against the base commit.
-          fetch-depth: 0
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -46,11 +43,7 @@ jobs:
       - name: Unit and contract tests
         run: node scripts/performance/isolated-command.mjs npx vitest run
 
-      # main carries pre-existing lint debt (see CLAUDE.md "Baseline"), so a
-      # full-repository lint cannot pass yet. No rule is relaxed: this step
-      # fails on any diagnostic a change introduces in the files it touches.
-      - name: Lint changes
-        env:
-          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          PUSH_BEFORE_SHA: ${{ github.event.before }}
-        run: node scripts/ci/lint-changed.mjs
+      # The whole repository is lint-clean since Phase 2B, so any error or
+      # warning fails (eslint --max-warnings=0).
+      - name: Lint
+        run: node scripts/performance/isolated-command.mjs npm run lint
