@@ -499,3 +499,70 @@ Three of four places, and the external formulas, treat a row's PPI as that yarn'
 - **App, rows typed 68 + 68:** weft kg 2.8333 ✓; weave ₹21.76/m (₹10.88 too high); weaver wage rate doubled; the quotation shows "136 Picks".
 
 **Status:** CS-1 is re-opened as a **product decision**. The 2026-09-26 INVARIANT test for the 100/N split records the owner's statement and stays unchanged until the owner decides. Either fix changes costing results, so it needs a new `COSTING_CALCULATION_VERSION` (saved snapshots stay immutable) and a payroll review for Base jobs activated from multi-weft costings. How many saved qualities have more than one weft row is UNKNOWN (a read-only production count would answer it, with approval).
+
+**Owner decision (2026-09-26, after E15):** two alternating weft yarns in a 68-pick fabric are entered **34 + 34**; each row holds that yarn's own picks. So summing picks for weave cost, wage rate and quotation text is correct (INVARIANT), and the **weft 100/N length split is a defect (CS-1, High)**: it halves weft yarn kg and cost for 2-row formula qualities (a third for 3 rows).
+
+- **Extra impact (VERIFIED):** Base yarn recipes take each layer's `finalKgPer100m` from the saved costing snapshot (`private.yarn_costing_recipe`, `20260912131633`) and freeze it at activation (`0920`). Activated multi-weft qualities therefore under-deduct weft yarn stock at production by the same factor.
+- **Fix:** needs its own approved package:
+  - formula rows use the full 100 m;
+  - new `COSTING_CALCULATION_VERSION`;
+  - deliberate updates to the `20c4546f` test in `__tests__/estimator.test.ts` and to the Package 1A characterization test;
+  - a decision on already-saved costings (immutable snapshots stay) and on already-activated yarn recipes.
+- **Side effects:** a version bump discards unsaved estimator drafts (C-INV-25) and re-issues Free tokens (engine-version binding).
+- **Prevalence:** the number of affected saved costings and activated jobs in production is UNKNOWN; answering it needs an approved read-only count.
+
+## E16. First CI run failed: pre-existing lockfile inconsistency (2026-09-26)
+
+- **Trigger:** at 16:02 IST, commit `9f12af19` (UI rails, author Raj Patel; not this program) was made in this checkout. `main` was then fast-forwarded to the refactor branch and pushed. `main` and `origin/maintenance/weavly-refactor` both point to `9f12af19`, so this program's three commits (`e6bbb7ba`, `9c682ace`, `797fe98e`) are on `main`. They contain no application code, so runtime behavior is unchanged by them.
+- **Symptom:** CI run `36236128674` (push to main, `9f12af19`) failed at **Install dependencies**. `npm ci` returned EUSAGE: "package.json and package-lock.json … not in sync. Missing: @emnapi/core@1.10.0 … @emnapi/runtime@1.10.0". Type check, tests and lint were skipped. The runner used Node 24.21.0.
+- **Root cause (VERIFIED, reproduced):** the optional dev dependency `@rolldown/binding-wasm32-wasi` (via Vite 8/rolldown) pins `@emnapi/core` and `@emnapi/runtime` to exactly `1.10.0`. The lockfile provides only the hoisted `1.11.2` and no nested `1.10.0` entries. npm **11.20.0** rejects this (`npm ci --dry-run` exit 1); npm **11.6.2**, the local baseline, accepts it (exit 0). The lockfile was last changed in `b1ee8719`, before this program, so this is a pre-existing defect that CI exposed. Anyone on current npm cannot `npm ci` this repo.
+- **Minimal fix (verified in scratch, not applied):** add the two npm-generated nested entries `node_modules/@rolldown/binding-wasm32-wasi/node_modules/@emnapi/{core,runtime}@1.10.0` (taken from `npm@11.20.0 install --package-lock-only`; 23 added lines, nothing else changed). Both npm 11.6.2 and 11.20.0 then pass `npm ci --dry-run`. A full regeneration would also flip `peer` flags on 72 entries (no version changes), so the minimal variant is preferred for review. The package is optional and only for wasm32, so it is not installed on macOS or Linux x64 and nothing installed on Vercel changes. Approval is needed (lockfile change, and it reaches production via `main`).
+- **Also noted:** GitHub warns that `actions/checkout@v4` and `actions/setup-node@v4` target the deprecated Node 20 runtime; they were forced to Node 24. A follow-up bump to their current major versions is optional.
+
+## E17. Package 1B-1 — disposable database harness (2026-09-26)
+
+**Files:**
+- `scripts/test-db/cluster.mjs` (harness)
+- `vitest.db.config.ts`
+- `__tests__/db/{global-setup,helpers}.ts`
+- `__tests__/db/{harness,tenant-and-lock,known-defects,free-debit,costing-immutability}.dbtest.ts` (24 tests)
+- `package.json` script `test:db` (`vitest run --config vitest.db.config.ts`)
+
+`npm test` does not match `*.dbtest.ts` (the default suite stays at 232 files). CI is unchanged.
+
+**How it works:**
+- `initdb` runs in the OS temp dir on a free port, 127.0.0.1 only, with no Unix socket and trust auth; fsync is off because the cluster is disposable.
+- A loopback guard refuses every other host.
+- It creates the Supabase roles and installs stubs (`auth.uid()`/`jwt()`/`role()`, `auth.users`, `storage`, `extensions.pgcrypto`, no-op `cron`), plus Supabase's documented default privileges for existing projects: tables and functions created in `public` are granted to `anon`, `authenticated` and `service_role`, and migrations revoke selectively.
+- It replays all migrations except the four pg_cron/pg_net schedules into a template database. Each test file clones the template, and teardown stops the cluster and deletes its directory.
+- Tests switch identity with `SET ROLE` plus the JWT claims `custom_access_token_hook` would mint.
+- **Fidelity assumption (INFERRED):** the production project has those default privileges (created 2026-02, an "existing project" under Supabase's docs). The first run without them failed with `permission denied for table organizations` for `service_role`. Confirming it needs a read-only `pg_default_acl` query on production (not run).
+- **Not exercised:** PostgREST pre-request hooks, real JWT verification, `pg_net` and cron.
+
+**Results** (`npm run test:db`: 5 files, **24 passed**, about 6 s; afterwards no process or data directory remains):
+
+| Area | Tests (label) | Outcome |
+| --- | --- | --- |
+| Harness | migrations replayed = total − 4 hosted-only (≥ 296); all public tables have RLS; loopback guard; TCP-only listener (INVARIANT) | PASS |
+| Tenancy/plan/lock (quality stock RPCs) | owner writes only own org; other org cannot read by table or board RPC; request replay counted once; changed-detail replay → 40001; Lite owner → 42501; locked org → "organization is locked", balance unchanged (INVARIANT O-INV-01/02/09, A-INV-07) | PASS |
+| **Known defects, now reproduced by execution** | **OS-1** `get_inventory_audit_data` → `42803 aggregate function calls cannot be nested`. **OS-2** owner `INSERT inventory_audits` → `42501 permission denied for table inventory_audits`. **OS-3** save → confirm → reverse_dispatch leaves `archived_at` NULL (the fabric is correctly restored to 100 m) | KNOWN DEFECT, asserting current behavior |
+| Free debit | migrated policy 2/month Asia/Kolkata (CHARACTERIZATION); new request debits once and saves; replay returns same result, no second debit; same id + different inputs → `FREE_REQUEST_CONFLICT`; exhausted → `FREE_QUOTA_EXHAUSTED` with nothing saved; locked org → `FREE_ACCESS_DENIED`; `authenticated` cannot call the debit (42501) (INVARIANT A-INV-19) | PASS |
+| Costing immutability | owner cannot change economics; archive metadata can change; service role also bound, delete refused (INVARIANT C-INV-21); legacy `quotation` rows unprotected (CHARACTERIZATION); **CS-8 reproduced**: any SQL session that sets `app.account_deletion='true'` bypasses the trigger (CHARACTERIZATION; PostgREST clients cannot run `SET`, INFERRED) | PASS |
+
+**Mutation check** (disposable copy, one extra migration each; restored copy 24/24):
+
+| Mutation | Tests failed |
+| --- | --- |
+| Estimator triggers disabled | 2 (C-INV-21) |
+| `assert_org_not_locked` made a no-op | 1 (lock) |
+| INSERT granted on `inventory_audits` | 1 (OS-2 flips) |
+| Free limit 3 | 2 |
+| RLS off on `quality_stock` | 4 |
+
+**Gates at worktree state** (`main` @ `09213fde` + 1B-1):
+- default vitest 232 files / 2,019 passed / 1 skipped;
+- tsc PASS;
+- new files lint 0/0;
+- full lint 3 errors / **80** warnings. The drop of one from the 81 baseline is the unused `ChevronDown` import in `BaseDailyProductionSheet.tsx`, removed by UI commit `9f12af19`, not by this package.
+
+**Deferred to 1B-2:** the paid-save chain (`register_estimator_costing_attestation` → `save_estimator_costing_revision_v2`: replay, `no_change`, stale version) and OS-4 payroll request idempotency.

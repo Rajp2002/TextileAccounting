@@ -49,6 +49,7 @@ git archive HEAD | tar -x -C <copy> && ln -s "$PWD/node_modules" <copy>/node_mod
 (cd <copy> && node scripts/performance/isolated-command.mjs npm run build --ignore-scripts)
 node scripts/performance/application-bundle-report.mjs <copy>/.next
 node scripts/ci/lint-changed.mjs <base-commit>   # CI lint ratchet: fails only on new diagnostics
+npm run test:db   # disposable loopback PostgreSQL; needs initdb/pg_ctl on PATH (EVIDENCE E17)
 ```
 
 Disposable database probe (no repo file yet): EVIDENCE E9 lists the exact `initdb` flags, stubs and replay procedure.
