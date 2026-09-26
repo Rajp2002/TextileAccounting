@@ -1108,3 +1108,66 @@ Every call goes through `user:update_base_payroll_cycle`. The adapter throws on 
 - The E12/E23 entries are corrected, including the action name.
 
 **Not changed (noted):** production RLS still lets Base owners write `base_payroll_cycle_configs` directly through the API (`base_payroll_cycle_configs_owner_write`). Making the RPC the only writer at the database level would be an RLS change needing its own approval. The table constraints above keep such writes consistent.
+
+## E26. Package 2C: one builder for the `estimator_quotes` save payload (2026-09-26)
+
+Owner-approved. Resolves duplication lead D1 (E8) for the live paths.
+
+### Change
+
+- New pure module `lib/estimator-quote-payload.ts`: `buildEstimatorQuotePayload(input)`. It holds the ~60 column mappings of a saved costing row: recipe snapshot, result snapshot, reconciliation, legacy flat fields and worker-rate snapshot.
+- The two live call sites now pass only what differs:
+  - `saveEstimatorQuoteV3`: record kind, status, template, instructions and quotation document fields from the params; **commercial scalars from the authoritative result**; party name `.trim()`.
+  - `saveAsFabricTemplate`: fixed costing/draft values; **commercial scalars from the estimate**; party name `normalizeTemplateName` (collapses inner spaces).
+- `meters` is `orderQuantityM ?? 0` in both, as before.
+- `actions.ts`: +52/−134 lines (net −82); the builder is 113 lines, most of them the mapping list the two sites used to repeat.
+- **Left alone:** the third copy, in `createMarketRunFromEstimator`, is unreachable. It is behind `requireFactoryWorkflow()`, which always refuses. It stays for the Phase 3 deletion protocol.
+
+### Proof of identical behavior (VERIFIED)
+
+- A temporary capture test ran both live actions end to end against the replayed schema, in 5 variants:
+  - costing with a party (irregular spacing) and quantity;
+  - costing without a party or quantity;
+  - new quality with a party and quantity;
+  - new quality without them;
+  - costing that also updates its saved quality (`save_estimator_costing_revision_v2`).
+- It recorded every RPC call and its arguments: 10 calls and 58 KB, including the attested quote payloads and template payloads.
+- Before vs after, with keys sorted and run-specific ids and timestamps normalized, the outputs were **identical** (SHA-256 `2057057962e9a132…` both).
+- The capture test was not committed.
+- Recorded for information: for these inputs the estimate-sourced and result-sourced commercial scalars were equal, and both paths produce the same key set.
+
+### Tests
+
+**New:**
+- `__tests__/estimator-quote-payload.test.ts` (5):
+  - result and recipe mapping;
+  - commercial passthrough and `meters`;
+  - direct-mode-only overhead override, with the legacy `overhead_pct` always 0;
+  - record-kind extra columns;
+  - legacy fallbacks (68 picks, 75 denier, 0 rate).
+- `__tests__/db/costing-save.dbtest.ts` gains the first end-to-end test of `saveAsFabricTemplate`: the quality and an attested version-1 costing in one RPC, priced at the independent reference ₹31.44. It also passes on the pre-2C `actions.ts`, so it pins existing behavior.
+
+**Source-contract tests updated deliberately (6 assertions in 4 files).** They asserted the payload's inline text in `actions.ts`, down to spacing:
+- `base-p1-remediation`: party, quantity and meters sources.
+- `base-estimator-go-readiness`: `factory_profile_updated_at`.
+- `batch10-estimator-quote-order-snapshots`: worker rate, landed cost, idempotency key.
+- `sprint3-estimator-simplicity`: `overhead_pct` 0.
+
+After the refactor, three of the old strings survived **only in the unreachable market-run copy**, so those assertions would have passed while protecting nothing live. Each now pins the live call site (via `functionBody` where useful) and the builder mapping. The single market-run assertion is scoped to `createMarketRunFromEstimator`, so Phase 3 removes it together with the function.
+
+### Observation
+
+| ID | Finding |
+| --- | --- |
+| P2-O6 | The two costing saves normalize the party name differently: "save as quality" collapses inner spaces ("Shah Textiles"); a costing save only trims ("Shah   Textiles"). Preserved, and pinned as CHARACTERIZATION in the new DB test. A product decision if they should match |
+
+### Gates
+
+Worktree = `main` @ `ce4c3ff0` + 2C.
+
+| Check | Result |
+| --- | --- |
+| `npm run lint` | exit 0 |
+| tsc | PASS |
+| Default vitest | 234 files / 2,033 passed / 1 skipped |
+| `npm run test:db` | 11 files / 60 passed |

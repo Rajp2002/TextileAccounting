@@ -3,19 +3,23 @@
 Updated 2026-09-26 (night). **Phase 2 in progress.**
 - **2B and OS-13 are committed and pushed with this change**, together with the CI change to the full lint gate.
 - **Lint is fully green.**
-- **Current package: 2C** (one builder for the `estimator_quotes` save payload), approved.
-- Details: EVIDENCE E24 and E25.
+- **2C is committed and pushed with this change.**
+- **Current package: 2D** (shared tour runner), approved.
+- Details: EVIDENCE E24–E26.
 
 ## Decisions needed
 
-- None pending. 2C is in progress.
-- **Phase 5 note:** CLAUDE.md's "Baseline" section still describes lint as red (3 errors / 81 warnings). It is now clean, and CI runs `npm run lint`.
+- None pending. 2D is in progress.
+- **Phase 5 note:** CLAUDE.md's "Baseline" section still describes lint as red. It is now clean, and CI runs `npm run lint`.
 
 ## Decisions recorded (user, 2026-09-26)
 
 - **2B and OS-13:** committed and pushed.
 - **CI:** now enforces the full `npm run lint` (owner-approved). The changed-file ratchet script `scripts/ci/lint-changed.mjs` and its test remain but are no longer used by CI (a Phase 3 candidate).
-- **2C:** approved.
+- **2C:** committed and pushed.
+- **P2-O6 (party-name spacing):** delegated by the owner to Claude. Decision: **no change**. Inner repeated spaces are rare, and aligning the two paths would change stored party names and exact-match party lookups for a cosmetic gain. Pinned as CHARACTERIZATION.
+- **2D:** approved.
+- **CI with the full lint gate:** passed on `ce4c3ff0`.
 - **2A:** committed and pushed (`0a17a722`, `41990fb2`). CI passed.
 - **Phase 2:** started by the owner.
 - **F3:**
@@ -34,7 +38,17 @@ Updated 2026-09-26 (night). **Phase 2 in progress.**
   - AS-02 (Free auto-confirm) is accepted for now.
   - OS-5 and AS-05 scope: the owner is unsure.
 
-## Gate results (2B + OS-13)
+## Gate results (2C)
+
+| Check | Result |
+| --- | --- |
+| Save payload equivalence | Byte-identical across 5 variants and 10 RPC calls (E26) |
+| `npm run lint` | exit 0 |
+| tsc | PASS |
+| Default `npm test` | 234 files / 2,033 passed / 1 skipped |
+| `npm run test:db` | 11 files / 60 passed |
+
+## Earlier gate results (2B + OS-13)
 
 | Check | Result |
 | --- | --- |
@@ -49,7 +63,7 @@ Updated 2026-09-26 (night). **Phase 2 in progress.**
 
 - OS-5, AS-05, OS-12, CS-2.
 - CS-1: the owner is verifying.
-- P2-O1…O5 observations (E23).
+- P2-O1…O6 observations (E23, E26).
 - Direct-write RLS on `base_payroll_cycle_configs` (E25); `custom_access_token_hook` grants (E18); `get_user_role()` is unused.
 - Leaked-password protection (Auth setting).
 - The optional `actions/*` version bump.
