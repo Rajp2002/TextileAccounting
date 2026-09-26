@@ -384,9 +384,9 @@ Release claims touching these areas are **blocked** until they are resolved or e
 
 | Rank | ID | Area | Severity | Evidence strength | Proposed handling |
 | --- | --- | --- | --- | --- | --- |
-| 1 | OS-1 | Inventory audit page/finalize | High | **Reproduced** (42803 on the replayed schema) | New corrective migration after a characterization test on the DB harness. Schema-change approval required |
-| 2 | OS-2 | Inventory audit writes | High | Grant text verified | Route writes through an RPC or change grants; schema/authorization approval required |
-| 3 | OS-3 | Challan archive | High (functional) | Migration text verified | Corrective migration restoring the archive step; schema approval |
+| 1 | OS-1 | Inventory audit page/finalize | High | **Reproduced** (42803 on the replayed schema) | **Fixed in F1 (E20)**; awaits application to QA/production |
+| 2 | OS-2 | Inventory audit writes | High | Grant text verified | **Fixed in F1 (E20)** via owner RPCs, plus OS-2b draft creation in the UI |
+| 3 | OS-3 | Challan archive | High (functional) | Migration text verified | **Fixed in F1 (E20)**; optional backfill awaits a decision |
 | 4 | OS-5 | Data export completeness | High (compliance) | Investigator only | Verify, then product decision on scope and pagination |
 | 5 | AS-01 | Onboarding admin fallback | Medium (security) | Code verified | Remove the fallback / add lock+plan checks; authorization-change approval |
 | 6 | CS-3 / AS-04 | Free signing-key fallback | Low–Med (security) | Code verified; prod config UNKNOWN | **User action: confirm `WEAVLY_FREE_SIGNING_KEYS` is set in Vercel production.** Then fail closed; separately approved |
@@ -634,3 +634,61 @@ On OS-4: the 2026-09-01 function refused this with "This payment request was rev
 - tsc PASS;
 - changed/new files lint 0/0;
 - full lint 3 errors / 80 warnings (unchanged from 1B-1).
+
+## E20. Fix package F1 — inventory audit and challan archive (2026-09-26)
+
+**Migrations** (new files; no applied migration edited; not applied to any hosted project):
+
+| File | Fixes | Change |
+| --- | --- | --- |
+| `20260926132159_repair_inventory_audit_board.sql` | **OS-1** plus a latent second bug | Re-creates `get_inventory_audit_data` from the `0920` definition with three edits (diff-verified): the yarn and fabric lists aggregate per item in a subquery and then build the same JSON (same keys, rounding and order); `v_audit` is a row type; with no audit id, the latest draft for the date is loaded, as the function's own comment intended. **Second bug, verified:** with only the aggregate fix, the no-id page load still fails with `record "v_audit" is not assigned yet` |
+| `20260926132310_inventory_audit_owner_writes.sql` | **OS-2** | Adds `create_inventory_audit_draft(date, title, notes)` and `record_inventory_audit_count(audit, type, item, count, notes)`, both SECURITY DEFINER with explicit `GRANT EXECUTE … TO authenticated` (needed since production's function default is service_role only, E18). Same owner, Base stock access, locked-org and finalized checks as `apply_inventory_audit_adjustment`. One reusable draft per org and date (advisory lock). No future dates. Labels and system quantities are derived server-side as of the audit date. A count already applied to stock cannot be re-recorded. Direct table writes stay revoked |
+| `20260926132412_restore_challan_auto_archive.sql` | **OS-3** | Re-creates `mutate_delivery_challan` from `20260922135042`, diff-verified identical except the restored `20260909045727` archive statement before the event insert |
+
+**App changes:**
+- `app/(dashboard)/owner/stock/audit/actions.ts`: `createInventoryAuditAction` and `saveAuditPhysicalCountAction` call the new RPCs instead of writing tables (the client-supplied label and system quantity are no longer stored).
+- `InventoryAuditClient.tsx` (**OS-2b, product-visible**): the first count for a date creates or reuses that date's draft instead of showing "Draft audit record is required to record counts." No UI path created drafts before (`createInventoryAuditAction` had no caller). The draft title is the table default "Stock Audit", which is not displayed.
+
+**Tests:**
+- `__tests__/db/known-defects.dbtest.ts` is replaced by `inventory-audit.dbtest.ts` (9) and `delivery-challans.dbtest.ts` (5). These assert the fixed behavior plus unchanged invariants: stock restored on reversal, direct writes denied, partial payments and short receipts stay open, reversing the settling payment un-archives.
+- **Pre-fix proof:** on the schema without the three migrations, 10 of the 14 new tests fail with the defect signatures (`aggregate function calls cannot be nested`, missing functions, `archived_at` not set). The other 4 are invariants that hold either way.
+
+**Gates** (worktree = `main` @ `2aa3d6c7` + F1):
+- `npm run test:db` 8 files / **47 passed**;
+- default vitest 232 files / 2,019 passed / 1 skipped;
+- tsc PASS;
+- full lint 3 / 80 (unchanged);
+- lint ratchet on the changed app files: `InventoryAuditClient.tsx` 4 pre-existing / 0 new, `actions.ts` 0 / 0.
+- **NOT RUN:** a browser check of the audit page and challan History, which needs the migrations applied to QA.
+
+**Deploy order is safe either way.**
+- If the app deploys first, draft creation returns an RPC-missing error and the page still fails, as it does today; no regression.
+- If the migrations are applied first, the page loads and challans archive; counts wait for the app deploy.
+- Recommended: apply to **QA**, check the audit page (load, count, finalize) and one settled and one reversed challan, then **production**. Applying migrations is the owner's action.
+
+**Optional backfill (not included as a migration; production data write, needs a decision).** Challans settled or reversed while the archive step was missing keep `archived_at` NULL until their next change. One idempotent statement applying the same rule would move them to History:
+
+```sql
+UPDATE public.delivery_challans SET archived_at = clock_timestamp()
+WHERE archived_at IS NULL
+  AND ((delivery_status = 'received' AND difference_status IN ('none','accepted') AND balance = 0)
+       OR delivery_status = 'reversed');
+```
+
+### F1 applied to production (2026-09-26, owner-approved)
+
+- **Pre-checks:**
+  - Production migration history had 300 rows, whose versions and names match the local files (latest `20260924085030`).
+  - `md5(prosrc)` of the four existing audit and challan functions in production equals a pre-F1 replay (no drift).
+  - Delivery challans in production: 1 total, **0 matching the archive rule**. The owner delegated the backfill decision and **it was skipped** (nothing to change).
+- **Applied** with the Supabase connector `apply_migration`, in order and without the files' `BEGIN;`/`COMMIT;` lines. Recorded versions: `20260926132159 repair_inventory_audit_board`, `20260926132310 inventory_audit_owner_writes`, `20260926132412 restore_challan_auto_archive`. The local files were renamed to exactly these versions, so history and files stay in sync.
+- **Post-checks (VERIFIED):**
+  - Production `md5(prosrc)` equals the tested harness build: `get_inventory_audit_data` `5d47b3b5…`, `mutate_delivery_challan` `306ed58a…`, `create_inventory_audit_draft` `c8d1f50a…`, `record_inventory_audit_count` `8d843ab7…`.
+  - Unchanged: `apply_inventory_audit_adjustment` `1265f974…`, `finalize_inventory_audit` `d506a5bd…`.
+  - All six functions are EXECUTE for `authenticated` only and SECURITY DEFINER.
+- **Security advisor after applying:**
+  - The new functions appear only in the existing WARN `authenticated_security_definer_function_executable`, alongside 63 existing owner RPCs of the same design.
+  - No new search-path finding.
+  - Pre-existing findings logged for the backlog: `free_server_time` mutable search_path (WARN); leaked-password protection disabled (WARN, Auth setting); 8 service-role-only Free tables with RLS and no policies (INFO, by design).
+- **Rollback:** `docs/maintenance/weavly-refactor/evidence/f1-rollback.sql` restores the prior definitions, drops the two new functions and removes the three history rows.
+- **Not verified:** the audit page and challan flows in the production UI with a signed-in owner. The owner should load `/owner/stock/audit`, record a count and finalize (or the app must first be deployed with this commit).
