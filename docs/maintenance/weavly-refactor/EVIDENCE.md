@@ -691,7 +691,9 @@ WHERE archived_at IS NULL
   - No new search-path finding.
   - Pre-existing findings logged for the backlog: `free_server_time` mutable search_path (WARN); leaked-password protection disabled (WARN, Auth setting); 8 service-role-only Free tables with RLS and no policies (INFO, by design).
 - **Rollback:** `docs/maintenance/weavly-refactor/evidence/f1-rollback.sql` restores the prior definitions, drops the two new functions and removes the three history rows.
-- **Not verified:** the audit page and challan flows in the production UI with a signed-in owner. The owner should load `/owner/stock/audit`, record a count and finalize (or the app must first be deployed with this commit).
+- **Production UI check (owner-reported, 2026-09-26):**
+  - On `/owner/stock/audit` the page loaded, a count was recorded and the audit was finalized.
+  - One challan's History showed its transactions.
 
 ### F1 commit record (correction)
 
@@ -827,3 +829,135 @@ Worktree = `main` @ `e3541dfb` + F2.
 **Rollback:** `evidence/f2-rollback.sql`, with the recorded version filled in.
 
 **Not verified in production:** a real settle → reverse → re-send flow. That would write payroll data, which is out of scope. The behavior is covered by the DB tests against the same function source.
+
+## E22. Fix package F3: production drift capture and `free_server_time` search_path (2026-09-26)
+
+**Owner-approved scope:**
+- capture the production-only functions (E18) in migrations;
+- pin `free_server_time`'s search_path.
+
+The owner then approved:
+- committing and pushing to `main`;
+- applying the migrations to production;
+- dropping the three legacy policies, a separate authorization change (see "F3 applied to production" below).
+
+### Production inventory (read-only metadata)
+
+- **`rls_auto_enable()`** backs the event trigger `ensure_rls`.
+  - Owner: `postgres`.
+  - It fires on `ddl_command_end` for `CREATE TABLE`, `CREATE TABLE AS` and `SELECT INTO`.
+  - It enables RLS on every new table in `public`.
+- **`get_user_org_id()`** is the third clause of the `profiles` SELECT policy "Users read own or organization profiles". `20260903115520` adds that clause only when the helper exists.
+- **`get_user_role()`** is referenced by no policy, view or function.
+- **Both helpers:**
+  - SECURITY DEFINER, `search_path=pg_catalog, public`;
+  - EXECUTE for `authenticated` and `service_role`;
+  - they return only the caller's own org and role.
+- **Consequence:** a database built from migrations had no `ensure_rls`, and its profiles policy lacked the live-membership clause.
+
+### Migrations
+
+- **`20260926174334_capture_production_drift_functions.sql`:**
+  - the three functions, verbatim from `pg_get_functiondef`;
+  - production's grants, restated;
+  - `ensure_rls`, created only if missing;
+  - the policy clause, added only if missing.
+
+  On production every statement restates what already exists.
+- **`20260926174338_pin_free_server_time_search_path.sql`:** `ALTER FUNCTION public.free_server_time() SET search_path = ''`. The body is only `SELECT now()`.
+
+### Proofs
+
+- **Pre-fix:** all 5 tests in `__tests__/db/production-parity.dbtest.ts` fail on the schema without the two migrations:
+  - the functions are absent;
+  - a member without an `org_id` claim sees only their own profile;
+  - new tables don't get RLS;
+  - the search_path is unset.
+- **With F3:**
+  - The replayed functions hash exactly as production's (`a83f8e45…`, `5f3dc6bb…`, `99be2067…`).
+  - The profiles policy text is identical to production's.
+- **Idempotency:** re-applying both migrations to a database that already has these objects leaves the functions, ACLs, policies and event triggers unchanged. This is the production situation.
+- **Rollback:** `evidence/f3-rollback.sql` is verified. It restores the unpinned function with the same source hash.
+
+### Parity after F3 (replayed schema vs production)
+
+| Object | Replayed | Production | Differences |
+| --- | --- | --- | --- |
+| Functions in `public`, `private`, `weavly_private` | 206 | 206 | `free_server_time`: the pin is not applied yet. The replayed hash equals production's body plus the pin. Legacy `settle_worker_payroll(…, p_month, p_gross_amount, p_is_final_settlement)`: comments and whitespace only (normalized hashes equal, `a6c4fbc9…`) |
+| Non-internal triggers | 167 | 167 | none |
+| RLS enabled/forced flags | 127 | 127 | none |
+| Policies (including `storage`) | 348 | 351 | 3 production-only legacy policies (below) |
+
+Method and caveats:
+- Compared by per-object hashes in 16 buckets, then row by row for the mismatched buckets.
+- The replayed schema runs Postgres 17.11, production 17.6. Deparsed text matched wherever hashes matched.
+- E18 item 2 (`custom_access_token_hook` grants) is unchanged.
+
+### Production-only legacy policies (not captured; decision needed)
+
+**The policies.** All three apply to role `public`, check `org_id IN (SELECT org_id FROM profiles WHERE id = auth.uid())`, and have no role or lock checks:
+- `machines` "Users can view org machines" (SELECT);
+- `production_logs` "Users can view org logs" (SELECT);
+- `production_logs` "Supervisors can insert logs" (INSERT).
+
+**Inert today (VERIFIED on a disposable database with the three policies added):**
+- The restrictive `requires_premium_subscription` calls `org_has_subscription_tier(org_id, 'premium')`, which has returned false for every tier since `20260924085030`.
+- Base owners, locked or not, saw 0 rows.
+- An insert was refused by that policy. The table's validation triggers were disabled for the probe only.
+- Anonymous users were refused.
+
+**Not captured.** Copying them into migrations would enshrine lock-free policies.
+
+**Dropped (owner-approved authorization change).** `20260926174343_drop_legacy_production_only_policies.sql` drops them with `DROP POLICY IF EXISTS`, which is a no-op on a database built from migrations.
+- Test: the policies are recreated as production defined them, the migration file is applied, and they must be gone.
+- Mutation check: with the DROP lines removed, the test fails.
+
+### F3 gates
+
+Worktree = `main` @ `87d9d374` + F3.
+
+| Check | Result |
+| --- | --- |
+| `npm run test:db` | 10 files / **55 passed** (+5 parity) |
+| Default vitest | 232 files / 2,023 passed / 1 skipped |
+| tsc | PASS |
+| Full lint | 3 errors / 80 warnings (unchanged); the new test file 0 / 0 |
+| `npm run test:db` after adding the drop migration | 10 files / **56 passed** |
+
+### F3 applied to production (2026-09-26, owner-approved)
+
+**Pre-checks** (read-only; all matched the tested state):
+- Latest history row `20260926135315`, with 304 rows.
+- Hashes and ACLs of `get_user_org_id`, `get_user_role`, `rls_auto_enable` and `free_server_time` (unpinned).
+- Profiles policy `md5(qual)` `02eeced8…`.
+- `ensure_rls` enabled.
+- The three legacy policies present; 351 policies in total.
+
+**Applied** with the Supabase connector `apply_migration`. The three calls were issued in one batch; they are independent, and history recorded them in the intended order:
+
+| Version | Migration |
+| --- | --- |
+| `20260926174334` | `capture_production_drift_functions` |
+| `20260926174338` | `pin_free_server_time_search_path` |
+| `20260926174343` | `drop_legacy_production_only_policies` |
+
+The local files were renamed to these versions.
+
+**Post-checks (VERIFIED):**
+- 307 history rows.
+- The captured functions' hashes and ACLs, the profiles policy (`02eeced8…`) and `ensure_rls` are byte-identical to before.
+- `free_server_time` has `search_path=""`, with the same source.
+- The three legacy policies are gone: 348 policies remain, and `machines`/`production_logs` keep only their migration-defined policies.
+
+**Parity (replayed schema vs production), VERIFIED:**
+- Policy buckets are identical (16/16).
+- Function buckets are identical except the one holding the comment-only legacy `settle_worker_payroll` overload. Substituting production's hash for that line reproduces production's bucket exactly.
+
+**Security advisor:**
+- `function_search_path_mutable` is **cleared**.
+- Remaining findings are unchanged:
+  - the SECURITY DEFINER WARN (65, by design);
+  - leaked-password protection (Auth setting);
+  - 8 Free tables with RLS and no policy (INFO).
+
+**Rollback:** `evidence/f3-rollback.sql`. It recreates the three policies, unpins the function and removes the two history rows. The unpin was verified on a disposable database.
