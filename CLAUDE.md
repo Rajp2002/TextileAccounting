@@ -74,7 +74,7 @@ Because of these, lint is red on `main`. When checking a change, compare the lin
 
 ## Stack
 
-Next.js 16 App Router + React 19, TypeScript strict, Tailwind v4 + shadcn/ui (Radix, `new-york` style, `components.json`), TanStack Query (persisted), react-hook-form + zod, Supabase (Auth, Postgres/RLS/RPC, Realtime, Edge Functions), Razorpay billing, Upstash Redis rate limiting, Sentry, `@ducanh2912/next-pwa` with a custom worker in `worker/index.ts`, Dexie for offline queues. Money/costing math uses `decimal.js`. Path alias `@/*` → repo root.
+Next.js 16 App Router + React 19, TypeScript strict, Tailwind v4 + shadcn/ui (Radix, `new-york` style, `components.json`), TanStack Query (persisted), zod, Supabase (Auth, Postgres/RLS/RPC, Realtime, Edge Functions), Razorpay billing, Upstash Redis rate limiting, Sentry, `@ducanh2912/next-pwa` with a custom worker in `worker/index.ts`, Dexie for offline queues. Money/costing math uses `decimal.js`. Path alias `@/*` → repo root.
 
 ## Architecture
 
@@ -113,7 +113,7 @@ Follow `design.md` and `.agents/rules/weavly-global-premium-design-principles.md
 - Tokens and global CSS: `app/globals.css` (Tailwind v4 `@theme`, `--weavly-*` variables, shadow vars, safe-area utilities) and `app/mobile.css`.
 - Root layout: `app/layout.tsx`. Segment layouts: `app/(dashboard)/owner/layout.tsx` (owner shell: `BrandBackground` + `OwnerSidebar` + plan provider), `app/free/layout.tsx`, `app/(dashboard)/admin/layout.tsx`, `app/(auth)/onboarding/layout.tsx`, `app/(public)/layout.tsx`, `app/(plan-selection)/layout.tsx`.
 - Navigation: `components/navigation/` (`owner-sidebar.tsx`, `mobile-navigation.tsx`, `navigation-link.tsx`, `navigation-disclosure.tsx`, route-loading skeletons, `page-title-layout.ts`); per-plan items come from `lib/owner-navigation.ts`.
-- Primitives: `components/ui/`. Route scaffolding (`PageHeader`, `Toolbar`, `SectionHeader`, `StatusBadge`, `EmptyState`) is in `components/ui/page-header.tsx`. `button.tsx` provides the `default` (ink) and `saffron` variants and the sizes `sm` h-9, `default` h-10, and `lg` h-11. The other primitives are `card`, `badge`, `input`, `select`, `sheet`, `dialog`, `table`, `tabs`, `skeleton`, and `amount`.
+- Primitives: `components/ui/`. Route scaffolding (`PageHeader`, `Toolbar`, `SectionHeader`, `StatusBadge`, `EmptyState`) is in `components/ui/page-header.tsx`. `button.tsx` provides the `default` (ink) and `saffron` variants and the sizes `sm` h-9, `default` h-10, and `lg` h-11. The other primitives are `card`, `badge`, `input`, `select`, `sheet`, `dialog`, `table`, `tabs`, and `skeleton`.
 - Backgrounds: `components/brand-background.tsx` (variants are chosen per route in the owner layout). Auth shell: `components/auth/auth-layout.tsx`. Landing: `components/landing/`.
 - `cn()` is in `lib/utils.ts`.
 
