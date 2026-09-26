@@ -52,9 +52,13 @@ describe('Production preview safety and targets', () => {
         const source = fs.readFileSync('components/tours/ProductionTutorial.tsx', 'utf8')
         expect(source).toContain('productionTourSequence(step)')
         expect(source).toContain("if (step === 'finish') void persistTourCompleted('production', userId)")
-        expect(source).toContain('returnFocus.current ?? launcherElement')
-        expect(source).toContain('trigger?.isConnected ? trigger : launcherElement')
-        expect(source).toContain('focusTarget?.focus({ preventScroll: true })')
-        expect(source).toContain('window.scrollTo({ left: scroll.x, top: scroll.y')
+        // Package 2D: the focus strategy is named here and implemented in the
+        // shared tour hook (behavior covered by guided-tour-focus.test.ts).
+        expect(source).toContain("focusReturn: 'return-focus-or-launcher'")
+        const tourHook = fs.readFileSync('hooks/use-guided-tour.ts', 'utf8')
+        expect(tourHook).toContain('returnFocus?.current ?? launcherElement')
+        expect(tourHook).toContain('trigger?.isConnected ? trigger : launcherElement')
+        expect(tourHook).toContain('trigger?.focus({ preventScroll: true })')
+        expect(tourHook).toContain('window.scrollTo({ left: scroll.x, top: scroll.y')
     })
 })

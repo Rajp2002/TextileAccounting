@@ -69,8 +69,11 @@ describe('Assignment tour workflow', () => {
             expect(functionBody.slice(0, functionBody.indexOf('try {'))).toMatch(/if \(tourStep(?: \|\| pendingKey)?\) return/)
         }
         expect(controller).toContain("if (index === configurationTourSteps.length - 1) {\n            void persistTourCompleted('configuration', userId)")
-        expect(controller).toContain('trigger?.focus({ preventScroll: true })')
-        expect(controller).toContain('window.scrollTo({ left: scroll.x, top: scroll.y')
+        // Package 2D: focus and scroll restoration live in the shared tour hook.
+        expect(controller).toContain('useGuidedTourModal({ panel, portal, navigation, launcher, returnScroll })')
+        const tourHook = readFileSync('hooks/use-guided-tour.ts', 'utf8')
+        expect(tourHook).toContain('trigger?.focus({ preventScroll: true })')
+        expect(tourHook).toContain('window.scrollTo({ left: scroll.x, top: scroll.y')
     })
 
     it('provides complete localized core and contextual help with current prerequisite labels', () => {

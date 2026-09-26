@@ -7,8 +7,8 @@ import { useTranslation } from '@/lib/i18n/context'
 import { stockTutorialCopy, fabricStockTutorialHelp, yarnStockTutorialHelp } from '@/lib/i18n/stock-tutorial'
 import { stockTourSelector, stockTourSteps, stockTourSection, type StockTourStep, type StockTourKind } from '@/lib/stock-tour'
 import { findTourTarget } from '@/lib/tutorial-target'
-import { lockTourViewport } from '@/lib/tutorial-viewport-lock'
 import { useMobileTour } from '@/hooks/use-mobile-tour'
+import { useGuidedTourModal, useGuidedTourPlacement } from '@/hooks/use-guided-tour'
 import { persistTourCompleted } from '@/lib/tours/tour-preferences'
 
 /** Keyed by step so optional detail closes when the user advances or goes back. */
@@ -50,7 +50,6 @@ export default function StockTutorial({ step, onStepChange, launcher, userId, ki
         return { target, card: target }
     }, [])
     const mobile = useMobileTour(step, panel, resolve)
-    const [measurement, setMeasurement] = useState<{ step: StockTourStep; rect: DOMRect; bottom: boolean; left: boolean } | null>(null)
     const close = () => onStepChange(null)
     const next = () => {
         if (index === steps.length - 1) {
@@ -62,87 +61,10 @@ export default function StockTutorial({ step, onStepChange, launcher, userId, ki
     const navigation = useRef({ close, next, back })
     useEffect(() => { navigation.current = { close, next, back } })
 
-    useEffect(() => {
-        if (!panel.current) return
-        const trigger = launcher.current?.querySelector<HTMLButtonElement>('[data-tour-control="take-tour"], [data-tour-control="quiet-tour"]')
-        const scroll = returnScroll.current
-        const previous = new Map<HTMLElement, boolean>()
-        const makeInert = () => {
-            for (const element of Array.from(document.body.children)) {
-                if (!(element instanceof HTMLElement) || element === portal.current || element.contains(portal.current)) continue
-                if (!previous.has(element)) previous.set(element, element.inert)
-                element.inert = true
-            }
-        }
-        makeInert()
-        const observer = new MutationObserver(makeInert)
-        observer.observe(document.body, { childList: true })
-        const unlock = lockTourViewport(panel.current)
-        const block = (event: Event) => {
-            if (event.target instanceof Node && panel.current?.contains(event.target)) return
-            event.preventDefault()
-            event.stopImmediatePropagation()
-        }
-        const focus = () => {
-            if (!panel.current?.contains(document.activeElement)) panel.current?.focus({ preventScroll: true })
-        }
-        const keyboard = (event: KeyboardEvent) => {
-            if (event.ctrlKey || event.metaKey || event.altKey) return
-            if (event.key === 'Escape') { event.preventDefault(); event.stopImmediatePropagation(); navigation.current.close(); return }
-            if (event.key === 'ArrowRight' || event.key === 'ArrowLeft' || (event.key === 'Enter' && !(event.target instanceof HTMLButtonElement))) {
-                event.preventDefault(); event.stopImmediatePropagation()
-                if (event.key === 'ArrowLeft') navigation.current.back()
-                else navigation.current.next()
-            }
-            if (event.key === 'Tab') {
-                const buttons = Array.from(panel.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') ?? [])
-                const current = buttons.indexOf(document.activeElement as HTMLButtonElement)
-                event.preventDefault(); event.stopImmediatePropagation()
-                buttons[(current + (event.shiftKey ? -1 : 1) + buttons.length) % buttons.length]?.focus()
-            }
-        }
-        const events = ['pointerdown', 'pointerup', 'click', 'dblclick', 'contextmenu', 'touchstart']
-        events.forEach(name => document.addEventListener(name, block, { capture: true, passive: false }))
-        document.addEventListener('keydown', keyboard, true)
-        document.addEventListener('focusin', focus, true)
-        panel.current.focus({ preventScroll: true })
-        return () => {
-            observer.disconnect(); unlock()
-            events.forEach(name => document.removeEventListener(name, block, true))
-            document.removeEventListener('keydown', keyboard, true)
-            document.removeEventListener('focusin', focus, true)
-            previous.forEach((inert, element) => { element.inert = inert })
-            window.scrollTo({ left: scroll.x, top: scroll.y, behavior: 'instant' })
-            trigger?.focus({ preventScroll: true })
-        }
-    }, [launcher, returnScroll])
+    useGuidedTourModal({ panel, portal, navigation, launcher, returnScroll })
 
-    useEffect(() => {
-        if (mobile.mobile) return
-        let frame = 0
-        let positioned: HTMLElement | null = null
-        const start = performance.now()
-        const measure = () => {
-            const { target } = resolve(step)
-            if (target && panel.current) {
-                if (target !== positioned) { target.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' }); positioned = target }
-                const rect = target.getBoundingClientRect()
-                const bounds = panel.current.getBoundingClientRect()
-                const inPreview = Boolean(target.closest('[data-stock-tour-preview="true"]'))
-                const left = !inPreview && rect.right > window.innerWidth - bounds.width - 32 && rect.left > window.innerWidth / 2
-                const bottom = !inPreview && !left && rect.top < bounds.height + 32 && rect.right > window.innerWidth - bounds.width - 32
-                setMeasurement({ step, rect, left, bottom })
-            }
-            if (performance.now() - start < 1500) frame = requestAnimationFrame(measure)
-        }
-        const update = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(measure) }
-        frame = requestAnimationFrame(measure)
-        window.addEventListener('resize', update)
-        window.addEventListener('scroll', update, true)
-        return () => { cancelAnimationFrame(frame); window.removeEventListener('resize', update); window.removeEventListener('scroll', update, true) }
-    }, [step, mobile.mobile, resolve, language])
+    const current = useGuidedTourPlacement({ step, mobile: mobile.mobile, resolve, language, panel, previewSelector: '[data-stock-tour-preview="true"]' })
 
-    const current = measurement?.step === step ? measurement : null
     const rect = mobile.mobile ? mobile.rects?.field : current?.rect
     return createPortal(
         <div ref={portal} data-testid="stock-tutorial" data-i18n-skip="true" lang={language} className="guided-tour-portal fixed inset-0 z-[100]">

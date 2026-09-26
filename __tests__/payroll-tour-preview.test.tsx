@@ -68,9 +68,13 @@ describe('Payroll sample preview targets and isolation', () => {
         expect(wrapper).toContain('returnFocus.current = launcher.current?.querySelector<HTMLElement>')
         expect(wrapper).toContain("nextTrack === 'help' ? '[data-tour-control=\"payroll-help\"]'")
         expect(tutorial).toContain("if (track === 'core') void persistTourCompleted('payroll', userId)")
-        expect(tutorial).toContain('const trigger = launchElement?.isConnected ?')
-        expect(tutorial).toContain("event.key === 'Escape'")
-        expect(tutorial).toContain('trigger?.focus({ preventScroll: true })')
+        // Package 2D: the focus strategy is named here and implemented in the
+        // shared tour hook (behavior covered by guided-tour-focus.test.ts).
+        expect(tutorial).toContain("focusReturn: 'return-focus-at-close'")
+        const tourHook = fs.readFileSync('hooks/use-guided-tour.ts', 'utf8')
+        expect(tourHook).toContain('launchElement?.isConnected ? launchElement : launcherContainer')
+        expect(tourHook).toContain("event.key === 'Escape'")
+        expect(tourHook).toContain('trigger?.focus({ preventScroll: true })')
     })
     it('keeps the live page mounted and saves scroll before starting', () => {
         const source = fs.readFileSync('components/payroll/PayrollGuidedTour.tsx', 'utf8')
