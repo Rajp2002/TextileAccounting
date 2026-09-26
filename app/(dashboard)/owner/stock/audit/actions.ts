@@ -38,32 +38,27 @@ export async function createInventoryAuditAction(
     input: z.input<typeof CreateAuditSchema>
 ): Promise<{ success: true; auditId: string } | { error: string }> {
     try {
-        const { profile, user } = await requireRole(['owner'])
+        await requireRole(['owner'])
         const parsed = CreateAuditSchema.safeParse(input)
         if (!parsed.success) {
             return { error: parsed.error.issues[0]?.message || 'Invalid audit input.' }
         }
 
+        // Owners have no direct write access to audit tables; the RPC reuses an
+        // open draft for the same date and applies the owner and lock checks.
         const supabase = await createClient()
-        const { data, error } = await supabase
-            .from('inventory_audits')
-            .insert({
-                org_id: profile.org_id,
-                audit_date: parsed.data.auditDate,
-                title: parsed.data.title,
-                notes: parsed.data.notes || null,
-                status: 'draft',
-                created_by: user.id,
-            })
-            .select('id')
-            .single()
+        const { data, error } = await supabase.rpc('create_inventory_audit_draft', {
+            p_audit_date: parsed.data.auditDate,
+            p_title: parsed.data.title,
+            p_notes: parsed.data.notes || null,
+        })
 
         if (error) {
             return { error: error.message || 'Failed to create inventory audit.' }
         }
 
         revalidatePath('/owner/stock/audit')
-        return { success: true, auditId: data.id }
+        return { success: true, auditId: (data as { audit_id: string }).audit_id }
     } catch (err) {
         return { error: err instanceof Error ? err.message : 'Error creating audit.' }
     }
@@ -73,29 +68,22 @@ export async function saveAuditPhysicalCountAction(
     input: z.input<typeof AuditPhysicalCountSchema>
 ): Promise<{ success: true } | { error: string }> {
     try {
-        const { profile } = await requireRole(['owner'])
+        await requireRole(['owner'])
         const parsed = AuditPhysicalCountSchema.safeParse(input)
         if (!parsed.success) {
             return { error: parsed.error.issues[0]?.message || 'Invalid physical count.' }
         }
 
+        // The RPC derives the item label and system quantity (as of the audit
+        // date) on the server; the client-supplied values are not stored.
         const supabase = await createClient()
-        const { error } = await supabase
-            .from('inventory_audit_lines')
-            .upsert(
-                {
-                    audit_id: parsed.data.auditId,
-                    org_id: profile.org_id,
-                    item_type: parsed.data.itemType,
-                    item_id: parsed.data.itemId,
-                    item_label: parsed.data.itemLabel,
-                    system_quantity: parsed.data.systemQuantity,
-                    physical_count: parsed.data.physicalCount,
-                    notes: parsed.data.notes || null,
-                    updated_at: new Date().toISOString(),
-                },
-                { onConflict: 'audit_id,item_type,item_id' }
-            )
+        const { error } = await supabase.rpc('record_inventory_audit_count', {
+            p_audit_id: parsed.data.auditId,
+            p_item_type: parsed.data.itemType,
+            p_item_id: parsed.data.itemId,
+            p_physical_count: parsed.data.physicalCount,
+            p_notes: parsed.data.notes || null,
+        })
 
         if (error) {
             return { error: error.message || 'Failed to record physical count.' }

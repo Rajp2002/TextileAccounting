@@ -38,6 +38,7 @@ import {
 } from '@/lib/inventory-audit'
 import {
     applyAuditAdjustmentAction,
+    createInventoryAuditAction,
     finalizeInventoryAuditAction,
     getInventoryAuditDataAction,
     saveAuditPhysicalCountAction,
@@ -125,14 +126,20 @@ export default function InventoryAuditClient({ initialData }: Props) {
             return
         }
 
-        if (!data.audit?.id) {
-            toast.error('Draft audit record is required to record counts.')
-            return
-        }
-
         startTransition(async () => {
+            // The first count for a date opens (or reuses) that date's draft audit.
+            let auditId = data.audit?.id
+            if (!auditId) {
+                const draft = await createInventoryAuditAction({ auditDate, title: 'Stock Audit' })
+                if ('error' in draft) {
+                    toast.error(draft.error)
+                    return
+                }
+                auditId = draft.auditId
+            }
+
             const res = await saveAuditPhysicalCountAction({
-                auditId: data.audit!.id,
+                auditId,
                 itemType: countDialog.type,
                 itemId: countDialog.item.id,
                 itemLabel: 'quality_label' in countDialog.item ? countDialog.item.quality_label : countDialog.item.yarn_name,
@@ -150,7 +157,7 @@ export default function InventoryAuditClient({ initialData }: Props) {
             setCountDialog(null)
 
             // Refresh board
-            const updated = await getInventoryAuditDataAction({ auditDate, auditId: data.audit!.id })
+            const updated = await getInventoryAuditDataAction({ auditDate, auditId })
             if ('data' in updated) setData(updated.data)
         })
     }
