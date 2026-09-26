@@ -30,7 +30,7 @@ export default function ProductionGuidedTour({ userId, orgId, userMetadata, chil
     const returnScroll = useRef({ x: 0, y: 0 })
     return <>
         {!isDailySheet && <aside className="production-left-rail guided-tour-left-rail space-y-2" aria-label="Production guides and tools">
-            <div ref={launcher}>
+            <div ref={launcher} className="flex min-h-0 flex-1 flex-col justify-between h-full">
                 <TourInvitation
                     tourId="production"
                     userId={userId}
@@ -44,23 +44,25 @@ export default function ProductionGuidedTour({ userId, orgId, userMetadata, chil
                         setStep(productionTourSteps[0])
                     }}
                 />
-                <Button
-                    type="button"
-                    variant="outline"
-                    className={cn(railButton, 'mt-2 h-auto whitespace-normal')}
-                    data-tour-control="production-details"
-                    onClick={event => {
-                        returnFocus.current = event.currentTarget
-                        returnScroll.current = { x: window.scrollX, y: window.scrollY }
-                        setStep(productionTourDetailSteps[0])
-                    }}
-                >
-                    <span className="flex min-w-0 items-center gap-2.5">
-                        <ListChecks className={railIcon} aria-hidden="true" />
-                        <span className="min-w-0">{copy.details}</span>
-                    </span>
-                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                </Button>
+                <div className="left-rail-bottom mt-auto pt-3">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        className={cn(railButton, 'h-auto whitespace-normal')}
+                        data-tour-control="production-details"
+                        onClick={event => {
+                            returnFocus.current = event.currentTarget
+                            returnScroll.current = { x: window.scrollX, y: window.scrollY }
+                            setStep(productionTourDetailSteps[0])
+                        }}
+                    >
+                        <span className="flex min-w-0 items-center gap-2.5">
+                            <ListChecks className={railIcon} aria-hidden="true" />
+                            <span className="min-w-0">{copy.details}</span>
+                        </span>
+                        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                    </Button>
+                </div>
             </div>
         </aside>}
         <div hidden={step !== null}>{children}</div>

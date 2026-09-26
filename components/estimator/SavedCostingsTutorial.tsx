@@ -161,7 +161,7 @@ export function SavedCostingsTutorial({step, onStepChange, onComplete, free = fa
  const spotlight = mobile.mobile ? mobile.rects?.field : rect?.step === step ? rect.bounds : null
  const bottom = spotlight && spotlight.top < 380 && spotlight.right > window.innerWidth - 300
  return <>
-  <div ref={launcher} data-costing-tour="guide" className={inline ? 'mb-4' : 'saved-costings-tour-launcher mb-4'}>
+  <div ref={launcher} data-costing-tour="guide" className={inline ? 'mb-4' : 'saved-costings-tour-launcher mb-4 flex min-h-0 flex-1 flex-col justify-between h-full'}>
     <TourInvitation
       tourId="saved-costings"
       userId={userId}
@@ -175,7 +175,7 @@ export function SavedCostingsTutorial({step, onStepChange, onComplete, free = fa
       align="full"
       className="w-full"
     />
-    <div data-i18n-skip="true" lang={language} className="@container mt-2">
+    <div data-i18n-skip="true" lang={language} className="@container left-rail-bottom mt-auto pt-3">
      <div className="grid items-start gap-2 @lg:grid-cols-2">
       {!free && <Button type="button" variant="outline" className={cn(railButton, 'h-auto whitespace-normal')} onClick={event => {
        returnFocus.current = event.currentTarget

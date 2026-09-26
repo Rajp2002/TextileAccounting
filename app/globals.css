@@ -709,6 +709,8 @@
   .production-activate-action,
   .workers-reference-action,
   .machines-reference-action,
+  .billing-rail-action,
+  .production-daily-sheet-action,
   .dispatch-action-rail,
   .rates-review-rail-desktop,
   .rates-archive-policy-rail-desktop,
@@ -802,6 +804,7 @@
 
     .production-daily-sheet-rail {
       gap: 1rem;
+      justify-content: space-between;
     }
 
     .billing-right-rail {
@@ -840,7 +843,9 @@
     .dispatch-action-rail,
     .production-activate-action,
     .workers-reference-action,
-    .machines-reference-action {
+    .machines-reference-action,
+    .billing-rail-action,
+    .production-daily-sheet-action {
       display: flex;
       flex: none;
       justify-content: center;
@@ -850,13 +855,17 @@
     .workers-reference-action button,
     .machines-reference-action button,
     .dispatch-action-rail button,
+    .billing-rail-action button,
+    .billing-rail-action a,
+    .production-daily-sheet-action button,
     .payroll-records-action button {
       width: 100%;
     }
 
     .workers-reference-bottom,
     .machines-reference-bottom,
-    .billing-rail-bottom {
+    .billing-rail-bottom,
+    .production-daily-sheet-rail-bottom {
       margin-top: auto;
     }
 
@@ -875,6 +884,7 @@
     .production-inline-activate,
     .stock-movement-rail-mobile,
     .production-daily-sheet-history-mobile,
+    .production-daily-sheet-toolbar-mobile,
     .rail-inline-actions {
       display: none;
     }
@@ -983,15 +993,23 @@
       position: fixed;
       top: var(--rail-top);
       left: var(--rail-left);
+      bottom: var(--rail-bottom);
       z-index: 30;
-      display: block;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
       width: var(--rail-w);
       max-width: none;
+      height: calc(100dvh - var(--rail-top) - var(--rail-bottom));
       max-height: calc(100dvh - var(--rail-top) - var(--rail-bottom));
       margin: 0;
       overflow-y: auto;
       overscroll-behavior: contain;
       scrollbar-width: thin;
+    }
+
+    .left-rail-bottom {
+      margin-top: auto !important;
     }
   }
 
@@ -1044,6 +1062,7 @@
   .saved-costings-left-rail .saved-costings-tour-launcher {
     position: static;
     width: 100%;
+    height: 100%;
     margin-bottom: 0;
   }
 

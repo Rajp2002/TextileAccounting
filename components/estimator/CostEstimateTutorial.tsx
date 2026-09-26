@@ -655,21 +655,23 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
             />
         )}
         {enabled && (
-            <button
-                type="button"
-                data-i18n-skip="true"
-                lang={language}
-                onClick={() => { setGuide('fields'); setRequested(true) }}
-                className={cn('estimator-touch-target', railButton)}
-            >
-                <span className="flex min-w-0 items-center gap-2.5">
-                    <BookOpen className={railIcon} aria-hidden="true" />
-                    <span className="min-w-0">
-                        {workflowCopy.fieldGuide}
+            <div className="left-rail-bottom mt-auto pt-3">
+                <button
+                    type="button"
+                    data-i18n-skip="true"
+                    lang={language}
+                    onClick={() => { setGuide('fields'); setRequested(true) }}
+                    className={cn('estimator-touch-target', railButton)}
+                >
+                    <span className="flex min-w-0 items-center gap-2.5">
+                        <BookOpen className={railIcon} aria-hidden="true" />
+                        <span className="min-w-0">
+                            {workflowCopy.fieldGuide}
+                        </span>
                     </span>
-                </span>
-                <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-            </button>
+                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                </button>
+            </div>
         )}
         {active && createPortal(<div data-i18n-skip="true" lang={language} className="guided-tour-portal fixed inset-0 z-[100]" data-testid="cost-estimate-tutorial">
             <div

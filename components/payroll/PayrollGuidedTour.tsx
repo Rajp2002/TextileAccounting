@@ -35,7 +35,7 @@ export default function PayrollGuidedTour({ variant, userId, orgId, userMetadata
     }
     return <>
         <aside className="payroll-left-rail guided-tour-left-rail space-y-2" aria-label="Payroll guides and tools">
-            <div ref={launcher}>
+            <div ref={launcher} className="flex min-h-0 flex-1 flex-col justify-between h-full">
                 <TourInvitation
                     tourId="payroll"
                     userId={userId}
@@ -45,36 +45,37 @@ export default function PayrollGuidedTour({ variant, userId, orgId, userMetadata
                     className="w-full"
                     onLaunch={() => launch('core')}
                 />
-                <div data-i18n-skip="true" lang={language} className="mt-3">
-                    <button
-                        type="button"
-                        data-tour-control="payroll-help"
-                        aria-describedby="payroll-help-description"
-                        onClick={() => launch('help')}
-                        className={cn('estimator-touch-target', railButton)}
-                    >
-                        <span className="flex min-w-0 items-center gap-2.5">
-                            <HelpCircle className={railIcon} aria-hidden="true" />
-                            <span className="min-w-0">{copy.help}</span>
-                        </span>
-                        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                    </button>
-                    <p id="payroll-help-description" className="sr-only">{copy.helpDescription[variant]}</p>
-                </div>
-                <div className="mt-3">
-                    <Dialog>
-                        <DialogTrigger asChild>
-                            <button
-                                type="button"
-                                className={cn('estimator-touch-target', railButton)}
-                            >
-                                <span className="flex min-w-0 items-center gap-2.5">
-                                    <ReceiptText className={railIcon} aria-hidden="true" />
-                                    <span className="min-w-0">How pay is calculated</span>
-                                </span>
-                                <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                            </button>
-                        </DialogTrigger>
+                <div className="left-rail-bottom mt-auto space-y-2 pt-3">
+                    <div data-i18n-skip="true" lang={language}>
+                        <button
+                            type="button"
+                            data-tour-control="payroll-help"
+                            aria-describedby="payroll-help-description"
+                            onClick={() => launch('help')}
+                            className={cn('estimator-touch-target', railButton)}
+                        >
+                            <span className="flex min-w-0 items-center gap-2.5">
+                                <HelpCircle className={railIcon} aria-hidden="true" />
+                                <span className="min-w-0">{copy.help}</span>
+                            </span>
+                            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                        </button>
+                        <p id="payroll-help-description" className="sr-only">{copy.helpDescription[variant]}</p>
+                    </div>
+                    <div>
+                        <Dialog>
+                            <DialogTrigger asChild>
+                                <button
+                                    type="button"
+                                    className={cn('estimator-touch-target', railButton)}
+                                >
+                                    <span className="flex min-w-0 items-center gap-2.5">
+                                        <ReceiptText className={railIcon} aria-hidden="true" />
+                                        <span className="min-w-0">How pay is calculated</span>
+                                    </span>
+                                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                                </button>
+                            </DialogTrigger>
                         <DialogContent className="sm:max-w-lg rounded-2xl border border-hairline bg-surface p-6 shadow-2xl">
                             <DialogHeader>
                                 <div className="flex items-center gap-3">
@@ -115,7 +116,8 @@ export default function PayrollGuidedTour({ variant, userId, orgId, userMetadata
                     </Dialog>
                 </div>
             </div>
-        </aside>
+        </div>
+    </aside>
         <div hidden={step !== null}>{children}</div>
         {step && <>
             <PayrollTourPreview step={step} variant={variant} />

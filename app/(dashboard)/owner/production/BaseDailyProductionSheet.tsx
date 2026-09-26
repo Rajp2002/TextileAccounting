@@ -9,7 +9,7 @@ import { buildMachineCollectionSheet, compareMachineLabels, machineReadingState,
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { useTranslation } from '@/lib/i18n/context'
-import { AlertTriangle, ArrowUpRight, CheckCircle2, ChevronDown, Clock3, ClipboardList, FileClock, Loader2, Lock, LockOpen, Plus, Printer, Save, Users } from 'lucide-react'
+import { AlertTriangle, ArrowUpRight, CheckCircle2, Clock3, ClipboardList, FileClock, Loader2, Lock, LockOpen, Plus, Printer, Save, Users } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -20,6 +20,8 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { formatINR } from '@/lib/finance'
+import { cn } from '@/lib/utils'
+import { railButton, railIcon, railPrimaryAction, railSurface } from '@/components/ui/rail'
 import {
     calculateBaseDailyProductionSummary,
     type BaseDailyProductionStatus,
@@ -646,73 +648,104 @@ export default function BaseDailyProductionSheet({
         )
     }
 
+    const saveDisabled = isSaving || areInputsDisabled || Boolean(unmatchedDraftMeters) || invalidEnteredCount > 0 || registerSummary.invalid > 0 || summary.entered_count + summary.zero_count + summary.absent_count === 0
+
     return (
         <div className="production-daily-sheet-workspace relative min-w-0 pb-28 min-[1280px]:pb-0">
-            <aside aria-label="Daily sheet controls" className="production-daily-sheet-rail flex min-w-0 flex-col gap-4">
-                <div className="rounded-2xl border border-hairline/80 bg-surface/95 p-4 shadow-[var(--shadow-card)] backdrop-blur-sm 2xl:p-5">
-                    <p className="mb-4 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Shift details</p>
-                    <div className="grid grid-cols-1 gap-3">
-                        <div className="space-y-1.5">
-                            <Label htmlFor="base-daily-date" className="text-xs font-bold text-body">Date</Label>
-                            <Input id="base-daily-date" type="date" max={initialData.today} value={productionDate} disabled={isSaving} onChange={(event) => changeSelection(event.target.value, shift)} className="h-10 w-full rounded-xl border-hairline bg-surface text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom" />
-                        </div>
-                        <div className="space-y-1.5">
-                            <Label htmlFor="base-daily-shift" className="text-xs font-bold text-body">Shift</Label>
-                            <Select value={shift} disabled={isSaving} onValueChange={(value) => changeSelection(productionDate, value as 'day' | 'night')}>
-                                <SelectTrigger id="base-daily-shift" className="h-10 w-full rounded-xl border-hairline bg-surface text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom"><SelectValue /></SelectTrigger>
-                                <SelectContent className="rounded-xl border-hairline bg-surface shadow-lg">
-                                    <SelectItem value="day">Day shift</SelectItem>
-                                    <SelectItem value="night">Night shift</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <Button variant="outline" className="h-10 w-full rounded-xl border-hairline bg-surface font-semibold shadow-xs hover:bg-surface-soft mt-1" onClick={printCollectionSheet} disabled={machineContexts.length === 0}>
-                            <Printer className="h-4 w-4" /> Print sheet
+            <aside aria-label="Daily sheet controls" className="production-daily-sheet-rail flex min-w-0 flex-col">
+                <div className="production-daily-sheet-rail-top flex flex-col gap-3">
+                    <div className="production-daily-sheet-action">
+                        <Button
+                            onClick={() => handleSave()}
+                            disabled={saveDisabled}
+                            className={cn(railPrimaryAction, 'w-full gap-2')}
+                        >
+                            {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                            <span>{isSaving ? 'Saving…' : currentBatch ? 'Save correction' : 'Save shift'}</span>
                         </Button>
                     </div>
+
+                    <div className={cn(railSurface, 'p-4 2xl:p-5')}>
+                        <p className="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Shift details</p>
+                        <div className="grid grid-cols-1 gap-3">
+                            <div className="space-y-1.5">
+                                <Label htmlFor="base-daily-date" className="text-xs font-bold text-body">Date</Label>
+                                <Input id="base-daily-date" type="date" max={initialData.today} value={productionDate} disabled={isSaving} onChange={(event) => changeSelection(event.target.value, shift)} className="h-10 w-full rounded-xl border-hairline bg-surface text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label htmlFor="base-daily-shift" className="text-xs font-bold text-body">Shift</Label>
+                                <Select value={shift} disabled={isSaving} onValueChange={(value) => changeSelection(productionDate, value as 'day' | 'night')}>
+                                    <SelectTrigger id="base-daily-shift" className="h-10 w-full rounded-xl border-hairline bg-surface text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom"><SelectValue /></SelectTrigger>
+                                    <SelectContent className="rounded-xl border-hairline bg-surface shadow-lg">
+                                        <SelectItem value="day">Day shift</SelectItem>
+                                        <SelectItem value="night">Night shift</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <Button variant="outline" className="h-10 w-full rounded-xl border-hairline bg-surface font-semibold shadow-xs hover:bg-surface-soft mt-1" onClick={printCollectionSheet} disabled={machineContexts.length === 0}>
+                                <Printer className="h-4 w-4" /> Print sheet
+                            </Button>
+                        </div>
+                    </div>
+
+                    <div className={cn(railSurface, 'p-4 2xl:p-5')}>
+                        <div className="flex items-center justify-between gap-2">
+                            <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Shift progress</p>
+                            <span className="text-[11px] font-medium text-body">
+                                {draftStatus === 'local' ? 'Draft on device' : currentBatch ? 'Saved shift' : 'Not submitted'}
+                            </span>
+                        </div>
+                        <div className="mt-3 flex items-baseline gap-2">
+                            <span className="text-3xl font-black tracking-tight tabular-nums text-ink">{registerSummary.accounted}<span className="text-lg text-muted-foreground">/{registerSummary.total}</span></span>
+                            <span className="text-xs font-medium text-body">machines accounted for</span>
+                        </div>
+                        <div role="progressbar" aria-label="Machines accounted for" aria-valuenow={registerSummary.accounted} aria-valuemin={0} aria-valuemax={Math.max(registerSummary.total, 1)} className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-soft">
+                            <div className="h-full rounded-full bg-loom transition-[width]" style={{ width: `${registerSummary.total ? registerSummary.accounted / registerSummary.total * 100 : 0}%` }} />
+                        </div>
+                        <dl className="mt-4 grid grid-cols-2 divide-x divide-hairline border-t border-hairline pt-4">
+                            <div className="pr-3"><dt className="text-xs text-muted-foreground">Pending</dt><dd className="mt-1 text-base font-bold tabular-nums text-ink">{registerSummary.pending}</dd></div>
+                            <div className="pl-3"><dt className="text-xs text-muted-foreground">Production</dt><dd className="mt-1 text-base font-bold tabular-nums text-ink">{formatMeters(summary.total_meters)}</dd></div>
+                        </dl>
+                    </div>
+
+                    {(assignedWorkers.length > 0 || unassignedWorkers.length > 0) && (
+                        <button
+                            type="button"
+                            aria-expanded={isPayrollExpanded}
+                            aria-controls="base-payroll-rollup"
+                            onClick={() => setIsPayrollExpanded(true)}
+                            className={cn(railButton, 'h-auto py-2.5')}
+                        >
+                            <span className="flex items-start gap-2.5 min-w-0">
+                                <Users className={cn(railIcon, 'mt-0.5')} />
+                                <span className="min-w-0 flex-1">
+                                    <span className="block text-sm font-semibold text-ink">Worker review</span>
+                                    <span className="block text-xs text-body truncate font-normal">
+                                        {assignedWorkers.length} {assignedWorkers.length === 1 ? 'worker' : 'workers'} · Check totals & pay
+                                    </span>
+                                </span>
+                            </span>
+                            <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                        </button>
+                    )}
                 </div>
 
-                <div className="rounded-2xl border border-hairline/80 bg-surface/95 p-4 shadow-[var(--shadow-card)] backdrop-blur-sm 2xl:p-5">
-                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Shift progress</p>
-                    <div className="mt-3 flex items-baseline gap-2">
-                        <span className="text-3xl font-black tracking-tight tabular-nums text-ink">{registerSummary.accounted}<span className="text-lg text-muted-foreground">/{registerSummary.total}</span></span>
-                        <span className="text-xs font-medium text-body">machines accounted for</span>
-                    </div>
-                    <div role="progressbar" aria-label="Machines accounted for" aria-valuenow={registerSummary.accounted} aria-valuemin={0} aria-valuemax={Math.max(registerSummary.total, 1)} className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-soft">
-                        <div className="h-full rounded-full bg-loom transition-[width]" style={{ width: `${registerSummary.total ? registerSummary.accounted / registerSummary.total * 100 : 0}%` }} />
-                    </div>
-                    <dl className="mt-4 grid grid-cols-2 divide-x divide-hairline border-t border-hairline pt-4">
-                        <div className="pr-3"><dt className="text-xs text-muted-foreground">Pending</dt><dd className="mt-1 text-base font-bold tabular-nums text-ink">{registerSummary.pending}</dd></div>
-                        <div className="pl-3"><dt className="text-xs text-muted-foreground">Production</dt><dd className="mt-1 text-base font-bold tabular-nums text-ink">{formatMeters(summary.total_meters)}</dd></div>
-                    </dl>
-                </div>
-
-                {(assignedWorkers.length > 0 || unassignedWorkers.length > 0) && (
+                <div className="production-daily-sheet-rail-bottom flex flex-col gap-3">
                     <button
                         type="button"
-                        aria-expanded={isPayrollExpanded}
-                        aria-controls="base-payroll-rollup"
-                        onClick={() => setIsPayrollExpanded(true)}
-                        className="group w-full flex items-center justify-between gap-3 rounded-2xl border border-hairline/80 bg-surface/95 p-4 text-left shadow-[var(--shadow-card)] backdrop-blur-sm transition-all hover:border-loom/40 hover:bg-surface-soft/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-loom"
+                        onClick={onOpenHistory}
+                        className={cn('production-daily-sheet-history-desktop', railButton, 'h-auto py-2.5')}
                     >
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-loom/10 text-loom group-hover:bg-loom group-hover:text-white transition-colors">
-                            <Users className="h-5 w-5" />
-                        </span>
-                        <span className="min-w-0 flex-1">
-                            <span className="block text-sm font-bold text-ink">Worker review</span>
-                            <span className="block text-xs text-body truncate">
-                                {assignedWorkers.length} {assignedWorkers.length === 1 ? 'worker' : 'workers'} · Check totals & pay
+                        <span className="flex items-start gap-2.5 min-w-0">
+                            <Clock3 className={cn(railIcon, 'mt-0.5')} />
+                            <span className="min-w-0 flex-1">
+                                <span className="block text-sm font-semibold text-ink">Recent production</span>
+                                <span className="block text-xs text-body font-normal">Find a saved shift</span>
                             </span>
                         </span>
                         <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
                     </button>
-                )}
-
-                <button type="button" onClick={onOpenHistory} className="production-daily-sheet-history-desktop group mt-auto w-full items-center gap-3 rounded-2xl border border-hairline/80 bg-surface/95 p-4 text-left shadow-[var(--shadow-card)] backdrop-blur-sm transition-colors hover:border-saffron hover:bg-saffron-soft/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-saffron-soft text-saffron-deep"><Clock3 className="h-5 w-5" /></span>
-                    <span className="min-w-0 flex-1"><span className="block text-sm font-bold text-ink">Recent production</span><span className="block text-xs text-body">Find a saved shift</span></span>
-                    <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-                </button>
+                </div>
             </aside>
 
             <div ref={sheetRef} className="flex min-w-0 flex-col 2xl:min-h-[calc(100svh-3rem)] 2xl:pb-20">
@@ -936,7 +969,7 @@ export default function BaseDailyProductionSheet({
             </div>
 
             {sheetWorkers.length > 0 && (
-                <div style={toolbarBounds ? { position: 'fixed', left: toolbarBounds.left, width: toolbarBounds.width } : undefined} className="sticky bottom-[calc(80px+env(safe-area-inset-bottom,0px))] z-20 flex items-center justify-between gap-3 rounded-2xl border border-hairline bg-surface/95 p-3 sm:p-4 shadow-xl backdrop-blur md:bottom-3">
+                <div style={toolbarBounds ? { position: 'fixed', left: toolbarBounds.left, width: toolbarBounds.width } : undefined} className="production-daily-sheet-toolbar-mobile sticky bottom-[calc(80px+env(safe-area-inset-bottom,0px))] z-20 flex items-center justify-between gap-3 rounded-2xl border border-hairline bg-surface/95 p-3 sm:p-4 shadow-xl backdrop-blur md:bottom-3 min-[1280px]:hidden">
                     <div className="flex items-center gap-3 text-sm">
                         <div className="hidden rounded-xl border border-hairline bg-surface-soft p-2.5 text-ink sm:block"><Save className="h-4 w-4" /></div>
                         <div>
@@ -949,7 +982,7 @@ export default function BaseDailyProductionSheet({
                             </p>
                         </div>
                     </div>
-                    <Button onClick={() => handleSave()} disabled={isSaving || areInputsDisabled || unmatchedDraftMeters || invalidEnteredCount > 0 || registerSummary.invalid > 0 || summary.entered_count + summary.zero_count + summary.absent_count === 0} className="h-10 sm:h-11 min-w-[132px] sm:min-w-[160px] rounded-xl bg-loom hover:bg-loom-elevated text-white font-bold tracking-wide shadow-xs">
+                    <Button onClick={() => handleSave()} disabled={saveDisabled} className="h-10 sm:h-11 min-w-[132px] sm:min-w-[160px] rounded-xl bg-loom hover:bg-loom-elevated text-white font-bold tracking-wide shadow-xs">
                         {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                         <span>{isSaving ? 'Saving…' : currentBatch ? 'Save correction' : 'Save shift'}</span>
                     </Button>
@@ -957,9 +990,14 @@ export default function BaseDailyProductionSheet({
             )}
             </div>
 
-            <button type="button" onClick={onOpenHistory} className="production-daily-sheet-history-mobile mt-4 w-full items-center gap-3 rounded-2xl border border-hairline bg-surface p-4 text-left shadow-sm transition-colors hover:border-saffron hover:bg-saffron-soft/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron">
-                <Clock3 className="h-5 w-5 shrink-0 text-saffron-deep" />
-                <span className="min-w-0 flex-1"><span className="block text-sm font-bold text-ink">Recent production</span><span className="block text-xs text-body">Find a saved shift</span></span>
+            <button type="button" onClick={onOpenHistory} className={cn('production-daily-sheet-history-mobile mt-4', railButton, 'h-auto py-2.5')}>
+                <span className="flex items-start gap-2.5 min-w-0">
+                    <Clock3 className={cn(railIcon, 'mt-0.5')} />
+                    <span className="min-w-0 flex-1">
+                        <span className="block text-sm font-semibold text-ink">Recent production</span>
+                        <span className="block text-xs text-body font-normal">Find a saved shift</span>
+                    </span>
+                </span>
                 <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground" />
             </button>
 

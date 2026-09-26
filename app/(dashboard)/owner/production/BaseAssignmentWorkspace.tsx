@@ -402,7 +402,7 @@ export default function BaseAssignmentWorkspace({
                         }}
                     />
                 </div>
-                <div data-i18n-skip="true" lang={language} className="mt-3">
+                <div data-i18n-skip="true" lang={language} className="left-rail-bottom mt-auto pt-3">
                     <Dialog>
                         <DialogTrigger asChild>
                             <button

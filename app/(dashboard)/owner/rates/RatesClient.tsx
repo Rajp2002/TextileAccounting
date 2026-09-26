@@ -1516,7 +1516,9 @@ export default function RatesClient({
                         }
                     }}
                 />
-                <RateBookHelp />
+                <div className="left-rail-bottom mt-auto pt-3">
+                    <RateBookHelp />
+                </div>
             </aside>
 
             <div className="rates-workspace ui-route-enter mx-auto w-full max-w-7xl space-y-6" data-ratebook-tutorial-root="true">

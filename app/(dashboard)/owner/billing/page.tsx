@@ -12,7 +12,8 @@ import {
     Star, Zap, Lock, CreditCard, ReceiptText,
     Sparkles, ArrowRight, Calculator, FileText, ShieldCheck,
 } from 'lucide-react'
-import { railSurface } from '@/components/ui/rail'
+import { railIcon, railPrimaryAction, railSurface } from '@/components/ui/rail'
+import { cn } from '@/lib/utils'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { redirect } from 'next/navigation'
@@ -360,8 +361,33 @@ export default async function BillingPage() {
                     : `Access through ${formatShortDate(subscription.current_end)}`
             : 'Active annual access'
 
+    const primaryPlanAction = canRenew && selfServeActiveTier && activeRenewalPrice ? (
+        billingReadiness.canCreateOrder ? (
+            <SubscribeButton
+                planTier={selfServeActiveTier}
+                tierName={getBillingPlan(selfServeActiveTier).name}
+                displayAmount={formatAmount(activeRenewalPrice.totalPaise)}
+                buttonLabel={`Renew for ${formatAmount(activeRenewalPrice.totalPaise)}`}
+                successHref="/owner/billing"
+                successLabel="View payment history"
+                className={cn(railPrimaryAction, 'w-full')}
+            />
+        ) : (
+            <Button disabled className={cn(railPrimaryAction, 'w-full opacity-60')}>
+                Renew unavailable
+            </Button>
+        )
+    ) : (
+        <Button asChild className={cn(railPrimaryAction, 'w-full gap-2')}>
+            <Link href="/plans?from=billing">
+                <span>{subscriptionTier === 'lite' ? 'Upgrade to Base' : subscriptionTier === 'base' ? 'Compare plans' : 'Explore plans'}</span>
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Link>
+        </Button>
+    )
+
     return (
-        <div className="billing-workspace-shell mx-auto w-full max-w-6xl space-y-6 px-4 pb-20 sm:px-6 lg:px-0">
+        <div className="billing-workspace-shell w-full max-w-6xl space-y-6 pb-20">
             <div className="ui-route-enter space-y-6">
                 <RouteMilestones route="/owner/billing" shellVisible primaryUsable secondaryReady />
                 <PlanAnalyticsBeacon eventName="base_pricing_viewed" properties={{ current_tier: tier }} />
@@ -369,6 +395,9 @@ export default async function BillingPage() {
                 <PageHeader
                     title="Subscription & Billing"
                 />
+                <div className="rail-inline-actions -mt-2 flex justify-end">
+                    {primaryPlanAction}
+                </div>
 
                 {/* In-progress or recovery alerts */}
                 {latestAttemptNeedsAttention && latestAttempt && <BillingAttemptStatus attempt={latestAttempt} />}
@@ -527,26 +556,30 @@ export default async function BillingPage() {
                 </section>
             </div>
 
-            {/* Desktop right rail with top assurance pills and bottom receipt & referral pills */}
+            {/* Desktop right rail with top action & assurance and bottom receipt & referral pills */}
             <aside className="billing-right-rail" aria-label="Billing details and rewards">
-                <div className="billing-rail-top">
+                <div className="billing-rail-top space-y-3">
+                    <div className="billing-rail-action">
+                        {primaryPlanAction}
+                    </div>
+
                     <section aria-label="Billing essentials" className={`${railSurface} divide-y divide-hairline`}>
                         <div className="flex items-start gap-3 p-4">
-                            <Zap className="mt-0.5 h-4 w-4 shrink-0 text-saffron-deep" aria-hidden="true" />
+                            <Zap className={cn(railIcon, 'mt-0.5')} aria-hidden="true" />
                             <div>
                                 <h2 className="text-sm font-semibold text-ink">Verified plan activation</h2>
                                 <p className="mt-1 text-xs leading-relaxed text-body">Paid access begins after payment verification. Your saved costings and workspace settings stay in place.</p>
                             </div>
                         </div>
                         <div className="flex items-start gap-3 p-4">
-                            <ReceiptText className="mt-0.5 h-4 w-4 shrink-0 text-saffron-deep" aria-hidden="true" />
+                            <ReceiptText className={cn(railIcon, 'mt-0.5')} aria-hidden="true" />
                             <div>
                                 <h2 className="text-sm font-semibold text-ink">Clear billing documents</h2>
                                 <p className="mt-1 text-xs leading-relaxed text-body">Download a PDF receipt for captured payments from your history. GST tax invoices are not issued for this pilot.</p>
                             </div>
                         </div>
                         <div className="flex items-start gap-3 p-4">
-                            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-saffron-deep" aria-hidden="true" />
+                            <ShieldCheck className={cn(railIcon, 'mt-0.5')} aria-hidden="true" />
                             <div>
                                 <h2 className="text-sm font-semibold text-ink">Secure Razorpay checkout</h2>
                                 <p className="mt-1 text-xs leading-relaxed text-body">Pay with the methods available at checkout. Weavly does not store your full card or banking details.</p>
@@ -555,12 +588,15 @@ export default async function BillingPage() {
                     </section>
                 </div>
 
-                <div className="billing-rail-bottom">
+                <div className="billing-rail-bottom space-y-3">
                     <BillingDocumentNotice compact />
 
                     <details className={`${railSurface} group overflow-hidden`}>
                         <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-ink outline-none hover:bg-surface-soft focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-saffron/50 [&::-webkit-details-marker]:hidden">
-                            Referral rewards
+                            <span className="flex items-center gap-2">
+                                <Sparkles className={railIcon} aria-hidden="true" />
+                                <span>Referral rewards</span>
+                            </span>
                             <ChevronDown className="h-4 w-4 text-subtle transition-transform group-open:rotate-180" aria-hidden="true" />
                         </summary>
                         <div className="border-t border-hairline p-4 sm:p-5">

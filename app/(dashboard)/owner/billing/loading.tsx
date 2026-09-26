@@ -20,13 +20,12 @@ export default function Loading() {
 
             <aside className="billing-right-rail" aria-hidden="true">
                 <div className="billing-rail-top space-y-3">
-                    <div className="h-20 animate-pulse rounded-2xl border border-hairline bg-surface" />
-                    <div className="h-20 animate-pulse rounded-2xl border border-hairline bg-surface" />
-                    <div className="h-20 animate-pulse rounded-2xl border border-hairline bg-surface" />
+                    <div className="h-11 animate-pulse rounded-lg bg-surface-soft" />
+                    <div className="h-48 animate-pulse rounded-xl border border-hairline bg-surface" />
                 </div>
                 <div className="billing-rail-bottom space-y-3">
-                    <div className="h-12 animate-pulse rounded-xl border border-hairline bg-surface" />
-                    <div className="h-12 animate-pulse rounded-2xl border border-hairline bg-surface" />
+                    <div className="h-11 animate-pulse rounded-xl border border-hairline bg-surface" />
+                    <div className="h-11 animate-pulse rounded-xl border border-hairline bg-surface" />
                 </div>
             </aside>
         </BaseRouteLoading>
