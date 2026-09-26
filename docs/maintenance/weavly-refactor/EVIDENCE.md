@@ -388,11 +388,11 @@ Release claims touching these areas are **blocked** until they are resolved or e
 | 2 | OS-2 | Inventory audit writes | High | Grant text verified | **Fixed in F1 (E20)** via owner RPCs, plus OS-2b draft creation in the UI |
 | 3 | OS-3 | Challan archive | High (functional) | Migration text verified | **Fixed in F1 (E20)**; optional backfill awaits a decision |
 | 4 | OS-5 | Data export completeness | High (compliance) | Investigator only | Verify, then product decision on scope and pagination |
-| 5 | AS-01 | Onboarding admin fallback | Medium (security) | Code verified | Remove the fallback / add lock+plan checks; authorization-change approval |
-| 6 | CS-3 / AS-04 | Free signing-key fallback | Low–Med (security) | Code verified; prod config UNKNOWN | **User action: confirm `WEAVLY_FREE_SIGNING_KEYS` is set in Vercel production.** Then fail closed; separately approved |
+| 5 | AS-01 | Onboarding admin fallback | Medium (security) | **Reproduced (E21)** | **Fixed in F2 (E21)**; app only, takes effect on deploy |
+| 6 | CS-3 / AS-04 | Free signing-key fallback | Low–Med (security) | **Reproduced (E21)**; prod config UNKNOWN | **Fixed in F2 (E21)** (fails closed). Deploy precondition: a valid production keyring, owner to confirm |
 | 7 | CS-1 | Multi-weft costing convention | High if used | Code verified | **Product decision**; characterize meanwhile |
 | 8 | CS-2 | Reopen/re-save drift | Medium | Partly verified | Characterize; fix may need persisting `warping_mode`/`overhead_mode` (contract change) |
-| 9 | OS-4, OS-12 | Payroll/advance idempotency | Medium-Low | **OS-4 narrowed and reproduced (E19):** only a replay after reversal re-settles; plain retries are idempotent | Separate fix: restore the reversed-request guard |
+| 9 | OS-4, OS-12 | Payroll/advance idempotency | Medium-Low | **OS-4 narrowed and reproduced (E19):** only a replay after reversal re-settles; plain retries are idempotent | **OS-4 fixed in F2 (E21)**; migration awaits production approval. OS-12 open |
 | 10 | AS-02, AS-05 | Free email verification; locked-org writes | Medium / Low–Med | Investigator | Product decisions |
 | 11 | OS-6…OS-11, AS-03, AS-06…AS-12, CS-4…CS-10 | various | Low–Med | mixed | Backlog, after the harness exists |
 
@@ -692,3 +692,138 @@ WHERE archived_at IS NULL
   - Pre-existing findings logged for the backlog: `free_server_time` mutable search_path (WARN); leaked-password protection disabled (WARN, Auth setting); 8 service-role-only Free tables with RLS and no policies (INFO, by design).
 - **Rollback:** `docs/maintenance/weavly-refactor/evidence/f1-rollback.sql` restores the prior definitions, drops the two new functions and removes the three history rows.
 - **Not verified:** the audit page and challan flows in the production UI with a signed-in owner. The owner should load `/owner/stock/audit`, record a count and finalize (or the app must first be deployed with this commit).
+
+### F1 commit record (correction)
+
+F1 reached `main` as two commits instead of one. A `git add` error stopped the fix commit, but the docs commit had already been created and was pushed first:
+
+- `eda53bc4`: docs, plus the deletion of `__tests__/db/known-defects.dbtest.ts`. Its CI run was cancelled, superseded by the next push.
+- `e3541dfb`: migrations, app changes and tests, pushed a few minutes later. **CI passed.**
+
+For those few minutes, `main`'s docs described fixes whose code had not landed yet. `eda53bc4` changed no app code, so a deploy of it served the same app as before.
+
+## E21. Fix package F2: onboarding fallback, Free signing key, reversed payroll requests (2026-09-26)
+
+Owner-approved scope: AS-01, CS-3 and OS-4. The owner then approved committing and pushing to `main` and applying the migration to production, and confirmed the production signing keyring (see "F2 applied to production" below).
+
+### AS-01: authorization (app only)
+
+In `app/(auth)/onboarding/base/actions.ts`:
+- The payroll step calls only `update_base_payroll_cycle`, as the signed-in owner. The RPC checks the owner role and Base access, and it applies same-day edits in place (`20260915120000`). The service-role fallbacks (update, then insert) and the direct table writes are removed.
+- All seven mutating onboarding actions use `requireWritableOrg(['owner'])` instead of `requireRole`, so locked orgs fail closed.
+
+**Pre-fix proof (VERIFIED).** Run on a disposable copy of the old code. The test adapter was extended there only, to support the old code's `.insert()`/`.update()` calls.
+- A **Lite** owner's save was refused by the RPC, and then by RLS on the user insert.
+- The service-role insert then wrote an active `base_payroll_cycle_configs` row, and the action returned `{ success: true }`.
+- With F2 the action returns `{ error: 'Failed to configure payroll cycle. Please try again.' }`, writes no rows and never creates the admin client.
+
+**Tests:**
+- `__tests__/db/onboarding-payroll.dbtest.ts` (new, 2 tests) runs end to end through the real RPC.
+- The "Payroll Persistence Contract" in `__tests__/base-onboarding-payroll-step.test.ts` was **deliberately rewritten**. It used to assert that the fallback existed. It now asserts:
+  - the step is RPC-only;
+  - no admin client is used;
+  - all seven mutating actions have the lock check.
+
+**Visible change:** a locked org, or a non-Base org, now gets an error in onboarding. Before, those writes succeeded through the service role.
+
+### CS-3: Free signing key (app only)
+
+`resolveFreeSigningKeys` in `lib/free-request-identity.ts` is called by `signing()` in `lib/free-service.ts`.
+
+**In production** (`NODE_ENV=production`, which includes Vercel previews), signing is refused with `FREE_SIGNING_KEY_UNAVAILABLE` when the active key is:
+- missing;
+- unparseable, or not a JSON object;
+- shorter than 32 bytes.
+
+What the user and the server see:
+- The API answers `503 {"code":"FREE_TEMPORARY_ERROR"}`.
+- The server log names the settings only, never key material.
+- Older keys in the keyring are still used for verification, so key rotation works.
+
+**Source change:**
+- The production fallback literal is removed from the source.
+- It stays in git history, so it must never be used as a real key.
+- The development and test fallback is unchanged.
+
+**Pre-fix proof (VERIFIED).** Run on a disposable copy in production mode with no keyring:
+- A request token minted from the repository key was **accepted and reached the debit RPC**.
+- With F2 it is refused before any debit.
+- The literal was read at runtime and never printed.
+
+**Tests:**
+- 3 resolver tests in `__tests__/free-request-identity.test.ts`.
+- 1 service test in `__tests__/free-service.test.ts`. It checks that unset and short keys are refused before the debit, that the log is free of key material, and the 503 mapping.
+
+**Deploy precondition (confirmed by the owner on 2026-09-26; not independently verified by Claude).**
+- **Required setting:** production needs `WEAVLY_FREE_SIGNING_KEYS` to be a JSON object that contains the key named by `WEAVLY_FREE_SIGNING_KEY_ID` (default `launch`), at least 32 bytes long.
+- **If it is missing:** after deploy, `freeStatus` and Free calculations return 503 for active Free users. Paid plans don't call `signing()` and are unaffected.
+- **Previews:** they need their own key, or Free is unavailable there.
+
+### OS-4: reversed payroll requests (schema)
+
+`supabase/migrations/20260926135315_restore_payroll_reversed_request_guard.sql` re-creates `settle_base_worker_payroll_reviewed` from `20260913180000` with three edits (diff-verified):
+
+1. `client_request_id` is required again.
+2. A request whose settlement was reversed is refused with `40001`, "This payment request was reversed. Reload payroll before recording another payment." This is the message from `20260901110004`.
+3. Each request is mapped in `base_payroll_payment_requests`, with `ON CONFLICT DO NOTHING`.
+
+The signature, SECURITY DEFINER, `search_path` and grants are unchanged.
+
+**Hashes** (`md5(prosrc)`, replayed schema):
+- Pre-image `74d7e947012ae1d129959c9fda6acd95`. This is what production should have now; check it before applying.
+- Post-image `fc49b5fd7f0b8604f74ec10ae187706a`.
+- ACL: EXECUTE for `authenticated` only.
+
+**Proofs:**
+- **Pre-fix:** without the migration, both new invariants fail ("statement succeeded"): the replay after a reversal settles again, and a request with no id settles.
+- **Mutations:** removing the guard, the mapping insert, or the id requirement each fails exactly one test.
+
+**App compatibility.** The only caller, `settleBaseWorkerPayroll`, validates `client_request_id` as a UUID and always sends one. The migration can be applied before or after the app deploy.
+
+**Limit.** Settlements made while the guard was missing have no mapping, so replays of those requests are not caught. Request ids live only in page memory, so this closes once open pages reload.
+
+**Rollback:** `evidence/f2-rollback.sql` restores the `20260913180000` definition. Verified on a disposable database: the hash returned to `74d7e947…`.
+
+### F2 gates
+
+Worktree = `main` @ `e3541dfb` + F2.
+
+| Check | Result |
+| --- | --- |
+| `npm run test:db` | 9 files / **50 passed** (+2 onboarding; the OS-4 KNOWN DEFECT became 2 invariants); no cluster left |
+| Default vitest | 232 files / 2,023 passed / 1 skipped (+4) |
+| tsc | PASS |
+| Full lint | 3 errors / 80 warnings (unchanged) |
+| Lint, per changed file (HEAD vs working copy, 8 TS files) | 0 new diagnostics |
+| CI for the F1 pushes | `e3541dfb` success (`eda53bc4` cancelled, superseded) |
+| NOT RUN | Browser checks; anything against QA or production |
+
+### F2 applied to production (2026-09-26, owner-approved)
+
+**Pre-checks** (read-only):
+- The latest history row was `20260926132412` (F1), with 303 rows in total.
+- `settle_base_worker_payroll_reviewed` matched the tested pre-image:
+  - `md5(prosrc)` `74d7e947…`;
+  - one overload with the same signature;
+  - SECURITY DEFINER, `search_path=pg_catalog, public, private`;
+  - EXECUTE for `authenticated` only.
+- The functions the guard depends on equal the tested build: `settle_base_worker_payroll` `82501d5b…` and `reverse_base_payroll_settlement` `19ae6e42…`.
+- `base_payroll_payment_requests` has the expected columns and `PRIMARY KEY (org_id, request_id)`, with no API-role grants.
+
+**Applied** with the Supabase connector `apply_migration`, exactly as the file reads.
+- Recorded version: `20260926135315 restore_payroll_reversed_request_guard`.
+- The local file was renamed to that version.
+
+**Post-checks (VERIFIED):**
+- `md5(prosrc)` `fc49b5fd…`, equal to the tested post-image.
+- Security settings, `search_path` and ACL are unchanged.
+- The inner function is unchanged.
+- History now has 304 rows.
+
+**Security advisor:** nothing new.
+- The function was already listed in `authenticated_security_definer_function_executable`, and the count is the same 65 as after F1.
+- The pre-existing findings are unchanged.
+
+**Rollback:** `evidence/f2-rollback.sql`, with the recorded version filled in.
+
+**Not verified in production:** a real settle → reverse → re-send flow. That would write payroll data, which is out of scope. The behavior is covered by the DB tests against the same function source.
