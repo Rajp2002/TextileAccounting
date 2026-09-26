@@ -1,0 +1,56 @@
+name: CI
+
+# Secret-free verification gate. Checks run through the isolated command
+# wrapper, which blanks service credentials, points Supabase at a closed
+# loopback port, and keeps the opt-in live Supabase test skipped.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Types, tests and changed-file lint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          # Full history so the lint step can diff against the base commit.
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: node scripts/performance/isolated-command.mjs node node_modules/typescript/bin/tsc --noEmit --incremental false
+
+      - name: Unit and contract tests
+        run: node scripts/performance/isolated-command.mjs npx vitest run
+
+      # main carries pre-existing lint debt (see CLAUDE.md "Baseline"), so a
+      # full-repository lint cannot pass yet. No rule is relaxed: this step
+      # fails on any diagnostic a change introduces in the files it touches.
+      - name: Lint changes
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE_SHA: ${{ github.event.before }}
+        run: node scripts/ci/lint-changed.mjs
