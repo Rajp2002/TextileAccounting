@@ -1423,3 +1423,59 @@ Worktree = `main` @ `6ba75687` + 3C.
 | Remaining path references to deleted files | none outside docs and QA evidence; one explanatory comment in `sprint16-billing-language` |
 
 **Recovery:** `git revert <3C commit>`, or `git checkout 6ba75687 -- <path>`.
+
+## E30. Batch 3B: unused UI primitives and the dependencies they freed (2026-09-27)
+
+Approved by the owner (2026-09-27): deleted and committed in `4de225d0`, including the two `CLAUDE.md` corrections.
+
+### Deleted files (8, 670 lines)
+
+`components/ui/{amount,avatar,calendar,checkbox,form,input-otp,radio-group,scroll-area}.tsx`
+
+Checked before deletion (all VERIFIED):
+- **Imports:** the reachability scan was re-run on `16481b76`. None of the 8 files has an importer in app, tests, scripts or other files. After deletion, unreachable files went from 25 to 17 (exactly these 8) and reachable files stayed at 479, so nothing new was stranded. `label.tsx` (imported by `form.tsx`) is still used by the three auth forms.
+- **Path and string references:** none outside docs and QA evidence. `amount.tsx`'s last importer, `WorkerExitDialog.tsx`, was deleted in 3A.
+- **CSS and config:** no selector targets the deleted `data-slot` values (`avatar*`, `input-otp*`, `scroll-area*`). The `dropdown-menu-checkbox-item` and `dropdown-menu-radio-item` selectors in `app/mobile.css` belong to the live dropdown menu. `components.json`, `next.config.ts`, the PostCSS, ESLint and Vitest configs name none of them.
+- **Tests:** no test lists `components/ui` as a directory.
+
+### Dependencies removed
+
+| Package | Only importer | Note |
+| --- | --- | --- |
+| `react-hook-form` 7.71.1 | `form.tsx` | |
+| `@hookform/resolvers` 5.2.2 | none (already unused) | Its peer is `react-hook-form`; left alone, npm would re-install that peer |
+| `input-otp` 1.4.2 | `input-otp.tsx` | |
+| `@radix-ui/react-avatar` 1.1.10 | `avatar.tsx` | |
+| `@radix-ui/react-radio-group` 1.3.8 | `radio-group.tsx` | |
+| `@radix-ui/react-scroll-area` 1.2.10 | `scroll-area.tsx` | |
+
+The lockfile also dropped three packages that only these needed:
+- `@radix-ui/react-use-is-hydrated` 0.1.0 (from `react-avatar`);
+- `use-sync-external-store` 1.6.0 (from `react-use-is-hydrated`);
+- `@standard-schema/utils` 0.3.0 (from `@hookform/resolvers`).
+
+Kept, because live code uses them: `@radix-ui/react-label` (`label.tsx`), `@radix-ui/react-slot` (`button.tsx`, `badge.tsx`), `date-fns` (4 app files plus `next.config.ts` `optimizePackageImports`), `lucide-react` and `zod` (19 importers).
+
+### How the lockfile was produced
+
+- **npm 11.6.2 (local), `uninstall --package-lock-only`:** also deleted the two nested `@rolldown/binding-wasm32-wasi/node_modules/@emnapi/{core,runtime}` entries that `09213fde` added so CI's newer npm accepts the lockfile. **Rejected.**
+- **npm 11.19.0 (the version in the CI log for run 36266321952):** removed the right 9 entries, but also toggled `peer: true` on 71 unrelated entries (41 on, 30 off). No version or integrity changed.
+- **Committed lockfile:** the previous lockfile minus exactly the 9 package entries and 6 root declarations that npm 11.19.0 removed. It equals npm 11.19.0's output apart from the `peer` flags, and the diff is deletions only (168 lines).
+- **`npm ci --dry-run`:** npm 11.6.2 installs 1,087 → 1,078 packages; npm 11.19.0 installs 1,084 → 1,075. Both accept the lockfile and both drop exactly 9. The 3-package gap between the two npm versions was already there.
+
+The worktree's `node_modules` is a symlink to the main checkout's, so no install ran in the worktree. All dependency work ran in a credential-free copy (tracked files only, no `.env*`).
+
+### Gates
+
+| Check | Result |
+| --- | --- |
+| Worktree (`main` @ `16481b76` + 3B): `npm run lint` | exit 0 |
+| Worktree: tsc | PASS |
+| Worktree: default vitest | 227 files / 1,952 passed / 1 skipped (unchanged from 3C) |
+| Worktree: `npm run test:db` | 11 files / 60 passed |
+| Clean install in the copy: `npm ci --ignore-scripts` with npm 11.19.0 | 1,075 packages; none of the 6 removed packages present |
+| On that install, CI's commands: tsc (`--incremental false`), `npx vitest run`, `npm run lint` | PASS / 227 files, 1,952 passed, 1 skipped / exit 0 |
+| On that install: production build (`npm run build --ignore-scripts`) | PASS (compiled 78 s; 53/53 static pages) |
+| `package.json` and lockfile committed vs. the tested copy | byte-identical (`cmp`) |
+
+**Recovery:** `git revert 4de225d0` restores the files, `package.json` and the lockfile together; then run `npm ci`.

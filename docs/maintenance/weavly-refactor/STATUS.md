@@ -1,22 +1,21 @@
 # Weavly refactor program — status
 
-Updated 2026-09-26 (night). **Phase 2 in progress.**
+Updated 2026-09-27. **Phase 3 in progress.**
 - **2B and OS-13 are committed and pushed with this change**, together with the CI change to the full lint gate.
 - **Lint is fully green.**
 - **2C:** committed and pushed.
 - **2D:** committed and pushed. CI passed.
 - **Phase 3:** the inventory is done (68 unreachable source files, E28).
 - **Batch 3A:** committed and pushed (`c36eb72d`, `6ba75687`). CI passed.
-- **Batch 3C:** approved, committed and pushed with this change (E29).
-- **Paused.** The owner deferred batch 3B (session limits).
-- Details: EVIDENCE E24–E27.
+- **Batch 3C:** committed and pushed (`7b03576d`, `16481b76`, E29). CI passed.
+- **Batch 3B:** approved, committed and pushed with this change (`4de225d0`, E30). It removes 8 unused `components/ui` primitives and 6 npm packages, plus 3 sub-packages only they needed.
+- Details: EVIDENCE E24–E30.
 
 ## Next session
 
-1. **Batch 3B** (deferred by the owner): the 8 unused `components/ui` primitives from the E28 inventory, plus any npm packages they free. Show the package list before changing `package.json` or the lockfile.
+1. **Batch 3F:** the dead factory-workflow branches in `estimator/actions.ts`, including the market-run payload copy. This work is at symbol level and needs a UI caller analysis first.
 2. **Then, per the approved order:**
-   - 3F: dead factory-workflow branches in `estimator/actions.ts`, including the market-run payload copy.
-   - 3D: offline sync.
+   - 3D: offline sync;
    - 3E: auth, billing and compliance orphans, reviewed file by file with the owner.
 3. **Open follow-ups:**
    - live-settings test coverage (E29);
@@ -24,7 +23,8 @@ Updated 2026-09-26 (night). **Phase 2 in progress.**
    - OS-5, AS-05, OS-12, CS-2, CS-1;
    - `custom_access_token_hook` grants;
    - leaked-password protection.
-4. **Phase 5 note:** CLAUDE.md's "Baseline" section still describes lint as red. It is now clean, and CI runs `npm run lint`.
+4. **Phase 5 note:** CLAUDE.md's "Baseline" section still describes lint as red. It is now clean, and CI runs `npm run lint`. (3B already corrected the stack and primitives lines.)
+5. **Local note:** the main checkout's `node_modules` still contains the 6 removed packages until the next `npm ci`. This is harmless, because nothing imports them.
 
 ## Decisions recorded (user, 2026-09-26)
 
@@ -34,7 +34,7 @@ Updated 2026-09-26 (night). **Phase 2 in progress.**
 - **P2-O6 (party-name spacing):** delegated by the owner to Claude. Decision: **no change**. Inner repeated spaces are rare, and aligning the two paths would change stored party names and exact-match party lookups for a cosmetic gain. Pinned as CHARACTERIZATION.
 - **2D:** committed and pushed.
 - **Batch 3C:** approved and deleted (2026-09-27).
-- **Batch 3B:** deferred by the owner (2026-09-27).
+- **Batch 3B:** deferred by the owner (2026-09-27), then approved the same day. The approval covers the 8 files, the 6 packages, and the two `CLAUDE.md` corrections (the `amount` primitive, "react-hook-form + zod"). Committed and pushed.
 - **Batch 3A:** approved and deleted. `BaseSetupWorkspace.tsx` (rollback adapter) was deleted by owner decision.
 - **Batch order approved:** 3C → 3B → 3F → 3D → 3E. Each batch still lands only after its own approval.
 - **Phase 3:** approved by the owner (2026-09-27). Each deletion batch still needs its own approval under the deletion protocol (BRIEF rule 7).
@@ -58,7 +58,19 @@ Updated 2026-09-26 (night). **Phase 2 in progress.**
   - AS-02 (Free auto-confirm) is accepted for now.
   - OS-5 and AS-05 scope: the owner is unsure.
 
-## Gate results (2D)
+## Gate results (3B)
+
+| Check | Result |
+| --- | --- |
+| `npm run lint` | exit 0 |
+| tsc | PASS |
+| Default `npm test` | 227 files / 1,952 passed / 1 skipped |
+| `npm run test:db` | 11 files / 60 passed |
+| Clean `npm ci` (npm 11.19.0), then tsc, vitest and lint | PASS |
+| Production build on that install (credential-free copy) | PASS (53/53 static pages) |
+| Lockfile accepted by npm 11.6.2 and 11.19.0 (`npm ci --dry-run`) | Yes; each installs exactly 9 fewer packages |
+
+## Earlier gate results (2D)
 
 | Check | Result |
 | --- | --- |
