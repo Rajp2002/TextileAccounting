@@ -394,7 +394,7 @@ Release claims touching these areas are **blocked** until they are resolved or e
 | 8 | CS-2 | Reopen/re-save drift | Medium | Partly verified | Characterize; fix may need persisting `warping_mode`/`overhead_mode` (contract change) |
 | 9 | OS-4, OS-12 | Payroll/advance idempotency | Medium-Low | **OS-4 narrowed and reproduced (E19):** only a replay after reversal re-settles; plain retries are idempotent | **OS-4 fixed in F2 (E21)**; migration awaits production approval. OS-12 open |
 | 10 | AS-02, AS-05 | Free email verification; locked-org writes | Medium / Low–Med | Investigator | Product decisions |
-| 10b | OS-13 | Payroll cycle settings fallback | Low–Med (integrity) | Code and policy verified; not reproduced (E23) | When `update_base_payroll_cycle` refuses, `updateBasePayrollCycleAction` writes the table directly, skipping the RPC's lock and effective-date ordering; the two writes are not atomic. Proposed: RPC-only, like AS-01 |
+| 10b | OS-13 | Payroll cycle settings fallback | **Low** (corrected, E25) | Reproduced in the harness (E25) | **Fixed (E25):** `saveBasePayrollCycleConfig` is RPC-only |
 | 11 | OS-6…OS-11, AS-03, AS-06…AS-12, CS-4…CS-10 | various | Low–Med | mixed | Backlog, after the harness exists |
 
 ## E13. Scored backlog
@@ -1018,15 +1018,15 @@ Lint went from **3 errors / 80 warnings to 3 errors / 0 warnings**. The 3 errors
 
 | ID | Finding | Evidence |
 | --- | --- | --- |
-| OS-13 | Payroll cycle settings fallback bypasses the RPC's checks and is non-atomic (escalated, E12 row 10b) | See the details below this table |
+| OS-13 | Payroll cycle settings fallback bypasses the RPC and is non-atomic (escalated, E12 row 10b). **Corrected in E25:** the action is `saveBasePayrollCycleConfig`, and table constraints already block the backdating case | See the details below this table |
 | P2-O1 | The rate-book tutorial launcher ignores `disabled`, so it stays clickable while a rate change is pending | `RatesClient.tsx:1539` passes `disabled={isPending}`; `RateBookTutorialLauncher` never forwarded it |
 | P2-O2 | `BaseMachineBoard` receives `onActivateQualityClick` but never renders an action for it | The parent is `BaseProductionClient.tsx`. Leftover, or a missing entry point (INFERRED) |
 | P2-O3 | Base onboarding `Step6Review` receives `readiness` but does not display it | Leftover, or a missing summary (INFERRED) |
 | P2-O4 | `BaseAssignmentWorkspace`'s `includeInactive` state has no setter in use (no toggle); only the tour view overrides it | `BaseAssignmentWorkspace.tsx:99` |
 | P2-O5 | Job-creation leftovers in `BaseProductionClient` are removed. `BaseMachineJobs.tsx`, `createBaseProductionJob`, `updateBaseProductionJobStatus` and `lib/base-job-summaries.ts` now have no application importers | Phase 3 candidates under the deletion protocol |
 
-**OS-13 details:**
-- **The action:** `app/(dashboard)/owner/production/actions.ts` `updateBasePayrollCycleAction`.
+**OS-13 details** (as first recorded; corrected in E25):
+- **The action:** `app/(dashboard)/owner/production/actions.ts` `updateBasePayrollCycleAction`. **Correction:** the name is `saveBasePayrollCycleConfig`.
 - **Where the RPC falls short:** it handles the same-day in-place case itself, but refuses an effective date before the current one.
 - **What the fallback does** when the RPC errors: it closes the active config, then inserts a new one, as two separate writes with the user client.
 - **Why those writes succeed:** production RLS allows Base owners to write directly (`base_payroll_cycle_configs_owner_write`, ALL, `private.base_production_core_access(org_id)`; `authenticated` has INSERT/UPDATE).
@@ -1043,3 +1043,68 @@ Worktree = `main` @ `2794f4a0` + 2A.
 | Default vitest | 232 files / 2,023 passed / 1 skipped |
 | `npm run test:db` | 10 files / 56 passed |
 | Build | NOT RUN (type-only and dead-binding changes) |
+
+## E24. Package 2B: the three react-hooks lint errors (2026-09-26)
+
+Owner-approved. **Lint is now fully green:** `eslint --max-warnings=0 .` exits 0, the first time in this program. CLAUDE.md conflict #7 (lint policy vs. reality) is resolved in practice.
+
+| File | Rule | Change |
+| --- | --- | --- |
+| `components/estimator/FreeUsageCard.tsx` | `preserve-manual-memoization` | Reads `quota?.resetsAt` into a local before the `useMemo`, so the inferred and declared dependencies match. Output is identical |
+| `components/navigation/navigation-disclosure.tsx` (rails shell) | `set-state-in-effect` | Replaced the effect that set `isClosing` with React's documented "adjust state when a prop changes" pattern. `isClosing` is set during render when `expanded` changes; the 160 ms timer is the only effect. The `wasExpanded`/`closeTimer` refs are gone |
+| `hooks/use-gutter-dock.ts` (Free usage card dock) | `set-state-in-effect` | The measurement is now a pure, exported `dockUpdater(container, config)` (the old `updateDock` body, verbatim, returning its state updater). The effect applies `setDockState(dockUpdater(containerRef.current, config))` synchronously, as before. The rule accepts ref-derived values, and its re-run triggers are unchanged. Public API unchanged |
+
+**New test:** `__tests__/gutter-dock.test.ts` (5 CHARACTERIZATION tests) pins the docking rules: 1200px minimum width, 280px minimum gutter, centring, forced docking, and a missing container or window.
+
+### Old-vs-new browser comparison (VERIFIED)
+
+Method:
+- The pre-change copies and the new files were bundled side by side into a throwaway page with Vite, in the worktree's ignored `scratch/`.
+- Stubs replaced `next/navigation`, `next/link` and i18n.
+- The page ran in the built-in browser. It recorded every `hidden` mutation, plus the value sampled at each animation frame, which is what gets painted.
+- The harness was deleted afterwards. No console errors.
+
+| Scenario | Old | New |
+| --- | --- | --- |
+| Expand | visible at 4 ms | visible at 4 ms |
+| Collapse (click) | DOM: hidden 2 ms → visible 3 ms → hidden 164 ms. Painted: visible, then hidden from 179 ms | DOM: hidden 164 ms. Painted: visible, then hidden from 179 ms |
+| Collapse, re-expand at 80 ms | transient DOM flip; stays visible; no stray hide | no DOM change; stays visible; no stray hide |
+| Reduced motion collapse | hidden at 1 ms (painted 22 ms) | hidden at 1 ms (painted 22 ms) |
+| Gutter dock: 1400px and 1100px viewports, remounts, 352px vs 252px gutters | identical states in every case | identical |
+
+**Result:** painted behavior is identical. The new disclosure removes an unpainted hidden/visible flip, which is the extra render the rule warns about. For non-click updates, where effects are not flushed before paint, that flip could previously have shown as a one-frame flash; now it cannot.
+
+**Gates:**
+
+| Check | Result |
+| --- | --- |
+| Strict lint | exit 0 |
+| tsc | PASS |
+| Default vitest | 233 files / 2,028 passed / 1 skipped |
+| `npm run test:db` | 11 files / 59 passed (with OS-13, E25) |
+
+## E25. OS-13 fix: payroll cycle settings are RPC-only (2026-09-26)
+
+Owner-approved as its own package.
+
+**The fix.** `saveBasePayrollCycleConfig` (`app/(dashboard)/owner/production/actions.ts`) now returns `databaseError(rpcError, …)` when `update_base_payroll_cycle` refuses. The direct-write fallback is removed: the same-day update, the close of the active config and the insert. The user-facing message is unchanged: "Failed to save payroll cycle configuration. Your existing settings have not changed."
+
+**Test:** `__tests__/db/payroll-cycle-settings.dbtest.ts` runs end to end through the real RPC, with only auth and tier mocked:
+- a later date closes the previous cycle;
+- a date before the current cycle is refused and nothing changes;
+- a same-day change updates in place.
+
+Every call goes through `user:update_base_payroll_cycle`. The adapter throws on direct table writes, so any fallback write fails the test.
+
+**Pre-fix evidence and severity correction (VERIFIED):**
+- On the unfixed code, the refused-backdate case reached the direct `.update()`.
+- With a write-capable adapter in a disposable copy, the unfixed code's writes were still rejected:
+  - the close by `CHECK base_payroll_cycle_configs_effective_range` (`effective_from <= effective_until`);
+  - the second active insert by the unique index `idx_base_payroll_cycle_active`.
+
+  The unfixed code therefore returned the same error with the data unchanged.
+- So the ordering rule was **not** bypassable, and OS-13 is **Low**, not Low–Med.
+- **What the fix still removes:** an unlocked direct-write path that ran on *any* RPC error, including transient ones. It could leave the org with no active cycle if the insert failed after the close succeeded.
+- The E12/E23 entries are corrected, including the action name.
+
+**Not changed (noted):** production RLS still lets Base owners write `base_payroll_cycle_configs` directly through the API (`base_payroll_cycle_configs_owner_write`). Making the RPC the only writer at the database level would be an RLS change needing its own approval. The table constraints above keep such writes consistent.
