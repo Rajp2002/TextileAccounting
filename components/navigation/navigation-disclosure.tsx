@@ -8,6 +8,9 @@ import { useTranslation } from '@/lib/i18n/context'
 import { isCurrentNavigationPage, type NavigationGroup } from '@/lib/disclosure-navigation'
 import { cn } from '@/lib/utils'
 
+const prefersReducedMotion = () =>
+    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
 export function NavigationDisclosure({ group, expanded, onToggle, onCollapse, onCurrentDestination, onNavigate, yarnReviewDueCount = 0 }: {
     group: NavigationGroup; expanded: boolean; onToggle: () => void; onCollapse: () => void;
     onCurrentDestination?: () => void; onNavigate: () => void; yarnReviewDueCount?: number
@@ -19,34 +22,21 @@ export function NavigationDisclosure({ group, expanded, onToggle, onCollapse, on
     const active = group.children.some(child => child.active(pathname, child.href))
     const Icon = group.icon
 
+    // Keep the submenu rendered for its 160ms closing animation. The state is
+    // adjusted during render when `expanded` changes, so no extra render pass
+    // shows the list hidden before the animation starts.
     const [isClosing, setIsClosing] = useState(false)
-    const wasExpanded = useRef(expanded)
-    const closeTimer = useRef<NodeJS.Timeout | null>(null)
+    const [prevExpanded, setPrevExpanded] = useState(expanded)
+    if (prevExpanded !== expanded) {
+        setPrevExpanded(expanded)
+        setIsClosing(!expanded && !prefersReducedMotion())
+    }
 
     useEffect(() => {
-        if (wasExpanded.current && !expanded) {
-            const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-            if (prefersReducedMotion) {
-                setIsClosing(false)
-            } else {
-                setIsClosing(true)
-                if (closeTimer.current) clearTimeout(closeTimer.current)
-                closeTimer.current = setTimeout(() => {
-                    setIsClosing(false)
-                }, 160)
-            }
-        } else if (expanded) {
-            if (closeTimer.current) {
-                clearTimeout(closeTimer.current)
-                closeTimer.current = null
-            }
-            setIsClosing(false)
-        }
-        wasExpanded.current = expanded
-        return () => {
-            if (closeTimer.current) clearTimeout(closeTimer.current)
-        }
-    }, [expanded])
+        if (!isClosing) return
+        const timer = setTimeout(() => setIsClosing(false), 160)
+        return () => clearTimeout(timer)
+    }, [isClosing])
 
     const collapse = () => { trigger.current?.focus(); onCollapse() }
 

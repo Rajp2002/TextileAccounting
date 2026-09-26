@@ -47,10 +47,11 @@ export function FreeUsageCard({
   const remaining = quota ? Math.max(0, Math.min(quota.remaining, limit)) : null
   const isExhausted = remaining === 0
 
+  const resetsAt = quota?.resetsAt
   const formattedResetDate = useMemo(() => {
-    if (!quota?.resetsAt) return ''
+    if (!resetsAt) return ''
     try {
-      const date = new Date(quota.resetsAt)
+      const date = new Date(resetsAt)
       if (isNaN(date.getTime())) return ''
       return new Intl.DateTimeFormat(`${language}-IN`, {
         dateStyle: 'medium',
@@ -60,7 +61,7 @@ export function FreeUsageCard({
     } catch {
       return ''
     }
-  }, [quota?.resetsAt, language])
+  }, [resetsAt, language])
 
   // Honest loading without quota
   const isInitialLoading = loading && remaining === null
