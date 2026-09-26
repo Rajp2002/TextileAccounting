@@ -1,51 +1,47 @@
 # Weavly refactor program — status
 
-Updated 2026-09-26 (evening). **Package 1B-1 is complete and committed** (`95ae0240`, pushed to `main` with this docs commit). **Current package: 1B-2** (paid-save chain and OS-4 reproduction), approved by the user together with a read-only production check of default privileges. Work continues in the worktree on branch `maintenance/weavly-refactor`.
+Updated 2026-09-26 (night). **Package 1B-2 is complete** (EVIDENCE E18, E19) and committed and pushed to `main` with this docs change (user-approved). **Current package: F1**, the inventory audit and challan archive fixes, approved by the user.
+
+## Decisions needed
+
+1. (Approved: commit and push 1B-2; F1 approved.)
+2. **Current package: F1, the inventory audit and challan archive fixes.** Corrective migration files that flip the OS-1, OS-2 and OS-3 KNOWN DEFECT tests, proven on the harness first.
+   - Why first: these are the only confirmed defects breaking user-visible features today. The audit page always errors, owners cannot save audit counts, and settled or reversed challans never reach History.
+   - What it needs: schema-change approval. Applying the migrations to production is **your action**, since `supabase db push` is off-limits for Claude.
+   - Alternatives: **1C** (access-boundary tests: auth helpers, billing routes, webhook, onboarding) or **F2** (AS-01 onboarding fallback, CS-3 fail-closed signing key, OS-4 reversed-request guard).
+3. **Signing key:** still unverified by Claude (the Vercel connector returns 403). Please confirm a post-change production deploy and one Free calculation.
 
 ## Decisions recorded (user, 2026-09-26)
 
-- **1B-1:** commit and push to `main` (approved). **1B-2** and the read-only production `pg_default_acl` check are approved.
-- **Lockfile fix:** commit straight to `main`. Done: `09213fde` pushed. It adds the two missing nested `@emnapi` entries; E16 has the verification.
-- **CS-1 (multi-weft):** rows hold each yarn's own picks (34 + 34), so the weft 100/N split is the defect (E15). **The fix is out of scope for now**; the owner will verify the correct method for multi-weft qualities first. The tests keep characterizing current behavior.
-- **1B approved.** It is split for reviewability:
-  - **1B-1 (now):** harness, self-checks, the OS-1/OS-2/OS-3 reproductions, tenant and locked-org boundaries, the Free debit, and the saved-costing immutability trigger.
-  - **1B-2 (next, proposed):** the paid-save chain (attestation plus `save_estimator_costing_revision_v2`: replay, `no_change`, stale version) and OS-4 payroll idempotency, both of which need large payloads or seed data.
-- **Earlier:** CS-3 key reported added (unverified); AS-02 accepted temporarily.
+- Commit and push 1B-1 to `main`: done, `95ae0240` + `28c00db0`.
+- 1B-2 approved: done.
+- Read-only `pg_default_acl` check approved: done. The harness matches production for 170/171 shared functions and all tables. Three production-only functions show schema drift (E18).
+- Lockfile fix: done, `09213fde`; CI is green.
+- CS-1 multi-weft fix out of scope until the owner verifies the method. AS-02 accepted temporarily.
 
-## Package 1B-1 plan (recorded before editing)
-
-- **Problem:** RPC, RLS and trigger behavior has text-only coverage, and no harness covers migrations `0913`–`0922` (E10). E12 escalations need executable reproductions.
-- **New paths:**
-  - `scripts/test-db/cluster.mjs`: `initdb` in the OS temp dir, TCP on 127.0.0.1 only, no Unix socket, trust auth, and a loopback guard on every connection. Supabase stubs as in E9. It replays all migrations except the four pg_cron/pg_net schedules into a template database; each test file gets its own copy. The cluster is stopped and deleted at teardown.
-  - `vitest.db.config.ts`, `__tests__/db/{global-setup,helpers}.ts`, `__tests__/db/*.dbtest.ts`.
-  - `package.json` gains one script, `test:db`.
-- **Preserved:** no migration, schema, application or dependency changes (`pg` is already installed). `npm test` does not pick up `*.dbtest.ts`, and CI is unchanged.
-- **Test labels:** INVARIANT, CHARACTERIZATION, or KNOWN DEFECT (a KNOWN DEFECT test asserts today's failure and flips once a separately approved fix lands).
-- **Acceptance:**
-  - `npm run test:db` passes.
-  - No Postgres process or data directory remains afterwards.
-  - The loopback guard rejects remote hosts.
-  - The full vitest, tsc and lint gates are unchanged, apart from new files linting clean.
-  - A reverse-checked patch is saved while the work is uncommitted.
-- **Rollback:** reverse the patch, or revert the commit once committed.
-
-## 1B-1 gate results
+## 1B-2 gate results
 
 | Check | Result |
 | --- | --- |
-| `npm run test:db` | PASS: 5 files, 24 tests, about 6 s; no cluster or data directory left |
-| DB mutation check | 5/5 mutations caught; restored copy 24/24 |
-| Default `npm test` | 232 files / 2,019 passed / 1 skipped (unchanged; `*.dbtest.ts` excluded) |
+| `npm run test:db` | PASS: 7 files, 36 tests (24 from 1B-1 + 12 new), about 7 s; no cluster left |
+| DB mutation check | tier-check mutation → 2 failures; revoked save RPC → 7 failures; restored copy 36/36 |
+| Default `npm test` | 232 files / 2,019 passed / 1 skipped (unchanged) |
 | tsc | PASS |
-| New files lint | 0/0 |
-| Full lint | 3 errors / 80 warnings; the −1 is from UI commit `9f12af19` |
-| Patch reverse-check | PASS |
+| New/changed files lint | 0/0 |
+| Full lint | 3 errors / 80 warnings (unchanged) |
 
-Limits: Supabase default privileges are an INFERRED fidelity assumption, and PostgREST hooks, real JWTs, pg_net and cron are not exercised.
+## Findings from 1B-2
+
+- **The paid save chain works end to end in PostgreSQL.** The attestation, save, replay, `noChange`, stale-version, tamper and cross-tenant checks all hold.
+- **CS-9 confirmed by execution:** the service-role attestation succeeds for an unpaid org. The owner-side RPC is the real plan gate.
+- **OS-4 narrowed:**
+  - Plain retries *are* idempotent.
+  - Re-sending a settlement request after it was reversed re-pays the worker. This regressed from the 2026-09-01 version.
+- **Schema drift:** three production functions exist outside `supabase/migrations`.
 
 ## Still open
 
-- OS-1/OS-2/OS-3/OS-5 fixes; AS-01 onboarding admin fallback; AS-05 locked-org scope.
-- A fail-closed CS-3 code change once the key is verified.
-- A read-only production count of multi-weft costings (when the owner resumes CS-1).
-- The optional bump of `actions/checkout` and `actions/setup-node` to non-deprecated major versions.
+- OS-1, OS-2, OS-3 and OS-4 fixes; OS-5 export scope; AS-01; AS-05; the CS-3 fail-closed change.
+- A read-only multi-weft count, when the owner resumes CS-1.
+- Deciding whether to bring the three drifted production functions under migrations (Phase 5 or a separate decision).
+- The optional `actions/checkout` and `actions/setup-node` major-version bump.

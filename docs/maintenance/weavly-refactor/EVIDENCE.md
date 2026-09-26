@@ -392,7 +392,7 @@ Release claims touching these areas are **blocked** until they are resolved or e
 | 6 | CS-3 / AS-04 | Free signing-key fallback | Low–Med (security) | Code verified; prod config UNKNOWN | **User action: confirm `WEAVLY_FREE_SIGNING_KEYS` is set in Vercel production.** Then fail closed; separately approved |
 | 7 | CS-1 | Multi-weft costing convention | High if used | Code verified | **Product decision**; characterize meanwhile |
 | 8 | CS-2 | Reopen/re-save drift | Medium | Partly verified | Characterize; fix may need persisting `warping_mode`/`overhead_mode` (contract change) |
-| 9 | OS-4, OS-12 | Payroll/advance idempotency | Medium | Partly verified | DB harness tests, then separate fix |
+| 9 | OS-4, OS-12 | Payroll/advance idempotency | Medium-Low | **OS-4 narrowed and reproduced (E19):** only a replay after reversal re-settles; plain retries are idempotent | Separate fix: restore the reversed-request guard |
 | 10 | AS-02, AS-05 | Free email verification; locked-org writes | Medium / Low–Med | Investigator | Product decisions |
 | 11 | OS-6…OS-11, AS-03, AS-06…AS-12, CS-4…CS-10 | various | Low–Med | mixed | Backlog, after the harness exists |
 
@@ -566,3 +566,71 @@ Three of four places, and the external formulas, treat a row's PPI as that yarn'
 - full lint 3 errors / **80** warnings. The drop of one from the 81 baseline is the unused `ChevronDown` import in `BaseDailyProductionSheet.tsx`, removed by UI commit `9f12af19`, not by this package.
 
 **Deferred to 1B-2:** the paid-save chain (`register_estimator_costing_attestation` → `save_estimator_costing_revision_v2`: replay, `no_change`, stale version) and OS-4 payroll request idempotency.
+
+## E18. Harness fidelity vs production privileges (read-only check, approved 2026-09-26)
+
+Metadata-only queries were run against production `vzhwahudircrpgtitwzd`: `pg_default_acl`, and `has_function_privilege`/`has_table_privilege` for `anon`, `authenticated` and `service_role` on every public function and table. No table data was read.
+
+- **Production default ACL for objects created by `postgres` in `public`:**
+  - tables `anon`/`authenticated`/`service_role` = `arwdDxtm` (ALL);
+  - sequences = `rwU` (ALL);
+  - functions = `postgres`, `service_role` only (no PUBLIC, `anon` or `authenticated`).
+- **Comparison with a freshly replayed harness.** Rows were compared by md5 in 16 buckets, then row by row for the mismatched buckets:
+
+  | Side | Rows |
+  | --- | --- |
+  | Harness | 311 (174 functions, 137 tables/views) |
+  | Production | 314 |
+
+  Every table and view matches on DELETE/INSERT/SELECT/UPDATE for all three roles. Functions match for 170 of the 171 present in both. Differences:
+  1. **Schema drift (VERIFIED):** production has three functions that no migration creates: `rls_auto_enable()` (`--s`), `get_user_org_id()` (`-us`) and `get_user_role()` (`-us`). Migrations only touch them conditionally. `supabase/migrations` is therefore not a complete description of production.
+  2. `custom_access_token_hook(jsonb)`: production `--s` vs harness `-us`. Migrations revoke only PUBLIC, and production's grants were narrowed outside migrations (INFERRED: the Auth hook configuration).
+- **Interpretation:** production's *current* function default (service_role only) is newer than almost all existing functions, which were created under the broader default the harness uses. **Gap:** a future migration that adds an RPC without an explicit `GRANT EXECUTE … TO authenticated` would work in the harness but fail in production. New migrations should grant explicitly; the harness cannot catch a missing grant.
+- The harness now grants ALL on tables and sequences, matching production. The 1B-1 results are unchanged.
+- **OS-2 confirmed in production:** `authenticated` has only SELECT on `inventory_audits`.
+
+## E19. Package 1B-2 — paid save chain and payroll settlement (2026-09-26)
+
+**Files:**
+- `__tests__/db/supabase-adapter.ts`: a minimal Supabase-client stand-in. `.rpc()` and `.from().select().eq()/.in()/.is()/.order()/.limit()/.maybeSingle()/.single()` run in PostgreSQL as the owner or service role; unsupported calls throw.
+- `__tests__/db/costing-save.dbtest.ts` (8 tests)
+- `__tests__/db/payroll-settlement.dbtest.ts` (4 tests)
+- `scripts/test-db/cluster.mjs`: timestamps returned as strings like PostgREST; production-matching table and sequence defaults.
+
+**Paid save, end to end.** The real `saveEstimatorQuoteV3` runs with only auth mocked. Prices come from the independent Python reference (production 26.23; price 31.44/31.82/32.20/32.60/33.00 at 12–16% margin).
+
+| Test | Result |
+| --- | --- |
+| New costing: `service:register_estimator_costing_attestation` then `user:save_estimator_costing_revision_v2`, version 1, row attested, attestation consumed (INVARIANT C-INV-19/20) | PASS |
+| Same request retried: same row, `idempotentReplay` (C-INV-20) | PASS |
+| One-paisa total mismatch refused before any RPC (C-INV-17) | PASS |
+| Unchanged inputs as a revision: `noChange`, no new version (CHARACTERIZATION) | PASS |
+| Stale source → "This costing changed in another tab…", raised by the RPC | PASS |
+| Payload altered after attestation → "The costing payload was not verified by the server…" (C-INV-19) | PASS |
+| Other org revising → "The costing being edited no longer exists." (SECURITY DEFINER RPC scopes to the caller's org) | PASS |
+| Unpaid org → "…required to save costings." **CS-9 / AS-06 confirmed by execution:** the service-role attestation succeeds for an unpaid org and the row stays unconsumed; only the owner-side RPC enforces the plan | PASS (CHARACTERIZATION) |
+
+**Payroll settlement** (100 m × ₹2 = ₹200 via `save_base_daily_production_reviewed`, then `settle_base_worker_payroll_reviewed`):
+
+| Test | Result |
+| --- | --- |
+| Gross = metres × snapshot rate, one paid settlement (O-INV-14) | PASS |
+| Retry for the same period returns the same `settlement_id` with `idempotent: true` (O-INV-17) | PASS |
+| Reviewed amounts differing from computed → 40001, nothing saved (O-INV-17) | PASS |
+| **OS-4, narrowed and reproduced (KNOWN DEFECT):** after a reversal, re-sending the original request (same `client_request_id`) creates a **new paid settlement** | reproduced |
+
+On OS-4: the 2026-09-01 function refused this with "This payment request was reversed. Reload payroll before recording another payment." (`20260901110004:358`); the 2026-09-13 reviewed wrapper never reads `client_request_id`. **The original OS-4 claim (plain retries broken) is not supported;** plain retries are idempotent by period. Severity: Medium-Low. It needs a stale retry arriving after an explicit reversal, and it re-pays a worker the owner just reversed.
+
+**Mutation check** (disposable copy; restored 36/36):
+
+| Mutation | Tests failed |
+| --- | --- |
+| `org_has_subscription_tier` always true | 2 (Lite stock access, unpaid save) |
+| Owner EXECUTE revoked on the save RPC | 7 (every end-to-end save test that reaches the RPC) |
+
+**Gates** (worktree = `main` @ `28c00db0` + 1B-2):
+- `npm run test:db` 7 files / 36 passed, no cluster left;
+- default vitest 232 files / 2,019 passed / 1 skipped;
+- tsc PASS;
+- changed/new files lint 0/0;
+- full lint 3 errors / 80 warnings (unchanged from 1B-1).
