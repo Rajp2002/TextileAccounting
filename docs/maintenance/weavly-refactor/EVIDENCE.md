@@ -1553,3 +1553,89 @@ Worktree = `main` @ `57bd9b0c` + 3F.
 | Reachability | 17 unreachable (unchanged set: 3D and 3E) |
 
 **Recovery:** `git revert 1259c566`.
+
+## E32. Batch 3G: hidden market-run and party-order UI (2026-09-27)
+
+Approved by the owner (2026-09-27); committed in `e917f291`.
+
+### Why it was hidden (VERIFIED)
+
+- `owner/estimator/page.tsx` sets `canUseProduction = false`; `app/free/FreeClient.tsx` passes `canUseProduction={false}`.
+- In `EstimatorClient`:
+  - `mode` started as `canUseProduction ? estimatorWorkflow.initialMode : 'quote'`;
+  - every `setMode('market')` sat under a `canUseProduction` guard;
+  - `isStandaloneCostingSession = !canUseProduction || …` is always true.
+- `quotes/page.tsx` sets `canUseQuotationWorkflow = canUseProduction && …`, so `canCreateOrder` was always false and the convert dialog never opened.
+
+### Scope
+
+**Removed:**
+- **`EstimatorClient`:**
+  - the `mode` state, its `?mode=` seed, the `productionMode` prop and `getEstimatorWorkflowConfig`;
+  - every `mode === 'market'` arm: party/quality sync, party-hint guard, template-name seed, title, price label, quality-name layout and `onChange`, simulation title and quantity label;
+  - `handleStartPartyOrder`;
+  - the market branch of `handleSaveQuote`. Its `targetMode` parameter was dropped, and the always-`'quote'` conditions were folded: `effectiveTargetMode`, the request-id guard and the two `canUseProduction`-dead mode checks. The pending-save state types and replays were updated to match.
+  - the party-order and market-run controls in the older button block.
+- **`EstimatorLiveCostActions`:** the market and party-order props and controls, including the dropdown Market Run item.
+- **`QuotesClient`:** `quoteToConvert` with its convert state, `openConvertDialog`, `handleConvertAcceptedQuote`, the Create Active Order button and dialog, and four imports only they used.
+- **Tour:** `marketMode` in `EstimatorTourContext` and `CostEstimateTutorial`, and the `saveMarket` step with its en/hi/gu copy.
+- **Locales:** `estimator.simulation.market_title`, `estimator.simulation.market_target` (already unused) and `estimator.field_labels.market_target` in en/hi/gu. No dynamic key access exists.
+- **Server:** the three 3F stubs in `estimator/actions.ts`.
+
+**Kept for batch 3H:** the other `canUseProduction` and quotation-lifecycle branches (draft/sent/accepted controls, `showPartyField`, the factory-profile wizard step, the "full" saved-costings tour, the "Market Run only mode" checks inside `saveEstimatorQuoteV3`), plus the now-unused `tx()` dictionary entries (for example "Start Party Order") in `lib/i18n/legacy*.ts`.
+
+**Correction:** STATUS listed the `saveEstimatorQuoteV3` quotation sub-paths under 3G. They belong with the quotation lifecycle (3H).
+
+Size: 16 files, +48 / −632 ignoring whitespace (+224 / −808 raw, because two blocks moved out one indent level).
+
+### Old-vs-new browser comparison
+
+**Harness (disposable, in the scratchpad):**
+- **Builds:** `main` @ `0eaca72a` and the 3G tree, each built by Vite from an isolated copy with the real `I18nProvider`.
+- **Stubs:**
+  - every `'use server'` module becomes a recorder with canned responses;
+  - `next/navigation`, `next/dynamic` and `next/link`;
+  - an inert browser Supabase client;
+  - `fetch` (Free status and calculate, analytics);
+  - waits run on `MessageChannel`, because the pane was hidden and chained timers are throttled there.
+- **Recorded per run** (fresh page load each time): the whole `document.body` HTML, with React/Radix IDs and UUIDs canonicalised, plus the server-action calls with full arguments, router and `fetch` calls, and console errors. Each run was stored in IndexedDB and compared byte for byte.
+
+| Scenario | Result |
+| --- | --- |
+| E1 Lite; E2 Base with production mode `market_run`; E3 Base with `?mode=market` | Identical |
+| E4 Free; E5 setup wizard (no profile) | Identical |
+| E6 live-cost sheet with the "More costing actions" menu open | Identical |
+| E7 save a new costing (seeded complete draft) | Identical, including the `saveEstimatorQuoteV3` payload |
+| E8 stale-rate dialog → Save with These Rates (the replay path that carried `targetMode`) | Identical |
+| E9 save an edited costing (source quote) | Identical |
+| E10 guided tour to section 8 (save step) | Identical |
+| E11 Free save (metered path) | Identical |
+| Q1 Quotations Base; Q2 Lite; Q3 `initialStatus=accepted` with an accepted quotation row | Identical |
+
+Result: 14/14 identical; 0 console errors on either side. Repeat runs gave the same hashes, so the comparison is deterministic.
+
+### Contracts updated
+
+- `estimator-only-experience`:
+  - `resolvedPartyName` and `handleSaveQuote(…)` now pin the new text;
+  - the `id="btn-start-party-order"` presence check became a negative check for `btn-start-party-order` and `btn-start-market-run`;
+  - `if (!state.orderQuantityM || …)` existed only in the removed party-order handler, so it was removed. The live quantity rule is pinned separately.
+- `base-p1-remediation`: `resolvedPartyName` pin.
+- `estimator-core-tour`: `marketMode` cases removed. The copy-parity check still visits every step key.
+- `batch10-estimator-quote-order-snapshots`: the three retired actions must not be defined.
+- `__tests__/db/retired-factory-workflows.dbtest.ts` (3F) deleted: its subject, the stubs, no longer exists.
+
+### Gates
+
+Worktree = `main` @ `0eaca72a` + 3G.
+
+| Check | Result |
+| --- | --- |
+| `npm run lint` | exit 0 |
+| tsc | PASS |
+| Default vitest | 227 files / 1,952 passed / 1 skipped |
+| `npm run test:db` | 11 files / 60 passed |
+| Production build (credential-free copy) | PASS (compiled 87 s; 53/53 static pages) |
+| Reachability | 17 unreachable (unchanged set) |
+
+**Recovery:** `git revert e917f291`.
