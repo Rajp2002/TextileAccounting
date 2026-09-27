@@ -2,6 +2,12 @@
 
 import { useEffect, useState, type RefObject } from 'react'
 import { lockTourViewport } from '@/lib/tutorial-viewport-lock'
+import type { Language } from '@/lib/i18n/context'
+import { tourCommonCopy } from '@/lib/i18n/tour-common'
+import { placeTourPanel, type TourBox, type TourPanelPlacement } from '@/lib/tours/placement'
+import { resolveTourTarget, watchTourTarget } from '@/lib/tours/target-readiness'
+import { scrollIntoSafeView, type ScrollRecord } from '@/lib/tours/tour-scroll'
+import type { TourStepSpec } from '@/lib/tours/tour-types'
 
 // Shared behavior of the page-level guided tours in components/tours
 // (Phase 2D). Each tour keeps its own steps, copy and panel content.
@@ -115,12 +121,46 @@ export function useGuidedTourModal({ panel, portal, navigation, launcher, return
 
 export type TourPlacement<Step> = { step: Step; rect: DOMRect; bottom: boolean; left: boolean }
 
+export function useTourStep<S extends string>({ step, spec, panel, compact, language, unavailable, scrollRecord }: {
+    tourId: string; step: S; spec: TourStepSpec<S>; panel: RefObject<HTMLDivElement | null>; compact: boolean; language: Language; unavailable?: string; scrollRecord: ScrollRecord
+}): { status: 'preparing' | 'ready' | 'unavailable'; rect: TourBox | null; placement: TourPanelPlacement | null; statusText?: string; reducedMotion: boolean } {
+    const [result, setResult] = useState<{ step: S; status: 'preparing' | 'ready' | 'unavailable'; rect: TourBox | null; placement: TourPanelPlacement | null; slow: boolean }>({ step, status: 'preparing', rect: null, placement: null, slow: false })
+    const reducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    useEffect(() => {
+        const slowTimer = window.setTimeout(() => setResult(value => value.status === 'preparing' ? { ...value, step, slow: true } : value), 400)
+        const resolve = () => resolveTourTarget(spec.anchor, spec.context)
+        const cancel = watchTourTarget({ resolve, onReady: (target, initialRect) => {
+            const safe = compact ? { left: 8, top: 72, right: window.innerWidth - 8, bottom: Math.max(72, (panel.current?.getBoundingClientRect().top ?? window.innerHeight) - 16), width: window.innerWidth - 16, height: window.innerHeight - 88 } : { left: 16, top: 16, right: window.innerWidth - 16, bottom: window.innerHeight - 16, width: window.innerWidth - 32, height: window.innerHeight - 32 }
+            scrollIntoSafeView(target, safe, reducedMotion, scrollRecord)
+            const rect = target.getBoundingClientRect(); const box = { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom, width: rect.width, height: rect.height }
+            const contextElement = spec.context ? target.closest<HTMLElement>(spec.context) : null; const contextRect = contextElement?.getBoundingClientRect(); const context = contextRect ? { left: contextRect.left, top: contextRect.top, right: contextRect.right, bottom: contextRect.bottom, width: contextRect.width, height: contextRect.height } : null
+            const panelRect = panel.current?.getBoundingClientRect(); const placement = compact ? null : placeTourPanel({ target: box, context, panel: { width: panelRect?.width || 360, height: panelRect?.height || 240 }, viewport: { width: window.innerWidth, height: window.innerHeight } })
+            setResult({ step, status: 'ready', rect: box.width ? box : initialRect, placement, slow: false })
+        }, onUnavailable: () => setResult({ step, status: 'unavailable', rect: null, placement: null, slow: false }) })
+        return () => { window.clearTimeout(slowTimer); cancel() }
+    }, [step, spec, panel, compact, language, reducedMotion, scrollRecord])
+    useEffect(() => {
+        if (result.status !== 'ready') return
+        const update = () => {
+            const target = resolveTourTarget(spec.anchor, spec.context); if (!target) return
+            const rect = target.getBoundingClientRect(); const box = { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom, width: rect.width, height: rect.height }
+            setResult(value => ({ ...value, rect: box }))
+        }
+        window.addEventListener('resize', update); window.addEventListener('scroll', update, true)
+        return () => { window.removeEventListener('resize', update); window.removeEventListener('scroll', update, true) }
+    }, [result.status, spec])
+    const current = result.step === step ? result : { step, status: 'preparing' as const, rect: null, placement: null, slow: false }
+    const statusText = current.status === 'unavailable' ? (unavailable ?? tourCommonCopy[language].unavailable) : current.slow ? tourCommonCopy[language].preparing : undefined
+    return { status: current.status, rect: current.rect, placement: current.placement, statusText, reducedMotion }
+}
+
 /**
  * Keeps the desktop panel beside the current target: scrolls the target into
  * view once, then re-measures for 1.5s and on resize or scroll. The panel
  * moves to the left or bottom when it would cover the target, except for
  * targets inside the tour's own preview (`previewSelector`).
  */
+/** @deprecated Migrate tours to useTourStep. */
 export function useGuidedTourPlacement<Step>({ step, mobile, resolve, language, panel, previewSelector }: {
     step: Step
     mobile: boolean

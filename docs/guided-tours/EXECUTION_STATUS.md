@@ -8,8 +8,8 @@ States: `NOT_STARTED` · `IN_PROGRESS` · `REVIEW_REQUIRED` · `PASSED` · `FAIL
 
 | # | Task | Status | Revision at start | Last updated | Ledger |
 | --- | --- | --- | --- | --- | --- |
-| 1 | GT-00 Baseline and harness | IN_PROGRESS | `2275e920` | 2026-09-27 | [GT-00 ledger](#gt-00--in_progress--2026-09-27) |
-| 2 | GT-01 Runtime foundation | NOT_STARTED | — | — | — |
+| 1 | GT-00 Baseline and harness | PASSED (owner waiver) | `2275e920` | 2026-09-27 | [GT-00 ledger](#gt-00--in_progress--2026-09-27) |
+| 2 | GT-01 Runtime foundation | IN_PROGRESS | `ab0c2aff` | 2026-09-27 | [GT-01 ledger](#gt-01--in_progress--2026-09-27) |
 | 3 | GT-02 Invitation and persistence | NOT_STARTED | — | — | — |
 | 4 | GT-03 Saved Costings (reference) | NOT_STARTED | — | — | — |
 | 5 | GT-04 Gate G1 | NOT_STARTED | — | — | — |
@@ -28,7 +28,7 @@ States: `NOT_STARTED` · `IN_PROGRESS` · `REVIEW_REQUIRED` · `PASSED` · `FAIL
 | 18 | GT-17 Final acceptance (G2) | NOT_STARTED | — | — | — |
 | — | GT-B1 Stock audit tour | BLOCKED (PI-06, PI-07) | — | — | — |
 
-**Exact next action:** owner decides whether GT-00 may proceed with owner QA runs only, or provides Playwright and Chromium paths so the harness can be verified.
+**Exact next action:** continue GT-01 by adding the readiness/scroll tests and the foundation harness scenario; browser evidence remains UNVERIFIED under the owner's waiver.
 
 ## Planning baseline (for comparison in GT-00)
 
@@ -52,7 +52,7 @@ Recorded 2026-09-27 at `f7cff98` (`claude/gracious-sagan-dnwtsm` = `main`), clea
 
 ## Approved deviations
 
-None. A deviation is recorded here only with the approver's name and the plan/spec section it changes.
+- **2026-09-27, owner:** “Continue with implementation plan” approves proceeding after the GT-00 escalation using owner QA runs only. GT-00 is treated as passed for queue dependency purposes; browser-harness evidence remains explicitly UNVERIFIED and must not be represented as observed evidence.
 
 ## Open issues
 
@@ -92,6 +92,23 @@ Append one entry per task session, newest last. Template:
   - **Smallest decision needed:** Should the program proceed without harness evidence using owner QA runs only, or will Playwright and Chromium be provided with their paths?
   - **Worktree state:** only `docs/guided-tours/EXECUTION_STATUS.md` is tracked and modified; `scratch/tour-harness/` is git-ignored; all automated baseline checks pass; harness verification is outstanding.
 - Next action: stop before GT-01 and await the owner's decision or valid `PLAYWRIGHT_ROOT` and `CHROMIUM_PATH` values.
+
+### GT-01 — IN_PROGRESS — 2026-09-27
+- Revision / worktree: `work` @ `ab0c2aff11ae0c3b791527151991af8f7c241190`; clean at task start; unrelated uncommitted files left untouched: none.
+- Files changed: shared runtime helpers in `lib/tours/`; shared copy; `TourPanel`, `TourSpotlight`, and `GuidedTour`; guided-tour and mobile-positioning hooks; focused tests; this ledger.
+- Deliberate test changes: `__tests__/mobile-tour-positioning.test.ts` now asserts bounded frame checks and the absence of fixed settle timers, as required by EC-07.
+- Commands and results:
+  - `node scripts/performance/isolated-command.mjs node node_modules/typescript/bin/tsc --noEmit --incremental false` → exit 0.
+  - focused legacy runtime tests (focus, mobile positioning, target, viewport lock) → 4 files, 31 tests passed.
+  - focused new/runtime tests → 7 files, 14 tests passed.
+  - focused ESLint over all changed runtime/component files → exit 0, zero warnings.
+  - `node scripts/performance/isolated-command.mjs npx vitest run` → completed without a reported failure; output was truncated by the command runner, so an exact final total is not recorded in this checkpoint.
+- Harness: UNVERIFIED under the owner's GT-00 waiver; the `foundation` scenario is not yet implemented.
+- Evidence types: automated type, lint, focused, and full-suite checks; browser harness UNVERIFIED; owner QA not yet run.
+- Definition of done: runtime implementation — partially done; required readiness/scroll tests — not done; foundation harness — not done; full diff review and final gates — not done.
+- Remaining issues: compact positioning is integrated through the shared readiness path but still needs foundation-harness proof; focus-to-Next behavior when Back disappears needs its specified implementation/test; the two required dedicated test files remain to be added.
+- Escalations: none; the earlier harness availability issue is covered by the recorded owner waiver.
+- Next action: add `tour-target-readiness` and `tour-scroll` tests, implement focus-to-Next, then add/copy the foundation harness scenario before completing GT-01.
 
 ```
 ### GT-xx — <status> — <date>

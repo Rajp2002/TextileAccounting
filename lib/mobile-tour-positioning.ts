@@ -3,13 +3,16 @@ import { clipTourRect, findTourScrollContainer, isTourTargetVisible } from './tu
 export type TourRect = NonNullable<ReturnType<typeof clipTourRect>>
 
 /** One bounded positioning session per step; event feedback can only update measurements. */
-export function trackMobileTourTarget(resolve: () => HTMLElement | null, panel: () => HTMLElement | null, onMeasure: (rect: TourRect | null) => void) {
+export function trackMobileTourTarget(resolve: () => HTMLElement | null, panel: () => HTMLElement | null, onMeasure: (rect: TourRect | null) => void, onUnavailable: () => void = () => {}) {
     let frame = 0
     let stopped = false
     let positioned: HTMLElement | null = null
     const start = performance.now()
     const originalPadding = new Map<HTMLElement, string>()
     const originalBottom = new Map<HTMLElement, string>()
+    let previous: TourRect | null = null
+    let stableFrames = 0
+    let unavailableReported = false
     const rememberPadding = (element: HTMLElement, padding: number) => {
         if (!originalPadding.has(element)) originalPadding.set(element, element.style.paddingBottom)
         element.style.paddingBottom = `${padding}px`
@@ -22,7 +25,7 @@ export function trackMobileTourTarget(resolve: () => HTMLElement | null, panel: 
         if (!isTourTargetVisible(target) || !panelRect) {
             onMeasure(null)
             // A late mount is not permission to remove or advance a step.
-            if (performance.now() - start > 1500) return
+            if (performance.now() - start > 1500) { if (!unavailableReported) { unavailableReported = true; onUnavailable() } return }
             frame = requestAnimationFrame(measure)
             return
         }
@@ -70,7 +73,13 @@ export function trackMobileTourTarget(resolve: () => HTMLElement | null, panel: 
                 bottom: /(auto|scroll|hidden|clip)/.test(style.overflowY) ? rect.bottom : bounds.bottom,
             })
         }
-        onMeasure(clipped)
+        if (!clipped) onMeasure(null)
+        if (!clipped && performance.now() - start >= 1500) { if (!unavailableReported) { unavailableReported = true; onUnavailable() }; return }
+        if (clipped && previous && ['left', 'top', 'right', 'bottom'].every(key => Math.abs(clipped[key as keyof TourRect] - previous![key as keyof TourRect]) <= 1)) stableFrames += 1
+        else stableFrames = 0
+        previous = clipped
+        if (stableFrames >= 2) onMeasure(clipped)
+        else frame = requestAnimationFrame(measure)
         // If positioning still fails, keep this step and its navigation intact.
     }
     const schedule = () => { if (!stopped && !frame) frame = requestAnimationFrame(measure) }
@@ -84,13 +93,10 @@ export function trackMobileTourTarget(resolve: () => HTMLElement | null, panel: 
     window.addEventListener('scrollend', schedule, true)
     window.visualViewport?.addEventListener('resize', resize)
     window.visualViewport?.addEventListener('scroll', schedule)
-    // Some mobile browsers defer scroll delivery. Re-measure without another scroll command.
-    const settleTimers = [120, 350].map(delay => setTimeout(schedule, delay))
     frame = requestAnimationFrame(measure)
     return () => {
         stopped = true
         cancelAnimationFrame(frame)
-        settleTimers.forEach(timer => clearTimeout(timer))
         observer.disconnect()
         window.removeEventListener('scroll', schedule, true)
         window.removeEventListener('resize', resize)

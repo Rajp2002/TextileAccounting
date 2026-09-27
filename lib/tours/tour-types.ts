@@ -4,6 +4,14 @@ export type TourEmphasis = 'halo' | 'static'
 
 export type TourPresentation = 'unresolved' | 'invitation' | 'quiet' | 'active'
 
+export interface TourStepSpec<S extends string = string> {
+    id: S
+    anchor: string
+    context?: string
+    kind: 'live' | 'sample' | 'handoff'
+    detail?: boolean
+}
+
 export interface TourPreferenceRecord {
     firstShown?: string | boolean
     dismissed?: boolean

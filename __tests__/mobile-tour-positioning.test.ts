@@ -88,19 +88,20 @@ describe('mobile tour event feedback', () => {
         expect(h.scrollBy.mock.calls.length).toBeLessThanOrEqual(3)
         cleanup()
     })
-    it('refreshes after a delayed scroll even when the browser emits no scroll event', () => {
+    it('uses bounded frame checks instead of delayed settle timers', () => {
         const h = harness()
         h.scrollBy.mockImplementation(() => {})
         const measured = vi.fn()
         const cleanup = trackMobileTourTarget(() => h.target, () => h.panel, measured)
         h.drain()
         expect(measured).toHaveBeenLastCalledWith(null)
-        // Layout catches up later, with no manual swipe and no scroll/resize notification.
+        // Once the frame budget expires, no fixed timer silently restarts positioning.
         h.setTop(240)
         vi.advanceTimersByTime(350)
         h.drain()
-        expect(measured).toHaveBeenLastCalledWith(expect.objectContaining({ top: 240, height: 40 }))
+        expect(measured).toHaveBeenLastCalledWith(null)
         expect(h.scrollBy).toHaveBeenCalledTimes(1)
+        expect(vi.getTimerCount()).toBe(0)
         cleanup()
         expect(vi.getTimerCount()).toBe(0)
     })
