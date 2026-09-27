@@ -33,9 +33,9 @@ function resolveTarget(step: SavedCostingStep) {
 }
 
 /** Controlled navigation lets the page derive sample dialogs without async data writes. */
-export function SavedCostingsTutorial({step, onStepChange, onComplete, free = false, production = false, quotations = false, inline = false, full = false, ending = 'empty', userId, orgId, userMetadata}: {
+export function SavedCostingsTutorial({step, onStepChange, onComplete, free = false, production = false, inline = false, ending = 'empty', userId, orgId, userMetadata}: {
  step: SavedCostingStep | null; onStepChange: (step: SavedCostingStep | null) => void; onComplete?: () => void
- free?: boolean; production?: boolean; quotations?: boolean; inline?: boolean; full?: boolean; ending?: SavedCostingEnding
+ free?: boolean; production?: boolean; inline?: boolean; ending?: SavedCostingEnding
  userId?: string; orgId?: string; userMetadata?: Record<string, unknown> | null
 }) {
  const {language, tx} = useTranslation()
@@ -44,16 +44,15 @@ export function SavedCostingsTutorial({step, onStepChange, onComplete, free = fa
  const [comparisonTour, setComparisonTour] = useState(false)
  const steps = useMemo(() => comparisonTour && !free ? [...comparisonCostingSteps] : savedCostingTourSteps(free, production), [comparisonTour, free, production])
  const field = step ? savedCostingStepCopy(language, step, {
-  free, full, quotations, ending,
-  openLabel: tx(full ? 'Open' : 'Use'),
-  previewLabel: free ? tx('View breakdown / Export') : tx(full ? 'Preview' : 'Export'),
-  newLabel: tx(quotations ? 'New Estimate' : 'New Costing'),
+  free, ending,
+  openLabel: tx('Use'),
+  previewLabel: free ? tx('View breakdown / Export') : tx('Export'),
+  newLabel: tx('New Costing'),
  }) : null
  const helpFields = free
   ? [copy.fields.freeHelp, copy.fields.customer, copy.fields.share]
   : [copy.fields.filters, copy.fields.breakdown, copy.fields.organize,
-     ...(!full ? [copy.fields.separateQuality] : []), copy.fields.customer, copy.fields.share,
-     ...(quotations ? [copy.fields.quotations] : [])]
+     copy.fields.separateQuality, copy.fields.customer, copy.fields.share]
  const index = step ? steps.indexOf(step) : -1
  const panel = useRef<HTMLDivElement>(null)
  const launcher = useRef<HTMLDivElement>(null)

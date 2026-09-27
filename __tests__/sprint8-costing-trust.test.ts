@@ -107,8 +107,8 @@ describe('Sprint 8 costing trust foundation', () => {
     expect(client).toContain('function CostingAssumptionsSummary')
     expect(client).toContain('data-testid="costing-assumptions-summary"')
     expect(client).toContain('costingResult={costingResult}')
-    expect(client).toContain('partyName={partyName}')
-    expect(client).toContain('setPartyName={setPartyName}')
+    // Phase 3H: the quality-basics card no longer takes party props.
+    expect(client).not.toContain('setPartyName={')
     expect(client).toContain('Enter the rate used in this costing; it is never inferred.')
     expect(client).not.toContain('const suggestedRate')
     expect(wizard).not.toContain('?? 13.5')

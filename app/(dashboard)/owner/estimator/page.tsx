@@ -12,17 +12,12 @@ export default async function EstimatorPage() {
     // query before the estimator reads can start.
     const planAccess = await getCachedOrgPlanAccess(profile.org_id)
     const subscriptionTier = planAccess.effectiveTier
-    const canUseProduction = false
     const canUseProductionPipeline = hasCapability(subscriptionTier, 'production')
 
     const [profileRes, organizationRes] = await Promise.all([
         getFactoryCostProfile({ createIfMissing: false }),
         getCachedOwnerOrganization(user.id, profile.org_id),
     ])
-
-    // Compatibility contract: getEstimatorPartyNames() and
-    // initialPartyNames={partiesRes.data ?? []} now belong to the deferred
-    // getEstimatorSecondaryData() boundary, not this critical payload.
 
     const wizardDismissed = user.user_metadata?.factory_cost_wizard_dismissed === true
         || user.user_metadata?.factory_cost_configured === true
@@ -35,10 +30,8 @@ export default async function EstimatorPage() {
         wizardDismissed={wizardDismissed}
         userId={user.id}
         orgId={profile.org_id}
-        canUseProduction={canUseProduction}
         canUseProductionPipeline={canUseProductionPipeline}
         staleDefaultRateNames={[]}
         organizationName={organizationRes.data?.name ?? ''}
-        initialPartyNames={[]}
     />
 }

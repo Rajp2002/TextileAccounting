@@ -2,15 +2,13 @@ import type { TutorialField } from './i18n/cost-estimate-tutorial'
 
 export type EstimatorTourContext = {
     freePlan: boolean
-    standalone: boolean
     existingCosting: boolean
     productionPipeline: boolean
     overheadMode: 'direct' | 'monthly_expenses'
 }
 
 export function buildEstimatorCoreTour(context: EstimatorTourContext) {
-    const saveCopy = context.freePlan ? 'saveFree' : !context.standalone
-        ? 'saveQuotation'
+    const saveCopy = context.freePlan ? 'saveFree'
         : context.existingCosting ? 'saveVersion' : 'saveCosting'
     return [
         { field: 'liveCostShortcut', copy: 'purpose' },

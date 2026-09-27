@@ -15,7 +15,7 @@ describe('saved quality costing library', () => {
     expect(page).toContain('getEstimatorTemplates({ includeArchived: true })')
     expect(page).toContain('initialTemplates={templates ?? []}')
     expect(client).toContain('Latest Saved Costing breakdown')
-    expect(client).toContain('Applied production')
+    expect(client).not.toContain('Applied production')
     expect(client).toContain('Saved Costing history')
     expect(client).toContain('Choose a costing version to view its breakdown')
     expect(client).toContain('View version ${Number(record.version_number ?? 1)} breakdown for ${group.name}')

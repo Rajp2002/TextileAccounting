@@ -12,7 +12,7 @@ import { currentBaseMonthlySalary, mergeBaseSalaryOverhead, readBaseSalaryHistor
 import type { BaseProductionWorker } from '@/lib/base-production-core'
 import { getSuratTodayString } from '@/lib/time'
 import { getCachedOrgTier } from '@/lib/subscription'
-import { getNewEstimateRecordKind, normalizeCostingRecordKind, shouldCreateImmutableRevision } from '@/lib/costing-workspace'
+import { normalizeCostingRecordKind } from '@/lib/costing-workspace'
 import { buildSavedQualityRecipeState, type SavedQualityCostingReuse } from '@/lib/saved-costings'
 import { auditHistoricalCosting } from '@/lib/costing-reconciliation'
 import type { FactoryProfileId } from '@/lib/factory-cost-profiles'
@@ -689,13 +689,11 @@ export async function getEstimatorTemplates(options?: { includeArchived?: boolea
  */
 export async function getEstimatorSecondaryData() {
     const { profile } = await requireRole(['owner'])
-    const canUseProduction = false
     const supabase = await createServerClient()
 
-    const [templatesResult, workersResult, partiesResult, ratesResult, yarnRatesResult] = await Promise.all([
+    const [templatesResult, workersResult, ratesResult, yarnRatesResult] = await Promise.all([
         getEstimatorTemplates(),
         Promise.resolve({ data: [] }),
-        canUseProduction ? getEstimatorPartyNames() : Promise.resolve({ data: [] }),
         supabase
             .from('cost_rate_book')
             .select('name, last_reviewed_at, review_interval_days')
@@ -710,7 +708,7 @@ export async function getEstimatorSecondaryData() {
             .in('category', ['yarn_warp', 'yarn_weft']),
     ])
 
-    const deferredErrors = [templatesResult, workersResult, partiesResult]
+    const deferredErrors = [templatesResult, workersResult]
         .map(result => (result as { error?: string }).error)
         .filter((error): error is string => Boolean(error))
     if (ratesResult.error) deferredErrors.push(ratesResult.error.message)
@@ -720,7 +718,6 @@ export async function getEstimatorSecondaryData() {
     return {
         templates: templatesResult.data ?? [],
         workers: workersResult.data ?? [],
-        partyNames: partiesResult.data ?? [],
         staleDefaultRateNames: (ratesResult.data ?? [])
             .filter(rate => getRateReviewStatus(rate) === 'overdue')
             .map(rate => rate.name),
@@ -1388,14 +1385,6 @@ export async function saveEstimatorQuoteV3(params: {
 }) {
     const { user, profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
-    const admin = createAdminClient()
-    const canUseProduction = false
-    const newRecordKind = getNewEstimateRecordKind(canUseProduction, params.recordKind)
-    const allowsPartyOrders = false
-
-    if (newRecordKind === 'quotation' && !allowsPartyOrders) {
-        return { error: 'Party quotations are unavailable in Market Run only mode.' }
-    }
 
     const requestIdError = validateClientRequestId(params.clientRequestId)
     if (requestIdError) return { error: requestIdError }
@@ -1414,14 +1403,7 @@ export async function saveEstimatorQuoteV3(params: {
     }
 
     const { estimate } = params
-    if (newRecordKind === 'quotation' && !params.partyName?.trim()) return { error: 'Customer or party is required for a quotation.' }
     if (!params.qualityLabel.trim()) return { error: 'Quality label is required.' }
-    if (newRecordKind === 'quotation' && params.quotationValidUntil !== undefined && params.quotationValidUntil !== null && params.quotationValidUntil !== '' && !normalizeQuotationDate(params.quotationValidUntil)) {
-        return { error: 'Quotation validity date is invalid.' }
-    }
-    if (newRecordKind === 'quotation' && params.customerTerms && params.customerTerms.trim().length > 2000) {
-        return { error: 'Customer terms must be 2,000 characters or fewer.' }
-    }
     if (params.templateId && !UUID_PATTERN.test(params.templateId)) return { error: 'Saved quality identifier is invalid.' }
     if (params.templateId) {
         const { data: template, error: templateError } = await supabase
@@ -1439,7 +1421,7 @@ export async function saveEstimatorQuoteV3(params: {
     // not a request to create another Saved Quality with the same name. Let
     // the revision RPC resolve the source template and perform the atomic
     // version save instead of surfacing a misleading duplicate-quality error.
-    if (!params.templateId && !params.sourceQuoteId && newRecordKind === 'costing') {
+    if (!params.templateId && !params.sourceQuoteId) {
         const [{ data: archivedTemplates, error: archivedTemplateError }, { data: activeTemplates, error: activeTemplateError }] = await Promise.all([
             supabase
             .from('estimator_templates')
@@ -1458,9 +1440,9 @@ export async function saveEstimatorQuoteV3(params: {
         const existingName = (activeTemplates ?? []).some(template => normalizeTemplateNameKey(template.name) === normalizeTemplateNameKey(params.qualityLabel))
         if (existingName) return { error: 'This Saved Quality already exists. Select it from My Qualities to update it, or use Use as Starting Point and save a new quality.' }
     }
-    const requireCapacity = requiresFactoryCapacity(estimate, newRecordKind === 'quotation')
+    const requireCapacity = requiresFactoryCapacity(estimate, false)
     const snapshotError = getFirstEstimatorValidationMessage(validateEstimatorSnapshot(estimate, {
-        requireTapeLength: canUseProduction,
+        requireTapeLength: false,
         requireCapacity,
     }))
     if (snapshotError) return { error: snapshotError }
@@ -1470,7 +1452,7 @@ export async function saveEstimatorQuoteV3(params: {
         totalProductionCostPerM: authoritative.productionCostPerM,
         quotePricePerM: authoritative.quotePricePerM,
         targetMeters: estimate.orderQuantityM,
-        requireTapeLength: canUseProduction,
+        requireTapeLength: false,
         requireCapacity,
         result: authoritative.result,
         totals: authoritative.totals,
@@ -1484,19 +1466,8 @@ export async function saveEstimatorQuoteV3(params: {
     // e.g. 58 picks × 0.16 = ₹9.28/m — this is what the weaver earns per metre
     const workerRatePerM = calcWorkerRateSnapshot(estimate.weftRows, estimate.perPickCostPaisa ?? 0)
 
-    const quotationDocumentPayload = newRecordKind === 'quotation'
-        ? {
-            ...(params.quotationValidUntil !== undefined
-                ? { quotation_valid_until: normalizeQuotationDate(params.quotationValidUntil) }
-                : {}),
-            ...(params.customerTerms !== undefined
-                ? { customer_terms: normalizeCustomerTerms(params.customerTerms) }
-                : {}),
-        }
-        : {}
-
     let factoryProfileUpdatedAt = params.factoryProfileUpdatedAt ?? null
-    if (newRecordKind === 'costing' && !factoryProfileUpdatedAt) {
+    if (!factoryProfileUpdatedAt) {
         const { data: factoryProfile, error: factoryProfileError } = await supabase
             .from('factory_cost_profile')
             .select('updated_at')
@@ -1506,16 +1477,14 @@ export async function saveEstimatorQuoteV3(params: {
         factoryProfileUpdatedAt = factoryProfile?.updated_at ?? null
     }
 
-    const costingInputFingerprint = newRecordKind === 'costing'
-        ? buildCostingInputFingerprint(estimate, {
-            warpInstruction: params.warpInstruction,
-            weftInstruction: params.weftInstruction,
-        })
-        : null
+    const costingInputFingerprint = buildCostingInputFingerprint(estimate, {
+        warpInstruction: params.warpInstruction,
+        weftInstruction: params.weftInstruction,
+    })
 
     const quotePayload = buildEstimatorQuotePayload({
         orgId: profile.org_id,
-        recordKind: newRecordKind,
+        recordKind: 'costing',
         partyName: params.partyName?.trim() || null,
         qualityLabel: params.qualityLabel.trim(),
         templateId: params.templateId ?? null,
@@ -1539,21 +1508,15 @@ export async function saveEstimatorQuoteV3(params: {
         costingInputFingerprint,
         factoryProfileUpdatedAt,
         reconciledAt: new Date().toISOString(),
-        extra: quotationDocumentPayload,
     })
 
-    const costingAttestation = newRecordKind === 'costing'
-        ? await attestCanonicalCostingPayload(user.id, profile.org_id, quotePayload)
-        : null
-    if (costingAttestation && !costingAttestation.payload) {
+    const costingAttestation = await attestCanonicalCostingPayload(user.id, profile.org_id, quotePayload)
+    if (!costingAttestation.payload) {
         return { error: costingAttestation.error ?? 'The costing payload could not be verified.' }
     }
-    const trustedQuotePayload = costingAttestation?.payload ?? quotePayload
+    const trustedQuotePayload = costingAttestation.payload
 
     if (params.updateSavedQuality) {
-        if (newRecordKind !== 'costing') {
-            return { error: 'Only a Cost Estimate can update a Saved Quality.' }
-        }
         if (!params.templateId) {
             return { error: 'Select a Saved Quality before updating its recipe.' }
         }
@@ -1592,220 +1555,38 @@ export async function saveEstimatorQuoteV3(params: {
         }
     }
 
-    // Base Cost Estimates always use the transactional revision boundary. It
-    // is what makes “Save New Costing Version” predictable when two tabs or a
-    // double-click reach the server together. Quotation save semantics below
-    // remain separate from saved costings.
-    if (newRecordKind === 'costing') {
-        const { data: costingResult, error: costingError } = await supabase.rpc(
-            'save_estimator_costing_revision_v2',
-            {
-                p_quote_payload: trustedQuotePayload,
-                p_source_quote_id: params.sourceQuoteId ?? null,
-                p_expected_source_updated_at: params.expectedSourceUpdatedAt ?? null,
-                p_template_id: params.templateId ?? null,
-                p_expected_template_updated_at: params.expectedTemplateUpdatedAt ?? null,
-                p_update_saved_quality: false,
-                p_template_payload: {},
-            },
-        )
+    // Cost Estimates always use the transactional revision boundary. It is
+    // what makes “Save New Costing Version” predictable when two tabs or a
+    // double-click reach the server together. A source record of another kind
+    // (for example a legacy quotation) is handled by the same RPC.
+    const { data: costingResult, error: costingError } = await supabase.rpc(
+        'save_estimator_costing_revision_v2',
+        {
+            p_quote_payload: trustedQuotePayload,
+            p_source_quote_id: params.sourceQuoteId ?? null,
+            p_expected_source_updated_at: params.expectedSourceUpdatedAt ?? null,
+            p_template_id: params.templateId ?? null,
+            p_expected_template_updated_at: params.expectedTemplateUpdatedAt ?? null,
+            p_update_saved_quality: false,
+            p_template_payload: {},
+        },
+    )
 
-        if (costingError) return { error: costingError.message }
-        if (!costingResult || costingResult.success !== true) {
-            return { error: costingResult?.error ?? 'The Cost Estimate could not be saved.' }
-        }
-        return {
-            success: true,
-            quoteId: costingResult.quoteId,
-            updatedAt: costingResult.updatedAt,
-            createdAt: costingResult.createdAt,
-            versionNumber: costingResult.versionNumber,
-            qualityUpdated: costingResult.qualityUpdated,
-            outcome: costingResult.outcome,
-            noChange: costingResult.noChange,
-            idempotentReplay: costingResult.idempotentReplay,
-        }
+    if (costingError) return { error: costingError.message }
+    if (!costingResult || costingResult.success !== true) {
+        return { error: costingResult?.error ?? 'The Cost Estimate could not be saved.' }
     }
-
-    if (params.sourceQuoteId) {
-        const timestampError = validateExpectedTimestamp(params.expectedSourceUpdatedAt, 'The quote being edited')
-        if (timestampError) return { error: timestampError }
-
-        const { data: source, error: sourceError } = await supabase
-            .from('estimator_quotes')
-            .select('id, status, order_id, updated_at, costing_group_id, version_number, record_kind')
-            .eq('id', params.sourceQuoteId)
-            .eq('org_id', profile.org_id)
-            .maybeSingle()
-
-        if (sourceError) return { error: sourceError.message }
-        if (!source) return { error: 'The quote being edited no longer exists.' }
-        if (Date.parse(source.updated_at) !== Date.parse(params.expectedSourceUpdatedAt!)) {
-            return { error: 'This Quotation changed in another tab. Reload it from Quotations before saving again.' }
-        }
-
-        const sourceRecordKind = normalizeCostingRecordKind(source.record_kind)
-        if (sourceRecordKind === 'quotation' && !allowsPartyOrders) {
-            return { error: 'Party quotations are unavailable in Market Run only mode.' }
-        }
-        const editableQuotationPayload = sourceRecordKind === 'quotation'
-            && ['draft', 'sent', 'rejected'].includes(source.status)
-            ? { ...quotePayload, status: source.status }
-            : quotePayload
-        if (shouldCreateImmutableRevision(sourceRecordKind, source.status, Boolean(source.order_id))) {
-            if (sourceRecordKind === 'costing') {
-                const { data: latestCosting, error: latestCostingError } = await supabase
-                    .from('estimator_quotes')
-                    .select('id')
-                    .eq('org_id', profile.org_id)
-                    .eq('record_kind', 'costing')
-                    .eq('costing_group_id', source.costing_group_id ?? source.id)
-                    .order('version_number', { ascending: false })
-                    .order('created_at', { ascending: false })
-                    .limit(1)
-                    .maybeSingle()
-
-                if (latestCostingError) return { error: latestCostingError.message }
-                if (latestCosting && latestCosting.id !== source.id) {
-                    return { error: 'A newer costing version already exists. Reload it before saving again.' }
-                }
-            }
-
-            const versionId = crypto.randomUUID()
-            const { data: version, error: versionError } = await admin
-                .from('estimator_quotes')
-                .insert({
-                    ...quotePayload,
-                    id: versionId,
-                    ...(sourceRecordKind === 'quotation'
-                        ? { quotation_reference: buildQuotationReference(versionId) }
-                        : {}),
-                    record_kind: sourceRecordKind,
-                    source_quote_id: source.id,
-                    costing_group_id: source.costing_group_id ?? source.id,
-                    version_number: Number(source.version_number ?? 1) + 1,
-                })
-                .select('id, updated_at, version_number, quotation_reference')
-                .single()
-            if (versionError) return { error: versionError.message }
-            return { success: true, quoteId: version.id, updatedAt: version.updated_at, versionNumber: version.version_number, quotationReference: version.quotation_reference }
-        }
-
-        // Draft/sent/rejected quotes remain the same business record. Accepted
-        // or converted quotes are immutable audit history, so re-estimation
-        // creates a linked new version instead.
-        if (canUseProduction && sourceRecordKind === 'quotation' && !source.order_id && ['draft', 'sent', 'rejected'].includes(source.status)) {
-            const { data: updated, error: updateError } = await supabase
-                .from('estimator_quotes')
-                .update(editableQuotationPayload)
-                .eq('id', source.id)
-                .eq('org_id', profile.org_id)
-                .is('order_id', null)
-                .in('status', ['draft', 'sent', 'rejected'])
-                .eq('updated_at', params.expectedSourceUpdatedAt!)
-                .select('id, updated_at, quotation_reference')
-                .maybeSingle()
-
-            if (updateError) return { error: updateError.message }
-            if (!updated) return { error: 'This Quotation changed in another tab. Refresh Quotations before saving again.' }
-            return { success: true, quoteId: updated.id, updatedAt: updated.updated_at, quotationReference: updated.quotation_reference, updated: true }
-        }
+    return {
+        success: true,
+        quoteId: costingResult.quoteId,
+        updatedAt: costingResult.updatedAt,
+        createdAt: costingResult.createdAt,
+        versionNumber: costingResult.versionNumber,
+        qualityUpdated: costingResult.qualityUpdated,
+        outcome: costingResult.outcome,
+        noChange: costingResult.noChange,
+        idempotentReplay: costingResult.idempotentReplay,
     }
-
-    const savedId = crypto.randomUUID()
-    const { data: saved, error } = await admin
-        .from('estimator_quotes')
-        .insert({
-            ...quotePayload,
-            id: savedId,
-            ...(newRecordKind === 'quotation'
-                ? { quotation_reference: buildQuotationReference(savedId) }
-                : {}),
-            source_quote_id: params.sourceQuoteId ?? null,
-        })
-        .select('id, updated_at, version_number, quotation_reference')
-        .single()
-
-    if (error) {
-        if (error.code === '23505') {
-            const { data: existing } = await supabase
-                .from('estimator_quotes')
-                .select('id, updated_at, quotation_reference')
-                .eq('org_id', profile.org_id)
-                .eq('client_request_id', params.clientRequestId)
-                .maybeSingle()
-            if (existing) {
-                return { success: true, quoteId: existing.id, updatedAt: existing.updated_at, quotationReference: existing.quotation_reference, idempotentReplay: true }
-            }
-        }
-        return { error: error.message }
-    }
-    return { success: true, quoteId: saved.id, updatedAt: saved.updated_at, versionNumber: saved.version_number, quotationReference: saved.quotation_reference }
-}
-
-// ─── Party Rate Memory ────────────────────────────────────────────────────────
-
-/**
- * Return recent distinct party names for the inline quotation chooser.
- * The names come only from tenant-scoped estimator history; creating a new name
- * remains a simple free-text action.
- */
-export async function getEstimatorPartyNames(): Promise<{ data?: string[]; error?: string }> {
-    const { profile } = await requireRole(['owner'])
-    const supabase = await createServerClient()
-
-    const { data, error } = await supabase
-        .from('estimator_quotes')
-        .select('party_name')
-        .eq('org_id', profile.org_id)
-        .order('created_at', { ascending: false })
-        .limit(100)
-
-    if (error) return { error: error.message }
-    const seen = new Set<string>()
-    const names = (data ?? [])
-        .map(row => row.party_name?.trim())
-        .filter((name): name is string => Boolean(name))
-        .filter(name => {
-            const key = name.toLocaleLowerCase('en-IN')
-            if (seen.has(key)) return false
-            seen.add(key)
-            return true
-        })
-        .slice(0, 25)
-    return { data: names }
-}
-
-/**
- * Returns the most recent quote for a given party name.
- * Used to surface "You last quoted X ₹Y/m for Quality Z on Date" in the estimator.
- * Only fires when partyName is 3+ chars (enforced by the caller).
- */
-export async function getLastQuoteForParty(partyName: string): Promise<{
-    data?: {
-        quality_label:        string
-        quote_price_per_meter: number
-        landed_cost_per_meter: number
-        created_at:            string
-        order_id:              string | null
-    }
-    error?: string
-}> {
-    const { profile } = await requireRole(['owner'])
-    const supabase = await createServerClient()
-
-    const { data, error } = await supabase
-        .from('estimator_quotes')
-        .select('quality_label, quote_price_per_meter, landed_cost_per_meter, created_at, order_id')
-        .eq('org_id', profile.org_id)
-        .ilike('party_name', partyName.trim())
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
-
-    if (error) return { error: error.message }
-    if (!data) return {}
-    return { data }
 }
 
 // ─── Quote History ────────────────────────────────────────────────────────────
@@ -1937,96 +1718,6 @@ export async function updateSavedCostingLibraryState(input: {
     }
     revalidatePath('/owner/quotes')
     return { data }
-}
-
-export async function updateQuoteStatus(
-    id: string,
-    status: 'draft' | 'sent' | 'accepted' | 'rejected',
-    expectedUpdatedAt: string
-) {
-    if (!UUID_PATTERN.test(id)) return { error: 'Quotation identifier is invalid.' }
-    const { profile } = await requireRole(['owner'])
-    const supabase = await createServerClient()
-
-    const timestampError = validateExpectedTimestamp(expectedUpdatedAt, 'This quote')
-    if (timestampError) return { error: timestampError }
-
-    const { data: current, error: currentError } = await supabase
-        .from('estimator_quotes')
-        .select('id, status, order_id, updated_at, record_kind')
-        .eq('id', id)
-        .eq('org_id', profile.org_id)
-        .single()
-
-    if (currentError || !current) return { error: currentError?.message ?? 'Quote not found.' }
-    if (normalizeCostingRecordKind(current.record_kind) !== 'quotation') {
-        return { error: 'Standalone costings do not have quotation statuses. Create a quotation from this costing first.' }
-    }
-    if (current.order_id) return { error: 'Converted quotes can no longer change status.' }
-    if (Date.parse(current.updated_at) !== Date.parse(expectedUpdatedAt)) {
-        return { error: 'This Quotation changed in another tab. Refresh Quotations before changing its status.' }
-    }
-
-    const allowedTransitions: Record<string, string[]> = {
-        draft: ['sent'],
-        sent: ['accepted', 'rejected'],
-        accepted: [],
-        rejected: [],
-    }
-
-    if (!allowedTransitions[current.status]?.includes(status)) {
-        const nextAction = allowedTransitions[current.status]?.length
-            ? `Next allowed action: ${allowedTransitions[current.status].join(' or ')}.`
-            : 'No further status changes are allowed; create a new quotation from the saved snapshot.'
-        return { error: `Invalid quote transition from "${current.status}" to "${status}". ${nextAction}` }
-    }
-
-    const { data, error } = await supabase
-        .from('estimator_quotes')
-        .update({ status })
-        .eq('id', id)
-        .eq('org_id', profile.org_id)
-        .eq('updated_at', expectedUpdatedAt)
-        .select()
-        .maybeSingle()
-
-    if (error) return { error: error.message }
-    if (!data) return { error: 'This Quotation changed in another tab. Refresh Quotations before changing its status.' }
-    
-    revalidatePath('/owner/quotes')
-    return { success: true, data }
-}
-
-export async function getQuoteStatusHistory(id: string) {
-    if (!UUID_PATTERN.test(id)) return { error: 'Quotation identifier is invalid.' }
-    const { profile } = await requireRole(['owner'])
-    const supabase = await createServerClient()
-
-    const { data, error } = await supabase
-        .from('audit_log')
-        .select('changed_at, changed_by, old_data, new_data')
-        .eq('org_id', profile.org_id)
-        .eq('table_name', 'estimator_quotes')
-        .eq('record_id', id)
-        .order('changed_at', { ascending: true })
-
-    if (error) return { error: error.message }
-
-    const statusValues = new Set(['draft', 'sent', 'accepted', 'rejected'])
-    const getStatus = (value: unknown) => {
-        if (!value || typeof value !== 'object' || !('status' in value)) return null
-        const status = (value as { status?: unknown }).status
-        return typeof status === 'string' && statusValues.has(status) ? status : null
-    }
-
-    const history = (data ?? []).map(row => ({
-        changedAt: row.changed_at,
-        changedBy: row.changed_by,
-        from: getStatus(row.old_data),
-        to: getStatus(row.new_data),
-    })).filter(row => row.to && row.from !== row.to)
-
-    return { data: history }
 }
 
 export async function updateQuotationDocumentMetadata(input: {

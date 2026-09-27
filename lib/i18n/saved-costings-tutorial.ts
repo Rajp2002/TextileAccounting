@@ -1,7 +1,7 @@
 import type { Language } from './context'
 import type { SavedCostingStep } from '@/lib/saved-costings-tour'
 
-type Copy = { replay: string; sample: string; fields: Record<SavedCostingStep | 'finishEmpty' | 'finishUnavailable' | 'productionUsage' | 'reuseQuotation' | 'separateQuality' | 'freeHelp', [string, string]>; help: string; compare: string }
+type Copy = { replay: string; sample: string; fields: Record<SavedCostingStep | 'finishEmpty' | 'finishUnavailable' | 'separateQuality' | 'freeHelp', [string, string]>; help: string; compare: string }
 const en: Copy = {
  replay: 'How Saved Costings works · Guided tour', sample: 'Tour sample · Nothing is saved or sent',
  help: "More help: documents and library", compare: "Compare versions · Sample walkthrough", fields: {
@@ -9,8 +9,6 @@ const en: Copy = {
  finishEmpty: ["Save your first costing", "Finish closes the tour samples and restores your page. Choose {new} to open Cost Estimate, review a calculation and save it."],
  freeHelp: ["Find a Free snapshot", "Search by label or use the date, cost and margin filters. Clear filters if a snapshot is missing. Load more shows older records; refresh the page if loading fails."],
  separateQuality: ["Keep another quality separate", "Save as separate quality starts a draft for a different quality. Give it a new name in Cost Estimate and save after review. It does not overwrite the original costing."],
- productionUsage: ["Follow production from this costing", "For new production, open Production → Activate Quality. Find the intended version, choose Activate, then Assign Looms. Applied production here shows linked runs and produced metres. Viewing this history records no new output, stock or wages."],
- reuseQuotation: ["Reuse or prepare a quotation?", "{open} loads this version into Cost Estimate. Duplicate starts a new customer quotation draft from these inputs. Confirm before replacing an existing local draft; review the party and price before saving. Neither action sends a quotation."],
  economics: ["Read v2 before reusing it", "This sample’s v2 shows production cost, selling price and margin from its saved inputs. Selling price minus production cost is profit per metre. Check the yarn and factory costs in its breakdown before using this price for a new decision."],
  comparisonDetails: ["Find the reason for a change", "Expand calculation details to distinguish cost changes from reference changes. Read Old, New and Change for each input. Not available means saved detail is missing; today’s rates are not substituted."],
  find: ["Keep the numbers behind a price", "Saved Costings preserves the inputs and economics from the day you saved. Later yarn rates do not rewrite that history. First save a calculation in Cost Estimate; then choose its quality and version here."],
@@ -26,7 +24,6 @@ const en: Copy = {
  compareSelect: ['Select two versions of one costing', 'Turn on Compare, open the costing and select two version checkboxes. Close details and choose Compare Costings when both snapshots finish loading. Clear selection resets the pair; Done leaves comparison mode. With only one version, save another version before comparing.'],
  comparison: ["Explain what changed", "Old and New follow saved order; Change is New minus Old. Compare cost, price, margin and quantity in these two sample versions. A review warning means an older costing lacks enough saved detail for a full comparison."],
  production: ["Hand this version to production", "Activate for Production opens the Activate Quality for Production picker. Find the intended quality and version, choose Activate, then Assign Looms. Opening the link records no output, stock or wages. Archived snapshots cannot be activated."],
- quotations: ['Costings and quotations', 'This workspace also has quotation status tabs. Open / Duplicate, Preview, status history and the allowed next status action appear on each quotation. Accepted quotations can link to an active order. These actions follow the quotation lifecycle and are separate from viewing saved costing snapshots.'],
  snapshots: ['Your Free snapshots', 'Completed Free calculations appear here as fixed snapshots. Viewing and exporting them does not use your monthly allowance. They are not reusable saved qualities and have no version history or comparison. These rules also apply to retained Free snapshots after upgrading.'],
  searchAndFilters: ['Search and filters', 'Here you can search a specific costing or sort by filters.'],
  search: ['Search', 'Here you can search a specific costing.'],
@@ -40,8 +37,6 @@ const hi: Copy = { replay: 'सेव की गई लागतें कैस
  finishEmpty: ["पहली लागत सेव करें", "Finish टूर नमूने बंद करके आपका पेज बहाल करता है। {new} से Cost Estimate खोलें, गणना जाँचें और सेव करें।"],
  freeHelp: ["Free स्नैपशॉट खोजें", "लेबल खोजें या तारीख, लागत और मार्जिन के फ़िल्टर लगाएँ। स्नैपशॉट न मिले तो फ़िल्टर हटाएँ। Load more से पुराने रिकॉर्ड देखें; लोड न हो तो पेज रीफ़्रेश करें।"],
  separateQuality: ["दूसरी क्वालिटी अलग रखें", "Save as separate quality दूसरी क्वालिटी का ड्राफ्ट शुरू करता है। Cost Estimate में नया नाम दें और जाँचकर सेव करें। मूल लागत नहीं बदलती।"],
- productionUsage: ["इस लागत का उत्पादन देखें", "नए उत्पादन के लिए Production → Activate Quality खोलें। सही संस्करण खोजें, Activate चुनें, फिर Assign Looms करें। यहाँ Applied production जुड़े रन और बने मीटर दिखाता है। इतिहास देखने से नया उत्पादन, स्टॉक या मजदूरी दर्ज नहीं होती।"],
- reuseQuotation: ["फिर इस्तेमाल करें या कोटेशन बनाएँ?", "{open} इस संस्करण को Cost Estimate में लाता है। Duplicate इन्हीं इनपुट से नया ग्राहक कोटेशन ड्राफ्ट शुरू करता है। स्थानीय ड्राफ्ट बदलने से पहले पुष्टि करें; पार्टी और कीमत जाँचकर सेव करें। इससे कोटेशन भेजा नहीं जाता।"],
  economics: ["इस्तेमाल से पहले v2 पढ़ें", "नमूने के v2 में सेव इनपुट से उत्पादन लागत, बिक्री मूल्य और मार्जिन दिखते हैं। बिक्री मूल्य में से उत्पादन लागत घटाने पर प्रति मीटर लाभ मिलता है। नई कीमत तय करने से पहले विवरण में धागे और कारखाने के खर्च जाँचें।"],
  comparisonDetails: ["बदलाव का कारण देखें", "Calculation details खोलकर लागत बदलने वाले इनपुट और संदर्भ बदलाव अलग देखें। हर इनपुट का Old, New और Change पढ़ें। Not available का अर्थ सेव विवरण नहीं है; आज के रेट उसकी जगह नहीं आते।"],
  find: ["कीमत के पीछे के आंकड़े सुरक्षित रखें", "Saved Costings में सेव किए दिन के इनपुट और आर्थिक आंकड़े सुरक्षित रहते हैं। बाद के धागे के रेट यह इतिहास नहीं बदलते। पहले Cost Estimate में गणना सेव करें; फिर यहाँ उसकी क्वालिटी और संस्करण चुनें।"],
@@ -57,7 +52,6 @@ const hi: Copy = { replay: 'सेव की गई लागतें कैस
  compareSelect: ['एक लागत के दो संस्करण चुनें', 'Compare चालू करें, लागत खोलें और दो संस्करण चुनें। विवरण बंद करके दोनों लोड होने पर Compare Costings चुनें। Clear selection जोड़ी हटाता है; Done तुलना मोड बंद करता है। एक संस्करण हो तो पहले दूसरा सेव करें।'],
  comparison: ["क्या बदला, समझें", "Old और New सेव क्रम में हैं; Change का अर्थ New में से Old घटाना है। दोनों नमूनों की लागत, कीमत, मार्जिन और मात्रा देखें। समीक्षा चेतावनी का अर्थ है कि पुरानी लागत में पूरी तुलना के लिए पर्याप्त सेव विवरण नहीं है।"],
  production: ["यह संस्करण उत्पादन में ले जाएँ", "Activate for Production से Activate Quality for Production की सूची खुलती है। सही क्वालिटी और संस्करण खोजें, Activate चुनें, फिर Assign Looms करें। लिंक खोलने से उत्पादन, स्टॉक या मजदूरी दर्ज नहीं होती। आर्काइव स्नैपशॉट सक्रिय नहीं हो सकते।"],
- quotations: ['लागतें और कोटेशन', 'यहाँ कोटेशन स्थिति टैब भी हैं। प्रत्येक कोटेशन पर Open / Duplicate, Preview, स्थिति इतिहास और अगली अनुमत कार्रवाई मिलती है। स्वीकृत कोटेशन सक्रिय ऑर्डर से जुड़ सकते हैं। यह कोटेशन कार्यप्रवाह स्नैपशॉट देखने से अलग है।'],
  snapshots: ['आपके Free स्नैपशॉट', 'पूरी Free गणनाएँ यहाँ स्थिर स्नैपशॉट हैं। देखने और एक्सपोर्ट करने से मासिक सीमा नहीं घटती। ये दोबारा उपयोग योग्य क्वालिटी नहीं हैं और इनमें संस्करण इतिहास या तुलना नहीं है। अपग्रेड के बाद पुराने Free स्नैपशॉट पर भी यही नियम हैं।'],
  searchAndFilters: ['खोज और फ़िल्टर', 'यहाँ आप कोई विशिष्ट लागत खोज सकते हैं या फ़िल्टर के अनुसार क्रमबद्ध कर सकते हैं।'],
  search: ['खोजें', 'यहाँ आप कोई विशिष्ट लागत खोज सकते हैं।'],
@@ -70,8 +64,6 @@ const gu: Copy = { replay: 'સાચવેલી ખર્ચ ગણતરી�
  finishEmpty: ["પહેલી ગણતરી સાચવો", "Finish ટૂરના નમૂના બંધ કરીને તમારું પેજ પાછું લાવે છે. {new} થી Cost Estimate ખોલો, ગણતરી તપાસો અને સાચવો."],
  freeHelp: ["Free સ્નેપશોટ શોધો", "લેબલ શોધો અથવા તારીખ, ખર્ચ અને માર્જિનના ફિલ્ટર વાપરો. સ્નેપશોટ ન મળે તો ફિલ્ટર દૂર કરો. Load more થી જૂના રેકોર્ડ જુઓ; લોડ ન થાય તો પેજ રિફ્રેશ કરો."],
  separateQuality: ["બીજી ક્વોલિટી અલગ રાખો", "Save as separate quality બીજી ક્વોલિટીનો ડ્રાફ્ટ શરૂ કરે છે. Cost Estimate માં નવું નામ આપો અને તપાસીને સાચવો. મૂળ ગણતરી બદલાતી નથી."],
- productionUsage: ["આ ગણતરીનું ઉત્પાદન જુઓ", "નવા ઉત્પાદન માટે Production → Activate Quality ખોલો. યોગ્ય આવૃત્તિ શોધો, Activate પસંદ કરો, પછી Assign Looms કરો. અહીં Applied production જોડાયેલા રન અને બનેલા મીટર બતાવે છે. ઇતિહાસ જોવાથી નવું ઉત્પાદન, સ્ટોક કે વેતન નોંધાતું નથી."],
- reuseQuotation: ["ફરી વાપરવું કે ક્વોટેશન બનાવવું?", "{open} આ આવૃત્તિ Cost Estimate માં લાવે છે. Duplicate આ ઇનપુટથી નવું ગ્રાહક ક્વોટેશન ડ્રાફ્ટ શરૂ કરે છે. સ્થાનિક ડ્રાફ્ટ બદલતાં પહેલાં પુષ્ટિ કરો; પાર્ટી અને ભાવ તપાસીને સાચવો. તેનાથી ક્વોટેશન મોકલાતું નથી."],
  economics: ["વાપરતાં પહેલાં v2 વાંચો", "નમૂનાની v2 માં સાચવેલા ઇનપુટથી ઉત્પાદન ખર્ચ, વેચાણ ભાવ અને માર્જિન દેખાય છે. વેચાણ ભાવમાંથી ઉત્પાદન ખર્ચ બાદ કરતાં પ્રતિ મીટર નફો મળે છે. નવો ભાવ નક્કી કરતાં પહેલાં વિગતોમાં યાર્ન અને કારખાનાનો ખર્ચ તપાસો."],
  comparisonDetails: ["ફેરફારનું કારણ જુઓ", "Calculation details ખોલીને ખર્ચ બદલતા ઇનપુટ અને સંદર્ભના ફેરફાર અલગ જુઓ. દરેક ઇનપુટનું Old, New અને Change વાંચો. Not available એટલે સાચવેલી વિગત નથી; આજના રેટ તેની જગ્યાએ લેવાતા નથી."],
  find: ["ભાવ પાછળના આંકડા સાચવો", "Saved Costings માં સાચવેલા દિવસના ઇનપુટ અને નાણાકીય આંકડા જળવાય છે. પછીના યાર્ન રેટ આ ઇતિહાસ બદલતા નથી. પહેલાં Cost Estimate માં ગણતરી સાચવો; પછી અહીં તેની ક્વોલિટી અને આવૃત્તિ પસંદ કરો."],
@@ -87,7 +79,6 @@ const gu: Copy = { replay: 'સાચવેલી ખર્ચ ગણતરી�
  compareSelect: ['એક ગણતરીની બે આવૃત્તિ પસંદ કરો', 'Compare ચાલુ કરો, ગણતરી ખોલો અને બે આવૃત્તિ પસંદ કરો. વિગતો બંધ કરીને બંને લોડ થાય પછી Compare Costings પસંદ કરો. Clear selection જોડી દૂર કરે છે; Done સરખામણી મોડ બંધ કરે છે. એક આવૃત્તિ હોય તો પહેલાં બીજી સાચવો.'],
  comparison: ["શું બદલાયું તે સમજો", "Old અને New સાચવેલા ક્રમમાં છે; Change એટલે New માંથી Old બાદ કરવું. બંને નમૂનાના ખર્ચ, ભાવ, માર્જિન અને જથ્થાની સરખામણી કરો. સમીક્ષા ચેતવણીનો અર્થ કે જૂની ગણતરીમાં સંપૂર્ણ સરખામણી માટે પૂરતી સાચવેલી વિગતો નથી."],
  production: ["આ આવૃત્તિ ઉત્પાદનમાં લઈ જાઓ", "Activate for Production થી Activate Quality for Production ની યાદી ખુલે છે. યોગ્ય ક્વોલિટી અને આવૃત્તિ શોધો, Activate પસંદ કરો, પછી Assign Looms કરો. લિંક ખોલવાથી ઉત્પાદન, સ્ટોક કે વેતન નોંધાતું નથી. આર્કાઇવ સ્નેપશોટ સક્રિય થઈ શકતા નથી."],
- quotations: ['ગણતરીઓ અને ક્વોટેશન', 'અહીં ક્વોટેશન સ્થિતિ ટેબ પણ છે. દરેક ક્વોટેશન પર Open / Duplicate, Preview, સ્થિતિ ઇતિહાસ અને આગળની મંજૂર કાર્યવાહી મળે છે. સ્વીકૃત ક્વોટેશન સક્રિય ઓર્ડર સાથે જોડાઈ શકે છે. આ કાર્યપ્રવાહ સ્નેપશોટ જોવાથી અલગ છે.'],
  snapshots: ['તમારા Free સ્નેપશોટ', 'પૂર્ણ Free ગણતરી અહીં સ્થિર સ્નેપશોટ છે. જોવા અને એક્સપોર્ટથી માસિક મર્યાદા ઘટતી નથી. આ ફરી વાપરી શકાય તેવી ક્વોલિટી નથી અને તેમાં આવૃત્તિ ઇતિહાસ કે સરખામણી નથી. અપગ્રેડ પછી જૂના Free સ્નેપશોટ પર પણ આ જ નિયમ છે.'],
  searchAndFilters: ['શોધો અને ફિલ્ટર', 'અહીં તમે ચોક્કસ ગણતરી શોધી શકો છો અથવા ફિલ્ટર મુજબ ક્રમબદ્ધ કરી શકો છો.'],
  search: ['શોધો', 'અહીં તમે ચોક્કસ ગણતરી શોધી શકો છો.'],
@@ -99,14 +90,13 @@ export const savedCostingsTutorialCopy: Record<Language, Copy> = {en, hi, gu}
 
 /** Copy follows the actions rendered by the calling library, including retained Free snapshots. */
 export function savedCostingStepCopy(language: Language, step: SavedCostingStep, options: {
-  free: boolean; full: boolean; quotations: boolean; ending: import('@/lib/saved-costings-tour').SavedCostingEnding
+  free: boolean; ending: import('@/lib/saved-costings-tour').SavedCostingEnding
   openLabel: string; previewLabel: string; newLabel: string
 }): [string, string] {
   const fields = savedCostingsTutorialCopy[language].fields
   const key = step === 'finish'
     ? options.ending === 'empty' ? 'finishEmpty' : options.ending === 'unavailable' ? 'finishUnavailable' : 'finish'
-    : step === 'reuse' && options.quotations ? 'reuseQuotation'
-    : step === 'production' && options.full ? 'productionUsage' : step
+    : step
   const [title, description] = fields[key]
   return [title, description.replace('{open}', options.openLabel).replace('{preview}', options.previewLabel).replace('{new}', options.newLabel)]
 }

@@ -4,7 +4,7 @@ import { comparisonCostingSteps, costingTourSurface, makeSavedCostingTourExample
 import { savedCostingStepCopy, savedCostingsTutorialCopy } from '../lib/i18n/saved-costings-tutorial'
 import { compareSavedCostingSnapshots, orderSavedCostingsForComparison } from '../lib/saved-costings'
 
-const baseOptions = { free: false, full: false, quotations: false, ending: 'existing' as const, openLabel: 'Use', previewLabel: 'Export', newLabel: 'New Costing' }
+const baseOptions = { free: false, ending: 'existing' as const, openLabel: 'Use', previewLabel: 'Export', newLabel: 'New Costing' }
 const tutorial = readFileSync(new URL('../components/estimator/SavedCostingsTutorial.tsx', import.meta.url), 'utf8')
 const page = readFileSync(new URL('../app/(dashboard)/owner/quotes/QuotesClient.tsx', import.meta.url), 'utf8')
 
@@ -24,7 +24,8 @@ describe('Saved Costings guided tour', () => {
   expect(tutorial).toContain('!free && <Button')
   expect(tutorial).toContain('copy.fields.organize')
   expect(tutorial).toContain('copy.fields.share')
-  expect(tutorial).toContain('quotations ? [copy.fields.quotations] : []')
+  // Phase 3H: the quotation-workspace help and variants were retired.
+  expect(tutorial).not.toContain('copy.fields.quotations')
  })
  it('derives reversible sample surfaces for forward, back and exit navigation', () => {
   expect(['versions', 'economics', 'internal', 'production', 'finish', null].map(step => costingTourSurface(step as Parameters<typeof costingTourSurface>[0]))).toEqual(['library', 'library', 'export', 'library', 'page', 'page'])
@@ -47,13 +48,12 @@ describe('Saved Costings guided tour', () => {
   expect(savedCostingTourEnding(4, true)).toBe('unavailable')
   expect(savedCostingStepCopy('en', 'finish', baseOptions)[1]).toContain('one of your saved costings')
   expect(savedCostingStepCopy('en', 'finish', {...baseOptions, ending: 'empty'})[1]).toContain('Choose New Costing')
-  expect(savedCostingStepCopy('en', 'finish', {...baseOptions, ending: 'empty', quotations: true, newLabel: 'New Estimate'})[1]).toContain('Choose New Estimate')
   expect(savedCostingStepCopy('en', 'finish', {...baseOptions, ending: 'unavailable'})[1]).toContain('refresh')
   for (const ending of ['existing', 'empty', 'unavailable'] as const) {
    expect(savedCostingStepCopy('en', 'finish', {...baseOptions, ending})[1]).not.toMatch(/sample demo costing|delete it anytime/)
   }
  })
- it('matches Base activation and Full applied-production targets without promising a write', () => {
+ it('matches Base activation targets without promising a write', () => {
   const base = savedCostingStepCopy('en', 'production', baseOptions)[1]
   expect(base).toContain('Activate for Production')
   expect(base).toContain('Activate Quality for Production picker')
@@ -61,17 +61,9 @@ describe('Saved Costings guided tour', () => {
   expect(base).not.toContain('with this costing selected')
   expect(base).toContain('Assign Looms')
   expect(base).toContain('records no output, stock or wages')
-  const full = savedCostingStepCopy('en', 'production', {...baseOptions, full: true})[1]
-  expect(full).toContain('Applied production')
-  expect(full).toContain('Production → Activate Quality')
-  expect(full).not.toContain('Activate for Production')
  })
- it('distinguishes new-quality duplication from a customer quotation draft', () => {
+ it('describes duplication as starting a new quality', () => {
   expect(savedCostingStepCopy('en', 'reuse', baseOptions)[1]).toContain('new quality')
-  const full = savedCostingStepCopy('en', 'reuse', {...baseOptions, full: true, quotations: true, openLabel: 'Open'})[1]
-  expect(full).toContain('Open loads this version')
-  expect(full).toContain('new customer quotation draft')
-  expect(full).toContain('Neither action sends')
  })
  it('retains document privacy in every core tour and translates every variant', () => {
   const keys = Object.keys(savedCostingsTutorialCopy.en.fields)
@@ -81,7 +73,7 @@ describe('Saved Costings guided tour', () => {
    expect(Object.values(copy.fields).every(pair => pair.every(text => text.trim().length > 0))).toBe(true)
    expect(copy.compare.length).toBeGreaterThan(0)
    expect(copy.help.length).toBeGreaterThan(0)
-   for (const options of [baseOptions, {...baseOptions, full: true, quotations: true}, {...baseOptions, free: true}]) {
+   for (const options of [baseOptions, {...baseOptions, free: true}]) {
     for (const step of [...savedCostingTourSteps(options.free, true), ...comparisonCostingSteps]) {
      expect(savedCostingStepCopy(lang, step, options).join(' ')).not.toMatch(/\{(?:open|preview|new)\}/)
     }

@@ -174,18 +174,19 @@ describe('Sprint 17 costing and quotation hardening', () => {
     expect(draft?.sourceRecordKind).toBe('quotation')
   })
 
-  it('keeps the quotation ledger and archive/restore boundaries explicit', () => {
+  it('retires the quotation ledger and keeps archive/restore boundaries explicit', () => {
     const quotes = read('app/(dashboard)/owner/quotes/QuotesClient.tsx')
     const actions = read('app/(dashboard)/owner/estimator/actions.ts')
     const migration = read('supabase/migrations/20260808121411_sprint17_quotation_ledger_hardening.sql')
     const hardeningMigration = read('supabase/migrations/20260808121531_harden_quotation_sent_stamp_search_path.sql')
     const estimator = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
 
-    expect(quotes).toContain('Quotation ledger')
-    expect(quotes).toContain('Mark Sent')
+    // Phase 3H: the quotation ledger and its status controls were retired.
+    expect(quotes).not.toContain('Quotation ledger')
+    expect(quotes).not.toContain('Mark Sent')
     expect(quotes).toContain('Restore snapshot')
     expect(quotes).toContain('New minus Old')
-    expect(actions).toContain('Next allowed action:')
+    expect(actions).not.toContain('Next allowed action:')
     expect(migration).toContain('sent_at')
     expect(migration).toContain('stamp_estimator_quote_sent_at')
     expect(hardeningMigration).toContain('SET search_path = pg_catalog, public')

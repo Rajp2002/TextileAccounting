@@ -64,7 +64,6 @@ describe('Base Estimator Go-readiness hardening', () => {
     expect(saved).toContain('getProductionCostPerM')
     expect(saved).toContain('latestResult.productionCostPerM')
     expect(saved).toContain("['Break-even selling price'")
-    expect(saved).toContain("costing.quality_label || 'Untitled costing'} · v")
   })
 
   it('gates Rate Book at route, action, RLS, and lockdown boundaries', () => {
@@ -113,12 +112,16 @@ describe('Base Estimator Go-readiness hardening', () => {
     expect(estimator).toContain('<div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">')
     expect(estimator).toContain('data-testid="save-as-new-quality"')
     expect(estimator).toContain('id="export-cost-sheet-hint" className="w-full text-xs')
-    expect(estimator).toContain("variant={isStandaloneCostingSession ? 'default' : 'outline'}")
+    // Phase 3H: the costing save is always the primary action.
+    expect(estimator).toContain('id="legacy-btn-save-accept"')
+    expect(estimator).toContain("onClick={() => handleSaveQuote('draft')}")
 
     const savedCostings = source('app/(dashboard)/owner/quotes/QuotesClient.tsx')
-    expect(savedCostings).toContain('canUseProduction && <section')
+    // Phase 3H: Saved Costings has no production-usage or quotation variant.
+    expect(savedCostings).not.toMatch(/\bcanUseProduction\b/)
+    expect(savedCostings).not.toContain('canUseQuotationWorkflow')
     const savedCostingsHeader = savedCostings.match(/<PageHeader\b([\s\S]*?)\/>/)?.[0] ?? ''
-    expect(savedCostingsHeader).toContain('title={canUseQuotationWorkflow ?')
+    expect(savedCostingsHeader).toContain("title={t('common.saved_costings_title')}")
     expect(savedCostingsHeader).not.toContain('description=')
     expect(savedCostings).toContain('expand a quality to review its costing history')
   })

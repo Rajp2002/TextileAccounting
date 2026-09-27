@@ -33,7 +33,6 @@ type FactoryCostWizardData = Partial<EstimateState> & {
 interface FactoryCostWizardProps {
     initialState: EstimateState
     initialYarnReviewIntervalDays: number
-    canUseFactoryProfiles: boolean
     onComplete: (data: FactoryCostWizardData) => Promise<void>
     onDismiss?: () => void
     saving: boolean
@@ -55,8 +54,8 @@ function getFactoryDefaultValue(label: string, initialState: EstimateState): num
     }
 }
 
-export default function FactoryCostWizard({ initialState, initialYarnReviewIntervalDays, canUseFactoryProfiles, onComplete, onDismiss, saving }: FactoryCostWizardProps) {
-    const [step, setStep] = useState<'intro' | 'profile' | 'choice' | 'fast' | 'detailed' | 'detailed-expenses' | 'defaults'>('intro')
+export default function FactoryCostWizard({ initialState, initialYarnReviewIntervalDays, onComplete, onDismiss, saving }: FactoryCostWizardProps) {
+    const [step, setStep] = useState<'intro' | 'choice' | 'fast' | 'detailed' | 'detailed-expenses' | 'defaults'>('intro')
     const [setupPath, setSetupPath] = useState<'direct' | 'monthly_expenses'>(initialState.overheadMode === 'direct' ? 'direct' : 'monthly_expenses')
     const [validationError, setValidationError] = useState<string | null>(null)
     const [pendingCompletion, setPendingCompletion] = useState<FactoryCostWizardData | null>(null)
@@ -68,10 +67,9 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
         commission: false,
         transport: false,
     }
-    const [selectedProfileId, setSelectedProfileId] = useState<FactoryProfileId | null>(canUseFactoryProfiles ? null : 'grey_weaver')
-    const [selectedSections, setSelectedSections] = useState({
-        ...(canUseFactoryProfiles ? initialState.enabledSections : greyWeaverSections),
-    })
+    // Weavly costs grey-fabric weaving only; the factory-type chooser was never
+    // shown on Free, Lite or Base.
+    const [selectedSections] = useState({ ...greyWeaverSections })
 
     const initialRent = initialState.overheadItems.find(item => item.category === 'rent')?.monthlyAmount ?? 0
     const initialElectricity = initialState.overheadItems.find(item => item.category === 'electricity')?.monthlyAmount ?? 0
@@ -144,19 +142,6 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
         setStep('defaults')
     }
 
-    const applyFactoryProfile = (profileId: FactoryProfileId) => {
-        const preset = FACTORY_COST_PRESETS.find(candidate => candidate.id === profileId)
-        if (!preset) return
-        setSelectedProfileId(profileId)
-        setSelectedSections({ ...preset.sections })
-        if (!preset.sections.winding) setWindingRate(0)
-        if (!preset.sections.processing) setProcessingRate(0)
-        if (!preset.sections.finishing) setFinishingRate(0)
-        if (!preset.sections.commission) setCommissionPct(0)
-        if (!preset.sections.transport) setTransportRate(0)
-        setValidationError(null)
-    }
-
     const getOverheadSetup = (): Partial<EstimateState> => {
         if (setupPath === 'direct') {
             return { overheadMode: 'direct', overheadOverridePerM: overheadPerM }
@@ -194,7 +179,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
             yarnShortagePct: yarnWastePct,
             enabledSections: { ...selectedSections },
             isConfigured: true,
-            factoryProfileKey: selectedProfileId ?? 'custom',
+            factoryProfileKey: 'grey_weaver',
         })
 
     const validateCompletion = (data: Partial<EstimateState> & { yarnReviewIntervalDays: number }) => validateFactoryCostProfile({
@@ -219,11 +204,6 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
     })
 
     const handleFinish = async () => {
-        if (!selectedProfileId && canUseFactoryProfiles) {
-            setValidationError('Choose your factory type before finishing setup.')
-            setStep('profile')
-            return
-        }
         const data = getCompletionData()
         if (setupPath === 'direct' && (overheadPerM == null || overheadPerM <= 0)) {
             setValidationError('Enter the direct factory cost per metre before saving these defaults.')
@@ -305,7 +285,6 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                 className="h-full bg-indigo-500 transition-all duration-500" 
                                 style={{ width: `${
                                     step === 'intro' ? 10 : 
-                                    step === 'profile' ? 28 :
                                     step === 'choice' ? 42 :
                                     step === 'fast' ? 58 :
                                     step === 'detailed' ? 58 :
@@ -326,17 +305,15 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                     </div>
                                     <div className="space-y-2">
                                         <h2 className="text-2xl font-black tracking-tight text-slate-900">
-                                            {canUseFactoryProfiles ? 'Set up your factory costing' : 'Set up your grey-fabric costing'}
+                                            Set up your grey-fabric costing
                                         </h2>
                                         <p className="text-slate-600 text-sm leading-relaxed">
-                                            {canUseFactoryProfiles
-                                                ? 'Choose the type of work you do. We\'ll show only the charges relevant to your unit, then use your actual factory expenses to calculate a trustworthy ₹/m cost.'
-                                                : 'Weavly is set up for grey fabric weaving. Enter your actual factory expenses and rates to calculate a trustworthy ₹/m cost.'}
+                                            Weavly is set up for grey fabric weaving. Enter your actual factory expenses and rates to calculate a trustworthy ₹/m cost.
                                         </p>
                                     </div>
                                     <div className="space-y-2">
                                         <Button 
-                                            onClick={() => setStep(canUseFactoryProfiles ? 'profile' : 'choice')}
+                                            onClick={() => setStep('choice')}
                                             className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-bold transition-all shadow-lg shadow-indigo-200"
                                         >
                                             Get Started
@@ -352,56 +329,6 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                             </button>
                                         )}
                                     </div>
-                                </div>
-                            )}
-
-                            {step === 'profile' && (
-                                <div className="space-y-5">
-                                    <div className="space-y-1 text-center">
-                                        <h2 className="text-xl font-bold text-slate-900">Choose your factory type</h2>
-                                        <p className="text-xs leading-relaxed text-slate-600">This is a preview until you save it. You can change the optional charges later.</p>
-                                    </div>
-                                    <div className="grid gap-2.5">
-                                        {FACTORY_COST_PRESETS.map(profile => (
-                                            <button
-                                                key={profile.id}
-                                                type="button"
-                                                aria-pressed={selectedProfileId === profile.id}
-                                                onClick={() => applyFactoryProfile(profile.id)}
-                                                className={`flex items-start gap-3 rounded-xl border-2 p-3.5 text-left transition-colors ${selectedProfileId === profile.id ? 'border-indigo-500 bg-indigo-50/70' : 'border-slate-100 hover:border-indigo-300 hover:bg-indigo-50/30'}`}
-                                            >
-                                                <span className="text-xl">{profile.emoji}</span>
-                                                <span className="min-w-0 flex-1">
-                                                    <span className="flex flex-wrap items-center gap-2 text-sm font-black text-slate-900">
-                                                        {profile.label}
-                                                        {profile.recommended && <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] uppercase tracking-wide text-amber-700">Recommended</span>}
-                                                    </span>
-                                                    <span className="mt-0.5 block text-xs leading-relaxed text-slate-600">{profile.description}</span>
-                                                </span>
-                                                {selectedProfileId === profile.id && <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600" />}
-                                            </button>
-                                        ))}
-                                    </div>
-                                    {selectedProfileId && (
-                                        <p className="rounded-xl border border-indigo-100 bg-indigo-50 px-3 py-2 text-[11px] leading-relaxed text-indigo-700">
-                                            <strong>{FACTORY_COST_PRESETS.find(profile => profile.id === selectedProfileId)?.label}</strong> is selected. Processing, finishing, broker commission, and transport are off unless this setup requires them or you enable them later.
-                                        </p>
-                                    )}
-                                    {!selectedProfileId && (
-                                        <p id="factory-profile-selection-hint" className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-semibold leading-relaxed text-amber-800">
-                                            Choose the factory type that best matches your unit before continuing.
-                                        </p>
-                                    )}
-                                    <Button
-                                        type="button"
-                                        disabled={!selectedProfileId}
-                                        aria-describedby={!selectedProfileId ? 'factory-profile-selection-hint' : undefined}
-                                        onClick={() => setStep('choice')}
-                                        className="h-12 w-full rounded-full bg-indigo-600 font-bold text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700"
-                                    >
-                                        Continue to factory expenses
-                                        <ArrowRight className="ml-2 h-4 w-4" />
-                                    </Button>
                                 </div>
                             )}
 
@@ -443,7 +370,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                             {step === 'fast' && (
                                 <div className="space-y-6">
                                     <div className="flex items-center gap-3">
-                                        <button onClick={() => setStep(canUseFactoryProfiles ? 'profile' : 'choice')} className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-800 transition-colors">
+                                        <button onClick={() => setStep('choice')} className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-800 transition-colors">
                                             <ArrowRight className="h-4 w-4 rotate-180" />
                                         </button>
                                         <h2 className="text-lg font-black text-slate-900">Enter your factory cost per metre</h2>

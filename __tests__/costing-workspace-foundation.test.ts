@@ -1,55 +1,19 @@
 import { describe, expect, it } from 'vitest'
 import {
-  canUseQuotationLifecycle,
-  getCostingWorkspaceCapabilities,
-  getNewEstimateRecordKind,
   isStandaloneCosting,
   normalizeCostingRecordKind,
-  shouldCreateImmutableRevision,
 } from '../lib/costing-workspace'
 import { parseEstimatorDraft } from '../lib/estimator-drafts'
 
 describe('shared costing workspace foundation', () => {
-  it('keeps decision tools shared while production capabilities remain additive', () => {
-    const base = getCostingWorkspaceCapabilities(false)
-    const suite = getCostingWorkspaceCapabilities(true)
-
-    expect(base).toMatchObject({
-      ratesWorkspace: true,
-      versionedCostings: true,
-      costingComparison: true,
-      professionalExports: true,
-      partyContext: false,
-      quotationLifecycle: false,
-      productionConversion: false,
-    })
-    expect(suite).toMatchObject({
-      ratesWorkspace: true,
-      versionedCostings: true,
-      costingComparison: true,
-      professionalExports: true,
-      quotationLifecycle: true,
-      productionConversion: true,
-    })
-  })
-
-  it('assigns durable record meaning independently from later plan changes', () => {
-    expect(getNewEstimateRecordKind(false)).toBe('costing')
-    expect(getNewEstimateRecordKind(true)).toBe('quotation')
-    expect(getNewEstimateRecordKind(true, 'costing')).toBe('costing')
-    expect(getNewEstimateRecordKind(false, 'quotation')).toBe('costing')
+  it('reads durable record meaning from the stored record kind', () => {
+    // Phase 3H: new estimates are always costings; the plan-dependent record
+    // kind and quotation-lifecycle helpers were retired with that workflow.
     expect(normalizeCostingRecordKind('costing')).toBe('costing')
+    expect(normalizeCostingRecordKind('quotation')).toBe('quotation')
+    expect(normalizeCostingRecordKind(null)).toBe('quotation')
     expect(isStandaloneCosting('costing')).toBe(true)
-    expect(canUseQuotationLifecycle('costing', true)).toBe(false)
-    expect(canUseQuotationLifecycle('quotation', true)).toBe(true)
-    expect(canUseQuotationLifecycle('quotation', false)).toBe(false)
-  })
-
-  it('makes costings and accepted/converted quotations immutable', () => {
-    expect(shouldCreateImmutableRevision('costing', 'draft', false)).toBe(true)
-    expect(shouldCreateImmutableRevision('quotation', 'accepted', false)).toBe(true)
-    expect(shouldCreateImmutableRevision('quotation', 'draft', true)).toBe(true)
-    expect(shouldCreateImmutableRevision('quotation', 'draft', false)).toBe(false)
+    expect(isStandaloneCosting('quotation')).toBe(false)
   })
 
   it('preserves record context through the browser handoff', () => {

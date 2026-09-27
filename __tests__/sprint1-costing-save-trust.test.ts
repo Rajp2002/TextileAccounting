@@ -64,7 +64,7 @@ describe('Sprint 1 costing save trust', () => {
     })
 
     it('does not classify a legacy historical costing edit as a new quality', () => {
-        expect(actions).toContain("if (!params.templateId && !params.sourceQuoteId && newRecordKind === 'costing')")
+        expect(actions).toContain('if (!params.templateId && !params.sourceQuoteId) {')
         expect(actions).toContain('p_source_quote_id: params.sourceQuoteId ?? null')
         expect(migration).toContain('v_template_id := v_source.template_id')
     })

@@ -113,7 +113,7 @@ describe('Sprint 15 Base estimator trust gates', () => {
       'utf8',
     )
     expect(client).toContain('requireCapacity: requireCapacityForCurrentCosting')
-    expect(actions).toContain("requiresFactoryCapacity(estimate, newRecordKind === 'quotation')")
+    expect(actions).toContain('requiresFactoryCapacity(estimate, false)')
   })
 
   it('does not display or persist money for an incomplete capacity profile', () => {

@@ -5,7 +5,6 @@ import QuotesClient from './QuotesClient'
 import { getAuthenticatedUser } from '@/lib/auth'
 import { getCachedOrgPlanAccess } from '@/lib/subscription'
 import { hasCapability } from '@/lib/subscription-access'
-import { getEstimatorWorkflowConfig, normalizeProductionMode } from '@/lib/production-mode'
 import { getCachedOwnerOrganization } from '@/lib/owner-organization'
 
 export default async function QuotesPage(props: { searchParams: Promise<{ status?: string }> }) {
@@ -32,11 +31,7 @@ export default async function QuotesPage(props: { searchParams: Promise<{ status
         ? requestedStatus
         : undefined
     const { user, profile } = auth
-    const canUseProduction = false
     const canUseProductionPipeline = hasCapability(planAccess.effectiveTier, 'production')
-    const productionMode = normalizeProductionMode(organizationRes.data?.production_mode)
-    const canUseQuotationWorkflow = canUseProduction
-        && getEstimatorWorkflowConfig(productionMode).allowsPartyOrders
 
     const previousFreeGrant = await getFreeGrant(profile.org_id)
     return (<>
@@ -49,9 +44,7 @@ export default async function QuotesPage(props: { searchParams: Promise<{ status
             initialStatus={status}
             userId={user.id}
             orgId={profile.org_id}
-            canUseProduction={canUseProduction}
             canUseProductionPipeline={canUseProductionPipeline}
-            canUseQuotationWorkflow={canUseQuotationWorkflow}
             organizationName={organizationRes.data?.name ?? ''}
         />
     </>)

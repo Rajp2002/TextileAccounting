@@ -52,10 +52,10 @@ describe('pilot no-go remediation', () => {
     expect(estimator).toContain('Resume')
     expect(estimator).not.toContain('/> Rename')
     expect(estimator).toContain('> <span>Discard</span></button>')
-    expect(actions).toContain('export async function getQuoteStatusHistory')
-    expect(quotes).toContain('Quotation history')
-    expect(quotes).toContain('Status updated')
-    expect(quotes).toContain('Quotation marked as')
+    // Phase 3H retired the quotation status history and status controls.
+    expect(actions).not.toContain('export async function getQuoteStatusHistory')
+    expect(quotes).not.toContain('Quotation history')
+    expect(quotes).not.toContain('Quotation marked as')
   })
 
   it('avoids persistent update interruptions and UTC date drift in Rate Book', () => {

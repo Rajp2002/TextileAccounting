@@ -44,14 +44,14 @@ describe('Sprint 3 estimator simplicity and textile workflow', () => {
     expect(validateFactoryCostProfile({ ...monthly, overhead_mode: 'direct', overhead_override_per_m: 0 }).valid).toBe(false)
   })
 
-  it('keeps Base entry focused on quality and keeps customer only for quotation context/export', () => {
+  it('keeps Base entry focused on quality with no customer field', () => {
     const client = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
     const english = read('lib/i18n/locales/en.ts')
 
     expect(client).toContain('Quick Costing')
     expect(client).toContain('same calculation engine')
-    expect(client).toContain('const showPartyField = canUseProduction && !isStandaloneCostingSession')
-    expect(client).toContain('defaultCustomerName={showPartyField ? partyName : \'\'}')
+    expect(client).not.toContain('data-estimator-field="partyName"')
+    expect(client).toContain('defaultCustomerName=""')
     expect(client).not.toContain('totals.effectiveOverheadPct')
     expect(english).toContain('add_blend: "Add warp yarn component"')
     expect(english).toContain('add_weft: "Add weft yarn component"')

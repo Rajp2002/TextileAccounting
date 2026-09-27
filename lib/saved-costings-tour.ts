@@ -5,7 +5,7 @@ export const paidCostingSteps = ['find', 'versions', 'economics', 'reuse', 'inte
 export const freeCostingSteps = ['snapshots', 'freeSelect', 'internal', 'finish'] as const
 export const comparisonCostingSteps = ['compareSelect', 'comparison', 'comparisonDetails', 'finish'] as const
 export type SavedCostingStep = typeof paidCostingSteps[number] | typeof freeCostingSteps[number] | typeof comparisonCostingSteps[number]
-    | 'filters' | 'select' | 'breakdown' | 'organize' | 'customer' | 'share' | 'production' | 'quotations'
+    | 'filters' | 'select' | 'breakdown' | 'organize' | 'customer' | 'share' | 'production'
     | 'searchAndFilters' | 'search' | 'freeFilters'
 export function savedCostingTourSteps(free: boolean, production = false): SavedCostingStep[] {
     if (free) return [...freeCostingSteps]

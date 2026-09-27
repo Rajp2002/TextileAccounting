@@ -103,7 +103,9 @@ describe('Estimator persistence safety', () => {
         expect(saveQuote).toContain(".eq('client_request_id', params.clientRequestId)")
         expect(saveQuote).toContain('clientRequestId: params.clientRequestId,')
         expect(readProjectFile('lib/estimator-quote-payload.ts')).toContain('client_request_id: input.clientRequestId')
-        expect(saveQuote).toContain(".eq('updated_at', params.expectedSourceUpdatedAt!)")
+        // Stale-edit protection is enforced by the revision RPC (Phase 3H removed
+        // the unreachable direct-update path).
+        expect(saveQuote).toContain('p_expected_source_updated_at: params.expectedSourceUpdatedAt ?? null')
         expect(saveQuote).toContain('idempotentReplay: true')
         expect(estimatorClient).toContain('createClientRequestUuid()')
         expect(estimatorClient).toContain('expectedSourceUpdatedAt: sourceQuoteUpdatedAt ?? undefined')
@@ -123,10 +125,11 @@ describe('Estimator persistence safety', () => {
         const quotesClient = readProjectFile('app/(dashboard)/owner/quotes/QuotesClient.tsx')
         const estimatorActions = readProjectFile('app/(dashboard)/owner/estimator/actions.ts')
 
-        expect(quotesClient).toContain("onClick={() => handleRestore(quote, 'edit')}")
-        expect(quotesClient).toContain("onClick={() => handleRestore(quote, 'duplicate')}")
+        // Phase 3H: the saved-quality library is the only records view.
+        expect(quotesClient).toContain("onOpen={quote => { setOpenQualityKey(null); void handleRestore(quote, 'edit') }}")
+        expect(quotesClient).toContain("onStartFrom={quote => { setOpenQualityKey(null); void handleRestore(quote, 'duplicate') }}")
         expect(quotesClient).toContain('sourceQuoteId: isDuplicate ? undefined : quote.id')
-        expect(quotesClient).toContain("onClick={() => requestArchiveState(quote)}")
+        expect(quotesClient).toContain('onToggleArchived={requestArchiveState}')
         expect(quotesClient).toContain('This archives only this costing snapshot.')
         expect(quotesClient).not.toContain('Delete this Costing?')
         expect(functionBody(estimatorActions, 'deleteEstimatorQuote')).toContain(".in('status', ['draft', 'rejected'])")
@@ -143,18 +146,15 @@ describe('Estimator persistence safety', () => {
 })
 
 describe('Batch 10 quote lifecycle transitions', () => {
-    it('rejects direct draft-to-accepted and exposes only valid quote history actions', () => {
+    it('retires quotation status changes with the quotation workflow', () => {
+        // Phase 3H: no screen could change a quotation's status (the controls
+        // rendered only for the retired Full Suite workflow), so the status
+        // actions are no longer server-action endpoints.
         const estimatorActions = readProjectFile('app/(dashboard)/owner/estimator/actions.ts')
-        const updateQuoteStatus = functionBody(estimatorActions, 'updateQuoteStatus')
         const quotesClient = readProjectFile('app/(dashboard)/owner/quotes/QuotesClient.tsx')
 
-        expect(updateQuoteStatus).toContain("draft: ['sent']")
-        expect(updateQuoteStatus).toContain("sent: ['accepted', 'rejected']")
-        expect(updateQuoteStatus).not.toContain("current.status === 'draft' && status === 'accepted'")
-        expect(updateQuoteStatus).not.toContain("current.status = 'sent'")
-        expect(quotesClient).toContain("quote.status === 'draft' && !linkedOrder")
-        expect(quotesClient).toContain("handleStatusChange(quote.id, 'sent')")
-        expect(quotesClient).toContain("quote.status === 'sent' && !linkedOrder")
-        expect(quotesClient).toContain("handleStatusChange(quote.id, 'rejected')")
+        expect(estimatorActions).not.toContain('export async function updateQuoteStatus')
+        expect(estimatorActions).not.toContain('export async function getQuoteStatusHistory')
+        expect(quotesClient).not.toContain('handleStatusChange')
     })
 })

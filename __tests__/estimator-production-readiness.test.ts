@@ -24,10 +24,12 @@ const estimatorActionsSource = readFileSync(
 const globalStylesSource = readFileSync(join(process.cwd(), 'app/globals.css'), 'utf8')
 
 describe('Estimator production-readiness regressions', () => {
-  it('shows required tape length only inside the production-plan beam planner', () => {
-    expect(estimatorClientSource).toMatch(
-      /\{canUseProduction && \(\(\) => \{[\s\S]*?label=\{t\('estimator\.warp\.tape_len'\)\}[\s\S]*?value=\{state\.tapeLengthM\}[\s\S]*?attentionWhenEmpty/,
-    )
+  it('never asks for tape length in the estimator (the production-plan beam planner is retired)', () => {
+    // Phase 3H removed the beam planner and tape-length field, which rendered
+    // only when canUseProduction was true (never on Free, Lite or Base).
+    expect(estimatorClientSource).not.toContain("label={t('estimator.warp.tape_len')}")
+    expect(estimatorClientSource).not.toContain('fieldKey="tapeLengthM"')
+    expect(estimatorClientSource).toContain('requireTapeLength: false')
   })
 
   it('allows base-plan costing without tape length while production still requires it', () => {

@@ -31,19 +31,16 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog'
-import { auditHistoricalCostingSnapshot, getEstimatorQuoteDetail, getQuoteStatusHistory, updateQuoteStatus, updateSavedCostingLibraryState } from '../estimator/actions'
+import { auditHistoricalCostingSnapshot, getEstimatorQuoteDetail, updateSavedCostingLibraryState } from '../estimator/actions'
 import { toast, userFacingError } from '@/lib/app-notifications'
-import { formatDateOnly, formatTimestampDate } from '@/lib/format'
+import { formatTimestampDate } from '@/lib/format'
 import { formatSuratDateTime } from '@/lib/time'
 import {
-    History,
-    CheckCircle2,
     FileText,
     ArrowRight,
     Loader2,
     AlertTriangle,
     Copy,
-    XCircle,
     Search,
     Eye,
     Plus,
@@ -59,7 +56,6 @@ import {
     Layers3,
     Sparkles,
     Trash2,
-    ExternalLink,
     X,
 } from 'lucide-react'
 import {
@@ -69,7 +65,6 @@ import {
   filterAndSortSavedCostings,
   getSavedCostingIdentity,
   isSavedCostingArchived,
-  getPreviousCostingVersion,
   normalizeSavedWarpRows,
   normalizeSavedWeftRows,
   getSavedCostingMetrics,
@@ -83,7 +78,7 @@ import {
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
 import { ArchivePolicyNotice } from '@/components/records/ArchivePolicyNotice'
 import { createCostingExportModel } from '@/lib/estimator-export'
-import { canUseQuotationLifecycle, isStandaloneCosting, type CostingRecordKind } from '@/lib/costing-workspace'
+import { isStandaloneCosting, type CostingRecordKind } from '@/lib/costing-workspace'
 import { useTranslation } from '@/lib/i18n/context'
 import { trackPlanEvent } from '@/lib/plan-analytics'
 import { RouteMilestones } from '@/components/performance/route-milestones'
@@ -99,17 +94,8 @@ const CostingExportDialog = dynamic(
 /* <section className="rounded-xl border border-slate-200 bg-white p-4">
                                                 <div className="flex flex-wrap items-start justify-between gap-3">
 <p className="text-sm font-black text-slate-950">{tx('Latest Saved Costing breakdown')}</p> */
-/* {canUseProduction && <section className="rounded-xl border border-slate-200 bg-white p-4">
-                                                <div className="flex items-center justify-between gap-3"> */
 
-const STATUS_CONFIG = {
-    draft:    { label: 'Draft',    color: 'bg-surface-soft text-body border-hairline' },
-    sent:     { label: 'Sent',     color: 'bg-info-soft text-info border-info/25' },
-    accepted: { label: 'Accepted', color: 'bg-success-soft text-success border-success/25' },
-    rejected: { label: 'Rejected', color: 'bg-risk-soft text-risk border-risk/25' },
-}
-
-type QuoteStatus = keyof typeof STATUS_CONFIG
+type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected'
 type QuoteDraftState = ReturnType<typeof makeDefaultEstimateState>
 type QuoteLinkedOrder = {
     id: string
@@ -207,19 +193,8 @@ type QuoteRow = {
     orders?: QuoteLinkedOrder | QuoteLinkedOrder[] | null
 }
 
-type QuoteStatusHistoryRow = {
-    changedAt: string
-    changedBy: string | null
-    from: QuoteStatus | null
-    to: QuoteStatus | null
-}
-
 function getLinkedOrder(quote: QuoteRow) {
     return Array.isArray(quote.orders) ? quote.orders[0] : quote.orders
-}
-
-function getProducedMeters(order: QuoteLinkedOrder | null | undefined) {
-    return (order?.production_logs ?? []).reduce((sum, log) => sum + Number(log.meters ?? 0), 0)
 }
 
 function normalizeQualityKey(value: string | null | undefined) {
@@ -328,28 +303,8 @@ function formatCostingMoneyPerM(value: number | null) {
     return value == null ? 'Not available' : `₹${value.toFixed(2)}/m`
 }
 
-function formatQuotationAmount(pricePerM: number | null, meters: number | null | undefined) {
-    const quantity = Number(meters ?? 0)
-    if (pricePerM == null || !Number.isFinite(quantity) || quantity <= 0) return 'Not available'
-    return `₹${(pricePerM * quantity).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-}
-
 function formatCostingPercent(value: number | null) {
     return value == null ? 'Not available' : `${value.toFixed(1)}%`
-}
-
-function formatQuoteTimestamp(value: string | null | undefined) {
-    return value ? formatSuratDateTime(value) : 'Not recorded'
-}
-
-function getQuotationNextAction(status: QuoteStatus) {
-    if (status === 'draft') return 'Next allowed action: Mark as sent.'
-    if (status === 'sent') return 'Next allowed action: Accept or reject.'
-    return 'No further status changes; create a new quotation from this saved snapshot.'
-}
-
-function getLegacyVersionLabel(costing: Pick<QuoteRow, 'quality_label' | 'version_number'>) {
-    return `${costing.quality_label || 'Untitled costing'} · v${Number(costing.version_number ?? 1)}`
 }
 
 const comparisonPriceLabels = ['Break-even selling price'] as const
@@ -404,12 +359,6 @@ function deltaChangedForUi(value: SavedCostingDelta) {
     return value.delta != null && Math.abs(value.delta) > 0.0001
 }
 
-function getProductionCostMovement(current: QuoteRow, previous: QuoteRow | null) {
-    const currentCost = getProductionCostPerM(current)
-    const previousCost = previous ? getProductionCostPerM(previous) : null
-    return previousCost == null || currentCost == null ? null : currentCost - previousCost
-}
-
 function getCurrentRecipeCostPerM(
     template: SavedQuality,
     profile?: SavedQualityFactoryProfile,
@@ -425,7 +374,6 @@ function getCurrentRecipeCostPerM(
 
 function SavedQualityLibraryView({
     groups,
-    canUseProduction,
     canUseProductionPipeline,
     openKey,
     comparisonMode,
@@ -443,7 +391,6 @@ function SavedQualityLibraryView({
     auditingId,
     onToggleFavorite,
     onToggleArchived,
-    onOpenUsage,
     onEnsureDetail,
     factoryInputsCapturedLabel,
     tourStep,
@@ -451,7 +398,6 @@ function SavedQualityLibraryView({
     onSelectRecord,
 }: {
     groups: SavedQualityGroup[]
-    canUseProduction: boolean
     canUseProductionPipeline: boolean
     openKey: string | null
     comparisonMode: boolean
@@ -469,7 +415,6 @@ function SavedQualityLibraryView({
     auditingId: string | null
     onToggleFavorite: (quote: QuoteRow) => void
     onToggleArchived: (quote: QuoteRow) => void
-    onOpenUsage: (quote: QuoteRow, order: QuoteLinkedOrder) => void
     onEnsureDetail?: (quote: QuoteRow) => Promise<QuoteRow | null>
     factoryInputsCapturedLabel: string
     selectedRecordIdByGroup: Record<string, string>
@@ -501,11 +446,6 @@ function SavedQualityLibraryView({
                             ['Weft yarn (saved adjusted cost)', activeResult.breakdown.weftCostPerM],
                         ]
                         : []
-                const usages = group.records
-                    .map(record => ({ record, order: getLinkedOrder(record) }))
-                    .filter((item): item is { record: QuoteRow; order: QuoteLinkedOrder } => Boolean(item.order))
-                    .filter((item, index, all) => all.findIndex(other => other.order.id === item.order.id) === index)
-                const totalProduced = usages.reduce((sum, usage) => sum + getProducedMeters(usage.order), 0)
                 const openGroupDetails = () => onOpenDetails(group.key, group.records.length === 1 ? group.records[0] : null)
                 const handleInspectRecord = (record: QuoteRow) => {
                     onSelectRecord(group.key, record.id)
@@ -551,7 +491,7 @@ function SavedQualityLibraryView({
                                     </span>
                                 </button>
 
-                                <div className={`grid gap-2 ${canUseProduction ? 'grid-cols-1 sm:grid-cols-3 sm:min-w-[420px]' : 'grid-cols-1 sm:grid-cols-2 sm:min-w-[300px]'}`}>
+                                <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 sm:min-w-[300px]">
                                     <div className="rounded-lg bg-surface-soft px-3 py-2">
                                         <p className="text-[10px] font-bold uppercase tracking-wide text-subtle">{tx(latest ? 'Latest cost' : 'Current recipe')}</p>
                                         <p className="mt-1 font-mono text-sm font-black text-ink">{latest
@@ -560,21 +500,10 @@ function SavedQualityLibraryView({
                                                 ? `₹${group.currentRecipeCostPerM.toFixed(2)}/m`
                                                 : '—'}</p>
                                     </div>
-                                    {canUseProduction ? <>
-                                        <div className="rounded-lg bg-surface-soft px-3 py-2">
-                                            <p className="text-[10px] font-bold uppercase tracking-wide text-subtle">{tx('Used for')}</p>
-                                            <p className="mt-1 text-sm font-black text-ink">{tx(`${usages.length} ${usages.length === 1 ? 'run' : 'runs'}`)}</p>
-                                        </div>
-                                        <div className="rounded-lg bg-surface-soft px-3 py-2">
-                                            <p className="text-[10px] font-bold uppercase tracking-wide text-subtle">{tx('Produced')}</p>
-                                            <p className="mt-1 text-sm font-black text-ink">{totalProduced.toLocaleString('en-IN', { maximumFractionDigits: 1 })} m</p>
-                                        </div>
-                                    </> : (
-                                        <div className="rounded-lg bg-surface-soft px-3 py-2">
-                                            <p className="text-[10px] font-bold uppercase tracking-wide text-subtle">{tx('History')}</p>
-                                            <p className="mt-1 text-sm font-black text-ink">{tx(`${group.records.length} ${group.records.length === 1 ? 'snapshot' : 'snapshots'}`)}</p>
-                                        </div>
-                                    )}
+                                    <div className="rounded-lg bg-surface-soft px-3 py-2">
+                                        <p className="text-[10px] font-bold uppercase tracking-wide text-subtle">{tx('History')}</p>
+                                        <p className="mt-1 text-sm font-black text-ink">{tx(`${group.records.length} ${group.records.length === 1 ? 'snapshot' : 'snapshots'}`)}</p>
+                                    </div>
                                 </div>
 
                                 <button
@@ -645,34 +574,15 @@ function SavedQualityLibraryView({
                                                         ? 'This quality has multiple saved versions. Select View breakdown on the version you want to inspect; saved commercial totals remain unchanged.'
                                                         : group.currentRecipeCostPerM != null
                                                             ? 'This is a live estimate from the saved yarn recipe and current factory costs, not a historical snapshot. Set a costing quantity and choose Save Costing to preserve its full analysis.'
-                                                            : canUseProduction
-                                                                ? 'Open Cost Estimate, choose this saved quality, set the costing quantity, and save the result. Its analysis and production usage will then appear here.'
-                                                                : 'Open Cost Estimate, choose this saved quality, set the costing quantity, and choose Save Costing. Its analysis will then appear here.'
+                                                            : 'Open Cost Estimate, choose this saved quality, set the costing quantity, and choose Save Costing. Its analysis will then appear here.'
                                                     : 'The saved commercial totals remain available in Saved Costing history. Open this version in Cost Estimate to review its saved assumptions.')}</p>
                                             {targetRecord && !activeDetailLoading && (
                                                 <div className="mt-4 flex flex-wrap justify-center gap-2">
-                                                    {canUseProduction ? <>
-                                                        {!targetRecord.is_archived && !latest.is_archived && group.template?.is_active !== false && <Button variant="outline" size="sm" onClick={() => onOpen(targetRecord)}>{tx('Open')}</Button>}
-                                                        <Button variant="outline" size="sm" onClick={() => onStartFrom(targetRecord)}><Copy className="h-3.5 w-3.5" /> {tx('Duplicate')}</Button>
-                                                        <Button variant="outline" size="sm" onClick={() => onExport(targetRecord)}><Eye className="h-3.5 w-3.5" /> {tx('Preview')}</Button>
-                                                        {canUseProductionPipeline && isStandaloneCosting(targetRecord.record_kind) && !targetRecord.is_archived && (
-                                                            <Link
-                                                                prefetch={tourStep ? false : undefined}
-                                                                data-costing-tour="production"
-                                                                href={`/owner/production?tab=jobs&costingId=${encodeURIComponent(targetRecord.id)}`}
-                                                                onClick={() => trackPlanEvent('production_cta_clicked', { source: 'saved_costing_detail' })}
-                                                                className="inline-flex h-9 items-center gap-1.5 rounded-md border border-saffron/30 bg-saffron-soft px-3 text-xs font-semibold text-saffron-deep hover:bg-saffron-soft/80"
-                                                            >
-                                                                <Factory className="h-3.5 w-3.5" /> Activate for Production
-                                                            </Link>
-                                                        )}
-                                                    </> : <>
-                                                        {!targetRecord.is_archived && !latest.is_archived && group.template?.is_active !== false && <Button size="sm" onClick={() => onOpen(targetRecord)} className="rounded-lg bg-loom font-medium text-white hover:bg-loom-elevated hover:text-white"><ArrowRight className="h-3.5 w-3.5" /> {tx('Use')}</Button>}
-                                                        <Button variant="outline" size="sm" onClick={() => onStartFrom(targetRecord)}><Copy className="h-3.5 w-3.5" /> {tx('Duplicate')}</Button>
-                                                        <Button variant="outline" size="sm" onClick={() => onExport(targetRecord)}><Download className="h-3.5 w-3.5" /> {tx('Export')}</Button>
-                                                        <Button variant="outline" size="sm" onClick={() => onSaveAsNewQuality(targetRecord)}><BookmarkPlus className="h-3.5 w-3.5" /> {tx('Save as separate quality')}</Button>
-                                                    </>}
-                                                    {!canUseProduction && canUseProductionPipeline && isStandaloneCosting(targetRecord.record_kind) && !targetRecord.is_archived && (
+                                                    {!targetRecord.is_archived && !latest.is_archived && group.template?.is_active !== false && <Button size="sm" onClick={() => onOpen(targetRecord)} className="rounded-lg bg-loom font-medium text-white hover:bg-loom-elevated hover:text-white"><ArrowRight className="h-3.5 w-3.5" /> {tx('Use')}</Button>}
+                                                    <Button variant="outline" size="sm" onClick={() => onStartFrom(targetRecord)}><Copy className="h-3.5 w-3.5" /> {tx('Duplicate')}</Button>
+                                                    <Button variant="outline" size="sm" onClick={() => onExport(targetRecord)}><Download className="h-3.5 w-3.5" /> {tx('Export')}</Button>
+                                                    <Button variant="outline" size="sm" onClick={() => onSaveAsNewQuality(targetRecord)}><BookmarkPlus className="h-3.5 w-3.5" /> {tx('Save as separate quality')}</Button>
+                                                    {canUseProductionPipeline && isStandaloneCosting(targetRecord.record_kind) && !targetRecord.is_archived && (
                                                         <Link
                                                                 prefetch={tourStep ? false : undefined}
                                                                 data-costing-tour="production"
@@ -687,7 +597,7 @@ function SavedQualityLibraryView({
                                             )}
                                         </div>
                                     ) : (
-                                        <div className={`grid gap-4 ${canUseProduction ? 'lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]' : ''}`}>
+                                        <div className="grid gap-4 ">
                                             <section data-costing-tour="breakdown" className="rounded-xl border border-hairline bg-surface p-4">
                                                 <div className="flex flex-wrap items-start justify-between gap-3">
                                                     <div>
@@ -695,17 +605,11 @@ function SavedQualityLibraryView({
                                                         <p className="mt-1 text-xs text-subtle">Snapshot v{Number(activeRecord.version_number ?? 1)} · {formatTimestampDate(activeRecord.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}</p>
                                                     </div>
                                                     <div data-costing-tour="reuse" className="flex flex-wrap gap-2">
-                                                        {canUseProduction ? <>
-                                                            {!activeRecord.is_archived && group.template?.is_active !== false && <Button variant="outline" size="sm" onClick={() => onOpen(activeRecord)} disabled={updatingId === activeRecord.id} aria-busy={updatingId === activeRecord.id}>{tx('Open')}</Button>}
-                                                            <Button variant="outline" size="sm" onClick={() => onStartFrom(activeRecord)}><Copy className="h-3.5 w-3.5" /> {tx('Duplicate')}</Button>
-                                                            <Button variant="outline" size="sm" onClick={() => onExport(activeRecord)}><Eye className="h-3.5 w-3.5" /> {tx('Preview')}</Button>
-                                                        </> : <>
-                                                            {!activeRecord.is_archived && group.template?.is_active !== false && <Button size="sm" onClick={() => onOpen(activeRecord)} disabled={updatingId === activeRecord.id} aria-busy={updatingId === activeRecord.id} className="rounded-lg bg-loom font-medium text-white hover:bg-loom-elevated hover:text-white"><ArrowRight className="h-3.5 w-3.5" /> {tx('Use')}</Button>}
-                                                            <Button variant="outline" size="sm" onClick={() => onStartFrom(activeRecord)}><Copy className="h-3.5 w-3.5" /> {tx('Duplicate')}</Button>
-                                                            <Button variant="outline" size="sm" onClick={() => onExport(activeRecord)}><Download className="h-3.5 w-3.5" /> {tx('Export')}</Button>
-                                                            <Button variant="outline" size="sm" onClick={() => onSaveAsNewQuality(activeRecord)}><BookmarkPlus className="h-3.5 w-3.5" /> {tx('Save as separate quality')}</Button>
-                                                        </>}
-                                                        {!canUseProduction && canUseProductionPipeline && isStandaloneCosting(activeRecord.record_kind) && !activeRecord.is_archived && (
+                                                        {!activeRecord.is_archived && group.template?.is_active !== false && <Button size="sm" onClick={() => onOpen(activeRecord)} disabled={updatingId === activeRecord.id} aria-busy={updatingId === activeRecord.id} className="rounded-lg bg-loom font-medium text-white hover:bg-loom-elevated hover:text-white"><ArrowRight className="h-3.5 w-3.5" /> {tx('Use')}</Button>}
+                                                        <Button variant="outline" size="sm" onClick={() => onStartFrom(activeRecord)}><Copy className="h-3.5 w-3.5" /> {tx('Duplicate')}</Button>
+                                                        <Button variant="outline" size="sm" onClick={() => onExport(activeRecord)}><Download className="h-3.5 w-3.5" /> {tx('Export')}</Button>
+                                                        <Button variant="outline" size="sm" onClick={() => onSaveAsNewQuality(activeRecord)}><BookmarkPlus className="h-3.5 w-3.5" /> {tx('Save as separate quality')}</Button>
+                                                        {canUseProductionPipeline && isStandaloneCosting(activeRecord.record_kind) && !activeRecord.is_archived && (
                                                             <Link
                                                                 prefetch={tourStep ? false : undefined}
                                                                 data-costing-tour="production"
@@ -752,40 +656,6 @@ function SavedQualityLibraryView({
                                                 )}
                                             </section>
 
-                                            {canUseProduction && <section data-costing-tour="production" className="rounded-xl border border-hairline bg-surface p-4">
-                                                <div className="flex items-center justify-between gap-3">
-                                                    <div>
-                                                        <p className="text-sm font-black text-ink">Applied production</p>
-                                                        <p className="mt-1 text-xs text-subtle">Orders and market runs created from this quality&apos;s costing snapshots.</p>
-                                                    </div>
-                                                    <Factory className="h-5 w-5 text-subtle" />
-                                                </div>
-                                                {usages.length === 0 ? (
-                                                    <div className="mt-4 rounded-lg border border-dashed border-hairline px-4 py-8 text-center text-xs text-subtle">This costing has not been applied to an order or market run yet.</div>
-                                                ) : (
-                                                    <div className="mt-4 space-y-2">
-                                                        {usages.map(({ record, order }) => {
-                                                            const produced = getProducedMeters(order)
-                                                            const target = Number(order.total_target_meters ?? record.meters ?? 0)
-                                                            const isMarketRun = Boolean(record.market_run_id || order.market_run_id || record.record_kind === 'market_run')
-                                                            return (
-                                                                <button key={order.id} type="button" onClick={() => onOpenUsage(record, order)} className="w-full rounded-lg border border-hairline p-3 text-left hover:border-info/40 hover:bg-info-soft/40">
-                                                                    <div className="flex items-start justify-between gap-3">
-                                                                        <div className="min-w-0">
-                                                                            <p className="truncate text-xs font-bold text-ink">{isMarketRun ? 'Market run' : 'Party order'} · {record.party_name || order.party_name || group.name}</p>
-                                                                            <p className="mt-1 text-[11px] text-subtle">{produced.toLocaleString('en-IN', { maximumFractionDigits: 1 })} m produced of {target.toLocaleString('en-IN')} m · {order.status}</p>
-                                                                        </div>
-                                                                        <ExternalLink className="h-4 w-4 shrink-0 text-subtle" />
-                                                                    </div>
-                                                                    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-soft">
-                                                                        <div className="h-full rounded-full bg-success" style={{ width: `${target > 0 ? Math.min(100, (produced / target) * 100) : 0}%` }} />
-                                                                    </div>
-                                                                </button>
-                                                            )
-                                                        })}
-                                                    </div>
-                                                )}
-                                            </section>}
                                         </div>
                                     )}
 
@@ -904,7 +774,7 @@ function SavedQualityLibraryView({
     )
 }
 
-export default function QuotesClient({ initialQuotes, initialTemplates, initialProfile, initialWorkers, initialStatus, orgId, userId, canUseProduction, canUseProductionPipeline, canUseQuotationWorkflow, organizationName }: { initialQuotes: QuoteRow[], initialTemplates: SavedQuality[], initialProfile?: SavedQualityFactoryProfile, initialWorkers: SavedQualityFixedWorker[], initialStatus?: string, orgId: string, userId: string, canUseProduction: boolean, canUseProductionPipeline: boolean, canUseQuotationWorkflow: boolean, organizationName: string }) {
+export default function QuotesClient({ initialQuotes, initialTemplates, initialProfile, initialWorkers, initialStatus, orgId, userId, canUseProductionPipeline, organizationName }: { initialQuotes: QuoteRow[], initialTemplates: SavedQuality[], initialProfile?: SavedQualityFactoryProfile, initialWorkers: SavedQualityFixedWorker[], initialStatus?: string, orgId: string, userId: string, canUseProductionPipeline: boolean, organizationName: string }) {
     const { t, tx } = useTranslation()
     const { language } = useTranslation()
     const [tourStep, setTourStep] = useState<SavedCostingStep | null>(null)
@@ -941,7 +811,6 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
     const isDemoCostingActive = (!demoCostingDeleted && quotes.length === 0 && initialTemplates.length === 0) || tourStep !== null
     const [updatingId, setUpdatingId] = useState<string | null>(null)
     const [filterStatus, setFilterStatus] = useState<string>(initialStatus || 'all')
-    const [quoteToAccept, setQuoteToAccept] = useState<QuoteRow | null>(null)
     const [quoteToRestore, setQuoteToRestore] = useState<QuoteRow | null>(null)
     const [restoreMode, setRestoreMode] = useState<'edit' | 'duplicate'>('edit')
     const [existingDraftForRestore, setExistingDraftForRestore] = useState<EstimatorAutosaveData<QuoteDraftState> | null>(null)
@@ -953,31 +822,11 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
     const [selectedCostingIds, setSelectedCostingIds] = useState<string[]>([])
     const [showComparison, setShowComparison] = useState(false)
     const [quoteToExport, setQuoteToExport] = useState<QuoteRow | null>(null)
-    const [quoteHistoryFor, setQuoteHistoryFor] = useState<QuoteRow | null>(null)
-    const [quoteHistoryRows, setQuoteHistoryRows] = useState<QuoteStatusHistoryRow[]>([])
-    const [quoteHistoryLoading, setQuoteHistoryLoading] = useState(false)
-    const [quoteHistoryError, setQuoteHistoryError] = useState<string | null>(null)
     const [quoteToArchive, setQuoteToArchive] = useState<QuoteRow | null>(null)
     const [archiveAction, setArchiveAction] = useState<'archive' | 'restore'>('archive')
     const [detailLoadingId, setDetailLoadingId] = useState<string | null>(null)
     const [showArchived, setShowArchived] = useState(false)
-    const showQualityLibrary = !canUseQuotationWorkflow || filterStatus === 'costings'
 
-    const filteredQuotes = useMemo(() => {
-        const library = filterAndSortSavedCostings(quotes.filter(quote => (
-            Boolean(quote.is_archived) === showArchived
-        )), {
-            query: searchQuery,
-            sort: costingSort,
-            margin: marginFilter,
-            favorites: showFavoritesOnly,
-        })
-        if (!canUseProduction || !canUseQuotationWorkflow) return library.filter(quote => isStandaloneCosting(quote.record_kind))
-        if (filterStatus === 'costings') return library.filter(quote => isStandaloneCosting(quote.record_kind))
-        if (filterStatus === 'all') return library
-        return library.filter(quote => canUseQuotationLifecycle(quote.record_kind, canUseProduction) && quote.status === filterStatus)
-    },
-    [canUseProduction, canUseQuotationWorkflow, costingSort, filterStatus, marginFilter, quotes, searchQuery, showArchived, showFavoritesOnly])
     const qualityGroups = useMemo(() => {
         const groups = new Map<string, SavedQualityGroup>()
         const labelIndex = new Map<string, string>()
@@ -992,7 +841,6 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
         }
 
         for (const record of quotes.filter(item => {
-            if (canUseQuotationWorkflow && filterStatus === 'costings' && !isStandaloneCosting(item.record_kind)) return false
             if (showFavoritesOnly && item.is_favorite !== true) return false
             const template = item.template_id ? templateById.get(item.template_id) : null
             const belongsInArchive = isSavedCostingArchived(item, template)
@@ -1043,7 +891,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             if (costingSort === 'cost_asc') return (a.records[0] ? getProductionCostPerM(a.records[0]) ?? Number.POSITIVE_INFINITY : Number.POSITIVE_INFINITY) - (b.records[0] ? getProductionCostPerM(b.records[0]) ?? Number.POSITIVE_INFINITY : Number.POSITIVE_INFINITY)
             return Date.parse(b.updatedAt) - Date.parse(a.updatedAt)
         })
-    }, [canUseQuotationWorkflow, filterStatus, costingSort, initialProfile, initialTemplates, initialWorkers, marginFilter, quotes, searchQuery, showArchived, showFavoritesOnly])
+    }, [costingSort, initialProfile, initialTemplates, initialWorkers, marginFilter, quotes, searchQuery, showArchived, showFavoritesOnly])
     const selectedCostings = useMemo(
         () => selectedCostingIds.map(id => quotes.find(quote => quote.id === id) ?? tourExamples.find(e => e.id === id)).filter((quote): quote is QuoteRow => Boolean(quote)),
         [quotes, selectedCostingIds, tourExamples],
@@ -1247,69 +1095,24 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
         }
     }
 
-    const openAppliedProduction = () => {
-        router.push('/owner/production')
-    }
-
-    const handleStatusChange = async (id: string, newStatus: 'draft' | 'sent' | 'accepted' | 'rejected') => {
-        const quote = quotes.find(item => item.id === id)
-        if (!quote) return false
-        setUpdatingId(id)
-        const res = await updateQuoteStatus(id, newStatus, quote.updated_at)
-        setUpdatingId(null)
-        if (res.error) {
-            toast.error(tx(userFacingError(res.error, 'The quotation status could not be updated. Try again.')))
-            return false
-        } else {
-            toast.success(tx(`Quotation marked as ${STATUS_CONFIG[newStatus].label}`), {
-                description: tx(`Status updated ${formatQuoteTimestamp(res.data?.updated_at)}.`),
-            })
-            setQuotes(prev => prev.map(q => q.id === id ? { ...q, ...res.data, status: newStatus } : q))
-            setQuoteToExport(current => current?.id === id ? { ...current, ...res.data, status: newStatus } : current)
-            return true
-        }
-    }
-
-    const openQuoteHistory = async (quote: QuoteRow) => {
-        setQuoteHistoryFor(quote)
-        setQuoteHistoryRows([])
-        setQuoteHistoryError(null)
-        setQuoteHistoryLoading(true)
-        try {
-            const result = await getQuoteStatusHistory(quote.id)
-            if (result.error) {
-                setQuoteHistoryError(userFacingError(result.error, 'Quotation history could not be loaded.'))
-            } else {
-                setQuoteHistoryRows(result.data as QuoteStatusHistoryRow[])
-            }
-        } catch (error) {
-            setQuoteHistoryError(userFacingError(error, 'Quotation history could not be loaded.'))
-        } finally {
-            setQuoteHistoryLoading(false)
-        }
-    }
-
     const restoreQuoteToEstimator = (quote: QuoteRow, mode: 'edit' | 'duplicate' = 'edit') => {
         try {
             const draftKey = getEstimatorDraftStorageKey(orgId, userId)
             const linkedOrder = getLinkedOrder(quote)
             const isDuplicate = mode === 'duplicate'
             const isCosting = isStandaloneCosting(quote.record_kind)
-            const createsQuotationFromCosting = canUseQuotationWorkflow && isDuplicate && isCosting
-            const startsNewBaseQuality = isDuplicate && isCosting && !canUseQuotationWorkflow
+            const startsNewBaseQuality = isDuplicate && isCosting
             const restoredState = buildDraftStateFromQuote(quote)
             const newDraft = createEstimatorDraft<QuoteDraftState>({
                 state: restoredState,
-                partyName: createsQuotationFromCosting ? '' : quote.party_name || '',
+                partyName: quote.party_name || '',
                 // A Base starting point is intentionally detached from both
                 // the old snapshot and its Saved Quality. Requiring a fresh
                 // quality name prevents Rajesh from accidentally saving a
                 // different construction into the old quality's history.
                 qualityLabel: startsNewBaseQuality
                     ? ''
-                    : isDuplicate && canUseQuotationWorkflow && !isCosting
-                        ? `${quote.quality_label || 'Untitled'} Copy`
-                        : quote.quality_label || '',
+                    : quote.quality_label || '',
                 warpInstruction: quote.warp_instruction || linkedOrder?.warp_instruction || '',
                 weftInstruction: quote.weft_instruction || linkedOrder?.weft_instruction || '',
                 sourceQuoteId: isDuplicate ? undefined : quote.id,
@@ -1319,9 +1122,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                 sourceQuoteStatus: isDuplicate ? undefined : quote.status,
                 sourceState: isDuplicate ? undefined : restoredState,
                 sourceFactoryProfileUpdatedAt: isDuplicate ? undefined : quote.factory_profile_updated_at ?? undefined,
-                sourceRecordKind: createsQuotationFromCosting
-                    ? undefined
-                    : quote.record_kind ?? (canUseQuotationWorkflow ? 'quotation' : 'costing'),
+                sourceRecordKind: quote.record_kind ?? 'costing',
                 templateId: startsNewBaseQuality ? undefined : quote.template_id ?? undefined,
                 restoreOnEstimatorEntry: true,
             }, {
@@ -1330,11 +1131,9 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             localStorage.setItem(draftKey, JSON.stringify(newDraft))
             setQuoteToRestore(null)
             setExistingDraftForRestore(null)
-            toast.success(tx(createsQuotationFromCosting
-                ? 'Costing loaded as a new customer quotation draft'
-                : isDuplicate
-                    ? (startsNewBaseQuality ? 'Starting point loaded. Enter a new Saved Quality name before saving.' : canUseQuotationWorkflow ? 'Quotation copied into a new Cost Estimate draft' : 'Costing loaded as a starting point')
-                    : isCosting ? 'Costing snapshot restored' : 'Quotation snapshot restored'))
+            toast.success(tx(isDuplicate
+                ? (startsNewBaseQuality ? 'Starting point loaded. Enter a new Saved Quality name before saving.' : 'Costing loaded as a starting point')
+                : isCosting ? 'Costing snapshot restored' : 'Quotation snapshot restored'))
             router.push('/owner/estimator')
         } catch (error) {
             toast.error(tx('Browser storage is unavailable. The quote could not be opened in the estimator.'))
@@ -1435,20 +1234,20 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
     return (
         <>
             <aside className="saved-costings-left-rail space-y-3" aria-label={tx('Saved Costings guides and tools')}>
-                <SavedCostingsTutorial step={tourStep} onStepChange={setTourStep} onComplete={() => setShowCostingDeleteNudge(true)} production={canUseProductionPipeline} full={canUseProduction} ending={savedCostingTourEnding(quotes.filter(quote => isStandaloneCosting(quote.record_kind)).length)} quotations={canUseQuotationWorkflow} userId={userId} orgId={orgId} />
+                <SavedCostingsTutorial step={tourStep} onStepChange={setTourStep} onComplete={() => setShowCostingDeleteNudge(true)} production={canUseProductionPipeline} ending={savedCostingTourEnding(quotes.filter(quote => isStandaloneCosting(quote.record_kind)).length)} userId={userId} orgId={orgId} />
             </aside>
             <div className="saved-costings-workspace ui-route-enter max-w-6xl mx-auto space-y-6">
             <RouteMilestones route="/owner/quotes" shellVisible primaryUsable secondaryReady />
             {detailLoadingId && <p role="status" aria-live="polite" className="ui-status-enter rounded-lg border border-info/25 bg-info-soft px-3 py-2 text-xs font-semibold text-info">{tx('Selection saved. Loading the complete snapshot for comparison…')}</p>}
             <PageHeader
-                title={canUseQuotationWorkflow ? t('common.costings_quotations_title') : t('common.saved_costings_title')}
+                title={t('common.saved_costings_title')}
                 actions={(
                     <Button
                         onClick={() => router.push('/owner/estimator')}
                         className="rail-inline-actions h-10 w-full sm:w-auto rounded-xl bg-loom px-4 font-medium text-white shadow-xs hover:bg-loom-elevated hover:text-white focus-visible:ring-saffron"
                     >
                         <Plus className="h-4 w-4" aria-hidden="true" />
-                        <span>{canUseQuotationWorkflow ? t('common.new_estimate') : t('common.new_costing')}</span>
+                        <span>{t('common.new_costing')}</span>
                     </Button>
                 )}
             />
@@ -1485,36 +1284,17 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     </div>
                 </div>
             )}
-            {canUseQuotationWorkflow && <Toolbar className="w-full overflow-x-auto rounded-2xl border border-hairline bg-surface p-1.5 shadow-xs">
-                    {['all', 'costings', 'draft', 'sent', 'accepted', 'rejected'].map(s => (
-                        <button
-                            key={s}
-                            onClick={() => {
-                                setFilterStatus(s)
-                                router.replace(`/owner/quotes${s !== 'all' ? `?status=${s}` : ''}`)
-                            }}
-                            className={`min-h-10 px-4 flex items-center justify-center rounded-xl text-xs font-semibold capitalize whitespace-nowrap transition-colors ${
-                                filterStatus === s
-                                    ? 'bg-loom text-white shadow-xs'
-                                    : 'text-body hover:bg-surface-soft hover:text-ink'
-                            }`}
-                        >
-                            {s}
-                        </button>
-                    ))}
-            </Toolbar>}
-
             <Toolbar data-costing-tour="filters" className="overflow-visible rounded-2xl border border-hairline bg-surface shadow-xs p-4">
                     <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(260px,1fr)_auto_auto_auto_auto]">
                         <div className="relative min-w-0">
                             <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle/60" />
-                            <Label htmlFor="saved-costings-search" className="sr-only">{canUseQuotationWorkflow ? t('common.search_party_quality_costing') : t('common.search_quality_costing')}</Label>
+                            <Label htmlFor="saved-costings-search" className="sr-only">{t('common.search_quality_costing')}</Label>
                             <Input
                                 id="saved-costings-search"
                                 value={searchQuery}
                                 onChange={event => setSearchQuery(event.target.value)}
                                 placeholder="Search saved records…"
-                                aria-label={canUseQuotationWorkflow ? 'Search saved qualities, costings, quotations, and party names' : 'Search saved qualities and costings'}
+                                aria-label="Search saved qualities and costings"
                                 className="h-10 sm:h-11 w-full min-w-0 rounded-xl border-hairline bg-surface pl-10 pr-4 text-sm text-ink placeholder:text-subtle/50 focus-visible:border-saffron focus-visible:ring-saffron"
                             />
                         </div>
@@ -1577,9 +1357,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     <p className="mt-3 text-xs font-medium text-body">
                         {isDemoCostingActive && quotes.length === 0
                             ? (searchQuery.trim() && !tourExamples[0]?.quality_label?.toLowerCase().includes(searchQuery.trim().toLowerCase()) && !'tour sample'.includes(searchQuery.trim().toLowerCase()) ? '0 qualities' : '1 sample quality')
-                            : showQualityLibrary
-                                ? `${qualityGroups.length} ${showArchived ? 'archived ' : ''}${qualityGroups.length === 1 ? 'quality' : 'qualities'}`
-                                : `${filteredQuotes.length} ${showArchived ? 'archived ' : ''}${filteredQuotes.length === 1 ? 'record' : 'records'}`}
+                            : `${qualityGroups.length} ${showArchived ? 'archived ' : ''}${qualityGroups.length === 1 ? 'quality' : 'qualities'}`}
                     </p>
                 </Toolbar>
 
@@ -1588,14 +1366,14 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold" data-i18n-skip="true" lang={language}>{savedCostingsTutorialCopy[language].sample}</p>
                     <SavedQualityLibraryView
                     selectedRecordIdByGroup={{}} onSelectRecord={() => {}}
-                        groups={tourGroups} canUseProduction={canUseProduction} canUseProductionPipeline={canUseProductionPipeline}
+                        groups={tourGroups} canUseProductionPipeline={canUseProductionPipeline}
                         openKey={tourSurface === 'library' ? 'tour-preview' : null}
                         tourStep={tourStep} comparisonMode={tourStep === 'compareSelect'}
                         selectedCostingIds={tourStep === 'compareSelect' ? tourExamples.map(row => row.id) : []}
                         updatingId={null} detailLoadingId={null} auditingId={null}
                         onOpenDetails={() => {}} onCloseDetails={() => {}} onToggleComparison={() => {}}
                         onOpen={() => {}} onStartFrom={() => {}} onSaveAsNewQuality={() => {}} onExport={() => {}}
-                        onAudit={() => {}} onToggleFavorite={() => {}} onToggleArchived={() => {}} onOpenUsage={() => {}}
+                        onAudit={() => {}} onToggleFavorite={() => {}} onToggleArchived={() => {}}
                         factoryInputsCapturedLabel={tx('Factory inputs captured')}
                     />
                 </div>
@@ -1637,7 +1415,6 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                         <SavedQualityLibraryView
                             selectedRecordIdByGroup={selectedRecordIdByGroup} onSelectRecord={selectRecord}
                             groups={tourGroups}
-                            canUseProduction={canUseProduction}
                             canUseProductionPipeline={canUseProductionPipeline}
                             openKey={openQualityKey}
                             comparisonMode={comparisonMode}
@@ -1658,7 +1435,6 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                             auditingId={updatingId}
                             onToggleFavorite={() => { toast.info(tx('This is a sample costing for exploration.')) }}
                             onToggleArchived={() => { toast.info(tx('This is a sample costing for exploration.')) }}
-                            onOpenUsage={() => { toast.info(tx('This is a sample costing for exploration.')) }}
                             onEnsureDetail={ensureQuoteDetail}
                             factoryInputsCapturedLabel={t('estimator.sprint1.baseline_captured')}
                         />
@@ -1666,18 +1442,18 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                 )
             ) : (
             <div>
-            {(showQualityLibrary ? qualityGroups.length === 0 : filteredQuotes.length === 0) ? (
+            {qualityGroups.length === 0 ? (
                 <EmptyState
                     icon={FileText}
                     title={searchQuery.trim()
                         ? `No saved records match “${searchQuery.trim()}”.`
-                        : canUseQuotationWorkflow ? t('common.no_costings_quotations') : t('common.no_saved_qualities_costings')}
+                        : t('common.no_saved_qualities_costings')}
                     description={searchQuery.trim()
                         ? 'Try a quality name, party name, quotation reference, or clear the search.'
                         : showArchived
                             ? 'No archived records are showing. Switch to Active or save a costing first.'
                             : filterStatus === 'all'
-                                ? (canUseQuotationWorkflow ? t('common.no_costings_quotations_yet') : t('common.save_quality_or_cost_estimate'))
+                                ? t('common.save_quality_or_cost_estimate')
                                 : `No quotations with status “${filterStatus}”.`}
                     action={(
                         <div className="flex flex-wrap justify-center gap-2">
@@ -1689,19 +1465,13 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                     {t('common.clear_search_filters')}
                                 </Button>
                             )}
-                            {canUseQuotationWorkflow && filterStatus !== 'all' && (
-                                <Button variant="ghost" onClick={() => setFilterStatus('all')}>
-                                    {t('common.clear_filters')}
-                                </Button>
-                            )}
                         </div>
                     )}
                 />
-            ) : showQualityLibrary ? (
+            ) : (
                 <SavedQualityLibraryView
                     selectedRecordIdByGroup={selectedRecordIdByGroup} onSelectRecord={selectRecord}
                     groups={qualityGroups}
-                    canUseProduction={canUseProduction}
                     canUseProductionPipeline={canUseProductionPipeline}
                     openKey={openQualityKey}
                     comparisonMode={comparisonMode}
@@ -1722,335 +1492,9 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     auditingId={updatingId}
                     onToggleFavorite={quote => { void handleLibraryState(quote, { isFavorite: !quote.is_favorite }) }}
                     onToggleArchived={requestArchiveState}
-                    onOpenUsage={() => { setOpenQualityKey(null); openAppliedProduction() }}
                     onEnsureDetail={ensureQuoteDetail}
                     factoryInputsCapturedLabel={t('estimator.sprint1.baseline_captured')}
                 />
-            ) : !canUseProduction || !canUseQuotationWorkflow ? (
-                <div>
-                    <div className="hidden overflow-hidden rounded-xl border border-hairline bg-surface shadow-[var(--shadow-card)] md:block">
-                      <div className="overflow-x-auto">
-                        <table className="w-full min-w-[980px] border-collapse text-left">
-                            <thead className="border-b border-hairline bg-surface-soft text-[11px] font-bold uppercase tracking-wide text-subtle">
-                                <tr>
-                                    <th className="w-12 px-4 py-3"><span className="sr-only">Compare</span></th>
-                                    <th className="px-4 py-3">Quality</th>
-                                    <th className="px-4 py-3">{t('common.production_cost_per_m')}</th>
-                                    <th className="px-4 py-3">{t('common.suggested_selling_price')}</th>
-                                    <th className="px-4 py-3">{t('common.margin')}</th>
-                                    <th className="px-4 py-3">Quantity</th>
-                                    <th className="px-4 py-3">Updated</th>
-                                    <th className="px-4 py-3 text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-hairline">
-                                {filteredQuotes.map(quote => {
-                                    const selected = selectedCostingIds.includes(quote.id)
-                                    const metrics = getSavedCostingMetrics(quote)
-                                    const previousVersion = getPreviousCostingVersion(quote, quotes)
-                                    const costMovement = getProductionCostMovement(quote, previousVersion)
-                                    return (
-                                        <tr key={quote.id} className={selected ? 'bg-info-soft/60' : 'hover:bg-surface-soft/70'}>
-                                            <td className="px-4 py-4 align-middle">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selected}
-                                                    onChange={() => toggleCostingSelection(quote.id)}
-                                                    aria-label={`Select ${quote.quality_label || 'Untitled costing'} for comparison`}
-                                                    className="h-4 w-4 rounded border-hairline accent-saffron"
-                                                />
-                                            </td>
-                                            <td className="max-w-[240px] px-4 py-4">
-                                                <p className="truncate text-sm font-bold text-ink" aria-label={getLegacyVersionLabel(quote)} title={getSavedCostingIdentity(quote).label}>{getSavedCostingIdentity(quote).label}</p>
-                                                <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-subtle">
-                                                    <span>Saved {formatTimestampDate(quote.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                                                    {getCostingStatus(quote) !== 'verified' && <StatusBadge status="needs_review" label={getCostingBadge(getCostingStatus(quote))} />}
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-4">
-                                                <p className="font-mono text-sm font-semibold text-body">{formatCostingMoneyPerM(getProductionCostPerM(quote))}</p>
-                                                {costMovement !== null && (
-                                                    <p className={`mt-1 text-[11px] font-semibold ${costMovement > 0 ? 'text-warning' : costMovement < 0 ? 'text-success' : 'text-subtle'}`}>
-                                                        {costMovement === 0 ? 'No change' : `₹${Math.abs(costMovement).toFixed(2)}/m ${costMovement > 0 ? 'higher' : 'lower'}`} than v{Number(previousVersion?.version_number ?? 1)}
-                                                    </p>
-                                                )}
-                                            </td>
-                                            <td className="px-4 py-4 font-mono text-sm font-bold text-saffron-deep">{formatCostingMoneyPerM(metrics.suggestedSellingPricePerM)}</td>
-                                            <td className={`px-4 py-4 font-mono text-sm font-bold ${(metrics.actualMarginPct ?? 0) < 0 ? 'text-risk' : 'text-success'}`}>
-                                                {formatCostingPercent(metrics.actualMarginPct)}
-                                            </td>
-                                            <td className="px-4 py-4 text-sm font-medium text-body">{Number(quote.meters || 0).toLocaleString('en-IN')} m</td>
-                                            <td className="px-4 py-4 text-xs font-medium text-subtle">{formatSuratDateTime(quote.updated_at)}</td>
-                                            <td className="px-4 py-4">
-                                                <div className="flex justify-end gap-1">
-                                                    {!quote.is_archived && <Button variant="ghost" size="sm" onClick={() => handleRestore(quote, 'edit')} className="h-9 text-xs font-semibold text-info">{tx('Open')}</Button>}
-                                                    <Button variant="ghost" size="sm" onClick={() => handleRestore(quote, 'duplicate')} className="h-9 text-xs font-semibold">
-                                                        <Copy className="h-3.5 w-3.5" /> {tx('Duplicate')}
-                                                    </Button>
-                                                    <Button variant="ghost" size="sm" onClick={() => { void openQuoteExport(quote) }} className="h-9 text-xs font-semibold">
-                                                        <Eye className="h-3.5 w-3.5" /> {tx('Preview')}
-                                                    </Button>
-                                                    {getCostingStatus(quote) !== 'verified' && <Button variant="ghost" size="sm" onClick={() => { void auditQuote(quote) }} disabled={updatingId === quote.id} className="h-9 text-xs font-semibold text-warning">
-                                                        {updatingId === quote.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />} {tx(updatingId === quote.id ? 'Checking…' : 'Check saved numbers')}
-                                                    </Button>}
-                                                    <Button variant="ghost" size="icon" onClick={() => handleLibraryState(quote, { isFavorite: !quote.is_favorite })} className={quote.is_favorite ? 'h-9 w-9 text-warning' : 'h-9 w-9 text-subtle'} aria-label={quote.is_favorite ? `Remove ${quote.quality_label || 'costing'} from favourites` : `Add ${quote.quality_label || 'costing'} to favourites`}>
-                                                        <Star className="h-4 w-4" fill={quote.is_favorite ? 'currentColor' : 'none'} />
-                                                    </Button>
-                                                    <Button variant="ghost" size="icon" onClick={() => requestArchiveState(quote)} disabled={updatingId === quote.id} className="h-9 w-9 text-subtle" aria-label={quote.is_archived ? `Restore costing snapshot ${quote.quality_label || 'costing'}` : `Archive costing snapshot ${quote.quality_label || 'costing'}`}>
-                                                        {updatingId === quote.id ? <Loader2 className="h-4 w-4 animate-spin" /> : quote.is_archived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
-                                                    </Button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    )
-                                })}
-                            </tbody>
-                        </table>
-                      </div>
-                    </div>
-                    <div className="space-y-3 md:hidden">
-                        {filteredQuotes.map(quote => {
-                            const selected = selectedCostingIds.includes(quote.id)
-                            const metrics = getSavedCostingMetrics(quote)
-                            const quality = quote.quality_label || 'Untitled costing'
-                            const previousVersion = getPreviousCostingVersion(quote, quotes)
-                            const costMovement = getProductionCostMovement(quote, previousVersion)
-                            return (
-                                <Card key={quote.id} className={selected ? 'border-info/30 bg-info-soft/40 shadow-[var(--shadow-card)]' : 'border-hairline bg-surface shadow-[var(--shadow-card)]'}>
-                                    <CardContent className="p-4">
-                                        <div className="flex items-start gap-3">
-                                            <input
-                                                type="checkbox"
-                                                checked={selected}
-                                                onChange={() => toggleCostingSelection(quote.id)}
-                                                aria-label={`Select ${quality} for comparison`}
-                                                className="mt-1 h-4 w-4 shrink-0 rounded border-hairline accent-saffron"
-                                            />
-                                            <div className="min-w-0 flex-1">
-                                                <p className="truncate text-sm font-bold text-ink" aria-label={getLegacyVersionLabel(quote)} title={getSavedCostingIdentity(quote).label}>{getSavedCostingIdentity(quote).label}</p>
-                                                <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-subtle">
-                                                    <span>Updated {formatSuratDateTime(quote.updated_at)}</span>
-                                                    {getCostingStatus(quote) !== 'verified' && <StatusBadge status="needs_review" label={getCostingBadge(getCostingStatus(quote))} />}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="mt-4 grid grid-cols-2 gap-3 rounded-lg bg-surface-soft p-3">
-                                            <div>
-                                                <p className="text-[10px] font-bold uppercase tracking-wide text-subtle">{t('common.production_cost_per_m')}</p>
-                                                <p className="mt-1 font-mono text-sm font-bold text-ink">{formatCostingMoneyPerM(getProductionCostPerM(quote))}</p>
-                                                {costMovement !== null && (
-                                                    <p className={`mt-1 text-[10px] font-semibold ${costMovement > 0 ? 'text-warning' : costMovement < 0 ? 'text-success' : 'text-subtle'}`}>
-                                                        {costMovement === 0 ? 'No change' : `₹${Math.abs(costMovement).toFixed(2)}/m ${costMovement > 0 ? 'higher' : 'lower'}`} than v{Number(previousVersion?.version_number ?? 1)}
-                                                    </p>
-                                                )}
-                                            </div>
-                                            <div>
-                                                <p className="text-[10px] font-bold uppercase tracking-wide text-subtle">{t('common.suggested_selling_price_per_m')}</p>
-                                                <p className="mt-1 font-mono text-sm font-bold text-saffron-deep">{formatCostingMoneyPerM(metrics.suggestedSellingPricePerM)}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-[10px] font-bold uppercase tracking-wide text-subtle">{t('common.margin')}</p>
-                                                <p className={`mt-1 font-mono text-sm font-bold ${(metrics.actualMarginPct ?? 0) < 0 ? 'text-risk' : 'text-success'}`}>{formatCostingPercent(metrics.actualMarginPct)}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-[10px] font-bold uppercase tracking-wide text-subtle">Quantity</p>
-                                                <p className="mt-1 text-sm font-semibold text-body">{Number(quote.meters || 0).toLocaleString('en-IN')} m</p>
-                                            </div>
-                                        </div>
-                                        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
-                                            {!quote.is_archived && <Button variant="outline" size="sm" onClick={() => handleRestore(quote, 'edit')} className="h-10 text-xs font-semibold text-info">Open</Button>}
-                                            <Button variant="outline" size="sm" onClick={() => handleRestore(quote, 'duplicate')} aria-label="Duplicate costing" className="h-10 text-xs font-semibold">
-                                                <Copy className="h-3.5 w-3.5" /> {tx('Duplicate')}
-                                            </Button>
-                                            <Button variant="outline" size="sm" onClick={() => { void openQuoteExport(quote) }} className="h-10 text-xs font-semibold">
-                                                <Eye className="h-3.5 w-3.5" /> {tx('Preview')}
-                                            </Button>
-                                        </div>
-                                        <div className="mt-2 grid grid-cols-2 gap-2">
-                                            <Button variant="ghost" size="sm" onClick={() => handleLibraryState(quote, { isFavorite: !quote.is_favorite })} className={quote.is_favorite ? 'h-9 text-xs text-warning' : 'h-9 text-xs text-body'}>
-                                                <Star className="h-3.5 w-3.5" fill={quote.is_favorite ? 'currentColor' : 'none'} /> {tx(quote.is_favorite ? 'Favourited' : 'Favourite')}
-                                            </Button>
-                                            <Button variant="ghost" size="sm" onClick={() => requestArchiveState(quote)} disabled={updatingId === quote.id} className="h-9 text-xs text-body" aria-label={`${quote.is_archived ? 'Restore costing snapshot' : 'Archive costing snapshot'} ${quote.quality_label || 'costing'}`}>
-                                                {updatingId === quote.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : quote.is_archived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />} {tx(updatingId === quote.id ? quote.is_archived ? `Restoring ${quote.quality_label || 'costing'}…` : `Archiving ${quote.quality_label || 'costing'}…` : quote.is_archived ? 'Restore snapshot' : 'Archive snapshot')}
-                                            </Button>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            )
-                        })}
-                    </div>
-                </div>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {filteredQuotes.map(quote => {
-                        const linkedOrder = getLinkedOrder(quote)
-                        const metrics = getSavedCostingMetrics(quote)
-                        const isCosting = isStandaloneCosting(quote.record_kind)
-                        const hasQuotationLifecycle = canUseQuotationLifecycle(quote.record_kind, canUseQuotationWorkflow)
-                        const previousVersion = getPreviousCostingVersion(quote, quotes)
-                        const costMovement = getProductionCostMovement(quote, previousVersion)
-
-                        return (
-                            <Card key={quote.id} className="group relative border-hairline shadow-[var(--shadow-card)] transition-shadow hover:shadow-[var(--shadow-panel)]">
-                                <CardContent className="p-5 flex flex-col h-full">
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div className="space-y-1 w-full min-w-0 pr-2">
-                                            <h3 className="truncate text-lg font-black tracking-tight text-ink" title={isCosting ? (quote.quality_label || 'Untitled costing') : (quote.party_name || '')}>
-                                                {isCosting ? (quote.quality_label || 'Untitled costing') : quote.party_name}
-                                            </h3>
-                                            <p className="truncate text-xs font-bold uppercase leading-none tracking-widest text-subtle">
-                                                {isCosting ? `Saved Costing · v${Number(quote.version_number ?? 1)}` : quote.quality_label}
-                                            </p>
-                                            {hasQuotationLifecycle && <p className="text-[11px] font-medium text-subtle">Status updated {formatQuoteTimestamp(quote.updated_at)}</p>}
-                                        </div>
-                                        <div className="flex flex-wrap justify-end gap-1">
-                                            <Badge variant="outline" className={`${isCosting ? 'border-saffron/25 bg-saffron-soft text-saffron-deep' : STATUS_CONFIG[quote.status as keyof typeof STATUS_CONFIG]?.color} capitalize font-bold`}>
-                                                {isCosting ? (quote.id === updatingId ? 'Updating' : 'Saved Costing') : STATUS_CONFIG[quote.status]?.label ?? quote.status}
-                                            </Badge>
-                                            {getCostingStatus(quote) !== 'verified' && <StatusBadge status="needs_review" label={getCostingBadge(getCostingStatus(quote))} />}
-                                        </div>
-                                    </div>
-
-                                    {hasQuotationLifecycle && (
-                                        <div className="mb-4 rounded-xl border border-info/25 bg-info-soft/60 p-3 text-[11px] text-body">
-                                            <p className="font-bold uppercase tracking-wide text-info">Quotation ledger</p>
-                                            <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-2">
-                                                <p><span className="font-semibold text-subtle">Identifier:</span> {quote.quotation_reference || `QT-${quote.id.slice(0, 8).toUpperCase()}`}</p>
-                                                <p><span className="font-semibold text-subtle">Customer:</span> {quote.party_name || 'Not recorded'}</p>
-                                                <p><span className="font-semibold text-subtle">Created:</span> {formatQuoteTimestamp(quote.created_at)}</p>
-                                                <p><span className="font-semibold text-subtle">Valid until:</span> {quote.quotation_valid_until ? formatDateOnly(quote.quotation_valid_until, { day: 'numeric', month: 'short', year: 'numeric' }) : 'Not set'}</p>
-                                                <p><span className="font-semibold text-subtle">Price basis:</span> {formatCostingMoneyPerM(metrics.suggestedSellingPricePerM)} · {Number(quote.meters || 0).toLocaleString('en-IN')} m</p>
-                                                <p><span className="font-semibold text-subtle">Quoted amount:</span> {formatQuotationAmount(metrics.suggestedSellingPricePerM, quote.meters)}</p>
-                                                <p><span className="font-semibold text-subtle">Sent:</span> {formatQuoteTimestamp(quote.sent_at)}</p>
-                                            </div>
-                                            <p className="mt-2 font-medium text-subtle">{getQuotationNextAction(quote.status)}</p>
-                                        </div>
-                                    )}
-
-                                    <div className="grid grid-cols-2 gap-4 mb-4">
-                                        <div>
-                                            <p className="text-xs font-bold uppercase tracking-wider text-subtle">{isCosting ? t('common.suggested_selling_price_per_m') : t('common.quotation_price')}</p>
-                                            <p className="font-mono text-base font-black text-saffron-deep">{formatCostingMoneyPerM(metrics.suggestedSellingPricePerM)}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs font-bold uppercase tracking-wider text-subtle">{t('common.margin')}</p>
-                                            <p className={`font-mono text-base font-black ${(metrics.actualMarginPct ?? 0) < 0 ? 'text-risk' : 'text-success'}`}>
-                                                {formatCostingPercent(metrics.actualMarginPct)}
-                                            </p>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs font-bold uppercase tracking-wider text-subtle">{t('common.production_cost_per_m')}</p>
-                                            <p className="mt-0.5 font-mono text-xs font-bold text-body">{formatCostingMoneyPerM(getProductionCostPerM(quote))}</p>
-                                            {isCosting && costMovement != null && (
-                                                <p className={`mt-1 text-[10px] font-bold ${costMovement > 0 ? 'text-risk' : costMovement < 0 ? 'text-success' : 'text-subtle'}`}>
-                                                    {costMovement === 0 ? 'No change' : `₹${Math.abs(costMovement).toFixed(2)}/m ${costMovement > 0 ? 'higher' : 'lower'}`} than v{Number(previousVersion?.version_number ?? 1)}
-                                                </p>
-                                            )}
-                                        </div>
-                                        <div>
-                                            <p className="text-xs font-bold uppercase tracking-wider text-subtle">{t('common.date')}</p>
-                                            <p className="mt-0.5 text-xs font-bold text-body">{formatTimestampDate(quote.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="mt-auto space-y-3 border-t border-hairline pt-4">
-                                        <div className="flex flex-wrap items-center justify-between gap-2">
-                                            <div className="flex items-center gap-1">
-                                                {linkedOrder && (
-                                                    <Badge variant="outline" className="border-success/25 bg-success-soft font-bold text-success">
-                                                        Order #{linkedOrder.id.split('-')[0]}
-                                                        {linkedOrder.status === 'completed' && <CheckCircle2 className="h-3 w-3 ml-1" />}
-                                                    </Badge>
-                                                )}
-                                            </div>
-                                            <div className="ml-auto flex flex-wrap justify-end gap-1">
-                                                <Button
-                                                    variant="ghost"
-                                                    className="h-11 px-3 text-xs font-bold text-info hover:bg-info-soft hover:text-info lg:h-7 lg:px-2"
-                                                    onClick={() => handleRestore(quote, 'edit')}
-                                                    disabled={quote.is_archived}
-                                                >
-                                                    {quote.is_archived ? 'Archived · restore to edit' : isCosting ? t('common.open_and_save_new_version') : ((quote.status === 'draft' || quote.status === 'sent') ? 'Edit' : 'Re-estimate')}
-                                                    <ArrowRight className="h-4 w-4 lg:h-3 lg:w-3 ml-1" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    className="h-11 px-3 text-xs font-bold text-body hover:bg-surface-soft hover:text-ink lg:h-7 lg:px-2"
-                                                    onClick={() => handleRestore(quote, 'duplicate')}
-                                                >
-                                                    <Copy className="mr-1 h-4 w-4 lg:h-3 lg:w-3" />
-                                                    {isCosting ? (canUseQuotationWorkflow ? t('common.prepare_quotation') : t('common.use_as_starting_point')) : t('common.duplicate')}
-                                                </Button>
-                                                <Button variant="ghost" className="h-11 px-3 text-xs font-bold text-body lg:h-7 lg:px-2" onClick={() => { void openQuoteExport(quote) }}>
-                                                    <Eye className="mr-1 h-4 w-4 lg:h-3 lg:w-3" /> {t('common.preview')}
-                                                </Button>
-                                                {hasQuotationLifecycle && <Button variant="ghost" className="h-11 px-3 text-xs font-bold text-body hover:bg-surface-soft hover:text-ink lg:h-7 lg:px-2" onClick={() => { void openQuoteHistory(quote) }}>
-                                                    <History className="mr-1 h-4 w-4 lg:h-3 lg:w-3" /> History
-                                                </Button>}
-                                                {getCostingStatus(quote) !== 'verified' && <Button variant="ghost" className="h-11 px-3 text-xs font-bold text-warning lg:h-7 lg:px-2" onClick={() => { void auditQuote(quote) }} disabled={updatingId === quote.id}>
-                                                    {updatingId === quote.id ? <Loader2 className="mr-1 h-4 w-4 animate-spin lg:h-3 lg:w-3" /> : <CheckCircle2 className="mr-1 h-4 w-4 lg:h-3 lg:w-3" />} {updatingId === quote.id ? 'Checking…' : 'Check saved numbers'}
-                                                </Button>}
-                                                <Button variant="ghost" className="h-11 px-3 text-xs font-bold text-body lg:h-7 lg:px-2" onClick={() => toggleCostingSelection(quote.id)}>
-                                                    <GitCompareArrows className="mr-1 h-4 w-4 lg:h-3 lg:w-3" /> {selectedCostingIds.includes(quote.id) ? 'Selected' : t('common.compare')}
-                                                </Button>
-                                                <Button variant="ghost" size="icon" aria-label={quote.is_favorite ? `Remove ${quote.quality_label || 'record'} from favourites` : `Add ${quote.quality_label || 'record'} to favourites`} onClick={() => void handleLibraryState(quote, { isFavorite: !quote.is_favorite })} className="h-9 w-9">
-                                                    <Star className={`h-4 w-4 ${quote.is_favorite ? 'fill-warning text-warning' : 'text-subtle'}`} />
-                                                </Button>
-                                                <Button variant="ghost" size="icon" aria-label={`${quote.is_archived ? 'Restore costing snapshot' : 'Archive costing snapshot'} ${quote.quality_label || 'record'}`} onClick={() => requestArchiveState(quote)} disabled={updatingId === quote.id} className="h-9 w-9 text-subtle">
-                                                    {updatingId === quote.id ? <Loader2 className="h-4 w-4 animate-spin" /> : quote.is_archived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
-                                                </Button>
-                                            </div>
-                                        </div>
-
-                                        {hasQuotationLifecycle && quote.status === 'draft' && !linkedOrder && (
-                                            <Button
-                                                size="sm"
-                                                className="w-full gap-2 bg-saffron font-bold text-white hover:bg-saffron-deep"
-                                                onClick={() => handleStatusChange(quote.id, 'sent')}
-                                                disabled={updatingId === quote.id}
-                                            >
-                                                {updatingId === quote.id ? (
-                                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                                ) : (
-                                                    <FileText className="h-4 w-4" />
-                                                )}
-                                                Mark Sent
-                                            </Button>
-                                        )}
-
-                                        {hasQuotationLifecycle && quote.status === 'sent' && !linkedOrder && (
-                                            <div className="grid grid-cols-2 gap-2">
-                                                <Button
-                                                    size="sm"
-                                                    className="gap-2 bg-saffron font-bold text-white hover:bg-saffron-deep"
-                                                    onClick={() => setQuoteToAccept(quote)}
-                                                    disabled={updatingId === quote.id}
-                                                >
-                                                    {updatingId === quote.id ? (
-                                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                                    ) : (
-                                                        <CheckCircle2 className="h-4 w-4" />
-                                                    )}
-                                                    Accept
-                                                </Button>
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    className="gap-2 border-risk/30 font-bold text-risk hover:bg-risk-soft"
-                                                    onClick={() => handleStatusChange(quote.id, 'rejected')}
-                                                    disabled={updatingId === quote.id}
-                                                >
-                                                    <XCircle className="h-4 w-4" />
-                                                    Reject
-                                                </Button>
-                                            </div>
-                                        )}
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        )
-                    })}
-                </div>
             )}
             </div>
             )}
@@ -2063,7 +1507,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             <aside className="saved-costings-action-rail-desktop" aria-label={tx('Costing actions')}>
                 <Button onClick={() => router.push('/owner/estimator')} className={cn(railPrimaryAction, 'w-full')}>
                     <Plus className="h-4 w-4" aria-hidden="true" />
-                    <span>{canUseQuotationWorkflow ? t('common.new_estimate') : t('common.new_costing')}</span>
+                    <span>{t('common.new_costing')}</span>
                 </Button>
             </aside>
 
@@ -2071,53 +1515,6 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             <aside className="saved-costings-archive-rail-desktop space-y-3" aria-label={tx('Saved Costings archive policy')}>
                 <ArchivePolicyNotice />
             </aside>
-
-            <Dialog open={Boolean(quoteHistoryFor)} onOpenChange={open => {
-                if (!open) {
-                    setQuoteHistoryFor(null)
-                    setQuoteHistoryRows([])
-                    setQuoteHistoryError(null)
-                }
-            }}>
-                <DialogContent className="sm:max-w-xl">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2"><History className="h-5 w-5 text-info" /> Quotation history</DialogTitle>
-                        <DialogDescription>
-                            {quoteHistoryFor?.party_name || 'Quotation'} · {quoteHistoryFor?.quality_label || 'Unnamed quality'}. Status changes and their recorded times are shown here. Sent: {formatQuoteTimestamp(quoteHistoryFor?.sent_at)}.
-                        </DialogDescription>
-                    </DialogHeader>
-                    {quoteHistoryLoading ? (
-                        <div className="flex items-center justify-center gap-2 py-10 text-sm text-subtle" role="status" aria-live="polite"><Loader2 className="h-5 w-5 animate-spin text-info" /> Loading quotation history…</div>
-                    ) : quoteHistoryError ? (
-                        <p role="alert" className="py-8 text-center text-sm font-medium text-destructive">{quoteHistoryError}</p>
-                    ) : quoteHistoryRows.length > 0 ? (
-                        <div className="max-h-[55vh] space-y-2 overflow-y-auto pr-1">
-                            {quoteHistoryRows.map((row, index) => {
-                                const toConfig = row.to ? STATUS_CONFIG[row.to] : null
-                                const fromLabel = row.from ? STATUS_CONFIG[row.from].label : 'Created'
-                                return (
-                                    <div key={`${row.changedAt}-${index}`} className="flex items-start gap-3 rounded-xl border border-hairline bg-surface-soft/70 p-3">
-                                        <span className={`mt-0.5 inline-flex min-h-7 items-center rounded-full border px-2 text-[11px] font-bold ${toConfig?.color ?? 'border-hairline bg-surface text-body'}`}>
-                                            {toConfig?.label ?? row.to ?? 'Recorded'}
-                                        </span>
-                                        <div className="min-w-0 flex-1">
-                                            <p className="text-sm font-semibold text-ink">{fromLabel} <span className="font-normal text-subtle">→</span> {toConfig?.label ?? row.to ?? 'Recorded'}</p>
-                                            <p className="mt-1 text-xs text-subtle">{formatQuoteTimestamp(row.changedAt)} · {row.changedBy ? 'Owner action' : 'System record'}</p>
-                                        </div>
-                                    </div>
-                                )
-                            })}
-                        </div>
-                    ) : (
-                        <div className="rounded-xl border border-dashed border-hairline bg-surface-soft px-4 py-8 text-center text-sm text-body">
-                            No status changes recorded yet. This quotation is currently <span className="font-bold">{quoteHistoryFor ? STATUS_CONFIG[quoteHistoryFor.status].label : 'Draft'}</span>.
-                        </div>
-                    )}
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setQuoteHistoryFor(null)}>Close</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
 
             {tourSurface === 'export' && <CostingExportDialog key={tourStep} open tutorialPreview onOpenChange={() => {}} model={tourExport} defaultMode={tourStep === 'internal' ? 'internal' : 'customer'} defaultBusinessName="Tour sample" defaultCustomerName="Sample customer" sourceRecordKind="costing" />}
             {quoteToExport && !tourStep && (
@@ -2139,11 +1536,6 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                         setQuotes(current => current.map(item => item.id === quoteToExport.id ? { ...item, ...data } : item))
                         setQuoteToExport(current => current ? { ...current, ...data } : current)
                     }}
-                    onMarkAsSent={quoteToExport.record_kind === 'quotation'
-                        && canUseQuotationLifecycle(quoteToExport.record_kind, canUseQuotationWorkflow)
-                        && quoteToExport.status === 'draft'
-                        ? () => handleStatusChange(quoteToExport.id, 'sent')
-                        : undefined}
                 />
             )}
 
@@ -2261,37 +1653,6 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     )}
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setShowComparison(false)}>Close</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            <Dialog open={!!quoteToAccept} onOpenChange={(open) => !open && setQuoteToAccept(null)}>
-                <DialogContent className="max-w-md">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            <CheckCircle2 className="h-5 w-5 text-success" />
-                            Accept this quote?
-                        </DialogTitle>
-                        <DialogDescription className="text-sm leading-relaxed text-subtle">
-                            Yarn rates and price will be locked. A later re-estimate creates a linked new quote without changing this record.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter className="flex gap-2 justify-end pt-2">
-                        <Button variant="ghost" onClick={() => setQuoteToAccept(null)}>
-                            Cancel
-                        </Button>
-                        <Button
-                            className="bg-saffron font-bold text-white hover:bg-saffron-deep"
-                            onClick={async () => {
-                                if (quoteToAccept) {
-                                    const id = quoteToAccept.id
-                                    setQuoteToAccept(null)
-                                    await handleStatusChange(id, 'accepted')
-                                }
-                            }}
-                        >
-                            Yes, Accept
-                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

@@ -37,20 +37,21 @@ describe('Estimator-only product presentation', () => {
         expect(rateActions).not.toContain('defaultWeftName')
     })
 
-    it('keeps Lite and Base quality-first while retaining legacy quotation actions', () => {
-        expect(estimator).toContain("const isStandaloneCostingSession = !canUseProduction || sourceRecordKind === 'costing'")
-        expect(estimator).toContain('const resolvedPartyName = saveAsStandaloneCosting')
-        expect(estimator).toContain('const showPartyField = canUseProduction && !isStandaloneCostingSession')
-        expect(estimator).toContain('defaultCustomerName={showPartyField ? partyName : \'\'}')
+    it('keeps Lite and Base quality-first with the quotation workflow retired', () => {
+        // Phase 3H: every estimator session is a standalone costing session.
+        expect(estimator).not.toContain('isStandaloneCostingSession')
+        expect(estimator).not.toMatch(/\bcanUseProduction\b/)
+        expect(estimator).toContain('const resolvedPartyName = partyName.trim() || null')
+        expect(estimator).toContain('defaultCustomerName=""')
         expect(estimator).toContain('Quick Costing')
         expect(estimator).toContain("'Save New Version' : 'Save Costing'")
-        expect(estimator).toContain('{canUseProduction && !isStandaloneCostingSession && <Button')
+        expect(estimator).not.toContain('legacy-btn-save-quote')
         // Phase 3G removed the hidden party-order and market-run controls.
         expect(estimator).not.toContain('btn-start-party-order')
         expect(estimator).not.toContain('btn-start-market-run')
         expect(estimator).toContain("t('estimator.price_helpers.suggested_selling_price')")
         expect(estimator).toContain("t('estimator.order_basics.title')")
-        expect(estimator).toContain("!canUseProduction ? t('estimator.simulation.base_title')")
+        expect(estimator).toContain("title={t('estimator.simulation.base_title')}")
         expect(estimator).toContain('placeholder="e.g. 5000"')
         expect(estimator).toContain('hasValidCostResult && costingResult.quoteIsValid')
     })
@@ -62,17 +63,19 @@ describe('Estimator-only product presentation', () => {
         expect(english).toContain('title: "Cost Estimate Details"')
         expect(english).toContain('simulation_qty: "Cost Estimate Quantity"')
         expect(estimator).toContain("t('estimator.price_helpers.suggested_selling_price')")
-        expect(estimator).toContain("if (!saveAsStandaloneCosting && (!state.orderQuantityM || state.orderQuantityM <= 0))")
-        expect(estimator).toContain("(requiresCommercialContext && !partyName.trim())")
+        expect(estimator).not.toContain("tx('Set a quantity before saving')")
+        expect(estimator).not.toContain('requiresCommercialContext')
         expect(estimator).not.toContain("canUseProduction ? t('estimator.order_basics.title')")
         expect(estimator).not.toContain("!canUseProduction ? 'Costing Quantity'")
     })
 
     it('presents persisted quote entities as saved costings without forking persistence', () => {
-        expect(quotes).toContain("canUseQuotationWorkflow ? t('common.costings_quotations_title') : t('common.saved_costings_title')")
+        expect(quotes).toContain("title={t('common.saved_costings_title')}")
         expect(quotes).toContain("t('common.search_quality_costing')")
         expect(quotes).toContain('Compare Saved Costings')
-        expect(quotes).toContain("t('common.open_and_save_new_version')")
+        // Phase 3H: the library's Use action reopens a costing for a new version
+        // (the older card list with "Open and save new version" never rendered).
+        expect(quotes).toContain("onClick={() => onOpen(targetRecord)}")
         expect(quotes).toContain("tx('Duplicate')")
         expect(quotes).toContain('Costing loaded as a starting point')
         expect(estimator).toContain('saveEstimatorQuoteV3(saveRequest)')
@@ -85,12 +88,13 @@ describe('Estimator-only product presentation', () => {
     })
 
     it('saves Base edits through the authoritative versioned quote path', () => {
-        expect(estimator).toContain("handleSaveQuote(isStandaloneCostingSession ? 'draft' : 'accepted')")
+        expect(estimator).toContain("onClick={() => handleSaveQuote('draft')}")
         expect(estimator).toContain('Review overdue costing rates')
         expect(estimator).toContain('Save with These Rates')
         const actions = read('app/(dashboard)/owner/estimator/actions.ts')
-        expect(actions).toContain('costing_group_id: source.costing_group_id ?? source.id')
-        expect(actions).toContain('version_number: Number(source.version_number ?? 1) + 1')
+        // Edited costings are versioned inside the transactional revision RPC.
+        expect(actions).toContain("'save_estimator_costing_revision_v2'")
+        expect(actions).toContain('p_source_quote_id: params.sourceQuoteId ?? null')
     })
 
     it('uses an intentional deep-link explanation with a return path', () => {

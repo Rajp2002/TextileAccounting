@@ -75,8 +75,11 @@ describe('Sprint 3 profile selection and draft recovery', () => {
     const estimator = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
     const autosave = read('hooks/useAutosave.ts')
 
-    expect(wizard).toContain('Choose your factory type')
-    expect(wizard).toContain('preview until you save it')
+    // Phase 3H: the factory-type chooser never rendered on Free, Lite or Base
+    // (grey-fabric weaving only), so setup goes straight to factory expenses.
+    expect(wizard).not.toContain('Choose your factory type')
+    expect(wizard).toContain('Set up your grey-fabric costing')
+    expect(wizard).toContain("factoryProfileKey: 'grey_weaver'")
     expect(wizard).not.toContain('13.5')
     expect(estimator).toContain('Unsaved Cost Estimate')
     expect(estimator).toContain('Cost Estimate draft discarded')

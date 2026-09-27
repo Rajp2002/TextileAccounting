@@ -3,40 +3,40 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { calcFullTotals, makeDefaultEstimateState } from '../lib/estimator'
 import { buildCostingPrintHtml, createCostingExportModel } from '../lib/estimator-export'
-import { getCostingWorkspaceCapabilities } from '../lib/costing-workspace'
 
 const read = (path: string) => readFileSync(join(process.cwd(), path), 'utf8')
 
 describe('Base P1 pilot remediation', () => {
   it('keeps Base costing quality-first without enabling production conversion', () => {
-    expect(getCostingWorkspaceCapabilities(false)).toMatchObject({
-      partyContext: false,
-      quotationLifecycle: false,
-      productionConversion: false,
-    })
-
     const page = read('app/(dashboard)/owner/estimator/page.tsx')
     const client = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
-    expect(page).toContain('getEstimatorPartyNames()')
-    expect(page).toContain('initialPartyNames={partiesRes.data ?? []}')
-    expect(client).toContain('const showPartyField = canUseProduction && !isStandaloneCostingSession')
-    expect(client).toContain('defaultCustomerName={showPartyField ? partyName : \'\'}')
+    const actions = read('app/(dashboard)/owner/estimator/actions.ts')
+    // Phase 3H: no production or party-picker path remains in the estimator.
+    // canUseProductionPipeline (the Base production link) is a different, live flag.
+    expect(page).not.toMatch(/\bcanUseProduction\b/)
+    expect(client).not.toMatch(/\bcanUseProduction\b/)
+    expect(client).not.toContain('showPartyField')
+    expect(actions).not.toContain('function getEstimatorPartyNames')
+    expect(actions).not.toContain('function getLastQuoteForParty')
+    expect(client).toContain('defaultCustomerName=""')
     expect(client).toContain('Quick Costing')
   })
 
-  it('allows Base costings without party or quantity while keeping quotation requirements', () => {
+  it('allows Base costings without party or quantity', () => {
     const client = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
     const actions = read('app/(dashboard)/owner/estimator/actions.ts')
 
-    expect(client).toContain('const resolvedPartyName = saveAsStandaloneCosting')
-    expect(client).toContain("if (!saveAsStandaloneCosting && !resolvedPartyName)")
-    expect(client).toContain("if (!saveAsStandaloneCosting && (!state.orderQuantityM || state.orderQuantityM <= 0))")
+    expect(client).toContain('const resolvedPartyName = partyName.trim() || null')
+    expect(client).not.toContain("toast.error(t('estimator.toast.party_required'))")
+    expect(client).not.toContain("tx('Set a quantity before saving')")
     expect(client).toContain('placeholder="e.g. 5000"')
     // Package 2C: the estimator_quotes row is built by lib/estimator-quote-payload.ts;
     // the call sites still decide the party and quantity sources.
     const payloadBuilder = read('lib/estimator-quote-payload.ts')
     expect(actions).toContain('partyName: params.partyName?.trim() || null')
-    expect(actions).toContain("if (newRecordKind === 'quotation' && !params.partyName?.trim())")
+    // Phase 3H: the server only creates costings (the quotation branch was
+    // unreachable), so a party is optional context, never a requirement.
+    expect(actions).toContain("recordKind: 'costing',")
     expect(actions).toContain('orderQuantityM: authoritative.result.quantityM')
     expect(payloadBuilder).toContain('order_quantity_m: commercial.orderQuantityM')
     expect(payloadBuilder).toContain('meters: commercial.orderQuantityM ?? 0')
