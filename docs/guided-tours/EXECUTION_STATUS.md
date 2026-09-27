@@ -1,6 +1,6 @@
 # Guided tours: execution status
 
-Implementation state only. Planning is complete (see [PLANNING_CHECKLIST.md](PLANNING_CHECKLIST.md)); **no implementation work has been done.** A task is complete only when its row says PASSED and its ledger entry has the evidence. Only PASSED satisfies a dependency.
+Implementation state only. Planning is complete (see [PLANNING_CHECKLIST.md](PLANNING_CHECKLIST.md)); **GT-00 and GT-01 are complete.** A task is complete only when its row says PASSED and its ledger entry has the evidence. Only PASSED satisfies a dependency.
 
 States: `NOT_STARTED` · `IN_PROGRESS` · `REVIEW_REQUIRED` · `PASSED` · `FAILED` · `BLOCKED`.
 
@@ -9,7 +9,7 @@ States: `NOT_STARTED` · `IN_PROGRESS` · `REVIEW_REQUIRED` · `PASSED` · `FAIL
 | # | Task | Status | Revision at start | Last updated | Ledger |
 | --- | --- | --- | --- | --- | --- |
 | 1 | GT-00 Baseline and harness | PASSED | 2275e920 | 2026-09-27 | GT-00 targeted recovery entry below |
-| 2 | GT-01 Runtime foundation | NOT_STARTED | — | — | — |
+| 2 | GT-01 Runtime foundation | PASSED | b1ee267c | 2026-09-27 | GT-01 PASSED recovery entry below |
 | 3 | GT-02 Invitation and persistence | NOT_STARTED | — | — | — |
 | 4 | GT-03 Saved Costings (reference) | NOT_STARTED | — | — | — |
 | 5 | GT-04 Gate G1 | NOT_STARTED | — | — | — |
@@ -28,7 +28,7 @@ States: `NOT_STARTED` · `IN_PROGRESS` · `REVIEW_REQUIRED` · `PASSED` · `FAIL
 | 18 | GT-17 Final acceptance (G2) | NOT_STARTED | — | — | — |
 | — | GT-B1 Stock audit tour | BLOCKED (PI-06, PI-07) | — | — | — |
 
-**Exact next action:** GT-00 is PASSED. Next eligible task: read `tasks/GT-01-runtime-foundation.md` and only its Read first files/sections, then start GT-01 on `tours/implementation`. Keep using the corrected scratch harness; do not overwrite it with the original hidden-launcher selector. Preserve the completed baseline records; no need to repeat the GT-00 batch.
+**Exact next action:** GT-02 — read `tasks/GT-02-invitation-persistence.md` and only its Read first sources, then implement invitation/persistence within that packet. GT-01 is PASSED; both harness servers are stopped. Keep all original and refreshed evidence in the current worktree. No push or PR has been authorized.
 
 ## Planning baseline (for comparison in GT-00)
 
@@ -52,9 +52,13 @@ Recorded 2026-09-27 at `f7cff98` (`claude/gracious-sagan-dnwtsm` = `main`), clea
 
 ## Approved deviations
 
+Owner, 2026-09-27: approved a harness-only readiness/sampling correction and a targeted refresh of the five named Estimator baseline comparisons against both GT-00 and GT-01. Original evidence and the other 47 baseline rows remain unchanged. Exact equality remains the criterion; no application behavior, summary calculations or assertions were relaxed.
+
 Owner, 2026-09-27: approved the scratch-only visible-launcher selector correction for GT-00 and instructed rerunning only `rates gu 390x844`, preserving the other 51 completed runs. This supersedes the previous escalation's proposed complete-batch rerun; application code and acceptance criteria remain unchanged.
 
 ## Open issues
+
+No open GT-01 escalation. The owner-approved settling sampler produced exact GT-00/GT-01 comparisons for the five affected Estimator cases; all 52 accepted summaries match. See the PASSED recovery entry. Historical blocked entries are retained.
 
 No open GT-00 blocker. The launcher escalation was resolved by the owner-approved scratch correction and targeted rerun; see the PASSED recovery entry. The earlier failed entry is historical evidence. Existing tour geometry and legacy stub calls remain recorded as the pre-implementation baseline.
 
@@ -269,4 +273,126 @@ yarn-stock-en-1024x768 steps=8 panelCornerChanges=1 serverCalls=3 nav=0 s2 overl
 yarn-stock-en-1440x900 steps=8 panelCornerChanges=1 serverCalls=3 nav=0 s1 rail-rect-intersects(check screenshot); s2 rail-rect-intersects(check screenshot); s3 rail-rect-intersects(check screenshot); s4 rail-rect-intersects(check screenshot); s5 rail-rect-intersects(check screenshot); s6 rail-rect-intersects(check screenshot); s7 rail-rect-intersects(check screenshot); s8 rail-rect-intersects(check screenshot)
 yarn-stock-gu-390x844 steps=8 panelCornerChanges=0 serverCalls=3 nav=0 no geometry issues
 yarn-stock-hi-1280x800 steps=8 panelCornerChanges=1 serverCalls=3 nav=0 s2 overlap=23560
+```
+
+### GT-01 — IN_PROGRESS — 2026-09-27
+- Revision / worktree: `tours/implementation` @ `b1ee267c86a29179083c58224e3a851b4e58b0f2`, clean at start; original checkout's unrelated checklist remains untouched.
+- Files changed: this ledger; implementation pending in the packet's allowed surface.
+- Deliberate test changes: pending; only the mobile settle-timer assertion may change, as specified.
+- Commands and results: branch/revision/status read successfully; GT-00 PASSED verified; required plan sections, sources and existing tests read. No source drift since GT-00.
+- Harness: GT-00 records and corrected visible-launcher runner retained. Foundation checks and existing-tour regression UNVERIFIED until run.
+- Evidence types: implementation/type/lint/full-suite and harness verification pending.
+- Definition of done: all items pending.
+- Remaining issues: none established.
+- Escalations: none.
+- Next action: implement the specified pure helpers and shared copy, then the step runtime, panel/composition, tests and foundation harness; verify before committing.
+
+
+### GT-01 — IN_PROGRESS — implementation and verification checkpoint — 2026-09-27
+- Revision / worktree: `tours/implementation` @ `b1ee267c86a29179083c58224e3a851b4e58b0f2`, `/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas`. GT-01 changes are uncommitted. The unrelated original-checkout planning checklist is untouched. Nothing pushed; no PR.
+- Files changed:
+  - New runtime helpers: `lib/tours/{placement,target-readiness,tour-scroll,tour-text,active-tour,sample-ids}.ts`; approved shared copy: `lib/i18n/tour-common.ts`; new components: `components/tours/{GuidedTour,TourPanel,TourSpotlight}.tsx`.
+  - Allowed shared changes: `hooks/use-guided-tour.ts`, `hooks/use-mobile-tour.ts`, `lib/mobile-tour-positioning.ts`, and additive `TourStepSpec` in `lib/tours/tour-types.ts`. No existing tour components, wrappers, copy files, live pages, server code, global CSS, dependencies or lockfile changed.
+  - Eight new packet-listed test files; one permitted existing test edit below.
+  - Tracked harness `README.md`, `main.tsx`, `run-tour.mjs`, `summarize.py`; this ledger. Ignored scratch contains evidence and diagnostic probes/control copies.
+- Deliberate test changes: `__tests__/mobile-tour-positioning.test.ts`'s deferred-layout case now advances animation frames instead of the removed 350ms settle timer. A single-frame helper was added; the assertions still require a null measurement before visibility, the correct measured rect after layout, and exactly one scroll. No other existing test changed. Eight new files add 49 tests for placement, target resolution/stability/cancellation, scrolling/restoration, tokens, active guard, sample IDs, approved copy parity/native script, panel SSR and spotlight geometry.
+- Implementation review: two-frame stability with a 1,500ms budget; 400ms preparing text; fresh preparation for revisits and one recovery; listeners only while tracking a ready target; actual scroll-container restore; retained placement while preparing; panel/spotlight motion and reduced-motion suppression; Back removal focuses Next; completion uses only existing `persistTourCompleted`; no business action, draft, Free allowance, navigation or refresh paths added. Shared strings match plan §9.3 exactly.
+- Commands and results (all verification children run through `node scripts/performance/isolated-command.mjs`, or `node ../../scripts/performance/isolated-command.mjs` from the scratch harness):
+  - Initial `npx tsc --noEmit --incremental false` → exit 0. Focused `npx vitest run` over the eight new tests plus guided-tour-focus, mobile-tour-positioning, tutorial-target and tutorial-viewport-lock → 12 files / 80 tests passed (`scratch/tour-harness/gt01-focused.log`).
+  - Initial `npm run lint` → one unnecessary useMemo dependency warning; corrected locally. No assertion weakened.
+  - Final `npx tsc --noEmit --incremental false` → exit 0 (`gt01-types.log`); `npm run lint` → exit 0, zero warnings (`gt01-lint.log`); `npx vitest run` → exit 0, 235 files, 1,998 passed, one existing finance-test skip (`gt01-full-tests.log`, final run started 19:41:07, duration 106.52s). Earlier complete runs also passed with the same totals. Final application edit was reduced-motion suppression in the new spotlight; subsequent edits only improved scratch/recorded harness capture and documentation.
+  - Main local harness: isolated `node node_modules/vite/bin/vite.js --config scratch/tour-harness/vite.config.mjs --host 127.0.0.1` → localhost:5199. All real server modules/browser services remain stubbed. Existing PostCSS import-order notices and missing-favicon 404 are the harness's known notices.
+  - Browser paths passed after the wrapper via `env PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/ CHROMIUM_PATH="/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing"`.
+  - `node run-tour.mjs foundation en 1440x900 gt01-foundation`, `... foundation en 1024x768 gt01-foundation`, `... foundation gu 390x844 gt01-foundation`, and `env REDUCED_MOTION=1 ... foundation en 1024x768 gt01-foundation-reduced` → all exit 0, six steps each, no recorded issues, zero server calls and zero navigation. Separate output roots preserve GT-00.
+  - `node gt01-runtime-probe.mjs` → final exit 0 at 1024×768 and 390×844: More detail resets, 400ms recovery message, one recovery then unavailable, navigation remains enabled, revisit recovers, Exit restores focus, guard releases for replay, Done closes, page inertness restored, no server calls/navigation. Its first scratch creation command had a duplicate path prefix (corrected before execution); a later probe timeout was fixed by waiting for the requested step ID as well as ready, rather than accepting the prior step's ready state. These were probe fixes, not relaxed runtime assertions.
+  - `node gt01-motion-probe.mjs` → initially caught a 120ms hidden-outline fade under reduced motion; new spotlight fixed, final exit 0: ready and preparing both have zero transition durations and zero animations (`gt01-motion-probe.json`).
+  - Visual review caught the fake harness sidebar covering foundation boxes 1/5 and the phone scroller covering part of box 2. Corrected only the foundation fixture (no fake sidebar in that scenario; phone centre box moved clear of the scroller), then reran all four checks. The runner now waits for the foundation's intentional transition to finish before screenshots after its Back/Next keyboard probe. Final screenshots reviewed.
+  - Isolated `env TOUR_OUT_DIR=gt01-regression ... PATH="$PWD/bin:$PATH" ./batch.sh` → exit 0, 52 complete records / 416 steps; `python3 summarize.py gt01-regression` → exit 0. `diff -u baseline-summary.txt gt01-regression-summary.txt` → exit 1: six differing summaries, listed in `gt01-regression-diff.txt`. No records overwritten in `out/`.
+  - Targeted retry only: `node run-tour.mjs <scenario> <language> <size> gt01-regression-retry` for estimator en1440×900, en1024×768, hi1280×800; free-estimator en1440×900, hi1280×800; rates en1024×768 → all exit 0. `python3 summarize.py gt01-regression-retry` → exit 0. Rate Book matches GT-00 on retry; all five Estimator summaries still differ. Original regression records retained alongside retries. No second 52-case batch.
+  - `git diff --check` → clean; explicit allowed-surface audit → all 28 changed/new tracked paths allowed; scratch and tracked `main.tsx`, `run-tour.mjs`, `summarize.py` match. Full changed-file diff reviewed.
+- Harness evidence:
+  - Final foundation screenshots in `scratch/tour-harness/gt01-foundation/{foundation-en-1440x900,foundation-en-1024x768,foundation-gu-390x844}/` and `scratch/tour-harness/gt01-foundation-reduced/foundation-en-1024x768/`: each contains `00-page.png`, `01.png`, `02.png`, `03.png`, `04.png`, `05.png`, `06.png`, `99-after.png`, `record.json`. Contact sheets are review aids; the numbered screenshots are authoritative after the final transition-wait correction.
+  - Every step ready, outlines fully on screen, zero panel/outline overlap; container step scrolls its 300px container without moving the window; Exit restores both window and container positions and launcher focus; focus stays inside the panel; Back removal focuses Next; reduced motion issues no smooth scroll.
+  - Regression screenshots/records under `gt01-regression/`; six targeted records/screenshots under `gt01-regression-retry/`; original GT-00 under `out/` unchanged. All output roots are under `scratch/tour-harness/`.
+- Evidence types: automated checks and stubbed harness done. Exact legacy summary equality FAILED, not waived. Cause of the Estimator variance remains UNVERIFIED pending the baseline control below. Owner QA, independent review, native-language review, real devices and screen-reader speech are UNVERIFIED (reserved for the later gates, not claimed by this local harness).
+- Definition of done: allowed implementation DONE; new/full tests, types, lint DONE; four foundation scenarios DONE; existing-tour summary equality NOT DONE; commands/test update/screenshots documented DONE. GT-01 cannot be PASSED yet.
+- Remaining issues: five Estimator summary mismatches. For example paid en1440×900 step 10: GT-00 `target-clipped`, first regression `TARGET-OFFSCREEN y=-770`, fresh retry `TARGET-OFFSCREEN y=-299`. `components/estimator/CostEstimateTutorial.tsx` is unchanged and owns its desktop positioning/timers (lines 468, 560–584), independently of `useGuidedTourModal`; existing sampler reads at 900ms. Timing is suspected, not accepted as a baseline waiver.
+- Baseline-control checkpoint: extracted the GT-00 (`b1ee267c`) versions of both shared hooks, mobile positioning and its unchanged target helper into `scratch/tour-harness/gt00-control-source/`, and the original committed harness main into `control-main.tsx`. `control-vite.config.mjs` routes these exact source copies on localhost:5200 with the same server stubs; no checkout/reset/stash or protected source edits. `control-run-tour.mjs` only changes the URL to `/control.html` on port 5200. First cold navigation timed out while Vite optimized dependencies. One fresh retry is running: paid estimator en1440×900 and Free estimator hi1280×800 → `gt00-control/`; expected summary `gt00-control-summary.txt`. Finish that one retry, then record the result and escalation as required; do not retry indefinitely or normalize baseline differences.
+- Escalations: pending control result; no authority to relax exact equality or change protected tours assumed.
+- Next action: collect the running baseline control, write the §6 escalation if equality remains unresolved, stop both local harness servers, preserve all files, and stop before GT-02. Commit GT-01 only after it is PASSED, using the owner's specified message.
+
+
+### GT-01 — BLOCKED — baseline control and escalation — 2026-09-27
+- Baseline control finished after one fresh retry following the cold Vite navigation timeout. The isolated `control-run-tour.mjs` runs for paid Estimator en1440×900 (10 steps) and Free Estimator hi1280×800 (9 steps) both exited 0; `python3 summarize.py gt00-control` exited 0. Both summaries differ from GT-00's original saved summary despite loading the committed GT-00 shared hooks/mobile runtime and original harness main. Evidence: `scratch/tour-harness/gt00-control-summary.txt` and `gt00-control/{estimator-en-1440x900,free-estimator-hi-1280x800}/record.json` plus numbered screenshots. This demonstrates non-reproducibility of these baseline measurements; it does not waive GT-01's acceptance criterion or prove every implementation path regression-free.
+- GT-00 paid en1440×900 originally reports step 10 `target-clipped`. The old-runtime control instead reports step 5 `target-clipped` and no issue on step 10. The old-runtime Free hi1280×800 control reports step 5 `target-clipped` and no step-9 overlap; the original baseline reports step-9 overlap=5520. Full control output follows:
+
+```text
+estimator-en-1440x900 steps=10 panelCornerChanges=1 serverCalls=4 nav=0 s2 overlap=2460; s2 rail-rect-intersects(check screenshot); s3 target-clipped; s4 target-clipped; s5 target-clipped; s7 rail-rect-intersects(check screenshot); s8 rail-rect-intersects(check screenshot); s9 rail-rect-intersects(check screenshot)
+free-estimator-hi-1280x800 steps=9 panelCornerChanges=1 serverCalls=3 nav=0 s2 target-clipped; s3 target-clipped; s4 target-clipped; s5 target-clipped; s6 target-clipped; s7 overlap=13770; s8 overlap=12699; s9 target-clipped
+```
+
+- No acceptance criteria, baselines, protected application files or assertions were changed to hide the difference. Rate Book en1024×768 matches on its single targeted retry. Five cases remain unresolved: `estimator-en-1440x900`, `estimator-en-1024x768`, `estimator-hi-1280x800`, `free-estimator-en-1440x900`, `free-estimator-hi-1280x800`.
+- All GT-01 implementation checks in the preceding checkpoint remain passing; exact regression equality is FAILED. The precise mechanism of the legacy timing variance remains UNVERIFIED. Owner QA/native review/independent review remain UNVERIFIED for the later gates.
+- Both task-owned local Vite servers (ports 5199 and 5200) stopped with SIGTERM after the comparisons. No new application edits, commits, pushes or PRs. GT-02 and GT-03 remain NOT_STARTED.
+
+#### ESCALATION — GT-01
+
+Blocking condition: The required exact GT-00 summary comparison fails for five Estimator desktop cases, and replaying committed GT-00 runtime code also changes their recorded geometry.
+
+Specification: `tasks/GT-01-runtime-foundation.md`, Verification: “summarize.py output must equal the GT-00 baseline summary”; Protected surface: “Every existing tour component, wrapper and copy file: unchanged behavior and markup.” EXECUTOR_PROMPT §1 forbids rewriting acceptance criteria or accepting regressions to get green.
+
+Source evidence: `scratch/tour-harness/gt01-regression-diff.txt`, `gt01-regression-retry-summary.txt`, `gt00-control-summary.txt`; `components/estimator/CostEstimateTutorial.tsx:468` and `:560`–`:584` retain their original scroll/timer implementation. Example screenshots: `scratch/tour-harness/out/estimator-en-1440x900/10.png`, `gt01-regression/estimator-en-1440x900/10.png`, `gt01-regression-retry/estimator-en-1440x900/10.png`, `gt00-control/estimator-en-1440x900/10.png`. All screenshot paths after the first are under the same `scratch/tour-harness/` root.
+
+Expected: 52 regression summaries exactly equal the preserved GT-00 summary, without modifying protected existing tours.
+
+Actual: All 52 runs completed, but six initial summaries differed. Rate Book matched on its targeted retry; five Estimator variants still differed. Two representative runs using the committed GT-00 runtime also failed to reproduce the old summary. New foundation geometry/focus/scroll/reduced-motion checks pass in all four required configurations.
+
+Tried: One complete GT-01 batch, one fresh targeted retry of each of the six mismatches after final code checks finished, source/diff inspection confirming existing tour components are untouched, screenshot comparison, and a scratch-only original-runtime control for paid/Free Estimator (one cold-start timeout followed by one successful fresh retry). Original evidence and every retry retained. No repeated full batch, legacy component fix, baseline overwrite or weakened assertion.
+
+Why this exceeds my discretion: Passing now would require treating unequal summaries as equal, replacing the fixed baseline without authorization, or changing protected legacy tour behavior. The executor expressly forbids those actions. The control evidence justifies a harness investigation, not a unilateral acceptance waiver.
+
+Smallest decision needed: May I make a harness-only readiness/sampling fix and regenerate only the five affected Estimator baseline comparisons using the same corrected harness against GT-00 and GT-01, keeping all original evidence and the other 47 baseline cases unchanged?
+
+Worktree state: `tours/implementation` @ `b1ee267c`; 28 allowed changed/new tracked paths, all uncommitted. Type check and zero-warning lint passed; full suite 235 files / 1,998 passed / one existing skip; four foundation runs and final interaction/reduced-motion probes passed. Exact legacy summary parity unresolved. Both harness servers stopped. No push or PR; GT-02 not started.
+
+
+### GT-01 — IN_PROGRESS — approved harness recovery — 2026-09-27
+- Owner authorization: “yes do whatever you deem necessary and get gt-01 passed”, in response to the escalation's specific harness-only readiness fix and targeted five-case baseline refresh. The decision resolves the authority blocker; exact comparison is still required.
+- Revision/worktree unchanged: `tours/implementation` @ `b1ee267c`; all prior changes and evidence retained. No application changes planned for this recovery.
+- Next action: add an opt-in bounded settled-geometry sampler; run the same sampler against the exact GT-00 control and GT-01 for the five named Estimator desktop cases. Keep the original baseline, original GT-01 batch and other 47 case comparisons. No second full batch.
+
+
+### GT-01 — PASSED — approved recovery and final verification — 2026-09-27
+- Revision / worktree: `tours/implementation` @ `b1ee267c` before the GT-01 task commit; `/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas`. Original checkout's unrelated planning checklist remains untouched. GT-00 remains PASSED. GT-02 and GT-03 are NOT_STARTED.
+- Files changed: the same 28 allowed files listed in the implementation checkpoint. Recovery changed only `docs/guided-tours/harness/run-tour.mjs`, its README and this ledger, plus ignored scratch runner/control/evidence files. No application change during recovery. No existing tour component, wrapper, copy, business action, live page, dependency or lockfile changed.
+- Deliberate test changes: only the previously documented `mobile-tour-positioning.test.ts` frame-based update replacing the removed timer assertion, retaining the null/rect/single-scroll assertions. Eight new test files provide 49 new tests. No test was weakened or deleted during recovery.
+- Approval and resolution: owner approved the exact decision requested by the preceding escalation. Added opt-in `SETTLED_SAMPLING=1`: following the existing 900ms wait, observe for at least 1,500ms and require unchanged panel/outline geometry, scroll positions and text for 500ms with no finite animation running; fail explicitly after 8,000ms. Fonts are awaited. Each step records its settling duration. Normal motion, styles, target layout and issue calculations remain unchanged. The old fixed-delay evidence remains preserved, not silently replaced.
+- Commands and results:
+  - Isolated Vite harnesses on localhost:5199 (GT-01) and :5200 (GT-00 control) started successfully. The control's hooks, mobile positioning, target helper and original main were byte-compared with `git show b1ee267c:<path>`: all exact. Browser/server services remain stubbed; no live data touched.
+  - From `scratch/tour-harness`, `node ../../scripts/performance/isolated-command.mjs env SETTLED_SAMPLING=1 PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/ CHROMIUM_PATH="/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing" node <runner> <scenario> <language> <size> <output>`: both `control-run-tour.mjs` → `gt00-settled` and `run-tour.mjs` → `gt01-settled` ran the five cases below, all exit 0, no retries/timeouts. First pair run directly; the remaining four pairs ran sequentially through the isolated `targeted-settled.mjs` driver, exit 0 (`gt01-settled-comparison.log`). No full browser batch rerun during this recovery.
+  - `python3 summarize.py gt00-settled` and `python3 summarize.py gt01-settled` (children of the isolated driver) → exit 0, exact five-row equality. Five cases also match every recorded step's panel/highlight rectangles, overlap, clipping flags, description scrolling, title/body/progress, scroll position, focus containment, and stubbed server calls.
+  - `node ../../scripts/performance/isolated-command.mjs python3 finalize-comparison.py` → exit 0: **52 exact summary matches / 416 steps**, with the five approved refreshed rows, 47 original GT-00 baseline rows preserved, and Rate Book using its previously successful targeted retry. `diff -u gt00-accepted-summary.txt gt01-accepted-summary.txt` → exit 0, empty diff. The manifest `gt01-accepted-comparison.json` records each selected evidence path/hash and the original baseline hash. Original `out/`, `baseline-summary.txt`, `gt01-regression/`, `gt01-regression-retry/` and earlier controls remain intact.
+  - Final application type check remains PASS: isolated `npx tsc --noEmit --incremental false`, exit 0 (`gt01-types.log`). Application code did not change after this check.
+  - Final application full suite remains PASS: isolated `npx vitest run`, exit 0, **235 files / 1,998 passed / one existing live-Supabase test skipped** (`gt01-full-tests.log`). No application or test changes during recovery, so this suite was not repeated.
+  - After the harness edit, `node scripts/performance/isolated-command.mjs npm run lint` → exit 0, **zero warnings** (`gt01-lint-recovery.log`).
+  - Exact allowed-surface audit → all 28 paths allowed. `git diff --check` → clean. Tracked and scratch `main.tsx`, `run-tour.mjs`, `summarize.py` match. Recovery diff reviewed in full; earlier application diff review retained.
+  - Task-owned Vite PIDs 20033/20043 received SIGTERM; both sessions exited 143 as expected. No harness/browser job remains running.
+- Harness and visual evidence:
+  - Foundation's four required runs and interaction/reduced-motion probes remain PASS as recorded in the implementation checkpoint: 24 ready steps, no overlap/offscreen outline, correct focus/scroll restoration, no smooth scroll under reduced motion, zero new-runtime server calls/navigation.
+  - Refreshed cases: `estimator-en-1440x900` (10 steps), `estimator-en-1024x768` (10), `estimator-hi-1280x800` (10), `free-estimator-en-1440x900` (9), `free-estimator-hi-1280x800` (9). In both `scratch/tour-harness/gt00-settled/` and `gt01-settled/`, each directory holds `00-page.png`, numbered `01.png` through `10.png` or `09.png`, `99-after.png` and `record.json`.
+  - Side-by-side screenshot review completed for all five cases: paid steps 2/6/10 and Free steps 3/6/9, plus paid en1440 step 10 at full size. Review sheets: `scratch/tour-harness/<case>-settled-comparison.png`. Matched legacy overlap/clipping remains visible; these are preserved baseline findings for later migration tasks, not claimed fixed by GT-01.
+- Evidence types: automated checks, stubbed browser harness, screenshot review and implementation diff review DONE. No required GT-01 check remains UNVERIFIED. Owner QA, independent gate review, native-language review, real devices and screen-reader speech remain UNVERIFIED for the later gates; they are not claimed by this task. The gated live-Supabase test remains intentionally skipped.
+- Definition of done: allowed implementation DONE; new/full tests, types and zero-warning lint DONE; all four foundation runs DONE; exact existing-tour summary parity with the owner's five-case refresh DONE; ledger, commands, screenshots and deliberate test update DONE.
+- Remaining issues: no GT-01 blocker. Existing legacy geometry/stub-call findings remain documented. No production/QA data, business logic or entitlement changes.
+- Escalations: the GT-01 sampling escalation is RESOLVED by explicit owner approval and exact comparison evidence; historical packet retained above.
+- Next action: commit GT-01 with `feat(tours): GT-01 Shared runtime and presentation foundation`, without pushing or opening a PR. Next eligible task is GT-02, starting with its packet and Read first list.
+
+Refreshed exact summaries (identical for GT-00 and GT-01):
+
+```text
+estimator-en-1024x768 steps=10 panelCornerChanges=1 serverCalls=4 nav=0 s2 overlap=31374; s3 target-clipped; s4 target-clipped; s6 target-clipped; s7 overlap=52089; s8 overlap=52089; s9 overlap=52089
+estimator-en-1440x900 steps=10 panelCornerChanges=1 serverCalls=4 nav=0 s2 overlap=2460; s2 rail-rect-intersects(check screenshot); s3 target-clipped; s4 target-clipped; s7 rail-rect-intersects(check screenshot); s8 rail-rect-intersects(check screenshot); s9 rail-rect-intersects(check screenshot)
+estimator-hi-1280x800 steps=10 panelCornerChanges=1 serverCalls=4 nav=0 s2 overlap=10769; s3 target-clipped; s4 target-clipped; s6 target-clipped; s7 overlap=13770; s8 overlap=13770; s9 overlap=13770
+free-estimator-en-1440x900 steps=9 panelCornerChanges=1 serverCalls=3 nav=0 s2 target-clipped; s3 target-clipped; s4 target-clipped; s7 rail-rect-intersects(check screenshot); s8 rail-rect-intersects(check screenshot); s9 overlap=35144
+free-estimator-hi-1280x800 steps=9 panelCornerChanges=1 serverCalls=3 nav=0 s2 target-clipped; s3 target-clipped; s4 target-clipped; s6 target-clipped; s7 overlap=13770; s8 overlap=12699; s9 overlap=39192
 ```

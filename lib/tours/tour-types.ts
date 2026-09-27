@@ -26,3 +26,11 @@ export interface TourDefinition {
         replayTitle: string
     }
 }
+
+export interface TourStepSpec<S extends string = string> {
+    id: S
+    anchor: string
+    context?: string
+    kind: 'live' | 'sample' | 'handoff'
+    detail?: boolean
+}

@@ -1,6 +1,14 @@
 'use client'
 
-import { useEffect, useState, type RefObject } from 'react'
+import { useCallback, useEffect, useMemo, useState, type RefObject } from 'react'
+import { useMobileTour } from '@/hooks/use-mobile-tour'
+import { isTourTargetVisible } from '@/lib/tutorial-target'
+import { placeTourPanel, type Placement, type Rect } from '@/lib/tours/placement'
+import { resolveTourTarget, watchTourTarget } from '@/lib/tours/target-readiness'
+import { restoreScroll, scrollIntoSafeView, visibleTourRect, type ScrollRecord } from '@/lib/tours/tour-scroll'
+import type { TourId, TourStepSpec } from '@/lib/tours/tour-types'
+import { tourCommonCopy } from '@/lib/i18n/tour-common'
+import type { Language } from '@/lib/i18n/context'
 import { lockTourViewport } from '@/lib/tutorial-viewport-lock'
 
 // Shared behavior of the page-level guided tours in components/tours
@@ -77,9 +85,18 @@ export function useGuidedTourModal({ panel, portal, navigation, launcher, return
             event.preventDefault()
             event.stopImmediatePropagation()
         }
+        let lastFocused: Element | null = null
         const focus = () => {
-            if (!panel.current?.contains(document.activeElement)) panel.current?.focus({ preventScroll: true })
+            if (panel.current?.contains(document.activeElement)) { lastFocused = document.activeElement; return }
+            const next = lastFocused instanceof HTMLButtonElement && !lastFocused.isConnected
+                ? panel.current?.querySelector<HTMLButtonElement>('[data-tour-control="next"]') : null
+            ;(next ?? panel.current)?.focus({ preventScroll: true })
         }
+        // Removing Back on step 1 does not fire focusin in every browser.
+        const focusObserver = new MutationObserver(() => {
+            if (lastFocused instanceof HTMLButtonElement && !lastFocused.isConnected) focus()
+        })
+        focusObserver.observe(panel.current, { childList: true, subtree: true })
         const keyboard = (event: KeyboardEvent) => {
             if (event.ctrlKey || event.metaKey || event.altKey) return
             if (event.key === 'Escape') { event.preventDefault(); event.stopImmediatePropagation(); navigation.current.close(); return }
@@ -101,7 +118,7 @@ export function useGuidedTourModal({ panel, portal, navigation, launcher, return
         document.addEventListener('focusin', focus, true)
         panel.current.focus({ preventScroll: true })
         return () => {
-            observer.disconnect(); unlock()
+            observer.disconnect(); focusObserver.disconnect(); unlock()
             events.forEach(name => document.removeEventListener(name, block, true))
             document.removeEventListener('keydown', keyboard, true)
             document.removeEventListener('focusin', focus, true)
@@ -116,6 +133,7 @@ export function useGuidedTourModal({ panel, portal, navigation, launcher, return
 export type TourPlacement<Step> = { step: Step; rect: DOMRect; bottom: boolean; left: boolean }
 
 /**
+ * @deprecated New tours use useTourStep. Kept until all existing tours migrate in GT-16.
  * Keeps the desktop panel beside the current target: scrolls the target into
  * view once, then re-measures for 1.5s and on resize or scroll. The panel
  * moves to the left or bottom when it would cover the target, except for
@@ -155,4 +173,112 @@ export function useGuidedTourPlacement<Step>({ step, mobile, resolve, language, 
         return () => { cancelAnimationFrame(frame); window.removeEventListener('resize', update); window.removeEventListener('scroll', update, true) }
     }, [step, mobile, resolve, language, panel, previewSelector])
     return measurement?.step === step ? measurement : null
+}
+
+
+export type TourStepStatus = 'preparing' | 'ready' | 'unavailable'
+type StepMeasurement = { key: object; status: TourStepStatus; rect: Rect | null; placement: Placement | null }
+
+/** Bounded readiness, scrolling and event-only tracking for the new shared runtime. */
+export function useTourStep<S extends string>({ tourId, step, spec, panel, compact, language, unavailable, scrollRecord }: {
+    tourId: TourId; step: S; spec: TourStepSpec<S>; panel: RefObject<HTMLDivElement | null>
+    compact: boolean; language: Language; unavailable?: string; scrollRecord?: ScrollRecord
+}) {
+    const ownedRecord = useMemo<ScrollRecord>(() => new Map(), [])
+    const record = scrollRecord ?? ownedRecord
+    const key = useMemo(() => ({ step, language, compact, anchor: spec.anchor, context: spec.context }), [step, language, compact, spec.anchor, spec.context])
+    const [measurement, setMeasurement] = useState<StepMeasurement | null>(null)
+    const [slowPreparation, setSlowPreparation] = useState<object | null>(null)
+    const resolve = useCallback(() => resolveTourTarget(spec.anchor, spec.context, { tourId, stepId: step }), [spec.anchor, spec.context, tourId, step])
+    const resolveMobile = useCallback(() => { const target = resolve(); return { target, card: target } }, [resolve])
+    const reducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const mobileOptions = useMemo(() => ({ record, reducedMotion }), [record, reducedMotion])
+    const mobile = useMobileTour(compact ? key : undefined, panel, resolveMobile, mobileOptions)
+
+    useEffect(() => () => { if (!scrollRecord) restoreScroll(ownedRecord) }, [ownedRecord, scrollRecord])
+
+    useEffect(() => {
+        if (compact) return
+        let stopped = false
+        let retryUsed = false
+        let cancel = () => {}
+        let stopTracking = () => {}
+        let pendingFrame = 0
+        const safe = (): Rect => ({ left: 16, top: 16, right: window.innerWidth - 16, bottom: window.innerHeight - 16, width: window.innerWidth - 32, height: window.innerHeight - 32 })
+        const fail = () => {
+            if (!stopped) setMeasurement(previous => ({ key, status: 'unavailable', rect: null, placement: previous?.placement ?? null }))
+        }
+        const update = (element: HTMLElement) => {
+            if (stopped || !panel.current) return
+            const rect = visibleTourRect(element, safe())
+            const context = spec.context ? element.closest(spec.context) ?? document.querySelector(spec.context) : null
+            const placement = rect ? placeTourPanel({ target: rect, context: context?.getBoundingClientRect(), panel: panel.current.getBoundingClientRect(), viewport: { width: window.innerWidth, height: window.innerHeight } }) : null
+            setMeasurement({ key, status: rect ? 'ready' : 'unavailable', rect, placement })
+        }
+        const begin = () => {
+            const positioned = new WeakSet<HTMLElement>()
+            cancel = watchTourTarget({
+                resolve: () => {
+                    const element = resolve()
+                    if (!element || !panel.current) return null
+                    if (!positioned.has(element)) {
+                        positioned.add(element)
+                        scrollIntoSafeView(element, safe(), window.matchMedia('(prefers-reduced-motion: reduce)').matches, record)
+                    }
+                    return visibleTourRect(element, safe()) ? element : null
+                },
+                onUnavailable: fail,
+                onReady: element => {
+                    if (stopped) return
+                    update(element)
+                    const track = () => {
+                        pendingFrame = 0
+                        if (stopped) return
+                        if (!isTourTargetVisible(element) || !visibleTourRect(element, safe()) || resolve() !== element) {
+                            stopTracking()
+                            if (retryUsed) { fail(); return }
+                            retryUsed = true
+                            setMeasurement(previous => ({ key, status: 'preparing', rect: null, placement: previous?.placement ?? null }))
+                            begin()
+                        } else update(element)
+                    }
+                    const schedule = () => { if (!pendingFrame) pendingFrame = requestAnimationFrame(track) }
+                    const observer = new ResizeObserver(schedule)
+                    observer.observe(element)
+                    if (panel.current) observer.observe(panel.current)
+                    window.addEventListener('resize', schedule)
+                    window.addEventListener('scroll', schedule, true)
+                    window.visualViewport?.addEventListener('resize', schedule)
+                    window.visualViewport?.addEventListener('scroll', schedule)
+                    stopTracking = () => {
+                        observer.disconnect()
+                        cancelAnimationFrame(pendingFrame)
+                        pendingFrame = 0
+                        window.removeEventListener('resize', schedule)
+                        window.removeEventListener('scroll', schedule, true)
+                        window.visualViewport?.removeEventListener('resize', schedule)
+                        window.visualViewport?.removeEventListener('scroll', schedule)
+                    }
+                },
+            })
+        }
+        begin()
+        return () => { stopped = true; cancel(); stopTracking() }
+    }, [compact, key, panel, record, resolve, spec.context])
+
+    const current = measurement?.key === key ? measurement : null
+    const status: TourStepStatus = compact ? mobile.unavailable ? 'unavailable' : mobile.rects ? 'ready' : 'preparing' : current?.status ?? 'preparing'
+    const preparation = useMemo(() => ({ key, status }), [key, status])
+    useEffect(() => {
+        if (status !== 'preparing') return
+        const timer = window.setTimeout(() => setSlowPreparation(preparation), 400)
+        return () => window.clearTimeout(timer)
+    }, [preparation, status])
+    return {
+        status,
+        rect: compact ? mobile.rects?.field ?? null : current?.rect ?? null,
+        placement: compact ? null : current?.placement ?? measurement?.placement ?? null,
+        statusText: status === 'unavailable' ? unavailable ?? tourCommonCopy[language].unavailable
+            : status === 'preparing' && slowPreparation === preparation ? tourCommonCopy[language].preparing : undefined,
+    }
 }

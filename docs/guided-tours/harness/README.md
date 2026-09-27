@@ -25,7 +25,7 @@ The harness must run from the git-ignored `scratch/` folder so nothing it create
 # from the repository root, with dependencies installed (see CLAUDE.md; this container needed `npx -y npm@11.6.2 ci`)
 mkdir -p scratch/tour-harness && cp -R docs/guided-tours/harness/. scratch/tour-harness/
 cd scratch/tour-harness
-npx vite --config vite.config.mjs          # serves http://localhost:5199; leave running (background it)
+node ../../scripts/performance/isolated-command.mjs npx vite --config vite.config.mjs # serves http://localhost:5199; leave running (background it)
 ```
 
 Playwright is **not** a project dependency. The scripts load a global Playwright installation:
@@ -45,7 +45,7 @@ REDUCED_MOTION=1 node run-tour.mjs <scenario> en 1024x768      # reduced-motion 
 node probe-labels.mjs                                          # writes labels-out.json
 ```
 
-Scenarios in `main.tsx` today: `production`, `fabric-stock`, `yarn-stock`, `dispatch`, `payroll`, `machines`, `workers`, `assignments`, `estimator`, `free-estimator`, `rates`, `quotes`, `free-costings`, `labels`.
+Scenarios in `main.tsx` today: `foundation`, `production`, `fabric-stock`, `yarn-stock`, `dispatch`, `payroll`, `machines`, `workers`, `assignments`, `estimator`, `free-estimator`, `rates`, `quotes`, `free-costings`, `labels`.
 
 The one `404` console error in every run is the missing favicon; ignore it.
 
@@ -60,3 +60,27 @@ The one `404` console error in every run is the missing favicon; ignore it.
 - **Rail overlap cannot be measured by hit-testing**: during a tour the page is `inert`, and inert elements are skipped by `elementFromPoint`. `summarize.py` flags rect intersections; confirm them from screenshots.
 - Live-page scenarios render with empty data, so they show demo or sample rows and empty states. Populated states need the owner's QA run.
 - The harness does not load the real sidebar or `app/layout.tsx` fonts; text metrics are close but not identical.
+
+## GT-01 foundation and preserved regression evidence
+
+Run every verification command through `node ../../scripts/performance/isolated-command.mjs` from the scratch harness directory. The commands above show the child commands for brevity. The foundation fixture is independent of the fake sidebar so its top-left target and 300px scroll container remain visible. It uses only shared, approved copy and does not record completion.
+
+```bash
+node ../../scripts/performance/isolated-command.mjs node run-tour.mjs foundation en 1440x900 gt01-foundation
+node ../../scripts/performance/isolated-command.mjs node run-tour.mjs foundation en 1024x768 gt01-foundation
+node ../../scripts/performance/isolated-command.mjs node run-tour.mjs foundation gu 390x844 gt01-foundation
+node ../../scripts/performance/isolated-command.mjs env REDUCED_MOTION=1 node run-tour.mjs foundation en 1024x768 gt01-foundation-reduced
+node ../../scripts/performance/isolated-command.mjs env TOUR_OUT_DIR=gt01-regression ./batch.sh
+node ../../scripts/performance/isolated-command.mjs python3 summarize.py gt01-regression
+```
+
+The isolation wrapper strips custom environment variables. On a machine whose browser paths differ from the defaults, insert `env PLAYWRIGHT_ROOT="$PLAYWRIGHT_ROOT" CHROMIUM_PATH="$CHROMIUM_PATH"` after the wrapper path and before the child command (combine these assignments with the existing `env` assignments above). Set those shell variables to the existing local installations first. `batch.sh` also needs a `timeout` executable on `PATH`; GT-00's local macOS helper is retained under `scratch/tour-harness/bin/`. Do not overwrite GT-00's `out/` or `baseline-summary.txt`. `TOUR_OUT_DIR` changes only the default output root; the explicit runner output argument takes precedence. `summarize.py` accepts that root as its optional first argument.
+
+The foundation runner exits nonzero for missing/unavailable steps, panel/outline overlap, an offscreen outline, focus outside the panel, Back removal failing to focus Next, incorrect container/window scrolling or restoration, or smooth scrolling under reduced motion. Inspect its screenshots as well as its `record.json`.
+
+
+### Approved Estimator comparison recovery
+
+GT-01's original 900ms samples were not reproducible even with the committed GT-00 runtime. The owner approved refreshing only these five comparisons: paid Estimator en1440×900, en1024×768 and hi1280×800; Free Estimator en1440×900 and hi1280×800. Keep `out/`, `baseline-summary.txt`, the original GT-01 regression and all other 47 comparisons.
+
+For both the GT-00 control and GT-01, pass `env SETTLED_SAMPLING=1` after the isolation wrapper and use separate output roots. This opt-in mode keeps normal motion and observes fonts, panel/outline geometry, scroll positions and finite animations. After the usual initial wait it requires at least 1,500ms of observation and 500ms of unchanged geometry with no finite animation running. It fails after 8,000ms instead of recording a moving frame. Each step records its settling duration. It does not change styles, trigger layout events, move targets or suppress geometry issues. The summary format and issue calculations remain unchanged.

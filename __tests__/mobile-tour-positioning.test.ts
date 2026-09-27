@@ -38,6 +38,12 @@ function harness() {
         observe() {}
         disconnect() { notifyResize = () => {} }
     })
+    const tick = () => {
+        clock += 16
+        const pending = [...frames.values()]
+        frames.clear()
+        pending.forEach(cb => cb(clock))
+    }
     const drain = () => {
         let iterations = 0
         while (frames.size && iterations++ < 200) {
@@ -52,7 +58,7 @@ function harness() {
         notifyResize()
         for (const callbacks of [...events.values(), ...viewportEvents.values()]) callbacks.forEach(cb => cb())
     }
-    return { target, panel, scrollBy, drain, resize, frames, root, body, setTop: (value: number) => { top = value } }
+    return { target, panel, scrollBy, tick, drain, resize, frames, root, body, setTop: (value: number) => { top = value } }
 }
 
 afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals() })
@@ -93,11 +99,11 @@ describe('mobile tour event feedback', () => {
         h.scrollBy.mockImplementation(() => {})
         const measured = vi.fn()
         const cleanup = trackMobileTourTarget(() => h.target, () => h.panel, measured)
-        h.drain()
+        h.tick() // Issue the single scroll command.
+        h.tick() // Still outside the visible band; wait for layout within the budget.
         expect(measured).toHaveBeenLastCalledWith(null)
-        // Layout catches up later, with no manual swipe and no scroll/resize notification.
+        // Layout catches up on a later frame, with no scroll/resize notification or timer.
         h.setTop(240)
-        vi.advanceTimersByTime(350)
         h.drain()
         expect(measured).toHaveBeenLastCalledWith(expect.objectContaining({ top: 240, height: 40 }))
         expect(h.scrollBy).toHaveBeenCalledTimes(1)
