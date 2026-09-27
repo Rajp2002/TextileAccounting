@@ -11,7 +11,6 @@ import { readCompleteBaseRows } from '@/lib/base-complete-query'
 import { currentBaseMonthlySalary, mergeBaseSalaryOverhead, readBaseSalaryHistory } from '@/lib/base-salary'
 import type { BaseProductionWorker } from '@/lib/base-production-core'
 import { getSuratTodayString } from '@/lib/time'
-import { executeQuoteConversion } from '@/lib/quotes/convert-accepted-quote-to-order'
 import { getCachedOrgTier } from '@/lib/subscription'
 import { getNewEstimateRecordKind, normalizeCostingRecordKind, shouldCreateImmutableRevision } from '@/lib/costing-workspace'
 import { buildSavedQualityRecipeState, type SavedQualityCostingReuse } from '@/lib/saved-costings'
@@ -28,43 +27,8 @@ import {
 } from '@/lib/monthly-overhead'
 import { detectTemplateYarnRenames } from '@/lib/yarn-rate-reconciliation'
 
-/**
- * Generates a 12-character URL-safe tracking token for orders.
- * Uses Node.js crypto (built-in, no ESM issues) — 9 random bytes → base64url → 12 chars.
- * e.g. 'aB3xK9mPqR2w' — non-guessable, safe for WhatsApp without line-wrapping.
- */
-function generateTrackingToken(): string {
-    return crypto.randomBytes(9).toString('base64url').slice(0, 12)
-}
-
 const ESTIMATOR_NAME_MAX_LENGTH = 120
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-
-type ProductionSetupRequirement = {
-    error: string
-    setupRequired?: 'machine'
-}
-
-async function getProductionSetupRequirement(
-    supabase: Awaited<ReturnType<typeof createServerClient>>,
-    orgId: string,
-): Promise<ProductionSetupRequirement | null> {
-    const { count, error } = await supabase
-        .from('machines')
-        .select('id', { count: 'exact', head: true })
-        .eq('org_id', orgId)
-
-    if (error) {
-        console.error('Failed to check loom setup before production start:', error)
-        return { error: 'Could not check loom setup. Please try again.' }
-    }
-
-    if ((count ?? 0) === 0) {
-        return { error: 'Add at least one loom before starting production.', setupRequired: 'machine' }
-    }
-
-    return null
-}
 
 async function attestCanonicalCostingPayload<T extends Record<string, unknown>>(
     userId: string,
@@ -289,10 +253,6 @@ function getInitialQualitySnapshotRequestId(templateId: string): string {
     return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-5${hex.slice(13, 16)}-a${hex.slice(17, 20)}-${hex.slice(20, 32)}`
 }
 
-async function requireFactoryWorkflow(): Promise<string> {
-    return 'This factory workflow is unavailable on Free, Lite, and Base.'
-}
-
 function getAuthoritativeQuoteTotals(
     estimate: EstimateState,
     precomputedTotals?: ReturnType<typeof calcFullTotals>
@@ -427,35 +387,6 @@ export async function getFactoryCostProfile(options?: { createIfMissing?: boolea
     }
 
     return { data: profileData ? withStaff(profileData) : null }
-}
-
-// ─── Fixed Workers for Overhead ───────────────────────────────────────────────
-
-/**
- * Fetches active fixed-salary workers so the estimator can pre-populate
- * the "Fixed Salary Staff" overhead section with real DB data.
- * Returns light objects; each maps to an OverheadItem with source='fixed_worker_derived'.
- */
-export async function getFixedWorkersForOverhead(): Promise<{
-    data?: { id: number; name: string; role: string; monthly_salary: number }[]
-    error?: string
-}> {
-    const { profile } = await requireRole(['owner'])
-    const supabase = await createServerClient()
-
-    const tierError = await requireFactoryWorkflow()
-    if (tierError) return { error: tierError }
-
-    const { data, error } = await supabase
-        .from('fixed_workers')
-        .select('id, name, role, monthly_salary')
-        .eq('org_id', profile.org_id)
-        .eq('is_active', true)
-        .order('role', { ascending: true })
-        .order('name', { ascending: true })
-
-    if (error) return { error: error.message }
-    return { data: data ?? [] }
 }
 
 export async function upsertFactoryCostProfile(data: {
@@ -763,7 +694,7 @@ export async function getEstimatorSecondaryData() {
 
     const [templatesResult, workersResult, partiesResult, ratesResult, yarnRatesResult] = await Promise.all([
         getEstimatorTemplates(),
-        canUseProduction ? getFixedWorkersForOverhead() : Promise.resolve({ data: [] }),
+        Promise.resolve({ data: [] }),
         canUseProduction ? getEstimatorPartyNames() : Promise.resolve({ data: [] }),
         supabase
             .from('cost_rate_book')
@@ -1812,240 +1743,31 @@ export async function saveEstimatorQuoteV3(params: {
     return { success: true, quoteId: saved.id, updatedAt: saved.updated_at, versionNumber: saved.version_number, quotationReference: saved.quotation_reference }
 }
 
-// ─── Convert Quote to Order ───────────────────────────────────────────────────
+// ─── Retired factory workflows ────────────────────────────────────────────────
 
-export async function convertQuoteToOrder(data: {
-    party_name:          string
-    quality_label:       string
-    warp_instruction?:   string
-    weft_instruction?:   string
-    notes?:              string
-    total_target_meters: number
-    deadline:            string
-    estimate?:           EstimateState
-    quote_price_per_m?:  number
-    totalProductionCostPerM?: number
-}) {
+// Quote-to-order conversion, the Start Party Order fast path and market runs are
+// not offered on Free, Lite or Base. The Estimator and Quotations screens still
+// import these three actions, but only from controls that never render there
+// (both pages pass canUseProduction = false). Server actions are public
+// endpoints, so each one refuses without reading or writing data.
+const FACTORY_WORKFLOW_UNAVAILABLE = 'This factory workflow is unavailable on Free, Lite, and Base.'
+
+export async function convertAcceptedQuoteToOrder(data: unknown) {
     void data
-    return {
-        error: 'Direct Party Order creation from the estimator has been retired. Save the Quotation, accept it, then convert it from Quotations.',
-    }
+    await requireRole(['owner'])
+    return { error: FACTORY_WORKFLOW_UNAVAILABLE }
 }
 
-export async function convertAcceptedQuoteToOrder(data: {
-    quoteId: string
-    total_target_meters: number
-    deadline: string
-    notes?: string
-}) {
-    const { profile } = await requireRole(['owner'])
-    const supabase = await createServerClient()
-
-    const tierError = await requireFactoryWorkflow()
-    if (tierError) return { error: tierError }
-
-    const targetMeters = Number(data.total_target_meters)
-    if (!Number.isFinite(targetMeters) || targetMeters <= 0) {
-        return { error: 'Order quantity must be greater than 0.' }
-    }
-
-    const result = await executeQuoteConversion({
-        supabase,
-        orgId:         profile.org_id,
-        quoteId:       data.quoteId,
-        targetMeters,
-        deadline:      data.deadline,
-        notes:         data.notes,
-        trackingToken: generateTrackingToken(),
-    })
-
-    if ('error' in result) return result
-
-    revalidatePath('/owner/production')
-    revalidatePath('/owner/production')
-    revalidatePath('/owner/quotes')
-    revalidatePath('/owner/machines')
-    revalidatePath('/owner/production')
-    return { success: true, orderId: result.orderId }
+export async function startPartyOrderFromEstimator(input: unknown) {
+    void input
+    await requireRole(['owner'])
+    return { error: FACTORY_WORKFLOW_UNAVAILABLE }
 }
 
-// ─── Start Party Order ────────────────────────────────────────────────────────
-
-export type StartPartyOrderInput = {
-    /** Snapshot of the estimator state captured when the dialog opened */
-    estimatorState:       EstimateState
-    partyName:            string
-    qualityLabel:         string
-    warpInstruction?:     string | null
-    weftInstruction?:     string | null
-    targetMeters:         number
-    deadline:             string | null
-    quotePricePerM:       number
-    costPerM:             number
-    instructions?:        string | null
-    orderNotes?:          string | null
-}
-
-/**
- * Creates an accepted estimator quote and immediately converts it to a
- * production order — the "Start Party Order" fast path from the Estimator.
- *
- * Backend flow (Batch 23 — QUOTE-007 atomic transaction boundary):
- *   1. Validate inputs (role-scoped, server-side)
- *   2. Pre-compute yarn requirements from estimator state
- *   3. Call the atomic start_party_order_from_estimator RPC which creates
- *      the accepted quote, active order, quote/order backlinks, and
- *      order_yarn_requirements in a single database transaction.
- *
- * If the RPC fails, no orphaned accepted quote is left behind — all writes
- * are rolled back by PostgreSQL.
- */
-export async function startPartyOrderFromEstimator(input: StartPartyOrderInput) {
-    const { profile } = await requireRole(['owner'])
-    const supabase = await createServerClient()
-
-    const tierError = await requireFactoryWorkflow()
-    if (tierError) return { error: tierError }
-
-    // ── Input validation ─────────────────────────────────────────────────────
-    if (!input.partyName?.trim())         return { error: 'Add a party name before starting an order.' }
-    if (!input.qualityLabel?.trim())      return { error: 'Add a quality label before starting an order.' }
-
-    const targetMeters = Number(input.targetMeters)
-    if (!Number.isFinite(targetMeters) || targetMeters <= 0)
-        return { error: 'Target meters must be greater than zero.' }
-
-    const clientCostPerM = Number(input.costPerM)
-    if (!Number.isFinite(clientCostPerM) || clientCostPerM < 0)
-        return { error: 'Complete the estimate before starting an order.' }
-
-    const clientQuotePricePerM = Number(input.quotePricePerM)
-    if (!Number.isFinite(clientQuotePricePerM) || clientQuotePricePerM <= 0)
-        return { error: 'Quote price is missing. Complete the estimate first.' }
-
-    // Deadline is optional — accept null/empty
-    const deadline = input.deadline?.trim() || new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0]
-
-    const estimateForOrder = { ...input.estimatorState, orderQuantityM: targetMeters }
-    const snapshotError = getFirstEstimatorValidationMessage(validateEstimatorSnapshot(estimateForOrder, { requireCapacity: true }))
-    if (snapshotError) return { error: snapshotError }
-    const totals = calcFullTotals(estimateForOrder)
-    const authoritative = getAuthoritativeQuoteTotals(estimateForOrder, totals)
-    const { estimatorState } = input
-    const validationError = getFirstEstimatorValidationMessage(validateEstimatorQuoteBoundary({
-        estimate: estimateForOrder,
-        totalProductionCostPerM: authoritative.productionCostPerM,
-        quotePricePerM: authoritative.quotePricePerM,
-        targetMeters,
-        requireCapacity: true,
-        result: authoritative.result,
-        totals: authoritative.totals,
-    }))
-    if (validationError) return { error: validationError }
-    if (!totalsMatchAuthoritative(input.costPerM, input.quotePricePerM, authoritative)) {
-        return { error: 'The estimate changed before the order was created. Review the recalculated totals and try again.' }
-    }
-
-    // Worker pay is an authoritative snapshot derived from the validated
-    // recipe. Never accept a client-provided rate for downstream payroll.
-    const workerRatePerM = calcWorkerRateSnapshot(
-        estimatorState.weftRows,
-        estimatorState.perPickCostPaisa ?? 0
-    )
-
-    // ── Pre-compute yarn requirements (same logic as executeQuoteConversion) ──
-    const warpRequiredKg  = (totals.totalWarpKgPer100m / 100) * targetMeters
-    const weftRequiredKg  = ((totals.totalAllYarnKgPer100m - totals.totalWarpKgPer100m) / 100) * targetMeters
-    const totalRequiredKg = warpRequiredKg + weftRequiredKg
-    const estimatedBeams  = totals.estimatedBeamCapacityM > 0
-        ? Math.max(1, Math.ceil(targetMeters / totals.estimatedBeamCapacityM))
-        : null
-
-    const productionSetupRequirement = await getProductionSetupRequirement(supabase, profile.org_id)
-    if (productionSetupRequirement) return productionSetupRequirement
-
-    // ── Atomic RPC: quote + order + backlinks + yarn requirements ─────────────
-    const { data: rpcRows, error: rpcError } = await supabase.rpc(
-        'start_party_order_from_estimator_v2',
-        {
-            // Quote fields
-            p_party_name:            input.partyName.trim(),
-            p_quality_label:         input.qualityLabel.trim(),
-            p_warp_instruction:      input.warpInstruction?.trim() ?? null,
-            p_weft_instruction:      input.weftInstruction?.trim() ?? null,
-            p_warp_rows:             estimatorState.warpRows,
-            p_weft_rows:             estimatorState.weftRows,
-            p_per_pick_cost_paise:   estimatorState.perPickCostPaisa,
-            p_tape_length_m:         estimatorState.tapeLengthM,
-            p_warp_crimp_pct:        estimatorState.warpCrimpPct ?? 0,
-            p_warping_rate_per_kg:   estimatorState.warpingRatePerKg,
-            p_sizing_rate_per_kg:    estimatorState.sizingRatePerKg,
-            p_winding_rate_per_kg:   estimatorState.windingRatePerKg,
-            p_processing_rate_per_m: estimatorState.processingRatePerM,
-            p_finishing_rate_per_m:  estimatorState.finishingRatePerM,
-            p_overhead_items:        estimatorState.overheadItems,
-            p_monthly_output_m:      estimatorState.monthlyOutputM,
-            p_overhead_override_per_m: estimatorState.overheadMode === 'direct' ? estimatorState.overheadOverridePerM ?? null : null,
-            p_overhead_pct:          0,
-            p_commission_pct:        authoritative.result.commissionPct,
-            p_transport_per_m:       authoritative.result.transportPerM,
-            p_order_quantity_m:      authoritative.result.quantityM ?? targetMeters,
-            p_profit_margin_pct:     authoritative.result.targetMarginPct,
-            p_enabled_sections:      estimatorState.enabledSections,
-            p_loom_type:             estimatorState.loomType ?? null,
-            p_estimator_rpm:         estimatorState.loomRpm ?? null,
-            p_estimator_power_kw:    estimatorState.loomPowerKw ?? null,
-            p_hours_per_shift:       estimatorState.hoursPerShift,
-            p_sizing_mode:           estimatorState.sizingMode,
-            p_landed_cost_per_meter: authoritative.landedCostPerM,
-            p_quote_price_per_meter: authoritative.quotePricePerM,
-            p_intended_margin_pct:   authoritative.result.targetMarginPct,
-            p_worker_rate_per_m:     workerRatePerM,
-            p_ppi:                   Math.round(estimatorState.weftRows[0]?.picks ?? 68),
-            p_yarn_denier:           Math.round(estimatorState.warpRows[0] ? getEffectiveYarnDenier(estimatorState.warpRows[0]) : 75),
-            p_yarn_rate_per_kg:      estimatorState.warpRows[0]?.yarnRate ?? 0,
-            // Order fields
-            p_target_meters:         targetMeters,
-            p_deadline:              deadline,
-            p_notes:                 input.orderNotes?.trim() ?? input.instructions?.trim() ?? '',
-            p_tracking_token:        generateTrackingToken(),
-            // Pre-computed yarn requirements
-            p_warp_required_kg:      Number(warpRequiredKg.toFixed(3)),
-            p_weft_required_kg:      Number(weftRequiredKg.toFixed(3)),
-            p_total_required_kg:     Number(totalRequiredKg.toFixed(3)),
-            p_estimated_beams:       estimatedBeams,
-            p_requirement_snapshot:  {
-                order_quantity_m:          targetMeters,
-                estimated_beam_capacity_m: totals.estimatedBeamCapacityM,
-                warp_rows:                 estimateForOrder.warpRows,
-                weft_rows:                 estimateForOrder.weftRows,
-                warp_crimp_pct:            estimateForOrder.warpCrimpPct ?? 0,
-                yarn_shortage_pct:         estimateForOrder.yarnShortagePct ?? 0,
-            },
-            p_costing_result_snapshot: authoritative.result,
-        }
-    )
-
-    if (rpcError) {
-        return { error: rpcError.message || 'Failed to create order. Please try again.' }
-    }
-
-    const rpcResult = Array.isArray(rpcRows) ? rpcRows[0] : rpcRows
-    if (!rpcResult?.success || !rpcResult.order_id) {
-        return { error: rpcResult?.error ?? 'Failed to create order.' }
-    }
-
-    revalidatePath('/owner/production')
-    revalidatePath('/owner/production')
-    revalidatePath('/owner/quotes')
-    revalidatePath('/owner/machines')
-    revalidatePath('/owner/production')
-
-    return {
-        success: true,
-        quoteId: rpcResult.quote_id as string,
-        orderId: rpcResult.order_id as string,
-    }
+export async function createMarketRunFromEstimator(params: unknown) {
+    void params
+    await requireRole(['owner'])
+    return { error: FACTORY_WORKFLOW_UNAVAILABLE }
 }
 
 // ─── Party Rate Memory ────────────────────────────────────────────────────────
@@ -2111,64 +1833,6 @@ export async function getLastQuoteForParty(partyName: string): Promise<{
     if (error) return { error: error.message }
     if (!data) return {}
     return { data }
-}
-
-// ─── Monthly Output Suggestion ────────────────────────────────────────────────
-
-/**
- * Suggests a monthly output value by summing production_logs metres
- * over the last 30 days, divided by the number of active production days.
- */
-export async function getMonthlyOutputSuggestion(): Promise<{
-    data?: {
-        avg30Days: number
-        avg90Days: number
-        lastUpdated: string
-    }
-    error?: string
-}> {
-    const { profile } = await requireRole(['owner'])
-    const supabase = await createServerClient()
-
-    const tierError = await requireFactoryWorkflow()
-    if (tierError) return { error: tierError }
-
-    const now = new Date()
-    const ninetyDaysAgo = new Date()
-    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90)
-    const since90 = ninetyDaysAgo.toISOString().split('T')[0]
-
-    const { data, error } = await supabase
-        .from('production_logs')
-        .select('meters, date')
-        .eq('org_id', profile.org_id)
-        .gte('date', since90)
-
-    if (error) return { error: error.message }
-    if (!data || data.length === 0) {
-        return { data: { avg30Days: 0, avg90Days: 0, lastUpdated: now.toISOString() } }
-    }
-
-    const thirtyDaysAgo = new Date()
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-    const since30 = thirtyDaysAgo.toISOString().split('T')[0]
-
-    const logs30 = data.filter(r => r.date >= since30)
-    const total30 = logs30.reduce((s, r) => s + Number(r.meters ?? 0), 0)
-    const days30  = new Set(logs30.map(r => r.date)).size
-    const avg30Days = days30 > 0 ? Math.round((total30 / days30) * 26) : 0
-
-    const total90 = data.reduce((s, r) => s + Number(r.meters ?? 0), 0)
-    const days90  = new Set(data.map(r => r.date)).size
-    const avg90Days = days90 > 0 ? Math.round((total90 / days90) * 26) : 0
-
-    return { 
-        data: { 
-            avg30Days, 
-            avg90Days, 
-            lastUpdated: now.toISOString() 
-        } 
-    }
 }
 
 // ─── Quote History ────────────────────────────────────────────────────────────
@@ -2471,257 +2135,4 @@ export async function deleteEstimatorQuote(id: string, expectedUpdatedAt: string
 
     revalidatePath('/owner/quotes')
     return { success: true }
-}
-
-// ─── Market Run — Create ──────────────────────────────────────────────────────
-
-/**
- * Creates a Market Run from estimator output.
- * Steps:
- *   1. Save the estimator snapshot as an estimator_quote (market mode)
- *   2. Create the market_runs record with cost anchor
- *   3. Link quote → market_run bidirectionally
- *   4. Create a backing production order (party_name = fabric_label, market_run_id set)
- *   5. Returns { marketRunId } for redirect
- */
-export async function createMarketRunFromEstimator(params: {
-    fabricLabel:             string
-    qualityLabel:            string
-    warpInstruction?:        string
-    weftInstruction?:        string
-    targetMeters:            number
-    estimate:                EstimateState
-    totalProductionCostPerM: number
-    notes?:                  string
-    deadline:                string
-    templateId?:             string
-}) {
-    const { profile } = await requireRole(['owner'])
-    const supabase = await createServerClient()
-    const admin = createAdminClient()
-
-    const tierError = await requireFactoryWorkflow()
-    if (tierError) return { error: tierError }
-
-    const targetMeters = Number(params.targetMeters)
-    if (!Number.isFinite(targetMeters) || targetMeters <= 0) {
-        return { error: 'Target meters must be greater than 0.' }
-    }
-    if (!params.fabricLabel.trim()) {
-        return { error: 'Fabric label is required.' }
-    }
-    if (params.templateId && !UUID_PATTERN.test(params.templateId)) return { error: 'Saved quality identifier is invalid.' }
-    if (params.templateId) {
-        const { data: template, error: templateError } = await supabase
-            .from('estimator_templates')
-            .select('id')
-            .eq('id', params.templateId)
-            .eq('org_id', profile.org_id)
-            .eq('is_active', true)
-            .maybeSingle()
-        if (templateError) return { error: templateError.message }
-        if (!template) return { error: 'The selected saved quality is no longer available.' }
-    }
-
-    const estimate = { ...params.estimate, orderQuantityM: targetMeters }
-    const snapshotError = getFirstEstimatorValidationMessage(validateEstimatorSnapshot(estimate, { requireCapacity: true }))
-    if (snapshotError) return { error: snapshotError }
-    const authoritative = getAuthoritativeQuoteTotals(estimate)
-    const validationError = getFirstEstimatorValidationMessage(validateEstimatorQuoteBoundary({
-        estimate,
-        totalProductionCostPerM: authoritative.productionCostPerM,
-        quotePricePerM: authoritative.quotePricePerM,
-        targetMeters,
-        requireCapacity: true,
-        result: authoritative.result,
-        totals: authoritative.totals,
-    }))
-    if (validationError) return { error: validationError }
-    if (normalizeCurrencySnapshot(params.totalProductionCostPerM) !== authoritative.productionCostPerM) {
-        return { error: 'The estimate changed before the market run was created. Review the recalculated totals and try again.' }
-    }
-
-    // Recompute the payroll snapshot after validation. A caller cannot lower
-    // or inflate the downstream worker rate independently of the recipe.
-    const workerRatePerM = calcWorkerRateSnapshot(
-        estimate.weftRows,
-        estimate.perPickCostPaisa ?? 0
-    )
-
-    const productionSetupRequirement = await getProductionSetupRequirement(supabase, profile.org_id)
-    if (productionSetupRequirement) return productionSetupRequirement
-
-    // 1. Save estimator snapshot as a quote (party_name = fabric label for display)
-    const { data: savedQuote, error: quoteError } = await admin
-        .from('estimator_quotes')
-        .insert({
-            org_id:               profile.org_id,
-            record_kind:          'market_run',
-            party_name:           params.fabricLabel.trim(),   // fabric label used as party placeholder
-            quality_label:        params.qualityLabel.trim(),
-            template_id:          params.templateId ?? null,
-            warp_instruction:     params.warpInstruction?.trim(),
-            weft_instruction:     params.weftInstruction?.trim(),
-            warp_rows:            estimate.warpRows,
-            weft_rows:            estimate.weftRows,
-            per_pick_cost_paise:  estimate.perPickCostPaisa,
-            tape_length_m:        estimate.tapeLengthM,
-            warp_crimp_pct:       estimate.warpCrimpPct ?? 0,
-            yarn_shortage_pct:    estimate.yarnShortagePct ?? 0,
-            warping_rate_per_kg:  estimate.warpingRatePerKg,
-            sizing_rate_per_kg:   estimate.sizingRatePerKg,
-            winding_rate_per_kg:  estimate.windingRatePerKg,
-            processing_rate_per_m: estimate.processingRatePerM,
-            finishing_rate_per_m: estimate.finishingRatePerM,
-            overhead_items:       estimate.overheadItems,
-            monthly_output_m:     estimate.monthlyOutputM,
-            overhead_override_per_m: estimate.overheadMode === 'direct' ? estimate.overheadOverridePerM ?? null : null,
-            overhead_pct:         0,
-            commission_pct:       authoritative.result.commissionPct,
-            transport_per_m:      authoritative.result.transportPerM,
-            order_quantity_m:     authoritative.result.quantityM ?? targetMeters,
-            profit_margin_pct:    authoritative.result.targetMarginPct,
-            enabled_sections:     estimate.enabledSections,
-            loom_type:            estimate.loomType ?? null,
-            estimator_rpm:        estimate.loomRpm ?? null,
-            estimator_power_kw:   estimate.loomPowerKw ?? null,
-            hours_per_shift:      estimate.hoursPerShift,
-            sizing_mode:          estimate.sizingMode,
-            loom_count:           estimate.loomCount,
-            monthly_working_days: estimate.monthlyWorkingDays,
-            avg_output_per_loom_per_day: estimate.avgOutputPerLoomPerDay,
-            calculation_version:      authoritative.result.calculationVersion,
-            rounding_policy:          authoritative.result.roundingPolicy,
-            production_cost_per_meter: authoritative.result.productionCostPerM,
-            overhead_per_meter:       authoritative.result.overheadPerM,
-            commission_cost_per_meter: authoritative.result.commissionPerM,
-            break_even_price_per_meter: authoritative.result.breakEvenPricePerM,
-            expected_profit_per_meter: authoritative.result.profitPerM,
-            expected_profit_total:     authoritative.result.expectedProfitTotal,
-            actual_margin_percent:     authoritative.result.actualMarginPct,
-            costing_result_snapshot:   authoritative.result,
-            reconciliation_status:     'verified',
-            reconciliation_note:       null,
-            reconciled_at:             new Date().toISOString(),
-            landed_cost_per_meter:    authoritative.landedCostPerM,
-            quote_price_per_meter:    authoritative.quotePricePerM,
-            intended_margin_percent:  authoritative.result.targetMarginPct,
-            meters:                   authoritative.result.quantityM ?? targetMeters,
-            status:                   'accepted',       // auto-accept — no party negotiation needed
-            worker_rate_per_m:        workerRatePerM,
-            ppi:     Math.round(estimate.weftRows[0]?.picks ?? 68),
-            yarn_denier: Math.round(estimate.warpRows[0] ? getEffectiveYarnDenier(estimate.warpRows[0]) : 75),
-            yarn_rate_per_kg: estimate.warpRows[0]?.yarnRate ?? 0,
-        })
-        .select('id')
-        .single()
-
-    if (quoteError || !savedQuote) return { error: quoteError?.message ?? 'Failed to save estimator snapshot.' }
-
-    // 2. Create market_runs record
-    const { data: marketRun, error: runError } = await supabase
-        .from('market_runs')
-        .insert({
-            org_id:           profile.org_id,
-            fabric_label:     params.fabricLabel.trim(),
-            quality_label:    params.qualityLabel.trim() || null,
-            warp_instruction: params.warpInstruction?.trim() || null,
-            weft_instruction: params.weftInstruction?.trim() || null,
-            target_meters:    targetMeters,
-            cost_per_meter:   authoritative.landedCostPerM,
-            worker_rate_per_m: workerRatePerM,
-            quote_id:         savedQuote.id,
-            status:           'production',
-            notes:            params.notes?.trim() || null,
-        })
-        .select('id')
-        .single()
-
-    if (runError || !marketRun) {
-        // Cleanup orphaned quote
-        await admin.from('estimator_quotes').delete().eq('id', savedQuote.id).eq('org_id', profile.org_id)
-        return { error: runError?.message ?? 'Failed to create market run.' }
-    }
-
-    // 3. Backlink quote → market_run
-    await admin
-        .from('estimator_quotes')
-        .update({ market_run_id: marketRun.id })
-        .eq('id', savedQuote.id)
-        .eq('org_id', profile.org_id)
-
-    // 4. Create backing production order (no party_id — market run orders have no external party)
-    const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .insert({
-            org_id:              profile.org_id,
-            party_name:          params.fabricLabel.trim(),     // fabric label as display name
-            quality_label:       params.qualityLabel.trim() || null,
-            warp_instruction:    params.warpInstruction?.trim() ?? '',
-            weft_instruction:    params.weftInstruction?.trim() ?? '',
-            total_target_meters: targetMeters,
-            start_date:          new Date().toISOString().split('T')[0],
-            deadline:            params.deadline,
-            status:              'active',
-            worker_rate_per_m:   workerRatePerM,
-            notes:               params.notes?.trim() ?? '',
-            tracking_token:      generateTrackingToken(),
-            market_run_id:       marketRun.id,
-        })
-        .select('id')
-        .single()
-
-    if (orderError || !order) {
-        // Cleanup
-        await supabase.from('market_runs').delete().eq('id', marketRun.id).eq('org_id', profile.org_id)
-        await admin.from('estimator_quotes').delete().eq('id', savedQuote.id).eq('org_id', profile.org_id)
-        return { error: orderError?.message ?? 'Failed to create production order.' }
-    }
-
-    await admin
-        .from('estimator_quotes')
-        .update({ order_id: order.id, market_run_id: marketRun.id })
-        .eq('id', savedQuote.id)
-        .eq('org_id', profile.org_id)
-
-    // 5. Compute and store yarn requirements (same as quote-to-order flow)
-    const estimateForOrder = {
-        ...estimate,
-        orderQuantityM: targetMeters,
-    }
-    const { calcFullTotals: calc } = await import('@/lib/estimator')
-    const totals = calc(estimateForOrder)
-    const warpRequiredKg = (totals.totalWarpKgPer100m / 100) * targetMeters
-    const weftRequiredKg = ((totals.totalAllYarnKgPer100m - totals.totalWarpKgPer100m) / 100) * targetMeters
-    const totalRequiredKg = warpRequiredKg + weftRequiredKg
-    const estimatedBeams = totals.estimatedBeamCapacityM > 0
-        ? Math.max(1, Math.ceil(targetMeters / totals.estimatedBeamCapacityM))
-        : null
-
-    await supabase
-        .from('order_yarn_requirements')
-        .upsert({
-            org_id: profile.org_id,
-            order_id: order.id,
-            quote_id: savedQuote.id,
-            warp_required_kg: Number(warpRequiredKg.toFixed(3)),
-            weft_required_kg: Number(weftRequiredKg.toFixed(3)),
-            total_required_kg: Number(totalRequiredKg.toFixed(3)),
-            estimated_beams: estimatedBeams,
-            requirement_snapshot: {
-                order_quantity_m: targetMeters,
-                estimated_beam_capacity_m: totals.estimatedBeamCapacityM,
-                warp_rows: estimate.warpRows,
-                weft_rows: estimate.weftRows,
-                warp_crimp_pct: estimate.warpCrimpPct ?? 0,
-                yarn_shortage_pct: estimate.yarnShortagePct ?? 0,
-            },
-        }, { onConflict: 'order_id' })
-
-    revalidatePath('/owner/production')
-    revalidatePath('/owner/production')
-    revalidatePath('/owner/production')
-    revalidatePath('/owner/machines')
-    revalidatePath('/owner/production')
-    return { success: true, marketRunId: marketRun.id }
 }

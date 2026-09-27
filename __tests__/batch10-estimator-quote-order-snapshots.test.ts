@@ -23,35 +23,33 @@ function functionBody(source: string, name: string) {
 }
 
 describe('Batch 10 estimator quote/order snapshots', () => {
-    it('stores normalized worker-rate snapshots on quote, order, and market-run write paths', () => {
+    it('stores normalized worker-rate snapshots on the live costing save paths', () => {
         const estimatorActions = readProjectFile('app/(dashboard)/owner/estimator/actions.ts')
         const estimatorClient = readProjectFile('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
 
         expect(estimatorActions).toContain('calcFullTotals, calcWorkerRateSnapshot, normalizeCurrencySnapshot')
         expect(estimatorActions).toContain('const workerRatePerM = calcWorkerRateSnapshot(estimate.weftRows, estimate.perPickCostPaisa ?? 0)')
-        expect(estimatorActions.match(/const workerRatePerM = calcWorkerRateSnapshot\(/g)?.length).toBeGreaterThanOrEqual(3)
-        expect(functionBody(estimatorActions, 'startPartyOrderFromEstimator')).not.toContain('input.workerRatePerM')
-        expect(functionBody(estimatorActions, 'createMarketRunFromEstimator')).not.toContain('params.workerRatePerM')
+        // Phase 3F retired the order and market-run write paths, so the two live
+        // costing saves are the only places that derive the snapshot.
+        expect(estimatorActions.match(/const workerRatePerM = calcWorkerRateSnapshot\(/g)?.length).toBe(2)
+        expect(functionBody(estimatorActions, 'saveEstimatorQuoteV3')).toContain('const workerRatePerM = calcWorkerRateSnapshot(estimate.weftRows, estimate.perPickCostPaisa ?? 0)')
+        expect(functionBody(estimatorActions, 'saveAsFabricTemplate')).toContain('const workerRatePerM = calcWorkerRateSnapshot(snapshotEstimate.weftRows, snapshotEstimate.perPickCostPaisa ?? 0)')
         // Package 2C: both live costing saves pass the snapshot to the shared
-        // payload builder; the retired market-run path still writes it inline.
+        // payload builder.
         expect(readProjectFile('lib/estimator-quote-payload.ts')).toContain('worker_rate_per_m: input.workerRatePerM')
         expect(functionBody(estimatorActions, 'saveEstimatorQuoteV3')).toContain('        workerRatePerM,\n')
         expect(functionBody(estimatorActions, 'saveAsFabricTemplate')).toContain('        workerRatePerM,\n')
-        expect(functionBody(estimatorActions, 'createMarketRunFromEstimator')).toContain('worker_rate_per_m:        workerRatePerM')
         expect(estimatorClient).not.toContain('calcWorkerRateSnapshot(state.weftRows, state.perPickCostPaisa ?? 0)')
     })
 
     it('persists delivered landed cost rather than dropping commission and transport', () => {
         const estimatorActions = readProjectFile('app/(dashboard)/owner/estimator/actions.ts')
         const saveQuote = functionBody(estimatorActions, 'saveEstimatorQuoteV3')
-        const startOrder = functionBody(estimatorActions, 'startPartyOrderFromEstimator')
 
         expect(estimatorActions).toContain('landedCostPerM: result.landedCostPerM')
         expect(estimatorActions).toContain('const result = buildCostingResult(estimate, totals)')
         expect(saveQuote).toContain('        result: authoritative.result,\n')
         expect(readProjectFile('lib/estimator-quote-payload.ts')).toContain('landed_cost_per_meter: result.landedCostPerM')
-        expect(startOrder).toContain('p_landed_cost_per_meter: authoritative.landedCostPerM')
-        expect(startOrder).not.toContain('p_landed_cost_per_meter: authoritative.productionCostPerM')
     })
 })
 

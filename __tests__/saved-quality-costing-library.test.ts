@@ -38,13 +38,16 @@ describe('saved quality costing library', () => {
     expect(migration).toContain('quote.template_id IS NULL')
   })
 
-  it('links new costing and market-run snapshots to the selected quality', () => {
+  it('links new costing snapshots to the selected quality', () => {
     const estimator = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
     const actions = read('app/(dashboard)/owner/estimator/actions.ts')
     const drafts = read('lib/estimator-drafts.ts')
 
     expect(estimator).toContain('templateId:              appliedTemplate?.id')
-    expect(actions).toContain('template_id:          params.templateId ?? null')
+    // Phase 3F retired the market-run insert that carried its own template_id;
+    // the live save passes the quality to the shared payload builder.
+    expect(actions).toContain('        templateId: params.templateId ?? null,\n')
+    expect(read('lib/estimator-quote-payload.ts')).toContain('        template_id: input.templateId,\n')
     expect(actions).toContain('production_logs ( meters )')
     expect(drafts).toContain('templateId?: string')
   })
