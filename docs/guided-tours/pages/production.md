@@ -1,0 +1,109 @@
+# P04 Production (Overview) — tour specification
+
+Status: specified, not implemented. Implementation: **GT-11**. Gujarati/Hindi: native review pending.
+Shared rules: [`GUIDED_TOURS_REFINEMENT_PLAN.md`](../../GUIDED_TOURS_REFINEMENT_PLAN.md) (D-10). Evidence: [`audit/production-assignments-machines-workers.md`](../audit/production-assignments-machines-workers.md) §1. The Daily Sheet has its own tour: [daily-sheet.md](daily-sheet.md).
+
+## A. Identity and evidence
+
+| Item | Value |
+| --- | --- |
+| Route | `/owner/production` (sidebar "Overview") → `BaseProductionClient` (jobs view) inside `ProductionGuidedTour` |
+| Entitlement | `production_management` (Base). Owner role. |
+| Tour today | `components/production/ProductionGuidedTour.tsx` (left rail: guide + "Setup, history & corrections"; hides the live page), `ProductionTourPreview.tsx`, `components/tours/ProductionTutorial.tsx`, `lib/production-tour.ts` (12-step core covering Overview **and** Daily Sheet + 11-step details track), `lib/i18n/production-tutorial.ts`, `productionTourExample`. |
+| Live controls | Right rail "Activate Quality" (`BaseProductionClient.tsx:433-442`); `BaseActiveQualities`: Activate Quality dialog, "Yarn required before production" gate with Add Stock, Assign Looms dialog, ⋮ Quality actions (View in Costings, Production History, Deactivate); `BaseMachineBoard`: "Machine Board", filters, Manage Workers sheet ("Manage Operators for {loom}"), Switch Quality, Assign Quality. |
+| Prerequisites | A saved costing (not archived); **stock above 0 kg for every yarn in its recipe** (`validate_quality_activation_yarn`); active machines; active piece-rate workers. |
+
+## B. Diagnosis
+
+| ID | Sev | Type | Finding | Evidence |
+| --- | --- | --- | --- | --- |
+| PD-1 | Major | Tour | The yarn-stock requirement for activation is never mentioned; a new owner who follows the tour is stopped by "Yarn required before production". | CODE-VERIFIED migration `20260920000000…sql:113-192`; copy `production-tutorial.ts:95-98` |
+| PD-2 | Major | Tour | Replica and copy name controls that do not exist: "Overview & Looms", "Loom Board", "Save machine production", "Edit production log", "Print collection sheet", "Production cost". | CODE-VERIFIED audit §1.3 |
+| PD-3 | Major | Tour | Half the core tour teaches the Daily Sheet, which cannot launch a guide. | CODE-VERIFIED `ProductionGuidedTour.tsx:25,32` |
+| PD-4 | Major | Tour | Live page hidden, no handoff; rail over the replica at ≥1440; panel over target at 1024 (step 8). | OBSERVED (harness) |
+| PD-5 | Minor | Tour | Gujarati/Hindi copy embeds English UI names; wage is મજૂરી here and વેતન in Workers; sample worker is "વણકર/बुनकर". | CODE-VERIFIED audit §1.6 |
+| PD-6 | Major | Product | Incomplete recipe → "All required yarns are now available!" loop (PI-05); View log / returnTo land on Overview (PI-03). | CODE-VERIFIED |
+
+## C. Learning outcomes and coverage
+
+After the tour the owner can: (1) explain how a saved costing becomes a running quality whose metres feed stock and wages; (2) list the four prerequisites including yarn stock; (3) activate a quality with its wage; (4) assign looms; (5) set day and night operators; (6) read the machine board; (7) start with the real "Activate Quality".
+
+| Requirement | Destination |
+| --- | --- |
+| Purpose: costing → looms → daily metres → stock and wages | `pd-overview` |
+| Prerequisites: saved costing, yarn stock, machines, workers | `pd-prereq` (+ detail: where to add each) |
+| Activate Quality: version + weaver wage | `pd-activate` (+ detail: yarn gate, Add Stock) |
+| Assign Looms | `pd-looms` |
+| Operators per shift (or Machine Assignments) | `pd-operators` |
+| Machine Board: running/available; Switch Quality; Deactivate | `pd-board` (+ detail: switch, deactivate via Quality actions) |
+| Recording metres | Daily Sheet tour (`pd-handoff` names it) |
+| History, corrections, print | Daily Sheet tour |
+
+## D. Structure
+
+Seven steps on the Overview. The old details track and every Daily Sheet step leave this tour (D-10). The "Setup, history & corrections" rail button is removed; the rail has only the guide. Replica: only the overview surfaces and the three overview dialogs remain; labels come from the live keys (LR-02); rendered inside `production-overview-workspace`; handoff unhides the live page (EC-18).
+
+Sample (`productionTourExample`): wage ₹2/m, quality "Sample fabric · v2", looms "Sample loom 1–3", worker "Sample worker" (localized per §9.2).
+
+## E. Steps
+
+| # | Step id | Preset | Anchor | Surface |
+| --- | --- | --- | --- | --- |
+| 1 | `pd-overview` (was `overview`) | PS-SAMPLE | `[data-production-tour="overview"]` | overview |
+| 2 | `pd-prereq` (was `prerequisites`) | PS-SAMPLE | `[data-production-tour="prerequisites"]` | overview, a checklist card: Saved costing, Yarn stock, Machines, Workers |
+| 3 | `pd-activate` (was `activate`) | PS-SAMPLE-DIALOG | `[data-production-tour="activate"]` / `[data-production-tour-preview="true"]` | Activate Quality dialog |
+| 4 | `pd-looms` (was `allocate`) | PS-SAMPLE-DIALOG | `[data-production-tour="allocate"]` / same | Assign Looms dialog |
+| 5 | `pd-operators` (was `operators`) | PS-SAMPLE | `[data-production-tour="operators"]` | overview, operators card titled with the live sheet title "Manage Operators for {loom}" |
+| 6 | `pd-board` (was `board`) | PS-SAMPLE | `[data-production-tour="board"]` | overview, "Machine Board" card |
+| 7 | `pd-handoff` | PS-HANDOFF | `[data-tour-anchor="production.activate"]` *(proposed on the right-rail Activate Quality and on its inline counterpart below 1280px)* | live |
+
+## F. Copy
+
+Keys in `lib/i18n/production-tutorial.ts` (rewritten; Daily Sheet and details keys move to the Daily Sheet tour or are deleted).
+
+| Key | English | Gujarati | Hindi |
+| --- | --- | --- | --- |
+| `overview.title` | From costing to daily production | કોસ્ટિંગથી રોજિંદા ઉત્પાદન સુધી | कॉस्टिंग से रोज़ के उत्पादन तक |
+| `overview.body` | Here a saved costing becomes a quality running on your looms. Metres recorded each shift then add fabric stock and worker pay. | અહીં સાચવેલી કોસ્ટિંગ તમારા લૂમ પર ચાલતી ક્વોલિટી બને છે. પછી દરેક શિફ્ટમાં નોંધાયેલા મીટર કાપડનો સ્ટોક અને કારીગરનો પગાર ઉમેરે છે. | यहाँ सेव की गई कॉस्टिंग आपके लूम पर चलती क्वालिटी बनती है। फिर हर शिफ्ट में दर्ज मीटर कपड़े का स्टॉक और कारीगर का वेतन जोड़ते हैं। |
+| `prereq.title` | Four things must exist first | પહેલાં આ ચાર વસ્તુ જોઈએ | पहले ये चार चीज़ें चाहिए |
+| `prereq.body` | A saved costing, stock of every yarn in it, your machines, and your workers. A quality cannot start while any of its yarns has no stock. | સાચવેલી કોસ્ટિંગ, તેમાંના દરેક યાર્નનો સ્ટોક, તમારાં મશીનો અને તમારા કારીગરો. કોઈ યાર્નનો સ્ટોક ન હોય ત્યાં સુધી ક્વોલિટી શરૂ ન થાય. | सेव की गई कॉस्टिंग, उसके हर धागे का स्टॉक, आपकी मशीनें और आपके कारीगर। किसी धागे का स्टॉक न हो तो क्वालिटी शुरू नहीं होती। |
+| `prereq.detail` | Costings come from the Cost Estimator, yarn from Yarn Stock, and machines and workers from their own pages. | કોસ્ટિંગ ખર્ચ અંદાજકમાંથી, યાર્ન યાર્નના સ્ટોકમાંથી, અને મશીનો તથા કારીગરો તેમના પોતાના પેજમાંથી આવે છે. | कॉस्टिंग लागत अनुमानक से, धागा धागे के स्टॉक से, और मशीनें व कारीगर अपने-अपने पेज से आते हैं। |
+| `activate.title` | Activate a quality with its wage | મજૂરી સાથે ક્વોલિટી ચાલુ કરો | मजदूरी के साथ क्वालिटी चालू करें |
+| `activate.body` | {c:activateQuality} picks a saved costing version and the weaver wage per metre, here ₹2/m. The wage is what workers earn on this quality. | {c:activateQuality} સાચવેલી કોસ્ટિંગનું વર્ઝન અને મીટરદીઠ મજૂરી પસંદ કરે છે, અહીં ₹2/મીટર. આ ક્વોલિટી પર કારીગરો આ મજૂરી કમાય છે. | {c:activateQuality} सेव कॉस्टिंग का वर्ज़न और प्रति मीटर मजदूरी चुनता है, यहाँ ₹2/मीटर। इस क्वालिटी पर कारीगर यही मजदूरी कमाते हैं। |
+| `activate.detail` | If a yarn has no stock, Weavly asks you to add it before the quality can start. | કોઈ યાર્નનો સ્ટોક ન હોય તો ક્વોલિટી શરૂ થાય તે પહેલાં Weavly તે ઉમેરવાનું કહે છે. | किसी धागे का स्टॉक न हो तो क्वालिटी शुरू होने से पहले Weavly उसे जोड़ने को कहता है। |
+| `looms.title` | Put the quality on looms | ક્વોલિટીને લૂમ પર મૂકો | क्वालिटी को लूम पर लगाएँ |
+| `looms.body` | {c:assignLooms} ticks the looms that will weave it. A loom weaves one quality at a time. | {c:assignLooms} તેને વણનારા લૂમ પર ટિક કરે છે. એક લૂમ એક વખતે એક જ ક્વોલિટી વણે છે. | {c:assignLooms} उसे बुनने वाले लूम पर टिक करता है। एक लूम एक बार में एक ही क्वालिटी बुनता है। |
+| `operators.title` | Give each loom a worker per shift | દરેક લૂમને શિફ્ટ પ્રમાણે કારીગર આપો | हर लूम को शिफ्ट के अनुसार कारीगर दें |
+| `operators.body` | {c:manageWorkers} sets the day and night operator of a loom. You can also do this for many looms in Machine Assignments. | {c:manageWorkers} લૂમનો દિવસ અને રાતનો ઓપરેટર નક્કી કરે છે. ઘણા લૂમ માટે આ મશીન ફાળવણીમાં પણ થાય છે. | {c:manageWorkers} लूम का दिन और रात का ऑपरेटर तय करता है। कई लूम के लिए यह मशीन आवंटन में भी होता है। |
+| `board.title` | Read the machine board | મશીન બોર્ડ વાંચો | मशीन बोर्ड पढ़ें |
+| `board.body` | {c:machineBoard} shows each loom as running or available, with its quality and operators. | {c:machineBoard}માં દરેક લૂમ ચાલુ કે ખાલી, તેની ક્વોલિટી અને ઓપરેટર સાથે દેખાય છે. | {c:machineBoard} में हर लूम चालू या खाली, अपनी क्वालिटी और ऑपरेटर के साथ दिखता है। |
+| `board.detail` | {c:switchQuality} moves a loom to another quality. To stop a quality everywhere, use {c:qualityActions} on its card. | {c:switchQuality} લૂમને બીજી ક્વોલિટી પર લઈ જાય છે. કોઈ ક્વોલિટી બધે બંધ કરવા તેના કાર્ડ પર {c:qualityActions} વાપરો. | {c:switchQuality} लूम को दूसरी क्वालिटी पर ले जाता है। किसी क्वालिटी को हर जगह रोकने के लिए उसके कार्ड पर {c:qualityActions} इस्तेमाल करें। |
+| `handoff.title` | Start your first quality | તમારી પહેલી ક્વોલિટી શરૂ કરો | अपनी पहली क्वालिटी शुरू करें |
+| `handoff.body` | Choose {c:activateQuality} to put a quality on your looms. Then record each shift's metres on the Daily Sheet. | તમારા લૂમ પર ક્વોલિટી મૂકવા {c:activateQuality} પસંદ કરો. પછી દરેક શિફ્ટના મીટર દૈનિક શીટમાં નોંધો. | अपने लूम पर क्वालिटी लगाने के लिए {c:activateQuality} चुनें। फिर हर शिफ्ट के मीटर दैनिक शीट में दर्ज करें। |
+| `guide.benefit` | See how to put a saved costing on your looms and get ready to record production. | સાચવેલી કોસ્ટિંગને લૂમ પર મૂકવી અને ઉત્પાદન નોંધવાની તૈયારી કેવી રીતે કરવી તે જુઓ. | सेव कॉस्टिंग को लूम पर लगाना और उत्पादन दर्ज करने की तैयारी करना देखें। |
+
+### Control tokens
+
+All are hard-coded English today and display word-by-word (label probe). Each gets a key (LR-03) under a proposed `production.*` namespace used by the live control and the token.
+
+| Token | Live render site | Gujarati | Hindi |
+| --- | --- | --- | --- |
+| `activateQuality` | right rail (433-442), `BaseActiveQualities` 406-412 | ક્વોલિટી ચાલુ કરો | क्वालिटी चालू करें |
+| `assignLooms` | quality card (528-535) | લૂમ ફાળવો | लूम दें |
+| `manageWorkers` | board card | કારીગર બદલો | कारीगर बदलें |
+| `machineBoard` | board title (306) | મશીન બોર્ડ | मशीन बोर्ड |
+| `switchQuality` | board card | ક્વોલિટી બદલો | क्वालिटी बदलें |
+| `qualityActions` | ⋮ menu aria-label (459-490) | ક્વોલિટીના વિકલ્પો | क्वालिटी के विकल्प |
+
+## G. State variants
+
+| Variant | Behavior |
+| --- | --- |
+| No saved costings / no machines / no workers | Replica unchanged; handoff anchor (Activate Quality) exists; `prereq` already tells where each comes from. |
+| Qualities already active | Same tour; `handoff.body` still correct. |
+| Live dialog open | Launcher under the modal. |
+| Replay | Compact launcher. |
+
+## H. Comprehension check
+
+"You saved a costing for a new crepe yesterday and want two looms to start it tonight. What must be true before you can, and what do you press, in which order?" Expected: yarn stock exists for its yarns; Activate Quality (version + wage) → Assign Looms (two looms) → Manage Workers (night operator) → record metres on the Daily Sheet.
