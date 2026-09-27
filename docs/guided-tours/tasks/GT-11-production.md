@@ -52,4 +52,4 @@ Escalate if keying "Manage Workers"/"Activate Quality" changes text in the Daily
 
 ## Checkpoint
 
-GT-11 PASSED. Next: **GT-12** (needs the owner's U-06 answer).
+GT-11 PASSED. Next: **GT-12**.

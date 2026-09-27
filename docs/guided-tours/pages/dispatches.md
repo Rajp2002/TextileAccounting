@@ -13,7 +13,7 @@ Shared rules: [`GUIDED_TOURS_REFINEMENT_PLAN.md`](../../GUIDED_TOURS_REFINEMENT_
 | Anchors today | Replica only: `[data-dispatch-tour="<step>"]`. None on the live page. |
 | Prerequisites for real use | Fabric stock for the quality (saved production or opening stock). Customer details are typed per dispatch (no party master). |
 | Consequential actions | Save draft (no stock change), Confirm dispatch has left (deducts fabric metres), Received as sent / Record receipt, Record payment, adjustments, refunds, Reverse erroneous dispatch, Reverse entry. |
-| Business rule (current migrations) | Confirm deducts **fabric** metres only; yarn is deducted when production is saved (`20260920000000_unified_inventory_audit_architecture.sql:446`; latest `mutate_delivery_challan` in `20260926132412…sql` never touches yarn). Owner to confirm production matches (U-04). |
+| Business rule (current migrations) | Confirm deducts **fabric** metres only; yarn is deducted when production is saved (`20260920000000_unified_inventory_audit_architecture.sql:446`; latest `mutate_delivery_challan` in `20260926132412…sql` never touches yarn). Owner confirmed on 2026-09-27 that production deducts yarn (U-04). |
 
 ## B. Diagnosis
 

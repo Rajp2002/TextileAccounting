@@ -10,6 +10,7 @@ Shared rules: [`GUIDED_TOURS_REFINEMENT_PLAN.md`](../../GUIDED_TOURS_REFINEMENT_
 | Route | `/owner/stock/audit` → `InventoryAuditClient.tsx`; reached only from the "Audit Inventory" buttons on Fabric and Yarn Stock (`QualityStockClient.tsx:129`, `YarnStockClient.tsx:107`) |
 | Entitlement | Base (owner). |
 | Workflow | Pick an audit date → record physical counts per fabric quality and yarn → review variances → Adjust (writes an `audit_adjustment` movement) → Finalize (freezes the snapshot); CSV export. |
+| Yarn you own (owner rule D-19, 2026-09-27) | Total yarn = loose yarn in Yarn Stock **plus** yarn held in finished fabric not yet dispatched, worked out from each quality's costing kg per 100 m. Already implemented: KPI cards "Yarn Embodied in Fabric" and "Total Represented" and the Material Position table (`InventoryAuditClient.tsx:298-325, 366-520`; formula text at 375-379). The audit tour must teach this. |
 | Tour today | The **Fabric Stock** tour (`audit/page.tsx:16-19`). |
 
 ## B. Diagnosis
@@ -34,8 +35,8 @@ Why not now: a tour that teaches a date picker which mixes audits, or a page Guj
 
 ## D. Outline for GT-B1 (to be completed when unblocked)
 
-Six steps, live page (PS-LIVE; `data-tour-anchor="audit.*"`, all proposed): `sa-purpose` (header: what an audit is and when to use it instead of Correct balance), `sa-date` (audit date), `sa-count` (Record count on a fabric row), `sa-variance` (read system vs counted), `sa-adjust` (Adjust writes the difference; cannot be undone except by another adjustment), `sa-finalize` (Finalize freezes the audit; handoff to the first Record count button). Copy is written when the page's behavior is fixed, following the plan's §4.8 rules and glossary.
+Seven steps, live page (PS-LIVE; `data-tour-anchor="audit.*"`, all proposed): `sa-purpose` (header: what an audit is and when to use it instead of Correct balance), `sa-date` (audit date), `sa-yarn-owned` (Material Position: loose yarn + yarn in unsold fabric = total yarn you own; the in-fabric part comes from each quality's kg per 100 m, so fabric already dispatched no longer counts), `sa-count` (Record count on a fabric row), `sa-variance` (read system vs counted), `sa-adjust` (Adjust writes the difference; cannot be undone except by another adjustment), `sa-finalize` (Finalize freezes the audit; handoff to the first Record count button). Copy is written when the page's behavior is fixed, following the plan's §4.8 rules and glossary.
 
 ## E. Comprehension check (for GT-B1)
 
-"At year end you count every quality and yarn on one day. Which page do you use, and what does Finalize change?" Expected: Stock audit; Finalize freezes that day's counts and adjustments as a record.
+"At year end you count every quality and yarn on one day. Which page do you use, how much yarn do you own if 100 kg is loose and 200 m of a quality using 10 kg per 100 m is still in the godown, and what does Finalize change?" Expected: Stock audit; 100 + 20 = 120 kg; Finalize freezes that day's counts and adjustments as a record.

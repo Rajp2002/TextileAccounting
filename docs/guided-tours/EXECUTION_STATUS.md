@@ -20,7 +20,7 @@ States: `NOT_STARTED` · `IN_PROGRESS` · `REVIEW_REQUIRED` · `PASSED` · `FAIL
 | 10 | GT-09 Yarn Stock | NOT_STARTED | — | — | — |
 | 11 | GT-10 Payroll | NOT_STARTED | — | — | — |
 | 12 | GT-11 Production (Overview) | NOT_STARTED | — | — | — |
-| 13 | GT-12 Daily Sheet | NOT_STARTED (needs owner answer U-06 before start) | — | — | — |
+| 13 | GT-12 Daily Sheet | NOT_STARTED | — | — | — |
 | 14 | GT-13 Machines | NOT_STARTED | — | — | — |
 | 15 | GT-14 Workers | NOT_STARTED | — | — | — |
 | 16 | GT-15 Machine Assignments | NOT_STARTED | — | — | — |
@@ -46,8 +46,8 @@ Recorded 2026-09-27 at `f7cff98` (`claude/gracious-sagan-dnwtsm` = `main`), clea
 
 | ID | Question | Answer | Date | By |
 | --- | --- | --- | --- | --- |
-| U-04 | Does the production database deduct yarn at production save (migration `20260920000000…`), not at dispatch? | — | — | — |
-| U-06 | On QA, does changing date or shift on the Daily Sheet stay on the Daily Sheet? | — | — | — |
+| U-04 | Does the production database deduct yarn at production save (migration `20260920000000…`), not at dispatch? | Yes. Also: yarn used to make fabric that is still in stock must count toward yarn inventory in the audit, worked out from each quality's costing kg per 100 m (recorded as plan D-19). | 2026-09-27 | Owner |
+| U-06 | On QA, does changing date or shift on the Daily Sheet stay on the Daily Sheet? | It should keep the owner on the Daily Sheet for the selected date; past dates up to today, never future dates; purpose: correcting wrong past entries. Recorded as intended behavior; GT-12 verifies the code (PI-04). | 2026-09-27 | Owner |
 | GT-B1 | Which path should owners use for a routine count: Correct balance, or Audit → Adjust? | — | — | — |
 
 ## Approved deviations

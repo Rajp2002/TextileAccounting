@@ -1,6 +1,6 @@
 # P05 Daily Sheet — tour specification (new tour)
 
-Status: specified, not implemented. Implementation: **GT-12** (entry condition U-06). Gujarati/Hindi: native review pending.
+Status: specified, not implemented. Implementation: **GT-12**. Gujarati/Hindi: native review pending.
 Shared rules: [`GUIDED_TOURS_REFINEMENT_PLAN.md`](../../GUIDED_TOURS_REFINEMENT_PLAN.md) (D-10). Evidence: [`audit/production-assignments-machines-workers.md`](../audit/production-assignments-machines-workers.md) §1.
 
 ## A. Identity and evidence
@@ -20,7 +20,7 @@ Shared rules: [`GUIDED_TOURS_REFINEMENT_PLAN.md`](../../GUIDED_TOURS_REFINEMENT_
 | --- | --- | --- | --- | --- |
 | DSH-1 | Major | Tour | The most-used Base page cannot launch a guide. | CODE-VERIFIED `ProductionGuidedTour.tsx:25,32` |
 | DSH-2 | Major | Tour | Existing Daily Sheet copy (inside the Production tour) names "Save machine production", "Edit production log", "Print collection sheet", "Worker payroll roll-up". | CODE-VERIFIED audit §1.3 |
-| DSH-3 | Unknown | Product | Changing date or shift may switch the view to Overview (PI-04). | INFERRED `BaseDailyProductionSheet.tsx:178` |
+| DSH-3 | Unknown | Product | Owner-defined behavior (2026-09-27): changing the date or shift keeps the owner on the Daily Sheet for the selected date; only today and past dates can be chosen (the input already has `max={today}`, `BaseDailyProductionSheet.tsx:673`), so wrong past entries can be corrected. Unverified in code: `changeSelection` calls `replaceState` to `/owner/production?…` (178), which may switch the view to Overview (PI-04). GT-12 checks it. | INFERRED `BaseDailyProductionSheet.tsx:178` |
 | DSH-4 | Minor | Product | A machine without an operator stays "pending" with no Not running action, forcing "Save an incomplete shift?" (production audit P7). | CODE-VERIFIED |
 
 ## C. Learning outcomes and coverage
@@ -30,7 +30,7 @@ After the tour the owner can: (1) explain that each date and shift has one sheet
 | Requirement | Destination |
 | --- | --- |
 | One sheet per date and shift | `ds-sheet` (+ detail: print a blank sheet) |
-| Date and shift | `ds-shift` (copy depends on U-06) |
+| Date and shift; past dates only, to check or correct an earlier shift | `ds-shift` (+ detail) |
 | Metres per loom, not a counter; keyboard movement | `ds-reading` (+ detail) |
 | Pending vs Not running; loom without operator | `ds-pending` (+ detail) |
 | Worker review: metres × wage; zero output, absent | `ds-earnings` (+ detail) |
@@ -74,8 +74,8 @@ Keys in a proposed `lib/i18n/daily-sheet-tutorial.ts`.
 | `sheet.body` | Each day and night shift has its own sheet listing every running loom with its quality and operator. | દિવસ અને રાતની દરેક શિફ્ટની પોતાની શીટ હોય છે, જેમાં દરેક ચાલુ લૂમ તેની ક્વોલિટી અને ઓપરેટર સાથે હોય છે. | दिन और रात की हर शिफ्ट की अपनी शीट होती है, जिसमें हर चालू लूम अपनी क्वालिटी और ऑपरेटर के साथ होता है। |
 | `sheet.detail` | {c:printSheet} prints the sheet so readings can be written on the floor and typed in later. | {c:printSheet} શીટ છાપે છે, જેથી ફ્લોર પર રીડિંગ લખી પછી અહીં ભરી શકાય. | {c:printSheet} शीट छापता है, ताकि फ़्लोर पर रीडिंग लिखकर बाद में यहाँ भरी जा सके। |
 | `shift.title` | Check the date and shift | તારીખ અને શિફ્ટ તપાસો | तारीख और शिफ्ट जाँचें |
-| `shift.body.works` | Choose the date and shift you are recording. Readings belong to that shift only. | તમે નોંધો છો તે તારીખ અને શિફ્ટ પસંદ કરો. રીડિંગ ફક્ત એ શિફ્ટની ગણાય છે. | आप जिस तारीख और शिफ्ट को दर्ज कर रहे हैं, उसे चुनें। रीडिंग सिर्फ़ उसी शिफ्ट की गिनी जाती है। |
-| `shift.body.today` | The sheet opens on today's current shift. Readings belong to that shift only. | શીટ આજની ચાલુ શિફ્ટ પર ખૂલે છે. રીડિંગ ફક્ત એ શિફ્ટની ગણાય છે. | शीट आज की चालू शिफ्ट पर खुलती है। रीडिंग सिर्फ़ उसी शिफ्ट की गिनी जाती है। |
+| `shift.body` | Choose the shift you are recording. To check or fix an earlier shift, pick its date; future dates cannot be chosen. | તમે નોંધો છો તે શિફ્ટ પસંદ કરો. જૂની શિફ્ટ તપાસવા કે સુધારવા તેની તારીખ પસંદ કરો; આગળની તારીખ પસંદ કરી શકાતી નથી. | आप जो शिफ्ट दर्ज कर रहे हैं, उसे चुनें। पुरानी शिफ्ट जाँचने या सुधारने के लिए उसकी तारीख चुनें; आगे की तारीख नहीं चुनी जा सकती। |
+| `shift.detail` | If that shift was already saved, it opens locked; {c:editSavedLog} unlocks it after you give a reason. | એ શિફ્ટ પહેલેથી સાચવી હોય તો તે લૉક ખૂલે છે; કારણ આપ્યા પછી {c:editSavedLog} તેને ખોલે છે. | वह शिफ्ट पहले सेव हो चुकी हो तो लॉक खुलती है; कारण देने के बाद {c:editSavedLog} उसे खोलता है। |
 | `reading.title` | Enter the metres woven this shift | આ શિફ્ટમાં વણાયેલા મીટર લખો | इस शिफ्ट में बुने मीटर लिखें |
 | `reading.body` | Type what each loom wove in this shift, here 120 m, not the meter's running total. | દરેક લૂમે આ શિફ્ટમાં જે વણ્યું તે લખો, અહીં 120 મીટર, મીટરનો ચાલુ કુલ આંકડો નહીં. | हर लूम ने इस शिफ्ट में जो बुना वह लिखें, यहाँ 120 मीटर, मीटर का चालू कुल नहीं। |
 | `reading.detail` | Enter or the down arrow moves to the next loom. | Enter અથવા નીચેનો તીર આગલા લૂમ પર લઈ જાય છે. | Enter या नीचे का तीर अगले लूम पर ले जाता है। |
@@ -100,7 +100,6 @@ Keys in a proposed `lib/i18n/daily-sheet-tutorial.ts`.
 | `guide.title` | Daily Sheet guide | દૈનિક શીટ માર્ગદર્શિકા | दैनिक शीट मार्गदर्शिका |
 | `guide.benefit` | See how to record a shift's metres and save them. | શિફ્ટના મીટર નોંધીને કેવી રીતે સાચવવા તે જુઓ. | शिफ्ट के मीटर दर्ज करके सेव करना देखें। |
 
-`shift.body.works` is used if the owner confirms at GT-12 entry that changing date/shift stays on the Daily Sheet; otherwise `shift.body.today` and PI-04 is escalated.
 
 ### Control tokens
 

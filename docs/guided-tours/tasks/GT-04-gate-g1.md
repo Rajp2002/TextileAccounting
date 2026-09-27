@@ -58,7 +58,7 @@ Reviewer verdict (PASS / PASS WITH CONDITIONS / FAIL) with findings; owner QA ch
 - [ ] Reviewer verdict PASS, or PASS WITH CONDITIONS whose conditions are all resolved and re-verified.
 - [ ] Owner QA checklist complete with no blocking issue.
 - [ ] Native spot-check notes recorded; any wording changes applied in GT-03 and re-verified.
-- [ ] Owner confirms U-04 (yarn deducted at production in the production database) or records that it is unknown.
+- [x] U-04 already answered by the owner (2026-09-27): yarn is deducted at production.
 
 ## Failure and escalation conditions
 

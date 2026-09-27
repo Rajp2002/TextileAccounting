@@ -452,6 +452,7 @@ Established UI terms (source: `lib/i18n/locales/{en,gu,hi}.ts`, unless noted). T
 | margin | margin | માર્જિન | मार्जिन | |
 | draft | draft | ડ્રાફ્ટ | ड्राफ्ट | |
 | customer | customer | ગ્રાહક | ग्राहक | there is no party master in Dispatches |
+| yarn held in fabric | yarn in fabric | કાપડમાં રહેલું યાર્ન | कपड़े में लगा धागा | audit term for embodied yarn (D-19) |
 | lot / taka | lot / taka | લોટ / તાકા | लॉट / ताका | |
 | receipt (dispatch) | receipt | પ્રાપ્તિ | प्राप्ति | not પ્રાપ્તી or રસીદ |
 | guide | guide | માર્ગદર્શિકા | मार्गदर्शिका | `challan.guideTitle` pattern |
@@ -567,6 +568,7 @@ Never run `npm run build` or `npm start` in the repository root: they load `.env
 | D-15 | Execution order: foundation → Saved Costings (G1) → Cost Estimator → Rate Book → Dispatches → Fabric Stock → Yarn Stock → Payroll → Production → Daily Sheet → Machines → Workers → Machine Assignments → cleanup → final (G2). | All-plan tours first (largest audience); Dispatches next because it introduces the replica handoff that the other Base replica tours reuse; the register tours last because they are already closest to the target. |
 | D-16 | Resolved design conflicts from CLAUDE.md: panel shadow `--shadow-card` (conflict 2: stricter rule); controls `h-10`, 44px on touch (conflict 1); tour primary actions ink, saffron only for the outline (conflict 3); no nested cards in the panel (conflict 4). | Follows `.agents/rules` as CLAUDE.md instructs. |
 | D-17 | Payroll's unreachable `full` variant is removed from tour code and its tests (the tier was retired). | Dead content with retired features (WhatsApp slips, statutory deductions). |
+| D-19 | Yarn held in finished fabric that has not been dispatched is still yarn the owner owns. Yarn Stock shows loose yarn only; the Stock audit adds the in-fabric part from each quality's kg per 100 m (Loose + In fabric = Total). The Yarn Stock and Stock audit tours teach this. | Owner rule (2026-09-27); already implemented on the audit page (`InventoryAuditClient.tsx:298-325, 375-379`). |
 | D-18 | The persistent demo rows on empty accounts (Rate Book demo yarn, Saved Costings demo costing) stay, but every handler is guarded (DS-02) and their "nothing is saved" claims are corrected. | Existing product behavior; the leaks are the defect, not the rows. |
 
 ## 12. Product problems found (not fixed by this program unless a task says so)
@@ -578,7 +580,7 @@ These came out of the audits. They are outside the tour scope; the owner decides
 | PI-01 | Major | Payroll collects a payment date that is never saved; its default is a UTC date. | `BasePayrollSettlementWorkspace.tsx:147,228-234`; `BaseSettlementSchema` (`production/actions.ts:107-120`) has no date | Payroll tour does not claim the date is recorded. |
 | PI-02 | Major | Payroll payables are computed up to today regardless of the selected period; completing a period does not check open obligations. | `production/loaders.ts:559`; payroll audit §5 #1 | Payroll tour teaches the current period only. |
 | PI-03 | Major | "View log", Payroll's readiness "Review" and Daily Sheet `returnTo` open Overview instead of the Daily Sheet. | `lib/base-production-navigation.ts:52-56` (no `tab=production`); production audit P2 | Tours do not send owners through these links. |
-| PI-04 | Unknown (possible Blocker) | Changing date or shift on the Daily Sheet may switch the view to Overview (`replaceState` to `/owner/production`). | INFERRED: `BaseDailyProductionSheet.tsx:178` | GT-12 entry condition (§13 U-06). |
+| PI-04 | Unknown (possible Major) | Owner-defined behavior: changing date or shift keeps the Daily Sheet open for the selected (today or past) date. The code calls `replaceState` to `/owner/production?…`, which may switch the view to Overview instead. | INFERRED: `BaseDailyProductionSheet.tsx:178` | The tour teaches the owner-defined behavior; GT-12 verifies it and escalates a product fix if it fails. |
 | PI-05 | Major | Activating a quality with an incomplete recipe shows "All required yarns are now available!" and loops. | `BaseActiveQualities.tsx:211-218, 875-903` | Production tour explains the yarn requirement. |
 | PI-06 | Major | Stock audit: changing the date mixes two audits; the adjustment shown can differ from the one applied. | `InventoryAuditClient.tsx:89-99`; stock audit §3.4 | Blocks the audit tour (D-11). |
 | PI-07 | Major | Stock audit page is English-only, with no translation hooks. | stock audit §3.5 | Blocks the audit tour. |
@@ -600,7 +602,7 @@ These came out of the audits. They are outside the tour scope; the owner decides
 | U-01 | Real-app rendering with real data, sidebar and auth | No `.env*` in this container; harness only | Nothing in implementation; G1/G2 evidence | Owner QA runs at G1 and G2. |
 | U-02 | Screen-reader output (VoiceOver, TalkBack, NVDA) | Source only | Nothing in implementation | Reviewer or owner check at G1 (reference) and G2. |
 | U-03 | Real iOS Safari and Android behavior of the bottom sheet (visual viewport, safe areas) | Harness emulates 390×844 only | Nothing | Owner device check at G2. |
-| U-04 | Whether the production database has the migration that moved yarn deduction to production (SD-01) | Migrations are the source of truth per CLAUDE.md; production not inspected | GT-07's Dispatch copy acceptance | Owner confirms at G1; copy follows the migrations until then. |
+| U-04 | Whether the production database deducts yarn at production save (SD-01) | Owner | GT-07 copy | **Resolved 2026-09-27:** yes, yarn is deducted at production. The owner added a rule: yarn held in unsold fabric still counts as yarn owned (D-19). |
 | U-05 | Native quality of the Gujarati and Hindi copy in this package | Written here, not reviewed by a native speaker | G2 acceptance only | N review at G1 (spot) and G2 (all). |
-| U-06 | PI-04: does changing date/shift on the Daily Sheet jump to Overview? | Code reading only | GT-12 step `ds-shift` copy | GT-12 entry condition: owner checks on QA; the page spec gives copy for both outcomes. |
+| U-06 | Daily Sheet date/shift behavior (PI-04) | Owner | GT-12 `ds-shift` copy | **Resolved 2026-09-27 as intended behavior:** changing date or shift stays on the Daily Sheet for the selected date; only today and past dates, so past entries can be corrected. The code path is still unverified (PI-04); GT-12 checks it. |
 | U-07 | Rate Book tour on a phone in the harness (the 390×844 Gujarati run timed out) | Harness | Nothing | GT-06 re-runs it with the new runtime. |

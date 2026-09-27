@@ -7,7 +7,7 @@ GT-07. Rebuild the Dispatches tour on the shared runtime, fix its factual error 
 ## Dependencies and entry conditions
 
 - GT-06 PASSED.
-- U-04: the owner's G1 answer is recorded (the copy follows the migrations either way; record which).
+- U-04 is resolved (owner, 2026-09-27): production deducts yarn; dispatch does not.
 
 ## Read first
 
@@ -52,7 +52,7 @@ Page spec; SD-01 wording (fabric only; yarn counted at production).
 
 ## Failure and escalation conditions
 
-- Escalate: the workspace class cannot contain the replica without layout changes to the live page; owner's U-04 answer says production still deducts yarn at dispatch (then SD-01 wording needs a decision).
+- Escalate: the workspace class cannot contain the replica without layout changes to the live page; the code shows a dispatch path that deducts yarn, contradicting the owner's U-04 answer (then SD-01 wording needs a decision).
 
 ## Checkpoint
 

@@ -11,7 +11,7 @@ Shared rules: [`GUIDED_TOURS_REFINEMENT_PLAN.md`](../../GUIDED_TOURS_REFINEMENT_
 | Entitlement | `production` (Base). Owner role. |
 | Tour today | Same wrapper and tutorial as Fabric Stock; `YarnStockTourPreview.tsx`; steps `yarnStockTourSteps`; copy in `lib/i18n/stock-tutorial.ts`; numbers `yarnStockExample`. |
 | Live controls | Header: "Audit Inventory" link (hard-coded, ~107), Refresh, Opening weight, Add yarn; yarn cards: Add yarn, Correct balance, Movement history; "Yarn used by each fabric" with Link costing; audit date + CSV. Labels from `yarnStockText[language]` (`lib/i18n/yarn-stock.ts`; complete in en/gu/hi). |
-| Rule (current migrations) | Saving production deducts yarn at the linked kg per 100 m; dispatch does not deduct yarn (`20260920000000…sql:446`). |
+| Rules | Saving production deducts yarn at the linked kg per 100 m; dispatch does not deduct yarn (`20260920000000…sql:446`; **owner confirmed for production, 2026-09-27**). Yarn woven into fabric that is still in stock is **still yarn the owner owns**: the Stock audit adds it back from each quality's kg per 100 m (Loose yarn + Yarn in fabric = Total), and the Yarn Stock page itself shows loose yarn only (`InventoryAuditClient.tsx:298-325, 375-379`; owner rule D-19, 2026-09-27). |
 
 ## B. Diagnosis
 
@@ -29,7 +29,7 @@ After the tour the owner can: (1) read unused yarn per yarn in kg; (2) record op
 
 | Requirement | Destination |
 | --- | --- |
-| Unused yarn per yarn; yarn inside unsent fabric shown apart | `ys-balance` (+ detail) |
+| Loose yarn per yarn on this page; yarn inside unsold fabric still counts as owned and is added back in the Stock audit (D-19) | `ys-balance` (+ detail), `ys-usage` (+ detail) |
 | Opening weight, once | `ys-opening` |
 | Deliveries: Add yarn | `ys-receipt` |
 | Link costing: kg per 100 m (6 + 4 = 10) | `ys-link` |
@@ -64,7 +64,7 @@ Keys in `lib/i18n/stock-tutorial.ts` (yarn section rewritten; `yarnStockTutorial
 | --- | --- | --- | --- |
 | `balance.title` | Unused yarn, by yarn | વણવપરાયેલું યાર્ન, યાર્ન પ્રમાણે | बिना इस्तेमाल धागा, धागे के अनुसार |
 | `balance.body` | This is yarn on hand that has not been woven yet, in kg. Here 100 kg. | આ હાથ પરનું હજી વણાયું ન હોય તેવું યાર્ન છે, કિલોમાં. અહીં 100 કિલો. | यह हाथ में पड़ा, अभी न बुना गया धागा है, किलो में। यहाँ 100 किलो। |
-| `balance.detail` | Yarn already woven into fabric you have not sent yet is shown separately and is not part of this balance. | હજી ન મોકલેલા કાપડમાં વણાઈ ગયેલું યાર્ન અલગ બતાવાય છે અને આ બેલેન્સમાં નથી. | अभी न भेजे कपड़े में बुना जा चुका धागा अलग दिखता है और इस बैलेंस में नहीं है। |
+| `balance.detail` | Yarn already woven into fabric that is still in your stock is not lost. {c:auditInventory} adds it back from each quality's kg per 100 m, so you see all the yarn you own. | સ્ટોકમાં પડેલા કાપડમાં વણાઈ ગયેલું યાર્ન ખોવાતું નથી. {c:auditInventory} દરેક ક્વોલિટીના 100 મીટરે કિલો પ્રમાણે તે પાછું ઉમેરે છે, જેથી તમારી પાસેનું બધું યાર્ન દેખાય. | स्टॉक में पड़े कपड़े में बुना जा चुका धागा खोता नहीं। {c:auditInventory} हर क्वालिटी के 100 मीटर पर किलो के हिसाब से उसे वापस जोड़ता है, ताकि आपके पास का सारा धागा दिखे। |
 | `opening.title` | Record the yarn you already have | તમારી પાસેનું યાર્ન નોંધો | आपके पास पड़ा धागा दर्ज करें |
 | `opening.body` | {c:openingWeight} records each yarn's weight once, when you start: here 100 kg. | {c:openingWeight} શરૂઆતમાં દરેક યાર્નનું વજન એક વાર નોંધે છે: અહીં 100 કિલો. | {c:openingWeight} शुरुआत में हर धागे का वज़न एक बार दर्ज करता है: यहाँ 100 किलो। |
 | `receipt.title` | Add each new delivery | દરેક નવી આવક ઉમેરો | हर नई आवक जोड़ें |
@@ -73,6 +73,7 @@ Keys in `lib/i18n/stock-tutorial.ts` (yarn section rewritten; `yarnStockTutorial
 | `link.body` | {c:linkCosting} copies the kg of each yarn per 100 m from a saved costing. Here warp 6 + weft 4 = 10 kg per 100 m. | {c:linkCosting} સાચવેલી કોસ્ટિંગમાંથી 100 મીટરે દરેક યાર્નના કિલો લે છે. અહીં તાણા 6 + ભરણ 4 = 100 મીટરે 10 કિલો. | {c:linkCosting} सेव कॉस्टिंग से 100 मीटर पर हर धागे के किलो लेता है। यहाँ ताना 6 + बाना 4 = 100 मीटर पर 10 किलो। |
 | `usage.title` | Saving production uses yarn | ઉત્પાદન સાચવવાથી યાર્ન વપરાય છે | उत्पादन सेव करने से धागा लगता है |
 | `usage.body` | When a shift of 200 m is saved, 20 kg is deducted (200 × 10 ÷ 100). Dispatch does not deduct yarn again. | 200 મીટરની શિફ્ટ સાચવતાં 20 કિલો ઘટે છે (200 × 10 ÷ 100). ડિસ્પેચ ફરી યાર્ન ઘટાડતું નથી. | 200 मीटर की शिफ्ट सेव होने पर 20 किलो घटता है (200 × 10 ÷ 100)। डिस्पैच दोबारा धागा नहीं घटाता। |
+| `usage.detail` | Those 20 kg now sit inside the 200 m of fabric until it is dispatched; the Stock audit still counts them as your yarn. | એ 20 કિલો ડિસ્પેચ થાય ત્યાં સુધી 200 મીટર કાપડમાં રહે છે; સ્ટોક ઓડિટ તેને હજી તમારું યાર્ન ગણે છે. | वे 20 किलो डिस्पैच होने तक 200 मीटर कपड़े में रहते हैं; स्टॉक ऑडिट उन्हें अब भी आपका धागा गिनता है। |
 | `correct.title` | After weighing, enter the weighed total | વજન કર્યા પછી કુલ વજન લખો | तौलने के बाद कुल वज़न लिखें |
 | `correct.body` | {c:correctBalance} replaces the balance with what you weighed. Enter 98, not −2. | {c:correctBalance} બેલેન્સને તમે તોલેલા વજનથી બદલે છે. 98 લખો, −2 નહીં. | {c:correctBalance} बैलेंस को आपके तौले वज़न से बदलता है। 98 लिखें, −2 नहीं। |
 | `correct.detail` | {c:movementHistory} shows every change. Pick a date to see balances on that day and export them. For a dated audit of fabric and yarn together, use {c:auditInventory}. | {c:movementHistory}માં દરેક ફેરફાર દેખાય છે. તારીખ પસંદ કરી તે દિવસનું બેલેન્સ જોઈ એક્સપોર્ટ કરી શકો. કાપડ અને યાર્નના તારીખવાર ઓડિટ માટે {c:auditInventory} વાપરો. | {c:movementHistory} में हर बदलाव दिखता है। तारीख चुनकर उस दिन का बैलेंस देख और एक्सपोर्ट कर सकते हैं। कपड़े और धागे के तारीखवार ऑडिट के लिए {c:auditInventory} इस्तेमाल करें। |

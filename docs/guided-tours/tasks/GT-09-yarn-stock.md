@@ -24,7 +24,7 @@ Yarn RPCs, pending-request storage, dated view and CSV, `yarnStockText` values.
 
 ## Required implementation
 
-Per spec §D–§F: seven steps, numbers (100 → 120 kg; 6 + 4 = 10 kg/100 m; 200 m → −20 kg; 98 counted), replica order, copy, tokens resolved from `yarnStockText[language]`, handoff.
+Per spec §D–§F (including D-19: `balance.detail` and `usage.detail` explain that yarn in unsold fabric still counts and is added back in the Stock audit): seven steps, numbers (100 → 120 kg; 6 + 4 = 10 kg/100 m; 200 m → −20 kg; 98 counted), replica order, copy, tokens resolved from `yarnStockText[language]`, handoff.
 
 ## Locked decisions
 

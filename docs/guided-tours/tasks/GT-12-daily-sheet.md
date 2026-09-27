@@ -7,7 +7,7 @@ GT-12. Give the Daily Sheet its own guide slot and a 9-step replica tour, keyed 
 ## Dependencies and entry conditions
 
 - GT-11 PASSED.
-- **U-06 answered by the owner** (on QA: change the date or shift on the Daily Sheet; does the page stay on the Daily Sheet?). Record the answer. "Stays" → use `shift.body.works`; "jumps to Overview" → use `shift.body.today` and leave PI-04 escalated.
+- U-06 resolved (owner, 2026-09-27): changing the date or shift keeps the owner on the Daily Sheet for the selected date; only today and past dates can be chosen; the purpose is correcting past entries. The tour teaches this (`shift.body`, `shift.detail`).
 
 ## Read first
 
@@ -40,12 +40,13 @@ Exact placement of the guide slot within the right-rail pattern, as long as one 
 
 - Tests: steps; copy parity/limits/script; tokens; replica pattern (disabled, no handlers, no localStorage); source-contract that the tour files never reference `saveBaseDailyProductionBatch` or the draft key; the live buttons use the new keys.
 - Full suite, tsc, lint green.
+- PI-04 check (the harness cannot test it: its router stub ignores `replaceState`): ask the owner to try it on QA, or run `npm run dev` only with the owner's explicit permission for this check. Change the date to yesterday and back, and the shift to night: the page must stay on the Daily Sheet showing the chosen date and shift. If it switches to Overview, escalate PI-04 as a product fix; do not change the tour copy.
 - Harness `daily-sheet` (empty and one-machine) at four viewports + reduced motion: guide slot visible at every width; no overlap; handoff on the first Metres input (one-machine) or Add worker (empty); a draft value typed before launching (via `PRE_CLICK` + typing hook, or a seeded localStorage draft) is unchanged after Exit.
 
 ## Definition of done
 
-- [ ] DSH-1, DSH-2 fixed; DSH-3 handled per the U-06 answer.
-- [ ] Tests/tsc/lint green; harness met; ledger updated with the U-06 answer.
+- [ ] DSH-1, DSH-2 fixed; DSH-3 (PI-04) checked as described under Verification, and escalated if the page leaves the Daily Sheet.
+- [ ] Tests/tsc/lint green; harness met; ledger updated.
 
 ## Failure and escalation conditions
 

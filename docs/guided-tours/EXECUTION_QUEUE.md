@@ -16,7 +16,7 @@ One strict order. One active task at a time. A task starts only when every depen
 | 10 | GT-09 | Yarn Stock | GT-08 | Task gate | [GT-09](tasks/GT-09-yarn-stock.md) |
 | 11 | GT-10 | Payroll (core + "Advances, records and corrections"); remove the `full` variant | GT-09 | Task gate | [GT-10](tasks/GT-10-payroll.md) |
 | 12 | GT-11 | Production "Set up production" (Overview) | GT-10 | Task gate | [GT-11](tasks/GT-11-production.md) |
-| 13 | GT-12 | Daily Sheet "Record a shift" (new tour and launcher) | GT-11; owner answer to U-06 | Task gate | [GT-12](tasks/GT-12-daily-sheet.md) |
+| 13 | GT-12 | Daily Sheet "Record a shift" (new tour and launcher) | GT-11 | Task gate | [GT-12](tasks/GT-12-daily-sheet.md) |
 | 14 | GT-13 | Machines | GT-12 | Task gate | [GT-13](tasks/GT-13-machines.md) |
 | 15 | GT-14 | Workers | GT-13 | Task gate | [GT-14](tasks/GT-14-workers.md) |
 | 16 | GT-15 | Machine Assignments | GT-14 | Task gate | [GT-15](tasks/GT-15-machine-assignments.md) |
@@ -39,5 +39,3 @@ One strict order. One active task at a time. A task starts only when every depen
 | `production.assignLooms` key | GT-11 | GT-13, GT-15 |
 | `qualityStock.audit` key | GT-08 | GT-09 |
 | Harness scenarios | GT-00 (copy), each task (adds its own) | every task, GT-17 |
-EOF
-echo ok
