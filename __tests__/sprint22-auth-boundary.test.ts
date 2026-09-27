@@ -84,7 +84,7 @@ describe('Sprint 22 auth boundary', () => {
     it('keeps unknown identity memory-only and scopes every queue operation', () => {
         const provider = read('components/query-provider.tsx')
         const database = read('lib/db.ts')
-        const offlineSync = read('hooks/use-offline-sync.ts')
+        const cleanup = read('lib/client-storage-cleanup.ts')
         const settingsLayout = read('app/(dashboard)/owner/settings/layout.tsx')
 
         expect(provider).toContain('MemoryQueryProvider')
@@ -92,10 +92,14 @@ describe('Sprint 22 auth boundary', () => {
         expect(provider).toContain('getQueryPersistenceKey(scope)')
         expect(database).toContain('scope: string')
         expect(database).toContain('toCollection()')
-        expect(database).toContain('.filter((mutation) => mutation.scope === scope')
-        expect(database).toContain('requireScope(scope)')
         expect(database).toContain('LEGACY_MUTATION_SCOPE')
-        expect(offlineSync).toContain('isPrincipalCacheScope(scope)')
+        // Phase 3D: offline writes are retired, so the database exposes no
+        // queue or replay helpers; only scoped cleanup touches it.
+        for (const helper of ['queueMutation', 'getPendingMutations', 'discardPendingMutations', 'deleteMutationsForScope']) {
+            expect(database).not.toContain(`function ${helper}`)
+        }
+        expect(cleanup).toContain('.filter((mutation) => mutation.scope === scope)')
+        expect(cleanup).toContain('.filter((mutation) => mutation.scope === LEGACY_MUTATION_SCOPE)')
         expect(settingsLayout).toContain('createPrincipalCacheScope')
         expect(settingsLayout).toContain('<QueryProvider scope={cacheScope}>')
     })

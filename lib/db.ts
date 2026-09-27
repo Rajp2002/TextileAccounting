@@ -1,5 +1,9 @@
 import Dexie, { Table } from 'dexie';
-import { isPrincipalCacheScope, LEGACY_MUTATION_SCOPE } from './auth-cache-scope'
+import { LEGACY_MUTATION_SCOPE } from './auth-cache-scope'
+
+// Offline writes were retired: nothing queues or replays mutations any more.
+// The database stays only so the auth-boundary cleanup in
+// lib/client-storage-cleanup.ts can delete queues left by older app versions.
 
 export interface OfflineMutation<T = unknown> {
     id?: number;
@@ -33,50 +37,3 @@ export class TextileDatabase extends Dexie {
 }
 
 export const db = new TextileDatabase();
-
-function requireScope(scope: string) {
-    if (!isPrincipalCacheScope(scope)) {
-        throw new Error('Offline mutations require a verified principal scope.')
-    }
-}
-
-export async function queueMutation<T = unknown>(
-    table: string,
-    type: 'INSERT' | 'UPDATE' | 'DELETE',
-    data: T,
-    scope: string,
-) {
-    requireScope(scope)
-    await db.mutations.add({
-        scope,
-        table,
-        type,
-        data,
-        timestamp: Date.now(),
-        synced: 0
-    });
-}
-
-export async function getPendingMutations(scope: string) {
-    requireScope(scope)
-    return db.mutations
-        .toCollection()
-        .filter((mutation) => mutation.scope === scope && mutation.synced === 0)
-        .toArray()
-}
-
-export async function discardPendingMutations(scope: string) {
-    requireScope(scope)
-    return db.mutations
-        .toCollection()
-        .filter((mutation) => mutation.scope === scope && mutation.synced === 0)
-        .delete()
-}
-
-export async function deleteMutationsForScope(scope: string) {
-    if (scope !== LEGACY_MUTATION_SCOPE) requireScope(scope)
-    return db.mutations
-        .toCollection()
-        .filter((mutation) => mutation.scope === scope)
-        .delete()
-}
