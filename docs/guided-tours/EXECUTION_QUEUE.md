@@ -22,7 +22,7 @@ One strict order. One active task at a time. A task starts only when every depen
 | 16 | GT-15 | Machine Assignments | GT-14 | Task gate | [GT-15](tasks/GT-15-machine-assignments.md) |
 | 17 | GT-16 | Retire tour code made unused by GT-03..GT-15 | GT-15 | Task gate | [GT-16](tasks/GT-16-retire-legacy.md) |
 | 18 | GT-17 | Cross-feature regression and final acceptance | GT-16 | **G2 (reviewer + owner + native review)** | [GT-17](tasks/GT-17-final-acceptance.md) |
-| — | GT-B1 | Stock audit tour | GT-17 **and** PI-06, PI-07 fixed **and** owner decision (page spec §C) | Task gate | [GT-B1](tasks/GT-B1-stock-audit.md) — **BLOCKED** |
+| — | GT-B1 | Stock audit tour | GT-17 **and** PI-06, PI-07 fixed (page spec §C; the owner decision is recorded as D-20) | Task gate | [GT-B1](tasks/GT-B1-stock-audit.md) — **BLOCKED** |
 
 ## Dependency check
 

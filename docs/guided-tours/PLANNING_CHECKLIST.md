@@ -57,7 +57,7 @@ Read as the implementing model meeting the package cold:
 - [x] Tasks cite real files and line ranges at `f7cff98`, or mark proposals.
 - [x] Queue is linear and dependency-valid; cross-task artifacts produced before use.
 - [x] Each task has a bounded change surface and a checkable Definition of Done.
-- [x] Unknowns block only what depends on them (U-04 → GT-07 acceptance; U-06 → GT-12 start; PI-06/PI-07 → GT-B1).
+- [x] Unknowns block only what depends on them (U-04 → GT-07 acceptance; U-06 → GT-12 start; PI-06/PI-07 → GT-B1). Update 2026-09-27: the owner answered U-04, U-06 and the GT-B1 count-path question (D-19, D-20); only PI-06/PI-07 still block GT-B1.
 - [x] Escalation vs. discretion is explicit (EXECUTOR_PROMPT §1, §6).
 - [x] Survives a fresh session: entry points in plan §0, EXECUTOR_PROMPT §2.
 - [x] Nothing presented as implemented; all implementation tasks NOT_STARTED/BLOCKED.

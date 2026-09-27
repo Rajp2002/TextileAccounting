@@ -11,7 +11,7 @@ Shared rules: [`GUIDED_TOURS_REFINEMENT_PLAN.md`](../../GUIDED_TOURS_REFINEMENT_
 | Entitlement | `production` (Base). Owner role. |
 | Tour today | Same wrapper and tutorial as Fabric Stock; `YarnStockTourPreview.tsx`; steps `yarnStockTourSteps`; copy in `lib/i18n/stock-tutorial.ts`; numbers `yarnStockExample`. |
 | Live controls | Header: "Audit Inventory" link (hard-coded, ~107), Refresh, Opening weight, Add yarn; yarn cards: Add yarn, Correct balance, Movement history; "Yarn used by each fabric" with Link costing; audit date + CSV. Labels from `yarnStockText[language]` (`lib/i18n/yarn-stock.ts`; complete in en/gu/hi). |
-| Rules | Saving production deducts yarn at the linked kg per 100 m; dispatch does not deduct yarn (`20260920000000…sql:446`; **owner confirmed for production, 2026-09-27**). Yarn woven into fabric that is still in stock is **still yarn the owner owns**: the Stock audit adds it back from each quality's kg per 100 m (Loose yarn + Yarn in fabric = Total), and the Yarn Stock page itself shows loose yarn only (`InventoryAuditClient.tsx:298-325, 375-379`; owner rule D-19, 2026-09-27). |
+| Rules | Saving production deducts yarn at the linked kg per 100 m; dispatch does not deduct yarn (`20260920000000…sql:446`; **owner confirmed for production, 2026-09-27**). Yarn woven into fabric that is still in stock is **still yarn the owner owns**: the Stock audit adds it back from each quality's kg per 100 m (Loose yarn + Yarn in fabric = Total), and the Yarn Stock page itself shows loose yarn only (`InventoryAuditClient.tsx:298-325, 375-379`; owner rule D-19, 2026-09-27). Routine weighing uses Correct balance; the Stock audit is the full dated record (owner rule D-20, 2026-09-27). |
 
 ## B. Diagnosis
 
@@ -34,7 +34,7 @@ After the tour the owner can: (1) read unused yarn per yarn in kg; (2) record op
 | Deliveries: Add yarn | `ys-receipt` |
 | Link costing: kg per 100 m (6 + 4 = 10) | `ys-link` |
 | Production deducts yarn (200 m × 10 ÷ 100 = 20 kg); dispatch does not | `ys-usage` |
-| Correction = weighed total; Audit Inventory | `ys-correct` (+ detail) |
+| Correction = weighed total; Correct balance for regular weighing, "Audit Inventory" for a full dated audit kept as a record (D-20) | `ys-correct` (+ detail) |
 | Movement history, dated view, CSV | `ys-correct` detail |
 | Next action | `ys-handoff` |
 
@@ -76,7 +76,7 @@ Keys in `lib/i18n/stock-tutorial.ts` (yarn section rewritten; `yarnStockTutorial
 | `usage.detail` | Those 20 kg now sit inside the 200 m of fabric until it is dispatched; the Stock audit still counts them as your yarn. | એ 20 કિલો ડિસ્પેચ થાય ત્યાં સુધી 200 મીટર કાપડમાં રહે છે; સ્ટોક ઓડિટ તેને હજી તમારું યાર્ન ગણે છે. | वे 20 किलो डिस्पैच होने तक 200 मीटर कपड़े में रहते हैं; स्टॉक ऑडिट उन्हें अब भी आपका धागा गिनता है। |
 | `correct.title` | After weighing, enter the weighed total | વજન કર્યા પછી કુલ વજન લખો | तौलने के बाद कुल वज़न लिखें |
 | `correct.body` | {c:correctBalance} replaces the balance with what you weighed. Enter 98, not −2. | {c:correctBalance} બેલેન્સને તમે તોલેલા વજનથી બદલે છે. 98 લખો, −2 નહીં. | {c:correctBalance} बैलेंस को आपके तौले वज़न से बदलता है। 98 लिखें, −2 नहीं। |
-| `correct.detail` | {c:movementHistory} shows every change. Pick a date to see balances on that day and export them. For a dated audit of fabric and yarn together, use {c:auditInventory}. | {c:movementHistory}માં દરેક ફેરફાર દેખાય છે. તારીખ પસંદ કરી તે દિવસનું બેલેન્સ જોઈ એક્સપોર્ટ કરી શકો. કાપડ અને યાર્નના તારીખવાર ઓડિટ માટે {c:auditInventory} વાપરો. | {c:movementHistory} में हर बदलाव दिखता है। तारीख चुनकर उस दिन का बैलेंस देख और एक्सपोर्ट कर सकते हैं। कपड़े और धागे के तारीखवार ऑडिट के लिए {c:auditInventory} इस्तेमाल करें। |
+| `correct.detail` | {c:movementHistory} shows every change. Pick a date to see balances on that day and export them. Use {c:correctBalance} for regular weighing; for a full dated audit of fabric and yarn, kept as a record, use {c:auditInventory}. | {c:movementHistory}માં દરેક ફેરફાર દેખાય છે. તારીખ પસંદ કરી તે દિવસનું બેલેન્સ જોઈ એક્સપોર્ટ કરી શકો. નિયમિત વજન માટે {c:correctBalance} વાપરો; કાપડ અને યાર્નનું તારીખ સાથેનું પૂરું ઓડિટ રેકોર્ડ તરીકે રાખવા {c:auditInventory} વાપરો. | {c:movementHistory} में हर बदलाव दिखता है। तारीख चुनकर उस दिन का बैलेंस देख और एक्सपोर्ट कर सकते हैं। नियमित तौल के लिए {c:correctBalance} इस्तेमाल करें; कपड़े और धागे का तारीख के साथ पूरा ऑडिट रिकॉर्ड के रूप में रखने के लिए {c:auditInventory} इस्तेमाल करें। |
 | `handoff.title` | Record the yarn in your godown | ગોડાઉનનું યાર્ન નોંધો | गोदाम का धागा दर्ज करें |
 | `handoff.body` | Start with each yarn's opening weight, then link your fabric costings so production can deduct yarn. | દરેક યાર્નના શરૂઆતના વજનથી શરૂ કરો, પછી કાપડની કોસ્ટિંગ જોડો જેથી ઉત્પાદન યાર્ન ઘટાડી શકે. | हर धागे के शुरुआती वज़न से शुरू करें, फिर कपड़े की कॉस्टिंग जोड़ें ताकि उत्पादन धागा घटा सके। |
 | `guide.benefit` | Learn to record yarn, link it to costings and follow what production uses. | યાર્ન નોંધવું, કોસ્ટિંગ સાથે જોડવું અને ઉત્પાદનમાં વપરાશ જોવો શીખો. | धागा दर्ज करना, कॉस्टिंग से जोड़ना और उत्पादन में खपत देखना सीखें। |

@@ -26,7 +26,7 @@ States: `NOT_STARTED` · `IN_PROGRESS` · `REVIEW_REQUIRED` · `PASSED` · `FAIL
 | 16 | GT-15 Machine Assignments | NOT_STARTED | — | — | — |
 | 17 | GT-16 Retire legacy tour code | NOT_STARTED | — | — | — |
 | 18 | GT-17 Final acceptance (G2) | NOT_STARTED | — | — | — |
-| — | GT-B1 Stock audit tour | BLOCKED (PI-06, PI-07, owner decision) | — | — | — |
+| — | GT-B1 Stock audit tour | BLOCKED (PI-06, PI-07) | — | — | — |
 
 **Exact next action:** start GT-00 in an explicitly initiated execution session (see [EXECUTOR_PROMPT.md](EXECUTOR_PROMPT.md)).
 
@@ -48,7 +48,7 @@ Recorded 2026-09-27 at `f7cff98` (`claude/gracious-sagan-dnwtsm` = `main`), clea
 | --- | --- | --- | --- | --- |
 | U-04 | Does the production database deduct yarn at production save (migration `20260920000000…`), not at dispatch? | Yes. Also: yarn used to make fabric that is still in stock must count toward yarn inventory in the audit, worked out from each quality's costing kg per 100 m (recorded as plan D-19). | 2026-09-27 | Owner |
 | U-06 | On QA, does changing date or shift on the Daily Sheet stay on the Daily Sheet? | It should keep the owner on the Daily Sheet for the selected date; past dates up to today, never future dates; purpose: correcting wrong past entries. Recorded as intended behavior; GT-12 verifies the code (PI-04). | 2026-09-27 | Owner |
-| GT-B1 | Which path should owners use for a routine count: Correct balance, or Audit → Adjust? | — | — | — |
+| GT-B1 | Which path should owners use for a routine count: Correct balance, or Audit → Adjust? | Correct balance. A routine count is about produced fabric in stock and unused (available) yarn, which the Fabric and Yarn Stock pages show; the Stock audit is the full dated record (recorded as plan D-20). | 2026-09-27 | Owner |
 
 ## Approved deviations
 

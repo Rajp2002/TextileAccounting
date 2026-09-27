@@ -9,7 +9,7 @@ GT-B1. A dedicated tour for `/owner/stock/audit`, outlined in [`pages/stock-audi
 - GT-17 PASSED.
 - PI-06 fixed: changing the audit date loads that date's audit; the adjustment shown equals the one applied.
 - PI-07 fixed: the audit page's strings go through translation keys in en/gu/hi.
-- Owner decision recorded: which path owners should use for a routine count (Correct balance vs Audit → Adjust).
+- [x] Owner decision recorded (2026-09-27, plan D-20): routine counts use Correct balance; the audit is the full dated record.
 
 ## Read first
 
