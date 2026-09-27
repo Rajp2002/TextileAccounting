@@ -11,29 +11,31 @@ Updated 2026-09-27. **Phase 3 in progress.**
 - **Batch 3B:** committed and pushed (`4de225d0`, `57bd9b0c`, E30). CI and the Vercel production build passed.
 - **Batch 3F:** committed and pushed (`1259c566`, `0eaca72a`, E31). CI and the Vercel production build passed.
 - **Batch 3G:** committed and pushed (`e917f291`, `a12bceb1`, E32). CI and the Vercel production build passed; no runtime errors.
-- **Batch 3D:** approved, committed and pushed with this change (`34c0efd7`, E33). It deletes the unmounted offline-sync provider and hooks, and trims `lib/db.ts` to the database that the cleanup still uses.
-- **Batch 3E:** started (owner, 2026-09-27). The review is file by file.
-- Details: EVIDENCE E24–E33.
+- **Batch 3D:** committed and pushed (`34c0efd7`, `70c6b765`, E33). CI and the Vercel production build passed.
+- **Batch 3E:** approved file by file, committed and pushed with this change (`1d085ca3`, E34). 14 files deleted; **no unreachable source files remain**.
+- Details: EVIDENCE E24–E34.
 
 ## Next session
 
-1. **Batch 3E** (in progress): auth, billing and compliance orphans, reviewed file by file with the owner.
-2. **Batch 3H** (queued by the owner, 2026-09-27): the remaining hidden quotation-lifecycle UI behind `canUseProduction = false`. It covers:
+1. **Batch 3H** (queued by the owner, 2026-09-27): the remaining hidden quotation-lifecycle UI behind `canUseProduction = false`. It covers:
    - draft/sent/accepted controls and `showPartyField`;
    - the factory-profile wizard step;
    - the "full" saved-costings tour;
    - the "Market Run only mode" checks and quotation sub-paths in `saveEstimatorQuoteV3`;
    - the unused `tx()` dictionary entries.
    It needs its own analysis and an old-vs-new browser comparison.
-3. **Open follow-ups:**
+2. **Open follow-ups:**
+   - **Base worker privacy (owner decision, legal advice):** current Base workers have no live notice, consent or erasure path. `erase_worker_pii_atomic` only covers the retired worker tables (E34).
+   - **Razorpay legacy subscriptions (owner):** confirm in the Razorpay dashboard that none of the 10 legacy subscription IDs is live, then retire `/api/subscriptions/auto-renew` (E34).
+   - **Schema cleanup candidates (separate approval):** `organizations.access_code_*` and the legacy compliance tables.
    - live-settings test coverage (E29);
    - P2-O1…O5;
    - OS-5, AS-05, OS-12, CS-2, CS-1;
    - `custom_access_token_hook` grants;
    - leaked-password protection.
-4. **Phase 5 note:** CLAUDE.md's "Baseline" section still describes lint as red. It is now clean, and CI runs `npm run lint`. (3B already corrected the stack and primitives lines.)
-5. **Local note:** the main checkout was fast-forwarded to `57bd9b0c` and reinstalled with `npm ci` (2026-09-27).
-6. **Phase 5 docs:** `TECHNICAL_ANALYSIS.md` and `USER_WORKFLOWS.md` still describe the retired party-order, conversion and market-run flows.
+3. **Phase 5 note:** CLAUDE.md's "Baseline" section still describes lint as red. It is now clean, and CI runs `npm run lint`. (3B already corrected the stack and primitives lines.)
+4. **Local note:** the main checkout was fast-forwarded to `57bd9b0c` and reinstalled with `npm ci` (2026-09-27).
+5. **Phase 5 docs:** `TECHNICAL_ANALYSIS.md` and `USER_WORKFLOWS.md` still describe the retired party-order, conversion and market-run flows.
 
 ## Decisions recorded (user, 2026-09-26)
 
@@ -49,7 +51,7 @@ Updated 2026-09-27. **Phase 3 in progress.**
 - **Batch 3G:** added and approved by the owner (2026-09-27), then approved to land and committed. Correction: the `saveEstimatorQuoteV3` quotation sub-paths were moved to 3H.
 - **Batch 3H:** queued by the owner (2026-09-27), after 3E.
 - **Batch 3D:** approved and committed (2026-09-27).
-- **Batch 3E:** started by the owner (2026-09-27).
+- **Batch 3E:** started by the owner, reviewed file by file, all 14 deletions approved (2026-09-27). The Base worker privacy gap is recorded as a follow-up; the auto-renew route is kept pending the Razorpay check.
 - **Batch order approved:** 3C → 3B → 3F → 3G → 3D → 3E → 3H. Each batch still lands only after its own approval.
 - **Phase 3:** approved by the owner (2026-09-27). Each deletion batch still needs its own approval under the deletion protocol (BRIEF rule 7).
 - **CI for 2C** (`7a15df69`): passed.
@@ -72,7 +74,18 @@ Updated 2026-09-27. **Phase 3 in progress.**
   - AS-02 (Free auto-confirm) is accepted for now.
   - OS-5 and AS-05 scope: the owner is unsure.
 
-## Gate results (3D)
+## Gate results (3E)
+
+| Check | Result |
+| --- | --- |
+| `npm run lint` | exit 0 |
+| tsc | PASS |
+| Default `npm test` | 227 files / 1,952 passed / 1 skipped |
+| `npm run test:db` | 11 files / 60 passed |
+| Production build (credential-free copy) | PASS (53/53 static pages) |
+| Reachability | 0 unreachable source files |
+
+## Earlier gate results (3D)
 
 | Check | Result |
 | --- | --- |

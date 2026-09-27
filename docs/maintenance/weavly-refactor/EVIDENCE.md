@@ -1684,3 +1684,46 @@ Worktree = `main` @ `a12bceb1` + 3D.
 **Behavior:** no browser comparison was run. No shipped path loaded the deleted modules, and the removed helpers had no callers left (same standard as 3A and 3C).
 
 **Recovery:** `git revert 34c0efd7`.
+
+## E34. Batch 3E: auth, billing, compliance and access-code orphans (2026-09-27)
+
+The owner reviewed the files one by one and approved all 14 (2026-09-27); committed in `1d085ca3`. 1,302 lines deleted.
+
+### File review (VERIFIED)
+
+| File | Purpose | Why it was dead |
+| --- | --- | --- |
+| `app/(auth)/actions.ts` | duplicate `getUser` | Live auth is `app/(auth)/actions/auth.ts`. The E28 "references" were prefix matches on that path. |
+| `app/(auth)/signup/actions.ts` | deprecated `signOut`/`getUser` | same |
+| `components/onboarding/PlanSelection.tsx` | old plan picker | Superseded by `components/plans/PlanChooserClient.tsx` (`5e26323e`). |
+| `components/billing/FreeBillingAction.tsx` | old Free continuation button | same |
+| `lib/tracking-token.ts` | order tracking-token validation | Order tracking retired; no users. |
+| `components/AccessCodeBanner.tsx`, `lib/access-codes.ts` | supervisor access codes | Retired with the Full Suite tier. `organizations.access_code_*` columns and the data-export redaction stay (a schema change needs separate approval). The access-code rate-limit helpers stay: `scripts/qa/batch1b-access-code-probe.mjs` uses them. |
+| `app/(dashboard)/owner/actions/compliance.ts`, `components/compliance/ComplianceNotice.tsx`, `components/compliance/LanguageRequestDialog.tsx`, `owner/settings/audit/ComplianceRegistry.tsx` | worker notice, consent, language-request and erasure flows | Built for the legacy worker model (`supervisor` role). `erase_worker_pii_atomic` (`20260714063000`) only touches `workers`, `fixed_workers`, `attendance`, `production_logs` and related logs, not `base_production_workers`. The live `lib/actions/compliance.ts` (notice registry and security incidents) is a different module and is kept. |
+| `app/(dashboard)/owner/billing/actions.ts`, `components/billing/BillingProfileForm.tsx` | GST billing-profile capture | Removed from the billing page on purpose in `37a141f5`. Policy copy: "a payment receipt (PDF)… not a GST tax invoice", with "GST tax invoice support… reviewed after Weavly is incorporated". `sprint16-billing-language` asserts that it stays absent. `ensureBillingInvoice` stays; it issues nothing without a complete profile. |
+| `components/billing/AutoRenewToggle.tsx` | turn off Razorpay auto-renew | Unmounted in `c052da7f` (checkout moved to one-time orders). `p1-billing-orders` asserts that it stays absent. |
+
+### Production check (read-only aggregate)
+
+`org_subscriptions` rows with a `razorpay_subscription_id`:
+- 10 in total;
+- all `status = 'active'` with `cancel_at_cycle_end = false`;
+- all with `current_end` in the past, so none was renewed after its period.
+
+No customer data was read. `/api/subscriptions/auto-renew` is kept until the owner confirms in the Razorpay dashboard that none of these subscriptions is live.
+
+### Gates
+
+Worktree = `main` @ `70c6b765` + 3E.
+
+| Check | Result |
+| --- | --- |
+| `npm run lint` | exit 0 |
+| tsc | PASS |
+| Default vitest | 227 files / 1,952 passed / 1 skipped |
+| `npm run test:db` | 11 files / 60 passed |
+| Production build (credential-free copy) | PASS (compiled 85 s; 53/53 static pages) |
+| Reachability | **0 unreachable source files** (478 reachable) |
+| Path references in tests, scripts, configs and CI | none |
+
+**Recovery:** `git revert 1d085ca3`.
