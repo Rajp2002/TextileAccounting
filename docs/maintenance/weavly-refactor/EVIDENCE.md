@@ -1727,3 +1727,100 @@ Worktree = `main` @ `70c6b765` + 3E.
 | Path references in tests, scripts, configs and CI | none |
 
 **Recovery:** `git revert 1d085ca3`.
+
+## E35. Batch 3H: hidden quotation-lifecycle UI and server paths (2026-09-27)
+
+Approved by the owner (2026-09-27); committed in `5410386b`.
+
+**Product context (owner, 2026-09-27):** the old estimator created costings for party orders and for market runs. Production now logs output into inventory, and dispatch sends stock to a party customer or to a trader. Quotations, party orders and market runs are retired by design.
+
+### Why it was dead (VERIFIED)
+
+- Every renderer passes `canUseProduction = false`: `owner/estimator/page.tsx`, `app/free/FreeClient.tsx` and `owner/quotes/page.tsx`. The Quotes page also set `canUseQuotationWorkflow = canUseProduction && …`.
+- In the estimator, `isStandaloneCostingSession = !canUseProduction || …` was always true, and `showPartyField` and `requiresCommercialContext` were always false.
+- In Saved Costings, `showQualityLibrary = !canUseQuotationWorkflow || …` was always true. Only the saved-quality library could render; the table and card views (old lines 1729–2053) never could.
+- On the server, `newRecordKind = getNewEstimateRecordKind(false, …)` was always `'costing'`, and the `if (newRecordKind === 'costing') { … return }` block always returned. So the quotation validation, source-quote lookup, quotation update and direct-insert tail (~115 lines) were unreachable. A legacy source record already went through `save_estimator_costing_revision_v2`.
+
+### Scope
+
+- **Server (`estimator/actions.ts`):**
+  - fold `saveEstimatorQuoteV3` to the costing path;
+  - drop the `partiesResult` slot from `getEstimatorSecondaryData`;
+  - delete `getEstimatorPartyNames`, `getLastQuoteForParty`, `updateQuoteStatus` and `getQuoteStatusHistory`. They have no callers, so they are no longer server-action endpoints.
+- **Estimator:**
+  - remove the party field and last-quote hint;
+  - remove the tape-length field and beam planner;
+  - remove the quotation buttons and copy, and the flag props on `CostingAssumptionsSummary`, `CostingSaveReview`, `EstimatorLiveCostActions` and `QuickCostingView`;
+  - remove the saved-quality scroll arrows and their scroll state;
+  - `handleSaveQuote` always saves a costing and no longer takes `recordKindOverride`.
+  A party name restored from a legacy record still passes through (`resolvedPartyName = partyName.trim() || null`).
+- **`FactoryCostWizard`:** drop the factory-type step, which was reachable only with `canUseFactoryProfiles`. Setup is `grey_weaver`.
+- **Tours:** the estimator tour loses its `standalone` flag and the `saveQuotation` step and copy. The saved-costings tour loses its `full` and `quotations` variants, the `productionUsage`, `reuseQuotation` and `quotations` copy (en/hi/gu), and the `'quotations'` step id.
+- **Saved Costings (`QuotesClient`, 2,495 → 1,724 lines):**
+  - the table and card views, status tabs, status history and accept dialog;
+  - the Applied production panel and its usage totals;
+  - the quotation-only helpers and the list memo.
+  An empty-state button driven by the URL `status` (live) is kept.
+- **Libraries:** remove the test-only `getCostingWorkspaceCapabilities`, `getNewEstimateRecordKind`, `canUseQuotationLifecycle` and `shouldCreateImmutableRevision`, and the unused `getEstimatorWorkflowConfig` and `EstimatorWorkflowMode`.
+- **Kept:** legacy quotation records stay visible in each quality's history and exportable. The export dialog's quotation status display is unchanged (see E36 for the button).
+
+Size: 34 files, +247 / −1,815 ignoring whitespace (+308 / −1,876 raw).
+
+**Not done:** removing the quotation phrases from the `tx()` dictionaries (`lib/i18n/legacy*.ts`). `tx()` also translates server error messages at runtime, so no entry can be proven unused. Moved to the Phase 5 i18n review.
+
+### Old-vs-new browser comparison
+
+The harness is the one from E32, rebuilt for `main` @ `9ca9c0b0` versus the 3H tree. It also records `localStorage`, with ISO timestamps and random 21-character row IDs masked.
+
+| Scenario | Result |
+| --- | --- |
+| E1 Lite; E2 Base; E3 `?mode=market`; E4 Free | Identical |
+| E5 setup wizard; E12 wizard "Get Started" (old code already went straight to factory expenses) | Identical |
+| E6 live-cost actions menu | Identical |
+| E7 new costing save; E8 stale-rate replay; E9 edited costing save | Identical, including save payloads |
+| E10 guided tour to the save step; E11 Free save | Identical |
+| E13 save of a reopened legacy quotation that has a party | Identical; payload `partyName: "Mahavir Traders"`, `recordKind: "costing"` |
+| Q1–Q3 Saved Costings (Base, Lite, `?status=accepted`) | Identical |
+| Q4 open a quality's details; Q5 "Use" a version (draft written, `router.push('/owner/estimator')`) | Identical, including the saved draft |
+| Q6 archived toggle; Q7 export from the library | Identical |
+
+Result: 20/20 identical in DOM, server-action calls, router and `fetch` log, and `localStorage`. 0 console errors.
+
+### Contracts
+
+About 30 contracts in 20 test files pinned removed text. Each now pins the live mechanism it protected, or asserts the removal:
+- stale-edit protection → `p_expected_source_updated_at`;
+- costing versioning → the revision RPC;
+- the archive filter → `isSavedCostingArchived`;
+- the retired quotation ledger, status actions, tape-length UI, factory-type step and production panel → asserted absent.
+
+Three unit tests of deleted helpers were removed (1,952 → 1,949).
+
+**Finding (recorded, not fixed):** some Saved Costings contracts pass only on commented-out "historical copy reference retained for source-regression coverage" blocks in `QuotesClient.tsx` (for example `saved-costing-plan-panels` and "expand a quality to review its costing history"). They protect nothing live. This is for the Phase 4/6 test review.
+
+### Gates
+
+Worktree = `main` @ `9ca9c0b0` + 3H.
+
+| Check | Result |
+| --- | --- |
+| `npm run lint` | exit 0 |
+| tsc | PASS |
+| Default vitest | 227 files / 1,949 passed / 1 skipped |
+| `npm run test:db` | 11 files / 60 passed (the real `saveEstimatorQuoteV3` against PostgreSQL) |
+| Production build (credential-free copy) | PASS (53/53 static pages) |
+| Reachability | 0 unreachable source files |
+
+**Recovery:** `git revert 5410386b`.
+
+## E36. Export dialog: no-op "Mark as sent" removed (2026-09-27)
+
+Owner-approved behaviour change; committed in `f934a63b`.
+
+**What changed for users:**
+- **Before:** exporting a legacy draft quotation as a customer PDF showed "Mark as sent" once the PDF was generated. `canMarkSent` did not check `onMarkAsSent`, and no screen passes that prop (before 3H, Saved Costings passed `undefined`), so the click did nothing.
+- **After:** the button, its handler and state, and the help sentence "Mark as sent records this status and time." are gone. The quotation status line and "PDF sharing does not confirm delivery." stay.
+
+**Gates:** tsc and lint clean; 227 files / 1,949 passed; production build PASS. `base-costing-export-status-boundary` now asserts that the button and `canMarkSent` are absent and that the delivery note remains.
+
+**Recovery:** `git revert f934a63b`.

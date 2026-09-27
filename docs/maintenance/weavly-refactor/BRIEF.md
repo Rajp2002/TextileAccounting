@@ -25,7 +25,7 @@ Make the existing Weavly application simpler, more consistent, maintainable, sec
 | 0 | Discovery, risk map, baseline, Phase 1 proposal | complete, gate reached 2026-09-26 |
 | 1 | Regression protection and quality gates (packages 1A–1F in STATUS) | complete 2026-09-26 (1F, 1A, 1B-1, 1B-2); fix packages F1–F3 applied |
 | 2 | Targeted consistency/maintainability, one subsystem per package | 2A–2D and OS-13 done 2026-09-27 (E23–E27); 2E/2F deferred |
-| 3 | Proven-unused code, dependencies, assets, legacy docs (deletion protocol) | started 2026-09-27 |
+| 3 | Proven-unused code, dependencies, assets, legacy docs (deletion protocol) | code, dependencies and hidden UI complete 2026-09-27 (batches 3A–3H, E28–E36; no unreachable source files remain). Unused assets are a close-out check; legacy docs move to Phase 5 |
 | 4 | Measured performance and interaction quality | not started |
 | 5 | Canonical documentation and agent instructions | not started |
 | 6 | Independent review and integrated verification (release assessment only) | not started |

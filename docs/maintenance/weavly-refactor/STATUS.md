@@ -1,6 +1,6 @@
 # Weavly refactor program — status
 
-Updated 2026-09-27. **Phase 3 in progress.**
+Updated 2026-09-27. **Phase 3 code deletions complete.**
 - **2B and OS-13 are committed and pushed with this change**, together with the CI change to the full lint gate.
 - **Lint is fully green.**
 - **2C:** committed and pushed.
@@ -12,30 +12,33 @@ Updated 2026-09-27. **Phase 3 in progress.**
 - **Batch 3F:** committed and pushed (`1259c566`, `0eaca72a`, E31). CI and the Vercel production build passed.
 - **Batch 3G:** committed and pushed (`e917f291`, `a12bceb1`, E32). CI and the Vercel production build passed; no runtime errors.
 - **Batch 3D:** committed and pushed (`34c0efd7`, `70c6b765`, E33). CI and the Vercel production build passed.
-- **Batch 3E:** approved file by file, committed and pushed with this change (`1d085ca3`, E34). 14 files deleted; **no unreachable source files remain**.
-- Details: EVIDENCE E24–E34.
+- **Batch 3E:** committed and pushed (`1d085ca3`, `9ca9c0b0`, E34). CI and the Vercel production build passed.
+- **Batch 3H:** approved, committed and pushed with this change (`5410386b`, E35). It removes the hidden quotation-lifecycle UI and server paths. The old-vs-new browser comparison was identical in 20/20 scenarios.
+- **Export fix:** the no-op "Mark as sent" button was removed (`f934a63b`, E36; owner-approved).
+- Details: EVIDENCE E24–E36.
 
 ## Next session
 
-1. **Batch 3H** (queued by the owner, 2026-09-27): the remaining hidden quotation-lifecycle UI behind `canUseProduction = false`. It covers:
-   - draft/sent/accepted controls and `showPartyField`;
-   - the factory-profile wizard step;
-   - the "full" saved-costings tour;
-   - the "Market Run only mode" checks and quotation sub-paths in `saveEstimatorQuoteV3`;
-   - the unused `tx()` dictionary entries.
-   It needs its own analysis and an old-vs-new browser comparison.
-2. **Open follow-ups:**
-   - **Base worker privacy (owner decision, legal advice):** current Base workers have no live notice, consent or erasure path. `erase_worker_pii_atomic` only covers the retired worker tables (E34).
-   - **Razorpay legacy subscriptions (owner):** confirm in the Razorpay dashboard that none of the 10 legacy subscription IDs is live, then retire `/api/subscriptions/auto-renew` (E34).
+1. **Phase 3 close-out:** check `public/` for unused assets (images, icons, fonts) using the deletion protocol. Legacy docs move to Phase 5.
+2. **Phase 4** (measured performance and interaction quality): not started. It needs its own plan and approval.
+3. **Open follow-ups:**
    - **Schema cleanup candidates (separate approval):** `organizations.access_code_*` and the legacy compliance tables.
-   - live-settings test coverage (E29);
+   - live-settings test coverage (E29), and the Saved Costings contracts that pass only on commented-out copy (E35);
+   - removing the quotation phrases from the `tx()` dictionaries (Phase 5 i18n review, E35);
    - P2-O1…O5;
    - OS-5, AS-05, OS-12, CS-2, CS-1;
    - `custom_access_token_hook` grants;
    - leaked-password protection.
-3. **Phase 5 note:** CLAUDE.md's "Baseline" section still describes lint as red. It is now clean, and CI runs `npm run lint`. (3B already corrected the stack and primitives lines.)
-4. **Local note:** the main checkout was fast-forwarded to `57bd9b0c` and reinstalled with `npm ci` (2026-09-27).
-5. **Phase 5 docs:** `TECHNICAL_ANALYSIS.md` and `USER_WORKFLOWS.md` still describe the retired party-order, conversion and market-run flows.
+4. **Phase 5 note:** CLAUDE.md's "Baseline" section still describes lint as red. It is now clean, and CI runs `npm run lint`. (3B already corrected the stack and primitives lines.)
+5. **Local note:** the main checkout was fast-forwarded to `57bd9b0c` and reinstalled with `npm ci` (2026-09-27).
+6. **Phase 5 docs:** `TECHNICAL_ANALYSIS.md` and `USER_WORKFLOWS.md` still describe the retired party-order, conversion and market-run flows.
+
+## Owner to-dos: remind at program close
+
+The owner asked (2026-09-27) to be reminded of these once the refactor is done. Raise them in the final close-out, not in per-batch reports.
+
+1. **Razorpay legacy subscriptions.** Confirm in the Razorpay dashboard that none of the 10 legacy subscription IDs is still live. In production they are all `active` with auto-renew on, but every period has ended and none was renewed. Once confirmed, `/api/subscriptions/auto-renew` can be retired (E34).
+2. **Base worker privacy.** Ask a legal adviser whether Base needs a worker privacy notice, consent capture or data erasure. None exists for `base_production_workers`, and `erase_worker_pii_atomic` only covers the retired tables (E34). Nothing is to be built until the owner decides.
 
 ## Decisions recorded (user, 2026-09-26)
 
@@ -49,7 +52,9 @@ Updated 2026-09-27. **Phase 3 in progress.**
 - **Batch 3A:** approved and deleted. `BaseSetupWorkspace.tsx` (rollback adapter) was deleted by owner decision.
 - **Batch 3F:** approved and committed (2026-09-27).
 - **Batch 3G:** added and approved by the owner (2026-09-27), then approved to land and committed. Correction: the `saveEstimatorQuoteV3` quotation sub-paths were moved to 3H.
-- **Batch 3H:** queued by the owner (2026-09-27), after 3E.
+- **Batch 3H:** queued, then approved and committed (2026-09-27).
+- **"Mark as sent":** the owner approved removing the no-op button (2026-09-27).
+- **Product model (owner, 2026-09-27):** production → inventory → dispatch replaced the order- and market-run-based costings. Quotations, party orders and market runs are retired by design.
 - **Batch 3D:** approved and committed (2026-09-27).
 - **Batch 3E:** started by the owner, reviewed file by file, all 14 deletions approved (2026-09-27). The Base worker privacy gap is recorded as a follow-up; the auto-renew route is kept pending the Razorpay check.
 - **Batch order approved:** 3C → 3B → 3F → 3G → 3D → 3E → 3H. Each batch still lands only after its own approval.
@@ -74,7 +79,19 @@ Updated 2026-09-27. **Phase 3 in progress.**
   - AS-02 (Free auto-confirm) is accepted for now.
   - OS-5 and AS-05 scope: the owner is unsure.
 
-## Gate results (3E)
+## Gate results (3H)
+
+| Check | Result |
+| --- | --- |
+| `npm run lint` | exit 0 |
+| tsc | PASS |
+| Default `npm test` | 227 files / 1,949 passed / 1 skipped |
+| `npm run test:db` | 11 files / 60 passed |
+| Old-vs-new browser comparison | 20/20 identical (DOM, calls, navigation, saved drafts) |
+| Production build (credential-free copy) | PASS (53/53 static pages) |
+| Reachability | 0 unreachable source files |
+
+## Earlier gate results (3E)
 
 | Check | Result |
 | --- | --- |
