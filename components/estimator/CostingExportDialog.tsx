@@ -81,7 +81,6 @@ export function CostingExportDialog({
   sourceQuoteStatus,
   sourceRecordKind,
   onQuoteUpdated,
-  onMarkAsSent,
   tutorialPreview = false,
 }: {
   open: boolean
@@ -100,7 +99,6 @@ export function CostingExportDialog({
   sourceQuoteStatus?: QuoteStatus
   sourceRecordKind?: 'costing' | 'quotation'
   onQuoteUpdated?: (data: { updated_at: string; quotation_reference?: string | null; quotation_valid_until?: string | null; customer_terms?: string | null }) => void
-  onMarkAsSent?: () => Promise<boolean> | boolean
 }) {
   const { tx } = useTranslation()
   const generationGuard = useRef(createDocumentGenerationGuard())
@@ -117,13 +115,11 @@ export function CostingExportDialog({
   const [generatedFilename, setGeneratedFilename] = useState('')
   const [generatedDocumentKey, setGeneratedDocumentKey] = useState<string | null>(null)
   const [sharing, setSharing] = useState(false)
-  const [markingSent, setMarkingSent] = useState(false)
-  const [markedSent, setMarkedSent] = useState(false)
   const [latestQuoteUpdatedAt, setLatestQuoteUpdatedAt] = useState(sourceQuoteUpdatedAt)
 
   const savedQuotation = Boolean(sourceQuoteId && sourceRecordKind === 'quotation')
   const lockedQuotation = savedQuotation && sourceQuoteStatus === 'accepted'
-  const displayedQuoteStatus: QuoteStatus | undefined = markedSent ? 'sent' : sourceQuoteStatus
+  const displayedQuoteStatus: QuoteStatus | undefined = sourceQuoteStatus
 
   useEffect(() => {
     if (!open || !model) return
@@ -140,8 +136,6 @@ export function CostingExportDialog({
     setGeneratedDocumentKey(null)
     setGeneratedFilename('')
     setSharing(false)
-    setMarkingSent(false)
-    setMarkedSent(false)
     setLatestQuoteUpdatedAt(sourceQuoteUpdatedAt)
     if (!tutorialPreview) void trackPlanEvent('export_preview_opened', { mode: defaultMode })
   }, [defaultBusinessName, defaultCustomerName, defaultCustomerTerms, defaultInternalNotes, defaultMode, defaultValidUntil, model, open, sourceQuoteStatus, sourceQuoteUpdatedAt, sourceRecordKind, tutorialPreview])
@@ -168,13 +162,7 @@ export function CostingExportDialog({
   }, [documentKey, open])
   const validationErrors = useMemo(() => validateCostingExportInput(model, options), [model, options])
   const canGenerate = validationErrors.length === 0 && status !== 'saving' && status !== 'generating'
-  const isBusy = status === 'saving' || status === 'generating' || sharing || markingSent
-  const canMarkSent = savedQuotation
-    && mode === 'customer'
-    && sourceQuoteId
-    && sourceQuoteStatus === 'draft'
-    && !markedSent
-    && ['generated', 'download-started', 'print-opened', 'share-opened'].includes(status)
+  const isBusy = status === 'saving' || status === 'generating' || sharing
   const exportActionHint = !model
     ? 'Complete the Cost Estimate before creating a document.'
     : validationErrors.length > 0
@@ -376,20 +364,6 @@ export function CostingExportDialog({
     }
   }
 
-  const handleMarkSent = async () => {
-    if (!onMarkAsSent) return
-    setMarkingSent(true)
-    try {
-      const success = await onMarkAsSent()
-      if (success) {
-        setMarkedSent(true)
-        toast.success('Quotation marked as sent')
-      }
-    } finally {
-      setMarkingSent(false)
-    }
-  }
-
   return (
     <Dialog modal={!tutorialPreview} open={open} onOpenChange={value => { if (!tutorialPreview) onOpenChange(value) }}>
       <DialogContent data-costing-tour-dialog={tutorialPreview ? "true" : undefined} onOpenAutoFocus={event => {if (tutorialPreview) event.preventDefault()}} onCloseAutoFocus={event => {if (tutorialPreview) event.preventDefault()}} onInteractOutside={event => {if (tutorialPreview) event.preventDefault()}} onEscapeKeyDown={event => {if (tutorialPreview) event.preventDefault()}} className="max-h-[95vh] overflow-y-auto sm:max-w-6xl">
@@ -410,7 +384,7 @@ export function CostingExportDialog({
               <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-bold text-slate-700">{displayedQuoteStatus[0].toUpperCase() + displayedQuoteStatus.slice(1)}</span>
             </div>
             <p className="text-xs text-slate-500">Updated {formatToSurat(latestQuoteUpdatedAt ?? new Date(), 'd MMM yyyy, h:mm a')}</p>
-            <p className="text-[11px] text-slate-500 sm:max-w-xs sm:text-right">Mark as sent records this status and time. PDF sharing does not confirm delivery.</p>
+            <p className="text-[11px] text-slate-500 sm:max-w-xs sm:text-right">PDF sharing does not confirm delivery.</p>
           </div>
         )}
 
@@ -558,12 +532,6 @@ export function CostingExportDialog({
               <Button type="button" variant="outline" onClick={() => void handleShare()} disabled={isBusy}>
                 {sharing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />}
                 Share PDF
-              </Button>
-            )}
-            {canMarkSent && (
-              <Button type="button" variant="outline" onClick={() => void handleMarkSent()} disabled={isBusy} className="border-indigo-200 text-indigo-700 hover:bg-indigo-50">
-                {markingSent ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                Mark as sent
               </Button>
             )}
             {status === 'share-opened' && generatedFileIsCurrent && <span className="flex items-center gap-1 text-xs font-semibold text-slate-500"><ExternalLink className="h-3.5 w-3.5" /> Delivery is not confirmed</span>}

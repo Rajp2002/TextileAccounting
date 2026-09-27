@@ -12,7 +12,11 @@ describe('Base costing export status boundary', () => {
     // wires a mark-as-sent handler into the export dialog.
     expect(quotesClient).not.toContain('onMarkAsSent')
     expect(exportDialog).toContain('const savedQuotation = Boolean(sourceQuoteId && sourceRecordKind === \'quotation\')')
-    expect(exportDialog).toContain('const canMarkSent = savedQuotation')
+    // The owner approved removing "Mark as sent" (2026-09-27): no screen wires a
+    // handler, so the button did nothing for legacy draft quotations.
+    expect(exportDialog).not.toContain('Mark as sent')
+    expect(exportDialog).not.toContain('canMarkSent')
+    expect(exportDialog).toContain('PDF sharing does not confirm delivery.')
     expect(exportDialog).toContain('Share PDF')
     expect(exportDialog).toContain('Download PDF')
   })
