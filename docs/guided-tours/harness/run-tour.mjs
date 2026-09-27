@@ -1,11 +1,13 @@
-// Usage: node run-tour.mjs <scenario> <lang> <width>x<height> [outdir] [launcherSelector]
+// Usage: node run-tour.mjs <scenario>[?key=value&…] <lang> <width>x<height> [outdir] [launcherSelector]
+// A variant such as 'quotes?tier=lite' (quote it in the shell) passes tier=lite as its own URL parameter.
 import { createRequire } from 'node:module'
 import { mkdirSync, writeFileSync } from 'node:fs'
 const require = createRequire(process.env.PLAYWRIGHT_ROOT ?? '/opt/node22/lib/node_modules/')
 const { chromium } = require('playwright')
 const [scenario = 'production', lang = 'en', size = '1440x900', outRoot = 'out', launcher = '[data-tour-control="take-tour"], [data-tour-control="quiet-tour"]'] = process.argv.slice(2)
 const [width, height] = size.split('x').map(Number)
-const out = `${outRoot}/${scenario}-${lang}-${size}`
+const [scenarioName, scenarioQuery = ''] = scenario.split('?')
+const out = `${outRoot}/${scenario.replace(/[^A-Za-z0-9-]+/g, '_')}-${lang}-${size}`
 mkdirSync(out, { recursive: true })
 const browser = await chromium.launch(process.env.CHROMIUM_PATH === '' ? {} : { executablePath: process.env.CHROMIUM_PATH ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' })
 const mobile = width < 768
@@ -14,7 +16,7 @@ const page = await context.newPage()
 const logs = []
 page.on('console', m => { if (['error', 'warning'].includes(m.type())) logs.push(`${m.type()}: ${m.text()}`) })
 page.on('pageerror', e => logs.push('pageerror: ' + e.message))
-await page.goto(`http://localhost:5199/?s=${scenario}&lang=${lang}&fresh=1`)
+await page.goto(`http://localhost:5199/?s=${encodeURIComponent(scenarioName)}${scenarioQuery ? `&${scenarioQuery}` : ''}&lang=${lang}&fresh=1`)
 await page.waitForFunction(() => window.__harnessReady || window.__harnessError, null, { timeout: 60000 })
 await page.waitForTimeout(1200)
 await page.screenshot({ path: `${out}/00-page.png` })

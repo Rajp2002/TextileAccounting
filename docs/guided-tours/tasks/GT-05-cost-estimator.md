@@ -51,7 +51,7 @@ Where the restore closure lives; how the anchors are forwarded through `Estimato
 
 - Tests: step order per plan; every step's anchor exists in Quick view source; copy parity/limits/native script; tokens resolve in 3 languages; worked numbers (₹60,000 ÷ 30,000 = ₹2/m; ₹100/m at 20% → ₹125/m) computed with `lib/estimator.ts`/`lib/finance.ts`; restore closure restores `entryMode`, `liveEstimateOpen`, `showQualityLibrary`, `showAdvancedOverhead`, `assumptionsExpanded`; no reference to the deleted dismiss action; contract test covers the Estimator tour files and the Free tokens.
 - Full suite, tsc, lint green.
-- Harness: `estimator`, `estimator?tier=lite`, `free-estimator` at the four viewports + reduced motion; `estimator` with `PRE_CLICK` on the Detailed tab. Required: no overlap; every outline on screen (CE-3 fixed: step 10 paid and steps 5/9 Free were off screen before); Detailed restored after Exit when launched from Detailed; server calls only `recordTourEventAction` (plus the page's own `getEstimatorSecondaryData` on mount, which must not increase during the tour); no request to `/api/free/calculate`.
+- Harness: `estimator`, `'estimator?tier=lite'` (quoted; the part after `?` becomes URL parameters, see the harness README), `free-estimator` at the four viewports + reduced motion; `estimator` with `PRE_CLICK` on the Detailed tab. Required: no overlap; every outline on screen (CE-3 fixed: step 10 paid and steps 5/9 Free were off screen before); Detailed restored after Exit when launched from Detailed; server calls only `recordTourEventAction` (plus the page's own `getEstimatorSecondaryData` on mount, which must not increase during the tour); no request to `/api/free/calculate`.
 
 ## Definition of done
 

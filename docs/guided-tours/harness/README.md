@@ -12,9 +12,9 @@ It is **not** the app. It has no auth, no real data, no real sidebar content and
 | `postcss.config.mjs` | Tailwind v4 PostCSS with the repo as the source base |
 | `index.html`, `main.tsx` | Mounts `I18nProvider` + a copy of the owner-shell classes (`data-owner-shell`, `mobile-workspace-content`, `dashboard-main`) + one scenario, chosen by `?s=<scenario>&lang=<en\|gu\|hi>&fresh=1` |
 | `stubs/` | Minimal `next/navigation`, `next/link`, `next/dynamic`, `next/image`, `next/cache`, `next/headers`, Supabase client |
-| `run-tour.mjs` | Opens a scenario, clicks the guide launcher, presses Next through every step, records geometry, focus, scroll, server calls and a screenshot per step into `out/<scenario>-<lang>-<size>/` |
-| `summarize.py` | Prints per-run issues: panel/outline overlap, target off screen or clipped, description scrolling, server calls |
-| `batch.sh` | All scenarios × the four standard viewports |
+| `run-tour.mjs` | Opens a scenario, clicks the guide launcher, presses Next through every step, records geometry, focus, scroll, server calls and a screenshot per step into `out/<scenario>-<lang>-<size>/` (characters other than letters, digits and `-` in the scenario become `_`, so `quotes?tier=lite` writes `out/quotes_tier_lite-…`) |
+| `summarize.py` | Prints per-run issues: panel/outline overlap, target off screen or clipped, description scrolling, server calls; lists runs that crashed or timed out as INCOMPLETE and exits 1 if any run is incomplete or recorded an error |
+| `batch.sh` | All scenarios × the four standard viewports; exits 1 and lists the runs that failed or timed out |
 | `labels.json`, `probe-labels.mjs` | The label probe behind `audit/label-probe.md` |
 
 ## Set up (once per session)
@@ -39,8 +39,9 @@ Both defaults match the cloud container used for planning. On another machine, s
 
 ```bash
 node run-tour.mjs <scenario> <en|gu|hi> <width>x<height> [outDir]
+node run-tour.mjs 'quotes?tier=lite' en 1440x900              # variant: the part after ? becomes URL parameters; quote it
 REDUCED_MOTION=1 node run-tour.mjs <scenario> en 1024x768      # reduced-motion check
-./batch.sh && python3 summarize.py                             # everything, then the issue list
+./batch.sh; python3 summarize.py                               # everything, then the issue list; each exits 1 if a run failed, timed out or has no record
 node probe-labels.mjs                                          # writes labels-out.json
 ```
 

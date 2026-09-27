@@ -1,7 +1,13 @@
-import json,sys,glob
-for f in sorted(glob.glob('out/*/record.json')):
+import json,sys,glob,os
+# Lists issues per run. A run directory without record.json crashed or timed out; it is
+# reported as INCOMPLETE and makes the exit status 1, as does a run that recorded an error.
+problems=0
+for d in sorted(glob.glob('out/*/')):
+    name=d.rstrip('/').split('/')[-1]
+    f=os.path.join(d,'record.json')
+    if not os.path.exists(f): print(name, 'INCOMPLETE: no record.json (crashed or timed out)'); problems+=1; continue
     r=json.load(open(f)); steps=r['steps']
-    if 'after' not in r: print(f.split('/')[1], 'ERROR', r.get('error'), r['logs'][:3]); continue
+    if 'after' not in r: print(name, 'ERROR', r.get('error'), r['logs'][:3]); problems+=1; continue
     issues=[]
     for i,s in enumerate(steps,1):
         if s['overlapArea']>0: issues.append(f"s{i} overlap={s['overlapArea']}")
@@ -18,4 +24,5 @@ for f in sorted(glob.glob('out/*/record.json')):
             if ov>0: issues.append(f"s{i} rail-rect-intersects(check screenshot)")
     corners=[(s['panel']['x']>500, s['panel']['y']>100) for s in steps if s['panel']]
     jumps=sum(1 for a,b in zip(corners,corners[1:]) if a!=b)
-    print(f.split('/')[1], f"steps={len(steps)} panelCornerChanges={jumps} serverCalls={len(r['after']['serverCalls'])} nav={len(r['after']['navigations'])}", '; '.join(issues) or 'no geometry issues')
+    print(name, f"steps={len(steps)} panelCornerChanges={jumps} serverCalls={len(r['after']['serverCalls'])} nav={len(r['after']['navigations'])}", '; '.join(issues) or 'no geometry issues')
+sys.exit(1 if problems else 0)
