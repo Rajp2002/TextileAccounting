@@ -1479,3 +1479,77 @@ The worktree's `node_modules` is a symlink to the main checkout's, so no install
 | `package.json` and lockfile committed vs. the tested copy | byte-identical (`cmp`) |
 
 **Recovery:** `git revert 4de225d0` restores the files, `package.json` and the lockfile together; then run `npm ci`.
+
+## E31. Batch 3F: dead factory-workflow server paths (2026-09-27)
+
+Approved by the owner (2026-09-27); committed in `1259c566`.
+
+### Caller analysis (VERIFIED)
+
+`requireFactoryWorkflow()` always returned "This factory workflow is unavailable on Free, Lite, and Base." It guarded five actions:
+
+| Action | Callers | Reachable? |
+| --- | --- | --- |
+| `getFixedWorkersForOverhead` | `getEstimatorSecondaryData`, only when `canUseProduction`, a local `const … = false` | No |
+| `getMonthlyOutputSuggestion` | none | No |
+| `convertAcceptedQuoteToOrder` | `QuotesClient` convert dialog. It opens only from `canCreateOrder`, which needs `canUseQuotationLifecycle(…, canUseQuotationWorkflow)`. `quotes/page.tsx` sets `canUseQuotationWorkflow = canUseProduction = false`. | No |
+| `startPartyOrderFromEstimator` | `EstimatorClient.handleStartPartyOrder`. Its buttons render only under `canUseProduction && !isStandaloneCostingSession`. | No |
+| `createMarketRunFromEstimator` | `EstimatorClient.handleSaveQuote('market')`. Reached only with `mode === 'market'`. Every `setMode('market')` sits under `canUseProduction`; the initial mode is `'quote'` unless `canUseProduction`. | No |
+
+Both renderers of `EstimatorClient` pass `canUseProduction = false`: `owner/estimator/page.tsx` (local constant) and `app/free/FreeClient.tsx` (literal). `isStandaloneCostingSession = !canUseProduction || …` is therefore always true.
+
+`convertQuoteToOrder` was already a retired stub with no callers.
+
+### Change
+
+Deleted from `estimator/actions.ts` (2,727 → 2,138 lines):
+- the bodies above, including:
+  - the third `estimator_quotes` payload copy (in the market-run path, left by 2C);
+  - the `start_party_order_from_estimator_v2` and `convert_accepted_quote_to_order` RPC calls;
+  - the direct service-role writes of the market-run path;
+- `convertQuoteToOrder`;
+- `requireFactoryWorkflow`, `generateTrackingToken`, `getProductionSetupRequirement` and the `executeQuoteConversion` import.
+
+Also deleted: `lib/quotes/convert-accepted-quote-to-order.ts` (190 lines). Its only importer was `convertAcceptedQuoteToOrder`; its other export, `hydrateEstimateStateFromQuote`, had no importers.
+
+**Kept as stubs:** `convertAcceptedQuoteToOrder`, `startPartyOrderFromEstimator` and `createMarketRunFromEstimator`. The hidden UI still imports them, and no UI success branch reads a result field. Each stub calls `requireRole(['owner'])` and returns the same refusal. Batch 3G removes them together with the hidden UI.
+
+**`getEstimatorSecondaryData`:** the workers slot is now `Promise.resolve({ data: [] })`. It resolved to that before, too.
+
+**Left alone:** the two "Party quotations are unavailable in Market Run only mode." checks inside the live `saveEstimatorQuoteV3`. They reject legacy quotation records and are part of the live save; they are reviewed in 3G.
+
+### Behavior proof
+
+New `__tests__/db/retired-factory-workflows.dbtest.ts` (3 tests). For a Base owner, each stub must:
+- resolve to exactly the refusal;
+- run the owner check once;
+- make no `from()` table access and no RPC (both Supabase clients are wrapped);
+- leave the row counts of `estimator_quotes`, `orders`, `market_runs`, `order_yarn_requirements` and `machines` unchanged.
+
+| Run | Result |
+| --- | --- |
+| Against 3F | 3/3 pass |
+| Against the pre-3F `actions.ts` and conversion module (disposable copy) | 3/3 pass: the old code already behaved this way |
+| Pre-3F code with the guard returning `''` (mutant) | 3/3 fail, e.g. conversion reads the table and returns "Quote not found.": the test detects a live path |
+
+### Contracts updated
+
+- `batch10-estimator-quote-order-snapshots`:
+  - assertions on the deleted party-order and market-run bodies removed;
+  - the worker-rate snapshot count is now exactly 2, and each live save's derivation is pinned.
+- `saved-quality-costing-library`: `template_id:          params.templateId ?? null` existed only in the deleted market-run insert. The contract now pins the live save's `templateId: params.templateId ?? null` and the payload builder's `template_id: input.templateId`. (A search by function name missed this one; the full suite caught it.)
+
+### Gates
+
+Worktree = `main` @ `57bd9b0c` + 3F.
+
+| Check | Result |
+| --- | --- |
+| `npm run lint` | exit 0 |
+| tsc | PASS |
+| Default vitest | 227 files / 1,952 passed / 1 skipped |
+| `npm run test:db` | 12 files / 63 passed |
+| Production build (credential-free copy) | PASS (compiled 86 s; 53/53 static pages) |
+| Reachability | 17 unreachable (unchanged set: 3D and 3E) |
+
+**Recovery:** `git revert 1259c566`.

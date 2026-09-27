@@ -8,12 +8,13 @@ Updated 2026-09-27. **Phase 3 in progress.**
 - **Phase 3:** the inventory is done (68 unreachable source files, E28).
 - **Batch 3A:** committed and pushed (`c36eb72d`, `6ba75687`). CI passed.
 - **Batch 3C:** committed and pushed (`7b03576d`, `16481b76`, E29). CI passed.
-- **Batch 3B:** approved, committed and pushed with this change (`4de225d0`, E30). It removes 8 unused `components/ui` primitives and 6 npm packages, plus 3 sub-packages only they needed.
-- Details: EVIDENCE E24–E30.
+- **Batch 3B:** committed and pushed (`4de225d0`, `57bd9b0c`, E30). CI and the Vercel production build passed.
+- **Batch 3F:** approved, committed and pushed with this change (`1259c566`, E31). It removes the dead factory-workflow server paths and leaves 3 refusal stubs until 3G.
+- Details: EVIDENCE E24–E31.
 
 ## Next session
 
-1. **Batch 3F:** the dead factory-workflow branches in `estimator/actions.ts`, including the market-run payload copy. This work is at symbol level and needs a UI caller analysis first.
+1. **Batch 3G** (approved 2026-09-27; analysis in progress): the hidden UI behind `canUseProduction = false` in the Estimator and Quotations screens. That covers market-run mode, the party-order and order-conversion controls and dialog, the `saveMarket` tour step and its strings, the 3 stubs from 3F, and the dead quotation sub-paths in `saveEstimatorQuoteV3`. It needs an old-vs-new browser check.
 2. **Then, per the approved order:**
    - 3D: offline sync;
    - 3E: auth, billing and compliance orphans, reviewed file by file with the owner.
@@ -24,7 +25,8 @@ Updated 2026-09-27. **Phase 3 in progress.**
    - `custom_access_token_hook` grants;
    - leaked-password protection.
 4. **Phase 5 note:** CLAUDE.md's "Baseline" section still describes lint as red. It is now clean, and CI runs `npm run lint`. (3B already corrected the stack and primitives lines.)
-5. **Local note:** the main checkout's `node_modules` still contains the 6 removed packages until the next `npm ci`. This is harmless, because nothing imports them.
+5. **Local note:** the main checkout was fast-forwarded to `57bd9b0c` and reinstalled with `npm ci` (2026-09-27).
+6. **Phase 5 docs:** `TECHNICAL_ANALYSIS.md` and `USER_WORKFLOWS.md` still describe the retired party-order, conversion and market-run flows.
 
 ## Decisions recorded (user, 2026-09-26)
 
@@ -36,7 +38,9 @@ Updated 2026-09-27. **Phase 3 in progress.**
 - **Batch 3C:** approved and deleted (2026-09-27).
 - **Batch 3B:** deferred by the owner (2026-09-27), then approved the same day. The approval covers the 8 files, the 6 packages, and the two `CLAUDE.md` corrections (the `amount` primitive, "react-hook-form + zod"). Committed and pushed.
 - **Batch 3A:** approved and deleted. `BaseSetupWorkspace.tsx` (rollback adapter) was deleted by owner decision.
-- **Batch order approved:** 3C → 3B → 3F → 3D → 3E. Each batch still lands only after its own approval.
+- **Batch 3F:** approved and committed (2026-09-27).
+- **Batch 3G:** added and approved by the owner (2026-09-27). It runs after 3F and before 3D.
+- **Batch order approved:** 3C → 3B → 3F → 3G → 3D → 3E. Each batch still lands only after its own approval.
 - **Phase 3:** approved by the owner (2026-09-27). Each deletion batch still needs its own approval under the deletion protocol (BRIEF rule 7).
 - **CI for 2C** (`7a15df69`): passed.
 - **CI with the full lint gate:** passed on `ce4c3ff0`.
@@ -58,7 +62,18 @@ Updated 2026-09-27. **Phase 3 in progress.**
   - AS-02 (Free auto-confirm) is accepted for now.
   - OS-5 and AS-05 scope: the owner is unsure.
 
-## Gate results (3B)
+## Gate results (3F)
+
+| Check | Result |
+| --- | --- |
+| `npm run lint` | exit 0 |
+| tsc | PASS |
+| Default `npm test` | 227 files / 1,952 passed / 1 skipped |
+| `npm run test:db` | 12 files / 63 passed (new: retired-factory-workflows) |
+| Equivalence | New DB test passes against pre-3F code; fails when the old guard is disabled |
+| Production build (credential-free copy) | PASS (53/53 static pages) |
+
+## Earlier gate results (3B)
 
 | Check | Result |
 | --- | --- |
