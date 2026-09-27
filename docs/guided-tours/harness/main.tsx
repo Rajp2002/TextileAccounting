@@ -1,3 +1,4 @@
+/* eslint-disable -- guided-tour harness: a local diagnostic tool, not application code. */
 import '@/app/globals.css'
 import '@/app/mobile.css'
 import React, { Suspense } from 'react'

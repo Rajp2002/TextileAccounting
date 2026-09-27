@@ -1,3 +1,4 @@
+/* eslint-disable -- guided-tour harness: a local diagnostic tool, not application code. */
 import { useSyncExternalStore } from 'react'
 const listeners = new Set<() => void>()
 const subscribe = (l: () => void) => { listeners.add(l); window.addEventListener('popstate', l); return () => { listeners.delete(l); window.removeEventListener('popstate', l) } }
