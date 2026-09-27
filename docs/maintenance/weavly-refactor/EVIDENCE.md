@@ -1639,3 +1639,48 @@ Worktree = `main` @ `0eaca72a` + 3G.
 | Reachability | 17 unreachable (unchanged set) |
 
 **Recovery:** `git revert e917f291`.
+
+## E33. Batch 3D: offline-sync provider and hooks (2026-09-27)
+
+Approved by the owner (2026-09-27); committed in `34c0efd7`.
+
+### Consumers (VERIFIED)
+
+- **`OfflineSyncProvider`:** its only mount was `app/(dashboard)/supervisor/layout.tsx`, removed in `25933ba5` ("retire full suite tier", 2026-09-24). No importers since.
+- **`use-offline-sync` and `use-online-status`:** imported only by the provider and by each other.
+- **Other places checked:** no path, string or selector references in `worker/`, `next.config.ts` or `public/`. The banner copy appears nowhere else.
+- **Test:** one test (`sprint22-auth-boundary`) read the hook's source.
+
+### `lib/db.ts`
+
+- **Stays live.** `lib/client-storage-cleanup.ts` loads `{ db }` with `await import('./db')` in `clearOfflineMutationQueue` and `clearLegacyOfflineMutationQueue`. Those run from the auth-boundary cleanup, logout and account deletion. The scan counts `lib/db.ts` as reachable (478 reachable before and after).
+- **Helpers removed:**
+  - `queueMutation` and `deleteMutationsForScope`: no callers before 3D;
+  - `getPendingMutations` and `discardPendingMutations`: only the deleted hook used them;
+  - `requireScope`, which only those four helpers used.
+- **Unchanged:** the Dexie schema (`TextileDB` versions 1 and 2, with the upgrade that quarantines unscoped rows as `LEGACY_MUTATION_SCOPE`), so existing browser databases open and upgrade exactly as before. `dexie` stays.
+
+### Tests
+
+`sprint22-auth-boundary` no longer reads the deleted hook. It now asserts that:
+- `lib/db.ts` defines none of the four helpers;
+- the cleanup filters by `mutation.scope === scope` and by `LEGACY_MUTATION_SCOPE`.
+
+The `lib/db.ts` checks for `scope: string`, `toCollection()` and `LEGACY_MUTATION_SCOPE` are unchanged.
+
+### Gates
+
+Worktree = `main` @ `a12bceb1` + 3D.
+
+| Check | Result |
+| --- | --- |
+| `npm run lint` | exit 0 |
+| tsc | PASS |
+| Default vitest | 227 files / 1,952 passed / 1 skipped |
+| `npm run test:db` | 11 files / 60 passed |
+| Production build (credential-free copy) | PASS (compiled 90 s; 53/53 static pages) |
+| Reachability | 17 → 14 unreachable (exactly the 3 deleted files); reachable unchanged at 478 |
+
+**Behavior:** no browser comparison was run. No shipped path loaded the deleted modules, and the removed helpers had no callers left (same standard as 3A and 3C).
+
+**Recovery:** `git revert 34c0efd7`.
