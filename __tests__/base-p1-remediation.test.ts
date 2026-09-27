@@ -28,7 +28,7 @@ describe('Base P1 pilot remediation', () => {
     const client = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
     const actions = read('app/(dashboard)/owner/estimator/actions.ts')
 
-    expect(client).toContain("const resolvedPartyName = effectiveTargetMode === 'market'")
+    expect(client).toContain('const resolvedPartyName = saveAsStandaloneCosting')
     expect(client).toContain("if (!saveAsStandaloneCosting && !resolvedPartyName)")
     expect(client).toContain("if (!saveAsStandaloneCosting && (!state.orderQuantityM || state.orderQuantityM <= 0))")
     expect(client).toContain('placeholder="e.g. 5000"')

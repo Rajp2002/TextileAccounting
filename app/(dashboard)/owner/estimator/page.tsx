@@ -3,7 +3,6 @@ import EstimatorClient from './EstimatorClient'
 import { requireRole } from '@/lib/auth'
 import { getCachedOrgPlanAccess } from '@/lib/subscription'
 import { hasCapability } from '@/lib/subscription-access'
-import { normalizeProductionMode } from '@/lib/production-mode'
 import { getCachedOwnerOrganization } from '@/lib/owner-organization'
 
 export default async function EstimatorPage() {
@@ -38,7 +37,6 @@ export default async function EstimatorPage() {
         orgId={profile.org_id}
         canUseProduction={canUseProduction}
         canUseProductionPipeline={canUseProductionPipeline}
-        productionMode={normalizeProductionMode(organizationRes.data?.production_mode)}
         staleDefaultRateNames={[]}
         organizationName={organizationRes.data?.name ?? ''}
         initialPartyNames={[]}

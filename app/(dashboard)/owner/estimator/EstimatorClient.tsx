@@ -95,8 +95,6 @@ import {
     getLastQuoteForParty,
     upsertFactoryCostProfile,
     dismissFactoryCostWizard,
-    createMarketRunFromEstimator,
-    startPartyOrderFromEstimator,
     archiveTemplate,
     renameTemplate,
 } from './actions'
@@ -134,11 +132,6 @@ const FactoryCostWizard = dynamic(() => import('./FactoryCostWizard'), {
     ssr: false,
     loading: () => null,
 })
-import {
-    getEstimatorWorkflowConfig,
-    type EstimatorWorkflowMode,
-    type ProductionMode,
-} from '@/lib/production-mode'
 import {
     getFirstEstimatorValidationMessage,
     getEstimatorReadiness,
@@ -1876,10 +1869,7 @@ function CostingSaveReview({
 function EstimatorLiveCostActions({
     freeCanCalculate,
     isStandaloneCostingSession,
-    mode,
     canUseProduction,
-    allowsPartyOrders,
-    allowsMarketRuns,
     sourceQuoteId,
     savingQuote,
     savingTemplate,
@@ -1898,13 +1888,9 @@ function EstimatorLiveCostActions({
     actionReadinessId,
     topCostingActionLabel,
     onSaveCosting,
-    onStartPartyOrder,
     onSaveAccepted,
     onExport,
     onSaveDraft,
-    onStartMarketRun,
-    onSwitchMarket,
-    onSwitchQuote,
     onUpdateQuality,
     onSaveAsNewQuality,
     onNewQuality,
@@ -1912,10 +1898,7 @@ function EstimatorLiveCostActions({
 }: {
     freeCanCalculate?: boolean
     isStandaloneCostingSession: boolean
-    mode: EstimatorWorkflowMode
     canUseProduction: boolean
-    allowsPartyOrders: boolean
-    allowsMarketRuns: boolean
     sourceQuoteId: string | null
     savingQuote: boolean
     savingTemplate: boolean
@@ -1934,13 +1917,9 @@ function EstimatorLiveCostActions({
     actionReadinessId: string
     topCostingActionLabel: string
     onSaveCosting: () => void
-    onStartPartyOrder: () => void
     onSaveAccepted: () => void
     onExport: () => void
     onSaveDraft: () => void
-    onStartMarketRun: () => void
-    onSwitchMarket: () => void
-    onSwitchQuote: () => void
     onUpdateQuality: () => void
     onSaveAsNewQuality: () => void
     onNewQuality: () => void
@@ -1996,98 +1975,46 @@ function EstimatorLiveCostActions({
                             <Plus className="h-4 w-4" aria-hidden="true" />
                             New Quality / Reset
                         </DropdownMenuItem>
-                        {canUseProduction && !isStandaloneCostingSession && allowsMarketRuns && (
-                            <DropdownMenuItem onSelect={() => runAction(onSwitchMarket)}>
-                                <Gauge className="h-4 w-4" aria-hidden="true" />
-                                Market Run
-                            </DropdownMenuItem>
-                        )}
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
 
-            {(mode === 'quote' || isStandaloneCostingSession) ? (
-                <div className="grid gap-2 sm:grid-cols-2">
-                    {canUseProduction && !isStandaloneCostingSession && (
-                        <Button
-                            id="btn-start-party-order"
-                            type="button"
-                            size="sm"
-                            className="h-12 rounded-xl bg-loom px-4 text-[13px] font-semibold text-white shadow-xs transition-all duration-150 hover:bg-loom-elevated hover:text-white motion-safe:hover:-translate-y-0.5 active:scale-[0.98]"
-                            onClick={() => runAction(onStartPartyOrder)}
-                            disabled={savingQuote || !hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totalProductionCostPerM <= 0 || !quoteIsValid}
-                            aria-busy={savingQuote}
-                        >
-                            {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <Play className="h-3.5 w-3.5 shrink-0" />}
-                            <span className="truncate">Start Party Order</span>
-                        </Button>
-                    )}
-                    <div data-testid="save-costing-action-top" className={`min-w-0 ${canUseProduction && !isStandaloneCostingSession ? 'sm:col-span-1' : 'sm:col-span-2'}`}>
-                        <Button
-                            id="btn-save-accept"
-                            data-testid="save-costing-action"
-                            type="button"
-                            size="sm"
-                            variant="default"
-                            className="h-12 w-full rounded-xl bg-loom px-4 text-[13px] font-semibold text-white shadow-xs transition-all duration-150 hover:bg-loom-elevated hover:text-white motion-safe:hover:-translate-y-0.5 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-55"
-                            onClick={() => runAction(isStandaloneCostingSession ? onSaveCosting : onSaveAccepted)}
-                            disabled={saveCostingDisabled}
-                            aria-busy={savingQuote}
-                            aria-describedby={actionReadinessMessage ? actionReadinessId : undefined}
-                            aria-label={isStandaloneCostingSession ? topCostingActionLabel : sourceQuoteId ? 'Save quotation with current status' : 'Save and accept quotation'}
-                            title={firstCostingReadinessMessage ?? (saveCostingDisabled ? 'Complete the required inputs before saving.' : undefined)}
-                        >
-                            {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />}
-                            <span className="truncate">{isStandaloneCostingSession ? topCostingActionLabel : sourceQuoteId ? 'Save Quotation' : 'Save & Accept'}</span>
-                        </Button>
-                    </div>
-                    {canUseProduction && !isStandaloneCostingSession && (
-                        <Button
-                            id="btn-save-quote"
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            className="h-12 rounded-xl border border-hairline bg-surface px-4 text-[13px] font-semibold text-body hover:bg-surface-soft"
-                            onClick={() => runAction(onSaveDraft)}
-                            disabled={savingQuote || !quoteIsValid}
-                            aria-busy={savingQuote}
-                        >
-                            {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <Save className="h-3.5 w-3.5 shrink-0" />}
-                            <span className="truncate">Save Quotation</span>
-                        </Button>
-                    )}
-                    {canUseProduction && !isStandaloneCostingSession && !allowsPartyOrders && (
-                        <Button type="button" variant="outline" size="sm" onClick={() => runAction(onSwitchMarket)} disabled={savingQuote} className="h-12 rounded-xl">
-                            <Gauge className="h-3.5 w-3.5" /> Market Run
-                        </Button>
-                    )}
-                </div>
-            ) : (
-                <div className="grid gap-2 sm:grid-cols-2">
+            <div className="grid gap-2 sm:grid-cols-2">
+                <div data-testid="save-costing-action-top" className={`min-w-0 ${canUseProduction && !isStandaloneCostingSession ? 'sm:col-span-1' : 'sm:col-span-2'}`}>
                     <Button
-                        id="btn-start-market-run"
+                        id="btn-save-accept"
+                        data-testid="save-costing-action"
                         type="button"
                         size="sm"
-                        className="h-12 rounded-xl bg-loom px-4 text-[13px] font-semibold text-white shadow-xs transition-all duration-150 hover:bg-loom-elevated hover:text-white motion-safe:hover:-translate-y-0.5 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-55"
-                        onClick={() => runAction(onStartMarketRun)}
-                        disabled={savingQuote || !hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totalProductionCostPerM <= 0 || !quoteIsValid}
+                        variant="default"
+                        className="h-12 w-full rounded-xl bg-loom px-4 text-[13px] font-semibold text-white shadow-xs transition-all duration-150 hover:bg-loom-elevated hover:text-white motion-safe:hover:-translate-y-0.5 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-55"
+                        onClick={() => runAction(isStandaloneCostingSession ? onSaveCosting : onSaveAccepted)}
+                        disabled={saveCostingDisabled}
+                        aria-busy={savingQuote}
+                        aria-describedby={actionReadinessMessage ? actionReadinessId : undefined}
+                        aria-label={isStandaloneCostingSession ? topCostingActionLabel : sourceQuoteId ? 'Save quotation with current status' : 'Save and accept quotation'}
+                        title={firstCostingReadinessMessage ?? (saveCostingDisabled ? 'Complete the required inputs before saving.' : undefined)}
+                    >
+                        {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />}
+                        <span className="truncate">{isStandaloneCostingSession ? topCostingActionLabel : sourceQuoteId ? 'Save Quotation' : 'Save & Accept'}</span>
+                    </Button>
+                </div>
+                {canUseProduction && !isStandaloneCostingSession && (
+                    <Button
+                        id="btn-save-quote"
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="h-12 rounded-xl border border-hairline bg-surface px-4 text-[13px] font-semibold text-body hover:bg-surface-soft"
+                        onClick={() => runAction(onSaveDraft)}
+                        disabled={savingQuote || !quoteIsValid}
                         aria-busy={savingQuote}
                     >
-                        {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <Gauge className="h-3.5 w-3.5 shrink-0" />}
-                        <span className="truncate">Start Market Run</span>
+                        {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <Save className="h-3.5 w-3.5 shrink-0" />}
+                        <span className="truncate">Save Quotation</span>
                     </Button>
-                    {allowsPartyOrders && (
-                        <Button type="button" size="sm" variant="outline" className="h-12 rounded-[10px]" onClick={() => runAction(onSaveDraft)} disabled={savingQuote || !quoteIsValid}>
-                            <Save className="h-3.5 w-3.5" /> <span className="truncate">Save Quotation</span>
-                        </Button>
-                    )}
-                    {allowsPartyOrders && (
-                        <Button type="button" size="sm" variant="outline" className="h-12 rounded-[10px]" onClick={() => runAction(onSwitchQuote)} disabled={savingQuote}>
-                            <Play className="h-3.5 w-3.5" /> <span className="truncate">Party Order</span>
-                        </Button>
-                    )}
-                </div>
-            )}
+                )}
+            </div>
 
             {freeCanCalculate === undefined && <><div className="flex flex-wrap items-center gap-2 rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-2">
                 {appliedTemplate && hasActiveQualityRecipeChanges && (
@@ -3496,7 +3423,6 @@ export default function EstimatorClient({
     orgId,
     canUseProduction,
     canUseProductionPipeline,
-    productionMode,
     staleDefaultRateNames,
     organizationName,
     initialPartyNames,
@@ -3518,7 +3444,6 @@ export default function EstimatorClient({
     orgId: string
     canUseProduction: boolean
     canUseProductionPipeline: boolean
-    productionMode: ProductionMode
     staleDefaultRateNames: string[]
     organizationName: string
     initialPartyNames: string[]
@@ -3527,11 +3452,6 @@ export default function EstimatorClient({
     const searchParams = useSearchParams()
     const router = useRouter()
     const productionReturnTo = safeBaseReturnPath(searchParams.get('returnTo'))
-    const estimatorWorkflow = getEstimatorWorkflowConfig(productionMode, searchParams.get('mode'))
-    const [mode, setMode] = useState<EstimatorWorkflowMode>(
-        canUseProduction ? estimatorWorkflow.initialMode : 'quote'
-    )
-    const { allowsPartyOrders, allowsMarketRuns } = estimatorWorkflow
 
     const [widthUnit, setWidthUnit] = useState<'cm' | 'inch'>('inch')
     const [hasLoadedWidthUnit, setHasLoadedWidthUnit] = useState(false)
@@ -3709,12 +3629,10 @@ export default function EstimatorClient({
     const [showDiscardDraft, setShowDiscardDraft] = useState(false)
     const [showExportDialog, setShowExportDialog] = useState(false)
     const [pendingStaleRateSave, setPendingStaleRateSave] = useState<{
-        targetMode: 'quote' | 'market'
         status: 'draft' | 'accepted'
         recordKindOverride?: 'costing' | 'quotation'
     } | null>(null)
     const [pendingQualityVersionSave, setPendingQualityVersionSave] = useState<{
-        targetMode: 'quote' | 'market'
         status: 'draft' | 'accepted'
         recordKindOverride?: 'costing' | 'quotation'
     } | null>(null)
@@ -4160,13 +4078,6 @@ export default function EstimatorClient({
         ))
     }, [buildCurrentDraft, isStandaloneCostingSession, orgId, saveDraft, sourceRecordKind, state])
 
-    // Sync partyName with qualityLabel in market mode for database/draft compatibility
-    useEffect(() => {
-        if (mode === 'market') {
-            setPartyName(qualityLabel)
-        }
-    }, [qualityLabel, mode])
-
     // Auto-fill warpInstruction based on warp rows' labels
     useEffect(() => {
         const currentWarpLabels = state.warpRows
@@ -4217,7 +4128,7 @@ export default function EstimatorClient({
 
     // Party rate memory — debounced 800ms, 3-char minimum
     useEffect(() => {
-        if (mode === 'market' || isStandaloneCostingSession) { setPartyHint(null); return }
+        if (isStandaloneCostingSession) { setPartyHint(null); return }
         if (partyLookupTimerRef[0]) clearTimeout(partyLookupTimerRef[0])
         if (partyName.trim().length < 3) { setPartyHint(null); return }
         const timer = setTimeout(async () => {
@@ -4228,7 +4139,7 @@ export default function EstimatorClient({
         partyLookupTimerRef[0] = timer
         return () => clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isStandaloneCostingSession, mode, partyName])
+    }, [isStandaloneCostingSession, partyName])
 
     const requireCapacityForCurrentCosting = requiresFactoryCapacity(
         state,
@@ -4515,11 +4426,11 @@ export default function EstimatorClient({
         setTemplateName(
             qualityLabel.trim()
             || appliedTemplate?.name
-            || (mode === 'market' ? partyName.trim() : '')
+            || ''
         )
         setTemplateSaveError(null)
         setShowSaveTemplate(true)
-    }, [appliedTemplate?.name, mode, partyName, qualityLabel, freeMode, tx])
+    }, [appliedTemplate?.name, qualityLabel, freeMode, tx])
 
     const openSaveAsNewQualityDialog = useCallback(() => {
         if (!appliedTemplate) {
@@ -4809,7 +4720,6 @@ export default function EstimatorClient({
                 workers: initialWorkers || [],
             },
         })
-        setMode(canUseProduction ? estimatorWorkflow.initialMode : 'quote')
         setEntryMode('quick')
         assumptionsManuallyToggledRef.current = false
         setAssumptionsExpanded(false)
@@ -5011,7 +4921,6 @@ export default function EstimatorClient({
     }
 
     const handleSaveQuote = async (
-        targetMode: 'quote' | 'market' = mode,
         status: 'draft' | 'accepted' = 'draft',
         staleRatesAcknowledged = false,
         recordKindOverride?: 'costing' | 'quotation',
@@ -5023,7 +4932,6 @@ export default function EstimatorClient({
         if (unconfirmedRequestId) return
         setShowValidation(true)
         const saveAsStandaloneCosting = isStandaloneCostingSession || recordKindOverride === 'costing'
-        const effectiveTargetMode = saveAsStandaloneCosting ? 'quote' : targetMode
         const statusForSave: 'draft' | 'sent' | 'accepted' | 'rejected' = !saveAsStandaloneCosting
             && sourceQuoteId
             && sourceQuoteStatus
@@ -5037,45 +4945,35 @@ export default function EstimatorClient({
             void trackPlanEvent('costing_started', { source: 'estimator' })
         }
         if (!warningAlreadyReviewed && requireWarningReview(() => handleSaveQuote(
-            targetMode,
             status,
             staleRatesAcknowledged,
             recordKindOverride,
             qualityUpdateDecision,
             true,
         ))) return
-        if (!saveAsStandaloneCosting && canUseProduction && effectiveTargetMode === 'quote' && !allowsPartyOrders) {
-            return toast.error(tx('Party quotations are unavailable in Market Run only mode'))
-        }
-        if (effectiveTargetMode === 'market' && !allowsMarketRuns) {
-            return toast.error(tx('Market Runs are unavailable in Order-Based only mode'))
-        }
 
-        const resolvedPartyName = effectiveTargetMode === 'market'
-            ? (qualityLabel.trim() || partyName.trim())
-            : saveAsStandaloneCosting
-                ? (partyName.trim() || null)
-                : partyName.trim()
+        const resolvedPartyName = saveAsStandaloneCosting
+            ? (partyName.trim() || null)
+            : partyName.trim()
 
         if (!saveAsStandaloneCosting && !resolvedPartyName) {
-            return toast.error(effectiveTargetMode === 'market' ? tx('Fabric Label is required') : t('estimator.toast.party_required'))
+            return toast.error(t('estimator.toast.party_required'))
         }
         if (!qualityLabel.trim()) return toast.error(t('estimator.toast.quality_required'))
         if (!saveAsStandaloneCosting && (!state.orderQuantityM || state.orderQuantityM <= 0)) {
             return toast.error(tx('Set a quantity before saving'))
         }
         if (staleRateNames.length > 0 && !staleRatesAcknowledged) {
-            setPendingStaleRateSave({ targetMode, status, recordKindOverride })
+            setPendingStaleRateSave({ status, recordKindOverride })
             return
         }
 
-        const shouldOfferSavedQualityUpdate = effectiveTargetMode === 'quote'
-            && saveAsStandaloneCosting
+        const shouldOfferSavedQualityUpdate = saveAsStandaloneCosting
             && Boolean(appliedTemplate)
             && hasSavedQualityRecipeChanges(appliedTemplate!, state)
 
         if (shouldOfferSavedQualityUpdate && !qualityUpdateDecision) {
-            setPendingQualityVersionSave({ targetMode, status, recordKindOverride })
+            setPendingQualityVersionSave({ status, recordKindOverride })
             return
         }
 
@@ -5091,10 +4989,8 @@ export default function EstimatorClient({
             return
         }
 
-        const clientRequestId = effectiveTargetMode === 'quote'
-            ? quoteRequestIdRef.current ?? createClientRequestUuid()
-            : null
-        if (clientRequestId) quoteRequestIdRef.current = clientRequestId
+        const clientRequestId = quoteRequestIdRef.current ?? createClientRequestUuid()
+        quoteRequestIdRef.current = clientRequestId
 
         // Flush both the current inputs and request identity before the action.
         // If the response is lost after commit, reopening and retrying reuses the
@@ -5105,151 +5001,114 @@ export default function EstimatorClient({
         setSavingQuote(true)
 
         try {
-            if (effectiveTargetMode === 'market') {
-                const targetMeters = state.orderQuantityM
-                if (!targetMeters || targetMeters <= 0) {
-                    toast.error(tx('Set a quantity before saving'))
-                    return
-                }
-                const res = await createMarketRunFromEstimator({
-                    fabricLabel:             resolvedPartyName ?? '',
+            void trackPlanEvent('save_attempted', {
+                record_kind: saveAsStandaloneCosting ? 'costing' : 'quotation',
+                is_new_version: Boolean(sourceQuoteId),
+            })
+            const saveRequest: Parameters<typeof saveEstimatorQuoteV3>[0] = {
+                    clientRequestId:          clientRequestId!,
+                    partyName:               resolvedPartyName,
                     qualityLabel:            qualityLabel.trim(),
                     warpInstruction:         warpInstruction.trim() || undefined,
                     weftInstruction:         weftInstruction.trim() || undefined,
-                    targetMeters,
                     estimate:                state,
+                    quotePricePerM:          costingResult.suggestedSellingPricePerM,
                     totalProductionCostPerM: costingResult.productionCostPerM,
-                    notes:                   '',
-                    deadline:                new Date(new Date().getTime() + 30 * 86400000).toISOString().split('T')[0], // 30 days default
+                    status:                  statusForSave,
+                    recordKind:              saveAsStandaloneCosting ? 'costing' : 'quotation',
+                    sourceQuoteId:           sourceQuoteId ?? undefined,
+                    expectedSourceUpdatedAt: sourceQuoteUpdatedAt ?? undefined,
                     templateId:              appliedTemplate?.id,
-                })
-                if ('error' in res) {
-                    toast.error(tx(userFacingError(res.error, 'The Market Run could not be started. Try again.')))
-                } else {
-                    clearDraft()
-                    suppressAutosaveUntilChanged()
-                    setSourceQuoteId(null)
-                    setSourceQuoteUpdatedAt(null)
-                    setSourceQuoteVersionNumber(null)
-                    setSourceQuoteCreatedAt(null)
-                    setSourceQuoteStatus(null)
-                    setSourceState(null)
-                    setSourceFactoryProfileUpdatedAt(null)
-                    setSourceRecordKind(null)
-                    quoteRequestIdRef.current = null
-                    toast.success(tx('Market Run started and costing saved'))
-                    router.push('/owner/production')
-                }
-            } else {
-                void trackPlanEvent('save_attempted', {
+                    expectedTemplateUpdatedAt: appliedTemplate?.updated_at,
+                    // Reopening a historical Cost Estimate keeps the
+                    // baseline provenance that belongs to its inputs. A
+                    // changed factory default is for future estimates; it
+                    // must not make an edited old estimate look as though
+                    // the new default supplied all of its numbers.
+                    factoryProfileUpdatedAt: (sourceQuoteId
+                        ? sourceFactoryProfileUpdatedAt ?? factoryBaselineUpdatedAt
+                        : factoryBaselineUpdatedAt) ?? undefined,
+                    updateSavedQuality: qualityUpdateDecision === 'version_and_quality',
+            }
+            pendingSaveRequestRef.current = saveRequest
+            saveDraftNow({ ...buildCurrentDraft(clientRequestId, saveRequest.recordKind), pendingSaveRequest: saveRequest })
+            const mutationOutcome = await runMutationWithTimeout(() => saveEstimatorQuoteV3(saveRequest), 15_000)
+
+            if (mutationOutcome.status === 'unknown') {
+                setUnconfirmedRequestId(clientRequestId)
+                void trackPlanEvent('save_outcome_unknown', {
                     record_kind: saveAsStandaloneCosting ? 'costing' : 'quotation',
-                    is_new_version: Boolean(sourceQuoteId),
                 })
-                const saveRequest: Parameters<typeof saveEstimatorQuoteV3>[0] = {
-                        clientRequestId:          clientRequestId!,
-                        partyName:               resolvedPartyName,
-                        qualityLabel:            qualityLabel.trim(),
-                        warpInstruction:         warpInstruction.trim() || undefined,
-                        weftInstruction:         weftInstruction.trim() || undefined,
-                        estimate:                state,
-                        quotePricePerM:          costingResult.suggestedSellingPricePerM,
-                        totalProductionCostPerM: costingResult.productionCostPerM,
-                        status:                  statusForSave,
-                        recordKind:              saveAsStandaloneCosting ? 'costing' : 'quotation',
-                        sourceQuoteId:           sourceQuoteId ?? undefined,
-                        expectedSourceUpdatedAt: sourceQuoteUpdatedAt ?? undefined,
-                        templateId:              appliedTemplate?.id,
-                        expectedTemplateUpdatedAt: appliedTemplate?.updated_at,
-                        // Reopening a historical Cost Estimate keeps the
-                        // baseline provenance that belongs to its inputs. A
-                        // changed factory default is for future estimates; it
-                        // must not make an edited old estimate look as though
-                        // the new default supplied all of its numbers.
-                        factoryProfileUpdatedAt: (sourceQuoteId
-                            ? sourceFactoryProfileUpdatedAt ?? factoryBaselineUpdatedAt
-                            : factoryBaselineUpdatedAt) ?? undefined,
-                        updateSavedQuality: qualityUpdateDecision === 'version_and_quality',
-                }
-                pendingSaveRequestRef.current = saveRequest
-                saveDraftNow({ ...buildCurrentDraft(clientRequestId, saveRequest.recordKind), pendingSaveRequest: saveRequest })
-                const mutationOutcome = await runMutationWithTimeout(() => saveEstimatorQuoteV3(saveRequest), 15_000)
+                // The persistent recovery panel is the single source of save status.
+                if (clientRequestId) await checkUnconfirmedSave(clientRequestId)
+                return
+            }
 
-                if (mutationOutcome.status === 'unknown') {
-                    setUnconfirmedRequestId(clientRequestId)
-                    void trackPlanEvent('save_outcome_unknown', {
-                        record_kind: saveAsStandaloneCosting ? 'costing' : 'quotation',
-                    })
-                    // The persistent recovery panel is the single source of save status.
-                    if (clientRequestId) await checkUnconfirmedSave(clientRequestId)
-                    return
+            const res = mutationOutcome.value
+            if (res.success) {
+                const wasEditingCosting = Boolean(sourceQuoteId)
+                if (res.quoteId) reportConfirmedSave(saveRequest, res.quoteId)
+                void trackPlanEvent('costing_completed', {
+                    record_kind: saveAsStandaloneCosting ? 'costing' : 'quotation',
+                    edited: wasEditingCosting,
+                })
+                void trackPlanEvent('costing_saved', {
+                    record_kind: saveAsStandaloneCosting ? 'costing' : 'quotation',
+                    edited: wasEditingCosting,
+                })
+                if (wasEditingCosting && saveAsStandaloneCosting) {
+                    void trackPlanEvent('costing_recalculated', { source: 'saved_costing' })
                 }
-
-                const res = mutationOutcome.value
-                if (res.success) {
-                    const wasEditingCosting = Boolean(sourceQuoteId)
-                    if (res.quoteId) reportConfirmedSave(saveRequest, res.quoteId)
-                    void trackPlanEvent('costing_completed', {
-                        record_kind: saveAsStandaloneCosting ? 'costing' : 'quotation',
-                        edited: wasEditingCosting,
+                if (resolvedPartyName) {
+                    setPartyNames(current => {
+                        if (current.some(name => name.toLocaleLowerCase('en-IN') === resolvedPartyName.toLocaleLowerCase('en-IN'))) {
+                            return current
+                        }
+                        return [resolvedPartyName, ...current].slice(0, 25)
                     })
-                    void trackPlanEvent('costing_saved', {
-                        record_kind: saveAsStandaloneCosting ? 'costing' : 'quotation',
-                        edited: wasEditingCosting,
-                    })
-                    if (wasEditingCosting && saveAsStandaloneCosting) {
-                        void trackPlanEvent('costing_recalculated', { source: 'saved_costing' })
-                    }
-                    if (resolvedPartyName) {
-                        setPartyNames(current => {
-                            if (current.some(name => name.toLocaleLowerCase('en-IN') === resolvedPartyName.toLocaleLowerCase('en-IN'))) {
-                                return current
-                            }
-                            return [resolvedPartyName, ...current].slice(0, 25)
-                        })
-                    }
-                    clearDraft()
-                    suppressAutosaveUntilChanged()
-                    setSourceQuoteId(null)
-                    setSourceQuoteUpdatedAt(null)
-                    setSourceQuoteVersionNumber(null)
-                    setSourceQuoteCreatedAt(null)
-                    setSourceQuoteStatus(null)
-                    setSourceState(null)
-                    setSourceFactoryProfileUpdatedAt(null)
-                    setSourceRecordKind(null)
-                    quoteRequestIdRef.current = null
-                    const savedVersion = 'versionNumber' in res && res.versionNumber ? res.versionNumber : 1
-                    const savedAt = 'updatedAt' in res && res.updatedAt ? res.updatedAt : new Date().toISOString()
-                    toast.success(
-                        tx(!saveAsStandaloneCosting
-                            ? (statusForSave === 'accepted' ? 'Quotation saved and accepted!' : t('estimator.toast.converted_success'))
-                            : ('noChange' in res && res.noChange)
-                                ? t('estimator.sprint1.costing_no_change', { version: String(('versionNumber' in res && res.versionNumber) || 1) })
-                                : (qualityUpdateDecision === 'version_and_quality'
-                                    ? `${wasEditingCosting ? 'New costing version' : 'Costing'} saved and Saved Quality updated`
-                                    : (wasEditingCosting ? 'New costing version saved' : 'Costing saved'))),
-                        {
-                            description: tx(`${!saveAsStandaloneCosting ? 'Quotation' : 'Costing snapshot'} v${savedVersion} · ${formatSuratDateTime(savedAt)} · rate basis ₹${Number(state.warpRows[0]?.yarnRate ?? 0).toFixed(2)}/kg${sourceQuoteStatus ? ` · status preserved as ${sourceQuoteStatus}` : ''}.`),
-                        },
-                    )
-                    if (saveAsStandaloneCosting && res.quoteId) {
-                        confirmSavedCosting({ id: res.quoteId, version_number: savedVersion, updated_at: savedAt, created_at: ('createdAt' in res && res.createdAt) || savedAt })
-                        // Saving may also update the reusable recipe's concurrency token.
-                        await refreshSavedQualityTokens()
-                    } else router.push('/owner/quotes')
-                } else {
-                    setUnconfirmedRequestId(null)
-                    pendingSaveRequestRef.current = null
-                    quoteRequestIdRef.current = null
-                    saveDraftNow(buildCurrentDraft(null))
-                    void trackPlanEvent('save_failed', {
-                        record_kind: saveAsStandaloneCosting ? 'costing' : 'quotation',
-                    })
-                    toast.error(tx(userFacingError(res.error, 'The Customer Quotation could not be saved. Try again.')))
                 }
+                clearDraft()
+                suppressAutosaveUntilChanged()
+                setSourceQuoteId(null)
+                setSourceQuoteUpdatedAt(null)
+                setSourceQuoteVersionNumber(null)
+                setSourceQuoteCreatedAt(null)
+                setSourceQuoteStatus(null)
+                setSourceState(null)
+                setSourceFactoryProfileUpdatedAt(null)
+                setSourceRecordKind(null)
+                quoteRequestIdRef.current = null
+                const savedVersion = 'versionNumber' in res && res.versionNumber ? res.versionNumber : 1
+                const savedAt = 'updatedAt' in res && res.updatedAt ? res.updatedAt : new Date().toISOString()
+                toast.success(
+                    tx(!saveAsStandaloneCosting
+                        ? (statusForSave === 'accepted' ? 'Quotation saved and accepted!' : t('estimator.toast.converted_success'))
+                        : ('noChange' in res && res.noChange)
+                            ? t('estimator.sprint1.costing_no_change', { version: String(('versionNumber' in res && res.versionNumber) || 1) })
+                            : (qualityUpdateDecision === 'version_and_quality'
+                                ? `${wasEditingCosting ? 'New costing version' : 'Costing'} saved and Saved Quality updated`
+                                : (wasEditingCosting ? 'New costing version saved' : 'Costing saved'))),
+                    {
+                        description: tx(`${!saveAsStandaloneCosting ? 'Quotation' : 'Costing snapshot'} v${savedVersion} · ${formatSuratDateTime(savedAt)} · rate basis ₹${Number(state.warpRows[0]?.yarnRate ?? 0).toFixed(2)}/kg${sourceQuoteStatus ? ` · status preserved as ${sourceQuoteStatus}` : ''}.`),
+                    },
+                )
+                if (saveAsStandaloneCosting && res.quoteId) {
+                    confirmSavedCosting({ id: res.quoteId, version_number: savedVersion, updated_at: savedAt, created_at: ('createdAt' in res && res.createdAt) || savedAt })
+                    // Saving may also update the reusable recipe's concurrency token.
+                    await refreshSavedQualityTokens()
+                } else router.push('/owner/quotes')
+            } else {
+                setUnconfirmedRequestId(null)
+                pendingSaveRequestRef.current = null
+                quoteRequestIdRef.current = null
+                saveDraftNow(buildCurrentDraft(null))
+                void trackPlanEvent('save_failed', {
+                    record_kind: saveAsStandaloneCosting ? 'costing' : 'quotation',
+                })
+                toast.error(tx(userFacingError(res.error, 'The Customer Quotation could not be saved. Try again.')))
             }
         } catch (error) {
-            if (effectiveTargetMode === 'quote' && clientRequestId) {
+            if (clientRequestId) {
                 setUnconfirmedRequestId(clientRequestId)
                 await checkUnconfirmedSave(clientRequestId)
                 return
@@ -5269,65 +5128,6 @@ export default function EstimatorClient({
         }
     }
 
-    const handleStartPartyOrder = async (warningAlreadyReviewed = false) => {
-        if (saveQuoteLockRef.current || savingQuote) return
-        setShowValidation(true)
-        if (!hasValidCostResult) return toast.error(tx(firstCostingReadinessMessage ?? 'Complete the highlighted inputs before starting the party order.'))
-        if (!warningAlreadyReviewed && requireWarningReview(() => handleStartPartyOrder(true))) return
-        if (!partyName.trim()) return toast.error(t('estimator.toast.party_required'))
-        if (!qualityLabel.trim()) return toast.error(t('estimator.toast.quality_required'))
-        if (!state.orderQuantityM || state.orderQuantityM <= 0) {
-            return toast.error(tx('Set a quantity before starting the order'))
-        }
-
-        const quotePricePerM = costingResult.suggestedSellingPricePerM
-        if (!quotePricePerM || quotePricePerM <= 0 || costingResult.productionCostPerM <= 0) {
-            return toast.error(tx('Complete the estimate before starting the order'))
-        }
-
-        saveQuoteLockRef.current = true
-        setSavingQuote(true)
-
-        try {
-            const result = await startPartyOrderFromEstimator({
-                estimatorState: state,
-                partyName: partyName.trim(),
-                qualityLabel: qualityLabel.trim(),
-                warpInstruction: warpInstruction.trim() || undefined,
-                weftInstruction: weftInstruction.trim() || undefined,
-                targetMeters: state.orderQuantityM,
-                deadline: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
-                quotePricePerM,
-                costPerM: costingResult.productionCostPerM,
-            })
-
-            if ('error' in result) {
-                toast.error(tx(userFacingError(result.error, 'Party Order could not be started. Try again.')))
-                return
-            }
-
-            clearDraft()
-            suppressAutosaveUntilChanged()
-            setSourceQuoteId(null)
-            setSourceQuoteUpdatedAt(null)
-            setSourceQuoteVersionNumber(null)
-            setSourceQuoteCreatedAt(null)
-            setSourceQuoteStatus(null)
-            setSourceState(null)
-            setSourceFactoryProfileUpdatedAt(null)
-            setSourceRecordKind(null)
-            quoteRequestIdRef.current = null
-            toast.success(tx('Party order started and costing saved'))
-            router.push('/owner/production')
-        } catch (error) {
-            console.error('Failed to start party order:', error)
-            toast.error(tx(userFacingError(error, 'Party Order could not be started. Check the estimate and try again.')))
-        } finally {
-            setSavingQuote(false)
-            saveQuoteLockRef.current = false
-        }
-    }
-
     if (loading) {
         return (
             <div className="flex items-center justify-center p-20">
@@ -5337,7 +5137,7 @@ export default function EstimatorClient({
     }
 
     const hasOrderQty    = !!(state.orderQuantityM && state.orderQuantityM > 0)
-    const showPartyField = canUseProduction && !isStandaloneCostingSession && mode !== 'market'
+    const showPartyField = canUseProduction && !isStandaloneCostingSession
     const requiresCommercialContext = !isStandaloneCostingSession
     const actionReadinessId = 'estimator-action-readiness'
     // Validation: Pilot Safety Rails
@@ -5466,7 +5266,7 @@ export default function EstimatorClient({
                 secondaryReady={templatesLoaded}
             />
             <PageHeader
-                title={mode === 'market' ? tx('Market estimate') : tx('Cost estimate')}
+                title={tx('Cost estimate')}
             />
             {freeMode && (
                 <FreeTransactionRecovery
@@ -5783,7 +5583,6 @@ export default function EstimatorClient({
                         freePlan={freeMode}
                         standalone={isStandaloneCostingSession}
                         existingCosting={Boolean(sourceQuoteId && sourceRecordKind === 'costing')}
-                        marketMode={mode === 'market'}
                         productionPipeline={canUseProductionPipeline}
                         overheadMode={state.overheadMode}
                         orgId={orgId}
@@ -5865,7 +5664,7 @@ export default function EstimatorClient({
                                     </div>
                                     <div className="min-w-0">
                                         <p className="mb-1 text-[11px] font-semibold leading-4 text-[var(--color-muted)]" aria-label={t('estimator.price_helpers.suggested_selling_price')}>
-                                            {mode === 'market' ? 'Target price / m' : t('common.suggested_selling_price_per_m')}
+                                            {t('common.suggested_selling_price_per_m')}
                                         </p>
                                         <p className="max-w-full break-words font-mono text-[clamp(1.45rem,7vw,2.2rem)] font-semibold leading-[1.05] tracking-tight tabular-nums text-[var(--color-yarn-orange)]">
                                             {hasValidCostResult && costingResult.quoteIsValid ? `₹${costingResult.suggestedSellingPricePerM.toFixed(2)}` : '—'}
@@ -5997,146 +5796,62 @@ export default function EstimatorClient({
                         <div className="space-y-2 2xl:w-[520px]">
                             <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
 
-                            {mode === 'quote' || isStandaloneCostingSession ? (
-                                <>
-                                    {/* PRIMARY: atomically create the accepted quote and live order */}
-                                    {canUseProduction && !isStandaloneCostingSession && <Button
-                                        id="legacy-btn-start-party-order"
-                                        size="sm"
-                                        className="col-span-2 h-12 rounded-xl bg-loom px-5 text-[14px] font-semibold text-white shadow-xs transition-all duration-150 hover:bg-loom-elevated hover:text-white motion-safe:hover:-translate-y-0.5 active:scale-[0.98] sm:col-span-1"
-                                        onClick={() => void handleStartPartyOrder()}
-                                        disabled={savingQuote || !hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !costingResult.quoteIsValid}
-                                        aria-describedby={actionReadinessMessage ? actionReadinessId : undefined}
-                                        aria-busy={savingQuote}
-                                        title={(!hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !costingResult.quoteIsValid)
-                                            ? tx('Complete party, quality, quantity, and cost result first.')
-                                            : undefined
-                                        }
-                                    >
-                                        {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <Play className="h-3.5 w-3.5 shrink-0" />}
-                                        <span className="truncate">{tx('Start Party Order')}</span>
-                                    </Button>}
+                            {/* Costing remains the primary action. */}
+                            <Button
+                                id="legacy-btn-save-accept"
+                                data-testid="legacy-save-costing-action"
+                                size="sm"
+                                variant={isStandaloneCostingSession ? 'default' : 'outline'}
+                                className={isStandaloneCostingSession
+                                    ? 'col-span-2 h-12 rounded-xl bg-loom px-5 text-[14px] font-semibold text-white shadow-xs transition-all duration-150 hover:bg-loom-elevated hover:text-white motion-safe:hover:-translate-y-0.5 active:scale-[0.98] sm:col-span-1'
+                                    : 'h-12 rounded-xl border border-hairline bg-surface px-5 text-[14px] font-semibold text-body hover:bg-surface-soft'}
+                                onClick={() => handleSaveQuote(isStandaloneCostingSession ? 'draft' : 'accepted')}
+                                disabled={freeMode ? !freeCanCalculate : savingQuote || !hasValidCostResult || (requiresCommercialContext && !hasOrderQty) || (requiresCommercialContext && !partyName.trim()) || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || (requiresCommercialContext && !costingResult.quoteIsValid)}
+                                aria-describedby={actionReadinessMessage ? actionReadinessId : undefined}
+                                aria-busy={savingQuote}
+                                aria-label={!isStandaloneCostingSession
+                                    ? sourceQuoteId ? 'Save quotation with current status' : 'Save and accept quotation'
+                                    : sourceQuoteId
+                                        ? 'Save new immutable costing version'
+                                        : 'Save costing snapshot'}
+                                title={firstCostingReadinessMessage ?? (((requiresCommercialContext && !hasOrderQty) || (requiresCommercialContext && !partyName.trim()) || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || (requiresCommercialContext && !costingResult.quoteIsValid))
+                                    ? (requiresCommercialContext ? tx('Complete customer, quality, quantity, and cost result first.') : tx('Complete quality and cost inputs first.'))
+                                    : undefined)}
+                            >
+                                {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />}
+                                <span className="truncate">{tx(!isStandaloneCostingSession ? (sourceQuoteId ? 'Save Quotation' : 'Save & Accept') : (sourceQuoteId ? 'Save New Version' : 'Save Costing'))}</span>
+                            </Button>
 
-                                    {/* Costing remains the primary action. */}
-                                    <Button
-                                        id="legacy-btn-save-accept"
-                                        data-testid="legacy-save-costing-action"
-                                        size="sm"
-                                        variant={isStandaloneCostingSession ? 'default' : 'outline'}
-                                        className={isStandaloneCostingSession
-                                            ? 'col-span-2 h-12 rounded-xl bg-loom px-5 text-[14px] font-semibold text-white shadow-xs transition-all duration-150 hover:bg-loom-elevated hover:text-white motion-safe:hover:-translate-y-0.5 active:scale-[0.98] sm:col-span-1'
-                                            : 'h-12 rounded-xl border border-hairline bg-surface px-5 text-[14px] font-semibold text-body hover:bg-surface-soft'}
-                                        onClick={() => handleSaveQuote('quote', isStandaloneCostingSession ? 'draft' : 'accepted')}
-                                        disabled={freeMode ? !freeCanCalculate : savingQuote || !hasValidCostResult || (requiresCommercialContext && !hasOrderQty) || (requiresCommercialContext && !partyName.trim()) || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || (requiresCommercialContext && !costingResult.quoteIsValid)}
-                                        aria-describedby={actionReadinessMessage ? actionReadinessId : undefined}
-                                        aria-busy={savingQuote}
-                                        aria-label={!isStandaloneCostingSession
-                                            ? sourceQuoteId ? 'Save quotation with current status' : 'Save and accept quotation'
-                                            : sourceQuoteId
-                                                ? 'Save new immutable costing version'
-                                                : 'Save costing snapshot'}
-                                        title={firstCostingReadinessMessage ?? (((requiresCommercialContext && !hasOrderQty) || (requiresCommercialContext && !partyName.trim()) || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || (requiresCommercialContext && !costingResult.quoteIsValid))
-                                            ? (requiresCommercialContext ? tx('Complete customer, quality, quantity, and cost result first.') : tx('Complete quality and cost inputs first.'))
-                                            : undefined)}
-                                    >
-                                        {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />}
-                                        <span className="truncate">{tx(!isStandaloneCostingSession ? (sourceQuoteId ? 'Save Quotation' : 'Save & Accept') : (sourceQuoteId ? 'Save New Version' : 'Save Costing'))}</span>
-                                    </Button>
-
-                                    {isStandaloneCostingSession && (
-                                        <Button
-                                            id="legacy-btn-export-cost-sheet"
-                                            size="sm"
-                                            variant="outline"
-                                            className="h-12 rounded-xl border border-hairline bg-surface px-5 text-[14px] font-semibold text-ink shadow-xs hover:bg-surface-soft"
-                                            onClick={() => setShowExportDialog(true)}
-                                            disabled={!exportModel}
-                                            aria-describedby={!exportModel ? 'export-cost-sheet-hint' : undefined}
-                                            title={exportModel ? tx('Create an internal cost sheet or customer quotation') : tx('Correct the highlighted inputs before exporting')}
-                                        >
-                                            <FileDown className="h-3.5 w-3.5 shrink-0" />
-                                            <span className="truncate">{tx('Export Cost Sheet')}</span>
-                                        </Button>
-                                    )}
-
-                                    {/* TERTIARY: Save Quote */}
-                                    {canUseProduction && !isStandaloneCostingSession && <Button
-                                        id="legacy-btn-save-quote"
-                                        size="sm"
-                                        variant="outline"
-                                        className="h-12 rounded-xl border border-hairline bg-surface px-5 text-[14px] font-semibold text-body hover:bg-surface-soft"
-                                        onClick={() => handleSaveQuote('quote', 'draft')}
-                                        disabled={savingQuote || !costingResult.quoteIsValid}
-                                        aria-describedby={actionReadinessMessage ? actionReadinessId : undefined}
-                                        aria-busy={savingQuote}
-                                    >
-                                        {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <Save className="h-3.5 w-3.5 shrink-0" />}
-                                        <span className="truncate">{tx('Save Quotation')}</span>
-                                    </Button>}
-
-                                    {/* TERTIARY: Switch to Market mode */}
-                                    {canUseProduction && !isStandaloneCostingSession && allowsMarketRuns && (
-                                        <Button
-                                            id="legacy-btn-switch-market"
-                                            size="sm"
-                                            variant="ghost"
-                                            className="h-12 rounded-xl border border-hairline bg-surface px-5 text-[14px] font-semibold text-body hover:bg-surface-soft"
-                                            onClick={() => setMode('market')}
-                                        >
-                                            <Gauge className="h-3.5 w-3.5 shrink-0" />
-                                            <span className="truncate">{tx('Market Run')}</span>
-                                        </Button>
-                                    )}
-                                </>
-                            ) : (
-                                <>
-                                    {/* PRIMARY: Start Market Run */}
-                                    <Button
-                                        id="legacy-btn-start-market-run"
-                                        size="sm"
-                                        className="col-span-2 h-12 rounded-xl bg-loom px-5 text-[14px] font-semibold text-white shadow-xs transition-all duration-150 hover:bg-loom-elevated hover:text-white motion-safe:hover:-translate-y-0.5 active:scale-[0.98] sm:col-span-1"
-                                        onClick={() => handleSaveQuote('market')}
-                                        disabled={savingQuote || !hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !costingResult.quoteIsValid}
-                                        aria-describedby={actionReadinessMessage ? actionReadinessId : undefined}
-                                        aria-busy={savingQuote}
-                                        title={(!hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !costingResult.quoteIsValid)
-                                            ? tx('Complete Fabric Quality, quantity, and Cost Estimate first.')
-                                            : undefined
-                                        }
-                                    >
-                                        {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <Gauge className="h-3.5 w-3.5 shrink-0" />}
-                                        <span className="truncate">{tx('Start Market Run')}</span>
-                                    </Button>
-
-                                    {/* SECONDARY: Save Quote (draft) */}
-                                    {allowsPartyOrders && <Button
-                                        id="legacy-btn-save-quote-market"
-                                        size="sm"
-                                        variant="outline"
-                                        className="h-12 rounded-[10px] border border-[var(--color-hairline)] bg-white px-5 text-[14px] font-semibold text-[var(--color-body)] hover:bg-[var(--color-surface-soft)]"
-                                        onClick={() => handleSaveQuote('quote')}
-                                        disabled={savingQuote || !costingResult.quoteIsValid}
-                                        aria-describedby={actionReadinessMessage ? actionReadinessId : undefined}
-                                        aria-busy={savingQuote}
-                                    >
-                                        <Save className="h-3.5 w-3.5 shrink-0" />
-                                        <span className="truncate">{tx('Save Quotation')}</span>
-                                    </Button>}
-
-                                    {/* TERTIARY: Transition to Party Order mode */}
-                                    {allowsPartyOrders && <Button
-                                        id="legacy-btn-start-party-order-market"
-                                        size="sm"
-                                        variant="ghost"
-                                        className="h-12 rounded-[10px] border border-[var(--color-hairline)] bg-white px-5 text-[14px] font-semibold text-[var(--color-body)] hover:bg-[var(--color-surface-soft)]"
-                                        onClick={() => setMode('quote')}
-                                        disabled={savingQuote}
-                                    >
-                                        <Play className="h-3.5 w-3.5 shrink-0" />
-                                        <span className="truncate">{tx('Party Order')}</span>
-                                    </Button>}
-                                </>
+                            {isStandaloneCostingSession && (
+                                <Button
+                                    id="legacy-btn-export-cost-sheet"
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-12 rounded-xl border border-hairline bg-surface px-5 text-[14px] font-semibold text-ink shadow-xs hover:bg-surface-soft"
+                                    onClick={() => setShowExportDialog(true)}
+                                    disabled={!exportModel}
+                                    aria-describedby={!exportModel ? 'export-cost-sheet-hint' : undefined}
+                                    title={exportModel ? tx('Create an internal cost sheet or customer quotation') : tx('Correct the highlighted inputs before exporting')}
+                                >
+                                    <FileDown className="h-3.5 w-3.5 shrink-0" />
+                                    <span className="truncate">{tx('Export Cost Sheet')}</span>
+                                </Button>
                             )}
+
+                            {/* TERTIARY: Save Quote */}
+                            {canUseProduction && !isStandaloneCostingSession && <Button
+                                id="legacy-btn-save-quote"
+                                size="sm"
+                                variant="outline"
+                                className="h-12 rounded-xl border border-hairline bg-surface px-5 text-[14px] font-semibold text-body hover:bg-surface-soft"
+                                onClick={() => handleSaveQuote('draft')}
+                                disabled={savingQuote || !costingResult.quoteIsValid}
+                                aria-describedby={actionReadinessMessage ? actionReadinessId : undefined}
+                                aria-busy={savingQuote}
+                            >
+                                {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <Save className="h-3.5 w-3.5 shrink-0" />}
+                                <span className="truncate">{tx('Save Quotation')}</span>
+                            </Button>}
 
                             {/* Save / Update Quality template button */}
                             {appliedTemplate ? (
@@ -6600,7 +6315,7 @@ export default function EstimatorClient({
                             )}
 
                             {/* Fabric / Quality Name (visible in both modes) */}
-                            <div className={mode === 'market' || !showPartyField ? "col-span-1 md:col-span-2 space-y-1.5" : "space-y-1.5"}>
+                            <div className={!showPartyField ? "col-span-1 md:col-span-2 space-y-1.5" : "space-y-1.5"}>
                                 <Label className="text-[10px] uppercase font-bold text-slate-500">
                                     {t('estimator.order_basics.fabric_quality_name')}
                                 </Label>
@@ -6615,9 +6330,6 @@ export default function EstimatorClient({
                                         if (appliedTemplate) return
                                         const val = e.target.value
                                         setQualityLabelFromUser(val)
-                                        if (mode === 'market') {
-                                            setPartyNameFromUser(val)
-                                        }
                                     }}
                                     placeholder="e.g. 60g Georgette, D.246, Japan Satin"
                                     className="font-bold border-slate-200 h-11"
@@ -7644,7 +7356,7 @@ export default function EstimatorClient({
                 {/* 9. Quotation assumptions / Order simulation */}
                 <EstimatorCard accent="weft">
                     <SectionHeader
-                        title={!canUseProduction ? t('estimator.simulation.base_title') : mode === 'market' ? t('estimator.simulation.market_title') : t('estimator.simulation.title')}
+                        title={!canUseProduction ? t('estimator.simulation.base_title') : t('estimator.simulation.title')}
                         detail={!canUseProduction ? <p className="text-[11px] text-[var(--color-muted)] font-normal">{t('estimator.simulation.base_description')}</p> : undefined}
                         icon={Coins}
                         accent="weft"
@@ -7654,7 +7366,7 @@ export default function EstimatorClient({
                     <CardContent className="p-5 sm:p-6 space-y-5">
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                             <NumField fieldKey="orderQuantityM"
-                                label={mode === 'market' ? t('estimator.field_labels.market_target') : t('estimator.field_labels.simulation_qty')}
+                                label={t('estimator.field_labels.simulation_qty')}
                                 value={state.orderQuantityM}
                                 onChange={v => dispatch({ type: 'SET', field: 'orderQuantityM', value: v })}
                                 unit="m"
@@ -7722,10 +7434,7 @@ export default function EstimatorClient({
                     <EstimatorLiveCostActions
                         freeCanCalculate={freeMode ? freeCanCalculate : undefined}
                         isStandaloneCostingSession={isStandaloneCostingSession}
-                        mode={mode}
                         canUseProduction={canUseProduction}
-                        allowsPartyOrders={allowsPartyOrders}
-                        allowsMarketRuns={allowsMarketRuns}
                         sourceQuoteId={sourceQuoteId}
                         savingQuote={savingQuote}
                         savingTemplate={savingTemplate}
@@ -7743,14 +7452,10 @@ export default function EstimatorClient({
                         actionReadinessMessage={actionReadinessMessage}
                         actionReadinessId={actionReadinessId}
                         topCostingActionLabel={topCostingActionLabel}
-                        onSaveCosting={() => void handleSaveQuote('quote', 'draft')}
-                        onStartPartyOrder={() => void handleStartPartyOrder()}
-                        onSaveAccepted={() => void handleSaveQuote('quote', 'accepted')}
+                        onSaveCosting={() => void handleSaveQuote('draft')}
+                        onSaveAccepted={() => void handleSaveQuote('accepted')}
                         onExport={() => setShowExportDialog(true)}
-                        onSaveDraft={() => void handleSaveQuote('quote', 'draft')}
-                        onStartMarketRun={() => void handleSaveQuote('market')}
-                        onSwitchMarket={() => setMode('market')}
-                        onSwitchQuote={() => setMode('quote')}
+                        onSaveDraft={() => void handleSaveQuote('draft')}
                         onUpdateQuality={() => void handleUpdateTemplate()}
                         onSaveAsNewQuality={() => openSaveAsNewQualityDialog()}
                         onNewQuality={() => setShowConfirmNewQuality(true)}
@@ -7814,7 +7519,7 @@ export default function EstimatorClient({
                             onClick={() => {
                                 const pending = pendingStaleRateSave
                                 setPendingStaleRateSave(null)
-                                if (pending) void handleSaveQuote(pending.targetMode, pending.status, true, pending.recordKindOverride, undefined, true)
+                                if (pending) void handleSaveQuote(pending.status, true, pending.recordKindOverride, undefined, true)
                             }}
                         >
                             Save with These Rates
@@ -7861,7 +7566,7 @@ export default function EstimatorClient({
                             onClick={() => {
                                 const pending = pendingQualityVersionSave
                                 setPendingQualityVersionSave(null)
-                                if (pending) void handleSaveQuote(pending.targetMode, pending.status, true, pending.recordKindOverride, 'version_only', true)
+                                if (pending) void handleSaveQuote(pending.status, true, pending.recordKindOverride, 'version_only', true)
                             }}
                         >
                             {t('estimator.sprint1.save_version_only')}
@@ -7871,7 +7576,7 @@ export default function EstimatorClient({
                             onClick={() => {
                                 const pending = pendingQualityVersionSave
                                 setPendingQualityVersionSave(null)
-                                if (pending) void handleSaveQuote(pending.targetMode, pending.status, true, pending.recordKindOverride, 'version_and_quality', true)
+                                if (pending) void handleSaveQuote(pending.status, true, pending.recordKindOverride, 'version_and_quality', true)
                             }}
                         >
                             {t('estimator.sprint1.save_version_update_quality')}

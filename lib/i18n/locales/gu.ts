@@ -1312,9 +1312,7 @@ export const gu = {
       base_title: "વેચાણ કિંમત અને જથ્થો",
       base_description: "દર-મીટર ખર્ચ માટે વૈકલ્પિક; જ્યારે તમને ગ્રાહક કિંમત અથવા કુલ કિંમત જોઈતી હોય ત્યારે પૂર્ણ કરો.",
       title: "કોસ્ટિંગ જથ્થો",
-      market_title: "માર્કેટ રન અને જથ્થો",
       quantity: "કોસ્ટિંગ જથ્થો",
-      market_target: "લક્ષ્ય ઉત્પાદન (Target Production)",
       quantity_hint: "કુલ કોસ્ટિંગ અને વેચાણ કિંમતની ગણતરી કરે છે",
       commission: "બ્રોકર કમિશન %",
       transport: "ટ્રાન્સપોર્ટ / મી"
@@ -1355,7 +1353,6 @@ export const gu = {
       dyeing_processing: "ડાઇંગ/પ્રોસેસિંગ",
       finishing_per_m: "ફિનિશિંગ / મી",
       simulation_qty: "કોસ્ટિંગ જથ્થો",
-      market_target: "લક્ષ્ય ઉત્પાદન (Target Production)",
       broker_comm: "બ્રોકર કમિશન %",
       transport_per_m: "ટ્રાન્સપોર્ટ / મી"
     },

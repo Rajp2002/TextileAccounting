@@ -1315,9 +1315,7 @@ export const en = {
       title: "Cost Estimate Quantity",
       base_title: "Selling price and quantity",
       base_description: "Optional for a per-metre cost; complete when you want a customer price or total value.",
-      market_title: "Market Run & Quantity",
       quantity: "Cost Estimate Quantity",
-      market_target: "Target Production",
       quantity_hint: "Calculates the total costing and selling price",
       commission: "Broker Comm. %",
       transport: "Transport / m"
@@ -1358,7 +1356,6 @@ export const en = {
       dyeing_processing: "Dyeing/Processing",
       finishing_per_m: "Finishing / m",
       simulation_qty: "Cost Estimate Quantity",
-      market_target: "Target Production",
       broker_comm: "Broker Comm. %",
       transport_per_m: "Transport / m"
     },

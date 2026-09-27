@@ -22,7 +22,6 @@ import { railPrimaryAction } from '@/components/ui/rail'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import {
     Dialog,
     DialogClose,
@@ -32,9 +31,8 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog'
-import { auditHistoricalCostingSnapshot, convertAcceptedQuoteToOrder, getEstimatorQuoteDetail, getQuoteStatusHistory, updateQuoteStatus, updateSavedCostingLibraryState } from '../estimator/actions'
+import { auditHistoricalCostingSnapshot, getEstimatorQuoteDetail, getQuoteStatusHistory, updateQuoteStatus, updateSavedCostingLibraryState } from '../estimator/actions'
 import { toast, userFacingError } from '@/lib/app-notifications'
-import { addDays, format } from 'date-fns'
 import { formatDateOnly, formatTimestampDate } from '@/lib/format'
 import { formatSuratDateTime } from '@/lib/time'
 import {
@@ -43,7 +41,6 @@ import {
     FileText,
     ArrowRight,
     Loader2,
-    Package,
     AlertTriangle,
     Copy,
     XCircle,
@@ -944,14 +941,10 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
     const isDemoCostingActive = (!demoCostingDeleted && quotes.length === 0 && initialTemplates.length === 0) || tourStep !== null
     const [updatingId, setUpdatingId] = useState<string | null>(null)
     const [filterStatus, setFilterStatus] = useState<string>(initialStatus || 'all')
-    const [quoteToConvert, setQuoteToConvert] = useState<QuoteRow | null>(null)
     const [quoteToAccept, setQuoteToAccept] = useState<QuoteRow | null>(null)
     const [quoteToRestore, setQuoteToRestore] = useState<QuoteRow | null>(null)
     const [restoreMode, setRestoreMode] = useState<'edit' | 'duplicate'>('edit')
     const [existingDraftForRestore, setExistingDraftForRestore] = useState<EstimatorAutosaveData<QuoteDraftState> | null>(null)
-    const [convertMeters, setConvertMeters] = useState('')
-    const [convertDeadline, setConvertDeadline] = useState(format(addDays(new Date(), 30), 'yyyy-MM-dd'))
-    const [convertNotes, setConvertNotes] = useState('')
     const [searchQuery, setSearchQuery] = useState('')
     const [costingSort, setCostingSort] = useState<SavedCostingSort>('recent')
     const [marginFilter, setMarginFilter] = useState<SavedCostingMarginFilter>('all')
@@ -1294,42 +1287,6 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
         } finally {
             setQuoteHistoryLoading(false)
         }
-    }
-
-    const openConvertDialog = (quote: QuoteRow) => {
-        setQuoteToConvert(quote)
-        const suggestedMeters = Number(quote.meters ?? 0)
-        setConvertMeters(suggestedMeters > 0 ? String(suggestedMeters) : '')
-        setConvertDeadline(format(addDays(new Date(), 30), 'yyyy-MM-dd'))
-        setConvertNotes('')
-    }
-
-    const handleConvertAcceptedQuote = async () => {
-        if (!quoteToConvert) return
-
-        const meters = Number(convertMeters)
-        if (!Number.isFinite(meters) || meters <= 0) {
-            toast.error(tx('Enter a valid order quantity before creating the active order'))
-            return
-        }
-
-        setUpdatingId(quoteToConvert.id)
-        const res = await convertAcceptedQuoteToOrder({
-            quoteId: quoteToConvert.id,
-            total_target_meters: meters,
-            deadline: convertDeadline,
-            notes: convertNotes.trim() || undefined,
-        })
-        setUpdatingId(null)
-
-        if ('error' in res) {
-            toast.error(tx(userFacingError(res.error, 'The accepted quotation could not be converted into an order. Try again.')))
-            return
-        }
-
-        toast.success(tx('Accepted quote converted into an active order'))
-        setQuoteToConvert(null)
-        router.push('/owner/production')
     }
 
     const restoreQuoteToEstimator = (quote: QuoteRow, mode: 'edit' | 'duplicate' = 'edit') => {
@@ -1930,7 +1887,6 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                         const metrics = getSavedCostingMetrics(quote)
                         const isCosting = isStandaloneCosting(quote.record_kind)
                         const hasQuotationLifecycle = canUseQuotationLifecycle(quote.record_kind, canUseQuotationWorkflow)
-                        const canCreateOrder = hasQuotationLifecycle && quote.status === 'accepted' && !linkedOrder
                         const previousVersion = getPreviousCostingVersion(quote, quotes)
                         const costMovement = getProductionCostMovement(quote, previousVersion)
 
@@ -2088,22 +2044,6 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                                     Reject
                                                 </Button>
                                             </div>
-                                        )}
-
-                                        {canCreateOrder && (
-                                            <Button
-                                                size="sm"
-                                                className="w-full gap-2 bg-success font-bold text-white hover:bg-success/90"
-                                                onClick={() => openConvertDialog(quote)}
-                                                disabled={updatingId === quote.id}
-                                            >
-                                                {updatingId === quote.id ? (
-                                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                                ) : (
-                                                    <Package className="h-4 w-4" />
-                                                )}
-                                                Create Active Order
-                                            </Button>
                                         )}
                                     </div>
                                 </CardContent>
@@ -2321,89 +2261,6 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     )}
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setShowComparison(false)}>Close</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            <Dialog open={!!quoteToConvert} onOpenChange={(open) => !open && setQuoteToConvert(null)}>
-                <DialogContent className="max-w-md">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            <Package className="h-5 w-5 text-success" />
-                            Create active order from accepted quote
-                        </DialogTitle>
-                        <DialogDescription>
-                            This is the only production entry point now. The quote stays accepted and becomes linked to the new live order.
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    {quoteToConvert && (
-                        <div className="space-y-4 py-2">
-                            <div className="rounded-xl border border-hairline bg-surface-soft p-3">
-                                <p className="text-sm font-black text-ink">{quoteToConvert.party_name}</p>
-                                <p className="mt-1 text-xs font-bold uppercase tracking-widest text-subtle">{quoteToConvert.quality_label}</p>
-                                <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
-                                    <div>
-                                        <p className="font-bold uppercase tracking-wider text-subtle">Quote Price</p>
-                                        <p className="font-mono font-black text-saffron-deep">₹{Number(quoteToConvert.quote_price_per_meter).toFixed(2)}/m</p>
-                                    </div>
-                                    <div>
-                                        <p className="font-bold uppercase tracking-wider text-subtle">Quoted Qty</p>
-                                        <p className="font-mono font-black text-ink">{Number(quoteToConvert.meters ?? 0).toLocaleString('en-IN')} m</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="space-y-1.5">
-                                    <Label className="text-xs font-black uppercase text-subtle">Total metres</Label>
-                                    <Input
-                                        type="number"
-                                        min="1"
-                                        step="1"
-                                        value={convertMeters}
-                                        onChange={event => setConvertMeters(event.target.value)}
-                                        className="font-mono font-bold"
-                                    />
-                                </div>
-                                <div className="space-y-1.5">
-                                    <Label className="text-xs font-black uppercase text-subtle">Deadline</Label>
-                                    <Input
-                                        type="date"
-                                        value={convertDeadline}
-                                        onChange={event => setConvertDeadline(event.target.value)}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="space-y-1.5">
-                                <Label className="text-xs font-black uppercase text-subtle">Order notes</Label>
-                                <Textarea
-                                    value={convertNotes}
-                                    onChange={event => setConvertNotes(event.target.value)}
-                                    placeholder="Optional production instructions for the floor"
-                                    className="resize-none h-20 text-xs"
-                                />
-                            </div>
-                        </div>
-                    )}
-
-                    <DialogFooter>
-                        <Button variant="ghost" onClick={() => setQuoteToConvert(null)}>
-                            Cancel
-                        </Button>
-                        <Button
-                            className="bg-success text-white hover:bg-success/90"
-                            onClick={handleConvertAcceptedQuote}
-                            disabled={!quoteToConvert || updatingId === quoteToConvert.id}
-                        >
-                            {quoteToConvert && updatingId === quoteToConvert.id ? (
-                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                            ) : (
-                                <Package className="h-4 w-4 mr-2" />
-                            )}
-                            Create active order
-                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

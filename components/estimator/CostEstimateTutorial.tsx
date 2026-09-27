@@ -58,7 +58,7 @@ function resolveStepElements(step: Step): { target: HTMLElement | null; card: HT
     return { target, card }
 }
 
-export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed, onPrepare, onOpenLiveCostModal, onOpenMonthlyExpensesModal, onOpenQualityLibraryModal, onActiveChange, freePlan = false, standalone = true, existingCosting = false, marketMode = false, productionPipeline = false, overheadMode = 'direct', requestTrigger }: {
+export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed, onPrepare, onOpenLiveCostModal, onOpenMonthlyExpensesModal, onOpenQualityLibraryModal, onActiveChange, freePlan = false, standalone = true, existingCosting = false, productionPipeline = false, overheadMode = 'direct', requestTrigger }: {
     accountDismissed: boolean; enabled: boolean; orgId: string; userId: string; onPrepare: () => (() => void) | void
     onOpenLiveCostModal?: (open: boolean) => void
     onOpenMonthlyExpensesModal?: (open: boolean) => void
@@ -67,7 +67,6 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
     freePlan?: boolean
     standalone?: boolean
     existingCosting?: boolean
-    marketMode?: boolean
     productionPipeline?: boolean
     overheadMode?: EstimatorTourContext['overheadMode']
     requestTrigger?: number
@@ -250,7 +249,7 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
                 })
                 observer?.disconnect()
                 setIndex(0)
-                const coreSteps: Step[] = buildEstimatorCoreTour({ freePlan, standalone, existingCosting, marketMode, productionPipeline, overheadMode }).map((step, section) => ({
+                const coreSteps: Step[] = buildEstimatorCoreTour({ freePlan, standalone, existingCosting, productionPipeline, overheadMode }).map((step, section) => ({
                     section,
                     field: step.field,
                     coreCopy: step.copy,
@@ -268,7 +267,7 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
             collect()
         }, 150)
         return () => { window.clearTimeout(timer); observer?.disconnect() }
-    }, [requested, enabled, onPrepare, languageStatus, guide, freePlan, standalone, existingCosting, marketMode, productionPipeline, overheadMode])
+    }, [requested, enabled, onPrepare, languageStatus, guide, freePlan, standalone, existingCosting, productionPipeline, overheadMode])
 
     const close = useCallback(() => {
         tutorialRows.current.forEach(row => row.dispatchEvent(new CustomEvent('tutorial-expand-row', { detail: false })))
@@ -631,7 +630,7 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
         }
     }, [active, mobileTour.mobile])
 
-    const saveStep = buildEstimatorCoreTour({ freePlan, standalone, existingCosting, marketMode, productionPipeline, overheadMode }).find(step => step.field === 'liveCostActions')!
+    const saveStep = buildEstimatorCoreTour({ freePlan, standalone, existingCosting, productionPipeline, overheadMode }).find(step => step.field === 'liveCostActions')!
     const activeCopy = active && (active.coreCopy
         ? workflowCopy.steps[active.coreCopy]
         : active.field === 'liveCostActions' ? workflowCopy.steps[saveStep.copy]

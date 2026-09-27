@@ -39,14 +39,15 @@ describe('Estimator-only product presentation', () => {
 
     it('keeps Lite and Base quality-first while retaining legacy quotation actions', () => {
         expect(estimator).toContain("const isStandaloneCostingSession = !canUseProduction || sourceRecordKind === 'costing'")
-        expect(estimator).toContain("const resolvedPartyName = effectiveTargetMode === 'market'")
+        expect(estimator).toContain('const resolvedPartyName = saveAsStandaloneCosting')
         expect(estimator).toContain('const showPartyField = canUseProduction && !isStandaloneCostingSession')
         expect(estimator).toContain('defaultCustomerName={showPartyField ? partyName : \'\'}')
         expect(estimator).toContain('Quick Costing')
         expect(estimator).toContain("'Save New Version' : 'Save Costing'")
         expect(estimator).toContain('{canUseProduction && !isStandaloneCostingSession && <Button')
-        expect(estimator).toContain('id="btn-start-party-order"')
-        expect(estimator).toContain('if (!state.orderQuantityM || state.orderQuantityM <= 0)')
+        // Phase 3G removed the hidden party-order and market-run controls.
+        expect(estimator).not.toContain('btn-start-party-order')
+        expect(estimator).not.toContain('btn-start-market-run')
         expect(estimator).toContain("t('estimator.price_helpers.suggested_selling_price')")
         expect(estimator).toContain("t('estimator.order_basics.title')")
         expect(estimator).toContain("!canUseProduction ? t('estimator.simulation.base_title')")
@@ -84,7 +85,7 @@ describe('Estimator-only product presentation', () => {
     })
 
     it('saves Base edits through the authoritative versioned quote path', () => {
-        expect(estimator).toContain("handleSaveQuote('quote', isStandaloneCostingSession ? 'draft' : 'accepted')")
+        expect(estimator).toContain("handleSaveQuote(isStandaloneCostingSession ? 'draft' : 'accepted')")
         expect(estimator).toContain('Review overdue costing rates')
         expect(estimator).toContain('Save with These Rates')
         const actions = read('app/(dashboard)/owner/estimator/actions.ts')

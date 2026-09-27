@@ -1310,9 +1310,7 @@ export const hi = {
       base_title: "बिक्री मूल्य और मात्रा",
       base_description: "प्रति-मीटर लागत के लिए वैकल्पिक; जब आपको ग्राहक मूल्य या कुल मूल्य चाहिए तब पूरा करें।",
       title: "लागत मात्रा",
-      market_title: "मार्केट रन और मात्रा",
       quantity: "लागत मात्रा",
-      market_target: "लक्ष्य उत्पादन (Target Production)",
       quantity_hint: "कुल लागत और बिक्री मूल्य की गणना करता है",
       commission: "ब्रोकर कमीशन %",
       transport: "ट्रांसपोर्ट / मी"
@@ -1353,7 +1351,6 @@ export const hi = {
       dyeing_processing: "डाइंग/प्रोसेसिंग",
       finishing_per_m: "फिनिशिंग / मी",
       simulation_qty: "लागत मात्रा",
-      market_target: "लक्ष्य उत्पादन (Target Production)",
       broker_comm: "ब्रोकर कमीशन %",
       transport_per_m: "ट्रांसपोर्ट / मी"
     },

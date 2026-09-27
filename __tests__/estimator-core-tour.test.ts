@@ -6,7 +6,7 @@ import fs from 'node:fs'
 
 const base: EstimatorTourContext = {
     freePlan: false, standalone: true, existingCosting: false,
-    marketMode: false, productionPipeline: true, overheadMode: 'direct',
+    productionPipeline: true, overheadMode: 'direct',
 }
 const copies = (context: EstimatorTourContext) => buildEstimatorCoreTour(context).map(step => step.copy)
 
@@ -32,9 +32,8 @@ describe('estimator workflow tour', () => {
     it('matches save instructions to the active workflow, including reused costing versions', () => {
         expect(copies({ ...base, existingCosting: true })).toContain('saveVersion')
         expect(copies({ ...base, standalone: false })).toContain('saveQuotation')
-        expect(copies({ ...base, standalone: false, marketMode: true })).toContain('saveMarket')
         // Loading a costing in a full workspace still uses snapshot actions.
-        expect(copies({ ...base, marketMode: true, existingCosting: true })).toContain('saveVersion')
+        expect(copies({ ...base, existingCosting: true })).toContain('saveVersion')
         expect(copies({ ...base, productionPipeline: false }).at(-1)).toBe('next')
     })
 
@@ -48,9 +47,9 @@ describe('estimator workflow tour', () => {
     it('provides localized copy and stable targets for every entitlement combination', () => {
         const visited = new Set<string>()
         for (const freePlan of [false, true]) for (const standalone of [false, true]) {
-            for (const existingCosting of [false, true]) for (const marketMode of [false, true]) {
+            for (const existingCosting of [false, true]) {
                 for (const productionPipeline of [false, true]) for (const overheadMode of ['direct', 'monthly_expenses'] as const) {
-                    for (const step of buildEstimatorCoreTour({ freePlan, standalone, existingCosting, marketMode, productionPipeline, overheadMode })) {
+                    for (const step of buildEstimatorCoreTour({ freePlan, standalone, existingCosting, productionPipeline, overheadMode })) {
                         expect(isTutorialField(step.field)).toBe(true)
                         visited.add(step.copy)
                         for (const language of ['en', 'gu', 'hi'] as const) {

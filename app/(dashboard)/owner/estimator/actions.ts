@@ -1743,33 +1743,6 @@ export async function saveEstimatorQuoteV3(params: {
     return { success: true, quoteId: saved.id, updatedAt: saved.updated_at, versionNumber: saved.version_number, quotationReference: saved.quotation_reference }
 }
 
-// ─── Retired factory workflows ────────────────────────────────────────────────
-
-// Quote-to-order conversion, the Start Party Order fast path and market runs are
-// not offered on Free, Lite or Base. The Estimator and Quotations screens still
-// import these three actions, but only from controls that never render there
-// (both pages pass canUseProduction = false). Server actions are public
-// endpoints, so each one refuses without reading or writing data.
-const FACTORY_WORKFLOW_UNAVAILABLE = 'This factory workflow is unavailable on Free, Lite, and Base.'
-
-export async function convertAcceptedQuoteToOrder(data: unknown) {
-    void data
-    await requireRole(['owner'])
-    return { error: FACTORY_WORKFLOW_UNAVAILABLE }
-}
-
-export async function startPartyOrderFromEstimator(input: unknown) {
-    void input
-    await requireRole(['owner'])
-    return { error: FACTORY_WORKFLOW_UNAVAILABLE }
-}
-
-export async function createMarketRunFromEstimator(params: unknown) {
-    void params
-    await requireRole(['owner'])
-    return { error: FACTORY_WORKFLOW_UNAVAILABLE }
-}
-
 // ─── Party Rate Memory ────────────────────────────────────────────────────────
 
 /**

@@ -4,14 +4,13 @@ export type EstimatorTourContext = {
     freePlan: boolean
     standalone: boolean
     existingCosting: boolean
-    marketMode: boolean
     productionPipeline: boolean
     overheadMode: 'direct' | 'monthly_expenses'
 }
 
 export function buildEstimatorCoreTour(context: EstimatorTourContext) {
     const saveCopy = context.freePlan ? 'saveFree' : !context.standalone
-        ? context.marketMode ? 'saveMarket' : 'saveQuotation'
+        ? 'saveQuotation'
         : context.existingCosting ? 'saveVersion' : 'saveCosting'
     return [
         { field: 'liveCostShortcut', copy: 'purpose' },

@@ -32,6 +32,11 @@ describe('Batch 10 estimator quote/order snapshots', () => {
         // Phase 3F retired the order and market-run write paths, so the two live
         // costing saves are the only places that derive the snapshot.
         expect(estimatorActions.match(/const workerRatePerM = calcWorkerRateSnapshot\(/g)?.length).toBe(2)
+        // Phase 3G removed the refusal stubs with the hidden UI, so these are no
+        // longer server-action endpoints at all.
+        for (const retired of ['convertAcceptedQuoteToOrder', 'startPartyOrderFromEstimator', 'createMarketRunFromEstimator']) {
+            expect(estimatorActions).not.toContain(`function ${retired}`)
+        }
         expect(functionBody(estimatorActions, 'saveEstimatorQuoteV3')).toContain('const workerRatePerM = calcWorkerRateSnapshot(estimate.weftRows, estimate.perPickCostPaisa ?? 0)')
         expect(functionBody(estimatorActions, 'saveAsFabricTemplate')).toContain('const workerRatePerM = calcWorkerRateSnapshot(snapshotEstimate.weftRows, snapshotEstimate.perPickCostPaisa ?? 0)')
         // Package 2C: both live costing saves pass the snapshot to the shared
