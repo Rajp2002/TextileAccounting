@@ -1,6 +1,6 @@
 # Guided tours: execution status
 
-Implementation state only. Planning is complete (see [PLANNING_CHECKLIST.md](PLANNING_CHECKLIST.md)); **GT-00 and GT-01 are complete.** A task is complete only when its row says PASSED and its ledger entry has the evidence. Only PASSED satisfies a dependency.
+Implementation state only. Planning is complete (see [PLANNING_CHECKLIST.md](PLANNING_CHECKLIST.md)); **GT-00, GT-01 and GT-02 are complete.** A task is complete only when its row says PASSED and its ledger entry has the evidence. Only PASSED satisfies a dependency.
 
 States: `NOT_STARTED` · `IN_PROGRESS` · `REVIEW_REQUIRED` · `PASSED` · `FAILED` · `BLOCKED`.
 
@@ -10,7 +10,7 @@ States: `NOT_STARTED` · `IN_PROGRESS` · `REVIEW_REQUIRED` · `PASSED` · `FAIL
 | --- | --- | --- | --- | --- | --- |
 | 1 | GT-00 Baseline and harness | PASSED | 2275e920 | 2026-09-27 | GT-00 targeted recovery entry below |
 | 2 | GT-01 Runtime foundation | PASSED | b1ee267c | 2026-09-27 | GT-01 PASSED recovery entry below |
-| 3 | GT-02 Invitation and persistence | NOT_STARTED | — | — | — |
+| 3 | GT-02 Invitation and persistence | PASSED | d7a16a4f | 2026-09-27 | GT-02 PASSED entry below |
 | 4 | GT-03 Saved Costings (reference) | NOT_STARTED | — | — | — |
 | 5 | GT-04 Gate G1 | NOT_STARTED | — | — | — |
 | 6 | GT-05 Cost Estimator | NOT_STARTED | — | — | — |
@@ -28,7 +28,7 @@ States: `NOT_STARTED` · `IN_PROGRESS` · `REVIEW_REQUIRED` · `PASSED` · `FAIL
 | 18 | GT-17 Final acceptance (G2) | NOT_STARTED | — | — | — |
 | — | GT-B1 Stock audit tour | BLOCKED (PI-06, PI-07) | — | — | — |
 
-**Exact next action:** GT-02 — read `tasks/GT-02-invitation-persistence.md` and only its Read first sources, then implement invitation/persistence within that packet. GT-01 is PASSED; both harness servers are stopped. Keep all original and refreshed evidence in the current worktree. No push or PR has been authorized.
+**Exact next action:** Start GT-03 from its packet, `docs/guided-tours/tasks/GT-03-saved-costings.md`, then read only its listed sources and Saved Costings spec sections. GT-02 is PASSED with the authorized Estimator legacy-write cleanup included; its full migration stays in GT-05. GT-03 must stop at REVIEW_REQUIRED for the separate GT-04 reviewer/owner gate. No push or PR authorized.
 
 ## Planning baseline (for comparison in GT-00)
 
@@ -52,11 +52,15 @@ Recorded 2026-09-27 at `f7cff98` (`claude/gracious-sagan-dnwtsm` = `main`), clea
 
 ## Approved deviations
 
+Owner, 2026-09-27: answered “Authorized” to the GT-02 escalation requesting removal of only the Estimator legacy dismissal write/retry path and directly affected test updates. Legacy preference reads remain supported; the full Estimator migration remains in GT-05. No data-safety criterion was waived.
+
 Owner, 2026-09-27: approved a harness-only readiness/sampling correction and a targeted refresh of the five named Estimator baseline comparisons against both GT-00 and GT-01. Original evidence and the other 47 baseline rows remain unchanged. Exact equality remains the criterion; no application behavior, summary calculations or assertions were relaxed.
 
 Owner, 2026-09-27: approved the scratch-only visible-launcher selector correction for GT-00 and instructed rerunning only `rates gu 390x844`, preserving the other 51 completed runs. This supersedes the previous escalation's proposed complete-batch rerun; application code and acceptance criteria remain unchanged.
 
 ## Open issues
+
+No open GT-02 escalation. The owner authorized the narrow Estimator cleanup; all six required invitation cases now pass, including the only-`recordTourEventAction` tour-call check. The historical scope-conflict packet and failed preflight evidence remain below. Owner QA, separate reviewer and native-language review remain for the later gates.
 
 No open GT-01 escalation. The owner-approved settling sampler produced exact GT-00/GT-01 comparisons for the five affected Estimator cases; all 52 accepted summaries match. See the PASSED recovery entry. Historical blocked entries are retained.
 
@@ -396,3 +400,109 @@ estimator-hi-1280x800 steps=10 panelCornerChanges=1 serverCalls=4 nav=0 s2 overl
 free-estimator-en-1440x900 steps=9 panelCornerChanges=1 serverCalls=3 nav=0 s2 target-clipped; s3 target-clipped; s4 target-clipped; s7 rail-rect-intersects(check screenshot); s8 rail-rect-intersects(check screenshot); s9 overlap=35144
 free-estimator-hi-1280x800 steps=9 panelCornerChanges=1 serverCalls=3 nav=0 s2 target-clipped; s3 target-clipped; s4 target-clipped; s6 target-clipped; s7 overlap=13770; s8 overlap=12699; s9 overlap=39192
 ```
+
+
+### GT-02 — IN_PROGRESS — preflight — 2026-09-27
+- Revision / worktree: `tours/implementation` @ `d7a16a4fa3344c72e561daf6343babd0881a2332`; clean at task start. GT-00 and GT-01 PASSED. Original checkout's unrelated planning checklist untouched.
+- Required reads completed: CLAUDE.md, executor, plan §0/§1 and GT-02-cited sections, queue/status, task packet, listed source/tests, each page's guide.benefit and Daily Sheet title. Supabase skill read for the preference action; live query guidance is superseded by the explicit no-live-data rule. Official updateUser docs opened; changelog markdown fetch was unsupported. No Supabase operation performed.
+- Files changed: this ledger only; no application/test change yet.
+- Commands and results: git branch/revision/status confirm clean expected branch; rg and source reads confirm the legacy Estimator close handler unconditionally invokes syncDismissal, which calls dismissCostEstimateTutorial. That component is outside GT-02's allowed surface, while verification permits only recordTourEventAction.
+- Verification: GT-02 implementation/type/lint/tests/harness remain UNVERIFIED. Investigating this specific pre-existing conflict with one isolated first-step launch/Exit probe before making code changes.
+- Next action: run the stubbed Estimator exit probe; if the forbidden legacy call is observed, write the required §6 escalation and stop.
+
+
+### GT-02 — BLOCKED — Estimator exit scope conflict — 2026-09-27
+- Revision / worktree: `tours/implementation` @ `d7a16a4fa3344c72e561daf6343babd0881a2332`. Only this tracked ledger changed. Ignored scratch contains the one diagnostic script/log/record and two screenshots. No application or test changes; nothing committed, pushed or opened as a PR. Original checkout's unrelated work untouched.
+- Deliberate test changes: none.
+- Commands and results:
+  - `git branch --show-current`, `git rev-parse HEAD`, `git status --short` → expected branch/revision, clean start.
+  - Required source/spec/test reads and targeted `rg` → the existing close handler calls `syncDismissal`; the legacy action updates its account flag and invokes `revalidatePath` for Estimator routes. Plan §7.3 assigns removal of the legacy actions to their feature tasks.
+  - Isolated Vite harness via `node scripts/performance/isolated-command.mjs node node_modules/vite/bin/vite.js --config scratch/tour-harness/vite.config.mjs --host 127.0.0.1` → localhost:5199, all server modules and browser services stubbed.
+  - From scratch: `node ../../scripts/performance/isolated-command.mjs env PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/ CHROMIUM_PATH="/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing" node gt02-estimator-exit-probe.mjs` → **exit 1**, the required only-`recordTourEventAction` allowlist fails. One case, no retries and no complete tour/full batch.
+- Harness: Estimator en1440×900; launch first step, then Escape. Calls after launch: `recordTourEventAction`, **`dismissCostEstimateTutorial`**. `getEstimatorSecondaryData` was already present before launch and is recorded separately, not blamed on the tour. No navigation recorded. The actual legacy action was stubbed, so the real route refresh is CODE-VERIFIED only, not exercised against live data.
+- Evidence: `scratch/tour-harness/gt02-preflight.log`; `gt02-preflight/estimator-en-1440x900/{record.json,call-analysis.json,01-started.png,02-exited.png}`. Exit screenshot reviewed; it shows the legacy preference-sync failure notice from the recording stub.
+- Evidence types: source inspection and one stubbed browser reproduction DONE. GT-02 implementation, focused/full suite, type check, lint and the six required post-change invitation checks **UNVERIFIED** because implementation stopped at the confirmed scope conflict. Prior GT-01 passes are not claimed as GT-02 validation.
+- Definition of done: GT-02 implementation items NOT DONE; Estimator allowlist check FAILED; no acceptance waiver or out-of-scope fix attempted.
+- Remaining issues / escalation: packet below. Task-owned harness server stopped after evidence collection. Next action: owner scope decision; then resume GT-02, preserving the evidence.
+
+#### ESCALATION — GT-02
+
+Blocking condition: GT-02 requires the Estimator launch/Exit path to call only `recordTourEventAction`, but its existing legacy exit handler calls `dismissCostEstimateTutorial` and cannot be changed within GT-02's allowed surface.
+
+Specification: `tasks/GT-02-invitation-persistence.md:58`: “server calls are only `recordTourEventAction`”; lines 20–30 limit changes to shared invitation/preference code and the Dispatch guideCard prop. Plan §7.2: “Exit records nothing beyond `started`.” Plan §7.3 leaves legacy action removal to the feature tasks; GT-05 contains the Estimator migration. DS-05 also prohibits tour-triggered refreshes.
+
+Source evidence: `components/estimator/CostEstimateTutorial.tsx:271`–`:288` writes the legacy local marker and invokes `syncDismissal`; `:102`–`:116` calls the legacy action; `:118`–`:127` retries it on later loads. `app/(dashboard)/owner/estimator/tutorial-actions.ts:19`–`:20` revalidates `/owner/estimator` and `/free`. The isolated first-step/Escape probe above reproduces the legacy call.
+
+Expected: After GT-02, starting and exiting Estimator records only the allowed preference event, leaves a compact launcher and causes no refresh.
+
+Actual: On the unchanged preflight baseline, launch then Escape makes an additional `dismissCostEstimateTutorial` call. Fixing shared `TourInvitation` or `app/actions/tour-preferences.ts` cannot remove the independent legacy close/retry path. The legacy action's real implementation also revalidates routes; it was not run against Supabase.
+
+Tried: Read the precise task/plan contracts, traced the close/retry/action path, inspected preserved GT-01 evidence, then reproduced only the specified first-step/Exit sequence in the existing stub harness. Distinguished the unrelated pre-launch secondary-data read from tour calls. No application modifications, acceptance changes or repeated suite/batch runs.
+
+Why this exceeds my discretion: EXECUTOR_PROMPT §1 forbids expanding the task surface or rewriting acceptance criteria. Removing the legacy path touches a protected Estimator component (and potentially its directly affected tests); ignoring its call would weaken the mandatory allowlist.
+
+Smallest decision needed: Authorize GT-02 to remove only the Estimator's legacy dismissal write/retry path and update directly affected assertions now, while preserving legacy preference reads and leaving the full Estimator migration in GT-05? This is the recommended narrow fix; it avoids waiving the data-safety check.
+
+Worktree state: only `docs/guided-tours/EXECUTION_STATUS.md` modified plus ignored scratch evidence. GT-00/GT-01 remain PASSED. GT-02 implementation and final checks UNVERIFIED. No commit/push/PR; GT-03 NOT_STARTED.
+
+
+### GT-02 — IN_PROGRESS — authorized implementation — 2026-09-27
+- Owner answered “Authorized” to the precise narrow Estimator cleanup request. Scope now includes removing its legacy dismissal write/retry path and directly affected assertions, preserving legacy reads and leaving the full migration in GT-05. The preceding escalation is resolved as an authority question; implementation and verification remain pending.
+- Starting from `d7a16a4f`, with only the preceding ledger/evidence modifications. Next: shared invitation/persistence/copy/contracts, authorized Estimator cleanup, focused checks, full types/lint/tests and the six specified invitation harness cases. No full 52-case batch required by GT-02.
+
+
+### GT-02 — PASSED — 2026-09-27
+- Revision / worktree: `tours/implementation` based on `d7a16a4fa3344c72e561daf6343babd0881a2332`; isolated worktree `/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas`. Resumed with only this task's ledger and scratch evidence. Original checkout's unrelated checklist left untouched. Task commit authorized by the owner's COMMITS instruction; no push or PR.
+- Files changed (19 paths):
+  - Shared invitation component and hook: `components/tours/TourInvitation.tsx`, `hooks/use-tour-invitation.ts`.
+  - Preferences, definitions and copy: `lib/tours/tour-preferences.ts`, `lib/tours/tour-registry.ts`, `lib/tours/tour-types.ts`, `app/actions/tour-preferences.ts`, `lib/i18n/tour-invitations.ts`.
+  - `app/globals.css`: only the 36-line halo block deleted. Deleted `lib/tours/session-coordinator.ts` and its specified test.
+  - `components/dispatches/DispatchGuidedTour.tsx`: removed `guideCard` and the resulting unused translation import/binding (semantically neutral lint cleanup).
+  - Owner-authorized `components/estimator/CostEstimateTutorial.tsx`: removed legacy local-marker writes, dismissal action, mount/online/manual retry path and its failure notice; forwarded the existing account dismissal flag to shared invitation preferences. Shared legacy account/local reads remain. No step, anchor, placement, calculation or entitlement changes; legacy server-action file itself remains for later migration.
+  - Tests: `__tests__/tour-invitation-lifecycle.test.ts`, `tour-preferences-and-actions.test.ts`, `tour-i18n-parity.test.ts`, `tour-quota-and-data-safety.test.ts`, `guided-tour-left-rails.test.ts`; new `tour-data-safety-contract.test.ts`; deleted `tour-session-coordinator.test.ts`.
+  - This ledger. Only ignored scratch contains probe scripts, logs, six browser records, screenshots and contact sheets. No dependency, lockfile, migration, environment or tracked harness change.
+- Implementation decisions within the packet:
+  - `firstShown` records an impression once without deciding presentation. Dismissed, started or completed account/local/legacy state yields replay; decisions remain sticky and content-version changes never re-invite.
+  - Full invitation shows approved title/benefit, Start guide and ghost Not now. Not now switches immediately and focuses the compact launcher. Start records started; Exit adds no preference event. The start-aligned variant remains supported.
+  - Completion writes its content version locally first, then remotely; the third helper argument defaults to the registry version so unchanged feature callers remain compatible. Action accepts omitted versions and validates supplied versions with the specified regex and 16-character limit. It retains owner/Free auth and only updates user metadata; all modern preference route revalidation and legacy-flag writes are removed.
+  - Daily Sheet is registered for Base owners at v1, as this packet explicitly requires. All other entries remain v1 until their feature tasks. Benefits in all 36 language/page combinations and the new Daily Sheet name match the approved page-spec rows; Saved Costings gu/hi use the glossary.
+- Deliberate test changes (none weakened to hide a failure):
+  - Lifecycle: replaced obsolete halo and first-impression-suppresses assertions with invite/replay rendering in en/gu/hi, Not now, legacy start alignment, halo/coordinator absence, once-only impression, immediate decision/focus and synchronous launch coalescing contracts. Shared rail/accessibility checks retained; browser probe verifies actual focus and 44px sizes.
+  - Preferences/actions: replaced obsolete getTourStatus, route-refresh and legacy-write expectations with getTourPresentation and modern-only/no-refresh behavior. Covers all 12 tours, both legacy account flags and local keys, sticky account/local decisions, versions/no re-invitation, malformed/unavailable storage, auth/write failure, local-first persistence, impression deduplication and optional/invalid/boundary completion versions.
+  - i18n parity: retained all-language/script checks, replaced emphasis expectations with its absence, and added Daily Sheet eligibility/version, exact page-spec benefits and glossary/name checks.
+  - Quota/data safety: added the real `freeMeter`, `/api/free/calculate` and `complete_free_saved_costing` forbidden tokens, preserving existing assertions.
+  - Left rails: retained all placement assertions and added the specified absence of Dispatch `guideCard`.
+  - Deleted six session-coordinator tests together with that module, explicitly required by this packet; no failing-test deletion outside that retirement.
+  - New 19-test data-safety contract explicitly covers every shared tour library file, the six shared components/hooks, and the authorized Estimator component. Guards business-action imports, fetch, quota/business tokens, route invalidation and business-row access; checks the Estimator legacy write/retry removal and preserved account read.
+  - `__tests__/tour-no-autostart.test.ts` remains byte-for-byte unchanged and passes all five tests. Legacy Estimator server-action tests remain unchanged and pass; no other test files changed.
+- Commands and results (all checks isolated; all exit 0 except the preserved, corrected harness attempt noted below):
+  - `node scripts/performance/isolated-command.mjs npx vitest run __tests__/tour-invitation-lifecycle.test.ts __tests__/tour-preferences-and-actions.test.ts __tests__/tour-i18n-parity.test.ts __tests__/tour-no-autostart.test.ts __tests__/tour-quota-and-data-safety.test.ts __tests__/guided-tour-left-rails.test.ts __tests__/tour-data-safety-contract.test.ts` → 7 files, **97 passed** (`scratch/tour-harness/gt02-focused.log`).
+  - Initial full verification: isolated `npx tsc --noEmit --incremental false`, `npm run lint`, `npx vitest run` → all exit 0; lint zero warnings; 235 files, 2,040 passed, 1 skipped (`gt02-types.log`, `gt02-lint.log`, `gt02-tests.log`).
+  - Browser found Start guide at 38.5px because the existing rem sizing used the app's 14px root. Corrected only that button to an explicit 44px minimum. Final checks on the corrected tree:
+    - `node scripts/performance/isolated-command.mjs npx tsc --noEmit --incremental false` → **PASS**, exit 0 (`gt02-final-types.log`).
+    - `node scripts/performance/isolated-command.mjs npm run lint` → **PASS**, exit 0, zero warnings (`gt02-final-lint.log`).
+    - `node scripts/performance/isolated-command.mjs npx vitest run` → **235 files, 2,040 passed, 1 skipped**, exit 0, 22.44s (`gt02-final-tests.log`). The unchanged skipped finance test requires live Supabase; it was intentionally not enabled.
+  - Reviewed full changed-file diffs and allowed surface; `git diff --check` → clean. `git diff --exit-code HEAD -- __tests__/tour-no-autostart.test.ts` → exit 0, unchanged. No other application paths changed.
+- Harness commands and results:
+  - Started only the stub harness with `node scripts/performance/isolated-command.mjs node node_modules/vite/bin/vite.js --config scratch/tour-harness/vite.config.mjs --host 127.0.0.1` (`gt02-vite-implementation.log`). No Next dev/build/start or live service run.
+  - Existing external `PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/` and `CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing`; no dependency installed or added.
+  - Initial scratch invocation of isolated `env PLAYWRIGHT_ROOT=<above> CHROMIUM_PATH=<above> node gt02-invitation-probe.mjs` → exit 1 on the first Dispatch desktop case, `take-tour too short`; preserved `gt02-invitations.log` and `gt02-invitations/dispatch-en-1440x900/{record.json,failure.png}`. Fixed the actual button, without relaxing assertions. No timeout retry involved.
+  - Final command from repository root: `node scripts/performance/isolated-command.mjs env PLAYWRIGHT_ROOT=<above> CHROMIUM_PATH=<above> node scratch/tour-harness/gt02-invitation-probe.mjs` → **exit 0**, all six cases passed (`gt02-invitations-final.log`). Its relative output directory was moved into ignored scratch after completion; no output artifact is included in the commit.
+  - Isolated Python/Pillow contact-sheet generation → exit 0; six passing records checked, 54 screenshots preserved.
+  - Final server shutdown: identified owned port-5199 listener PID 22680 with `lsof`; `kill -TERM 22680` → exit 0; Vite session exited 143 intentionally. No task-owned harness left running.
+- Harness evidence / result:
+  - `dispatch`, `quotes`, `estimator`, each en1440×900 and gu390×844: **PASS**. Fresh card has approved Start guide/Not now text and both targets measure at least 44px. A shown-only reload keeps the invitation and does not repeat its impression. Not now focuses the compact launcher immediately; reload retains replay. Both replay-start/Exit and fresh-start/Exit retain replay on reload; Exit writes neither dismissed nor completed.
+  - Each case's three interaction groups (dismiss, replay launch/Exit, fresh launch/Exit) records exactly one `recordTourEventAction` and no other tour-caused server call; no navigation or page errors. Estimator's unrelated `getEstimatorSecondaryData` mount read is preserved in the raw before/after phases and predates tour launch. Its legacy dismissal call is gone.
+  - Records and all nine phase screenshots per case: `scratch/tour-harness/gt02-invitations-final/<scenario>-<lang>-<size>/`. Labels: `01-fresh`, `02-shown-reload`, `03-dismissed`, `04-dismissed-reload`, `05-replay-active`, `05-replay-exited`, `06-fresh-start-active`, `06-fresh-start-exited`, `07-started-reload`.
+  - Visually inspected the fresh and dismissed states for all six cases using `contact-en.png` and `contact-gu.png` in that directory. Invitation copy/buttons fit and replay occupies one compact rail row; desktop Dispatch uses the harness's existing placeholder page. This spot check does not claim that every legacy tour geometry defect is fixed.
+  - No full 52-case baseline batch rerun: GT-02 specifies these six lifecycle cases. The generic full-tour summarize.py is not applicable to this invitation-phase probe; its six `record.json` files and six PASS lines are the task summary.
+- Evidence types: automated checks, source/diff review and required stubbed browser cases **DONE**. No required GT-02 check remains UNVERIFIED. Live data/test, real-device/owner QA, separate reviewer and native-language review **UNVERIFIED**; they remain outside this task's checks or for the specified later gates. Copy matching verifies transcription, not native-language judgment.
+- Definition of done:
+  - §7 invitation states/events implemented with required three-page/two-viewport checks: DONE.
+  - No route revalidation in modern tour preferences; data-safety contract: DONE.
+  - Halo/session coordinator/CSS/tests retired: DONE.
+  - Approved invitation copy for every tour in all three languages: DONE.
+  - Full suite, types and zero-warning lint on final code; deliberate test updates and evidence recorded: DONE.
+- Remaining issues: none blocking GT-02. Existing feature migrations and gate review remain in queue; Estimator's full migration stays GT-05.
+- Escalations: GT-02 preflight scope conflict resolved by explicit owner authorization and the verified narrow cleanup. Historical packet retained; no acceptance waiver.
+- Next action: GT-03, `docs/guided-tours/tasks/GT-03-saved-costings.md`; read its packet and listed references before edits. Stop GT-03 at REVIEW_REQUIRED and do not self-pass GT-04/G1. No push or PR.

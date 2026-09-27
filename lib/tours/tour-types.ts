@@ -1,14 +1,13 @@
-export type TourId = 'cost-estimate' | 'rate-book' | 'saved-costings' | 'configuration' | 'workers' | 'machines' | 'payroll' | 'production' | 'dispatch' | 'fabric-stock' | 'yarn-stock'
+export type TourId = 'cost-estimate' | 'rate-book' | 'saved-costings' | 'configuration' | 'workers' | 'machines' | 'payroll' | 'production' | 'dispatch' | 'fabric-stock' | 'yarn-stock' | 'daily-sheet'
 
-export type TourEmphasis = 'halo' | 'static'
-
-export type TourPresentation = 'unresolved' | 'invitation' | 'quiet' | 'active'
+export type TourPresentation = 'invite' | 'replay'
 
 export interface TourPreferenceRecord {
     firstShown?: string | boolean
     dismissed?: boolean
     firstStarted?: boolean
     completed?: boolean
+    completedVersion?: string
     version?: string
 }
 
@@ -18,7 +17,6 @@ export interface TourDefinition {
     id: TourId
     contentVersion: string
     invitationPolicyVersion: string
-    emphasis: TourEmphasis
     allowedPlans: ('free' | 'lite' | 'base')[]
     allowedRoles: string[]
     copyKeys: {

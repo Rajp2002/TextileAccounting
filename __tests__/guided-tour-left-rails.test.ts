@@ -127,6 +127,7 @@ describe('Guided Tour Left Rail Placement Across All Sections', () => {
         expect(dispatchTour).toContain('<TourInvitation')
         expect(dispatchTour).toContain('tourId="dispatch"')
         expect(dispatchTour).toContain('align="full"')
+        expect(dispatchTour).not.toContain('guideCard=')
         expect(invitationProps(dispatchTour)).not.toContain('amber')
     })
 

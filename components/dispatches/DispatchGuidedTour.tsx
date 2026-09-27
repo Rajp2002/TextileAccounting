@@ -5,7 +5,6 @@ import { TourInvitation } from '@/components/tours/TourInvitation'
 import DispatchTutorial from '@/components/tours/DispatchTutorial'
 import DispatchTourPreview from './DispatchTourPreview'
 import { dispatchTourSteps, type DispatchTourStep } from '@/lib/dispatch-tour'
-import { useTranslation } from '@/lib/i18n/context'
 
 /** Keep the live page mounted so leaving the isolated preview restores all user state. */
 export default function DispatchGuidedTour({ userId, orgId, userMetadata, children }: {
@@ -14,7 +13,6 @@ export default function DispatchGuidedTour({ userId, orgId, userMetadata, childr
     userMetadata?: Record<string, unknown>
     children: ReactNode
 }) {
-    const { t } = useTranslation()
     const [step, setStep] = useState<DispatchTourStep | null>(null)
     const launcher = useRef<HTMLDivElement>(null)
     const returnScroll = useRef({ x: 0, y: 0 })
@@ -27,7 +25,6 @@ export default function DispatchGuidedTour({ userId, orgId, userMetadata, childr
                     orgId={orgId}
                     userMetadata={userMetadata}
                     align="full"
-                    guideCard={{ title: t('challan.guideTitle'), actionLabel: t('challan.guideAction') }}
                     className="w-full"
                     onLaunch={() => {
                         returnScroll.current = { x: window.scrollX, y: window.scrollY }

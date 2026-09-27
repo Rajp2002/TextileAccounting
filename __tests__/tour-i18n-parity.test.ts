@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
+import { readFileSync } from 'node:fs'
 import { tourInvitationCopy } from '../lib/i18n/tour-invitations'
-import { tourRegistry, supportedTours } from '../lib/tours/tour-registry'
+import { tourRegistry, supportedTours, isTourEligible } from '../lib/tours/tour-registry'
 import type { Language } from '../lib/i18n/context'
 
 describe('Tour Invitation i18n Parity (EN, GU, HI)', () => {
@@ -50,9 +51,28 @@ describe('Tour Invitation i18n Parity (EN, GU, HI)', () => {
     }
   })
 
-  it('registry specifies halo emphasis strictly for cost-estimate, and static for others', () => {
-    expect(tourRegistry['cost-estimate'].emphasis).toBe('halo')
-    expect(tourRegistry['rate-book'].emphasis).toBe('static')
-    expect(tourRegistry['saved-costings'].emphasis).toBe('static')
+  it('registers Daily Sheet for Base owners, with no emphasis and v1 until migration', () => {
+    expect(supportedTours).toContain('daily-sheet')
+    expect(tourRegistry['daily-sheet']).toMatchObject({ contentVersion: 'v1', allowedPlans: ['base'], allowedRoles: ['owner'], copyKeys: { benefit: 'dailySheetBenefit', replayTitle: 'replayDailySheet' } })
+    expect(isTourEligible('daily-sheet', 'base', 'owner')).toBe(true)
+    expect(isTourEligible('daily-sheet', 'free', 'owner')).toBe(false)
+    expect(isTourEligible('daily-sheet', 'lite', 'owner')).toBe(false)
+    expect(isTourEligible('daily-sheet', 'base', 'supervisor')).toBe(false)
+    for (const tour of Object.values(tourRegistry)) {
+      expect(tour).not.toHaveProperty('emphasis')
+      expect(tour.contentVersion).toBe('v1')
+    }
+  })
+
+  it('matches every approved page benefit exactly, including the yarn consumption correction', () => {
+    const pages = { 'cost-estimate': 'cost-estimator', 'rate-book': 'rate-book', 'saved-costings': 'saved-costings', configuration: 'machine-assignments', workers: 'workers', machines: 'machines', payroll: 'payroll', production: 'production', dispatch: 'dispatches', 'fabric-stock': 'fabric-stock', 'yarn-stock': 'yarn-stock', 'daily-sheet': 'daily-sheet' }
+    for (const tour of supportedTours) {
+      const row = readFileSync(`docs/guided-tours/pages/${pages[tour]}.md`, 'utf8').split('\n').find(line => line.startsWith('| `guide.benefit` |'))!
+      const approved = row.split('|').slice(2, 5).map(value => value.trim())
+      languages.forEach((language, index) => expect(tourInvitationCopy[language].benefits[tour]).toBe(approved[index]))
+    }
+    expect(tourInvitationCopy.gu.tourNames['saved-costings']).toBe('સાચવેલી કોસ્ટિંગ')
+    expect(tourInvitationCopy.hi.tourNames['saved-costings']).toBe('सेव की गई कॉस्टिंग')
+    expect(languages.map(language => tourInvitationCopy[language].tourNames['daily-sheet'])).toEqual(['Daily Sheet', 'દૈનિક શીટ', 'दैनिक शीट'])
   })
 })

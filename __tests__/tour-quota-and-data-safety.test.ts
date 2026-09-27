@@ -19,6 +19,9 @@ describe('Tour Quota and Data Safety Verification', () => {
 
   it('no tour file invokes free allowance quota consumption or decrements quota', () => {
     const quotaTokens = [
+      'freeMeter',
+      '/api/free/calculate',
+      'complete_free_saved_costing',
       'consumeFreeAllowance',
       'decrementFreeAllowance',
       'deductAllowance',

@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { dismissCostEstimateTutorial } from '@/app/(dashboard)/owner/estimator/tutorial-actions'
 import { useTranslation } from '@/lib/i18n/context'
 import { costEstimateTutorialCopy, isTutorialField, type TutorialField } from '@/lib/i18n/cost-estimate-tutorial'
 import { Button } from '@/components/ui/button'
@@ -81,12 +80,8 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
     const [rects, setRects] = useState<{ field: DOMRect; card: DOMRect } | null>(null)
     const panel = useRef<HTMLDivElement>(null)
     const tutorialRows = useRef<HTMLElement[]>([])
-    const key = `weavly:cost-estimate-tutorial:v1:${orgId}:${userId}`
     const active = steps[index]
     const visibleSections = [...new Set(steps.map(step => step.section))]
-    const dismissed = useRef(accountDismissed)
-    const syncing = useRef(false)
-    const [syncFailed, setSyncFailed] = useState(false)
     const prevSectionRef = useRef<number | null>(null)
     const [isSectionTransition, setIsSectionTransition] = useState(false)
     const isScrollingRef = useRef(false)
@@ -98,39 +93,6 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
             setRequested(true)
         }
     }, [requestTrigger])
-
-    const syncDismissal = useCallback(async () => {
-        if (syncing.current) return
-        syncing.current = true
-        try {
-            const result = await dismissCostEstimateTutorial()
-            setSyncFailed(!result.success)
-            if (result.success) {
-                try { localStorage.removeItem(key) } catch { /* Optional retry cache. */ }
-            }
-        } catch {
-            setSyncFailed(true)
-        } finally {
-            syncing.current = false
-        }
-    }, [key])
-
-    // Legacy migration only (NO automatic starts on page entry, timer, or reload)
-    useEffect(() => {
-        if (!enabled || languageStatus === 'loading') return
-        try {
-            if (localStorage.getItem(key) === 'done') {
-                dismissed.current = true
-                void syncDismissal()
-            }
-        } catch { /* Account state still works without browser storage. */ }
-    }, [enabled, key, syncDismissal, languageStatus])
-
-    useEffect(() => {
-        const retry = () => { if (syncFailed) void syncDismissal() }
-        window.addEventListener('online', retry)
-        return () => window.removeEventListener('online', retry)
-    }, [syncFailed, syncDismissal])
 
     useEffect(() => {
         return () => {
@@ -271,10 +233,6 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
     const close = useCallback(() => {
         tutorialRows.current.forEach(row => row.dispatchEvent(new CustomEvent('tutorial-expand-row', { detail: false })))
         tutorialRows.current = []
-        dismissed.current = true
-        // Only a retry marker: the account flag is the source of truth.
-        try { localStorage.setItem(key, 'done') } catch { /* Still allow dismissal. */ }
-        void syncDismissal()
         prevSectionRef.current = null
         setIsSectionTransition(false)
         setPanelPlacement('top-right')
@@ -285,7 +243,7 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
         onOpenQualityLibraryModal?.(false)
         restoreView.current?.()
         restoreView.current = undefined
-    }, [key, syncDismissal, onOpenLiveCostModal, onOpenMonthlyExpensesModal, onOpenQualityLibraryModal])
+    }, [onOpenLiveCostModal, onOpenMonthlyExpensesModal, onOpenQualityLibraryModal])
 
     const handleNext = useCallback(() => {
         if (!steps.length) return
@@ -638,15 +596,12 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
         : copy.fields[active.field])
 
     return <>
-        {syncFailed && <div data-i18n-skip="true" lang={language} role="status" className="flex flex-wrap items-center gap-2 rounded-xl border border-amber-200/80 bg-amber-50/60 p-2.5 text-xs text-[var(--color-muted)]">
-            <span className="text-amber-900">{copy.syncFailed}</span>
-            <button type="button" className="font-semibold text-amber-800 underline hover:text-amber-900" onClick={() => void syncDismissal()}>{copy.retry}</button>
-        </div>}
         {enabled && (
             <TourInvitation
                 tourId="cost-estimate"
                 userId={userId}
                 orgId={orgId}
+                userMetadata={{ cost_estimate_tutorial_dismissed: accountDismissed }}
                 align="full"
                 onLaunch={() => { setGuide('core'); setRequested(true) }}
                 className="w-full"

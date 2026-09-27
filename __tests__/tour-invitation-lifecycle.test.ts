@@ -1,109 +1,89 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
+import { createElement } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
+import type { Language } from '../lib/i18n/context'
+import type { TourPresentation } from '../lib/tours/tour-types'
+import { tourCommonCopy } from '../lib/i18n/tour-common'
+import { tourInvitationCopy } from '../lib/i18n/tour-invitations'
 
-const mocks = vi.hoisted(() => ({
-  requireRole: vi.fn(),
-  updateUser: vi.fn(),
-  revalidatePath: vi.fn(),
-}))
+const state = vi.hoisted(() => ({ language: 'en' as Language, presentation: 'invite' as TourPresentation }))
+vi.mock('@/lib/i18n/context', () => ({ useTranslation: () => ({ language: state.language }) }))
+vi.mock('@/hooks/use-tour-invitation', () => ({ useTourInvitation: () => ({ presentation: state.presentation, isStarting: false, handleLaunch: vi.fn(), handleDismiss: vi.fn() }) }))
+import { TourInvitation } from '../components/tours/TourInvitation'
 
-vi.mock('@/lib/auth', () => ({ requireRole: mocks.requireRole }))
-vi.mock('@/lib/supabase/server', () => ({
-  createClient: async () => ({ auth: { updateUser: mocks.updateUser } }),
-}))
-vi.mock('next/cache', () => ({ revalidatePath: mocks.revalidatePath }))
+const read = (file: string) => fs.readFileSync(path.resolve(__dirname, '..', file), 'utf8')
+const component = read('components/tours/TourInvitation.tsx')
+const hook = read('hooks/use-tour-invitation.ts')
+const render = (align: 'full' | 'start' = 'full') => renderToStaticMarkup(createElement(TourInvitation, { tourId: 'dispatch', userId: 'owner', align }))
 
-import { getTourStatus } from '../lib/tours/tour-preferences'
+beforeEach(() => { state.language = 'en'; state.presentation = 'invite' })
 
-describe('Tour Invitation Lifecycle & Contract', () => {
-  const componentPath = path.resolve(__dirname, '../components/tours/TourInvitation.tsx')
-  const hookPath = path.resolve(__dirname, '../hooks/use-tour-invitation.ts')
-  const componentSource = fs.readFileSync(componentPath, 'utf-8')
-  const hookSource = fs.readFileSync(hookPath, 'utf-8')
+describe('Tour invitation lifecycle', () => {
+    it.each(['en', 'gu', 'hi'] as const)('renders the guide card and both decisions in %s', language => {
+        state.language = language
+        const html = render()
+        const copy = tourCommonCopy[language]
+        const name = tourInvitationCopy[language].tourNames.dispatch
+        expect(html).toContain(copy.guideTitle.replace('{name}', name))
+        expect(html).toContain(tourInvitationCopy[language].benefits.dispatch)
+        expect(html).toContain(copy.startGuide)
+        expect(html).toContain(copy.notNow)
+        expect(html).toContain('data-tour-control="take-tour"')
+        expect(html).toContain('data-tour-control="dismiss"')
+        expect(html).toContain('data-variant="ghost"')
+        expect(html).toContain('aria-describedby=')
+        expect(html).toContain(`aria-label="${copy.launcherAria.replace('{name}', name)}"`)
+        expect(html).toContain('min-h-[44px]')
+        expect(html).toContain('min-w-[44px]')
+    })
 
-  it('TourInvitation component satisfies accessibility and minimum touch target requirements (44x44px)', () => {
-    expect(componentSource).toContain('min-h-[44px]')
-    expect(componentSource).toContain('min-w-[44px]')
-    expect(componentSource).toContain('aria-label')
-    expect(componentSource).toContain('data-testid="tour-invitation-dismiss"')
-    expect(componentSource).toContain('data-testid="tour-invitation-launch"')
-  })
+    it.each(['en', 'gu', 'hi'] as const)('renders only a compact replay launcher in %s', language => {
+        state.language = language; state.presentation = 'replay'
+        const html = render()
+        expect(html).toContain(tourCommonCopy[language].guideTitle.replace('{name}', tourInvitationCopy[language].tourNames.dispatch))
+        expect(html).toContain('data-tour-control="quiet-tour"')
+        expect(html).not.toContain('<section')
+        expect(html).not.toContain('data-tour-control="dismiss"')
+        expect(html).not.toContain(tourInvitationCopy[language].benefits.dispatch)
+        expect(html).toContain('min-h-11')
+    })
 
-  it('TourInvitation applies tour-halo-active class and globals.css defines tour-halo-pulse keyframes', () => {
-    const cssPath = path.resolve(__dirname, '../app/globals.css')
-    const cssSource = fs.readFileSync(cssPath, 'utf-8')
-    expect(componentSource).toContain('tour-halo-active')
-    expect(cssSource).toContain('@keyframes tour-halo-pulse')
-    expect(cssSource).toContain('.tour-halo-active::after')
-    expect(hookSource).toContain('isReducedMotionPreferred()')
-  })
+    it('retains the start-aligned invitation variant', () => {
+        const html = render('start')
+        expect(html).toContain('tour-invitation-container')
+        expect(html).toContain('Take a tour')
+        expect(html).toContain('Not now')
+    })
 
-  it('hook manages visit-scoped presentation without premature collapse on impression recording', () => {
-    // Check that recording impression does NOT reset presentation to 'quiet'
-    expect(hookSource).toContain("if (presentation === 'invitation' && !impressionRecorded.current)")
-    expect(hookSource).toContain("impressionRecorded.current = true")
-    expect(hookSource).toContain("void persistTourImpression(tourId, userId)")
-    // Note: setPresentation('quiet') should only be called in handleDismiss or after explicit action
-    expect(hookSource).toMatch(/handleDismiss\s*=\s*useCallback\(\(\)\s*=>\s*\{[^}]*setPresentation\('quiet'\)/)
-  })
+    it('removes attention animation and its coordinator completely', () => {
+        for (const source of [component, hook, read('app/globals.css')]) expect(source).not.toMatch(/tour-halo-|isHaloActive|session-coordinator/)
+        expect(fs.existsSync(path.resolve(__dirname, '../lib/tours/session-coordinator.ts'))).toBe(false)
+        expect(component).not.toContain('guideCard')
+    })
 
-  it('hook halts halo immediately on keydown, pointerdown, touchstart, or scroll', () => {
-    expect(hookSource).toContain("'keydown'")
-    expect(hookSource).toContain("'pointerdown'")
-    expect(hookSource).toContain("'touchstart'")
-    expect(hookSource).toContain("'scroll'")
-    expect(hookSource).toContain('stopHalo()')
-    // Passive pointer move must NOT cancel halo
-    expect(hookSource).toContain("if (event.type === 'pointermove' || event.type === 'mousemove') return")
-  })
+    it('keeps impressions separate from decisions and records them only once', () => {
+        expect(hook).toContain("presentation !== 'invite'")
+        expect(hook).toContain('impressions.current.has(identity)')
+        expect(hook).toContain('!account?.firstShown && !local?.firstShown')
+        expect(hook).toContain('void persistTourImpression(tourId, userId)')
+        expect(hook).toContain('getTourPresentation(tourId, userMetadata, userId, orgId)')
+    })
 
-  it('hook coalesces rapid double-clicks during launch', () => {
-    expect(hookSource).toContain('if (isStarting) return')
-    expect(hookSource).toContain('setIsStarting(true)')
-    expect(hookSource).toContain('setIsStarting(false)')
-  })
+    it('coalesces launch clicks synchronously and preserves focus after Not now', () => {
+        expect(hook).toContain('if (launching.current) return')
+        expect(hook).toContain('launching.current = true')
+        expect(hook).toContain('launching.current = false')
+        expect(component).toContain("presentation === 'replay' && focusAfterDismiss.current")
+        expect(component).toContain('launcherRef.current?.focus({ preventScroll: true })')
+    })
 
-  it('presentation status transitions from invitation to quiet on subsequent visits', () => {
-    const userId = 'user-lifecycle-1'
-    // First visit: unshown, undismissed
-    const firstVisitStatus = getTourStatus('cost-estimate', null, userId)
-    expect(firstVisitStatus.isFirstEligibleVisit).toBe(true)
-    expect(firstVisitStatus.isSuppressed).toBe(false)
-
-    // Second visit: impression has been recorded (firstShown timestamp exists)
-    const secondVisitStatus = getTourStatus('cost-estimate', {
-      tour_preferences: {
-        'cost-estimate': {
-          firstShown: '2026-09-10T10:00:00Z',
-          version: 'v1',
-        },
-      },
-    }, userId)
-    expect(secondVisitStatus.isFirstEligibleVisit).toBe(false)
-    expect(secondVisitStatus.isSuppressed).toBe(true)
-
-    // Third visit: user explicitly dismissed
-    const dismissedStatus = getTourStatus('cost-estimate', {
-      tour_preferences: {
-        'cost-estimate': {
-          dismissed: true,
-          version: 'v1',
-        },
-      },
-    }, userId)
-    expect(dismissedStatus.isFirstEligibleVisit).toBe(false)
-    expect(dismissedStatus.isDismissed).toBe(true)
-    expect(dismissedStatus.isSuppressed).toBe(true)
-  })
-
-  it('uses the shared quiet rail styling for every launcher presentation', () => {
-    const rail = fs.readFileSync(path.resolve(__dirname, '../components/ui/rail.ts'), 'utf8')
-    expect(componentSource).toContain('railSurface')
-    expect(componentSource).toContain('railButton')
-    expect(componentSource).not.toContain('amber')
-    expect(rail).toContain('border-hairline')
-    expect(rail).toContain('hover:bg-surface-soft')
-    expect(rail).toContain('shadow-xs')
-  })
+    it('uses the shared quiet rail styling for every launcher presentation', () => {
+        const rail = read('components/ui/rail.ts')
+        expect(component).toContain('railSurface')
+        expect(component).toContain('railButton')
+        expect(component).not.toContain('amber')
+        for (const token of ['border-hairline', 'hover:bg-surface-soft', 'shadow-xs']) expect(rail).toContain(token)
+    })
 })
