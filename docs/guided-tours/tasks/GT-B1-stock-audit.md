@@ -1,0 +1,36 @@
+# GT-B1 — Stock audit tour (BLOCKED)
+
+## Task ID and purpose
+
+GT-B1. A dedicated tour for `/owner/stock/audit`, outlined in [`pages/stock-audit.md`](../pages/stock-audit.md) §D.
+
+## Dependencies and entry conditions (all required)
+
+- GT-17 PASSED.
+- PI-06 fixed: changing the audit date loads that date's audit; the adjustment shown equals the one applied.
+- PI-07 fixed: the audit page's strings go through translation keys in en/gu/hi.
+- Owner decision recorded: which path owners should use for a routine count (Correct balance vs Audit → Adjust).
+
+## Read first
+
+Page spec (stock-audit.md), plan §4–§9, the GT-03 and GT-13 implementations (live-page pattern).
+
+## Allowed change surface
+
+To be set when unblocked: the audit page files, a new tour module and copy, locales, registry (`stock-audit` TourId added then), tests, harness.
+
+## Required implementation
+
+First, the senior designer completes the page spec (steps, copy in three languages, variants) against the fixed page. The executor then implements it like GT-13.
+
+## Definition of done
+
+Set when unblocked.
+
+## Failure and escalation conditions
+
+Starting while any entry condition is unmet is not allowed.
+
+## Checkpoint
+
+Stays **BLOCKED**.
