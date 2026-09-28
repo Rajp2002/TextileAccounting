@@ -444,6 +444,72 @@
     }
   }
 
+  /* Woven brand intro (components/intro). Hidden unless the pre-paint script chose to
+     play it, so the first paint is right either way: black stage, or the page itself. */
+  .weavly-intro,
+  .weavly-intro-skip {
+    display: none;
+  }
+
+  html[data-weavly-intro="landing"] .weavly-intro[data-surface="landing"],
+  html[data-weavly-intro="app-login"] .weavly-intro[data-surface="app-login"] {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    overflow: hidden;
+    background: #000;
+    touch-action: none;
+  }
+
+  html[data-weavly-intro="landing"] .weavly-intro-skip[data-surface="landing"],
+  html[data-weavly-intro="app-login"] .weavly-intro-skip[data-surface="app-login"] {
+    position: fixed;
+    right: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    z-index: 101;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 16px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.35);
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 13px;
+    font-weight: 500;
+    transition: color 200ms ease, background-color 200ms ease, border-color 200ms ease;
+  }
+
+  html[data-weavly-intro] .weavly-intro-skip[data-tone="light"] {
+    border-color: var(--color-hairline);
+    background: rgba(255, 255, 255, 0.6);
+    color: var(--color-ink);
+  }
+
+  html[data-weavly-intro] .weavly-intro-skip:focus-visible {
+    outline: 2px solid var(--weavly-focus-ring);
+    outline-offset: 2px;
+  }
+
+  html[data-weavly-intro-leaving] .weavly-intro,
+  html[data-weavly-intro-leaving] .weavly-intro-skip {
+    opacity: 0;
+    transition: opacity 180ms ease;
+  }
+
+  html[data-weavly-intro] body,
+  html[data-weavly-intro] .landing-scroll {
+    overflow: hidden;
+  }
+
+  html[data-weavly-intro] .animate-blob-drift-1,
+  html[data-weavly-intro] .animate-blob-drift-2,
+  html[data-weavly-intro] .animate-blob-drift-3,
+  html[data-weavly-intro] .animate-blob-drift-4 {
+    animation-play-state: paused;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .landing-scroll header,
     .landing-scroll header * {

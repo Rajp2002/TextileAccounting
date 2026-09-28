@@ -27,7 +27,7 @@ export default function AuthLayout({ children, title, subtitle }: AuthLayoutProp
                     <div className="p-5 pb-3 text-center xs:p-6 xs:pb-4 sm:p-8 sm:pb-4">
                         {/* App Logo */}
                         <div className="mx-auto mb-2 h-24 w-40 relative flex items-center justify-center group cursor-default">
-                            <div className="relative h-full w-full">
+                            <div data-weavly-intro-target="app-login" className="relative h-full w-full">
                                 <Image src="/images/WeavlyLogo.png" alt="Weavly Logo" fill sizes="10rem" className="object-contain transition-transform group-hover:scale-105 duration-500" priority />
                             </div>
                         </div>

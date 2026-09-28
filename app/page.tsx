@@ -10,13 +10,19 @@ import { ArrowRight, Calculator, CheckCircle2 } from 'lucide-react';
 
 import LandingBackground from "@/components/landing/background";
 import LandingFooter from "@/components/landing/footer";
+import { IntroPrePaintScript } from "@/components/intro/intro-pre-paint-script";
+import { WeavingIntro } from "@/components/intro/weaving-intro";
 
 export default function Home() {
   return (
     <main className="landing-scroll scroll-pt-28 h-[100svh] w-full overflow-x-hidden overflow-y-auto bg-white font-sans text-zinc-950 selection:bg-orange-500/20 scroll-smooth">
-      <div className="relative w-full min-h-max">
+      <IntroPrePaintScript surface="landing" />
+      <WeavingIntro surface="landing" />
+      {/* The fixed header sits outside the page plane so the intro can give the page a
+          little depth while the navbar lands. */}
+      <LandingHeader />
+      <div className="relative w-full min-h-max" data-weavly-intro-page>
         <LandingBackground />
-        <LandingHeader />
         <LandingHero />
         
         <div>

@@ -38,7 +38,7 @@ This core framework governs all visual and interaction design across Weavly. The
 20. **Every Surface Needs Complete States**: Design `loading`, `loaded`, `empty`, `no-results`, and `error` states for every data-driven view.
 21. **Responsive Means Recompose, Not Shrink**: Rearrange desktop columns into stacked mobile hierarchies (`Identity + Status` → `Metadata` → `Actions`), not compressed tables.
 22. **Design for Gujarati and Hindi From the Start**: Fluid widths and text wrapping so translated phrases never break or truncate awkwardly.
-23. **Keep Animations Restrained**: Functional motion only (`120–200ms`) for menus, dialogs, disclosures, and focus feedback.
+23. **Keep Animations Restrained**: Functional motion only (`120–200ms`) for menus, dialogs, disclosures, and focus feedback. The one deliberate exception is the woven brand intro (`components/intro/`, ~5s): it plays each time `/` is opened and each time the installed app launches on `/login`, never with reduced motion, is skippable at any moment, and always ends on the real, unchanged page. Do not reuse it inside product workflows.
 24. **Maintain a Clear Color Hierarchy**: Navy/charcoal for structure/actions; warm cream/white for surfaces; saffron for brand; warm gray for hairline borders; semantic colors for actual status only.
 25. **More UI Is Not Better UI**: Before adding anything, ask: *Does this improve comprehension, task speed, or confidence?* If no, remove it. *Fewer elements, better resolved.*
 
