@@ -316,6 +316,16 @@ describe('woven intro integration contracts', () => {
         expect(login.indexOf('<IntroPrePaintScript surface="app-login" />')).toBeLessThan(login.indexOf('<LoginForm'))
     })
 
+    it('keeps the saved-password popover closed until the user presses or tabs into a sign-in field', () => {
+        const form = read('app/(auth)/login/login-form.tsx')
+        // both the email and the password field
+        expect(form.match(/readOnly=\{!credentialsArmed\}/g)).toHaveLength(2)
+        expect(form.match(/onPointerDown=\{armCredentials\}/g)).toHaveLength(2)
+        expect(form.match(/onFocus=\{armCredentials\}/g)).toHaveLength(2)
+        // the pressed field is unlocked before it takes focus, so iOS still opens the keyboard
+        expect(form).toContain('event.currentTarget.readOnly = false')
+    })
+
     it('loads the WebGL runtime lazily and always restores the page when it ends', () => {
         expect(read('components/intro/weaving-intro.tsx')).toContain("import('./weaving-intro-runtime')")
         const runtime = read('components/intro/weaving-intro-runtime.ts')
