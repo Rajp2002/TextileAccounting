@@ -56,7 +56,9 @@ function SignupForm() {
     const searchParams = useSearchParams()
     
     const [referralCode, setReferralCode] = useState(searchParams?.get('ref') || '')
-    const selectedPlan = searchParams?.get('plan') === 'free' ? 'free' as const : searchParams?.get('plan') === 'base' ? 'base' as const : 'lite' as const
+    // Free is the default for every new account; only an explicit Lite or Base choice skips it.
+    const requestedPlan = searchParams?.get('plan')
+    const selectedPlan = requestedPlan === 'lite' ? 'lite' as const : requestedPlan === 'base' ? 'base' as const : 'free' as const
     
     const [loading, setLoading] = useState(false)
     const [ownerName, setOwnerName]     = useState('')
