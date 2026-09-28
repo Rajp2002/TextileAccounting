@@ -422,28 +422,6 @@
     color: #475569;
   }
 
-  /* Landing-page sections become discrete slides on roomy desktop viewports.
-     Small and short screens keep natural document flow so content is never clipped. */
-  .landing-section {
-    min-height: 100svh;
-  }
-
-  @media (min-width: 1024px) and (min-height: 760px) {
-    .landing-section {
-      display: flex;
-      min-height: 100svh;
-      align-items: center;
-      scroll-snap-align: start;
-      scroll-snap-stop: always;
-    }
-
-    .landing-scroll {
-      scroll-snap-type: y mandatory !important;
-      scroll-padding-top: 7rem;
-      overscroll-behavior-y: contain;
-    }
-  }
-
   /* Woven brand intro (components/intro). Hidden unless the pre-paint script chose to
      play it, so the first paint is right either way: black stage, or the page itself. */
   .weavly-intro,

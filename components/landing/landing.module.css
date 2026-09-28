@@ -1,0 +1,417 @@
+/*
+ * Landing page system, "Neel" (scoped by CSS Modules; nothing here reaches the
+ * app or the protected navbar). Cotton-white paper, indigo for ink, actions and
+ * bands (a richer take on the app's loom navy), and saffron as the one thread.
+ * Indigo and saffron are complementary, the classic neel-and-kesari pairing,
+ * so the logo's orange reads as the accent. The black navbar stays the only
+ * pure black: the beam the cloth hangs from.
+ */
+
+.page {
+  --lp-paper: #f4f2ec;
+  --lp-paper-deep: #e9e6dd;
+  --lp-sheet: #ffffff;
+  --lp-line: #d9d5ca;
+  --lp-line-strong: #b5afa1;
+  --lp-ink: #16213e;
+  --lp-body: #2b3246;
+  --lp-muted: #535a6d;
+  --lp-loom: #101a33;
+  --lp-loom-raised: #18233f;
+  --lp-loom-line: #26314f;
+  --lp-on-loom: #eef0f6;
+  --lp-on-loom-muted: #a9b0c4;
+  --lp-saffron: #e8762a;
+  --lp-saffron-ink: #a8430e;
+  --lp-good: #2f6b43;
+
+  position: relative;
+  background: var(--lp-paper);
+  color: var(--lp-body);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+.display {
+  font-family: var(--font-lp-display), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  font-stretch: 100%;
+  letter-spacing: -0.01em;
+}
+
+@media (min-width: 768px) {
+  .display {
+    font-stretch: 108%;
+  }
+}
+
+.gujarati {
+  font-family: var(--font-lp-gujarati), 'Noto Sans Gujarati', 'Gujarati Sangam MN', sans-serif;
+}
+
+.devanagari {
+  font-family: var(--font-lp-devanagari), 'Noto Sans Devanagari', 'Kohinoor Devanagari', sans-serif;
+}
+
+.figure {
+  font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.label {
+  font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* The warp: the navbar panel's edges run down the whole page as two hairlines,
+   so every section is woven on the same beam. */
+.warp {
+  position: relative;
+}
+
+.warp::before,
+.warp::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--warp-line, var(--lp-line));
+  pointer-events: none;
+}
+
+.warp::before {
+  left: 0;
+}
+
+.warp::after {
+  right: 0;
+}
+
+.onLoom {
+  --warp-line: var(--lp-loom-line);
+  background: var(--lp-loom);
+  color: var(--lp-on-loom);
+}
+
+.onDeep {
+  background: var(--lp-paper-deep);
+}
+
+/* A single saffron pick crossing the warp. */
+.thread {
+  height: 2px;
+  background: var(--lp-saffron);
+}
+
+.sheet {
+  background: var(--lp-sheet);
+  border: 1px solid var(--lp-line-strong);
+  box-shadow: 0 1px 0 rgba(22, 33, 62, 0.04), 0 18px 40px -24px rgba(22, 33, 62, 0.3);
+}
+
+.leader {
+  flex: 1 1 auto;
+  min-width: 1rem;
+  border-bottom: 1px dotted var(--lp-line-strong);
+  transform: translateY(-0.3em);
+}
+
+/* Primary action: loom-black, like the structural actions in the product. */
+.primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 0 22px;
+  border-radius: 8px;
+  background: var(--lp-ink);
+  color: var(--lp-paper);
+  font-weight: 600;
+  font-size: 15px;
+  transition: background-color 160ms ease;
+}
+
+.primary:hover {
+  background: #243258;
+}
+
+.primaryOnLoom {
+  background: var(--lp-on-loom);
+  color: var(--lp-ink);
+}
+
+.primaryOnLoom:hover {
+  background: #fff;
+}
+
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 18px;
+  border-radius: 8px;
+  border: 1px solid var(--lp-line-strong);
+  color: var(--lp-ink);
+  font-weight: 600;
+  font-size: 15px;
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+
+.secondary:hover {
+  border-color: var(--lp-ink);
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.secondaryOnLoom {
+  border-color: #3a4668;
+  color: var(--lp-on-loom);
+}
+
+.secondaryOnLoom:hover {
+  border-color: var(--lp-on-loom-muted);
+  background: var(--lp-loom-raised);
+}
+
+.textLink {
+  color: var(--lp-ink);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: var(--lp-line-strong);
+  text-underline-offset: 4px;
+  transition: text-decoration-color 160ms ease;
+}
+
+.textLink:hover {
+  text-decoration-color: var(--lp-saffron);
+}
+
+.page :where(a, button, summary, input):focus-visible {
+  outline: 2px solid var(--lp-saffron);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Range inputs: a 44px hit area around a thin track; the fill follows --fill. */
+.range {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 44px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  touch-action: pan-y;
+}
+
+.range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(to right, var(--lp-ink) var(--fill, 50%), var(--lp-line) var(--fill, 50%));
+}
+
+.range::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--lp-line);
+}
+
+.range::-moz-range-progress {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--lp-ink);
+}
+
+.range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  margin-top: -9px;
+  border-radius: 50%;
+  border: 2px solid var(--lp-sheet);
+  background: var(--lp-saffron);
+  box-shadow: 0 0 0 1px var(--lp-saffron-ink);
+}
+
+.range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--lp-sheet);
+  background: var(--lp-saffron);
+  box-shadow: 0 0 0 1px var(--lp-saffron-ink);
+}
+
+.range:focus-visible {
+  outline: none;
+}
+
+.range:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 2px var(--lp-sheet), 0 0 0 4px var(--lp-saffron-ink);
+}
+
+.range:focus-visible::-moz-range-thumb {
+  box-shadow: 0 0 0 2px var(--lp-sheet), 0 0 0 4px var(--lp-saffron-ink);
+}
+
+.bar > span {
+  transition: flex-grow 220ms ease;
+}
+
+/* FAQ disclosure marker */
+.faq summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.faq summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq .marker {
+  transition: transform 160ms ease;
+}
+
+.faq[open] .marker {
+  transform: rotate(45deg);
+}
+
+/* Policy pages: header panel in the navbar's proportions, and long-form text. */
+.legalBar {
+  background: #000;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+.legalLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 8px;
+  border-radius: 6px;
+  color: #c9cdd8;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 8px;
+  transition: color 160ms ease, text-decoration-color 160ms ease;
+}
+
+.legalLink:hover {
+  color: #fff;
+}
+
+.legalLink[aria-current='page'] {
+  color: #fff;
+  text-decoration-color: var(--lp-saffron);
+}
+
+.legalLink:focus-visible {
+  outline: 2px solid var(--lp-saffron);
+  outline-offset: 2px;
+}
+
+.legalProse {
+  --tw-prose-body: var(--lp-body);
+  --tw-prose-headings: var(--lp-ink);
+  --tw-prose-lead: var(--lp-body);
+  --tw-prose-links: var(--lp-ink);
+  --tw-prose-bold: var(--lp-ink);
+  --tw-prose-counters: var(--lp-muted);
+  --tw-prose-bullets: var(--lp-line-strong);
+  --tw-prose-hr: var(--lp-line);
+  --tw-prose-th-borders: var(--lp-line-strong);
+  --tw-prose-td-borders: var(--lp-line);
+  max-width: none;
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--lp-body);
+}
+
+.legalProse :where(a):not(:where(.not-prose, .not-prose *)) {
+  font-weight: 600;
+  text-decoration-color: var(--lp-saffron);
+  text-underline-offset: 4px;
+}
+
+/* Intro paragraphs on the policy pages sit outside .legalProse. */
+.legalBody > p a {
+  color: var(--lp-ink);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: var(--lp-saffron);
+  text-underline-offset: 4px;
+}
+
+.callout {
+  border-width: 1px;
+  border-style: solid;
+  border-left-width: 3px;
+  border-radius: 8px;
+}
+
+.calloutBlue {
+  border-color: #c9d0e4;
+  border-left-color: var(--lp-ink);
+  background: #eef0f7;
+  color: var(--lp-ink);
+}
+
+.calloutAmber {
+  border-color: #f0cfb2;
+  border-left-color: var(--lp-saffron);
+  background: #fcf1e7;
+  color: #3d2410;
+}
+
+.calloutRed {
+  border-color: #e8c3b8;
+  border-left-color: #a8361c;
+  background: #faece8;
+  color: #3f1a10;
+}
+
+.calloutNeutral {
+  border-color: var(--lp-line);
+  border-left-color: var(--lp-line-strong);
+  background: var(--lp-paper-deep);
+  color: var(--lp-ink);
+}
+
+/* Quiet entrance as content scrolls in. Decorative, so browsers without
+   scroll-driven animations simply show the content. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports ((animation-timeline: view()) and (animation-range: entry)) {
+    @keyframes lp-rise {
+      from {
+        opacity: 0;
+        transform: translateY(18px);
+      }
+    }
+
+    .rise {
+      animation: lp-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 55%;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar > span,
+  .primary,
+  .secondary,
+  .textLink,
+  .faq .marker {
+    transition: none;
+  }
+}
