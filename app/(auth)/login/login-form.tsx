@@ -25,12 +25,29 @@ export default function LoginForm({ recoveryDestination }: { recoveryDestination
     const [email, setEmail]                 = useState('')
     const [password, setPassword]           = useState('')
     const [showPassword, setShowPassword]   = useState(false)
+    // Safari opens its saved-password popover on its own as soon as a login
+    // form loads, which lands on top of the installed app's woven intro. The
+    // fields stay read-only (no popover) until the user presses or tabs into one.
+    const [credentialsArmed, setCredentialsArmed] = useState(false)
+
+    const armCredentials = (event: React.SyntheticEvent<HTMLInputElement>) => {
+        if (credentialsArmed) return
+        // Unlock this field before the focus that follows a press, so it lands
+        // on an editable field (iOS only opens the keyboard for those).
+        event.currentTarget.readOnly = false
+        setCredentialsArmed(true)
+    }
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search)
         if (params.get('message') === 'password-updated') {
             toast.success('Password updated. Please sign in with your new password.')
             window.history.replaceState(null, '', window.location.pathname)
+        }
+        // A field focused before hydration missed its handlers: unlock it now.
+        const active = document.activeElement
+        if (active instanceof HTMLInputElement && (active.id === 'email' || active.id === 'password')) {
+            active.readOnly = false
         }
     }, [])
 
@@ -113,6 +130,9 @@ export default function LoginForm({ recoveryDestination }: { recoveryDestination
                         onChange={(e) => setEmail(e.target.value)}
                         required
                         autoComplete="email"
+                        readOnly={!credentialsArmed}
+                        onPointerDown={armCredentials}
+                        onFocus={armCredentials}
                         className="h-12 transition-all focus:bg-surface"
                         disabled={loading}
                     />
@@ -137,6 +157,9 @@ export default function LoginForm({ recoveryDestination }: { recoveryDestination
                             onChange={(e) => setPassword(e.target.value)}
                             required
                             autoComplete="current-password"
+                            readOnly={!credentialsArmed}
+                            onPointerDown={armCredentials}
+                            onFocus={armCredentials}
                             className="h-12 pr-10 transition-all focus:bg-surface"
                             disabled={loading}
                         />
