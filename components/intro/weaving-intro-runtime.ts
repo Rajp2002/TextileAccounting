@@ -48,6 +48,14 @@ const MAX_DPR = 2
 const STRIP_DARK = [7, 7, 6]
 const STRIP_BEIGE = [255, 248, 234]
 const PAGE_BG = [244, 243, 236]
+/** Paint the page root (html and body: iOS takes the strip colour from either) with no transition. */
+function paintRoot(color: string) {
+    document.documentElement.style.backgroundColor = color
+    const body = document.body
+    body.style.backgroundColor = color
+    body.style.transition = color ? 'none' : ''
+}
+
 function stripColor(beige: number, fade: number, exposure: number): string {
     const warm = [40, 18, 0].map((c) => c * Math.sin(Math.PI * beige))
     const ch = STRIP_DARK.map((d, i) => {
@@ -244,7 +252,7 @@ export function startWeavingIntro({ surface, overlay, skipButton, handle }: Star
         overlay.style.background = ''
         skipButton.style.opacity = ''
         skipButton.removeAttribute('data-tone')
-        root.style.backgroundColor = ''
+        paintRoot('')
         handle.release()
         handle.state = 'done'
         root.removeAttribute(INTRO_ATTRIBUTE)
@@ -298,7 +306,7 @@ export function startWeavingIntro({ surface, overlay, skipButton, handle }: Star
         cloneBox.style.height = `${s.z * lb.h}px`
         cloneBox.style.opacity = s.imgA.toFixed(3)
         overlay.style.opacity = (1 - s.fade).toFixed(3)
-        if (surface === 'app-login') root.style.backgroundColor = stripColor(s.beige, s.fade, s.exposure)
+        if (surface === 'app-login') paintRoot(stripColor(s.beige, s.fade, s.exposure))
         skipButton.style.opacity = (1 - s.fade).toFixed(3)
         if (s.beige > 0.5) skipButton.setAttribute('data-tone', 'light')
         else skipButton.removeAttribute('data-tone')
