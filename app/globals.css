@@ -1847,3 +1847,24 @@ button[aria-expanded="true"] .nav-chevron {
 @media (max-width: 767px), (max-height: 500px) and (pointer: coarse) {
   [data-configuration-picker-preview="true"] { top: 72px !important; left: 8px !important; width: calc(100vw - 16px) !important; max-height: calc(54dvh - 88px) !important; }
 }
+
+/* Spring pop shared by every modal (Dialog): scale + slight tilt on enter, quick shrink on exit.
+   Uses the individual `scale`/`rotate` properties so the centring `translate` is untouched. */
+@keyframes modal-spring-in {
+  from { opacity: 0; scale: var(--modal-enter-scale, 0.6); rotate: var(--modal-enter-rotate, 8deg); }
+  60% { opacity: 1; }
+  to { opacity: 1; scale: 1; rotate: 0deg; }
+}
+@keyframes modal-spring-out {
+  from { opacity: 1; scale: 1; }
+  to { opacity: 0; scale: var(--modal-exit-scale, 0.85); }
+}
+.modal-spring[data-state="open"] {
+  animation: modal-spring-in 420ms linear(0, 0.35 8%, 0.85 20%, 1.06 34%, 1.07 44%, 0.99 62%, 1.005 78%, 1) both;
+}
+.modal-spring[data-state="closed"] {
+  animation: modal-spring-out 160ms ease-in both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .modal-spring[data-state] { animation-duration: 0.01ms !important; }
+}
