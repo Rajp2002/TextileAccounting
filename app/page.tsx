@@ -20,7 +20,7 @@ import { WeavingIntro } from "@/components/intro/weaving-intro";
 
 export default function Home() {
   return (
-    <main className="landing-scroll scroll-pt-28 h-[100svh] w-full overflow-x-hidden overflow-y-auto bg-[#f4f2ec] font-sans text-zinc-950 selection:bg-orange-500/20 scroll-smooth motion-reduce:scroll-auto">
+    <main className="landing-scroll scroll-pt-28 h-[100svh] w-full overflow-x-hidden overflow-y-auto bg-canvas font-sans text-ink selection:bg-wv-bg-selected/20 scroll-smooth motion-reduce:scroll-auto">
       <IntroPrePaintScript surface="landing" />
       <WeavingIntro surface="landing" />
       {/* The fixed header sits outside the page plane so the intro can give the page a

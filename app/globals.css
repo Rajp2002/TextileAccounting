@@ -335,17 +335,18 @@
   /* Hints must read as hints, never as an entered value. */
   --color-placeholder: var(--wv-cotton-500);
 
-  /* Legacy tokens preserved for compatibility */
-  --color-yarn-orange: #D96B1C;
-  --color-yarn-orange-dark: #9E4212;
-  --color-factory-green: #285C3B;
-  --color-factory-green-soft: #E1F0E5;
-  --color-warning-amber: #C98A13;
-  --color-warning-amber-soft: #F7E8C2;
-  --color-risk-red: #A6402D;
-  --color-risk-red-soft: #F2D8D1;
-  --color-info-blue: #315C78;
-  --color-info-blue-soft: #DDEAF0;
+  /* Compatibility aliases still used by estimator surfaces. Keep every value
+     on the canonical palette; yarn-orange is the readable saffron step. */
+  --color-yarn-orange: var(--wv-saffron-700);
+  --color-yarn-orange-dark: var(--wv-saffron-700);
+  --color-factory-green: var(--wv-status-success-fg);
+  --color-factory-green-soft: var(--wv-status-success-bg);
+  --color-warning-amber: var(--wv-status-warning-fg);
+  --color-warning-amber-soft: var(--wv-status-warning-bg);
+  --color-risk-red: var(--wv-status-danger-fg);
+  --color-risk-red-soft: var(--wv-status-danger-bg);
+  --color-info-blue: var(--wv-status-info-fg);
+  --color-info-blue-soft: var(--wv-status-info-bg);
 
   --weavly-primary: var(--wv-action-primary);
   --weavly-primary-active: var(--wv-action-primary-active);
@@ -509,7 +510,7 @@
   }
 
   ::selection {
-    background: rgba(226, 112, 37, 0.18);
+    background: var(--wv-bg-selected);
     color: var(--color-ink);
   }
 
@@ -532,22 +533,6 @@
 }
 
 @layer utilities {
-  /* Keep light-theme helper text readable everywhere, including pages that
-     use raw Tailwind grey/slate/zinc utilities instead of semantic tokens. */
-  :root:not(.dark) :where(
-    [class*="text-slate-300"],
-    [class*="text-slate-400"],
-    [class*="text-slate-500"],
-    [class*="text-gray-300"],
-    [class*="text-gray-400"],
-    [class*="text-gray-500"],
-    [class*="text-zinc-300"],
-    [class*="text-zinc-400"],
-    [class*="text-zinc-500"]
-  ) {
-    color: var(--color-muted);
-  }
-
   /* Preserve light text when a dark navigation, solid modal, or summary panel is
      the reading surface. Modal backdrops and overlays (e.g. fixed inset-0, backdrop-blur)
      are excluded so light dialog cards nested inside them keep high-contrast dark text.
@@ -555,98 +540,53 @@
   :root:not(.dark) :is(
     [class*="bg-[#111111]"],
     [class*="bg-black"],
-    [class*="bg-slate-900"],
-    [class*="bg-slate-950"],
-    [class*="bg-zinc-900"],
-    [class*="bg-zinc-950"],
     [class~="bg-loom"],
     [class~="bg-loom-elevated"]
   ):not([class*="fixed inset-0"]):not([class*="backdrop-blur"]):not([data-slot="dialog-overlay"]):not([data-slot="sheet-overlay"]) :is(
     [class*="text-muted-foreground"],
     [class*="text-body"],
     [class*="text-subtle"],
-    [class~="text-muted"],
-    [class*="text-slate-300"],
-    [class*="text-slate-400"],
-    [class*="text-slate-500"],
-    [class*="text-gray-300"],
-    [class*="text-gray-400"],
-    [class*="text-gray-500"],
-    [class*="text-zinc-300"],
-    [class*="text-zinc-400"],
-    [class*="text-zinc-500"]
+    [class~="text-muted"]
   ) {
-    color: #CBD5E1;
+    color: var(--wv-text-inverse-secondary);
   }
 
   /* When a light reading surface (card, modal, dialog, sheet) appears inside
-     a dark overlay or backdrop (such as bg-slate-900/60 or bg-black/60), ensure
+     a dark overlay or backdrop (such as bg-black/60), ensure
      text inside the light surface remains crisp, dark and clearly readable. */
   :root:not(.dark) :is(
     [class*="bg-[#111111]"],
     [class*="bg-black"],
-    [class*="bg-slate-900"],
-    [class*="bg-slate-950"],
-    [class*="bg-zinc-900"],
-    [class*="bg-zinc-950"],
     [class~="bg-loom"],
     [class~="bg-loom-elevated"]
   ) :is(
     [class*="bg-white"],
     [class*="bg-surface"],
     [class*="bg-card"],
-    [class*="bg-background"],
-    [class*="bg-slate-50"],
-    [class*="bg-slate-100"]
+    [class*="bg-background"]
   ) :is(
     [class*="text-muted-foreground"],
     [class*="text-body"],
     [class*="text-subtle"],
-    [class~="text-muted"],
-    [class*="text-slate-300"],
-    [class*="text-slate-400"],
-    [class*="text-slate-500"],
-    [class*="text-slate-600"],
-    [class*="text-gray-300"],
-    [class*="text-gray-400"],
-    [class*="text-gray-500"],
-    [class*="text-zinc-300"],
-    [class*="text-zinc-400"],
-    [class*="text-zinc-500"]
+    [class~="text-muted"]
   ),
   :root:not(.dark) :is(
     [class*="bg-[#111111]"],
     [class*="bg-black"],
-    [class*="bg-slate-900"],
-    [class*="bg-slate-950"],
-    [class*="bg-zinc-900"],
-    [class*="bg-zinc-950"],
     [class~="bg-loom"],
     [class~="bg-loom-elevated"]
   ) :is(
     [class*="bg-white"],
     [class*="bg-surface"],
     [class*="bg-card"],
-    [class*="bg-background"],
-    [class*="bg-slate-50"],
-    [class*="bg-slate-100"]
+    [class*="bg-background"]
   ):is(
     [class*="text-muted-foreground"],
     [class*="text-body"],
     [class*="text-subtle"],
-    [class~="text-muted"],
-    [class*="text-slate-300"],
-    [class*="text-slate-400"],
-    [class*="text-slate-500"],
-    [class*="text-slate-600"],
-    [class*="text-gray-300"],
-    [class*="text-gray-400"],
-    [class*="text-gray-500"],
-    [class*="text-zinc-300"],
-    [class*="text-zinc-400"],
-    [class*="text-zinc-500"]
+    [class~="text-muted"]
   ) {
-    color: #475569;
+    color: var(--wv-text-secondary);
   }
 
   /* Woven brand intro (components/intro). Hidden unless the pre-paint script chose to
@@ -748,8 +688,8 @@
   .bg-grid-pattern {
     background-size: 40px 40px;
     background-image:
-      linear-gradient(to right, rgba(126, 91, 47, 0.045) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(126, 91, 47, 0.045) 1px, transparent 1px);
+      linear-gradient(to right, color-mix(in srgb, var(--wv-text-body) 4.5%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in srgb, var(--wv-text-body) 4.5%, transparent) 1px, transparent 1px);
   }
 
   .settings-page-frame {
@@ -1527,7 +1467,7 @@
     appearance: none;
     margin-top: -5px; /* (8px track height - 18px thumb height) / 2 = -5px */
     background-color: var(--color-yarn-orange);
-    border: 2px solid #FFFFFF;
+    border: 2px solid var(--wv-bg-surface);
     height: 18px;
     width: 18px;
     border-radius: 9999px;
@@ -1544,7 +1484,7 @@
 
   .modern-slider::-moz-range-thumb {
     background-color: var(--color-yarn-orange);
-    border: 2px solid #FFFFFF;
+    border: 2px solid var(--wv-bg-surface);
     height: 18px;
     width: 18px;
     border-radius: 9999px;
@@ -1674,7 +1614,7 @@
 @media (display-mode: standalone) {
   html, body {
     /* Match the manifest background_color exactly */
-    background-color: #FFF8EA;
+    background-color: var(--wv-bg-canvas);
   }
 
   /* Once the app shell has mounted and React takes over, transition back to
@@ -1821,15 +1761,15 @@ button[aria-expanded="true"] .nav-chevron {
 @keyframes tour-halo-pulse {
   0% {
     opacity: 0;
-    box-shadow: 0 0 0 0 rgba(232, 122, 30, 0.45);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--wv-brand-accent) 45%, transparent);
   }
   50% {
     opacity: 1;
-    box-shadow: 0 0 0 6px rgba(232, 122, 30, 0.28);
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--wv-brand-accent) 28%, transparent);
   }
   100% {
     opacity: 0;
-    box-shadow: 0 0 0 10px rgba(232, 122, 30, 0);
+    box-shadow: 0 0 0 10px color-mix(in srgb, var(--wv-brand-accent) 0%, transparent);
   }
 }
 

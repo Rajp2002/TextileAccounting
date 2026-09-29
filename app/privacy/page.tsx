@@ -43,7 +43,7 @@ export default function PrivacyPolicyPage() {
                 { label: 'Privacy contact', value: LEGAL_OPERATOR.contactEmail, icon: Mail },
             ]}
         >
-            <p className="mb-10 max-w-3xl text-lg font-medium leading-8 text-zinc-700 dark:text-zinc-300">
+            <p className="mb-10 max-w-3xl text-lg font-medium leading-8 text-body">
                 Weavly (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) provides a business-to-business textile costing product and, on Weavly Base, a connected production-record workflow. Until a company is incorporated and this policy is updated, Weavly means {LEGAL_OPERATOR.displayName}. This policy explains our practices for personal information associated with Weavly Free, Lite, and Base. It is intended to meet the privacy-policy requirements presently applicable under India&apos;s Information Technology Act, 2000 and the Information Technology (Reasonable Security Practices and Procedures and Sensitive Personal Data or Information) Rules, 2011, while preparing for the phased commencement of the Digital Personal Data Protection Act, 2023 and Digital Personal Data Protection Rules, 2025.
             </p>
 
@@ -225,7 +225,7 @@ export default function PrivacyPolicyPage() {
                         { label: 'Officer', value: LEGAL_OPERATOR.grievanceOfficer },
                         {
                             label: 'Email',
-                            value: <a href={`mailto:${LEGAL_OPERATOR.contactEmail}`} className="text-orange-700 hover:underline dark:text-orange-300">{LEGAL_OPERATOR.contactEmail}</a>,
+                            value: <a href={`mailto:${LEGAL_OPERATOR.contactEmail}`} className="text-saffron-deep hover:underline">{LEGAL_OPERATOR.contactEmail}</a>,
                         },
                         { label: 'Postal address', value: LEGAL_OPERATOR.postalAddress },
                         { label: 'Internal response target', value: `${PRIVACY_REQUEST_SERVICE_LEVEL.responseCalendarDays} calendar days from receipt` },

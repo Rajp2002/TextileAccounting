@@ -166,8 +166,8 @@ export default function ResetPasswordForm() {
                 subtitle="Request a fresh link"
             >
                 <div className="space-y-5 text-center">
-                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-50">
-                        <AlertCircle className="h-6 w-6 text-red-500" />
+                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-wv-status-danger-bg">
+                        <AlertCircle className="h-6 w-6 text-wv-status-danger-fg" />
                     </div>
                     <p className="text-sm leading-6 text-muted-foreground">
                         {INVALID_LINK_MESSAGE}
@@ -207,7 +207,7 @@ export default function ResetPasswordForm() {
                             autoComplete="new-password"
                             className={cn(
                                 'h-12 pr-10 transition-all focus:bg-surface',
-                                errors.password && 'border-red-400 focus-visible:border-red-500'
+                                errors.password && 'border-wv-status-danger-fg focus-visible:border-wv-status-danger-fg'
                             )}
                             disabled={saving}
                             aria-invalid={!!errors.password}
@@ -223,7 +223,7 @@ export default function ResetPasswordForm() {
                         </button>
                     </div>
                     {errors.password && (
-                        <p id="reset-password-error" className="text-xs text-red-500">
+                        <p id="reset-password-error" className="text-xs text-wv-status-danger-fg">
                             {errors.password}
                         </p>
                     )}
@@ -246,7 +246,7 @@ export default function ResetPasswordForm() {
                             autoComplete="new-password"
                             className={cn(
                                 'h-12 pr-10 transition-all focus:bg-surface',
-                                errors.confirmPassword && 'border-red-400 focus-visible:border-red-500'
+                                errors.confirmPassword && 'border-wv-status-danger-fg focus-visible:border-wv-status-danger-fg'
                             )}
                             disabled={saving}
                             aria-invalid={!!errors.confirmPassword}
@@ -262,7 +262,7 @@ export default function ResetPasswordForm() {
                         </button>
                     </div>
                     {errors.confirmPassword && (
-                        <p id="confirm-password-error" className="text-xs text-red-500">
+                        <p id="confirm-password-error" className="text-xs text-wv-status-danger-fg">
                             {errors.confirmPassword}
                         </p>
                     )}

@@ -74,7 +74,7 @@ export default function LandingHeader() {
             }`}
         >
             <div className="mx-auto max-w-7xl">
-                <div data-weavly-intro-panel className="rounded-b-xl border border-t-0 border-gray-800/60 bg-black shadow-[0_8px_30px_rgb(0,0,0,0.3)] transition-all duration-300 ease-out">
+                <div data-weavly-intro-panel className="rounded-b-xl border border-t-0 border-wv-border-inverse bg-black shadow-[0_8px_30px_rgb(0,0,0,0.3)] transition-all duration-300 ease-out">
                     <div className="flex min-w-0 items-center justify-between px-3 py-2 xs:px-4 xs:py-3 md:px-6 lg:px-8">
                         <Link href="/" className="group flex items-center">
                             <div data-weavly-intro-target="landing" className="relative h-12 w-32 transition-opacity duration-200 group-hover:opacity-80 xs:h-16 xs:w-40 md:h-20 md:w-56">
@@ -88,22 +88,22 @@ export default function LandingHeader() {
                                 <Link
                                     key={link.name}
                                     href={link.href}
-                                    className="relative text-sm font-semibold text-gray-300 hover:text-white transition-colors group"
+                                    className="relative text-sm font-semibold text-wv-text-inverse-secondary hover:text-wv-text-inverse transition-colors group"
                                 >
                                     {link.name}
-                                    <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-gradient-to-r from-amber-500 to-orange-500 scale-x-0 group-hover:scale-x-100 transition-transform origin-left rounded-full" />
+                                    <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-saffron scale-x-0 group-hover:scale-x-100 transition-transform origin-left rounded-full" />
                                 </Link>
                             ))}
                         </nav>
 
                         <div className="hidden items-center gap-3 lg:flex xl:gap-4">
                             <Link href="/login">
-                                <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-white/10 font-semibold rounded-full px-6 transition-all">
+                                <Button variant="ghost" className="text-wv-text-inverse-secondary hover:text-wv-text-inverse hover:bg-surface/10 font-semibold rounded-full px-6 transition-all">
                                     Log in
                                 </Button>
                             </Link>
                             <Link href="/signup?plan=free">
-                                <Button className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-zinc-950 shadow-lg shadow-orange-500/20 rounded-md px-6 font-semibold transition-all">
+                                <Button className="bg-saffron hover:bg-wv-action-accent-hover text-ink shadow-xs rounded-md px-6 font-semibold focus-visible:ring-wv-border-focus-inverse transition-all">
                                     Start with Free
                                 </Button>
                             </Link>
@@ -113,7 +113,7 @@ export default function LandingHeader() {
                         <div className="flex lg:hidden">
                             <button
                                 type="button"
-                                className="-m-2.5 inline-flex items-center justify-center rounded-full p-2.5 text-gray-200 hover:bg-white/10 transition-colors"
+                                className="-m-2.5 inline-flex items-center justify-center rounded-full p-2.5 text-wv-text-inverse hover:bg-surface/10 transition-colors"
                                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                                 aria-expanded={mobileMenuOpen}
                                 aria-controls="landing-mobile-menu"
@@ -132,25 +132,25 @@ export default function LandingHeader() {
                 {/* Mobile Menu */}
                 {mobileMenuOpen && (
                     <div id="landing-mobile-menu" className="mt-2 lg:hidden">
-                        <div className="overflow-hidden rounded-xl bg-black/95 shadow-2xl ring-1 ring-gray-700/50 backdrop-blur-2xl">
+                        <div className="overflow-hidden rounded-xl bg-black/95 shadow-2xl ring-1 ring-wv-border-inverse backdrop-blur-2xl">
                             <div className="p-5 space-y-4">
                                 {navLinks.map((link) => (
                                     <Link
                                         key={link.name}
                                         href={link.href}
-                                        className="block text-base font-semibold leading-7 text-gray-200 hover:bg-white/10 rounded-xl px-4 py-3 transition-colors"
+                                        className="block text-base font-semibold leading-7 text-wv-text-inverse hover:bg-surface/10 rounded-xl px-4 py-3 transition-colors"
                                         onClick={() => setMobileMenuOpen(false)}
                                     >
                                         {link.name}
                                     </Link>
                                 ))}
-                                <div className="h-px bg-gray-700 my-2" />
+                                <div className="h-px bg-wv-border-inverse my-2" />
                                 <div className="flex flex-col gap-3">
                                     <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                                        <Button variant="outline" className="w-full rounded-md py-6 font-semibold border-gray-600 hover:bg-white/10 text-gray-200">Log in</Button>
+                                        <Button variant="outline" className="w-full rounded-md py-6 font-semibold border-wv-text-inverse-secondary bg-transparent hover:bg-surface/10 text-wv-text-inverse">Log in</Button>
                                     </Link>
                                     <Link href="/signup?plan=free" onClick={() => setMobileMenuOpen(false)}>
-                                        <Button className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-zinc-950 rounded-md py-6 font-semibold shadow-md">Start with Free</Button>
+                                        <Button className="w-full bg-saffron hover:bg-wv-action-accent-hover text-ink rounded-md py-6 font-semibold shadow-md focus-visible:ring-wv-border-focus-inverse">Start with Free</Button>
                                     </Link>
                                 </div>
                             </div>

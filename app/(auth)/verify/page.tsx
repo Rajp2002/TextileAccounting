@@ -57,18 +57,18 @@ function VerifyContent() {
         >
             <div className="space-y-6">
                 <div className="flex flex-col items-center gap-4">
-                    <div className="h-16 w-16 rounded-full bg-indigo-50 flex items-center justify-center">
-                        <Mail className="h-8 w-8 text-indigo-600" />
+                    <div className="h-16 w-16 rounded-full bg-wv-bg-selected flex items-center justify-center">
+                        <Mail className="h-8 w-8 text-wv-neel-600" />
                     </div>
 
                     <div className="text-center space-y-2">
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-body">
                             We sent a verification link to
                         </p>
                         {email && (
-                            <p className="font-semibold text-gray-900">{email}</p>
+                            <p className="font-semibold text-ink">{email}</p>
                         )}
-                        <p className="text-xs text-gray-500 leading-relaxed">
+                        <p className="text-xs text-subtle leading-relaxed">
                             Click the link in the email to verify your account.
                             Once verified, you can log in with your email and password.
                         </p>
@@ -98,7 +98,7 @@ function VerifyContent() {
                     </Button>
                 </div>
 
-                <p className="text-center text-xs text-gray-400">
+                <p className="text-center text-xs text-subtle">
                     Didn&apos;t receive anything? Check your spam folder or try resending.
                 </p>
             </div>
@@ -110,7 +110,7 @@ export default function VerifyPage() {
     return (
         <Suspense fallback={
             <div className="flex min-h-screen items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                <Loader2 className="h-8 w-8 animate-spin text-subtle" />
             </div>
         }>
             <VerifyContent />

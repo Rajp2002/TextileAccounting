@@ -57,7 +57,7 @@ export default function TermsOfServicePage() {
                 { label: 'Contract location', value: 'Surat, Gujarat, India', icon: Scale },
             ]}
         >
-            <p className="mb-10 max-w-3xl text-lg font-medium leading-8 text-zinc-700 dark:text-zinc-300">
+            <p className="mb-10 max-w-3xl text-lg font-medium leading-8 text-body">
                 These Terms of Service (&quot;Terms&quot;) govern use of Weavly Free and paid subscriptions to Weavly Lite and Weavly Base. Until a company is incorporated and these Terms are updated, the Service is offered by {LEGAL_OPERATOR.displayName} (&quot;Weavly&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;). The person accepting these Terms for a factory or business confirms that they are authorized to bind that business.
             </p>
 
@@ -111,19 +111,19 @@ export default function TermsOfServicePage() {
 
             <PolicySection id="commercial-terms" title="4. Price, Payment, Renewal, and Referrals">
                 <h3>4.1 Current Free, Lite, and Base catalog</h3>
-                <div className="not-prose my-6 overflow-x-auto rounded-lg border border-zinc-200 dark:border-white/10">
+                <div className="not-prose my-6 overflow-x-auto rounded-lg border border-wv-border-default">
                     <table className="w-full text-left text-sm">
-                        <thead className="bg-zinc-50 text-zinc-600 dark:bg-white/5 dark:text-zinc-300">
+                        <thead className="bg-surface-soft text-subtle">
                             <tr>
                                 <th className="px-4 py-3 font-bold">Plan</th>
                                 <th className="px-4 py-3 font-bold">First year</th>
                                 <th className="px-4 py-3 font-bold">Later annual renewal</th>
                             </tr>
                         </thead>
-                        <tbody className="bg-white text-zinc-700 dark:bg-[#09090b] dark:text-zinc-300">
+                        <tbody className="bg-surface text-body">
                             {plans.map((plan) => (
                                 <tr key={plan.name}>
-                                    <td className="px-4 py-3 font-semibold text-zinc-950 dark:text-white">{plan.name}</td>
+                                    <td className="px-4 py-3 font-semibold text-ink">{plan.name}</td>
                                     <td className="px-4 py-3">{plan.firstYear}</td>
                                     <td className="px-4 py-3">{plan.renewal}</td>
                                 </tr>
@@ -274,7 +274,7 @@ export default function TermsOfServicePage() {
                         { label: 'Operator', value: LEGAL_OPERATOR.displayName },
                         {
                             label: 'Email',
-                            value: <a href={`mailto:${LEGAL_OPERATOR.contactEmail}`} className="text-orange-700 hover:underline dark:text-orange-300">{LEGAL_OPERATOR.contactEmail}</a>,
+                            value: <a href={`mailto:${LEGAL_OPERATOR.contactEmail}`} className="text-saffron-deep hover:underline">{LEGAL_OPERATOR.contactEmail}</a>,
                         },
                         { label: 'Postal address', value: LEGAL_OPERATOR.postalAddress },
                     ]}

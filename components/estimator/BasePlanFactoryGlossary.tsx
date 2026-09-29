@@ -65,14 +65,14 @@ export function BasePlanFactoryGlossary() {
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700 shadow-xs border border-amber-200/60">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-wv-bg-selected text-ink shadow-xs border border-wv-neel-200">
               <BookOpen className="h-5 w-5" aria-hidden="true" />
             </div>
             <div>
-              <DialogTitle className="text-xl font-bold text-slate-900">
+              <DialogTitle className="text-xl font-bold text-ink">
                 {t('base_plan.glossary_title')}
               </DialogTitle>
-              <DialogDescription className="text-xs text-slate-500 mt-0.5">
+              <DialogDescription className="text-xs text-subtle mt-0.5">
                 {t('base_plan.glossary_help')}
               </DialogDescription>
             </div>
@@ -86,20 +86,20 @@ export function BasePlanFactoryGlossary() {
               return (
                 <div
                   key={key}
-                  className="group/card flex flex-col justify-start rounded-xl border border-slate-200/80 bg-slate-50/60 p-3 text-xs transition-all duration-150 hover:border-amber-300/80 hover:bg-amber-50/30 hover:shadow-xs"
+                  className="group/card flex flex-col justify-start rounded-xl border border-wv-border-default/80 bg-canvas/60 p-3 text-xs transition-all duration-150 hover:border-wv-border-default hover:bg-surface-soft hover:shadow-xs"
                 >
                   {title ? (
                     <>
-                      <div className="flex items-center gap-1.5 font-bold text-slate-900">
-                        <span className="h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0" />
+                      <div className="flex items-center gap-1.5 font-bold text-ink">
+                        <span className="h-1.5 w-1.5 rounded-full bg-wv-neel-600 shrink-0" />
                         <span>{title}</span>
                       </div>
-                      <p className="mt-1 leading-relaxed text-slate-600">
+                      <p className="mt-1 leading-relaxed text-body">
                         {definition}
                       </p>
                     </>
                   ) : (
-                    <p className="leading-relaxed text-slate-700">{explanation}</p>
+                    <p className="leading-relaxed text-body">{explanation}</p>
                   )}
                 </div>
               )
@@ -107,7 +107,7 @@ export function BasePlanFactoryGlossary() {
           </div>
         </div>
 
-        <DialogFooter className="mt-2 border-t border-slate-100 pt-3">
+        <DialogFooter className="mt-2 border-t border-wv-border-default pt-3">
           <DialogClose asChild>
             <Button variant="outline" size="sm" className="w-full sm:w-auto">
               Close

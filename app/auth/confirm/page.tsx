@@ -130,15 +130,15 @@ function ConfirmContent() {
     return (
         <div className="relative isolate flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background p-4">
             <BrandBackground variant="auth" />
-            <div className="relative z-10 w-full max-w-md bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/50 p-8 flex flex-col items-center space-y-6 text-center">
+            <div className="relative z-10 w-full max-w-md bg-surface/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/50 p-8 flex flex-col items-center space-y-6 text-center">
                 {error ? (
                     <>
-                        <div className="h-14 w-14 rounded-full bg-red-50 flex items-center justify-center">
-                            <AlertCircle className="h-7 w-7 text-red-500" />
+                        <div className="h-14 w-14 rounded-full bg-wv-status-danger-bg flex items-center justify-center">
+                            <AlertCircle className="h-7 w-7 text-wv-status-danger-fg" />
                         </div>
                         <div className="space-y-2">
-                            <h3 className="font-semibold text-lg text-gray-900">Verification Failed</h3>
-                            <p className="text-sm text-gray-500">{error}</p>
+                            <h3 className="font-semibold text-lg text-ink">Verification Failed</h3>
+                            <p className="text-sm text-subtle">{error}</p>
                         </div>
                         <div className="space-y-2 w-full">
                             <Button asChild className="w-full">
@@ -151,10 +151,10 @@ function ConfirmContent() {
                     </>
                 ) : (
                     <>
-                        <Loader2 className="h-10 w-10 animate-spin text-indigo-600" />
+                        <Loader2 className="h-10 w-10 animate-spin text-wv-neel-600" />
                         <div className="space-y-1">
-                            <p className="font-medium text-gray-900">{status}</p>
-                            <p className="text-xs text-gray-400">Please wait...</p>
+                            <p className="font-medium text-ink">{status}</p>
+                            <p className="text-xs text-subtle">Please wait...</p>
                         </div>
                     </>
                 )}
@@ -168,7 +168,7 @@ export default function ConfirmPage() {
         <Suspense fallback={
             <div className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-background">
                 <BrandBackground variant="auth" />
-                <Loader2 className="relative z-10 h-8 w-8 animate-spin text-gray-400" />
+                <Loader2 className="relative z-10 h-8 w-8 animate-spin text-subtle" />
             </div>
         }>
             <ConfirmContent />

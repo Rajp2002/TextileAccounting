@@ -78,14 +78,14 @@ export default function ForgotPasswordForm() {
                         autoComplete="email"
                         className={cn(
                             'h-12 transition-all focus:bg-surface',
-                            error && 'border-red-400 focus-visible:border-red-500'
+                            error && 'border-wv-status-danger-fg focus-visible:border-wv-status-danger-fg'
                         )}
                         disabled={loading}
                         aria-invalid={!!error}
                         aria-describedby={error ? 'forgot-password-error' : success ? 'forgot-password-success' : undefined}
                     />
                     {error && (
-                        <p id="forgot-password-error" className="text-xs text-red-500">
+                        <p id="forgot-password-error" className="text-xs text-wv-status-danger-fg">
                             {error}
                         </p>
                     )}
@@ -94,7 +94,7 @@ export default function ForgotPasswordForm() {
                 {success && (
                     <div
                         id="forgot-password-success"
-                        className="flex items-start gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800"
+                        className="flex items-start gap-2 rounded-lg border border-wv-status-success-border bg-wv-status-success-bg p-3 text-sm text-wv-status-success-fg"
                     >
                         <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
                         <span>{SUCCESS_MESSAGE}</span>

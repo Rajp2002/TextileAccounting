@@ -80,7 +80,7 @@ export default function LogoutButton({ variant = 'sidebar', className }: LogoutB
                         type="submit"
                         disabled={isLoggingOut}
                         className={cn(
-                            "inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-black/5 h-9 px-3 text-gray-500 hover:text-gray-900",
+                            "inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-black/5 h-9 px-3 text-subtle hover:text-ink",
                             className
                         )}
                     >

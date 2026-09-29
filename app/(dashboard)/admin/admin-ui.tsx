@@ -326,25 +326,25 @@ export function AdminDashboardUI({
     return (
         <Tabs defaultValue="grievances" className="w-full">
             <TabsList className="grid grid-cols-2 md:grid-cols-7 gap-2 bg-transparent h-auto mb-8">
-                <TabsTrigger value="grievances" className="data-[state=active]:bg-zinc-900 data-[state=active]:text-white dark:data-[state=active]:bg-zinc-50 dark:data-[state=active]:text-zinc-900 flex items-center gap-2 py-3">
+                <TabsTrigger value="grievances" className="data-[state=active]:bg-wv-bg-selected data-[state=active]:text-ink border-l-2 border-l-transparent data-[state=active]:border-l-saffron flex items-center gap-2 py-3">
                     <AlertCircle className="h-4 w-4" /> Grievances
                 </TabsTrigger>
-                <TabsTrigger value="access" className="data-[state=active]:bg-zinc-900 data-[state=active]:text-white dark:data-[state=active]:bg-zinc-50 dark:data-[state=active]:text-zinc-900 flex items-center gap-2 py-3">
+                <TabsTrigger value="access" className="data-[state=active]:bg-wv-bg-selected data-[state=active]:text-ink border-l-2 border-l-transparent data-[state=active]:border-l-saffron flex items-center gap-2 py-3">
                     <Users className="h-4 w-4" /> Right to Access
                 </TabsTrigger>
-                <TabsTrigger value="notices" className="data-[state=active]:bg-zinc-900 data-[state=active]:text-white dark:data-[state=active]:bg-zinc-50 dark:data-[state=active]:text-zinc-900 flex items-center gap-2 py-3">
+                <TabsTrigger value="notices" className="data-[state=active]:bg-wv-bg-selected data-[state=active]:text-ink border-l-2 border-l-transparent data-[state=active]:border-l-saffron flex items-center gap-2 py-3">
                     <FileText className="h-4 w-4" /> Notices
                 </TabsTrigger>
-                <TabsTrigger value="dpas" className="data-[state=active]:bg-zinc-900 data-[state=active]:text-white dark:data-[state=active]:bg-zinc-50 dark:data-[state=active]:text-zinc-900 flex items-center gap-2 py-3">
+                <TabsTrigger value="dpas" className="data-[state=active]:bg-wv-bg-selected data-[state=active]:text-ink border-l-2 border-l-transparent data-[state=active]:border-l-saffron flex items-center gap-2 py-3">
                     <FileSignature className="h-4 w-4" /> DPA Agreements
                 </TabsTrigger>
-                <TabsTrigger value="subsidy" className="data-[state=active]:bg-zinc-900 data-[state=active]:text-white dark:data-[state=active]:bg-zinc-50 dark:data-[state=active]:text-zinc-900 flex items-center gap-2 py-3">
+                <TabsTrigger value="subsidy" className="data-[state=active]:bg-wv-bg-selected data-[state=active]:text-ink border-l-2 border-l-transparent data-[state=active]:border-l-saffron flex items-center gap-2 py-3">
                     <Globe className="h-4 w-4" /> Gujarat Subsidy
                 </TabsTrigger>
-                <TabsTrigger value="breach" className="data-[state=active]:bg-zinc-900 data-[state=active]:text-white dark:data-[state=active]:bg-zinc-50 dark:data-[state=active]:text-zinc-900 flex items-center gap-2 py-3">
+                <TabsTrigger value="breach" className="data-[state=active]:bg-wv-bg-selected data-[state=active]:text-ink border-l-2 border-l-transparent data-[state=active]:border-l-saffron flex items-center gap-2 py-3">
                     <ShieldAlert className="h-4 w-4" /> Security Incidents
                 </TabsTrigger>
-                <TabsTrigger value="settings" className="data-[state=active]:bg-zinc-900 data-[state=active]:text-white dark:data-[state=active]:bg-zinc-50 dark:data-[state=active]:text-zinc-900 flex items-center gap-2 py-3">
+                <TabsTrigger value="settings" className="data-[state=active]:bg-wv-bg-selected data-[state=active]:text-ink border-l-2 border-l-transparent data-[state=active]:border-l-saffron flex items-center gap-2 py-3">
                     <Settings className="h-4 w-4" /> Settings
                 </TabsTrigger>
             </TabsList>
@@ -383,13 +383,13 @@ export function AdminDashboardUI({
                                                         <div className="flex items-center gap-2">
                                                             <span className="font-medium">{g.subject}</span>
                                                             {g.sla_applies && (
-                                                                <Badge variant="outline" className="text-[9px] h-4 bg-amber-50 text-amber-700 border-amber-200 uppercase font-black px-1.5">
+                                                                <Badge variant="outline" className="text-[9px] h-4 bg-wv-status-warning-bg text-wv-status-warning-fg border-wv-status-warning-border uppercase font-black px-1.5">
                                                                     SLA
                                                                 </Badge>
                                                             )}
                                                         </div>
                                                         <span className={`text-[10px] uppercase font-bold tracking-tight ${
-                                                            g.grievance_type === 'UNLOCK_REQUEST' ? 'text-purple-600 dark:text-purple-400' : 'text-zinc-500'
+                                                            g.grievance_type === 'UNLOCK_REQUEST' ? 'text-wv-neel-600' : 'text-subtle'
                                                         }`}>
                                                             {g.grievance_type.replace('_', ' ')}
                                                         </span>
@@ -403,15 +403,15 @@ export function AdminDashboardUI({
                                                 <TableCell>
                                                     {g.status !== 'resolved' ? (
                                                         g.sla_applies ? (
-                                                            <div className={`flex items-center gap-2 text-sm font-bold ${daysLeft !== null && daysLeft <= 5 ? 'text-red-500' : 'text-zinc-600'}`}>
+                                                            <div className={`flex items-center gap-2 text-sm font-bold ${daysLeft !== null && daysLeft <= 5 ? 'text-wv-status-danger-fg' : 'text-body'}`}>
                                                                 <Clock className="h-4 w-4" />
                                                                 {daysLeft === null ? 'Target unavailable' : `${daysLeft} days left`}
                                                             </div>
                                                         ) : (
-                                                            <span className="text-zinc-400 text-xs italic">No privacy-response target</span>
+                                                            <span className="text-subtle text-xs italic">No privacy-response target</span>
                                                         )
                                                     ) : (
-                                                        <span className="text-emerald-600 text-sm font-medium">Resolved on {new Date(g.resolved_at).toLocaleDateString()}</span>
+                                                        <span className="text-wv-status-success-fg text-sm font-medium">Resolved on {new Date(g.resolved_at).toLocaleDateString()}</span>
                                                     )}
                                                 </TableCell>
                                                 <TableCell>
@@ -450,7 +450,7 @@ export function AdminDashboardUI({
                                                                 <a 
                                                                     href={g.resolution_proof_url} 
                                                                     target="_blank" 
-                                                                    className="text-[10px] text-blue-600 underline flex items-center gap-1"
+                                                                    className="text-[10px] text-wv-neel-600 underline flex items-center gap-1"
                                                                 >
                                                                     <FileText className="h-3 w-3" /> View Proof
                                                                 </a>
@@ -474,7 +474,7 @@ export function AdminDashboardUI({
                         <CardContent className="space-y-4">
                             <div className="grid grid-cols-2 gap-2">
                                 <div className="space-y-1">
-                                    <label className="text-[10px] font-bold uppercase text-zinc-500">Target Entity</label>
+                                    <label className="text-[10px] font-bold uppercase text-subtle">Target Entity</label>
                                     <Select value={offlineTarget} onValueChange={(val) => setOfflineTarget(val as OfflineTarget)}>
                                         <SelectTrigger className="h-9 text-xs">
                                             <SelectValue placeholder="Target" />
@@ -486,7 +486,7 @@ export function AdminDashboardUI({
                                     </Select>
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="text-[10px] font-bold uppercase text-zinc-500">Grievance Type</label>
+                                    <label className="text-[10px] font-bold uppercase text-subtle">Grievance Type</label>
                                     <Select value={offlineType} onValueChange={(val) => setOfflineType(val as OfflineType)}>
                                         <SelectTrigger className="h-9 text-xs">
                                             <SelectValue placeholder="Type" />
@@ -620,16 +620,16 @@ export function AdminDashboardUI({
                                             <TableCell className="font-medium">{org.name}</TableCell>
                                             <TableCell>
                                                 {isSigned ? (
-                                                    <Badge variant="default" className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">
+                                                    <Badge variant="default" className="bg-wv-status-success-bg text-wv-status-success-fg">
                                                         <CheckCircle2 className="h-3 w-3 mr-1" /> Signed ({activeDpa?.version_string})
                                                     </Badge>
                                                 ) : (
-                                                    <Badge variant="secondary" className="bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+                                                    <Badge variant="secondary" className="bg-wv-status-warning-bg text-wv-status-warning-fg">
                                                         <XCircle className="h-3 w-3 mr-1" /> Pending ({activeDpa?.version_string})
                                                     </Badge>
                                                 )}
                                             </TableCell>
-                                            <TableCell className="text-sm text-zinc-500">
+                                            <TableCell className="text-sm text-subtle">
                                                 {isSigned ? new Date(orgDpa.signed_at).toLocaleDateString() : '-'}
                                             </TableCell>
                                             <TableCell>
@@ -650,7 +650,7 @@ export function AdminDashboardUI({
                                                     </Button>
                                                 )}
                                                 {isSigned && orgDpa?.proof_url && (
-                                                    <a href={orgDpa.proof_url} target="_blank" className="text-xs text-blue-600 hover:underline ml-2">
+                                                    <a href={orgDpa.proof_url} target="_blank" className="text-xs text-wv-neel-600 hover:underline ml-2">
                                                         View Proof
                                                     </a>
                                                 )}
@@ -743,11 +743,11 @@ export function AdminDashboardUI({
                     <CardContent className="max-w-md space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <label className="text-xs font-bold uppercase text-zinc-500">Start Date</label>
+                                <label className="text-xs font-bold uppercase text-subtle">Start Date</label>
                                 <Input type="date" value={exportDateRange.start} onChange={(e) => setExportDateRange({...exportDateRange, start: e.target.value})} />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-xs font-bold uppercase text-zinc-500">End Date</label>
+                                <label className="text-xs font-bold uppercase text-subtle">End Date</label>
                                 <Input type="date" value={exportDateRange.end} onChange={(e) => setExportDateRange({...exportDateRange, end: e.target.value})} />
                             </div>
                         </div>
@@ -760,7 +760,7 @@ export function AdminDashboardUI({
 
             {/* E. Breach Detection & Tenant Isolation */}
             <TabsContent value="breach" className="space-y-6">
-                <Card className="border-red-200 dark:border-red-400/20">
+                <Card className="border-wv-status-danger-border">
                     <CardHeader>
                         <CardTitle>Base Plan Security Incident Register</CardTitle>
                         <CardDescription>Operator-only triage for account, costing, billing-reference, support, and technical-log incidents. The six-hour time shown is the internal deadline to assess CERT-In reportability, not a claim that every event is reportable.</CardDescription>
@@ -820,7 +820,7 @@ export function AdminDashboardUI({
                                     <TableRow key={incident.id}>
                                         <TableCell>
                                             <p className="font-semibold">{incident.title}</p>
-                                            <p className="text-xs text-zinc-500">{incident.incident_type.replaceAll('_', ' ')} · {incident.source}</p>
+                                            <p className="text-xs text-subtle">{incident.incident_type.replaceAll('_', ' ')} · {incident.source}</p>
                                         </TableCell>
                                         <TableCell className="text-xs">{new Date(incident.aware_at).toLocaleString('en-IN')}</TableCell>
                                         <TableCell className="text-xs">{new Date(incident.cert_in_assessment_due_at).toLocaleString('en-IN')}</TableCell>
@@ -845,7 +845,7 @@ export function AdminDashboardUI({
                                         </TableCell>
                                     </TableRow>
                                 ))}
-                                {initialSecurityIncidents.length === 0 && <TableRow><TableCell colSpan={5} className="py-8 text-center text-zinc-500">No Base Plan security incidents recorded.</TableCell></TableRow>}
+                                {initialSecurityIncidents.length === 0 && <TableRow><TableCell colSpan={5} className="py-8 text-center text-subtle">No Base Plan security incidents recorded.</TableCell></TableRow>}
                             </TableBody>
                         </Table>
                     </CardContent>
@@ -873,7 +873,7 @@ export function AdminDashboardUI({
                                                 {org.is_locked_down ? (
                                                     <Badge variant="destructive" className="animate-pulse">ISOLATED</Badge>
                                                 ) : (
-                                                    <Badge variant="outline" className="text-emerald-600 border-emerald-200">ACTIVE</Badge>
+                                                    <Badge variant="outline" className="text-wv-status-success-fg border-wv-status-success-border">ACTIVE</Badge>
                                                 )}
                                             </TableCell>
                                             <TableCell>
@@ -881,7 +881,7 @@ export function AdminDashboardUI({
                                                     <Button 
                                                         variant="outline" 
                                                         size="sm" 
-                                                        className="text-emerald-600"
+                                                        className="text-wv-status-success-fg"
                                                         onClick={() => {
                                                             if(confirm(`Restore operations for ${org.name}?`)) {
                                                                 toast.promise(unlockTenant(org.id), {
@@ -954,7 +954,7 @@ export function AdminDashboardUI({
                                     ))}
                                     {initialBreachReports.length === 0 && (
                                         <TableRow>
-                                            <TableCell colSpan={3} className="text-center py-8 text-zinc-500 italic">No breach reports filed.</TableCell>
+                                            <TableCell colSpan={3} className="text-center py-8 text-subtle italic">No breach reports filed.</TableCell>
                                         </TableRow>
                                     )}
                                 </TableBody>
@@ -1027,12 +1027,12 @@ export function AdminDashboardUI({
                     </CardContent>
                 </Card>
 
-                <Card className="border-red-200 dark:border-red-900/30 bg-red-50/50 dark:bg-red-950/10">
+                <Card className="border-wv-status-danger-border bg-wv-status-danger-bg/50">
                     <CardHeader>
-                        <CardTitle className="text-red-700 dark:text-red-400 flex items-center gap-2">
+                        <CardTitle className="text-wv-status-danger-fg flex items-center gap-2">
                             <ShieldAlert className="h-5 w-5" /> Emergency Lockdown
                         </CardTitle>
-                        <CardDescription className="text-red-600/80">THE &quot;BIG RED BUTTON&quot;: Instantly freeze all platform operations in case of a verified mass breach.</CardDescription>
+                        <CardDescription className="text-wv-status-danger-fg/80">THE &quot;BIG RED BUTTON&quot;: Instantly freeze all platform operations in case of a verified mass breach.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <Button variant="destructive" className="font-bold tracking-widest uppercase py-6 px-10 h-auto text-lg" onClick={() => {
