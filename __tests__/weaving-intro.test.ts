@@ -6,6 +6,7 @@ import { buildIntroPrePaintScript, INTRO_ATTRIBUTE, INTRO_LEAVING_ATTRIBUTE } fr
 import { containedImageRect, inkRect, parseObjectPosition } from '../lib/intro/target-geometry'
 import { BINDING, buildWeaveMask, FIGURE, LOGO_INK_BOX, LOGO_SOURCE } from '../lib/intro/weave-mask'
 import {
+    ALL_WOVEN,
     composeIntro,
     HANDOFF_END,
     HANDOFF_START,
@@ -16,6 +17,8 @@ import {
     skipFrom,
     WEAVE_END,
     WEAVE_PASSES,
+    WEAVE_START,
+    workLightY,
     type IntroGeometry,
     type IntroSurface,
     type WeaveMaskInfo,
@@ -74,6 +77,66 @@ describe('woven intro timeline', () => {
         expect(s.tex).toBe(1)
     })
 
+    it('weaves the cloth all the way down past the screen before the hold, with no bare warp left in view', () => {
+        const SHORT: IntroGeometry = { ...DESKTOP, viewport: { w: 1440, h: 520 } }
+        for (const [surface, g] of [['landing', DESKTOP], ['landing', PHONE], ['landing', SHORT], ['app-login', LOGIN]] as const) {
+            const { geo, comp } = setup(surface, g)
+            const cellH = geo.ink.h / MASK.rows
+            const holdScreenY = (row: number) => comp.holdA.y + comp.zHold * (geo.ink.y + row * cellH)
+            // the fell only ever moves down, and is past the bottom edge (with the reed) before the cloth completes
+            let previous = -Infinity
+            let lastRow = -Infinity
+            for (let t = WEAVE_START; t < WEAVE_END; t += 1 / 120) {
+                const { fell } = introStateAt(t, comp, geo, MASK, null)
+                expect(fell).toBeGreaterThanOrEqual(previous)
+                previous = fell
+                if (fell < ALL_WOVEN) lastRow = fell
+            }
+            expect(holdScreenY(lastRow)).toBeGreaterThan(geo.viewport.h)
+            // from the hold through the whole pull-back, every row is woven cloth
+            for (let t = WEAVE_END; t <= introDuration(surface); t += 0.05) {
+                expect(introStateAt(t, comp, geo, MASK, null).fell).toBe(ALL_WOVEN)
+            }
+        }
+    })
+
+    it('keeps the loom\'s work-light on a finite, continuous track after the logo, so the cloth never flickers', () => {
+        // the shader's work-light gain at the bottom edge of the screen, where the run-out ends
+        const bottomGain = (y: number, vh: number, tex: number) => {
+            const ly = (vh - y) / vh
+            return 1 + tex * (0.55 * Math.exp(-ly * ly * 22) - 0.12)
+        }
+        for (const [surface, g] of [['landing', DESKTOP], ['landing', PHONE], ['app-login', LOGIN]] as const) {
+            const { geo, comp } = setup(surface, g)
+            const vh = geo.viewport.h
+            // played through: through the run-out, the hold and the pull-back, the light glides
+            let previous: { y: number; gain: number } | null = null
+            for (let t = WEAVE_END - 0.6; t <= introDuration(surface); t += 1 / 120) {
+                const s = introStateAt(t, comp, geo, MASK, null)
+                const y = workLightY(s, geo, MASK)
+                const gain = bottomGain(y, vh, s.tex)
+                if (previous) {
+                    expect(Math.abs(y - previous.y)).toBeLessThan(0.05 * vh)
+                    expect(Math.abs(gain - previous.gain)).toBeLessThan(0.1)
+                }
+                previous = { y, gain }
+            }
+            // skipped: the light rides the loom down to where the run-out rests, never off to infinity
+            for (const at of [WEAVE_END - 0.2, WEAVE_END + 0.1, HANDOFF_START + 0.3]) {
+                const skip = skipFrom(at, introStateAt(at, comp, geo, MASK, null))
+                let row = -Infinity
+                for (let t = at; t <= at + 0.6; t += 1 / 120) {
+                    const s = introStateAt(t, comp, geo, MASK, skip)
+                    expect(Number.isFinite(workLightY(s, geo, MASK))).toBe(true)
+                    expect(s.lightRow).toBeGreaterThanOrEqual(row)
+                    expect(s.lightRow).toBeLessThanOrEqual(comp.coverRow)
+                    row = s.lightRow
+                }
+                expect(row).toBe(comp.coverRow)
+            }
+        }
+    })
+
     it('keeps the whole name on screen on a phone when it becomes legible', () => {
         const { geo, comp } = setup('landing', PHONE)
         const s = introStateAt(LEGIBLE_TIME, comp, geo, MASK, null)
@@ -130,6 +193,7 @@ describe('woven intro timeline', () => {
             expect(s.fade).toBe(1)
             expect(s.pageS).toBeCloseTo(1, 9)
             expect(s.fell).toBe(end.fell) // the loom finishes every row, never pops half a logo
+            expect(s.lightRow).toBe(end.lightRow)
         }
     })
 
