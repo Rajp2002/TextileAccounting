@@ -415,6 +415,7 @@ describe('woven intro integration contracts', () => {
         expect(component).toContain("import('./weaving-intro-runtime')")
         const css = read('app/globals.css')
         expect(css).toContain('bottom: calc(-1 * env(safe-area-inset-bottom, 0px))')
+        expect(css).toContain('Unlayered on purpose')
         expect(css).toMatch(/html\[data-weavly-intro\],\s*html\[data-weavly-intro\] body\s*\{\s*background-color:\s*#000/)
     })
 })
