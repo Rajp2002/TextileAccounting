@@ -383,6 +383,8 @@
   --weavly-info: var(--wv-status-info-fg);
   --weavly-info-soft: var(--wv-status-info-bg);
 
+  --ease-liquid: linear(0, 0.18 5%, 0.58 12%, 0.9 20%, 1.05 28%, 1.07 34%, 1.03 44%, 0.995 58%, 1);
+
   --shadow-card: 0 1px 0 rgba(22, 33, 62, 0.04), 0 18px 40px -24px rgba(22, 33, 62, 0.3);
   --shadow-panel: 0 1px 0 rgba(22, 33, 62, 0.06), 0 24px 48px -24px rgba(22, 33, 62, 0.35);
   --shadow-modal: 0 20px 64px rgba(22, 33, 62, 0.22);

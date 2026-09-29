@@ -14,6 +14,7 @@ import { railButton, railIcon } from '@/components/ui/rail'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { LiquidSegmented } from '@/components/ui/liquid-segmented'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -457,40 +458,18 @@ export default function BaseAssignmentWorkspace({
             </aside>
             <div className="min-w-0 space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-hairline/70 bg-surface/80 p-2 shadow-xs sm:px-3">
-                    <div data-configuration-tour="shift" role="group" aria-label="Assignment shift" className="inline-flex rounded-full border border-hairline bg-surface p-1 shadow-xs">
-                        <Button
-                            type="button"
-                            size="sm"
-                            variant="ghost"
-                            className={cn(
-                                "h-8 rounded-full px-4 text-xs font-semibold transition-all",
-                                shift === 'day'
-                                    ? "bg-loom text-white shadow-xs hover:bg-loom-elevated hover:text-white"
-                                    : "text-muted-foreground hover:bg-surface-soft hover:text-ink"
-                            )}
-                            aria-pressed={shift === 'day'}
-                            disabled={pendingKey !== null}
-                            onClick={() => setShift('day')}
-                        >
-                            <Sun className="h-3.5 w-3.5" /> Day shift
-                        </Button>
-                        <Button
-                            type="button"
-                            size="sm"
-                            variant="ghost"
-                            className={cn(
-                                "h-8 rounded-full px-4 text-xs font-semibold transition-all",
-                                shift === 'night'
-                                    ? "bg-loom text-white shadow-xs hover:bg-loom-elevated hover:text-white"
-                                    : "text-muted-foreground hover:bg-surface-soft hover:text-ink"
-                            )}
-                            aria-pressed={shift === 'night'}
-                            disabled={pendingKey !== null}
-                            onClick={() => setShift('night')}
-                        >
-                            <Moon className="h-3.5 w-3.5" /> Night shift
-                        </Button>
-                    </div>
+                    <LiquidSegmented
+                        data-configuration-tour="shift"
+                        aria-label="Assignment shift"
+                        size="sm"
+                        disabled={pendingKey !== null}
+                        value={shift}
+                        onValueChange={setShift}
+                        options={[
+                            { value: 'day', label: 'Day shift', icon: <Sun /> },
+                            { value: 'night', label: 'Night shift', icon: <Moon /> },
+                        ]}
+                    />
                     <span data-configuration-tour="count" className="inline-flex items-center gap-1.5 rounded-full border border-hairline bg-surface px-3 py-1 text-xs font-medium text-body shadow-xs" aria-live="polite">
                         {tx('Assignments: {count}', { count: contextAssignmentCount })} · {tx(shift === 'day' ? 'Day shift' : 'Night shift')}
                     </span>
@@ -751,38 +730,16 @@ export default function BaseAssignmentWorkspace({
                         </span>
                         Connect workers to machines
                     </CardTitle>
-                    <div className="grid grid-cols-2 rounded-xl bg-surface-soft p-1 border border-hairline/60" role="group" aria-label="Assignment workspace view">
-                        <Button
-                            type="button"
-                            size="sm"
-                            variant="ghost"
-                            className={cn(
-                                "h-8 rounded-lg text-xs font-semibold transition-all",
-                                mobileView === 'workers'
-                                    ? "bg-surface text-ink shadow-xs border border-hairline"
-                                    : "text-muted-foreground hover:text-ink"
-                            )}
-                            aria-pressed={mobileView === 'workers'}
-                            onClick={() => setMobileView('workers')}
-                        >
-                            <Users className="h-3.5 w-3.5" /> Workers
-                        </Button>
-                        <Button
-                            type="button"
-                            size="sm"
-                            variant="ghost"
-                            className={cn(
-                                "h-8 rounded-lg text-xs font-semibold transition-all",
-                                mobileView === 'machines'
-                                    ? "bg-surface text-ink shadow-xs border border-hairline"
-                                    : "text-muted-foreground hover:text-ink"
-                            )}
-                            aria-pressed={mobileView === 'machines'}
-                            onClick={() => setMobileView('machines')}
-                        >
-                            <Wrench className="h-3.5 w-3.5" /> Machines
-                        </Button>
-                    </div>
+                    <LiquidSegmented
+                        aria-label="Assignment workspace view"
+                        size="sm"
+                        value={mobileView}
+                        onValueChange={setMobileView}
+                        options={[
+                            { value: 'workers', label: 'Workers', icon: <Users /> },
+                            { value: 'machines', label: 'Machines', icon: <Wrench /> },
+                        ]}
+                    />
                 </CardHeader>
                 {mobileView === 'workers' ? (
                     <CardContent className="p-4 pt-3">

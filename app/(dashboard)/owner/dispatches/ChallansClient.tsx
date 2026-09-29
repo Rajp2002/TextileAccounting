@@ -28,7 +28,7 @@ import {
     DialogDescription,
 } from '@/components/ui/dialog'
 import { EmptyState } from '@/components/ui/page-header'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { LiquidSegmented } from '@/components/ui/liquid-segmented'
 import { useTranslation } from '@/lib/i18n/context'
 import {
     paymentStatus,
@@ -293,22 +293,20 @@ export default function ChallansClient({
                 <NewDispatchButton onClick={beginDraft} disabled={busy || !!pending} label={tx('new')} />
             </aside>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                <Tabs
+                <LiquidSegmented
+                    className="w-full sm:w-fit"
+                    fullWidth
+                    aria-label={tx('dispatchViews')}
+                    disabled={busy}
                     value={history ? 'history' : 'active'}
                     onValueChange={(value) => {
                         void load(value === 'history')
                     }}
-                    className="w-full sm:w-auto"
-                >
-                    <TabsList aria-label={tx('dispatchViews')} className="h-11 w-full rounded-xl border-hairline/80 bg-surface/85 p-1 sm:w-fit">
-                        <TabsTrigger value="active" disabled={busy} className="min-w-[5.5rem] rounded-lg px-4 text-xs data-[state=active]:border-loom data-[state=active]:bg-loom data-[state=active]:text-white sm:text-sm">
-                            {tx('active')}
-                        </TabsTrigger>
-                        <TabsTrigger value="history" disabled={busy} className="min-w-[5.5rem] rounded-lg px-4 text-xs data-[state=active]:border-loom data-[state=active]:bg-loom data-[state=active]:text-white sm:text-sm">
-                            {tx('history')}
-                        </TabsTrigger>
-                    </TabsList>
-                </Tabs>
+                    options={[
+                        { value: 'active', label: tx('active') },
+                        { value: 'history', label: tx('history') },
+                    ]}
+                />
                 <form
                     className="flex min-w-0 flex-1 gap-2"
                     onSubmit={(event) => {

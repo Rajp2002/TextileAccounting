@@ -3,6 +3,7 @@
 import React, { useState, useId } from 'react'
 import { User, CheckCircle2, Loader2, Globe } from 'lucide-react'
 import { Label } from '@/components/ui/label'
+import { LiquidSegmented } from '@/components/ui/liquid-segmented'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -159,24 +160,14 @@ export function PersonalInformationCard({
                             <Globe className="h-3.5 w-3.5 text-subtle" aria-hidden="true" />
                             {tx('Preferred language')}
                         </Label>
-                        <div className="flex flex-wrap gap-2 pt-0.5">
-                            {LANGUAGES.map(lang => (
-                                <button
-                                    key={lang.code}
-                                    type="button"
-                                    onClick={() => handleLanguageChange(lang.code)}
-                                    aria-pressed={language === lang.code}
-                                    disabled={languageStatus === 'loading'}
-                                    className={`min-h-11 min-w-[80px] rounded-xl border px-3.5 text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-loom/40 ${
-                                        language === lang.code
-                                            ? 'border-loom bg-loom text-white shadow-xs'
-                                            : 'border-hairline bg-surface hover:bg-surface-soft text-body'
-                                    }`}
-                                >
-                                    {lang.label}
-                                </button>
-                            ))}
-                        </div>
+                        <LiquidSegmented
+                            className="mt-0.5"
+                            aria-label={tx('Preferred language')}
+                            disabled={languageStatus === 'loading'}
+                            value={language}
+                            onValueChange={handleLanguageChange}
+                            options={LANGUAGES.map(lang => ({ value: lang.code, label: lang.label }))}
+                        />
                         <p className="text-xs text-muted-foreground">
                             {tx('Language changes apply immediately.')}
                         </p>
