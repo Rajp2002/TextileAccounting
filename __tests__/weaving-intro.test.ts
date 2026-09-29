@@ -409,13 +409,11 @@ describe('woven intro integration contracts', () => {
         expect(legacy).toContain('"Skip intro": "ઇન્ટ્રો છોડો"')
     })
 
-    it('prefetches the runtime chunk early and covers the iOS bottom safe area', () => {
-        const component = read('components/intro/weaving-intro.tsx')
-        expect(component).toContain('const pending =')
-        expect(component).toContain("import('./weaving-intro-runtime')")
+    it('prefetches the runtime chunk early and stretches the stage to the full screen', () => {
+        expect(read('components/intro/weaving-intro.tsx')).toContain('const pending =')
         const css = read('app/globals.css')
-        expect(css).toContain('bottom: calc(-1 * env(safe-area-inset-bottom, 0px))')
-        expect(css).toContain('Unlayered on purpose')
-        expect(css).toMatch(/html\[data-weavly-intro\],\s*html\[data-weavly-intro\] body\s*\{\s*background-color:\s*#000/)
+        expect(css).toContain('height: var(--weavly-intro-h, calc(100% + env(safe-area-inset-bottom, 0px)))')
+        expect(css).not.toMatch(/html\[data-weavly-intro\],\s*html\[data-weavly-intro\] body/)
+        expect(read('lib/intro/intro-policy.ts')).toContain('--weavly-intro-h')
     })
 })

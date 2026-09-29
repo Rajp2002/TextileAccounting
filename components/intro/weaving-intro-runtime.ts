@@ -230,6 +230,7 @@ export function startWeavingIntro({ surface, overlay, skipButton, handle }: Star
         handle.state = 'done'
         root.removeAttribute(INTRO_ATTRIBUTE)
         root.removeAttribute(INTRO_LEAVING_ATTRIBUTE)
+        root.style.removeProperty('--weavly-intro-h')
         if (moveFocus && focusWasInIntro) {
             const next = surface === 'landing'
                 ? target?.closest<HTMLElement>('a')
