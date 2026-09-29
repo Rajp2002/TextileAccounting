@@ -51,18 +51,17 @@ if(document.referrer&&document.referrer.indexOf(location.origin+"/")===0)return;
 if(surface==="landing"&&location.hash)return;
 if(surface==="app-login"&&!(mq("(display-mode: standalone)")||mq("(display-mode: minimal-ui)")||mq("(display-mode: fullscreen)")||navigator.standalone===true))return;
 }
-var sh=w.screen&&w.screen.height||0,gap=sh-w.innerHeight;
-if(gap>0&&gap<100&&(mq("(display-mode: standalone)")||navigator.standalone===true)&&d.style)d.style.setProperty("--weavly-intro-h",sh+"px");
+if(surface==="app-login"&&d.style)d.style.backgroundColor="rgb(7,7,6)";
 d.setAttribute("${INTRO_ATTRIBUTE}",surface);
 var link=document.createElement("link");link.rel="preload";link.as="image";link.href="/images/WeavlyLogo.png";document.head.appendChild(link);
 var evs=["keydown","wheel","touchstart","pointerdown"],timer;
 var api=w.__weavlyIntro={surface:surface,state:"pending"};
 var early=function(){if(api.state==="pending")api.abort()};
 api.release=function(){clearTimeout(timer);for(var i=0;i<evs.length;i++)w.removeEventListener(evs[i],early,true)};
-api.abort=function(){if(api.state==="done")return;api.state="done";api.release();d.setAttribute("${INTRO_LEAVING_ATTRIBUTE}","");setTimeout(function(){d.removeAttribute("${INTRO_ATTRIBUTE}");d.removeAttribute("${INTRO_LEAVING_ATTRIBUTE}");if(d.style)d.style.removeProperty("--weavly-intro-h")},200)};
+api.abort=function(){if(api.state==="done")return;api.state="done";api.release();if(d.style&&d.style.backgroundColor)d.style.backgroundColor="rgb(244,243,236)";d.setAttribute("${INTRO_LEAVING_ATTRIBUTE}","");setTimeout(function(){d.removeAttribute("${INTRO_ATTRIBUTE}");d.removeAttribute("${INTRO_LEAVING_ATTRIBUTE}");if(d.style)d.style.backgroundColor=""},200)};
 for(var i=0;i<evs.length;i++)w.addEventListener(evs[i],early,true);
 timer=setTimeout(function(){if(api.state==="pending")api.abort()},${INTRO_START_TIMEOUT_MS});
-}catch(e){d.removeAttribute("${INTRO_ATTRIBUTE}")}
+}catch(e){d.removeAttribute("${INTRO_ATTRIBUTE}");if(d.style)d.style.backgroundColor=""}
 })`
 
 /** Static inline script (no user input) that decides whether the intro plays. */

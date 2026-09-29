@@ -38,6 +38,24 @@ type StartOptions = {
 type IntroTestHooks = { renderAt: (t: number) => IntroFrame | null; skipAt: (t: number) => void; complete: () => void; duration: number }
 
 const MAX_DPR = 2
+
+/**
+ * iOS standalone can leave a strip at the bottom of the screen that fixed elements (the stage)
+ * cannot paint; only the root background reaches it. On the login surface the root background
+ * follows the stage's own colour (dark cloth, then the beige ramp, then the page colour), so
+ * the weave appears to run to the bottom edge and never flips to a different colour.
+ */
+const STRIP_DARK = [7, 7, 6]
+const STRIP_BEIGE = [255, 248, 234]
+const PAGE_BG = [244, 243, 236]
+function stripColor(beige: number, fade: number, exposure: number): string {
+    const warm = [40, 18, 0].map((c) => c * Math.sin(Math.PI * beige))
+    const ch = STRIP_DARK.map((d, i) => {
+        const cloth = (d * exposure + (STRIP_BEIGE[i] * 0.95 - d * exposure) * beige + warm[i]) * 1
+        return Math.round(cloth + (PAGE_BG[i] - cloth) * fade)
+    })
+    return `rgb(${ch[0]}, ${ch[1]}, ${ch[2]})`
+}
 const SCROLL_KEYS = new Set([' ', 'Spacebar', 'ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End'])
 
 function loadImage(src: string): Promise<HTMLImageElement> {
@@ -226,11 +244,11 @@ export function startWeavingIntro({ surface, overlay, skipButton, handle }: Star
         overlay.style.background = ''
         skipButton.style.opacity = ''
         skipButton.removeAttribute('data-tone')
+        root.style.backgroundColor = ''
         handle.release()
         handle.state = 'done'
         root.removeAttribute(INTRO_ATTRIBUTE)
         root.removeAttribute(INTRO_LEAVING_ATTRIBUTE)
-        root.style.removeProperty('--weavly-intro-h')
         if (moveFocus && focusWasInIntro) {
             const next = surface === 'landing'
                 ? target?.closest<HTMLElement>('a')
@@ -280,6 +298,7 @@ export function startWeavingIntro({ surface, overlay, skipButton, handle }: Star
         cloneBox.style.height = `${s.z * lb.h}px`
         cloneBox.style.opacity = s.imgA.toFixed(3)
         overlay.style.opacity = (1 - s.fade).toFixed(3)
+        if (surface === 'app-login') root.style.backgroundColor = stripColor(s.beige, s.fade, s.exposure)
         skipButton.style.opacity = (1 - s.fade).toFixed(3)
         if (s.beige > 0.5) skipButton.setAttribute('data-tone', 'light')
         else skipButton.removeAttribute('data-tone')
