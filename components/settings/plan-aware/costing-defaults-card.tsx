@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { LiquidSegmented } from '@/components/ui/liquid-segmented'
 import { toast, userFacingError } from '@/lib/app-notifications'
 import { useTranslation } from '@/lib/i18n/context'
 import { saveCostingDefaults, type CostingDefaultsInput } from '@/app/(dashboard)/owner/settings/actions'
@@ -243,36 +244,18 @@ export function CostingDefaultsCard({
                         <Label className="text-sm font-semibold text-ink">
                             {tx('Default overhead method')}
                         </Label>
-                        <div className="grid grid-cols-2 gap-2 pt-0.5" role="radiogroup" aria-label={tx('Default overhead method')}>
-                            <button
-                                type="button"
-                                role="radio"
-                                aria-checked={formState.overheadMode === 'direct'}
-                                onClick={() => updateField('overheadMode', 'direct')}
-                                disabled={isSubmitting}
-                                className={`flex min-h-11 items-center justify-center rounded-xl border px-3 text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-loom/40 ${
-                                    formState.overheadMode === 'direct'
-                                        ? 'border-loom bg-loom text-white shadow-xs'
-                                        : 'border-hairline bg-surface hover:bg-surface-soft text-body'
-                                }`}
-                            >
-                                {tx('Direct (₹/m)')}
-                            </button>
-                            <button
-                                type="button"
-                                role="radio"
-                                aria-checked={formState.overheadMode === 'monthly_expenses'}
-                                onClick={() => updateField('overheadMode', 'monthly_expenses')}
-                                disabled={isSubmitting}
-                                className={`flex min-h-11 items-center justify-center rounded-xl border px-3 text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-loom/40 ${
-                                    formState.overheadMode === 'monthly_expenses'
-                                        ? 'border-loom bg-loom text-white shadow-xs'
-                                        : 'border-hairline bg-surface hover:bg-surface-soft text-body'
-                                }`}
-                            >
-                                {tx('Monthly Expenses')}
-                            </button>
-                        </div>
+                        <LiquidSegmented
+                            fullWidth
+                            className="mt-0.5"
+                            aria-label={tx('Default overhead method')}
+                            disabled={isSubmitting}
+                            value={formState.overheadMode}
+                            onValueChange={(value) => updateField('overheadMode', value)}
+                            options={[
+                                { value: 'direct', label: tx('Direct (₹/m)') },
+                                { value: 'monthly_expenses', label: tx('Monthly Expenses') },
+                            ]}
+                        />
                         <p className="text-xs text-muted-foreground">
                             {tx('Starting overhead calculation approach for new estimates.')}
                         </p>
@@ -283,36 +266,18 @@ export function CostingDefaultsCard({
                         <Label className="text-sm font-semibold text-ink">
                             {tx('Default warping method')}
                         </Label>
-                        <div className="grid grid-cols-2 gap-2 pt-0.5" role="radiogroup" aria-label={tx('Default warping method')}>
-                            <button
-                                type="button"
-                                role="radio"
-                                aria-checked={formState.warpingMode === 'in_house'}
-                                onClick={() => updateField('warpingMode', 'in_house')}
-                                disabled={isSubmitting}
-                                className={`flex min-h-11 items-center justify-center rounded-xl border px-3 text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-loom/40 ${
-                                    formState.warpingMode === 'in_house'
-                                        ? 'border-loom bg-loom text-white shadow-xs'
-                                        : 'border-hairline bg-surface hover:bg-surface-soft text-body'
-                                }`}
-                            >
-                                {tx('In-house')}
-                            </button>
-                            <button
-                                type="button"
-                                role="radio"
-                                aria-checked={formState.warpingMode === 'outsourced'}
-                                onClick={() => updateField('warpingMode', 'outsourced')}
-                                disabled={isSubmitting}
-                                className={`flex min-h-11 items-center justify-center rounded-xl border px-3 text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-loom/40 ${
-                                    formState.warpingMode === 'outsourced'
-                                        ? 'border-loom bg-loom text-white shadow-xs'
-                                        : 'border-hairline bg-surface hover:bg-surface-soft text-body'
-                                }`}
-                            >
-                                {tx('Outsourced')}
-                            </button>
-                        </div>
+                        <LiquidSegmented
+                            fullWidth
+                            className="mt-0.5"
+                            aria-label={tx('Default warping method')}
+                            disabled={isSubmitting}
+                            value={formState.warpingMode}
+                            onValueChange={(value) => updateField('warpingMode', value)}
+                            options={[
+                                { value: 'in_house', label: tx('In-house') },
+                                { value: 'outsourced', label: tx('Outsourced') },
+                            ]}
+                        />
                         <p className="text-xs text-muted-foreground">
                             {tx('In-house warping is included in factory overhead; outsourced uses rate per kg.')}
                         </p>
@@ -323,36 +288,18 @@ export function CostingDefaultsCard({
                         <Label className="text-sm font-semibold text-ink">
                             {tx('Default sizing method')}
                         </Label>
-                        <div className="grid grid-cols-2 gap-2 pt-0.5" role="radiogroup" aria-label={tx('Default sizing method')}>
-                            <button
-                                type="button"
-                                role="radio"
-                                aria-checked={formState.sizingMode === 'in_house'}
-                                onClick={() => updateField('sizingMode', 'in_house')}
-                                disabled={isSubmitting}
-                                className={`flex min-h-11 items-center justify-center rounded-xl border px-3 text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-loom/40 ${
-                                    formState.sizingMode === 'in_house'
-                                        ? 'border-loom bg-loom text-white shadow-xs'
-                                        : 'border-hairline bg-surface hover:bg-surface-soft text-body'
-                                }`}
-                            >
-                                {tx('In-house')}
-                            </button>
-                            <button
-                                type="button"
-                                role="radio"
-                                aria-checked={formState.sizingMode === 'outsourced'}
-                                onClick={() => updateField('sizingMode', 'outsourced')}
-                                disabled={isSubmitting}
-                                className={`flex min-h-11 items-center justify-center rounded-xl border px-3 text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-loom/40 ${
-                                    formState.sizingMode === 'outsourced'
-                                        ? 'border-loom bg-loom text-white shadow-xs'
-                                        : 'border-hairline bg-surface hover:bg-surface-soft text-body'
-                                }`}
-                            >
-                                {tx('Outsourced')}
-                            </button>
-                        </div>
+                        <LiquidSegmented
+                            fullWidth
+                            className="mt-0.5"
+                            aria-label={tx('Default sizing method')}
+                            disabled={isSubmitting}
+                            value={formState.sizingMode}
+                            onValueChange={(value) => updateField('sizingMode', value)}
+                            options={[
+                                { value: 'in_house', label: tx('In-house') },
+                                { value: 'outsourced', label: tx('Outsourced') },
+                            ]}
+                        />
                         <p className="text-xs text-muted-foreground">
                             {tx('In-house sizing is included in factory overhead; outsourced uses rate per kg.')}
                         </p>

@@ -18,6 +18,7 @@ import {
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { SwitchField } from '@/components/ui/switch-field'
 import { railPrimaryAction } from '@/components/ui/rail'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
@@ -1310,22 +1311,22 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                 </select>
                             </div>
                         </details>
-                        <Button
-                            variant={comparisonMode ? 'secondary' : 'outline'}
-                            onClick={() => { setComparisonMode(current => !current); setSelectedCostingIds([]) }}
-                            className="h-10 sm:h-11 rounded-xl"
-                            aria-pressed={comparisonMode}
+                        <SwitchField
+                            variant="pill"
+                            icon={<GitCompareArrows className="h-4 w-4" />}
+                            checked={comparisonMode}
+                            onCheckedChange={() => { setComparisonMode(current => !current); setSelectedCostingIds([]) }}
                         >
-                            <GitCompareArrows className="h-4 w-4" /> {comparisonMode ? 'Done' : 'Compare'}
-                        </Button>
-                        <Button
-                            variant={showFavoritesOnly ? 'secondary' : 'outline'}
-                            onClick={() => { setOpenQualityKey(null); setShowFavoritesOnly(current => !current); setSelectedCostingIds([]) }}
-                            className="h-10 sm:h-11 rounded-xl"
-                            aria-pressed={showFavoritesOnly}
+                            Compare
+                        </SwitchField>
+                        <SwitchField
+                            variant="pill"
+                            icon={<Star className={`h-4 w-4 ${showFavoritesOnly ? 'fill-current' : ''}`} />}
+                            checked={showFavoritesOnly}
+                            onCheckedChange={() => { setOpenQualityKey(null); setShowFavoritesOnly(current => !current); setSelectedCostingIds([]) }}
                         >
-                            <Star className={`h-4 w-4 ${showFavoritesOnly ? 'fill-current' : ''}`} /> {showFavoritesOnly ? 'All costings' : 'Favourites'}
-                        </Button>
+                            Favourites
+                        </SwitchField>
                         <Button variant={showArchived ? 'secondary' : 'outline'} onClick={() => { setOpenQualityKey(null); setShowArchived(current => !current); setSelectedCostingIds([]) }} className="h-10 sm:h-11 rounded-xl">
                             {showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />} {showArchived ? t('common.active') : t('common.archived')}
                         </Button>

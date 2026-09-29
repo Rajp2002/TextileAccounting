@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { trackPlanEvent } from '@/lib/plan-analytics'
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { SwitchField } from '@/components/ui/switch-field'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -138,7 +139,7 @@ export default function WorkerEditor({ today, initialOpen = false, returnTo, chi
                             </>}
                         </>}
                         {workerDraft.payType === 'piece_rate' && <div data-workers-tour-field="availability" className="space-y-2"><Label htmlFor="base-worker-shift">Shift availability</Label><Select value={workerDraft.shiftAvailability} onValueChange={(value) => setWorkerDraft((current) => ({ ...current, shiftAvailability: value as BaseWorkerShiftAvailability }))}><SelectTrigger id="base-worker-shift" className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="day">Day shift</SelectItem><SelectItem value="night">Night shift</SelectItem><SelectItem value="both">Day & night</SelectItem></SelectContent></Select><p className="text-xs text-muted-foreground">You can edit this later. The assignment board only shows workers available for the selected shift.</p></div>}
-                        {editingWorkerId && <label data-workers-tour-field="active" className="flex items-center gap-2 text-sm text-body"><input type="checkbox" checked={workerDraft.isActive} onChange={(event) => setWorkerDraft((current) => ({ ...current, isActive: event.target.checked }))} /> Active worker</label>}
+                        {editingWorkerId && <SwitchField data-workers-tour-field="active" className="font-normal" checked={workerDraft.isActive} onCheckedChange={(isActive) => setWorkerDraft((current) => ({ ...current, isActive }))}>Active worker</SwitchField>}
                         <DialogFooter><Button type="button" variant="outline" onClick={closeDialog}>Cancel</Button><Button type="submit" disabled={pendingAction === 'worker-create' || pendingAction === 'worker-update'}>{pendingAction?.startsWith('worker-') ? <Loader2 className="h-4 w-4 animate-spin" /> : null}{returnTo ? tx('Save and return') : editingWorkerId ? 'Save changes' : 'Add worker'}</Button></DialogFooter>
                     </fieldset></form>
                 </DialogContent>

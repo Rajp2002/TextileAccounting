@@ -13,6 +13,7 @@ import { AlertTriangle, ArrowUpRight, CheckCircle2, Clock3, ClipboardList, FileC
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { SwitchField } from '@/components/ui/switch-field'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -813,7 +814,7 @@ export default function BaseDailyProductionSheet({
                                 </div>
                                 <div className="flex flex-wrap gap-2">
                                     {draftStatus === 'local' && <Button variant="ghost" size="sm" disabled={isSaving} onClick={discardDraft} className="h-8 rounded-xl text-xs font-semibold text-muted-foreground hover:text-ink">Discard draft</Button>}
-                                    {(registerSummary.pending + registerSummary.invalid > 0 || showPending) && <Button variant="outline" size="sm" aria-pressed={showPending} onClick={togglePending} className="h-8 rounded-xl border-hairline bg-surface text-xs font-semibold hover:bg-surface-soft shadow-xs">{showPending ? 'Show all machines' : `Show pending (${registerSummary.pending + registerSummary.invalid})`}</Button>}
+                                    {(registerSummary.pending + registerSummary.invalid > 0 || showPending) && <SwitchField variant="pill" checked={showPending} onCheckedChange={togglePending}>{`Show pending (${registerSummary.pending + registerSummary.invalid})`}</SwitchField>}
                                 </div>
                             </div>
                             <CardDescription className="text-xs text-body">Leave a reading blank if it is pending. Enter 0 if the machine did not run.</CardDescription>

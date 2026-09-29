@@ -30,6 +30,7 @@ import {
     X,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { SwitchField } from '@/components/ui/switch-field'
 import { railPrimaryAction } from '@/components/ui/rail'
 import { cn } from '@/lib/utils'
 import { Card, CardContent } from '@/components/ui/card'
@@ -1708,31 +1709,29 @@ export default function RatesClient({
                             })}
                         </div>
 
-                        <button
+                        <SwitchField
                             data-ratebook-field="needsReviewFilter"
-                            type="button"
-                            aria-pressed={statusFilter === 'needs_review'}
-                            onClick={() => setStatusFilter(current => current === 'needs_review' ? 'all' : 'needs_review')}
-                            className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-3.5 text-xs sm:text-sm font-semibold transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-saffron focus-visible:ring-offset-2 ${
-                                statusFilter === 'needs_review'
-                                    ? 'border-warning/60 bg-warning-soft text-ink ring-1 ring-warning/30 shadow-sm'
-                                    : 'border-hairline-strong/70 bg-surface-soft/75 text-body hover:bg-surface-soft hover:text-ink'
-                            }`}
-                        >
-                            <CalendarClock className={`h-4 w-4 shrink-0 ${statusFilter === 'needs_review' ? 'text-warning' : 'text-subtle'}`} aria-hidden="true" />
-                            <span>Needs Review</span>
-                            <span
-                                className={`rounded-full px-1.5 py-0.5 text-[10px] font-black tracking-wide ${
-                                    dueReviewRates.length > 0
-                                        ? statusFilter === 'needs_review'
-                                            ? 'bg-warning text-white'
-                                            : 'bg-warning-soft text-warning border border-warning/30'
-                                        : 'bg-surface text-subtle'
+                            variant="pill"
+                            checked={statusFilter === 'needs_review'}
+                            onCheckedChange={(on) => setStatusFilter(on ? 'needs_review' : 'all')}
+                            checkedClassName="border-warning/60 bg-warning-soft ring-1 ring-warning/30"
+                            icon={<CalendarClock className={`h-4 w-4 shrink-0 ${statusFilter === 'needs_review' ? 'text-warning' : 'text-subtle'}`} aria-hidden="true" />}
+                            trailing={
+                                <span
+                                    className={`rounded-full px-1.5 py-0.5 text-[10px] font-black tracking-wide ${
+                                        dueReviewRates.length > 0
+                                            ? statusFilter === 'needs_review'
+                                                ? 'bg-warning text-white'
+                                                : 'bg-warning-soft text-warning border border-warning/30'
+                                            : 'bg-surface text-subtle'
                                     }`}
-                            >
-                                {dueReviewRates.length}
-                            </span>
-                        </button>
+                                >
+                                    {dueReviewRates.length}
+                                </span>
+                            }
+                        >
+                            Needs Review
+                        </SwitchField>
 
                         {dueReviewRates.length > 0 && (
                             <Button

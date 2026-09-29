@@ -18,6 +18,7 @@ import { toast } from 'sonner'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { SwitchField } from '@/components/ui/switch-field'
 import {
     Dialog,
     DialogContent,
@@ -591,15 +592,7 @@ export default function BasePayrollSettlementWorkspace({
                         </div>
 
                         {/* Outstanding Only Switch */}
-                        <label className="flex items-center gap-2 cursor-pointer select-none text-xs font-semibold text-body whitespace-nowrap">
-                            <input
-                                type="checkbox"
-                                checked={outstandingOnly}
-                                onChange={(e) => setOutstandingOnly(e.target.checked)}
-                                className="rounded border-hairline text-loom focus:ring-loom h-4 w-4"
-                            />
-                            <span>Outstanding only</span>
-                        </label>
+                        <SwitchField className="whitespace-nowrap text-xs" checked={outstandingOnly} onCheckedChange={setOutstandingOnly}>Outstanding only</SwitchField>
                     </div>
                 </div>
 
