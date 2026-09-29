@@ -1632,6 +1632,13 @@
   }
 }
 
+/* Unlayered on purpose: the standalone rule above is unlayered and would beat the layered
+   intro rule, leaving the beige page colour visible in the iOS home-indicator strip. */
+html[data-weavly-intro],
+html[data-weavly-intro] body {
+  background-color: #000;
+}
+
 /* Keep the mobile tour's reading area steady while the highlighted field changes. */
 @media (max-width: 767px), (max-height: 500px) and (pointer: coarse) {
   .guided-tour-panel {
