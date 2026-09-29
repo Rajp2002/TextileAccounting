@@ -25,18 +25,13 @@ export default function LoginForm({ recoveryDestination }: { recoveryDestination
     const [email, setEmail]                 = useState('')
     const [password, setPassword]           = useState('')
     const [showPassword, setShowPassword]   = useState(false)
-    // Safari opens its saved-password popover on its own as soon as a login
-    // form loads, which lands on top of the installed app's woven intro. The
-    // fields stay read-only (no popover) until the user presses or tabs into one.
+    // When a login page loads, Safari focuses the email or password field itself
+    // ("streamlined login"), and that focus opens its saved-password popover on
+    // top of the installed app's woven intro. Safari only does this for a form
+    // whose credential fields are in the tab order (read-only does not stop it),
+    // so the fields stay out of it until the user clicks one or presses Tab.
     const [credentialsArmed, setCredentialsArmed] = useState(false)
-
-    const armCredentials = (event: React.SyntheticEvent<HTMLInputElement>) => {
-        if (credentialsArmed) return
-        // Unlock this field before the focus that follows a press, so it lands
-        // on an editable field (iOS only opens the keyboard for those).
-        event.currentTarget.readOnly = false
-        setCredentialsArmed(true)
-    }
+    const armCredentials = () => setCredentialsArmed(true)
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search)
@@ -44,12 +39,22 @@ export default function LoginForm({ recoveryDestination }: { recoveryDestination
             toast.success('Password updated. Please sign in with your new password.')
             window.history.replaceState(null, '', window.location.pathname)
         }
-        // A field focused before hydration missed its handlers: unlock it now.
-        const active = document.activeElement
-        if (active instanceof HTMLInputElement && (active.id === 'email' || active.id === 'password')) {
-            active.readOnly = false
-        }
     }, [])
+
+    useEffect(() => {
+        if (credentialsArmed) return
+        const armOnTab = (event: KeyboardEvent) => {
+            if (event.key !== 'Tab') return
+            // Restore the tab order before this Tab moves focus.
+            for (const id of ['email', 'password']) {
+                const field = document.getElementById(id)
+                if (field) field.tabIndex = 0
+            }
+            setCredentialsArmed(true)
+        }
+        window.addEventListener('keydown', armOnTab, true)
+        return () => window.removeEventListener('keydown', armOnTab, true)
+    }, [credentialsArmed])
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -130,8 +135,7 @@ export default function LoginForm({ recoveryDestination }: { recoveryDestination
                         onChange={(e) => setEmail(e.target.value)}
                         required
                         autoComplete="email"
-                        readOnly={!credentialsArmed}
-                        onPointerDown={armCredentials}
+                        tabIndex={credentialsArmed ? undefined : -1}
                         onFocus={armCredentials}
                         className="h-12 transition-all focus:bg-surface"
                         disabled={loading}
@@ -157,8 +161,7 @@ export default function LoginForm({ recoveryDestination }: { recoveryDestination
                             onChange={(e) => setPassword(e.target.value)}
                             required
                             autoComplete="current-password"
-                            readOnly={!credentialsArmed}
-                            onPointerDown={armCredentials}
+                            tabIndex={credentialsArmed ? undefined : -1}
                             onFocus={armCredentials}
                             className="h-12 pr-10 transition-all focus:bg-surface"
                             disabled={loading}

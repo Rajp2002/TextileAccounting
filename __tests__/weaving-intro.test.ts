@@ -316,14 +316,16 @@ describe('woven intro integration contracts', () => {
         expect(login.indexOf('<IntroPrePaintScript surface="app-login" />')).toBeLessThan(login.indexOf('<LoginForm'))
     })
 
-    it('keeps the saved-password popover closed until the user presses or tabs into a sign-in field', () => {
+    it('keeps Safari from focusing a sign-in field (and opening its password popover) until the user does', () => {
         const form = read('app/(auth)/login/login-form.tsx')
-        // both the email and the password field
-        expect(form.match(/readOnly=\{!credentialsArmed\}/g)).toHaveLength(2)
-        expect(form.match(/onPointerDown=\{armCredentials\}/g)).toHaveLength(2)
+        // Safari's streamlined login skips forms whose credential fields have a
+        // negative tabIndex; read-only fields are still focused.
+        expect(form.match(/tabIndex=\{credentialsArmed \? undefined : -1\}/g)).toHaveLength(2)
         expect(form.match(/onFocus=\{armCredentials\}/g)).toHaveLength(2)
-        // the pressed field is unlocked before it takes focus, so iOS still opens the keyboard
-        expect(form).toContain('event.currentTarget.readOnly = false')
+        expect(form).not.toMatch(/readOnly=\{/)
+        // keyboard users get the fields back in the tab order on their first Tab
+        expect(form).toContain("window.addEventListener('keydown', armOnTab, true)")
+        expect(form).toContain('field.tabIndex = 0')
     })
 
     it('loads the WebGL runtime lazily and always restores the page when it ends', () => {
