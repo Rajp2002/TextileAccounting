@@ -36,6 +36,7 @@ export type IntroWindow = Window & { __weavlyIntro?: IntroHandle }
 
 const SCRIPT = `(function(surface){
 var d=document.documentElement,w=window;
+var paint=function(c){var b=document.body;d.style.backgroundColor=c;if(b){b.style.backgroundColor=c;b.style.transition=c?"none":""}};
 try{
 var q=location.search;
 if(/[?&]intro=0(?:&|$)/.test(q))return;
@@ -51,17 +52,17 @@ if(document.referrer&&document.referrer.indexOf(location.origin+"/")===0)return;
 if(surface==="landing"&&location.hash)return;
 if(surface==="app-login"&&!(mq("(display-mode: standalone)")||mq("(display-mode: minimal-ui)")||mq("(display-mode: fullscreen)")||navigator.standalone===true))return;
 }
-if(surface==="app-login"&&d.style)d.style.backgroundColor="rgb(7,7,6)";
+if(surface==="app-login"&&d.style)paint("rgb(7,7,6)");
 d.setAttribute("${INTRO_ATTRIBUTE}",surface);
 var link=document.createElement("link");link.rel="preload";link.as="image";link.href="/images/WeavlyLogo.png";document.head.appendChild(link);
 var evs=["keydown","wheel","touchstart","pointerdown"],timer;
 var api=w.__weavlyIntro={surface:surface,state:"pending"};
 var early=function(){if(api.state==="pending")api.abort()};
 api.release=function(){clearTimeout(timer);for(var i=0;i<evs.length;i++)w.removeEventListener(evs[i],early,true)};
-api.abort=function(){if(api.state==="done")return;api.state="done";api.release();if(d.style&&d.style.backgroundColor)d.style.backgroundColor="rgb(244,243,236)";d.setAttribute("${INTRO_LEAVING_ATTRIBUTE}","");setTimeout(function(){d.removeAttribute("${INTRO_ATTRIBUTE}");d.removeAttribute("${INTRO_LEAVING_ATTRIBUTE}");if(d.style)d.style.backgroundColor=""},200)};
+api.abort=function(){if(api.state==="done")return;api.state="done";api.release();if(d.style&&d.style.backgroundColor)paint("rgb(244,243,236)");d.setAttribute("${INTRO_LEAVING_ATTRIBUTE}","");setTimeout(function(){d.removeAttribute("${INTRO_ATTRIBUTE}");d.removeAttribute("${INTRO_LEAVING_ATTRIBUTE}");if(d.style)paint("")},200)};
 for(var i=0;i<evs.length;i++)w.addEventListener(evs[i],early,true);
 timer=setTimeout(function(){if(api.state==="pending")api.abort()},${INTRO_START_TIMEOUT_MS});
-}catch(e){d.removeAttribute("${INTRO_ATTRIBUTE}");if(d.style)d.style.backgroundColor=""}
+}catch(e){d.removeAttribute("${INTRO_ATTRIBUTE}");if(d.style)paint("")}
 })`
 
 /** Static inline script (no user input) that decides whether the intro plays. */

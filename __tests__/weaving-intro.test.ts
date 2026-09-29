@@ -412,8 +412,9 @@ describe('woven intro integration contracts', () => {
     it('prefetches the runtime chunk early and paints the iOS bottom strip from the stage colour', () => {
         expect(read('components/intro/weaving-intro.tsx')).toContain('const pending =')
         const runtime = read('components/intro/weaving-intro-runtime.ts')
-        expect(runtime).toContain('root.style.backgroundColor = stripColor(')
-        expect(runtime).toContain("root.style.backgroundColor = ''")
+        expect(runtime).toContain('paintRoot(stripColor(')
+        expect(runtime).toContain("paintRoot('')")
+        expect(runtime).toContain("body.style.transition = color ? 'none' : ''")
         expect(read('app/globals.css')).not.toContain('--weavly-intro-h')
         expect(read('lib/intro/intro-policy.ts')).not.toContain('--weavly-intro-h')
     })
