@@ -603,11 +603,6 @@
     display: block;
     position: fixed;
     inset: 0;
-    /* iOS standalone can report a window a few points shorter than the screen, leaving the
-       home-indicator strip outside a fixed inset:0 box. The pre-paint script measures the
-       real screen height into --weavly-intro-h so the woven stage itself reaches the bottom. */
-    height: var(--weavly-intro-h, calc(100% + env(safe-area-inset-bottom, 0px)));
-    bottom: auto;
     z-index: 100;
     overflow: hidden;
     background: #000;
