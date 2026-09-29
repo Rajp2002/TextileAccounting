@@ -603,6 +603,9 @@
     display: block;
     position: fixed;
     inset: 0;
+    /* iOS standalone (viewport-fit=cover) can leave the home-indicator strip outside a
+       fixed inset:0 box, where the beige page background shows through the black stage. */
+    bottom: calc(-1 * env(safe-area-inset-bottom, 0px));
     z-index: 100;
     overflow: hidden;
     background: #000;
@@ -643,6 +646,11 @@
   html[data-weavly-intro-leaving] .weavly-intro-skip {
     opacity: 0;
     transition: opacity 180ms ease;
+  }
+
+  html[data-weavly-intro],
+  html[data-weavly-intro] body {
+    background-color: #000;
   }
 
   html[data-weavly-intro] body,
