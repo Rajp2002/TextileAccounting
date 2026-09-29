@@ -171,9 +171,10 @@ describe('Rate Book P1: UI & Interaction Wiring in RatesClient.tsx', () => {
     })
 
     it('provides 3-way segmented direction control (All, Warp, Weft) and quick status chip', () => {
-        expect(client).toContain("categoryFilter === 'all'")
-        expect(client).toContain("categoryFilter === 'yarn_warp'")
-        expect(client).toContain("categoryFilter === 'yarn_weft'")
+        expect(client).toContain('value={categoryFilter}')
+        expect(client).toContain('onValueChange={setCategoryFilter}')
+        expect(client).toContain("{ value: 'yarn_warp', label: 'Warp' }")
+        expect(client).toContain("{ value: 'yarn_weft', label: 'Weft' }")
         expect(client).toContain("statusFilter === 'needs_review'")
         expect(client).toContain('Needs Review')
     })

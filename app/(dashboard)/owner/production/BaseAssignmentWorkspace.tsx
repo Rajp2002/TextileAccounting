@@ -264,12 +264,6 @@ export default function BaseAssignmentWorkspace({
         if (machineId) void handleAssign(workerId, machineId)
     }
 
-    function toggleMachineType(machineType: string) {
-        setSelectedMachineTypes((current) => current.includes(machineType)
-            ? current.filter((value) => value !== machineType)
-            : [...current, machineType])
-    }
-
     async function handleAssign(workerId: string, machineId: string, replaceExisting = false) {
         if (tourStep) return
         if (!currentJobByMachine.has(machineId)) {
@@ -500,7 +494,7 @@ export default function BaseAssignmentWorkspace({
                                 className="h-10 sm:h-11 rounded-xl border border-hairline bg-surface pl-9 text-sm text-ink placeholder:text-muted-foreground/70 focus:border-loom-subtle focus:ring-2 focus:ring-loom/10"
                             />
                         </div>
-                        <MachineTypeFilters machineTypes={machineTypes} selected={selectedMachineTypes} onToggle={toggleMachineType} onShowAll={() => setSelectedMachineTypes([])} />
+                        <MachineTypeFilters machineTypes={machineTypes} selected={selectedMachineTypes} onSelect={(machineType) => setSelectedMachineTypes(machineType ? [machineType] : [])} />
                     </div>
                     <div
                         ref={boardRef}
@@ -802,7 +796,7 @@ export default function BaseAssignmentWorkspace({
                     <CardContent className="p-4 pt-3">
                         <p className="mb-3 text-xs text-body">View the worker connected to each machine for this shift.</p>
                         <div className="mb-3">
-                            <MachineTypeFilters machineTypes={machineTypes} selected={selectedMachineTypes} onToggle={toggleMachineType} onShowAll={() => setSelectedMachineTypes([])} />
+                            <MachineTypeFilters machineTypes={machineTypes} selected={selectedMachineTypes} onSelect={(machineType) => setSelectedMachineTypes(machineType ? [machineType] : [])} />
                         </div>
                         <div className="space-y-2">
                             {visibleMachines.length === 0 ? <EmptyInline label="No machines match this view." /> : visibleMachines.map((machine) => {
@@ -906,7 +900,7 @@ export default function BaseAssignmentWorkspace({
                         <SheetDescription className="text-xs text-body">Choose a machine for the {shift} shift. Saving happens immediately.</SheetDescription>
                     </SheetHeader>
                     <div className="space-y-3 overflow-y-auto px-4 pt-3">
-                        <MachineTypeFilters machineTypes={machineTypes} selected={selectedMachineTypes} onToggle={toggleMachineType} onShowAll={() => setSelectedMachineTypes([])} />
+                        <MachineTypeFilters machineTypes={machineTypes} selected={selectedMachineTypes} onSelect={(machineType) => setSelectedMachineTypes(machineType ? [machineType] : [])} />
                         {selectableMachines.length === 0 ? <EmptyInline label="No active machines found." /> : selectableMachines.map((machine) => {
                             const assignment = assignmentByMachine.get(machine.id)
                             const assignedWorker = assignment ? workerById.get(assignment.worker_id) : null
@@ -972,54 +966,26 @@ function EmptyInline({ label }: { label: string }) {
 function MachineTypeFilters({
     machineTypes,
     selected,
-    onToggle,
-    onShowAll,
+    onSelect,
 }: {
     machineTypes: string[]
     selected: string[]
-    onToggle: (machineType: string) => void
-    onShowAll: () => void
+    onSelect: (machineType: string | null) => void
 }) {
     if (machineTypes.length === 0) return null
 
     return (
-        <div className="flex min-h-10 flex-wrap items-center gap-1.5" data-configuration-tour="types" aria-label="Filter by machine type">
-            <Button
-                type="button"
+        <div className="max-w-full overflow-x-auto pb-0.5" data-configuration-tour="types">
+            <LiquidSegmented
                 size="sm"
-                variant="ghost"
-                onClick={onShowAll}
-                aria-pressed={selected.length === 0}
-                className={cn(
-                    "h-8 rounded-full px-3 text-xs font-semibold transition-all border",
-                    selected.length === 0
-                        ? "border-loom bg-loom text-white shadow-xs hover:bg-loom-elevated hover:text-white"
-                        : "border-hairline bg-surface text-body hover:border-hairline-strong hover:text-ink hover:bg-surface-soft"
-                )}
-            >
-                All
-            </Button>
-            {machineTypes.map((machineType) => {
-                const isSelected = selected.includes(machineType)
-                return (
-                    <Button
-                        key={machineType}
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => onToggle(machineType)}
-                        aria-pressed={isSelected}
-                        className={cn(
-                            "h-8 rounded-full px-3 text-xs font-semibold transition-all border",
-                            isSelected
-                                ? "border-loom bg-loom text-white shadow-xs hover:bg-loom-elevated hover:text-white"
-                                : "border-hairline bg-surface text-body hover:border-hairline-strong hover:text-ink hover:bg-surface-soft"
-                        )}
-                    >
-                        {formatMachineType(machineType)}
-                    </Button>
-                )
-            })}
+                aria-label="Filter by machine type"
+                value={selected.length === 1 ? selected[0] : 'all'}
+                onValueChange={(value) => onSelect(value === 'all' ? null : value)}
+                options={[
+                    { value: 'all', label: 'All' },
+                    ...machineTypes.map((machineType) => ({ value: machineType, label: formatMachineType(machineType) })),
+                ]}
+            />
         </div>
     )
 }

@@ -146,9 +146,10 @@ describe('RatesClient UI contract for search, filters, and keyboard shortcuts', 
         expect(clientSource).toContain("YarnDirectionFilter = 'all' | YarnRateCategory")
         expect(clientSource).toContain("role=\"group\"")
         expect(clientSource).toContain("aria-label=\"Show yarn rates by direction\"")
-        expect(clientSource).toContain("categoryFilter === 'all'")
-        expect(clientSource).toContain("categoryFilter === 'yarn_warp'")
-        expect(clientSource).toContain("categoryFilter === 'yarn_weft'")
+        expect(clientSource).toContain('value={categoryFilter}')
+        expect(clientSource).toContain('onValueChange={setCategoryFilter}')
+        expect(clientSource).toContain("{ value: 'yarn_warp', label: 'Warp' }")
+        expect(clientSource).toContain("{ value: 'yarn_weft', label: 'Weft' }")
     })
 
     it('provides a dedicated Needs Review quick status chip with live count', () => {
