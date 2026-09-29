@@ -34,7 +34,7 @@ describe('CostEstimateTutorial Section Transitions', () => {
 
     it('enhances the visual aura and section progress badge during section transitions', () => {
         expect(tutorialSource).toContain('isSectionTransition')
-        expect(tutorialSource).toContain('border-orange-500/60 shadow-[0_0_0_1px_rgba(249,115,22,0.4),0_0_50px_rgba(249,115,22,0.32)]')
+        expect(tutorialSource).toContain('border-saffron/60 shadow-[0_0_0_1px_rgba(230,138,0,0.4),0_0_50px_rgba(230,138,0,0.32)]')
     })
 
     it('does not re-center the card when moving between fields in the same section (deltaY = 0 when field is in view)', () => {

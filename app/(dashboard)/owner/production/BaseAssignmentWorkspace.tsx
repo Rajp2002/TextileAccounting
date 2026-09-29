@@ -422,7 +422,7 @@ export default function BaseAssignmentWorkspace({
                         <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-y-auto rounded-2xl border border-hairline bg-surface p-6 shadow-2xl">
                             <DialogHeader>
                                 <div className="flex items-center gap-3">
-                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700 shadow-xs border border-amber-200/60">
+                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--wv-ochre-100)] text-[var(--wv-ochre-800)] shadow-xs border border-[var(--wv-ochre-200)]/60">
                                         <CircleHelp className="h-5 w-5" aria-hidden="true" />
                                     </div>
                                     <div>

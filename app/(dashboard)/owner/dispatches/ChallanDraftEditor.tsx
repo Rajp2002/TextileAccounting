@@ -416,7 +416,7 @@ export default function ChallanDraftEditor({
                                             size="icon"
                                             variant="ghost"
                                             aria-label={`${tx('remove')} ${index + 1}`}
-                                            className="h-10 w-10 rounded-xl text-muted-foreground hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                                            className="h-10 w-10 rounded-xl text-muted-foreground hover:text-[var(--wv-madder-600)] hover:bg-[var(--wv-madder-50)]"
                                             disabled={draft.lines.length === 1}
                                             onClick={() =>
                                                 onChange({
@@ -444,7 +444,7 @@ export default function ChallanDraftEditor({
                             {tx('addLine')}
                         </Button>
                         {progress.incomplete > 0 && (
-                            <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 p-2.5 rounded-xl border border-amber-200 dark:border-amber-900/50">
+                            <p className="text-xs font-semibold text-[var(--wv-ochre-800)] bg-[var(--wv-ochre-50)] p-2.5 rounded-xl border border-[var(--wv-ochre-200)]">
                                 {tx('incompleteRows')}
                             </p>
                         )}
@@ -480,7 +480,7 @@ export default function ChallanDraftEditor({
                                 <h3 className="text-lg font-extrabold tracking-tight text-ink">
                                     {tx('title')}
                                 </h3>
-                                <span className="inline-block mt-0.5 text-xs font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-md">
+                                <span className="inline-block mt-0.5 text-xs font-bold text-[var(--wv-ochre-800)] bg-[var(--wv-ochre-50)] px-2 py-0.5 rounded-md">
                                     {tx('draft')}
                                 </span>
                             </div>
@@ -652,7 +652,7 @@ export default function ChallanDraftEditor({
                     </Button>
                 </div>
                 {error && (
-                    <p role="alert" className="w-full text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 p-3 rounded-xl border border-rose-200 dark:border-rose-900/60">
+                    <p role="alert" className="w-full text-xs font-semibold text-[var(--wv-madder-600)] bg-[var(--wv-madder-50)] p-3 rounded-xl border border-[var(--wv-madder-200)]">
                         {error}
                     </p>
                 )}

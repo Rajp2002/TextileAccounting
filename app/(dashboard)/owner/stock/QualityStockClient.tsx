@@ -142,8 +142,8 @@ export default function QualityStockClient({ initialData }: { initialData: Quali
                 </div>
             </header>
 
-            {notice && <p role="status" className="rounded-xl border border-emerald-200 bg-emerald-50/80 p-3.5 text-xs sm:text-sm font-medium text-emerald-800 shadow-xs">{notice}</p>}
-            {error && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50/80 p-3.5 text-xs sm:text-sm font-medium text-rose-800 shadow-xs">{error} <button className="underline font-bold ml-1 hover:text-rose-950" onClick={() => void load()}>{tx('retry')}</button></p>}
+            {notice && <p role="status" className="rounded-xl border border-[var(--wv-moss-200)] bg-[var(--wv-moss-50)]/80 p-3.5 text-xs sm:text-sm font-medium text-[var(--wv-moss-700)] shadow-xs">{notice}</p>}
+            {error && <p role="alert" className="rounded-xl border border-[var(--wv-madder-200)] bg-[var(--wv-madder-50)]/80 p-3.5 text-xs sm:text-sm font-medium text-[var(--wv-madder-600)] shadow-xs">{error} <button className="underline font-bold ml-1 hover:text-[var(--wv-madder-600)]" onClick={() => void load()}>{tx('retry')}</button></p>}
 
             {/* Available stock card */}
             <div className="rounded-2xl border border-hairline/80 bg-surface/95 p-6 shadow-[var(--shadow-card)] backdrop-blur-sm">
@@ -207,7 +207,7 @@ export default function QualityStockClient({ initialData }: { initialData: Quali
                                             {quality.quality_label}
                                         </h3>
                                         {!quality.opening_recorded && (
-                                            <span className="shrink-0 inline-flex items-center gap-1 rounded-full border border-amber-200/80 bg-amber-50/90 px-2 py-0.5 text-[10px] font-bold text-amber-800" title={tx('openingPending')}>
+                                            <span className="shrink-0 inline-flex items-center gap-1 rounded-full border border-[var(--wv-ochre-200)]/80 bg-[var(--wv-ochre-50)]/90 px-2 py-0.5 text-[10px] font-bold text-[var(--wv-ochre-800)]" title={tx('openingPending')}>
                                                 <AlertCircle className="h-3 w-3" />
                                                 <span>Pending</span>
                                             </span>
@@ -365,12 +365,12 @@ export default function QualityStockClient({ initialData }: { initialData: Quali
                                             <div className="flex items-start gap-3 min-w-0">
                                                 <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
                                                     row.kind === 'production'
-                                                        ? 'bg-amber-500/10 text-amber-700'
+                                                        ? 'bg-[var(--wv-ochre-50)] text-[var(--wv-ochre-800)]'
                                                         : row.kind === 'dispatch' || row.kind === 'dispatch_reversal'
-                                                        ? 'bg-sky-500/10 text-sky-700'
+                                                        ? 'bg-[var(--wv-lagoon-50)] text-[var(--wv-lagoon-700)]'
                                                         : row.kind === 'opening'
-                                                        ? 'bg-emerald-500/10 text-emerald-700'
-                                                        : 'bg-purple-500/10 text-purple-700'
+                                                        ? 'bg-[var(--wv-moss-50)] text-[var(--wv-moss-700)]'
+                                                        : 'bg-[var(--wv-neel-50)] text-[var(--wv-neel-700)]'
                                                 }`}>
                                                     {row.kind === 'production' ? (
                                                         <Factory className="h-4 w-4" />
@@ -412,7 +412,7 @@ export default function QualityStockClient({ initialData }: { initialData: Quali
                                             </div>
                                             <div className="sm:text-right shrink-0 pl-11 sm:pl-0 tabular-nums">
                                                 <div className={`text-base font-bold tracking-tight ${
-                                                    isNegative ? 'text-rose-600' : isPositive ? 'text-emerald-600' : 'text-body'
+                                                    isNegative ? 'text-[var(--wv-madder-600)]' : isPositive ? 'text-[var(--wv-moss-700)]' : 'text-body'
                                                 }`}>
                                                     {isPositive ? '+' : ''}{metres(row.meters_delta)} {tx('metres')}
                                                 </div>
@@ -518,7 +518,7 @@ export default function QualityStockClient({ initialData }: { initialData: Quali
                                 required
                             />
                         </div>
-                        {saveError && <p role="alert" className="text-xs text-rose-700 font-medium">{saveError}</p>}
+                        {saveError && <p role="alert" className="text-xs text-[var(--wv-madder-600)] font-medium">{saveError}</p>}
                         {request && !saving && <p className="text-xs text-muted-foreground">{tx('retrySame')}</p>}
                         <div className="flex justify-end gap-2 pt-2">
                             <Button type="button" variant="outline" disabled={saving} onClick={() => { setForm(null); void load() }} className="rounded-xl border-hairline h-9 text-xs font-semibold">

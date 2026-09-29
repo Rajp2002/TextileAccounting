@@ -369,7 +369,7 @@ export function CostingExportDialog({
       <DialogContent data-costing-tour-dialog={tutorialPreview ? "true" : undefined} onOpenAutoFocus={event => {if (tutorialPreview) event.preventDefault()}} onCloseAutoFocus={event => {if (tutorialPreview) event.preventDefault()}} onInteractOutside={event => {if (tutorialPreview) event.preventDefault()}} onEscapeKeyDown={event => {if (tutorialPreview) event.preventDefault()}} className="max-h-[95vh] overflow-y-auto sm:max-w-6xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Eye className="h-5 w-5 text-blue-600" />
+            <Eye className="h-5 w-5 text-[var(--wv-action-primary)]" />
             {mode === 'customer' ? 'Preview Customer Quotation' : 'Preview Internal Cost Estimate'}
           </DialogTitle>
           <DialogDescription>
@@ -378,25 +378,25 @@ export function CostingExportDialog({
         </DialogHeader>
 
         {savedQuotation && displayedQuoteStatus && (
-          <div className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between" role="status">
+          <div className="flex flex-col gap-2 rounded-xl border border-[var(--wv-border-subtle)] bg-[var(--wv-bg-subtle)] px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between" role="status">
             <div className="flex min-w-0 items-center gap-2">
-              <span className="text-xs font-semibold text-slate-600">Quotation status</span>
-              <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-bold text-slate-700">{displayedQuoteStatus[0].toUpperCase() + displayedQuoteStatus.slice(1)}</span>
+              <span className="text-xs font-semibold text-[var(--wv-text-secondary)]">Quotation status</span>
+              <span className="rounded-full border border-[var(--wv-border-control)] bg-[var(--wv-bg-surface)] px-2.5 py-1 text-[11px] font-bold text-[var(--wv-text-primary)]">{displayedQuoteStatus[0].toUpperCase() + displayedQuoteStatus.slice(1)}</span>
             </div>
-            <p className="text-xs text-slate-500">Updated {formatToSurat(latestQuoteUpdatedAt ?? new Date(), 'd MMM yyyy, h:mm a')}</p>
-            <p className="text-[11px] text-slate-500 sm:max-w-xs sm:text-right">PDF sharing does not confirm delivery.</p>
+            <p className="text-xs text-[var(--wv-text-secondary)]">Updated {formatToSurat(latestQuoteUpdatedAt ?? new Date(), 'd MMM yyyy, h:mm a')}</p>
+            <p className="text-[11px] text-[var(--wv-text-secondary)] sm:max-w-xs sm:text-right">PDF sharing does not confirm delivery.</p>
           </div>
         )}
 
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
-          <section className="min-w-0 rounded-xl border border-slate-200 bg-slate-100 p-2">
+          <section className="min-w-0 rounded-xl border border-[var(--wv-border-subtle)] bg-[var(--wv-bg-subtle)] p-2">
             <div className="mb-2 flex items-center justify-between gap-3 px-2">
               <div>
-                <p className="text-xs font-black uppercase tracking-widest text-slate-500">Live preview</p>
-                <p className="mt-1 text-xs text-slate-500">The PDF uses this same document layout.</p>
+                <p className="text-xs font-black uppercase tracking-widest text-[var(--wv-text-secondary)]">Live preview</p>
+                <p className="mt-1 text-xs text-[var(--wv-text-secondary)]">The PDF uses this same document layout.</p>
               </div>
               {status !== 'idle' && !documentChanged && (
-                <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${status === 'failed' ? 'bg-red-100 text-red-700' : status.includes('started') || status.includes('opened') || status === 'generated' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>
+                <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${status === 'failed' ? 'bg-[var(--wv-status-danger-bg)] text-[var(--wv-status-danger-fg)] border border-[var(--wv-status-danger-border)]' : status.includes('started') || status.includes('opened') || status === 'generated' ? 'bg-[var(--wv-status-success-bg)] text-[var(--wv-status-success-fg)] border border-[var(--wv-status-success-border)]' : 'bg-[var(--wv-status-info-bg)] text-[var(--wv-status-info-fg)] border border-[var(--wv-status-info-border)]'}`}>
                   {statusLabel(status)}
                 </span>
               )}
@@ -405,7 +405,7 @@ export function CostingExportDialog({
               title={mode === 'customer' ? 'Customer quotation preview' : 'Internal cost estimate preview'}
               srcDoc={previewHtml}
               sandbox=""
-              className="h-[min(65vh,680px)] w-full rounded-lg border border-slate-200 bg-white shadow-inner"
+              className="h-[min(65vh,680px)] w-full rounded-lg border border-[var(--wv-border-subtle)] bg-[var(--wv-bg-surface)] shadow-inner"
             />
           </section>
 
@@ -415,21 +415,21 @@ export function CostingExportDialog({
                 type="button"
                 onClick={() => switchMode('internal')}
                 disabled={isBusy}
-                className={`rounded-xl border p-4 text-left transition-colors ${mode === 'internal' ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-300'}`}
+                className={`rounded-xl border p-4 text-left transition-colors ${mode === 'internal' ? 'border-[var(--wv-neel-700)] bg-[var(--wv-neel-50)] shadow-[inset_2px_0_0_var(--wv-brand-accent)]' : 'border-[var(--wv-border-control)] bg-[var(--wv-bg-surface)] hover:border-[var(--wv-border-strong)]'}`}
               >
-                <FileText className="mb-3 h-5 w-5 text-blue-600" />
-                <p className="font-semibold text-slate-950">Internal Cost Estimate</p>
-                <p className="mt-1 text-xs leading-relaxed text-slate-500">Detailed costs, assumptions, break-even, margin, and profit stay inside the factory.</p>
+                <FileText className="mb-3 h-5 w-5 text-[var(--wv-neel-700)]" />
+                <p className="font-semibold text-[var(--wv-text-primary)]">Internal Cost Estimate</p>
+                <p className="mt-1 text-xs leading-relaxed text-[var(--wv-text-secondary)]">Detailed costs, assumptions, break-even, margin, and profit stay inside the factory.</p>
               </button>
               <button
                 type="button"
                 onClick={() => switchMode('customer')}
                 disabled={isBusy}
-                className={`rounded-xl border p-4 text-left transition-colors ${mode === 'customer' ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 hover:border-slate-300'}`}
+                className={`rounded-xl border p-4 text-left transition-colors ${mode === 'customer' ? 'border-[var(--wv-moss-700)] bg-[var(--wv-moss-50)] shadow-[inset_2px_0_0_var(--wv-brand-accent)]' : 'border-[var(--wv-border-control)] bg-[var(--wv-bg-surface)] hover:border-[var(--wv-border-strong)]'}`}
               >
-                <ReceiptText className="mb-3 h-5 w-5 text-emerald-600" />
-                <p className="font-semibold text-slate-950">Customer Quotation</p>
-                <p className="mt-1 text-xs leading-relaxed text-slate-500">Final price and commercial details only. Internal costs and margin stay hidden.</p>
+                <ReceiptText className="mb-3 h-5 w-5 text-[var(--wv-status-success-fg)]" />
+                <p className="font-semibold text-[var(--wv-text-primary)]">Customer Quotation</p>
+                <p className="mt-1 text-xs leading-relaxed text-[var(--wv-text-secondary)]">Final price and commercial details only. Internal costs and margin stay hidden.</p>
               </button>
             </div>
 
@@ -441,13 +441,13 @@ export function CostingExportDialog({
               <div className="space-y-1.5">
                 <Label htmlFor="export-customer-name">Party / customer {mode === 'customer' ? '' : '(optional)'}</Label>
                 <Input id="export-customer-name" value={customerName} onChange={event => setCustomerName(event.target.value)} placeholder="Customer or party name" disabled={savedQuotation || isBusy} aria-describedby={savedQuotation ? 'export-customer-name-help' : undefined} />
-                {savedQuotation && <p id="export-customer-name-help" className="text-xs text-slate-500">This customer name is locked because the quotation has already been saved.</p>}
+                {savedQuotation && <p id="export-customer-name-help" className="text-xs text-[var(--wv-text-secondary)]">This customer name is locked because the quotation has already been saved.</p>}
               </div>
               {mode === 'customer' && (
                 <div className="space-y-1.5">
                   <Label htmlFor="export-valid-until">Valid until</Label>
                   <Input id="export-valid-until" type="date" value={validUntil} onChange={event => setValidUntil(event.target.value)} disabled={lockedQuotation || isBusy} aria-describedby={lockedQuotation ? 'export-valid-until-help' : undefined} />
-                  {lockedQuotation && <p id="export-valid-until-help" className="text-xs text-slate-500">Accepted quotations keep their original validity date.</p>}
+                  {lockedQuotation && <p id="export-valid-until-help" className="text-xs text-[var(--wv-text-secondary)]">Accepted quotations keep their original validity date.</p>}
                 </div>
               )}
               <div className="space-y-1.5">
@@ -461,31 +461,31 @@ export function CostingExportDialog({
                   disabled={isBusy || (lockedQuotation && mode === 'customer')}
                   aria-describedby={lockedQuotation && mode === 'customer' ? 'export-terms-help' : undefined}
                 />
-                {lockedQuotation && mode === 'customer' && <p id="export-terms-help" className="text-xs text-slate-500">Accepted quotations keep their original customer terms.</p>}
+                {lockedQuotation && mode === 'customer' && <p id="export-terms-help" className="text-xs text-[var(--wv-text-secondary)]">Accepted quotations keep their original customer terms.</p>}
               </div>
               {mode === 'customer' && (
-                <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 p-3">
+                <div className="flex items-center justify-between gap-4 rounded-lg border border-[var(--wv-border-subtle)] p-3">
                   <div>
                     <Label htmlFor="export-gst-note">Show GST detail note</Label>
-                    <p className="text-xs text-slate-500">The quotation-only, not-a-tax-invoice disclaimer is always shown.</p>
+                    <p className="text-xs text-[var(--wv-text-secondary)]">The quotation-only, not-a-tax-invoice disclaimer is always shown.</p>
                   </div>
                   <Switch id="export-gst-note" checked={showGstNote} onCheckedChange={setShowGstNote} disabled={isBusy} />
                 </div>
               )}
             </div>
 
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Filename</p>
-              <p className="mt-1 break-all font-mono text-xs font-semibold text-slate-800">
+            <div className="rounded-xl border border-[var(--wv-border-subtle)] bg-[var(--wv-bg-subtle)] p-3">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--wv-text-secondary)]">Filename</p>
+              <p className="mt-1 break-all font-mono text-xs font-semibold text-[var(--wv-text-primary)]">
                 {(generatedFileIsCurrent && generatedFilename) || (model ? getCostingExportFilename(model, options) : 'Ready after preview')}
               </p>
-              {documentReference && <p className="mt-1 text-xs text-slate-500">Reference: {documentReference}</p>}
+              {documentReference && <p className="mt-1 text-xs text-[var(--wv-text-secondary)]">Reference: {documentReference}</p>}
             </div>
 
             {validationErrors.length > 0 && (
-              <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950" role="alert">
+              <div className="rounded-xl border border-[var(--wv-status-warning-border)] bg-[var(--wv-status-warning-bg)] p-3 text-sm text-[var(--wv-status-warning-fg)]" role="alert">
                 <div className="flex items-start gap-2">
-                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[var(--wv-status-warning-fg)]" />
                   <div>
                     <p className="font-bold">Complete this before generating</p>
                     <ul className="mt-1 list-disc space-y-1 pl-4 text-xs">
@@ -496,11 +496,11 @@ export function CostingExportDialog({
               </div>
             )}
 
-            {documentChanged && <p role="status" className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">{tx('Document details changed. Download a fresh PDF before sharing.')}</p>}
+            {documentChanged && <p role="status" className="rounded-xl border border-[var(--wv-status-warning-border)] bg-[var(--wv-status-warning-bg)] p-3 text-sm text-[var(--wv-status-warning-fg)]">{tx('Document details changed. Download a fresh PDF before sharing.')}</p>}
             {status === 'download-started' && generatedFileIsCurrent && (
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">
+              <div className="rounded-xl border border-[var(--wv-status-success-border)] bg-[var(--wv-status-success-bg)] p-3 text-sm text-[var(--wv-status-success-fg)]">
                 <div className="flex items-start gap-2">
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--wv-status-success-fg)]" />
                   <div>
                     <p className="font-bold">PDF generated and download started</p>
                     <p className="mt-1 text-xs">Check your browser Downloads folder. The system cannot verify the device save location.</p>
@@ -509,9 +509,9 @@ export function CostingExportDialog({
               </div>
             )}
             {status === 'failed' && errorMessage && (
-              <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-900" role="alert">
+              <div className="rounded-xl border border-[var(--wv-status-danger-border)] bg-[var(--wv-status-danger-bg)] p-3 text-sm text-[var(--wv-status-danger-fg)]" role="alert">
                 <div className="flex items-start gap-2">
-                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-600" />
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[var(--wv-status-danger-fg)]" />
                   <div>
                     <p className="font-bold">Document action failed</p>
                     <p className="mt-1 text-xs">{errorMessage}</p>
@@ -523,7 +523,7 @@ export function CostingExportDialog({
         </div>
 
         <DialogFooter data-costing-tour="export-actions" className="flex-col gap-2 pt-2 sm:flex-row sm:items-center sm:justify-between">
-          {exportActionHint && <p id="export-action-help" className="text-xs font-medium leading-relaxed text-amber-700 sm:max-w-sm">{exportActionHint}</p>}
+          {exportActionHint && <p id="export-action-help" className="text-xs font-medium leading-relaxed text-[var(--wv-status-warning-fg)] sm:max-w-sm">{exportActionHint}</p>}
           <div className="flex flex-wrap gap-2">
             <Button type="button" variant="outline" onClick={() => void handlePrint()} disabled={!model || isBusy || validationErrors.length > 0} aria-describedby={exportActionHint ? 'export-action-help' : undefined}>
               <Printer className="h-4 w-4" /> Print
@@ -534,11 +534,11 @@ export function CostingExportDialog({
                 Share PDF
               </Button>
             )}
-            {status === 'share-opened' && generatedFileIsCurrent && <span className="flex items-center gap-1 text-xs font-semibold text-slate-500"><ExternalLink className="h-3.5 w-3.5" /> Delivery is not confirmed</span>}
+            {status === 'share-opened' && generatedFileIsCurrent && <span className="flex items-center gap-1 text-xs font-semibold text-[var(--wv-text-secondary)]"><ExternalLink className="h-3.5 w-3.5" /> Delivery is not confirmed</span>}
           </div>
           <div className="flex gap-2">
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Close</Button>
-            <Button type="button" onClick={() => void handlePdf()} disabled={!model || !canGenerate || isBusy} aria-describedby={exportActionHint ? 'export-action-help' : undefined} className="bg-blue-600 text-white hover:bg-blue-700">
+            <Button type="button" onClick={() => void handlePdf()} disabled={!model || !canGenerate || isBusy} aria-describedby={exportActionHint ? 'export-action-help' : undefined} className="bg-[var(--wv-action-primary)] text-[var(--wv-text-on-action)] hover:bg-[var(--wv-action-primary-hover)]">
               {status === 'saving' || status === 'generating' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
               {documentChanged ? tx('Download updated PDF') : status === 'download-started' ? 'Download PDF again' : 'Download PDF'}
             </Button>

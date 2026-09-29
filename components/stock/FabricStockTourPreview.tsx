@@ -24,7 +24,7 @@ export default function FabricStockTourPreview({ step }: { step: StockTourStep }
         <header><h1 className="text-2xl font-bold">{tx('title')}</h1><p className="text-xs text-saffron-deep">{copy.sample}</p></header>
         {target('balance', <><p>{tx('available')} · {preview.quality}</p><strong className="text-3xl">{currentBalance} m</strong>{step === 'balance' && <p>{preview.balanceEquation}</p>}</>)}
         {target('tracking', <><p className="font-semibold">{preview.trackingStart}</p><p className="text-sm">{preview.trackingNote}</p></>)}
-        {target('openingPending', <><h2 className="font-bold">{preview.quality}</h2><p className="text-sm">{preview.openingEquation}</p>{beforeOpening && <p className="text-sm text-amber-700">{tx('openingPending')}</p>}{action(beforeOpening ? 'opening' : 'correct')}{action('history')}</>)}
+        {target('openingPending', <><h2 className="font-bold">{preview.quality}</h2><p className="text-sm">{preview.openingEquation}</p>{beforeOpening && <p className="text-sm text-[var(--wv-ochre-700)]">{tx('openingPending')}</p>}{action(beforeOpening ? 'opening' : 'correct')}{action('history')}</>)}
         {step === 'finish' && target('finish', <>
             <h2 className="text-xl font-bold">{tx('history')} · {preview.quality}</h2>
             <div className="space-y-3">{[

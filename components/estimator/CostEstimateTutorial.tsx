@@ -638,9 +638,9 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
         : copy.fields[active.field])
 
     return <>
-        {syncFailed && <div data-i18n-skip="true" lang={language} role="status" className="flex flex-wrap items-center gap-2 rounded-xl border border-amber-200/80 bg-amber-50/60 p-2.5 text-xs text-[var(--color-muted)]">
-            <span className="text-amber-900">{copy.syncFailed}</span>
-            <button type="button" className="font-semibold text-amber-800 underline hover:text-amber-900" onClick={() => void syncDismissal()}>{copy.retry}</button>
+        {syncFailed && <div data-i18n-skip="true" lang={language} role="status" className="flex flex-wrap items-center gap-2 rounded-xl border border-[var(--wv-ochre-200)]/80 bg-[var(--wv-ochre-50)]/60 p-2.5 text-xs text-[var(--color-muted)]">
+            <span className="text-[var(--wv-ochre-800)]">{copy.syncFailed}</span>
+            <button type="button" className="font-semibold text-[var(--wv-ochre-700)] underline hover:text-[var(--wv-ochre-800)]" onClick={() => void syncDismissal()}>{copy.retry}</button>
         </div>}
         {enabled && (
             <TourInvitation
@@ -685,8 +685,8 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
                 <div
                     className={`guided-tour-highlight pointer-events-none fixed rounded-[18px] border-2 transition-all duration-500 ease-out ${
                         isSectionTransition
-                            ? 'border-orange-500/60 shadow-[0_0_0_1px_rgba(249,115,22,0.4),0_0_50px_rgba(249,115,22,0.32)] ring-2 ring-orange-400/25'
-                            : 'border-orange-500/35 shadow-[0_0_0_1px_rgba(249,115,22,0.25),0_0_35px_rgba(249,115,22,0.2)]'
+                            ? 'border-saffron/60 shadow-[0_0_0_1px_rgba(230,138,0,0.4),0_0_50px_rgba(230,138,0,0.32)] ring-2 ring-saffron/25'
+                            : 'border-saffron/35 shadow-[0_0_0_1px_rgba(230,138,0,0.25),0_0_35px_rgba(230,138,0,0.2)]'
                     }`}
                     style={{
                         left: spotlight.card.left - 4,
@@ -698,7 +698,7 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
             )}
             {spotlight && (
                 <div
-                    className={`guided-tour-highlight pointer-events-none fixed rounded-lg border-2 border-orange-500 ring-4 ring-orange-400/30 transition-all ${
+                    className={`guided-tour-highlight pointer-events-none fixed rounded-lg border-2 border-saffron ring-4 ring-saffron/30 transition-all ${
                         isSectionTransition ? 'duration-500 ease-out' : 'duration-300 ease-out'
                     }`}
                     style={{
@@ -710,7 +710,7 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
                 />
             )}
             <div ref={panel} role="dialog" aria-modal="true" aria-labelledby="cost-tour-title" aria-describedby="cost-tour-description" tabIndex={-1}
-                className={`guided-tour-panel fixed z-[101] w-[calc(100vw-2rem)] sm:w-[400px] max-w-[420px] max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-3rem)] overflow-y-auto rounded-2xl border border-orange-200 dark:border-orange-500/30 bg-[var(--color-surface)] p-4 sm:p-5 text-[var(--color-ink)] shadow-2xl outline-none transition-all duration-300 ${
+                className={`guided-tour-panel fixed z-[101] w-[calc(100vw-2rem)] sm:w-[400px] max-w-[420px] max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-3rem)] overflow-y-auto rounded-2xl border border-[var(--wv-saffron-200)]/90 bg-[var(--color-surface)] p-4 sm:p-5 text-[var(--color-ink)] shadow-2xl outline-none transition-all duration-300 ${
                     panelPlacement === 'bottom-right'
                         ? 'bottom-4 right-4 sm:bottom-6 sm:right-6'
                         : 'top-4 right-4 sm:top-6 sm:right-6'
@@ -719,8 +719,8 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
                     <div className="flex items-center gap-2">
                         <span className={`inline-flex items-center rounded-md px-2.5 py-1 text-[11px] font-bold ring-1 ring-inset transition-all duration-300 ${
                             isSectionTransition
-                                ? 'bg-orange-500 text-white ring-orange-500 shadow-sm scale-105'
-                                : 'bg-orange-500/10 text-orange-600 dark:text-orange-400 ring-orange-500/25'
+                                ? 'bg-saffron text-white ring-saffron shadow-sm scale-105'
+                                : 'bg-saffron/10 text-saffron-deep ring-saffron/25'
                         }`}>
                             {copy.sectionProgress.replace('{current}', String(visibleSections.indexOf(active.section) + 1)).replace('{total}', String(visibleSections.length))}
                         </span>
@@ -730,9 +730,9 @@ export function CostEstimateTutorial({ enabled, orgId, userId, accountDismissed,
                     <p id="cost-tour-description" className="mt-2 text-sm leading-relaxed sm:leading-[1.72] text-[var(--color-ink)]/90">{activeCopy?.description}</p>
                 </div>
                 <p className="hidden sm:block mt-3 text-xs text-[var(--color-muted)] leading-relaxed sm:leading-[1.65]">{copy.hint}</p>
-                <div className="mt-3.5 h-1.5 w-full overflow-hidden rounded-full bg-orange-100 dark:bg-orange-950/50" role="progressbar" aria-valuenow={index + 1} aria-valuemin={1} aria-valuemax={steps.length} aria-label={copy.progress}>
+                <div className="mt-3.5 h-1.5 w-full overflow-hidden rounded-full bg-[var(--wv-saffron-50)]" role="progressbar" aria-valuenow={index + 1} aria-valuemin={1} aria-valuemax={steps.length} aria-label={copy.progress}>
                     <div
-                        className="h-full rounded-full bg-gradient-to-r from-orange-500 to-amber-500 transition-all duration-300 ease-out"
+                        className="h-full rounded-full bg-saffron transition-all duration-300 ease-out"
                         style={{ width: `${Math.round(((index + 1) / steps.length) * 100)}%` }}
                     />
                 </div>

@@ -38,7 +38,7 @@ export default function ProductionTourPreview({ step }: { step: ProductionTourSt
         {target('tabs', <div className="flex flex-wrap gap-2">{action('Overview & Looms')}{action('Daily Sheet')}</div>)}
         {target('qualities', <>{heading('Active Qualities')}<p className="font-semibold">{quality} · v2</p><p>{tx('Weaver wage')}: ₹{example.rate}/m · 2 {tx('Looms')}</p>{action('Activate Quality')}{action('Assign Looms')}</>)}
         {target('filters', <>{field('Search by loom or worker', '')}<div className="flex flex-wrap gap-2">{action('All')}{action('Running')}{action('Available')}</div></>)}
-        {target('board', <>{heading('Loom Board')}<p>{loom} 1 · {quality} · v2</p><span className="text-sm font-semibold text-emerald-700">{tx('Running')}</span><div className="flex flex-wrap gap-2">{action('Switch Quality')}{action('Manage Workers')}</div></>)}
+        {target('board', <>{heading('Loom Board')}<p>{loom} 1 · {quality} · v2</p><span className="text-sm font-semibold text-[var(--wv-moss-700)]">{tx('Running')}</span><div className="flex flex-wrap gap-2">{action('Switch Quality')}{action('Manage Workers')}</div></>)}
         {target('operators', <>{heading('Manage Workers')}<p>{loom} 1 · {quality}</p><div className="flex flex-wrap gap-2">{action('Day Shift')}{action('Night Shift')}</div>{field('Assign / Replace Operator', worker)}{action('Assign')}<p>{tx('Day shift')}: {worker}</p><p>{tx('Night shift')}: {tx('Unassigned')}</p></>)}
     </>
     const daily = <>

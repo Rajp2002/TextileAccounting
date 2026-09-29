@@ -46,7 +46,7 @@ function getPasswordStrength(password: string): {
     const score = checks.filter(c => c.met).length
 
     const labels = ['', 'Weak', 'Fair', 'Good', 'Strong']
-    const colors = ['', 'bg-red-500', 'bg-orange-400', 'bg-yellow-400', 'bg-emerald-500']
+    const colors = ['', 'bg-[var(--wv-status-danger-fg)]', 'bg-[var(--wv-brand-accent)]', 'bg-[var(--wv-status-warning-solid)]', 'bg-[var(--wv-status-success-fg)]']
 
     return { score, label: labels[score] ?? '', color: colors[score] ?? '', checks }
 }
@@ -145,7 +145,7 @@ function SignupForm() {
             <form onSubmit={handleSubmit} className="space-y-5" noValidate>
                 {/* Factory Name */}
                 {selectedPlan !== 'free' && <div className="space-y-1.5">
-                    <Label htmlFor="factoryName" className="text-gray-700 font-medium">
+                    <Label htmlFor="factoryName" className="text-ink font-medium">
                         Factory name
                     </Label>
                     <Input
@@ -156,17 +156,17 @@ function SignupForm() {
                         onChange={(e) => { setFactoryName(e.target.value); setErrors(prev => ({ ...prev, factoryName: '' })) }}
                         onBlur={validate}
                         className={cn(
-                            'h-12 bg-gray-50/50 border-gray-200 focus:bg-white transition-all',
-                            errors.factoryName && 'border-red-400 focus:border-red-500'
+                            'h-12 bg-surface border-input focus:bg-surface transition-all',
+                            errors.factoryName && 'border-[var(--wv-status-danger-fg)] focus:border-[var(--wv-status-danger-fg)]'
                         )}
                         disabled={loading}
                     />
-                    {errors.factoryName && <p className="text-xs text-red-500 mt-1">{errors.factoryName}</p>}
+                    {errors.factoryName && <p className="text-xs text-[var(--wv-status-danger-fg)] mt-1">{errors.factoryName}</p>}
                 </div>}
 
                 {/* Owner Name */}
                 <div className="space-y-1.5">
-                    <Label htmlFor="ownerName" className="text-gray-700 font-medium">
+                    <Label htmlFor="ownerName" className="text-ink font-medium">
                         Your name
                     </Label>
                     <Input
@@ -177,17 +177,17 @@ function SignupForm() {
                         onChange={(e) => { setOwnerName(e.target.value); setErrors(prev => ({ ...prev, ownerName: '' })) }}
                         onBlur={validate}
                         className={cn(
-                            'h-12 bg-gray-50/50 border-gray-200 focus:bg-white transition-all',
-                            errors.ownerName && 'border-red-400 focus:border-red-500'
+                            'h-12 bg-surface border-input focus:bg-surface transition-all',
+                            errors.ownerName && 'border-[var(--wv-status-danger-fg)] focus:border-[var(--wv-status-danger-fg)]'
                         )}
                         disabled={loading}
                     />
-                    {errors.ownerName && <p className="text-xs text-red-500 mt-1">{errors.ownerName}</p>}
+                    {errors.ownerName && <p className="text-xs text-[var(--wv-status-danger-fg)] mt-1">{errors.ownerName}</p>}
                 </div>
 
                 {/* Email */}
                 <div className="space-y-1.5">
-                    <Label htmlFor="email" className="text-gray-700 font-medium">
+                    <Label htmlFor="email" className="text-ink font-medium">
                         Email
                     </Label>
                     <Input
@@ -198,21 +198,21 @@ function SignupForm() {
                         onChange={(e) => { setEmail(e.target.value); setErrors(prev => ({ ...prev, email: '' })) }}
                         onBlur={validate}
                         className={cn(
-                            'h-12 bg-gray-50/50 border-gray-200 focus:bg-white transition-all',
-                            errors.email && 'border-red-400 focus:border-red-500'
+                            'h-12 bg-surface border-input focus:bg-surface transition-all',
+                            errors.email && 'border-[var(--wv-status-danger-fg)] focus:border-[var(--wv-status-danger-fg)]'
                         )}
                         disabled={loading}
                     />
-                    {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
+                    {errors.email && <p className="text-xs text-[var(--wv-status-danger-fg)] mt-1">{errors.email}</p>}
                 </div>
 
                 {/* Phone */}
                 <div className="space-y-1.5">
-                    <Label htmlFor="phone" className="text-gray-700 font-medium">
+                    <Label htmlFor="phone" className="text-ink font-medium">
                         Phone Number
                     </Label>
                     <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">+91</span>
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">+91</span>
                         <Input
                             id="phone"
                             type="tel"
@@ -230,18 +230,18 @@ function SignupForm() {
                             aria-invalid={Boolean(errors.phone)}
                             aria-describedby={errors.phone ? 'phone-error' : undefined}
                             className={cn(
-                                'h-12 bg-gray-50/50 border-gray-200 focus:bg-white transition-all pl-11',
-                                errors.phone && 'border-red-400 focus:border-red-500'
+                                'h-12 bg-surface border-input focus:bg-surface transition-all pl-11',
+                                errors.phone && 'border-[var(--wv-status-danger-fg)] focus:border-[var(--wv-status-danger-fg)]'
                             )}
                             disabled={loading}
                         />
                     </div>
-                    {errors.phone && <p id="phone-error" role="alert" className="text-xs text-red-500 mt-1">{errors.phone}</p>}
+                    {errors.phone && <p id="phone-error" role="alert" className="text-xs text-[var(--wv-status-danger-fg)] mt-1">{errors.phone}</p>}
                 </div>
 
                 {/* Password + Strength Indicator */}
                 <div className="space-y-1.5">
-                    <Label htmlFor="password" className="text-gray-700 font-medium">
+                    <Label htmlFor="password" className="text-ink font-medium">
                         Password
                     </Label>
                     <div className="relative">
@@ -255,15 +255,15 @@ function SignupForm() {
                             aria-invalid={Boolean(errors.password)}
                             aria-describedby={errors.password ? 'password-error password-rules' : 'password-rules'}
                             className={cn(
-                                'h-12 bg-gray-50/50 border-gray-200 focus:bg-white transition-all pr-10',
-                                errors.password && 'border-red-400 focus:border-red-500'
+                                'h-12 bg-surface border-input focus:bg-surface transition-all pr-10',
+                                errors.password && 'border-[var(--wv-status-danger-fg)] focus:border-[var(--wv-status-danger-fg)]'
                             )}
                             disabled={loading}
                         />
                         <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-ink transition-colors"
                             tabIndex={-1}
                         >
                             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -279,7 +279,7 @@ function SignupForm() {
                                         key={i}
                                         className={cn(
                                             'h-1 flex-1 rounded-full transition-all duration-300',
-                                            i <= strength.score ? strength.color : 'bg-gray-200'
+                                            i <= strength.score ? strength.color : 'bg-[var(--wv-cotton-200)]'
                                         )}
                                     />
                                 ))}
@@ -287,9 +287,9 @@ function SignupForm() {
                             <div id="password-rules" className="flex items-center justify-between">
                                 <p className={cn(
                                     'text-xs font-medium transition-colors',
-                                    strength.score === 4 ? 'text-emerald-600' :
-                                    strength.score === 3 ? 'text-yellow-600' :
-                                    strength.score === 2 ? 'text-orange-500' : 'text-red-500'
+                                    strength.score === 4 ? 'text-[var(--wv-status-success-fg)]' :
+                                    strength.score === 3 ? 'text-[var(--wv-status-warning-fg)]' :
+                                    strength.score === 2 ? 'text-[var(--wv-brand-accent-strong)]' : 'text-[var(--wv-status-danger-fg)]'
                                 )}>
                                     {strength.label}
                                 </p>
@@ -297,7 +297,7 @@ function SignupForm() {
                                     {strength.checks.map((check) => (
                                         <div key={check.label} className={cn(
                                             'flex items-center gap-1 text-[10px]',
-                                            check.met ? 'text-emerald-600' : 'text-gray-400'
+                                            check.met ? 'text-[var(--wv-status-success-fg)]' : 'text-muted-foreground/60'
                                         )}>
                                             <CheckCircle2 className={cn('h-3 w-3', check.met ? 'opacity-100' : 'opacity-40')} />
                                             <span className="hidden sm:inline">{check.label}</span>
@@ -307,12 +307,12 @@ function SignupForm() {
                             </div>
                         </div>
                     )}
-                    {errors.password && <p id="password-error" role="alert" className="text-xs text-red-500">{errors.password}</p>}
+                    {errors.password && <p id="password-error" role="alert" className="text-xs text-[var(--wv-status-danger-fg)]">{errors.password}</p>}
                 </div>
 
                 {/* Confirm Password */}
                 <div className="space-y-1.5">
-                    <Label htmlFor="confirmPassword" className="text-gray-700 font-medium">
+                    <Label htmlFor="confirmPassword" className="text-ink font-medium">
                         Confirm password
                     </Label>
                     <Input
@@ -329,17 +329,17 @@ function SignupForm() {
                         aria-invalid={Boolean(errors.confirmPassword)}
                         aria-describedby={errors.confirmPassword ? 'confirm-password-error' : undefined}
                         className={cn(
-                            'h-12 bg-gray-50/50 border-gray-200 focus:bg-white transition-all',
-                            errors.confirmPassword && 'border-red-400 focus:border-red-500'
+                            'h-12 bg-surface border-input focus:bg-surface transition-all',
+                            errors.confirmPassword && 'border-[var(--wv-status-danger-fg)] focus:border-[var(--wv-status-danger-fg)]'
                         )}
                         disabled={loading}
                     />
-                    {errors.confirmPassword && <p id="confirm-password-error" role="alert" className="text-xs text-red-500 mt-1">{errors.confirmPassword}</p>}
+                    {errors.confirmPassword && <p id="confirm-password-error" role="alert" className="text-xs text-[var(--wv-status-danger-fg)] mt-1">{errors.confirmPassword}</p>}
                 </div>
 
                 {/* Referral Code (Optional) */}
                 <div className="space-y-1.5">
-                    <Label htmlFor="referralCode" className="text-gray-700 font-medium">
+                    <Label htmlFor="referralCode" className="text-ink font-medium">
                         Referral Code (Optional)
                     </Label>
                     <Input
@@ -348,7 +348,7 @@ function SignupForm() {
                         placeholder="e.g. WEAVLY-XXXX"
                         value={referralCode}
                         onChange={(e) => setReferralCode(e.target.value)}
-                        className="h-12 bg-gray-50/50 border-gray-200 focus:bg-white transition-all uppercase"
+                        className="h-12 bg-surface border-input focus:bg-surface transition-all uppercase"
                         disabled={loading}
                     />
                 </div>
@@ -360,13 +360,13 @@ function SignupForm() {
                         id="consent"
                         checked={consentGiven}
                         onChange={(e) => setConsentGiven(e.target.checked)}
-                        className="mt-1 h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500 cursor-pointer"
+                        className="mt-1 h-4 w-4 rounded border-[var(--wv-cotton-500)] text-[var(--wv-neel-900)] focus:ring-[var(--wv-border-focus)] cursor-pointer"
                     />
-                    <label htmlFor="consent" className="text-sm text-gray-500 leading-snug cursor-pointer">
+                    <label htmlFor="consent" className="text-sm text-muted-foreground leading-snug cursor-pointer">
                         I agree to the{' '}
-                        <a href="/terms" target="_blank" className="text-amber-700 hover:underline font-medium">Terms of Service</a>
+                        <a href="/terms" target="_blank" className="text-ink font-semibold underline decoration-[var(--wv-cotton-400)] hover:decoration-[var(--wv-brand-accent)] underline-offset-4">Terms of Service</a>
                         {' '}and{' '}
-                        <a href="/privacy" target="_blank" className="text-amber-700 hover:underline font-medium">Privacy Policy</a>
+                        <a href="/privacy" target="_blank" className="text-ink font-semibold underline decoration-[var(--wv-cotton-400)] hover:decoration-[var(--wv-brand-accent)] underline-offset-4">Privacy Policy</a>
                     </label>
                 </div>
 
@@ -374,7 +374,7 @@ function SignupForm() {
                 <Button
                     type="submit"
                     id="create-factory-btn"
-                    className="w-full h-12 text-base font-semibold transition-transform active:scale-[0.98] mt-2"
+                    className="w-full h-12 text-base font-semibold transition-transform active:scale-[0.98] mt-2 disabled:bg-[var(--wv-cotton-200)] disabled:text-[var(--wv-disabled)] disabled:border-[var(--wv-cotton-400)]"
                     disabled={loading || !consentGiven}
                 >
                     {loading ? (
@@ -392,9 +392,9 @@ function SignupForm() {
                 </Button>
 
                 <div className="space-y-3 pt-1">
-                    <p className="text-center text-sm text-gray-500">
+                    <p className="text-center text-sm text-muted-foreground">
                         Already have an account?{' '}
-                        <Link href="/login" className="text-amber-700 hover:underline font-medium">
+                        <Link href="/login" className="text-ink font-semibold underline decoration-[var(--wv-cotton-400)] hover:decoration-[var(--wv-brand-accent)] underline-offset-4">
                             Log in
                         </Link>
                     </p>

@@ -1157,7 +1157,7 @@ function NumField({
                         onChange(val)
                     }}
                     className={`h-11 text-xs sm:text-sm font-mono font-semibold text-center ${unit ? 'px-10 sm:px-14' : 'px-3'} border ${placeholderClass} focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-[9px] text-[var(--color-yarn-orange)] shadow-[0_1px_2px_rgba(30,37,40,0.035)] ${
-                        isEmpty ? 'bg-[var(--color-warning-amber-soft)] border-[var(--color-warning-amber)] text-[var(--color-warning-amber)] placeholder:text-[var(--color-warning-amber)]' : needsVerification ? 'border-amber-400 bg-amber-50/50 text-amber-950 ring-1 ring-amber-400/40' : 'bg-[var(--color-canvas-white)] border-[var(--color-hairline)] hover:border-[var(--color-hairline-strong)]'
+                        isEmpty ? 'bg-[var(--color-warning-amber-soft)] border-[var(--color-warning-amber)] text-[var(--color-warning-amber)] placeholder:text-[var(--color-warning-amber)]' : needsVerification ? 'border-[var(--wv-ochre-400)] bg-[var(--wv-ochre-50)]/50 text-[var(--wv-ochre-900)] ring-1 ring-[var(--wv-ochre-400)]/40' : 'bg-[var(--color-canvas-white)] border-[var(--color-hairline)] hover:border-[var(--color-hairline-strong)]'
                     }`}
                 />
                 {unit && (
@@ -1168,8 +1168,8 @@ function NumField({
             </div>
             {isEmpty && <p id={`${inputId}-help`} className="text-[10px] font-semibold text-[var(--color-warning-amber)]">Required</p>}
             {needsVerification && !isEmpty && (
-                <p className="text-[10px] font-semibold text-amber-700 flex items-center gap-1">
-                    <span className="h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0 inline-block" />
+                <p className="text-[10px] font-semibold text-[var(--wv-ochre-800)] flex items-center gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[var(--wv-ochre-400)] shrink-0 inline-block" />
                     Auto-filled · Verify
                 </p>
             )}
@@ -1183,7 +1183,7 @@ function NumField({
                         <button
                             type="button"
                             onClick={onDismissWarning}
-                            className="estimator-touch-target rounded px-1 text-left text-xs text-slate-400 underline hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)]"
+                            className="estimator-touch-target rounded px-1 text-left text-xs text-[var(--wv-cotton-500)] underline hover:text-[var(--wv-neel-700)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wv-brand-accent-strong)]"
                         >
                             Dismiss
                         </button>
@@ -1314,14 +1314,14 @@ function WidthField({
                     aria-invalid={isEmpty || undefined}
                     className={`h-11 text-xs sm:text-sm font-mono font-semibold text-center px-12 sm:px-16 placeholder:text-[var(--color-placeholder)] placeholder:font-normal focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/15 transition-all shadow-[0_1px_2px_rgba(30,37,40,0.035)] group-hover:border-[var(--color-hairline-strong)] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-[9px] text-[var(--color-yarn-orange)] ${isEmpty ? 'bg-[var(--color-warning-amber-soft)] border-[var(--color-warning-amber)] text-[var(--color-warning-amber)] placeholder:text-[var(--color-warning-amber)]' : 'bg-white border-[var(--color-hairline)]'}`}
                 />
-                <span className="absolute right-3.5 sm:right-4 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-bold pointer-events-none">
+                <span className="absolute right-3.5 sm:right-4 top-1/2 -translate-y-1/2 text-xs text-[var(--wv-cotton-500)] font-bold pointer-events-none">
                     {unit}
                 </span>
             </div>
             <div className="flex flex-col gap-0.5 mt-1">
                 {isEmpty && <p className="text-[10px] font-semibold text-[var(--color-warning-amber)]">Required</p>}
                 {value > 0 && (
-                    <p className="text-[10px] text-[var(--color-factory-green)] font-semibold leading-tight flex items-center gap-1 bg-[var(--color-factory-green-soft)] py-0.5 px-2 rounded-md self-start border border-[#CDE5D3]">
+                    <p className="text-[10px] text-[var(--color-factory-green)] font-semibold leading-tight flex items-center gap-1 bg-[var(--color-factory-green-soft)] py-0.5 px-2 rounded-md self-start border border-[var(--wv-moss-200)]">
                         {secondaryReadout}
                     </p>
                 )}
@@ -2013,7 +2013,7 @@ function EstimatorLiveCostActions({
             </p></>}
 
             {actionReadinessMessage && (
-                <p id={actionReadinessId} role="status" className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-medium leading-relaxed text-amber-800">
+                <p id={actionReadinessId} role="status" className="rounded-lg border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] px-3 py-2 text-[11px] font-medium leading-relaxed text-[var(--wv-ochre-800)]">
                     {actionReadinessMessage}
                 </p>
             )}
@@ -2147,7 +2147,7 @@ function LayerNameField({
                         type="button"
                         tabIndex={-1}
                         onClick={() => setIsOpen(prev => !prev)}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--wv-cotton-500)] hover:text-[var(--wv-neel-700)] p-1"
                         aria-label="Toggle saved yarns dropdown"
                     >
                         <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-150 ${isOpen ? 'rotate-180' : ''}`} />
@@ -2159,16 +2159,16 @@ function LayerNameField({
             {isOpen && filteredOptions.length > 0 && (
                 <div
                     data-testid="yarn-ratebook-dropdown"
-                    className="absolute left-0 top-full mt-1.5 z-50 w-[360px] sm:w-[440px] max-w-[calc(100vw-2.5rem)] rounded-[14px] border border-slate-200/90 bg-white shadow-[0_16px_40px_-6px_rgba(15,23,42,0.18),0_4px_16px_-2px_rgba(15,23,42,0.08)] ring-1 ring-black/5 overflow-hidden"
+                    className="absolute left-0 top-full mt-1.5 z-50 w-[360px] sm:w-[440px] max-w-[calc(100vw-2.5rem)] rounded-[14px] border border-[var(--wv-cotton-400)] bg-[var(--wv-cotton-0)] shadow-[0_16px_40px_-6px_rgba(15,23,42,0.18),0_4px_16px_-2px_rgba(15,23,42,0.08)] ring-1 ring-black/5 overflow-hidden"
                 >
-                    <div className="sticky top-0 z-10 bg-slate-50/95 backdrop-blur-xs px-3.5 py-2 border-b border-slate-100 flex items-center justify-between text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                    <div className="sticky top-0 z-10 bg-[var(--wv-cotton-100)]/95 backdrop-blur-xs px-3.5 py-2 border-b border-[var(--wv-cotton-200)] flex items-center justify-between text-[10px] font-bold text-[var(--wv-neel-500)] uppercase tracking-wider">
                         <div className="flex items-center gap-1.5">
-                            <BookOpen className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                            <BookOpen className="h-3.5 w-3.5 text-[var(--wv-cotton-500)] shrink-0" />
                             <span>Saved Yarns ({filteredOptions.length})</span>
                         </div>
-                        <span className="text-[10px] font-normal text-slate-400 lowercase tracking-normal">auto-fills denier & rate</span>
+                        <span className="text-[10px] font-normal text-[var(--wv-cotton-500)] lowercase tracking-normal">auto-fills denier & rate</span>
                     </div>
-                    <ul className="max-h-64 overflow-y-auto divide-y divide-slate-100/70 p-1.5">
+                    <ul className="max-h-64 overflow-y-auto divide-y divide-[var(--wv-cotton-200)]/70 p-1.5">
                         {filteredOptions.map((opt, idx) => {
                             const isSelected = idx === highlightedIndex
                             return (
@@ -2182,16 +2182,16 @@ function LayerNameField({
                                         onMouseEnter={() => setHighlightedIndex(idx)}
                                         onClick={() => handleSelect(opt)}
                                         className={`w-full text-left p-2.5 rounded-[9px] transition-colors flex flex-col gap-1.5 ${
-                                            isSelected ? 'bg-amber-50/90 ring-1 ring-amber-300/80 text-slate-900' : 'hover:bg-slate-50/90 text-slate-800'
+                                            isSelected ? 'bg-[var(--wv-ochre-50)]/90 ring-1 ring-[var(--wv-ochre-200)] text-[var(--wv-neel-900)]' : 'hover:bg-[var(--wv-cotton-100)]/90 text-[var(--wv-neel-800)]'
                                         }`}
                                     >
                                         {/* Line 1: Full, readable yarn name + Rate badge */}
                                         <div className="flex items-start justify-between gap-3 min-w-0">
-                                            <span className="text-xs font-bold text-slate-900 leading-snug break-words">
+                                            <span className="text-xs font-bold text-[var(--wv-neel-900)] leading-snug break-words">
                                                 {opt.name}
                                             </span>
                                             {opt.yarnRate > 0 && (
-                                                <span className="font-mono text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-md shrink-0 whitespace-nowrap shadow-xs">
+                                                <span className="font-mono text-xs font-bold text-[var(--wv-moss-700)] bg-[var(--wv-moss-50)] border border-[var(--wv-moss-200)] px-2 py-0.5 rounded-md shrink-0 whitespace-nowrap shadow-xs">
                                                     ₹{opt.yarnRate}/kg
                                                 </span>
                                             )}
@@ -2200,15 +2200,15 @@ function LayerNameField({
                                         {/* Line 2: Density, Category, and Provenance */}
                                         <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
                                             {opt.denier > 0 && (
-                                                <span className="font-mono font-bold text-blue-700 bg-blue-50 border border-blue-200/70 px-1.5 py-0.2 rounded shrink-0">
+                                                <span className="font-mono font-bold text-[var(--wv-lagoon-700)] bg-[var(--wv-lagoon-50)] border border-[var(--wv-lagoon-200)] px-1.5 py-0.2 rounded shrink-0">
                                                     {opt.denier} D
                                                 </span>
                                             )}
-                                            <span className="inline-flex items-center px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 font-semibold uppercase tracking-wider text-[9px] shrink-0">
+                                            <span className="inline-flex items-center px-1.5 py-0.2 rounded bg-[var(--wv-cotton-200)] text-[var(--wv-neel-700)] font-semibold uppercase tracking-wider text-[9px] shrink-0">
                                                 {opt.category === 'yarn_warp' ? 'Warp' : opt.category === 'yarn_weft' ? 'Weft' : 'Warp / Weft'}
                                             </span>
-                                            <span className="text-slate-300">·</span>
-                                            <span className="text-slate-400 font-medium truncate max-w-[200px]">
+                                            <span className="text-[var(--wv-cotton-400)]">·</span>
+                                            <span className="text-[var(--wv-cotton-500)] font-medium truncate max-w-[200px]">
                                                 {opt.source === 'rate_book' ? 'Rate Book' : opt.qualityNames?.[0] ? opt.qualityNames[0] : 'Saved Quality'}
                                             </span>
                                         </div>
@@ -2217,7 +2217,7 @@ function LayerNameField({
                             )
                         })}
                     </ul>
-                    <div className="bg-slate-50/90 px-3 py-1.5 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400">
+                    <div className="bg-[var(--wv-cotton-100)]/90 px-3 py-1.5 border-t border-[var(--wv-cotton-200)] flex items-center justify-between text-[10px] text-[var(--wv-cotton-500)]">
                         <span>Use ↑ ↓ to navigate · Enter to select</span>
                         <span>Esc to close</span>
                     </div>
@@ -2225,10 +2225,10 @@ function LayerNameField({
             )}
             {isOpen && filteredOptions.length === 0 && inputValue.trim().length > 0 && (
                 <div
-                    className="absolute left-0 top-full mt-1.5 z-50 w-[320px] max-w-[calc(100vw-2.5rem)] rounded-[12px] border border-slate-200 bg-white p-3 shadow-xl ring-1 ring-black/5"
+                    className="absolute left-0 top-full mt-1.5 z-50 w-[320px] max-w-[calc(100vw-2.5rem)] rounded-[12px] border border-[var(--wv-cotton-400)] bg-[var(--wv-cotton-0)] p-3 shadow-xl ring-1 ring-black/5"
                 >
-                    <p className="text-xs font-semibold text-slate-700">No matching saved yarn</p>
-                    <p className="mt-0.5 text-[11px] text-slate-400">
+                    <p className="text-xs font-semibold text-[var(--wv-neel-700)]">No matching saved yarn</p>
+                    <p className="mt-0.5 text-[11px] text-[var(--wv-cotton-500)]">
                         &quot;{inputValue}&quot; will be used as a custom component name.
                     </p>
                 </div>
@@ -2467,7 +2467,7 @@ function RowCard({
             data-testid={`yarn-component-${accent}-${index}`}
             onKeyDown={handleRowKeyDown}
             className={`group ${isExpanded ? 'overflow-visible' : 'overflow-hidden'} rounded-[12px] border transition-colors bg-[var(--color-canvas-white)] shadow-[0_1px_8px_rgba(30,37,40,0.035)] ${
-                isComplete ? 'border-emerald-200/90' : 'border-[var(--color-hairline)]'
+                isComplete ? 'border-[var(--wv-moss-200)]' : 'border-[var(--color-hairline)]'
             }`}
         >
             <div className={`flex min-w-0 items-stretch gap-1 border-b border-[var(--color-hairline)] ${c.strip}`}>
@@ -2486,7 +2486,7 @@ function RowCard({
                         aria-label={isComplete ? `${displayName} complete` : `Step ${index + 1}`}
                         className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-[7px] border font-semibold transition-colors duration-200 ${
                             isComplete
-                                ? 'border-[#A3E0B5] bg-[#E8F8EE] text-[var(--color-factory-green)] shadow-sm'
+                                ? 'border-[var(--wv-moss-200)] bg-[var(--wv-moss-50)] text-[var(--wv-moss-700)] shadow-sm'
                                 : `${c.badge} text-[10px] uppercase tracking-[0.05em]`
                         }`}
                     >
@@ -2500,12 +2500,12 @@ function RowCard({
                         <span className="flex items-center gap-1.5 flex-wrap">
                             <span className="block break-words text-[13px] font-semibold leading-4 text-[var(--color-ink)]">{displayName}</span>
                             {isComplete && (
-                                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                                <span className="inline-flex items-center gap-1 rounded-full border border-[var(--wv-moss-200)] bg-[var(--wv-moss-50)] px-2 py-0.5 text-[10px] font-semibold text-[var(--wv-moss-700)]">
                                     <Check className="h-2.5 w-2.5 stroke-[2.5]" /> Done
                                 </span>
                             )}
                             {unverifiedNotice && (unverifiedNotice.denier || unverifiedNotice.rate) && (
-                                <span className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-900">
+                                <span className="inline-flex items-center gap-1 rounded-full border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] px-2 py-0.5 text-[10px] font-semibold text-[var(--wv-ochre-800)]">
                                     Verify Denier & Rate
                                 </span>
                             )}
@@ -2549,14 +2549,14 @@ function RowCard({
                     {unverifiedNotice && (unverifiedNotice.denier || unverifiedNotice.rate) && (
                         <div
                             data-testid="yarn-auto-propagate-verification-banner"
-                            className="mx-4 mt-3 flex flex-wrap items-center justify-between gap-2 rounded-[9px] border border-amber-300 bg-amber-50/90 p-2.5 text-xs text-amber-950 shadow-xs transition-all"
+                            className="mx-4 mt-3 flex flex-wrap items-center justify-between gap-2 rounded-[9px] border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] p-2.5 text-xs text-[var(--wv-ochre-900)] shadow-xs transition-all"
                         >
                             <div className="flex items-center gap-2 min-w-0">
-                                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-200 text-amber-900 font-bold text-xs">
+                                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--wv-ochre-200)] text-[var(--wv-ochre-800)] font-bold text-xs">
                                     !
                                 </span>
                                 <div className="text-[11px] leading-tight">
-                                    <span className="font-semibold text-amber-900">Auto-filled from Rate Book:</span>{' '}
+                                    <span className="font-semibold text-[var(--wv-ochre-800)]">Auto-filled from Rate Book:</span>{' '}
                                     <span>
                                         {unverifiedNotice.denier && unverifiedNotice.rate
                                             ? `Denier (${unverifiedNotice.denierVal} D) & Yarn Rate (₹${unverifiedNotice.rateVal}/kg)`
@@ -2571,7 +2571,7 @@ function RowCard({
                                 <button
                                     type="button"
                                     onClick={onConfirmVerification}
-                                    className="inline-flex shrink-0 items-center gap-1 rounded-[6px] bg-amber-600 px-2.5 py-1 text-[11px] font-semibold text-white shadow-xs hover:bg-amber-700 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+                                    className="inline-flex shrink-0 items-center gap-1 rounded-[6px] bg-[var(--wv-action-primary)] px-2.5 py-1 text-[11px] font-semibold text-white shadow-xs hover:bg-[var(--wv-action-primary-hover)] active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wv-brand-accent-strong)]"
                                 >
                                     <Check className="h-3 w-3 stroke-[2.5]" />
                                     Confirm Values
@@ -2761,11 +2761,11 @@ function WeavingRateFields({
             </div>
 
             {hasValidCostResult && totals.weaveCostPerM > 100 && (
-                <div className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 shadow-sm">
+                <div className="flex items-start gap-2.5 rounded-xl border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] p-3 text-xs text-[var(--wv-ochre-800)] shadow-sm">
                     <span className="shrink-0 text-sm">⚠️</span>
                     <div>
                         <p className="font-bold">Unusually High Weave Cost ({formatCalculatedMoney(totals.weaveCostPerM, hasValidCostResult, '/m')})</p>
-                        <p className="mt-0.5 font-medium text-amber-700">Check that the weaving rate and unit are correct.</p>
+                        <p className="mt-0.5 font-medium text-[var(--wv-ochre-800)]">Check that the weaving rate and unit are correct.</p>
                     </div>
                 </div>
             )}
@@ -2840,7 +2840,7 @@ function QuickCostingView({
                 <SectionHeader title="Quality basics" icon={Layers} accent="neutral" step={1} tutorialSection={2} />
                 <CardContent className="grid gap-4 p-4 sm:grid-cols-2 sm:p-5">
                     <div className="space-y-1.5 sm:col-span-2">
-                        <Label className="text-[10px] font-bold uppercase text-slate-500">Fabric quality name — REQUIRED</Label>
+                        <Label className="text-[10px] font-bold uppercase text-[var(--wv-neel-500)]">Fabric quality name — REQUIRED</Label>
                         <Input
                             data-estimator-field="qualityLabel"
                             aria-label="Fabric quality name"
@@ -2848,9 +2848,9 @@ function QuickCostingView({
                             readOnly={qualityLocked}
                             onChange={event => setQualityLabel(event.target.value)}
                             placeholder="e.g. 60g Georgette, D.246, Japan Satin"
-                            className="h-11 border-slate-200 font-bold"
+                            className="h-11 border-[var(--wv-cotton-400)] font-bold"
                         />
-                        <p className="text-[10px] font-medium leading-normal text-slate-400">Use the name your staff and repeat customers will recognise.</p>
+                        <p className="text-[10px] font-medium leading-normal text-[var(--wv-cotton-500)]">Use the name your staff and repeat customers will recognise.</p>
                     </div>
                     <div className="sm:col-span-2">{constructionFields}</div>
                     <NumField fieldKey="warpCrimpPct"
@@ -4951,12 +4951,12 @@ export default function EstimatorClient({
                 : totals.totalProductionCostPerM <= 0
                     ? 'Enter valid yarn and weaving inputs so Production Cost / m is above ₹0.'
                     : null
-    const validityStatus = freeMode && freeMeter.stale ? { label: 'Inputs changed', description: 'Showing your last saved result. Calculate and save to update it using one monthly costing.', icon: AlertTriangle, className: 'border-amber-300 bg-amber-50 text-amber-900' } : costingReadiness.status === 'ready'
+    const validityStatus = freeMode && freeMeter.stale ? { label: 'Inputs changed', description: 'Showing your last saved result. Calculate and save to update it using one monthly costing.', icon: AlertTriangle, className: 'border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] text-[var(--wv-ochre-900)]' } : costingReadiness.status === 'ready'
         ? {
             label: 'Costing valid',
             description: 'Price and break-even are calculated from the current inputs.',
             icon: CheckCircle2,
-            className: 'border-[#CDE5D3] bg-[var(--color-factory-green-soft)] text-[var(--color-factory-green)]',
+            className: 'border-[var(--wv-moss-200)] bg-[var(--wv-moss-50)] text-[var(--wv-moss-700)]',
         }
         : costingReadiness.status === 'warning_ack_required'
             ? {
@@ -4969,7 +4969,7 @@ export default function EstimatorClient({
             label: 'Costing not ready',
             description: 'Complete the highlighted inputs before using this price.',
             icon: AlertCircle,
-            className: 'border-[#E7C3BB] bg-[var(--color-risk-red-soft)] text-[var(--color-risk-red)]',
+            className: 'border-[var(--wv-madder-200)] bg-[var(--wv-madder-50)] text-[var(--wv-madder-600)]',
         }
     const firstEstimatorIssueField = estimatorValidation.issues[0]?.field
         ?? costingReadiness.issues[0]?.field
@@ -5003,25 +5003,25 @@ export default function EstimatorClient({
     const constructionFields = (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-                <Label className="text-[10px] uppercase font-bold text-slate-500">{t('estimator.order_basics.warp_construction')}</Label>
+                <Label className="text-[10px] uppercase font-bold text-[var(--wv-neel-500)]">{t('estimator.order_basics.warp_construction')}</Label>
                 <Input
                     data-estimator-field="warpConstruction"
                     aria-label="Warp yarn construction"
                     value={warpInstruction === lastGeneratedWarp.current ? '' : warpInstruction}
                     onChange={e => setWarpInstructionFromUser(e.target.value)}
                     placeholder={formatEstimatorPlaceholder(lastGeneratedWarp.current || '50/48 + Rainbow')}
-                    className="text-sm font-medium placeholder:text-slate-400 border-slate-200 h-11"
+                    className="text-sm font-medium placeholder:text-[var(--wv-cotton-500)] border-[var(--wv-cotton-400)] h-11"
                 />
             </div>
             <div className="space-y-1.5">
-                <Label className="text-[10px] uppercase font-bold text-slate-500">{t('estimator.order_basics.weft_construction')}</Label>
+                <Label className="text-[10px] uppercase font-bold text-[var(--wv-neel-500)]">{t('estimator.order_basics.weft_construction')}</Label>
                 <Input
                     data-estimator-field="weftConstruction"
                     aria-label="Weft yarn construction"
                     value={weftInstruction === lastGeneratedWeft.current ? '' : weftInstruction}
                     onChange={e => setWeftInstructionFromUser(e.target.value)}
                     placeholder={formatEstimatorPlaceholder(lastGeneratedWeft.current || '50/48 - 68 Picks')}
-                    className="text-sm font-medium placeholder:text-slate-400 border-slate-200 h-11"
+                    className="text-sm font-medium placeholder:text-[var(--wv-cotton-500)] border-[var(--wv-cotton-400)] h-11"
                 />
             </div>
         </div>
@@ -5063,7 +5063,7 @@ export default function EstimatorClient({
                 />
             )}
             {unconfirmedRequestId && (
-                <section role="status" className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
+                <section role="status" className="rounded-xl border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] p-4 text-sm text-[var(--wv-ochre-900)]">
                     <h2 className="font-semibold">{tx('Save not yet confirmed')}</h2>
                     <p className="mt-1">{saveCheckMessage || tx('Checking the original save. Keep this page open; editing is paused to protect your submitted costing.')}</p>
                     <div className="mt-3 flex flex-wrap gap-2">
@@ -5230,7 +5230,7 @@ export default function EstimatorClient({
 
             {storageStatus === 'unavailable' && (
                 <div className={`${pageShellClass} mb-2`}>
-                    <p role="status" aria-live="polite" className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-semibold text-amber-900">
+                    <p role="status" aria-live="polite" className="rounded-lg border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] px-4 py-2 text-xs font-semibold text-[var(--wv-ochre-900)]">
                         Draft recovery is unavailable on this device right now. Keep this page open until the Cost Estimate is explicitly saved.
                     </p>
                 </div>
@@ -5238,7 +5238,7 @@ export default function EstimatorClient({
 
             {draftConflict && (
                 <div className={`${pageShellClass} mb-2`}>
-                    <div role="alert" className="flex flex-wrap items-center gap-3 rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-xs font-semibold text-sky-950">
+                    <div role="alert" className="flex flex-wrap items-center gap-3 rounded-lg border border-[var(--wv-lagoon-200)] bg-[var(--wv-lagoon-50)] px-4 py-3 text-xs font-semibold text-[var(--wv-neel-900)]">
                         <span className="min-w-0 flex-1">
                             {draftConflict.kind === 'cleared'
                                 ? 'This draft was cleared in another tab. Your current tab has not been changed.'
@@ -5255,7 +5255,7 @@ export default function EstimatorClient({
                             <button
                                 type="button"
                                 onClick={() => window.location.reload()}
-                                className="min-h-10 rounded-lg bg-sky-700 px-3 text-white"
+                                className="min-h-10 rounded-lg bg-[var(--wv-lagoon-700)] px-3 text-white"
                             >
                                 Reload newer draft
                             </button>
@@ -5266,25 +5266,25 @@ export default function EstimatorClient({
 
             {showValidation && estimatorWarnings.length > 0 && (
                 <div className={`${pageShellClass} mb-2`}>
-                    <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-900">
+                    <div className="rounded-xl border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] px-4 py-3 text-[var(--wv-ochre-900)]">
                         <div className="flex items-start gap-3">
-                            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+                            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[var(--wv-ochre-800)]" />
                             <div className="min-w-0 flex-1">
                                 <p className="text-sm font-bold">Review unusual values before saving</p>
-                                <ul className="mt-1 space-y-0.5 text-xs leading-relaxed text-amber-800">
+                                <ul className="mt-1 space-y-0.5 text-xs leading-relaxed text-[var(--wv-ochre-800)]">
                                     {estimatorWarnings.slice(0, 4).map(warning => (
                                         <li key={`${warning.field}:${warning.message}`}>{warning.message}</li>
                                     ))}
                                 </ul>
                                 {estimatorWarnings.length > 4 && (
-                                    <p className="mt-1 text-xs font-semibold text-amber-700">+{estimatorWarnings.length - 4} more unusual value(s)</p>
+                                    <p className="mt-1 text-xs font-semibold text-[var(--wv-ochre-800)]">+{estimatorWarnings.length - 4} more unusual value(s)</p>
                                 )}
-                                <p className="mt-2 text-[11px] font-medium text-amber-700">Costing can be reviewed, but a save or quotation requires acknowledgement.</p>
+                                <p className="mt-2 text-[11px] font-medium text-[var(--wv-ochre-800)]">Costing can be reviewed, but a save or quotation requires acknowledgement.</p>
                             </div>
                             <Button
                                 variant="outline"
                                 size="sm"
-                                className="shrink-0 border-amber-300 bg-white text-amber-800 hover:bg-amber-100"
+                                className="shrink-0 border-[var(--wv-ochre-200)] bg-white text-[var(--wv-ochre-800)] hover:bg-[var(--wv-ochre-50)]"
                                 onClick={() => {
                                     warningContinuationRef.current = null
                                     setWarningSavePending(false)
@@ -5300,18 +5300,18 @@ export default function EstimatorClient({
 
             {showValidation && !estimatorValidation.valid && (
                 <div id={validationSummaryId} className={`${pageShellClass} mb-2`} role="alert">
-                    <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-900">
+                    <div className="rounded-xl border border-[var(--wv-madder-200)] bg-[var(--wv-madder-50)] px-4 py-3 text-[var(--wv-madder-600)]">
                         <div className="flex items-start gap-3">
-                            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-600" />
+                            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-[var(--wv-madder-600)]" />
                             <div className="min-w-0 flex-1">
                                 <p className="text-sm font-bold">Complete the highlighted inputs before saving</p>
-                                <ul className="mt-1 space-y-0.5 text-xs leading-relaxed text-red-800">
+                                <ul className="mt-1 space-y-0.5 text-xs leading-relaxed text-[var(--wv-madder-600)]">
                                     {estimatorValidation.issues.slice(0, 6).map(issue => (
                                         <li key={`${issue.field}:${issue.message}`}>{issue.message}</li>
                                     ))}
                                 </ul>
                                 {estimatorValidation.issues.length > 6 && (
-                                    <p className="mt-1 text-xs font-semibold text-red-700">+{estimatorValidation.issues.length - 6} more input issue(s)</p>
+                                    <p className="mt-1 text-xs font-semibold text-[var(--wv-madder-600)]">+{estimatorValidation.issues.length - 6} more input issue(s)</p>
                                 )}
                             </div>
                             {estimatorValidation.issues.some(issue => (
@@ -5324,7 +5324,7 @@ export default function EstimatorClient({
                                     type="button"
                                     variant="outline"
                                     size="sm"
-                                    className="shrink-0 border-red-300 bg-white text-red-800 hover:bg-red-100"
+                                    className="shrink-0 border-[var(--wv-madder-200)] bg-white text-[var(--wv-madder-600)] hover:bg-[var(--wv-madder-50)]"
                                     onClick={() => {
                                         handleEntryModeChange('detailed')
                                         setShowAdvancedOverhead(true)
@@ -5520,7 +5520,7 @@ export default function EstimatorClient({
                                 {appliedTemplate && (
                                     <p
                                         data-testid="saved-quality-reuse-status"
-                                        className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-[11px] font-medium leading-4 text-blue-900"
+                                        className="rounded-lg border border-[var(--wv-lagoon-200)] bg-[var(--wv-lagoon-50)] px-3 py-2 text-[11px] font-medium leading-4 text-[var(--wv-lagoon-700)]"
                                     >
                                         {appliedTemplate.latest_costing_reuse
                                             ? 'Full costing reuse is active: current yarn rates are combined with the latest saved costing assumptions.'
@@ -5639,7 +5639,7 @@ export default function EstimatorClient({
                             ) : null}
                             </div>
                             {!exportModel && (
-                                <p id="export-cost-sheet-hint" className="w-full text-xs font-medium leading-relaxed text-amber-700">
+                                <p id="export-cost-sheet-hint" className="w-full text-xs font-medium leading-relaxed text-[var(--wv-ochre-800)]">
                                     {tx('Complete the highlighted inputs before creating an Internal Cost Sheet or Customer Quotation.')}
                                 </p>
                             )}
@@ -5652,7 +5652,7 @@ export default function EstimatorClient({
                     </div>
 
                     {actionReadinessMessage && (
-                        <p id={`${actionReadinessId}-legacy`} role="status" className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium leading-relaxed text-amber-800">
+                        <p id={`${actionReadinessId}-legacy`} role="status" className="mt-2 rounded-lg border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] px-3 py-2 text-xs font-medium leading-relaxed text-[var(--wv-ochre-800)]">
                             {actionReadinessMessage}
                         </p>
                     )}
@@ -5860,7 +5860,7 @@ export default function EstimatorClient({
 
                     <div className="space-y-4 px-4 py-4 sm:px-5 sm:py-5">
                         {secondaryError && (
-                            <div className="rounded-[12px] border border-amber-300 bg-amber-50 px-3.5 py-3.5 text-xs font-medium text-amber-900" role="status">
+                            <div className="rounded-[12px] border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] px-3.5 py-3.5 text-xs font-medium text-[var(--wv-ochre-900)]" role="status">
                                 {tx('Saved quality details are temporarily unavailable. The Cost Estimate remains ready to use.')}
                             </div>
                         )}
@@ -5992,7 +5992,7 @@ export default function EstimatorClient({
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Fabric / Quality Name (visible in both modes) */}
                             <div className="col-span-1 md:col-span-2 space-y-1.5">
-                                <Label className="text-[10px] uppercase font-bold text-slate-500">
+                                <Label className="text-[10px] uppercase font-bold text-[var(--wv-neel-500)]">
                                     {t('estimator.order_basics.fabric_quality_name')}
                                 </Label>
                                 <Input
@@ -6008,15 +6008,15 @@ export default function EstimatorClient({
                                         setQualityLabelFromUser(val)
                                     }}
                                     placeholder="e.g. 60g Georgette, D.246, Japan Satin"
-                                    className="font-bold border-slate-200 h-11"
+                                    className="font-bold border-[var(--wv-cotton-400)] h-11"
                                 />
-                                <p className="text-[10px] text-slate-400 font-medium leading-normal">
+                                <p className="text-[10px] text-[var(--wv-cotton-500)] font-medium leading-normal">
                                     {appliedTemplate ? t('estimator.sprint1.saved_quality_name_stable') : t('estimator.quality.fabricQualityNameHelper')}
                                 </p>
                             </div>
                         </div>
 
-                        <div className="border-t border-slate-100 pt-1">
+                        <div className="border-t border-[var(--wv-cotton-200)] pt-1">
                             <YarnComponentCountFields
                                 warpCount={state.warpRows.length}
                                 weftCount={state.weftRows.length}
@@ -6528,7 +6528,7 @@ export default function EstimatorClient({
                             </div>
                         </div>
 
-                        <div className="text-[10px] font-medium text-slate-400 italic">
+                        <div className="text-[10px] font-medium text-[var(--wv-cotton-500)] italic">
                             {t('estimator.warping_sizing.applied_on')} {totals.totalWarpKgPer100m.toFixed(2)} {t('estimator.warping_sizing.warp_consumption')}
                         </div>
                     </CardContent>
@@ -6595,8 +6595,8 @@ export default function EstimatorClient({
 
                                         {hasValidCostResult && state.overheadOverridePerM != null && state.overheadOverridePerM < monthlyOverheadReference && (
                                             <div className="flex items-center gap-2 pt-2 mt-2 border-t border-dashed border-[var(--color-hairline)]">
-                                                <AlertTriangle className="h-3 w-3 text-amber-600 shrink-0" />
-                                                <p className="text-[10px] font-bold text-amber-700 leading-tight">
+                                                <AlertTriangle className="h-3 w-3 text-[var(--wv-ochre-800)] shrink-0" />
+                                                <p className="text-[10px] font-bold text-[var(--wv-ochre-800)] leading-tight">
                                                     Safety Alert: Direct rate (₹{state.overheadOverridePerM}) is LOWER than the monthly-expense reference (₹{monthlyOverheadReference.toFixed(2)}).
                                                     This costing will not recover ₹{(monthlyOverheadReference - state.overheadOverridePerM).toFixed(2)} per metre against that reference.
                                                 </p>
@@ -6637,10 +6637,10 @@ export default function EstimatorClient({
                                                 <div className="flex items-center gap-2">
                                                     {totals.overheadTotalMonthly > 0 && (
                                                         <span className="text-[10px] font-mono text-[var(--color-muted)] font-normal mr-2">
-                                                            Total: ₹{totals.overheadTotalMonthly.toLocaleString('en-IN')}/mo
+                                                             Total: ₹{totals.overheadTotalMonthly.toLocaleString('en-IN')}/mo
                                                         </span>
                                                     )}
-                                                    <ChevronRight className="h-4 w-4 text-slate-400" />
+                                                    <ChevronRight className="h-4 w-4 text-[var(--wv-cotton-500)]" />
                                                 </div>
                                             </button>
                                         </div>
@@ -6736,7 +6736,7 @@ export default function EstimatorClient({
                                                                             <button 
                                                                                 type="button"
                                                                                 onClick={() => dispatch({ type: 'REMOVE_OVERHEAD_ITEM', id: item.id })}
-                                                                                className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+                                                                                className="text-[var(--wv-cotton-400)] hover:text-[var(--wv-madder-600)] opacity-0 group-hover:opacity-100 transition-all"
                                                                             >
                                                                                 <Trash2 className="h-3.5 w-3.5" />
                                                                             </button>
@@ -6795,18 +6795,18 @@ export default function EstimatorClient({
                                         </Dialog>
 
                                         {/* Live Summary */}
-                                        <div className="flex items-center justify-between bg-rose-50/70 border border-rose-100 rounded-xl px-4 py-3">
+                                        <div className="flex items-center justify-between bg-[var(--wv-madder-50)]/70 border border-[var(--wv-madder-200)]/70 rounded-xl px-4 py-3">
                                             <div>
-                                                <p className="text-[10px] font-semibold uppercase tracking-widest text-rose-600/80 leading-none mb-1">{t('estimator.overhead.overhead_per_m')}</p>
-                                                <p className="text-2xl font-semibold font-mono text-rose-700 leading-none">{formatCalculatedMoney(costingResult.overheadPerM, hasValidCostResult)}</p>
+                                                <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--wv-madder-600)]/80 leading-none mb-1">{t('estimator.overhead.overhead_per_m')}</p>
+                                                <p className="text-2xl font-semibold font-mono text-[var(--wv-madder-600)] leading-none">{formatCalculatedMoney(costingResult.overheadPerM, hasValidCostResult)}</p>
                                                 {state.overheadOverridePerM != null && state.overheadOverridePerM > 0 && (
-                                                    <p className="text-[9px] text-amber-600 font-bold mt-0.5">⚡ direct rate selected</p>
+                                                    <p className="text-[9px] text-[var(--wv-ochre-800)] font-bold mt-0.5">⚡ direct rate selected</p>
                                                 )}
                                             </div>
                                             <div className="text-right">
-                                                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 leading-none mb-1">Method</p>
-                                                <p className="text-sm font-semibold text-slate-700 leading-tight">{state.overheadMode === 'direct' ? 'Direct rate' : 'Monthly expenses'}</p>
-                                                <p className="text-[9px] text-slate-400 mt-0.5">{state.overheadMode === 'direct' ? 'saved ₹/m input' : 'saved expenses ÷ output'}</p>
+                                                <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--wv-neel-500)] leading-none mb-1">Method</p>
+                                                <p className="text-sm font-semibold text-[var(--wv-neel-700)] leading-tight">{state.overheadMode === 'direct' ? 'Direct rate' : 'Monthly expenses'}</p>
+                                                <p className="text-[9px] text-[var(--wv-cotton-500)] mt-0.5">{state.overheadMode === 'direct' ? 'saved ₹/m input' : 'saved expenses ÷ output'}</p>
                                             </div>
                                         </div>
                                     </CardContent>
@@ -6822,17 +6822,17 @@ export default function EstimatorClient({
                             {state.enabledSections.winding ? (
                                 <NumField fieldKey="windingRatePerKg" label={t('estimator.field_labels.winding_per_kg')} value={state.windingRatePerKg} onChange={v => dispatch({ type: 'SET', field: 'windingRatePerKg', value: v ?? 0 })} unit="₹/kg" placeholder="e.g. 4" hint={t('estimator.post_processing.winding_scope').replace('{kg}', totals.totalAllYarnKgPer100m.toFixed(2))} />
                             ) : (
-                                <button onClick={() => dispatch({ type: 'ENABLE_SECTION', section: 'winding' })} className="h-10 rounded-xl border border-dashed border-slate-200 text-[10px] font-bold text-slate-400 flex items-center justify-center gap-1.5 hover:bg-slate-50 hover:text-indigo-500 transition-all uppercase tracking-widest"><Plus className="h-3 w-3" /> {t('estimator.post_processing.winding')}</button>
+                                <button onClick={() => dispatch({ type: 'ENABLE_SECTION', section: 'winding' })} className="h-10 rounded-xl border border-dashed border-[var(--wv-cotton-300)] text-[10px] font-bold text-[var(--wv-cotton-500)] flex items-center justify-center gap-1.5 hover:bg-[var(--wv-cotton-100)] hover:text-[var(--wv-neel-600)] transition-all uppercase tracking-widest"><Plus className="h-3 w-3" /> {t('estimator.post_processing.winding')}</button>
                             )}
                             {state.enabledSections.processing ? (
                                 <NumField fieldKey="processingRatePerM" label={t('estimator.field_labels.dyeing_processing')} value={state.processingRatePerM} onChange={v => dispatch({ type: 'SET', field: 'processingRatePerM', value: v ?? 0 })} unit="₹/m" placeholder="e.g. 2" />
                             ) : (
-                                <button onClick={() => dispatch({ type: 'ENABLE_SECTION', section: 'processing' })} className="h-10 rounded-xl border border-dashed border-slate-200 text-[10px] font-bold text-slate-400 flex items-center justify-center gap-1.5 hover:bg-slate-50 hover:text-indigo-500 transition-all uppercase tracking-widest"><Plus className="h-3 w-3" /> {t('estimator.post_processing.processing')}</button>
+                                <button onClick={() => dispatch({ type: 'ENABLE_SECTION', section: 'processing' })} className="h-10 rounded-xl border border-dashed border-[var(--wv-cotton-300)] text-[10px] font-bold text-[var(--wv-cotton-500)] flex items-center justify-center gap-1.5 hover:bg-[var(--wv-cotton-100)] hover:text-[var(--wv-neel-600)] transition-all uppercase tracking-widest"><Plus className="h-3 w-3" /> {t('estimator.post_processing.processing')}</button>
                             )}
                             {state.enabledSections.finishing ? (
                                 <NumField fieldKey="finishingRatePerM" label={t('estimator.field_labels.finishing_per_m')} value={state.finishingRatePerM} onChange={v => dispatch({ type: 'SET', field: 'finishingRatePerM', value: v ?? 0 })} unit="₹/m" placeholder="e.g. 1.50" />
                             ) : (
-                                <button onClick={() => dispatch({ type: 'ENABLE_SECTION', section: 'finishing' })} className="h-10 rounded-xl border border-dashed border-slate-200 text-[10px] font-bold text-slate-400 flex items-center justify-center gap-1.5 hover:bg-slate-50 hover:text-indigo-500 transition-all uppercase tracking-widest"><Plus className="h-3 w-3" /> {t('estimator.post_processing.finishing')}</button>
+                                <button onClick={() => dispatch({ type: 'ENABLE_SECTION', section: 'finishing' })} className="h-10 rounded-xl border border-dashed border-[var(--wv-cotton-300)] text-[10px] font-bold text-[var(--wv-cotton-500)] flex items-center justify-center gap-1.5 hover:bg-[var(--wv-cotton-100)] hover:text-[var(--wv-neel-600)] transition-all uppercase tracking-widest"><Plus className="h-3 w-3" /> {t('estimator.post_processing.finishing')}</button>
                             )}
                         </div>
                     </CardContent>
@@ -7382,7 +7382,7 @@ export default function EstimatorClient({
                         >
                             {renamingTpl && <Loader2 className="h-4 w-4 animate-spin" />} {renamingTpl ? tx('Saving name…') : t('estimator.sprint1.save_name_correction')}
                         </Button>
-                        {!renameValue.trim() && <p id="rename-quality-help" className="text-xs font-medium text-amber-700">{tx('Enter a Fabric Quality name before saving.')}</p>}
+                        {!renameValue.trim() && <p id="rename-quality-help" className="text-xs font-medium text-[var(--wv-ochre-800)]">{tx('Enter a Fabric Quality name before saving.')}</p>}
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

@@ -683,10 +683,10 @@ function PriceDeltaBadge({
     if (delta.direction === 'increased') {
         return (
             <span
-                className={`inline-flex items-center gap-1 rounded-md border border-amber-500/25 bg-amber-500/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-amber-700 dark:border-amber-400/25 dark:bg-amber-400/10 dark:text-amber-300 ${className}`}
+                className={`inline-flex items-center gap-1 rounded-md border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] px-1.5 py-0.5 font-mono text-[10px] font-semibold text-[var(--wv-ochre-800)] ${className}`}
                 title={delta.previousValueFormatted ? `Previous rate: ${delta.previousValueFormatted}` : undefined}
             >
-                <TrendingUp className="h-3 w-3 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+                <TrendingUp className="h-3 w-3 shrink-0 text-[var(--wv-ochre-800)]" aria-hidden="true" />
                 <span>{delta.formattedDifference}</span>
                 {delta.formattedPercent && <span className="opacity-80">({delta.formattedPercent})</span>}
             </span>
@@ -696,10 +696,10 @@ function PriceDeltaBadge({
     if (delta.direction === 'decreased') {
         return (
             <span
-                className={`inline-flex items-center gap-1 rounded-md border border-emerald-500/25 bg-emerald-500/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-emerald-700 dark:border-emerald-400/25 dark:bg-emerald-400/10 dark:text-emerald-300 ${className}`}
+                className={`inline-flex items-center gap-1 rounded-md border border-[var(--wv-moss-200)] bg-[var(--wv-moss-50)] px-1.5 py-0.5 font-mono text-[10px] font-semibold text-[var(--wv-moss-700)] ${className}`}
                 title={delta.previousValueFormatted ? `Previous rate: ${delta.previousValueFormatted}` : undefined}
             >
-                <TrendingDown className="h-3 w-3 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+                <TrendingDown className="h-3 w-3 shrink-0 text-[var(--wv-moss-700)]" aria-hidden="true" />
                 <span>{delta.formattedDifference}</span>
                 {delta.formattedPercent && <span className="opacity-80">({delta.formattedPercent})</span>}
             </span>
@@ -1559,29 +1559,29 @@ export default function RatesClient({
             {showDeleteNudge && !demoYarnDeleted && rates.some(r => r.id === DEMO_YARN_RATE.id) && (
                 <div
                     role="status"
-                    className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50/90 p-3.5 text-sm text-amber-950 shadow-xs animate-in fade-in-0 duration-200"
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)]/90 p-3.5 text-sm text-[var(--wv-ochre-800)] shadow-xs animate-in fade-in-0 duration-200"
                 >
                     <div className="flex items-center gap-2.5">
-                        <Sparkles className="h-5 w-5 shrink-0 text-amber-700" aria-hidden="true" />
+                        <Sparkles className="h-5 w-5 shrink-0 text-[var(--wv-ochre-800)]" aria-hidden="true" />
                         <div>
-                            <p className="font-semibold text-amber-900">{tx('Tour completed')}</p>
-                            <p className="text-xs text-amber-800/90">{tx('A sample yarn rate was added so you could explore Rate Book features. You can delete it anytime.')}</p>
+                            <p className="font-semibold text-ink">{tx('Tour completed')}</p>
+                            <p className="text-xs text-[var(--wv-ochre-800)]/90">{tx('A sample yarn rate was added so you could explore Rate Book features. You can delete it anytime.')}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
                         <Button
                             size="sm"
                             variant="outline"
-                            className="border-amber-300 bg-white text-xs font-semibold text-amber-900 hover:bg-amber-100/70"
+                            className="border-[var(--wv-ochre-200)] bg-surface text-xs font-semibold text-[var(--wv-ochre-800)] hover:bg-[var(--wv-ochre-50)]"
                             onClick={handleDeleteDemoYarn}
                         >
-                            <Trash2 className="mr-1.5 h-3.5 w-3.5 text-amber-700" aria-hidden="true" />
+                            <Trash2 className="mr-1.5 h-3.5 w-3.5 text-[var(--wv-ochre-800)]" aria-hidden="true" />
                             {tx('Delete sample yarn')}
                         </Button>
                         <Button
                             size="sm"
                             variant="ghost"
-                            className="text-xs text-amber-700 hover:text-amber-900"
+                            className="text-xs text-[var(--wv-ochre-800)] hover:text-ink"
                             onClick={() => setShowDeleteNudge(false)}
                         >
                             {tx('Dismiss')}
@@ -1815,8 +1815,6 @@ export default function RatesClient({
                     />
                 ) : (
                     <>
-                        {/* Review-state branches remain explicit for source-level regression checks; their rendered surfaces use Weavly semantic tokens. */}
-                        {/* reviewState === 'overdue' ? 'bg-red-50/70' : reviewState === 'due_soon' ? 'bg-amber-50/70' */}
                         <div key={`table-${resultMotionKey}`} className="ui-content-swap hidden lg:block">
                             <table className="w-full table-fixed text-left text-[12px]">
                                 <colgroup>

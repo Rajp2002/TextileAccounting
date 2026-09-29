@@ -13,19 +13,19 @@ const badgeVariants = cva(
         secondary:
           "bg-surface-soft text-body border-hairline [a&]:hover:bg-surface-muted",
         destructive:
-          "bg-risk-soft text-risk border-risk-soft [a&]:hover:bg-risk-soft focus-visible:ring-risk/20 dark:focus-visible:ring-risk/40",
+          "bg-[var(--wv-status-danger-bg)] text-[var(--wv-status-danger-fg)] border-[var(--wv-status-danger-border)] [a&]:hover:bg-[var(--wv-status-danger-bg)] focus-visible:ring-ring/25",
         outline:
           "border-hairline text-body [a&]:hover:bg-saffron-soft/60 [a&]:hover:text-ink",
         warning:
-          "bg-warning-soft text-warning border-warning-soft [a&]:hover:bg-warning-soft",
+          "bg-[var(--wv-status-warning-bg)] text-[var(--wv-status-warning-fg)] border-[var(--wv-status-warning-border)] [a&]:hover:bg-[var(--wv-status-warning-bg)]",
         success:
-          "bg-success-soft text-success border-success-soft [a&]:hover:bg-success-soft",
+          "bg-[var(--wv-status-success-bg)] text-[var(--wv-status-success-fg)] border-[var(--wv-status-success-border)] [a&]:hover:bg-[var(--wv-status-success-bg)]",
         risk:
-          "bg-risk-soft text-risk border-risk-soft [a&]:hover:bg-risk-soft",
+          "bg-[var(--wv-status-danger-bg)] text-[var(--wv-status-danger-fg)] border-[var(--wv-status-danger-border)] [a&]:hover:bg-[var(--wv-status-danger-bg)]",
         info:
-          "bg-info-soft text-info border-info-soft [a&]:hover:bg-info-soft",
+          "bg-[var(--wv-status-info-bg)] text-[var(--wv-status-info-fg)] border-[var(--wv-status-info-border)] [a&]:hover:bg-[var(--wv-status-info-bg)]",
         brand:
-          "bg-saffron-soft text-saffron-deep border-saffron-soft [a&]:hover:bg-saffron-soft",
+          "bg-[var(--wv-bg-brand-soft)] text-[var(--wv-brand-accent-strong)] border-[var(--wv-saffron-200)] [a&]:hover:bg-[var(--wv-bg-brand-soft)]",
         ghost: "[a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
         link: "text-saffron-deep underline-offset-4 [a&]:hover:underline",
 

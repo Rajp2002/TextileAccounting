@@ -11,10 +11,10 @@ export default function AuditTrailPage() {
                 <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-ink sm:text-[2rem]">Audit Trail</h1>
             </div>
 
-            <Card className="shadow-sm border-gray-200 overflow-hidden">
-                <CardHeader className="bg-gray-50/50 border-b border-gray-100">
+            <Card className="shadow-[var(--shadow-card)] border-[var(--wv-border-default)] overflow-hidden">
+                <CardHeader className="bg-[var(--wv-bg-subtle)] border-b border-[var(--wv-border-subtle)]">
                     <div className="flex items-center gap-2">
-                        <History className="h-5 w-5 text-indigo-600" />
+                        <History className="h-5 w-5 text-[var(--wv-action-primary)]" />
                         <CardTitle>System Activity</CardTitle>
                     </div>
                     <CardDescription>

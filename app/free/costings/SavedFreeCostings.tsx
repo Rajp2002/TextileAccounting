@@ -220,29 +220,29 @@ export default function SavedFreeCostings() {
         {showDeleteNudge && !tourStep && !loading && !error && !demoDeleted && rows.length === 0 && demoMatchesFilters && (
           <div
             role="status"
-            className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50/90 p-3.5 text-sm text-amber-950 shadow-xs animate-in fade-in-0 duration-200"
+            className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)]/90 p-3.5 text-sm text-[var(--wv-ochre-900)] shadow-xs animate-in fade-in-0 duration-200"
           >
             <div className="flex items-center gap-2.5">
-              <Sparkles className="h-5 w-5 shrink-0 text-amber-700" aria-hidden="true" />
+              <Sparkles className="h-5 w-5 shrink-0 text-[var(--wv-ochre-700)]" aria-hidden="true" />
               <div>
-                <p className="font-semibold text-amber-900">{freeText(language, 'demoTourCompleted')}</p>
-                <p className="text-xs text-amber-800/90">{freeText(language, 'demoTourCompletedHint')}</p>
+                <p className="font-semibold text-[var(--wv-ochre-900)]">{freeText(language, 'demoTourCompleted')}</p>
+                <p className="text-xs text-[var(--wv-ochre-800)]/90">{freeText(language, 'demoTourCompletedHint')}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <Button
                 size="sm"
                 variant="outline"
-                className="border-amber-300 bg-white text-xs font-semibold text-amber-900 hover:bg-amber-100/70"
+                className="border-[var(--wv-ochre-300)] bg-white text-xs font-semibold text-[var(--wv-ochre-900)] hover:bg-[var(--wv-ochre-100)]/70"
                 onClick={handleDeleteDemo}
               >
-                <Trash2 className="mr-1.5 h-3.5 w-3.5 text-amber-700" aria-hidden="true" />
+                <Trash2 className="mr-1.5 h-3.5 w-3.5 text-[var(--wv-ochre-700)]" aria-hidden="true" />
                 {freeText(language, 'deleteDemoSample')}
               </Button>
               <Button
                 size="sm"
                 variant="ghost"
-                className="text-xs text-amber-700 hover:text-amber-900"
+                className="text-xs text-[var(--wv-ochre-700)] hover:text-[var(--wv-ochre-900)]"
                 onClick={() => setShowDeleteNudge(false)}
               >
                 {freeText(language, 'dismiss')}
@@ -360,7 +360,7 @@ export default function SavedFreeCostings() {
                 if (target instanceof Element && target.closest('button, [data-slot="dialog-content"], [data-slot="dialog-overlay"]')) return
                 setInspectingCosting(demoCosting)
               }}
-              className="cursor-pointer border-amber-200/90 bg-amber-50/40 shadow-[var(--shadow-card)] transition hover:border-amber-300 hover:shadow-[var(--shadow-panel)]"
+              className="cursor-pointer border-[var(--wv-saffron-200)]/90 bg-[var(--wv-saffron-50)]/40 shadow-[var(--shadow-card)] transition hover:border-[var(--wv-saffron-300)] hover:shadow-[var(--shadow-panel)]"
             >
               <CardContent className="p-0">
                 <div className="flex flex-col gap-4 p-4 sm:flex-row sm:flex-wrap sm:items-center sm:p-5 lg:flex-nowrap">
@@ -370,7 +370,7 @@ export default function SavedFreeCostings() {
                     aria-haspopup="dialog"
                     className="group flex min-w-0 flex-1 items-start gap-3 rounded-lg text-left outline-none focus-visible:ring-2 focus-visible:ring-saffron/35"
                   >
-                    <span className="mt-0.5 rounded-lg bg-amber-100 p-2 text-amber-800">
+                    <span className="mt-0.5 rounded-lg bg-[var(--wv-saffron-100)] p-2 text-saffron-deep">
                       <Layers3 className="h-5 w-5" />
                     </span>
                     <span className="min-w-0">
@@ -378,10 +378,10 @@ export default function SavedFreeCostings() {
                         <span className="truncate text-base font-black text-ink" title={demoCosting.label}>
                           {demoCosting.label}
                         </span>
-                        <span className="inline-flex items-center rounded-md bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800 ring-1 ring-inset ring-amber-200">
+                        <span className="inline-flex items-center rounded-md bg-[var(--wv-saffron-100)] px-2 py-0.5 text-xs font-semibold text-saffron-deep ring-1 ring-inset ring-[var(--wv-saffron-200)]">
                           {freeText(language, 'demoSample')}
                         </span>
-                        <Badge variant="outline" className="border-amber-200 bg-white text-[10px] font-bold text-amber-900">
+                        <Badge variant="outline" className="border-[var(--wv-saffron-200)] bg-white text-[10px] font-bold text-saffron-deep">
                           v1
                         </Badge>
                       </span>
@@ -392,15 +392,15 @@ export default function SavedFreeCostings() {
                   </button>
 
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:min-w-[360px]">
-                    <div className="rounded-lg border border-amber-200/60 bg-white/80 px-3 py-2">
+                    <div className="rounded-lg border border-[var(--wv-saffron-200)]/60 bg-white/80 px-3 py-2">
                       <p className="text-[10px] font-bold uppercase tracking-wide text-subtle">{tx('Production Cost')}</p>
                       <p className="mt-1 font-mono text-sm font-black text-ink">₹{demoCosting.result.productionCostPerM.toFixed(2)}/m</p>
                     </div>
-                    <div className="rounded-lg border border-amber-200/60 bg-white/80 px-3 py-2">
+                    <div className="rounded-lg border border-[var(--wv-saffron-200)]/60 bg-white/80 px-3 py-2">
                       <p className="text-[10px] font-bold uppercase tracking-wide text-subtle">{tx('Selling Price')}</p>
                       <p className="mt-1 font-mono text-sm font-black text-saffron-deep">₹{demoCosting.result.suggestedSellingPricePerM.toFixed(2)}/m</p>
                     </div>
-                    <div className="col-span-2 rounded-lg border border-amber-200/60 bg-white/80 px-3 py-2 sm:col-span-1">
+                    <div className="col-span-2 rounded-lg border border-[var(--wv-saffron-200)]/60 bg-white/80 px-3 py-2 sm:col-span-1">
                       <p className="text-[10px] font-bold uppercase tracking-wide text-subtle">{tx('Margin')}</p>
                       <p className={`mt-1 font-mono text-sm font-black ${demoCosting.result.actualMarginPct < 0 ? 'text-risk' : 'text-success'}`}>
                         {demoCosting.result.actualMarginPct.toFixed(1)}%
@@ -413,7 +413,7 @@ export default function SavedFreeCostings() {
                       variant="outline"
                       size="sm"
                       onClick={() => setSelected(demoCosting)}
-                      className="border-amber-300 bg-white text-xs font-semibold text-amber-950 hover:bg-amber-100/60"
+                      className="border-[var(--wv-saffron-300)] bg-white text-xs font-semibold text-ink hover:bg-[var(--wv-saffron-100)]/60"
                     >
                       <Eye className="mr-1.5 h-3.5 w-3.5" />
                       {tx('Export')}
@@ -433,7 +433,7 @@ export default function SavedFreeCostings() {
                       onClick={() => setInspectingCosting(demoCosting)}
                       aria-haspopup="dialog"
                       aria-label={`Open ${demoCosting.label} details`}
-                      className="hidden rounded-md p-2 text-amber-700 hover:bg-amber-100/70 sm:block"
+                      className="hidden rounded-md p-2 text-saffron-deep hover:bg-[var(--wv-saffron-100)]/70 sm:block"
                     >
                       <ChevronRight className="h-5 w-5" />
                     </button>

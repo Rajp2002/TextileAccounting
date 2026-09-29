@@ -109,7 +109,7 @@ export default function LoginForm({ recoveryDestination }: { recoveryDestination
                 <div
                     role="status"
                     aria-live="polite"
-                    className="mb-5 rounded-lg border border-saffron/30 bg-saffron-soft/40 p-4"
+                    className="mb-5 rounded-lg border border-[var(--wv-saffron-200)] bg-[var(--wv-saffron-50)] p-4"
                 >
                     <p className="font-semibold text-ink">Your session is already active.</p>
                     <p className="mt-1 text-sm text-body">
@@ -148,7 +148,7 @@ export default function LoginForm({ recoveryDestination }: { recoveryDestination
                         <Label htmlFor="password" className="font-medium text-body">
                             Password
                         </Label>
-                        <Link href="/forgot-password" className="text-xs font-medium text-saffron-deep hover:underline">
+                        <Link href="/forgot-password" className="text-xs font-semibold text-ink underline decoration-[var(--wv-cotton-400)] hover:decoration-[var(--wv-brand-accent)] underline-offset-4">
                             Forgot password?
                         </Link>
                     </div>
@@ -169,7 +169,7 @@ export default function LoginForm({ recoveryDestination }: { recoveryDestination
                         <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-surface-soft hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/25"
+                            className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-surface-soft hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wv-border-focus)]/25"
                             aria-label={showPassword ? 'Hide password' : 'Show password'}
                             aria-pressed={showPassword}
                         >
@@ -202,7 +202,7 @@ export default function LoginForm({ recoveryDestination }: { recoveryDestination
                 <div className="space-y-2 pt-1 text-center text-sm text-muted-foreground">
                     <p>
                         Don&apos;t have an account?{' '}
-                        <Link href="/signup" className="font-medium text-saffron-deep hover:underline">
+                        <Link href="/signup" className="font-semibold text-ink underline decoration-[var(--wv-cotton-400)] hover:decoration-[var(--wv-brand-accent)] underline-offset-4">
                             Sign up
                         </Link>
                     </p>

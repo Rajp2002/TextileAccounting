@@ -461,8 +461,8 @@ export default function BasePayrollSettlementWorkspace({
 
                 {/* 2. Success Banner if Period Settled */}
                 {completedSuccess && (
-                    <div className="bg-emerald-500/10 border-b border-emerald-500/20 px-4 py-3 sm:px-6 flex items-center justify-between flex-wrap gap-2">
-                        <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300">
+                    <div className="bg-[var(--wv-moss-50)] border-b border-[var(--wv-moss-200)] px-4 py-3 sm:px-6 flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex items-center gap-2 text-[var(--wv-moss-800)]">
                             <CheckCircle2 className="h-5 w-5 shrink-0" />
                             <p className="text-xs sm:text-sm font-semibold">
                                 {period.label} payroll is finalized. {formatINR(summary.totalNet)} settled across {summary.totalWorkers} workers.
@@ -476,7 +476,7 @@ export default function BasePayrollSettlementWorkspace({
                                     onOpenChange(false)
                                     onViewRecords()
                                 }}
-                                className="h-8 rounded-lg text-xs font-bold border-emerald-500/30 hover:bg-emerald-500/10"
+                                className="h-8 rounded-lg text-xs font-bold border-[var(--wv-moss-300)] hover:bg-[var(--wv-moss-100)]"
                             >
                                 View in records
                             </Button>
@@ -499,10 +499,10 @@ export default function BasePayrollSettlementWorkspace({
                             </p>
                         </div>
                         <div className="px-2 sm:px-4">
-                            <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                            <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[var(--wv-moss-700)]">
                                 Paid
                             </p>
-                            <p className="mt-1 text-base sm:text-2xl font-black text-emerald-700 dark:text-emerald-300">
+                            <p className="mt-1 text-base sm:text-2xl font-black text-[var(--wv-moss-700)]">
                                 {formatINR(summary.paidAmount, { hideDecimals: true })}
                             </p>
                             <p className="mt-0.5 text-[10px] sm:text-xs text-muted-foreground">
@@ -532,7 +532,7 @@ export default function BasePayrollSettlementWorkspace({
                         </div>
                         <div className="h-2 w-full rounded-full bg-surface-soft overflow-hidden">
                             <div
-                                className="h-full bg-emerald-500 transition-all duration-500 ease-out"
+                                className="h-full bg-[var(--wv-moss-600)] transition-all duration-500 ease-out"
                                 style={{ width: `${summary.progressPercent}%` }}
                             />
                         </div>
@@ -723,7 +723,7 @@ export default function BasePayrollSettlementWorkspace({
                                                         <button
                                                             type="button"
                                                             onClick={() => setViewingWorkerId(payable.worker_id)}
-                                                            className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:underline"
+                                                            className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--wv-moss-700)] hover:underline"
                                                         >
                                                             <Check className="h-4 w-4" />
                                                             <span>Paid · {paymentModeLabel(payable.payment_mode)}</span>
@@ -832,7 +832,7 @@ export default function BasePayrollSettlementWorkspace({
                 <div className="sticky bottom-0 z-20 border-t border-hairline bg-surface px-4 py-3 sm:px-6 sm:py-4 flex items-center justify-between gap-3">
                     <div className="text-xs text-muted-foreground">
                         {summary.outstandingWorkers === 0 ? (
-                            <span className="text-emerald-700 dark:text-emerald-400 font-bold flex items-center gap-1.5">
+                            <span className="text-[var(--wv-moss-700)] font-bold flex items-center gap-1.5">
                                 <CheckCircle2 className="h-4 w-4" />
                                 All {summary.totalWorkers} worker obligations resolved.
                             </span>
@@ -1124,7 +1124,7 @@ export default function BasePayrollSettlementWorkspace({
                                 </div>
                             </div>
 
-                            <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-3 text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2">
+                            <div className="rounded-xl border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] p-3 text-xs text-[var(--wv-ochre-800)] flex items-start gap-2">
                                 <Info className="h-4 w-4 shrink-0 mt-0.5" />
                                 <p className="leading-relaxed">
                                     Completing this payroll creates an immutable historical snapshot. Future changes to worker salaries, rates, or production will not alter this settled pay run.

@@ -28,7 +28,7 @@ describe('disclosure semantics shared by all four groups',()=>{
  })
  it('keeps active parent styling while collapsed and distinguishes exact pages from details',()=>{
   location.pathname='/owner/stock/yarn'
-  expect(render(2,false)).toContain('bg-saffron-deep')
+  expect(render(2,false)).toContain('bg-[var(--wv-neel-700)]')
   expect(render(2,true)).toContain('aria-current="page"')
   location.pathname='/owner/stock/yarn/example'
   const html=render(2,true)
@@ -55,10 +55,10 @@ describe('disclosure semantics shared by all four groups',()=>{
   // Group 0 is costing, Group 1 is production, Group 2 is stock, Group 3 is workforce
   // Viewing payroll means workforce is active, costing is not
   const costingOpen = render(0, true)
-  expect(costingOpen).not.toContain('bg-saffron-deep')
+  expect(costingOpen).not.toContain('bg-[var(--wv-neel-700)]')
   expect(costingOpen).toContain('aria-expanded="true"')
   const workforceCollapsed = render(3, false)
-  expect(workforceCollapsed).toContain('bg-saffron-deep')
+  expect(workforceCollapsed).toContain('bg-[var(--wv-neel-700)]')
  })
 })
 

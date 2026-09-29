@@ -11,7 +11,7 @@ export default function BaseOnboardingLayout({
     children: React.ReactNode
 }) {
     return (
-        <div className="min-h-screen bg-stone-50 antialiased dark:bg-stone-950">
+        <div className="min-h-screen bg-[var(--wv-cotton-100)] antialiased">
             {children}
         </div>
     )

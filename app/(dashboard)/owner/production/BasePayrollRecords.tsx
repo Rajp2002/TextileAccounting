@@ -229,7 +229,7 @@ export default function BasePayrollRecords({
                                     <div className="flex items-center justify-between">
                                         <label className="text-xs font-semibold text-body" htmlFor="payroll-history-period">Pay period</label>
                                         {selectedPeriod.isSettled ? (
-                                            <Badge className="bg-emerald-600 text-white font-bold text-[10px]">
+                                            <Badge className="bg-[var(--wv-moss-700)] text-white font-bold text-[10px]">
                                                 <CheckCircle2 className="h-3 w-3 mr-1" /> Settled
                                             </Badge>
                                         ) : null}

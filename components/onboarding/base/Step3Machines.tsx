@@ -98,20 +98,20 @@ export function Step3Machines({
         <div className="mx-auto max-w-2xl space-y-6">
             <div className="space-y-2 text-center sm:text-left">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] px-3 py-1 text-xs font-semibold text-[var(--wv-ochre-800)]">
                         <Cpu className="h-3.5 w-3.5" />
                         <span>{tx('Step 3 of 6 · Machine Inventory')}</span>
                     </div>
 
-                    <div className="rounded-full bg-stone-100 px-3 py-1 font-mono text-xs font-semibold text-stone-700 dark:bg-stone-800 dark:text-stone-300">
-                        {tx('Total Machines')}: <span className="font-bold text-amber-600">{countsByType.total}</span>
+                    <div className="rounded-full bg-[var(--wv-cotton-200)] px-3 py-1 font-mono text-xs font-semibold text-[var(--wv-neel-800)]">
+                        {tx('Total Machines')}: <span className="font-bold text-[var(--wv-brand-accent-strong)]">{countsByType.total}</span>
                     </div>
                 </div>
 
-                <h2 className="text-2xl font-bold tracking-tight text-stone-900 dark:text-stone-100 sm:text-3xl">
+                <h2 className="text-2xl font-bold tracking-tight text-[var(--wv-neel-900)] sm:text-3xl">
                     {tx('Enter your factory machines')}
                 </h2>
-                <p className="text-sm text-stone-600 dark:text-stone-400">
+                <p className="text-sm text-[var(--wv-neel-700)]">
                     {tx('Keyboard-first bulk entry: type a machine number, press Enter to advance, or paste a list from Excel.')}
                 </p>
             </div>
@@ -131,8 +131,8 @@ export function Step3Machines({
                             className={cn(
                                 'inline-flex items-center gap-2 rounded-xl border px-3.5 py-2 text-xs font-semibold transition-all',
                                 isSelected
-                                    ? 'border-amber-600 bg-amber-600 text-white shadow-sm'
-                                    : 'border-stone-200 bg-white text-stone-700 hover:border-stone-300 hover:bg-stone-50 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-300'
+                                    ? 'border-[var(--wv-action-primary)] bg-[var(--wv-action-primary)] text-white shadow-sm'
+                                    : 'border-[var(--wv-cotton-300)] bg-white text-[var(--wv-neel-700)] hover:border-[var(--wv-cotton-400)] hover:bg-[var(--wv-cotton-100)]'
                             )}
                         >
                             <span>{tx(label)}</span>
@@ -140,8 +140,8 @@ export function Step3Machines({
                                 className={cn(
                                     'rounded-full px-1.5 py-0.5 font-mono text-[10px] font-bold',
                                     isSelected
-                                        ? 'bg-amber-700 text-amber-100'
-                                        : 'bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400'
+                                        ? 'bg-white/20 text-white'
+                                        : 'bg-[var(--wv-cotton-200)] text-[var(--wv-neel-700)]'
                                 )}
                             >
                                 {count}
@@ -153,7 +153,7 @@ export function Step3Machines({
                 <button
                     type="button"
                     onClick={() => setShowCustomModal(true)}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-dashed border-stone-300 bg-stone-50/50 px-3 py-2 text-xs font-semibold text-stone-600 transition hover:border-stone-400 hover:bg-stone-100 dark:border-stone-700 dark:bg-stone-800/40 dark:text-stone-400"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-dashed border-[var(--wv-cotton-400)] bg-[var(--wv-cotton-100)]/50 px-3 py-2 text-xs font-semibold text-[var(--wv-neel-700)] transition hover:border-[var(--wv-cotton-500)] hover:bg-[var(--wv-cotton-200)]"
                 >
                     <Plus className="h-3.5 w-3.5" />
                     <span>{tx('Other type')}</span>
@@ -164,7 +164,7 @@ export function Step3Machines({
             {showCustomModal && (
                 <form
                     onSubmit={handleAddCustomType}
-                    className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50/70 p-3 dark:border-amber-900/50 dark:bg-amber-950/30"
+                    className="flex items-center gap-2 rounded-xl border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] p-3"
                 >
                     <input
                         type="text"
@@ -172,12 +172,12 @@ export function Step3Machines({
                         placeholder={tx('e.g. Jacquard, Circular Loom')}
                         value={customTypeName}
                         onChange={e => setCustomTypeName(e.target.value)}
-                        className="h-9 flex-1 rounded-md border border-stone-300 bg-white px-3 text-xs text-stone-900 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100"
+                        className="h-9 flex-1 rounded-md border border-[var(--wv-cotton-400)] bg-white px-3 text-xs text-[var(--wv-neel-900)] focus:border-[var(--wv-brand-accent-strong)] focus:outline-none focus:ring-1 focus:ring-[var(--wv-brand-accent-strong)]"
                     />
                     <button
                         type="submit"
                         disabled={!customTypeName.trim()}
-                        className="h-9 rounded-md bg-amber-600 px-3 text-xs font-semibold text-white transition hover:bg-amber-700 disabled:opacity-50"
+                        className="h-9 rounded-md bg-[var(--wv-action-primary)] px-3 text-xs font-semibold text-white transition hover:bg-[var(--wv-action-primary-hover)] disabled:opacity-50"
                     >
                         {tx('Add')}
                     </button>
@@ -187,7 +187,7 @@ export function Step3Machines({
                             setShowCustomModal(false)
                             setCustomTypeName('')
                         }}
-                        className="rounded p-1 text-stone-400 hover:text-stone-600"
+                        className="rounded p-1 text-[var(--wv-cotton-500)] hover:text-[var(--wv-neel-800)]"
                     >
                         <X className="h-4 w-4" />
                     </button>
@@ -196,7 +196,7 @@ export function Step3Machines({
 
             {/* Active Machine Bulk Entry Grid */}
             <div className="space-y-3">
-                <div className="flex items-center justify-between text-xs font-medium text-stone-500 dark:text-stone-400">
+                <div className="flex items-center justify-between text-xs font-medium text-[var(--wv-neel-600)]">
                     <span>
                         {tx(getMachineTypeLabel(activeType))} {tx('Machines')}
                     </span>
@@ -218,7 +218,7 @@ export function Step3Machines({
             </div>
 
             {error && (
-                <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+                <div className="rounded-lg border border-[var(--wv-madder-200)] bg-[var(--wv-madder-50)] p-3 text-sm text-[var(--wv-madder-700)]">
                     {tx(error)}
                 </div>
             )}

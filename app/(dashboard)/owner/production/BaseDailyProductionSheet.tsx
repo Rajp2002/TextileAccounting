@@ -757,9 +757,9 @@ export default function BaseDailyProductionSheet({
             </div>
 
             {currentBatch && (
-                <div className={`flex flex-col gap-3 rounded-2xl border px-4 py-3.5 text-xs sm:flex-row sm:items-center sm:justify-between shadow-xs ${isSavedBatchProtected ? 'border-amber-200 bg-amber-50/50' : 'border-emerald-200 bg-emerald-50/50'}`}>
+                <div className={`flex flex-col gap-3 rounded-2xl border px-4 py-3.5 text-xs sm:flex-row sm:items-center sm:justify-between shadow-xs ${isSavedBatchProtected ? 'border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)]/50' : 'border-[var(--wv-moss-200)] bg-[var(--wv-moss-50)]/50'}`}>
                     <div className="flex items-start gap-2.5 text-body">
-                        {isSavedBatchProtected ? <Lock className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" /> : <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" />}
+                        {isSavedBatchProtected ? <Lock className="mt-0.5 h-4 w-4 shrink-0 text-[var(--wv-ochre-700)]" /> : <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--wv-moss-700)]" />}
                         <span className="leading-relaxed">
                             <strong className="font-bold text-ink">{isCurrentBatchLocked ? 'Finalized' : registerSummary.pending > 0 ? 'Saved · incomplete' : 'Saved'}</strong> for {formatDateOnly(productionDate)} · {shift === 'day' ? 'Day' : 'Night'} shift.{' '}
                             {isCurrentBatchLocked
@@ -776,7 +776,7 @@ export default function BaseDailyProductionSheet({
                             </Button>
                         )}
                         {isSavedBatchProtected && (
-                            <Button variant="outline" size="sm" className="h-8 rounded-xl border-amber-300 bg-surface text-amber-900 hover:bg-amber-100 text-xs font-bold shadow-xs" onClick={() => setIsUnlockDialogOpen(true)}>
+                            <Button variant="outline" size="sm" className="h-8 rounded-xl border-[var(--wv-ochre-300)] bg-surface text-[var(--wv-ochre-900)] hover:bg-[var(--wv-ochre-100)] text-xs font-bold shadow-xs" onClick={() => setIsUnlockDialogOpen(true)}>
                                 <LockOpen className="h-4 w-4" /> Edit saved log
                             </Button>
                         )}
@@ -827,7 +827,7 @@ export default function BaseDailyProductionSheet({
                                 {machineContexts.map((context, index) => {
                                     if (showPending && !pendingMachineIds.includes(context.machineId)) return null
                                     if (!context.workerId) return (
-                                        <div key={context.machineId} className="flex flex-wrap items-center justify-between gap-3 bg-amber-50/40 px-4 py-3 text-sm">
+                                        <div key={context.machineId} className="flex flex-wrap items-center justify-between gap-3 bg-[var(--wv-ochre-50)]/40 px-4 py-3 text-sm">
                                             <div><p className="font-bold text-ink">{context.machineLabel}</p><p className="text-xs text-body">Pending · assign a worker before entering production.</p></div>
                                             <Button variant="outline" size="sm" onClick={openConfiguration} className="rounded-xl border-hairline bg-surface text-xs font-semibold hover:bg-surface-soft shadow-xs">Assign worker in Machine Assignments</Button>
                                         </div>
@@ -871,7 +871,7 @@ export default function BaseDailyProductionSheet({
                                                 {state === 'invalid' && <p id={`reading-error-${context.machineId}`} className="mt-1 text-xs font-semibold text-destructive">Use 0–100,000, up to 2 decimals.</p>}
                                             </div>
                                             <div className="col-span-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs md:col-span-1 md:flex-col md:items-start">
-                                                <span className={`inline-flex rounded-full px-2 py-0.5 font-bold ${state === 'entered' ? 'bg-emerald-50 text-emerald-700' : state === 'pending' || state === 'invalid' ? 'bg-amber-50 text-amber-800' : 'bg-surface-soft text-body'}`}>{state === 'entered' ? 'Entered' : state === 'not_running' ? 'Not running' : state === 'absent' ? 'Worker absent' : state === 'invalid' ? 'Check reading' : 'Pending'}</span>
+                                                <span className={`inline-flex rounded-full px-2 py-0.5 font-bold ${state === 'entered' ? 'bg-[var(--wv-moss-50)] text-[var(--wv-moss-700)]' : state === 'pending' || state === 'invalid' ? 'bg-[var(--wv-ochre-50)] text-[var(--wv-ochre-800)]' : 'bg-surface-soft text-body'}`}>{state === 'entered' ? 'Entered' : state === 'not_running' ? 'Not running' : state === 'absent' ? 'Worker absent' : state === 'invalid' ? 'Check reading' : 'Pending'}</span>
                                                 {!disabled && row.status !== 'absent' && (
                                                     <Button type="button" variant="ghost" size="sm" aria-label={`${state === 'not_running' ? 'Clear' : 'Mark not running'} ${context.machineLabel}`} onClick={() => {
                                                         if (state === 'entered' && !window.confirm(tx('Replace this machine’s production with zero?'))) return
@@ -931,14 +931,14 @@ export default function BaseDailyProductionSheet({
                                                     <p className="text-sm sm:text-base font-black text-ink">{formatMeters(rowTotal)}</p>
                                                     <p className="text-xs font-semibold text-muted-foreground">{formatINR(rowGrossPay)}</p>
                                                 </div>
-                                                {row.savedUnallocatedMeters !== null && <div className="md:col-span-4 rounded-xl border border-amber-200 bg-amber-50/50 px-3 py-2 text-xs text-body"><AlertTriangle className="mr-1 inline h-3.5 w-3.5 text-warning" /> Previously saved as {formatMeters(row.savedUnallocatedMeters)} without an exact machine split. Enter the machine allocation before saving this correction.</div>}
+                                                {row.savedUnallocatedMeters !== null && <div className="md:col-span-4 rounded-xl border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)]/50 px-3 py-2 text-xs text-body"><AlertTriangle className="mr-1 inline h-3.5 w-3.5 text-warning" /> Previously saved as {formatMeters(row.savedUnallocatedMeters)} without an exact machine split. Enter the machine allocation before saving this correction.</div>}
                                             </div>
                                         )
                                     })}
                                     {unassignedWorkers.map((worker) => {
                                         const row = getRow(worker.id)
                                         return (
-                                            <div key={`${worker.id}-unassigned`} className="grid gap-3 bg-amber-50/30 px-4 py-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_150px_160px] md:items-center">
+                                            <div key={`${worker.id}-unassigned`} className="grid gap-3 bg-[var(--wv-ochre-50)]/30 px-4 py-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_150px_160px] md:items-center">
                                                 <div><p className="font-bold text-ink">{worker.name}</p><p className="text-xs text-muted-foreground">No active machine assignment · no weaver rate</p></div>
                                                 <div className="flex items-start gap-2 text-xs text-body"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />Assign a machine and production job before recording output so pay and job reporting are allocated correctly.</div>
                                                 <span className="text-xs font-semibold text-muted-foreground">{toWorkerStatusLabel(row.status)}</span>
@@ -1023,7 +1023,7 @@ export default function BaseDailyProductionSheet({
                             This sheet is already saved for {formatDateOnly(productionDate)} · {shift === 'day' ? 'Day' : 'Night'} shift. Any correction can change production totals and worker payroll.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-3 text-xs leading-relaxed text-body">
+                    <div className="rounded-xl border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)]/50 p-3 text-xs leading-relaxed text-body">
                         Check the machine, worker, and metres carefully. Editing stays unlocked only for this saved shift and locks again after you save.
                     </div>
                     <div className="space-y-2">

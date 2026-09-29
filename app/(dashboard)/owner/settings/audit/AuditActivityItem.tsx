@@ -29,11 +29,11 @@ interface AuditActivityItemProps {
 }
 
 const CATEGORY_CONFIG = {
-  hr_payroll: { icon: Wallet, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100', glow: 'shadow-indigo-100' },
-  production: { icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100', glow: 'shadow-emerald-100' },
-  inventory: { icon: Layers, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100', glow: 'shadow-amber-100' },
-  settings_security: { icon: Shield, color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-100', glow: 'shadow-rose-100' },
-  estimator: { icon: Calculator, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100', glow: 'shadow-blue-100' },
+  hr_payroll: { icon: Wallet, color: 'text-[var(--wv-neel-700)]', bg: 'bg-[var(--wv-neel-50)]', border: 'border-[var(--wv-neel-200)]', glow: 'shadow-[0_2px_8px_rgba(22,33,62,0.06)]' },
+  production: { icon: TrendingUp, color: 'text-[var(--wv-status-info-fg)]', bg: 'bg-[var(--wv-status-info-bg)]', border: 'border-[var(--wv-status-info-border)]', glow: 'shadow-[0_2px_8px_rgba(49,92,120,0.08)]' },
+  inventory: { icon: Layers, color: 'text-[var(--wv-status-warning-fg)]', bg: 'bg-[var(--wv-status-warning-bg)]', border: 'border-[var(--wv-status-warning-border)]', glow: 'shadow-[0_2px_8px_rgba(117,89,0,0.08)]' },
+  settings_security: { icon: Shield, color: 'text-[var(--wv-status-danger-fg)]', bg: 'bg-[var(--wv-status-danger-bg)]', border: 'border-[var(--wv-status-danger-border)]', glow: 'shadow-[0_2px_8px_rgba(172,22,55,0.08)]' },
+  estimator: { icon: Calculator, color: 'text-[var(--wv-status-success-fg)]', bg: 'bg-[var(--wv-status-success-bg)]', border: 'border-[var(--wv-status-success-border)]', glow: 'shadow-[0_2px_8px_rgba(47,107,67,0.08)]' },
 }
 
 export default function AuditActivityItem({ log, isLast }: AuditActivityItemProps) {
@@ -77,15 +77,15 @@ export default function AuditActivityItem({ log, isLast }: AuditActivityItemProp
         )}>
           <Icon className="h-5 w-5" />
         </div>
-        {!isLast && <div className="flex-1 w-0.5 bg-gray-100 my-2" />}
+        {!isLast && <div className="flex-1 w-0.5 bg-[var(--wv-border-subtle)] my-2" />}
       </div>
 
       {/* ── Narrative Card ── */}
       <div className="flex-1 pb-8">
         <div 
           className={cn(
-            "group bg-white rounded-2xl border transition-all duration-300 overflow-hidden",
-            isExpanded ? "border-gray-300 shadow-xl ring-1 ring-gray-900/5" : "border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200"
+            "group bg-[var(--wv-bg-surface)] rounded-2xl border transition-all duration-300 overflow-hidden",
+            isExpanded ? "border-[var(--wv-neel-700)] shadow-[var(--shadow-card)] ring-1 ring-[var(--wv-neel-700)]/10" : "border-[var(--wv-border-default)] shadow-xs hover:border-[var(--wv-border-strong)]"
           )}
         >
           {/* Header Area */}
@@ -99,22 +99,22 @@ export default function AuditActivityItem({ log, isLast }: AuditActivityItemProp
             <div className="flex items-start justify-between gap-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-bold text-gray-900 tracking-tight">
+                  <h3 className="text-sm font-bold text-[var(--wv-text-primary)] tracking-tight">
                     {summary}
                   </h3>
-                  <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-widest px-1.5 py-0 border-gray-200 text-gray-400 bg-gray-50">
+                  <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0 border-[var(--wv-border-subtle)] text-[var(--wv-text-secondary)] bg-[var(--wv-bg-subtle)]">
                     {log.action}
                   </Badge>
                 </div>
                 
-                <div className="flex items-center gap-3 text-xs text-gray-500">
-                  <div className="flex items-center gap-1.5 py-0.5 px-2 bg-gray-50 rounded-full border border-gray-100">
-                    <div className="h-4 w-4 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-[10px]">
+                <div className="flex items-center gap-3 text-xs text-[var(--wv-text-secondary)]">
+                  <div className="flex items-center gap-1.5 py-0.5 px-2 bg-[var(--wv-bg-subtle)] rounded-full border border-[var(--wv-border-subtle)]">
+                    <div className="h-4 w-4 rounded-full bg-[var(--wv-neel-100)] text-[var(--wv-neel-900)] flex items-center justify-center font-bold text-[10px]">
                       {actorInitial}
                     </div>
-                    <span className="font-semibold text-gray-700">{actorName}</span>
+                    <span className="font-semibold text-[var(--wv-text-body)]">{actorName}</span>
                   </div>
-                  <span className="h-1 w-1 rounded-full bg-gray-300" />
+                  <span className="h-1 w-1 rounded-full bg-[var(--wv-border-subtle)]" />
                   <div className="flex items-center gap-1">
                     <History className="h-3 w-3" />
                     {timeAgo}
@@ -124,12 +124,12 @@ export default function AuditActivityItem({ log, isLast }: AuditActivityItemProp
 
               <div className="flex items-center gap-2">
                  <div className="text-right hidden sm:block">
-                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Entity ID</div>
-                    <div className="text-xs font-mono font-bold text-gray-600">#{log.record_id}</div>
+                    <div className="text-[10px] font-bold text-[var(--wv-text-secondary)] uppercase tracking-wider">Entity ID</div>
+                    <div className="text-xs font-mono font-bold text-[var(--wv-text-body)]">#{log.record_id}</div>
                  </div>
                  <div className={cn(
-                   "h-8 w-8 rounded-full flex items-center justify-center bg-gray-50 text-gray-400 group-hover:bg-primary/5 group-hover:text-primary transition-colors",
-                   isExpanded && "bg-primary/10 text-primary rotate-180"
+                   "h-8 w-8 rounded-full flex items-center justify-center bg-[var(--wv-bg-subtle)] text-[var(--wv-text-secondary)] group-hover:bg-[var(--wv-neel-50)] group-hover:text-[var(--wv-neel-900)] transition-colors",
+                   isExpanded && "bg-[var(--wv-neel-100)] text-[var(--wv-neel-900)] rotate-180"
                  )}>
                     {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                  </div>
@@ -138,20 +138,20 @@ export default function AuditActivityItem({ log, isLast }: AuditActivityItemProp
 
             {/* Smart Preview (Grid of key changes) */}
             {!isExpanded && (
-               <div className="mt-4 pt-4 border-t border-gray-50 flex flex-wrap gap-4">
+               <div className="mt-4 pt-4 border-t border-[var(--wv-border-subtle)] flex flex-wrap gap-4">
                   {/* We show a very simplified preview if collapsed */}
                   <div className="flex items-center gap-2 text-[11px]">
-                     <span className="text-gray-400 font-medium tracking-wide uppercase">Entity:</span>
-                     <span className="font-bold text-gray-700 capitalize">
+                     <span className="text-[var(--wv-text-secondary)] font-medium tracking-wide uppercase">Entity:</span>
+                     <span className="font-semibold text-[var(--wv-text-primary)] capitalize">
                         {log.table_name.replace(/_/g, ' ')}
                      </span>
                   </div>
                   {statusValue && (
                     <div className="flex items-center gap-2 text-[11px]">
-                      <span className="text-gray-400 font-medium tracking-wide uppercase">Status:</span>
+                      <span className="text-[var(--wv-text-secondary)] font-medium tracking-wide uppercase">Status:</span>
                       <span className={cn(
                         "font-bold uppercase",
-                        statusValue === 'paid' ? "text-emerald-600" : "text-amber-600"
+                        statusValue === 'paid' ? "text-[var(--wv-status-success-fg)]" : "text-[var(--wv-status-warning-fg)]"
                       )}>
                         {statusValue}
                       </span>
@@ -163,20 +163,20 @@ export default function AuditActivityItem({ log, isLast }: AuditActivityItemProp
 
           {/* Expanded Content (Technical Diff) */}
           {isExpanded && (
-            <div className="bg-gray-50/50 border-t border-gray-100 p-4 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-              <div className="flex items-center gap-2 text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">
+            <div className="bg-[var(--wv-bg-subtle)]/50 border-t border-[var(--wv-border-subtle)] p-4 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="flex items-center gap-2 text-[11px] font-bold text-[var(--wv-text-secondary)] uppercase tracking-widest mb-2">
                  <Info className="h-3.5 w-3.5" /> Technical Data Log
               </div>
               <AuditDiff oldData={log.old_data} newData={log.new_data} />
               
-              <div className="grid grid-cols-2 gap-4 text-[11px] bg-white p-3 rounded-xl border border-gray-200/50 shadow-inner">
+              <div className="grid grid-cols-2 gap-4 text-[11px] bg-[var(--wv-bg-surface)] p-3 rounded-xl border border-[var(--wv-border-subtle)] shadow-xs">
                 <div>
-                   <span className="text-gray-400 block mb-1">Database Table</span>
-                   <code className="text-primary font-bold">{log.table_name}</code>
+                   <span className="text-[var(--wv-text-secondary)] block mb-1">Database Table</span>
+                   <code className="text-[var(--wv-action-primary)] font-bold">{log.table_name}</code>
                 </div>
                 <div>
-                   <span className="text-gray-400 block mb-1">Precise Timestamp</span>
-                   <span className="text-gray-700 font-semibold">{formatToSurat(new Date(log.changed_at), 'PPP pp')}</span>
+                   <span className="text-[var(--wv-text-secondary)] block mb-1">Precise Timestamp</span>
+                   <span className="text-[var(--wv-text-primary)] font-semibold">{formatToSurat(new Date(log.changed_at), 'PPP pp')}</span>
                 </div>
               </div>
             </div>

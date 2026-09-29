@@ -104,7 +104,7 @@ export function OrganizationDataExportButton({
 
     return (
         <div className="space-y-4">
-            <p className="text-xs text-slate-500">{t('base_plan.export.timezone')}</p>
+            <p className="text-xs text-subtle">{t('base_plan.export.timezone')}</p>
             <div className="flex min-w-0 flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                 <Button
                     data-testid={testId}
@@ -118,52 +118,52 @@ export function OrganizationDataExportButton({
                     </span>
                 </Button>
                 {status === 'download-started' && (
-                    <span role="status" className="flex min-w-0 max-w-full flex-wrap items-center gap-1 break-words text-xs font-semibold text-emerald-700">
+                    <span role="status" className="flex min-w-0 max-w-full flex-wrap items-center gap-1 break-words text-xs font-semibold text-[var(--wv-moss-700)]">
                         <CheckCircle2 className="h-3.5 w-3.5 shrink-0" /> <span className="min-w-0 break-words">{tx('Export generated; download requested (complete organization export)')}</span>
                     </span>
                 )}
                 {status === 'download-failed' && (
-                    <span role="alert" className="flex min-w-0 max-w-full flex-wrap items-center gap-1 break-words text-xs font-semibold text-red-700">
+                    <span role="alert" className="flex min-w-0 max-w-full flex-wrap items-center gap-1 break-words text-xs font-semibold text-risk">
                         <AlertTriangle className="h-3.5 w-3.5 shrink-0" /> <span className="min-w-0 break-words">{tx('Export generated; browser download failed')}</span>
                     </span>
                 )}
                 {status === 'failed' && (
-                    <span role="alert" className="flex min-w-0 max-w-full flex-wrap items-center gap-1 break-words text-xs font-semibold text-red-700">
+                    <span role="alert" className="flex min-w-0 max-w-full flex-wrap items-center gap-1 break-words text-xs font-semibold text-risk">
                         <AlertTriangle className="h-3.5 w-3.5 shrink-0" /> <span className="min-w-0 break-words">{tx('No export was generated')}</span>
                     </span>
                 )}
-                {downloadError && <p role="alert" className="min-w-0 max-w-full break-words text-xs font-semibold text-amber-800">{downloadError}</p>}
+                {downloadError && <p role="alert" className="min-w-0 max-w-full break-words text-xs font-semibold text-[var(--wv-ochre-800)]">{downloadError}</p>}
             </div>
 
             {filename && (
-                <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-950">
+                <div className="rounded-lg border border-[var(--wv-moss-200)] bg-[var(--wv-moss-50)] px-3 py-2 text-xs text-[var(--wv-moss-700)]">
                     <span className="font-bold">{tx('File:')}</span> <span className="break-all font-mono">{filename}</span>
-                    <p className="mt-1 text-emerald-800">{tx('Check the browser Downloads folder. The device save location cannot be verified automatically.')}</p>
+                    <p className="mt-1 text-[var(--wv-moss-700)]">{tx('Check the browser Downloads folder. The device save location cannot be verified automatically.')}</p>
                 </div>
             )}
 
             {showHistory && (
-                <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <div className="rounded-xl border border-hairline bg-surface-soft p-4">
                     <div className="flex items-start justify-between gap-3">
                         <div>
-                            <h2 className="text-sm font-black text-slate-950">{tx('Recent organization exports')}</h2>
-                            <p className="mt-1 text-xs text-slate-500">{tx('Owner-only exports generated for this organization. The browser save location cannot be verified automatically.')}</p>
+                            <h2 className="text-sm font-black text-ink">{tx('Recent organization exports')}</h2>
+                            <p className="mt-1 text-xs text-subtle">{tx('Owner-only exports generated for this organization. The browser save location cannot be verified automatically.')}</p>
                         </div>
                         <Button type="button" variant="ghost" size="sm" onClick={loadHistory} disabled={pending} className="h-8 text-xs">
                             <RefreshCw className="h-3.5 w-3.5" /> {tx('Refresh')}
                         </Button>
                     </div>
                     {historyError ? (
-                        <p className="mt-3 text-xs font-semibold text-red-700">{tx('History could not be loaded')}: {historyError}</p>
+                        <p className="mt-3 text-xs font-semibold text-risk">{tx('History could not be loaded')}: {historyError}</p>
                     ) : history.length === 0 ? (
-                        <p className="mt-3 text-xs text-slate-500">{tx('No completed exports recorded yet.')}</p>
+                        <p className="mt-3 text-xs text-subtle">{tx('No completed exports recorded yet.')}</p>
                     ) : (
-                        <div className="mt-3 divide-y divide-slate-200">
+                        <div className="mt-3 divide-y divide-hairline">
                             {history.map(item => (
                                 <div key={`${item.changed_at}-${item.record_id}`} className="py-3 first:pt-0 last:pb-0">
-                                    <p className="text-xs font-semibold text-slate-800">{formatExportDate(item.changed_at)}</p>
-                                    <p className="mt-1 break-words font-mono text-[11px] text-slate-600">{item.description}</p>
-                                    <p className="mt-1 text-[11px] text-slate-500">{tx(`Generated by ${item.actor_name}${item.status === 'failed' ? ' · failed' : ''}`)}</p>
+                                    <p className="text-xs font-semibold text-ink">{formatExportDate(item.changed_at)}</p>
+                                    <p className="mt-1 break-words font-mono text-[11px] text-body">{item.description}</p>
+                                    <p className="mt-1 text-[11px] text-subtle">{tx(`Generated by ${item.actor_name}${item.status === 'failed' ? ' · failed' : ''}`)}</p>
                                 </div>
                             ))}
                         </div>

@@ -505,7 +505,7 @@ export default function BaseProductionClient({
                         </div>
                         <div className="p-4 sm:p-5">
                             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                                <Factory className="h-4 w-4 text-emerald-600" />
+                                <Factory className="h-4 w-4 text-[var(--wv-moss-700)]" />
                                 <span>Machines Running</span>
                             </div>
                             <p className="text-xl sm:text-2xl font-black tracking-tight text-ink">

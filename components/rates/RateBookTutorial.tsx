@@ -530,9 +530,9 @@ export function RateBookTutorial({
     return (
         <>
             {syncFailed && (
-                <div data-i18n-skip="true" lang={language} role="status" className="flex flex-wrap items-center gap-2 rounded-xl border border-amber-200/80 bg-amber-50/60 p-2.5 text-xs text-[var(--color-muted)]">
-                    <span className="text-amber-900">{copy.syncFailed}</span>
-                    <button type="button" className="font-semibold text-amber-800 underline hover:text-amber-900" onClick={() => void syncDismissal()}>{copy.retry}</button>
+                <div data-i18n-skip="true" lang={language} role="status" className="flex flex-wrap items-center gap-2 rounded-xl border border-[var(--wv-ochre-200)]/80 bg-[var(--wv-ochre-50)]/60 p-2.5 text-xs text-[var(--color-muted)]">
+                    <span className="text-[var(--wv-ochre-800)]">{copy.syncFailed}</span>
+                    <button type="button" className="font-semibold text-[var(--wv-ochre-700)] underline hover:text-[var(--wv-ochre-800)]" onClick={() => void syncDismissal()}>{copy.retry}</button>
                 </div>
             )}
 
@@ -602,7 +602,7 @@ export function RateBookTutorial({
                         aria-describedby="ratebook-tour-description"
                         tabIndex={-1}
                         onClick={(e) => e.stopPropagation()}
-                        className={`guided-tour-panel fixed z-[101] w-[calc(100vw-2rem)] sm:w-[260px] max-w-[268px] h-auto max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-3rem)] overflow-y-auto rounded-2xl border border-amber-200/90 dark:border-amber-500/30 bg-[var(--color-surface)] p-3.5 sm:p-4 text-[var(--color-ink)] shadow-2xl outline-none transition-all duration-300 flex flex-col ${
+                        className={`guided-tour-panel fixed z-[101] w-[calc(100vw-2rem)] sm:w-[260px] max-w-[268px] h-auto max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-3rem)] overflow-y-auto rounded-2xl border border-[var(--wv-saffron-200)]/90 bg-[var(--color-surface)] p-3.5 sm:p-4 text-[var(--color-ink)] shadow-2xl outline-none transition-all duration-300 flex flex-col ${
                             isSheetStep && !mobileTour.mobile
                                 ? 'top-4 right-4 sm:top-5 sm:right-[calc(32rem+1.25rem)]'
                                 : panelPlacement === 'bottom-right'
@@ -635,9 +635,9 @@ export function RateBookTutorial({
                         <div className="mt-4 pt-3.5 border-t border-hairline/60 space-y-3 shrink-0">
                             <p className="hidden sm:block text-[11.5px] text-[var(--color-muted)] leading-relaxed sm:leading-[1.65]">{copy.hint}</p>
 
-                            <div className="h-1.5 w-full overflow-hidden rounded-full bg-amber-100 dark:bg-amber-950/50" role="progressbar" aria-valuenow={index + 1} aria-valuemin={1} aria-valuemax={steps.length} aria-label={copy.progress}>
+                            <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--wv-saffron-50)]" role="progressbar" aria-valuenow={index + 1} aria-valuemin={1} aria-valuemax={steps.length} aria-label={copy.progress}>
                                 <div
-                                    className="h-full rounded-full bg-gradient-to-r from-saffron to-amber-500 transition-all duration-300 ease-out"
+                                    className="h-full rounded-full bg-saffron transition-all duration-300 ease-out"
                                     style={{ width: `${Math.round(((index + 1) / steps.length) * 100)}%` }}
                                 />
                             </div>

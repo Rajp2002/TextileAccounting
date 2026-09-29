@@ -594,7 +594,7 @@ export default function ChallansClient({
                                 {selected.acknowledged_meters !== null && (
                                     <div>
                                         <span className="text-xs text-muted-foreground block">{tx('differenceMeters')}</span>
-                                        <span className="font-bold text-amber-600 dark:text-amber-400 tabular-nums">
+                                        <span className="font-bold text-[var(--wv-ochre-800)] tabular-nums">
                                             {(
                                                 Number(selected.sent_meters) -
                                                 Number(selected.acknowledged_meters)
@@ -621,7 +621,7 @@ export default function ChallansClient({
                                 </div>
                                 <div>
                                     <span className="text-xs text-muted-foreground block">{tx('paid')}</span>
-                                    <span className="font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">Rs {money(selected.paid_amount)}</span>
+                                    <span className="font-bold text-[var(--wv-moss-700)] tabular-nums">Rs {money(selected.paid_amount)}</span>
                                 </div>
                                 <div>
                                     <span className="text-xs text-muted-foreground block">{tx('adjustments')}</span>
@@ -636,8 +636,8 @@ export default function ChallansClient({
                                     <span
                                         className={`font-black tabular-nums ${
                                             Number(selected.balance) > 0
-                                                ? 'text-rose-600 dark:text-rose-400'
-                                                : 'text-emerald-600 dark:text-emerald-400'
+                                                ? 'text-[var(--wv-madder-600)]'
+                                                : 'text-[var(--wv-moss-700)]'
                                         }`}
                                     >
                                         Rs {money(Math.abs(selected.balance))}
@@ -744,7 +744,7 @@ export default function ChallansClient({
                                                 disabled={busy || !!pending}
                                                 onClick={() => start('resolve')}
                                             >
-                                                <AlertTriangle className="h-4 w-4 text-amber-600" />
+                                                <AlertTriangle className="h-4 w-4 text-[var(--wv-ochre-800)]" />
                                                 {tx('resolve')}
                                             </Button>
                                         )}
@@ -782,7 +782,7 @@ export default function ChallansClient({
                                         ) && (
                                             <Button
                                                 variant="outline"
-                                                className="h-10 px-4 rounded-xl border-hairline font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 shadow-xs gap-1.5"
+                                                className="h-10 px-4 rounded-xl border-hairline font-bold text-[var(--wv-madder-600)] hover:bg-[var(--wv-madder-50)] shadow-xs gap-1.5"
                                                 disabled={busy || !!pending}
                                                 onClick={() =>
                                                     start('reverse_dispatch')
@@ -895,7 +895,7 @@ export default function ChallansClient({
                                                 <Button
                                                     size="sm"
                                                     variant="outline"
-                                                    className="h-8 px-2.5 rounded-lg border-hairline text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                                                    className="h-8 px-2.5 rounded-lg border-hairline text-xs font-semibold text-[var(--wv-madder-600)] hover:bg-[var(--wv-madder-50)]"
                                                     disabled={busy || !!pending}
                                                     onClick={() => {
                                                         start('reverse_entry')
@@ -1109,7 +1109,7 @@ export default function ChallansClient({
                             </Button>
                         </fieldset>
                         {error && (
-                            <p role="alert" className="text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 p-3 rounded-xl border border-rose-200 dark:border-rose-900/60">
+                            <p role="alert" className="text-xs font-semibold text-[var(--wv-madder-600)] bg-[var(--wv-madder-50)] p-3 rounded-xl border border-[var(--wv-madder-200)]">
                                 {error}
                             </p>
                         )}
