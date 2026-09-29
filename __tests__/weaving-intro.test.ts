@@ -6,6 +6,7 @@ import { buildIntroPrePaintScript, INTRO_ATTRIBUTE, INTRO_LEAVING_ATTRIBUTE } fr
 import { containedImageRect, inkRect, parseObjectPosition } from '../lib/intro/target-geometry'
 import { BINDING, buildWeaveMask, FIGURE, LOGO_INK_BOX, LOGO_SOURCE } from '../lib/intro/weave-mask'
 import {
+    ALL_WOVEN,
     composeIntro,
     HANDOFF_END,
     HANDOFF_START,
@@ -16,6 +17,7 @@ import {
     skipFrom,
     WEAVE_END,
     WEAVE_PASSES,
+    WEAVE_START,
     type IntroGeometry,
     type IntroSurface,
     type WeaveMaskInfo,
@@ -72,6 +74,29 @@ describe('woven intro timeline', () => {
         expect(centre.y).toBeCloseTo(900 * 0.47, 0)
         expect(s.z * geo.ink.w).toBeGreaterThan(700)
         expect(s.tex).toBe(1)
+    })
+
+    it('weaves the cloth all the way down past the screen before the hold, with no bare warp left in view', () => {
+        const SHORT: IntroGeometry = { ...DESKTOP, viewport: { w: 1440, h: 520 } }
+        for (const [surface, g] of [['landing', DESKTOP], ['landing', PHONE], ['landing', SHORT], ['app-login', LOGIN]] as const) {
+            const { geo, comp } = setup(surface, g)
+            const cellH = geo.ink.h / MASK.rows
+            const holdScreenY = (row: number) => comp.holdA.y + comp.zHold * (geo.ink.y + row * cellH)
+            // the fell only ever moves down, and is past the bottom edge (with the reed) before the cloth completes
+            let previous = -Infinity
+            let lastRow = -Infinity
+            for (let t = WEAVE_START; t < WEAVE_END; t += 1 / 120) {
+                const { fell } = introStateAt(t, comp, geo, MASK, null)
+                expect(fell).toBeGreaterThanOrEqual(previous)
+                previous = fell
+                if (fell < ALL_WOVEN) lastRow = fell
+            }
+            expect(holdScreenY(lastRow)).toBeGreaterThan(geo.viewport.h)
+            // from the hold through the whole pull-back, every row is woven cloth
+            for (let t = WEAVE_END; t <= introDuration(surface); t += 0.05) {
+                expect(introStateAt(t, comp, geo, MASK, null).fell).toBe(ALL_WOVEN)
+            }
+        }
     })
 
     it('keeps the whole name on screen on a phone when it becomes legible', () => {
