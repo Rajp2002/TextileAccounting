@@ -19,6 +19,7 @@ import {
     introStateAt,
     skipFrom,
     WEAVE_PASSES,
+    workLightY,
     type IntroComposition,
     type IntroFrame,
     type IntroGeometry,
@@ -305,7 +306,7 @@ export function startWeavingIntro({ surface, overlay, skipButton, handle }: Star
         gl.uniform1f(U.uInDir, s.inDir)
         gl.uniform1f(U.uCarrierA, s.carrierA)
         gl.uniform1f(U.uTrail, s.trail)
-        gl.uniform1f(U.uFellY, s.A.y + s.z * (geo.ink.y + s.fell * geo.ink.h / mask.rows))
+        gl.uniform1f(U.uFellY, workLightY(s, geo, mask))
         gl.uniform1f(U.uBeat, s.beat)
         gl.uniform1f(U.uReed, s.reed)
         gl.uniform1f(U.uReedA, 0.9 * s.tex)

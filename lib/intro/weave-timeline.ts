@@ -59,6 +59,7 @@ export type IntroSkip = {
     tex0: number
     beige0: number
     fell0: number
+    lightRow0: number
 }
 
 export type IntroFrame = {
@@ -67,6 +68,8 @@ export type IntroFrame = {
     A: Point
     /** Pass progress: index of the row currently being inserted (rows < fell are woven). */
     fell: number
+    /** Where the loom physically is, for the work-light: always finite, even once `fell` is ALL_WOVEN. */
+    lightRow: number
     carrierX: number
     inDir: number
     carrierA: number
@@ -218,12 +221,12 @@ function weaveAt(tw: number) {
 
 /**
  * The run-out: after the logo the fell keeps going, starting at the loom's pass
- * rate and easing out once it is past the bottom of the screen. From then on the
- * whole cloth counts as woven, so the pull-back never reveals bare warp.
+ * rate and easing out once it is past the bottom of the screen, where it rests.
+ * (Once it is done the whole cloth counts as woven, so the pull-back never
+ * reveals bare warp; the work-light stays with this row.)
  */
 function runOutRow(since: number, fromRow: number, toRow: number): number {
     const u = clamp(since / RUNOUT)
-    if (u >= 1) return ALL_WOVEN
     const to = Math.max(toRow, fromRow + 1)
     // Start at the loom's own speed; capped so the curve never overshoots (stays monotonic).
     const m0 = Math.min(RUNOUT / DUR_MID, 3 * (to - fromRow))
@@ -249,10 +252,12 @@ export function introStateAt(
     // ----- the loom -----
     const w = weaveAt(t - WEAVE_START)
     const woven = w.k >= PASS_COUNT
-    let fell = woven ? runOutRow(w.since, lastRow, comp.coverRow) : w.k - LEAD_IN
+    let lightRow = woven ? runOutRow(w.since, lastRow, comp.coverRow) : w.k - LEAD_IN
+    let fell = woven && w.since >= RUNOUT ? ALL_WOVEN : lightRow
     if (skipping) {
         const u = smooth(0, 0.18, t - skip.at)
-        fell = skip.fell0 >= ALL_WOVEN || u >= 1 ? ALL_WOVEN : Math.round(lerp(skip.fell0, comp.coverRow, u))
+        lightRow = Math.round(lerp(skip.lightRow0, comp.coverRow, u))
+        fell = skip.fell0 >= ALL_WOVEN || u >= 1 ? ALL_WOVEN : lightRow
     }
     const prevDur = w.k > 0 ? passDurations[Math.min(w.k, PASS_COUNT) - 1] : 0
     const slowPrev = clamp((prevDur - 0.02) / 0.06)
@@ -343,7 +348,7 @@ export function introStateAt(
     const done = skipping ? t - skip.at >= 0.58 : t >= end
 
     return {
-        z, A, fell,
+        z, A, fell, lightRow,
         carrierX: (carrierSX - A.x) / z,
         inDir, carrierA, trail, beat, reed, shed,
         tex, beige, exposure,
@@ -359,5 +364,10 @@ export function introStateAt(
 
 /** Snapshot the current frame so a skip can fast-forward from exactly here. */
 export function skipFrom(t: number, frame: IntroFrame): IntroSkip {
-    return { at: t, z0: frame.z, A0: frame.A, page0: frame.pageS, tex0: frame.tex, beige0: frame.beige, fell0: frame.fell }
+    return { at: t, z0: frame.z, A0: frame.A, page0: frame.pageS, tex0: frame.tex, beige0: frame.beige, fell0: frame.fell, lightRow0: frame.lightRow }
+}
+
+/** Screen y (CSS px) of the loom's work-light: the physical fell under the current camera. */
+export function workLightY(frame: IntroFrame, geo: IntroGeometry, mask: WeaveMaskInfo): number {
+    return frame.A.y + frame.z * (geo.ink.y + frame.lightRow * geo.ink.h / mask.rows)
 }
