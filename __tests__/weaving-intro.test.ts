@@ -408,4 +408,13 @@ describe('woven intro integration contracts', () => {
         expect(legacy).toContain('"Skip intro": "इंट्रो छोड़ें"')
         expect(legacy).toContain('"Skip intro": "ઇન્ટ્રો છોડો"')
     })
+
+    it('starts the runtime before hydration and covers the iOS bottom safe area', () => {
+        const component = read('components/intro/weaving-intro.tsx')
+        expect(component).toContain("boot('app-login')")
+        expect(component).toContain("import('./weaving-intro-runtime')")
+        const css = read('app/globals.css')
+        expect(css).toContain('bottom: calc(-1 * env(safe-area-inset-bottom, 0px))')
+        expect(css).toMatch(/html\[data-weavly-intro\],\s*html\[data-weavly-intro\] body\s*\{\s*background-color:\s*#000/)
+    })
 })

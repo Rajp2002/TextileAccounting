@@ -379,16 +379,19 @@ export function startWeavingIntro({ surface, overlay, skipButton, handle }: Star
         // The start watchdog (or an early tap) may have removed the stage while we waited:
         // then stop quietly, never attaching listeners to a page that has moved on.
         const superseded = () => finished || handle.state !== 'pending'
-        const [logo] = await Promise.all([loadImage(LOGO_SOURCE.src), target.decode().catch(() => undefined)])
+        // Decode the logo, the page's own logo and the handoff clone together, not one after another.
+        const clone = createClone(target)
+        const [logo] = await Promise.all([
+            loadImage(LOGO_SOURCE.src),
+            target.decode().catch(() => undefined),
+            clone.img.decode().catch(() => undefined),
+        ])
         if (superseded()) { finished = true; return }
         mask = readMask(logo)
         geo = measure(surface, overlay, target)
         if (!geo) throw new Error('intro geometry unavailable')
         comp = composeIntro(surface, geo, mask)
 
-        const clone = createClone(target)
-        await clone.img.decode().catch(() => undefined)
-        if (superseded()) { finished = true; return }
         cloneBox = clone.box
 
         canvas = document.createElement('canvas')
