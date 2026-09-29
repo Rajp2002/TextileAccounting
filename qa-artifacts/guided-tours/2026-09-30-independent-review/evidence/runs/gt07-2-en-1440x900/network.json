@@ -1,0 +1,938 @@
+[
+  {
+    "type": "request",
+    "url": "http://localhost:5199/?s=dispatch&pending=1&lang=en&fresh=1",
+    "method": "GET",
+    "at": 1790715668781,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/?s=dispatch&pending=1&lang=en&fresh=1",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@vite/client",
+    "method": "GET",
+    "at": 1790715668802,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/main.tsx?t=1790715611787",
+    "method": "GET",
+    "at": 1790715668803,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/main.tsx?t=1790715611787",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/app/globals.css?t=1790715611787",
+    "method": "GET",
+    "at": 1790715668818,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/app/mobile.css",
+    "method": "GET",
+    "at": 1790715668819,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/react.js?v=494edbe2",
+    "method": "GET",
+    "at": 1790715668821,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/react-dom_client.js?v=2899bfeb",
+    "method": "GET",
+    "at": 1790715668821,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/components/tours/GuidedTour.tsx",
+    "method": "GET",
+    "at": 1790715668824,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@vite/client",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/i18n/tour-common.ts",
+    "method": "GET",
+    "at": 1790715668825,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/i18n/context.tsx",
+    "method": "GET",
+    "at": 1790715668825,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=227f6f2e",
+    "method": "GET",
+    "at": 1790715668826,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/vite/dist/client/env.mjs",
+    "method": "GET",
+    "at": 1790715668826,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/app/mobile.css",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/react.js?v=494edbe2",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/chunk-B-1-B7_t.js?v=24ee0ca6",
+    "method": "GET",
+    "at": 1790715668838,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/app/globals.css?t=1790715611787",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/components/tours/GuidedTour.tsx",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/i18n/tour-common.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/i18n/context.tsx",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=227f6f2e",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/vite/dist/client/env.mjs",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/react-dom.js?v=b69b5a7a",
+    "method": "GET",
+    "at": 1790715668860,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/hooks/use-guided-tour.ts",
+    "method": "GET",
+    "at": 1790715668861,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/tours/active-tour.ts",
+    "method": "GET",
+    "at": 1790715668861,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/tours/tour-preferences.ts",
+    "method": "GET",
+    "at": 1790715668862,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/tours/tour-scroll.ts",
+    "method": "GET",
+    "at": 1790715668863,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/tours/target-readiness.ts",
+    "method": "GET",
+    "at": 1790715668863,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/tutorial-target.ts",
+    "method": "GET",
+    "at": 1790715668864,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/components/tours/TourPanel.tsx",
+    "method": "GET",
+    "at": 1790715668864,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/components/tours/TourSpotlight.tsx",
+    "method": "GET",
+    "at": 1790715668864,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/i18n/locales/en.ts",
+    "method": "GET",
+    "at": 1790715668868,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/i18n/base-plan-phrases.ts",
+    "method": "GET",
+    "at": 1790715668868,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/i18n/runtime.ts",
+    "method": "GET",
+    "at": 1790715668869,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/chunk-B-1-B7_t.js?v=24ee0ca6",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/react-dom_client.js?v=2899bfeb",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/react-dom.js?v=b69b5a7a",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/hooks/use-guided-tour.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/tours/active-tour.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/tours/tour-preferences.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/tours/tour-scroll.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/tours/target-readiness.ts",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/hooks/use-mobile-tour.ts",
+    "method": "GET",
+    "at": 1790715668880,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/tutorial-target.ts",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/tours/placement.ts",
+    "method": "GET",
+    "at": 1790715668882,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/tutorial-viewport-lock.ts",
+    "method": "GET",
+    "at": 1790715668882,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/components/tours/TourSpotlight.tsx",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/tours/tour-registry.ts",
+    "method": "GET",
+    "at": 1790715668883,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/components/tours/TourPanel.tsx",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/app/actions/tour-preferences.ts",
+    "method": "GET",
+    "at": 1790715668883,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/lucide-react.js?v=4c8ed4c5",
+    "method": "GET",
+    "at": 1790715668884,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/components/ui/button.tsx",
+    "method": "GET",
+    "at": 1790715668885,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/tours/tour-text.ts",
+    "method": "GET",
+    "at": 1790715668886,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/i18n/locales/en.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/app/actions/tour-preferences.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/hooks/use-mobile-tour.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/i18n/runtime.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/tours/placement.ts",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/mobile-tour-positioning.ts",
+    "method": "GET",
+    "at": 1790715668897,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/tutorial-viewport-lock.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/i18n/base-plan-phrases.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/tours/tour-registry.ts",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/i18n/base-continuity-phrases.ts",
+    "method": "GET",
+    "at": 1790715668903,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/components/ui/button.tsx",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/tours/tour-text.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/mobile-tour-positioning.ts",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/class-variance-authority.js?v=85c5b104",
+    "method": "GET",
+    "at": 1790715668906,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/@radix-ui_react-slot.js?v=7996bb80",
+    "method": "GET",
+    "at": 1790715668907,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/utils.ts",
+    "method": "GET",
+    "at": 1790715668907,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/i18n/base-continuity-phrases.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/class-variance-authority.js?v=85c5b104",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/@radix-ui_react-slot.js?v=7996bb80",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/clsx.js?v=cb0bcdb9",
+    "method": "GET",
+    "at": 1790715668913,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/utils.ts",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/dist-CcTBG-V1.js?v=24ee0ca6",
+    "method": "GET",
+    "at": 1790715668914,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/tailwind-merge.js?v=6d66c618",
+    "method": "GET",
+    "at": 1790715668915,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/clsx.js?v=cb0bcdb9",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/dist-CcTBG-V1.js?v=24ee0ca6",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/jsx-runtime-D51v3ApR.js?v=24ee0ca6",
+    "method": "GET",
+    "at": 1790715668919,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/tailwind-merge.js?v=6d66c618",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/jsx-runtime-D51v3ApR.js?v=24ee0ca6",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/lucide-react.js?v=4c8ed4c5",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/components/dispatches/DispatchGuidedTour.tsx",
+    "method": "GET",
+    "at": 1790715669126,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/components/dispatches/DispatchGuidedTour.tsx",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/stubs/next-dynamic.tsx",
+    "method": "GET",
+    "at": 1790715669146,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/components/tours/ReplicaGuidedTour.tsx",
+    "method": "GET",
+    "at": 1790715669146,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/dispatch-tour.ts",
+    "method": "GET",
+    "at": 1790715669147,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/stubs/next-dynamic.tsx",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/components/tours/ReplicaGuidedTour.tsx",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/dispatch-tour.ts",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/components/tours/TourInvitation.tsx",
+    "method": "GET",
+    "at": 1790715669152,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/components/tours/TourInvitation.tsx",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/i18n/tour-invitations.ts",
+    "method": "GET",
+    "at": 1790715669157,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/hooks/use-tour-invitation.ts",
+    "method": "GET",
+    "at": 1790715669158,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/components/ui/rail.ts",
+    "method": "GET",
+    "at": 1790715669158,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/i18n/tour-invitations.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/hooks/use-tour-invitation.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/components/ui/rail.ts",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/app/(dashboard)/owner/dispatches/ChallansClient.tsx",
+    "method": "GET",
+    "at": 1790715669164,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/app/(dashboard)/owner/dispatches/ChallansClient.tsx",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/stubs/next-link.tsx",
+    "method": "GET",
+    "at": 1790715669177,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/components/ui/badge.tsx",
+    "method": "GET",
+    "at": 1790715669178,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/components/ui/input.tsx",
+    "method": "GET",
+    "at": 1790715669179,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/components/ui/dialog.tsx",
+    "method": "GET",
+    "at": 1790715669179,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/components/ui/page-header.tsx",
+    "method": "GET",
+    "at": 1790715669180,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/components/ui/tabs.tsx",
+    "method": "GET",
+    "at": 1790715669181,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/delivery-challans.ts",
+    "method": "GET",
+    "at": 1790715669181,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/app/(dashboard)/owner/dispatches/challan-actions.ts",
+    "method": "GET",
+    "at": 1790715669182,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/challan-payment-terms.ts",
+    "method": "GET",
+    "at": 1790715669182,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/app/(dashboard)/owner/dispatches/ChallanDraftEditor.tsx",
+    "method": "GET",
+    "at": 1790715669183,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/stubs/next-link.tsx",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/components/ui/badge.tsx",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/components/ui/input.tsx",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/components/ui/dialog.tsx",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/components/ui/page-header.tsx",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/@radix-ui_react-dialog.js?v=e9feeafe",
+    "method": "GET",
+    "at": 1790715669188,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/components/ui/tabs.tsx",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/delivery-challans.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/app/(dashboard)/owner/dispatches/challan-actions.ts",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/@radix-ui_react-tabs.js?v=10850693",
+    "method": "GET",
+    "at": 1790715669192,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/challan-payment-terms.ts",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/zod.js?v=ace86a06",
+    "method": "GET",
+    "at": 1790715669194,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/decimal__js.js?v=b3399231",
+    "method": "GET",
+    "at": 1790715669195,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/app/(dashboard)/owner/dispatches/ChallanDraftEditor.tsx",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/form-navigation.ts",
+    "method": "GET",
+    "at": 1790715669196,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/@radix-ui_react-dialog.js?v=e9feeafe",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/challan-draft-entry.ts",
+    "method": "GET",
+    "at": 1790715669197,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/dist-C0v08Roy.js?v=24ee0ca6",
+    "method": "GET",
+    "at": 1790715669198,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/@radix-ui_react-tabs.js?v=10850693",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/dist-D78_aM_-.js?v=24ee0ca6",
+    "method": "GET",
+    "at": 1790715669199,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/dist-BkBhazdl.js?v=24ee0ca6",
+    "method": "GET",
+    "at": 1790715669199,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/es2015-CA1l6cXL.js?v=24ee0ca6",
+    "method": "GET",
+    "at": 1790715669200,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/dist-BSZx42Q4.js?v=24ee0ca6",
+    "method": "GET",
+    "at": 1790715669201,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/dist-DxpYCQfv.js?v=24ee0ca6",
+    "method": "GET",
+    "at": 1790715669201,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/dist-C6QlXEnj.js?v=24ee0ca6",
+    "method": "GET",
+    "at": 1790715669201,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/form-navigation.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/challan-draft-entry.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/dist-C0v08Roy.js?v=24ee0ca6",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/decimal__js.js?v=b3399231",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/dist-D78_aM_-.js?v=24ee0ca6",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/dist-BkBhazdl.js?v=24ee0ca6",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/dist-BSZx42Q4.js?v=24ee0ca6",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/dist-DxpYCQfv.js?v=24ee0ca6",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/es2015-CA1l6cXL.js?v=24ee0ca6",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/dist-C6QlXEnj.js?v=24ee0ca6",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/tslib.es6-B1NP4NDs.js?v=24ee0ca6",
+    "method": "GET",
+    "at": 1790715669215,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/tslib.es6-B1NP4NDs.js?v=24ee0ca6",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/node_modules/.vite/deps/zod.js?v=ace86a06",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/i18n/dispatch-tutorial.ts",
+    "method": "GET",
+    "at": 1790715670758,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/lib/i18n/dispatch-tutorial.ts",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/components/dispatches/DispatchTourPreview.tsx",
+    "method": "GET",
+    "at": 1790715670837,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/components/dispatches/DispatchTourPreview.tsx",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/app/globals.css?t=1790715671707",
+    "method": "GET",
+    "at": 1790715671709,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile%20Saas/app/globals.css?t=1790715671707",
+    "status": 200
+  }
+]

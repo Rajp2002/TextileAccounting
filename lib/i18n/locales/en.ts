@@ -1,4 +1,33 @@
 export const en = {
+  dailySheet: {
+    "printSheet": "Print sheet",
+    "notRunning": "Not running",
+    "workerReview": "Worker review",
+    "saveShift": "Save shift",
+    "editSavedLog": "Edit saved log",
+    "saveCorrection": "Save correction",
+    "machineSheet": "Machine sheet",
+    "discardDraft": "Discard draft",
+    "metres": "Metres",
+    "draftOnDevice": "Draft on device",
+    "showPending": "Show pending",
+    "shiftDetails": "Shift details"
+},
+  tourControls: {
+    rateBook: {"addRate": "Add Yarn Rate", "needsReview": "Needs Review", "advancedEdit": "Advanced edit"},
+    estimator: {
+    "saveCosting": "Save Costing",
+    "saveNewVersion": "Save New Version"
+    },
+    savedCostings: {
+  "viewBreakdown": "View breakdown",
+  "use": "Use",
+  "archived": "Archived",
+  "internalEstimate": "Internal Cost Estimate",
+  "customerQuotation": "Customer Quotation",
+  "activateForProduction": "Activate for Production",
+  "export": "Export"
+} },
  navigation: {
   "production_overview": "Overview",
   "production_daily_sheet": "Daily Sheet",
@@ -165,6 +194,8 @@ export const en = {
 },
 
   qualityStock: {
+    audit: "Audit Inventory",
+    pending: "Pending",
         dispatch: "Dispatch",
         dispatch_reversal: "Dispatch reversal",
     productionEntry: "Production",
@@ -352,6 +383,14 @@ export const en = {
     app_update_failure_fallback: "If the update cannot load, keep working and try again later.",
   },
   production: {
+    activateQuality: "Activate Quality",
+    assignLooms: "Assign Looms",
+    manageWorkers: "Manage Workers",
+    machineBoard: "Machine Board",
+    switchQuality: "Switch Quality",
+    qualityActions: "Quality actions",
+    manageOperatorsForLoom: "Manage Operators for {loom}",
+    cost: "Cost",
     log_production: "Record Shift Production",
     save_all: "Save All Entries",
     saving: "Saving...",
@@ -419,6 +458,8 @@ export const en = {
     }
   },
   assignments: {
+    assign: "Assign",
+    noJob: "No production job",
     title: "Worker Assignments",
     day_shift: "Day Shift",
     night_shift: "Night Shift",
@@ -566,6 +607,27 @@ export const en = {
     }
   },
   payroll: {
+    preparingPdf: "Preparing PDF…",
+    "settlePayroll": "Settle payroll",
+    "resolve": "Resolve",
+    "markPaid": "Mark Paid",
+    "completePayroll": "Complete Payroll",
+    "addAdvance": "Add advance",
+    "addDeduction": "Add deduction",
+    "payrollRecords": "Payroll records",
+    "exportCsv": "Export CSV",
+    "exportPdf": "Export PDF",
+    "resolveMistaken": "Resolve mistaken payment record",
+    "continueSettlement": "Continue settlement",
+    "viewSettledPayroll": "View settled payroll",
+    "reviewBeforePaying": "Review before paying",
+    "confirmPayment": "Confirm Payment",
+    "viewSettledRecords": "View Settled Records",
+    "completePeriodTitle": "Complete {periodLabel} payroll?",
+    "markPaidCard": "Mark paid",
+    "completePayrollRail": "Complete payroll",
+    "needsReview": "Needs review",
+
     monthly_payroll: "Worker Hisaab",
     track_settle: "Payroll close: earnings, Upaad recovery, Inam, Kapaat, net payout, and carry-forward.",
     status: {
@@ -1034,6 +1096,14 @@ export const en = {
     }
   },
   workers: {
+    addWorker: "Add worker",
+    viewPayroll: "View payroll",
+    fixedMonthlySalary: "Fixed monthly salary",
+    salaryEffectiveFrom: "Salary change effective from",
+    lastWorkingDay: "Last working day (optional)",
+    shiftAvailability: "Shift availability",
+    joiningDate: "Joining date",
+
     manage_workers: "Manage Workers",
     meter_workers: "Piece-rate Workers",
     fixed_staff: "Salaried Workers",
@@ -1510,5 +1580,12 @@ export const en = {
       data_export_generated: "Data export generated",
       latest_saved_costing_breakdown: "Latest Saved Costing breakdown",
     },
-  }
+  },
+  // Approved Estimator phrases follow existing dictionary phrases with the same English source.
+  estimatorTourPhrases: {
+    "changeQuality": "Change quality",
+    "liveCost": "Live cost",
+    "calculateSave": "Calculate & save · uses 1 costing",
+    "startProduction": "Start Production"
+}
 }

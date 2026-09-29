@@ -1,37 +1,50 @@
-export type PayrollTourVariant = 'base' | 'full'
+import type { TourStepSpec } from './tours/tour-types'
+import type { Language } from './i18n/context'
+
+export type PayrollTourVariant = 'base'
 export type PayrollTourTrack = 'core' | 'help'
-
-export const basePayrollTourSteps = ['period', 'readiness', 'earnings', 'recovery', 'obligations', 'paymentDetails', 'confirm', 'paid', 'complete', 'finish'] as const
-export const fullPayrollTourSteps = ['cycle', 'fullEarnings', 'fullSettlement', 'fullRecovery', 'mode', 'finalSettlement', 'confirm', 'paid', 'finish'] as const
-export const basePayrollHelpSteps = ['advance', 'deduction', 'records', 'machineRecord', 'export', 'correction', 'finish'] as const
-export const fullPayrollHelpSteps = ['rules', 'adjustment', 'history', 'receipt', 'csv', 'slip', 'whatsapp', 'finish'] as const
-export type PayrollTourStep = typeof basePayrollTourSteps[number] | typeof fullPayrollTourSteps[number] | typeof basePayrollHelpSteps[number] | typeof fullPayrollHelpSteps[number]
-
-export function payrollTourSteps(variant: PayrollTourVariant, track: PayrollTourTrack = 'core'): readonly PayrollTourStep[] {
-    if (track === 'help') return variant === 'base' ? basePayrollHelpSteps : fullPayrollHelpSteps
-    return variant === 'base' ? basePayrollTourSteps : fullPayrollTourSteps
+export const basePayrollTourSteps = ['pr-period', 'pr-readiness', 'pr-earnings', 'pr-recovery', 'pr-settle', 'pr-paid', 'pr-complete', 'pr-handoff'] as const
+export const basePayrollHelpSteps = ['pra-advance', 'pra-deduction', 'pra-records', 'pra-export', 'pra-correct', 'pra-handoff'] as const
+export type PayrollTourStep = typeof basePayrollTourSteps[number] | typeof basePayrollHelpSteps[number]
+export function payrollTourSteps(track: PayrollTourTrack = 'core'): readonly PayrollTourStep[] {
+    return track === 'help' ? basePayrollHelpSteps : basePayrollTourSteps
 }
 export function payrollTourSurface(step: PayrollTourStep) {
-    if (['advance', 'deduction', 'rules', 'correction'].includes(step)) return step as 'advance' | 'deduction' | 'rules' | 'correction'
-    if (['obligations', 'paymentDetails', 'mode', 'confirm', 'paid', 'complete', 'fullSettlement', 'adjustment', 'fullRecovery', 'finalSettlement'].includes(step)) return 'settlement'
-    if (['records', 'machineRecord', 'export', 'history', 'receipt', 'csv', 'slip', 'whatsapp'].includes(step)) return 'records'
+    if (['pr-settle', 'pr-paid', 'pr-complete'].includes(step)) return 'settlement'
+    if (step === 'pra-advance') return 'advance'
+    if (step === 'pra-deduction') return 'deduction'
+    if (step === 'pra-correct') return 'correction'
     return 'page'
 }
-export function payrollTourSection(step: PayrollTourStep) {
-    if (['period', 'cycle', 'rules'].includes(step)) return 0
-    if (step === 'readiness') return 1
-    if (['earnings', 'fullEarnings', 'recovery'].includes(step)) return 2
-    if (['advance', 'deduction'].includes(step)) return 3
-    if (payrollTourSurface(step) === 'settlement') return 4
-    if (step !== 'finish') return 5
-    return 6
+const anchors: Record<PayrollTourStep, string> = {
+    'pr-period': 'period', 'pr-readiness': 'readiness', 'pr-earnings': 'earnings',
+    'pr-recovery': 'recovery', 'pr-settle': 'settle', 'pr-paid': 'paymentDetails',
+    'pr-complete': 'complete', 'pr-handoff': 'payroll.settle',
+    'pra-advance': 'advance', 'pra-deduction': 'deduction', 'pra-records': 'records',
+    'pra-export': 'export', 'pra-correct': 'correction', 'pra-handoff': 'payroll.records',
 }
-export const payrollTourSelector = (step: PayrollTourStep) => `[data-payroll-tour="${step}"]`
+export const payrollTourSelector = (step: PayrollTourStep) => step.endsWith('handoff')
+    ? `[data-tour-anchor="${anchors[step]}"]` : `[data-payroll-tour="${anchors[step]}"]`
+const specs = (steps: readonly PayrollTourStep[]): readonly TourStepSpec<PayrollTourStep>[] => steps.map(id => ({
+    id, anchor: payrollTourSelector(id), kind: id.endsWith('handoff') ? 'handoff' : 'sample',
+    ...(payrollTourSurface(id) !== 'page' ? { context: '[data-payroll-tour-preview="true"]' } : {}),
+    ...(['pr-period', 'pr-settle'].includes(id) ? { detail: true } : {}),
+}))
+export const payrollTourSpecs = specs(basePayrollTourSteps)
+export const payrollHelpSpecs = specs(basePayrollHelpSteps)
+
+/** Same date-only parsing, calendar and options as the Payroll page, localized for the replica. */
+export function formatPayrollTourDate(value: string, language: Language) {
+    const [year, month, day] = value.slice(0, 10).split('-').map(Number)
+    return new Intl.DateTimeFormat(`${language}-IN`, {
+        day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata',
+    }).format(new Date(Date.UTC(year, month - 1, day)))
+}
 
 /** Display-only examples, deliberately separate from business action payloads. */
 export function makePayrollTourExample() {
     const piece = { id: 'tour-payroll-piece', metres: 1000, rate: 2, gross: 2000, debt: 1000, recovery: 1000, net: 1000, carry: 0 }
     const salary = { id: 'tour-payroll-salary', monthly: 18000, days: 30, monthDays: 30, gross: 18000, recovery: 0, net: 18000 }
     const zero = { id: 'tour-payroll-zero', gross: 0, net: 0 }
-    return { piece, salary, zero, period: '01–30 Sep 2026', gross: piece.gross + salary.gross, recovery: piece.recovery, net: piece.net + salary.net, paid: salary.net, remaining: piece.net }
+    return { piece, salary, zero, period: '01–30 Sep 2026', periodStart: '2026-09-01', periodEnd: '2026-09-30', gross: piece.gross + salary.gross, recovery: piece.recovery, net: piece.net + salary.net, paid: salary.net, remaining: piece.net }
 }

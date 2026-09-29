@@ -15,7 +15,7 @@ export default async function QuotesPage(props: { searchParams: Promise<{ status
         getCachedOwnerOrganization(user.id, profile.org_id)
     ))
 
-    const [searchParams, { data: quotes }, { data: templates }, auth, planAccess, organizationRes] = await Promise.all([
+    const [searchParams, { data: quotes, error: quotesError }, { data: templates, error: templatesError }, auth, planAccess, organizationRes] = await Promise.all([
         searchParamsPromise,
         getEstimatorQuotes(),
         getEstimatorTemplates({ includeArchived: true, summary: true }),
@@ -35,14 +35,16 @@ export default async function QuotesPage(props: { searchParams: Promise<{ status
 
     const previousFreeGrant = await getFreeGrant(profile.org_id)
     return (<>
-        {previousFreeGrant && <SavedFreeCostings />}
+        {previousFreeGrant && <SavedFreeCostings embedded />}
         <QuotesClient 
-            initialQuotes={quotes ?? []} 
+            initialQuotes={quotes ?? []}
+            tourUnavailable={Boolean(quotesError || templatesError)}
             initialTemplates={templates ?? []}
             initialProfile={undefined}
             initialWorkers={[]}
             initialStatus={status}
             userId={user.id}
+            userMetadata={{ tour_preferences: user.user_metadata?.tour_preferences }}
             orgId={profile.org_id}
             canUseProductionPipeline={canUseProductionPipeline}
             organizationName={organizationRes.data?.name ?? ''}

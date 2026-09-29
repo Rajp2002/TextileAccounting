@@ -22,7 +22,7 @@ interface WorkerCardProps {
 }
 
 export function WorkerCard({ worker, onEdit, tourPreview = false }: WorkerCardProps) {
-  const { tx, language = 'en' } = useTranslation()
+  const { tx, t, language = 'en' } = useTranslation()
   const copy = workersTutorialCopy[language]
   const summary = getWorkerOperationalSummary(worker)
 
@@ -184,7 +184,7 @@ export function WorkerCard({ worker, onEdit, tourPreview = false }: WorkerCardPr
             aria-label={`${tx('View payroll for')} ${worker.name}`}
           >
             <FileText className="h-3.5 w-3.5 text-subtle" aria-hidden="true" />
-            <span>{tx('View payroll')}</span>
+            <span>{t('workers.viewPayroll')}</span>
           </NavigationLink>
         )}
 

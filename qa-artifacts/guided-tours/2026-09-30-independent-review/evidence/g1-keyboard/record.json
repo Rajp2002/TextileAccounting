@@ -1,0 +1,30 @@
+[
+  {
+    "scenario": "quotes",
+    "steps": [],
+    "errors": [],
+    "error": "AssertionError [ERR_ASSERTION]: start/step must focus Next\n\nnull !== 'next'\n",
+    "passed": false
+  },
+  {
+    "scenario": "quotes?tier=lite",
+    "steps": [],
+    "errors": [],
+    "error": "AssertionError [ERR_ASSERTION]: start/step must focus Next\n\nnull !== 'next'\n",
+    "passed": false
+  },
+  {
+    "scenario": "free-costings",
+    "steps": [],
+    "errors": [],
+    "error": "AssertionError [ERR_ASSERTION]: start/step must focus Next\n\nnull !== 'next'\n",
+    "passed": false
+  },
+  {
+    "scenario": "quotes-compare",
+    "steps": [],
+    "errors": [],
+    "error": "AssertionError [ERR_ASSERTION]: start/step must focus Next\n\nnull !== 'next'\n",
+    "passed": false
+  }
+]

@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
+import { en } from '../lib/i18n/locales/en'
 
 const root = process.cwd()
 
@@ -22,9 +23,11 @@ describe('Base Worker Deductions', () => {
     it('renders Add deduction pill alongside Add advance on worker card in BaseProductionClient', () => {
         const client = readProjectFile('app/(dashboard)/owner/production/BaseProductionClient.tsx')
 
-        // Both pills exist
-        expect(client).toContain('Add advance')
-        expect(client).toContain('Add deduction')
+        // Both keyed controls keep the same English labels and action wiring.
+        expect(client).toContain("t('payroll.addAdvance')")
+        expect(en.payroll.addAdvance).toBe('Add advance')
+        expect(client).toContain("t('payroll.addDeduction')")
+        expect(en.payroll.addDeduction).toBe('Add deduction')
         expect(client).toContain('openDeduction(payable.worker_id)')
         expect(client).toContain('openAdvance(payable.worker_id)')
 

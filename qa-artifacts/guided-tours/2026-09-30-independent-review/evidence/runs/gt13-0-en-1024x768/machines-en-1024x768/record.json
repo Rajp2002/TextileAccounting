@@ -1,0 +1,499 @@
+{
+  "scenario": "machines",
+  "lang": "en",
+  "size": "1024x768",
+  "steps": [
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "One record for each loom",
+      "body": "Add every loom you run once. Production, assignments and payroll then refer to it by name.",
+      "step": "mc-purpose",
+      "status": "ready",
+      "eyebrow": "Step 1 of 6",
+      "progress": null,
+      "panel": {
+        "x": 270,
+        "y": 100,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 270,
+        "y": 15,
+        "w": 732,
+        "h": 69
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "div(role=dialog)",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 768,
+      "vw": 1024,
+      "machines": {
+        "search": "",
+        "status": "all",
+        "names": [
+          "Sample Rapier",
+          "Sample loom 2"
+        ],
+        "samples": true,
+        "sampleCount": 2,
+        "bannerCount": 1,
+        "preview": false,
+        "enabledFields": 0,
+        "visibleClose": 0,
+        "anchors": 1,
+        "inert": true,
+        "url": "http://localhost:5199/owner/machines?search=Retained&status=needs_setup",
+        "calls": 2,
+        "storage": {
+          "weavly_language": "en"
+        }
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Name it the way your floor does",
+      "body": "Choose the machine type and an optional label such as \"Rapier 3\". If you leave the name blank, Weavly numbers it.",
+      "step": "mc-details",
+      "status": "ready",
+      "eyebrow": "Sample · Step 2 of 6",
+      "progress": null,
+      "panel": {
+        "x": 608,
+        "y": 213,
+        "w": 360,
+        "h": 243
+      },
+      "highlight": {
+        "x": 96,
+        "y": 288,
+        "w": 480,
+        "h": 252
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 80,
+        "y": 213,
+        "w": 512,
+        "h": 343
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 768,
+      "vw": 1024,
+      "machines": {
+        "search": "",
+        "status": "all",
+        "names": [
+          "Sample Rapier",
+          "Sample loom 2"
+        ],
+        "samples": true,
+        "sampleCount": 2,
+        "bannerCount": 1,
+        "preview": true,
+        "enabledFields": 0,
+        "visibleClose": 0,
+        "anchors": 1,
+        "inert": true,
+        "url": "http://localhost:5199/owner/machines?search=Retained&status=needs_setup",
+        "calls": 2,
+        "storage": {
+          "weavly_language": "en"
+        }
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Added is not the same as ready",
+      "body": "A machine shows Needs setup until it has a quality to weave and a worker for a shift.",
+      "step": "mc-readiness",
+      "status": "ready",
+      "eyebrow": "Sample · Step 3 of 6",
+      "progress": null,
+      "panel": {
+        "x": 263,
+        "y": 249,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 639,
+        "y": 249,
+        "w": 363,
+        "h": 222
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 768,
+      "vw": 1024,
+      "machines": {
+        "search": "",
+        "status": "all",
+        "names": [
+          "Sample Rapier",
+          "Sample loom 2"
+        ],
+        "samples": true,
+        "sampleCount": 2,
+        "bannerCount": 1,
+        "preview": false,
+        "enabledFields": 0,
+        "visibleClose": 0,
+        "anchors": 1,
+        "inert": true,
+        "url": "http://localhost:5199/owner/machines?search=Retained&status=needs_setup",
+        "calls": 2,
+        "storage": {
+          "weavly_language": "en"
+        }
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "First, give it a quality",
+      "body": "In Production, Assign Looms on a quality puts it on this loom.",
+      "step": "mc-quality",
+      "status": "ready",
+      "eyebrow": "Step 4 of 6",
+      "progress": null,
+      "panel": {
+        "x": 285,
+        "y": 328,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 285,
+        "y": 519,
+        "w": 702,
+        "h": 89
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 768,
+      "vw": 1024,
+      "machines": {
+        "search": "",
+        "status": "all",
+        "names": [
+          "Sample Rapier",
+          "Sample loom 2"
+        ],
+        "samples": true,
+        "sampleCount": 2,
+        "bannerCount": 1,
+        "preview": false,
+        "enabledFields": 0,
+        "visibleClose": 0,
+        "anchors": 1,
+        "inert": true,
+        "url": "http://localhost:5199/owner/machines?search=Retained&status=needs_setup",
+        "calls": 2,
+        "storage": {
+          "weavly_language": "en"
+        }
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Then give it a worker",
+      "body": "In Machine Assignments, choose who runs this loom in each shift.",
+      "step": "mc-worker",
+      "status": "ready",
+      "eyebrow": "Step 5 of 6",
+      "progress": null,
+      "panel": {
+        "x": 285,
+        "y": 405,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 285,
+        "y": 596,
+        "w": 702,
+        "h": 77
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 768,
+      "vw": 1024,
+      "machines": {
+        "search": "",
+        "status": "all",
+        "names": [
+          "Sample Rapier",
+          "Sample loom 2"
+        ],
+        "samples": true,
+        "sampleCount": 2,
+        "bannerCount": 1,
+        "preview": false,
+        "enabledFields": 0,
+        "visibleClose": 0,
+        "anchors": 1,
+        "inert": true,
+        "url": "http://localhost:5199/owner/machines?search=Retained&status=needs_setup",
+        "calls": 2,
+        "storage": {
+          "weavly_language": "en"
+        }
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Add your looms",
+      "body": "Choose Add machine once for each loom on your floor.",
+      "step": "mc-handoff",
+      "status": "ready",
+      "eyebrow": "Step 6 of 6",
+      "progress": null,
+      "panel": {
+        "x": 494,
+        "y": 16,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 870,
+        "y": 15,
+        "w": 132,
+        "h": 51
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 768,
+      "vw": 1024,
+      "machines": {
+        "search": "Retained",
+        "status": "needs_setup",
+        "names": [],
+        "samples": false,
+        "sampleCount": 0,
+        "bannerCount": 0,
+        "preview": false,
+        "enabledFields": 0,
+        "visibleClose": 0,
+        "anchors": 1,
+        "inert": true,
+        "url": "http://localhost:5199/owner/machines?search=Retained&status=needs_setup",
+        "calls": 2,
+        "storage": {
+          "weavly_language": "en"
+        }
+      }
+    }
+  ],
+  "logs": [
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction"
+  ],
+  "apiRequests": [],
+  "preClick": null,
+  "sampling": "legacy-900ms",
+  "machinesBefore": {
+    "search": "Retained",
+    "status": "needs_setup",
+    "names": [],
+    "samples": false,
+    "sampleCount": 0,
+    "bannerCount": 0,
+    "preview": false,
+    "enabledFields": 0,
+    "visibleClose": 0,
+    "anchors": 1,
+    "inert": false,
+    "url": "http://localhost:5199/owner/machines?search=Retained&status=needs_setup",
+    "calls": 1,
+    "storage": {
+      "weavly_language": "en"
+    }
+  },
+  "before": {
+    "x": 0,
+    "y": 0,
+    "inner": null
+  },
+  "machinesBack": true,
+  "after": {
+    "scroll": {
+      "x": 0,
+      "y": 0,
+      "inner": null
+    },
+    "active": "<button data-slot=\"button\" data-variant=\"default\" data-size=\"default\" class=\"inline-flex items-center justify-center gap-2 whitespace-nowrap transition-[color,b",
+    "activeAnchor": "machines.add",
+    "activeRateBookField": null,
+    "activeControl": null,
+    "serverCalls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "navigations": [],
+    "scrollCalls": [
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      }
+    ],
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"machines\":{\"firstShown\":\"2026-09-29T22:13:22.474Z\",\"version\":\"v1\",\"firstStarted\":true,\"completed\":true,\"completedVersion\":\"v2\"}}"
+    },
+    "search": null
+  },
+  "machinesAfter": {
+    "search": "Retained",
+    "status": "needs_setup",
+    "names": [],
+    "samples": false,
+    "sampleCount": 0,
+    "bannerCount": 0,
+    "preview": false,
+    "enabledFields": 0,
+    "visibleClose": 0,
+    "anchors": 1,
+    "inert": false,
+    "url": "http://localhost:5199/owner/machines?search=Retained&status=needs_setup",
+    "calls": 3,
+    "storage": {
+      "weavly_language": "en"
+    }
+  },
+  "issues": []
+}

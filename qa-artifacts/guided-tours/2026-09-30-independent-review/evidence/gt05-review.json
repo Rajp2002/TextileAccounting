@@ -1,0 +1,14 @@
+{
+  "task": "GT-05",
+  "group": "gt05",
+  "runs": 17,
+  "steps": 168,
+  "classifications": {
+    "FAIL": 17
+  },
+  "reviewNotes": "All 17 original runs and required English desktop/Gujarati phone captures reviewed. BV-01 Major reproduces unavailable Save step 9 in Gujarati phone Base/Lite/Free. Other UI assertions pass, including Detailed Done/Exit. Raw FAIL also retains unchanged intercepted estimator_opened mount analytics; no tour business-action increment. Existing costing/already-open sheet/live factory configuration remain UNVERIFIED. No fix applied.",
+  "status": "FAILED",
+  "humanGates": "UNVERIFIED",
+  "visualReview": "Every captured English 1440x900 and Gujarati 390x844 step inspected",
+  "evidence": "gt05-results.json"
+}

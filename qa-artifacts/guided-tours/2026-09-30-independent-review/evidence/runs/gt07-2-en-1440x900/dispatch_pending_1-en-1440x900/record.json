@@ -1,0 +1,686 @@
+{
+  "scenario": "dispatch?pending=1",
+  "lang": "en",
+  "size": "1440x900",
+  "steps": [
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "One record for goods, receipt and money",
+      "body": "Each dispatch follows fabric from your stock to the customer, then what they accept and what they pay.",
+      "step": "overview",
+      "status": "ready",
+      "eyebrow": "Sample · Step 1 of 10",
+      "progress": null,
+      "panel": {
+        "x": 116,
+        "y": 127,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 492,
+        "y": 127,
+        "w": 705,
+        "h": 128
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "div(role=dialog)",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": {
+        "mounts": 1,
+        "unmounts": 0,
+        "retainedSearch": "Retained search",
+        "sameSearchNode": true,
+        "replica": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Choose a quality that has stock",
+      "body": "The list shows how many metres of each quality are in stock. Metres come from shifts saved on the Daily Sheet or opening stock.",
+      "step": "quality",
+      "status": "ready",
+      "eyebrow": "Sample · Step 2 of 10",
+      "progress": null,
+      "panel": {
+        "x": 816,
+        "y": 345,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 304,
+        "y": 443,
+        "w": 480,
+        "h": 96
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 288,
+        "y": 345,
+        "w": 512,
+        "h": 210
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": {
+        "mounts": 1,
+        "unmounts": 0,
+        "retainedSearch": "Retained search",
+        "sameSearchNode": true,
+        "replica": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Customer, address and agreed price",
+      "body": "Enter the customer and delivery details and the price per metre you agreed. You type these for each dispatch.",
+      "step": "parties",
+      "status": "ready",
+      "eyebrow": "Sample · Step 3 of 10",
+      "progress": null,
+      "panel": {
+        "x": 816,
+        "y": 266,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 304,
+        "y": 364,
+        "w": 480,
+        "h": 254
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 288,
+        "y": 266,
+        "w": 512,
+        "h": 367
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": {
+        "mounts": 1,
+        "unmounts": 0,
+        "retainedSearch": "Retained search",
+        "sameSearchNode": true,
+        "replica": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "List each lot or taka",
+      "body": "Add one line per lot with its metres. Here 60 m + 40 m = 100 m, worth ₹4,000 at ₹40/m.",
+      "step": "lots",
+      "status": "ready",
+      "eyebrow": "Sample · Step 4 of 10",
+      "progress": null,
+      "panel": {
+        "x": 816,
+        "y": 270,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 304,
+        "y": 368,
+        "w": 480,
+        "h": 247
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 288,
+        "y": 270,
+        "w": 512,
+        "h": 360
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": {
+        "mounts": 1,
+        "unmounts": 0,
+        "retainedSearch": "Retained search",
+        "sameSearchNode": true,
+        "replica": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Save a draft first",
+      "body": "“Save draft” keeps the challan without touching stock, so you can check it before the goods leave.",
+      "step": "saveDraft",
+      "status": "ready",
+      "eyebrow": "Sample · Step 5 of 10",
+      "progress": null,
+      "panel": {
+        "x": 816,
+        "y": 324,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 304,
+        "y": 422,
+        "w": 480,
+        "h": 138
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 288,
+        "y": 324,
+        "w": 512,
+        "h": 252
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": {
+        "mounts": 1,
+        "unmounts": 0,
+        "retainedSearch": "Retained search",
+        "sameSearchNode": true,
+        "replica": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Confirm when the goods leave",
+      "body": "“Confirm dispatch has left” locks the challan and takes 100 m out of fabric stock. Yarn was already counted when the fabric was produced.",
+      "step": "confirm",
+      "status": "ready",
+      "eyebrow": "Sample · Step 6 of 10",
+      "progress": null,
+      "panel": {
+        "x": 816,
+        "y": 329,
+        "w": 360,
+        "h": 243
+      },
+      "highlight": {
+        "x": 304,
+        "y": 427,
+        "w": 480,
+        "h": 128
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 288,
+        "y": 329,
+        "w": 512,
+        "h": 241
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": {
+        "mounts": 1,
+        "unmounts": 0,
+        "retainedSearch": "Retained search",
+        "sameSearchNode": true,
+        "replica": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Record what the customer accepted",
+      "body": "If everything arrived, use “Received as sent”. Otherwise record the metres accepted, here 98 of 100 m.",
+      "step": "receipt",
+      "status": "ready",
+      "eyebrow": "Sample · Step 7 of 10",
+      "progress": null,
+      "panel": {
+        "x": 816,
+        "y": 275,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 304,
+        "y": 372,
+        "w": 480,
+        "h": 237
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 288,
+        "y": 275,
+        "w": 512,
+        "h": 351
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": {
+        "mounts": 1,
+        "unmounts": 0,
+        "retainedSearch": "Retained search",
+        "sameSearchNode": true,
+        "replica": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "A shortfall changes the bill, not stock",
+      "body": "The 2 m not accepted do not return to stock. The amount due becomes ₹3,920.",
+      "step": "difference",
+      "status": "ready",
+      "eyebrow": "Sample · Step 8 of 10",
+      "progress": null,
+      "panel": {
+        "x": 116,
+        "y": 127,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 492,
+        "y": 127,
+        "w": 705,
+        "h": 177
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": {
+        "mounts": 1,
+        "unmounts": 0,
+        "retainedSearch": "Retained search",
+        "sameSearchNode": true,
+        "replica": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Record money when you receive it",
+      "body": "“Record payment” adds a payment. Here ₹2,000 received leaves ₹1,920 due.",
+      "step": "payment",
+      "status": "ready",
+      "eyebrow": "Sample · Step 9 of 10",
+      "progress": null,
+      "panel": {
+        "x": 816,
+        "y": 195,
+        "w": 360,
+        "h": 221
+      },
+      "highlight": {
+        "x": 304,
+        "y": 292,
+        "w": 480,
+        "h": 397
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 288,
+        "y": 195,
+        "w": 512,
+        "h": 511
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": {
+        "mounts": 1,
+        "unmounts": 0,
+        "retainedSearch": "Retained search",
+        "sameSearchNode": true,
+        "replica": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Start a dispatch when goods are ready",
+      "body": "Choose “New dispatch” to fill a draft. Open a dispatch in the list to record its receipt or payment.",
+      "step": "handoff",
+      "status": "ready",
+      "eyebrow": "Step 10 of 10",
+      "progress": null,
+      "panel": {
+        "x": 841,
+        "y": 16,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 1217,
+        "y": 15,
+        "w": 208,
+        "h": 51
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": {
+        "mounts": 1,
+        "unmounts": 0,
+        "retainedSearch": "Retained search",
+        "sameSearchNode": true,
+        "replica": false,
+        "anchors": 1,
+        "enabledReplicaControls": 0
+      },
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440
+    }
+  ],
+  "logs": [
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction"
+  ],
+  "apiRequests": [],
+  "preClick": null,
+  "sampling": "legacy-900ms",
+  "before": {
+    "x": 0,
+    "y": 0,
+    "inner": null
+  },
+  "after": {
+    "scroll": {
+      "x": 0,
+      "y": 0,
+      "inner": null
+    },
+    "active": "<button type=\"button\" aria-label=\"Start the Dispatch guide\" data-testid=\"tour-launcher-dispatch\" data-tour-control=\"quiet-tour\" class=\"estimator-touch-target gr",
+    "activeAnchor": null,
+    "activeRateBookField": null,
+    "activeControl": "quiet-tour",
+    "serverCalls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "navigations": [],
+    "scrollCalls": [
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      }
+    ],
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"dispatch\":{\"firstShown\":\"2026-09-29T21:01:09.316Z\",\"version\":\"v1\",\"firstStarted\":true,\"completed\":true,\"completedVersion\":\"v2\"}}"
+    },
+    "dispatch": {
+      "mounts": 1,
+      "unmounts": 0,
+      "retainedSearch": "Retained search",
+      "sameSearchNode": true,
+      "liveHidden": false,
+      "replica": false
+    },
+    "search": null
+  },
+  "issues": []
+}

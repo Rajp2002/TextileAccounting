@@ -1,0 +1,203 @@
+[
+  {
+    "scenario": "quotes",
+    "steps": [
+      {
+        "id": "find",
+        "active": null,
+        "panelFocused": true
+      },
+      {
+        "id": "versions",
+        "active": "next",
+        "panelFocused": false
+      },
+      {
+        "id": "economics",
+        "active": "next",
+        "panelFocused": false
+      },
+      {
+        "id": "reuse",
+        "active": "next",
+        "panelFocused": false
+      },
+      {
+        "id": "internal",
+        "active": "next",
+        "panelFocused": false
+      },
+      {
+        "id": "production",
+        "active": "next",
+        "panelFocused": false
+      },
+      {
+        "id": "finish",
+        "active": "next",
+        "panelFocused": false
+      }
+    ],
+    "errors": [],
+    "after": {
+      "anchor": "costings.new",
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "nav": [],
+      "inert": 0
+    },
+    "passed": true
+  },
+  {
+    "scenario": "quotes?tier=lite",
+    "steps": [
+      {
+        "id": "find",
+        "active": null,
+        "panelFocused": true
+      },
+      {
+        "id": "versions",
+        "active": "next",
+        "panelFocused": false
+      },
+      {
+        "id": "economics",
+        "active": "next",
+        "panelFocused": false
+      },
+      {
+        "id": "reuse",
+        "active": "next",
+        "panelFocused": false
+      },
+      {
+        "id": "internal",
+        "active": "next",
+        "panelFocused": false
+      },
+      {
+        "id": "finish",
+        "active": "next",
+        "panelFocused": false
+      }
+    ],
+    "errors": [],
+    "after": {
+      "anchor": "costings.new",
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "nav": [],
+      "inert": 0
+    },
+    "passed": true
+  },
+  {
+    "scenario": "free-costings",
+    "steps": [
+      {
+        "id": "snapshots",
+        "active": null,
+        "panelFocused": true
+      },
+      {
+        "id": "freeSelect",
+        "active": "next",
+        "panelFocused": false
+      },
+      {
+        "id": "internal",
+        "active": "next",
+        "panelFocused": false
+      },
+      {
+        "id": "finish",
+        "active": "next",
+        "panelFocused": false
+      }
+    ],
+    "errors": [],
+    "after": {
+      "anchor": "free-costings.new",
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "nav": [],
+      "inert": 0
+    },
+    "passed": true
+  },
+  {
+    "scenario": "quotes-compare",
+    "steps": [
+      {
+        "id": "compareSelect",
+        "active": null,
+        "panelFocused": true
+      },
+      {
+        "id": "comparison",
+        "active": "next",
+        "panelFocused": false
+      },
+      {
+        "id": "comparisonDetails",
+        "active": "next",
+        "panelFocused": false
+      },
+      {
+        "id": "compareHandoff",
+        "active": "next",
+        "panelFocused": false
+      }
+    ],
+    "errors": [],
+    "after": {
+      "anchor": "costings.compare",
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "nav": [],
+      "inert": 0
+    },
+    "passed": true
+  }
+]

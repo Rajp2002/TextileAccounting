@@ -1,0 +1,14 @@
+{
+  "task": "GT-07",
+  "runs": 20,
+  "steps": 200,
+  "classifications": {
+    "AUTOMATED_PASS": 20
+  },
+  "failures": [],
+  "reviewNotes": "All 20 core/populated/pending-retry/no-stock standard and reduced-motion cases passed; no blocked traffic, only preference calls. Replica form/receipt/payment controls were inert, live search node/value retained, dialog contexts separated from outlines/panels, and Done used New dispatch or the launcher when the pending retry disables the target. Source, page copy and dispatch action-stub proof reviewed. No reproduced Major or Blocker in this task.",
+  "status": "IN_PROGRESS",
+  "humanGates": "UNVERIFIED",
+  "visualReview": "Every captured English 1440x900 and Gujarati 390x844 step inspected",
+  "evidence": "gt07-results.json"
+}

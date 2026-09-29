@@ -1,0 +1,2310 @@
+{
+  "phase": "Independent review complete through GT-15",
+  "source": {
+    "date": "2026-09-30",
+    "worktree": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas",
+    "branch": "tours/implementation",
+    "head": "c020b9b0548a4c9f0c2c0105afe3506d821bc7ce",
+    "sourceFingerprint": "0b2a992cae3d32013cdae9364aea88a83e0705a4cbc65765b99d4b454298a368",
+    "applicationFingerprint": "a70241eef16e00357e5bb1be433f3e991f9a02777ba08e535c4ce2a091189167"
+  },
+  "server": {
+    "owned": true,
+    "pid": 70042,
+    "sessionId": 12188,
+    "url": "http://127.0.0.1:5199",
+    "command": "isolated Vite --config scratch/browser-verification-harness/vite.config.mjs --host 127.0.0.1",
+    "restartOf": 48739
+  },
+  "completed": [
+    {
+      "group": "g1",
+      "runs": 25,
+      "steps": 135,
+      "classifications": {
+        "AUTOMATED_PASS": 25
+      }
+    },
+    {
+      "group": "gt05",
+      "runs": 17,
+      "steps": 168,
+      "classifications": {
+        "FAIL": 17
+      }
+    },
+    {
+      "group": "gt06",
+      "runs": 22,
+      "steps": 132,
+      "classifications": {
+        "FAIL": 22
+      }
+    },
+    {
+      "group": "gt07",
+      "runs": 20,
+      "steps": 200,
+      "classifications": {
+        "AUTOMATED_PASS": 20
+      }
+    },
+    {
+      "group": "gt08",
+      "runs": 12,
+      "steps": 66,
+      "classifications": {
+        "AUTOMATED_PASS": 12
+      }
+    },
+    {
+      "group": "gt09",
+      "runs": 12,
+      "steps": 69,
+      "classifications": {
+        "AUTOMATED_PASS": 11,
+        "FAIL": 1
+      }
+    },
+    {
+      "group": "gt10",
+      "runs": 14,
+      "steps": 84,
+      "classifications": {
+        "FAIL": 14
+      }
+    },
+    {
+      "group": "gt11",
+      "runs": 12,
+      "steps": 78,
+      "classifications": {
+        "FAIL": 12
+      }
+    },
+    {
+      "group": "gt12",
+      "runs": 12,
+      "steps": 106,
+      "classifications": {
+        "FAIL": 12
+      }
+    },
+    {
+      "group": "gt13",
+      "runs": 12,
+      "steps": 66,
+      "classifications": {
+        "AUTOMATED_PASS": 12
+      }
+    },
+    {
+      "group": "gt14",
+      "runs": 20,
+      "steps": 120,
+      "classifications": {
+        "AUTOMATED_PASS": 20
+      }
+    },
+    {
+      "group": "gt15",
+      "runs": 16,
+      "steps": 94,
+      "classifications": {
+        "FAIL": 16
+      }
+    }
+  ],
+  "remaining": "Application corrections and required owner/native/screen-reader/device/live acceptance evidence remain outstanding; no further implementation is authorized by this review.",
+  "findings": [
+    {
+      "id": "BV-01",
+      "severity": "Major",
+      "owner": "GT-05",
+      "step": "est-save",
+      "case": "estimator / gu / 390x844",
+      "status": "FAILED",
+      "evidence": "runs/gt05-0-gu-390x844/estimator-gu-390x844/09.png",
+      "reason": "required Save anchor unavailable; no outline"
+    },
+    {
+      "id": "BV-02",
+      "severity": "Major",
+      "owner": "GT-15",
+      "step": "ma-purpose",
+      "case": "Assignments / English 1024x768 and Hindi 1280x800 / empty, populated and Night/focus; standard and reduced motion",
+      "status": "FAILED",
+      "evidence": "runs/gt15-0-en-1024x768/assignments-en-1024x768/01.png",
+      "reason": "Step-1 panel overlaps the board; the required MA-1 no-overlap condition remains unmet and the conditional fallback was not selected",
+      "source": "lib/configuration-tour.ts:52",
+      "requirement": "docs/guided-tours/pages/machine-assignments.md \u00a7E and GT-15 packet",
+      "cases": [
+        {
+          "id": "gt15-0-hi-1280x800",
+          "origin": "original main",
+          "language": "hi",
+          "size": "1280x800",
+          "step": "ma-purpose",
+          "overlapArea": 5724,
+          "panel": {
+            "x": 16,
+            "y": 16,
+            "w": 360,
+            "h": 175
+          },
+          "highlight": {
+            "x": 270,
+            "y": 137,
+            "w": 775,
+            "h": 609
+          },
+          "screenshot": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-0-hi-1280x800/assignments-hi-1280x800/01.png",
+          "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-0-hi-1280x800/assignments-hi-1280x800/record.json"
+        },
+        {
+          "id": "gt15-0-en-1024x768",
+          "origin": "original main",
+          "language": "en",
+          "size": "1024x768",
+          "step": "ma-purpose",
+          "overlapArea": 10070,
+          "panel": {
+            "x": 16,
+            "y": 577,
+            "w": 360,
+            "h": 175
+          },
+          "highlight": {
+            "x": 270,
+            "y": 95,
+            "w": 732,
+            "h": 577
+          },
+          "screenshot": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-0-en-1024x768/assignments-en-1024x768/01.png",
+          "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-0-en-1024x768/assignments-en-1024x768/record.json"
+        },
+        {
+          "id": "gt15-0-reduced-en-1024x768",
+          "origin": "original main",
+          "language": "en",
+          "size": "1024x768",
+          "step": "ma-purpose",
+          "overlapArea": 10070,
+          "panel": {
+            "x": 16,
+            "y": 577,
+            "w": 360,
+            "h": 175
+          },
+          "highlight": {
+            "x": 270,
+            "y": 95,
+            "w": 732,
+            "h": 577
+          },
+          "screenshot": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-0-reduced-en-1024x768/assignments-en-1024x768/01.png",
+          "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-0-reduced-en-1024x768/assignments-en-1024x768/record.json"
+        },
+        {
+          "id": "gt15-1-hi-1280x800",
+          "origin": "original main",
+          "language": "hi",
+          "size": "1280x800",
+          "step": "ma-purpose",
+          "overlapArea": 5724,
+          "panel": {
+            "x": 16,
+            "y": 16,
+            "w": 360,
+            "h": 175
+          },
+          "highlight": {
+            "x": 270,
+            "y": 137,
+            "w": 775,
+            "h": 609
+          },
+          "screenshot": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-1-hi-1280x800/assignments_populated_1-hi-1280x800/01.png",
+          "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-1-hi-1280x800/assignments_populated_1-hi-1280x800/record.json"
+        },
+        {
+          "id": "gt15-1-en-1024x768",
+          "origin": "original main",
+          "language": "en",
+          "size": "1024x768",
+          "step": "ma-purpose",
+          "overlapArea": 10070,
+          "panel": {
+            "x": 16,
+            "y": 577,
+            "w": 360,
+            "h": 175
+          },
+          "highlight": {
+            "x": 270,
+            "y": 95,
+            "w": 732,
+            "h": 577
+          },
+          "screenshot": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-1-en-1024x768/assignments_populated_1-en-1024x768/01.png",
+          "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-1-en-1024x768/assignments_populated_1-en-1024x768/record.json"
+        },
+        {
+          "id": "gt15-1-reduced-en-1024x768",
+          "origin": "original main",
+          "language": "en",
+          "size": "1024x768",
+          "step": "ma-purpose",
+          "overlapArea": 10070,
+          "panel": {
+            "x": 16,
+            "y": 577,
+            "w": 360,
+            "h": 175
+          },
+          "highlight": {
+            "x": 270,
+            "y": 95,
+            "w": 732,
+            "h": 577
+          },
+          "screenshot": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-1-reduced-en-1024x768/assignments_populated_1-en-1024x768/01.png",
+          "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-1-reduced-en-1024x768/assignments_populated_1-en-1024x768/record.json"
+        },
+        {
+          "id": "gt15-night-focus-hi-1280x800",
+          "origin": "original main",
+          "language": "hi",
+          "size": "1280x800",
+          "step": "ma-purpose",
+          "overlapArea": 5724,
+          "panel": {
+            "x": 16,
+            "y": 16,
+            "w": 360,
+            "h": 175
+          },
+          "highlight": {
+            "x": 270,
+            "y": 137,
+            "w": 775,
+            "h": 609
+          },
+          "screenshot": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-night-focus-hi-1280x800/assignments_populated_1_shift_night_worker_11111111-1111-4111-8111-111111111111_machine_22222222-2222-4222-8222-222222222222-hi-1280x800/01.png",
+          "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-night-focus-hi-1280x800/assignments_populated_1_shift_night_worker_11111111-1111-4111-8111-111111111111_machine_22222222-2222-4222-8222-222222222222-hi-1280x800/record.json"
+        },
+        {
+          "id": "gt15-retry-night-focus-en-1024x768",
+          "origin": "unchanged retry",
+          "language": "en",
+          "size": "1024x768",
+          "step": "ma-purpose",
+          "overlapArea": 10070,
+          "panel": {
+            "x": 16,
+            "y": 577,
+            "w": 360,
+            "h": 175
+          },
+          "highlight": {
+            "x": 270,
+            "y": 95,
+            "w": 732,
+            "h": 577
+          },
+          "screenshot": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-retry-night-focus-en-1024x768/assignments_populated_1_shift_night_worker_11111111-1111-4111-8111-111111111111_machine_22222222-2222-4222-8222-222222222222-en-1024x768/01.png",
+          "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-retry-night-focus-en-1024x768/assignments_populated_1_shift_night_worker_11111111-1111-4111-8111-111111111111_machine_22222222-2222-4222-8222-222222222222-en-1024x768/record.json"
+        }
+      ]
+    }
+  ],
+  "nextCommand": "Address recorded findings in their owning tasks only under separate implementation authorization; human gates remain UNVERIFIED",
+  "lastCompletedRun": {
+    "id": "gt15-transition-gu-390x844",
+    "task": "GT-15",
+    "scenario": "assignments?populated=1",
+    "language": "gu",
+    "size": "390x844",
+    "script": "/private/tmp/weavly-review-assignment-transition.mjs",
+    "args": [
+      "assignments?populated=1",
+      "gu",
+      "390x844",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-transition-gu-390x844"
+    ],
+    "command": [
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+      "170",
+      "node",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+      "env",
+      "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+      "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+      "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-transition-gu-390x844/network.json",
+      "node",
+      "--import",
+      "/private/tmp/weavly-review-network.mjs",
+      "/private/tmp/weavly-review-assignment-transition.mjs",
+      "assignments?populated=1",
+      "gu",
+      "390x844",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-transition-gu-390x844"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 14.38,
+    "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-transition-gu-390x844/transition/record.json",
+    "steps": 3,
+    "error": null,
+    "blockedNetwork": [
+      {
+        "type": "blocked-api",
+        "url": "http://localhost:5199/api/analytics/plan-events",
+        "method": "POST"
+      }
+    ],
+    "classification": "FAIL",
+    "visualReview": "UNVERIFIED"
+  },
+  "commands": [
+    {
+      "name": "types",
+      "command": [
+        "node",
+        "scripts/performance/isolated-command.mjs",
+        "node",
+        "node_modules/typescript/bin/tsc",
+        "--noEmit",
+        "--incremental",
+        "false"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 32.45,
+      "log": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/commands/types.log"
+    },
+    {
+      "name": "lint",
+      "command": [
+        "node",
+        "scripts/performance/isolated-command.mjs",
+        "npm",
+        "run",
+        "lint"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 39.91,
+      "log": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/commands/lint.log"
+    },
+    {
+      "name": "vitest-full",
+      "command": [
+        "node",
+        "scripts/performance/isolated-command.mjs",
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "--maxWorkers=1"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 124.59,
+      "log": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/commands/vitest-full.log"
+    },
+    {
+      "name": "vitest-tour",
+      "command": [
+        "node",
+        "scripts/performance/isolated-command.mjs",
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "--maxWorkers=1",
+        "__tests__/configuration-tour-preview.test.tsx",
+        "__tests__/configuration-tour.test.ts",
+        "__tests__/cost-estimate-tutorial-i18n.test.ts",
+        "__tests__/cost-estimate-tutorial-modal.test.ts",
+        "__tests__/cost-estimate-tutorial-ordering.test.ts",
+        "__tests__/cost-estimate-tutorial-transitions.test.ts",
+        "__tests__/daily-sheet-tour-preview.test.tsx",
+        "__tests__/daily-sheet-tour.test.ts",
+        "__tests__/desktop-dimensions-responsive.test.ts",
+        "__tests__/dispatch-tour-preview.test.tsx",
+        "__tests__/dispatch-tour.test.ts",
+        "__tests__/dispatch-tutorial-panel.test.tsx",
+        "__tests__/estimator-core-tour.test.ts",
+        "__tests__/estimator-left-rail.test.ts",
+        "__tests__/free-plan-guided-tour.test.ts",
+        "__tests__/guided-tour-fixes-and-demo-data.test.ts",
+        "__tests__/guided-tour-focus.test.ts",
+        "__tests__/guided-tour-left-rails.test.ts",
+        "__tests__/machine-register-refinement.test.ts",
+        "__tests__/machines-register-tour-help.test.tsx",
+        "__tests__/machines-tour-preview.test.tsx",
+        "__tests__/machines-tour.test.ts",
+        "__tests__/management-register-rendering.test.ts",
+        "__tests__/mobile-tour-positioning.test.ts",
+        "__tests__/payroll-tour-preview.test.tsx",
+        "__tests__/payroll-tour.test.ts",
+        "__tests__/production-tour-preview.test.tsx",
+        "__tests__/production-tour.test.ts",
+        "__tests__/rate-book-tour-flow.test.tsx",
+        "__tests__/rate-book-tutorial.test.ts",
+        "__tests__/rate-review-rail.test.ts",
+        "__tests__/saved-costings-tour.test.ts",
+        "__tests__/stock-tour.test.tsx",
+        "__tests__/tour-active-guard.test.ts",
+        "__tests__/tour-common-i18n.test.ts",
+        "__tests__/tour-data-safety-contract.test.ts",
+        "__tests__/tour-i18n-parity.test.ts",
+        "__tests__/tour-invitation-lifecycle.test.ts",
+        "__tests__/tour-no-autostart.test.ts",
+        "__tests__/tour-panel-render.test.tsx",
+        "__tests__/tour-placement.test.ts",
+        "__tests__/tour-preferences-and-actions.test.ts",
+        "__tests__/tour-quota-and-data-safety.test.ts",
+        "__tests__/tour-sample-ids.test.ts",
+        "__tests__/tour-target-readiness.test.ts",
+        "__tests__/tour-text.test.ts",
+        "__tests__/tutorial-target.test.ts",
+        "__tests__/tutorial-viewport-lock.test.ts",
+        "__tests__/worker-pay-basis.test.tsx",
+        "__tests__/worker-register-refinement.test.ts",
+        "__tests__/workers-tour-preview.test.tsx",
+        "__tests__/workers-tour.test.ts"
+      ],
+      "exitCode": 1,
+      "elapsedSeconds": 35.7,
+      "log": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/commands/vitest-tour.log"
+    },
+    {
+      "name": "vitest-tour-retry",
+      "command": [
+        "node",
+        "scripts/performance/isolated-command.mjs",
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "--maxWorkers=1",
+        "__tests__/configuration-tour-preview.test.tsx",
+        "__tests__/configuration-tour.test.ts",
+        "__tests__/cost-estimate-tutorial-i18n.test.ts",
+        "__tests__/cost-estimate-tutorial-modal.test.ts",
+        "__tests__/cost-estimate-tutorial-ordering.test.ts",
+        "__tests__/cost-estimate-tutorial-transitions.test.ts",
+        "__tests__/daily-sheet-tour-preview.test.tsx",
+        "__tests__/daily-sheet-tour.test.ts",
+        "__tests__/desktop-dimensions-responsive.test.ts",
+        "__tests__/dispatch-tour-preview.test.tsx",
+        "__tests__/dispatch-tour.test.ts",
+        "__tests__/dispatch-tutorial-panel.test.tsx",
+        "__tests__/estimator-core-tour.test.ts",
+        "__tests__/estimator-left-rail.test.ts",
+        "__tests__/free-plan-guided-tour.test.ts",
+        "__tests__/guided-tour-fixes-and-demo-data.test.ts",
+        "__tests__/guided-tour-focus.test.ts",
+        "__tests__/guided-tour-left-rails.test.ts",
+        "__tests__/machine-register-refinement.test.ts",
+        "__tests__/machines-register-tour-help.test.tsx",
+        "__tests__/machines-tour-preview.test.tsx",
+        "__tests__/machines-tour.test.ts",
+        "__tests__/management-register-rendering.test.ts",
+        "__tests__/mobile-tour-positioning.test.ts",
+        "__tests__/payroll-tour-preview.test.tsx",
+        "__tests__/payroll-tour.test.ts",
+        "__tests__/production-tour-preview.test.tsx",
+        "__tests__/production-tour.test.ts",
+        "__tests__/rate-book-tour-flow.test.tsx",
+        "__tests__/rate-book-tutorial.test.ts",
+        "__tests__/rate-review-rail.test.ts",
+        "__tests__/saved-costings-tour.test.ts",
+        "__tests__/stock-tour.test.tsx",
+        "__tests__/tour-active-guard.test.ts",
+        "__tests__/tour-common-i18n.test.ts",
+        "__tests__/tour-data-safety-contract.test.ts",
+        "__tests__/tour-i18n-parity.test.ts",
+        "__tests__/tour-invitation-lifecycle.test.ts",
+        "__tests__/tour-no-autostart.test.ts",
+        "__tests__/tour-panel-render.test.tsx",
+        "__tests__/tour-placement.test.ts",
+        "__tests__/tour-preferences-and-actions.test.ts",
+        "__tests__/tour-quota-and-data-safety.test.ts",
+        "__tests__/tour-sample-ids.test.ts",
+        "__tests__/tour-target-readiness.test.ts",
+        "__tests__/tour-text.test.ts",
+        "__tests__/tutorial-target.test.ts",
+        "__tests__/tutorial-viewport-lock.test.ts",
+        "__tests__/worker-pay-basis.test.tsx",
+        "__tests__/worker-register-refinement.test.ts",
+        "__tests__/workers-tour-preview.test.tsx",
+        "__tests__/workers-tour.test.ts"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 34.8,
+      "log": "scratch/browser-verification/commands/vitest-tour-retry.log",
+      "reason": "evidence-copy contamination relocated; no source, assertion, timeout or config change"
+    }
+  ],
+  "visualReviewed": [
+    "foundation-en-1440x900:01-06",
+    "foundation-gu-390x844:01-06",
+    "g1-0-en-1440x900:all",
+    "g1-0-gu-390x844:all",
+    "g1-1-en-1440x900:all",
+    "g1-1-gu-390x844:all",
+    "g1-2-en-1440x900:all",
+    "g1-2-gu-390x844:all",
+    "g1-3-en-1440x900:all",
+    "g1-3-gu-390x844:all",
+    "gt05-0-en-1440x900:01-10",
+    "gt05-0-gu-390x844:01-10",
+    "gt05-0-en-1440x900:all",
+    "gt05-0-gu-390x844:all",
+    "gt05-1-en-1440x900:all",
+    "gt05-1-gu-390x844:all",
+    "gt05-2-en-1440x900:all",
+    "gt05-2-gu-390x844:all",
+    "gt06-0-en-1440x900:all",
+    "gt06-0-gu-390x844:all",
+    "gt06-1-en-1440x900:all",
+    "gt06-1-gu-390x844:all",
+    "gt06-filter-en-1440x900:all",
+    "gt06-filter-gu-390x844:all",
+    "gt06-recovery-0-en-1440x900:all",
+    "gt06-recovery-0-gu-390x844:all",
+    "gt06-recovery-1-en-1440x900:all",
+    "gt06-recovery-1-gu-390x844:all",
+    "G1 supplemental invitation, lifecycle, populated/error/embedded screenshots: all 14 derived contact sheets inspected",
+    "gt07-0-en-1440x900:all",
+    "gt07-0-gu-390x844:all",
+    "gt07-1-en-1440x900:all",
+    "gt07-1-gu-390x844:all",
+    "gt07-2-en-1440x900:all",
+    "gt07-2-gu-390x844:all",
+    "gt07-3-en-1440x900:all",
+    "gt07-3-gu-390x844:all",
+    "gt08-0-en-1440x900:all",
+    "gt08-0-gu-390x844:all",
+    "gt08-1-en-1440x900:all",
+    "gt08-1-gu-390x844:all",
+    "gt08-exit-fabric-stock-en-1440x900:all",
+    "gt08-exit-fabric-stock-gu-390x844:all",
+    "gt09-0-en-1440x900:all",
+    "gt09-1-en-1440x900:all",
+    "gt09-1-gu-390x844:all",
+    "gt09-exit-yarn-stock-en-1440x900:all",
+    "gt09-exit-yarn-stock-gu-390x844:all",
+    "gt09-retry-gu-390x844:all",
+    "gt10-0-en-1440x900:all",
+    "gt10-0-gu-390x844:all",
+    "gt10-1-en-1440x900:all",
+    "gt10-1-gu-390x844:all",
+    "gt10-exit-payroll-en-1440x900:all",
+    "gt10-exit-payroll-gu-390x844:all",
+    "gt10-exit-payroll-extra-en-1440x900:all",
+    "gt10-exit-payroll-extra-gu-390x844:all",
+    "gt10-paint-0-en-1440x900:all",
+    "gt10-paint-1-en-1440x900:all",
+    "gt11-0-en-1440x900:all",
+    "gt11-0-gu-390x844:all",
+    "gt11-1-en-1440x900:all",
+    "gt11-1-gu-390x844:all",
+    "gt11-exit-production-en-1440x900:all",
+    "gt11-exit-production-gu-390x844:all",
+    "gt11-paint-0-en-1440x900:all",
+    "gt12-0-en-1440x900:all",
+    "gt12-0-gu-390x844:all",
+    "gt12-1-en-1440x900:all",
+    "gt12-1-gu-390x844:all",
+    "gt12-exit-daily-sheet-en-1440x900:all",
+    "gt12-exit-daily-sheet-gu-390x844:all",
+    "gt13-0-en-1440x900:all",
+    "gt13-0-gu-390x844:all",
+    "gt13-1-en-1440x900:all",
+    "gt13-1-gu-390x844:all",
+    "gt13-exit-machines-en-1440x900:all",
+    "gt13-exit-machines-gu-390x844:all",
+    "gt13-transition-0-en-1440x900:all",
+    "gt13-transition-1-gu-390x844:all",
+    "gt14-0-en-1440x900:all",
+    "gt14-0-gu-390x844:all",
+    "gt14-1-en-1440x900:all",
+    "gt14-1-gu-390x844:all",
+    "gt14-2-en-1440x900:all",
+    "gt14-2-gu-390x844:all",
+    "gt14-3-en-1440x900:all",
+    "gt14-3-gu-390x844:all",
+    "gt14-transition-0-en-1440x900:all",
+    "gt14-transition-0-gu-390x844:all",
+    "gt14-transition-1-en-1440x900:all",
+    "gt14-transition-1-gu-390x844:all",
+    "gt15-0-en-1440x900:all",
+    "gt15-0-gu-390x844:all",
+    "gt15-1-en-1440x900:all",
+    "gt15-1-gu-390x844:all",
+    "gt15-exit-assignments-en-1440x900:all",
+    "gt15-exit-assignments-gu-390x844:all",
+    "gt15-night-focus-en-1440x900:all",
+    "gt15-retry-night-focus-gu-390x844:all",
+    "gt15-transition-en-1440x900:all",
+    "gt15-transition-gu-390x844:all"
+  ],
+  "humanGates": {
+    "ownerQA": "UNVERIFIED",
+    "nativeGujaratiHindi": "UNVERIFIED",
+    "screenReader": "UNVERIFIED",
+    "realDevices": "UNVERIFIED",
+    "authenticatedShell": "UNVERIFIED",
+    "livePreferenceMetadataPersistence": "UNVERIFIED"
+  },
+  "taskStatus": {
+    "GT-04": "IN_PROGRESS",
+    "GT-05": "FAILED",
+    "GT-16": "NOT_STARTED",
+    "GT-17": "NOT_STARTED",
+    "GT-B1": "BLOCKED",
+    "GT-07": "IN_PROGRESS",
+    "GT-08": "IN_PROGRESS",
+    "GT-09": "IN_PROGRESS",
+    "GT-10": "IN_PROGRESS",
+    "GT-11": "IN_PROGRESS",
+    "GT-12": "IN_PROGRESS",
+    "GT-13": "IN_PROGRESS",
+    "GT-14": "IN_PROGRESS",
+    "GT-15": "FAILED",
+    "GT-06": "IN_PROGRESS"
+  },
+  "g1ReviewerVerdict": "PASS WITH CONDITIONS; owner/native/accessibility/device evidence remains UNVERIFIED; GT-04 stays IN_PROGRESS",
+  "keyboard": {
+    "final": "g1-keyboard-final/record.json",
+    "result": "4/4 scenarios passed; 21 steps",
+    "invalidProbes": [
+      "g1-keyboard/record.json: reviewer incorrectly required Next focus on launch; \u00a75.4 requires panel",
+      "g1-keyboard-spec-aligned/record.json: empty navigation telemetry was undefined"
+    ]
+  },
+  "copyAudit": {
+    "file": "copy-alias-resolved-saved-costings_cost-estimator_rate-book_dispatches_fabric-stock_yarn-stock_payroll_production_daily-sheet_machines_workers_machine-assignments.json",
+    "matched": 849,
+    "mismatches": 0,
+    "unmatched": 0,
+    "nativeReview": "UNVERIFIED"
+  },
+  "taskReviews": {
+    "GT-05": {
+      "task": "GT-05",
+      "group": "gt05",
+      "runs": 17,
+      "steps": 168,
+      "classifications": {
+        "FAIL": 17
+      },
+      "reviewNotes": "All 17 original runs and required English desktop/Gujarati phone captures reviewed. BV-01 Major reproduces unavailable Save step 9 in Gujarati phone Base/Lite/Free. Other UI assertions pass, including Detailed Done/Exit. Raw FAIL also retains unchanged intercepted estimator_opened mount analytics; no tour business-action increment. Existing costing/already-open sheet/live factory configuration remain UNVERIFIED. No fix applied.",
+      "status": "FAILED",
+      "humanGates": "UNVERIFIED",
+      "visualReview": "Every captured English 1440x900 and Gujarati 390x844 step inspected",
+      "evidence": "gt05-results.json"
+    },
+    "GT-06": {
+      "task": "GT-06",
+      "group": "gt06",
+      "runs": 22,
+      "steps": 132,
+      "classifications": {
+        "FAIL": 22
+      },
+      "reviewNotes": "All 22 original runs exit 0 with no UI issues; all required English desktop/Gujarati phone captures reviewed. Empty/populated, retained nonmatching search Exit/Done, deleted-demo and archived-only recovery verified. Approved unavailable update/review/usage states continue and Done focuses Add Yarn Rate. Raw guard FAIL retains unchanged rate_book_viewed mount analytics; prelaunch usage getter is stubbed, with no tour business-action increment. Human/live gates and upstream dependencies remain unfulfilled.",
+      "status": "IN_PROGRESS",
+      "humanGates": "UNVERIFIED",
+      "visualReview": "Every captured English 1440x900 and Gujarati 390x844 step inspected",
+      "evidence": "gt06-results.json"
+    },
+    "GT-07": {
+      "task": "GT-07",
+      "runs": 20,
+      "steps": 200,
+      "classifications": {
+        "AUTOMATED_PASS": 20
+      },
+      "failures": [],
+      "reviewNotes": "All 20 core/populated/pending-retry/no-stock standard and reduced-motion cases passed; no blocked traffic, only preference calls. Replica form/receipt/payment controls were inert, live search node/value retained, dialog contexts separated from outlines/panels, and Done used New dispatch or the launcher when the pending retry disables the target. Source, page copy and dispatch action-stub proof reviewed. No reproduced Major or Blocker in this task.",
+      "status": "IN_PROGRESS",
+      "humanGates": "UNVERIFIED",
+      "visualReview": "Every captured English 1440x900 and Gujarati 390x844 step inspected",
+      "evidence": "gt07-results.json"
+    },
+    "GT-08": {
+      "task": "GT-08",
+      "runs": 12,
+      "steps": 66,
+      "classifications": {
+        "AUTOMATED_PASS": 12
+      },
+      "failures": [],
+      "reviewNotes": "Empty and populated all-opening-stock fixtures passed all four viewports plus reduced motion; Exit at the opening-stock sample passed in English desktop and Gujarati phone. Required history geometry and desktop rail paint were inspected; Opening stock is the live handoff. Live search/node/storage restored, replica fields/buttons disabled, no business action/API/navigation or blocked traffic. Exact page copy and scoped source reviewed. No reproduced Major or Blocker.",
+      "status": "IN_PROGRESS",
+      "humanGates": "UNVERIFIED",
+      "visualReview": "Every captured English 1440x900 and Gujarati 390x844 step inspected",
+      "evidence": "gt08-results.json"
+    },
+    "GT-09": {
+      "task": "GT-09",
+      "runs": 12,
+      "steps": 69,
+      "classifications": {
+        "AUTOMATED_PASS": 11,
+        "FAIL": 1
+      },
+      "failures": [
+        {
+          "id": "gt09-0-gu-390x844",
+          "exitCode": 1,
+          "error": null,
+          "issues": [],
+          "blockedNetwork": []
+        }
+      ],
+      "reviewNotes": "Original batch: 11/12 passed; the empty Gujarati phone launch timed out at the unchanged 15-second panel wait before any tour-step capture. Its log/network/pre-launch screenshot remain preserved; no blocked traffic, pending lazy StockTourPreview request, root cause unresolved. One diagnostic retry imported the unchanged generic runner, assertions and timeouts: all seven steps PASS, no page error or failed request; retry records/contact sheets inspected. Populated-unlinked fixtures and both Exit cases passed. No reproduced Major/Blocker; do not erase the intermittent launch failure or claim all original runs passed. Opening weight handoff, audit-date node/value retention, replica safety, page copy and scoped source reviewed; only preference calls, no business API/navigation. Supplemental evidence: gt09-retry-results.json and runs/gt09-retry-gu-390x844/diagnostics.json.",
+      "status": "IN_PROGRESS",
+      "humanGates": "UNVERIFIED",
+      "visualReview": "Every captured English 1440x900 and Gujarati 390x844 step inspected",
+      "evidence": "gt09-results.json",
+      "supplementalRetries": [
+        {
+          "id": "gt09-retry-gu-390x844",
+          "task": "GT-09",
+          "scenario": "yarn-stock",
+          "language": "gu",
+          "size": "390x844",
+          "script": "/private/tmp/weavly-review-run-diagnostic.mjs",
+          "args": [
+            "yarn-stock",
+            "gu",
+            "390x844",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt09-retry-gu-390x844"
+          ],
+          "command": [
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+            "170",
+            "node",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+            "env",
+            "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+            "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+            "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt09-retry-gu-390x844/network.json",
+            "node",
+            "--import",
+            "/private/tmp/weavly-review-network.mjs",
+            "/private/tmp/weavly-review-run-diagnostic.mjs",
+            "yarn-stock",
+            "gu",
+            "390x844",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt09-retry-gu-390x844"
+          ],
+          "exitCode": 0,
+          "elapsedSeconds": 44.69,
+          "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt09-retry-gu-390x844/yarn-stock-gu-390x844/record.json",
+          "steps": 7,
+          "error": null,
+          "blockedNetwork": [],
+          "classification": "AUTOMATED_PASS",
+          "visualReview": "UNVERIFIED"
+        }
+      ]
+    },
+    "GT-10": {
+      "task": "GT-10",
+      "runs": 14,
+      "steps": 84,
+      "classifications": {
+        "FAIL": 14
+      },
+      "failures": [
+        {
+          "id": "gt10-0-en-1440x900",
+          "exitCode": 1,
+          "error": null,
+          "issues": [
+            "pr-settle: rail paints over target",
+            "pr-paid: rail paints over target",
+            "pr-complete: rail paints over target"
+          ],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt10-0-hi-1280x800",
+          "exitCode": 0,
+          "error": null,
+          "issues": [],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt10-0-en-1024x768",
+          "exitCode": 0,
+          "error": null,
+          "issues": [],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt10-0-gu-390x844",
+          "exitCode": 0,
+          "error": null,
+          "issues": [],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt10-0-reduced-en-1024x768",
+          "exitCode": 0,
+          "error": null,
+          "issues": [],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt10-1-en-1440x900",
+          "exitCode": 1,
+          "error": null,
+          "issues": [
+            "pra-advance: rail paints over target",
+            "pra-deduction: rail paints over target",
+            "pra-correct: rail paints over target"
+          ],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt10-1-hi-1280x800",
+          "exitCode": 0,
+          "error": null,
+          "issues": [],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt10-1-en-1024x768",
+          "exitCode": 0,
+          "error": null,
+          "issues": [],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt10-1-gu-390x844",
+          "exitCode": 0,
+          "error": null,
+          "issues": [],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt10-1-reduced-en-1024x768",
+          "exitCode": 0,
+          "error": null,
+          "issues": [],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt10-exit-payroll-en-1440x900",
+          "exitCode": 0,
+          "error": null,
+          "issues": [],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt10-exit-payroll-gu-390x844",
+          "exitCode": 0,
+          "error": null,
+          "issues": [],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt10-exit-payroll-extra-en-1440x900",
+          "exitCode": 1,
+          "error": null,
+          "issues": [
+            "pra-advance: rail paints over target",
+            "pra-deduction: rail paints over target"
+          ],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt10-exit-payroll-extra-gu-390x844",
+          "exitCode": 0,
+          "error": null,
+          "issues": [],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        }
+      ],
+      "reviewNotes": "Payroll core and optional guides: 14 main runs / 84 steps plus two unchanged-runner paint probes / 14 steps. All required English desktop and Gujarati phone captures inspected. Raw guard FAIL retains one unchanged BaseProductionClient production_viewed mount POST per run; no tour-induced increment. Three main runs and both paint probes retain numeric aside/target intersections. Computed styles show transparent rail z30, dialogs z50, and no visible rail child crossing any of the six flagged targets; screenshots confirm no occlusion. Adjudicated as harness bounding-box false positives (gt10-paint-adjudication.json), without changing assertions. Preferences, live node identity, search/scroll restoration, optional guide non-completion, handoff/Exit focus and no money-handler calls verified in fixture scope. PI-01/02/03 behavior unchanged. Populated/blocked/completed live payroll and all human gates UNVERIFIED; no reproduced Major in modeled states.",
+      "status": "IN_PROGRESS",
+      "humanGates": "UNVERIFIED",
+      "visualReview": "Every captured English 1440x900 and Gujarati 390x844 step inspected",
+      "evidence": "gt10-results.json",
+      "supplementalPaintDiagnostics": [
+        {
+          "id": "gt10-paint-0-en-1440x900",
+          "task": "GT-10",
+          "scenario": "payroll",
+          "language": "en",
+          "size": "1440x900",
+          "script": "/private/tmp/weavly-review-run-paint.mjs",
+          "args": [
+            "payroll",
+            "en",
+            "1440x900",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-0-en-1440x900"
+          ],
+          "command": [
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+            "170",
+            "node",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+            "env",
+            "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+            "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+            "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-0-en-1440x900/network.json",
+            "node",
+            "--import",
+            "/private/tmp/weavly-review-network.mjs",
+            "/private/tmp/weavly-review-run-paint.mjs",
+            "payroll",
+            "en",
+            "1440x900",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-0-en-1440x900"
+          ],
+          "exitCode": 1,
+          "elapsedSeconds": 46.46,
+          "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-0-en-1440x900/payroll-en-1440x900/record.json",
+          "steps": 8,
+          "error": null,
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ],
+          "classification": "FAIL",
+          "visualReview": "UNVERIFIED"
+        },
+        {
+          "id": "gt10-paint-1-en-1440x900",
+          "task": "GT-10",
+          "scenario": "payroll-extra",
+          "language": "en",
+          "size": "1440x900",
+          "script": "/private/tmp/weavly-review-run-paint.mjs",
+          "args": [
+            "payroll-extra",
+            "en",
+            "1440x900",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-1-en-1440x900"
+          ],
+          "command": [
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+            "170",
+            "node",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+            "env",
+            "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+            "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+            "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-1-en-1440x900/network.json",
+            "node",
+            "--import",
+            "/private/tmp/weavly-review-network.mjs",
+            "/private/tmp/weavly-review-run-paint.mjs",
+            "payroll-extra",
+            "en",
+            "1440x900",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-1-en-1440x900"
+          ],
+          "exitCode": 1,
+          "elapsedSeconds": 43.55,
+          "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-1-en-1440x900/payroll-extra-en-1440x900/record.json",
+          "steps": 6,
+          "error": null,
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ],
+          "classification": "FAIL",
+          "visualReview": "UNVERIFIED"
+        }
+      ]
+    },
+    "GT-11": {
+      "task": "GT-11",
+      "runs": 12,
+      "steps": 78,
+      "classifications": {
+        "FAIL": 12
+      },
+      "failures": [
+        {
+          "id": "gt11-0-en-1440x900",
+          "exitCode": 1,
+          "error": null,
+          "issues": [
+            "pd-activate: rail intersects target",
+            "pd-looms: rail intersects target"
+          ],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt11-0-hi-1280x800",
+          "exitCode": 0,
+          "error": null,
+          "issues": [],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt11-0-en-1024x768",
+          "exitCode": 0,
+          "error": null,
+          "issues": [],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt11-0-gu-390x844",
+          "exitCode": 0,
+          "error": null,
+          "issues": [],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt11-0-reduced-en-1024x768",
+          "exitCode": 0,
+          "error": null,
+          "issues": [],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt11-1-en-1440x900",
+          "exitCode": 1,
+          "error": null,
+          "issues": [
+            "pd-activate: rail intersects target",
+            "pd-looms: rail intersects target"
+          ],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt11-1-hi-1280x800",
+          "exitCode": 0,
+          "error": null,
+          "issues": [],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt11-1-en-1024x768",
+          "exitCode": 0,
+          "error": null,
+          "issues": [],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt11-1-gu-390x844",
+          "exitCode": 0,
+          "error": null,
+          "issues": [],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt11-1-reduced-en-1024x768",
+          "exitCode": 0,
+          "error": null,
+          "issues": [],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt11-exit-production-en-1440x900",
+          "exitCode": 1,
+          "error": null,
+          "issues": [
+            "pd-activate: rail intersects target",
+            "pd-looms: rail intersects target"
+          ],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt11-exit-production-gu-390x844",
+          "exitCode": 0,
+          "error": null,
+          "issues": [],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        }
+      ],
+      "reviewNotes": "Production empty/populated: 12 main runs / 78 steps plus one unchanged-runner paint diagnostic / 7 steps. All English desktop and Gujarati phone captures inspected, including Exit. Raw guard FAIL retains one unchanged production_viewed mount POST per run with no tour increment. Three main runs retain pd-activate/pd-looms numeric aside intersections; transparent rail z30 with only a top child, dialogs z50, no visible child/target intersection, and unobstructed screenshots establish harness false positives (gt11-paint-adjudication.json). Seven-step order, prerequisite yarn stock, live labels, same mounted client/search node, retained Available filter/storage, disabled samples, scroll cleanup and Activate Quality Done focus/launcher Exit focus verified. No activation/allocation/operator handlers called. Native, authenticated-shell, live-dialog and real-device behavior UNVERIFIED; no reproduced Major in modeled states.",
+      "status": "IN_PROGRESS",
+      "humanGates": "UNVERIFIED",
+      "visualReview": "Every captured English 1440x900 and Gujarati 390x844 step inspected",
+      "evidence": "gt11-results.json",
+      "supplementalPaintDiagnostics": [
+        {
+          "id": "gt11-paint-0-en-1440x900",
+          "task": "GT-11",
+          "scenario": "production",
+          "language": "en",
+          "size": "1440x900",
+          "script": "/private/tmp/weavly-review-run-paint.mjs",
+          "args": [
+            "production",
+            "en",
+            "1440x900",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-paint-0-en-1440x900"
+          ],
+          "command": [
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+            "170",
+            "node",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+            "env",
+            "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+            "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+            "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-paint-0-en-1440x900/network.json",
+            "node",
+            "--import",
+            "/private/tmp/weavly-review-network.mjs",
+            "/private/tmp/weavly-review-run-paint.mjs",
+            "production",
+            "en",
+            "1440x900",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-paint-0-en-1440x900"
+          ],
+          "exitCode": 1,
+          "elapsedSeconds": 44.75,
+          "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-paint-0-en-1440x900/production-en-1440x900/record.json",
+          "steps": 7,
+          "error": null,
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ],
+          "classification": "FAIL",
+          "visualReview": "UNVERIFIED"
+        }
+      ]
+    },
+    "GT-12": {
+      "task": "GT-12",
+      "runs": 12,
+      "steps": 106,
+      "classifications": {
+        "FAIL": 12
+      },
+      "failures": [
+        {
+          "id": "gt12-0-en-1440x900",
+          "exitCode": 0,
+          "error": null,
+          "issues": [],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt12-0-hi-1280x800",
+          "exitCode": 0,
+          "error": null,
+          "issues": [],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt12-0-en-1024x768",
+          "exitCode": 0,
+          "error": null,
+          "issues": [],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt12-0-gu-390x844",
+          "exitCode": 0,
+          "error": null,
+          "issues": [],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt12-0-reduced-en-1024x768",
+          "exitCode": 0,
+          "error": null,
+          "issues": [],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt12-1-en-1440x900",
+          "exitCode": 0,
+          "error": null,
+          "issues": [],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt12-1-hi-1280x800",
+          "exitCode": 0,
+          "error": null,
+          "issues": [],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt12-1-en-1024x768",
+          "exitCode": 0,
+          "error": null,
+          "issues": [],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt12-1-gu-390x844",
+          "exitCode": 0,
+          "error": null,
+          "issues": [],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt12-1-reduced-en-1024x768",
+          "exitCode": 0,
+          "error": null,
+          "issues": [],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt12-exit-daily-sheet-en-1440x900",
+          "exitCode": 0,
+          "error": null,
+          "issues": [],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt12-exit-daily-sheet-gu-390x844",
+          "exitCode": 0,
+          "error": null,
+          "issues": [],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        }
+      ],
+      "reviewNotes": "Daily Sheet empty/populated: 12 runs / 106 steps; every UI assertion set passed and all required English desktop/Gujarati phone steps visually inspected, including Exit. Raw guard FAIL preserves one unchanged production_viewed mount POST per run; no tour increment. Nine-step order, single guide last in right rail at desktop/inline above sheet below 1280, disabled samples, handoff to Add worker or first Metres input, same live node, exact 37.5 draft value and device-storage bytes through all populated tours and both Exits, scroll/inert cleanup and launcher Exit focus verified. No save/correction/print handler called. PI-04 date/shift navigation cannot be verified by this router stub; owner-approved deferral and U-06 copy/navigation remain unchanged. Locked/conflict/storage-error live states, QA/native/screen-reader/real-device checks UNVERIFIED. No reproduced Major in modeled states.",
+      "status": "IN_PROGRESS",
+      "humanGates": "UNVERIFIED",
+      "visualReview": "Every captured English 1440x900 and Gujarati 390x844 step inspected",
+      "evidence": "gt12-results.json"
+    },
+    "GT-13": {
+      "task": "GT-13",
+      "runs": 12,
+      "steps": 66,
+      "classifications": {
+        "AUTOMATED_PASS": 12
+      },
+      "failures": [],
+      "reviewNotes": "Machines empty/populated: 12 main runs / 66 steps AUTOMATED_PASS; two separate read-only Back/Next transition probes / 6 frames also pass. All required English desktop/Gujarati phone main, Exit and diagnostic captures inspected. Six steps, read-only editor/no Close, Back restore, disabled fields, inline Production/Assignments links ready below 1280, sample guards, retained search/Needs setup filter/URL/storage, Add machine Done focus and launcher Exit focus verified; no business handler or blocked network request. Original readiness screenshots are taken immediately after the runner Back/Next check, after its pre-Back geometry measurement: they retain transitioning old outlines and a fading desktop panel across the new card. Separate frames show correct outline and zero actual-target/panel overlap by 500ms and at 2000ms on desktop/phone; original captures preserved, exact frame-level transition duration UNVERIFIED. No persistent obstruction or reproduced Major in modeled states. Native, real-device, authenticated editor/dirty-check and human gates remain UNVERIFIED.",
+      "status": "IN_PROGRESS",
+      "humanGates": "UNVERIFIED",
+      "visualReview": "Every captured English 1440x900 and Gujarati 390x844 step inspected",
+      "evidence": "gt13-results.json",
+      "supplementalTransitionDiagnostics": [
+        {
+          "id": "gt13-transition-0-en-1440x900",
+          "task": "GT-13",
+          "scenario": "machines",
+          "language": "en",
+          "size": "1440x900",
+          "script": "/private/tmp/weavly-review-machine-transition.mjs",
+          "args": [
+            "machines",
+            "en",
+            "1440x900",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt13-transition-0-en-1440x900"
+          ],
+          "command": [
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+            "170",
+            "node",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+            "env",
+            "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+            "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+            "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt13-transition-0-en-1440x900/network.json",
+            "node",
+            "--import",
+            "/private/tmp/weavly-review-network.mjs",
+            "/private/tmp/weavly-review-machine-transition.mjs",
+            "machines",
+            "en",
+            "1440x900",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt13-transition-0-en-1440x900"
+          ],
+          "exitCode": 0,
+          "elapsedSeconds": 10.05,
+          "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt13-transition-0-en-1440x900/transition/record.json",
+          "steps": 3,
+          "error": null,
+          "blockedNetwork": [],
+          "classification": "AUTOMATED_PASS",
+          "visualReview": "UNVERIFIED"
+        },
+        {
+          "id": "gt13-transition-1-gu-390x844",
+          "task": "GT-13",
+          "scenario": "machines?populated=1",
+          "language": "gu",
+          "size": "390x844",
+          "script": "/private/tmp/weavly-review-machine-transition.mjs",
+          "args": [
+            "machines?populated=1",
+            "gu",
+            "390x844",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt13-transition-1-gu-390x844"
+          ],
+          "command": [
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+            "170",
+            "node",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+            "env",
+            "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+            "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+            "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt13-transition-1-gu-390x844/network.json",
+            "node",
+            "--import",
+            "/private/tmp/weavly-review-network.mjs",
+            "/private/tmp/weavly-review-machine-transition.mjs",
+            "machines?populated=1",
+            "gu",
+            "390x844",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt13-transition-1-gu-390x844"
+          ],
+          "exitCode": 0,
+          "elapsedSeconds": 10.39,
+          "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt13-transition-1-gu-390x844/transition/record.json",
+          "steps": 3,
+          "error": null,
+          "blockedNetwork": [],
+          "classification": "AUTOMATED_PASS",
+          "visualReview": "UNVERIFIED"
+        }
+      ]
+    },
+    "GT-14": {
+      "task": "GT-14",
+      "runs": 20,
+      "steps": 120,
+      "classifications": {
+        "AUTOMATED_PASS": 20
+      },
+      "failures": [],
+      "reviewNotes": "All 20 main runs and 120 captured steps passed UI assertions with zero blocked requests. Piece-rate and salary paths covered empty and populated retained nonmatching search/Night/inactive filters at standard and reduced motion. Start and replay reset to piece-rate; Back retained the selected pay type. Search/filter DOM values, URL and local storage were preserved; sample choices were localized, read-only and disabled; earnings and salary proration examples matched source. Done focused Add Worker and Escape restored the launcher without completion. Every required English desktop and Gujarati phone screenshot across all four variants was inspected. The immediate post-Back step-2 screenshot captures an in-progress outline transition; four separate read-only probes (piece/salary, English desktop/Gujarati phone) passed 12 frames at 0/500/2000 ms, with the correct availability/salary outline by 500 and 2000 ms and no actual target/panel overlap in any frame. All four supplemental contact sheets were inspected. Exact frame-level transition duration and required human/native-language/screen-reader/real-device/live persistence evidence remain UNVERIFIED. Original main screenshots and assertions are unchanged; no reproduced Major defect.",
+      "status": "IN_PROGRESS",
+      "humanGates": "UNVERIFIED",
+      "visualReview": "Every captured English 1440x900 and Gujarati 390x844 step inspected",
+      "evidence": "gt14-results.json",
+      "supplementalTransitionDiagnostics": [
+        {
+          "id": "gt14-transition-0-en-1440x900",
+          "task": "GT-14",
+          "scenario": "workers",
+          "language": "en",
+          "size": "1440x900",
+          "script": "/private/tmp/weavly-review-worker-transition.mjs",
+          "args": [
+            "workers",
+            "en",
+            "1440x900",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt14-transition-0-en-1440x900"
+          ],
+          "command": [
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+            "170",
+            "node",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+            "env",
+            "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+            "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+            "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt14-transition-0-en-1440x900/network.json",
+            "node",
+            "--import",
+            "/private/tmp/weavly-review-network.mjs",
+            "/private/tmp/weavly-review-worker-transition.mjs",
+            "workers",
+            "en",
+            "1440x900",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt14-transition-0-en-1440x900"
+          ],
+          "exitCode": 0,
+          "elapsedSeconds": 21.22,
+          "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt14-transition-0-en-1440x900/transition/record.json",
+          "steps": 3,
+          "error": null,
+          "blockedNetwork": [],
+          "classification": "AUTOMATED_PASS",
+          "visualReview": "UNVERIFIED"
+        },
+        {
+          "id": "gt14-transition-0-gu-390x844",
+          "task": "GT-14",
+          "scenario": "workers",
+          "language": "gu",
+          "size": "390x844",
+          "script": "/private/tmp/weavly-review-worker-transition.mjs",
+          "args": [
+            "workers",
+            "gu",
+            "390x844",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt14-transition-0-gu-390x844"
+          ],
+          "command": [
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+            "170",
+            "node",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+            "env",
+            "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+            "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+            "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt14-transition-0-gu-390x844/network.json",
+            "node",
+            "--import",
+            "/private/tmp/weavly-review-network.mjs",
+            "/private/tmp/weavly-review-worker-transition.mjs",
+            "workers",
+            "gu",
+            "390x844",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt14-transition-0-gu-390x844"
+          ],
+          "exitCode": 0,
+          "elapsedSeconds": 8.69,
+          "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt14-transition-0-gu-390x844/transition/record.json",
+          "steps": 3,
+          "error": null,
+          "blockedNetwork": [],
+          "classification": "AUTOMATED_PASS",
+          "visualReview": "UNVERIFIED"
+        },
+        {
+          "id": "gt14-transition-1-en-1440x900",
+          "task": "GT-14",
+          "scenario": "workers-salary",
+          "language": "en",
+          "size": "1440x900",
+          "script": "/private/tmp/weavly-review-worker-transition.mjs",
+          "args": [
+            "workers-salary",
+            "en",
+            "1440x900",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt14-transition-1-en-1440x900"
+          ],
+          "command": [
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+            "170",
+            "node",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+            "env",
+            "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+            "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+            "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt14-transition-1-en-1440x900/network.json",
+            "node",
+            "--import",
+            "/private/tmp/weavly-review-network.mjs",
+            "/private/tmp/weavly-review-worker-transition.mjs",
+            "workers-salary",
+            "en",
+            "1440x900",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt14-transition-1-en-1440x900"
+          ],
+          "exitCode": 0,
+          "elapsedSeconds": 8.94,
+          "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt14-transition-1-en-1440x900/transition/record.json",
+          "steps": 3,
+          "error": null,
+          "blockedNetwork": [],
+          "classification": "AUTOMATED_PASS",
+          "visualReview": "UNVERIFIED"
+        },
+        {
+          "id": "gt14-transition-1-gu-390x844",
+          "task": "GT-14",
+          "scenario": "workers-salary",
+          "language": "gu",
+          "size": "390x844",
+          "script": "/private/tmp/weavly-review-worker-transition.mjs",
+          "args": [
+            "workers-salary",
+            "gu",
+            "390x844",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt14-transition-1-gu-390x844"
+          ],
+          "command": [
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+            "170",
+            "node",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+            "env",
+            "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+            "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+            "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt14-transition-1-gu-390x844/network.json",
+            "node",
+            "--import",
+            "/private/tmp/weavly-review-network.mjs",
+            "/private/tmp/weavly-review-worker-transition.mjs",
+            "workers-salary",
+            "gu",
+            "390x844",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt14-transition-1-gu-390x844"
+          ],
+          "exitCode": 0,
+          "elapsedSeconds": 18.01,
+          "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt14-transition-1-gu-390x844/transition/record.json",
+          "steps": 3,
+          "error": null,
+          "blockedNetwork": [],
+          "classification": "AUTOMATED_PASS",
+          "visualReview": "UNVERIFIED"
+        }
+      ]
+    },
+    "GT-15": {
+      "task": "GT-15",
+      "runs": 16,
+      "steps": 94,
+      "classifications": {
+        "FAIL": 16
+      },
+      "failures": [
+        {
+          "id": "gt15-0-en-1440x900",
+          "exitCode": 1,
+          "error": null,
+          "issues": [
+            "navigation/API request"
+          ],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt15-0-hi-1280x800",
+          "exitCode": 1,
+          "error": null,
+          "issues": [
+            "ma-purpose: panel/outline overlap 5724; MA-1/default board anchor remains unverified",
+            "navigation/API request"
+          ],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt15-0-en-1024x768",
+          "exitCode": 1,
+          "error": null,
+          "issues": [
+            "ma-purpose: panel/outline overlap 10070; MA-1/default board anchor remains unverified",
+            "navigation/API request"
+          ],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt15-0-gu-390x844",
+          "exitCode": 1,
+          "error": null,
+          "issues": [
+            "navigation/API request"
+          ],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt15-0-reduced-en-1024x768",
+          "exitCode": 1,
+          "error": null,
+          "issues": [
+            "ma-purpose: panel/outline overlap 10070; MA-1/default board anchor remains unverified",
+            "navigation/API request"
+          ],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt15-1-en-1440x900",
+          "exitCode": 1,
+          "error": null,
+          "issues": [
+            "navigation/API request"
+          ],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt15-1-hi-1280x800",
+          "exitCode": 1,
+          "error": null,
+          "issues": [
+            "ma-purpose: panel/outline overlap 5724; MA-1/default board anchor remains unverified",
+            "navigation/API request"
+          ],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt15-1-en-1024x768",
+          "exitCode": 1,
+          "error": null,
+          "issues": [
+            "ma-purpose: panel/outline overlap 10070; MA-1/default board anchor remains unverified",
+            "navigation/API request"
+          ],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt15-1-gu-390x844",
+          "exitCode": 1,
+          "error": null,
+          "issues": [
+            "navigation/API request"
+          ],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt15-1-reduced-en-1024x768",
+          "exitCode": 1,
+          "error": null,
+          "issues": [
+            "ma-purpose: panel/outline overlap 10070; MA-1/default board anchor remains unverified",
+            "navigation/API request"
+          ],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt15-exit-assignments-en-1440x900",
+          "exitCode": 1,
+          "error": null,
+          "issues": [
+            "navigation/API request"
+          ],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt15-exit-assignments-gu-390x844",
+          "exitCode": 1,
+          "error": null,
+          "issues": [
+            "navigation/API request"
+          ],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt15-night-focus-en-1440x900",
+          "exitCode": 1,
+          "error": null,
+          "issues": [
+            "navigation/API request"
+          ],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt15-night-focus-hi-1280x800",
+          "exitCode": 1,
+          "error": null,
+          "issues": [
+            "ma-purpose: panel/outline overlap 5724; MA-1/default board anchor remains unverified",
+            "navigation/API request"
+          ],
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ]
+        },
+        {
+          "id": "gt15-night-focus-en-1024x768",
+          "exitCode": 1,
+          "error": null,
+          "issues": [],
+          "blockedNetwork": []
+        },
+        {
+          "id": "gt15-night-focus-gu-390x844",
+          "exitCode": 1,
+          "error": null,
+          "issues": [],
+          "blockedNetwork": []
+        }
+      ],
+      "reviewNotes": "GT-15 main matrix completed 16 attempts / 94 captured steps. Seven original main cases reproduce MA-1 step-1 board overlap at English 1024x768 and Hindi 1280x800, including empty/populated and reduced motion; a separately preserved unchanged Night/focus retry at 1024 also reproduces it. GT-15 must be FAILED under BV-02; the conditional columns fallback was not selected or tested and no anchor fix is authorized by this review. The owned fixture server exhausted Node heap memory before the last two original cases loaded; both zero-step connection-refused failures remain intact. The identical fixture was restarted, and two unchanged retries captured all 14 missing steps, with Gujarati state/focus checks passing apart from the baseline API guard. All 19 original English desktop/Gujarati phone contact sheets and three Gujarati retry sheets were visually inspected, plus representative 1024/1280 board screenshots. Samples, picker, Choose and Undo controls remained disabled and inert; no real business handler or navigation occurred. Derived day/sample views preserved and restored Night, nonmatching search, worker/machine focus URL and non-tour storage. Focus banner stayed hidden while touring. Done focused first live Assign or Add worker in the ordinary variants, and the replay launcher when the restored nonmatching search removed the worker. Exit at picker restored the page/launcher without completion; replay/Escape passed. All loaded original and retry runs retain one blocked unchanged production_viewed mount event, so raw FAIL classifications and API assertions are preserved. Separate read-only Back/Next probes at English 1440/1024 and Gujarati phone captured nine frames at 0/500/2000 ms; all three probe UI exits are 0 with no issues, while raw guard classifications remain FAIL for the mount event. All nine diagnostic screenshots were inspected. Immediate images retain moving outlines/fading panels, with brief saved-preview obstruction at 1024; computed rectangles and screenshots are sampled at slightly different moments. At 500 and 2000 ms, panel and outline are on screen, correctly aligned and separate from the saved-preview target in all three cases. Exact transition duration, native language, screen reader, real device, owner and live persistence evidence remain UNVERIFIED. Original runner, assertions, timeouts, screenshots and failures are unchanged.",
+      "status": "FAILED",
+      "humanGates": "UNVERIFIED",
+      "visualReview": "Every captured English 1440x900 and Gujarati 390x844 step inspected",
+      "evidence": "gt15-results.json",
+      "supplementalRetries": [
+        {
+          "id": "gt15-retry-night-focus-en-1024x768",
+          "task": "GT-15",
+          "scenario": "assignments?populated=1&shift=night&worker=11111111-1111-4111-8111-111111111111&machine=22222222-2222-4222-8222-222222222222",
+          "language": "en",
+          "size": "1024x768",
+          "env": {
+            "PRE_TYPE": "No matching retained worker"
+          },
+          "originalRun": "gt15-night-focus-en-1024x768",
+          "command": [
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+            "170",
+            "node",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+            "env",
+            "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+            "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+            "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-retry-night-focus-en-1024x768/network.json",
+            "PRE_TYPE=No matching retained worker",
+            "node",
+            "--import",
+            "/private/tmp/weavly-review-network.mjs",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification-harness/run-tour.mjs",
+            "assignments?populated=1&shift=night&worker=11111111-1111-4111-8111-111111111111&machine=22222222-2222-4222-8222-222222222222",
+            "en",
+            "1024x768",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-retry-night-focus-en-1024x768"
+          ],
+          "exitCode": 1,
+          "elapsedSeconds": 61.69,
+          "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-retry-night-focus-en-1024x768/assignments_populated_1_shift_night_worker_11111111-1111-4111-8111-111111111111_machine_22222222-2222-4222-8222-222222222222-en-1024x768/record.json",
+          "steps": 7,
+          "error": null,
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ],
+          "classification": "FAIL",
+          "visualReview": "UNVERIFIED"
+        },
+        {
+          "id": "gt15-retry-night-focus-gu-390x844",
+          "task": "GT-15",
+          "scenario": "assignments?populated=1&shift=night&worker=11111111-1111-4111-8111-111111111111&machine=22222222-2222-4222-8222-222222222222",
+          "language": "gu",
+          "size": "390x844",
+          "env": {
+            "PRE_TYPE": "No matching retained worker"
+          },
+          "originalRun": "gt15-night-focus-gu-390x844",
+          "command": [
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+            "170",
+            "node",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+            "env",
+            "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+            "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+            "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-retry-night-focus-gu-390x844/network.json",
+            "PRE_TYPE=No matching retained worker",
+            "node",
+            "--import",
+            "/private/tmp/weavly-review-network.mjs",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification-harness/run-tour.mjs",
+            "assignments?populated=1&shift=night&worker=11111111-1111-4111-8111-111111111111&machine=22222222-2222-4222-8222-222222222222",
+            "gu",
+            "390x844",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-retry-night-focus-gu-390x844"
+          ],
+          "exitCode": 1,
+          "elapsedSeconds": 44.67,
+          "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-retry-night-focus-gu-390x844/assignments_populated_1_shift_night_worker_11111111-1111-4111-8111-111111111111_machine_22222222-2222-4222-8222-222222222222-gu-390x844/record.json",
+          "steps": 7,
+          "error": null,
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ],
+          "classification": "FAIL",
+          "visualReview": "UNVERIFIED"
+        }
+      ],
+      "supplementalTransitionDiagnostics": [
+        {
+          "id": "gt15-transition-en-1440x900",
+          "task": "GT-15",
+          "scenario": "assignments?populated=1",
+          "language": "en",
+          "size": "1440x900",
+          "script": "/private/tmp/weavly-review-assignment-transition.mjs",
+          "args": [
+            "assignments?populated=1",
+            "en",
+            "1440x900",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-transition-en-1440x900"
+          ],
+          "command": [
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+            "170",
+            "node",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+            "env",
+            "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+            "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+            "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-transition-en-1440x900/network.json",
+            "node",
+            "--import",
+            "/private/tmp/weavly-review-network.mjs",
+            "/private/tmp/weavly-review-assignment-transition.mjs",
+            "assignments?populated=1",
+            "en",
+            "1440x900",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-transition-en-1440x900"
+          ],
+          "exitCode": 0,
+          "elapsedSeconds": 22.32,
+          "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-transition-en-1440x900/transition/record.json",
+          "steps": 3,
+          "error": null,
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ],
+          "classification": "FAIL",
+          "visualReview": "UNVERIFIED"
+        },
+        {
+          "id": "gt15-transition-en-1024x768",
+          "task": "GT-15",
+          "scenario": "assignments?populated=1",
+          "language": "en",
+          "size": "1024x768",
+          "script": "/private/tmp/weavly-review-assignment-transition.mjs",
+          "args": [
+            "assignments?populated=1",
+            "en",
+            "1024x768",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-transition-en-1024x768"
+          ],
+          "command": [
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+            "170",
+            "node",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+            "env",
+            "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+            "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+            "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-transition-en-1024x768/network.json",
+            "node",
+            "--import",
+            "/private/tmp/weavly-review-network.mjs",
+            "/private/tmp/weavly-review-assignment-transition.mjs",
+            "assignments?populated=1",
+            "en",
+            "1024x768",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-transition-en-1024x768"
+          ],
+          "exitCode": 0,
+          "elapsedSeconds": 13.36,
+          "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-transition-en-1024x768/transition/record.json",
+          "steps": 3,
+          "error": null,
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ],
+          "classification": "FAIL",
+          "visualReview": "UNVERIFIED"
+        },
+        {
+          "id": "gt15-transition-gu-390x844",
+          "task": "GT-15",
+          "scenario": "assignments?populated=1",
+          "language": "gu",
+          "size": "390x844",
+          "script": "/private/tmp/weavly-review-assignment-transition.mjs",
+          "args": [
+            "assignments?populated=1",
+            "gu",
+            "390x844",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-transition-gu-390x844"
+          ],
+          "command": [
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+            "170",
+            "node",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+            "env",
+            "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+            "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+            "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-transition-gu-390x844/network.json",
+            "node",
+            "--import",
+            "/private/tmp/weavly-review-network.mjs",
+            "/private/tmp/weavly-review-assignment-transition.mjs",
+            "assignments?populated=1",
+            "gu",
+            "390x844",
+            "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-transition-gu-390x844"
+          ],
+          "exitCode": 0,
+          "elapsedSeconds": 14.38,
+          "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-transition-gu-390x844/transition/record.json",
+          "steps": 3,
+          "error": null,
+          "blockedNetwork": [
+            {
+              "type": "blocked-api",
+              "url": "http://localhost:5199/api/analytics/plan-events",
+              "method": "POST"
+            }
+          ],
+          "classification": "FAIL",
+          "visualReview": "UNVERIFIED"
+        }
+      ],
+      "findings": [
+        "BV-02"
+      ],
+      "adjudication": "gt15-finding-bv02.json"
+    }
+  },
+  "fixtureIncident": "gt15-fixture-oom.json",
+  "serverHistory": [
+    {
+      "owned": true,
+      "pid": 48739,
+      "sessionId": 91675,
+      "url": "http://127.0.0.1:5199",
+      "command": "isolated Vite --config scratch/browser-verification-harness/vite.config.mjs --host 127.0.0.1",
+      "terminated": "Node heap exhaustion",
+      "exitCode": 1
+    }
+  ],
+  "ownedServer": {
+    "pid": 70042,
+    "commandBefore": "70042 node node_modules/vite/bin/vite.js --config scratch/browser-verification-harness/vite.config.mjs --host 127.0.0.1",
+    "signal": "SIGTERM",
+    "stopped": true,
+    "scope": "Only the Vite process started for this isolated synthetic browser review"
+  },
+  "integratedReviewVerdict": "FAIL",
+  "runnerIntegrity": {
+    "unchanged": true,
+    "sha256": "1638f82ee99d2e9cfa16e62d977534a0743a6463e072a63b226f6ed89d375987"
+  },
+  "provenance": "provenance-final/manifest.json",
+  "integrityRepair": {
+    "originalFailure": "integrity-first-attempt/source-integrity.json",
+    "reason": "Starting manifest represents preexisting tracked deletions with DELETED; first final manifest wrongly omitted those entries. Final helper now uses the identical tombstone representation. No application change was made.",
+    "provenance": "provenance-integrity-repair/manifest.json"
+  },
+  "sourceIntegrity": {
+    "headUnchanged": true,
+    "branchUnchanged": true,
+    "applicationFingerprint": "a70241eef16e00357e5bb1be433f3e991f9a02777ba08e535c4ce2a091189167",
+    "applicationUnchanged": true,
+    "fileChanges": [
+      {
+        "file": "docs/guided-tours/EXECUTION_STATUS.md",
+        "before": "b785f18c98d830bc0769bfc417ab22e87e8d31159c0bab7386382772f870d2b7",
+        "after": "ed5c07f71acd6a6a87fe7f730bd6e15aad3866a50d996660ee30ea350da92458"
+      }
+    ],
+    "allowedChangesOnly": true
+  }
+}

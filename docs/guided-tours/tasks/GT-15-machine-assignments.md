@@ -18,6 +18,8 @@ GT-15. Move the Machine Assignments tour to `GuidedTour` with corrected copy, ke
 
 `BaseAssignmentWorkspace.tsx` (tour mount, anchors, keys for Assign / No production job, focus banner hidden while touring), delete `components/tours/ConfigurationTutorial.tsx` when unused, `lib/configuration-tour.ts`, `lib/i18n/configuration-tutorial.ts` (remove the "Show inactive" topic), `app/globals.css` (remove the dead `[data-configuration-tour-preview]` rule), locales, registry `configuration` → `v2`, listed tests, contract test, harness.
 
+Owner-approved clarification (2026-09-28): the owner answered “approve all three” to the coordinator’s decisions. Page spec §F now removes only the incorrect one-loom-per-worker sentence from `shift.body` in English/Gujarati/Hindi, retaining “Day and night are set separately.” and its already approved translations. Implement that corrected row. Multiple-loom assignment behavior remains protected. Use the default board anchor; the conditional overlap fallback still requires later browser evidence. These packet/page addenda are owner-approved documentation changes and must be preserved in the task patch.
+
 ## Protected surface
 
 Assign/replace/undo/remove behavior and server validation, drag linking, picker, mobile toggle, legacy redirects.

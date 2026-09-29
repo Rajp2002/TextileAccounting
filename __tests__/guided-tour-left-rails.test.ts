@@ -63,14 +63,15 @@ describe('Guided Tour Left Rail Placement Across All Sections', () => {
     })
 
     // 5. Production
-    it('verifies Production renders TourInvitation in .production-left-rail', () => {
+    it('keeps the Production launcher and replica inside their shared rail/workspace contract', () => {
         const productionTour = read('components/production/ProductionGuidedTour.tsx')
-
-        expect(productionTour).toContain('<aside className="production-left-rail guided-tour-left-rail space-y-2"')
-        expect(productionTour).toContain('<TourInvitation')
+        const shell = read('components/tours/ReplicaGuidedTour.tsx')
+        expect(productionTour).toContain('<ReplicaGuidedTour')
+        expect(productionTour).toContain('railClassName="production-left-rail"')
+        expect(productionTour).toContain('workspaceClassName="production-overview-workspace')
         expect(productionTour).toContain('tourId="production"')
-        expect(productionTour).toContain('align="full"')
-        expect(invitationProps(productionTour)).not.toContain('amber')
+        expect(shell).toContain('align="full"')
+        expect(invitationProps(shell)).not.toContain('amber')
     })
 
     // 6. Workers Register
@@ -101,10 +102,11 @@ describe('Guided Tour Left Rail Placement Across All Sections', () => {
     it('verifies Payroll renders TourInvitation in .payroll-left-rail', () => {
         const payrollTour = read('components/payroll/PayrollGuidedTour.tsx')
 
-        expect(payrollTour).toContain('<aside className="payroll-left-rail guided-tour-left-rail space-y-2"')
-        expect(payrollTour).toContain('<TourInvitation')
+        expect(payrollTour).toContain('<ReplicaGuidedTour')
+        expect(payrollTour).toContain('railClassName="payroll-left-rail"')
+        expect(read('components/tours/ReplicaGuidedTour.tsx')).toContain('<TourInvitation')
         expect(payrollTour).toContain('tourId="payroll"')
-        expect(payrollTour).toContain('align="full"')
+        expect(read('components/tours/ReplicaGuidedTour.tsx')).toContain('align="full"')
         expect(payrollTour).not.toContain('bg-saffron-soft/75')
     })
 
@@ -112,23 +114,31 @@ describe('Guided Tour Left Rail Placement Across All Sections', () => {
     it('verifies Stock (Fabric & Yarn) renders TourInvitation in .stock-left-rail', () => {
         const stockTour = read('components/stock/StockGuidedTour.tsx')
 
-        expect(stockTour).toContain('<aside className="stock-left-rail guided-tour-left-rail space-y-2"')
-        expect(stockTour).toContain('<TourInvitation')
+        const shell = read('components/tours/ReplicaGuidedTour.tsx')
+        expect(stockTour).toContain('<ReplicaGuidedTour')
+        expect(stockTour).toContain('railClassName="stock-left-rail"')
+        expect(stockTour).toContain('workspaceClassName="stock-workspace-shell')
         expect(stockTour).toContain('tourId={kind}')
-        expect(stockTour).toContain('align="full"')
-        expect(invitationProps(stockTour)).not.toContain('amber')
+        expect(shell).toContain('className={`${railClassName} guided-tour-left-rail space-y-2`}')
+        expect(shell).toContain('<TourInvitation')
+        expect(shell).toContain('align="full"')
+        expect(invitationProps(shell)).not.toContain('amber')
     })
 
     // 11. Dispatches
     it('verifies Dispatches renders TourInvitation in .dispatch-left-rail', () => {
         const dispatchTour = read('components/dispatches/DispatchGuidedTour.tsx')
 
-        expect(dispatchTour).toContain('<aside className="dispatch-left-rail guided-tour-left-rail space-y-2"')
-        expect(dispatchTour).toContain('<TourInvitation')
+        const shell = read('components/tours/ReplicaGuidedTour.tsx')
+        expect(dispatchTour).toContain('<ReplicaGuidedTour')
+        expect(dispatchTour).toContain('railClassName="dispatch-left-rail"')
+        expect(dispatchTour).toContain('workspaceClassName="dispatch-workspace-shell')
         expect(dispatchTour).toContain('tourId="dispatch"')
-        expect(dispatchTour).toContain('align="full"')
-        expect(dispatchTour).not.toContain('guideCard=')
-        expect(invitationProps(dispatchTour)).not.toContain('amber')
+        expect(shell).toContain('className={`${railClassName} guided-tour-left-rail space-y-2`}')
+        expect(shell).toContain('<TourInvitation')
+        expect(shell).toContain('align="full"')
+        expect(shell).not.toContain('guideCard=')
+        expect(invitationProps(shell)).not.toContain('amber')
     })
 
     // CSS verification

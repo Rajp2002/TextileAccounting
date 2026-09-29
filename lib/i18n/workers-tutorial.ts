@@ -1,122 +1,124 @@
 import type { Language } from './context'
-import type { WorkersTourStep, WorkersHelpStep } from '../workers-tour'
-import { configurationTutorialCopy } from './configuration-tutorial'
+import type { WorkersTourCopyKey, WorkersHelpStep } from '../workers-tour'
 
 type WorkersCopy = {
-    sample: string
     paths: { piece: string; salary: string }
+    samples: { worker: string; staff: string; role: string }
     helpTitle: string
     wageLabel: string
     wageSource: string
     qualityWage: string
     salaryBasis: string
-    fields: Record<WorkersTourStep | WorkersHelpStep, readonly [string, string]>
-    skip: string; back: string; next: string; finish: string; progress: string
+    fields: Record<WorkersHelpStep, readonly [string, string]>
+    steps: Record<WorkersTourCopyKey, { title: string; body: string }>
 }
+
+// Tour copy is transcribed from Workers §F; native-language review remains pending.
+// Existing live pay-source text and maintenance help stay unchanged.
 export const workersTutorialCopy: Record<Language, WorkersCopy> = {
     en: {
-        ...configurationTutorialCopy.en,
-        sample: 'Tour samples · Nothing will be saved',
-        paths: { piece: 'Piece-rate walkthrough', salary: 'Salary walkthrough' },
+        paths: { piece: "Piece rate", salary: "Monthly salary" },
+        samples: { worker: "Sample worker", staff: "Sample staff", role: "Supervisor" },
         helpTitle: 'Worker help: filters, roles and leaving dates',
         wageLabel: 'Wage source',
         wageSource: 'Production quality',
         qualityWage: "Quality weaver wage",
         salaryBasis: "Fixed monthly salary",
         fields: {
-            earnings: ["Output becomes earnings", "At a quality wage of ₹1.50/m, 100 m gives this piece-rate worker ₹150 gross earnings. Saved production keeps its wage snapshot for Payroll; later quality wage changes do not rewrite that saved rate."],
-            purpose: ["Set up the right pay path", "Register workers before assigning production or calculating salary. Choose a walkthrough below: piece-rate pay follows output; fixed salary follows salary and employment dates. These are safe samples."],
             search: ["Find a worker", "Search by worker name or staff role. Search and shift/status filters work together; clear filters if a worker is missing."],
             shiftFilter: ['Filter by availability', 'Choose Day shift or Night shift to include workers available for that shift. Day & night shows only workers available for both.'],
             statusFilter: ['Find active or inactive workers', 'The register starts with active workers. Use All workers or Inactive workers when reviewing someone who has left.'],
             groups: ['Two ways to pay', 'Piece Rate groups workers paid based on production. Fixed Salary groups staff paid a monthly salary. Each group has its own count.'],
             pieceCard: ['Read a worker card', 'The card shows the worker’s name, shift availability and active status. Availability controls which shift they can be assigned to.'],
-            pieceReadiness: ["Use the quality’s weaver wage", "The active quality in Production supplies the weaver wage copied from its saved costing. Check Weaver wage there before recording output. Wages can differ between qualities; the worker form does not set this rate."],
             salaryReadiness: ['Check salary readiness', 'Salary shows whether pay is configured, without exposing the amount on the card. Payroll is Ready when salary and a joining date are present.'],
             add: ["Add a worker", "Choose Add worker for a new person. Decide the pay type before saving; use the tour to preview either pay path safely."],
             name: ["Worker name", "Enter a recognisable name so you can find the worker in the register and assignment screens."],
-            payType: ['Choose the pay type carefully', 'Choose Piece rate for production-based pay or Fixed monthly salary for staff. Pay type cannot be changed after the worker is created.'],
-            availability: ["Make the worker available", "Enter a recognisable name and choose Day shift, Night shift or Day & night. Only active workers available for that shift appear on the assignment board. Then save with Add worker."],
             salaryRole: ['Describe the staff role', 'For fixed-salary staff, enter a role such as Supervisor. You can also find staff by searching for this role.'],
-            salary: ["Set the agreed salary", "For the named staff member, enter the monthly salary: this sample uses ₹18,000. Salary earnings follow employment dates, not metres produced. The amount stays hidden on the register card."],
-            joining: ["Check when salary starts", "Check Joining date before Add worker; it cannot be edited later. At ₹18,000/month, 15 eligible days in a 30-day month earn ₹9,000 gross. Payroll uses the actual calendar month’s days."],
             edit: ["Update an existing worker", "Use Edit on a worker card to update details. For salary changes, choose an effective date of today or later; earlier earnings and paid records stay unchanged."],
-            effective: ["Date salary changes", "Later, use Edit and Salary change effective from for a salary change starting today or later. Earlier earnings and paid records stay unchanged."],
             lastDay: ['Record the last working day', 'Salary accrues through this date. A last working day is required when deactivating fixed-salary staff.'],
             active: ["Manage active status", "Clear Active worker when the person is no longer active. Use the status filter to find inactive records."],
-            assignments: ["Prepare a loom for this worker", "Use View assignments for this worker. If no loom is ready, register it in Machines, then use Production → Overview & Looms → Activate Quality → Assign Looms before assigning the worker to a shift."],
-            payroll: ["Review the salary obligation", "This sample has salary and a joining date, so its card shows Payroll Ready. View payroll opens the overall payroll page: select the pay period and review this staff member’s calculated amount before recording payment."],
-            finish: ["Start with your real worker", "Finish restores your register and filters. Choose Add worker for a new person, or View assignments / View payroll on an existing card. Replay to learn the other pay path; expandable Worker help covers filters and maintenance."],
+        },
+        steps: {
+            paytype: { title: "Choose how this worker is paid", body: "Piece-rate workers earn per metre woven; salaried staff earn a monthly amount. This cannot be changed after saving." },
+            availability: { title: "Set the shifts they can work", body: "Day, night or both. Only matching workers can be put on a loom for that shift." },
+            wage: { title: "The wage comes from the quality", body: "You do not type a wage here. Each quality's weaver wage, set when it is activated in Production, applies to whoever weaves it." },
+            loom: { title: "Put them on a loom", body: "A piece-rate worker earns only when assigned to a loom for a shift, in Machine Assignments." },
+            earnings: { title: "Metres become earnings", body: "Saved shifts add metres × wage: 100 m × ₹1.50 = ₹150. Payroll pays it." },
+            salary: { title: "Enter the agreed monthly salary", body: "Enter the full monthly amount, here ₹18,000. Payroll works out each period from it." },
+            joining: { title: "Salary starts on the joining date", body: "Someone who joins halfway through a 30-day month is paid 15/30 × ₹18,000 = ₹9,000 for it." },
+            changes: { title: "Date every change", body: "When the salary changes, set the date it applies from. When someone leaves, set their last working day before marking them inactive." },
+            payroll: { title: "Salaries appear in payroll", body: "{c:viewPayroll} opens this worker's pay for the current period." },
+            handoff: { title: "Add your workers", body: "Choose {c:addWorker} for each person and pick their pay type carefully." },
         },
     },
     gu: {
-        ...configurationTutorialCopy.gu,
-        sample: 'ટૂરના નમૂના · કંઈ સાચવવામાં આવશે નહીં',
-        paths: { piece: 'પીસ રેટ માર્ગદર્શન', salary: 'પગાર માર્ગદર્શન' },
+        paths: { piece: "પીસ રેટ", salary: "માસિક પગાર" },
+        samples: { worker: "નમૂના કારીગર", staff: "નમૂના સ્ટાફ", role: "સુપરવાઇઝર" },
         helpTitle: 'કારીગર મદદ: ફિલ્ટર, ભૂમિકા અને છેલ્લી તારીખ',
         wageLabel: 'વેતનનો સ્ત્રોત',
         wageSource: 'ઉત્પાદનની ક્વોલિટી',
         qualityWage: "ક્વોલિટીનું વણકર વેતન",
         salaryBasis: "નિશ્ચિત માસિક પગાર",
         fields: {
-            earnings: ["ઉત્પાદનથી કમાણી બને છે", "ક્વોલિટીનું વેતન ₹1.50/મી હોય તો 100 મીટર માટે પીસ રેટ કારીગરની કુલ કમાણી ₹150 થાય છે. સાચવેલું ઉત્પાદન પેરોલ માટે તે સમયનો દર રાખે છે; પછીનો ક્વોલિટી દરનો ફેરફાર સાચવેલો દર બદલતો નથી."],
-            purpose: ["યોગ્ય વેતન પદ્ધતિ ગોઠવો", "ઉત્પાદન ફાળવતા કે પગાર ગણતા પહેલાં કારીગર નોંધો. નીચે માર્ગદર્શન પસંદ કરો: પીસ રેટમાં ઉત્પાદન પ્રમાણે કમાણી થાય છે; નિશ્ચિત પગારમાં પગાર અને નોકરીની તારીખો પ્રમાણે. આ સલામત નમૂના છે."],
             search: ["કારીગર શોધો", "કારીગરના નામ અથવા સ્ટાફની ભૂમિકાથી શોધો. શોધ અને શિફ્ટ/સ્થિતિ ફિલ્ટર સાથે કામ કરે છે; કારીગર ન દેખાય તો ફિલ્ટર દૂર કરો."],
             shiftFilter: ['ઉપલબ્ધતા પ્રમાણે ફિલ્ટર કરો', 'દિવસ કે રાત્રિની શિફ્ટ પસંદ કરવાથી તે શિફ્ટમાં ઉપલબ્ધ કારીગરો દેખાશે. દિવસ અને રાત્રિ પસંદ કરવાથી બંનેમાં ઉપલબ્ધ કારીગરો જ દેખાશે.'],
             statusFilter: ['સક્રિય કે નિષ્ક્રિય કારીગરો શોધો', 'શરૂઆતમાં સક્રિય કારીગરો દેખાય છે. કામ છોડી ગયેલા કારીગરને જોવા બધા કારીગરો અથવા નિષ્ક્રિય કારીગરો પસંદ કરો.'],
             groups: ['પગારની બે પદ્ધતિ', 'પીસ રેટમાં ઉત્પાદન પ્રમાણે વેતન મેળવનારા કારીગરો છે. નિશ્ચિત પગારમાં માસિક પગારવાળો સ્ટાફ છે. દરેક જૂથની પોતાની સંખ્યા છે.'],
             pieceCard: ['કારીગરનું કાર્ડ સમજો', 'કાર્ડ પર નામ, શિફ્ટ ઉપલબ્ધતા અને સક્રિય સ્થિતિ દેખાય છે. ઉપલબ્ધતા પ્રમાણે શિફ્ટમાં ફાળવણી થઈ શકે છે.'],
-            pieceReadiness: ["ક્વોલિટીનું વણકર વેતન વાપરો", "ઉત્પાદનની સક્રિય ક્વોલિટીનું વણકર વેતન તેના સાચવેલા કોસ્ટિંગમાંથી આવે છે. ઉત્પાદન નોંધતા પહેલાં ત્યાં Weaver wage તપાસો. ક્વોલિટી પ્રમાણે વેતન જુદું હોઈ શકે; કારીગરના ફોર્મમાં આ દર ગોઠવાતો નથી."],
             salaryReadiness: ['પગારની તૈયારી જુઓ', 'પગારની રકમ બતાવ્યા વિના તેની ગોઠવણીની સ્થિતિ દેખાય છે. પગાર અને જોડાવાની તારીખ હોય ત્યારે પેરોલ તૈયાર દેખાય છે.'],
             add: ["કારીગર ઉમેરો", "નવી વ્યક્તિ માટે કારીગર ઉમેરો પસંદ કરો. સાચવતા પહેલાં વેતન પદ્ધતિ નક્કી કરો; બંને પદ્ધતિ સલામત રીતે જોવા ટૂર વાપરો."],
             name: ["કારીગરનું નામ", "રજિસ્ટર અને ફાળવણીમાં સરળતાથી ઓળખાય એવું નામ લખો."],
-            payType: ['પગારની પદ્ધતિ ધ્યાનથી પસંદ કરો', 'ઉત્પાદન આધારિત વેતન માટે પીસ રેટ અથવા સ્ટાફ માટે નિશ્ચિત માસિક પગાર પસંદ કરો. કારીગર બનાવ્યા પછી પદ્ધતિ બદલી શકાતી નથી.'],
-            availability: ["કારીગરની ઉપલબ્ધતા ગોઠવો", "ઓળખાય એવું નામ લખો અને દિવસ, રાત્રિ કે બંને શિફ્ટ પસંદ કરો. ફાળવણી બોર્ડ પર તે શિફ્ટ માટે ઉપલબ્ધ સક્રિય કારીગરો જ દેખાય છે. પછી કારીગર ઉમેરો વડે સાચવો."],
             salaryRole: ['સ્ટાફની ભૂમિકા લખો', 'નિશ્ચિત પગારવાળા સ્ટાફ માટે સુપરવાઇઝર જેવી ભૂમિકા લખો. આ ભૂમિકાથી પણ સ્ટાફ શોધી શકો છો.'],
-            salary: ["નક્કી કરેલો પગાર લખો", "નામ લખેલા સ્ટાફનો માસિક પગાર દાખલ કરો: નમૂનામાં ₹18,000 છે. પગારની કમાણી નોકરીની તારીખો પ્રમાણે થાય છે, બનાવેલા મીટર પ્રમાણે નહીં. રજિસ્ટરના કાર્ડ પર રકમ છુપાયેલી રહે છે."],
-            joining: ["પગાર ક્યારથી શરૂ થાય તે તપાસો", "કારીગર ઉમેરો કરતાં પહેલાં જોડાવાની તારીખ તપાસો; પછી બદલાતી નથી. ₹18,000/માસે, 30 દિવસના મહિનામાં 15 પાત્ર દિવસની કુલ કમાણી ₹9,000 છે. પેરોલ વાસ્તવિક મહિનાના દિવસો વાપરે છે."],
             edit: ["હાલના કારીગરની વિગતો બદલો", "વિગતો બદલવા કાર્ડ પર સંપાદન પસંદ કરો. પગાર બદલવા આજની કે પછીની લાગુ તારીખ આપો; અગાઉની કમાણી અને ચૂકવેલા રેકોર્ડ બદલાતા નથી."],
-            effective: ["પગારના ફેરફારની તારીખ આપો", "પછી પગાર બદલવા સંપાદન અને પગાર લાગુ થવાની તારીખમાં આજની કે પછીની તારીખ આપો. અગાઉની કમાણી અને ચૂકવેલા રેકોર્ડ બદલાતા નથી."],
             lastDay: ['છેલ્લો કામનો દિવસ', 'આ તારીખ સુધી પગાર ગણાય છે. નિશ્ચિત પગારવાળા સ્ટાફને નિષ્ક્રિય કરતી વખતે છેલ્લો કામનો દિવસ જરૂરી છે.'],
             active: ["સક્રિય સ્થિતિ સંભાળો", "વ્યક્તિ હવે સક્રિય ન હોય ત્યારે સક્રિય કારીગરનું ચિહ્ન દૂર કરો. સ્થિતિ ફિલ્ટરથી નિષ્ક્રિય રેકોર્ડ શોધો."],
-            assignments: ["કારીગર માટે લૂમ તૈયાર કરો", "આ કારીગર માટે ફાળવણી જુઓ વાપરો. લૂમ તૈયાર ન હોય તો મશીનોમાં નોંધો, પછી ઉત્પાદન → Overview & Looms → Activate Quality → Assign Looms વાપરો. ત્યારબાદ કારીગરને શિફ્ટમાં ફાળવો."],
-            payroll: ["ચૂકવવાનો પગાર તપાસો", "નમૂનામાં પગાર અને જોડાવાની તારીખ છે, તેથી કાર્ડ પર પેરોલ તૈયાર છે. પેરોલ જુઓ આખું પેરોલ પાનું ખોલે છે: સમયગાળો પસંદ કરી ચૂકવણી નોંધતા પહેલાં આ સ્ટાફની ગણતરી તપાસો."],
-            finish: ["તમારા કારીગરથી શરૂઆત કરો", "પૂર્ણ કરવાથી રજિસ્ટર અને ફિલ્ટર પાછાં આવશે. નવી વ્યક્તિ માટે કારીગર ઉમેરો, અથવા હાલના કાર્ડ પર ફાળવણી જુઓ / પેરોલ જુઓ પસંદ કરો. બીજી પદ્ધતિ માટે ટૂર ફરી જુઓ; વિસ્તારી શકાય તેવી કારીગર મદદમાં ફિલ્ટર અને વ્યવસ્થાપન છે."],
+        },
+        steps: {
+            paytype: { title: "આ કારીગરને કેવી રીતે પગાર મળે તે પસંદ કરો", body: "પીસ રેટ કારીગર વણેલા મીટર પ્રમાણે કમાય છે; પગારદાર સ્ટાફ માસિક રકમ કમાય છે. સાચવ્યા પછી આ બદલી શકાતું નથી." },
+            availability: { title: "તે કઈ શિફ્ટમાં કામ કરી શકે તે નક્કી કરો", body: "દિવસ, રાત કે બંને. ફક્ત મેળ ખાતા કારીગર જ તે શિફ્ટમાં લૂમ પર મુકાય છે." },
+            wage: { title: "મજૂરી ક્વોલિટીમાંથી આવે છે", body: "અહીં મજૂરી લખવાની નથી. ઉત્પાદનમાં ચાલુ કરતી વખતે નક્કી થયેલી ક્વોલિટીની મજૂરી, જે કારીગર તેને વણે તેને લાગુ પડે છે." },
+            loom: { title: "તેમને લૂમ પર મૂકો", body: "પીસ રેટ કારીગર મશીન ફાળવણીમાં કોઈ શિફ્ટના લૂમ પર મુકાય ત્યારે જ કમાય છે." },
+            earnings: { title: "મીટર કમાણી બને છે", body: "સાચવેલી શિફ્ટ મીટર × મજૂરી ઉમેરે છે: 100 મીટર × ₹1.50 = ₹150. પેરોલ તે ચૂકવે છે." },
+            salary: { title: "નક્કી થયેલો માસિક પગાર લખો", body: "આખી માસિક રકમ લખો, અહીં ₹18,000. પેરોલ તેમાંથી દરેક સમયગાળો ગણે છે." },
+            joining: { title: "પગાર જોડાયાની તારીખથી શરૂ થાય", body: "30 દિવસના મહિનાની વચ્ચે જોડાનારને તે મહિનાના 15/30 × ₹18,000 = ₹9,000 મળે છે." },
+            changes: { title: "દરેક ફેરફારને તારીખ આપો", body: "પગાર બદલાય ત્યારે તે કઈ તારીખથી લાગુ થાય તે લખો. કોઈ છોડે ત્યારે નિષ્ક્રિય કરતાં પહેલાં છેલ્લો કામકાજનો દિવસ લખો." },
+            payroll: { title: "પગાર પેરોલમાં દેખાય છે", body: "{c:viewPayroll} આ કારીગરનો ચાલુ સમયગાળાનો પગાર ખોલે છે." },
+            handoff: { title: "તમારા કારીગરો ઉમેરો", body: "દરેક વ્યક્તિ માટે {c:addWorker} પસંદ કરો અને પગારનો પ્રકાર ધ્યાનથી પસંદ કરો." },
         },
     },
     hi: {
-        ...configurationTutorialCopy.hi,
-        sample: 'टूर के नमूने · कुछ भी सहेजा नहीं जाएगा',
-        paths: { piece: 'पीस रेट मार्गदर्शन', salary: 'वेतन मार्गदर्शन' },
+        paths: { piece: "पीस रेट", salary: "मासिक वेतन" },
+        samples: { worker: "नमूना कारीगर", staff: "नमूना स्टाफ", role: "सुपरवाइज़र" },
         helpTitle: 'कारीगर सहायता: फ़िल्टर, भूमिका और अंतिम तारीख',
         wageLabel: 'वेतन का स्रोत',
         wageSource: 'उत्पादन की क्वालिटी',
         qualityWage: "क्वालिटी का बुनकर वेतन",
         salaryBasis: "निश्चित मासिक वेतन",
         fields: {
-            earnings: ["उत्पादन से कमाई बनती है", "क्वालिटी का वेतन ₹1.50/मी हो तो 100 मीटर से पीस रेट कारीगर की कुल कमाई ₹150 होती है। सहेजा उत्पादन पेरोल के लिए उस समय की दर रखता है; बाद का क्वालिटी दर बदलाव सहेजी दर नहीं बदलता।"],
-            purpose: ["सही वेतन पद्धति तय करें", "उत्पादन आवंटित करने या वेतन गणना से पहले कारीगर दर्ज करें। नीचे मार्गदर्शन चुनें: पीस रेट में उत्पादन से कमाई होती है; निश्चित वेतन में वेतन और नौकरी की तारीखों से। ये सुरक्षित नमूने हैं।"],
             search: ["कारीगर खोजें", "कारीगर के नाम या स्टाफ की भूमिका से खोजें। खोज और शिफ्ट/स्थिति फ़िल्टर साथ काम करते हैं; कारीगर न मिले तो फ़िल्टर हटाएँ।"],
             shiftFilter: ['उपलब्धता के अनुसार फ़िल्टर करें', 'दिन या रात की शिफ्ट चुनने पर उस शिफ्ट के लिए उपलब्ध कारीगर दिखेंगे। दिन और रात चुनने पर दोनों में उपलब्ध कारीगर ही दिखेंगे।'],
             statusFilter: ['सक्रिय या निष्क्रिय कारीगर खोजें', 'शुरुआत में सक्रिय कारीगर दिखते हैं। काम छोड़ चुके व्यक्ति को देखने के लिए सभी या निष्क्रिय कारीगर चुनें।'],
             groups: ['वेतन के दो तरीके', 'पीस रेट में उत्पादन के आधार पर वेतन पाने वाले कारीगर हैं। निश्चित वेतन में मासिक वेतन वाला स्टाफ है। हर समूह की अपनी गिनती है।'],
             pieceCard: ['कारीगर का कार्ड समझें', 'कार्ड पर नाम, शिफ्ट उपलब्धता और सक्रिय स्थिति दिखती है। उपलब्धता तय करती है कि किस शिफ्ट में आवंटन हो सकता है।'],
-            pieceReadiness: ["क्वालिटी का बुनकर वेतन लें", "उत्पादन की सक्रिय क्वालिटी का बुनकर वेतन उसकी सहेजी लागत से आता है। उत्पादन दर्ज करने से पहले वहाँ Weaver wage जाँचें। क्वालिटी के अनुसार वेतन अलग हो सकता है; कारीगर के फ़ॉर्म में यह दर तय नहीं होती।"],
             salaryReadiness: ['वेतन की तैयारी देखें', 'राशि दिखाए बिना वेतन सेटअप की स्थिति दिखती है। वेतन और कार्यग्रहण तिथि मौजूद होने पर पेरोल तैयार दिखता है।'],
             add: ["कारीगर जोड़ें", "नए व्यक्ति के लिए कारीगर जोड़ें चुनें। सहेजने से पहले वेतन प्रकार तय करें; दोनों प्रकार सुरक्षित रूप से देखने के लिए टूर चलाएँ।"],
             name: ["कारीगर का नाम", "ऐसा नाम लिखें जिससे रजिस्टर और आवंटन में कारीगर आसानी से पहचाना जा सके।"],
-            payType: ['वेतन प्रकार ध्यान से चुनें', 'उत्पादन आधारित वेतन के लिए पीस रेट या स्टाफ के लिए निश्चित मासिक वेतन चुनें। कारीगर बनने के बाद वेतन प्रकार नहीं बदल सकते।'],
-            availability: ["कारीगर की उपलब्धता तय करें", "पहचानने योग्य नाम लिखें और दिन, रात या दोनों शिफ्ट चुनें। आवंटन बोर्ड पर उस शिफ्ट के लिए उपलब्ध सक्रिय कारीगर ही दिखते हैं। फिर कारीगर जोड़ें से सहेजें।"],
             salaryRole: ['स्टाफ की भूमिका लिखें', 'निश्चित वेतन वाले स्टाफ के लिए सुपरवाइज़र जैसी भूमिका लिखें। इस भूमिका से भी स्टाफ खोज सकते हैं।'],
-            salary: ["तय मासिक वेतन लिखें", "नाम दर्ज किए स्टाफ का मासिक वेतन भरें: नमूने में ₹18,000 है। वेतन की कमाई नौकरी की तारीखों पर निर्भर है, बने मीटर पर नहीं। रजिस्टर के कार्ड पर राशि छिपी रहती है।"],
-            joining: ["वेतन की शुरुआत जाँचें", "कारीगर जोड़ें से पहले कार्यग्रहण तिथि जाँचें; बाद में बदल नहीं सकती। ₹18,000/माह पर 30 दिन के महीने में 15 पात्र दिनों की कुल कमाई ₹9,000 है। पेरोल असली कैलेंडर महीने के दिन लेता है।"],
             edit: ["मौजूदा कारीगर का विवरण बदलें", "विवरण बदलने के लिए कार्ड पर संपादन चुनें। वेतन बदलाव के लिए आज या बाद की प्रभावी तारीख दें; पिछली कमाई और भुगतान रिकॉर्ड नहीं बदलते।"],
-            effective: ["वेतन बदलाव को तारीख दें", "बाद में वेतन बदलने के लिए संपादन और वेतन बदलाव की प्रभावी तिथि में आज या बाद की तारीख दें। पिछली कमाई और भुगतान रिकॉर्ड नहीं बदलते।"],
             lastDay: ['अंतिम कार्य दिवस दर्ज करें', 'इस तारीख तक वेतन जुड़ता है। निश्चित वेतन वाले स्टाफ को निष्क्रिय करते समय अंतिम कार्य दिवस ज़रूरी है।'],
             active: ["सक्रिय स्थिति संभालें", "व्यक्ति अब सक्रिय न हो तो सक्रिय कारीगर का निशान हटाएँ। स्थिति फ़िल्टर से निष्क्रिय रिकॉर्ड खोजें।"],
-            assignments: ["कारीगर के लिए लूम तैयार करें", "इस कारीगर के लिए आवंटन देखें चुनें। लूम तैयार न हो तो मशीनों में दर्ज करें, फिर उत्पादन → Overview & Looms → Activate Quality → Assign Looms चुनें। इसके बाद कारीगर को शिफ्ट में आवंटित करें।"],
-            payroll: ["देय वेतन की समीक्षा करें", "नमूने में वेतन और कार्यग्रहण तिथि हैं, इसलिए कार्ड पर पेरोल तैयार है। पेरोल देखें पूरा पेरोल पृष्ठ खोलता है: अवधि चुनें और भुगतान दर्ज करने से पहले इस स्टाफ की गणना जाँचें।"],
-            finish: ["अपने कारीगर से शुरुआत करें", "समाप्त करने पर रजिस्टर और फ़िल्टर वापस आएंगे। नए व्यक्ति के लिए कारीगर जोड़ें, या मौजूदा कार्ड पर आवंटन देखें / पेरोल देखें चुनें। दूसरी पद्धति सीखने को टूर दोहराएँ; खुलने वाली कारीगर सहायता में फ़िल्टर और प्रबंधन हैं।"],
+        },
+        steps: {
+            paytype: { title: "यह कारीगर कैसे वेतन पाता है, यह चुनें", body: "पीस रेट कारीगर बुने मीटर के हिसाब से कमाते हैं; वेतन वाला स्टाफ़ मासिक रकम कमाता है। सेव के बाद यह बदला नहीं जा सकता।" },
+            availability: { title: "वह किन शिफ्ट में काम कर सकता है, यह तय करें", body: "दिन, रात या दोनों। सिर्फ़ मेल खाते कारीगर ही उस शिफ्ट में लूम पर लगते हैं।" },
+            wage: { title: "मजदूरी क्वालिटी से आती है", body: "यहाँ मजदूरी नहीं लिखनी। उत्पादन में चालू करते समय तय क्वालिटी की मजदूरी, जो कारीगर उसे बुने, उस पर लागू होती है।" },
+            loom: { title: "उन्हें लूम पर लगाएँ", body: "पीस रेट कारीगर मशीन आवंटन में किसी शिफ्ट के लूम पर लगने पर ही कमाता है।" },
+            earnings: { title: "मीटर कमाई बनते हैं", body: "सेव शिफ्ट मीटर × मजदूरी जोड़ती है: 100 मीटर × ₹1.50 = ₹150। पेरोल यह चुकाता है।" },
+            salary: { title: "तय मासिक वेतन लिखें", body: "पूरी मासिक रकम लिखें, यहाँ ₹18,000। पेरोल उससे हर अवधि निकालता है।" },
+            joining: { title: "वेतन जुड़ने की तारीख से शुरू होता है", body: "30 दिन के महीने के बीच में जुड़ने वाले को उस महीने के 15/30 × ₹18,000 = ₹9,000 मिलते हैं।" },
+            changes: { title: "हर बदलाव को तारीख दें", body: "वेतन बदले तो किस तारीख से लागू हो, यह लिखें। कोई छोड़े तो निष्क्रिय करने से पहले आख़िरी काम का दिन लिखें।" },
+            payroll: { title: "वेतन पेरोल में दिखता है", body: "{c:viewPayroll} इस कारीगर का चालू अवधि का वेतन खोलता है।" },
+            handoff: { title: "अपने कारीगर जोड़ें", body: "हर व्यक्ति के लिए {c:addWorker} चुनें और वेतन का प्रकार ध्यान से चुनें।" },
         },
     },
 }

@@ -1,0 +1,171 @@
+{
+  "task": "GT-12",
+  "runs": 12,
+  "steps": 106,
+  "classifications": {
+    "FAIL": 12
+  },
+  "failures": [
+    {
+      "id": "gt12-0-en-1440x900",
+      "exitCode": 0,
+      "error": null,
+      "issues": [],
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "id": "gt12-0-hi-1280x800",
+      "exitCode": 0,
+      "error": null,
+      "issues": [],
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "id": "gt12-0-en-1024x768",
+      "exitCode": 0,
+      "error": null,
+      "issues": [],
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "id": "gt12-0-gu-390x844",
+      "exitCode": 0,
+      "error": null,
+      "issues": [],
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "id": "gt12-0-reduced-en-1024x768",
+      "exitCode": 0,
+      "error": null,
+      "issues": [],
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "id": "gt12-1-en-1440x900",
+      "exitCode": 0,
+      "error": null,
+      "issues": [],
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "id": "gt12-1-hi-1280x800",
+      "exitCode": 0,
+      "error": null,
+      "issues": [],
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "id": "gt12-1-en-1024x768",
+      "exitCode": 0,
+      "error": null,
+      "issues": [],
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "id": "gt12-1-gu-390x844",
+      "exitCode": 0,
+      "error": null,
+      "issues": [],
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "id": "gt12-1-reduced-en-1024x768",
+      "exitCode": 0,
+      "error": null,
+      "issues": [],
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "id": "gt12-exit-daily-sheet-en-1440x900",
+      "exitCode": 0,
+      "error": null,
+      "issues": [],
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "id": "gt12-exit-daily-sheet-gu-390x844",
+      "exitCode": 0,
+      "error": null,
+      "issues": [],
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ]
+    }
+  ],
+  "reviewNotes": "Daily Sheet empty/populated: 12 runs / 106 steps; every UI assertion set passed and all required English desktop/Gujarati phone steps visually inspected, including Exit. Raw guard FAIL preserves one unchanged production_viewed mount POST per run; no tour increment. Nine-step order, single guide last in right rail at desktop/inline above sheet below 1280, disabled samples, handoff to Add worker or first Metres input, same live node, exact 37.5 draft value and device-storage bytes through all populated tours and both Exits, scroll/inert cleanup and launcher Exit focus verified. No save/correction/print handler called. PI-04 date/shift navigation cannot be verified by this router stub; owner-approved deferral and U-06 copy/navigation remain unchanged. Locked/conflict/storage-error live states, QA/native/screen-reader/real-device checks UNVERIFIED. No reproduced Major in modeled states.",
+  "status": "IN_PROGRESS",
+  "humanGates": "UNVERIFIED",
+  "visualReview": "Every captured English 1440x900 and Gujarati 390x844 step inspected",
+  "evidence": "gt12-results.json"
+}

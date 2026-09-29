@@ -137,6 +137,16 @@ Words to confirm in native review: "તાર/तार" for ends (UI uses "Beam
 | `startProduction` | post-save panel (5084) | same expression | ઉત્પાદન શરૂ કરો | उत्पादन शुरू करें | Add phrase |
 | `detailed` | view tabs | same expression as the tab | વિગતવાર | विस्तृत | none |
 
+### F.3 Owner addendum — Save labels (2026-09-28)
+
+The owner supplied the missing Save New Version wording in the Wave 1 coordinator chat as romanized Hindi “save naya version” and Gujarati “save navi version”. The coordinator rendered it using those words and the existing save/version terminology as follows. Native-language review remains deferred to the review gate.
+
+| Label | English | Gujarati | Hindi |
+| --- | --- | --- | --- |
+| Save New Version | Save New Version | નવી વર્ઝન સાચવો | नया वर्ज़न सेव करें |
+
+For these two Estimator labels only, use `t('tourControls.estimator.saveCosting')` and `t('tourControls.estimator.saveNewVersion')` for the live control and the matching tour token. This scoped exception resolves existing phrase overrides; do not change global translation maps or precedence. Save Costing retains §F.2's English/Gujarati/Hindi values. All other task contracts stay unchanged.
+
 ## G. State variants
 
 | Variant | Behavior |

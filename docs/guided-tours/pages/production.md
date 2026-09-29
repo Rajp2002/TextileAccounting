@@ -95,6 +95,19 @@ All are hard-coded English today and display word-by-word (label probe). Each ge
 | `switchQuality` | board card | ક્વોલિટી બદલો | क्वालिटी बदलें |
 | `qualityActions` | ⋮ menu aria-label (459-490) | ક્વોલિટીના વિકલ્પો | क्वालिटी के विकल्प |
 
+### F.1 Owner-authorized missing replica labels — 2026-09-28
+
+The owner resolved GT-11's missing-copy/key escalation: “GT-11 - approved for their label keys. You can look online to see what would be the appropriate words”. This authorizes selecting these two labels from researched terminology and sharing their keys between the existing Overview live render sites and replica. It is a narrow exception to the earlier missing-copy stop; other copy and protected behavior stay governed by the original specification.
+
+| Shared key | English | Gujarati | Hindi |
+| --- | --- | --- | --- |
+| `production.manageOperatorsForLoom` | Manage Operators for {loom} | {loom} માટે ઓપરેટરોનું સંચાલન કરો | {loom} के ऑपरेटर प्रबंधित करें |
+| `production.cost` | Cost | ખર્ચ | लागत |
+
+Retain the `{loom}` placeholder and interpolate the same custom-label/name value as the live sheet currently uses. Key only the existing `BaseMachineBoard` operators-sheet title and `BaseActiveQualities` Cost labels, plus the matching Overview replica labels. Keep punctuation, amounts, units, handlers and calculations unchanged. Do not change Daily Sheet or Payroll copy.
+
+Terminology evidence: [GujaratiLexicon, manage](https://www.gujaratilexicon.com/dictionary/english-to-gujarati-translation/manage/) gives સંચાલન કરવું; [Cambridge, Gujarati cost](https://dictionary.cambridge.org/dictionary/english-gujarati/cost) gives ખર્ચ for money spent; [Cambridge, Hindi manage](https://dictionary.cambridge.org/dictionary/english-hindi/manage) gives प्रबंधन करना; [Collins, Hindi cost](https://www.collinsdictionary.com/dictionary/english-hindi/cost) gives लागत. The operator noun follows the already-approved Production copy's ઓપરેટર/ऑपरेटर terminology. These full UI titles are coordinator-composed from those meanings under the owner's delegated wording decision; no source or native reviewer is claimed to have approved the complete phrases. Native-language and browser review remain **UNVERIFIED**.
+
 ## G. State variants
 
 | Variant | Behavior |

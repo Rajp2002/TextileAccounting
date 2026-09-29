@@ -1,5 +1,7 @@
 'use client'
 
+import { useTranslation } from '@/lib/i18n/context'
+
 import { useDeferredValue, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
@@ -94,6 +96,7 @@ export default function BasePayrollRecords({
     initialData: BaseProductionInitialData
     onBack: () => void
 }) {
+    const { t } = useTranslation()
     const router = useRouter()
     const [reversingId, setReversingId] = useState<string | null>(null)
     const [reversalReason, setReversalReason] = useState('')
@@ -254,8 +257,8 @@ export default function BasePayrollRecords({
                                 </div>
                             </div>
                             <div className="flex flex-wrap gap-2">
-                                <Button variant="outline" className="h-10 rounded-xl border-hairline bg-surface text-ink shadow-xs hover:border-hairline-strong hover:bg-surface-soft" onClick={exportCsv}><FileSpreadsheet className="h-4 w-4" /> Export CSV</Button>
-                                <Button className="h-10 rounded-xl bg-loom text-white shadow-xs hover:bg-loom-elevated" onClick={() => void exportPdf()} disabled={exportingPdf || selectedPeriod.workers.every(worker => worker.status === 'reversed')}><FileText className="h-4 w-4" /> {exportingPdf ? 'Preparing PDF…' : 'Export PDF'}</Button>
+                                <Button variant="outline" className="h-10 rounded-xl border-hairline bg-surface text-ink shadow-xs hover:border-hairline-strong hover:bg-surface-soft" onClick={exportCsv}><FileSpreadsheet className="h-4 w-4" /> <span data-i18n-skip="true">{t('payroll.exportCsv')}</span></Button>
+                                <Button className="h-10 rounded-xl bg-loom text-white shadow-xs hover:bg-loom-elevated" onClick={() => void exportPdf()} disabled={exportingPdf || selectedPeriod.workers.every(worker => worker.status === 'reversed')}><FileText className="h-4 w-4" /> <span data-i18n-skip="true">{exportingPdf ? t('payroll.preparingPdf') : t('payroll.exportPdf')}</span></Button>
                             </div>
                         </CardContent>
                     </Card>
@@ -302,7 +305,7 @@ export default function BasePayrollRecords({
                                         </button>
                                         {expanded && (
                                             <CardContent className="space-y-4 border-t border-hairline pt-4">
-                                                {worker.status === 'reversed' ? <p className="rounded-lg bg-warning/10 p-3 text-sm">Reversed {formatDateOnly(original?.reversed_at)}: {worker.reversalReason}. The amounts below are the preserved original record.</p> : <div className="space-y-2"><Button variant="outline" size="sm" disabled={!canReverse} onClick={() => { setReversingId(worker.settlementId); setReversalReason(''); setPaymentNotMade(false) }}>Resolve mistaken payment record</Button>{!canReverse && <p className="text-xs text-body">{hasLaterPayment ? 'A later payment depends on this record. Resolve the latest settlement first.' : 'This older record lacks the per-advance receipt needed for a safe automatic reversal.'}</p>}</div>}
+                                                {worker.status === 'reversed' ? <p className="rounded-lg bg-warning/10 p-3 text-sm">Reversed {formatDateOnly(original?.reversed_at)}: {worker.reversalReason}. The amounts below are the preserved original record.</p> : <div className="space-y-2"><Button variant="outline" size="sm" disabled={!canReverse} onClick={() => { setReversingId(worker.settlementId); setReversalReason(''); setPaymentNotMade(false) }}><span data-i18n-skip="true">{t('payroll.resolveMistaken')}</span></Button>{!canReverse && <p className="text-xs text-body">{hasLaterPayment ? 'A later payment depends on this record. Resolve the latest settlement first.' : 'This older record lacks the per-advance receipt needed for a safe automatic reversal.'}</p>}</div>}
                                                 <div className="overflow-x-auto rounded-lg border border-hairline">
                                                     <table className="w-full min-w-[720px] text-sm">
                                                         <thead className="bg-surface-soft text-left text-xs text-muted-foreground"><tr><th className="px-3 py-2">{isSalary ? 'Pay basis' : 'Machine'}</th><th className="px-3 py-2">{isSalary ? 'Salary period' : 'Costing'}</th><th className="px-3 py-2 text-right">Rate</th><th className="px-3 py-2 text-right">Production</th><th className="px-3 py-2 text-right">Earnings</th></tr></thead>

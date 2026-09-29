@@ -1,0 +1,16 @@
+[
+  {
+    "id": "gt11-paint-0-en-1440x900",
+    "task": "GT-11",
+    "scenario": "production",
+    "language": "en",
+    "size": "1440x900",
+    "script": "/private/tmp/weavly-review-run-paint.mjs",
+    "args": [
+      "production",
+      "en",
+      "1440x900",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-paint-0-en-1440x900"
+    ]
+  }
+]

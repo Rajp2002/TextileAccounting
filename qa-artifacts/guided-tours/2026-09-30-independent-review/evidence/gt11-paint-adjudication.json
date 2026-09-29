@@ -1,0 +1,68 @@
+{
+  "task": "GT-11",
+  "adjudication": "Numeric aside bounding-box flags are harness false positives in the inspected captured states",
+  "proof": [
+    {
+      "run": "gt11-paint-0-en-1440x900",
+      "step": "pd-activate",
+      "railRect": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "railBackground": "rgba(0, 0, 0, 0)",
+      "railZ": "30",
+      "dialogZ": "50",
+      "paintedChildren": [
+        {
+          "x": 269,
+          "y": 21,
+          "w": 196,
+          "h": 44
+        }
+      ],
+      "targetRect": {
+        "x": 304,
+        "y": 371.984375,
+        "w": 480,
+        "h": 238
+      },
+      "screenshot": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-paint-0-en-1440x900/production-en-1440x900/03.png",
+      "visualOcclusion": false
+    },
+    {
+      "run": "gt11-paint-0-en-1440x900",
+      "step": "pd-looms",
+      "railRect": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "railBackground": "rgba(0, 0, 0, 0)",
+      "railZ": "30",
+      "dialogZ": "50",
+      "paintedChildren": [
+        {
+          "x": 269,
+          "y": 21,
+          "w": 196,
+          "h": 44
+        }
+      ],
+      "targetRect": {
+        "x": 304,
+        "y": 353.234375,
+        "w": 480,
+        "h": 275.5
+      },
+      "screenshot": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-paint-0-en-1440x900/production-en-1440x900/04.png",
+      "visualOcclusion": false
+    }
+  ],
+  "rawFailuresPreserved": true,
+  "assertionsUnchanged": true,
+  "hitTestingLimitation": "elementsFromPoint returns the tour portal under inert isolation; it is not treated as paint visibility evidence",
+  "humanGates": "UNVERIFIED"
+}

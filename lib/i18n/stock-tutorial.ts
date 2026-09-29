@@ -1,447 +1,283 @@
 import type { Language } from './context'
-import type { StockTourKind, StockTourStep } from '../stock-tour'
-import { configurationTutorialCopy } from './configuration-tutorial'
-export type StockTutorialCopy = { sample: string; sections: string[]; fields: Partial<Record<StockTourStep, readonly [string, string]>>; skip: string; back: string; next: string; finish: string; progress: string }
-export const fabricStockTutorialCopy: Record<Language, StockTutorialCopy> = {
-en: { ...configurationTutorialCopy.en, sample: "Sample preview · your stock is unchanged", sections: [
-  "Understand the balance",
-  "Verify opening stock",
-  "Correct a balance",
-  "History and next action"
-], fields: {
-  "balance": [
-    "Available fabric, by quality",
-    "Opening stock + saved production − confirmed dispatches gives available metres. Here 500 + 200 − 100 = 600 m. A dispatch draft does not deduct stock."
-  ],
-  "tracking": [
-    "Check when stock tracking began",
-    "Read Stock started on your page. Historical production was not imported. Opening stock adds only physically remaining pre-start fabric, once per quality; do not add production already recorded since tracking began."
-  ],
-  "openingPending": [
-    "Verify what belongs in opening",
-    "Of 650 m remaining from before tracking, 150 m committed to historical pending dispatches leaves 500 m to add. Check Dispatch → Earlier dispatch records → Pending Dispatches. If access is restricted, reconcile those commitments with your earlier sales/dispatch records or ask your administrator before saving."
-  ],
-  "opening": [
-    "Record the verified 500 m",
-    "Choose Opening stock for the matching Production quality. Enter 500 remaining pre-start metres and a count reference, then review Save stock. This adds 500 m once; it does not replace today’s balance. This preview saves nothing."
-  ],
-  "correction": [
-    "A correction sets today’s total",
-    "Use Correct balance on the quality card after verifying the total available now. Unlike opening stock, this sets an absolute total. Saving also closes opening stock for this quality, so verify any missing opening first."
-  ],
-  "counted": [
-    "600 m → 590 m: a −10 m movement",
-    "Enter 590 as the verified total, not −10. Give the count reason and review Save stock. The balance becomes 590 m; the −10 m difference and reason remain in history."
-  ],
-  "finish": [
-    "Trace the balance, then act",
-    "Movement history shows each change and its Balance after. After Finish, check your tracking start and a quality’s Movement history. If opening is missing, reconcile the pre-start count before Opening stock; if already recorded, use Correct balance only for a verified difference."
-  ]
-} },
-gu: { ...configurationTutorialCopy.gu, sample: "નમૂનો · તમારો સ્ટોક બદલાતો નથી", sections: [
-  "બેલેન્સ સમજો",
-  "શરૂઆતનો સ્ટોક ચકાસો",
-  "સ્ટોક સુધારો",
-  "ઇતિહાસ અને આગળનું પગલું"
-], fields: {
-  "balance": [
-    "ક્વોલિટી પ્રમાણે ઉપલબ્ધ કાપડ",
-    "શરૂઆતનો સ્ટોક + સાચવેલું ઉત્પાદન − પુષ્ટિ કરેલા ડિસ્પેચ = ઉપલબ્ધ મીટર. અહીં 500 + 200 − 100 = 600 મી. ડિસ્પેચના ડ્રાફ્ટથી સ્ટોક ઘટતો નથી."
-  ],
-  "tracking": [
-    "સ્ટોક ટ્રેકિંગ ક્યારે શરૂ થયું તે જુઓ",
-    "પેજ પર સ્ટોક શરૂ થયાની તારીખ જુઓ. જૂનું ઉત્પાદન આપમેળે ઉમેરાયું નથી. દરેક ક્વોલિટી માટે શરૂઆત પહેલાંનું ખરેખર બાકી કાપડ એક જ વાર ઉમેરો; ટ્રેકિંગ પછી નોંધાયેલ ઉત્પાદન ફરી ન ઉમેરો."
-  ],
-  "openingPending": [
-    "શરૂઆતમાં શું ગણવું તે ચકાસો",
-    "શરૂઆત પહેલાંના બાકી 650 મીમાંથી જૂના બાકી ડિસ્પેચ માટે નક્કી કરેલા 150 મી બાદ કરતાં 500 મી ઉમેરવાના થાય. ડિસ્પેચ → જૂના ડિસ્પેચ રેકોર્ડ → Pending Dispatches જુઓ. પ્રવેશ મર્યાદિત હોય તો સાચવતાં પહેલાં જૂના વેચાણ/ડિસ્પેચ રેકોર્ડથી આ બાકી જથ્થો મેળવો અથવા એડમિનિસ્ટ્રેટરની મદદ લો."
-  ],
-  "opening": [
-    "ચકાસેલા 500 મી નોંધો",
-    "ઉત્પાદનવાળી ક્વોલિટી માટે શરૂઆતનો સ્ટોક ખોલો. શરૂઆત પહેલાંના બાકી 500 મી અને ગણતરીનો સંદર્ભ નાખો, પછી સ્ટોક સાચવતાં પહેલાં તપાસો. આથી એક વાર 500 મી ઉમેરાય છે; આજનું બેલેન્સ બદલાઈને 500 થતું નથી. આ નમૂનો કંઈ સાચવતો નથી."
-  ],
-  "correction": [
-    "સુધારો આજનું કુલ નક્કી કરે છે",
-    "હાલના ઉપલબ્ધ કુલની ચકાસણી પછી ક્વોલિટી કાર્ડ પર સ્ટોક સુધારો વાપરો. શરૂઆતના સ્ટોકથી અલગ, આ હાલનું કુલ નક્કી કરે છે. સાચવવાથી આ ક્વોલિટીની શરૂઆતની નોંધ પણ બંધ થાય છે, તેથી બાકી શરૂઆતની નોંધ પહેલાં ચકાસો."
-  ],
-  "counted": [
-    "600 મી → 590 મી: −10 મીની હિલચાલ",
-    "ચકાસેલા કુલ તરીકે 590 નાખો, −10 નહીં. ગણતરીનું કારણ આપો અને સ્ટોક સાચવતાં પહેલાં તપાસો. બેલેન્સ 590 મી થશે; −10 મીનો તફાવત અને કારણ ઇતિહાસમાં રહેશે."
-  ],
-  "finish": [
-    "બેલેન્સનો ઇતિહાસ જોઈ આગળ વધો",
-    "હિલચાલ ઇતિહાસ દરેક ફેરફાર અને તે પછીનું બેલેન્સ બતાવે છે. ટૂર પૂરો થયા પછી શરૂઆતની તારીખ અને ક્વોલિટીનો સ્ટોક ફેરફારનો ઇતિહાસ જુઓ. શરૂઆત નોંધાઈ ન હોય તો જૂની ગણતરી મેળવીને શરૂઆતનો સ્ટોક નોંધો; નોંધાઈ હોય તો ચકાસેલા તફાવત માટે જ સ્ટોક સુધારો."
-  ]
-} },
-hi: { ...configurationTutorialCopy.hi, sample: "नमूना · आपका स्टॉक नहीं बदलता", sections: [
-  "शेष समझें",
-  "शुरुआती स्टॉक जाँचें",
-  "स्टॉक सुधारें",
-  "इतिहास और अगला कदम"
-], fields: {
-  "balance": [
-    "क्वालिटी के अनुसार उपलब्ध कपड़ा",
-    "शुरुआती स्टॉक + सहेजा उत्पादन − पुष्टि किए डिस्पैच = उपलब्ध मीटर। यहाँ 500 + 200 − 100 = 600 मी। डिस्पैच ड्राफ्ट से स्टॉक नहीं घटता।"
-  ],
-  "tracking": [
-    "स्टॉक ट्रैकिंग की शुरुआत देखें",
-    "पेज पर स्टॉक शुरू होने की तारीख देखें। पुराना उत्पादन अपने आप नहीं जोड़ा गया। हर क्वालिटी के लिए शुरुआत से पहले का बचा कपड़ा एक बार ही जोड़ें; ट्रैकिंग के बाद दर्ज उत्पादन दोबारा न जोड़ें।"
-  ],
-  "openingPending": [
-    "शुरुआत में क्या गिनना है, जाँचें",
-    "शुरुआत से पहले के बचे 650 मी में से पुराने लंबित डिस्पैच के लिए तय 150 मी निकालकर 500 मी जोड़ने हैं। डिस्पैच → पुराने डिस्पैच रिकॉर्ड → Pending Dispatches देखें। प्रवेश सीमित हो तो सहेजने से पहले पुराने बिक्री/डिस्पैच रिकॉर्ड से यह मात्रा मिलाएँ या व्यवस्थापक की मदद लें।"
-  ],
-  "opening": [
-    "सत्यापित 500 मी दर्ज करें",
-    "उत्पादन वाली क्वालिटी के लिए शुरुआती स्टॉक खोलें। पहले के बचे 500 मी और गिनती संदर्भ डालें, फिर स्टॉक सहेजने से पहले जाँचें। इससे एक बार 500 मी जुड़ते हैं; आज का शेष बदलकर 500 नहीं होता। यह नमूना कुछ नहीं सहेजता।"
-  ],
-  "correction": [
-    "सुधार आज का कुल तय करता है",
-    "अभी के उपलब्ध कुल की पुष्टि के बाद क्वालिटी कार्ड पर स्टॉक सुधारें इस्तेमाल करें। शुरुआती स्टॉक से अलग, यह वर्तमान कुल तय करता है। सहेजने से इस क्वालिटी की शुरुआती प्रविष्टि भी बंद होती है, इसलिए छूटी शुरुआती प्रविष्टि पहले जाँचें।"
-  ],
-  "counted": [
-    "600 मी → 590 मी: −10 मी की गतिविधि",
-    "सत्यापित कुल के रूप में 590 डालें, −10 नहीं। गिनती का कारण दें और स्टॉक सहेजने से पहले जाँचें। शेष 590 मी होगा; −10 मी का अंतर और कारण इतिहास में रहेंगे।"
-  ],
-  "finish": [
-    "शेष का इतिहास देखकर आगे बढ़ें",
-    "गतिविधि इतिहास हर बदलाव और उसके बाद का शेष दिखाता है। टूर पूरा करने के बाद शुरुआत की तारीख और क्वालिटी का स्टॉक बदलाव का इतिहास देखें। शुरुआत दर्ज न हो तो पुराने बचे कपड़े की गिनती मिलाकर शुरुआती स्टॉक दर्ज करें; दर्ज हो तो सत्यापित अंतर पर ही स्टॉक सुधारें।"
-  ]
-} },
+import type { FabricStockTourStep, YarnStockTourStep } from '../stock-tour'
+import { yarnStockText } from './yarn-stock'
+import { formatTourText } from '../tours/tour-text'
+type FabricCopyKey = FabricStockTourStep extends `fs-${infer Key}` ? Key : never
+type FabricStepCopy = { title: string; body: string; detail?: string }
+type FabricCopy = Record<FabricCopyKey, FabricStepCopy> & { guide: { benefit: string }; sample: string }
+
+/** Approved Fabric page-spec §F copy; Gujarati/Hindi native review remains pending. */
+export const fabricStockTutorialCopy: Record<Language, FabricCopy> = {
+    "en": {
+        "balance": {
+            "title": "Fabric ready to send, by quality",
+            "body": "Saved shifts add metres and confirmed dispatches remove them. Here 200 m made − 100 m sent = 100 m."
+        },
+        "pending": {
+            "title": "Add the fabric you had before Weavly",
+            "body": "A quality marked {c:pending} has no opening stock yet. Count the finished fabric you already had and record it once."
+        },
+        "opening": {
+            "title": "Opening stock is added once",
+            "body": "{c:openingStock} adds the counted metres to what production already recorded: 100 + 500 = 600 m. Add a note such as your count date."
+        },
+        "correct": {
+            "title": "After a count, enter the counted total",
+            "body": "{c:correctBalance} replaces the balance with what you counted. Enter 590, not −10; Weavly records the −10 m difference.",
+            "detail": "Use this for your regular counts. For a full dated audit of all fabric and yarn, kept as a record, use {c:auditInventory} at the top of the page."
+        },
+        "history": {
+            "title": "Trace every change",
+            "body": "{c:movementHistory} lists each production, dispatch, opening and correction with the balance after it.",
+            "detail": "If a shift was saved on another device, choose {c:refresh} to see it."
+        },
+        "handoff": {
+            "title": "Record fabric you already have",
+            "body": "If you had finished fabric before using Weavly, record it here once. From now on, saved shifts add stock by themselves."
+        },
+        "guide": {
+            "benefit": "Learn to record opening fabric, correct a count and trace changes."
+        },
+        "sample": "Sample preview · your stock is unchanged"
+    },
+    "gu": {
+        "balance": {
+            "title": "મોકલવા તૈયાર કાપડ, ક્વોલિટી પ્રમાણે",
+            "body": "સાચવેલી શિફ્ટ મીટર ઉમેરે છે અને ખાતરી કરેલા ડિસ્પેચ ઘટાડે છે. અહીં 200 મીટર બન્યું − 100 મીટર ગયું = 100 મીટર."
+        },
+        "pending": {
+            "title": "Weavly પહેલાંનું કાપડ ઉમેરો",
+            "body": "{c:pending} લખેલી ક્વોલિટીનો શરૂઆતનો સ્ટોક હજી નોંધાયો નથી. તમારી પાસે પહેલેથી હતું તે તૈયાર કાપડ ગણી એક વાર નોંધો."
+        },
+        "opening": {
+            "title": "શરૂઆતનો સ્ટોક એક જ વાર ઉમેરાય છે",
+            "body": "{c:openingStock} ગણેલા મીટર ઉત્પાદનમાં નોંધાયેલા મીટરમાં ઉમેરે છે: 100 + 500 = 600 મીટર. ગણતરીની તારીખ જેવી નોંધ લખો."
+        },
+        "correct": {
+            "title": "ગણતરી પછી ગણેલો કુલ જથ્થો લખો",
+            "body": "{c:correctBalance} બેલેન્સને ગણેલા જથ્થાથી બદલે છે. 590 લખો, −10 નહીં; Weavly −10 મીટરનો ફરક નોંધે છે.",
+            "detail": "નિયમિત ગણતરી માટે આ જ વાપરો. બધા કાપડ અને યાર્નનું તારીખ સાથેનું પૂરું ઓડિટ રેકોર્ડ તરીકે રાખવા, પેજની ઉપર {c:auditInventory} વાપરો."
+        },
+        "history": {
+            "title": "દરેક ફેરફાર તપાસો",
+            "body": "{c:movementHistory}માં દરેક ઉત્પાદન, ડિસ્પેચ, શરૂઆતનો સ્ટોક અને સુધારો, પછીના બેલેન્સ સાથે દેખાય છે.",
+            "detail": "બીજા ઉપકરણ પર શિફ્ટ સાચવી હોય તો જોવા {c:refresh} પસંદ કરો."
+        },
+        "handoff": {
+            "title": "તમારી પાસેનું કાપડ નોંધો",
+            "body": "Weavly વાપરતાં પહેલાં તૈયાર કાપડ હતું તો તેને અહીં એક વાર નોંધો. હવેથી સાચવેલી શિફ્ટ જાતે સ્ટોક ઉમેરશે."
+        },
+        "guide": {
+            "benefit": "શરૂઆતનું કાપડ નોંધવું, ગણતરી સુધારવી અને ફેરફાર તપાસવા શીખો."
+        },
+        "sample": "નમૂનો · તમારો સ્ટોક બદલાતો નથી"
+    },
+    "hi": {
+        "balance": {
+            "title": "भेजने को तैयार कपड़ा, क्वालिटी के अनुसार",
+            "body": "सेव शिफ्ट मीटर जोड़ती हैं और पुष्टि किए डिस्पैच घटाते हैं। यहाँ 200 मीटर बना − 100 मीटर गया = 100 मीटर।"
+        },
+        "pending": {
+            "title": "Weavly से पहले का कपड़ा जोड़ें",
+            "body": "{c:pending} लिखी क्वालिटी का शुरुआती स्टॉक अभी दर्ज नहीं है। आपके पास पहले से पड़ा तैयार कपड़ा गिनकर एक बार दर्ज करें।"
+        },
+        "opening": {
+            "title": "शुरुआती स्टॉक एक ही बार जुड़ता है",
+            "body": "{c:openingStock} गिने हुए मीटर उत्पादन में दर्ज मीटर में जोड़ता है: 100 + 500 = 600 मीटर। गिनती की तारीख जैसा नोट लिखें।"
+        },
+        "correct": {
+            "title": "गिनती के बाद गिना हुआ कुल लिखें",
+            "body": "{c:correctBalance} बैलेंस को गिनी हुई मात्रा से बदलता है। 590 लिखें, −10 नहीं; Weavly −10 मीटर का फ़र्क दर्ज करता है।",
+            "detail": "नियमित गिनती के लिए यही इस्तेमाल करें। सारे कपड़े और धागे का तारीख के साथ पूरा ऑडिट रिकॉर्ड के रूप में रखने के लिए पेज के ऊपर {c:auditInventory} इस्तेमाल करें।"
+        },
+        "history": {
+            "title": "हर बदलाव देखें",
+            "body": "{c:movementHistory} में हर उत्पादन, डिस्पैच, शुरुआती स्टॉक और सुधार, उसके बाद के बैलेंस के साथ दिखता है।",
+            "detail": "किसी दूसरे डिवाइस पर शिफ्ट सेव हुई हो तो देखने के लिए {c:refresh} चुनें।"
+        },
+        "handoff": {
+            "title": "आपके पास पड़ा कपड़ा दर्ज करें",
+            "body": "Weavly इस्तेमाल करने से पहले तैयार कपड़ा था तो उसे यहाँ एक बार दर्ज करें। अब से सेव शिफ्ट खुद स्टॉक जोड़ेंगी।"
+        },
+        "guide": {
+            "benefit": "शुरुआती कपड़ा दर्ज करना, गिनती सुधारना और बदलाव देखना सीखें।"
+        },
+        "sample": "नमूना · आपका स्टॉक नहीं बदलता"
+    }
 }
-/** Optional, step-specific detail shown only in the Fabric Stock tour panel. */
-export const fabricStockTutorialHelp: Record<Language, Partial<Record<StockTourStep, readonly [string, string]>>> = {
-  "en": {
-    "balance": [
-      "Production and dispatch changes",
-      "Later production edits change stock by the difference, including edits to historical production. Record verified opening before an edit that would otherwise make stock negative. Dispatch reversals appear as separate movements."
-    ],
-    "tracking": [
-      "Historical metres and reminders",
-      "Historical production excluded is context, not an amount to copy into opening. Reconcile historical metres without a quality with your physical count. Opening stock not recorded is a reminder, not proof that fabric remains."
-    ],
-    "openingPending": [
-      "Match the older commitment",
-      "Match the quality and the metres still pending, not the whole original sale. Exclude only fabric already committed to historical pending dispatches. Do not treat every current dispatch draft as a historical commitment. If the amount is uncertain, resolve it before recording opening."
-    ],
-    "opening": [
-      "Entry rules",
-      "Opening from a quality card fixes its name. Otherwise use the Production quality name; case and extra spaces are ignored. Enter non-negative metres with at most two decimal places and a reason of at least three characters. The reason stays with the movement."
-    ],
-    "correction": [
-      "If the balance changes while counting",
-      "If stock changes before saving, close the form, Refresh stock and review the current balance before trying again. Refresh also reloads history after production or dispatch changes elsewhere."
-    ],
-    "counted": [
-      "Keep the count traceable",
-      "Use a count date or reference and explain the difference. A correction records a stock movement; it does not rewrite the production or dispatch record that caused the difference."
-    ],
-    "finish": [
-      "Find and read older movements",
-      "Search qualities filters cards only. A card’s Movement history or the history dropdown filters movements separately. Balance after belongs to that movement, not necessarily today. Load older movements keeps that quality filter. Production links open Production; you can replay this tour from this page."
-    ]
-  },
-  "gu": {
-    "balance": [
-      "ઉત્પાદન અને ડિસ્પેચમાં ફેરફાર",
-      "જૂના ઉત્પાદન સહિત, પછીના ઉત્પાદન સુધારા તફાવત જેટલો સ્ટોક બદલે છે. સ્ટોક નકારાત્મક કરી શકે એવા સુધારા પહેલાં ચકાસેલો શરૂઆતનો સ્ટોક નોંધો. ડિસ્પેચ પરતની હિલચાલ અલગ નોંધાય છે."
-    ],
-    "tracking": [
-      "જૂના મીટર અને યાદ અપાવતી નોંધ",
-      "બાકાત રાખેલું જૂનું ઉત્પાદન માત્ર માહિતી છે; તેને શરૂઆતના સ્ટોકમાં સીધું ન નાખો. ક્વોલિટી વિનાના જૂના મીટરને ભૌતિક ગણતરી સાથે મેળવો. શરૂઆતનો સ્ટોક નોંધાયો નથી એ યાદ અપાવે છે, કાપડ બાકી હોવાનો પુરાવો નથી."
-    ],
-    "openingPending": [
-      "જૂના નક્કી કરેલા જથ્થાને મેળવો",
-      "ક્વોલિટી અને મોકલવાના હજી બાકી મીટર મેળવો, આખું મૂળ વેચાણ નહીં. ફક્ત જૂના બાકી ડિસ્પેચ માટે પહેલેથી નક્કી કરેલું કાપડ બાકાત રાખો. હાલના દરેક ડિસ્પેચ ડ્રાફ્ટને જૂની પ્રતિબદ્ધતા ન ગણો. જથ્થો અચોક્કસ હોય તો શરૂઆત નોંધતાં પહેલાં ખાતરી કરો."
-    ],
-    "opening": [
-      "નોંધના નિયમો",
-      "ક્વોલિટી કાર્ડથી ખોલતાં નામ નક્કી હોય છે. અન્યથા ઉત્પાદનવાળું નામ વાપરો; અંગ્રેજી મોટા-નાના અક્ષર અને વધારાની જગ્યા અવગણાય છે. શૂન્ય કે તેથી વધુ મીટર વધુમાં વધુ બે દશાંશ સાથે અને ઓછામાં ઓછા ત્રણ અક્ષરનું કારણ નાખો. કારણ હિલચાલ સાથે રહે છે."
-    ],
-    "correction": [
-      "ગણતરી દરમિયાન બેલેન્સ બદલાય તો",
-      "સાચવતાં પહેલાં સ્ટોક બદલાય તો ફોર્મ બંધ કરો, તાજું કરો વાપરો અને હાલનું બેલેન્સ તપાસીને ફરી પ્રયાસ કરો. અન્ય જગ્યાએ ઉત્પાદન કે ડિસ્પેચ બદલાય પછી રિફ્રેશથી ઇતિહાસ પણ ફરી આવે છે."
-    ],
-    "counted": [
-      "ગણતરીનો સંદર્ભ રાખો",
-      "ગણતરીની તારીખ કે સંદર્ભ આપો અને તફાવત સમજાવો. સુધારો સ્ટોકની હિલચાલ નોંધે છે; તફાવતનું કારણ બનેલી ઉત્પાદન કે ડિસ્પેચની મૂળ નોંધ ફરી લખતો નથી."
-    ],
-    "finish": [
-      "જૂની હિલચાલ શોધો અને વાંચો",
-      "ક્વોલિટી શોધ ફક્ત કાર્ડ ગાળે છે. કાર્ડનું ઇતિહાસ અથવા ઇતિહાસનું ડ્રોપડાઉન હિલચાલ અલગથી ગાળે છે. નોંધ પછીનું બેલેન્સ આજનું જ હોય તે જરૂરી નથી. જૂની હિલચાલ લોડ કરતાં એ જ ક્વોલિટીનો ફિલ્ટર રહે છે. ઉત્પાદન લિંક ઉત્પાદન ખોલે છે; આ પેજથી ટૂર ફરી જોઈ શકો છો."
-    ]
-  },
-  "hi": {
-    "balance": [
-      "उत्पादन और डिस्पैच में बदलाव",
-      "पुराने उत्पादन सहित, बाद के उत्पादन सुधार अंतर से स्टॉक बदलते हैं। स्टॉक नकारात्मक कर सकने वाले सुधार से पहले सत्यापित शुरुआती स्टॉक दर्ज करें। डिस्पैच वापसी अलग गतिविधि के रूप में दिखती है।"
-    ],
-    "tracking": [
-      "पुराने मीटर और याद दिलाने वाली सूचना",
-      "बाहर रखा पुराना उत्पादन केवल जानकारी है; उसे सीधे शुरुआती स्टॉक में न डालें। बिना क्वालिटी के पुराने मीटर भौतिक गिनती से मिलाएँ। शुरुआती स्टॉक दर्ज नहीं होना एक याद है, कपड़ा बचा होने का प्रमाण नहीं।"
-    ],
-    "openingPending": [
-      "पुरानी तय मात्रा मिलाएँ",
-      "क्वालिटी और अभी भेजने के लिए बचे मीटर मिलाएँ, पूरी मूल बिक्री नहीं। केवल पुराने लंबित डिस्पैच के लिए पहले से तय कपड़ा निकालें। हर वर्तमान डिस्पैच ड्राफ्ट को पुरानी प्रतिबद्धता न मानें। मात्रा अनिश्चित हो तो शुरुआत दर्ज करने से पहले पुष्टि करें।"
-    ],
-    "opening": [
-      "प्रविष्टि के नियम",
-      "क्वालिटी कार्ड से खोलने पर नाम तय रहता है। अन्यथा उत्पादन वाला नाम रखें; अंग्रेजी बड़े-छोटे अक्षर और अतिरिक्त खाली जगह अनदेखी होती है। शून्य या अधिक मीटर अधिकतम दो दशमलव में और कम से कम तीन अक्षर का कारण दें। कारण गतिविधि के साथ रहता है।"
-    ],
-    "correction": [
-      "गिनती के दौरान शेष बदले तो",
-      "सहेजने से पहले स्टॉक बदले तो फ़ॉर्म बंद करें, ताज़ा करें इस्तेमाल करें और वर्तमान शेष जाँचकर फिर प्रयास करें। दूसरी जगह उत्पादन या डिस्पैच बदलने के बाद रीफ़्रेश इतिहास भी फिर लाता है।"
-    ],
-    "counted": [
-      "गिनती का संदर्भ रखें",
-      "गिनती की तारीख या संदर्भ दें और अंतर समझाएँ। सुधार स्टॉक गतिविधि दर्ज करता है; अंतर पैदा करने वाले उत्पादन या डिस्पैच के मूल रिकॉर्ड को दोबारा नहीं लिखता।"
-    ],
-    "finish": [
-      "पुरानी गतिविधियाँ खोजें और पढ़ें",
-      "क्वालिटी खोज केवल कार्ड छाँटती है। कार्ड का स्टॉक बदलाव का इतिहास या इतिहास ड्रॉपडाउन गतिविधियाँ अलग से छाँटता है। प्रविष्टि के बाद का शेष आज का ही हो, जरूरी नहीं। पुरानी गतिविधियाँ लोड करने पर वही क्वालिटी फ़िल्टर रहता है। उत्पादन लिंक उत्पादन खोलता है; इस पेज से टूर फिर देख सकते हैं।"
-    ]
-  }
-}
+
 export const fabricStockPreviewCopy = {
   "en": {
     "quality": "Sample fabric",
     "countReference": "Verified pre-start count",
     "correctionReference": "Physical count: 590 m",
-    "openingEquation": "650 m pre-start physical − 150 m historically committed = 500 m opening",
-    "trackingStart": "Stock started: 1 September 2026 · sample",
-    "trackingNote": "The opening count covers fabric remaining from before this sample date.",
-    "balanceEquation": "500 m opening + 200 m production − 100 m confirmed dispatch = 600 m"
   },
   "gu": {
     "quality": "નમૂના કાપડ",
     "countReference": "ચકાસેલી શરૂઆત પહેલાંની ગણતરી",
     "correctionReference": "ભૌતિક ગણતરી: 590 મી",
-    "openingEquation": "650 મી જૂનું બાકી કાપડ − 150 મી જૂના ડિસ્પેચ માટે નક્કી = 500 મી શરૂઆત",
-    "trackingStart": "સ્ટોક શરૂ: 1 સપ્ટેમ્બર 2026 · નમૂનો",
-    "trackingNote": "શરૂઆતની ગણતરી આ નમૂનાની તારીખ પહેલાંના બાકી કાપડની છે.",
-    "balanceEquation": "500 મી શરૂઆત + 200 મી ઉત્પાદન − 100 મી પુષ્ટિ કરેલો ડિસ્પેચ = 600 મી"
   },
   "hi": {
     "quality": "नमूना कपड़ा",
     "countReference": "सत्यापित शुरुआती गिनती",
     "correctionReference": "भौतिक गिनती: 590 मी",
-    "openingEquation": "650 मी पुराना बचा कपड़ा − 150 मी पुराने डिस्पैच के लिए तय = 500 मी शुरुआती",
-    "trackingStart": "स्टॉक शुरू: 1 सितंबर 2026 · नमूना",
-    "trackingNote": "शुरुआती गिनती इस नमूना तारीख से पहले के बचे कपड़े की है।",
-    "balanceEquation": "500 मी शुरुआती + 200 मी उत्पादन − 100 मी पुष्टि किया डिस्पैच = 600 मी"
   }
 }
-export const yarnStockTutorialCopy: Record<Language, StockTutorialCopy> = {
-en: { ...configurationTutorialCopy.en, sample: fabricStockTutorialCopy.en.sample, sections: [
-    "Count unused yarn",
-    "Record weights",
-    "Prepare production",
-    "Reconcile"
-], fields: {
-    "balance": [
-        "Track unused yarn in stock",
-        "Yarn Stock shows unused yarn. Recording production deducts the yarn used, while confirmed dispatch deducts fabric metres only. Audit Inventory reports yarn embodied in remaining fabric separately."
-    ],
-    "yarn": [
-        "Count the yarn physically available",
-        "For this yarn: 120 kg before production − 20 kg used for 200 m at 10 kg / 100 m = 100 kg unused. Audit Inventory reports the 20 kg in fabric separately."
-    ],
-    "opening": [
-        "Start with opening weight",
-        "The first weight entry starts tracking. Record unused yarn physically in stock once per yarn with Opening weight. Use the costing’s yarn name. Exclude yarn already used in fabric and quantities already recorded as receipts. Add a count reference, then Save."
-    ],
-    "receipt": [
-        "Add only the new receipt",
-        "Add yarn records newly received kilograms, not today’s total. Use the costing’s yarn name and a receipt reference: 100 kg opening + 20 kg received = 120 kg. Matching names share one balance across warp and weft."
-    ],
-    "link": [
-        "Link the right fabric costing",
-        "Choose this fabric quality’s saved costing version and check every yarn’s kg / 100 m. Save with a reason; relinking changes future production only. No compatible costing? Save a fresh costing with named warp and weft layers and calculated weights, then return and link it."
-    ],
-    "movement": [
-        "Record production to deduct yarn",
-        "Link the fabric costing and record enough yarn before production. Here 200 m × 10 kg / 100 m deducts 20 kg: 120 − 20 = 100 kg. A later dispatch does not deduct this yarn again."
-    ],
-    "correction": [
-        "Correct the unused yarn count",
-        "Correct balance takes the verified unused yarn physically in stock. Enter 98 kg to replace 100 kg, not −2: saving records a −2 kg movement. Explain the count difference in the reason."
-    ],
-    "finish": [
-        "Check history, then prepare production",
-        "Movement history shows production use, receipts, corrections and the balance after each entry. Next, record any missing opening weights or receipts and link each fabric’s costing before recording production. You can replay this tour."
-    ]
-} },
-gu: { ...configurationTutorialCopy.gu, sample: fabricStockTutorialCopy.gu.sample, sections: [
-    "બાકી કાચું યાર્ન ગણો",
-    "વજન નોંધો",
-    "ઉત્પાદન તૈયાર કરો",
-    "હિસાબ મેળવો"
-], fields: {
-    "balance": [
-        "સ્ટોકમાં બચેલું કાચું યાર્ન",
-        "યાર્ન સ્ટોકમાં વણવપરાયેલું યાર્ન દેખાય છે. ઉત્પાદન નોંધતાં વપરાયેલું યાર્ન કપાય છે; પુષ્ટિ કરેલો ડિસ્પેચ માત્ર કાપડના મીટર ઘટાડે છે. કાપડમાં રહેલું યાર્ન ઇન્વેન્ટરી ઓડિટમાં અલગ દેખાય છે."
-    ],
-    "yarn": [
-        "હાથમાં રહેલું યાર્ન ગણો",
-        "ઉત્પાદન પહેલાં 120 કિલો કાચું યાર્ન − 10 કિલો / 100 મી પ્રમાણે 200 મીમાં વપરાયેલા 20 કિલો = 100 કિલો બાકી કાચું યાર્ન. કાપડમાં રહેલા 20 કિલો ઇન્વેન્ટરી ઓડિટમાં અલગ દેખાય છે."
-    ],
-    "opening": [
-        "શરૂઆતનું વજન નોંધો",
-        "પહેલી વજન નોંધથી ટ્રેકિંગ શરૂ થાય છે. શરૂઆતનું વજન વડે સ્ટોકમાં રહેલું કાચું યાર્ન દરેક યાર્ન માટે એક વાર નોંધો. કોસ્ટિંગનું યાર્ન નામ વાપરો. કાપડમાં વપરાયેલું યાર્ન અને પહેલેથી નોંધેલી આવક છોડો. ગણતરીનો સંદર્ભ આપી સાચવો."
-    ],
-    "receipt": [
-        "માત્ર નવી આવક ઉમેરો",
-        "યાર્ન ઉમેરો વડે નવા મળેલા કિલો નોંધો, આજનું કુલ નહીં. કોસ્ટિંગનું યાર્ન નામ અને રસીદ સંદર્ભ વાપરો: 100 કિલો શરૂઆત + 20 કિલો આવક = 120 કિલો. એક નામના તાણા અને વાણાનું બેલેન્સ એક છે."
-    ],
-    "link": [
-        "યોગ્ય કાપડનું કોસ્ટિંગ જોડો",
-        "આ કાપડની ક્વોલિટીનું સાચવેલું કોસ્ટિંગ વર્ઝન પસંદ કરી દરેક યાર્નના કિલો / 100 મી તપાસો. કારણ આપી સાચવો; ફરી જોડવાથી માત્ર આગળના ઉત્પાદનની કપાત બદલાય. યોગ્ય કોસ્ટિંગ ન હોય તો નામવાળા તાણા અને વાણાના સ્તરો તથા ગણાયેલ વજન સાથે નવું કોસ્ટિંગ સાચવો અને અહીં જોડો."
-    ],
-    "movement": [
-        "ઉત્પાદન નોંધતાં યાર્ન કપાય",
-        "ઉત્પાદન પહેલાં કાપડનું કોસ્ટિંગ જોડો અને જરૂરી યાર્નનો પૂરતો સ્ટોક નોંધો. અહીં 200 મી × 10 કિલો / 100 મીથી 20 કિલો કપાય: 120 − 20 = 100 કિલો. પછીનો ડિસ્પેચ આ યાર્ન ફરી ઘટાડતો નથી."
-    ],
-    "correction": [
-        "બાકી કાચા યાર્નનું વજન સુધારો",
-        "બેલેન્સ સુધારોમાં સ્ટોકમાં બચેલા કાચા યાર્નનું ચકાસેલું વજન નાખો. 100 કિલોની જગ્યાએ 98 કિલો નાખો, −2 નહીં: સાચવવાથી −2 કિલોની નોંધ બને છે. ગણતરીના તફાવતનું કારણ લખો."
-    ],
-    "finish": [
-        "ઇતિહાસ તપાસી આગલું ઉત્પાદન તૈયાર કરો",
-        "સ્ટોક ઇતિહાસમાં ઉત્પાદનની ખપત, આવક, સુધારા અને દરેક નોંધ પછીનું બેલેન્સ છે. બાકી શરૂઆતનું વજન અથવા આવક નોંધો અને ઉત્પાદન પહેલાં દરેક કાપડનું કોસ્ટિંગ જોડો. ટૂર ફરી જોઈ શકો છો."
-    ]
-} },
-hi: { ...configurationTutorialCopy.hi, sample: fabricStockTutorialCopy.hi.sample, sections: [
-    "बचा कच्चा धागा गिनें",
-    "वजन दर्ज करें",
-    "उत्पादन तैयार करें",
-    "हिसाब मिलाएँ"
-], fields: {
-    "balance": [
-        "स्टॉक में बचा कच्चा धागा",
-        "धागे के स्टॉक में बिना इस्तेमाल का धागा दिखता है। उत्पादन दर्ज होने पर इस्तेमाल हुआ धागा घटता है; पुष्टि किया डिस्पैच केवल कपड़े के मीटर घटाता है। कपड़े में लगा धागा इन्वेंटरी ऑडिट में अलग दिखता है।"
-    ],
-    "yarn": [
-        "उपलब्ध कच्चा धागा गिनें",
-        "उत्पादन से पहले 120 किलो कच्चा धागा − 10 किलो / 100 मी के हिसाब से 200 मी में इस्तेमाल 20 किलो = 100 किलो बचा कच्चा धागा। कपड़े में लगे 20 किलो इन्वेंटरी ऑडिट में अलग दिखते हैं।"
-    ],
-    "opening": [
-        "शुरुआती वजन दर्ज करें",
-        "पहली वजन प्रविष्टि से ट्रैकिंग शुरू होती है। शुरुआती वजन से स्टॉक में मौजूद कच्चे धागे का वजन हर धागे के लिए एक बार दर्ज करें। लागत वाला नाम रखें। कपड़े में इस्तेमाल धागा और पहले से दर्ज आवक छोड़ें। गिनती का संदर्भ देकर सहेजें।"
-    ],
-    "receipt": [
-        "केवल नई आवक जोड़ें",
-        "धागा जोड़ें से नए मिले किलो दर्ज करें, आज का कुल नहीं। लागत वाला धागे का नाम और रसीद संदर्भ रखें: 100 किलो शुरुआती + 20 किलो आवक = 120 किलो। एक नाम का ताना और बाना एक शेष साझा करते हैं।"
-    ],
-    "link": [
-        "सही कपड़े की लागत जोड़ें",
-        "इस कपड़े की क्वालिटी का सहेजा लागत संस्करण चुनकर हर धागे के किलो / 100 मी जाँचें। कारण देकर सहेजें; दोबारा जोड़ना केवल आगे के उत्पादन की कटौती बदलता है। उपयुक्त लागत न हो तो नाम वाले ताने और बाने की परतों और गणना किए वजन के साथ नई लागत सहेजें और यहाँ जोड़ें।"
-    ],
-    "movement": [
-        "उत्पादन दर्ज होने पर धागा घटता है",
-        "उत्पादन से पहले कपड़े की लागत जोड़ें और आवश्यक धागे का पर्याप्त स्टॉक दर्ज करें। यहाँ 200 मी × 10 किलो / 100 मी से 20 किलो घटता है: 120 − 20 = 100 किलो। बाद का डिस्पैच यह धागा दोबारा नहीं घटाता।"
-    ],
-    "correction": [
-        "बचे कच्चे धागे का वजन सुधारें",
-        "शेष सुधारें में स्टॉक में बचे कच्चे धागे का सत्यापित वजन डालें। 100 किलो की जगह 98 किलो डालें, −2 नहीं: सहेजने पर −2 किलो की प्रविष्टि बनती है। गिनती के अंतर का कारण लिखें।"
-    ],
-    "finish": [
-        "इतिहास जाँचकर अगला उत्पादन तैयार करें",
-        "स्टॉक इतिहास में उत्पादन की खपत, आवक, सुधार और हर प्रविष्टि के बाद का शेष दिखता है। छूटे शुरुआती वजन या आवक दर्ज करें और उत्पादन से पहले हर कपड़े की लागत जोड़ें। टूर फिर देख सकते हैं।"
-    ]
-} },
-}
+type YarnCopyKey = YarnStockTourStep extends `ys-${infer Key}` ? Key : never
+type YarnStepCopy = { title: string; body: string; detail?: string }
+type YarnCopy = Record<YarnCopyKey, YarnStepCopy> & { guide: { benefit: string } }
 
-export const yarnStockTutorialHelp: Record<Language, Partial<Record<StockTourStep, readonly [string, string]>>> = {
+/** Approved Yarn page-spec §F copy; Gujarati/Hindi native review remains pending. */
+export const yarnStockTutorialCopy: Record<Language, YarnCopy> = {
     "en": {
-        "yarn": [
-            "Which yarn weights should I count?",
-            "Count only unused yarn physically in stock here. Audit Inventory reports yarn embodied in remaining fabric separately, using the production lot’s saved recipe."
-        ],
-        "opening": [
-            "Entry details",
-            "Weights allow up to three decimals; reasons need at least three characters. Exclude yarn already used in fabric and recorded receipts from opening weight. If opening is already recorded, use Add yarn for a new receipt or Correct balance for a verified unused stock count."
-        ],
-        "receipt": [
-            "What if saving is unconfirmed?",
-            "A receipt must be greater than zero. Keep the same details and retry an unconfirmed save before starting another entry, so you do not record the delivery twice."
-        ],
-        "link": [
-            "What is saved in the link?",
-            "Every warp and weft layer used must have a yarn name and positive calculated kg / 100 m in the saved costing. Review the weights including costing allowances. Relinking affects future production only; past consumption keeps its original rate."
-        ],
-        "movement": [
-            "Read a movement or reversal",
-            "Balance after means the balance immediately after that entry, not necessarily today’s balance. Production consumption and reversals appear as separate movements. Historical dispatch entries may include a document link."
-        ],
-        "correction": [
-            "If stock changes before you save",
-            "Refresh and review the latest balance before retrying a correction. Its reason and signed difference stay in Movement history. Count unused yarn physically in stock only."
-        ],
-        "finish": [
-            "Dated balances, filters and CSV",
-            "Filter Movement history by yarn; a card’s History button selects it. Load more retrieves older entries for that filter and date. Audit date shows entries recorded through that day in India time, with editing controls hidden. Clear the date and choose View date to edit current stock. Dates before tracking are not opening counts. Export balances CSV contains displayed balances, total and tracking information, not movement history."
-        ]
+        "balance": {
+            "title": "Unused yarn, by yarn",
+            "body": "This is yarn on hand that has not been woven yet, in kg. Here 100 kg.",
+            "detail": "Yarn already woven into fabric that is still in your stock is not lost. {c:auditInventory} adds it back from each quality's kg per 100 m, so you see all the yarn you own."
+        },
+        "opening": {
+            "title": "Record the yarn you already have",
+            "body": "{c:openingWeight} records each yarn's weight once, when you start: here 100 kg."
+        },
+        "receipt": {
+            "title": "Add each new delivery",
+            "body": "{c:addYarn} adds a delivery to that yarn: 100 + 20 = 120 kg."
+        },
+        "link": {
+            "title": "Link each fabric to its costing",
+            "body": "{c:linkCosting} copies the kg of each yarn per 100 m from a saved costing. Here warp 6 + weft 4 = 10 kg per 100 m."
+        },
+        "usage": {
+            "title": "Saving production uses yarn",
+            "body": "When a shift of 200 m is saved, 20 kg is deducted (200 × 10 ÷ 100). Dispatch does not deduct yarn again.",
+            "detail": "Those 20 kg now sit inside the 200 m of fabric until it is dispatched; the Stock audit still counts them as your yarn."
+        },
+        "correct": {
+            "title": "After weighing, enter the weighed total",
+            "body": "{c:correctBalance} replaces the balance with what you weighed. Enter 98, not −2.",
+            "detail": "{c:movementHistory} shows every change. Pick a date to see balances on that day and export them. Use {c:correctBalance} for regular weighing; for a full dated audit of fabric and yarn, kept as a record, use {c:auditInventory}."
+        },
+        "handoff": {
+            "title": "Record the yarn in your godown",
+            "body": "Start with each yarn's opening weight, then link your fabric costings so production can deduct yarn."
+        },
+        "guide": {
+            "benefit": "Learn to record yarn, link it to costings and follow what production uses."
+        }
     },
     "gu": {
-        "yarn": [
-            "કયા યાર્નનું વજન ગણવું?",
-            "અહીં માત્ર સ્ટોકમાં રહેલું વણવપરાયેલું યાર્ન ગણો. બાકી કાપડમાં રહેલું યાર્ન તેના ઉત્પાદન લોટના સાચવેલા સૂત્રથી ઇન્વેન્ટરી ઓડિટમાં અલગ દેખાય છે."
-        ],
-        "opening": [
-            "નોંધની વિગતો",
-            "વજનમાં ત્રણ દશાંશ સુધી અને કારણમાં ઓછામાં ઓછા ત્રણ અક્ષર રાખો. કાપડમાં વપરાયેલું યાર્ન અને નોંધેલી આવક શરૂઆતના વજનમાં ફરી ન ગણો. શરૂઆત નોંધાઈ હોય તો નવી આવક માટે યાર્ન ઉમેરો અથવા ચકાસેલા કાચા સ્ટોક માટે બેલેન્સ સુધારો વાપરો."
-        ],
-        "receipt": [
-            "સાચવવાની પુષ્ટિ ન થાય તો?",
-            "આવક શૂન્યથી વધુ હોવી જોઈએ. સાચવવાની પુષ્ટિ ન હોય તો નવી નોંધ કરતાં પહેલાં એ જ વિગતો રાખીને ફરી પ્રયાસ કરો, જેથી એક જ આવક બે વાર ન નોંધાય."
-        ],
-        "link": [
-            "લિંકમાં શું સાચવાય છે?",
-            "સાચવેલા કોસ્ટિંગમાં વપરાતા તાણા અને વાણાના દરેક સ્તરનું યાર્ન નામ અને શૂન્યથી વધુ ગણાયેલ કિલો / 100 મી જરૂરી છે. કોસ્ટિંગના ભથ્થાં સહિત વજન તપાસો. ફરી જોડવાથી માત્ર આગળના ઉત્પાદનની કપાત બદલાય; જૂની ખપતનો દર યથાવત રહે છે."
-        ],
-        "movement": [
-            "હિલચાલ કે પરતની નોંધ વાંચો",
-            "નોંધ પછી બેલેન્સ એટલે તે નોંધ પછી તરતનું બેલેન્સ, જરૂરી નથી કે આજનું હોય. ઉત્પાદનની ખપત અને પરતની અલગ નોંધ થાય છે. જૂની ડિસ્પેચ નોંધમાં દસ્તાવેજની લિંક હોઈ શકે છે."
-        ],
-        "correction": [
-            "સાચવતાં પહેલાં સ્ટોક બદલાય તો",
-            "સુધારો ફરી કરતાં પહેલાં રિફ્રેશ કરીને નવું બેલેન્સ તપાસો. કારણ અને ચિહ્નવાળો તફાવત સ્ટોક ઇતિહાસમાં રહે છે. માત્ર સ્ટોકમાં બચેલું કાચું યાર્ન ગણો."
-        ],
-        "finish": [
-            "તારીખનું બેલેન્સ, ફિલ્ટર અને CSV",
-            "સ્ટોક ઇતિહાસ યાર્નથી ગાળો; કાર્ડનું સ્ટોક ઇતિહાસ તે યાર્ન પસંદ કરે છે. વધુ જુઓ એ જ તારીખ અને ફિલ્ટરની જૂની નોંધો લાવે છે. ઓડિટ તારીખ ભારતીય સમય મુજબ તે દિવસ સુધી નોંધાયેલ હિલચાલ બતાવે છે અને ફેરફારનાં નિયંત્રણો છુપાવે છે. હાલનો સ્ટોક સુધારવા તારીખ ખાલી કરી તારીખ જુઓ પસંદ કરો. ટ્રેકિંગ પહેલાંની તારીખ શરૂઆતની ગણતરી નથી. બેલેન્સ CSVમાં દેખાતાં બેલેન્સ, કુલ અને ટ્રેકિંગ વિગતો છે, હિલચાલ ઇતિહાસ નહીં."
-        ]
+        "balance": {
+            "title": "વણવપરાયેલું યાર્ન, યાર્ન પ્રમાણે",
+            "body": "આ હાથ પરનું હજી વણાયું ન હોય તેવું યાર્ન છે, કિલોમાં. અહીં 100 કિલો.",
+            "detail": "સ્ટોકમાં પડેલા કાપડમાં વણાઈ ગયેલું યાર્ન ખોવાતું નથી. {c:auditInventory} દરેક ક્વોલિટીના 100 મીટરે કિલો પ્રમાણે તે પાછું ઉમેરે છે, જેથી તમારી પાસેનું બધું યાર્ન દેખાય."
+        },
+        "opening": {
+            "title": "તમારી પાસેનું યાર્ન નોંધો",
+            "body": "{c:openingWeight} શરૂઆતમાં દરેક યાર્નનું વજન એક વાર નોંધે છે: અહીં 100 કિલો."
+        },
+        "receipt": {
+            "title": "દરેક નવી આવક ઉમેરો",
+            "body": "{c:addYarn} તે યાર્નમાં આવક ઉમેરે છે: 100 + 20 = 120 કિલો."
+        },
+        "link": {
+            "title": "દરેક કાપડને તેની કોસ્ટિંગ સાથે જોડો",
+            "body": "{c:linkCosting} સાચવેલી કોસ્ટિંગમાંથી 100 મીટરે દરેક યાર્નના કિલો લે છે. અહીં તાણા 6 + ભરણ 4 = 100 મીટરે 10 કિલો."
+        },
+        "usage": {
+            "title": "ઉત્પાદન સાચવવાથી યાર્ન વપરાય છે",
+            "body": "200 મીટરની શિફ્ટ સાચવતાં 20 કિલો ઘટે છે (200 × 10 ÷ 100). ડિસ્પેચ ફરી યાર્ન ઘટાડતું નથી.",
+            "detail": "એ 20 કિલો ડિસ્પેચ થાય ત્યાં સુધી 200 મીટર કાપડમાં રહે છે; સ્ટોક ઓડિટ તેને હજી તમારું યાર્ન ગણે છે."
+        },
+        "correct": {
+            "title": "વજન કર્યા પછી કુલ વજન લખો",
+            "body": "{c:correctBalance} બેલેન્સને તમે તોલેલા વજનથી બદલે છે. 98 લખો, −2 નહીં.",
+            "detail": "{c:movementHistory}માં દરેક ફેરફાર દેખાય છે. તારીખ પસંદ કરી તે દિવસનું બેલેન્સ જોઈ એક્સપોર્ટ કરી શકો. નિયમિત વજન માટે {c:correctBalance} વાપરો; કાપડ અને યાર્નનું તારીખ સાથેનું પૂરું ઓડિટ રેકોર્ડ તરીકે રાખવા {c:auditInventory} વાપરો."
+        },
+        "handoff": {
+            "title": "ગોડાઉનનું યાર્ન નોંધો",
+            "body": "દરેક યાર્નના શરૂઆતના વજનથી શરૂ કરો, પછી કાપડની કોસ્ટિંગ જોડો જેથી ઉત્પાદન યાર્ન ઘટાડી શકે."
+        },
+        "guide": {
+            "benefit": "યાર્ન નોંધવું, કોસ્ટિંગ સાથે જોડવું અને ઉત્પાદનમાં વપરાશ જોવો શીખો."
+        }
     },
     "hi": {
-        "yarn": [
-            "किस धागे का वजन गिनें?",
-            "यहाँ केवल स्टॉक में बचा बिना इस्तेमाल का धागा गिनें। बचे कपड़े में लगा धागा उसके उत्पादन लॉट के सहेजे सूत्र से इन्वेंटरी ऑडिट में अलग दिखता है।"
-        ],
-        "opening": [
-            "प्रविष्टि के विवरण",
-            "वजन में तीन दशमलव तक और कारण में कम से कम तीन अक्षर रखें। कपड़े में इस्तेमाल धागा और दर्ज आवक शुरुआती वजन में दोबारा न गिनें। शुरुआत दर्ज हो तो नई आवक के लिए धागा जोड़ें या सत्यापित कच्चे स्टॉक के लिए शेष सुधारें इस्तेमाल करें।"
-        ],
-        "receipt": [
-            "सहेजने की पुष्टि न हो तो?",
-            "आवक शून्य से अधिक होनी चाहिए। सहेजने की पुष्टि न हो तो नई प्रविष्टि शुरू करने से पहले उन्हीं विवरणों से दोबारा प्रयास करें, ताकि एक ही आवक दो बार दर्ज न हो।"
-        ],
-        "link": [
-            "जोड़ने पर क्या सहेजता है?",
-            "सहेजी लागत में इस्तेमाल हर ताने और बाने की परत का धागे का नाम और शून्य से अधिक गणना किए किलो / 100 मी जरूरी हैं। लागत के भत्तों सहित वजन जाँचें। दोबारा जोड़ना केवल आगे के उत्पादन पर लागू होता है; पुरानी खपत की दर नहीं बदलती।"
-        ],
-        "movement": [
-            "गतिविधि या वापसी पढ़ें",
-            "प्रविष्टि के बाद शेष उस प्रविष्टि के तुरंत बाद का शेष है, जरूरी नहीं आज का हो। उत्पादन की खपत और वापसी अलग प्रविष्टियों के रूप में दिखती हैं। पुरानी डिस्पैच प्रविष्टि में दस्तावेज की कड़ी हो सकती है।"
-        ],
-        "correction": [
-            "सहेजने से पहले स्टॉक बदले तो",
-            "सुधार दोबारा करने से पहले रीफ़्रेश करके नया शेष जाँचें। कारण और चिह्न वाला अंतर स्टॉक इतिहास में रहते हैं। केवल स्टॉक में बचा कच्चा धागा गिनें।"
-        ],
-        "finish": [
-            "तारीख का शेष, फ़िल्टर और CSV",
-            "स्टॉक इतिहास को धागे से छाँटें; कार्ड का स्टॉक इतिहास वही धागा चुनता है। और देखें उसी तारीख और फ़िल्टर की पुरानी प्रविष्टियाँ लाता है। ऑडिट तारीख भारतीय समय के अनुसार उस दिन तक दर्ज गतिविधियाँ दिखाती है और बदलाव के नियंत्रण छिपाती है। वर्तमान स्टॉक बदलने के लिए तारीख खाली करके तारीख देखें चुनें। ट्रैकिंग से पहले की तारीख शुरुआती गिनती नहीं है। शेष CSV में दिखते शेष, कुल और ट्रैकिंग विवरण हैं, गतिविधि इतिहास नहीं।"
-        ]
+        "balance": {
+            "title": "बिना इस्तेमाल धागा, धागे के अनुसार",
+            "body": "यह हाथ में पड़ा, अभी न बुना गया धागा है, किलो में। यहाँ 100 किलो।",
+            "detail": "स्टॉक में पड़े कपड़े में बुना जा चुका धागा खोता नहीं। {c:auditInventory} हर क्वालिटी के 100 मीटर पर किलो के हिसाब से उसे वापस जोड़ता है, ताकि आपके पास का सारा धागा दिखे।"
+        },
+        "opening": {
+            "title": "आपके पास पड़ा धागा दर्ज करें",
+            "body": "{c:openingWeight} शुरुआत में हर धागे का वज़न एक बार दर्ज करता है: यहाँ 100 किलो।"
+        },
+        "receipt": {
+            "title": "हर नई आवक जोड़ें",
+            "body": "{c:addYarn} उस धागे में आवक जोड़ता है: 100 + 20 = 120 किलो।"
+        },
+        "link": {
+            "title": "हर कपड़े को उसकी कॉस्टिंग से जोड़ें",
+            "body": "{c:linkCosting} सेव कॉस्टिंग से 100 मीटर पर हर धागे के किलो लेता है। यहाँ ताना 6 + बाना 4 = 100 मीटर पर 10 किलो।"
+        },
+        "usage": {
+            "title": "उत्पादन सेव करने से धागा लगता है",
+            "body": "200 मीटर की शिफ्ट सेव होने पर 20 किलो घटता है (200 × 10 ÷ 100)। डिस्पैच दोबारा धागा नहीं घटाता।",
+            "detail": "वे 20 किलो डिस्पैच होने तक 200 मीटर कपड़े में रहते हैं; स्टॉक ऑडिट उन्हें अब भी आपका धागा गिनता है।"
+        },
+        "correct": {
+            "title": "तौलने के बाद कुल वज़न लिखें",
+            "body": "{c:correctBalance} बैलेंस को आपके तौले वज़न से बदलता है। 98 लिखें, −2 नहीं।",
+            "detail": "{c:movementHistory} में हर बदलाव दिखता है। तारीख चुनकर उस दिन का बैलेंस देख और एक्सपोर्ट कर सकते हैं। नियमित तौल के लिए {c:correctBalance} इस्तेमाल करें; कपड़े और धागे का तारीख के साथ पूरा ऑडिट रिकॉर्ड के रूप में रखने के लिए {c:auditInventory} इस्तेमाल करें।"
+        },
+        "handoff": {
+            "title": "गोदाम का धागा दर्ज करें",
+            "body": "हर धागे के शुरुआती वज़न से शुरू करें, फिर कपड़े की कॉस्टिंग जोड़ें ताकि उत्पादन धागा घटा सके।"
+        },
+        "guide": {
+            "benefit": "धागा दर्ज करना, कॉस्टिंग से जोड़ना और उत्पादन में खपत देखना सीखें।"
+        }
     }
 }
 
-export const stockTutorialCopy: Record<StockTourKind, Record<Language, StockTutorialCopy>> = { 'fabric-stock': fabricStockTutorialCopy, 'yarn-stock': yarnStockTutorialCopy }
+export function fabricStockTourControlLabels(t: (key: string) => string) {
+    return {
+        pending: t('qualityStock.pending'),
+        openingStock: t('qualityStock.opening'),
+        correctBalance: t('qualityStock.correct'),
+        movementHistory: t('qualityStock.history'),
+        refresh: t('qualityStock.refresh'),
+        auditInventory: t('qualityStock.audit'),
+    }
+}
+
+export function fabricStockStepCopy(language: Language, step: FabricStockTourStep, controls: Record<string, string>) {
+    const copy = fabricStockTutorialCopy[language][step.slice(3) as FabricCopyKey]
+    const format = (text: string) => formatTourText(text.replace(/\{c:[^}]+\}/g, token => `“${token}”`), controls)
+    return {
+        title: format(copy.title),
+        body: format(copy.body),
+        ...(copy.detail ? { detail: format(copy.detail) } : {}),
+    }
+}
+
+export function yarnStockTourControlLabels(language: Language, t: (key: string) => string) {
+    const text = yarnStockText[language]
+    return {
+        openingWeight: text.opening,
+        addYarn: text.receipt,
+        linkCosting: text.link,
+        correctBalance: text.correction,
+        movementHistory: text.history,
+        auditInventory: t('qualityStock.audit'),
+    }
+}
+
+export function yarnStockStepCopy(language: Language, step: YarnStockTourStep, controls: Record<string, string>) {
+    const copy = yarnStockTutorialCopy[language][step.slice(3) as YarnCopyKey]
+    const format = (text: string) => formatTourText(text.replace(/\{c:[^}]+\}/g, token => `“${token}”`), controls)
+    return {
+        title: format(copy.title),
+        body: format(copy.body),
+        ...(copy.detail ? { detail: format(copy.detail) } : {}),
+    }
+}

@@ -51,16 +51,16 @@ describe('Tour Invitation i18n Parity (EN, GU, HI)', () => {
     }
   })
 
-  it('registers Daily Sheet for Base owners, with no emphasis and v1 until migration', () => {
+  it('registers Daily Sheet for Base owners, with no emphasis and migrated v2 content', () => {
     expect(supportedTours).toContain('daily-sheet')
-    expect(tourRegistry['daily-sheet']).toMatchObject({ contentVersion: 'v1', allowedPlans: ['base'], allowedRoles: ['owner'], copyKeys: { benefit: 'dailySheetBenefit', replayTitle: 'replayDailySheet' } })
+    expect(tourRegistry['daily-sheet']).toMatchObject({ contentVersion: 'v2', allowedPlans: ['base'], allowedRoles: ['owner'], copyKeys: { benefit: 'dailySheetBenefit', replayTitle: 'replayDailySheet' } })
     expect(isTourEligible('daily-sheet', 'base', 'owner')).toBe(true)
     expect(isTourEligible('daily-sheet', 'free', 'owner')).toBe(false)
     expect(isTourEligible('daily-sheet', 'lite', 'owner')).toBe(false)
     expect(isTourEligible('daily-sheet', 'base', 'supervisor')).toBe(false)
     for (const tour of Object.values(tourRegistry)) {
       expect(tour).not.toHaveProperty('emphasis')
-      expect(tour.contentVersion).toBe('v1')
+      expect(tour.contentVersion).toBe(['saved-costings', 'cost-estimate', 'rate-book', 'dispatch', 'fabric-stock', 'yarn-stock', 'production', 'workers', 'daily-sheet', 'configuration', 'machines', 'payroll'].includes(tour.id) ? 'v2' : 'v1')
     }
   })
 

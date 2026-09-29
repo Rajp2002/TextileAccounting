@@ -1,0 +1,140 @@
+[
+  {
+    "id": "gt15-transition-en-1440x900",
+    "task": "GT-15",
+    "scenario": "assignments?populated=1",
+    "language": "en",
+    "size": "1440x900",
+    "script": "/private/tmp/weavly-review-assignment-transition.mjs",
+    "args": [
+      "assignments?populated=1",
+      "en",
+      "1440x900",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-transition-en-1440x900"
+    ],
+    "command": [
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+      "170",
+      "node",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+      "env",
+      "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+      "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+      "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-transition-en-1440x900/network.json",
+      "node",
+      "--import",
+      "/private/tmp/weavly-review-network.mjs",
+      "/private/tmp/weavly-review-assignment-transition.mjs",
+      "assignments?populated=1",
+      "en",
+      "1440x900",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-transition-en-1440x900"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 22.32,
+    "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-transition-en-1440x900/transition/record.json",
+    "steps": 3,
+    "error": null,
+    "blockedNetwork": [
+      {
+        "type": "blocked-api",
+        "url": "http://localhost:5199/api/analytics/plan-events",
+        "method": "POST"
+      }
+    ],
+    "classification": "FAIL",
+    "visualReview": "UNVERIFIED"
+  },
+  {
+    "id": "gt15-transition-en-1024x768",
+    "task": "GT-15",
+    "scenario": "assignments?populated=1",
+    "language": "en",
+    "size": "1024x768",
+    "script": "/private/tmp/weavly-review-assignment-transition.mjs",
+    "args": [
+      "assignments?populated=1",
+      "en",
+      "1024x768",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-transition-en-1024x768"
+    ],
+    "command": [
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+      "170",
+      "node",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+      "env",
+      "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+      "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+      "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-transition-en-1024x768/network.json",
+      "node",
+      "--import",
+      "/private/tmp/weavly-review-network.mjs",
+      "/private/tmp/weavly-review-assignment-transition.mjs",
+      "assignments?populated=1",
+      "en",
+      "1024x768",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-transition-en-1024x768"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 13.36,
+    "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-transition-en-1024x768/transition/record.json",
+    "steps": 3,
+    "error": null,
+    "blockedNetwork": [
+      {
+        "type": "blocked-api",
+        "url": "http://localhost:5199/api/analytics/plan-events",
+        "method": "POST"
+      }
+    ],
+    "classification": "FAIL",
+    "visualReview": "UNVERIFIED"
+  },
+  {
+    "id": "gt15-transition-gu-390x844",
+    "task": "GT-15",
+    "scenario": "assignments?populated=1",
+    "language": "gu",
+    "size": "390x844",
+    "script": "/private/tmp/weavly-review-assignment-transition.mjs",
+    "args": [
+      "assignments?populated=1",
+      "gu",
+      "390x844",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-transition-gu-390x844"
+    ],
+    "command": [
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+      "170",
+      "node",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+      "env",
+      "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+      "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+      "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-transition-gu-390x844/network.json",
+      "node",
+      "--import",
+      "/private/tmp/weavly-review-network.mjs",
+      "/private/tmp/weavly-review-assignment-transition.mjs",
+      "assignments?populated=1",
+      "gu",
+      "390x844",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-transition-gu-390x844"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 14.38,
+    "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-transition-gu-390x844/transition/record.json",
+    "steps": 3,
+    "error": null,
+    "blockedNetwork": [
+      {
+        "type": "blocked-api",
+        "url": "http://localhost:5199/api/analytics/plan-events",
+        "method": "POST"
+      }
+    ],
+    "classification": "FAIL",
+    "visualReview": "UNVERIFIED"
+  }
+]

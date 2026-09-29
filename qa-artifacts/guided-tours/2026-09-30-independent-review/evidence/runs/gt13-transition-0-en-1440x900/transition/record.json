@@ -1,0 +1,164 @@
+{
+  "scenario": "machines",
+  "lang": "en",
+  "size": "1440x900",
+  "steps": [
+    {
+      "step": "mc-readiness",
+      "status": "ready",
+      "panel": {
+        "x": 816,
+        "y": 278.515625,
+        "w": 360,
+        "h": 175.15625
+      },
+      "highlight": {
+        "x": 304,
+        "y": 353.734375,
+        "w": 480,
+        "h": 251.75
+      },
+      "target": {
+        "x": 852.75,
+        "y": 193.5,
+        "w": 352.75,
+        "h": 210.375
+      },
+      "overlapArea": 0,
+      "actualTargetOverlap": 40522.41796875,
+      "focusInPanel": true,
+      "title": "Added is not the same as ready",
+      "storage": {
+        "weavly_language": "en"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "animations": [
+        {
+          "state": "running"
+        },
+        {
+          "state": "running"
+        },
+        {
+          "state": "running"
+        },
+        {
+          "state": "running"
+        },
+        {
+          "state": "running"
+        }
+      ],
+      "afterBackNextMilliseconds": 0
+    },
+    {
+      "step": "mc-readiness",
+      "status": "ready",
+      "panel": {
+        "x": 470.75,
+        "y": 187.5,
+        "w": 360,
+        "h": 175.15625
+      },
+      "highlight": {
+        "x": 846.75,
+        "y": 187.5,
+        "w": 364.75,
+        "h": 222.375
+      },
+      "target": {
+        "x": 852.75,
+        "y": 193.5,
+        "w": 352.75,
+        "h": 210.375
+      },
+      "overlapArea": 0,
+      "actualTargetOverlap": 0,
+      "focusInPanel": true,
+      "title": "Added is not the same as ready",
+      "storage": {
+        "weavly_language": "en"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "animations": [],
+      "afterBackNextMilliseconds": 500
+    },
+    {
+      "step": "mc-readiness",
+      "status": "ready",
+      "panel": {
+        "x": 470.75,
+        "y": 187.5,
+        "w": 360,
+        "h": 175.15625
+      },
+      "highlight": {
+        "x": 846.75,
+        "y": 187.5,
+        "w": 364.75,
+        "h": 222.375
+      },
+      "target": {
+        "x": 852.75,
+        "y": 193.5,
+        "w": 352.75,
+        "h": 210.375
+      },
+      "overlapArea": 0,
+      "actualTargetOverlap": 0,
+      "focusInPanel": true,
+      "title": "Added is not the same as ready",
+      "storage": {
+        "weavly_language": "en"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "animations": [],
+      "afterBackNextMilliseconds": 2000
+    }
+  ],
+  "issues": [],
+  "purpose": "Read-only Back/Next timing diagnosis; original main run remains unchanged and preserved",
+  "after": {
+    "calls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"machines\":{\"firstShown\":\"2026-09-29T22:21:05.097Z\",\"version\":\"v1\",\"firstStarted\":true}}"
+    },
+    "activeControl": "quiet-tour"
+  }
+}

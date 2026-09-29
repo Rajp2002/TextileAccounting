@@ -1,5 +1,6 @@
-import { rateBookTutorialCopy } from '../lib/i18n/rate-book-tutorial'
-import { describe, expect, it } from 'vitest'
+import { rateBookHelpCopy } from '../components/rates/RateBookTutorial'
+import { describe, expect, it, vi } from 'vitest'
+vi.mock('@/components/tours/TourInvitation', () => ({ TourInvitation: () => null }))
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
@@ -63,9 +64,9 @@ describe('Rate Review Right Rail layout & interaction', () => {
         expect(rates).toContain('Rate Review')
         expect(rates).toContain('Rate Book Principles')
         expect(rates).toContain('copy.principles.map')
-        expect(rateBookTutorialCopy.en.principles.join(' ')).toContain('updates matching yarn prices in linked Saved Qualities')
-        expect(rateBookTutorialCopy.en.principles.join(' ')).toContain('Historical costing snapshots keep their original numbers')
-        expect(rateBookTutorialCopy.en.principles.join(' ')).toContain('supplier-price check')
+        expect(rateBookHelpCopy.en.principles.join(' ')).toContain('updates matching yarn prices in linked Saved Qualities')
+        expect(rateBookHelpCopy.en.principles.join(' ')).toContain('Historical costing snapshots keep their original numbers')
+        expect(rateBookHelpCopy.en.principles.join(' ')).toContain('supplier-price check')
     })
 
     it('summarizes pending rates without rendering individual rail rows', () => {

@@ -1,0 +1,17 @@
+[
+  {
+    "source": "/private/tmp/weavly-review-integrity.py",
+    "copy": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/provenance-integrity-repair/weavly-review-integrity.py",
+    "sha256": "af8f731b071a668cabb65d654b19a837865aed0429061f47c5b78f2a7d80d7b2"
+  },
+  {
+    "source": "/private/tmp/weavly-review-integrity-repair.py",
+    "copy": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/provenance-integrity-repair/weavly-review-integrity-repair.py",
+    "sha256": "2e23c330ed42ff2a06b75e349654afc46207a3085ea2100e7c159a1c4dae13dd"
+  },
+  {
+    "source": "/private/tmp/weavly-review-report.py",
+    "copy": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/provenance-integrity-repair/weavly-review-report.py",
+    "sha256": "839b9f4982c453ca502763392c9c7d8a31307994b3ddfe0089a3866145defb2d"
+  }
+]

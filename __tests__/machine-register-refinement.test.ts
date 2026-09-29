@@ -91,6 +91,7 @@ describe('Machines Register Premium UI Redesign', () => {
       expect(html).toContain('Machines')
       expect(html).toContain('Add and manage the machines in your factory.')
       expect(html).toContain('Add machine')
+      expect(html.match(/data-tour-anchor="machines.add"/g)).toHaveLength(2)
       // Old table heading removed
       expect(html).not.toContain('Machine register ·')
     })

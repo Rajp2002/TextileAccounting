@@ -19,27 +19,17 @@ describe('Yarn Rate Book Tour Step 1 Alignment & Sample Data', () => {
     const ratesClientPath = path.resolve(__dirname, '../app/(dashboard)/owner/rates/RatesClient.tsx')
     const ratesClientSource = fs.readFileSync(ratesClientPath, 'utf8')
 
-    it('fixes smooth scroll displacement by adjusting target rects with deltaY and settling timers', () => {
-        // Must track active smooth scrolling
-        expect(tutorialSource).toContain('const isScrollingRef = useRef(false)')
-        expect(tutorialSource).toContain('isScrollingRef.current = true')
-        // Target rects must be adjusted by - deltaY during smooth scroll
-        expect(tutorialSource).toContain('top: targetRect.top - deltaY')
-        expect(tutorialSource).toContain('bottom: targetRect.bottom - deltaY')
-        // Settle timer must update rects after scroll completes
-        expect(tutorialSource).toContain('settleTimer')
-        // Backup timer must guarantee update even if scroll event is debounced
-        expect(tutorialSource).toContain('backupTimer')
+    it('delegates measured scroll, spotlight, placement and focus to the shared runtime', () => {
+        const runtime = fs.readFileSync(path.resolve(__dirname, '../components/rates/RateBookTourRuntime.tsx'), 'utf8')
+        expect(runtime).toContain('<GuidedTour tourId="rate-book"')
+        expect(tutorialSource).toContain("dynamic(() => import('./RateBookTourRuntime'), { ssr: false })")
+        expect(tutorialSource).not.toMatch(/settleTimer|backupTimer|deltaY|prevSectionRef/)
     })
 
-    it('correctly detects section 0 step 1 as a new section without requiring prior section', () => {
-        expect(tutorialSource).toContain('prevSectionRef.current !== active.section')
-        expect(tutorialSource).not.toContain('prevSectionRef.current !== null && prevSectionRef.current !== active.section')
-    })
-
-    it('provides and invokes onTourFinish callback on completion or dismissal', () => {
+    it('preserves the completion-only sample deletion nudge callback', () => {
         expect(tutorialSource).toContain('onTourFinish?: () => void')
-        expect(tutorialSource).toContain('onTourFinish?.()')
+        expect(tutorialSource).toContain('onDone={onTourFinish}')
+        expect(tutorialSource).not.toContain('onTourFinish?.()')
     })
 
     it('defines demo yarn rate with unreviewed warp status for full tour coverage', () => {
@@ -83,7 +73,9 @@ describe('Saved Costings Dialog Centering & Sample Pre-population', () => {
         expect(globalsCssSource).toContain('[data-costing-tour-dialog="true"]')
     })
 
-    it('uses matching inline centering calculation for detailed breakdown dialog', () => {
+    it('reserves a reading column for sample dialogs while retaining live centering', () => {
+        expect(globalsCssSource).toContain('left: calc((100vw - 384px) / 2) !important')
+        expect(globalsCssSource).toContain('width: calc(100vw - 416px) !important')
         expect(quotesClientSource).toContain("left: 'calc(50% + clamp(0px, calc((100vw - 1212px) / 2), 124px))'")
     })
 

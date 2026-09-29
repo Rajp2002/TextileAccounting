@@ -1,0 +1,14 @@
+{
+  "task": "GT-08",
+  "runs": 12,
+  "steps": 66,
+  "classifications": {
+    "AUTOMATED_PASS": 12
+  },
+  "failures": [],
+  "reviewNotes": "Empty and populated all-opening-stock fixtures passed all four viewports plus reduced motion; Exit at the opening-stock sample passed in English desktop and Gujarati phone. Required history geometry and desktop rail paint were inspected; Opening stock is the live handoff. Live search/node/storage restored, replica fields/buttons disabled, no business action/API/navigation or blocked traffic. Exact page copy and scoped source reviewed. No reproduced Major or Blocker.",
+  "status": "IN_PROGRESS",
+  "humanGates": "UNVERIFIED",
+  "visualReview": "Every captured English 1440x900 and Gujarati 390x844 step inspected",
+  "evidence": "gt08-results.json"
+}

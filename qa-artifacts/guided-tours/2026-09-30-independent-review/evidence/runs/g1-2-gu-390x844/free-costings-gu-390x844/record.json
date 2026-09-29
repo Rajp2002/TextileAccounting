@@ -1,0 +1,242 @@
+{
+  "scenario": "free-costings",
+  "lang": "gu",
+  "size": "390x844",
+  "steps": [
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "દરેક Free કોસ્ટિંગ અહીં રહે છે",
+      "body": "તમે ગણેલી અને સાચવેલી દરેક કોસ્ટિંગ અહીં પાકા રેકોર્ડ તરીકે દેખાય છે. તેને ખોલવા કે એક્સપોર્ટ કરવાથી માસિક મર્યાદા વપરાતી નથી.",
+      "step": "snapshots",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 1 / 4",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 555,
+        "w": 374,
+        "h": 281
+      },
+      "highlight": {
+        "x": 8,
+        "y": 156,
+        "w": 374,
+        "h": 299
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "div(role=dialog)",
+      "scrollY": 348,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": "",
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "કોસ્ટિંગ શીટ એક્સપોર્ટ કરો",
+      "body": "કાર્ડ પરનું “એક્સપોર્ટ કરો” તેનો પ્રતિ મીટર ખર્ચ અને વેચાણ ભાવ છાપી કે સાચવી શકાય તેવા દસ્તાવેજમાં ખોલે છે.",
+      "step": "freeSelect",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 2 / 4",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 632,
+        "w": 374,
+        "h": 204
+      },
+      "highlight": {
+        "x": 201,
+        "y": 352,
+        "w": 117,
+        "h": 56
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 362,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": "",
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "દસ્તાવેજ કોણ જોશે તે પસંદ કરો",
+      "body": "“આંતરિક ખર્ચ અંદાજ”માં તમારો ખર્ચ અને માર્જિન દેખાય છે. “ગ્રાહક ક્વોટેશન”માં ફક્ત ભાવ અને તમારી શરતો દેખાય છે.",
+      "step": "internal",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 3 / 4",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 577,
+        "w": 374,
+        "h": 259
+      },
+      "highlight": {
+        "x": 17,
+        "y": 189,
+        "w": 356,
+        "h": 256
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 58,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 8,
+        "y": 16,
+        "w": 374,
+        "h": 820
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": "",
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "તમારી પહેલી કોસ્ટિંગ ગણો",
+      "body": "ખર્ચ અંદાજક ખોલવા “નવી કોસ્ટિંગ” પસંદ કરો. સાચવેલી કોસ્ટિંગ અહીં દેખાશે.",
+      "step": "finish",
+      "status": "ready",
+      "eyebrow": "પગલું 4 / 4",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 632,
+        "w": 374,
+        "h": 204
+      },
+      "highlight": {
+        "x": 137,
+        "y": 163,
+        "w": 117,
+        "h": 56
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 14,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": "",
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    }
+  ],
+  "logs": [
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction"
+  ],
+  "apiRequests": [
+    {
+      "url": "http://localhost:5199/api/free/costings",
+      "method": "GET"
+    }
+  ],
+  "preClick": null,
+  "sampling": "legacy-900ms",
+  "before": {
+    "x": 0,
+    "y": 0,
+    "inner": null
+  },
+  "after": {
+    "scroll": {
+      "x": 0,
+      "y": 0,
+      "inner": null
+    },
+    "active": "<button data-slot=\"button\" data-variant=\"saffron\" data-size=\"default\" class=\"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm ",
+    "activeAnchor": "free-costings.new",
+    "activeRateBookField": null,
+    "activeControl": null,
+    "serverCalls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "navigations": [],
+    "scrollCalls": [],
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"saved-costings\":{\"firstShown\":\"2026-09-29T20:18:16.256Z\",\"version\":\"v1\",\"firstStarted\":true,\"completed\":true,\"completedVersion\":\"v2\"}}"
+    },
+    "search": ""
+  },
+  "issues": []
+}

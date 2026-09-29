@@ -16,7 +16,7 @@ import { getYarnStockBoard, mutateYarnStock } from './yarn-actions'
 type Entry = { kind: 'opening' | 'receipt' | 'correction'; yarn?: YarnBalance } | { kind: 'recipe'; quality: YarnQuality }
 
 export default function YarnStockClient({ initialData }: { initialData: YarnBoard }) {
-    const { language } = useTranslation(), text = yarnStockText[language]
+    const { language, t } = useTranslation(), text = yarnStockText[language]
     const [data, setData] = useState(initialData)
     const [date, setDate] = useState(''), [filter, setFilter] = useState('')
     const [busy, setBusy] = useState(false), [error, setError] = useState(''), [notice, setNotice] = useState(false)
@@ -106,10 +106,10 @@ export default function YarnStockClient({ initialData }: { initialData: YarnBoar
                 <Button asChild variant="outline" className="border-loom/30 text-loom hover:bg-loom/5 gap-1.5 font-medium">
                     <Link href="/owner/stock/audit">
                         <ClipboardCheck className="h-4 w-4" />
-                        Audit Inventory
+                        {t('qualityStock.audit')}
                     </Link>
                 </Button>
-                <Button variant="outline" disabled={busy} onClick={() => void load()}>{text.refresh}</Button>{current && <><Button variant="outline" disabled={Boolean(request)} onClick={() => open({ kind: 'opening' })}>{text.opening}</Button><Button disabled={Boolean(request)} onClick={() => open({ kind: 'receipt' })}>{text.receipt}</Button></>}
+                <Button variant="outline" disabled={busy} onClick={() => void load()}>{text.refresh}</Button>{current && <><Button data-tour-anchor="yarn.opening" variant="outline" disabled={Boolean(request)} onClick={() => open({ kind: 'opening' })}>{text.opening}</Button><Button disabled={Boolean(request)} onClick={() => open({ kind: 'receipt' })}>{text.receipt}</Button></>}
             </div>
         </header>
         {notice && <p role="status" className="rounded-lg bg-emerald-50 p-3 text-emerald-800">{text.saved}</p>}

@@ -1,59 +1,53 @@
-import { describe, expect, it } from 'vitest'
-import fs from 'node:fs'
-import path from 'node:path'
+import { describe, expect, it, vi } from 'vitest'
+import { readFileSync } from 'node:fs'
 
-describe('CostEstimateTutorial Section Transitions', () => {
-    const tutorialPath = path.resolve(__dirname, '../components/estimator/CostEstimateTutorial.tsx')
-    const tutorialSource = fs.readFileSync(tutorialPath, 'utf8')
+const source = readFileSync('components/estimator/CostEstimateTutorial.tsx', 'utf8')
+const runtime = readFileSync('components/estimator/CostEstimateTourRuntime.tsx', 'utf8')
+const page = readFileSync('app/(dashboard)/owner/estimator/EstimatorClient.tsx', 'utf8')
+const prepare = page.slice(page.indexOf('const prepareTutorial = useCallback(() => {') + 'const prepareTutorial = useCallback(() => {'.length, page.indexOf('    const [mobileCostingShortcutVisible]')).replace(/\}, \[\]\)\s*$/, '')
 
-    it('does not unmount the card glow element on section changes (no section-keyed unmount)', () => {
-        // Having key={`section-glow-${active.section}`} destroys the card spotlight on every section change.
-        // It must be persistent so CSS can smoothly morph the box between sections.
-        expect(tutorialSource).not.toContain('key={`section-glow-${')
-        expect(tutorialSource).not.toContain('key={"section-glow-')
+describe('Estimator reversible tour state', () => {
+    it('executes the real restore closure for every combination of captured UI flags', () => {
+        for (let flags = 0; flags < 32; flags++) {
+            const previous = { entryMode: flags & 1 ? 'detailed' : 'quick', showAdvancedOverhead: Boolean(flags & 2), liveEstimateOpen: Boolean(flags & 4), showQualityLibrary: Boolean(flags & 8), assumptionsExpanded: Boolean(flags & 16) }
+            const view = { ...previous }
+            const setters = ['entryMode', 'showAdvancedOverhead', 'liveEstimateOpen', 'showQualityLibrary', 'assumptionsExpanded'] as const
+            const callbacks = setters.map(key => vi.fn(value => { Object.assign(view, { [key]: value }) }))
+            const preparing = { current: false }, skip = { current: false }, current = { current: { ...previous } }
+            const restore = new Function('tutorialViewRef', 'tutorialPreparingRef', 'skipRestoredAssumptionsEffect', ...setters.map(key => `set${key[0].toUpperCase()}${key.slice(1)}`), prepare)(current, preparing, skip, ...callbacks) as () => void
+            expect(view).toEqual({ ...previous, entryMode: 'quick', showAdvancedOverhead: false, liveEstimateOpen: false, showQualityLibrary: false })
+            expect(preparing.current).toBe(true)
+            expect(callbacks[4]).not.toHaveBeenCalled()
+            current.current = { ...view } // Renders during the tour cannot overwrite its snapshot.
+            restore()
+            expect(view).toEqual(previous)
+            expect(preparing.current).toBe(false)
+            expect(skip.current).toBe(previous.entryMode !== 'quick')
+        }
+        expect(prepare).not.toMatch(/dispatch|localStorage|fetch|save|freeMeter/)
     })
-
-    it('applies smooth 500ms transition to the card spotlight', () => {
-        expect(tutorialSource).toContain('transition-all duration-500 ease-out')
+    it('captures once on explicit launch and restores on close and unmount', () => {
+        expect(source).toContain('if (!enabled || restoreView.current) return')
+        expect(source).toContain('restoreView.current = onPrepare()')
+        expect(source.match(/restoreView.current\?\.\(\)/g)).toHaveLength(2)
+        expect(source).toContain('useEffect(() => () => {')
+        expect(source).toContain('if (next === null) {')
+        expect(source).toContain('onActiveChange(false)')
+        expect(source).toContain('onDone={() => { handoffPending.current = true }}')
+        expect(source).toContain('if (step !== null || !handoffPending.current) return')
+        expect(source).toContain("querySelectorAll<HTMLInputElement>('[data-estimator-field=\"qualityLabel\"]')")
     })
-
-    it('applies smooth clip-path transition to the dark backdrop cutout', () => {
-        expect(tutorialSource).toContain('transition: \'clip-path 500ms')
-    })
-
-    it('frames the top of the card cleanly when entering a new section', () => {
-        expect(tutorialSource).toContain('isNewSection')
-        expect(tutorialSource).toContain('targetCardTop')
-        expect(tutorialSource).toContain('deltaY = cardRect.top - targetCardTop')
-    })
-
-    it('calculates target post-scroll viewport coordinates to prevent pre-scroll jump', () => {
-        expect(tutorialSource).toContain('top: cardRect.top - deltaY')
-        expect(tutorialSource).toContain('top: targetRect.top - deltaY')
-    })
-
-    it('enhances the visual aura and section progress badge during section transitions', () => {
-        expect(tutorialSource).toContain('isSectionTransition')
-        expect(tutorialSource).toContain('border-orange-500/60 shadow-[0_0_0_1px_rgba(249,115,22,0.4),0_0_50px_rgba(249,115,22,0.32)]')
-    })
-
-    it('does not re-center the card when moving between fields in the same section (deltaY = 0 when field is in view)', () => {
-        // Prevents jumping up a section and returning when navigating between fields within Section 7
-        expect(tutorialSource).toContain('else if (active.card.offsetHeight <= viewportHeight)')
-        expect(tutorialSource).toContain('never re-center the card; move directly from one field to the next without scrolling')
-        expect(tutorialSource).toContain('deltaY = 0')
-    })
-
-    it('clamps deltaY to actual document scrollable bounds so phantom scroll offsets are never applied at page boundaries', () => {
-        expect(tutorialSource).toContain('maxScrollY')
-        expect(tutorialSource).toContain('maxDeltaDown')
-        expect(tutorialSource).toContain('maxDeltaUp')
-        expect(tutorialSource).toContain('deltaY = Math.max(maxDeltaUp, Math.min(deltaY, maxDeltaDown))')
-    })
-
-    it('provides temporary bottom scroll padding on data-costing-tutorial-root while tutorial is active', () => {
-        expect(tutorialSource).toContain('data-costing-tutorial-root')
-        expect(tutorialSource).toContain("root.style.paddingBottom = '40vh'")
+    it('uses shared scrolling, clipping, placement and cleanup with no bespoke timers or aura', () => {
+        expect(runtime).toContain('<GuidedTour')
+        expect(runtime).toContain('estimatorTourView(step)')
+        expect(runtime).toContain('onOpenLiveCostModal(view.liveEstimateOpen)')
+        for (const retired of ['setTimeout', "paddingBottom = '40vh'", 'tutorial-expand-row', 'isSectionTransition', 'shadow-2xl', 'duration-500', 'clip-path 500ms', 'panelPlacement']) expect(source + runtime).not.toContain(retired)
+        expect(page).not.toContain('tutorial-expand-row')
+        expect(page).not.toContain('tutorialExpanded')
+        const shared = readFileSync('components/tours/GuidedTour.tsx', 'utf8')
+        expect(shared).toContain('useTourStep(')
+        expect(shared).toContain('useGuidedTourModal(')
+        expect(shared).toContain('restoreScroll(record)')
+        expect(shared).toContain('releaseTour(props.tourId)')
     })
 })
-

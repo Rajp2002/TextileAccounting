@@ -1,5 +1,7 @@
 'use client'
 
+import { useTranslation } from '@/lib/i18n/context'
+
 import { useDeferredValue, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
@@ -93,6 +95,7 @@ export default function BasePayrollSettlementWorkspace({
     onSuccess?: () => void
     onViewRecords?: () => void
 }) {
+    const { t } = useTranslation()
     const router = useRouter()
 
     // Local mutable state for optimistic live updates
@@ -739,7 +742,7 @@ export default function BasePayrollSettlementWorkspace({
                                                             onClick={() => handleResolveZeroWorker(payable.worker_id, payable.worker_name)}
                                                             className="h-8 rounded-xl text-xs font-bold border-hairline"
                                                         >
-                                                            Resolve
+                                                            <span data-i18n-skip="true">{t('payroll.resolve')}</span>
                                                         </Button>
                                                     ) : (
                                                         <Button
@@ -753,7 +756,7 @@ export default function BasePayrollSettlementWorkspace({
                                                             }}
                                                             className="h-8 sm:h-9 rounded-xl bg-loom text-white text-xs font-bold shadow-xs hover:bg-loom-elevated"
                                                         >
-                                                            {hasIssues ? 'Needs review' : 'Mark Paid'}
+                                                            <span data-i18n-skip="true">{hasIssues ? t('payroll.needsReview') : t('payroll.markPaid')}</span>
                                                         </Button>
                                                     )}
 
@@ -853,7 +856,7 @@ export default function BasePayrollSettlementWorkspace({
                                 }}
                                 className="rounded-xl font-bold text-xs"
                             >
-                                View Settled Records
+                                <span data-i18n-skip="true">{t('payroll.viewSettledRecords')}</span>
                             </Button>
                         ) : (
                             <Button
@@ -865,7 +868,7 @@ export default function BasePayrollSettlementWorkspace({
                                         : 'bg-surface-soft text-muted-foreground border border-hairline'
                                 }`}
                             >
-                                Complete Payroll
+                                <span data-i18n-skip="true">{t('payroll.completePayroll')}</span>
                                 <ArrowRight className="h-4 w-4 ml-1" />
                             </Button>
                         )}
@@ -961,7 +964,7 @@ export default function BasePayrollSettlementWorkspace({
                                         className="rounded-xl bg-loom text-white font-bold text-xs hover:bg-loom-elevated"
                                     >
                                         {isPaying ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
-                                        Confirm Payment
+                                        <span data-i18n-skip="true">{t('payroll.confirmPayment')}</span>
                                     </Button>
                                 </DialogFooter>
                             </div>
@@ -1101,7 +1104,7 @@ export default function BasePayrollSettlementWorkspace({
                     <DialogContent className="max-w-md rounded-2xl border border-hairline bg-surface p-6 shadow-2xl">
                         <DialogHeader>
                             <DialogTitle className="text-xl font-bold text-ink">
-                                Complete {period.label} payroll?
+                                <span data-i18n-skip="true">{t('payroll.completePeriodTitle', { periodLabel: period.label })}</span>
                             </DialogTitle>
                             <DialogDescription className="text-xs text-body">
                                 Finalize this pay period and lock in an immutable accounting record.
@@ -1148,7 +1151,7 @@ export default function BasePayrollSettlementWorkspace({
                                     className="rounded-xl bg-loom text-white font-bold text-xs hover:bg-loom-elevated"
                                 >
                                     {isCompleting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
-                                    Complete Payroll
+                                    <span data-i18n-skip="true">{t('payroll.completePayroll')}</span>
                                 </Button>
                             </DialogFooter>
                         </div>

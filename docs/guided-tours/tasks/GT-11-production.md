@@ -19,6 +19,8 @@ GT-11. Rebuild the Overview tour (7 steps) on `ReplicaGuidedTour`, add the yarn-
 
 `ProductionGuidedTour.tsx` (→ `ReplicaGuidedTour` on the Overview; on `/owner/production/daily-sheet` render `children` only, as today; remove the "Setup, history & corrections" button), `ProductionTourPreview.tsx` (overview surfaces and the two dialogs; **leave the Daily Sheet surfaces in place, unused, for GT-12 to move**), delete `components/tours/ProductionTutorial.tsx` when unused, `lib/production-tour.ts` (overview steps; keep daily step ids in the type until GT-12), `lib/i18n/production-tutorial.ts` (overview keys; daily keys stay until GT-12), `BaseProductionClient.tsx` / `BaseActiveQualities.tsx` / `BaseMachineBoard.tsx` (label keys for the §F tokens and the `production.activate` anchors only), locales `production.*`, registry `production` → `v2`, listed tests, contract test, harness.
 
+Owner-approved addition (2026-09-28): `BaseMachineBoard.tsx` may key only its existing “Manage Operators for {loom}” sheet title; `BaseActiveQualities.tsx` may key only its existing “Cost” labels. Use the exact shared keys/copy in page spec §F.1 in those live sites and the matching Overview replica. The owner expressly authorized online terminology research for this missing copy. No additional business logic, handlers, calculations, Daily Sheet or Payroll changes are allowed.
+
 ## Protected surface
 
 Activation, yarn gate, assign looms, operators, switch/deactivate, board filters; Daily Sheet (untouched in this task).

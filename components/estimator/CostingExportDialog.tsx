@@ -366,7 +366,7 @@ export function CostingExportDialog({
 
   return (
     <Dialog modal={!tutorialPreview} open={open} onOpenChange={value => { if (!tutorialPreview) onOpenChange(value) }}>
-      <DialogContent data-costing-tour-dialog={tutorialPreview ? "true" : undefined} onOpenAutoFocus={event => {if (tutorialPreview) event.preventDefault()}} onCloseAutoFocus={event => {if (tutorialPreview) event.preventDefault()}} onInteractOutside={event => {if (tutorialPreview) event.preventDefault()}} onEscapeKeyDown={event => {if (tutorialPreview) event.preventDefault()}} className="max-h-[95vh] overflow-y-auto sm:max-w-6xl">
+      <DialogContent showCloseButton={!tutorialPreview} data-costing-tour-dialog={tutorialPreview ? "true" : undefined} onOpenAutoFocus={event => {if (tutorialPreview) event.preventDefault()}} onCloseAutoFocus={event => {if (tutorialPreview) event.preventDefault()}} onInteractOutside={event => {if (tutorialPreview) event.preventDefault()}} onEscapeKeyDown={event => {if (tutorialPreview) event.preventDefault()}} className="max-h-[95vh] overflow-y-auto sm:max-w-6xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Eye className="h-5 w-5 text-blue-600" />
@@ -418,7 +418,7 @@ export function CostingExportDialog({
                 className={`rounded-xl border p-4 text-left transition-colors ${mode === 'internal' ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-300'}`}
               >
                 <FileText className="mb-3 h-5 w-5 text-blue-600" />
-                <p className="font-semibold text-slate-950">Internal Cost Estimate</p>
+                <p className="font-semibold text-slate-950">{tx('Internal Cost Estimate')}</p>
                 <p className="mt-1 text-xs leading-relaxed text-slate-500">Detailed costs, assumptions, break-even, margin, and profit stay inside the factory.</p>
               </button>
               <button
@@ -428,7 +428,7 @@ export function CostingExportDialog({
                 className={`rounded-xl border p-4 text-left transition-colors ${mode === 'customer' ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 hover:border-slate-300'}`}
               >
                 <ReceiptText className="mb-3 h-5 w-5 text-emerald-600" />
-                <p className="font-semibold text-slate-950">Customer Quotation</p>
+                <p className="font-semibold text-slate-950">{tx('Customer Quotation')}</p>
                 <p className="mt-1 text-xs leading-relaxed text-slate-500">Final price and commercial details only. Internal costs and margin stay hidden.</p>
               </button>
             </div>
@@ -537,7 +537,7 @@ export function CostingExportDialog({
             {status === 'share-opened' && generatedFileIsCurrent && <span className="flex items-center gap-1 text-xs font-semibold text-slate-500"><ExternalLink className="h-3.5 w-3.5" /> Delivery is not confirmed</span>}
           </div>
           <div className="flex gap-2">
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Close</Button>
+            {!tutorialPreview && <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Close</Button>}
             <Button type="button" onClick={() => void handlePdf()} disabled={!model || !canGenerate || isBusy} aria-describedby={exportActionHint ? 'export-action-help' : undefined} className="bg-blue-600 text-white hover:bg-blue-700">
               {status === 'saving' || status === 'generating' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
               {documentChanged ? tx('Download updated PDF') : status === 'download-started' ? 'Download PDF again' : 'Download PDF'}

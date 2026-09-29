@@ -1,0 +1,137 @@
+[
+  {
+    "id": "gt05-0-en-1440x900",
+    "task": "GT-05",
+    "scenario": "estimator",
+    "language": "en",
+    "size": "1440x900"
+  },
+  {
+    "id": "gt05-0-hi-1280x800",
+    "task": "GT-05",
+    "scenario": "estimator",
+    "language": "hi",
+    "size": "1280x800"
+  },
+  {
+    "id": "gt05-0-en-1024x768",
+    "task": "GT-05",
+    "scenario": "estimator",
+    "language": "en",
+    "size": "1024x768"
+  },
+  {
+    "id": "gt05-0-gu-390x844",
+    "task": "GT-05",
+    "scenario": "estimator",
+    "language": "gu",
+    "size": "390x844"
+  },
+  {
+    "id": "gt05-1-en-1440x900",
+    "task": "GT-05",
+    "scenario": "estimator?tier=lite",
+    "language": "en",
+    "size": "1440x900"
+  },
+  {
+    "id": "gt05-1-hi-1280x800",
+    "task": "GT-05",
+    "scenario": "estimator?tier=lite",
+    "language": "hi",
+    "size": "1280x800"
+  },
+  {
+    "id": "gt05-1-en-1024x768",
+    "task": "GT-05",
+    "scenario": "estimator?tier=lite",
+    "language": "en",
+    "size": "1024x768"
+  },
+  {
+    "id": "gt05-1-gu-390x844",
+    "task": "GT-05",
+    "scenario": "estimator?tier=lite",
+    "language": "gu",
+    "size": "390x844"
+  },
+  {
+    "id": "gt05-2-en-1440x900",
+    "task": "GT-05",
+    "scenario": "free-estimator",
+    "language": "en",
+    "size": "1440x900"
+  },
+  {
+    "id": "gt05-2-hi-1280x800",
+    "task": "GT-05",
+    "scenario": "free-estimator",
+    "language": "hi",
+    "size": "1280x800"
+  },
+  {
+    "id": "gt05-2-en-1024x768",
+    "task": "GT-05",
+    "scenario": "free-estimator",
+    "language": "en",
+    "size": "1024x768"
+  },
+  {
+    "id": "gt05-2-gu-390x844",
+    "task": "GT-05",
+    "scenario": "free-estimator",
+    "language": "gu",
+    "size": "390x844"
+  },
+  {
+    "id": "gt05-0-reduced",
+    "task": "GT-05",
+    "scenario": "estimator",
+    "language": "en",
+    "size": "1024x768",
+    "env": {
+      "REDUCED_MOTION": "1"
+    }
+  },
+  {
+    "id": "gt05-1-reduced",
+    "task": "GT-05",
+    "scenario": "estimator?tier=lite",
+    "language": "en",
+    "size": "1024x768",
+    "env": {
+      "REDUCED_MOTION": "1"
+    }
+  },
+  {
+    "id": "gt05-2-reduced",
+    "task": "GT-05",
+    "scenario": "free-estimator",
+    "language": "en",
+    "size": "1024x768",
+    "env": {
+      "REDUCED_MOTION": "1"
+    }
+  },
+  {
+    "id": "gt05-detailed-done",
+    "task": "GT-05",
+    "scenario": "estimator",
+    "language": "en",
+    "size": "1024x768",
+    "env": {
+      "PRE_CLICK": "[role=tab]:text-is(\"Detailed\")"
+    }
+  },
+  {
+    "id": "gt05-detailed-exit",
+    "task": "GT-05",
+    "scenario": "estimator",
+    "language": "en",
+    "size": "1024x768",
+    "env": {
+      "PRE_CLICK": "[role=tab]:text-is(\"Detailed\")",
+      "EXIT_AT": "8"
+    }
+  }
+]

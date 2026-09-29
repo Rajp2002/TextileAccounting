@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { WorkerPayBasis } from '@/components/workers/WorkerPayBasis'
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslation } from '@/lib/i18n/context'
 import { toast } from 'sonner'
 import {
     ArrowRightLeft,
@@ -77,6 +78,7 @@ export default function BaseMachineBoard({
     today,
 }: BaseMachineBoardProps) {
     const router = useRouter()
+    const { t } = useTranslation()
     const [search, setSearch] = useState('')
     const [filterStatus, setFilterStatus] = useState<'all' | 'running' | 'available'>('all')
     const [pendingKey, setPendingKey] = useState<string | null>(null)
@@ -303,7 +305,7 @@ export default function BaseMachineBoard({
         <section className="space-y-4 pt-2">
             <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
                 <div>
-                    <h2 className="text-lg font-bold text-ink">Machine Board</h2>
+                    <h2 data-i18n-skip="true" className="text-lg font-bold text-ink">{t('production.machineBoard')}</h2>
                     <p className="text-xs sm:text-sm text-muted-foreground">
                         Loom-by-loom status, active quality, and operator assignments.
                     </p>
@@ -477,7 +479,7 @@ export default function BaseMachineBoard({
                                                     onClick={() => setManagingMachine(machine)}
                                                     className="flex-1 h-8 rounded-xl text-xs font-semibold border-hairline bg-surface hover:bg-surface-soft"
                                                 >
-                                                    <Users className="mr-1.5 h-3.5 w-3.5" /> Manage Workers
+                                                    <Users className="mr-1.5 h-3.5 w-3.5" /> <span data-i18n-skip="true">{t('production.manageWorkers')}</span>
                                                 </Button>
                                                 <Button
                                                     variant="outline"
@@ -485,7 +487,7 @@ export default function BaseMachineBoard({
                                                     onClick={() => openSwitchQuality(machine)}
                                                     className="flex-1 h-8 rounded-xl text-xs font-semibold border-hairline bg-surface hover:bg-surface-soft"
                                                 >
-                                                    <ArrowRightLeft className="mr-1.5 h-3.5 w-3.5" /> Switch Quality
+                                                    <ArrowRightLeft className="mr-1.5 h-3.5 w-3.5" /> <span data-i18n-skip="true">{t('production.switchQuality')}</span>
                                                 </Button>
                                             </div>
                                         </div>
@@ -631,8 +633,8 @@ export default function BaseMachineBoard({
             <Sheet open={managingMachine !== null} onOpenChange={(open) => !open && setManagingMachine(null)}>
                 <SheetContent side="right" className="w-[min(440px,95vw)] p-0 flex flex-col">
                     <SheetHeader className="p-5 pb-3 border-b border-hairline bg-surface-soft/40">
-                        <SheetTitle className="text-base font-bold text-ink">
-                            Manage Operators for {managingMachine?.custom_label || managingMachine?.name}
+                        <SheetTitle data-i18n-skip="true" className="text-base font-bold text-ink">
+                            {t('production.manageOperatorsForLoom', { loom: managingMachine?.custom_label || managingMachine?.name || '' })}
                         </SheetTitle>
                         <SheetDescription className="text-xs text-muted-foreground">
                             Quality: {managingMachine && currentJobByMachine.get(managingMachine.id)?.quality_label}

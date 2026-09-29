@@ -1,0 +1,38 @@
+[
+  {
+    "run": "gt14-transition-0-en-1440x900",
+    "steps": [
+      "wkp-availability",
+      "wkp-availability",
+      "wkp-availability"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt14-transition-0-en-1440x900-01-03.png"
+  },
+  {
+    "run": "gt14-transition-0-gu-390x844",
+    "steps": [
+      "wkp-availability",
+      "wkp-availability",
+      "wkp-availability"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt14-transition-0-gu-390x844-01-03.png"
+  },
+  {
+    "run": "gt14-transition-1-en-1440x900",
+    "steps": [
+      "wks-salary",
+      "wks-salary",
+      "wks-salary"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt14-transition-1-en-1440x900-01-03.png"
+  },
+  {
+    "run": "gt14-transition-1-gu-390x844",
+    "steps": [
+      "wks-salary",
+      "wks-salary",
+      "wks-salary"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt14-transition-1-gu-390x844-01-03.png"
+  }
+]

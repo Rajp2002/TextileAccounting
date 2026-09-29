@@ -1,0 +1,572 @@
+[
+  {
+    "id": "gt10-0-en-1440x900",
+    "task": "GT-10",
+    "scenario": "payroll",
+    "language": "en",
+    "size": "1440x900",
+    "command": [
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+      "170",
+      "node",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+      "env",
+      "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+      "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+      "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-0-en-1440x900/network.json",
+      "node",
+      "--import",
+      "/private/tmp/weavly-review-network.mjs",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification-harness/run-tour.mjs",
+      "payroll",
+      "en",
+      "1440x900",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-0-en-1440x900"
+    ],
+    "exitCode": 1,
+    "elapsedSeconds": 55.43,
+    "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-0-en-1440x900/payroll-en-1440x900/record.json",
+    "steps": 8,
+    "error": null,
+    "blockedNetwork": [
+      {
+        "type": "blocked-api",
+        "url": "http://localhost:5199/api/analytics/plan-events",
+        "method": "POST"
+      }
+    ],
+    "classification": "FAIL",
+    "visualReview": "UNVERIFIED"
+  },
+  {
+    "id": "gt10-0-hi-1280x800",
+    "task": "GT-10",
+    "scenario": "payroll",
+    "language": "hi",
+    "size": "1280x800",
+    "command": [
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+      "170",
+      "node",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+      "env",
+      "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+      "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+      "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-0-hi-1280x800/network.json",
+      "node",
+      "--import",
+      "/private/tmp/weavly-review-network.mjs",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification-harness/run-tour.mjs",
+      "payroll",
+      "hi",
+      "1280x800",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-0-hi-1280x800"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 44.87,
+    "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-0-hi-1280x800/payroll-hi-1280x800/record.json",
+    "steps": 8,
+    "error": null,
+    "blockedNetwork": [
+      {
+        "type": "blocked-api",
+        "url": "http://localhost:5199/api/analytics/plan-events",
+        "method": "POST"
+      }
+    ],
+    "classification": "FAIL",
+    "visualReview": "UNVERIFIED"
+  },
+  {
+    "id": "gt10-0-en-1024x768",
+    "task": "GT-10",
+    "scenario": "payroll",
+    "language": "en",
+    "size": "1024x768",
+    "command": [
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+      "170",
+      "node",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+      "env",
+      "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+      "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+      "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-0-en-1024x768/network.json",
+      "node",
+      "--import",
+      "/private/tmp/weavly-review-network.mjs",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification-harness/run-tour.mjs",
+      "payroll",
+      "en",
+      "1024x768",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-0-en-1024x768"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 44.6,
+    "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-0-en-1024x768/payroll-en-1024x768/record.json",
+    "steps": 8,
+    "error": null,
+    "blockedNetwork": [
+      {
+        "type": "blocked-api",
+        "url": "http://localhost:5199/api/analytics/plan-events",
+        "method": "POST"
+      }
+    ],
+    "classification": "FAIL",
+    "visualReview": "UNVERIFIED"
+  },
+  {
+    "id": "gt10-0-gu-390x844",
+    "task": "GT-10",
+    "scenario": "payroll",
+    "language": "gu",
+    "size": "390x844",
+    "command": [
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+      "170",
+      "node",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+      "env",
+      "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+      "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+      "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-0-gu-390x844/network.json",
+      "node",
+      "--import",
+      "/private/tmp/weavly-review-network.mjs",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification-harness/run-tour.mjs",
+      "payroll",
+      "gu",
+      "390x844",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-0-gu-390x844"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 47.62,
+    "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-0-gu-390x844/payroll-gu-390x844/record.json",
+    "steps": 8,
+    "error": null,
+    "blockedNetwork": [
+      {
+        "type": "blocked-api",
+        "url": "http://localhost:5199/api/analytics/plan-events",
+        "method": "POST"
+      }
+    ],
+    "classification": "FAIL",
+    "visualReview": "UNVERIFIED"
+  },
+  {
+    "id": "gt10-0-reduced-en-1024x768",
+    "task": "GT-10",
+    "scenario": "payroll",
+    "language": "en",
+    "size": "1024x768",
+    "env": {
+      "REDUCED_MOTION": "1"
+    },
+    "command": [
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+      "170",
+      "node",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+      "env",
+      "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+      "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+      "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-0-reduced-en-1024x768/network.json",
+      "REDUCED_MOTION=1",
+      "node",
+      "--import",
+      "/private/tmp/weavly-review-network.mjs",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification-harness/run-tour.mjs",
+      "payroll",
+      "en",
+      "1024x768",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-0-reduced-en-1024x768"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 44.59,
+    "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-0-reduced-en-1024x768/payroll-en-1024x768/record.json",
+    "steps": 8,
+    "error": null,
+    "blockedNetwork": [
+      {
+        "type": "blocked-api",
+        "url": "http://localhost:5199/api/analytics/plan-events",
+        "method": "POST"
+      }
+    ],
+    "classification": "FAIL",
+    "visualReview": "UNVERIFIED"
+  },
+  {
+    "id": "gt10-1-en-1440x900",
+    "task": "GT-10",
+    "scenario": "payroll-extra",
+    "language": "en",
+    "size": "1440x900",
+    "command": [
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+      "170",
+      "node",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+      "env",
+      "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+      "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+      "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-1-en-1440x900/network.json",
+      "node",
+      "--import",
+      "/private/tmp/weavly-review-network.mjs",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification-harness/run-tour.mjs",
+      "payroll-extra",
+      "en",
+      "1440x900",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-1-en-1440x900"
+    ],
+    "exitCode": 1,
+    "elapsedSeconds": 43.31,
+    "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-1-en-1440x900/payroll-extra-en-1440x900/record.json",
+    "steps": 6,
+    "error": null,
+    "blockedNetwork": [
+      {
+        "type": "blocked-api",
+        "url": "http://localhost:5199/api/analytics/plan-events",
+        "method": "POST"
+      }
+    ],
+    "classification": "FAIL",
+    "visualReview": "UNVERIFIED"
+  },
+  {
+    "id": "gt10-1-hi-1280x800",
+    "task": "GT-10",
+    "scenario": "payroll-extra",
+    "language": "hi",
+    "size": "1280x800",
+    "command": [
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+      "170",
+      "node",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+      "env",
+      "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+      "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+      "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-1-hi-1280x800/network.json",
+      "node",
+      "--import",
+      "/private/tmp/weavly-review-network.mjs",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification-harness/run-tour.mjs",
+      "payroll-extra",
+      "hi",
+      "1280x800",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-1-hi-1280x800"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 42.9,
+    "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-1-hi-1280x800/payroll-extra-hi-1280x800/record.json",
+    "steps": 6,
+    "error": null,
+    "blockedNetwork": [
+      {
+        "type": "blocked-api",
+        "url": "http://localhost:5199/api/analytics/plan-events",
+        "method": "POST"
+      }
+    ],
+    "classification": "FAIL",
+    "visualReview": "UNVERIFIED"
+  },
+  {
+    "id": "gt10-1-en-1024x768",
+    "task": "GT-10",
+    "scenario": "payroll-extra",
+    "language": "en",
+    "size": "1024x768",
+    "command": [
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+      "170",
+      "node",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+      "env",
+      "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+      "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+      "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-1-en-1024x768/network.json",
+      "node",
+      "--import",
+      "/private/tmp/weavly-review-network.mjs",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification-harness/run-tour.mjs",
+      "payroll-extra",
+      "en",
+      "1024x768",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-1-en-1024x768"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 50.15,
+    "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-1-en-1024x768/payroll-extra-en-1024x768/record.json",
+    "steps": 6,
+    "error": null,
+    "blockedNetwork": [
+      {
+        "type": "blocked-api",
+        "url": "http://localhost:5199/api/analytics/plan-events",
+        "method": "POST"
+      }
+    ],
+    "classification": "FAIL",
+    "visualReview": "UNVERIFIED"
+  },
+  {
+    "id": "gt10-1-gu-390x844",
+    "task": "GT-10",
+    "scenario": "payroll-extra",
+    "language": "gu",
+    "size": "390x844",
+    "command": [
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+      "170",
+      "node",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+      "env",
+      "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+      "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+      "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-1-gu-390x844/network.json",
+      "node",
+      "--import",
+      "/private/tmp/weavly-review-network.mjs",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification-harness/run-tour.mjs",
+      "payroll-extra",
+      "gu",
+      "390x844",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-1-gu-390x844"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 42.48,
+    "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-1-gu-390x844/payroll-extra-gu-390x844/record.json",
+    "steps": 6,
+    "error": null,
+    "blockedNetwork": [
+      {
+        "type": "blocked-api",
+        "url": "http://localhost:5199/api/analytics/plan-events",
+        "method": "POST"
+      }
+    ],
+    "classification": "FAIL",
+    "visualReview": "UNVERIFIED"
+  },
+  {
+    "id": "gt10-1-reduced-en-1024x768",
+    "task": "GT-10",
+    "scenario": "payroll-extra",
+    "language": "en",
+    "size": "1024x768",
+    "env": {
+      "REDUCED_MOTION": "1"
+    },
+    "command": [
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+      "170",
+      "node",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+      "env",
+      "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+      "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+      "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-1-reduced-en-1024x768/network.json",
+      "REDUCED_MOTION=1",
+      "node",
+      "--import",
+      "/private/tmp/weavly-review-network.mjs",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification-harness/run-tour.mjs",
+      "payroll-extra",
+      "en",
+      "1024x768",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-1-reduced-en-1024x768"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 42.72,
+    "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-1-reduced-en-1024x768/payroll-extra-en-1024x768/record.json",
+    "steps": 6,
+    "error": null,
+    "blockedNetwork": [
+      {
+        "type": "blocked-api",
+        "url": "http://localhost:5199/api/analytics/plan-events",
+        "method": "POST"
+      }
+    ],
+    "classification": "FAIL",
+    "visualReview": "UNVERIFIED"
+  },
+  {
+    "id": "gt10-exit-payroll-en-1440x900",
+    "task": "GT-10",
+    "scenario": "payroll",
+    "language": "en",
+    "size": "1440x900",
+    "env": {
+      "EXIT_AT": "4"
+    },
+    "command": [
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+      "170",
+      "node",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+      "env",
+      "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+      "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+      "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-exit-payroll-en-1440x900/network.json",
+      "EXIT_AT=4",
+      "node",
+      "--import",
+      "/private/tmp/weavly-review-network.mjs",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification-harness/run-tour.mjs",
+      "payroll",
+      "en",
+      "1440x900",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-exit-payroll-en-1440x900"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 39.87,
+    "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-exit-payroll-en-1440x900/payroll-en-1440x900/record.json",
+    "steps": 4,
+    "error": null,
+    "blockedNetwork": [
+      {
+        "type": "blocked-api",
+        "url": "http://localhost:5199/api/analytics/plan-events",
+        "method": "POST"
+      }
+    ],
+    "classification": "FAIL",
+    "visualReview": "UNVERIFIED"
+  },
+  {
+    "id": "gt10-exit-payroll-gu-390x844",
+    "task": "GT-10",
+    "scenario": "payroll",
+    "language": "gu",
+    "size": "390x844",
+    "env": {
+      "EXIT_AT": "4"
+    },
+    "command": [
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+      "170",
+      "node",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+      "env",
+      "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+      "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+      "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-exit-payroll-gu-390x844/network.json",
+      "EXIT_AT=4",
+      "node",
+      "--import",
+      "/private/tmp/weavly-review-network.mjs",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification-harness/run-tour.mjs",
+      "payroll",
+      "gu",
+      "390x844",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-exit-payroll-gu-390x844"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 49.97,
+    "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-exit-payroll-gu-390x844/payroll-gu-390x844/record.json",
+    "steps": 4,
+    "error": null,
+    "blockedNetwork": [
+      {
+        "type": "blocked-api",
+        "url": "http://localhost:5199/api/analytics/plan-events",
+        "method": "POST"
+      }
+    ],
+    "classification": "FAIL",
+    "visualReview": "UNVERIFIED"
+  },
+  {
+    "id": "gt10-exit-payroll-extra-en-1440x900",
+    "task": "GT-10",
+    "scenario": "payroll-extra",
+    "language": "en",
+    "size": "1440x900",
+    "env": {
+      "EXIT_AT": "3"
+    },
+    "command": [
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+      "170",
+      "node",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+      "env",
+      "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+      "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+      "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-exit-payroll-extra-en-1440x900/network.json",
+      "EXIT_AT=3",
+      "node",
+      "--import",
+      "/private/tmp/weavly-review-network.mjs",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification-harness/run-tour.mjs",
+      "payroll-extra",
+      "en",
+      "1440x900",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-exit-payroll-extra-en-1440x900"
+    ],
+    "exitCode": 1,
+    "elapsedSeconds": 38.76,
+    "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-exit-payroll-extra-en-1440x900/payroll-extra-en-1440x900/record.json",
+    "steps": 3,
+    "error": null,
+    "blockedNetwork": [
+      {
+        "type": "blocked-api",
+        "url": "http://localhost:5199/api/analytics/plan-events",
+        "method": "POST"
+      }
+    ],
+    "classification": "FAIL",
+    "visualReview": "UNVERIFIED"
+  },
+  {
+    "id": "gt10-exit-payroll-extra-gu-390x844",
+    "task": "GT-10",
+    "scenario": "payroll-extra",
+    "language": "gu",
+    "size": "390x844",
+    "env": {
+      "EXIT_AT": "3"
+    },
+    "command": [
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+      "170",
+      "node",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+      "env",
+      "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+      "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+      "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-exit-payroll-extra-gu-390x844/network.json",
+      "EXIT_AT=3",
+      "node",
+      "--import",
+      "/private/tmp/weavly-review-network.mjs",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification-harness/run-tour.mjs",
+      "payroll-extra",
+      "gu",
+      "390x844",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-exit-payroll-extra-gu-390x844"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 38.24,
+    "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-exit-payroll-extra-gu-390x844/payroll-extra-gu-390x844/record.json",
+    "steps": 3,
+    "error": null,
+    "blockedNetwork": [
+      {
+        "type": "blocked-api",
+        "url": "http://localhost:5199/api/analytics/plan-events",
+        "method": "POST"
+      }
+    ],
+    "classification": "FAIL",
+    "visualReview": "UNVERIFIED"
+  }
+]

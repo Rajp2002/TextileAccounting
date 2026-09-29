@@ -1,0 +1,604 @@
+{
+  "scenario": "yarn-stock?populated=1&unlinked=1",
+  "lang": "gu",
+  "size": "390x844",
+  "steps": [
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "વણવપરાયેલું યાર્ન, યાર્ન પ્રમાણે",
+      "body": "આ હાથ પરનું હજી વણાયું ન હોય તેવું યાર્ન છે, કિલોમાં. અહીં 100 કિલો.",
+      "step": "ys-balance",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 1 / 7",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 577,
+        "w": 374,
+        "h": 259
+      },
+      "highlight": {
+        "x": 23,
+        "y": 287,
+        "w": 344,
+        "h": 110
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "div(role=dialog)",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": {
+        "replica": true,
+        "balance": "100 kg",
+        "pending": false,
+        "unmounts": 0,
+        "sameSearchNode": false,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "yarn": {
+        "mounts": 1,
+        "unmounts": 0,
+        "date": "2026-09-14",
+        "sameDateNode": true,
+        "anchors": 0,
+        "sections": [
+          "header",
+          "balance",
+          "date",
+          "yarns",
+          "costings",
+          "history"
+        ],
+        "sampleBanners": 1
+      },
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "તમારી પાસેનું યાર્ન નોંધો",
+      "body": "“શરૂઆતનું વજન” શરૂઆતમાં દરેક યાર્નનું વજન એક વાર નોંધે છે: અહીં 100 કિલો.",
+      "step": "ys-opening",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 2 / 7",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 632,
+        "w": 374,
+        "h": 204
+      },
+      "highlight": {
+        "x": 17,
+        "y": 94,
+        "w": 356,
+        "h": 335
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 8,
+        "y": 72,
+        "w": 374,
+        "h": 368
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": {
+        "replica": true,
+        "balance": "100 kg",
+        "pending": false,
+        "unmounts": 0,
+        "sameSearchNode": false,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "yarn": {
+        "mounts": 1,
+        "unmounts": 0,
+        "date": "2026-09-14",
+        "sameDateNode": true,
+        "anchors": 0,
+        "sections": [
+          "header",
+          "balance",
+          "date",
+          "yarns",
+          "costings",
+          "history"
+        ],
+        "sampleBanners": 1,
+        "weight": "100"
+      },
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "દરેક નવી આવક ઉમેરો",
+      "body": "“યાર્ન ઉમેરો” તે યાર્નમાં આવક ઉમેરે છે: 100 + 20 = 120 કિલો.",
+      "step": "ys-receipt",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 3 / 7",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 632,
+        "w": 374,
+        "h": 204
+      },
+      "highlight": {
+        "x": 17,
+        "y": 94,
+        "w": 356,
+        "h": 349
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 8,
+        "y": 72,
+        "w": 374,
+        "h": 368
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": {
+        "replica": true,
+        "balance": "120 kg",
+        "pending": false,
+        "unmounts": 0,
+        "sameSearchNode": false,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "yarn": {
+        "mounts": 1,
+        "unmounts": 0,
+        "date": "2026-09-14",
+        "sameDateNode": true,
+        "anchors": 0,
+        "sections": [
+          "header",
+          "balance",
+          "date",
+          "yarns",
+          "costings",
+          "history"
+        ],
+        "sampleBanners": 1,
+        "weight": "20"
+      },
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "દરેક કાપડને તેની કોસ્ટિંગ સાથે જોડો",
+      "body": "“કોસ્ટિંગ જોડો” સાચવેલી કોસ્ટિંગમાંથી 100 મીટરે દરેક યાર્નના કિલો લે છે. અહીં તાણા 6 + ભરણ 4 = 100 મીટરે 10 કિલો.",
+      "step": "ys-link",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 4 / 7",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 609,
+        "w": 374,
+        "h": 227
+      },
+      "highlight": {
+        "x": 17,
+        "y": 66,
+        "w": 356,
+        "h": 380
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 8,
+        "y": 72,
+        "w": 374,
+        "h": 368
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": {
+        "replica": true,
+        "balance": "120 kg",
+        "pending": false,
+        "unmounts": 0,
+        "sameSearchNode": false,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "yarn": {
+        "mounts": 1,
+        "unmounts": 0,
+        "date": "2026-09-14",
+        "sameDateNode": true,
+        "anchors": 0,
+        "sections": [
+          "header",
+          "balance",
+          "date",
+          "yarns",
+          "costings",
+          "history"
+        ],
+        "sampleBanners": 1
+      },
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "ઉત્પાદન સાચવવાથી યાર્ન વપરાય છે",
+      "body": "200 મીટરની શિફ્ટ સાચવતાં 20 કિલો ઘટે છે (200 × 10 ÷ 100). ડિસ્પેચ ફરી યાર્ન ઘટાડતું નથી.",
+      "step": "ys-usage",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 5 / 7",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 577,
+        "w": 374,
+        "h": 259
+      },
+      "highlight": {
+        "x": 23,
+        "y": 269,
+        "w": 344,
+        "h": 96
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 856,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": {
+        "replica": true,
+        "balance": "100 kg",
+        "pending": false,
+        "unmounts": 0,
+        "sameSearchNode": false,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "yarn": {
+        "mounts": 1,
+        "unmounts": 0,
+        "date": "2026-09-14",
+        "sameDateNode": true,
+        "anchors": 0,
+        "sections": [
+          "header",
+          "balance",
+          "date",
+          "yarns",
+          "costings",
+          "history"
+        ],
+        "sampleBanners": 1,
+        "movement": "નમૂના યાર્ન · ઉત્પાદન · −20 kg200 m × 10 ÷ 100 = 20 kgનોંધ પછી બેલેન્સ: 100 kg"
+      },
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "વજન કર્યા પછી કુલ વજન લખો",
+      "body": "“બેલેન્સ સુધારો” બેલેન્સને તમે તોલેલા વજનથી બદલે છે. 98 લખો, −2 નહીં.",
+      "step": "ys-correct",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 6 / 7",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 577,
+        "w": 374,
+        "h": 259
+      },
+      "highlight": {
+        "x": 17,
+        "y": 81,
+        "w": 356,
+        "h": 349
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 504,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 8,
+        "y": 72,
+        "w": 374,
+        "h": 375
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": {
+        "replica": true,
+        "balance": "100 kg",
+        "pending": false,
+        "unmounts": 0,
+        "sameSearchNode": false,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "yarn": {
+        "mounts": 1,
+        "unmounts": 0,
+        "date": "2026-09-14",
+        "sameDateNode": true,
+        "anchors": 0,
+        "sections": [
+          "header",
+          "balance",
+          "date",
+          "yarns",
+          "costings",
+          "history"
+        ],
+        "sampleBanners": 1,
+        "weight": "98",
+        "movement": "નમૂના યાર્ન · ઉત્પાદન · −20 kg200 m × 10 ÷ 100 = 20 kgનોંધ પછી બેલેન્સ: 100 kg"
+      },
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "ગોડાઉનનું યાર્ન નોંધો",
+      "body": "દરેક યાર્નના શરૂઆતના વજનથી શરૂ કરો, પછી કાપડની કોસ્ટિંગ જોડો જેથી ઉત્પાદન યાર્ન ઘટાડી શકે.",
+      "step": "ys-handoff",
+      "status": "ready",
+      "eyebrow": "પગલું 7 / 7",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 632,
+        "w": 374,
+        "h": 204
+      },
+      "highlight": {
+        "x": 223,
+        "y": 114,
+        "w": 121,
+        "h": 56
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": {
+        "replica": false,
+        "pending": false,
+        "unmounts": 0,
+        "sameSearchNode": false,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "yarn": {
+        "mounts": 1,
+        "unmounts": 0,
+        "date": "2026-09-14",
+        "sameDateNode": true,
+        "anchors": 1,
+        "sections": [],
+        "sampleBanners": 0
+      },
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    }
+  ],
+  "logs": [
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction"
+  ],
+  "apiRequests": [],
+  "preClick": null,
+  "sampling": "legacy-900ms",
+  "before": {
+    "x": 0,
+    "y": 0,
+    "inner": null
+  },
+  "after": {
+    "scroll": {
+      "x": 0,
+      "y": 0,
+      "inner": null
+    },
+    "active": "<button data-slot=\"button\" data-variant=\"outline\" data-size=\"default\" class=\"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm ",
+    "activeAnchor": "yarn.opening",
+    "activeRateBookField": null,
+    "activeControl": null,
+    "serverCalls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "navigations": [],
+    "scrollCalls": [
+      {
+        "owner": "element",
+        "method": "scrollTo",
+        "behavior": "smooth"
+      },
+      {
+        "owner": "element",
+        "method": "scrollTo",
+        "behavior": "smooth"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "smooth"
+      },
+      {
+        "owner": "element",
+        "method": "scrollTo",
+        "behavior": "smooth"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "smooth"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "element",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "element",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      }
+    ],
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"yarn-stock\":{\"firstShown\":\"2026-09-29T21:25:44.159Z\",\"version\":\"v1\",\"firstStarted\":true,\"completed\":true,\"completedVersion\":\"v2\"}}"
+    },
+    "yarn": {
+      "mounts": 1,
+      "unmounts": 0,
+      "date": "2026-09-14",
+      "sameDateNode": true,
+      "liveHidden": false,
+      "replica": false
+    },
+    "search": null
+  },
+  "issues": []
+}

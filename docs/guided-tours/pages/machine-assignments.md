@@ -65,7 +65,7 @@ Keys in `lib/i18n/configuration-tutorial.ts` (rewritten; the dead "Show inactive
 | `purpose.title` | Who runs which loom, each shift | દરેક શિફ્ટમાં કયો લૂમ કોણ ચલાવે | हर शिफ्ट में कौन सा लूम कौन चलाए |
 | `purpose.body` | Link each worker to the loom they run. The Daily Sheet then lists each loom with its worker. | દરેક કારીગરને તે ચલાવે તે લૂમ સાથે જોડો. પછી દૈનિક શીટમાં દરેક લૂમ તેના કારીગર સાથે આવે છે. | हर कारीगर को उसके लूम से जोड़ें। फिर दैनिक शीट में हर लूम अपने कारीगर के साथ आता है। |
 | `shift.title` | Choose the shift first | પહેલાં શિફ્ટ પસંદ કરો | पहले शिफ्ट चुनें |
-| `shift.body` | Day and night are set separately. A worker can run one loom in each shift. | દિવસ અને રાત અલગ નક્કી થાય છે. કારીગર દરેક શિફ્ટમાં એક લૂમ ચલાવી શકે. | दिन और रात अलग तय होते हैं। कारीगर हर शिफ्ट में एक लूम चला सकता है। |
+| `shift.body` | Day and night are set separately. | દિવસ અને રાત અલગ નક્કી થાય છે. | दिन और रात अलग तय होते हैं। |
 | `job.title` | A loom needs a quality first | લૂમને પહેલાં ક્વોલિટી જોઈએ | लूम को पहले क्वालिटी चाहिए |
 | `job.body` | A loom marked {c:noJob} has nothing to weave yet. Put a quality on it in Production with {c:assignLooms}. | {c:noJob} લખેલા લૂમ પાસે હજી વણવાનું કંઈ નથી. ઉત્પાદનમાં {c:assignLooms}થી તેના પર ક્વોલિટી મૂકો. | {c:noJob} लिखे लूम के पास अभी बुनने को कुछ नहीं। उत्पादन में {c:assignLooms} से उस पर क्वालिटी लगाएँ। |
 | `assign.title` | Start from the worker | કારીગરથી શરૂ કરો | कारीगर से शुरू करें |
@@ -80,6 +80,10 @@ Keys in `lib/i18n/configuration-tutorial.ts` (rewritten; the dead "Show inactive
 | `handoff.empty.title` | Add workers first | પહેલાં કારીગરો ઉમેરો | पहले कारीगर जोड़ें |
 | `handoff.empty.body` | Only piece-rate workers can be linked to looms. Choose {c:addWorker} to add one. | ફક્ત પીસ રેટ કારીગર લૂમ સાથે જોડાય છે. ઉમેરવા {c:addWorker} પસંદ કરો. | सिर्फ़ पीस रेट कारीगर लूम से जुड़ते हैं। जोड़ने के लिए {c:addWorker} चुनें। |
 | `guide.benefit` | See how to link workers to looms for each shift. | દરેક શિફ્ટ માટે કારીગરોને લૂમ સાથે જોડવાનું જુઓ. | हर शिफ्ट के लिए कारीगरों को लूम से जोड़ना देखें। |
+
+### F.1 Owner-approved copy correction — 2026-09-28
+
+The owner answered “approve all three” to the coordinator’s decisions, including removing only the unsupported one-loom-per-worker sentence from `shift.body` in all three languages. The table above now retains only its previously approved first sentence. The existing assignment workflow supports multiple looms per worker in a shift; do not alter assignment/replace/undo/remove behavior, server validation or other copy. Native/browser/reviewer/owner verification remains UNVERIFIED.
 
 ### Control tokens
 

@@ -1,0 +1,222 @@
+{
+  "task": "GT-10",
+  "adjudication": "Numeric aside bounding-box flags are harness false positives in these six captured states",
+  "proof": [
+    {
+      "run": "gt10-paint-0-en-1440x900",
+      "step": "pr-settle",
+      "railRect": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "railBackground": "rgba(0, 0, 0, 0)",
+      "railZ": "30",
+      "dialogZ": "50",
+      "paintedChildren": [
+        {
+          "x": 269,
+          "y": 21,
+          "w": 196,
+          "h": 44
+        },
+        {
+          "x": 269,
+          "y": 752.5,
+          "w": 196,
+          "h": 126.5
+        }
+      ],
+      "targetRect": {
+        "x": 304,
+        "y": 381.609375,
+        "w": 480,
+        "h": 196
+      },
+      "screenshot": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-0-en-1440x900/payroll-en-1440x900/05.png",
+      "visualOcclusion": false
+    },
+    {
+      "run": "gt10-paint-0-en-1440x900",
+      "step": "pr-paid",
+      "railRect": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "railBackground": "rgba(0, 0, 0, 0)",
+      "railZ": "30",
+      "dialogZ": "50",
+      "paintedChildren": [
+        {
+          "x": 269,
+          "y": 21,
+          "w": 196,
+          "h": 44
+        },
+        {
+          "x": 269,
+          "y": 752.5,
+          "w": 196,
+          "h": 126.5
+        }
+      ],
+      "targetRect": {
+        "x": 304,
+        "y": 357.109375,
+        "w": 480,
+        "h": 245
+      },
+      "screenshot": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-0-en-1440x900/payroll-en-1440x900/06.png",
+      "visualOcclusion": false
+    },
+    {
+      "run": "gt10-paint-0-en-1440x900",
+      "step": "pr-complete",
+      "railRect": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "railBackground": "rgba(0, 0, 0, 0)",
+      "railZ": "30",
+      "dialogZ": "50",
+      "paintedChildren": [
+        {
+          "x": 269,
+          "y": 21,
+          "w": 196,
+          "h": 44
+        },
+        {
+          "x": 269,
+          "y": 752.5,
+          "w": 196,
+          "h": 126.5
+        }
+      ],
+      "targetRect": {
+        "x": 304,
+        "y": 371.109375,
+        "w": 480,
+        "h": 217
+      },
+      "screenshot": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-0-en-1440x900/payroll-en-1440x900/07.png",
+      "visualOcclusion": false
+    },
+    {
+      "run": "gt10-paint-1-en-1440x900",
+      "step": "pra-advance",
+      "railRect": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "railBackground": "rgba(0, 0, 0, 0)",
+      "railZ": "30",
+      "dialogZ": "50",
+      "paintedChildren": [
+        {
+          "x": 269,
+          "y": 21,
+          "w": 196,
+          "h": 213.046875
+        },
+        {
+          "x": 269,
+          "y": 752.5,
+          "w": 196,
+          "h": 126.5
+        }
+      ],
+      "targetRect": {
+        "x": 304,
+        "y": 316.859375,
+        "w": 480,
+        "h": 325.5
+      },
+      "screenshot": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-1-en-1440x900/payroll-extra-en-1440x900/01.png",
+      "visualOcclusion": false
+    },
+    {
+      "run": "gt10-paint-1-en-1440x900",
+      "step": "pra-deduction",
+      "railRect": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "railBackground": "rgba(0, 0, 0, 0)",
+      "railZ": "30",
+      "dialogZ": "50",
+      "paintedChildren": [
+        {
+          "x": 269,
+          "y": 21,
+          "w": 196,
+          "h": 213.046875
+        },
+        {
+          "x": 269,
+          "y": 752.5,
+          "w": 196,
+          "h": 126.5
+        }
+      ],
+      "targetRect": {
+        "x": 304,
+        "y": 283.609375,
+        "w": 480,
+        "h": 392
+      },
+      "screenshot": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-1-en-1440x900/payroll-extra-en-1440x900/02.png",
+      "visualOcclusion": false
+    },
+    {
+      "run": "gt10-paint-1-en-1440x900",
+      "step": "pra-correct",
+      "railRect": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "railBackground": "rgba(0, 0, 0, 0)",
+      "railZ": "30",
+      "dialogZ": "50",
+      "paintedChildren": [
+        {
+          "x": 269,
+          "y": 21,
+          "w": 196,
+          "h": 213.046875
+        },
+        {
+          "x": 269,
+          "y": 752.5,
+          "w": 196,
+          "h": 126.5
+        }
+      ],
+      "targetRect": {
+        "x": 304,
+        "y": 392.109375,
+        "w": 480,
+        "h": 175
+      },
+      "screenshot": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-1-en-1440x900/payroll-extra-en-1440x900/05.png",
+      "visualOcclusion": false
+    }
+  ],
+  "rawFailuresPreserved": true,
+  "assertionsUnchanged": true,
+  "hitTestingLimitation": "elementsFromPoint returns the tour portal under inert isolation; it is not treated as paint visibility evidence",
+  "baselineAnalytics": "One blocked pre-tour production_viewed POST per fixture mount; no tour-induced increment",
+  "livePopulatedPayroll": "UNVERIFIED",
+  "humanGates": "UNVERIFIED"
+}

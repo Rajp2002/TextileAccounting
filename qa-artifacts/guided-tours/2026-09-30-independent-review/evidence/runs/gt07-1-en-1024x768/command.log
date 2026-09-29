@@ -1,0 +1,1 @@
+{"scenario":"dispatch?populated=1","lang":"en","size":"1024x768","steps":10,"logs":["warning: [harness] server action called recordTourEventAction","warning: [harness] server action called recordTourEventAction","warning: [harness] server action called recordTourEventAction"]}

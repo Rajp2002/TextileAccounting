@@ -1,0 +1,58 @@
+[
+  {
+    "id": "gt14-transition-0-en-1440x900",
+    "task": "GT-14",
+    "scenario": "workers",
+    "language": "en",
+    "size": "1440x900",
+    "script": "/private/tmp/weavly-review-worker-transition.mjs",
+    "args": [
+      "workers",
+      "en",
+      "1440x900",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt14-transition-0-en-1440x900"
+    ]
+  },
+  {
+    "id": "gt14-transition-0-gu-390x844",
+    "task": "GT-14",
+    "scenario": "workers",
+    "language": "gu",
+    "size": "390x844",
+    "script": "/private/tmp/weavly-review-worker-transition.mjs",
+    "args": [
+      "workers",
+      "gu",
+      "390x844",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt14-transition-0-gu-390x844"
+    ]
+  },
+  {
+    "id": "gt14-transition-1-en-1440x900",
+    "task": "GT-14",
+    "scenario": "workers-salary",
+    "language": "en",
+    "size": "1440x900",
+    "script": "/private/tmp/weavly-review-worker-transition.mjs",
+    "args": [
+      "workers-salary",
+      "en",
+      "1440x900",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt14-transition-1-en-1440x900"
+    ]
+  },
+  {
+    "id": "gt14-transition-1-gu-390x844",
+    "task": "GT-14",
+    "scenario": "workers-salary",
+    "language": "gu",
+    "size": "390x844",
+    "script": "/private/tmp/weavly-review-worker-transition.mjs",
+    "args": [
+      "workers-salary",
+      "gu",
+      "390x844",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt14-transition-1-gu-390x844"
+    ]
+  }
+]

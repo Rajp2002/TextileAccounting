@@ -1,0 +1,562 @@
+{
+  "scenario": "workers-salary",
+  "lang": "gu",
+  "size": "390x844",
+  "steps": [
+    {
+      "assignments": null,
+      "workers": {
+        "search": "",
+        "shift": "all",
+        "status": "active",
+        "samples": true,
+        "bannerCount": 1,
+        "names": [
+          "નમૂના કારીગર",
+          "નમૂના સ્ટાફ"
+        ],
+        "preview": true,
+        "available": false,
+        "effective": false,
+        "lastDay": false,
+        "enabledFields": 0,
+        "visibleClose": 0,
+        "selectedPath": "path-salary",
+        "anchors": 1,
+        "url": "http://localhost:5199/owner/workers?s=workers-salary&lang=gu&fresh=1"
+      },
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "આ કારીગરને કેવી રીતે પગાર મળે તે પસંદ કરો",
+      "body": "પીસ રેટ કારીગર વણેલા મીટર પ્રમાણે કમાય છે; પગારદાર સ્ટાફ માસિક રકમ કમાય છે. સાચવ્યા પછી આ બદલી શકાતું નથી.",
+      "step": "wk-paytype",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 1 / 6",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 555,
+        "w": 374,
+        "h": 281
+      },
+      "highlight": {
+        "x": 17,
+        "y": 235,
+        "w": 356,
+        "h": 75
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[path-salary]",
+      "scrollY": 0,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 8,
+        "y": 72,
+        "w": 374,
+        "h": 397
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": {
+        "search": "",
+        "shift": "all",
+        "status": "active",
+        "samples": true,
+        "bannerCount": 1,
+        "names": [
+          "નમૂના કારીગર",
+          "નમૂના સ્ટાફ"
+        ],
+        "preview": true,
+        "available": false,
+        "effective": false,
+        "lastDay": false,
+        "enabledFields": 0,
+        "visibleClose": 0,
+        "anchors": 1,
+        "url": "http://localhost:5199/owner/workers?s=workers-salary&lang=gu&fresh=1"
+      },
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "નક્કી થયેલો માસિક પગાર લખો",
+      "body": "આખી માસિક રકમ લખો, અહીં ₹18,000. પેરોલ તેમાંથી દરેક સમયગાળો ગણે છે.",
+      "step": "wks-salary",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 2 / 6",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 632,
+        "w": 374,
+        "h": 204
+      },
+      "highlight": {
+        "x": 17,
+        "y": 390,
+        "w": 356,
+        "h": 69
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 8,
+        "y": 72,
+        "w": 374,
+        "h": 368
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": {
+        "search": "",
+        "shift": "all",
+        "status": "active",
+        "samples": true,
+        "bannerCount": 1,
+        "names": [
+          "નમૂના કારીગર",
+          "નમૂના સ્ટાફ"
+        ],
+        "preview": true,
+        "available": false,
+        "effective": false,
+        "lastDay": false,
+        "enabledFields": 0,
+        "visibleClose": 0,
+        "anchors": 1,
+        "url": "http://localhost:5199/owner/workers?s=workers-salary&lang=gu&fresh=1"
+      },
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "પગાર જોડાયાની તારીખથી શરૂ થાય",
+      "body": "30 દિવસના મહિનાની વચ્ચે જોડાનારને તે મહિનાના 15/30 × ₹18,000 = ₹9,000 મળે છે.",
+      "step": "wks-joining",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 3 / 6",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 632,
+        "w": 374,
+        "h": 204
+      },
+      "highlight": {
+        "x": 17,
+        "y": 296,
+        "w": 356,
+        "h": 75
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 8,
+        "y": 72,
+        "w": 374,
+        "h": 368
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": {
+        "search": "",
+        "shift": "all",
+        "status": "active",
+        "samples": true,
+        "bannerCount": 1,
+        "names": [
+          "નમૂના કારીગર",
+          "નમૂના સ્ટાફ"
+        ],
+        "preview": true,
+        "available": false,
+        "effective": true,
+        "lastDay": true,
+        "enabledFields": 0,
+        "visibleClose": 0,
+        "anchors": 1,
+        "url": "http://localhost:5199/owner/workers?s=workers-salary&lang=gu&fresh=1"
+      },
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "દરેક ફેરફારને તારીખ આપો",
+      "body": "પગાર બદલાય ત્યારે તે કઈ તારીખથી લાગુ થાય તે લખો. કોઈ છોડે ત્યારે નિષ્ક્રિય કરતાં પહેલાં છેલ્લો કામકાજનો દિવસ લખો.",
+      "step": "wks-changes",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 4 / 6",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 632,
+        "w": 374,
+        "h": 204
+      },
+      "highlight": {
+        "x": 17,
+        "y": 201,
+        "w": 356,
+        "h": 110
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 8,
+        "y": 72,
+        "w": 374,
+        "h": 368
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": {
+        "search": "",
+        "shift": "all",
+        "status": "active",
+        "samples": true,
+        "bannerCount": 1,
+        "names": [
+          "નમૂના કારીગર",
+          "નમૂના સ્ટાફ"
+        ],
+        "preview": false,
+        "available": false,
+        "effective": false,
+        "lastDay": false,
+        "enabledFields": 0,
+        "visibleClose": 0,
+        "anchors": 1,
+        "url": "http://localhost:5199/owner/workers?s=workers-salary&lang=gu&fresh=1"
+      },
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "પગાર પેરોલમાં દેખાય છે",
+      "body": "“પેરોલ જુઓ” આ કારીગરનો ચાલુ સમયગાળાનો પગાર ખોલે છે.",
+      "step": "wks-payroll",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 5 / 6",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 632,
+        "w": 374,
+        "h": 204
+      },
+      "highlight": {
+        "x": 23,
+        "y": 322,
+        "w": 100,
+        "h": 47
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 547,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": {
+        "search": "",
+        "shift": "all",
+        "status": "active",
+        "samples": false,
+        "bannerCount": 0,
+        "names": [],
+        "preview": false,
+        "available": false,
+        "effective": false,
+        "lastDay": false,
+        "enabledFields": 0,
+        "visibleClose": 0,
+        "anchors": 1,
+        "url": "http://localhost:5199/owner/workers?s=workers-salary&lang=gu&fresh=1"
+      },
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "તમારા કારીગરો ઉમેરો",
+      "body": "દરેક વ્યક્તિ માટે “કારીગર ઉમેરો” પસંદ કરો અને પગારનો પ્રકાર ધ્યાનથી પસંદ કરો.",
+      "step": "wk-handoff",
+      "status": "ready",
+      "eyebrow": "પગલું 6 / 6",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 632,
+        "w": 374,
+        "h": 204
+      },
+      "highlight": {
+        "x": 258,
+        "y": 66,
+        "w": 124,
+        "h": 39
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    }
+  ],
+  "logs": [
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction"
+  ],
+  "apiRequests": [],
+  "preClick": null,
+  "sampling": "legacy-900ms",
+  "workersBefore": {
+    "search": "",
+    "shift": "all",
+    "status": "active",
+    "url": "http://localhost:5199/owner/workers?s=workers-salary&lang=gu&fresh=1",
+    "calls": 1,
+    "storage": {
+      "weavly_language": "gu"
+    },
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"workers\":{\"firstShown\":\"2026-09-29T22:29:08.332Z\",\"version\":\"v1\"}}"
+    },
+    "activeControl": null,
+    "activeAnchor": null,
+    "preview": false,
+    "samples": false
+  },
+  "workersExit": {
+    "search": "",
+    "shift": "all",
+    "status": "active",
+    "url": "http://localhost:5199/owner/workers?s=workers-salary&lang=gu&fresh=1",
+    "calls": 2,
+    "storage": {
+      "weavly_language": "gu"
+    },
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"workers\":{\"firstShown\":\"2026-09-29T22:29:08.332Z\",\"version\":\"v1\",\"firstStarted\":true}}"
+    },
+    "activeControl": "quiet-tour",
+    "activeAnchor": null,
+    "preview": false,
+    "samples": false
+  },
+  "before": {
+    "x": 0,
+    "y": 0,
+    "inner": null
+  },
+  "workersBack": true,
+  "after": {
+    "scroll": {
+      "x": 0,
+      "y": 0,
+      "inner": null
+    },
+    "active": "<button data-slot=\"button\" data-variant=\"default\" data-size=\"default\" class=\"inline-flex items-center justify-center gap-2 whitespace-nowrap transition-[color,b",
+    "activeAnchor": "workers.add",
+    "activeRateBookField": null,
+    "activeControl": null,
+    "serverCalls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "navigations": [],
+    "scrollCalls": [
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "element",
+        "method": "scrollTo",
+        "behavior": "smooth"
+      },
+      {
+        "owner": "element",
+        "method": "scrollTo",
+        "behavior": "smooth"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "smooth"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "smooth"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "element",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "element",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      }
+    ],
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"workers\":{\"firstShown\":\"2026-09-29T22:29:08.332Z\",\"version\":\"v1\",\"firstStarted\":true,\"completed\":true,\"completedVersion\":\"v2\"}}"
+    },
+    "search": null
+  },
+  "workersAfter": {
+    "search": "",
+    "shift": "all",
+    "status": "active",
+    "url": "http://localhost:5199/owner/workers?s=workers-salary&lang=gu&fresh=1",
+    "calls": 4,
+    "storage": {
+      "weavly_language": "gu"
+    },
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"workers\":{\"firstShown\":\"2026-09-29T22:29:08.332Z\",\"version\":\"v1\",\"firstStarted\":true,\"completed\":true,\"completedVersion\":\"v2\"}}"
+    },
+    "activeControl": null,
+    "activeAnchor": "workers.add",
+    "preview": false,
+    "samples": false
+  },
+  "issues": []
+}

@@ -74,15 +74,16 @@ export function WorkersPageHeader({
 }
 
 export function WorkerAddButton({ onAdd, className }: { onAdd: () => void; className?: string }) {
-  const { tx } = useTranslation()
+  const { t } = useTranslation()
 
   return (
     <Button
+      data-tour-anchor="workers.add"
       onClick={onAdd}
       className={cn(railPrimaryAction, className)}
     >
       <UserPlus className="size-4" aria-hidden="true" />
-      <span>{tx('Add worker')}</span>
+      <span>{t('workers.addWorker')}</span>
     </Button>
   )
 }

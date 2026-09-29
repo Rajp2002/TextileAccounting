@@ -1,0 +1,661 @@
+{
+  "scenario": "dispatch?populated=1",
+  "lang": "gu",
+  "size": "390x844",
+  "steps": [
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "માલ, પ્રાપ્તિ અને પૈસા માટે એક રેકોર્ડ",
+      "body": "દરેક ડિસ્પેચ કાપડને તમારા સ્ટોકથી ગ્રાહક સુધી, પછી તે શું સ્વીકારે અને શું ચૂકવે તે સુધી નોંધે છે.",
+      "step": "overview",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 1 / 10",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 632,
+        "w": 374,
+        "h": 204
+      },
+      "highlight": {
+        "x": 23,
+        "y": 181,
+        "w": 344,
+        "h": 128
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "div(role=dialog)",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": {
+        "mounts": 1,
+        "unmounts": 0,
+        "retainedSearch": "Retained search",
+        "sameSearchNode": true,
+        "replica": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "સ્ટોક હોય તે ક્વોલિટી પસંદ કરો",
+      "body": "યાદીમાં દરેક ક્વોલિટીના સ્ટોકમાં કેટલા મીટર છે તે દેખાય છે. મીટર દૈનિક શીટમાં સાચવેલી શિફ્ટ કે શરૂઆતના સ્ટોકમાંથી આવે છે.",
+      "step": "quality",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 2 / 10",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 609,
+        "w": 374,
+        "h": 227
+      },
+      "highlight": {
+        "x": 17,
+        "y": 163,
+        "w": 356,
+        "h": 105
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 8,
+        "y": 72,
+        "w": 374,
+        "h": 207
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": {
+        "mounts": 1,
+        "unmounts": 0,
+        "retainedSearch": "Retained search",
+        "sameSearchNode": true,
+        "replica": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "ગ્રાહક, સરનામું અને નક્કી થયેલો ભાવ",
+      "body": "ગ્રાહક અને ડિલિવરીની વિગતો અને નક્કી થયેલો મીટરદીઠ ભાવ લખો. દરેક ડિસ્પેચમાં આ લખવાનું રહે છે.",
+      "step": "parties",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 3 / 10",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 632,
+        "w": 374,
+        "h": 204
+      },
+      "highlight": {
+        "x": 17,
+        "y": 66,
+        "w": 356,
+        "h": 380
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 8,
+        "y": 72,
+        "w": 374,
+        "h": 368
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": {
+        "mounts": 1,
+        "unmounts": 0,
+        "retainedSearch": "Retained search",
+        "sameSearchNode": true,
+        "replica": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "દરેક લોટ કે તાકો લખો",
+      "body": "દરેક લોટ માટે તેના મીટર સાથે એક લાઇન ઉમેરો. અહીં 60 + 40 = 100 મીટર, ₹40/મીટરે ₹4,000 થાય.",
+      "step": "lots",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 4 / 10",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 632,
+        "w": 374,
+        "h": 204
+      },
+      "highlight": {
+        "x": 17,
+        "y": 124,
+        "w": 356,
+        "h": 265
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 8,
+        "y": 72,
+        "w": 374,
+        "h": 368
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": {
+        "mounts": 1,
+        "unmounts": 0,
+        "retainedSearch": "Retained search",
+        "sameSearchNode": true,
+        "replica": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "પહેલાં ડ્રાફ્ટ સાચવો",
+      "body": "“ડ્રાફ્ટ સાચવો” સ્ટોકને અડ્યા વગર ચલણ રાખે છે, જેથી માલ નીકળે તે પહેલાં તપાસી શકો.",
+      "step": "saveDraft",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 5 / 10",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 632,
+        "w": 374,
+        "h": 204
+      },
+      "highlight": {
+        "x": 17,
+        "y": 124,
+        "w": 356,
+        "h": 144
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 8,
+        "y": 72,
+        "w": 374,
+        "h": 368
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": {
+        "mounts": 1,
+        "unmounts": 0,
+        "retainedSearch": "Retained search",
+        "sameSearchNode": true,
+        "replica": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "માલ નીકળે ત્યારે ખાતરી કરો",
+      "body": "“ડિસ્પેચ રવાના થયાની પુષ્ટિ” ચલણ લૉક કરે છે અને કાપડના સ્ટોકમાંથી 100 મીટર ઘટાડે છે. યાર્ન તો કાપડ બન્યું ત્યારે જ ગણાઈ ગયું હતું.",
+      "step": "confirm",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 6 / 10",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 555,
+        "w": 374,
+        "h": 281
+      },
+      "highlight": {
+        "x": 17,
+        "y": 124,
+        "w": 356,
+        "h": 133
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 8,
+        "y": 72,
+        "w": 374,
+        "h": 397
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": {
+        "mounts": 1,
+        "unmounts": 0,
+        "retainedSearch": "Retained search",
+        "sameSearchNode": true,
+        "replica": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "ગ્રાહકે શું સ્વીકાર્યું તે નોંધો",
+      "body": "બધું પહોંચ્યું હોય તો “મોકલ્યા મુજબ પ્રાપ્ત” વાપરો. નહીં તો સ્વીકારેલા મીટર નોંધો, અહીં 100 માંથી 98.",
+      "step": "receipt",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 7 / 10",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 632,
+        "w": 374,
+        "h": 204
+      },
+      "highlight": {
+        "x": 17,
+        "y": 124,
+        "w": 356,
+        "h": 266
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 8,
+        "y": 72,
+        "w": 374,
+        "h": 368
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": {
+        "mounts": 1,
+        "unmounts": 0,
+        "retainedSearch": "Retained search",
+        "sameSearchNode": true,
+        "replica": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "ઘટ બિલ બદલે છે, સ્ટોક નહીં",
+      "body": "સ્વીકાર ન થયેલા 2 મીટર સ્ટોકમાં પાછા નથી આવતા. લેવાની રકમ ₹3,920 થાય છે.",
+      "step": "difference",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 8 / 10",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 632,
+        "w": 374,
+        "h": 204
+      },
+      "highlight": {
+        "x": 23,
+        "y": 181,
+        "w": 344,
+        "h": 182
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": {
+        "mounts": 1,
+        "unmounts": 0,
+        "retainedSearch": "Retained search",
+        "sameSearchNode": true,
+        "replica": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "પૈસા મળે ત્યારે નોંધો",
+      "body": "“ચુકવણી નોંધો” ચુકવણી ઉમેરે છે. અહીં ₹2,000 મળતાં ₹1,920 બાકી રહે છે.",
+      "step": "payment",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 9 / 10",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 577,
+        "w": 374,
+        "h": 259
+      },
+      "highlight": {
+        "x": 17,
+        "y": 66,
+        "w": 356,
+        "h": 385
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 8,
+        "y": 72,
+        "w": 374,
+        "h": 375
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": {
+        "mounts": 1,
+        "unmounts": 0,
+        "retainedSearch": "Retained search",
+        "sameSearchNode": true,
+        "replica": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "માલ તૈયાર હોય ત્યારે ડિસ્પેચ શરૂ કરો",
+      "body": "ડ્રાફ્ટ ભરવા “નવો ડિસ્પેચ” પસંદ કરો. પ્રાપ્તિ કે ચુકવણી નોંધવા યાદીમાંથી ડિસ્પેચ ખોલો.",
+      "step": "handoff",
+      "status": "ready",
+      "eyebrow": "પગલું 10 / 10",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 632,
+        "w": 374,
+        "h": 204
+      },
+      "highlight": {
+        "x": 268,
+        "y": 111,
+        "w": 114,
+        "h": 56
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": {
+        "mounts": 1,
+        "unmounts": 0,
+        "retainedSearch": "Retained search",
+        "sameSearchNode": true,
+        "replica": false,
+        "anchors": 1,
+        "enabledReplicaControls": 0
+      },
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    }
+  ],
+  "logs": [
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction"
+  ],
+  "apiRequests": [],
+  "preClick": null,
+  "sampling": "legacy-900ms",
+  "before": {
+    "x": 0,
+    "y": 0,
+    "inner": null
+  },
+  "after": {
+    "scroll": {
+      "x": 0,
+      "y": 0,
+      "inner": null
+    },
+    "active": "<button data-slot=\"button\" data-variant=\"default\" data-size=\"default\" class=\"inline-flex items-center justify-center gap-2 whitespace-nowrap transition-[color,b",
+    "activeAnchor": "dispatch.new",
+    "activeRateBookField": null,
+    "activeControl": null,
+    "serverCalls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "navigations": [],
+    "scrollCalls": [
+      {
+        "owner": "element",
+        "method": "scrollTo",
+        "behavior": "smooth"
+      },
+      {
+        "owner": "element",
+        "method": "scrollTo",
+        "behavior": "smooth"
+      },
+      {
+        "owner": "element",
+        "method": "scrollTo",
+        "behavior": "smooth"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "element",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "element",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      }
+    ],
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"dispatch\":{\"firstShown\":\"2026-09-29T20:59:31.212Z\",\"version\":\"v1\",\"firstStarted\":true,\"completed\":true,\"completedVersion\":\"v2\"}}"
+    },
+    "dispatch": {
+      "mounts": 1,
+      "unmounts": 0,
+      "retainedSearch": "Retained search",
+      "sameSearchNode": true,
+      "liveHidden": false,
+      "replica": false
+    },
+    "search": null
+  },
+  "issues": []
+}

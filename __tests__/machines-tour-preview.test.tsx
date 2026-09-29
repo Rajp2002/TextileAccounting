@@ -1,4 +1,5 @@
 import React from 'react'
+import { readFileSync } from 'node:fs'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
 import { makeMachinesTourExamples } from '../lib/machines-tour'
@@ -32,6 +33,14 @@ describe('Machines tour editor preview', () => {
         expect(html).toContain('data-machines-tour-field="availability"')
         expect(html).toContain('Edit machine')
         expect(html).toContain('<fieldset disabled=""')
+    })
+    it('uses the shared runtime and scopes the hidden close control to the sample portal', () => {
+        const wrapper = readFileSync('components/machines/MachinesGuidedTour.tsx', 'utf8')
+        expect(wrapper).toContain("import('@/components/tours/GuidedTour')")
+        expect(wrapper).toContain('<GuidedTour tourId="machines" steps={machinesTourSpecs}')
+        expect(wrapper).toContain('[data-machines-tour-preview="true"] > [data-slot="dialog-close"], [data-machines-tour-preview="true"] [data-slot="dialog-footer"] button[type="button"] { display: none; }')
+        expect(wrapper).toContain('machinesStepCopy(language, id, controls)')
+        expect(wrapper).not.toMatch(/useGuidedTourPlacement|useMobileTour|persistTourCompleted/)
     })
     it('preserves the writable real add form', () => {
         const html = renderToStaticMarkup(<MachineEditor today="2026-09-16" initialOpen>{() => null}</MachineEditor>)

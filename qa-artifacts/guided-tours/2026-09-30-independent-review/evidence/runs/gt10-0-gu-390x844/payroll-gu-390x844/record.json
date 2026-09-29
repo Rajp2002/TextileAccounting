@@ -1,0 +1,624 @@
+{
+  "scenario": "payroll",
+  "lang": "gu",
+  "size": "390x844",
+  "steps": [
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "એક વખતે એક સમયગાળાનો પગાર",
+      "body": "દરેક સમયગાળો તમારા પગાર ચક્ર પ્રમાણે છે. કારીગરને ચૂકવવું અને સમયગાળો પૂર્ણ કરવો અલગ પગલાં છે.",
+      "step": "pr-period",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 1 / 8",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 577,
+        "w": 374,
+        "h": 259
+      },
+      "highlight": {
+        "x": 8,
+        "y": 245,
+        "w": 374,
+        "h": 214
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "div(role=dialog)",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390,
+      "payroll": {
+        "mounts": 1,
+        "unmounts": 0,
+        "sameSearchNode": true,
+        "search": "Retained payroll",
+        "liveHidden": true,
+        "replica": true,
+        "enabledReplicaControls": 0,
+        "paymentDate": false,
+        "storage": {
+          "weavly_language": "gu"
+        },
+        "prefs": {
+          "weavly:tour-prefs:v1:u1": "{\"payroll\":{\"firstShown\":\"2026-09-29T21:33:30.368Z\",\"version\":\"v1\",\"firstStarted\":true}}"
+        },
+        "calls": 2,
+        "apiCalls": 1
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "પહેલાં તૈયારીની ખામીઓ સુધારો",
+      "body": "ખૂટતાં ઉત્પાદન રીડિંગ કે પગાર સેટઅપ અહીં દેખાય છે. ચૂકવતાં પહેલાં દરેકને દૈનિક શીટ કે કારીગરોમાં સુધારો.",
+      "step": "pr-readiness",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 2 / 8",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 632,
+        "w": 374,
+        "h": 204
+      },
+      "highlight": {
+        "x": 8,
+        "y": 245,
+        "w": 374,
+        "h": 156
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390,
+      "payroll": {
+        "mounts": 1,
+        "unmounts": 0,
+        "sameSearchNode": true,
+        "search": "Retained payroll",
+        "liveHidden": true,
+        "replica": true,
+        "enabledReplicaControls": 0,
+        "paymentDate": false,
+        "storage": {
+          "weavly_language": "gu"
+        },
+        "prefs": {
+          "weavly:tour-prefs:v1:u1": "{\"payroll\":{\"firstShown\":\"2026-09-29T21:33:30.368Z\",\"version\":\"v1\",\"firstStarted\":true}}"
+        },
+        "calls": 2,
+        "apiCalls": 1
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "કુલ પગાર કેવી રીતે ગણાય છે",
+      "body": "પીસ રેટ પગાર = મીટર × મજૂરી: 1,000 મીટર × ₹2/મીટર = ₹2,000. પગારદારને સમયગાળામાં કામ કરેલા દિવસોનો પગાર મળે છે.",
+      "step": "pr-earnings",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 3 / 8",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 609,
+        "w": 374,
+        "h": 227
+      },
+      "highlight": {
+        "x": 8,
+        "y": 245,
+        "w": 374,
+        "h": 322
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390,
+      "payroll": {
+        "mounts": 1,
+        "unmounts": 0,
+        "sameSearchNode": true,
+        "search": "Retained payroll",
+        "liveHidden": true,
+        "replica": true,
+        "enabledReplicaControls": 0,
+        "paymentDate": false,
+        "storage": {
+          "weavly_language": "gu"
+        },
+        "prefs": {
+          "weavly:tour-prefs:v1:u1": "{\"payroll\":{\"firstShown\":\"2026-09-29T21:33:30.368Z\",\"version\":\"v1\",\"firstStarted\":true}}"
+        },
+        "calls": 2,
+        "apiCalls": 1
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "ઉપાડ પગારમાંથી વસૂલાય છે",
+      "body": "કુલ પગારમાંથી વધુમાં વધુ અડધો ઉપાડ અને કપાતમાં જાય: અહીં ₹2,000 માંથી ₹1,000, ચૂકવવાના ₹1,000 રહે. બાકી આગળ જાય છે.",
+      "step": "pr-recovery",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 4 / 8",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 609,
+        "w": 374,
+        "h": 227
+      },
+      "highlight": {
+        "x": 8,
+        "y": 245,
+        "w": 374,
+        "h": 249
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390,
+      "payroll": {
+        "mounts": 1,
+        "unmounts": 0,
+        "sameSearchNode": true,
+        "search": "Retained payroll",
+        "liveHidden": true,
+        "replica": true,
+        "enabledReplicaControls": 0,
+        "paymentDate": false,
+        "storage": {
+          "weavly_language": "gu"
+        },
+        "prefs": {
+          "weavly:tour-prefs:v1:u1": "{\"payroll\":{\"firstShown\":\"2026-09-29T21:33:30.368Z\",\"version\":\"v1\",\"firstStarted\":true}}"
+        },
+        "calls": 2,
+        "apiCalls": 1
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "ચૂકવવા સેટલમેન્ટ ખોલો",
+      "body": "પેરોલ સેટલ કરોમાં આ સમયગાળામાં દરેક કારીગરને ચૂકવવાની ચોખ્ખી રકમ દેખાય છે.",
+      "step": "pr-settle",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 5 / 8",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 577,
+        "w": 374,
+        "h": 259
+      },
+      "highlight": {
+        "x": 17,
+        "y": 140,
+        "w": 356,
+        "h": 214
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 8,
+        "y": 72,
+        "w": 374,
+        "h": 291
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390,
+      "payroll": {
+        "mounts": 1,
+        "unmounts": 0,
+        "sameSearchNode": true,
+        "search": "Retained payroll",
+        "liveHidden": true,
+        "replica": true,
+        "enabledReplicaControls": 0,
+        "paymentDate": false,
+        "storage": {
+          "weavly_language": "gu"
+        },
+        "prefs": {
+          "weavly:tour-prefs:v1:u1": "{\"payroll\":{\"firstShown\":\"2026-09-29T21:33:30.368Z\",\"version\":\"v1\",\"firstStarted\":true}}"
+        },
+        "calls": 2,
+        "apiCalls": 1
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "તમે કરેલી દરેક ચુકવણી નોંધો",
+      "body": "ચૂકવાયું નોંધો નોંધે છે કે તમે કારીગરને રોકડ, બેંક કે UPIથી ચૂકવ્યા. Weavly કોઈ પૈસા મોકલતું નથી.",
+      "step": "pr-paid",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 6 / 8",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 632,
+        "w": 374,
+        "h": 204
+      },
+      "highlight": {
+        "x": 17,
+        "y": 140,
+        "w": 356,
+        "h": 272
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 8,
+        "y": 72,
+        "w": 374,
+        "h": 349
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390,
+      "payroll": {
+        "mounts": 1,
+        "unmounts": 0,
+        "sameSearchNode": true,
+        "search": "Retained payroll",
+        "liveHidden": true,
+        "replica": true,
+        "enabledReplicaControls": 0,
+        "paymentDate": false,
+        "storage": {
+          "weavly_language": "gu"
+        },
+        "prefs": {
+          "weavly:tour-prefs:v1:u1": "{\"payroll\":{\"firstShown\":\"2026-09-29T21:33:30.368Z\",\"version\":\"v1\",\"firstStarted\":true}}"
+        },
+        "calls": 2,
+        "apiCalls": 1
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "સમયગાળો છેલ્લે પૂર્ણ કરો",
+      "body": "દરેક કારીગર ચૂકવાઈ જાય કે બંધ થાય પછી પેરોલ પૂર્ણ કરો સમયગાળો બંધ કરી રેકોર્ડમાં રાખે છે.",
+      "step": "pr-complete",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 7 / 8",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 632,
+        "w": 374,
+        "h": 204
+      },
+      "highlight": {
+        "x": 17,
+        "y": 140,
+        "w": 356,
+        "h": 226
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 8,
+        "y": 72,
+        "w": 374,
+        "h": 303
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390,
+      "payroll": {
+        "mounts": 1,
+        "unmounts": 0,
+        "sameSearchNode": true,
+        "search": "Retained payroll",
+        "liveHidden": true,
+        "replica": true,
+        "enabledReplicaControls": 0,
+        "paymentDate": false,
+        "storage": {
+          "weavly_language": "gu"
+        },
+        "prefs": {
+          "weavly:tour-prefs:v1:u1": "{\"payroll\":{\"firstShown\":\"2026-09-29T21:33:30.368Z\",\"version\":\"v1\",\"firstStarted\":true}}"
+        },
+        "calls": 2,
+        "apiCalls": 1
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "આ સમયગાળાના કારીગરોને ચૂકવો",
+      "body": "તૈયારી પૂરી થાય એટલે અહીં સેટલમેન્ટ ખોલો અને દરેક ચુકવણી કરતાં જ નોંધો.",
+      "step": "pr-handoff",
+      "status": "ready",
+      "eyebrow": "પગલું 8 / 8",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 632,
+        "w": 374,
+        "h": 204
+      },
+      "highlight": {
+        "x": 8,
+        "y": 387,
+        "w": 374,
+        "h": 56
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390,
+      "payroll": {
+        "mounts": 1,
+        "unmounts": 0,
+        "sameSearchNode": true,
+        "search": "Retained payroll",
+        "liveHidden": false,
+        "replica": false,
+        "enabledReplicaControls": 0,
+        "paymentDate": false,
+        "storage": {
+          "weavly_language": "gu"
+        },
+        "prefs": {
+          "weavly:tour-prefs:v1:u1": "{\"payroll\":{\"firstShown\":\"2026-09-29T21:33:30.368Z\",\"version\":\"v1\",\"firstStarted\":true}}"
+        },
+        "calls": 2,
+        "apiCalls": 1
+      }
+    }
+  ],
+  "logs": [
+    "warning: [harness] server action called recordTourEventAction",
+    "error: Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction"
+  ],
+  "apiRequests": [
+    {
+      "url": "http://localhost:5199/api/analytics/plan-events",
+      "method": "POST"
+    }
+  ],
+  "preClick": null,
+  "sampling": "legacy-900ms",
+  "before": {
+    "x": 0,
+    "y": 0,
+    "inner": null
+  },
+  "payrollBefore": {
+    "mounts": 1,
+    "unmounts": 0,
+    "sameSearchNode": true,
+    "search": "Retained payroll",
+    "liveHidden": false,
+    "replica": false,
+    "enabledReplicaControls": 0,
+    "paymentDate": false,
+    "storage": {
+      "weavly_language": "gu"
+    },
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"payroll\":{\"firstShown\":\"2026-09-29T21:33:30.368Z\",\"version\":\"v1\"}}"
+    },
+    "calls": 1,
+    "apiCalls": 1
+  },
+  "after": {
+    "scroll": {
+      "x": 0,
+      "y": 0,
+      "inner": null
+    },
+    "active": "<button data-slot=\"button\" data-variant=\"default\" data-size=\"default\" class=\"inline-flex items-center justify-center gap-2 whitespace-nowrap transition-[color,b",
+    "activeAnchor": "payroll.settle",
+    "activeRateBookField": null,
+    "activeControl": null,
+    "serverCalls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "navigations": [],
+    "scrollCalls": [
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      }
+    ],
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"payroll\":{\"firstShown\":\"2026-09-29T21:33:30.368Z\",\"version\":\"v1\",\"firstStarted\":true,\"completed\":true,\"completedVersion\":\"v2\"}}"
+    },
+    "payroll": {
+      "mounts": 1,
+      "unmounts": 0,
+      "sameSearchNode": true,
+      "search": "Retained payroll",
+      "liveHidden": false,
+      "replica": false,
+      "enabledReplicaControls": 0,
+      "paymentDate": false,
+      "storage": {
+        "weavly_language": "gu"
+      },
+      "prefs": {
+        "weavly:tour-prefs:v1:u1": "{\"payroll\":{\"firstShown\":\"2026-09-29T21:33:30.368Z\",\"version\":\"v1\",\"firstStarted\":true,\"completed\":true,\"completedVersion\":\"v2\"}}"
+      },
+      "calls": 3,
+      "apiCalls": 1
+    },
+    "search": null
+  },
+  "issues": []
+}

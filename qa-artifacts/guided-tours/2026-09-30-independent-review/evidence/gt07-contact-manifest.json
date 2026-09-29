@@ -1,0 +1,274 @@
+[
+  {
+    "run": "gt07-0-en-1440x900",
+    "steps": [
+      "overview",
+      "quality",
+      "parties"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt07-0-en-1440x900-01-03.png"
+  },
+  {
+    "run": "gt07-0-en-1440x900",
+    "steps": [
+      "lots",
+      "saveDraft",
+      "confirm"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt07-0-en-1440x900-04-06.png"
+  },
+  {
+    "run": "gt07-0-en-1440x900",
+    "steps": [
+      "receipt",
+      "difference",
+      "payment"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt07-0-en-1440x900-07-09.png"
+  },
+  {
+    "run": "gt07-0-en-1440x900",
+    "steps": [
+      "handoff"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt07-0-en-1440x900-10-10.png"
+  },
+  {
+    "run": "gt07-0-gu-390x844",
+    "steps": [
+      "overview",
+      "quality",
+      "parties"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt07-0-gu-390x844-01-03.png"
+  },
+  {
+    "run": "gt07-0-gu-390x844",
+    "steps": [
+      "lots",
+      "saveDraft",
+      "confirm"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt07-0-gu-390x844-04-06.png"
+  },
+  {
+    "run": "gt07-0-gu-390x844",
+    "steps": [
+      "receipt",
+      "difference",
+      "payment"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt07-0-gu-390x844-07-09.png"
+  },
+  {
+    "run": "gt07-0-gu-390x844",
+    "steps": [
+      "handoff"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt07-0-gu-390x844-10-10.png"
+  },
+  {
+    "run": "gt07-1-en-1440x900",
+    "steps": [
+      "overview",
+      "quality",
+      "parties"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt07-1-en-1440x900-01-03.png"
+  },
+  {
+    "run": "gt07-1-en-1440x900",
+    "steps": [
+      "lots",
+      "saveDraft",
+      "confirm"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt07-1-en-1440x900-04-06.png"
+  },
+  {
+    "run": "gt07-1-en-1440x900",
+    "steps": [
+      "receipt",
+      "difference",
+      "payment"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt07-1-en-1440x900-07-09.png"
+  },
+  {
+    "run": "gt07-1-en-1440x900",
+    "steps": [
+      "handoff"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt07-1-en-1440x900-10-10.png"
+  },
+  {
+    "run": "gt07-1-gu-390x844",
+    "steps": [
+      "overview",
+      "quality",
+      "parties"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt07-1-gu-390x844-01-03.png"
+  },
+  {
+    "run": "gt07-1-gu-390x844",
+    "steps": [
+      "lots",
+      "saveDraft",
+      "confirm"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt07-1-gu-390x844-04-06.png"
+  },
+  {
+    "run": "gt07-1-gu-390x844",
+    "steps": [
+      "receipt",
+      "difference",
+      "payment"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt07-1-gu-390x844-07-09.png"
+  },
+  {
+    "run": "gt07-1-gu-390x844",
+    "steps": [
+      "handoff"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt07-1-gu-390x844-10-10.png"
+  },
+  {
+    "run": "gt07-2-en-1440x900",
+    "steps": [
+      "overview",
+      "quality",
+      "parties"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt07-2-en-1440x900-01-03.png"
+  },
+  {
+    "run": "gt07-2-en-1440x900",
+    "steps": [
+      "lots",
+      "saveDraft",
+      "confirm"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt07-2-en-1440x900-04-06.png"
+  },
+  {
+    "run": "gt07-2-en-1440x900",
+    "steps": [
+      "receipt",
+      "difference",
+      "payment"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt07-2-en-1440x900-07-09.png"
+  },
+  {
+    "run": "gt07-2-en-1440x900",
+    "steps": [
+      "handoff"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt07-2-en-1440x900-10-10.png"
+  },
+  {
+    "run": "gt07-2-gu-390x844",
+    "steps": [
+      "overview",
+      "quality",
+      "parties"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt07-2-gu-390x844-01-03.png"
+  },
+  {
+    "run": "gt07-2-gu-390x844",
+    "steps": [
+      "lots",
+      "saveDraft",
+      "confirm"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt07-2-gu-390x844-04-06.png"
+  },
+  {
+    "run": "gt07-2-gu-390x844",
+    "steps": [
+      "receipt",
+      "difference",
+      "payment"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt07-2-gu-390x844-07-09.png"
+  },
+  {
+    "run": "gt07-2-gu-390x844",
+    "steps": [
+      "handoff"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt07-2-gu-390x844-10-10.png"
+  },
+  {
+    "run": "gt07-3-en-1440x900",
+    "steps": [
+      "overview",
+      "quality",
+      "parties"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt07-3-en-1440x900-01-03.png"
+  },
+  {
+    "run": "gt07-3-en-1440x900",
+    "steps": [
+      "lots",
+      "saveDraft",
+      "confirm"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt07-3-en-1440x900-04-06.png"
+  },
+  {
+    "run": "gt07-3-en-1440x900",
+    "steps": [
+      "receipt",
+      "difference",
+      "payment"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt07-3-en-1440x900-07-09.png"
+  },
+  {
+    "run": "gt07-3-en-1440x900",
+    "steps": [
+      "handoff"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt07-3-en-1440x900-10-10.png"
+  },
+  {
+    "run": "gt07-3-gu-390x844",
+    "steps": [
+      "overview",
+      "quality",
+      "parties"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt07-3-gu-390x844-01-03.png"
+  },
+  {
+    "run": "gt07-3-gu-390x844",
+    "steps": [
+      "lots",
+      "saveDraft",
+      "confirm"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt07-3-gu-390x844-04-06.png"
+  },
+  {
+    "run": "gt07-3-gu-390x844",
+    "steps": [
+      "receipt",
+      "difference",
+      "payment"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt07-3-gu-390x844-07-09.png"
+  },
+  {
+    "run": "gt07-3-gu-390x844",
+    "steps": [
+      "handoff"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt07-3-gu-390x844-10-10.png"
+  }
+]

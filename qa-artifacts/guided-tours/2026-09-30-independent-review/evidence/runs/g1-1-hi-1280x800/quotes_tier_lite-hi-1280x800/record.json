@@ -1,0 +1,342 @@
+{
+  "scenario": "quotes?tier=lite",
+  "lang": "hi",
+  "size": "1280x800",
+  "steps": [
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "हर सेव की गई कॉस्टिंग एक पक्का रिकॉर्ड है",
+      "body": "हर कार्ड एक क्वालिटी है। उसके वर्ज़न में सेव करने वाले दिन के इनपुट और भाव रहते हैं; बाद के धागे के रेट उन्हें नहीं बदलते।",
+      "step": "find",
+      "status": "ready",
+      "eyebrow": "नमूना · चरण 1 / 6",
+      "progress": null,
+      "panel": {
+        "x": 869,
+        "y": 373,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 270,
+        "y": 373,
+        "w": 583,
+        "h": 187
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "div(role=dialog)",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": "",
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "जो वर्ज़न चाहिए, उसे खोलें",
+      "body": "वर्ज़न देखने के लिए क्वालिटी कार्ड खोलें। तारीख के पास “विवरण देखें” चुनकर वह वर्ज़न पढ़ें।",
+      "step": "versions",
+      "status": "ready",
+      "eyebrow": "नमूना · चरण 2 / 6",
+      "progress": null,
+      "panel": {
+        "x": 896,
+        "y": 16,
+        "w": 360,
+        "h": 221
+      },
+      "highlight": {
+        "x": 50,
+        "y": 338,
+        "w": 797,
+        "h": 452
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 16,
+        "y": 14,
+        "w": 864,
+        "h": 772
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": "",
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "लागत, भाव और मुनाफ़ा पढ़ें",
+      "body": "नमूना v2 में उत्पादन लागत ₹17.44/मीटर और बिक्री भाव ₹19.82/मीटर है, यानी हर मीटर पर ₹2.38 मुनाफ़ा बचता है।",
+      "step": "economics",
+      "status": "ready",
+      "eyebrow": "नमूना · चरण 3 / 6",
+      "progress": null,
+      "panel": {
+        "x": 896,
+        "y": 16,
+        "w": 360,
+        "h": 221
+      },
+      "highlight": {
+        "x": 65,
+        "y": 423,
+        "w": 767,
+        "h": 69
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 16,
+        "y": 14,
+        "w": 864,
+        "h": 772
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": "",
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "वर्ज़न दोबारा इस्तेमाल करें या नई क्वालिटी शुरू करें",
+      "body": "“इस्तेमाल करें” इस वर्ज़न को लागत अनुमानक में खोलता है, ताकि आप बदलाव करके नया वर्ज़न सेव कर सकें। “कॉपी बनाएं” इससे अलग क्वालिटी शुरू करता है।",
+      "step": "reuse",
+      "status": "ready",
+      "eyebrow": "नमूना · चरण 4 / 6",
+      "progress": null,
+      "panel": {
+        "x": 896,
+        "y": 16,
+        "w": 360,
+        "h": 243
+      },
+      "highlight": {
+        "x": 188,
+        "y": 141,
+        "w": 644,
+        "h": 44
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 16,
+        "y": 14,
+        "w": 864,
+        "h": 772
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": "",
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "दस्तावेज़ कौन देखेगा, यह चुनें",
+      "body": "“आंतरिक लागत अनुमान” में आपकी लागत और मार्जिन दिखता है। “ग्राहक कोटेशन” में सिर्फ़ भाव और आपकी शर्तें दिखती हैं।",
+      "step": "internal",
+      "status": "ready",
+      "eyebrow": "नमूना · चरण 5 / 6",
+      "progress": null,
+      "panel": {
+        "x": 896,
+        "y": 33,
+        "w": 360,
+        "h": 221
+      },
+      "highlight": {
+        "x": 509,
+        "y": 108,
+        "w": 355,
+        "h": 256
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 16,
+        "y": 33,
+        "w": 864,
+        "h": 734
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": "",
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "अपनी पहली कॉस्टिंग सेव करें",
+      "body": "लागत अनुमानक खोलने के लिए “नई कॉस्टिंग” चुनें। सेव करने के बाद आपकी कॉस्टिंग यहाँ दिखेगी।",
+      "step": "finish",
+      "status": "ready",
+      "eyebrow": "चरण 6 / 6",
+      "progress": null,
+      "panel": {
+        "x": 674,
+        "y": 16,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 1050,
+        "y": 15,
+        "w": 208,
+        "h": 51
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": "",
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280
+    }
+  ],
+  "logs": [
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction"
+  ],
+  "apiRequests": [],
+  "preClick": null,
+  "sampling": "legacy-900ms",
+  "before": {
+    "x": 0,
+    "y": 0,
+    "inner": null
+  },
+  "after": {
+    "scroll": {
+      "x": 0,
+      "y": 0,
+      "inner": null
+    },
+    "active": "<button data-slot=\"button\" data-variant=\"default\" data-size=\"default\" class=\"inline-flex items-center justify-center gap-2 whitespace-nowrap transition-[color,b",
+    "activeAnchor": "costings.new",
+    "activeRateBookField": null,
+    "activeControl": null,
+    "serverCalls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "navigations": [],
+    "scrollCalls": [],
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"saved-costings\":{\"firstShown\":\"2026-09-29T20:16:55.132Z\",\"version\":\"v1\",\"firstStarted\":true,\"completed\":true,\"completedVersion\":\"v2\"}}"
+    },
+    "search": ""
+  },
+  "issues": []
+}

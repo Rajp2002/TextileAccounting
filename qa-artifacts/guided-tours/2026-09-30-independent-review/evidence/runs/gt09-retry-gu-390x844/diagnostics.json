@@ -1,0 +1,58 @@
+[
+  {
+    "type": "navigation",
+    "at": 1790717340252,
+    "url": "http://localhost:5199/?s=yarn-stock&lang=gu&fresh=1"
+  },
+  {
+    "type": "console",
+    "level": "debug",
+    "at": 1790717340336,
+    "text": "[vite] connecting..."
+  },
+  {
+    "type": "console",
+    "level": "debug",
+    "at": 1790717340354,
+    "text": "[vite] connected."
+  },
+  {
+    "type": "console",
+    "level": "info",
+    "at": 1790717340497,
+    "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+  },
+  {
+    "type": "navigation",
+    "at": 1790717340629,
+    "url": "http://localhost:5199/owner/stock/yarn?s=yarn-stock&lang=gu&fresh=1"
+  },
+  {
+    "type": "console",
+    "level": "warning",
+    "at": 1790717340835,
+    "text": "[harness] server action called recordTourEventAction"
+  },
+  {
+    "type": "console",
+    "level": "warning",
+    "at": 1790717342264,
+    "text": "[harness] server action called recordTourEventAction"
+  },
+  {
+    "type": "console",
+    "level": "warning",
+    "at": 1790717350178,
+    "text": "[harness] server action called recordTourEventAction"
+  },
+  {
+    "type": "console",
+    "level": "debug",
+    "at": 1790717365014,
+    "text": "[vite] hot updated: /@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/app/globals.css"
+  },
+  {
+    "type": "close",
+    "at": 1790717381980
+  }
+]

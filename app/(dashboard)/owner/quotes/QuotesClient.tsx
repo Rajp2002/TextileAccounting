@@ -4,8 +4,9 @@ import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
 import { SavedCostingsTutorial } from '@/components/estimator/SavedCostingsTutorial'
-import { savedCostingTourEnding, costingTourSurface, makeSavedCostingTourExamples, makeSavedCostingTourExport, type SavedCostingStep } from '@/lib/saved-costings-tour'
-import { savedCostingsTutorialCopy } from '@/lib/i18n/saved-costings-tutorial'
+import { savedCostingTourEnding, isSavedCostingHandoff, costingTourSurface, makeSavedCostingTourExamples, makeSavedCostingTourExport, type SavedCostingStep } from '@/lib/saved-costings-tour'
+import { tourCommonCopy } from '@/lib/i18n/tour-common'
+import { isSampleRecordId } from '@/lib/tours/sample-ids'
 import { useRouter } from 'next/navigation'
 import { buildCostingResult, calcFullTotals, makeDefaultEstimateState, parseCostingResultSnapshot, type CostingResultSnapshot } from '@/lib/estimator'
 import {
@@ -425,10 +426,10 @@ function SavedQualityLibraryView({
 
     return (
         <div className="space-y-3">
-            {groups.map(group => {
+            {groups.map((group, groupIndex) => {
                 const isOpen = openKey === group.key
                 const latest = group.records[0] ?? null
-                const selectedRecordId = tourStep ? (tourStep === 'versions' ? null : group.records[0]?.id) : selectedRecordIdByGroup[group.key]
+                const selectedRecordId = tourStep ? (tourStep === 'versions' || tourStep === 'compareSelect' ? null : group.records[0]?.id) : selectedRecordIdByGroup[group.key]
                 const activeRecord = (selectedRecordId ? group.records.find(r => r.id === selectedRecordId) : null) ?? (group.records.length === 1 ? group.records[0] : null)
                 const targetRecord = activeRecord ?? latest
                 const latestResult = activeRecord ? getHistoricalCostingResult(activeRecord) : null
@@ -457,6 +458,9 @@ function SavedQualityLibraryView({
                 return (
                     <Card
                         key={group.key}
+                        data-costing-tour={tourStep && groupIndex === 0 ? "sample" : undefined}
+                        data-tour-anchor={!tourStep && groupIndex === 0 && !isSampleRecordId(group.key) ? "costings.first-card" : undefined}
+                        tabIndex={!tourStep && groupIndex === 0 ? -1 : undefined}
                         onClick={event => {
                             const target = event.target
                             if (target instanceof Element && target.closest('button, [data-slot="dialog-content"], [data-slot="dialog-overlay"]')) return
@@ -465,12 +469,12 @@ function SavedQualityLibraryView({
                         className={`ui-disclosure-card cursor-pointer ${isOpen ? 'border-saffron/30 bg-surface shadow-[var(--shadow-panel)]' : 'border-hairline bg-surface shadow-[var(--shadow-card)]'}`}
                     >
                         <CardContent className="p-0">
-                            <div className="flex flex-col gap-4 p-4 sm:flex-row sm:flex-wrap sm:items-center sm:p-5 lg:flex-nowrap">
+                            <div className={cn("flex flex-col gap-4 p-4 sm:flex-row sm:flex-wrap sm:items-center sm:p-5 lg:flex-nowrap", tourStep && "xl:flex-wrap")}>
                                 <button
                                     type="button"
                                     onClick={openGroupDetails}
                                     aria-haspopup="dialog"
-                                    className="group flex min-w-0 flex-1 items-start gap-3 rounded-lg text-left outline-none focus-visible:ring-2 focus-visible:ring-saffron/35"
+                                    className={cn("group flex min-w-0 flex-1 items-start gap-3 rounded-lg text-left outline-none focus-visible:ring-2 focus-visible:ring-saffron/35", tourStep && "xl:basis-full")}
                                 >
                                     <span className="mt-0.5 rounded-lg bg-saffron-soft p-2 text-saffron-deep">
                                         <Layers3 className="h-5 w-5" />
@@ -541,7 +545,7 @@ function SavedQualityLibraryView({
                                                     ? `${group.records.length} saved costing ${group.records.length === 1 ? 'snapshot' : 'snapshots'} · updated ${formatTimestampDate(group.updatedAt, { day: 'numeric', month: 'short', year: 'numeric' })}`
                                                     : 'Saved recipe · no saved costing yet'}
                                             </DialogDescription>
-                                            <DialogClose asChild>
+                                            {!tourStep && <DialogClose asChild>
                                                 <button
                                                     type="button"
                                                     aria-label={`Close ${group.name} details`}
@@ -549,7 +553,7 @@ function SavedQualityLibraryView({
                                                 >
                                                     <X className="h-5 w-5" aria-hidden="true" />
                                                 </button>
-                                            </DialogClose>
+                                            </DialogClose>}
                                         </DialogHeader>
 
                                         <div className="ui-disclosure-content w-full min-w-0 bg-surface-soft/60 p-4 sm:p-5">
@@ -578,7 +582,7 @@ function SavedQualityLibraryView({
                                                     : 'The saved commercial totals remain available in Saved Costing history. Open this version in Cost Estimate to review its saved assumptions.')}</p>
                                             {targetRecord && !activeDetailLoading && (
                                                 <div className="mt-4 flex flex-wrap justify-center gap-2">
-                                                    {!targetRecord.is_archived && !latest.is_archived && group.template?.is_active !== false && <Button size="sm" onClick={() => onOpen(targetRecord)} className="rounded-lg bg-loom font-medium text-white hover:bg-loom-elevated hover:text-white"><ArrowRight className="h-3.5 w-3.5" /> {tx('Use')}</Button>}
+                                                    {!targetRecord.is_archived && !latest.is_archived && group.template?.is_active !== false && <Button size="sm" onClick={() => onOpen(targetRecord)} className="rounded-lg bg-loom font-medium text-white hover:bg-loom-elevated hover:text-white"><ArrowRight className="h-3.5 w-3.5" /> {t('tourControls.savedCostings.use')}</Button>}
                                                     <Button variant="outline" size="sm" onClick={() => onStartFrom(targetRecord)}><Copy className="h-3.5 w-3.5" /> {tx('Duplicate')}</Button>
                                                     <Button variant="outline" size="sm" onClick={() => onExport(targetRecord)}><Download className="h-3.5 w-3.5" /> {tx('Export')}</Button>
                                                     <Button variant="outline" size="sm" onClick={() => onSaveAsNewQuality(targetRecord)}><BookmarkPlus className="h-3.5 w-3.5" /> {tx('Save as separate quality')}</Button>
@@ -590,7 +594,7 @@ function SavedQualityLibraryView({
                                                             onClick={() => trackPlanEvent('production_cta_clicked', { source: 'saved_costing_detail' })}
                                                             className="inline-flex h-9 items-center gap-1.5 rounded-md border border-saffron/30 bg-saffron-soft px-3 text-xs font-semibold text-saffron-deep hover:bg-saffron-soft/80"
                                                         >
-                                                            <Factory className="h-3.5 w-3.5" /> Activate for Production
+                                                            <Factory className="h-3.5 w-3.5" /> {tx('Activate for Production')}
                                                         </Link>
                                                     )}
                                                 </div>
@@ -605,7 +609,7 @@ function SavedQualityLibraryView({
                                                         <p className="mt-1 text-xs text-subtle">Snapshot v{Number(activeRecord.version_number ?? 1)} · {formatTimestampDate(activeRecord.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}</p>
                                                     </div>
                                                     <div data-costing-tour="reuse" className="flex flex-wrap gap-2">
-                                                        {!activeRecord.is_archived && group.template?.is_active !== false && <Button size="sm" onClick={() => onOpen(activeRecord)} disabled={updatingId === activeRecord.id} aria-busy={updatingId === activeRecord.id} className="rounded-lg bg-loom font-medium text-white hover:bg-loom-elevated hover:text-white"><ArrowRight className="h-3.5 w-3.5" /> {tx('Use')}</Button>}
+                                                        {!activeRecord.is_archived && group.template?.is_active !== false && <Button size="sm" onClick={() => onOpen(activeRecord)} disabled={updatingId === activeRecord.id} aria-busy={updatingId === activeRecord.id} className="rounded-lg bg-loom font-medium text-white hover:bg-loom-elevated hover:text-white"><ArrowRight className="h-3.5 w-3.5" /> {t('tourControls.savedCostings.use')}</Button>}
                                                         <Button variant="outline" size="sm" onClick={() => onStartFrom(activeRecord)}><Copy className="h-3.5 w-3.5" /> {tx('Duplicate')}</Button>
                                                         <Button variant="outline" size="sm" onClick={() => onExport(activeRecord)}><Download className="h-3.5 w-3.5" /> {tx('Export')}</Button>
                                                         <Button variant="outline" size="sm" onClick={() => onSaveAsNewQuality(activeRecord)}><BookmarkPlus className="h-3.5 w-3.5" /> {tx('Save as separate quality')}</Button>
@@ -617,7 +621,7 @@ function SavedQualityLibraryView({
                                                                 onClick={() => trackPlanEvent('production_cta_clicked', { source: 'saved_costing_breakdown' })}
                                                                 className="inline-flex h-9 items-center gap-1.5 rounded-md border border-saffron/30 bg-saffron-soft px-3 text-xs font-semibold text-saffron-deep hover:bg-saffron-soft/80"
                                                             >
-                                                                <Factory className="h-3.5 w-3.5" /> Activate for Production
+                                                                <Factory className="h-3.5 w-3.5" /> {tx('Activate for Production')}
                                                             </Link>
                                                         )}
                                                         <Button variant="outline" size="sm" onClick={() => onToggleArchived(activeRecord)} disabled={updatingId === activeRecord.id} aria-busy={updatingId === activeRecord.id}>
@@ -774,7 +778,7 @@ function SavedQualityLibraryView({
     )
 }
 
-export default function QuotesClient({ initialQuotes, initialTemplates, initialProfile, initialWorkers, initialStatus, orgId, userId, canUseProductionPipeline, organizationName }: { initialQuotes: QuoteRow[], initialTemplates: SavedQuality[], initialProfile?: SavedQualityFactoryProfile, initialWorkers: SavedQualityFixedWorker[], initialStatus?: string, orgId: string, userId: string, canUseProductionPipeline: boolean, organizationName: string }) {
+export default function QuotesClient({ initialQuotes, initialTemplates, initialProfile, initialWorkers, initialStatus, orgId, userId, canUseProductionPipeline, organizationName, userMetadata, tourUnavailable = false }: { initialQuotes: QuoteRow[], initialTemplates: SavedQuality[], initialProfile?: SavedQualityFactoryProfile, initialWorkers: SavedQualityFixedWorker[], initialStatus?: string, orgId: string, userId: string, canUseProductionPipeline: boolean, organizationName: string; userMetadata?: Record<string, unknown>; tourUnavailable?: boolean }) {
     const { t, tx } = useTranslation()
     const { language } = useTranslation()
     const [tourStep, setTourStep] = useState<SavedCostingStep | null>(null)
@@ -784,9 +788,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
     const [demoCostingDeleted, setDemoCostingDeleted] = useState(false)
     const [showCostingDeleteNudge, setShowCostingDeleteNudge] = useState(false)
     const tourSurface = costingTourSurface(tourStep)
-    const tourExamples = useMemo(makeSavedCostingTourExamples, [])
-    const tourExport = useMemo(makeSavedCostingTourExport, [])
-    const tourGroups = useMemo(() => [{key: 'tour-preview', name: 'Tour sample', template: null, records: tourExamples, updatedAt: tourExamples[0].updated_at, currentRecipeCostPerM: null}], [tourExamples])
+    const tourSampleActive = tourStep !== null && !isSavedCostingHandoff(tourStep)
     const DEMO_COSTING_STORAGE_KEY = 'weavly:owner-demo-costing-deleted'
 
     useEffect(() => {
@@ -808,7 +810,10 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
 
     const router = useRouter()
     const [quotes, setQuotes] = useState<QuoteRow[]>(initialQuotes)
-    const isDemoCostingActive = (!demoCostingDeleted && quotes.length === 0 && initialTemplates.length === 0) || tourStep !== null
+    const isDemoCostingActive = (!demoCostingDeleted && quotes.length === 0 && initialTemplates.length === 0) || tourSampleActive
+    const tourExamples = useMemo(() => isDemoCostingActive ? makeSavedCostingTourExamples() : [], [isDemoCostingActive])
+    const tourExport = useMemo(() => tourSurface === 'export' ? makeSavedCostingTourExport() : null, [tourSurface])
+    const tourGroups = useMemo(() => tourExamples.length ? [{key: 'tour-preview', name: 'Tour sample', template: null, records: tourExamples, updatedAt: tourExamples[0].updated_at, currentRecipeCostPerM: null}] : [], [tourExamples])
     const [updatingId, setUpdatingId] = useState<string | null>(null)
     const [filterStatus, setFilterStatus] = useState<string>(initialStatus || 'all')
     const [quoteToRestore, setQuoteToRestore] = useState<QuoteRow | null>(null)
@@ -1234,7 +1239,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
     return (
         <>
             <aside className="saved-costings-left-rail space-y-3" aria-label={tx('Saved Costings guides and tools')}>
-                <SavedCostingsTutorial step={tourStep} onStepChange={setTourStep} onComplete={() => setShowCostingDeleteNudge(true)} production={canUseProductionPipeline} ending={savedCostingTourEnding(quotes.filter(quote => isStandaloneCosting(quote.record_kind)).length)} userId={userId} orgId={orgId} />
+                <SavedCostingsTutorial step={tourStep} onStepChange={setTourStep} onComplete={() => setShowCostingDeleteNudge(true)} production={canUseProductionPipeline} ending={savedCostingTourEnding(quotes.filter(quote => isStandaloneCosting(quote.record_kind)).length, tourUnavailable)} userId={userId} orgId={orgId} userMetadata={userMetadata} />
             </aside>
             <div className="saved-costings-workspace ui-route-enter max-w-6xl mx-auto space-y-6">
             <RouteMilestones route="/owner/quotes" shellVisible primaryUsable secondaryReady />
@@ -1243,7 +1248,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                 title={t('common.saved_costings_title')}
                 actions={(
                     <Button
-                        onClick={() => router.push('/owner/estimator')}
+                        data-tour-anchor="costings.new" onClick={() => router.push('/owner/estimator')}
                         className="rail-inline-actions h-10 w-full sm:w-auto rounded-xl bg-loom px-4 font-medium text-white shadow-xs hover:bg-loom-elevated hover:text-white focus-visible:ring-saffron"
                     >
                         <Plus className="h-4 w-4" aria-hidden="true" />
@@ -1315,12 +1320,13 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                             </div>
                         </details>
                         <Button
+                            data-tour-anchor="costings.compare"
                             variant={comparisonMode ? 'secondary' : 'outline'}
                             onClick={() => { setComparisonMode(current => !current); setSelectedCostingIds([]) }}
                             className="h-10 sm:h-11 rounded-xl"
                             aria-pressed={comparisonMode}
                         >
-                            <GitCompareArrows className="h-4 w-4" /> {comparisonMode ? 'Done' : 'Compare'}
+                            <GitCompareArrows className="h-4 w-4" /> {comparisonMode ? tx('Done') : tx('Compare')}
                         </Button>
                         <Button
                             variant={showFavoritesOnly ? 'secondary' : 'outline'}
@@ -1331,7 +1337,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                             <Star className={`h-4 w-4 ${showFavoritesOnly ? 'fill-current' : ''}`} /> {showFavoritesOnly ? 'All costings' : 'Favourites'}
                         </Button>
                         <Button variant={showArchived ? 'secondary' : 'outline'} onClick={() => { setOpenQualityKey(null); setShowArchived(current => !current); setSelectedCostingIds([]) }} className="h-10 sm:h-11 rounded-xl">
-                            {showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />} {showArchived ? t('common.active') : t('common.archived')}
+                            {showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />} {showArchived ? t('common.active') : t('tourControls.savedCostings.archived')}
                         </Button>
                     </div>
                     {comparisonMode && selectedCostings.length === 2 ? (
@@ -1355,15 +1361,15 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                         </p>
                     ) : null}
                     <p className="mt-3 text-xs font-medium text-body">
-                        {isDemoCostingActive && quotes.length === 0
+                        {tourSampleActive ? '1 sample quality' : isDemoCostingActive && quotes.length === 0
                             ? (searchQuery.trim() && !tourExamples[0]?.quality_label?.toLowerCase().includes(searchQuery.trim().toLowerCase()) && !'tour sample'.includes(searchQuery.trim().toLowerCase()) ? '0 qualities' : '1 sample quality')
                             : `${qualityGroups.length} ${showArchived ? 'archived ' : ''}${qualityGroups.length === 1 ? 'quality' : 'qualities'}`}
                     </p>
                 </Toolbar>
 
-            {tourStep ? (
-                <div data-costing-tour="sample" className="space-y-3">
-                    <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold" data-i18n-skip="true" lang={language}>{savedCostingsTutorialCopy[language].sample}</p>
+            {tourSampleActive ? (
+                <div className="space-y-3 xl:pr-[192px]">
+                    <p className="rounded-lg border border-hairline bg-surface-soft px-3 py-2 text-sm font-semibold text-ink" data-i18n-skip="true" lang={language}>{tourCommonCopy[language].sampleBanner}</p>
                     <SavedQualityLibraryView
                     selectedRecordIdByGroup={{}} onSelectRecord={() => {}}
                         groups={tourGroups} canUseProductionPipeline={canUseProductionPipeline}
@@ -1411,7 +1417,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     />
                 ) : (
                     <div data-costing-tour="sample" className="space-y-3">
-                        <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold" data-i18n-skip="true" lang={language}>{savedCostingsTutorialCopy[language].sample}</p>
+                        <p className="rounded-lg border border-hairline bg-surface-soft px-3 py-2 text-sm font-semibold text-ink" data-i18n-skip="true" lang={language}>{tourCommonCopy[language].sampleBanner}</p>
                         <SavedQualityLibraryView
                             selectedRecordIdByGroup={selectedRecordIdByGroup} onSelectRecord={selectRecord}
                             groups={tourGroups}
@@ -1427,9 +1433,9 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                             }}
                             onCloseDetails={() => setOpenQualityKey(null)}
                             onToggleComparison={toggleCostingSelection}
-                            onOpen={quote => { setOpenQualityKey(null); void handleRestore(quote, 'edit') }}
-                            onStartFrom={quote => { setOpenQualityKey(null); void handleRestore(quote, 'duplicate') }}
-                            onSaveAsNewQuality={quote => { setOpenQualityKey(null); void handleRestore(quote, 'duplicate') }}
+                            onOpen={quote => { if (isSampleRecordId(quote.id)) toast.info(tx('This is a sample costing for exploration.')) }}
+                            onStartFrom={quote => { if (isSampleRecordId(quote.id)) toast.info(tx('This is a sample costing for exploration.')) }}
+                            onSaveAsNewQuality={quote => { if (isSampleRecordId(quote.id)) toast.info(tx('This is a sample costing for exploration.')) }}
                             onExport={quote => { setOpenQualityKey(null); void openQuoteExport(quote) }}
                             onAudit={() => { toast.info(tx('This is a sample costing for exploration.')) }}
                             auditingId={updatingId}
@@ -1505,7 +1511,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
 
             {/* Top action: New Costing pill */}
             <aside className="saved-costings-action-rail-desktop" aria-label={tx('Costing actions')}>
-                <Button onClick={() => router.push('/owner/estimator')} className={cn(railPrimaryAction, 'w-full')}>
+                <Button data-tour-anchor="costings.new" onClick={() => router.push('/owner/estimator')} className={cn(railPrimaryAction, 'w-full')}>
                     <Plus className="h-4 w-4" aria-hidden="true" />
                     <span>{t('common.new_costing')}</span>
                 </Button>
@@ -1516,7 +1522,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                 <ArchivePolicyNotice />
             </aside>
 
-            {tourSurface === 'export' && <CostingExportDialog key={tourStep} open tutorialPreview onOpenChange={() => {}} model={tourExport} defaultMode={tourStep === 'internal' ? 'internal' : 'customer'} defaultBusinessName="Tour sample" defaultCustomerName="Sample customer" sourceRecordKind="costing" />}
+            {tourSurface === 'export' && tourExport && <CostingExportDialog key={tourStep} open tutorialPreview onOpenChange={() => {}} model={tourExport} defaultMode={tourStep === 'internal' ? 'internal' : 'customer'} defaultBusinessName="Tour sample" defaultCustomerName="Sample customer" sourceRecordKind="costing" />}
             {quoteToExport && !tourStep && (
                 <CostingExportDialog
                     open
@@ -1552,7 +1558,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             />
 
             <Dialog modal={!tourStep} open={tourStep ? tourSurface === 'comparison' : showComparison} onOpenChange={open => {if (!tourStep) setShowComparison(open)}}>
-                <DialogContent data-costing-tour-dialog={tourStep ? "true" : undefined} data-costing-tour="comparison" onOpenAutoFocus={event => {if (tourStep) event.preventDefault()}} onCloseAutoFocus={event => {if (tourStep) event.preventDefault()}} onInteractOutside={event => {if (tourStep) event.preventDefault()}} onEscapeKeyDown={event => {if (tourStep) event.preventDefault()}} className="sm:max-w-4xl">
+                <DialogContent showCloseButton={!tourStep} data-costing-tour-dialog={tourStep ? "true" : undefined} data-costing-tour="comparison" onOpenAutoFocus={event => {if (tourStep) event.preventDefault()}} onCloseAutoFocus={event => {if (tourStep) event.preventDefault()}} onInteractOutside={event => {if (tourStep) event.preventDefault()}} onEscapeKeyDown={event => {if (tourStep) event.preventDefault()}} className="sm:max-w-4xl">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <GitCompareArrows className="h-5 w-5 text-info" /> Compare Saved Costings
@@ -1651,9 +1657,9 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                             </details>
                         </div>
                     )}
-                    <DialogFooter>
+                    {!tourStep && <DialogFooter>
                         <Button variant="outline" onClick={() => setShowComparison(false)}>Close</Button>
-                    </DialogFooter>
+                    </DialogFooter>}
                 </DialogContent>
             </Dialog>
 

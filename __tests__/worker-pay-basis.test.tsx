@@ -1,4 +1,7 @@
 import React from 'react'
+import { en } from '../lib/i18n/locales/en'
+import { gu } from '../lib/i18n/locales/gu'
+import { hi } from '../lib/i18n/locales/hi'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { readFileSync } from 'node:fs'
@@ -6,7 +9,7 @@ import { workersTutorialCopy } from '../lib/i18n/workers-tutorial'
 import { makeWorkersTourExamples } from '../lib/workers-tour'
 
 const locale = vi.hoisted(() => ({ language: 'en' as 'en' | 'gu' | 'hi' }))
-vi.mock('@/lib/i18n/context', () => ({ useTranslation: () => ({ language: locale.language, tx: (text: string) => text }) }))
+vi.mock('@/lib/i18n/context', () => ({ useTranslation: () => ({ language: locale.language, tx: (text: string) => text, t: (key: string) => ({ en, gu, hi }[locale.language].workers[key.split('.')[1] as keyof typeof en.workers] as string) }) }))
 vi.mock('@/components/navigation/navigation-link', () => ({ NavigationLink: ({ children, ...props }: React.ComponentProps<'a'>) => <a {...props}>{children}</a> }))
 import { WorkerPayBasis } from '../components/workers/WorkerPayBasis'
 import { WorkerCard } from '../components/workers/WorkerCard'
@@ -14,7 +17,7 @@ import { WorkerCard } from '../components/workers/WorkerCard'
 beforeEach(() => { locale.language = 'en' })
 describe('Base worker wage-source display', () => {
     it.each([0, 99])('does not claim rate readiness from the legacy worker rate %s', rate => {
-        const worker = { ...makeWorkersTourExamples('2026-09-16')[0], rate_per_meter: rate }
+        const worker = { ...makeWorkersTourExamples()[0], rate_per_meter: rate }
         const html = renderToStaticMarkup(<WorkerCard worker={worker} onEdit={() => {}} />)
         expect(html).toContain('Wage source')
         expect(html).toContain('Production quality')

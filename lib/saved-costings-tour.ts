@@ -1,28 +1,47 @@
 import { makeDefaultEstimateState, calcFullTotals, buildCostingResult } from './estimator'
 import { createCostingExportModel } from './estimator-export'
+import type { TourStepSpec } from './tours/tour-types'
 
 export const paidCostingSteps = ['find', 'versions', 'economics', 'reuse', 'internal', 'finish'] as const
 export const freeCostingSteps = ['snapshots', 'freeSelect', 'internal', 'finish'] as const
-export const comparisonCostingSteps = ['compareSelect', 'comparison', 'comparisonDetails', 'finish'] as const
-export type SavedCostingStep = typeof paidCostingSteps[number] | typeof freeCostingSteps[number] | typeof comparisonCostingSteps[number]
-    | 'filters' | 'select' | 'breakdown' | 'organize' | 'customer' | 'share' | 'production'
-    | 'searchAndFilters' | 'search' | 'freeFilters'
+export const comparisonCostingSteps = ['compareSelect', 'comparison', 'comparisonDetails', 'compareHandoff'] as const
+export type SavedCostingStep = typeof paidCostingSteps[number] | typeof freeCostingSteps[number] | typeof comparisonCostingSteps[number] | 'production'
+export type SavedCostingEnding = 'existing' | 'empty' | 'unavailable'
 export function savedCostingTourSteps(free: boolean, production = false): SavedCostingStep[] {
     if (free) return [...freeCostingSteps]
     const steps: SavedCostingStep[] = [...paidCostingSteps]
     if (production) steps.splice(steps.indexOf('finish'), 0, 'production')
     return steps
 }
-export type SavedCostingEnding = 'existing' | 'empty' | 'unavailable'
 export function savedCostingTourEnding(count: number, unavailable = false): SavedCostingEnding {
     return unavailable ? 'unavailable' : count > 0 ? 'existing' : 'empty'
 }
+export function isSavedCostingHandoff(step: SavedCostingStep | null) {
+    return step === 'finish' || step === 'compareHandoff'
+}
 export function costingTourSurface(step: SavedCostingStep | null) {
-    if (step === 'internal' || step === 'customer' || step === 'share') return 'export'
-    if ((step === 'comparison' || step === 'comparisonDetails')) return 'comparison'
-    if (step && ['versions', 'breakdown', 'economics', 'reuse', 'organize', 'production', 'compareSelect'].includes(step)) return 'library'
+    if (step === 'internal') return 'export'
+    if (step === 'comparison' || step === 'comparisonDetails') return 'comparison'
+    if (step && ['versions', 'economics', 'reuse', 'production', 'compareSelect'].includes(step)) return 'library'
     return 'page'
 }
+export function savedCostingTourSpecs(free: boolean, production = false, comparison = false, ending: SavedCostingEnding = 'empty'): TourStepSpec<SavedCostingStep>[] {
+    const dialog = '[data-costing-tour-dialog="true"]'
+    const anchors: Record<SavedCostingStep, string> = {
+        find: '[data-costing-tour="sample"]', versions: '[data-costing-tour="versions"]', economics: '[data-costing-tour="economics"]',
+        reuse: '[data-costing-tour="reuse"]', internal: '[data-costing-tour="export-modes"]', production: '[data-costing-tour="production"]',
+        snapshots: '[data-costing-tour="free-sample"]', freeSelect: '[data-tour-anchor="free-costings.sample-export"]',
+        compareSelect: '[data-costing-tour="versions"]', comparison: '[data-costing-tour="comparison"]', comparisonDetails: '[data-costing-tour="comparison-details"]',
+        compareHandoff: '[data-tour-anchor="costings.compare"]',
+        finish: `[data-tour-anchor="${free ? 'free-costings' : 'costings'}.${ending === 'existing' ? 'first-card' : 'new'}"]`,
+    }
+    return (comparison && !free ? [...comparisonCostingSteps] : savedCostingTourSteps(free, production)).map(id => ({
+        id, anchor: anchors[id], kind: isSavedCostingHandoff(id) ? 'handoff' : 'sample',
+        context: costingTourSurface(id) !== 'page' ? dialog : undefined,
+        detail: ['versions', 'economics', 'reuse', 'internal', 'snapshots'].includes(id),
+    }))
+}
+
 /** In-memory examples only. These IDs must never be passed to persistence actions. */
 export function makeSavedCostingTourExamples() {
     return [2, 1].map(version => {
@@ -56,4 +75,10 @@ export function makeSavedCostingTourExamples() {
 export function makeSavedCostingTourExport() {
     const row = makeSavedCostingTourExamples()[0]
     return createCostingExportModel({qualityLabel: row.label, createdAt: row.created_at, state: row.estimate, totals: row.totals, result: row.result})
+}
+
+/** Display values use the very same calculated examples as the sample views. */
+export function savedCostingTourValues(rows = makeSavedCostingTourExamples()) {
+    const format = (value: number) => value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    return { cost: format(rows[0].result.productionCostPerM), price: format(rows[0].result.suggestedSellingPricePerM), profit: format(rows[0].result.profitPerM), costChange: format(rows[0].result.productionCostPerM - rows[1].result.productionCostPerM) }
 }

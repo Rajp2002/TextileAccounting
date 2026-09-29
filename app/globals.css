@@ -644,7 +644,9 @@
   }
 
   .rates-left-rail-desktop {
-    display: none;
+    display: block;
+    width: 100%;
+    margin-bottom: 1.25rem;
   }
 
   .estimator-reference-rail,
@@ -728,13 +730,6 @@
   @media (min-width: 1024px) {
     .machine-card-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    /* Phones reach the Rate Book guide from the page header instead. */
-    .rates-left-rail-desktop {
-      display: block;
-      width: 100%;
-      margin-bottom: 1.25rem;
     }
   }
 
@@ -1483,7 +1478,12 @@
 
 /* Reserve the desktop reading panel beside tour-controlled previews. */
 @media (min-width: 768px) {
-  [data-costing-tour-dialog="true"] { width: calc(100vw - 330px) !important; max-width: 1180px !important; }
+  [data-costing-tour-dialog="true"] {
+    /* Reading column plus outline, gutter and viewport-edge clearance. */
+    left: calc((100vw - 384px) / 2) !important;
+    width: calc(100vw - 416px) !important;
+    max-width: 1180px !important;
+  }
 }
 [data-costing-tour-dialog="true"] [data-slot="dialog-header"] { position: static; }
 
@@ -1567,7 +1567,7 @@ button[aria-expanded="true"] .nav-chevron {
    CSS optimization can otherwise fold it into transform and discard it alongside
    transform:none, allowing the dialog utilities or phone sheet rule to win. */
 @media (min-width: 768px) {
-  [data-workers-tour-preview="true"], [data-machines-tour-preview="true"], [data-stock-tour-preview="true"], [data-dispatch-tour-preview="true"], [data-production-tour-preview="true"], [data-payroll-tour-preview="true"], [data-configuration-tour-preview="true"] {
+  [data-workers-tour-preview="true"], [data-machines-tour-preview="true"], [data-stock-tour-preview="true"], [data-dispatch-tour-preview="true"], [data-production-tour-preview="true"], [data-payroll-tour-preview="true"] {
     left: max(16px, calc((100vw - 864px) / 2));
     width: calc(100vw - 368px);
     max-width: 512px;
@@ -1579,7 +1579,7 @@ button[aria-expanded="true"] .nav-chevron {
   }
 }
 @media (max-width: 767px), (max-height: 500px) and (pointer: coarse) {
-  [data-workers-tour-preview="true"], [data-machines-tour-preview="true"], [data-stock-tour-preview="true"], [data-dispatch-tour-preview="true"], [data-production-tour-preview="true"], [data-payroll-tour-preview="true"], [data-configuration-tour-preview="true"] {
+  [data-workers-tour-preview="true"], [data-machines-tour-preview="true"], [data-stock-tour-preview="true"], [data-dispatch-tour-preview="true"], [data-production-tour-preview="true"], [data-payroll-tour-preview="true"] {
     top: 72px !important;
     bottom: auto !important;
     left: 8px !important;
@@ -1597,8 +1597,7 @@ button[aria-expanded="true"] .nav-chevron {
 [data-stock-tour-preview="true"] [data-slot="dialog-header"],
 [data-dispatch-tour-preview="true"] [data-slot="dialog-header"],
 [data-production-tour-preview="true"] [data-slot="dialog-header"],
-[data-payroll-tour-preview="true"] [data-slot="dialog-header"],
-[data-configuration-tour-preview="true"] [data-slot="dialog-header"] { position: static; }
+[data-payroll-tour-preview="true"] [data-slot="dialog-header"] { position: static; }
 
 /* Picker rows scroll independently above the tour reading panel. */
 [data-configuration-picker-preview="true"] { bottom: auto !important; --tw-translate-x: 0px !important; --tw-translate-y: 0px !important; --tour-preview-translate: 0px 0px; translate: var(--tour-preview-translate) !important; transform: none !important; }

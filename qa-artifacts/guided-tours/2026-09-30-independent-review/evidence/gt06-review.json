@@ -1,0 +1,14 @@
+{
+  "task": "GT-06",
+  "group": "gt06",
+  "runs": 22,
+  "steps": 132,
+  "classifications": {
+    "FAIL": 22
+  },
+  "reviewNotes": "All 22 original runs exit 0 with no UI issues; all required English desktop/Gujarati phone captures reviewed. Empty/populated, retained nonmatching search Exit/Done, deleted-demo and archived-only recovery verified. Approved unavailable update/review/usage states continue and Done focuses Add Yarn Rate. Raw guard FAIL retains unchanged rate_book_viewed mount analytics; prelaunch usage getter is stubbed, with no tour business-action increment. Human/live gates and upstream dependencies remain unfulfilled.",
+  "status": "IN_PROGRESS",
+  "humanGates": "UNVERIFIED",
+  "visualReview": "Every captured English 1440x900 and Gujarati 390x844 step inspected",
+  "evidence": "gt06-results.json"
+}

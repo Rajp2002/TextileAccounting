@@ -1,9 +1,10 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
-import { RateBookTutorial } from '@/components/rates/RateBookTutorial'
-import { RateBookHelp, RateBookTutorialLauncher } from '@/components/rates/RateBookTutorial'
-import { rateBookTutorialCopy } from '@/lib/i18n/rate-book-tutorial'
+import { RateBookTutorial, RateBookHelp, rateBookHelpCopy } from '@/components/rates/RateBookTutorial'
+import type { RateBookStep } from '@/lib/rate-book-tour'
+import { isSampleRecordId } from '@/lib/tours/sample-ids'
+import { tourCommonCopy } from '@/lib/i18n/tour-common'
 import { toast, userFacingError } from '@/lib/app-notifications'
 import {
     AlertTriangle,
@@ -300,7 +301,6 @@ function QuickRateEditPopover({
     onSave,
     onOpenAdvanced,
     trigger,
-    isTutorialActive = false,
 }: {
     rate: CostRateRow
     isOpen: boolean
@@ -314,14 +314,13 @@ function QuickRateEditPopover({
     onSave: (rate: CostRateRow, val: number, src: string) => void
     onOpenAdvanced: (rate: CostRateRow) => void
     trigger: React.ReactNode
-    isTutorialActive?: boolean
 }) {
     const { tx } = useTranslation()
     const inputRef = useRef<HTMLInputElement>(null)
     const savedQualityCount = getSavedQualityCount(rate)
 
     useEffect(() => {
-        if (isOpen && !isTutorialActive) {
+        if (isOpen) {
             const timer = setTimeout(() => {
                 try {
                     inputRef.current?.focus()
@@ -332,7 +331,7 @@ function QuickRateEditPopover({
             }, 10)
             return () => clearTimeout(timer)
         }
-    }, [isOpen, isTutorialActive])
+    }, [isOpen])
 
     const rawVal = Number(value)
     const isValueValid = value !== '' && Number.isFinite(rawVal) && rawVal >= 0 && rawVal <= 10_000_000
@@ -354,28 +353,11 @@ function QuickRateEditPopover({
                 sideOffset={8}
                 onOpenAutoFocus={(e) => {
                     e.preventDefault()
-                    if (!isTutorialActive) {
-                        try {
-                            inputRef.current?.focus()
-                            inputRef.current?.select()
-                        } catch {
-                            inputRef.current?.focus()
-                        }
-                    }
-                }}
-                onPointerDownOutside={(e) => {
-                    if (isTutorialActive) {
-                        e.preventDefault()
-                    }
-                }}
-                onInteractOutside={(e) => {
-                    if (isTutorialActive) {
-                        e.preventDefault()
-                    }
-                }}
-                onFocusOutside={(e) => {
-                    if (isTutorialActive) {
-                        e.preventDefault()
+                    try {
+                        inputRef.current?.focus()
+                        inputRef.current?.select()
+                    } catch {
+                        inputRef.current?.focus()
                     }
                 }}
                 className="w-[320px] max-w-[calc(100vw-2rem)] rounded-xl border border-hairline bg-surface p-4 shadow-[var(--shadow-panel)] z-50"
@@ -827,7 +809,7 @@ function RateReviewRailWidget({
 
 function RateBookReferenceCard() {
     const { tx, language } = useTranslation()
-    const copy = rateBookTutorialCopy[language] ?? rateBookTutorialCopy.en
+    const copy = rateBookHelpCopy[language]
     return (
         <Card className="border-hairline bg-surface/90 shadow-sm backdrop-blur-xs">
             <CardContent className="p-4 space-y-3">
@@ -881,18 +863,18 @@ export default function RatesClient({
     initialRates,
     initialConflicts,
     defaultReviewIntervalDays,
-    tutorialDismissed = false,
+    userMetadata,
     userId = 'owner',
     orgId = 'org',
 }: {
     initialRates: CostRateRow[]
     initialConflicts: YarnRateConflict[]
     defaultReviewIntervalDays: number
-    tutorialDismissed?: boolean
+    userMetadata?: Record<string, unknown> | null
     userId?: string
     orgId?: string
 }) {
-    const { t, tx } = useTranslation()
+    const { t, tx, language } = useTranslation()
     const [demoYarnDeleted, setDemoYarnDeleted] = useState(false)
     const [showDeleteNudge, setShowDeleteNudge] = useState(false)
 
@@ -931,11 +913,7 @@ export default function RatesClient({
     const [statusFilter, setStatusFilter] = useState<RateStatusFilter>('all')
     const [searchQuery, setSearchQuery] = useState('')
     const [showArchived, setShowArchived] = useState(false)
-    const [isTutorialActive, setIsTutorialActive] = useState(false)
-    const [tutorialTrigger, setTutorialTrigger] = useState(0)
-    const handleLaunchTutorial = useCallback(() => {
-        setTutorialTrigger(prev => prev + 1)
-    }, [])
+    const [tourStep, setTourStep] = useState<RateBookStep | null>(null)
     const searchRef = useRef<HTMLInputElement>(null)
     const [draft, setDraft] = useState<CostRateInput | null>(null)
     const [showDueReviews, setShowDueReviews] = useState(false)
@@ -964,7 +942,7 @@ export default function RatesClient({
 
     useEffect(() => {
         function handleKeyDown(event: KeyboardEvent) {
-            if (isTutorialActive || event.ctrlKey || event.metaKey || event.altKey) return
+            if (tourStep !== null || event.ctrlKey || event.metaKey || event.altKey) return
 
             const activeElement = document.activeElement
             const isInputFocused =
@@ -994,7 +972,7 @@ export default function RatesClient({
 
         window.addEventListener('keydown', handleKeyDown)
         return () => window.removeEventListener('keydown', handleKeyDown)
-    }, [draft, showDueReviews, historyRate, reviewRate, archiveRate, deleteRate, showConflicts, quickEditRate, searchQuery, isTutorialActive])
+    }, [draft, showDueReviews, historyRate, reviewRate, archiveRate, deleteRate, showConflicts, quickEditRate, searchQuery, tourStep])
 
     useEffect(() => {
         let cancelled = false
@@ -1042,7 +1020,7 @@ export default function RatesClient({
     )
     const activeYarnRates = useMemo(() => yarnRates.filter(rate => rate.is_active !== false), [yarnRates])
     const archivedYarnRates = useMemo(() => yarnRates.filter(rate => rate.is_active === false), [yarnRates])
-    const targetYarnRates = showArchived ? archivedYarnRates : activeYarnRates
+    const targetYarnRates = tourStep !== null ? activeYarnRates : showArchived ? archivedYarnRates : activeYarnRates
 
     const allRatesCount = targetYarnRates.length
     const warpRatesCount = useMemo(() => targetYarnRates.filter(rate => rate.category === 'yarn_warp').length, [targetYarnRates])
@@ -1061,20 +1039,20 @@ export default function RatesClient({
 
     const filteredRates = useMemo(
         () => filterCostRates(targetYarnRates, {
-            query: searchQuery,
-            category: categoryFilter,
-            status: statusFilter,
+            query: tourStep !== null ? '' : searchQuery,
+            category: tourStep !== null ? 'all' : categoryFilter,
+            status: tourStep !== null ? 'all' : statusFilter,
         }),
-        [targetYarnRates, searchQuery, categoryFilter, statusFilter],
+        [targetYarnRates, searchQuery, categoryFilter, statusFilter, tourStep],
     )
 
     const visibleRates = useMemo(
         () => [...filteredRates].sort((left, right) => {
-            if (showArchived) return left.name.localeCompare(right.name, 'en-IN')
+            if (tourStep === null && showArchived) return left.name.localeCompare(right.name, 'en-IN')
             return REVIEW_STATUS_PRIORITY[getRateReviewStatus(left)] - REVIEW_STATUS_PRIORITY[getRateReviewStatus(right)]
                 || left.name.localeCompare(right.name, 'en-IN')
         }),
-        [filteredRates, showArchived],
+        [filteredRates, showArchived, tourStep],
     )
 
     const resultMotionKey = `${categoryFilter}|${statusFilter}|${showArchived ? 'archived' : 'active'}|${searchQuery.trim()}|${visibleRates.length}`
@@ -1103,6 +1081,10 @@ export default function RatesClient({
     const handleSave = () => {
         if (!draft) return
         const target = draft
+        if (isSampleRecordId(target.id)) {
+            toast.info(tourCommonCopy[language].sampleBanner)
+            return
+        }
         setPendingAction({ id: target.id ?? 'new-rate', kind: 'save' })
         startTransition(async () => {
             try {
@@ -1359,6 +1341,10 @@ export default function RatesClient({
     }
 
     const openHistory = async (rate: CostRateRow) => {
+        if (isSampleRecordId(rate.id)) {
+            toast.info(tourCommonCopy[language].sampleBanner)
+            return
+        }
         setHistoryRate(rate)
         setHistoryRows([])
         setHistoryError(null)
@@ -1384,6 +1370,10 @@ export default function RatesClient({
     const handleArchive = () => {
         if (!archiveRate) return
         const target = archiveRate
+        if (isSampleRecordId(target.id)) {
+            toast.info(tourCommonCopy[language].sampleBanner)
+            return
+        }
         const restoring = target.is_active === false
         setArchiveError(null)
         setPendingAction({ id: target.id, kind: restoring ? 'restore' : 'archive' })
@@ -1504,12 +1494,14 @@ export default function RatesClient({
             {/* Rate Book Left Rail - pinned to top of left rail beside sidebar, matching the Cost Estimator left rail pattern */}
             <aside className="rates-left-rail-desktop space-y-3" aria-label={tx('Rate Book guides and tools')}>
                 <RateBookTutorial
-                    accountDismissed={tutorialDismissed}
                     enabled={!isPending}
                     orgId={orgId}
                     userId={userId}
-                    requestTrigger={tutorialTrigger}
-                    onActiveChange={setIsTutorialActive}
+                    userMetadata={userMetadata}
+                    step={tourStep}
+                    onStepChange={setTourStep}
+                    sampleRow={isSampleRecordId(visibleRates[0]?.id)}
+                    hasRealRates={activeYarnRates.some(rate => !isSampleRecordId(rate.id))}
                     onTourFinish={() => {
                         if (!demoYarnDeleted && rates.some(r => r.id === DEMO_YARN_RATE.id)) {
                             setShowDeleteNudge(true)
@@ -1535,21 +1527,13 @@ export default function RatesClient({
                     title={t('common.yarn_rate_book')}
                     actions={(
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                            <div className="lg:hidden">
-                                <RateBookTutorialLauncher
-                                    onClick={handleLaunchTutorial}
-                                    disabled={isPending}
-                                    userId={userId}
-                                    orgId={orgId}
-                                />
-                            </div>
                             <Button
                                 data-ratebook-field="addRateAction"
                                 onClick={() => { setSaveError(null); setDraft(defaultDraft(defaultReviewIntervalDays)) }}
                                 className="rail-inline-actions h-10 w-full sm:w-auto rounded-xl bg-loom px-4 font-medium text-white shadow-xs hover:bg-loom-elevated hover:text-white focus-visible:ring-saffron"
                             >
                                 <Plus className="h-4 w-4" aria-hidden="true" />
-                                <span>{tx('Add Yarn Rate')}</span>
+                                <span>{t('tourControls.rateBook.addRate')}</span>
                             </Button>
                         </div>
                     )}
@@ -1645,7 +1629,7 @@ export default function RatesClient({
 
                 <Toolbar data-ratebook-section={1} data-ratebook-section-card="true" className="flex flex-col gap-3 rounded-none border-0 border-b border-hairline p-4 shadow-none md:flex-row md:items-center md:justify-between">
                     <div className="flex flex-1 flex-wrap items-center gap-3">
-                        <div data-ratebook-field="yarnSearch" className="relative min-w-[min(100%,14rem)] flex-1 sm:max-w-xs md:max-w-sm">
+                        <div data-ratebook-field="yarnSearch" tabIndex={-1} className="relative min-w-[min(100%,14rem)] flex-1 sm:max-w-xs md:max-w-sm">
                             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" aria-hidden="true" />
                             <Label htmlFor="yarn-rates-search" className="sr-only">{tx('Search yarn rates')}</Label>
                             <Input
@@ -1720,7 +1704,7 @@ export default function RatesClient({
                             }`}
                         >
                             <CalendarClock className={`h-4 w-4 shrink-0 ${statusFilter === 'needs_review' ? 'text-warning' : 'text-subtle'}`} aria-hidden="true" />
-                            <span>Needs Review</span>
+                            <span>{tx('Needs Review')}</span>
                             <span
                                 className={`rounded-full px-1.5 py-0.5 text-[10px] font-black tracking-wide ${
                                     dueReviewRates.length > 0
@@ -1769,6 +1753,8 @@ export default function RatesClient({
                 <p role="status" aria-live="polite" aria-atomic="true" className="sr-only">
                     {visibleRates.length} {visibleRates.length === 1 ? 'yarn rate' : 'yarn rates'} found.
                 </p>
+
+                {tourStep !== null && isSampleRecordId(visibleRates[0]?.id) && <p data-i18n-skip="true" lang={language} className="mx-4 my-3 rounded-lg border border-hairline bg-surface-soft px-3 py-2 text-sm font-semibold text-ink">{tourCommonCopy[language].sampleBanner}</p>}
 
                 {visibleRates.length === 0 ? (
                     <EmptyState
@@ -1845,6 +1831,7 @@ export default function RatesClient({
                                             <tr
                                                 key={rate.id}
                                                 data-ratebook-field="yarnRow"
+                                                data-ratebook-row-id={rate.id}
                                                 className={`transition-colors duration-150 motion-reduce:transition-none ${archived ? 'bg-surface-soft opacity-80' : reviewState === 'overdue' ? 'bg-risk-soft/70 hover:bg-risk-soft' : reviewState === 'due_soon' ? 'bg-warning-soft/70 hover:bg-warning-soft' : reviewState === 'needs_review' ? 'bg-info-soft/60 hover:bg-info-soft' : 'hover:bg-surface-soft/70'}`}
                                             >
                                                 <td data-ratebook-field="yarnNameCell" className="px-3 py-3 align-top">
@@ -1888,7 +1875,6 @@ export default function RatesClient({
                                                                 <QuickRateEditPopover
                                                                     rate={rate}
                                                                     isOpen={quickEditRate?.id === rate.id}
-                                                                    isTutorialActive={isTutorialActive}
                                                                     onOpenChange={open => {
                                                                         if (open) {
                                                                             setQuickEditIsMobile(false)
@@ -1896,7 +1882,7 @@ export default function RatesClient({
                                                                             setQuickEditValue(rate.current_value)
                                                                             setQuickEditSource(rate.source ?? '')
                                                                             setQuickEditError(null)
-                                                                        } else if (!isTutorialActive) {
+                                                                        } else {
                                                                             setQuickEditRate(null)
                                                                             setQuickEditIsMobile(false)
                                                                         }
@@ -1990,6 +1976,7 @@ export default function RatesClient({
                                     <Card
                                         key={rate.id}
                                         data-ratebook-field="yarnRow"
+                                        data-ratebook-row-id={rate.id}
                                         className={`ui-surface overflow-hidden rounded-2xl border border-hairline border-l-4 bg-surface ${cardAccent}`}
                                     >
                                         <CardContent className="p-4">
@@ -2041,7 +2028,6 @@ export default function RatesClient({
                                                     <QuickRateEditPopover
                                                         rate={rate}
                                                         isOpen={quickEditRate?.id === rate.id && quickEditIsMobile}
-                                                        isTutorialActive={isTutorialActive}
                                                         onOpenChange={open => {
                                                             if (open) {
                                                                 setQuickEditIsMobile(true)
@@ -2049,7 +2035,7 @@ export default function RatesClient({
                                                                 setQuickEditValue(rate.current_value)
                                                                 setQuickEditSource(rate.source ?? '')
                                                                 setQuickEditError(null)
-                                                            } else if (!isTutorialActive) {
+                                                            } else {
                                                                 setQuickEditRate(null)
                                                                 setQuickEditIsMobile(false)
                                                             }
@@ -2139,7 +2125,6 @@ export default function RatesClient({
                 onConfirmAll={handleConfirmAll}
                 isConfirmingAll={pendingAction?.id === 'all-review'}
                 pendingActionId={pendingAction?.id}
-                hideOverlay={isTutorialActive}
             />
 
             <Dialog open={showConflicts && conflicts.length > 0} onOpenChange={setShowConflicts}>
@@ -2176,18 +2161,9 @@ export default function RatesClient({
                 </DialogContent>
             </Dialog>
 
-            <Sheet modal={!isTutorialActive} open={Boolean(draft)} onOpenChange={open => { if (!open && !isPending && !isTutorialActive) { setDraft(null); setSaveError(null) } }}>
+            <Sheet open={Boolean(draft)} onOpenChange={open => { if (!open && !isPending) { setDraft(null); setSaveError(null) } }}>
                     <SheetContent
                         data-ratebook-field="rateDrawerFields"
-                        hideOverlay={isTutorialActive}
-                        onOpenAutoFocus={(event) => { if (isTutorialActive) event.preventDefault() }}
-                        onCloseAutoFocus={(event) => { if (isTutorialActive) event.preventDefault() }}
-                        onPointerDownOutside={(e) => {
-                            if (isTutorialActive) e.preventDefault()
-                        }}
-                        onInteractOutside={(e) => {
-                            if (isTutorialActive) e.preventDefault()
-                        }}
                         className="w-full overflow-y-auto sm:max-w-lg"
                     >
                     <SheetHeader className="border-b border-hairline px-6 py-5"><SheetTitle className="text-xl font-black">{tx(draft?.id ? `Change ${draft.name}` : 'Add Yarn Rate')}</SheetTitle><SheetDescription>{tx('Set the current rate used by matching Saved Quality layers.')}</SheetDescription></SheetHeader>
@@ -2292,9 +2268,9 @@ export default function RatesClient({
             {/* Keep viewport-positioned review controls outside the animated route wrapper. */}
             <aside className="rates-review-rail-desktop space-y-4" aria-label={tx('Rate review and reference')}>
                 <div>
-                    <Button onClick={() => { setSaveError(null); setDraft(defaultDraft(defaultReviewIntervalDays)) }} className={cn(railPrimaryAction, 'w-full')}>
+                    <Button data-ratebook-field="addRateAction" onClick={() => { setSaveError(null); setDraft(defaultDraft(defaultReviewIntervalDays)) }} className={cn(railPrimaryAction, 'w-full')}>
                         <Plus className="h-4 w-4" aria-hidden="true" />
-                        <span>{tx('Add Yarn Rate')}</span>
+                        <span>{t('tourControls.rateBook.addRate')}</span>
                     </Button>
                 </div>
                 <div data-ratebook-section={6} data-ratebook-field="reviewRailWidget">
