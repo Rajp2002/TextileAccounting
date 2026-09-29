@@ -1150,10 +1150,12 @@
       --rail-right: var(--rail-outer);
     }
 
-    /* Routes without a guide keep the wider two-column composition. */
+    /* Routes without a guide keep the wider two-column composition, but their
+       right rail sits at the same viewport offset as every other route. The
+       workspace stays in the content column and ends one rail gap before it. */
     .production-daily-sheet-workspace,
     .billing-workspace-shell {
-      margin-right: var(--rail-span);
+      margin-right: max(0px, calc(var(--rail-right) + var(--rail-span) - var(--main-inset)));
     }
 
     .estimator-workspace-shell,
@@ -1168,11 +1170,6 @@
     .rates-workspace {
       width: min(100%, var(--workspace-w));
       margin-inline: auto;
-    }
-
-    .production-daily-sheet-rail,
-    .billing-right-rail {
-      right: var(--main-inset);
     }
 
     .estimator-left-rail,
