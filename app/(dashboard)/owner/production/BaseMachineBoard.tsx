@@ -21,6 +21,7 @@ import {
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { LiquidSegmented } from '@/components/ui/liquid-segmented'
 import { Card } from '@/components/ui/card'
 import {
     Dialog,
@@ -309,44 +310,17 @@ export default function BaseMachineBoard({
                     </p>
                 </div>
 
-                <div className="flex items-center gap-1.5 rounded-xl border border-hairline bg-surface p-1 shadow-xs">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setFilterStatus('all')}
-                        className={`h-7 px-3 text-xs font-semibold rounded-lg ${
-                            filterStatus === 'all'
-                                ? 'bg-loom text-white hover:bg-loom hover:text-white shadow-xs'
-                                : 'text-muted-foreground hover:text-ink'
-                        }`}
-                    >
-                        All ({activeMachines.length})
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setFilterStatus('running')}
-                        className={`h-7 px-3 text-xs font-semibold rounded-lg ${
-                            filterStatus === 'running'
-                                ? 'bg-loom text-white hover:bg-loom hover:text-white shadow-xs'
-                                : 'text-muted-foreground hover:text-ink'
-                        }`}
-                    >
-                        Running ({runningCount})
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setFilterStatus('available')}
-                        className={`h-7 px-3 text-xs font-semibold rounded-lg ${
-                            filterStatus === 'available'
-                                ? 'bg-loom text-white hover:bg-loom hover:text-white shadow-xs'
-                                : 'text-muted-foreground hover:text-ink'
-                        }`}
-                    >
-                        Available ({availableCount})
-                    </Button>
-                </div>
+                <LiquidSegmented
+                    size="sm"
+                    aria-label="Filter machines by status"
+                    value={filterStatus}
+                    onValueChange={setFilterStatus}
+                    options={[
+                        { value: 'all', label: `All (${activeMachines.length})` },
+                        { value: 'running', label: `Running (${runningCount})` },
+                        { value: 'available', label: `Available (${availableCount})` },
+                    ]}
+                />
             </div>
 
             {/* Search filter bar */}

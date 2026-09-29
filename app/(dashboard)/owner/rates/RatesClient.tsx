@@ -77,6 +77,7 @@ import { formatDateOnly } from '@/lib/format'
 import { formatSuratDateTime, formatToSurat, getSuratTodayString } from '@/lib/time'
 import { RouteMilestones } from '@/components/performance/route-milestones'
 import { EmptyState, PageHeader, StatusBadge, Toolbar } from '@/components/ui/page-header'
+import { LiquidSegmented } from '@/components/ui/liquid-segmented'
 import PlanAnalyticsBeacon from '@/components/billing/PlanAnalyticsBeacon'
 import { trackPlanEvent } from '@/lib/plan-analytics'
 
@@ -1681,33 +1682,26 @@ export default function RatesClient({
                             )}
                         </div>
 
-                        <div
+                        <LiquidSegmented
                             data-ratebook-field="directionFilter"
-                            role="group"
+                            fullWidth
+                            className="sm:w-80"
                             aria-label="Show yarn rates by direction"
-                            className="relative grid min-h-11 w-full grid-cols-3 overflow-hidden rounded-xl border border-hairline-strong/70 bg-surface-soft/75 p-1 sm:w-80"
-                        >
-                            <span
-                                aria-hidden="true"
-                                className={`pointer-events-none absolute inset-y-1 left-1 w-[calc(33.333%_-_0.25rem)] rounded-lg border border-saffron/35 bg-saffron-soft shadow-[0_2px_8px_rgba(169,71,19,0.15),0_1px_2px_rgba(30,37,40,0.05)] transition-transform duration-200 ease-out motion-reduce:transition-none ${categoryFilter === 'yarn_warp' ? 'translate-x-full' : categoryFilter === 'yarn_weft' ? 'translate-x-[200%]' : 'translate-x-0'}`}
-                            />
-                            {DIRECTION_OPTIONS.map(({ value, label }) => {
-                                const isSelected = categoryFilter === value
+                            value={categoryFilter}
+                            onValueChange={setCategoryFilter}
+                            options={DIRECTION_OPTIONS.map(({ value, label }) => {
                                 const count = value === 'all' ? allRatesCount : value === 'yarn_warp' ? warpRatesCount : weftRatesCount
-                                return (
-                                    <button
-                                        key={value}
-                                        type="button"
-                                        aria-pressed={isSelected}
-                                        onClick={() => setCategoryFilter(value)}
-                                        className={`relative z-10 flex min-h-10 items-center justify-center gap-1.5 rounded-lg px-2 text-xs font-semibold sm:text-sm leading-none outline-none transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-saffron focus-visible:ring-offset-2 focus-visible:ring-offset-surface-soft motion-reduce:transition-none ${isSelected ? 'font-bold text-saffron-deep' : 'text-subtle hover:text-ink'}`}
-                                    >
-                                        <span>{label}</span>
-                                        <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${isSelected ? 'bg-saffron/20 text-saffron-deep' : 'bg-surface-soft text-subtle'}`}>{count}</span>
-                                    </button>
-                                )
+                                return {
+                                    value,
+                                    label: (
+                                        <>
+                                            <span>{label}</span>
+                                            <span className="rounded-full bg-surface px-1.5 py-0.5 text-[10px] font-bold text-subtle group-aria-checked/option:bg-white/20 group-aria-checked/option:text-white">{count}</span>
+                                        </>
+                                    ),
+                                }
                             })}
-                        </div>
+                        />
 
                         <SwitchField
                             data-ratebook-field="needsReviewFilter"
