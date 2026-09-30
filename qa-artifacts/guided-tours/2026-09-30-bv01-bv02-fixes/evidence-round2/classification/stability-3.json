@@ -1,0 +1,103 @@
+{
+  "folder": "/Users/rajpatel/Projects/textile Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/scratch/tour-fix-review-results/round2-stability-3-2026-09-30T10-13-56-759Z",
+  "head": "9ae694bb4068963141dadfe1dfb0c4df3fafeb2f",
+  "workingTreeDiffSha256": "47f572991410db74f4e64b8b22811312b520d3f46c20b41bc64c0f55b07a2957",
+  "runnerSha256": "1638f82ee99d2e9cfa16e62d977534a0743a6463e072a63b226f6ed89d375987",
+  "totals": {
+    "PASS": 4
+  },
+  "runs": [
+    {
+      "id": "x05-base-en-768x1024",
+      "set": "extra",
+      "scenario": "estimator",
+      "language": "en",
+      "size": "768x1024",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 10,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 12,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: estimator_opened"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "estimator_opened"
+      ]
+    },
+    {
+      "id": "x05-base-gu-768x1024",
+      "set": "extra",
+      "scenario": "estimator",
+      "language": "gu",
+      "size": "768x1024",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 10,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 12,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: estimator_opened"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "estimator_opened"
+      ]
+    },
+    {
+      "id": "r2-x05-free-en-768x1024",
+      "set": "extra",
+      "scenario": "free-estimator",
+      "language": "en",
+      "size": "768x1024",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 10,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 12,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: free_status"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "free_status"
+      ]
+    },
+    {
+      "id": "r2-x05-free-gu-768x1024",
+      "set": "extra",
+      "scenario": "free-estimator",
+      "language": "gu",
+      "size": "768x1024",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 10,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 12,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: free_status"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "free_status"
+      ]
+    }
+  ]
+}

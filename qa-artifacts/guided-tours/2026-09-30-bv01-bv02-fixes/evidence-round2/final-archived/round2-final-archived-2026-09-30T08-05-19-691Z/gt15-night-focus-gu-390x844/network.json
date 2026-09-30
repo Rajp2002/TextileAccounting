@@ -1,0 +1,1406 @@
+[
+  {
+    "type": "request",
+    "url": "http://localhost:5199/?s=assignments&populated=1&shift=night&worker=11111111-1111-4111-8111-111111111111&machine=22222222-2222-4222-8222-222222222222&lang=gu&fresh=1",
+    "method": "GET",
+    "at": 1790756997311,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/?s=assignments&populated=1&shift=night&worker=11111111-1111-4111-8111-111111111111&machine=22222222-2222-4222-8222-222222222222&lang=gu&fresh=1",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@vite/client",
+    "method": "GET",
+    "at": 1790756997337,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/main.tsx?t=1790756414754",
+    "method": "GET",
+    "at": 1790756997339,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/main.tsx?t=1790756414754",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/app/globals.css?t=1790756414754",
+    "method": "GET",
+    "at": 1790756997355,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@vite/client",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/app/mobile.css",
+    "method": "GET",
+    "at": 1790756997357,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/react.js?v=e88624b5",
+    "method": "GET",
+    "at": 1790756997359,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/react-dom_client.js?v=e88624b5",
+    "method": "GET",
+    "at": 1790756997360,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/components/tours/GuidedTour.tsx",
+    "method": "GET",
+    "at": 1790756997360,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/i18n/tour-common.ts",
+    "method": "GET",
+    "at": 1790756997361,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/i18n/context.tsx",
+    "method": "GET",
+    "at": 1790756997362,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=e88624b5",
+    "method": "GET",
+    "at": 1790756997362,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/vite/dist/client/env.mjs",
+    "method": "GET",
+    "at": 1790756997363,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/app/mobile.css",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/app/globals.css?t=1790756414754",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/react.js?v=e88624b5",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/chunk-B-1-B7_t.js?v=e88624b5",
+    "method": "GET",
+    "at": 1790756997372,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/i18n/context.tsx",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/components/tours/GuidedTour.tsx",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/i18n/tour-common.ts",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/i18n/locales/en.ts",
+    "method": "GET",
+    "at": 1790756997386,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/i18n/base-plan-phrases.ts",
+    "method": "GET",
+    "at": 1790756997389,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=e88624b5",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/vite/dist/client/env.mjs",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/chunk-B-1-B7_t.js?v=e88624b5",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/i18n/runtime.ts",
+    "method": "GET",
+    "at": 1790756997390,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/react-dom.js?v=e88624b5",
+    "method": "GET",
+    "at": 1790756997391,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/hooks/use-guided-tour.ts",
+    "method": "GET",
+    "at": 1790756997394,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/tours/active-tour.ts",
+    "method": "GET",
+    "at": 1790756997395,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/tours/tour-preferences.ts",
+    "method": "GET",
+    "at": 1790756997395,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/tours/tour-scroll.ts",
+    "method": "GET",
+    "at": 1790756997396,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/tours/target-readiness.ts",
+    "method": "GET",
+    "at": 1790756997396,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/tutorial-target.ts",
+    "method": "GET",
+    "at": 1790756997396,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/components/tours/TourPanel.tsx",
+    "method": "GET",
+    "at": 1790756997397,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/components/tours/TourSpotlight.tsx",
+    "method": "GET",
+    "at": 1790756997398,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/i18n/locales/en.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/react-dom_client.js?v=e88624b5",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/i18n/base-plan-phrases.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/i18n/runtime.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/react-dom.js?v=e88624b5",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/tours/active-tour.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/hooks/use-guided-tour.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/tours/tour-preferences.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/tours/tour-scroll.ts",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/i18n/base-continuity-phrases.ts",
+    "method": "GET",
+    "at": 1790756997419,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/tours/target-readiness.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/tutorial-target.ts",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/hooks/use-mobile-tour.ts",
+    "method": "GET",
+    "at": 1790756997421,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/tours/placement.ts",
+    "method": "GET",
+    "at": 1790756997422,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/tutorial-viewport-lock.ts",
+    "method": "GET",
+    "at": 1790756997422,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/tours/tour-registry.ts",
+    "method": "GET",
+    "at": 1790756997423,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/components/tours/TourPanel.tsx",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/components/tours/TourSpotlight.tsx",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/app/actions/tour-preferences.ts",
+    "method": "GET",
+    "at": 1790756997425,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/lucide-react.js?v=e88624b5",
+    "method": "GET",
+    "at": 1790756997425,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/components/ui/button.tsx",
+    "method": "GET",
+    "at": 1790756997426,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/tours/tour-text.ts",
+    "method": "GET",
+    "at": 1790756997427,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/i18n/base-continuity-phrases.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/hooks/use-mobile-tour.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/tours/placement.ts",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/mobile-tour-positioning.ts",
+    "method": "GET",
+    "at": 1790756997436,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/tutorial-viewport-lock.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/tours/tour-registry.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/app/actions/tour-preferences.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/components/ui/button.tsx",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/tours/tour-text.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/mobile-tour-positioning.ts",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/class-variance-authority.js?v=e88624b5",
+    "method": "GET",
+    "at": 1790756997449,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/@radix-ui_react-slot.js?v=e88624b5",
+    "method": "GET",
+    "at": 1790756997449,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/utils.ts",
+    "method": "GET",
+    "at": 1790756997450,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/class-variance-authority.js?v=e88624b5",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/@radix-ui_react-slot.js?v=e88624b5",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/clsx.js?v=e88624b5",
+    "method": "GET",
+    "at": 1790756997454,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/utils.ts",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/dist-CcTBG-V1.js?v=e88624b5",
+    "method": "GET",
+    "at": 1790756997455,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/tailwind-merge.js?v=e88624b5",
+    "method": "GET",
+    "at": 1790756997456,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/clsx.js?v=e88624b5",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/dist-CcTBG-V1.js?v=e88624b5",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/jsx-runtime-D51v3ApR.js?v=e88624b5",
+    "method": "GET",
+    "at": 1790756997460,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/tailwind-merge.js?v=e88624b5",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/jsx-runtime-D51v3ApR.js?v=e88624b5",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/lucide-react.js?v=e88624b5",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/app/(dashboard)/owner/production/BaseProductionClient.tsx",
+    "method": "GET",
+    "at": 1790756997801,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/app/(dashboard)/owner/production/BaseProductionClient.tsx",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/hooks/use-localized-page-title.ts",
+    "method": "GET",
+    "at": 1790756997823,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/stubs/next-link.tsx",
+    "method": "GET",
+    "at": 1790756997824,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/stubs/next-navigation.ts",
+    "method": "GET",
+    "at": 1790756997825,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/sonner.js?v=e88624b5",
+    "method": "GET",
+    "at": 1790756997825,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/components/ui/badge.tsx",
+    "method": "GET",
+    "at": 1790756997826,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/components/ui/rail.ts",
+    "method": "GET",
+    "at": 1790756997827,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/components/ui/card.tsx",
+    "method": "GET",
+    "at": 1790756997827,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/components/ui/dialog.tsx",
+    "method": "GET",
+    "at": 1790756997832,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/components/ui/input.tsx",
+    "method": "GET",
+    "at": 1790756997832,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/components/ui/label.tsx",
+    "method": "GET",
+    "at": 1790756997833,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/components/ui/select.tsx",
+    "method": "GET",
+    "at": 1790756997833,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/components/ui/textarea.tsx",
+    "method": "GET",
+    "at": 1790756997833,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/components/ConfirmActionDialog.tsx",
+    "method": "GET",
+    "at": 1790756997834,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/finance.ts",
+    "method": "GET",
+    "at": 1790756997834,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/base-payroll-readiness.ts",
+    "method": "GET",
+    "at": 1790756997834,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/base-payroll-review.ts",
+    "method": "GET",
+    "at": 1790756997834,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/base-production-navigation.ts",
+    "method": "GET",
+    "at": 1790756997835,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/plan-analytics.ts",
+    "method": "GET",
+    "at": 1790756997835,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/base-production-core.ts",
+    "method": "GET",
+    "at": 1790756997836,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/payroll-cycle-engine.ts",
+    "method": "GET",
+    "at": 1790756997836,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/app/(dashboard)/owner/production/actions.ts",
+    "method": "GET",
+    "at": 1790756997836,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/app/(dashboard)/owner/production/BaseActiveQualities.tsx",
+    "method": "GET",
+    "at": 1790756997837,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/app/(dashboard)/owner/production/BaseMachineBoard.tsx",
+    "method": "GET",
+    "at": 1790756997837,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/app/(dashboard)/owner/production/BaseAssignmentWorkspace.tsx",
+    "method": "GET",
+    "at": 1790756997837,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/app/(dashboard)/owner/production/BaseDailyProductionSheet.tsx",
+    "method": "GET",
+    "at": 1790756997838,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/app/(dashboard)/owner/production/BasePayrollReadinessPanel.tsx",
+    "method": "GET",
+    "at": 1790756997838,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/app/(dashboard)/owner/production/BasePayrollRecords.tsx",
+    "method": "GET",
+    "at": 1790756997838,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/app/(dashboard)/owner/production/BasePayrollSettlementWorkspace.tsx",
+    "method": "GET",
+    "at": 1790756997838,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/hooks/use-localized-page-title.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/stubs/next-link.tsx",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/stubs/next-navigation.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/components/ui/badge.tsx",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/sonner.js?v=e88624b5",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/components/ui/rail.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/components/ui/card.tsx",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/components/ui/dialog.tsx",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/components/ui/input.tsx",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/components/ui/label.tsx",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/components/ui/select.tsx",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/components/ui/textarea.tsx",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/components/ConfirmActionDialog.tsx",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/@radix-ui_react-dialog.js?v=e88624b5",
+    "method": "GET",
+    "at": 1790756997855,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/finance.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/base-payroll-readiness.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/base-payroll-review.ts",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/@radix-ui_react-label.js?v=e88624b5",
+    "method": "GET",
+    "at": 1790756997858,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/@radix-ui_react-select.js?v=e88624b5",
+    "method": "GET",
+    "at": 1790756997859,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/base-production-navigation.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/plan-analytics.ts",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/decimal__js.js?v=e88624b5",
+    "method": "GET",
+    "at": 1790756997860,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/base-production-core.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/payroll-cycle-engine.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/app/(dashboard)/owner/production/actions.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/app/(dashboard)/owner/production/BaseActiveQualities.tsx",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/base-salary.ts",
+    "method": "GET",
+    "at": 1790756997866,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/app/(dashboard)/owner/production/BaseMachineBoard.tsx",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/components/ui/dropdown-menu.tsx",
+    "method": "GET",
+    "at": 1790756997869,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/app/(dashboard)/owner/stock/yarn-actions.ts",
+    "method": "GET",
+    "at": 1790756997870,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/components/workers/WorkerPayBasis.tsx",
+    "method": "GET",
+    "at": 1790756997872,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/app/(dashboard)/owner/production/BaseAssignmentWorkspace.tsx",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/components/ui/sheet.tsx",
+    "method": "GET",
+    "at": 1790756997873,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/app/(dashboard)/owner/production/BasePayrollReadinessPanel.tsx",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/stubs/next-dynamic.tsx",
+    "method": "GET",
+    "at": 1790756997876,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/components/tours/TourInvitation.tsx",
+    "method": "GET",
+    "at": 1790756997876,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/tours/sample-ids.ts",
+    "method": "GET",
+    "at": 1790756997876,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/app/(dashboard)/owner/production/BaseDailyProductionSheet.tsx",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/i18n/configuration-tutorial.ts",
+    "method": "GET",
+    "at": 1790756997877,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/app/(dashboard)/owner/production/BasePayrollRecords.tsx",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/configuration-tour.ts",
+    "method": "GET",
+    "at": 1790756997878,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/app/(dashboard)/owner/production/worker-colors.ts",
+    "method": "GET",
+    "at": 1790756997879,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/components/production/DailySheetGuidedTour.tsx",
+    "method": "GET",
+    "at": 1790756997881,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/base-production-draft.ts",
+    "method": "GET",
+    "at": 1790756997883,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/base-production-audit.ts",
+    "method": "GET",
+    "at": 1790756997883,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/base-machine-register.ts",
+    "method": "GET",
+    "at": 1790756997884,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/components/ui/tabs.tsx",
+    "method": "GET",
+    "at": 1790756997884,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/base-payroll-history.ts",
+    "method": "GET",
+    "at": 1790756997885,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/app/(dashboard)/owner/production/BasePayrollSettlementWorkspace.tsx",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/@radix-ui_react-select.js?v=e88624b5",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/@radix-ui_react-dialog.js?v=e88624b5",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/decimal__js.js?v=e88624b5",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/@radix-ui_react-label.js?v=e88624b5",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/base-salary.ts",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/dist-C0v08Roy.js?v=e88624b5",
+    "method": "GET",
+    "at": 1790756997888,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/dist-D78_aM_-.js?v=e88624b5",
+    "method": "GET",
+    "at": 1790756997889,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/dist-BkBhazdl.js?v=e88624b5",
+    "method": "GET",
+    "at": 1790756997889,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/es2015-CA1l6cXL.js?v=e88624b5",
+    "method": "GET",
+    "at": 1790756997890,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/dist-DxpYCQfv.js?v=e88624b5",
+    "method": "GET",
+    "at": 1790756997890,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/dist-CbhbyQzU.js?v=e88624b5",
+    "method": "GET",
+    "at": 1790756997892,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/dist-DJ5kyXu6.js?v=e88624b5",
+    "method": "GET",
+    "at": 1790756997892,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/components/ui/dropdown-menu.tsx",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/dist-BSZx42Q4.js?v=e88624b5",
+    "method": "GET",
+    "at": 1790756997893,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/app/(dashboard)/owner/stock/yarn-actions.ts",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/estimator.ts",
+    "method": "GET",
+    "at": 1790756997894,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/components/workers/WorkerPayBasis.tsx",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/@radix-ui_react-dropdown-menu.js?v=e88624b5",
+    "method": "GET",
+    "at": 1790756997895,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/components/ui/sheet.tsx",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/stubs/next-dynamic.tsx",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/i18n/workers-tutorial.ts",
+    "method": "GET",
+    "at": 1790756997898,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/components/tours/TourInvitation.tsx",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/tours/sample-ids.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/i18n/configuration-tutorial.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/configuration-tour.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/app/(dashboard)/owner/production/worker-colors.ts",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/i18n/tour-invitations.ts",
+    "method": "GET",
+    "at": 1790756997903,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/hooks/use-tour-invitation.ts",
+    "method": "GET",
+    "at": 1790756997904,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/components/production/DailySheetGuidedTour.tsx",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/base-production-draft.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/base-production-audit.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/base-machine-register.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/components/ui/tabs.tsx",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/base-payroll-history.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/dist-C0v08Roy.js?v=e88624b5",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/components/tours/ReplicaGuidedTour.tsx",
+    "method": "GET",
+    "at": 1790756997910,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/daily-sheet-tour.ts",
+    "method": "GET",
+    "at": 1790756997911,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/zod.js?v=e88624b5",
+    "method": "GET",
+    "at": 1790756997911,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/@radix-ui_react-tabs.js?v=e88624b5",
+    "method": "GET",
+    "at": 1790756997914,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/dist-D78_aM_-.js?v=e88624b5",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/dist-BkBhazdl.js?v=e88624b5",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/dist-DxpYCQfv.js?v=e88624b5",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/es2015-CA1l6cXL.js?v=e88624b5",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/dist-DJ5kyXu6.js?v=e88624b5",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/dist-BSZx42Q4.js?v=e88624b5",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/dist-CbhbyQzU.js?v=e88624b5",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/tslib.es6-B1NP4NDs.js?v=e88624b5",
+    "method": "GET",
+    "at": 1790756997918,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/dist-UhnsEovB.js?v=e88624b5",
+    "method": "GET",
+    "at": 1790756997920,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/i18n/workers-tutorial.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/estimator.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/@radix-ui_react-dropdown-menu.js?v=e88624b5",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/i18n/tour-invitations.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/hooks/use-tour-invitation.ts",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/nanoid.js?v=e88624b5",
+    "method": "GET",
+    "at": 1790756997925,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/components/tours/ReplicaGuidedTour.tsx",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/dist-C6QlXEnj.js?v=e88624b5",
+    "method": "GET",
+    "at": 1790756997927,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/daily-sheet-tour.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/@radix-ui_react-tabs.js?v=e88624b5",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/tslib.es6-B1NP4NDs.js?v=e88624b5",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/dist-UhnsEovB.js?v=e88624b5",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/nanoid.js?v=e88624b5",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/dist-C6QlXEnj.js?v=e88624b5",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/node_modules/.vite/deps/zod.js?v=e88624b5",
+    "status": 200
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/api/analytics/plan-events",
+    "method": "POST",
+    "at": 1790756998139,
+    "body": "{\"eventName\":\"production_viewed\",\"properties\":{\"surface\":\"base_production_core\"}}"
+  },
+  {
+    "type": "blocked-api",
+    "url": "http://localhost:5199/api/analytics/plan-events",
+    "method": "POST"
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/i18n/locales/gu.ts",
+    "method": "GET",
+    "at": 1790756998141,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/i18n/legacy.ts",
+    "method": "GET",
+    "at": 1790756998141,
+    "body": null
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/i18n/legacy-generated.ts",
+    "method": "GET",
+    "at": 1790756998142,
+    "body": null
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/i18n/locales/gu.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/i18n/legacy.ts",
+    "status": 200
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:5199/@fs/Users/rajpatel/Projects/textile%20Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/lib/i18n/legacy-generated.ts",
+    "status": 200
+  }
+]

@@ -1,0 +1,428 @@
+{
+  "folder": "scratch/tour-fix-review-results/gt17-reduced-2026-09-30T13-09-21-368Z",
+  "head": "9ae694bb4068963141dadfe1dfb0c4df3fafeb2f",
+  "workingTreeDiffSha256": "b841786088dae7bc06748b9649997e723562df40ccf94258890882ef0f043589",
+  "runnerSha256": "1638f82ee99d2e9cfa16e62d977534a0743a6463e072a63b226f6ed89d375987",
+  "totals": {
+    "PASS": 17,
+    "BASELINE_ANALYTICS_ONLY": 1
+  },
+  "runs": [
+    {
+      "id": "foundation-reduced",
+      "set": "g1",
+      "scenario": "foundation",
+      "language": "en",
+      "size": "1024x768",
+      "env": {
+        "REDUCED_MOTION": "1"
+      },
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 6,
+      "statuses": "ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 8,
+      "problems": [],
+      "notes": [],
+      "runnerIssues": [],
+      "apiRequests": 0,
+      "baselineRequests": []
+    },
+    {
+      "id": "g1-0-reduced",
+      "set": "g1",
+      "scenario": "quotes",
+      "language": "en",
+      "size": "1024x768",
+      "env": {
+        "REDUCED_MOTION": "1"
+      },
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 7,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 9,
+      "problems": [],
+      "notes": [],
+      "runnerIssues": [],
+      "apiRequests": 0,
+      "baselineRequests": []
+    },
+    {
+      "id": "g1-2-reduced",
+      "set": "g1",
+      "scenario": "free-costings",
+      "language": "en",
+      "size": "1024x768",
+      "env": {
+        "REDUCED_MOTION": "1"
+      },
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 4,
+      "statuses": "ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 6,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: free_costings_list_stub"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "free_costings_list_stub"
+      ]
+    },
+    {
+      "id": "g1-3-reduced",
+      "set": "g1",
+      "scenario": "quotes-compare",
+      "language": "en",
+      "size": "1024x768",
+      "env": {
+        "REDUCED_MOTION": "1"
+      },
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 4,
+      "statuses": "ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 6,
+      "problems": [],
+      "notes": [],
+      "runnerIssues": [],
+      "apiRequests": 0,
+      "baselineRequests": []
+    },
+    {
+      "id": "gt05-0-reduced",
+      "set": "gt05",
+      "scenario": "estimator",
+      "language": "en",
+      "size": "1024x768",
+      "env": {
+        "REDUCED_MOTION": "1"
+      },
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 10,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 12,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: estimator_opened"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "estimator_opened"
+      ]
+    },
+    {
+      "id": "gt05-2-reduced",
+      "set": "gt05",
+      "scenario": "free-estimator",
+      "language": "en",
+      "size": "1024x768",
+      "env": {
+        "REDUCED_MOTION": "1"
+      },
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 10,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 12,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: free_status"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "free_status"
+      ]
+    },
+    {
+      "id": "gt06-0-reduced",
+      "set": "gt06",
+      "scenario": "rates",
+      "language": "en",
+      "size": "1024x768",
+      "env": {
+        "REDUCED_MOTION": "1"
+      },
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 6,
+      "statuses": "ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 8,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: rate_book_viewed"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "rate_book_viewed"
+      ]
+    },
+    {
+      "id": "gt07-0-reduced-en-1024x768",
+      "set": "gt07",
+      "scenario": "dispatch",
+      "language": "en",
+      "size": "1024x768",
+      "env": {
+        "REDUCED_MOTION": "1"
+      },
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 10,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 12,
+      "problems": [],
+      "notes": [],
+      "runnerIssues": [],
+      "apiRequests": 0,
+      "baselineRequests": []
+    },
+    {
+      "id": "gt08-0-reduced-en-1024x768",
+      "set": "gt08",
+      "scenario": "fabric-stock",
+      "language": "en",
+      "size": "1024x768",
+      "env": {
+        "REDUCED_MOTION": "1"
+      },
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 6,
+      "statuses": "ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 8,
+      "problems": [],
+      "notes": [],
+      "runnerIssues": [],
+      "apiRequests": 0,
+      "baselineRequests": []
+    },
+    {
+      "id": "gt09-0-reduced-en-1024x768",
+      "set": "gt09",
+      "scenario": "yarn-stock",
+      "language": "en",
+      "size": "1024x768",
+      "env": {
+        "REDUCED_MOTION": "1"
+      },
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 7,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 9,
+      "problems": [],
+      "notes": [],
+      "runnerIssues": [],
+      "apiRequests": 0,
+      "baselineRequests": []
+    },
+    {
+      "id": "gt10-0-reduced-en-1024x768",
+      "set": "gt10",
+      "scenario": "payroll",
+      "language": "en",
+      "size": "1024x768",
+      "env": {
+        "REDUCED_MOTION": "1"
+      },
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 8,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 10,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: production_viewed"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "production_viewed"
+      ]
+    },
+    {
+      "id": "gt10-1-reduced-en-1024x768",
+      "set": "gt10",
+      "scenario": "payroll-extra",
+      "language": "en",
+      "size": "1024x768",
+      "env": {
+        "REDUCED_MOTION": "1"
+      },
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 6,
+      "statuses": "ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 8,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: production_viewed"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "production_viewed"
+      ]
+    },
+    {
+      "id": "gt11-0-reduced-en-1024x768",
+      "set": "gt11",
+      "scenario": "production",
+      "language": "en",
+      "size": "1024x768",
+      "env": {
+        "REDUCED_MOTION": "1"
+      },
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 7,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 9,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: production_viewed"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "production_viewed"
+      ]
+    },
+    {
+      "id": "gt12-0-reduced-en-1024x768",
+      "set": "gt12",
+      "scenario": "daily-sheet",
+      "language": "en",
+      "size": "1024x768",
+      "env": {
+        "REDUCED_MOTION": "1"
+      },
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 9,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 11,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: production_viewed"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "production_viewed"
+      ]
+    },
+    {
+      "id": "gt13-0-reduced-en-1024x768",
+      "set": "gt13",
+      "scenario": "machines",
+      "language": "en",
+      "size": "1024x768",
+      "env": {
+        "REDUCED_MOTION": "1"
+      },
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 6,
+      "statuses": "ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 8,
+      "problems": [],
+      "notes": [],
+      "runnerIssues": [],
+      "apiRequests": 0,
+      "baselineRequests": []
+    },
+    {
+      "id": "gt14-0-reduced-en-1024x768",
+      "set": "gt14",
+      "scenario": "workers",
+      "language": "en",
+      "size": "1024x768",
+      "env": {
+        "REDUCED_MOTION": "1"
+      },
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 6,
+      "statuses": "ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 8,
+      "problems": [],
+      "notes": [],
+      "runnerIssues": [],
+      "apiRequests": 0,
+      "baselineRequests": []
+    },
+    {
+      "id": "gt14-1-reduced-en-1024x768",
+      "set": "gt14",
+      "scenario": "workers-salary",
+      "language": "en",
+      "size": "1024x768",
+      "env": {
+        "REDUCED_MOTION": "1"
+      },
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 6,
+      "statuses": "ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 8,
+      "problems": [],
+      "notes": [],
+      "runnerIssues": [],
+      "apiRequests": 0,
+      "baselineRequests": []
+    },
+    {
+      "id": "gt15-0-reduced-en-1024x768",
+      "set": "gt15",
+      "scenario": "assignments",
+      "language": "en",
+      "size": "1024x768",
+      "env": {
+        "REDUCED_MOTION": "1"
+      },
+      "exitCode": 1,
+      "class": "BASELINE_ANALYTICS_ONLY",
+      "steps": 7,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 9,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: production_viewed"
+      ],
+      "runnerIssues": [
+        "navigation/API request"
+      ],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "production_viewed"
+      ]
+    }
+  ]
+}

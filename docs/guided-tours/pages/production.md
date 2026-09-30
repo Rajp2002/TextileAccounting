@@ -1,6 +1,6 @@
 # P04 Production (Overview) — tour specification
 
-Status: specified, not implemented. Implementation: **GT-11**. Gujarati/Hindi: native review pending.
+Status: implemented and PASSED (2026-09-30; human verification deferred by the owner). Implementation: **GT-11**. Gujarati/Hindi: native review pending, not done.
 Shared rules: [`GUIDED_TOURS_REFINEMENT_PLAN.md`](../../GUIDED_TOURS_REFINEMENT_PLAN.md) (D-10). Evidence: [`audit/production-assignments-machines-workers.md`](../audit/production-assignments-machines-workers.md) §1. The Daily Sheet has its own tour: [daily-sheet.md](daily-sheet.md).
 
 ## A. Identity and evidence

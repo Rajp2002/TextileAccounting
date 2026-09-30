@@ -1,0 +1,96 @@
+{
+  "folder": "/Users/rajpatel/Projects/textile Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/scratch/tour-fix-review-results/BV-01-2026-09-29T23-35-16-455Z",
+  "runnerSha256": "1638f82ee99d2e9cfa16e62d977534a0743a6463e072a63b226f6ed89d375987",
+  "totals": {
+    "FAIL": 3
+  },
+  "runs": [
+    {
+      "id": "gt05-0-gu-390x844",
+      "set": "BV-01",
+      "scenario": "estimator",
+      "language": "gu",
+      "size": "390x844",
+      "env": {},
+      "exitCode": 1,
+      "class": "FAIL",
+      "steps": 10,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready,ready,unavailable,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 12,
+      "problems": [
+        "est-save: unavailable",
+        "est-save: outline not fully on screen"
+      ],
+      "notes": [
+        "baseline mount request blocked: estimator_opened"
+      ],
+      "runnerIssues": [
+        "est-save: unavailable",
+        "est-save: outline not fully on screen"
+      ],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "estimator_opened"
+      ]
+    },
+    {
+      "id": "gt05-1-gu-390x844",
+      "set": "BV-01",
+      "scenario": "estimator?tier=lite",
+      "language": "gu",
+      "size": "390x844",
+      "env": {},
+      "exitCode": 1,
+      "class": "FAIL",
+      "steps": 10,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready,ready,unavailable,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 12,
+      "problems": [
+        "est-save: unavailable",
+        "est-save: outline not fully on screen"
+      ],
+      "notes": [
+        "baseline mount request blocked: estimator_opened"
+      ],
+      "runnerIssues": [
+        "est-save: unavailable",
+        "est-save: outline not fully on screen"
+      ],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "estimator_opened"
+      ]
+    },
+    {
+      "id": "gt05-2-gu-390x844",
+      "set": "BV-01",
+      "scenario": "free-estimator",
+      "language": "gu",
+      "size": "390x844",
+      "env": {},
+      "exitCode": 1,
+      "class": "FAIL",
+      "steps": 10,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready,ready,unavailable,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 12,
+      "problems": [
+        "est-save: unavailable",
+        "est-save: outline not fully on screen"
+      ],
+      "notes": [
+        "baseline mount request blocked: free_status"
+      ],
+      "runnerIssues": [
+        "est-save: unavailable",
+        "est-save: outline not fully on screen"
+      ],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "free_status"
+      ]
+    }
+  ]
+}

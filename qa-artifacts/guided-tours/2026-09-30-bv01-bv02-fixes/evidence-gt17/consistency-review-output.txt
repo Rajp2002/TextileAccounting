@@ -1,0 +1,27 @@
+Cost Estimator       entries= 29  longest title 39/48  body 149/190  detail 124/260
+Saved Costings       entries= 39  longest title 38/48  body 182/190  detail 149/260
+Yarn Rate Book       entries= 17  longest title 44/48  body 146/190  detail 127/260
+Dispatches           entries= 22  longest title 39/48  body 140/190  detail 160/260
+Fabric Stock         entries= 14  longest title 38/48  body 146/190  detail 157/260
+Yarn Stock           entries= 17  longest title 39/48  body 129/190  detail 261/260
+Payroll              entries= 37  longest title 34/48  body 148/190  detail 96/260
+Production           entries= 17  longest title 33/48  body 149/190  detail 141/260
+Daily Sheet          entries= 28  longest title 44/48  body 127/190  detail 116/260
+Machines             entries= 13  longest title 31/48  body 113/190  detail 97/260
+Workers              entries= 20  longest title 33/48  body 132/190  detail 0/260
+Machine Assignments  entries= 17  longest title 31/48  body 141/190  detail 138/260
+RECORDED EXCEPTIONS: Yarn Stock correct.detail (detail is 261, limit 260)
+Cost Estimator       longest gu/hi ratio 1.15x  sentence-count differences 0
+Saved Costings       longest gu/hi ratio 1.37x  sentence-count differences 0
+Yarn Rate Book       longest gu/hi ratio 1.71x  sentence-count differences 0
+Dispatches           longest gu/hi ratio 1.17x  sentence-count differences 0
+Fabric Stock         longest gu/hi ratio 1.25x  sentence-count differences 0
+Yarn Stock           longest gu/hi ratio 1.70x  sentence-count differences 0
+Payroll              longest gu/hi ratio 1.42x  sentence-count differences 4
+Production           longest gu/hi ratio 1.17x  sentence-count differences 0
+Daily Sheet          longest gu/hi ratio 1.29x  sentence-count differences 0
+Machines             longest gu/hi ratio 1.19x  sentence-count differences 0
+Workers              longest gu/hi ratio 1.54x  sentence-count differences 0
+Machine Assignments  longest gu/hi ratio 1.18x  sentence-count differences 0
+RECORDED EXCEPTIONS: Yarn Rate Book handoff.empty.title hi (1.71x English (21 -> 36)); Yarn Stock balance.title hi (1.70x English (20 -> 34)); Payroll calculation.salary.body gu (sentence count 2 vs English 1); Payroll calculation.salary.body hi (sentence count 2 vs English 1); Payroll calculation.recovery.body gu (sentence count 2 vs English 1); Payroll calculation.recovery.body hi (sentence count 2 vs English 1)
+      Tests  7 passed (7)

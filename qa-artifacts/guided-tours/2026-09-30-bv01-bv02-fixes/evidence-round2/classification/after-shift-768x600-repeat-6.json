@@ -1,0 +1,34 @@
+{
+  "folder": "/Users/rajpatel/Projects/textile Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/scratch/tour-fix-review-results/round2b-768x600-6-2026-09-30T10-55-25-524Z",
+  "head": "9ae694bb4068963141dadfe1dfb0c4df3fafeb2f",
+  "workingTreeDiffSha256": "14100b6ccd4c821b12c3c8cd4e38a2ef49150d3c2472bca895a9a3bc95ac8400",
+  "runnerSha256": "1638f82ee99d2e9cfa16e62d977534a0743a6463e072a63b226f6ed89d375987",
+  "totals": {
+    "PASS": 1
+  },
+  "runs": [
+    {
+      "id": "r2-x05-base-en-768x600",
+      "set": "extra",
+      "scenario": "estimator",
+      "language": "en",
+      "size": "768x600",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 10,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 12,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: estimator_opened"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "estimator_opened"
+      ]
+    }
+  ]
+}

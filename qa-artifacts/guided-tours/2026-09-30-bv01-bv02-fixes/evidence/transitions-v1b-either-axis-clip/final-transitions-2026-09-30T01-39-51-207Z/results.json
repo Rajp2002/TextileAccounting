@@ -1,0 +1,227 @@
+{
+  "label": "final-transitions",
+  "cases": [
+    {
+      "id": "tr05-base-gu-390x844",
+      "kind": "estimator",
+      "language": "gu",
+      "size": "390x844",
+      "env": {},
+      "exitCode": 0,
+      "signal": null,
+      "frames": 84,
+      "issues": [],
+      "output": "/Users/rajpatel/Projects/textile Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/scratch/tour-fix-review-results/final-transitions-2026-09-30T01-39-51-207Z/tr05-base-gu-390x844"
+    },
+    {
+      "id": "tr05-base-en-390x844",
+      "kind": "estimator",
+      "language": "en",
+      "size": "390x844",
+      "env": {},
+      "exitCode": 0,
+      "signal": null,
+      "frames": 84,
+      "issues": [],
+      "output": "/Users/rajpatel/Projects/textile Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/scratch/tour-fix-review-results/final-transitions-2026-09-30T01-39-51-207Z/tr05-base-en-390x844"
+    },
+    {
+      "id": "tr05-lite-gu-390x844",
+      "kind": "estimator",
+      "language": "gu",
+      "size": "390x844",
+      "env": {},
+      "exitCode": 0,
+      "signal": null,
+      "frames": 84,
+      "issues": [],
+      "output": "/Users/rajpatel/Projects/textile Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/scratch/tour-fix-review-results/final-transitions-2026-09-30T01-39-51-207Z/tr05-lite-gu-390x844"
+    },
+    {
+      "id": "tr05-lite-en-390x844",
+      "kind": "estimator",
+      "language": "en",
+      "size": "390x844",
+      "env": {},
+      "exitCode": 0,
+      "signal": null,
+      "frames": 84,
+      "issues": [],
+      "output": "/Users/rajpatel/Projects/textile Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/scratch/tour-fix-review-results/final-transitions-2026-09-30T01-39-51-207Z/tr05-lite-en-390x844"
+    },
+    {
+      "id": "tr05-free-gu-390x844",
+      "kind": "estimator",
+      "language": "gu",
+      "size": "390x844",
+      "env": {},
+      "exitCode": 0,
+      "signal": null,
+      "frames": 84,
+      "issues": [],
+      "output": "/Users/rajpatel/Projects/textile Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/scratch/tour-fix-review-results/final-transitions-2026-09-30T01-39-51-207Z/tr05-free-gu-390x844"
+    },
+    {
+      "id": "tr05-free-en-390x844",
+      "kind": "estimator",
+      "language": "en",
+      "size": "390x844",
+      "env": {},
+      "exitCode": 0,
+      "signal": null,
+      "frames": 84,
+      "issues": [],
+      "output": "/Users/rajpatel/Projects/textile Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/scratch/tour-fix-review-results/final-transitions-2026-09-30T01-39-51-207Z/tr05-free-en-390x844"
+    },
+    {
+      "id": "tr05-base-gu-360x640",
+      "kind": "estimator",
+      "language": "gu",
+      "size": "360x640",
+      "env": {},
+      "exitCode": 0,
+      "signal": null,
+      "frames": 84,
+      "issues": [],
+      "output": "/Users/rajpatel/Projects/textile Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/scratch/tour-fix-review-results/final-transitions-2026-09-30T01-39-51-207Z/tr05-base-gu-360x640"
+    },
+    {
+      "id": "tr05-base-gu-390x844-reduced",
+      "kind": "estimator",
+      "language": "gu",
+      "size": "390x844",
+      "env": {
+        "REDUCED_MOTION": "1"
+      },
+      "exitCode": 0,
+      "signal": null,
+      "frames": 84,
+      "issues": [],
+      "output": "/Users/rajpatel/Projects/textile Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/scratch/tour-fix-review-results/final-transitions-2026-09-30T01-39-51-207Z/tr05-base-gu-390x844-reduced"
+    },
+    {
+      "id": "tr05-base-en-1024x768",
+      "kind": "estimator",
+      "language": "en",
+      "size": "1024x768",
+      "env": {},
+      "exitCode": 0,
+      "signal": null,
+      "frames": 84,
+      "issues": [],
+      "output": "/Users/rajpatel/Projects/textile Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/scratch/tour-fix-review-results/final-transitions-2026-09-30T01-39-51-207Z/tr05-base-en-1024x768"
+    },
+    {
+      "id": "tr05-base-en-1440x900",
+      "kind": "estimator",
+      "language": "en",
+      "size": "1440x900",
+      "env": {},
+      "exitCode": 0,
+      "signal": null,
+      "frames": 84,
+      "issues": [],
+      "output": "/Users/rajpatel/Projects/textile Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/scratch/tour-fix-review-results/final-transitions-2026-09-30T01-39-51-207Z/tr05-base-en-1440x900"
+    },
+    {
+      "id": "tr05-base-en-844x390-landscape-touch",
+      "kind": "estimator",
+      "language": "en",
+      "size": "844x390",
+      "env": {
+        "COMPACT_TOUCH": "1"
+      },
+      "exitCode": 0,
+      "signal": null,
+      "frames": 84,
+      "issues": [],
+      "output": "/Users/rajpatel/Projects/textile Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/scratch/tour-fix-review-results/final-transitions-2026-09-30T01-39-51-207Z/tr05-base-en-844x390-landscape-touch"
+    },
+    {
+      "id": "tr15-pop-en-1024x768",
+      "kind": "assignments",
+      "language": "en",
+      "size": "1024x768",
+      "env": {},
+      "exitCode": 0,
+      "signal": null,
+      "frames": 57,
+      "issues": [],
+      "output": "/Users/rajpatel/Projects/textile Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/scratch/tour-fix-review-results/final-transitions-2026-09-30T01-39-51-207Z/tr15-pop-en-1024x768"
+    },
+    {
+      "id": "tr15-pop-hi-1280x800",
+      "kind": "assignments",
+      "language": "hi",
+      "size": "1280x800",
+      "env": {},
+      "exitCode": 0,
+      "signal": null,
+      "frames": 57,
+      "issues": [],
+      "output": "/Users/rajpatel/Projects/textile Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/scratch/tour-fix-review-results/final-transitions-2026-09-30T01-39-51-207Z/tr15-pop-hi-1280x800"
+    },
+    {
+      "id": "tr15-pop-en-1440x900",
+      "kind": "assignments",
+      "language": "en",
+      "size": "1440x900",
+      "env": {},
+      "exitCode": 0,
+      "signal": null,
+      "frames": 57,
+      "issues": [],
+      "output": "/Users/rajpatel/Projects/textile Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/scratch/tour-fix-review-results/final-transitions-2026-09-30T01-39-51-207Z/tr15-pop-en-1440x900"
+    },
+    {
+      "id": "tr15-pop-gu-390x844",
+      "kind": "assignments",
+      "language": "gu",
+      "size": "390x844",
+      "env": {},
+      "exitCode": 0,
+      "signal": null,
+      "frames": 57,
+      "issues": [],
+      "output": "/Users/rajpatel/Projects/textile Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/scratch/tour-fix-review-results/final-transitions-2026-09-30T01-39-51-207Z/tr15-pop-gu-390x844"
+    },
+    {
+      "id": "tr15-pop-gu-1024x768",
+      "kind": "assignments",
+      "language": "gu",
+      "size": "1024x768",
+      "env": {},
+      "exitCode": 0,
+      "signal": null,
+      "frames": 57,
+      "issues": [],
+      "output": "/Users/rajpatel/Projects/textile Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/scratch/tour-fix-review-results/final-transitions-2026-09-30T01-39-51-207Z/tr15-pop-gu-1024x768"
+    },
+    {
+      "id": "tr15-pop-en-1024x768-reduced",
+      "kind": "assignments",
+      "language": "en",
+      "size": "1024x768",
+      "env": {
+        "REDUCED_MOTION": "1"
+      },
+      "exitCode": 0,
+      "signal": null,
+      "frames": 57,
+      "issues": [],
+      "output": "/Users/rajpatel/Projects/textile Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/scratch/tour-fix-review-results/final-transitions-2026-09-30T01-39-51-207Z/tr15-pop-en-1024x768-reduced"
+    },
+    {
+      "id": "tr15-empty-en-1024x768",
+      "kind": "assignments",
+      "language": "en",
+      "size": "1024x768",
+      "env": {},
+      "exitCode": 0,
+      "signal": null,
+      "frames": 57,
+      "issues": [],
+      "output": "/Users/rajpatel/Projects/textile Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/scratch/tour-fix-review-results/final-transitions-2026-09-30T01-39-51-207Z/tr15-empty-en-1024x768"
+    }
+  ]
+}

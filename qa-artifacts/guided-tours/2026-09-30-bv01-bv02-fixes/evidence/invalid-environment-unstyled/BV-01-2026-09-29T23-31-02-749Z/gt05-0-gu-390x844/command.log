@@ -1,0 +1,23 @@
+{"scenario":"estimator","lang":"gu","size":"390x844","steps":10,"logs":["warning: [harness] server action called recordTourEventAction","warning: [harness] server action called getEstimatorSecondaryData","error: Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector","warning: [harness] server action called recordTourEventAction","warning: [harness] server action called recordTourEventAction"]}
+[
+  'est-purpose: panel offscreen or focus outside panel',
+  'est-purpose: outline not fully on screen',
+  'est-warp: panel offscreen or focus outside panel',
+  'est-warp: outline not fully on screen',
+  'est-weft: panel offscreen or focus outside panel',
+  'est-weft: outline not fully on screen',
+  'est-weaving: panel offscreen or focus outside panel',
+  'est-weaving: outline not fully on screen',
+  'est-warping: panel offscreen or focus outside panel',
+  'est-warping: outline not fully on screen',
+  'est-overhead: panel offscreen or focus outside panel',
+  'est-overhead: outline not fully on screen',
+  'est-pricing: panel offscreen or focus outside panel',
+  'est-pricing: outline not fully on screen',
+  'est-live: unavailable',
+  'est-live: outline not fully on screen',
+  'est-save: panel offscreen or focus outside panel',
+  'est-save: outline not fully on screen',
+  'est-handoff: panel offscreen or focus outside panel',
+  'est-handoff: outline not fully on screen'
+]

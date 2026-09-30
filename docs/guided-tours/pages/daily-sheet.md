@@ -1,6 +1,6 @@
 # P05 Daily Sheet — tour specification (new tour)
 
-Status: specified, not implemented. Implementation: **GT-12**. Gujarati/Hindi: native review pending.
+Status: implemented and PASSED (2026-09-30; human verification deferred by the owner). Implementation: **GT-12**. Gujarati/Hindi: native review pending, not done.
 Shared rules: [`GUIDED_TOURS_REFINEMENT_PLAN.md`](../../GUIDED_TOURS_REFINEMENT_PLAN.md) (D-10). Evidence: [`audit/production-assignments-machines-workers.md`](../audit/production-assignments-machines-workers.md) §1.
 
 ## A. Identity and evidence

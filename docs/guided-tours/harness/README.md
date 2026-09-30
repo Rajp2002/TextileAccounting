@@ -117,6 +117,10 @@ PRE_CLICK clicks a visible selector before launching; to verify Detailed restora
 
 Every request whose pathname begins /api/ is recorded as URL + method in record.json's apiRequests array. Estimator assertions require ten exact Quick steps (or EXIT_AT steps), ready/on-screen outlines, no panel/outline or desktop panel/sheet overlap, wide first-step placement on the right, panel focus, correct Live cost state, restored mode/open state/input values and non-tour local storage, correct Exit/Done focus, no navigation, no increased getEstimatorSecondaryData mount reads, preference-only tour calls and no /api/free/calculate request. Inspect screenshots as well. Required scenarios, including reduced motion and restoration, remain UNVERIFIED until actually run.
 
+BV-01 (2026-09-30): at ≤767px the Live cost sheet fits the screen without scrolling, so the shared mobile tracker found no scrollport and step 9 (`est-save`) was unavailable in Gujarati. The Estimator runtime now reserves scroll room in `#mobile-live-estimate-panel` on phones only (`padding-bottom: 100dvh` in its runtime-only style block); the tracker then applies its own measured reserve and scrolls Save above the docked panel. Phone runs of steps 8 and 9 in all three plans, and Exit at step 9, are the regression checks.
+
+Round 2 (2026-09-30): at tablet portrait (768–1023px) the fixed 248px sidebar leaves a 448px column, so the 360px panel cannot sit beside a Quick card, and with cards 594–631px tall and centred by the tracker there was no room above or below (overlap at `est-warp`, `est-weft`; `est-handoff` overlapped only mid-animation at the runner's 900 ms sample). For those widths only, the runtime reserves the reading column on the left over the sidebar: cards narrow by 120px and right-align (start at 404px = 248 sidebar + 36 gutter + 120), and the Live cost sheet moves into the same right-hand column so the outline never crosses the panel between steps. ≥1024px rules are unchanged. `768x1024`, `820x1180` and the 1023px edge are the regression checks.
+
 ### GT-08 Fabric Stock (browser runs deferred)
 
 `fabric-stock` now mounts the real `QualityStockClient` using synthetic empty data. `fabric-stock?populated=1` adds one quality without opening stock; append `&allOpening=1` for an already opened quality. No live loader runs. The runner preserves a search value and DOM reference, checks the six steps, 100 → 600 → 590 balances, Pending state, disabled sample controls, live handoff, same mounted client/state, focus, geometry and the preference-only action allowlist. The plain audit workspace div remains so removing its guide does not change the content width.
@@ -194,13 +198,23 @@ hidden Close, inert page, hidden focus banner, sample/live data separation,
 data-dependent handoff, restored filters/shift/mobile view/URL/non-tour storage,
 replay and absence of business calls/navigation/API requests.
 
-The default `[data-configuration-tour="board"]` anchor is deliberately retained.
-`assignments.columns` is **not selected**. All MA-1 geometry and the conditional
-1024×768 fallback decision remain **UNVERIFIED**. The runner must fail on any
-panel/outline overlap, including the first board step; do not suppress it or declare
-MA-1 fixed from source tests. If the required fallback cannot avoid overlap, use
-executor §6. Native review, owner QA and independent reviewer acceptance remain
-**UNVERIFIED**. This implementation did not run a browser, server or harness scenario.
+Anchor decision (2026-09-30, from browser evidence): the default
+`[data-configuration-tour="board"]` anchor overlapped the panel at en 1024×768 and hi 1280×800
+(BV-02: 10,070 and 5,724 px²), so the page-spec §E fallback is selected. `ma-purpose` anchors to
+`[data-tour-anchor="assignments.columns"]`. First resolution (the board's control row) cleared the
+outline but put the panel over the Workers column, so round 2 moved the attribute to the Workers/Machines
+columns grid itself and made that grid content-height (`flex-none`) on sample steps only. The outline now
+frames the sample worker and loom, and the panel lands in the board's empty lower area. On phones the same
+attribute marks the mobile board card, the element phones already used. The runner still fails on any
+panel/outline overlap, including the first board step; do not suppress it. Its overlap message still
+mentions the "default board anchor"; that is only wording. Native review, owner QA and independent
+reviewer acceptance remain **UNVERIFIED**.
+
+Run the fixture server with the scratch harness folder as its working directory. The harness PostCSS
+config uses `base: '../..'`, which `@tailwindcss/postcss` resolves against the current directory, so a
+server started from the repository root generates no Tailwind utilities and every run looks unstyled
+(panels off screen, all steps flagged). Check `curl` output of `/@fs/<repo>/app/globals.css` contains
+`.flex {` before trusting a run.
 
 
 ### GT-10 Payroll (prepared; browser verification deferred)

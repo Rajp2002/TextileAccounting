@@ -1,6 +1,6 @@
 # P12 Dispatches (and P13 print view) — tour specification
 
-Status: specified, not implemented. Implementation: **GT-07** (first replica tour; introduces the live handoff for replicas, EC-18). Gujarati/Hindi: native review pending.
+Status: implemented and PASSED (2026-09-30; human verification deferred by the owner). Implementation: **GT-07** (first replica tour; introduces the live handoff for replicas, EC-18). Gujarati/Hindi: native review pending, not done.
 Shared rules: [`GUIDED_TOURS_REFINEMENT_PLAN.md`](../../GUIDED_TOURS_REFINEMENT_PLAN.md). Evidence: [`audit/stock-and-dispatch.md`](../audit/stock-and-dispatch.md) §0, §4.
 
 ## A. Identity and evidence

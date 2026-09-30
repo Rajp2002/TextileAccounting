@@ -1,0 +1,494 @@
+[
+  {
+    "id": "x05-base-gu-360x640",
+    "scenario": "estimator",
+    "language": "gu",
+    "size": "360x640"
+  },
+  {
+    "id": "x05-base-gu-375x667",
+    "scenario": "estimator",
+    "language": "gu",
+    "size": "375x667"
+  },
+  {
+    "id": "x05-base-gu-430x932",
+    "scenario": "estimator",
+    "language": "gu",
+    "size": "430x932"
+  },
+  {
+    "id": "x05-base-en-390x844",
+    "scenario": "estimator",
+    "language": "en",
+    "size": "390x844"
+  },
+  {
+    "id": "x05-base-hi-390x844",
+    "scenario": "estimator",
+    "language": "hi",
+    "size": "390x844"
+  },
+  {
+    "id": "x05-base-gu-390x844-reduced",
+    "scenario": "estimator",
+    "language": "gu",
+    "size": "390x844",
+    "env": {
+      "REDUCED_MOTION": "1"
+    }
+  },
+  {
+    "id": "x05-lite-gu-360x640",
+    "scenario": "estimator?tier=lite",
+    "language": "gu",
+    "size": "360x640"
+  },
+  {
+    "id": "x05-lite-gu-375x667",
+    "scenario": "estimator?tier=lite",
+    "language": "gu",
+    "size": "375x667"
+  },
+  {
+    "id": "x05-lite-gu-430x932",
+    "scenario": "estimator?tier=lite",
+    "language": "gu",
+    "size": "430x932"
+  },
+  {
+    "id": "x05-lite-en-390x844",
+    "scenario": "estimator?tier=lite",
+    "language": "en",
+    "size": "390x844"
+  },
+  {
+    "id": "x05-lite-hi-390x844",
+    "scenario": "estimator?tier=lite",
+    "language": "hi",
+    "size": "390x844"
+  },
+  {
+    "id": "x05-lite-gu-390x844-reduced",
+    "scenario": "estimator?tier=lite",
+    "language": "gu",
+    "size": "390x844",
+    "env": {
+      "REDUCED_MOTION": "1"
+    }
+  },
+  {
+    "id": "x05-free-gu-360x640",
+    "scenario": "free-estimator",
+    "language": "gu",
+    "size": "360x640"
+  },
+  {
+    "id": "x05-free-gu-375x667",
+    "scenario": "free-estimator",
+    "language": "gu",
+    "size": "375x667"
+  },
+  {
+    "id": "x05-free-gu-430x932",
+    "scenario": "free-estimator",
+    "language": "gu",
+    "size": "430x932"
+  },
+  {
+    "id": "x05-free-en-390x844",
+    "scenario": "free-estimator",
+    "language": "en",
+    "size": "390x844"
+  },
+  {
+    "id": "x05-free-hi-390x844",
+    "scenario": "free-estimator",
+    "language": "hi",
+    "size": "390x844"
+  },
+  {
+    "id": "x05-free-gu-390x844-reduced",
+    "scenario": "free-estimator",
+    "language": "gu",
+    "size": "390x844",
+    "env": {
+      "REDUCED_MOTION": "1"
+    }
+  },
+  {
+    "id": "x05-base-gu-390x844-exit9",
+    "scenario": "estimator",
+    "language": "gu",
+    "size": "390x844",
+    "env": {
+      "EXIT_AT": "9"
+    }
+  },
+  {
+    "id": "x05-free-gu-390x844-exit9",
+    "scenario": "free-estimator",
+    "language": "gu",
+    "size": "390x844",
+    "env": {
+      "EXIT_AT": "9"
+    }
+  },
+  {
+    "id": "x05-base-gu-390x844-detailed-done",
+    "scenario": "estimator",
+    "language": "gu",
+    "size": "390x844",
+    "env": {
+      "PRE_CLICK": "[role=tab]:text-is(\"Detailed\")"
+    }
+  },
+  {
+    "id": "x05-base-en-390x844-detailed-exit9",
+    "scenario": "estimator",
+    "language": "en",
+    "size": "390x844",
+    "env": {
+      "PRE_CLICK": "[role=tab]:text-is(\"Detailed\")",
+      "EXIT_AT": "9"
+    }
+  },
+  {
+    "id": "x05-base-en-768x1024",
+    "scenario": "estimator",
+    "language": "en",
+    "size": "768x1024"
+  },
+  {
+    "id": "x05-base-gu-768x1024",
+    "scenario": "estimator",
+    "language": "gu",
+    "size": "768x1024"
+  },
+  {
+    "id": "x05-base-hi-1024x768",
+    "scenario": "estimator",
+    "language": "hi",
+    "size": "1024x768"
+  },
+  {
+    "id": "x05-base-gu-1024x768",
+    "scenario": "estimator",
+    "language": "gu",
+    "size": "1024x768"
+  },
+  {
+    "id": "x15-pop-en-1366x768",
+    "scenario": "assignments?populated=1",
+    "language": "en",
+    "size": "1366x768"
+  },
+  {
+    "id": "x15-pop-en-1536x864",
+    "scenario": "assignments?populated=1",
+    "language": "en",
+    "size": "1536x864"
+  },
+  {
+    "id": "x15-pop-en-1920x1080",
+    "scenario": "assignments?populated=1",
+    "language": "en",
+    "size": "1920x1080"
+  },
+  {
+    "id": "x15-pop-en-768x1024",
+    "scenario": "assignments?populated=1",
+    "language": "en",
+    "size": "768x1024"
+  },
+  {
+    "id": "x15-pop-en-820x1180",
+    "scenario": "assignments?populated=1",
+    "language": "en",
+    "size": "820x1180"
+  },
+  {
+    "id": "x15-pop-gu-1024x768",
+    "scenario": "assignments?populated=1",
+    "language": "gu",
+    "size": "1024x768"
+  },
+  {
+    "id": "x15-pop-hi-1024x768",
+    "scenario": "assignments?populated=1",
+    "language": "hi",
+    "size": "1024x768"
+  },
+  {
+    "id": "x15-pop-gu-1280x800",
+    "scenario": "assignments?populated=1",
+    "language": "gu",
+    "size": "1280x800"
+  },
+  {
+    "id": "x15-pop-en-1280x720",
+    "scenario": "assignments?populated=1",
+    "language": "en",
+    "size": "1280x720"
+  },
+  {
+    "id": "x15-pop-en-1024x600",
+    "scenario": "assignments?populated=1",
+    "language": "en",
+    "size": "1024x600"
+  },
+  {
+    "id": "x15-pop-en-390x844",
+    "scenario": "assignments?populated=1",
+    "language": "en",
+    "size": "390x844"
+  },
+  {
+    "id": "x15-pop-hi-390x844",
+    "scenario": "assignments?populated=1",
+    "language": "hi",
+    "size": "390x844"
+  },
+  {
+    "id": "x15-pop-gu-360x640",
+    "scenario": "assignments?populated=1",
+    "language": "gu",
+    "size": "360x640"
+  },
+  {
+    "id": "x15-empty-hi-1024x768",
+    "scenario": "assignments",
+    "language": "hi",
+    "size": "1024x768"
+  },
+  {
+    "id": "x15-empty-gu-1280x800",
+    "scenario": "assignments",
+    "language": "gu",
+    "size": "1280x800"
+  },
+  {
+    "id": "x15-empty-en-768x1024",
+    "scenario": "assignments",
+    "language": "en",
+    "size": "768x1024"
+  },
+  {
+    "id": "x15-night-focus-gu-1024x768",
+    "scenario": "assignments?populated=1&shift=night&worker=11111111-1111-4111-8111-111111111111&machine=22222222-2222-4222-8222-222222222222",
+    "language": "gu",
+    "size": "1024x768",
+    "env": {
+      "PRE_TYPE": "No matching retained worker"
+    }
+  },
+  {
+    "id": "x15-exit5-en-1024x768",
+    "scenario": "assignments?populated=1",
+    "language": "en",
+    "size": "1024x768",
+    "env": {
+      "EXIT_AT": "5"
+    }
+  },
+  {
+    "id": "x15-reduced-hi-1280x800",
+    "scenario": "assignments?populated=1",
+    "language": "hi",
+    "size": "1280x800",
+    "env": {
+      "REDUCED_MOTION": "1"
+    }
+  },
+  {
+    "id": "x05-base-gu-390x844-detailed-done-localized",
+    "scenario": "estimator",
+    "language": "gu",
+    "size": "390x844",
+    "env": {
+      "PRE_CLICK": "[role=tab]:text-is(\"વિગતવાર\")"
+    }
+  },
+  {
+    "id": "x05-base-gu-390x844-detailed-exit9-localized",
+    "scenario": "estimator",
+    "language": "gu",
+    "size": "390x844",
+    "env": {
+      "PRE_CLICK": "[role=tab]:text-is(\"વિગતવાર\")",
+      "EXIT_AT": "9"
+    }
+  },
+  {
+    "id": "x05-base-hi-390x844-detailed-done-localized",
+    "scenario": "estimator",
+    "language": "hi",
+    "size": "390x844",
+    "env": {
+      "PRE_CLICK": "[role=tab]:text-is(\"विस्तृत\")"
+    }
+  },
+  {
+    "id": "r2-x05-base-en-820x1180",
+    "scenario": "estimator",
+    "language": "en",
+    "size": "820x1180"
+  },
+  {
+    "id": "r2-x05-base-gu-820x1180",
+    "scenario": "estimator",
+    "language": "gu",
+    "size": "820x1180"
+  },
+  {
+    "id": "r2-x05-base-en-1023x768",
+    "scenario": "estimator",
+    "language": "en",
+    "size": "1023x768"
+  },
+  {
+    "id": "r2-x05-base-hi-1000x800",
+    "scenario": "estimator",
+    "language": "hi",
+    "size": "1000x800"
+  },
+  {
+    "id": "r2-x05-base-en-900x1200",
+    "scenario": "estimator",
+    "language": "en",
+    "size": "900x1200"
+  },
+  {
+    "id": "r2-x05-base-en-768x600",
+    "scenario": "estimator",
+    "language": "en",
+    "size": "768x600"
+  },
+  {
+    "id": "r2-x05-base-en-1024x1366",
+    "scenario": "estimator",
+    "language": "en",
+    "size": "1024x1366"
+  },
+  {
+    "id": "r2-x05-base-en-1180x820",
+    "scenario": "estimator",
+    "language": "en",
+    "size": "1180x820"
+  },
+  {
+    "id": "r2-x05-free-en-768x1024",
+    "scenario": "free-estimator",
+    "language": "en",
+    "size": "768x1024"
+  },
+  {
+    "id": "r2-x05-free-gu-768x1024",
+    "scenario": "free-estimator",
+    "language": "gu",
+    "size": "768x1024"
+  },
+  {
+    "id": "r2-x05-lite-hi-768x1024",
+    "scenario": "estimator?tier=lite",
+    "language": "hi",
+    "size": "768x1024"
+  },
+  {
+    "id": "r2-x05-base-en-768x1024-reduced",
+    "scenario": "estimator",
+    "language": "en",
+    "size": "768x1024",
+    "env": {
+      "REDUCED_MOTION": "1"
+    }
+  },
+  {
+    "id": "r2-x05-base-en-768x1024-detailed-done",
+    "scenario": "estimator",
+    "language": "en",
+    "size": "768x1024",
+    "env": {
+      "PRE_CLICK": "[role=tab]:text-is(\"Detailed\")"
+    }
+  },
+  {
+    "id": "r2-x05-base-en-768x1024-detailed-exit9",
+    "scenario": "estimator",
+    "language": "en",
+    "size": "768x1024",
+    "env": {
+      "PRE_CLICK": "[role=tab]:text-is(\"Detailed\")",
+      "EXIT_AT": "9"
+    }
+  },
+  {
+    "id": "r2-x05-free-gu-768x1024-exit9",
+    "scenario": "free-estimator",
+    "language": "gu",
+    "size": "768x1024",
+    "env": {
+      "EXIT_AT": "9"
+    }
+  },
+  {
+    "id": "r2-x15-pop-en-1024x1366",
+    "scenario": "assignments?populated=1",
+    "language": "en",
+    "size": "1024x1366"
+  },
+  {
+    "id": "r2-x15-pop-en-1180x820",
+    "scenario": "assignments?populated=1",
+    "language": "en",
+    "size": "1180x820"
+  },
+  {
+    "id": "r2-x15-pop-en-900x1200",
+    "scenario": "assignments?populated=1",
+    "language": "en",
+    "size": "900x1200"
+  },
+  {
+    "id": "r2-x15-pop-hi-1440x900",
+    "scenario": "assignments?populated=1",
+    "language": "hi",
+    "size": "1440x900"
+  },
+  {
+    "id": "r2-x15-pop-gu-1440x900",
+    "scenario": "assignments?populated=1",
+    "language": "gu",
+    "size": "1440x900"
+  },
+  {
+    "id": "r2-x15-pop-en-1600x900",
+    "scenario": "assignments?populated=1",
+    "language": "en",
+    "size": "1600x900"
+  },
+  {
+    "id": "r2-x15-pop-hi-1024x600",
+    "scenario": "assignments?populated=1",
+    "language": "hi",
+    "size": "1024x600"
+  },
+  {
+    "id": "r2-x15-pop-gu-1280x720",
+    "scenario": "assignments?populated=1",
+    "language": "gu",
+    "size": "1280x720"
+  },
+  {
+    "id": "r2-x15-empty-en-1440x900",
+    "scenario": "assignments",
+    "language": "en",
+    "size": "1440x900"
+  },
+  {
+    "id": "r2-x15-empty-gu-1024x768",
+    "scenario": "assignments",
+    "language": "gu",
+    "size": "1024x768"
+  }
+]

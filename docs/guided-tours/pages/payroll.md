@@ -1,6 +1,6 @@
 # P14 Payroll — tour specification
 
-Status: specified, not implemented. Implementation: **GT-10**. Gujarati/Hindi: native review pending.
+Status: implemented and PASSED (2026-09-30; human verification deferred by the owner). Implementation: **GT-10**. Gujarati/Hindi: native review pending, not done.
 Shared rules: [`GUIDED_TOURS_REFINEMENT_PLAN.md`](../../GUIDED_TOURS_REFINEMENT_PLAN.md). Evidence: [`audit/payroll.md`](../audit/payroll.md).
 
 ## A. Identity and evidence
