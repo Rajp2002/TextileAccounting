@@ -115,6 +115,8 @@ const BaseSettlementSchema = z.object({
         client_request_id: UuidSchema,
         period_start: DateSchema,
         gross_pay: z.number().finite().nonnegative(),
+        incentive_pay: z.number().finite().nonnegative().optional(),
+        incentives: z.array(z.object({ id: UuidSchema, amount: z.number().finite().positive(), updated_at: z.string().datetime({ offset: true }) })).optional(),
         advance_deducted: z.number().finite().nonnegative(),
         net_payout: z.number().finite().nonnegative(),
         advance_balance_before: z.number().finite().nonnegative(),
@@ -1000,12 +1002,48 @@ export async function createBaseWorkerDeduction(input: {
     return { success: true }
 }
 
+const BaseIncentiveSchema = z.object({
+    workerId: UuidSchema, serviceStart: DateSchema, serviceEnd: DateSchema,
+    amount: z.number().finite().positive().max(10_000_000).refine(value => Math.abs(value * 100 - Math.round(value * 100)) < 0.000001),
+    evidenceReference: z.string().trim().min(3).max(240), clientRequestId: UuidSchema,
+})
+export async function createBaseWorkerIncentive(input: { workerId: string; serviceStart: string; serviceEnd: string; amount: number; evidenceReference: string; clientRequestId: string }) {
+    await requireBaseProductionOwner()
+    const parsed = safeParse(BaseIncentiveSchema, input)
+    if ('error' in parsed) return parsed
+    const supabase = await createServerClient()
+    const { error } = await supabase.rpc('create_base_worker_incentive', {
+        p_worker_id: parsed.data.workerId, p_service_start: parsed.data.serviceStart, p_service_end: parsed.data.serviceEnd,
+        p_amount: parsed.data.amount, p_evidence_reference: parsed.data.evidenceReference, p_client_request_id: parsed.data.clientRequestId,
+    })
+    if (error) return databaseError(error, error.message || 'Incentive could not be saved.')
+    revalidatePath('/owner/payroll')
+    revalidatePath('/owner/production')
+    return { success: true }
+}
+export async function reviewBaseWorkerIncentive(input: { incentiveId: string; expectedUpdatedAt: string; action: 'approve' | 'void'; reason?: string }) {
+    await requireBaseProductionOwner()
+    const parsed = safeParse(z.object({
+        incentiveId: UuidSchema, expectedUpdatedAt: z.string().datetime({ offset: true }), action: z.enum(['approve', 'void']),
+        reason: z.string().trim().max(240).optional(),
+    }).refine(value => value.action !== 'void' || (value.reason?.length ?? 0) >= 3), input)
+    if ('error' in parsed) return parsed
+    const supabase = await createServerClient()
+    const { error } = await supabase.rpc('review_base_worker_incentive', {
+        p_incentive_id: parsed.data.incentiveId, p_expected_updated_at: parsed.data.expectedUpdatedAt,
+        p_action: parsed.data.action, p_reason: parsed.data.reason ?? null,
+    })
+    if (error) return databaseError(error, error.message || 'Incentive review could not be saved.')
+    revalidatePath('/owner/payroll')
+    revalidatePath('/owner/production')
+    return { success: true }
+}
 export async function settleBaseWorkerPayroll(input: {
     workerId: string
     paymentMode: 'cash' | 'bank_transfer' | 'upi' | 'cheque'
     periodEnd: string
     note?: string
-    expected: { client_request_id: string; period_start: string; gross_pay: number; advance_deducted: number; net_payout: number; advance_balance_before: number }
+    expected: { client_request_id: string; period_start: string; gross_pay: number; incentive_pay?: number; incentives?: Array<{ id: string; amount: number; updated_at: string }>; advance_deducted: number; net_payout: number; advance_balance_before: number }
 }) {
     await requireBaseProductionOwner()
     const parsed = safeParse(BaseSettlementSchema, input)

@@ -289,7 +289,7 @@ export default function BasePayrollRecords({
                                 const canReverse = original && worker.status !== 'reversed' && !hasLaterPayment && (original.advance_deducted === 0 || original.recovery_receipt_complete)
                                 const expanded = expandedWorkers.has(worker.settlementId)
                                 const isSalary = worker.earnings.some(earning => earning.payType === 'fixed_monthly')
-                                const machineCount = new Set(worker.earnings.filter(earning => earning.payType !== 'fixed_monthly').map((earning) => earning.machineId ?? earning.machineLabel)).size
+                                const machineCount = new Set(worker.earnings.filter(earning => earning.payType !== 'fixed_monthly' && earning.kind !== 'manual_incentive').map((earning) => earning.machineId ?? earning.machineLabel)).size
                                 return (
                                     <Card key={worker.settlementId} className="[contain-intrinsic-size:140px] [content-visibility:auto]">
                                         <button type="button" className="w-full text-left" onClick={() => toggleWorker(worker.settlementId)} aria-expanded={expanded}>
@@ -319,8 +319,8 @@ export default function BasePayrollRecords({
                                                                 <tr key={`${earning.machineId ?? earning.machineLabel}:${earning.costingLabel}:${earning.rate}`}>
                                                                     <td className="px-3 py-3 font-semibold text-ink">{earning.machineLabel}</td>
                                                                     <td className="px-3 py-3 text-body">{earning.costingLabel}</td>
-                                                                    <td className="px-3 py-3 text-right text-body">{formatINR(earning.rate)}/{earning.payType === 'fixed_monthly' ? 'month' : 'm'}</td>
-                                                                    <td className="px-3 py-3 text-right font-semibold text-ink">{earning.payType === 'fixed_monthly' ? '—' : formatMeters(earning.meters)}</td>
+                                                                    <td className="px-3 py-3 text-right text-body">{earning.kind === 'manual_incentive' ? '—' : <>{formatINR(earning.rate)}/{earning.payType === 'fixed_monthly' ? 'month' : 'm'}</>}</td>
+                                                                    <td className="px-3 py-3 text-right font-semibold text-ink">{earning.payType === 'fixed_monthly' || earning.kind === 'manual_incentive' ? '—' : formatMeters(earning.meters)}</td>
                                                                     <td className="px-3 py-3 text-right font-bold text-ink">{formatINR(earning.grossPay)}</td>
                                                                 </tr>
                                                             ))}

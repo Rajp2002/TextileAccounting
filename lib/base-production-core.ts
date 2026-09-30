@@ -192,7 +192,35 @@ export type BaseWorkerAdvance = {
     created_at: string
 }
 
+export type BaseWorkerIncentive = {
+    id: string
+    worker_id: string
+    service_start: string
+    service_end: string
+    amount: number
+    evidence_reference: string
+    status: 'draft' | 'approved' | 'voided'
+    updated_at: string
+    approved_by: string | null
+    approved_at: string | null
+    void_reason?: string | null
+    settlement_id?: string | null
+}
+export type BaseIncentiveSnapshot = {
+    id: string
+    service_start: string
+    service_end: string
+    amount: number
+    evidence_reference: string
+    approved_by: string
+    approved_at: string
+    updated_at: string
+    calculation_version: 'manual-incentive-v1'
+    currency: 'INR'
+    unit: 'amount'
+}
 export type BasePayrollSettlement = {
+    incentive_pay?: number
     id: string
     worker_id: string
     period_start: string
@@ -255,6 +283,8 @@ export type BasePayrollPeriodSummary = {
 }
 
 export type BasePayrollSettlementLine = {
+    earning_snapshot?: BaseIncentiveSnapshot | null
+    source_id?: string
     id: string
     settlement_id: string
     worker_id: string
@@ -267,7 +297,7 @@ export type BasePayrollSettlementLine = {
     meters: number
     worker_rate_snapshot: number
     gross_pay: number
-    source_kind: 'legacy_entry' | 'worker_total' | 'machine_allocation' | 'fixed_salary'
+    source_kind: 'legacy_entry' | 'worker_total' | 'machine_allocation' | 'fixed_salary' | 'manual_incentive'
 }
 
 export type BaseJobSummary = {
@@ -280,6 +310,10 @@ export type BaseJobSummary = {
 }
 
 export type BaseWorkerPayable = {
+    base_pay?: number
+    incentive_pay?: number
+    incentive_lines?: BaseWorkerIncentive[]
+    incentive_review_ids?: string[]
     pay_type?: 'piece_rate' | 'fixed_monthly'
     salary_lines?: BaseSalaryLine[]
     worker_id: string
@@ -438,6 +472,7 @@ function getWorkerPeriodStart(
     settlements: BasePayrollSettlement[],
     periodEnd: string,
     entries: BaseProductionEntry[],
+    incentives: BaseWorkerIncentive[],
 ) {
     const monthStart = getBasePayrollPeriod(periodEnd).start
     const latestEnd = settlements
@@ -453,13 +488,16 @@ function getWorkerPeriodStart(
         .filter((entry) => entry.worker_id === workerId && entry.production_date <= periodEnd && entry.meters > 0)
         .map((entry) => entry.production_date)
         .sort()[0]
-    return firstProduction && firstProduction < monthStart ? firstProduction : monthStart
+    const firstIncentive = incentives.filter(item => item.worker_id === workerId && item.status !== 'voided'
+        && !item.settlement_id && item.service_start <= periodEnd).map(item => item.service_start).sort()[0]
+    return [monthStart, firstProduction, firstIncentive].filter((date): date is string => Boolean(date)).sort()[0]
 }
 
 export function calculateBaseWorkerPayables({
     workers,
     entries,
     allocations = [],
+    incentives = [],
     advances,
     settlements,
     periodEnd,
@@ -467,6 +505,7 @@ export function calculateBaseWorkerPayables({
     workers: BaseProductionWorker[]
     entries: BaseProductionEntry[]
     allocations?: BaseProductionAllocation[]
+    incentives?: BaseWorkerIncentive[]
     advances: BaseWorkerAdvance[]
     settlements: BasePayrollSettlement[]
     periodEnd: string
@@ -483,14 +522,14 @@ export function calculateBaseWorkerPayables({
         const lastPaid = activeSettlements.filter(item => item.worker_id === worker.id && item.period_end < periodEnd).sort((a, b) => b.period_end.localeCompare(a.period_end))[0]
         const periodStart = worker.pay_type === 'fixed_monthly'
             ? lastPaid ? new Date(new Date(`${lastPaid.period_end}T00:00:00Z`).getTime() + 86400000).toISOString().slice(0, 10) : worker.start_date ?? periodEnd
-            : getWorkerPeriodStart(worker.id, activeSettlements, periodEnd, entries)
+            : getWorkerPeriodStart(worker.id, activeSettlements, periodEnd, entries, incentives)
         const salaryLines = calculateBaseSalaryLines(worker, periodStart, periodEnd)
         const periodEntries = entries.filter((entry) => (
             entry.worker_id === worker.id
             && entry.production_date >= periodStart
             && entry.production_date <= periodEnd
         ))
-        const gross = worker.pay_type === 'fixed_monthly' ? salaryLines.reduce((total, line) => total.plus(line.grossPay), new Decimal(0)) : periodEntries.reduce(
+        const baseGross = worker.pay_type === 'fixed_monthly' ? salaryLines.reduce((total, line) => total.plus(line.grossPay), new Decimal(0)) : periodEntries.reduce(
             (total, entry) => total.plus(
                 entry.allocation_mode === 'machine_breakdown'
                     ? calculateBaseEntryGrossDecimal(entry, allocationsByEntry.get(entry.id) ?? [])
@@ -498,6 +537,16 @@ export function calculateBaseWorkerPayables({
             ),
             new Decimal(0),
         )
+        const paidForEnd = activeSettlements.find(item => item.worker_id === worker.id && item.period_end === periodEnd)
+        const incentiveStart = paidForEnd?.period_start ?? periodStart
+        const openIncentives = incentives.filter(item => item.worker_id === worker.id && item.status !== 'voided'
+            && (paidForEnd ? item.settlement_id === paidForEnd.id : !item.settlement_id) && item.service_start <= periodEnd)
+        const incentiveLines = openIncentives.filter(item => item.status === 'approved'
+            && item.service_start >= incentiveStart && item.service_end <= periodEnd
+            && Number.isFinite(item.amount) && item.amount > 0 && item.approved_by && item.approved_at)
+        const incentiveReviewIds = paidForEnd ? [] : openIncentives.filter(item => !incentiveLines.includes(item)).map(item => item.id)
+        const incentiveGross = incentiveLines.reduce((sum, item) => sum.plus(item.amount), new Decimal(0))
+        const gross = baseGross.plus(incentiveGross)
         const pendingAdvance = advances
             .filter((advance) => (
                 advance.worker_id === worker.id
@@ -523,6 +572,10 @@ export function calculateBaseWorkerPayables({
         const netPayout = paidSettlement ? toBaseNumber(paidSettlement.net_payout) : toRoundedNumber(Decimal.max(0, gross.minus(advanceRecovery)))
 
         return {
+            base_pay: paidSettlement ? toBaseNumber(paidSettlement.gross_pay - (paidSettlement.incentive_pay ?? 0)) : toRoundedNumber(baseGross),
+            incentive_pay: paidSettlement ? toBaseNumber(paidSettlement.incentive_pay) : toRoundedNumber(incentiveGross),
+            incentive_lines: incentiveLines,
+            incentive_review_ids: incentiveReviewIds,
             pay_type: worker.pay_type ?? 'piece_rate',
             salary_lines: salaryLines,
             worker_id: worker.id,

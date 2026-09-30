@@ -5,6 +5,7 @@ import type {
 } from './base-production-core'
 
 export type BasePayrollReadinessIssueCode =
+    | 'incentive_review'
     | 'allocation_mismatch'
     | 'missing_allocation'
     | 'missing_context'
@@ -90,7 +91,10 @@ export function buildBasePayrollReadiness({
             && entry.entry_status !== 'zero'
             && entry.entry_status !== 'absent'
         ))
-        const issues: BasePayrollReadinessIssue[] = []
+        const issues: BasePayrollReadinessIssue[] = (payable.incentive_review_ids ?? []).map(id => ({
+            code: 'incentive_review', entryId: id, productionDate: payable.period_end, shift: null,
+            message: 'Review incentives and include their complete service periods before payment.',
+        }))
         let machineLineCount = 0
         let legacyLineCount = 0
 

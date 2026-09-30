@@ -26,6 +26,7 @@ import {
     type BaseWorkerMachineAssignment,
     type BaseWorkerAdvance,
     type BaseWorkerPayable,
+    type BaseWorkerIncentive,
     type BasePayrollPeriod,
 } from '@/lib/base-production-core'
 import {
@@ -52,6 +53,7 @@ export type BaseProductionInitialData = {
     machineJobContexts: BaseMachineJobContext[]
     dailyBatches: BaseProductionBatch[]
     batchRevisions: BaseProductionBatchRevision[]
+    incentives?: BaseWorkerIncentive[]
     advances: BaseWorkerAdvance[]
     settlements: BasePayrollSettlement[]
     settlementLines: BasePayrollSettlementLine[]
@@ -153,6 +155,7 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
         advancesResult,
         settlementsResult,
         settlementLinesResult,
+        incentivesResult,
         machinesResult,
         assignmentsResult,
         contextsResult,
@@ -208,19 +211,23 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
             .range(from, to)),
         readCompleteBaseRows((from, to) => supabase
             .from('base_payroll_settlements')
-            .select('id, worker_id, period_start, period_end, gross_pay, advance_deducted, net_payout, payment_mode, paid_at, worker_name_snapshot, advance_balance_before, remaining_advance_balance, status, recovery_receipt_complete, reversal:base_payroll_reversals(reason, created_at)', from === 0 ? { count: 'exact' } : {})
+            .select('id, worker_id, period_start, period_end, gross_pay, incentive_pay, advance_deducted, net_payout, payment_mode, paid_at, worker_name_snapshot, advance_balance_before, remaining_advance_balance, status, recovery_receipt_complete, reversal:base_payroll_reversals(reason, created_at)', from === 0 ? { count: 'exact' } : {})
             .eq('org_id', orgId)
             .order('period_end', { ascending: false })
             .order('id')
             .range(from, to)),
         readCompleteBaseRows((from, to) => supabase
             .from('base_payroll_settlement_lines')
-            .select('id, settlement_id, worker_id, production_date, shift, machine_id, machine_label, job_id, costing_label, meters, worker_rate_snapshot, gross_pay, source_kind', from === 0 ? { count: 'exact' } : {})
+            .select('id, settlement_id, worker_id, production_date, shift, machine_id, machine_label, job_id, costing_label, meters, worker_rate_snapshot, gross_pay, source_kind, source_id, earning_snapshot', from === 0 ? { count: 'exact' } : {})
             .eq('org_id', orgId)
             .order('production_date')
             .order('machine_label')
             .order('id')
             .range(from, to)),
+        readCompleteBaseRows((from, to) => supabase
+            .from('base_worker_incentives')
+            .select('id, worker_id, service_start, service_end, amount, evidence_reference, status, updated_at, approved_by, approved_at, void_reason', from === 0 ? { count: 'exact' } : {})
+            .eq('org_id', orgId).order('created_at', { ascending: false }).order('id').range(from, to)),
         readCompleteBaseRows((from, to) => supabase
             .from('base_production_machines')
             .select('id, name, machine_type, custom_label, is_active', from === 0 ? { count: 'exact' } : {})
@@ -296,6 +303,7 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
     const rawAdvances = requireRows(advancesResult, 'advances')
     const rawSettlements = requireRows(settlementsResult, 'settlements')
     const rawSettlementLines = requireRows(settlementLinesResult, 'settlement history lines')
+    const rawIncentives = requireRows(incentivesResult, 'incentives')
     const rawMachines = requireRows(machinesResult, 'machines')
     const rawAssignments = requireRows(assignmentsResult, 'assignments')
     const rawContexts = requireRows(contextsResult, 'machine job contexts')
@@ -392,6 +400,7 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
             period_start: toDate(row.period_start, payrollPeriod.start),
             period_end: toDate(row.period_end, today),
             gross_pay: toBaseNumber(row.gross_pay),
+            incentive_pay: toBaseNumber(row.incentive_pay),
             advance_deducted: toBaseNumber(row.advance_deducted),
             net_payout: toBaseNumber(row.net_payout),
             payment_mode: toPaymentMode(row.payment_mode),
@@ -419,11 +428,22 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
         meters: toBaseNumber(row.meters),
         worker_rate_snapshot: toBaseNumber(row.worker_rate_snapshot),
         gross_pay: toBaseNumber(row.gross_pay),
-        source_kind: row.source_kind === 'machine_allocation' || row.source_kind === 'worker_total' || row.source_kind === 'fixed_salary'
+        source_id: String(row.source_id),
+        earning_snapshot: row.earning_snapshot?.calculation_version === 'manual-incentive-v1' ? row.earning_snapshot : null,
+        source_kind: row.source_kind === 'machine_allocation' || row.source_kind === 'worker_total' || row.source_kind === 'fixed_salary' || row.source_kind === 'manual_incentive'
             ? row.source_kind
             : 'legacy_entry',
     }))
 
+    const paidIds = new Set(settlements.filter(item => item.status !== 'reversed').map(item => item.id))
+    const paidIncentives = new Map(settlementLines.filter(line => line.source_kind === 'manual_incentive' && paidIds.has(line.settlement_id)).map(line => [line.source_id, line.settlement_id]))
+    const incentives: BaseWorkerIncentive[] = rawIncentives.map(row => ({
+        id: String(row.id), worker_id: String(row.worker_id), service_start: toDate(row.service_start, today),
+        service_end: toDate(row.service_end, today), amount: toBaseNumber(row.amount), evidence_reference: String(row.evidence_reference),
+        status: row.status === 'approved' || row.status === 'voided' ? row.status : 'draft',
+        updated_at: String(row.updated_at), approved_by: toStringOrNull(row.approved_by), approved_at: toStringOrNull(row.approved_at),
+        void_reason: toStringOrNull(row.void_reason), settlement_id: paidIncentives.get(String(row.id)) ?? null,
+    }))
     const machines = rawMachines.map(normalizeMachine)
 
     const assignments: BaseWorkerMachineAssignment[] = rawAssignments.map((row) => ({
@@ -561,8 +581,9 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
         advances,
         settlements,
         settlementLines,
+        incentives,
         payrollPeriods,
-        payables: calculateBaseWorkerPayables({ workers, entries, allocations, advances, settlements, periodEnd: today }),
+        payables: calculateBaseWorkerPayables({ workers, entries, allocations, incentives, advances, settlements, periodEnd: today }),
         allocations,
     }
 }
