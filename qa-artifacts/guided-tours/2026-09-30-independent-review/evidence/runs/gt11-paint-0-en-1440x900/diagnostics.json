@@ -1,0 +1,72 @@
+[
+  {
+    "type": "navigation",
+    "at": 1790719150380,
+    "url": "http://localhost:5199/?s=production&lang=en&fresh=1"
+  },
+  {
+    "type": "console",
+    "level": "debug",
+    "at": 1790719150463,
+    "text": "[vite] connecting..."
+  },
+  {
+    "type": "console",
+    "level": "debug",
+    "at": 1790719150465,
+    "text": "[vite] connected."
+  },
+  {
+    "type": "console",
+    "level": "info",
+    "at": 1790719150595,
+    "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+  },
+  {
+    "type": "navigation",
+    "at": 1790719150721,
+    "url": "http://localhost:5199/owner/production?s=production&lang=en&fresh=1"
+  },
+  {
+    "type": "console",
+    "level": "warning",
+    "at": 1790719151008,
+    "text": "[harness] server action called recordTourEventAction"
+  },
+  {
+    "type": "requestfailed",
+    "at": 1790719151080,
+    "url": "http://localhost:5199/api/analytics/plan-events",
+    "failure": {
+      "errorText": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+    }
+  },
+  {
+    "type": "console",
+    "level": "error",
+    "at": 1790719151080,
+    "text": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+  },
+  {
+    "type": "console",
+    "level": "warning",
+    "at": 1790719152546,
+    "text": "[harness] server action called recordTourEventAction"
+  },
+  {
+    "type": "console",
+    "level": "warning",
+    "at": 1790719160970,
+    "text": "[harness] server action called recordTourEventAction"
+  },
+  {
+    "type": "console",
+    "level": "debug",
+    "at": 1790719169572,
+    "text": "[vite] hot updated: /@fs/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/app/globals.css"
+  },
+  {
+    "type": "close",
+    "at": 1790719192852
+  }
+]

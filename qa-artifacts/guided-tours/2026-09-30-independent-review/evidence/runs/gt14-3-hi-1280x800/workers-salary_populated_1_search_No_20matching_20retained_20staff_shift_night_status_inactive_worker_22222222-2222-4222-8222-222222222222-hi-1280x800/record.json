@@ -1,0 +1,527 @@
+{
+  "scenario": "workers-salary?populated=1&search=No%20matching%20retained%20staff&shift=night&status=inactive&worker=22222222-2222-4222-8222-222222222222",
+  "lang": "hi",
+  "size": "1280x800",
+  "steps": [
+    {
+      "assignments": null,
+      "workers": {
+        "search": "",
+        "shift": "all",
+        "status": "active",
+        "samples": true,
+        "bannerCount": 1,
+        "names": [
+          "नमूना कारीगर",
+          "नमूना स्टाफ"
+        ],
+        "preview": true,
+        "available": false,
+        "effective": false,
+        "lastDay": false,
+        "enabledFields": 0,
+        "visibleClose": 0,
+        "selectedPath": "path-salary",
+        "anchors": 1,
+        "url": "http://localhost:5199/owner/workers?s=workers-salary&populated=1&search=No%20matching%20retained%20staff&shift=night&status=inactive&worker=22222222-2222-4222-8222-222222222222&lang=hi&fresh=1"
+      },
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "यह कारीगर कैसे वेतन पाता है, यह चुनें",
+      "body": "पीस रेट कारीगर बुने मीटर के हिसाब से कमाते हैं; वेतन वाला स्टाफ़ मासिक रकम कमाता है। सेव के बाद यह बदला नहीं जा सकता।",
+      "step": "wk-paytype",
+      "status": "ready",
+      "eyebrow": "नमूना · चरण 1 / 6",
+      "progress": null,
+      "panel": {
+        "x": 736,
+        "y": 151,
+        "w": 360,
+        "h": 230
+      },
+      "highlight": {
+        "x": 224,
+        "y": 313,
+        "w": 480,
+        "h": 66
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[path-salary]",
+      "scrollY": 0,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 208,
+        "y": 151,
+        "w": 512,
+        "h": 497
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280
+    },
+    {
+      "assignments": null,
+      "workers": {
+        "search": "",
+        "shift": "all",
+        "status": "active",
+        "samples": true,
+        "bannerCount": 1,
+        "names": [
+          "नमूना कारीगर",
+          "नमूना स्टाफ"
+        ],
+        "preview": true,
+        "available": false,
+        "effective": false,
+        "lastDay": false,
+        "enabledFields": 0,
+        "visibleClose": 0,
+        "anchors": 1,
+        "url": "http://localhost:5199/owner/workers?s=workers-salary&populated=1&search=No%20matching%20retained%20staff&shift=night&status=inactive&worker=22222222-2222-4222-8222-222222222222&lang=hi&fresh=1"
+      },
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "तय मासिक वेतन लिखें",
+      "body": "पूरी मासिक रकम लिखें, यहाँ ₹18,000। पेरोल उससे हर अवधि निकालता है।",
+      "step": "wks-salary",
+      "status": "ready",
+      "eyebrow": "नमूना · चरण 2 / 6",
+      "progress": null,
+      "panel": {
+        "x": 736,
+        "y": 151,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 224,
+        "y": 449,
+        "w": 480,
+        "h": 66
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 208,
+        "y": 151,
+        "w": 512,
+        "h": 497
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280
+    },
+    {
+      "assignments": null,
+      "workers": {
+        "search": "",
+        "shift": "all",
+        "status": "active",
+        "samples": true,
+        "bannerCount": 1,
+        "names": [
+          "नमूना कारीगर",
+          "नमूना स्टाफ"
+        ],
+        "preview": true,
+        "available": false,
+        "effective": false,
+        "lastDay": false,
+        "enabledFields": 0,
+        "visibleClose": 0,
+        "anchors": 1,
+        "url": "http://localhost:5199/owner/workers?s=workers-salary&populated=1&search=No%20matching%20retained%20staff&shift=night&status=inactive&worker=22222222-2222-4222-8222-222222222222&lang=hi&fresh=1"
+      },
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "वेतन जुड़ने की तारीख से शुरू होता है",
+      "body": "30 दिन के महीने के बीच में जुड़ने वाले को उस महीने के 15/30 × ₹18,000 = ₹9,000 मिलते हैं।",
+      "step": "wks-joining",
+      "status": "ready",
+      "eyebrow": "नमूना · चरण 3 / 6",
+      "progress": null,
+      "panel": {
+        "x": 736,
+        "y": 151,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 224,
+        "y": 517,
+        "w": 480,
+        "h": 66
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 208,
+        "y": 151,
+        "w": 512,
+        "h": 497
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280
+    },
+    {
+      "assignments": null,
+      "workers": {
+        "search": "",
+        "shift": "all",
+        "status": "active",
+        "samples": true,
+        "bannerCount": 1,
+        "names": [
+          "नमूना कारीगर",
+          "नमूना स्टाफ"
+        ],
+        "preview": true,
+        "available": false,
+        "effective": true,
+        "lastDay": true,
+        "enabledFields": 0,
+        "visibleClose": 0,
+        "anchors": 1,
+        "url": "http://localhost:5199/owner/workers?s=workers-salary&populated=1&search=No%20matching%20retained%20staff&shift=night&status=inactive&worker=22222222-2222-4222-8222-222222222222&lang=hi&fresh=1"
+      },
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "हर बदलाव को तारीख दें",
+      "body": "वेतन बदले तो किस तारीख से लागू हो, यह लिखें। कोई छोड़े तो निष्क्रिय करने से पहले आख़िरी काम का दिन लिखें।",
+      "step": "wks-changes",
+      "status": "ready",
+      "eyebrow": "नमूना · चरण 4 / 6",
+      "progress": null,
+      "panel": {
+        "x": 736,
+        "y": 39,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 224,
+        "y": 474,
+        "w": 480,
+        "h": 101
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 208,
+        "y": 39,
+        "w": 512,
+        "h": 721
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280
+    },
+    {
+      "assignments": null,
+      "workers": {
+        "search": "",
+        "shift": "all",
+        "status": "active",
+        "samples": true,
+        "bannerCount": 1,
+        "names": [
+          "नमूना कारीगर",
+          "नमूना स्टाफ"
+        ],
+        "preview": false,
+        "available": false,
+        "effective": false,
+        "lastDay": false,
+        "enabledFields": 0,
+        "visibleClose": 0,
+        "anchors": 1,
+        "url": "http://localhost:5199/owner/workers?s=workers-salary&populated=1&search=No%20matching%20retained%20staff&shift=night&status=inactive&worker=22222222-2222-4222-8222-222222222222&lang=hi&fresh=1"
+      },
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "वेतन पेरोल में दिखता है",
+      "body": "“पेरोल देखें” इस कारीगर का चालू अवधि का वेतन खोलता है।",
+      "step": "wks-payroll",
+      "status": "ready",
+      "eyebrow": "नमूना · चरण 5 / 6",
+      "progress": null,
+      "panel": {
+        "x": 793,
+        "y": 462,
+        "w": 360,
+        "h": 152
+      },
+      "highlight": {
+        "x": 680,
+        "y": 462,
+        "w": 97,
+        "h": 47
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280
+    },
+    {
+      "assignments": null,
+      "workers": {
+        "search": "No matching retained staff",
+        "shift": "night",
+        "status": "inactive",
+        "samples": false,
+        "bannerCount": 0,
+        "names": [],
+        "preview": false,
+        "available": false,
+        "effective": false,
+        "lastDay": false,
+        "enabledFields": 0,
+        "visibleClose": 0,
+        "anchors": 1,
+        "url": "http://localhost:5199/owner/workers?s=workers-salary&populated=1&search=No%20matching%20retained%20staff&shift=night&status=inactive&worker=22222222-2222-4222-8222-222222222222&lang=hi&fresh=1"
+      },
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "अपने कारीगर जोड़ें",
+      "body": "हर व्यक्ति के लिए “कारीगर जोड़ें” चुनें और वेतन का प्रकार ध्यान से चुनें।",
+      "step": "wk-handoff",
+      "status": "ready",
+      "eyebrow": "चरण 6 / 6",
+      "progress": null,
+      "panel": {
+        "x": 674,
+        "y": 16,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 1050,
+        "y": 15,
+        "w": 208,
+        "h": 51
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280
+    }
+  ],
+  "logs": [
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction"
+  ],
+  "apiRequests": [],
+  "preClick": null,
+  "sampling": "legacy-900ms",
+  "workersBefore": {
+    "search": "No matching retained staff",
+    "shift": "night",
+    "status": "inactive",
+    "url": "http://localhost:5199/owner/workers?s=workers-salary&populated=1&search=No%20matching%20retained%20staff&shift=night&status=inactive&worker=22222222-2222-4222-8222-222222222222&lang=hi&fresh=1",
+    "calls": 1,
+    "storage": {
+      "weavly_language": "hi"
+    },
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"workers\":{\"firstShown\":\"2026-09-29T22:35:10.598Z\",\"version\":\"v1\"}}"
+    },
+    "activeControl": null,
+    "activeAnchor": null,
+    "preview": false,
+    "samples": false
+  },
+  "workersExit": {
+    "search": "No matching retained staff",
+    "shift": "night",
+    "status": "inactive",
+    "url": "http://localhost:5199/owner/workers?s=workers-salary&populated=1&search=No%20matching%20retained%20staff&shift=night&status=inactive&worker=22222222-2222-4222-8222-222222222222&lang=hi&fresh=1",
+    "calls": 2,
+    "storage": {
+      "weavly_language": "hi"
+    },
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"workers\":{\"firstShown\":\"2026-09-29T22:35:10.598Z\",\"version\":\"v1\",\"firstStarted\":true}}"
+    },
+    "activeControl": "quiet-tour",
+    "activeAnchor": null,
+    "preview": false,
+    "samples": false
+  },
+  "before": {
+    "x": 0,
+    "y": 0,
+    "inner": null
+  },
+  "workersBack": true,
+  "after": {
+    "scroll": {
+      "x": 0,
+      "y": 0,
+      "inner": null
+    },
+    "active": "<button data-slot=\"button\" data-variant=\"default\" data-size=\"default\" class=\"inline-flex items-center justify-center gap-2 whitespace-nowrap transition-[color,b",
+    "activeAnchor": "workers.add",
+    "activeRateBookField": null,
+    "activeControl": null,
+    "serverCalls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "navigations": [],
+    "scrollCalls": [
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      }
+    ],
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"workers\":{\"firstShown\":\"2026-09-29T22:35:10.598Z\",\"version\":\"v1\",\"firstStarted\":true,\"completed\":true,\"completedVersion\":\"v2\"}}"
+    },
+    "search": null
+  },
+  "workersAfter": {
+    "search": "No matching retained staff",
+    "shift": "night",
+    "status": "inactive",
+    "url": "http://localhost:5199/owner/workers?s=workers-salary&populated=1&search=No%20matching%20retained%20staff&shift=night&status=inactive&worker=22222222-2222-4222-8222-222222222222&lang=hi&fresh=1",
+    "calls": 4,
+    "storage": {
+      "weavly_language": "hi"
+    },
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"workers\":{\"firstShown\":\"2026-09-29T22:35:10.598Z\",\"version\":\"v1\",\"firstStarted\":true,\"completed\":true,\"completedVersion\":\"v2\"}}"
+    },
+    "activeControl": null,
+    "activeAnchor": "workers.add",
+    "preview": false,
+    "samples": false
+  },
+  "issues": []
+}

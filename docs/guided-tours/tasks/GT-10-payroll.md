@@ -53,3 +53,15 @@ Escalate if keying a label would change text in another view that shares the com
 ## Checkpoint
 
 GT-10 PASSED. Next: **GT-11**.
+
+## Owner-authorized copy completion — 2026-09-28
+
+The owner explicitly approved Payroll-only terminology research and selection after the missing-copy escalation. Page spec §F.1 now fixes all 8 calculation-help strings and 6 sibling labels enumerated by that packet, preserving English meaning and `{period.label}`. Read and implement that addendum; the old missing-copy blocker is resolved. Key names remain discretionary inside the existing namespace. This grants no broader live-file surface, translation authority, business change or acceptance waiver. Missing copy outside those 14 entries or genuinely new material conflicts still require escalation.
+
+For Wave 4 patch collection only, this task may include the exact coordinator-approved changes to `pages/payroll.md` and this packet, whose hashes are recorded in primary `scratch/guided-tours-wave-4/approved-resumption.json`. Preserve them without further spec edits. They may already be present in the coordinator and must not cause duplicate application or unrelated overwrites. Publish a fresh final report only after resumed implementation/checks or a new blocker. Browser/native/reviewer/owner checks remain UNVERIFIED and implementation-complete status remains IN_PROGRESS.
+
+## Owner-authorized PDF loading-label completion — 2026-09-28
+
+The owner explicitly approved the coordinator's additional “Preparing PDF…” loading-label proposal with **“Approve this loading label”**. Payroll page §F.2 fixes the exact additional copy: Gujarati **PDF તૈયાર થઈ રહ્યું છે…** and Hindi **PDF तैयार हो रहा है…**, with English **Preparing PDF…**. This supplements the earlier 14 entries and resolves this specific omitted-copy escalation. Localize only the existing Export PDF button's loading state (and matching replica if shown), preserving all handlers, busy/disabled semantics and export behavior. No other scope or translation authority is added.
+
+For Wave 4 collection, the exact approved page/packet hashes after this supplement are recorded in primary `scratch/guided-tours-wave-4/approved-pdf-label-resumption.json`; this supersedes the earlier document hashes while preserving the §F.1 approval. Keep prior failure/partial-export evidence and any blocked marker as history, then publish fresh final evidence after continuing. Browser/native/reviewer/owner checks remain UNVERIFIED; implementation-complete remains IN_PROGRESS.

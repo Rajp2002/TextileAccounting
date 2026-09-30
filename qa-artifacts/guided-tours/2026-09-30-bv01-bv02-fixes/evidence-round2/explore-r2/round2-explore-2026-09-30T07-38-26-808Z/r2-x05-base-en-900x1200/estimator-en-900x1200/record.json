@@ -1,0 +1,829 @@
+{
+  "scenario": "estimator",
+  "lang": "en",
+  "size": "900x1200",
+  "steps": [
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Work out cost and price per metre",
+      "body": "Fill the sections from top to bottom; the price updates as you type. Start with the fabric's name.",
+      "step": "est-purpose",
+      "status": "ready",
+      "eyebrow": "Step 1 of 10",
+      "progress": null,
+      "panel": {
+        "x": 28,
+        "y": 443,
+        "w": 360,
+        "h": 221
+      },
+      "highlight": {
+        "x": 404,
+        "y": 443,
+        "w": 460,
+        "h": 425
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "div(role=dialog)",
+      "scrollY": 0,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [
+        "Quick"
+      ],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 1200,
+      "vw": 900
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Warp yarn: denier, ends and rate",
+      "body": "For each warp yarn enter its denier, total ends and price per kg. Weavly works out the kg used per 100 m and its cost per metre.",
+      "step": "est-warp",
+      "status": "ready",
+      "eyebrow": "Step 2 of 10",
+      "progress": null,
+      "panel": {
+        "x": 28,
+        "y": 303,
+        "w": 360,
+        "h": 243
+      },
+      "highlight": {
+        "x": 404,
+        "y": 303,
+        "w": 460,
+        "h": 594
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 564,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [
+        "Quick"
+      ],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 1200,
+      "vw": 900
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Weft yarn: picks and width",
+      "body": "For each weft yarn enter picks per inch, the finished width and its price per kg. Weft use depends on these, not on ends.",
+      "step": "est-weft",
+      "status": "ready",
+      "eyebrow": "Step 3 of 10",
+      "progress": null,
+      "panel": {
+        "x": 28,
+        "y": 285,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 285,
+        "w": 460,
+        "h": 631
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 1175,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [
+        "Quick"
+      ],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 1200,
+      "vw": 900
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Weaving charge",
+      "body": "Enter what weaving costs you, either per metre or in paisa per pick.",
+      "step": "est-weaving",
+      "status": "ready",
+      "eyebrow": "Step 4 of 10",
+      "progress": null,
+      "panel": {
+        "x": 28,
+        "y": 422,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 404,
+        "y": 422,
+        "w": 460,
+        "h": 357
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 1667,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [
+        "Quick"
+      ],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 1200,
+      "vw": 900
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Warping and sizing",
+      "body": "Add these charges if you pay for them, in-house or outside. Count each charge once, not again in overhead.",
+      "step": "est-warping",
+      "status": "ready",
+      "eyebrow": "Step 5 of 10",
+      "progress": null,
+      "panel": {
+        "x": 28,
+        "y": 777,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 777,
+        "w": 460,
+        "h": 227
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 1667,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [
+        "Quick"
+      ],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 1200,
+      "vw": 900
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Factory overhead per metre",
+      "body": "Enter your overhead per metre, or divide monthly expenses by monthly production: ₹60,000 ÷ 30,000 m = ₹2/m.",
+      "step": "est-overhead",
+      "status": "ready",
+      "eyebrow": "Step 6 of 10",
+      "progress": null,
+      "panel": {
+        "x": 28,
+        "y": 404,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 404,
+        "w": 460,
+        "h": 393
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 2265,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [
+        "Quick"
+      ],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 1200,
+      "vw": 900
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Margin, commission and transport",
+      "body": "Set the margin you want and any broker commission and transport. The suggested price includes all three.",
+      "step": "est-pricing",
+      "status": "ready",
+      "eyebrow": "Step 7 of 10",
+      "progress": null,
+      "panel": {
+        "x": 28,
+        "y": 642,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 642,
+        "w": 460,
+        "h": 406
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 2418,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [
+        "Quick"
+      ],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 1200,
+      "vw": 900
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Read the result",
+      "body": "“Live cost” shows production cost and the suggested price per metre. A cost of ₹100/m at 20% margin gives ₹125/m.",
+      "step": "est-live",
+      "status": "ready",
+      "eyebrow": "Step 8 of 10",
+      "progress": null,
+      "panel": {
+        "x": 23,
+        "y": 21,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 399,
+        "y": 211,
+        "w": 470,
+        "h": 162
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 2418,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 404,
+        "y": 21,
+        "w": 460,
+        "h": 1158
+      },
+      "estimatorMode": [
+        "Quick"
+      ],
+      "liveEstimateOpen": true,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 1200,
+      "vw": 900
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Save a fixed costing",
+      "body": "“Save Costing” keeps today's inputs and price in Saved Costings. “Save Quality & Create Costing” also keeps the recipe to reuse later.",
+      "step": "est-save",
+      "status": "ready",
+      "eyebrow": "Step 9 of 10",
+      "progress": null,
+      "panel": {
+        "x": 23,
+        "y": 21,
+        "w": 360,
+        "h": 243
+      },
+      "highlight": {
+        "x": 399,
+        "y": 536,
+        "w": 470,
+        "h": 262
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 2418,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 404,
+        "y": 21,
+        "w": 460,
+        "h": 1158
+      },
+      "estimatorMode": [
+        "Quick"
+      ],
+      "liveEstimateOpen": true,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 1200,
+      "vw": 900
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Start with your fabric's name",
+      "body": "Type the quality name, then work down the sections. “Detailed” view shows every input if you need more control.",
+      "step": "est-handoff",
+      "status": "ready",
+      "eyebrow": "Step 10 of 10",
+      "progress": null,
+      "panel": {
+        "x": 47,
+        "y": 571,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 416,
+        "y": 560,
+        "w": 437,
+        "h": 113
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [
+        "Quick"
+      ],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 1200,
+      "vw": 900
+    }
+  ],
+  "logs": [
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called getEstimatorSecondaryData",
+    "error: Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction"
+  ],
+  "apiRequests": [
+    {
+      "url": "http://localhost:5199/api/analytics/plan-events",
+      "method": "POST"
+    }
+  ],
+  "preClick": null,
+  "sampling": "legacy-900ms",
+  "before": {
+    "x": 0,
+    "y": 0,
+    "inner": null
+  },
+  "estimatorBefore": {
+    "mode": [
+      "Quick"
+    ],
+    "liveEstimateOpen": false,
+    "inputs": [
+      {
+        "field": "qualityLabel",
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": "warpConstruction",
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": "weftConstruction",
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "0",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": "perPickCostPaisa",
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      }
+    ],
+    "storage": {
+      "weavly_language": "en",
+      "weavly-estimator-width-unit": "inch"
+    },
+    "serverCalls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "getEstimatorSecondaryData",
+        "file": "app/(dashboard)/owner/estimator/actions.ts"
+      }
+    ],
+    "activeField": null,
+    "activeControl": null
+  },
+  "after": {
+    "scroll": {
+      "x": 0,
+      "y": 56,
+      "inner": null
+    },
+    "active": "<input data-slot=\"input\" class=\"file:text-foreground placeholder:text-[var(--color-placeholder)] selection:bg-saffron-soft selection:text-ink w-full min-w-0 rou",
+    "activeAnchor": null,
+    "activeRateBookField": null,
+    "activeControl": null,
+    "serverCalls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "getEstimatorSecondaryData",
+        "file": "app/(dashboard)/owner/estimator/actions.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "navigations": [],
+    "scrollCalls": [],
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"cost-estimate\":{\"firstShown\":\"2026-09-30T07:41:40.605Z\",\"version\":\"v1\",\"firstStarted\":true,\"completed\":true,\"completedVersion\":\"v2\"}}"
+    },
+    "search": null
+  },
+  "estimatorAfter": {
+    "mode": [
+      "Quick"
+    ],
+    "liveEstimateOpen": false,
+    "inputs": [
+      {
+        "field": "qualityLabel",
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": "warpConstruction",
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": "weftConstruction",
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "0",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": "perPickCostPaisa",
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      }
+    ],
+    "storage": {
+      "weavly_language": "en",
+      "weavly-estimator-width-unit": "inch"
+    },
+    "serverCalls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "getEstimatorSecondaryData",
+        "file": "app/(dashboard)/owner/estimator/actions.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "activeField": "qualityLabel",
+    "activeControl": null
+  },
+  "issues": []
+}

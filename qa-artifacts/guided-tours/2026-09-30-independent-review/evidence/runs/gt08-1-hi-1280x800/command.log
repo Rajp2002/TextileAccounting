@@ -1,0 +1,1 @@
+{"scenario":"fabric-stock?populated=1&allOpening=1","lang":"hi","size":"1280x800","steps":6,"logs":["warning: [harness] server action called recordTourEventAction","warning: [harness] server action called recordTourEventAction","warning: [harness] server action called recordTourEventAction"]}

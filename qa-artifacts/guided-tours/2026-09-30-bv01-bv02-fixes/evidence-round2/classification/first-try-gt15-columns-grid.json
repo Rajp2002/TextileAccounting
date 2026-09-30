@@ -1,0 +1,61 @@
+{
+  "folder": "/Users/rajpatel/Projects/textile Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/scratch/tour-fix-review-results/round2-gt15-try-2026-09-30T07-33-32-931Z",
+  "head": "9ae694bb4068963141dadfe1dfb0c4df3fafeb2f",
+  "workingTreeDiffSha256": "370f47321f8caf57a2dc80c1f378b49502ce613f259da21f1c6e8696d563398b",
+  "runnerSha256": "1638f82ee99d2e9cfa16e62d977534a0743a6463e072a63b226f6ed89d375987",
+  "totals": {
+    "BASELINE_ANALYTICS_ONLY": 2
+  },
+  "runs": [
+    {
+      "id": "gt15-1-hi-1280x800",
+      "set": "gt15",
+      "scenario": "assignments?populated=1",
+      "language": "hi",
+      "size": "1280x800",
+      "env": {},
+      "exitCode": 1,
+      "class": "BASELINE_ANALYTICS_ONLY",
+      "steps": 7,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 9,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: production_viewed"
+      ],
+      "runnerIssues": [
+        "navigation/API request"
+      ],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "production_viewed"
+      ]
+    },
+    {
+      "id": "gt15-1-en-1024x768",
+      "set": "gt15",
+      "scenario": "assignments?populated=1",
+      "language": "en",
+      "size": "1024x768",
+      "env": {},
+      "exitCode": 1,
+      "class": "BASELINE_ANALYTICS_ONLY",
+      "steps": 7,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 9,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: production_viewed"
+      ],
+      "runnerIssues": [
+        "navigation/API request"
+      ],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "production_viewed"
+      ]
+    }
+  ]
+}

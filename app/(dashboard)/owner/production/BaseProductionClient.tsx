@@ -143,7 +143,7 @@ export default function BaseProductionClient({
 }) {
     const router = useRouter()
     const pathname = usePathname()
-    const { tx } = useTranslation()
+    const { tx, t } = useTranslation()
     useLocalizedPageTitle(view === 'operations' ? `${tx('Worker–Machine Assignments')} | Weavly` : null)
     const searchParams = useSearchParams()
     const navigation = readBaseProductionNavigation(searchParams)
@@ -433,9 +433,9 @@ export default function BaseProductionClient({
             {view === 'production' && activeTab === 'jobs' && (
                 <aside className="production-activate-rail" aria-label="Production actions">
                     <div className="production-activate-action">
-                        <Button onClick={() => setIsActivateModalOpen(true)} className={railPrimaryAction}>
+                        <Button data-tour-anchor="production.activate" onClick={() => setIsActivateModalOpen(true)} className={railPrimaryAction}>
                             <Plus className="size-4" aria-hidden="true" />
-                            <span>Activate Quality</span>
+                            <span data-i18n-skip="true">{t('production.activateQuality')}</span>
                         </Button>
                     </div>
                 </aside>
@@ -473,15 +473,15 @@ export default function BaseProductionClient({
                                 </div>
                                 <p className="mt-2.5 text-center text-sm font-medium text-subtle">{formatDateOnly(activePeriodBounds.start)} – {formatDateOnly(activePeriodBounds.end)}</p>
                             </div>
-                            <Button onClick={() => setWorkspaceOpen(true)} className="min-h-12 w-full rounded-xl bg-loom px-5 text-[0.9375rem] font-semibold text-white shadow-[var(--shadow-button)] hover:bg-loom-elevated hover:text-white focus-visible:ring-saffron/40">
+                            <Button data-tour-anchor="payroll.settle" onClick={() => setWorkspaceOpen(true)} className="min-h-12 w-full rounded-xl bg-loom px-5 text-[0.9375rem] font-semibold text-white shadow-[var(--shadow-button)] hover:bg-loom-elevated hover:text-white focus-visible:ring-saffron/40">
                                 <WalletCards className="size-[1.125rem]" />
-                                {activePeriodSummary.status === 'settled'
-                                    ? 'View settled payroll'
+                                <span data-i18n-skip="true">{activePeriodSummary.status === 'settled'
+                                    ? t('payroll.viewSettledPayroll')
                                     : activePeriodSummary.status === 'ready_to_complete'
-                                        ? 'Complete payroll'
+                                        ? t('payroll.completePayrollRail')
                                         : activePeriodSummary.status === 'in_progress'
-                                            ? 'Continue settlement'
-                                            : 'Settle payroll'}
+                                            ? t('payroll.continueSettlement')
+                                            : t('payroll.settlePayroll')}</span>
                             </Button>
                         </>
                     )}
@@ -770,9 +770,9 @@ export default function BaseProductionClient({
                                                 <p className="flex items-center gap-1.5 text-xs font-medium text-success"><CheckCircle2 className="h-3.5 w-3.5" /> {workerReadiness.verifiedLineCount} earning {workerReadiness.verifiedLineCount === 1 ? 'line' : 'lines'} reconciled{workerReadiness.legacyLineCount > 0 ? ` · ${workerReadiness.legacyLineCount} legacy` : ''}</p>
                                             )}
                                             <div className="flex flex-wrap gap-2 pt-1">
-                                                <Button size="sm" variant="secondary" onClick={() => openAdvance(payable.worker_id)} disabled={!worker?.is_active} className="h-9 rounded-xl text-xs font-bold"><Plus className="h-4 w-4" /> Add advance</Button>
-                                                <Button size="sm" variant="secondary" onClick={() => openDeduction(payable.worker_id)} disabled={!worker?.is_active} className="h-9 rounded-xl text-xs font-bold"><Minus className="h-4 w-4" /> Add deduction</Button>
-                                                {payable.status === 'unsettled' && payable.gross_pay > 0 && <Button size="sm" variant="saffron" onClick={() => { setSettlementRequestId(crypto.randomUUID()); setSettlingWorkerId(payable.worker_id) }} disabled={settlePending || Boolean(workerReadiness?.issueCount)} className="h-9 rounded-xl text-xs font-bold">{settlePending ? <Loader2 className="h-4 w-4 animate-spin" /> : <WalletCards className="h-4 w-4" />} {workerReadiness?.issueCount ? 'Review before paying' : 'Mark paid'}</Button>}
+                                                <Button size="sm" variant="secondary" onClick={() => openAdvance(payable.worker_id)} disabled={!worker?.is_active} className="h-9 rounded-xl text-xs font-bold"><Plus className="h-4 w-4" /> <span data-i18n-skip="true">{t('payroll.addAdvance')}</span></Button>
+                                                <Button size="sm" variant="secondary" onClick={() => openDeduction(payable.worker_id)} disabled={!worker?.is_active} className="h-9 rounded-xl text-xs font-bold"><Minus className="h-4 w-4" /> <span data-i18n-skip="true">{t('payroll.addDeduction')}</span></Button>
+                                                {payable.status === 'unsettled' && payable.gross_pay > 0 && <Button size="sm" variant="saffron" onClick={() => { setSettlementRequestId(crypto.randomUUID()); setSettlingWorkerId(payable.worker_id) }} disabled={settlePending || Boolean(workerReadiness?.issueCount)} className="h-9 rounded-xl text-xs font-bold">{settlePending ? <Loader2 className="h-4 w-4 animate-spin" /> : <WalletCards className="h-4 w-4" />} <span data-i18n-skip="true">{workerReadiness?.issueCount ? t('payroll.reviewBeforePaying') : t('payroll.markPaidCard')}</span></Button>}
                                             </div>
                                         </CardContent>
                                     </Card>
@@ -786,8 +786,8 @@ export default function BaseProductionClient({
 
             {view === 'payroll' && activeTab !== 'history' && (
                 <div className="payroll-records-action">
-                    <Button variant="outline" className="min-h-11 w-full rounded-lg px-4" onClick={() => setPayrollTab('history')}>
-                        <History className="size-4" aria-hidden="true" /> Payroll records <ChevronRight className="size-4" aria-hidden="true" />
+                    <Button data-tour-anchor="payroll.records" variant="outline" className="min-h-11 w-full rounded-lg px-4" onClick={() => setPayrollTab('history')}>
+                        <History className="size-4" aria-hidden="true" /> <span data-i18n-skip="true">{t('payroll.payrollRecords')}</span> <ChevronRight className="size-4" aria-hidden="true" />
                     </Button>
                 </div>
             )}

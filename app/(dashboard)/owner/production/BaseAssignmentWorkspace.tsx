@@ -6,9 +6,14 @@ import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { TourInvitation } from '@/components/tours/TourInvitation'
 import { useTranslation } from '@/lib/i18n/context'
+import type { GuidedTour as GuidedTourComponent } from '@/components/tours/GuidedTour'
+import { findTourTarget } from '@/lib/tutorial-target'
+import { formatTourText } from '@/lib/tours/tour-text'
+import { isSampleRecordId } from '@/lib/tours/sample-ids'
+import { tourCommonCopy } from '@/lib/i18n/tour-common'
 import { configurationHelpTopics, configurationTutorialCopy } from '@/lib/i18n/configuration-tutorial'
-import { configurationTourSteps, configurationTourView, makeConfigurationTourExample, type ConfigurationTourStep } from '@/lib/configuration-tour'
-import { useCallback, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import { configurationTourSteps, configurationTourView, configurationTourSpecs, configurationTourControlLabels, configurationHandoffWorker, makeConfigurationTourExample, type ConfigurationTourStep } from '@/lib/configuration-tour'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { ArrowUpRight, Check, CircleHelp, Link2, Loader2, Moon, Plus, Search, Sun, Unlink, Users, Wrench } from 'lucide-react'
@@ -30,7 +35,7 @@ import {
 import type { BaseProductionInitialData } from './loaders'
 import { buildWorkerColorMap, DEFAULT_PALETTE } from './worker-colors'
 
-const ConfigurationTutorial = dynamic(() => import('@/components/tours/ConfigurationTutorial'), { ssr: false })
+const GuidedTour = dynamic(() => import('@/components/tours/GuidedTour').then(module => module.GuidedTour), { ssr: false }) as typeof GuidedTourComponent
 
 function formatMachineType(value: string) {
     return value.replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())
@@ -82,14 +87,33 @@ export default function BaseAssignmentWorkspace({
     initialShift?: BaseProductionShift
 }) {
     const router = useRouter()
-    const { language, tx } = useTranslation()
+    const { language, tx, t } = useTranslation()
     const tourCopy = configurationTutorialCopy[language]
     const [tourStep, setTourStep] = useState<ConfigurationTourStep | null>(null)
     const tourLauncher = useRef<HTMLDivElement>(null)
-    const tourReturnScroll = useRef({ x: 0, y: 0 })
+    const tourReturnFocus = useRef<HTMLElement | null>(null)
+    const tourReturnScroll = useRef<{ x: number; y: number } | null>(null)
+    const completedHandoff = useRef<string | null>(null)
+    useEffect(() => {
+        if (tourStep === null && tourReturnScroll.current) {
+            window.scrollTo({ left: tourReturnScroll.current.x, top: tourReturnScroll.current.y, behavior: 'instant' })
+            tourReturnScroll.current = null
+        }
+        if (tourStep === null && completedHandoff.current) {
+            // Restoring the user's search/focus/mobile view may remove the highlighted
+            // worker. Resolve again after restoration, then use the replay launcher.
+            const target = findTourTarget(completedHandoff.current)
+            const fallback = tourLauncher.current?.querySelector<HTMLElement>('[data-tour-control="quiet-tour"], [data-tour-control="take-tour"]')
+            const focus = target && !target.matches(':disabled, [aria-disabled="true"]') ? target : fallback
+            focus?.focus({ preventScroll: true })
+            completedHandoff.current = null
+        }
+    }, [tourStep])
+    const tourSampleActive = tourStep !== null && tourStep !== 'ma-handoff'
+    const tourLabels = configurationTourControlLabels(t, tx)
     const tourView = tourStep ? configurationTourView(tourStep) : null
     const initialData = useMemo(() => {
-        if (!tourStep) return liveData
+        if (!tourStep || tourStep === 'ma-handoff') return liveData
         const example = makeConfigurationTourExample(liveData.today, tourStep)
         const copy = configurationTutorialCopy[language]
         example.workers[0].name = copy.worker
@@ -112,8 +136,8 @@ export default function BaseAssignmentWorkspace({
     const workerSearch = tourStep ? '' : search
     const selectedMachineTypes = useMemo(() => tourStep ? [] : machineTypeFilter, [tourStep, machineTypeFilter])
     const showInactive = tourView?.showInactive ?? includeInactive
-    const pickerWorkerId = tourView ? tourView.pickerWorkerId : selectedPickerWorkerId
-    const mobileView = tourView?.mobileView ?? selectedMobileView
+    const pickerWorkerId = tourStep ? tourView?.pickerWorkerId ?? null : selectedPickerWorkerId
+    const mobileView = tourStep === 'ma-handoff' ? 'workers' : tourView?.mobileView ?? selectedMobileView
     const boardRef = useRef<HTMLDivElement>(null)
     const configurationParams = new URLSearchParams({ shift })
     if (focusWorkerId) configurationParams.set('worker', focusWorkerId)
@@ -194,6 +218,9 @@ export default function BaseAssignmentWorkspace({
         [initialData.machines, selectedMachineTypes],
     )
     const pickerWorker = pickerWorkerId ? workerById.get(pickerWorkerId) : null
+    const handoffWorker = tourSampleActive ? undefined : configurationHandoffWorker(visibleWorkers)
+    const hasHandoffWorker = Boolean(handoffWorker)
+    const tourSpecs = useMemo(() => configurationTourSpecs(hasHandoffWorker), [hasHandoffWorker])
 
     const updateConnectorPositions = useCallback(() => {
         const board = boardRef.current
@@ -242,7 +269,7 @@ export default function BaseAssignmentWorkspace({
     }
 
     function handleConnectorPointerDown(event: ReactPointerEvent<HTMLElement>, workerId: string) {
-        if (tourStep || pendingKey || !workerById.get(workerId)?.is_active) return
+        if (tourStep || isSampleRecordId(workerId) || pendingKey || !workerById.get(workerId)?.is_active) return
         event.preventDefault()
         event.currentTarget.setPointerCapture(event.pointerId)
         setDraggingWorkerId(workerId)
@@ -268,6 +295,10 @@ export default function BaseAssignmentWorkspace({
 
     async function handleAssign(workerId: string, machineId: string, replaceExisting = false) {
         if (tourStep) return
+        if (isSampleRecordId(workerId) || isSampleRecordId(machineId)) {
+            toast.info(tourCommonCopy[language].sampleBanner)
+            return
+        }
         if (!currentJobByMachine.has(machineId)) {
             toast.error('This machine has no active production job. Create or select one before assigning a worker.')
             return
@@ -327,6 +358,10 @@ export default function BaseAssignmentWorkspace({
         previousAssignment: BaseWorkerMachineAssignment | undefined,
     ) {
         if (tourStep || pendingKey) return
+        if (isSampleRecordId(assignmentId) || isSampleRecordId(previousAssignment?.id) || isSampleRecordId(previousAssignment?.worker_id) || isSampleRecordId(previousAssignment?.machine_id)) {
+            toast.info(tourCommonCopy[language].sampleBanner)
+            return
+        }
         setPendingKey(`undo-${assignmentId}`)
         try {
             const removeResult = await removeBaseWorkerMachineAssignment({ assignmentId })
@@ -362,6 +397,10 @@ export default function BaseAssignmentWorkspace({
 
     async function handleRemove(assignmentId: string) {
         if (tourStep) return
+        if (isSampleRecordId(assignmentId)) {
+            toast.info(tourCommonCopy[language].sampleBanner)
+            return
+        }
         if (pendingKey) return
         setPendingKey(`remove-${assignmentId}`)
         try {
@@ -382,7 +421,7 @@ export default function BaseAssignmentWorkspace({
 
     return (
         <div className="configuration-workspace" inert={tourStep !== null}>
-            {(focusWorkerId || focusMachineId) && <div role="status" className="col-span-full rounded border p-3"><p>{(focusWorkerId && !liveData.workers.some(worker => worker.id === focusWorkerId)) || (focusMachineId && !liveData.machines.some(machine => machine.id === focusMachineId)) ? 'This record is unavailable.' : focusWorkerId ? 'Worker filter active' : 'Machine filter active'}</p><Link className="inline-flex min-h-11 items-center underline" href={`/owner/assignments?shift=${shift}`}>View all assignments</Link></div>}
+            {!tourStep && (focusWorkerId || focusMachineId) && <div role="status" className="col-span-full rounded border p-3"><p>{(focusWorkerId && !liveData.workers.some(worker => worker.id === focusWorkerId)) || (focusMachineId && !liveData.machines.some(machine => machine.id === focusMachineId)) ? 'This record is unavailable.' : focusWorkerId ? 'Worker filter active' : 'Machine filter active'}</p><Link className="inline-flex min-h-11 items-center underline" href={`/owner/assignments?shift=${shift}`}>View all assignments</Link></div>}
             <aside className="configuration-guide-rail" aria-label="Machine Assignments guide">
                 <div ref={tourLauncher}>
                     <TourInvitation
@@ -393,7 +432,8 @@ export default function BaseAssignmentWorkspace({
                         align="full"
                         className="w-full"
                         onLaunch={() => {
-                            if (pendingKey) return
+                            if (pendingKey || selectedPickerWorkerId) return
+                            tourReturnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
                             tourReturnScroll.current = { x: window.scrollX, y: window.scrollY }
                             setTourStep(configurationTourSteps[0])
                         }}
@@ -501,8 +541,9 @@ export default function BaseAssignmentWorkspace({
                     <div
                         ref={boardRef}
                         data-configuration-tour-connections
+                        data-tour-anchor="assignments.columns"
                         onScroll={updateConnectorPositions}
-                        className={`relative grid flex-1 min-h-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-12 lg:gap-16 overflow-y-auto overscroll-contain pr-2 ${draggingWorkerId ? 'select-none' : ''}`}
+                        className={`relative grid ${tourSampleActive ? 'flex-none' : 'flex-1'} min-h-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-12 lg:gap-16 overflow-y-auto overscroll-contain pr-2 ${draggingWorkerId ? 'select-none' : ''}`}
                     >
                         <svg className="pointer-events-none absolute inset-0 z-0 h-full w-full overflow-visible" aria-hidden="true">
                             {visibleWorkers.flatMap((worker) => {
@@ -580,13 +621,14 @@ export default function BaseAssignmentWorkspace({
                                         <div className="flex shrink-0 items-center gap-2">
                                             <Button
                                                 data-configuration-tour="assign"
+                                                data-tour-anchor={!tourSampleActive && worker.id === handoffWorker?.id ? 'assignments.first-assign' : undefined}
                                                 size="sm"
                                                 variant="outline"
                                                 className="h-8 rounded-lg border-hairline px-3 text-xs font-medium text-body shadow-xs hover:border-hairline-strong hover:bg-surface-soft hover:text-ink"
                                                 onClick={() => setPickerWorkerId(worker.id)}
                                                 disabled={!worker.is_active}
                                             >
-                                                Assign
+                                                <span data-i18n-skip="true">{t('assignments.assign')}</span>
                                             </Button>
                                             <span
                                                 role="button"
@@ -680,7 +722,7 @@ export default function BaseAssignmentWorkspace({
                                                         <Check className="h-3 w-3" /> {worker.name}
                                                     </span>
                                                 ) : !hasActiveJob ? (
-                                                    <Badge variant="outline" className="border-dashed text-muted-foreground text-xs">No production job</Badge>
+                                                    <Badge variant="outline" className="border-dashed text-muted-foreground text-xs"><span data-i18n-skip="true">{t('assignments.noJob')}</span></Badge>
                                                 ) : (
                                                     <Badge variant="warning" className="text-xs">Unassigned</Badge>
                                                 )}
@@ -718,7 +760,7 @@ export default function BaseAssignmentWorkspace({
                 </CardContent>
             </Card>
 
-            <Card data-configuration-tour="board" className="gap-3 rounded-2xl border border-hairline bg-surface shadow-xs md:hidden min-h-[calc(100vh-14.5rem)] flex flex-col">
+            <Card data-configuration-tour="board" data-tour-anchor="assignments.columns" className="gap-3 rounded-2xl border border-hairline bg-surface shadow-xs md:hidden min-h-[calc(100vh-14.5rem)] flex flex-col">
                 <CardHeader className="border-b border-hairline/70 p-4 pb-3">
                     <CardTitle className="flex items-center gap-2 text-base font-bold text-ink">
                         <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-hairline bg-surface-soft text-loom">
@@ -778,6 +820,7 @@ export default function BaseAssignmentWorkspace({
                                             <div className="flex shrink-0 items-center gap-1">
                                                 <Button
                                                     data-configuration-tour="assign"
+                                                    data-tour-anchor={!tourSampleActive && worker.id === handoffWorker?.id ? 'assignments.first-assign' : undefined}
                                                     data-configuration-tour-drag-fallback
                                                     size="sm"
                                                     variant="outline"
@@ -785,7 +828,7 @@ export default function BaseAssignmentWorkspace({
                                                     onClick={() => setPickerWorkerId(worker.id)}
                                                     disabled={!worker.is_active}
                                                 >
-                                                    {assignments.length ? 'Change' : 'Assign'} <ChevronIcon />
+                                                    {assignments.length ? 'Change' : <span data-i18n-skip="true">{t('assignments.assign')}</span>} <ChevronIcon />
                                                 </Button>
                                             </div>
                                         </div>
@@ -831,7 +874,7 @@ export default function BaseAssignmentWorkspace({
                                                         <Check className="h-3 w-3" /> {worker.name}
                                                     </span>
                                                 ) : !hasActiveJob ? (
-                                                    <Badge variant="outline" className="border-dashed text-muted-foreground text-xs">No production job</Badge>
+                                                    <Badge variant="outline" className="border-dashed text-muted-foreground text-xs"><span data-i18n-skip="true">{t('assignments.noJob')}</span></Badge>
                                                 ) : (
                                                     <Badge variant="warning" className="text-xs">Unassigned</Badge>
                                                 )}
@@ -877,7 +920,7 @@ export default function BaseAssignmentWorkspace({
                     </Link>
                 </Button>
                 <Button asChild variant="outline" size="sm" className="h-11 w-full justify-start rounded-xl border-hairline bg-surface px-4 text-sm font-semibold text-ink shadow-xs hover:border-hairline-strong hover:bg-surface-soft hover:text-ink">
-                    <Link data-configuration-tour="add-worker" onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href={setupHref('worker')}>
+                    <Link data-tour-anchor="assignments.add-worker" data-configuration-tour="add-worker" onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href={setupHref('worker')}>
                         <Plus className="h-4 w-4" /> Add worker
                     </Link>
                 </Button>
@@ -896,7 +939,7 @@ export default function BaseAssignmentWorkspace({
             </aside>
 
             <Sheet modal={!tourStep} open={pickerWorkerId !== null} onOpenChange={(open) => { if (!open && !tourStep) setPickerWorkerId(null) }}>
-                <SheetContent data-configuration-tour="picker" data-configuration-picker-preview={tourStep ? "true" : undefined} onOpenAutoFocus={event => { if (tourStep) event.preventDefault() }} onCloseAutoFocus={event => { if (tourStep) event.preventDefault() }} onInteractOutside={event => { if (tourStep) event.preventDefault() }} side="bottom" className="max-h-[82dvh] rounded-t-2xl border-t border-hairline bg-surface pb-6 shadow-xl">
+                <SheetContent inert={Boolean(tourStep)} showCloseButton={!tourStep} hideOverlay={Boolean(tourStep)} data-configuration-tour="picker" data-configuration-picker-preview={tourStep ? "true" : undefined} onOpenAutoFocus={event => { if (tourStep) event.preventDefault() }} onCloseAutoFocus={event => { if (tourStep) event.preventDefault() }} onInteractOutside={event => { if (tourStep) event.preventDefault() }} side="bottom" className="max-h-[82dvh] rounded-t-2xl border-t border-hairline bg-surface pb-6 shadow-xl">
                     <SheetHeader className="pb-3 border-b border-hairline/60">
                         <SheetTitle className="text-lg font-bold text-ink">Assign {pickerWorker?.name ?? 'worker'}</SheetTitle>
                         <SheetDescription className="text-xs text-body">Choose a machine for the {shift} shift. Saving happens immediately.</SheetDescription>
@@ -935,7 +978,7 @@ export default function BaseAssignmentWorkspace({
                                     ) : isCurrent ? (
                                         <Badge variant="success" className="text-xs"><Check className="h-3 w-3 mr-1" /> Current</Badge>
                                     ) : !hasActiveJob ? (
-                                        <span className="text-xs font-semibold text-muted-foreground">No production job</span>
+                                        <span className="text-xs font-semibold text-muted-foreground"><span data-i18n-skip="true">{t('assignments.noJob')}</span></span>
                                     ) : (
                                         <span className="inline-flex items-center justify-center rounded-lg bg-loom px-3 py-1 text-xs font-semibold text-white shadow-xs hover:bg-loom-elevated">Choose</span>
                                     )}
@@ -948,15 +991,24 @@ export default function BaseAssignmentWorkspace({
                     </SheetFooter>
                 </SheetContent>
             </Sheet>
-            {tourStep === 'connected' && <div data-configuration-tour="saved-preview" data-i18n-skip="true" lang={language} role="status" className="col-span-full flex items-center justify-between gap-3 rounded-xl border border-hairline bg-surface p-4 shadow-sm">
+            {tourStep === 'ma-linked' && <div data-configuration-tour="saved-preview" data-i18n-skip="true" lang={language} role="status" className="col-span-full flex items-center justify-between gap-3 rounded-xl border border-hairline bg-surface p-4 shadow-sm">
                 <div>
-                    <p className="text-xs text-saffron-deep">{tourCopy.sample}</p>
                     <p className="font-semibold">{tourCopy.savedLabel}</p>
                     <p className="text-sm text-body">{tourCopy.worker} → {tourCopy.machine} · {tourCopy.dayShiftLabel}</p>
                 </div>
                 <Button type="button" variant="outline" disabled>{tourCopy.undoLabel}</Button>
             </div>}
-            {tourStep && <ConfigurationTutorial step={tourStep} onStepChange={setTourStep} launcher={tourLauncher} returnScroll={tourReturnScroll} userId={liveData.actorId} />}
+            {tourStep && <GuidedTour tourId="configuration" steps={tourSpecs} step={tourStep}
+                onDone={() => { completedHandoff.current = tourSpecs[tourSpecs.length - 1].anchor }}
+                onStepChange={setTourStep} launcher={tourLauncher} returnFocus={tourReturnFocus} userId={liveData.actorId}
+                copy={step => {
+                    const content = step === 'ma-handoff' && !handoffWorker ? tourCopy.emptyHandoff : tourCopy.steps[step]
+                    const controls = Object.fromEntries(Object.entries(tourLabels).map(([key, value]) => [key, `“${value}”`]))
+                    return {
+                        ...content, body: formatTourText(content.body, controls),
+                        detail: 'detail' in content && typeof content.detail === 'string' ? formatTourText(content.detail, controls) : undefined,
+                    }
+                }} />}
         </div>
     )
 }

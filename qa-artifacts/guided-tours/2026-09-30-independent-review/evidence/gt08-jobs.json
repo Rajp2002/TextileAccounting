@@ -1,0 +1,98 @@
+[
+  {
+    "id": "gt08-0-en-1440x900",
+    "task": "GT-08",
+    "scenario": "fabric-stock",
+    "language": "en",
+    "size": "1440x900"
+  },
+  {
+    "id": "gt08-0-hi-1280x800",
+    "task": "GT-08",
+    "scenario": "fabric-stock",
+    "language": "hi",
+    "size": "1280x800"
+  },
+  {
+    "id": "gt08-0-en-1024x768",
+    "task": "GT-08",
+    "scenario": "fabric-stock",
+    "language": "en",
+    "size": "1024x768"
+  },
+  {
+    "id": "gt08-0-gu-390x844",
+    "task": "GT-08",
+    "scenario": "fabric-stock",
+    "language": "gu",
+    "size": "390x844"
+  },
+  {
+    "id": "gt08-0-reduced-en-1024x768",
+    "task": "GT-08",
+    "scenario": "fabric-stock",
+    "language": "en",
+    "size": "1024x768",
+    "env": {
+      "REDUCED_MOTION": "1"
+    }
+  },
+  {
+    "id": "gt08-1-en-1440x900",
+    "task": "GT-08",
+    "scenario": "fabric-stock?populated=1&allOpening=1",
+    "language": "en",
+    "size": "1440x900"
+  },
+  {
+    "id": "gt08-1-hi-1280x800",
+    "task": "GT-08",
+    "scenario": "fabric-stock?populated=1&allOpening=1",
+    "language": "hi",
+    "size": "1280x800"
+  },
+  {
+    "id": "gt08-1-en-1024x768",
+    "task": "GT-08",
+    "scenario": "fabric-stock?populated=1&allOpening=1",
+    "language": "en",
+    "size": "1024x768"
+  },
+  {
+    "id": "gt08-1-gu-390x844",
+    "task": "GT-08",
+    "scenario": "fabric-stock?populated=1&allOpening=1",
+    "language": "gu",
+    "size": "390x844"
+  },
+  {
+    "id": "gt08-1-reduced-en-1024x768",
+    "task": "GT-08",
+    "scenario": "fabric-stock?populated=1&allOpening=1",
+    "language": "en",
+    "size": "1024x768",
+    "env": {
+      "REDUCED_MOTION": "1"
+    }
+  },
+  {
+    "id": "gt08-exit-fabric-stock-en-1440x900",
+    "task": "GT-08",
+    "scenario": "fabric-stock?populated=1&allOpening=1",
+    "language": "en",
+    "size": "1440x900",
+    "env": {
+      "EXIT_AT": "3"
+    }
+  },
+  {
+    "id": "gt08-exit-fabric-stock-gu-390x844",
+    "task": "GT-08",
+    "scenario": "fabric-stock?populated=1&allOpening=1",
+    "language": "gu",
+    "size": "390x844",
+    "env": {
+      "EXIT_AT": "3"
+    }
+  }
+]

@@ -1,0 +1,36 @@
+{
+  "finding": "BV-01",
+  "runnerSha256": "1638f82ee99d2e9cfa16e62d977534a0743a6463e072a63b226f6ed89d375987",
+  "cases": [
+    {
+      "originalCase": "gt05-0-gu-390x844",
+      "scenario": "estimator",
+      "language": "gu",
+      "size": "390x844",
+      "env": {},
+      "exitCode": 1,
+      "signal": null,
+      "output": "/Users/rajpatel/Projects/textile Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/scratch/tour-fix-review-results/BV-01-2026-09-29T23-27-21-410Z/gt05-0-gu-390x844"
+    },
+    {
+      "originalCase": "gt05-1-gu-390x844",
+      "scenario": "estimator?tier=lite",
+      "language": "gu",
+      "size": "390x844",
+      "env": {},
+      "exitCode": 1,
+      "signal": null,
+      "output": "/Users/rajpatel/Projects/textile Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/scratch/tour-fix-review-results/BV-01-2026-09-29T23-27-21-410Z/gt05-1-gu-390x844"
+    },
+    {
+      "originalCase": "gt05-2-gu-390x844",
+      "scenario": "free-estimator",
+      "language": "gu",
+      "size": "390x844",
+      "env": {},
+      "exitCode": 1,
+      "signal": null,
+      "output": "/Users/rajpatel/Projects/textile Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/scratch/tour-fix-review-results/BV-01-2026-09-29T23-27-21-410Z/gt05-2-gu-390x844"
+    }
+  ]
+}

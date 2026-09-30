@@ -2,7 +2,7 @@ import json,sys,glob,os
 # Lists issues per run. A run directory without record.json crashed or timed out; it is
 # reported as INCOMPLETE and makes the exit status 1, as does a run that recorded an error.
 problems=0
-for d in sorted(glob.glob('out/*/')):
+for d in sorted(glob.glob(os.path.join(sys.argv[1] if len(sys.argv) > 1 else 'out', '*/'))):
     name=d.rstrip('/').split('/')[-1]
     f=os.path.join(d,'record.json')
     if not os.path.exists(f): print(name, 'INCOMPLETE: no record.json (crashed or timed out)'); problems+=1; continue

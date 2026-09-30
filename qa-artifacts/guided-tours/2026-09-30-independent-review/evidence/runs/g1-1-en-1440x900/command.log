@@ -1,0 +1,1 @@
+{"scenario":"quotes?tier=lite","lang":"en","size":"1440x900","steps":6,"logs":["warning: [harness] server action called recordTourEventAction","warning: [harness] server action called recordTourEventAction","warning: [harness] server action called recordTourEventAction"]}

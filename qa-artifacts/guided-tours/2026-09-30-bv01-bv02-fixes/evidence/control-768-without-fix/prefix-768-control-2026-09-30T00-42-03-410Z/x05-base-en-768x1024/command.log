@@ -1,0 +1,6 @@
+{"scenario":"estimator","lang":"en","size":"768x1024","steps":10,"logs":["warning: [harness] server action called recordTourEventAction","warning: [harness] server action called getEstimatorSecondaryData","error: Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector","warning: [harness] server action called recordTourEventAction","warning: [harness] server action called recordTourEventAction"]}
+[
+  'est-warp: panel/outline overlap 4048',
+  'est-weft: panel/outline overlap 1656',
+  'est-handoff: panel/outline overlap 23014'
+]

@@ -1,0 +1,1 @@
+{"scenario":"assignments?populated=1","lang":"gu","size":"390x844","frames":57,"issues":["ma-purpose/start@500ms: panel/actual-target overlap 29322","ma-purpose/start@2000ms: panel/actual-target overlap 29322","ma-purpose/back@500ms: panel/actual-target overlap 29322","ma-purpose/back@2000ms: panel/actual-target overlap 29322"]}

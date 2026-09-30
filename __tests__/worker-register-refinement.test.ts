@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import React from 'react'
+import { en } from '../lib/i18n/locales/en'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { normalizeWorker } from '../app/(dashboard)/owner/production/registers/normalize'
 import { BASE_CONTINUITY_PHRASES } from '../lib/i18n/base-continuity-phrases'
@@ -15,7 +16,7 @@ vi.mock('@/lib/i18n/context', () => ({
   useTranslation: () => ({
     language: 'en',
     tx: (text: string) => text,
-    t: (text: string) => text,
+    t: (key: string) => key.startsWith('workers.') ? en.workers[key.split('.')[1] as keyof typeof en.workers] : key,
   }),
 }))
 vi.mock('@/components/navigation/navigation-link', () => ({

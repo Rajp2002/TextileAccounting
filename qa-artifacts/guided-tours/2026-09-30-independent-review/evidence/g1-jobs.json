@@ -1,0 +1,192 @@
+[
+  {
+    "id": "foundation-en-1440x900",
+    "task": "GT-01",
+    "scenario": "foundation",
+    "language": "en",
+    "size": "1440x900"
+  },
+  {
+    "id": "foundation-hi-1280x800",
+    "task": "GT-01",
+    "scenario": "foundation",
+    "language": "hi",
+    "size": "1280x800"
+  },
+  {
+    "id": "foundation-en-1024x768",
+    "task": "GT-01",
+    "scenario": "foundation",
+    "language": "en",
+    "size": "1024x768"
+  },
+  {
+    "id": "foundation-gu-390x844",
+    "task": "GT-01",
+    "scenario": "foundation",
+    "language": "gu",
+    "size": "390x844"
+  },
+  {
+    "id": "foundation-reduced",
+    "task": "GT-01",
+    "scenario": "foundation",
+    "language": "en",
+    "size": "1024x768",
+    "env": {
+      "REDUCED_MOTION": "1"
+    }
+  },
+  {
+    "id": "g1-0-en-1440x900",
+    "task": "GT-03",
+    "scenario": "quotes",
+    "language": "en",
+    "size": "1440x900"
+  },
+  {
+    "id": "g1-0-hi-1280x800",
+    "task": "GT-03",
+    "scenario": "quotes",
+    "language": "hi",
+    "size": "1280x800"
+  },
+  {
+    "id": "g1-0-en-1024x768",
+    "task": "GT-03",
+    "scenario": "quotes",
+    "language": "en",
+    "size": "1024x768"
+  },
+  {
+    "id": "g1-0-gu-390x844",
+    "task": "GT-03",
+    "scenario": "quotes",
+    "language": "gu",
+    "size": "390x844"
+  },
+  {
+    "id": "g1-1-en-1440x900",
+    "task": "GT-03",
+    "scenario": "quotes?tier=lite",
+    "language": "en",
+    "size": "1440x900"
+  },
+  {
+    "id": "g1-1-hi-1280x800",
+    "task": "GT-03",
+    "scenario": "quotes?tier=lite",
+    "language": "hi",
+    "size": "1280x800"
+  },
+  {
+    "id": "g1-1-en-1024x768",
+    "task": "GT-03",
+    "scenario": "quotes?tier=lite",
+    "language": "en",
+    "size": "1024x768"
+  },
+  {
+    "id": "g1-1-gu-390x844",
+    "task": "GT-03",
+    "scenario": "quotes?tier=lite",
+    "language": "gu",
+    "size": "390x844"
+  },
+  {
+    "id": "g1-2-en-1440x900",
+    "task": "GT-03",
+    "scenario": "free-costings",
+    "language": "en",
+    "size": "1440x900"
+  },
+  {
+    "id": "g1-2-hi-1280x800",
+    "task": "GT-03",
+    "scenario": "free-costings",
+    "language": "hi",
+    "size": "1280x800"
+  },
+  {
+    "id": "g1-2-en-1024x768",
+    "task": "GT-03",
+    "scenario": "free-costings",
+    "language": "en",
+    "size": "1024x768"
+  },
+  {
+    "id": "g1-2-gu-390x844",
+    "task": "GT-03",
+    "scenario": "free-costings",
+    "language": "gu",
+    "size": "390x844"
+  },
+  {
+    "id": "g1-3-en-1440x900",
+    "task": "GT-03",
+    "scenario": "quotes-compare",
+    "language": "en",
+    "size": "1440x900"
+  },
+  {
+    "id": "g1-3-hi-1280x800",
+    "task": "GT-03",
+    "scenario": "quotes-compare",
+    "language": "hi",
+    "size": "1280x800"
+  },
+  {
+    "id": "g1-3-en-1024x768",
+    "task": "GT-03",
+    "scenario": "quotes-compare",
+    "language": "en",
+    "size": "1024x768"
+  },
+  {
+    "id": "g1-3-gu-390x844",
+    "task": "GT-03",
+    "scenario": "quotes-compare",
+    "language": "gu",
+    "size": "390x844"
+  },
+  {
+    "id": "g1-0-reduced",
+    "task": "GT-03",
+    "scenario": "quotes",
+    "language": "en",
+    "size": "1024x768",
+    "env": {
+      "REDUCED_MOTION": "1"
+    }
+  },
+  {
+    "id": "g1-1-reduced",
+    "task": "GT-03",
+    "scenario": "quotes?tier=lite",
+    "language": "en",
+    "size": "1024x768",
+    "env": {
+      "REDUCED_MOTION": "1"
+    }
+  },
+  {
+    "id": "g1-2-reduced",
+    "task": "GT-03",
+    "scenario": "free-costings",
+    "language": "en",
+    "size": "1024x768",
+    "env": {
+      "REDUCED_MOTION": "1"
+    }
+  },
+  {
+    "id": "g1-3-reduced",
+    "task": "GT-03",
+    "scenario": "quotes-compare",
+    "language": "en",
+    "size": "1024x768",
+    "env": {
+      "REDUCED_MOTION": "1"
+    }
+  }
+]

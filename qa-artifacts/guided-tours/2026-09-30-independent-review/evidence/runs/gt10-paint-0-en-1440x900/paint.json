@@ -1,0 +1,2508 @@
+[
+  {
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-0-en-1440x900/payroll-en-1440x900/00-page.png",
+    "at": 1790718124317,
+    "rail": {
+      "tag": "ASIDE",
+      "classes": "payroll-left-rail guided-tour-left-rail space-y-2",
+      "role": null,
+      "rect": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "zIndex": "30",
+      "position": "fixed",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "1",
+      "pointerEvents": "auto",
+      "inert": false,
+      "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+    },
+    "railChildren": [
+      {
+        "tag": "DIV",
+        "classes": "",
+        "role": null,
+        "rect": {
+          "x": 269,
+          "y": 21,
+          "w": 196,
+          "h": 213.046875
+        },
+        "zIndex": "auto",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "opacity": "1",
+        "pointerEvents": "auto",
+        "inert": false,
+        "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+      },
+      {
+        "tag": "DIV",
+        "classes": "left-rail-bottom mt-auto space-y-2 pt-3",
+        "role": null,
+        "rect": {
+          "x": 269,
+          "y": 752.5,
+          "w": 196,
+          "h": 126.5
+        },
+        "zIndex": "auto",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "opacity": "1",
+        "pointerEvents": "auto",
+        "inert": false,
+        "text": "Advances, records and correctionsHow pay is calculated"
+      }
+    ],
+    "dialog": null,
+    "highlight": null,
+    "intersection": null,
+    "points": []
+  },
+  {
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-0-en-1440x900/payroll-en-1440x900/01.png",
+    "at": 1790718125912,
+    "step": "pr-period",
+    "status": "ready",
+    "rail": {
+      "tag": "ASIDE",
+      "classes": "payroll-left-rail guided-tour-left-rail space-y-2",
+      "role": null,
+      "rect": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "zIndex": "30",
+      "position": "fixed",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "1",
+      "pointerEvents": "auto",
+      "inert": false,
+      "text": "Payroll guideAdvances, records and correctionsHow pay is calculated"
+    },
+    "railChildren": [
+      {
+        "tag": "DIV",
+        "classes": "",
+        "role": null,
+        "rect": {
+          "x": 269,
+          "y": 21,
+          "w": 196,
+          "h": 44
+        },
+        "zIndex": "auto",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "opacity": "1",
+        "pointerEvents": "auto",
+        "inert": false,
+        "text": "Payroll guide"
+      },
+      {
+        "tag": "DIV",
+        "classes": "left-rail-bottom mt-auto space-y-2 pt-3",
+        "role": null,
+        "rect": {
+          "x": 269,
+          "y": 752.5,
+          "w": 196,
+          "h": 126.5
+        },
+        "zIndex": "auto",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "opacity": "1",
+        "pointerEvents": "auto",
+        "inert": false,
+        "text": "Advances, records and correctionsHow pay is calculated"
+      }
+    ],
+    "dialog": null,
+    "highlight": {
+      "tag": "DIV",
+      "classes": "guided-tour-highlight pointer-events-none fixed rounded-xl border-2 border-saffron",
+      "role": null,
+      "rect": {
+        "x": 476.5,
+        "y": 78,
+        "w": 735,
+        "h": 196
+      },
+      "zIndex": "auto",
+      "position": "fixed",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "1",
+      "pointerEvents": "none",
+      "inert": false,
+      "text": ""
+    },
+    "intersection": {
+      "left": 476.5,
+      "top": 78,
+      "right": 465,
+      "bottom": 274
+    },
+    "points": []
+  },
+  {
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-0-en-1440x900/payroll-en-1440x900/02.png",
+    "at": 1790718126992,
+    "step": "pr-readiness",
+    "status": "ready",
+    "rail": {
+      "tag": "ASIDE",
+      "classes": "payroll-left-rail guided-tour-left-rail space-y-2",
+      "role": null,
+      "rect": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "zIndex": "30",
+      "position": "fixed",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "1",
+      "pointerEvents": "auto",
+      "inert": false,
+      "text": "Payroll guideAdvances, records and correctionsHow pay is calculated"
+    },
+    "railChildren": [
+      {
+        "tag": "DIV",
+        "classes": "",
+        "role": null,
+        "rect": {
+          "x": 269,
+          "y": 21,
+          "w": 196,
+          "h": 44
+        },
+        "zIndex": "auto",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "opacity": "1",
+        "pointerEvents": "auto",
+        "inert": false,
+        "text": "Payroll guide"
+      },
+      {
+        "tag": "DIV",
+        "classes": "left-rail-bottom mt-auto space-y-2 pt-3",
+        "role": null,
+        "rect": {
+          "x": 269,
+          "y": 752.5,
+          "w": 196,
+          "h": 126.5
+        },
+        "zIndex": "auto",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "opacity": "1",
+        "pointerEvents": "auto",
+        "inert": false,
+        "text": "Advances, records and correctionsHow pay is calculated"
+      }
+    ],
+    "dialog": null,
+    "highlight": {
+      "tag": "DIV",
+      "classes": "guided-tour-highlight pointer-events-none fixed rounded-xl border-2 border-saffron",
+      "role": null,
+      "rect": {
+        "x": 476.5,
+        "y": 78,
+        "w": 735,
+        "h": 147
+      },
+      "zIndex": "auto",
+      "position": "fixed",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "1",
+      "pointerEvents": "none",
+      "inert": false,
+      "text": ""
+    },
+    "intersection": {
+      "left": 476.5,
+      "top": 78,
+      "right": 465,
+      "bottom": 225
+    },
+    "points": []
+  },
+  {
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-0-en-1440x900/payroll-en-1440x900/03.png",
+    "at": 1790718128055,
+    "step": "pr-earnings",
+    "status": "ready",
+    "rail": {
+      "tag": "ASIDE",
+      "classes": "payroll-left-rail guided-tour-left-rail space-y-2",
+      "role": null,
+      "rect": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "zIndex": "30",
+      "position": "fixed",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "1",
+      "pointerEvents": "auto",
+      "inert": false,
+      "text": "Payroll guideAdvances, records and correctionsHow pay is calculated"
+    },
+    "railChildren": [
+      {
+        "tag": "DIV",
+        "classes": "",
+        "role": null,
+        "rect": {
+          "x": 269,
+          "y": 21,
+          "w": 196,
+          "h": 44
+        },
+        "zIndex": "auto",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "opacity": "1",
+        "pointerEvents": "auto",
+        "inert": false,
+        "text": "Payroll guide"
+      },
+      {
+        "tag": "DIV",
+        "classes": "left-rail-bottom mt-auto space-y-2 pt-3",
+        "role": null,
+        "rect": {
+          "x": 269,
+          "y": 752.5,
+          "w": 196,
+          "h": 126.5
+        },
+        "zIndex": "auto",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "opacity": "1",
+        "pointerEvents": "auto",
+        "inert": false,
+        "text": "Advances, records and correctionsHow pay is calculated"
+      }
+    ],
+    "dialog": null,
+    "highlight": {
+      "tag": "DIV",
+      "classes": "guided-tour-highlight pointer-events-none fixed rounded-xl border-2 border-saffron",
+      "role": null,
+      "rect": {
+        "x": 476.5,
+        "y": 78,
+        "w": 735,
+        "h": 182
+      },
+      "zIndex": "auto",
+      "position": "fixed",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "1",
+      "pointerEvents": "none",
+      "inert": false,
+      "text": ""
+    },
+    "intersection": {
+      "left": 476.5,
+      "top": 78,
+      "right": 465,
+      "bottom": 260
+    },
+    "points": []
+  },
+  {
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-0-en-1440x900/payroll-en-1440x900/04.png",
+    "at": 1790718129120,
+    "step": "pr-recovery",
+    "status": "ready",
+    "rail": {
+      "tag": "ASIDE",
+      "classes": "payroll-left-rail guided-tour-left-rail space-y-2",
+      "role": null,
+      "rect": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "zIndex": "30",
+      "position": "fixed",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "1",
+      "pointerEvents": "auto",
+      "inert": false,
+      "text": "Payroll guideAdvances, records and correctionsHow pay is calculated"
+    },
+    "railChildren": [
+      {
+        "tag": "DIV",
+        "classes": "",
+        "role": null,
+        "rect": {
+          "x": 269,
+          "y": 21,
+          "w": 196,
+          "h": 44
+        },
+        "zIndex": "auto",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "opacity": "1",
+        "pointerEvents": "auto",
+        "inert": false,
+        "text": "Payroll guide"
+      },
+      {
+        "tag": "DIV",
+        "classes": "left-rail-bottom mt-auto space-y-2 pt-3",
+        "role": null,
+        "rect": {
+          "x": 269,
+          "y": 752.5,
+          "w": 196,
+          "h": 126.5
+        },
+        "zIndex": "auto",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "opacity": "1",
+        "pointerEvents": "auto",
+        "inert": false,
+        "text": "Advances, records and correctionsHow pay is calculated"
+      }
+    ],
+    "dialog": null,
+    "highlight": {
+      "tag": "DIV",
+      "classes": "guided-tour-highlight pointer-events-none fixed rounded-xl border-2 border-saffron",
+      "role": null,
+      "rect": {
+        "x": 476.5,
+        "y": 78,
+        "w": 735,
+        "h": 248.5
+      },
+      "zIndex": "auto",
+      "position": "fixed",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "1",
+      "pointerEvents": "none",
+      "inert": false,
+      "text": ""
+    },
+    "intersection": {
+      "left": 476.5,
+      "top": 78,
+      "right": 465,
+      "bottom": 326.5
+    },
+    "points": []
+  },
+  {
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-0-en-1440x900/payroll-en-1440x900/05.png",
+    "at": 1790718130230,
+    "step": "pr-settle",
+    "status": "ready",
+    "rail": {
+      "tag": "ASIDE",
+      "classes": "payroll-left-rail guided-tour-left-rail space-y-2",
+      "role": null,
+      "rect": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "zIndex": "30",
+      "position": "fixed",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "1",
+      "pointerEvents": "auto",
+      "inert": false,
+      "text": "Payroll guideAdvances, records and correctionsHow pay is calculated"
+    },
+    "railChildren": [
+      {
+        "tag": "DIV",
+        "classes": "",
+        "role": null,
+        "rect": {
+          "x": 269,
+          "y": 21,
+          "w": 196,
+          "h": 44
+        },
+        "zIndex": "auto",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "opacity": "1",
+        "pointerEvents": "auto",
+        "inert": false,
+        "text": "Payroll guide"
+      },
+      {
+        "tag": "DIV",
+        "classes": "left-rail-bottom mt-auto space-y-2 pt-3",
+        "role": null,
+        "rect": {
+          "x": 269,
+          "y": 752.5,
+          "w": 196,
+          "h": 126.5
+        },
+        "zIndex": "auto",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "opacity": "1",
+        "pointerEvents": "auto",
+        "inert": false,
+        "text": "Advances, records and correctionsHow pay is calculated"
+      }
+    ],
+    "dialog": {
+      "tag": "DIV",
+      "classes": "bg-surface text-ink data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100vw-1rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-xl border border-hairline p-4 shadow-[var(--shadow-modal)] duration-200 outline-none sm:max-h-[calc(100dvh-2rem)] sm:max-w-lg sm:rounded-2xl sm:p-6 max-h-[calc(100dvh-2rem)] overflow-y-auto",
+      "role": "dialog",
+      "rect": {
+        "x": 288,
+        "y": 306.390625,
+        "w": 512,
+        "h": 287.21875
+      },
+      "zIndex": "50",
+      "position": "fixed",
+      "background": "rgb(255, 255, 255)",
+      "opacity": "1",
+      "pointerEvents": "auto",
+      "inert": true,
+      "text": "Settle payrollSample — nothing here is saved or sent.Settle payrollSample weaver · ₹1,000M"
+    },
+    "highlight": {
+      "tag": "DIV",
+      "classes": "guided-tour-highlight pointer-events-none fixed rounded-xl border-2 border-saffron",
+      "role": null,
+      "rect": {
+        "x": 304,
+        "y": 381.609375,
+        "w": 480,
+        "h": 196
+      },
+      "zIndex": "auto",
+      "position": "fixed",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "1",
+      "pointerEvents": "none",
+      "inert": false,
+      "text": ""
+    },
+    "intersection": {
+      "left": 304,
+      "top": 381.609375,
+      "right": 465,
+      "bottom": 577.609375
+    },
+    "points": [
+      {
+        "x": 344.25,
+        "y": 430.609375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 5 of 8Open the settlement to paySettle payroll lists every worker with the n"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideAdvances, records and correctionsHow pay is calculatedPayrollReview earnings "
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 344.25,
+        "y": 479.609375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 5 of 8Open the settlement to paySettle payroll lists every worker with the n"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideAdvances, records and correctionsHow pay is calculatedPayrollReview earnings "
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 344.25,
+        "y": 528.609375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 5 of 8Open the settlement to paySettle payroll lists every worker with the n"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideAdvances, records and correctionsHow pay is calculatedPayrollReview earnings "
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 384.5,
+        "y": 430.609375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 5 of 8Open the settlement to paySettle payroll lists every worker with the n"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideAdvances, records and correctionsHow pay is calculatedPayrollReview earnings "
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 384.5,
+        "y": 479.609375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 5 of 8Open the settlement to paySettle payroll lists every worker with the n"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideAdvances, records and correctionsHow pay is calculatedPayrollReview earnings "
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 384.5,
+        "y": 528.609375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 5 of 8Open the settlement to paySettle payroll lists every worker with the n"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideAdvances, records and correctionsHow pay is calculatedPayrollReview earnings "
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 424.75,
+        "y": 430.609375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 5 of 8Open the settlement to paySettle payroll lists every worker with the n"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideAdvances, records and correctionsHow pay is calculatedPayrollReview earnings "
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 424.75,
+        "y": 479.609375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 5 of 8Open the settlement to paySettle payroll lists every worker with the n"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideAdvances, records and correctionsHow pay is calculatedPayrollReview earnings "
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 424.75,
+        "y": 528.609375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 5 of 8Open the settlement to paySettle payroll lists every worker with the n"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideAdvances, records and correctionsHow pay is calculatedPayrollReview earnings "
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-0-en-1440x900/payroll-en-1440x900/06.png",
+    "at": 1790718131361,
+    "step": "pr-paid",
+    "status": "ready",
+    "rail": {
+      "tag": "ASIDE",
+      "classes": "payroll-left-rail guided-tour-left-rail space-y-2",
+      "role": null,
+      "rect": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "zIndex": "30",
+      "position": "fixed",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "1",
+      "pointerEvents": "auto",
+      "inert": false,
+      "text": "Payroll guideAdvances, records and correctionsHow pay is calculated"
+    },
+    "railChildren": [
+      {
+        "tag": "DIV",
+        "classes": "",
+        "role": null,
+        "rect": {
+          "x": 269,
+          "y": 21,
+          "w": 196,
+          "h": 44
+        },
+        "zIndex": "auto",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "opacity": "1",
+        "pointerEvents": "auto",
+        "inert": false,
+        "text": "Payroll guide"
+      },
+      {
+        "tag": "DIV",
+        "classes": "left-rail-bottom mt-auto space-y-2 pt-3",
+        "role": null,
+        "rect": {
+          "x": 269,
+          "y": 752.5,
+          "w": 196,
+          "h": 126.5
+        },
+        "zIndex": "auto",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "opacity": "1",
+        "pointerEvents": "auto",
+        "inert": false,
+        "text": "Advances, records and correctionsHow pay is calculated"
+      }
+    ],
+    "dialog": {
+      "tag": "DIV",
+      "classes": "bg-surface text-ink data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100vw-1rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-xl border border-hairline p-4 shadow-[var(--shadow-modal)] duration-200 outline-none sm:max-h-[calc(100dvh-2rem)] sm:max-w-lg sm:rounded-2xl sm:p-6 max-h-[calc(100dvh-2rem)] overflow-y-auto",
+      "role": "dialog",
+      "rect": {
+        "x": 288,
+        "y": 281.890625,
+        "w": 512,
+        "h": 336.21875
+      },
+      "zIndex": "50",
+      "position": "fixed",
+      "background": "rgb(255, 255, 255)",
+      "opacity": "1",
+      "pointerEvents": "auto",
+      "inert": true,
+      "text": "Mark PaidSample — nothing here is saved or sent.Sample weaver · ₹1,000Payment methodNote ("
+    },
+    "highlight": {
+      "tag": "DIV",
+      "classes": "guided-tour-highlight pointer-events-none fixed rounded-xl border-2 border-saffron",
+      "role": null,
+      "rect": {
+        "x": 304,
+        "y": 357.109375,
+        "w": 480,
+        "h": 245
+      },
+      "zIndex": "auto",
+      "position": "fixed",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "1",
+      "pointerEvents": "none",
+      "inert": false,
+      "text": ""
+    },
+    "intersection": {
+      "left": 304,
+      "top": 357.109375,
+      "right": 465,
+      "bottom": 602.109375
+    },
+    "points": [
+      {
+        "x": 344.25,
+        "y": 418.359375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 6 of 8Record each payment you madeMark Paid records that you paid the worker"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideAdvances, records and correctionsHow pay is calculatedPayrollReview earnings "
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 344.25,
+        "y": 479.609375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 6 of 8Record each payment you madeMark Paid records that you paid the worker"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideAdvances, records and correctionsHow pay is calculatedPayrollReview earnings "
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 344.25,
+        "y": 540.859375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 6 of 8Record each payment you madeMark Paid records that you paid the worker"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideAdvances, records and correctionsHow pay is calculatedPayrollReview earnings "
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 384.5,
+        "y": 418.359375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 6 of 8Record each payment you madeMark Paid records that you paid the worker"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideAdvances, records and correctionsHow pay is calculatedPayrollReview earnings "
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 384.5,
+        "y": 479.609375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 6 of 8Record each payment you madeMark Paid records that you paid the worker"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideAdvances, records and correctionsHow pay is calculatedPayrollReview earnings "
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 384.5,
+        "y": 540.859375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 6 of 8Record each payment you madeMark Paid records that you paid the worker"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideAdvances, records and correctionsHow pay is calculatedPayrollReview earnings "
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 424.75,
+        "y": 418.359375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 6 of 8Record each payment you madeMark Paid records that you paid the worker"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideAdvances, records and correctionsHow pay is calculatedPayrollReview earnings "
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 424.75,
+        "y": 479.609375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 6 of 8Record each payment you madeMark Paid records that you paid the worker"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideAdvances, records and correctionsHow pay is calculatedPayrollReview earnings "
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 424.75,
+        "y": 540.859375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 6 of 8Record each payment you madeMark Paid records that you paid the worker"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideAdvances, records and correctionsHow pay is calculatedPayrollReview earnings "
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-0-en-1440x900/payroll-en-1440x900/07.png",
+    "at": 1790718132507,
+    "step": "pr-complete",
+    "status": "ready",
+    "rail": {
+      "tag": "ASIDE",
+      "classes": "payroll-left-rail guided-tour-left-rail space-y-2",
+      "role": null,
+      "rect": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "zIndex": "30",
+      "position": "fixed",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "1",
+      "pointerEvents": "auto",
+      "inert": false,
+      "text": "Payroll guideAdvances, records and correctionsHow pay is calculated"
+    },
+    "railChildren": [
+      {
+        "tag": "DIV",
+        "classes": "",
+        "role": null,
+        "rect": {
+          "x": 269,
+          "y": 21,
+          "w": 196,
+          "h": 44
+        },
+        "zIndex": "auto",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "opacity": "1",
+        "pointerEvents": "auto",
+        "inert": false,
+        "text": "Payroll guide"
+      },
+      {
+        "tag": "DIV",
+        "classes": "left-rail-bottom mt-auto space-y-2 pt-3",
+        "role": null,
+        "rect": {
+          "x": 269,
+          "y": 752.5,
+          "w": 196,
+          "h": 126.5
+        },
+        "zIndex": "auto",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "opacity": "1",
+        "pointerEvents": "auto",
+        "inert": false,
+        "text": "Advances, records and correctionsHow pay is calculated"
+      }
+    ],
+    "dialog": {
+      "tag": "DIV",
+      "classes": "bg-surface text-ink data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100vw-1rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-xl border border-hairline p-4 shadow-[var(--shadow-modal)] duration-200 outline-none sm:max-h-[calc(100dvh-2rem)] sm:max-w-lg sm:rounded-2xl sm:p-6 max-h-[calc(100dvh-2rem)] overflow-y-auto",
+      "role": "dialog",
+      "rect": {
+        "x": 288,
+        "y": 295.890625,
+        "w": 512,
+        "h": 308.21875
+      },
+      "zIndex": "50",
+      "position": "fixed",
+      "background": "rgb(255, 255, 255)",
+      "opacity": "1",
+      "pointerEvents": "auto",
+      "inert": true,
+      "text": "Settle payrollSample — nothing here is saved or sent.Ready to CompleteAll worker obligatio"
+    },
+    "highlight": {
+      "tag": "DIV",
+      "classes": "guided-tour-highlight pointer-events-none fixed rounded-xl border-2 border-saffron",
+      "role": null,
+      "rect": {
+        "x": 304,
+        "y": 371.109375,
+        "w": 480,
+        "h": 217
+      },
+      "zIndex": "auto",
+      "position": "fixed",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "1",
+      "pointerEvents": "none",
+      "inert": false,
+      "text": ""
+    },
+    "intersection": {
+      "left": 304,
+      "top": 371.109375,
+      "right": 465,
+      "bottom": 588.109375
+    },
+    "points": [
+      {
+        "x": 344.25,
+        "y": 425.359375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 7 of 8Complete the period lastWhen every worker is paid or resolved, Complet"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideAdvances, records and correctionsHow pay is calculatedPayrollReview earnings "
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 344.25,
+        "y": 479.609375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 7 of 8Complete the period lastWhen every worker is paid or resolved, Complet"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideAdvances, records and correctionsHow pay is calculatedPayrollReview earnings "
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 344.25,
+        "y": 533.859375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 7 of 8Complete the period lastWhen every worker is paid or resolved, Complet"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideAdvances, records and correctionsHow pay is calculatedPayrollReview earnings "
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 384.5,
+        "y": 425.359375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 7 of 8Complete the period lastWhen every worker is paid or resolved, Complet"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideAdvances, records and correctionsHow pay is calculatedPayrollReview earnings "
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 384.5,
+        "y": 479.609375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 7 of 8Complete the period lastWhen every worker is paid or resolved, Complet"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideAdvances, records and correctionsHow pay is calculatedPayrollReview earnings "
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 384.5,
+        "y": 533.859375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 7 of 8Complete the period lastWhen every worker is paid or resolved, Complet"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideAdvances, records and correctionsHow pay is calculatedPayrollReview earnings "
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 424.75,
+        "y": 425.359375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 7 of 8Complete the period lastWhen every worker is paid or resolved, Complet"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideAdvances, records and correctionsHow pay is calculatedPayrollReview earnings "
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 424.75,
+        "y": 479.609375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 7 of 8Complete the period lastWhen every worker is paid or resolved, Complet"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideAdvances, records and correctionsHow pay is calculatedPayrollReview earnings "
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 424.75,
+        "y": 533.859375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 7 of 8Complete the period lastWhen every worker is paid or resolved, Complet"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideAdvances, records and correctionsHow pay is calculatedPayrollReview earnings "
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-0-en-1440x900/payroll-en-1440x900/08.png",
+    "at": 1790718133606,
+    "step": "pr-handoff",
+    "status": "ready",
+    "rail": {
+      "tag": "ASIDE",
+      "classes": "payroll-left-rail guided-tour-left-rail space-y-2",
+      "role": null,
+      "rect": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "zIndex": "30",
+      "position": "fixed",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "1",
+      "pointerEvents": "auto",
+      "inert": false,
+      "text": "Payroll guideAdvances, records and correctionsHow pay is calculated"
+    },
+    "railChildren": [
+      {
+        "tag": "DIV",
+        "classes": "",
+        "role": null,
+        "rect": {
+          "x": 269,
+          "y": 21,
+          "w": 196,
+          "h": 44
+        },
+        "zIndex": "auto",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "opacity": "1",
+        "pointerEvents": "auto",
+        "inert": false,
+        "text": "Payroll guide"
+      },
+      {
+        "tag": "DIV",
+        "classes": "left-rail-bottom mt-auto space-y-2 pt-3",
+        "role": null,
+        "rect": {
+          "x": 269,
+          "y": 752.5,
+          "w": 196,
+          "h": 126.5
+        },
+        "zIndex": "auto",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "opacity": "1",
+        "pointerEvents": "auto",
+        "inert": false,
+        "text": "Advances, records and correctionsHow pay is calculated"
+      }
+    ],
+    "dialog": null,
+    "highlight": {
+      "tag": "DIV",
+      "classes": "guided-tour-highlight pointer-events-none fixed rounded-xl border-2 border-saffron",
+      "role": null,
+      "rect": {
+        "x": 1217,
+        "y": 153.75,
+        "w": 208,
+        "h": 54
+      },
+      "zIndex": "auto",
+      "position": "fixed",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "1",
+      "pointerEvents": "none",
+      "inert": false,
+      "text": ""
+    },
+    "intersection": {
+      "left": 1217,
+      "top": 153.75,
+      "right": 465,
+      "bottom": 207.75
+    },
+    "points": []
+  },
+  {
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-0-en-1440x900/payroll-en-1440x900/99-after.png",
+    "at": 1790718165510,
+    "rail": {
+      "tag": "ASIDE",
+      "classes": "payroll-left-rail guided-tour-left-rail space-y-2",
+      "role": null,
+      "rect": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "zIndex": "30",
+      "position": "fixed",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "1",
+      "pointerEvents": "auto",
+      "inert": false,
+      "text": "Payroll guideAdvances, records and correctionsHow pay is calculated"
+    },
+    "railChildren": [
+      {
+        "tag": "DIV",
+        "classes": "",
+        "role": null,
+        "rect": {
+          "x": 269,
+          "y": 21,
+          "w": 196,
+          "h": 44
+        },
+        "zIndex": "auto",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "opacity": "1",
+        "pointerEvents": "auto",
+        "inert": false,
+        "text": "Payroll guide"
+      },
+      {
+        "tag": "DIV",
+        "classes": "left-rail-bottom mt-auto space-y-2 pt-3",
+        "role": null,
+        "rect": {
+          "x": 269,
+          "y": 752.5,
+          "w": 196,
+          "h": 126.5
+        },
+        "zIndex": "auto",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "opacity": "1",
+        "pointerEvents": "auto",
+        "inert": false,
+        "text": "Advances, records and correctionsHow pay is calculated"
+      }
+    ],
+    "dialog": null,
+    "highlight": null,
+    "intersection": null,
+    "points": []
+  }
+]

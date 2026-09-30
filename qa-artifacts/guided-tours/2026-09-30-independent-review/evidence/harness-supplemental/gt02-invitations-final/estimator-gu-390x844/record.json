@@ -1,0 +1,226 @@
+{
+  "scenario": "estimator",
+  "lang": "gu",
+  "size": "390x844",
+  "checks": [
+    {
+      "label": "dismiss",
+      "tourCalls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "label": "05-replay",
+      "tourCalls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "label": "06-fresh-start",
+      "tourCalls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "passed": true
+    }
+  ],
+  "phases": [
+    {
+      "label": "01-fresh",
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "getEstimatorSecondaryData",
+          "file": "app/(dashboard)/owner/estimator/actions.ts"
+        }
+      ],
+      "nav": [],
+      "prefs": {
+        "cost-estimate": {
+          "firstShown": "2026-09-29T20:22:39.024Z",
+          "version": "v1"
+        }
+      }
+    },
+    {
+      "label": "02-shown-reload",
+      "calls": [
+        {
+          "fn": "getEstimatorSecondaryData",
+          "file": "app/(dashboard)/owner/estimator/actions.ts"
+        }
+      ],
+      "nav": [],
+      "prefs": {
+        "cost-estimate": {
+          "firstShown": "2026-09-29T20:22:39.024Z",
+          "version": "v1"
+        }
+      }
+    },
+    {
+      "label": "03-dismissed",
+      "calls": [
+        {
+          "fn": "getEstimatorSecondaryData",
+          "file": "app/(dashboard)/owner/estimator/actions.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "nav": [],
+      "prefs": {
+        "cost-estimate": {
+          "firstShown": "2026-09-29T20:22:39.024Z",
+          "version": "v1",
+          "dismissed": true
+        }
+      }
+    },
+    {
+      "label": "04-dismissed-reload",
+      "calls": [
+        {
+          "fn": "getEstimatorSecondaryData",
+          "file": "app/(dashboard)/owner/estimator/actions.ts"
+        }
+      ],
+      "nav": [],
+      "prefs": {
+        "cost-estimate": {
+          "firstShown": "2026-09-29T20:22:39.024Z",
+          "version": "v1",
+          "dismissed": true
+        }
+      }
+    },
+    {
+      "label": "05-replay-active",
+      "calls": [
+        {
+          "fn": "getEstimatorSecondaryData",
+          "file": "app/(dashboard)/owner/estimator/actions.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "nav": [],
+      "prefs": {
+        "cost-estimate": {
+          "firstShown": "2026-09-29T20:22:39.024Z",
+          "version": "v1",
+          "dismissed": true,
+          "firstStarted": true
+        }
+      }
+    },
+    {
+      "label": "05-replay-exited",
+      "calls": [
+        {
+          "fn": "getEstimatorSecondaryData",
+          "file": "app/(dashboard)/owner/estimator/actions.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "nav": [],
+      "prefs": {
+        "cost-estimate": {
+          "firstShown": "2026-09-29T20:22:39.024Z",
+          "version": "v1",
+          "dismissed": true,
+          "firstStarted": true
+        }
+      }
+    },
+    {
+      "label": "06-fresh-start-active",
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "getEstimatorSecondaryData",
+          "file": "app/(dashboard)/owner/estimator/actions.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "nav": [],
+      "prefs": {
+        "cost-estimate": {
+          "firstShown": "2026-09-29T20:22:47.867Z",
+          "version": "v1",
+          "firstStarted": true
+        }
+      }
+    },
+    {
+      "label": "06-fresh-start-exited",
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "getEstimatorSecondaryData",
+          "file": "app/(dashboard)/owner/estimator/actions.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "nav": [],
+      "prefs": {
+        "cost-estimate": {
+          "firstShown": "2026-09-29T20:22:47.867Z",
+          "version": "v1",
+          "firstStarted": true
+        }
+      }
+    },
+    {
+      "label": "07-started-reload",
+      "calls": [
+        {
+          "fn": "getEstimatorSecondaryData",
+          "file": "app/(dashboard)/owner/estimator/actions.ts"
+        }
+      ],
+      "nav": [],
+      "prefs": {
+        "cost-estimate": {
+          "firstShown": "2026-09-29T20:22:47.867Z",
+          "version": "v1",
+          "firstStarted": true
+        }
+      }
+    }
+  ],
+  "errors": [],
+  "passed": true
+}

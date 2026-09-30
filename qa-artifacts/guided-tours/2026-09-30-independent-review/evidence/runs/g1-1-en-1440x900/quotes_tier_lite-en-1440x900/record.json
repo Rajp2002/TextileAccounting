@@ -1,0 +1,372 @@
+{
+  "scenario": "quotes?tier=lite",
+  "lang": "en",
+  "size": "1440x900",
+  "steps": [
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Every saved costing is a fixed record",
+      "body": "Each card is one quality. Its versions keep the inputs and prices from the day you saved them; later yarn rates never change them.",
+      "step": "find",
+      "status": "ready",
+      "eyebrow": "Sample · Step 1 of 6",
+      "progress": null,
+      "panel": {
+        "x": 1036,
+        "y": 255,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 477,
+        "y": 255,
+        "w": 543,
+        "h": 187
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "div(role=dialog)",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": "",
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Open the version you mean",
+      "body": "Open a quality card to see its versions. Choose “View breakdown” next to a date to read that version.",
+      "step": "versions",
+      "status": "ready",
+      "eyebrow": "Sample · Step 2 of 6",
+      "progress": null,
+      "panel": {
+        "x": 1056,
+        "y": 43,
+        "w": 360,
+        "h": 243
+      },
+      "highlight": {
+        "x": 50,
+        "y": 372,
+        "w": 957,
+        "h": 457
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 16,
+        "y": 43,
+        "w": 1024,
+        "h": 814
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": "",
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Read cost, price and profit",
+      "body": "In sample v2, production cost is ₹17.44/m and the selling price is ₹19.82/m, so you keep ₹2.38 on every metre.",
+      "step": "economics",
+      "status": "ready",
+      "eyebrow": "Sample · Step 3 of 6",
+      "progress": null,
+      "panel": {
+        "x": 1056,
+        "y": 16,
+        "w": 360,
+        "h": 243
+      },
+      "highlight": {
+        "x": 65,
+        "y": 423,
+        "w": 927,
+        "h": 69
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 16,
+        "y": 14,
+        "w": 1024,
+        "h": 872
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": "",
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Reuse a version or start a new quality",
+      "body": "“Use” opens this version in the Cost Estimator so you can change it and save a new version. “Duplicate” starts a separate quality from it.",
+      "step": "reuse",
+      "status": "ready",
+      "eyebrow": "Sample · Step 4 of 6",
+      "progress": null,
+      "panel": {
+        "x": 1056,
+        "y": 16,
+        "w": 360,
+        "h": 243
+      },
+      "highlight": {
+        "x": 390,
+        "y": 141,
+        "w": 602,
+        "h": 44
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 16,
+        "y": 14,
+        "w": 1024,
+        "h": 872
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": "",
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Choose who will see the document",
+      "body": "“Internal Cost Estimate” shows your costs and margin. “Customer Quotation” shows only the price and your terms.",
+      "step": "internal",
+      "status": "ready",
+      "eyebrow": "Sample · Step 5 of 6",
+      "progress": null,
+      "panel": {
+        "x": 1056,
+        "y": 51,
+        "w": 360,
+        "h": 243
+      },
+      "highlight": {
+        "x": 601,
+        "y": 126,
+        "w": 423,
+        "h": 256
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 16,
+        "y": 51,
+        "w": 1024,
+        "h": 799
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": "",
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Save your first costing",
+      "body": "Choose “New Costing” to open the Cost Estimator. Your costing appears here after you save it.",
+      "step": "finish",
+      "status": "ready",
+      "eyebrow": "Step 6 of 6",
+      "progress": null,
+      "panel": {
+        "x": 841,
+        "y": 16,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 1217,
+        "y": 15,
+        "w": 208,
+        "h": 51
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": "",
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440
+    }
+  ],
+  "logs": [
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction"
+  ],
+  "apiRequests": [],
+  "preClick": null,
+  "sampling": "legacy-900ms",
+  "before": {
+    "x": 0,
+    "y": 0,
+    "inner": null
+  },
+  "after": {
+    "scroll": {
+      "x": 0,
+      "y": 0,
+      "inner": null
+    },
+    "active": "<button data-slot=\"button\" data-variant=\"default\" data-size=\"default\" class=\"inline-flex items-center justify-center gap-2 whitespace-nowrap transition-[color,b",
+    "activeAnchor": "costings.new",
+    "activeRateBookField": null,
+    "activeControl": null,
+    "serverCalls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "navigations": [],
+    "scrollCalls": [],
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"saved-costings\":{\"firstShown\":\"2026-09-29T20:16:42.301Z\",\"version\":\"v1\",\"firstStarted\":true,\"completed\":true,\"completedVersion\":\"v2\"}}"
+    },
+    "search": ""
+  },
+  "issues": []
+}

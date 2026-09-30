@@ -1,6 +1,6 @@
 # P05 Daily Sheet — tour specification (new tour)
 
-Status: specified, not implemented. Implementation: **GT-12**. Gujarati/Hindi: native review pending.
+Status: implemented and PASSED (2026-09-30; human verification deferred by the owner). Implementation: **GT-12**. Gujarati/Hindi: native review pending, not done.
 Shared rules: [`GUIDED_TOURS_REFINEMENT_PLAN.md`](../../GUIDED_TOURS_REFINEMENT_PLAN.md) (D-10). Evidence: [`audit/production-assignments-machines-workers.md`](../audit/production-assignments-machines-workers.md) §1.
 
 ## A. Identity and evidence
@@ -114,6 +114,24 @@ All hard-coded English today (label probe). Keys under a proposed `dailySheet.*`
 | `editSavedLog` | 780 | સાચવેલી નોંધ સુધારો | सेव की गई एंट्री सुधारें |
 
 Also key the labels shown in the replica ("Machine sheet", "Draft on device", "Discard draft", "Show pending", "Metres", "Shift details") so the replica and the live sheet match in every language.
+
+### F.1 Owner-authorized missing label wording — 2026-09-28
+
+The owner answered “approve all three” to the coordinator's GT-12 wording, GT-12 PI-04 deferral and GT-15 copy questions. The owner delegated research and selection of these three missing Gujarati/Hindi labels. Use these exact selected values for the live Daily Sheet and its replica under the already specified `dailySheet.*` namespace:
+
+| Key | English | Gujarati | Hindi |
+| --- | --- | --- | --- |
+| `dailySheet.draftOnDevice` | Draft on device | આ ઉપકરણ પર ડ્રાફ્ટ | इस डिवाइस पर ड्राफ्ट |
+| `dailySheet.showPending` | Show pending | બાકી બતાવો | बाकी दिखाएँ |
+| `dailySheet.shiftDetails` | Shift details | શિફ્ટની વિગતો | शिफ्ट का विवरण |
+
+Selection rationale: retain the page's approved `draft.title` terminology (`ઉપકરણ`, `ડ્રાફ્ટ`, `डिवाइस`, `ड्राफ्ट`), `pending.body` terminology (`બાકી`, `बाकी`), and existing repository Show/Shift/Details vocabulary. Preserve the existing pending count suffix and all control behavior. This is a GT-12-only wording decision, not broader permission to translate new strings or change global phrase precedence.
+
+Research checked 2026-09-28: [Google's Gujarati draft/device usage](https://support.google.com/youtube/answer/10343433?hl=gu), [Google's Hindi draft/device usage](https://support.google.com/youtube/answer/10343433?hl=hi), [GujaratiLexicon: detail](https://www.gujaratilexicon.com/dictionary/english-to-gujarati-translation/detail/), and [Google Docs Hindi details/show usage](https://support.google.com/docs/answer/45893?co=GENIE.Platform%3DDesktop&hl=hi). These establish terminology, not approval of Weavly's exact composed labels; the final selections above are the coordinator's judgment under the owner's delegation. Existing repository spellings are retained. The Gujarati Google page was available in search excerpts; a direct open returned a cache miss. Some help pages may use automated localization. Native-language quality remains **UNVERIFIED** until native review.
+
+### F.2 Owner-authorized PI-04 implementation deferral — 2026-09-28
+
+The same approval permits GT-12 implementation to continue while source-established PI-04 remains unresolved: changing date/shift calls the Overview URL helper and may select Overview through pathname-based tab selection. Do not change navigation, the approved U-06 `shift.body`/`shift.detail`, or business behavior in GT-12. Preserve the source evidence and track the product fix separately. Live reproduction/browser acceptance and native/reviewer/owner QA remain **UNVERIFIED**; this permission does not mark PI-04 fixed or allow GT-12 to become PASSED.
 
 ## G. State variants
 

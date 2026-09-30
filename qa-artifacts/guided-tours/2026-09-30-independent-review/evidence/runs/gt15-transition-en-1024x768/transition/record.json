@@ -1,0 +1,173 @@
+{
+  "scenario": "assignments?populated=1",
+  "lang": "en",
+  "size": "1024x768",
+  "steps": [
+    {
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "step": "ma-linked",
+      "status": "ready",
+      "panel": {
+        "x": 270,
+        "y": 521.34375,
+        "w": 360,
+        "h": 175.15625
+      },
+      "highlight": {
+        "x": 65.0625,
+        "y": 150.25,
+        "w": 535.390625,
+        "h": 75.25
+      },
+      "target": {
+        "x": 276,
+        "y": 715.5,
+        "w": 720,
+        "h": 68.5
+      },
+      "overlapArea": 0,
+      "actualTargetOverlap": 0,
+      "focusInPanel": true,
+      "title": "Check the link",
+      "storage": {
+        "weavly_language": "en"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "animations": [
+        {
+          "state": "running"
+        },
+        {
+          "state": "running"
+        },
+        {
+          "state": "running"
+        },
+        {
+          "state": "running"
+        },
+        {
+          "state": "running"
+        },
+        {
+          "state": "running"
+        }
+      ],
+      "afterBackNextMilliseconds": 0
+    },
+    {
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "step": "ma-linked",
+      "status": "ready",
+      "panel": {
+        "x": 270,
+        "y": 453.34375,
+        "w": 360,
+        "h": 175.15625
+      },
+      "highlight": {
+        "x": 270,
+        "y": 644.5,
+        "w": 732,
+        "h": 80.5
+      },
+      "target": {
+        "x": 276,
+        "y": 650.5,
+        "w": 720,
+        "h": 68.5
+      },
+      "overlapArea": 0,
+      "actualTargetOverlap": 0,
+      "focusInPanel": true,
+      "title": "Check the link",
+      "storage": {
+        "weavly_language": "en"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "animations": [],
+      "afterBackNextMilliseconds": 500
+    },
+    {
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "step": "ma-linked",
+      "status": "ready",
+      "panel": {
+        "x": 270,
+        "y": 453.34375,
+        "w": 360,
+        "h": 175.15625
+      },
+      "highlight": {
+        "x": 270,
+        "y": 644.5,
+        "w": 732,
+        "h": 80.5
+      },
+      "target": {
+        "x": 276,
+        "y": 650.5,
+        "w": 720,
+        "h": 68.5
+      },
+      "overlapArea": 0,
+      "actualTargetOverlap": 0,
+      "focusInPanel": true,
+      "title": "Check the link",
+      "storage": {
+        "weavly_language": "en"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "animations": [],
+      "afterBackNextMilliseconds": 2000
+    }
+  ],
+  "issues": [],
+  "purpose": "Read-only Back/Next timing diagnosis; original main run remains unchanged and preserved",
+  "after": {
+    "calls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"configuration\":{\"firstShown\":\"2026-09-29T23:01:06.448Z\",\"version\":\"v1\",\"firstStarted\":true}}"
+    },
+    "activeControl": "quiet-tour"
+  }
+}

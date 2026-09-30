@@ -1,0 +1,668 @@
+{
+  "scenario": "payroll",
+  "lang": "en",
+  "size": "1440x900",
+  "steps": [
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Pay one period at a time",
+      "body": "Each period follows your pay cycle. Paying a worker and completing the period are separate steps.",
+      "step": "pr-period",
+      "status": "ready",
+      "eyebrow": "Sample · Step 1 of 8",
+      "progress": null,
+      "panel": {
+        "x": 101,
+        "y": 78,
+        "w": 360,
+        "h": 243
+      },
+      "highlight": {
+        "x": 477,
+        "y": 78,
+        "w": 735,
+        "h": 196
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "div(role=dialog)",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440,
+      "payroll": {
+        "mounts": 1,
+        "unmounts": 0,
+        "sameSearchNode": true,
+        "search": "Retained payroll",
+        "liveHidden": true,
+        "replica": true,
+        "enabledReplicaControls": 0,
+        "paymentDate": false,
+        "storage": {
+          "weavly_language": "en"
+        },
+        "prefs": {
+          "weavly:tour-prefs:v1:u1": "{\"payroll\":{\"firstShown\":\"2026-09-29T21:31:12.590Z\",\"version\":\"v1\",\"firstStarted\":true}}"
+        },
+        "calls": 2,
+        "apiCalls": 1
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Fix readiness issues first",
+      "body": "Missing production readings or pay setup are listed here. Fix each one on the Daily Sheet or in Workers before paying.",
+      "step": "pr-readiness",
+      "status": "ready",
+      "eyebrow": "Sample · Step 2 of 8",
+      "progress": null,
+      "panel": {
+        "x": 101,
+        "y": 78,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 477,
+        "y": 78,
+        "w": 735,
+        "h": 147
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440,
+      "payroll": {
+        "mounts": 1,
+        "unmounts": 0,
+        "sameSearchNode": true,
+        "search": "Retained payroll",
+        "liveHidden": true,
+        "replica": true,
+        "enabledReplicaControls": 0,
+        "paymentDate": false,
+        "storage": {
+          "weavly_language": "en"
+        },
+        "prefs": {
+          "weavly:tour-prefs:v1:u1": "{\"payroll\":{\"firstShown\":\"2026-09-29T21:31:12.590Z\",\"version\":\"v1\",\"firstStarted\":true}}"
+        },
+        "calls": 2,
+        "apiCalls": 1
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "How gross pay is worked out",
+      "body": "Piece-rate pay is metres × wage: 1,000 m × ₹2/m = ₹2,000. A salary is paid for the days worked in the period.",
+      "step": "pr-earnings",
+      "status": "ready",
+      "eyebrow": "Sample · Step 3 of 8",
+      "progress": null,
+      "panel": {
+        "x": 101,
+        "y": 78,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 477,
+        "y": 78,
+        "w": 735,
+        "h": 182
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440,
+      "payroll": {
+        "mounts": 1,
+        "unmounts": 0,
+        "sameSearchNode": true,
+        "search": "Retained payroll",
+        "liveHidden": true,
+        "replica": true,
+        "enabledReplicaControls": 0,
+        "paymentDate": false,
+        "storage": {
+          "weavly_language": "en"
+        },
+        "prefs": {
+          "weavly:tour-prefs:v1:u1": "{\"payroll\":{\"firstShown\":\"2026-09-29T21:31:12.590Z\",\"version\":\"v1\",\"firstStarted\":true}}"
+        },
+        "calls": 2,
+        "apiCalls": 1
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Advances are recovered from pay",
+      "body": "Up to half of gross pay recovers advances and deductions: ₹1,000 of ₹2,000 here, leaving ₹1,000 to pay. Any rest carries forward.",
+      "step": "pr-recovery",
+      "status": "ready",
+      "eyebrow": "Sample · Step 4 of 8",
+      "progress": null,
+      "panel": {
+        "x": 101,
+        "y": 78,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 477,
+        "y": 78,
+        "w": 735,
+        "h": 249
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440,
+      "payroll": {
+        "mounts": 1,
+        "unmounts": 0,
+        "sameSearchNode": true,
+        "search": "Retained payroll",
+        "liveHidden": true,
+        "replica": true,
+        "enabledReplicaControls": 0,
+        "paymentDate": false,
+        "storage": {
+          "weavly_language": "en"
+        },
+        "prefs": {
+          "weavly:tour-prefs:v1:u1": "{\"payroll\":{\"firstShown\":\"2026-09-29T21:31:12.590Z\",\"version\":\"v1\",\"firstStarted\":true}}"
+        },
+        "calls": 2,
+        "apiCalls": 1
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Open the settlement to pay",
+      "body": "Settle payroll lists every worker with the net amount to pay for this period.",
+      "step": "pr-settle",
+      "status": "ready",
+      "eyebrow": "Sample · Step 5 of 8",
+      "progress": null,
+      "panel": {
+        "x": 816,
+        "y": 306,
+        "w": 360,
+        "h": 221
+      },
+      "highlight": {
+        "x": 304,
+        "y": 382,
+        "w": 480,
+        "h": 196
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 288,
+        "y": 306,
+        "w": 512,
+        "h": 287
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440,
+      "payroll": {
+        "mounts": 1,
+        "unmounts": 0,
+        "sameSearchNode": true,
+        "search": "Retained payroll",
+        "liveHidden": true,
+        "replica": true,
+        "enabledReplicaControls": 0,
+        "paymentDate": false,
+        "storage": {
+          "weavly_language": "en"
+        },
+        "prefs": {
+          "weavly:tour-prefs:v1:u1": "{\"payroll\":{\"firstShown\":\"2026-09-29T21:31:12.590Z\",\"version\":\"v1\",\"firstStarted\":true}}"
+        },
+        "calls": 2,
+        "apiCalls": 1
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Record each payment you made",
+      "body": "Mark Paid records that you paid the worker in cash, bank or UPI. Weavly does not move any money.",
+      "step": "pr-paid",
+      "status": "ready",
+      "eyebrow": "Sample · Step 6 of 8",
+      "progress": null,
+      "panel": {
+        "x": 816,
+        "y": 282,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 304,
+        "y": 357,
+        "w": 480,
+        "h": 245
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 288,
+        "y": 282,
+        "w": 512,
+        "h": 336
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440,
+      "payroll": {
+        "mounts": 1,
+        "unmounts": 0,
+        "sameSearchNode": true,
+        "search": "Retained payroll",
+        "liveHidden": true,
+        "replica": true,
+        "enabledReplicaControls": 0,
+        "paymentDate": false,
+        "storage": {
+          "weavly_language": "en"
+        },
+        "prefs": {
+          "weavly:tour-prefs:v1:u1": "{\"payroll\":{\"firstShown\":\"2026-09-29T21:31:12.590Z\",\"version\":\"v1\",\"firstStarted\":true}}"
+        },
+        "calls": 2,
+        "apiCalls": 1
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Complete the period last",
+      "body": "When every worker is paid or resolved, Complete Payroll closes the period and keeps it in records.",
+      "step": "pr-complete",
+      "status": "ready",
+      "eyebrow": "Sample · Step 7 of 8",
+      "progress": null,
+      "panel": {
+        "x": 816,
+        "y": 296,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 304,
+        "y": 371,
+        "w": 480,
+        "h": 217
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 288,
+        "y": 296,
+        "w": 512,
+        "h": 308
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440,
+      "payroll": {
+        "mounts": 1,
+        "unmounts": 0,
+        "sameSearchNode": true,
+        "search": "Retained payroll",
+        "liveHidden": true,
+        "replica": true,
+        "enabledReplicaControls": 0,
+        "paymentDate": false,
+        "storage": {
+          "weavly_language": "en"
+        },
+        "prefs": {
+          "weavly:tour-prefs:v1:u1": "{\"payroll\":{\"firstShown\":\"2026-09-29T21:31:12.590Z\",\"version\":\"v1\",\"firstStarted\":true}}"
+        },
+        "calls": 2,
+        "apiCalls": 1
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Pay this period's workers",
+      "body": "When readiness is clear, open the settlement here and record each payment as you make it.",
+      "step": "pr-handoff",
+      "status": "ready",
+      "eyebrow": "Step 8 of 8",
+      "progress": null,
+      "panel": {
+        "x": 841,
+        "y": 154,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 1217,
+        "y": 154,
+        "w": 208,
+        "h": 54
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440,
+      "payroll": {
+        "mounts": 1,
+        "unmounts": 0,
+        "sameSearchNode": true,
+        "search": "Retained payroll",
+        "liveHidden": false,
+        "replica": false,
+        "enabledReplicaControls": 0,
+        "paymentDate": false,
+        "storage": {
+          "weavly_language": "en"
+        },
+        "prefs": {
+          "weavly:tour-prefs:v1:u1": "{\"payroll\":{\"firstShown\":\"2026-09-29T21:31:12.590Z\",\"version\":\"v1\",\"firstStarted\":true}}"
+        },
+        "calls": 2,
+        "apiCalls": 1
+      }
+    }
+  ],
+  "logs": [
+    "warning: [harness] server action called recordTourEventAction",
+    "error: Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction"
+  ],
+  "apiRequests": [
+    {
+      "url": "http://localhost:5199/api/analytics/plan-events",
+      "method": "POST"
+    }
+  ],
+  "preClick": null,
+  "sampling": "legacy-900ms",
+  "before": {
+    "x": 0,
+    "y": 0,
+    "inner": null
+  },
+  "payrollBefore": {
+    "mounts": 1,
+    "unmounts": 0,
+    "sameSearchNode": true,
+    "search": "Retained payroll",
+    "liveHidden": false,
+    "replica": false,
+    "enabledReplicaControls": 0,
+    "paymentDate": false,
+    "storage": {
+      "weavly_language": "en"
+    },
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"payroll\":{\"firstShown\":\"2026-09-29T21:31:12.590Z\",\"version\":\"v1\"}}"
+    },
+    "calls": 1,
+    "apiCalls": 1
+  },
+  "after": {
+    "scroll": {
+      "x": 0,
+      "y": 0,
+      "inner": null
+    },
+    "active": "<button data-slot=\"button\" data-variant=\"default\" data-size=\"default\" class=\"inline-flex items-center justify-center gap-2 whitespace-nowrap transition-[color,b",
+    "activeAnchor": "payroll.settle",
+    "activeRateBookField": null,
+    "activeControl": null,
+    "serverCalls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "navigations": [],
+    "scrollCalls": [
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      }
+    ],
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"payroll\":{\"firstShown\":\"2026-09-29T21:31:12.590Z\",\"version\":\"v1\",\"firstStarted\":true,\"completed\":true,\"completedVersion\":\"v2\"}}"
+    },
+    "payroll": {
+      "mounts": 1,
+      "unmounts": 0,
+      "sameSearchNode": true,
+      "search": "Retained payroll",
+      "liveHidden": false,
+      "replica": false,
+      "enabledReplicaControls": 0,
+      "paymentDate": false,
+      "storage": {
+        "weavly_language": "en"
+      },
+      "prefs": {
+        "weavly:tour-prefs:v1:u1": "{\"payroll\":{\"firstShown\":\"2026-09-29T21:31:12.590Z\",\"version\":\"v1\",\"firstStarted\":true,\"completed\":true,\"completedVersion\":\"v2\"}}"
+      },
+      "calls": 3,
+      "apiCalls": 1
+    },
+    "search": null
+  },
+  "issues": [
+    "pr-settle: rail paints over target",
+    "pr-paid: rail paints over target",
+    "pr-complete: rail paints over target"
+  ]
+}

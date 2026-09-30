@@ -1,12 +1,15 @@
 'use client'
 
-import { useRef, useState, type ReactNode } from 'react'
-import { TourInvitation } from '@/components/tours/TourInvitation'
-import StockTutorial from '@/components/tours/StockTutorial'
-import StockTourPreview from './StockTourPreview'
-import { stockTourSteps, type StockTourStep, type StockTourKind } from '@/lib/stock-tour'
+import dynamic from 'next/dynamic'
+import { useState, type ReactNode } from 'react'
+import ReplicaGuidedTour from '@/components/tours/ReplicaGuidedTour'
+import { useTranslation } from '@/lib/i18n/context'
+import { fabricStockTourSpecs, yarnStockTourSpecs, type FabricStockTourStep, type YarnStockTourStep } from '@/lib/stock-tour'
+import type { StockTourKind } from '@/lib/stock-tour'
 
-/** Keep the live page mounted so leaving the isolated preview restores all user state. */
+const StockTourPreview = dynamic(() => import('./StockTourPreview'), { ssr: false })
+type CopyModule = typeof import('@/lib/i18n/stock-tutorial')
+
 export default function StockGuidedTour({ kind, userId, orgId, userMetadata, children }: {
     kind: StockTourKind
     userId: string
@@ -14,30 +17,21 @@ export default function StockGuidedTour({ kind, userId, orgId, userMetadata, chi
     userMetadata?: Record<string, unknown>
     children: ReactNode
 }) {
-    const [step, setStep] = useState<StockTourStep | null>(null)
-    const launcher = useRef<HTMLDivElement>(null)
-    const returnScroll = useRef({ x: 0, y: 0 })
-    return <>
-        <aside className="stock-left-rail guided-tour-left-rail space-y-2" aria-label={kind === 'yarn-stock' ? 'Yarn Stock guides and tools' : 'Fabric Stock guides and tools'}>
-            <div ref={launcher}>
-                <TourInvitation
-                    tourId={kind}
-                    userId={userId}
-                    orgId={orgId}
-                    userMetadata={userMetadata}
-                    align="full"
-                    className="w-full"
-                    onLaunch={() => {
-                        returnScroll.current = { x: window.scrollX, y: window.scrollY }
-                        setStep(stockTourSteps(kind)[0])
-                    }}
-                />
-            </div>
-        </aside>
-        <div className="stock-workspace-shell" hidden={step !== null}>{children}</div>
-        {step && <>
-            <StockTourPreview kind={kind} step={step} />
-            <StockTutorial kind={kind} step={step} onStepChange={setStep} launcher={launcher} returnScroll={returnScroll} userId={userId} />
-        </>}
-    </>
+    const { language, t } = useTranslation()
+    const [content, setContent] = useState<CopyModule | null>(null)
+    return <ReplicaGuidedTour tourId={kind}
+        steps={kind === 'fabric-stock' ? fabricStockTourSpecs : yarnStockTourSpecs}
+        handoffStepId={kind === 'fabric-stock' ? 'fs-handoff' : 'ys-handoff'}
+        workspaceClassName="stock-workspace-shell space-y-5"
+        railClassName="stock-left-rail" railLabel={t(kind === 'fabric-stock' ? 'qualityStock.title' : 'navigation.yarnStock')}
+        userId={userId} orgId={orgId} userMetadata={userMetadata}
+        prepare={async () => { setContent(await import('@/lib/i18n/stock-tutorial')) }}
+        copy={step => {
+            if (!content) throw new Error('Stock tour copy must load before launch')
+            if (kind === 'fabric-stock') return content.fabricStockStepCopy(language, step as FabricStockTourStep, content.fabricStockTourControlLabels(t))
+            return content.yarnStockStepCopy(language, step as YarnStockTourStep, content.yarnStockTourControlLabels(language, t))
+        }}
+        renderReplica={step => <StockTourPreview kind={kind} step={step} />}>
+        <div className="stock-workspace-shell">{children}</div>
+    </ReplicaGuidedTour>
 }

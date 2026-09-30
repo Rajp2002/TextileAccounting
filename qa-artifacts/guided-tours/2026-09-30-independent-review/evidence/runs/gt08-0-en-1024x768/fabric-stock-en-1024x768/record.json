@@ -1,0 +1,410 @@
+{
+  "scenario": "fabric-stock",
+  "lang": "en",
+  "size": "1024x768",
+  "steps": [
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Fabric ready to send, by quality",
+      "body": "Saved shifts add metres and confirmed dispatches remove them. Here 200 m made − 100 m sent = 100 m.",
+      "step": "fs-balance",
+      "status": "ready",
+      "eyebrow": "Sample · Step 1 of 6",
+      "progress": null,
+      "panel": {
+        "x": 285,
+        "y": 300,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 285,
+        "y": 188,
+        "w": 702,
+        "h": 96
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "div(role=dialog)",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": {
+        "replica": true,
+        "balance": "100 m",
+        "pending": true,
+        "mounts": 1,
+        "unmounts": 0,
+        "retainedSearch": "Retained",
+        "sameSearchNode": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 768,
+      "vw": 1024
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Add the fabric you had before Weavly",
+      "body": "A quality marked “Pending” has no opening stock yet. Count the finished fabric you already had and record it once.",
+      "step": "fs-pending",
+      "status": "ready",
+      "eyebrow": "Sample · Step 2 of 6",
+      "progress": null,
+      "panel": {
+        "x": 285,
+        "y": 381,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 285,
+        "y": 265,
+        "w": 702,
+        "h": 100
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": {
+        "replica": true,
+        "balance": "100 m",
+        "pending": true,
+        "mounts": 1,
+        "unmounts": 0,
+        "retainedSearch": "Retained",
+        "sameSearchNode": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 768,
+      "vw": 1024
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Opening stock is added once",
+      "body": "“Opening stock” adds the counted metres to what production already recorded: 100 + 500 = 600 m. Add a note such as your count date.",
+      "step": "fs-opening",
+      "status": "ready",
+      "eyebrow": "Sample · Step 3 of 6",
+      "progress": null,
+      "panel": {
+        "x": 608,
+        "y": 179,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 96,
+        "y": 277,
+        "w": 480,
+        "h": 296
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 80,
+        "y": 179,
+        "w": 512,
+        "h": 409
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": {
+        "replica": true,
+        "balance": "100 m",
+        "pending": true,
+        "mounts": 1,
+        "unmounts": 0,
+        "retainedSearch": "Retained",
+        "sameSearchNode": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 768,
+      "vw": 1024
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "After a count, enter the counted total",
+      "body": "“Correct balance” replaces the balance with what you counted. Enter 590, not −10; Weavly records the −10 m difference.",
+      "step": "fs-correct",
+      "status": "ready",
+      "eyebrow": "Sample · Step 4 of 6",
+      "progress": null,
+      "panel": {
+        "x": 608,
+        "y": 179,
+        "w": 360,
+        "h": 243
+      },
+      "highlight": {
+        "x": 96,
+        "y": 277,
+        "w": 480,
+        "h": 296
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 80,
+        "y": 179,
+        "w": 512,
+        "h": 409
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": {
+        "replica": true,
+        "balance": "600 m",
+        "pending": false,
+        "mounts": 1,
+        "unmounts": 0,
+        "retainedSearch": "Retained",
+        "sameSearchNode": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 768,
+      "vw": 1024
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Trace every change",
+      "body": "“Movement history” lists each production, dispatch, opening and correction with the balance after it.",
+      "step": "fs-history",
+      "status": "ready",
+      "eyebrow": "Sample · Step 5 of 6",
+      "progress": null,
+      "panel": {
+        "x": 648,
+        "y": 16,
+        "w": 360,
+        "h": 243
+      },
+      "highlight": {
+        "x": 285,
+        "y": 265,
+        "w": 702,
+        "h": 296
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": {
+        "replica": true,
+        "balance": "590 m",
+        "pending": false,
+        "mounts": 1,
+        "unmounts": 0,
+        "retainedSearch": "Retained",
+        "sameSearchNode": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 768,
+      "vw": 1024
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Record fabric you already have",
+      "body": "If you had finished fabric before using Weavly, record it here once. From now on, saved shifts add stock by themselves.",
+      "step": "fs-handoff",
+      "status": "ready",
+      "eyebrow": "Step 6 of 6",
+      "progress": null,
+      "panel": {
+        "x": 413,
+        "y": 119,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 789,
+        "y": 119,
+        "w": 146,
+        "h": 47
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": {
+        "replica": false,
+        "pending": false,
+        "mounts": 1,
+        "unmounts": 0,
+        "retainedSearch": "Retained",
+        "sameSearchNode": true,
+        "anchors": 1,
+        "enabledReplicaControls": 0
+      },
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 768,
+      "vw": 1024
+    }
+  ],
+  "logs": [
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction"
+  ],
+  "apiRequests": [],
+  "preClick": null,
+  "sampling": "legacy-900ms",
+  "before": {
+    "x": 0,
+    "y": 0,
+    "inner": null
+  },
+  "after": {
+    "scroll": {
+      "x": 0,
+      "y": 0,
+      "inner": null
+    },
+    "active": "<button data-slot=\"button\" data-variant=\"default\" data-size=\"default\" class=\"inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm leading-[1.",
+    "activeAnchor": "fabric.opening",
+    "activeRateBookField": null,
+    "activeControl": null,
+    "serverCalls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "navigations": [],
+    "scrollCalls": [
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      }
+    ],
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"fabric-stock\":{\"firstShown\":\"2026-09-29T21:11:34.210Z\",\"version\":\"v1\",\"firstStarted\":true,\"completed\":true,\"completedVersion\":\"v2\"}}"
+    },
+    "stock": {
+      "mounts": 1,
+      "unmounts": 0,
+      "retainedSearch": "Retained",
+      "sameSearchNode": true,
+      "liveHidden": false,
+      "replica": false
+    },
+    "search": null
+  },
+  "issues": []
+}

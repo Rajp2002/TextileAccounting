@@ -1,0 +1,410 @@
+[
+  {
+    "id": "b16-production-en-1440x900",
+    "scenario": "production",
+    "language": "en",
+    "size": "1440x900"
+  },
+  {
+    "id": "b16-production-gu-390x844",
+    "scenario": "production",
+    "language": "gu",
+    "size": "390x844"
+  },
+  {
+    "id": "b16-production-hi-1280x800",
+    "scenario": "production",
+    "language": "hi",
+    "size": "1280x800"
+  },
+  {
+    "id": "b16-production-en-1024x768",
+    "scenario": "production",
+    "language": "en",
+    "size": "1024x768"
+  },
+  {
+    "id": "b16-daily-sheet-en-1440x900",
+    "scenario": "daily-sheet",
+    "language": "en",
+    "size": "1440x900"
+  },
+  {
+    "id": "b16-daily-sheet-gu-390x844",
+    "scenario": "daily-sheet",
+    "language": "gu",
+    "size": "390x844"
+  },
+  {
+    "id": "b16-daily-sheet-hi-1280x800",
+    "scenario": "daily-sheet",
+    "language": "hi",
+    "size": "1280x800"
+  },
+  {
+    "id": "b16-daily-sheet-en-1024x768",
+    "scenario": "daily-sheet",
+    "language": "en",
+    "size": "1024x768"
+  },
+  {
+    "id": "b16-daily-sheet-populated-1-en-1440x900",
+    "scenario": "daily-sheet?populated=1",
+    "language": "en",
+    "size": "1440x900"
+  },
+  {
+    "id": "b16-daily-sheet-populated-1-gu-390x844",
+    "scenario": "daily-sheet?populated=1",
+    "language": "gu",
+    "size": "390x844"
+  },
+  {
+    "id": "b16-daily-sheet-populated-1-hi-1280x800",
+    "scenario": "daily-sheet?populated=1",
+    "language": "hi",
+    "size": "1280x800"
+  },
+  {
+    "id": "b16-daily-sheet-populated-1-en-1024x768",
+    "scenario": "daily-sheet?populated=1",
+    "language": "en",
+    "size": "1024x768"
+  },
+  {
+    "id": "b16-fabric-stock-en-1440x900",
+    "scenario": "fabric-stock",
+    "language": "en",
+    "size": "1440x900"
+  },
+  {
+    "id": "b16-fabric-stock-gu-390x844",
+    "scenario": "fabric-stock",
+    "language": "gu",
+    "size": "390x844"
+  },
+  {
+    "id": "b16-fabric-stock-hi-1280x800",
+    "scenario": "fabric-stock",
+    "language": "hi",
+    "size": "1280x800"
+  },
+  {
+    "id": "b16-fabric-stock-en-1024x768",
+    "scenario": "fabric-stock",
+    "language": "en",
+    "size": "1024x768"
+  },
+  {
+    "id": "b16-yarn-stock-en-1440x900",
+    "scenario": "yarn-stock",
+    "language": "en",
+    "size": "1440x900"
+  },
+  {
+    "id": "b16-yarn-stock-gu-390x844",
+    "scenario": "yarn-stock",
+    "language": "gu",
+    "size": "390x844"
+  },
+  {
+    "id": "b16-yarn-stock-hi-1280x800",
+    "scenario": "yarn-stock",
+    "language": "hi",
+    "size": "1280x800"
+  },
+  {
+    "id": "b16-yarn-stock-en-1024x768",
+    "scenario": "yarn-stock",
+    "language": "en",
+    "size": "1024x768"
+  },
+  {
+    "id": "b16-dispatch-en-1440x900",
+    "scenario": "dispatch",
+    "language": "en",
+    "size": "1440x900"
+  },
+  {
+    "id": "b16-dispatch-gu-390x844",
+    "scenario": "dispatch",
+    "language": "gu",
+    "size": "390x844"
+  },
+  {
+    "id": "b16-dispatch-hi-1280x800",
+    "scenario": "dispatch",
+    "language": "hi",
+    "size": "1280x800"
+  },
+  {
+    "id": "b16-dispatch-en-1024x768",
+    "scenario": "dispatch",
+    "language": "en",
+    "size": "1024x768"
+  },
+  {
+    "id": "b16-payroll-en-1440x900",
+    "scenario": "payroll",
+    "language": "en",
+    "size": "1440x900"
+  },
+  {
+    "id": "b16-payroll-gu-390x844",
+    "scenario": "payroll",
+    "language": "gu",
+    "size": "390x844"
+  },
+  {
+    "id": "b16-payroll-hi-1280x800",
+    "scenario": "payroll",
+    "language": "hi",
+    "size": "1280x800"
+  },
+  {
+    "id": "b16-payroll-en-1024x768",
+    "scenario": "payroll",
+    "language": "en",
+    "size": "1024x768"
+  },
+  {
+    "id": "b16-payroll-extra-en-1440x900",
+    "scenario": "payroll-extra",
+    "language": "en",
+    "size": "1440x900"
+  },
+  {
+    "id": "b16-payroll-extra-gu-390x844",
+    "scenario": "payroll-extra",
+    "language": "gu",
+    "size": "390x844"
+  },
+  {
+    "id": "b16-payroll-extra-hi-1280x800",
+    "scenario": "payroll-extra",
+    "language": "hi",
+    "size": "1280x800"
+  },
+  {
+    "id": "b16-payroll-extra-en-1024x768",
+    "scenario": "payroll-extra",
+    "language": "en",
+    "size": "1024x768"
+  },
+  {
+    "id": "b16-machines-en-1440x900",
+    "scenario": "machines",
+    "language": "en",
+    "size": "1440x900"
+  },
+  {
+    "id": "b16-machines-gu-390x844",
+    "scenario": "machines",
+    "language": "gu",
+    "size": "390x844"
+  },
+  {
+    "id": "b16-machines-hi-1280x800",
+    "scenario": "machines",
+    "language": "hi",
+    "size": "1280x800"
+  },
+  {
+    "id": "b16-machines-en-1024x768",
+    "scenario": "machines",
+    "language": "en",
+    "size": "1024x768"
+  },
+  {
+    "id": "b16-workers-en-1440x900",
+    "scenario": "workers",
+    "language": "en",
+    "size": "1440x900"
+  },
+  {
+    "id": "b16-workers-gu-390x844",
+    "scenario": "workers",
+    "language": "gu",
+    "size": "390x844"
+  },
+  {
+    "id": "b16-workers-hi-1280x800",
+    "scenario": "workers",
+    "language": "hi",
+    "size": "1280x800"
+  },
+  {
+    "id": "b16-workers-en-1024x768",
+    "scenario": "workers",
+    "language": "en",
+    "size": "1024x768"
+  },
+  {
+    "id": "b16-workers-salary-en-1440x900",
+    "scenario": "workers-salary",
+    "language": "en",
+    "size": "1440x900"
+  },
+  {
+    "id": "b16-workers-salary-gu-390x844",
+    "scenario": "workers-salary",
+    "language": "gu",
+    "size": "390x844"
+  },
+  {
+    "id": "b16-workers-salary-hi-1280x800",
+    "scenario": "workers-salary",
+    "language": "hi",
+    "size": "1280x800"
+  },
+  {
+    "id": "b16-workers-salary-en-1024x768",
+    "scenario": "workers-salary",
+    "language": "en",
+    "size": "1024x768"
+  },
+  {
+    "id": "b16-assignments-en-1440x900",
+    "scenario": "assignments",
+    "language": "en",
+    "size": "1440x900"
+  },
+  {
+    "id": "b16-assignments-gu-390x844",
+    "scenario": "assignments",
+    "language": "gu",
+    "size": "390x844"
+  },
+  {
+    "id": "b16-assignments-hi-1280x800",
+    "scenario": "assignments",
+    "language": "hi",
+    "size": "1280x800"
+  },
+  {
+    "id": "b16-assignments-en-1024x768",
+    "scenario": "assignments",
+    "language": "en",
+    "size": "1024x768"
+  },
+  {
+    "id": "b16-estimator-en-1440x900",
+    "scenario": "estimator",
+    "language": "en",
+    "size": "1440x900"
+  },
+  {
+    "id": "b16-estimator-gu-390x844",
+    "scenario": "estimator",
+    "language": "gu",
+    "size": "390x844"
+  },
+  {
+    "id": "b16-estimator-hi-1280x800",
+    "scenario": "estimator",
+    "language": "hi",
+    "size": "1280x800"
+  },
+  {
+    "id": "b16-estimator-en-1024x768",
+    "scenario": "estimator",
+    "language": "en",
+    "size": "1024x768"
+  },
+  {
+    "id": "b16-free-estimator-en-1440x900",
+    "scenario": "free-estimator",
+    "language": "en",
+    "size": "1440x900"
+  },
+  {
+    "id": "b16-free-estimator-gu-390x844",
+    "scenario": "free-estimator",
+    "language": "gu",
+    "size": "390x844"
+  },
+  {
+    "id": "b16-free-estimator-hi-1280x800",
+    "scenario": "free-estimator",
+    "language": "hi",
+    "size": "1280x800"
+  },
+  {
+    "id": "b16-free-estimator-en-1024x768",
+    "scenario": "free-estimator",
+    "language": "en",
+    "size": "1024x768"
+  },
+  {
+    "id": "b16-rates-en-1440x900",
+    "scenario": "rates",
+    "language": "en",
+    "size": "1440x900"
+  },
+  {
+    "id": "b16-rates-gu-390x844",
+    "scenario": "rates",
+    "language": "gu",
+    "size": "390x844"
+  },
+  {
+    "id": "b16-rates-hi-1280x800",
+    "scenario": "rates",
+    "language": "hi",
+    "size": "1280x800"
+  },
+  {
+    "id": "b16-rates-en-1024x768",
+    "scenario": "rates",
+    "language": "en",
+    "size": "1024x768"
+  },
+  {
+    "id": "b16-quotes-en-1440x900",
+    "scenario": "quotes",
+    "language": "en",
+    "size": "1440x900"
+  },
+  {
+    "id": "b16-quotes-gu-390x844",
+    "scenario": "quotes",
+    "language": "gu",
+    "size": "390x844"
+  },
+  {
+    "id": "b16-quotes-hi-1280x800",
+    "scenario": "quotes",
+    "language": "hi",
+    "size": "1280x800"
+  },
+  {
+    "id": "b16-quotes-en-1024x768",
+    "scenario": "quotes",
+    "language": "en",
+    "size": "1024x768"
+  },
+  {
+    "id": "b16-free-costings-en-1440x900",
+    "scenario": "free-costings",
+    "language": "en",
+    "size": "1440x900"
+  },
+  {
+    "id": "b16-free-costings-gu-390x844",
+    "scenario": "free-costings",
+    "language": "gu",
+    "size": "390x844"
+  },
+  {
+    "id": "b16-free-costings-hi-1280x800",
+    "scenario": "free-costings",
+    "language": "hi",
+    "size": "1280x800"
+  },
+  {
+    "id": "b16-free-costings-en-1024x768",
+    "scenario": "free-costings",
+    "language": "en",
+    "size": "1024x768"
+  }
+]

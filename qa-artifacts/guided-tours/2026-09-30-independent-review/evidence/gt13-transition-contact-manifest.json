@@ -1,0 +1,20 @@
+[
+  {
+    "run": "gt13-transition-0-en-1440x900",
+    "steps": [
+      "mc-readiness",
+      "mc-readiness",
+      "mc-readiness"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt13-transition-0-en-1440x900-01-03.png"
+  },
+  {
+    "run": "gt13-transition-1-gu-390x844",
+    "steps": [
+      "mc-readiness",
+      "mc-readiness",
+      "mc-readiness"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt13-transition-1-gu-390x844-01-03.png"
+  }
+]

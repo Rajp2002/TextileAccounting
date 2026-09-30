@@ -1,4 +1,5 @@
-import type { AllTourPreferences, TourId, TourPreferenceRecord } from './tour-types'
+import type { AllTourPreferences, TourId, TourPreferenceRecord, TourPresentation } from './tour-types'
+import { getTourDefinition } from './tour-registry'
 import { recordTourEventAction } from '@/app/actions/tour-preferences'
 
 function getLocalPrefsKey(userId: string): string {
@@ -14,7 +15,8 @@ export function getLocalTourPreferences(userId: string): AllTourPreferences {
     try {
         const raw = localStorage.getItem(getLocalPrefsKey(userId))
         if (!raw) return {}
-        return JSON.parse(raw) as AllTourPreferences
+        const parsed = JSON.parse(raw)
+        return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed as AllTourPreferences : {}
     } catch {
         return {}
     }
@@ -38,6 +40,7 @@ export function saveLocalTourPreference(
             version: 'v1',
         }
         // Stronger history preservation: never let a weaker state overwrite dismissed or completed
+        if (record.firstStarted) mergedRecord.firstStarted = true
         if (record.completed) mergedRecord.completed = true
         if (record.dismissed) mergedRecord.dismissed = true
         if (record.firstShown) mergedRecord.firstShown = record.firstShown
@@ -49,23 +52,13 @@ export function saveLocalTourPreference(
     }
 }
 
-export interface TourStatus {
-    isFirstEligibleVisit: boolean
-    isDismissed: boolean
-    isCompleted: boolean
-    hasStarted: boolean
-    isSuppressed: boolean
-}
-
-/**
- * Resolves the persistent status of a tour for a given user.
- */
-export function getTourStatus(
+/** An impression is not a decision; account, local and legacy decisions are sticky. */
+export function getTourPresentation(
     tourId: TourId,
     userMetadata?: Record<string, unknown> | null,
     userId?: string,
     orgId?: string
-): TourStatus {
+): TourPresentation {
     const tourPrefs = (userMetadata?.tour_preferences as AllTourPreferences | undefined)?.[tourId]
     const localPrefs = userId ? getLocalTourPreferences(userId)[tourId] : undefined
 
@@ -91,49 +84,16 @@ export function getTourStatus(
         }
     }
 
-    const isDismissed = Boolean(
-        tourPrefs?.dismissed ||
-        localPrefs?.dismissed ||
-        legacyDismissed
-    )
-
-    const isCompleted = Boolean(
-        tourPrefs?.completed ||
-        localPrefs?.completed
-    )
-
-    const hasStarted = Boolean(
-        tourPrefs?.firstStarted ||
-        localPrefs?.firstStarted
-    )
-
-    const hasBeenShown = Boolean(
-        tourPrefs?.firstShown ||
-        localPrefs?.firstShown ||
-        isDismissed ||
-        isCompleted ||
-        hasStarted
-    )
-
-    // Suppressed means future visits will show the quiet button instead of the invitation
-    const isSuppressed = hasBeenShown || isDismissed || isCompleted
-
-    // First eligible visit means the invitation has never been shown, dismissed, or completed
-    const isFirstEligibleVisit = !isSuppressed
-
-    return {
-        isFirstEligibleVisit,
-        isDismissed,
-        isCompleted,
-        hasStarted,
-        isSuppressed,
-    }
+    return legacyDismissed || [tourPrefs, localPrefs].some(record =>
+        record?.dismissed === true || record?.firstStarted === true || record?.completed === true
+    ) ? 'replay' : 'invite'
 }
 
 /**
  * Records an invitation impression.
  */
 export async function persistTourImpression(tourId: TourId, userId?: string): Promise<void> {
+    if (userId && getLocalTourPreferences(userId)[tourId]?.firstShown) return
     if (userId) {
         saveLocalTourPreference(userId, tourId, { firstShown: new Date().toISOString() })
     }
@@ -169,11 +129,15 @@ export async function persistTourStarted(tourId: TourId, userId?: string): Promi
 /**
  * Records tour completion.
  */
-export async function persistTourCompleted(tourId: TourId, userId?: string): Promise<void> {
+export async function persistTourCompleted(
+    tourId: TourId,
+    userId?: string,
+    contentVersion = getTourDefinition(tourId).contentVersion
+): Promise<void> {
     if (userId) {
-        saveLocalTourPreference(userId, tourId, { completed: true })
+        saveLocalTourPreference(userId, tourId, { completed: true, completedVersion: contentVersion })
     }
     try {
-        await recordTourEventAction({ tourId, action: 'completed' })
+        await recordTourEventAction({ tourId, action: 'completed', contentVersion })
     } catch {}
 }

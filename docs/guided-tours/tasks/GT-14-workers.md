@@ -18,6 +18,8 @@ GT-14. Move the Workers tour to `GuidedTour` with the pay-path choice in the pan
 
 `WorkersRegister.tsx` (tour mount, path reset, localized samples, handoff anchors), `WorkerEditor.tsx` (label keys for the labels the preview shows), delete `components/tours/WorkersTutorial.tsx` when unused, `lib/workers-tour.ts`, `lib/i18n/workers-tutorial.ts`, locales, registry `workers` → `v2`, listed tests, contract test, harness.
 
+Owner-approved addition (2026-09-28): `components/workers/WorkersPageHeader.tsx` may only put `data-tour-anchor="workers.add"` directly on the shared WorkerAddButton and key its Add worker label; `components/workers/WorkerCard.tsx` may only key View payroll. Use the existing approved §F copy and the same keys for live labels and tour tokens. Keep callbacks, hrefs, validation, form semantics and all business behavior unchanged. The actual WorkerEditor source path is `app/(dashboard)/owner/production/registers/WorkerEditor.tsx`; this is the existing editor named by the packet, not a new component.
+
 ## Protected surface
 
 Worker create/update validation, pay-type lock, salary history, inactive rules, filters and URL sync.

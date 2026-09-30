@@ -1,0 +1,37 @@
+[
+  {
+    "module": "app/actions/tour-preferences.ts",
+    "recordsStubCalls": true,
+    "returnsHarnessError": true,
+    "hasRealAuthImport": false,
+    "hasSupabaseImport": false
+  },
+  {
+    "module": "app/(dashboard)/owner/production/actions.ts",
+    "recordsStubCalls": true,
+    "returnsHarnessError": true,
+    "hasRealAuthImport": false,
+    "hasSupabaseImport": false
+  },
+  {
+    "module": "app/(dashboard)/owner/estimator/actions.ts",
+    "recordsStubCalls": true,
+    "returnsHarnessError": true,
+    "hasRealAuthImport": false,
+    "hasSupabaseImport": false
+  },
+  {
+    "module": "app/(dashboard)/owner/rates/actions.ts",
+    "recordsStubCalls": true,
+    "returnsHarnessError": true,
+    "hasRealAuthImport": false,
+    "hasSupabaseImport": false
+  },
+  {
+    "module": "app/(dashboard)/owner/dispatches/actions.ts",
+    "recordsStubCalls": false,
+    "returnsHarnessError": true,
+    "hasRealAuthImport": false,
+    "hasSupabaseImport": false
+  }
+]

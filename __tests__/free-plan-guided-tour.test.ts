@@ -25,11 +25,25 @@ describe('Free Plan Guided Tour & Viewport Scope', () => {
         expect(estimatorClientSource).not.toContain('pb-[50dvh]')
     })
 
-    it('accepts freePlan prop in CostEstimateTutorial and excludes Section 10 (Saved qualities) when freePlan is true', () => {
+    it('uses the same ten-step runtime on Free with no paid library target', () => {
         expect(tutorialSource).toContain('freePlan = false')
-        expect(tutorialSource).toContain("if (freePlan && (header.dataset.estimatorField === 'savedQualities' || Number(header.dataset.tutorialSection) === 10)) return")
-        expect(tutorialSource).toContain("if (header.dataset.estimatorField === 'savedQualities') {")
-        expect(tutorialSource).toContain('if (freePlan) return')
+        expect(tutorialSource).toContain('freePlan={freePlan}')
+        const steps = fs.readFileSync(path.resolve(__dirname, '../lib/estimator-tour.ts'), 'utf8')
+        expect(steps.match(/id: 'est-/g)).toHaveLength(10)
+        expect(steps).not.toContain('savedQualityPicker')
+        expect(steps).not.toContain('savedQualities')
+    })
+
+    it('forwards modern account preferences and user/org identity on both routes', () => {
+        const paidPage = fs.readFileSync(path.resolve(__dirname, '../app/(dashboard)/owner/estimator/page.tsx'), 'utf8')
+        for (const source of [paidPage, freePageSource]) {
+            expect(source).toContain('userMetadata={{ tour_preferences: user.user_metadata?.tour_preferences }}')
+            expect(source).toContain('userId={user.id}')
+            expect(source).toContain('orgId={profile.org_id}')
+        }
+        expect(freeClientSource).toContain('userMetadata={userMetadata}')
+        expect(estimatorClientSource).toContain('userMetadata={userMetadata}')
+        expect(tutorialSource).toContain('...userMetadata, cost_estimate_tutorial_dismissed: accountDismissed')
     })
 
     it('passes tutorialDismissed from user metadata in app/free/page.tsx to FreeClient', () => {

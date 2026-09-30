@@ -1,0 +1,15 @@
+export const recordTourEventAction = async (...args) => {
+	(window.__serverCalls ||= []).push({
+		fn: "recordTourEventAction",
+		file: "app/actions/tour-preferences.ts"
+	});
+	console.warn("[harness] server action called", "recordTourEventAction");
+	return {
+		success: false,
+		error: "harness",
+		data: null
+	};
+};
+export default {};
+
+//# sourceMappingURL=data:application/json;base64,eyJtYXBwaW5ncyI6IkFBQUEsT0FBTyxNQUFNLHdCQUF3QixPQUFPLEdBQUcsU0FBUztDQUFFLENBQUMsT0FBTyxrQkFBa0IsQ0FBQyxHQUFHLEtBQUs7RUFBRSxJQUFJO0VBQXlCLE1BQU07Q0FBa0MsQ0FBQztDQUFHLFFBQVEsS0FBSyxrQ0FBa0MsdUJBQXVCO0NBQUcsT0FBTztFQUFFLFNBQVM7RUFBTyxPQUFPO0VBQVcsTUFBTTtDQUFLO0FBQUU7QUFDelMsZUFBZSxDQUFDIiwibmFtZXMiOltdLCJzb3VyY2VzIjpbInRvdXItcHJlZmVyZW5jZXMudHMiXSwidmVyc2lvbiI6Mywic291cmNlc0NvbnRlbnQiOlsiZXhwb3J0IGNvbnN0IHJlY29yZFRvdXJFdmVudEFjdGlvbiA9IGFzeW5jICguLi5hcmdzKSA9PiB7ICh3aW5kb3cuX19zZXJ2ZXJDYWxscyB8fD0gW10pLnB1c2goeyBmbjogXCJyZWNvcmRUb3VyRXZlbnRBY3Rpb25cIiwgZmlsZTogXCJhcHAvYWN0aW9ucy90b3VyLXByZWZlcmVuY2VzLnRzXCIgfSk7IGNvbnNvbGUud2FybignW2hhcm5lc3NdIHNlcnZlciBhY3Rpb24gY2FsbGVkJywgXCJyZWNvcmRUb3VyRXZlbnRBY3Rpb25cIik7IHJldHVybiB7IHN1Y2Nlc3M6IGZhbHNlLCBlcnJvcjogJ2hhcm5lc3MnLCBkYXRhOiBudWxsIH0gfVxuZXhwb3J0IGRlZmF1bHQge31cbiJdfQ==

@@ -366,7 +366,7 @@ export function CostingExportDialog({
 
   return (
     <Dialog modal={!tutorialPreview} open={open} onOpenChange={value => { if (!tutorialPreview) onOpenChange(value) }}>
-      <DialogContent data-costing-tour-dialog={tutorialPreview ? "true" : undefined} onOpenAutoFocus={event => {if (tutorialPreview) event.preventDefault()}} onCloseAutoFocus={event => {if (tutorialPreview) event.preventDefault()}} onInteractOutside={event => {if (tutorialPreview) event.preventDefault()}} onEscapeKeyDown={event => {if (tutorialPreview) event.preventDefault()}} className="max-h-[95vh] overflow-y-auto sm:max-w-6xl">
+      <DialogContent showCloseButton={!tutorialPreview} data-costing-tour-dialog={tutorialPreview ? "true" : undefined} onOpenAutoFocus={event => {if (tutorialPreview) event.preventDefault()}} onCloseAutoFocus={event => {if (tutorialPreview) event.preventDefault()}} onInteractOutside={event => {if (tutorialPreview) event.preventDefault()}} onEscapeKeyDown={event => {if (tutorialPreview) event.preventDefault()}} className="max-h-[95vh] overflow-y-auto sm:max-w-6xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Eye className="h-5 w-5 text-[var(--wv-action-primary)]" />
@@ -418,7 +418,7 @@ export function CostingExportDialog({
                 className={`rounded-xl border p-4 text-left transition-colors ${mode === 'internal' ? 'border-[var(--wv-neel-700)] bg-[var(--wv-neel-50)] shadow-[inset_2px_0_0_var(--wv-brand-accent)]' : 'border-[var(--wv-border-control)] bg-[var(--wv-bg-surface)] hover:border-[var(--wv-border-strong)]'}`}
               >
                 <FileText className="mb-3 h-5 w-5 text-[var(--wv-neel-700)]" />
-                <p className="font-semibold text-[var(--wv-text-primary)]">Internal Cost Estimate</p>
+                <p className="font-semibold text-[var(--wv-text-primary)]">{tx('Internal Cost Estimate')}</p>
                 <p className="mt-1 text-xs leading-relaxed text-[var(--wv-text-secondary)]">Detailed costs, assumptions, break-even, margin, and profit stay inside the factory.</p>
               </button>
               <button
@@ -428,7 +428,7 @@ export function CostingExportDialog({
                 className={`rounded-xl border p-4 text-left transition-colors ${mode === 'customer' ? 'border-[var(--wv-moss-700)] bg-[var(--wv-moss-50)] shadow-[inset_2px_0_0_var(--wv-brand-accent)]' : 'border-[var(--wv-border-control)] bg-[var(--wv-bg-surface)] hover:border-[var(--wv-border-strong)]'}`}
               >
                 <ReceiptText className="mb-3 h-5 w-5 text-[var(--wv-status-success-fg)]" />
-                <p className="font-semibold text-[var(--wv-text-primary)]">Customer Quotation</p>
+                <p className="font-semibold text-[var(--wv-text-primary)]">{tx('Customer Quotation')}</p>
                 <p className="mt-1 text-xs leading-relaxed text-[var(--wv-text-secondary)]">Final price and commercial details only. Internal costs and margin stay hidden.</p>
               </button>
             </div>
@@ -537,7 +537,7 @@ export function CostingExportDialog({
             {status === 'share-opened' && generatedFileIsCurrent && <span className="flex items-center gap-1 text-xs font-semibold text-[var(--wv-text-secondary)]"><ExternalLink className="h-3.5 w-3.5" /> Delivery is not confirmed</span>}
           </div>
           <div className="flex gap-2">
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Close</Button>
+            {!tutorialPreview && <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Close</Button>}
             <Button type="button" onClick={() => void handlePdf()} disabled={!model || !canGenerate || isBusy} aria-describedby={exportActionHint ? 'export-action-help' : undefined} className="bg-[var(--wv-action-primary)] text-[var(--wv-text-on-action)] hover:bg-[var(--wv-action-primary-hover)]">
               {status === 'saving' || status === 'generating' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
               {documentChanged ? tx('Download updated PDF') : status === 'download-started' ? 'Download PDF again' : 'Download PDF'}

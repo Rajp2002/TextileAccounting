@@ -1,0 +1,2 @@
+{"scenario":"estimator","lang":"gu","size":"390x844","steps":10,"logs":["warning: [harness] server action called recordTourEventAction","warning: [harness] server action called getEstimatorSecondaryData","error: Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector","warning: [harness] server action called recordTourEventAction","warning: [harness] server action called recordTourEventAction"]}
+[ 'est-save: unavailable', 'est-save: outline not fully on screen' ]

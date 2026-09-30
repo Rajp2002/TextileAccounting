@@ -1,0 +1,528 @@
+{
+  "scenario": "assignments?populated=1",
+  "lang": "en",
+  "size": "1920x1080",
+  "steps": [
+    {
+      "assignments": {
+        "names": [
+          "Sample worker",
+          "Sample worker"
+        ],
+        "inert": true,
+        "picker": false,
+        "enabledOptions": 0,
+        "visibleClose": 0,
+        "anchors": [
+          "assignments.add-worker"
+        ],
+        "focusBanner": false
+      },
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Who runs which loom, each shift",
+      "body": "Link each worker to the loom they run. The Daily Sheet then lists each loom with its worker.",
+      "step": "ma-purpose",
+      "status": "ready",
+      "eyebrow": "Sample · Step 1 of 7",
+      "progress": null,
+      "panel": {
+        "x": 217,
+        "y": 270,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 593,
+        "y": 270,
+        "w": 983,
+        "h": 51
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "div(role=dialog)",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 1080,
+      "vw": 1920
+    },
+    {
+      "assignments": {
+        "names": [
+          "Sample worker",
+          "Sample worker"
+        ],
+        "inert": true,
+        "picker": false,
+        "enabledOptions": 0,
+        "visibleClose": 0,
+        "anchors": [
+          "assignments.add-worker"
+        ],
+        "focusBanner": false
+      },
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Choose the shift first",
+      "body": "Day and night are set separately.",
+      "step": "ma-shift",
+      "status": "ready",
+      "eyebrow": "Sample · Step 2 of 7",
+      "progress": null,
+      "panel": {
+        "x": 798,
+        "y": 76,
+        "w": 360,
+        "h": 152
+      },
+      "highlight": {
+        "x": 586,
+        "y": 76,
+        "w": 197,
+        "h": 49
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 1080,
+      "vw": 1920
+    },
+    {
+      "assignments": {
+        "names": [
+          "Sample worker"
+        ],
+        "inert": true,
+        "picker": false,
+        "enabledOptions": 0,
+        "visibleClose": 0,
+        "anchors": [
+          "assignments.add-worker"
+        ],
+        "focusBanner": false
+      },
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "A loom needs a quality first",
+      "body": "A loom marked “No production job” has nothing to weave yet. Put a quality on it in Production with “Assign Looms”.",
+      "step": "ma-job",
+      "status": "ready",
+      "eyebrow": "Sample · Step 3 of 7",
+      "progress": null,
+      "panel": {
+        "x": 1265,
+        "y": 407,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 1116,
+        "y": 407,
+        "w": 133,
+        "h": 26
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 1080,
+      "vw": 1920
+    },
+    {
+      "assignments": {
+        "names": [
+          "Sample worker",
+          "Sample worker"
+        ],
+        "inert": true,
+        "picker": false,
+        "enabledOptions": 0,
+        "visibleClose": 0,
+        "anchors": [
+          "assignments.add-worker"
+        ],
+        "focusBanner": false
+      },
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Start from the worker",
+      "body": "“Assign” next to a worker lists the looms free in this shift.",
+      "step": "ma-assign",
+      "status": "ready",
+      "eyebrow": "Sample · Step 4 of 7",
+      "progress": null,
+      "panel": {
+        "x": 1023,
+        "y": 374,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 937,
+        "y": 374,
+        "w": 69,
+        "h": 40
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 1080,
+      "vw": 1920
+    },
+    {
+      "assignments": {
+        "names": [
+          "Sample worker",
+          "Sample worker"
+        ],
+        "inert": true,
+        "picker": true,
+        "enabledOptions": 0,
+        "visibleClose": 0,
+        "anchors": [
+          "assignments.add-worker"
+        ],
+        "focusBanner": false
+      },
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Choosing a loom saves at once",
+      "body": "“Choose” links the worker to that loom from today. If the loom already has a worker, Weavly asks before replacing.",
+      "step": "ma-choose",
+      "status": "ready",
+      "eyebrow": "Sample · Step 5 of 7",
+      "progress": null,
+      "panel": {
+        "x": 544,
+        "y": 16,
+        "w": 360,
+        "h": 243
+      },
+      "highlight": {
+        "x": 24,
+        "y": 150,
+        "w": 496,
+        "h": 75
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 16,
+        "y": 16,
+        "w": 512,
+        "h": 225
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 1080,
+      "vw": 1920
+    },
+    {
+      "assignments": {
+        "names": [
+          "Sample worker"
+        ],
+        "inert": true,
+        "picker": false,
+        "enabledOptions": 0,
+        "visibleClose": 0,
+        "anchors": [
+          "assignments.add-worker"
+        ],
+        "focusBanner": false
+      },
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Check the link",
+      "body": "The worker and loom now show together for this shift. Their metres are entered on the Daily Sheet.",
+      "step": "ma-linked",
+      "status": "ready",
+      "eyebrow": "Sample · Step 6 of 7",
+      "progress": null,
+      "panel": {
+        "x": 198,
+        "y": 889,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 574,
+        "y": 957,
+        "w": 1020,
+        "h": 81
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 62,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 1080,
+      "vw": 1920
+    },
+    {
+      "assignments": {
+        "names": [
+          "Retained worker",
+          "Retained worker"
+        ],
+        "inert": true,
+        "picker": false,
+        "enabledOptions": 0,
+        "visibleClose": 0,
+        "anchors": [
+          "assignments.first-assign",
+          "assignments.add-worker"
+        ],
+        "focusBanner": false
+      },
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Link your first worker",
+      "body": "Choose “Assign” next to a worker and pick their loom.",
+      "step": "ma-handoff",
+      "status": "ready",
+      "eyebrow": "Step 7 of 7",
+      "progress": null,
+      "panel": {
+        "x": 1023,
+        "y": 374,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 937,
+        "y": 374,
+        "w": 69,
+        "h": 40
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 1080,
+      "vw": 1920
+    }
+  ],
+  "logs": [
+    "warning: [harness] server action called recordTourEventAction",
+    "error: Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction"
+  ],
+  "apiRequests": [
+    {
+      "url": "http://localhost:5199/api/analytics/plan-events",
+      "method": "POST"
+    }
+  ],
+  "preClick": null,
+  "sampling": "legacy-900ms",
+  "assignmentsBefore": {
+    "search": [
+      ""
+    ],
+    "shift": " Day shift",
+    "mobileView": [],
+    "names": [
+      "Retained worker"
+    ],
+    "picker": false,
+    "url": "http://localhost:5199/owner/assignments?s=assignments&populated=1&lang=en&fresh=1",
+    "storage": {
+      "weavly_language": "en"
+    }
+  },
+  "before": {
+    "x": 0,
+    "y": 0,
+    "inner": null
+  },
+  "assignmentsBack": true,
+  "after": {
+    "scroll": {
+      "x": 0,
+      "y": 0,
+      "inner": null
+    },
+    "active": "<button data-slot=\"button\" data-variant=\"outline\" data-size=\"sm\" class=\"inline-flex items-center justify-center whitespace-nowrap transition-[color,background-c",
+    "activeAnchor": "assignments.first-assign",
+    "activeRateBookField": null,
+    "activeControl": null,
+    "serverCalls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "navigations": [],
+    "scrollCalls": [
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "smooth"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "smooth"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      }
+    ],
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"configuration\":{\"firstShown\":\"2026-09-30T00:28:18.811Z\",\"version\":\"v1\",\"firstStarted\":true,\"completed\":true,\"completedVersion\":\"v2\"}}"
+    },
+    "search": null
+  },
+  "assignmentsAfter": {
+    "search": [
+      ""
+    ],
+    "shift": " Day shift",
+    "mobileView": [],
+    "names": [
+      "Retained worker"
+    ],
+    "picker": false,
+    "url": "http://localhost:5199/owner/assignments?s=assignments&populated=1&lang=en&fresh=1",
+    "storage": {
+      "weavly_language": "en"
+    }
+  },
+  "issues": [
+    "navigation/API request"
+  ]
+}

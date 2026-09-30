@@ -1,0 +1,190 @@
+{
+  "id": "BV-02",
+  "severity": "Major",
+  "owner": "GT-15",
+  "step": "ma-purpose",
+  "case": "Assignments / English 1024x768 and Hindi 1280x800 / empty, populated and Night/focus; standard and reduced motion",
+  "status": "FAILED",
+  "evidence": "runs/gt15-0-en-1024x768/assignments-en-1024x768/01.png",
+  "reason": "Step-1 panel overlaps the board; the required MA-1 no-overlap condition remains unmet and the conditional fallback was not selected",
+  "source": "lib/configuration-tour.ts:52",
+  "requirement": "docs/guided-tours/pages/machine-assignments.md \u00a7E and GT-15 packet",
+  "cases": [
+    {
+      "id": "gt15-0-hi-1280x800",
+      "origin": "original main",
+      "language": "hi",
+      "size": "1280x800",
+      "step": "ma-purpose",
+      "overlapArea": 5724,
+      "panel": {
+        "x": 16,
+        "y": 16,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 270,
+        "y": 137,
+        "w": 775,
+        "h": 609
+      },
+      "screenshot": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-0-hi-1280x800/assignments-hi-1280x800/01.png",
+      "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-0-hi-1280x800/assignments-hi-1280x800/record.json"
+    },
+    {
+      "id": "gt15-0-en-1024x768",
+      "origin": "original main",
+      "language": "en",
+      "size": "1024x768",
+      "step": "ma-purpose",
+      "overlapArea": 10070,
+      "panel": {
+        "x": 16,
+        "y": 577,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 270,
+        "y": 95,
+        "w": 732,
+        "h": 577
+      },
+      "screenshot": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-0-en-1024x768/assignments-en-1024x768/01.png",
+      "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-0-en-1024x768/assignments-en-1024x768/record.json"
+    },
+    {
+      "id": "gt15-0-reduced-en-1024x768",
+      "origin": "original main",
+      "language": "en",
+      "size": "1024x768",
+      "step": "ma-purpose",
+      "overlapArea": 10070,
+      "panel": {
+        "x": 16,
+        "y": 577,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 270,
+        "y": 95,
+        "w": 732,
+        "h": 577
+      },
+      "screenshot": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-0-reduced-en-1024x768/assignments-en-1024x768/01.png",
+      "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-0-reduced-en-1024x768/assignments-en-1024x768/record.json"
+    },
+    {
+      "id": "gt15-1-hi-1280x800",
+      "origin": "original main",
+      "language": "hi",
+      "size": "1280x800",
+      "step": "ma-purpose",
+      "overlapArea": 5724,
+      "panel": {
+        "x": 16,
+        "y": 16,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 270,
+        "y": 137,
+        "w": 775,
+        "h": 609
+      },
+      "screenshot": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-1-hi-1280x800/assignments_populated_1-hi-1280x800/01.png",
+      "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-1-hi-1280x800/assignments_populated_1-hi-1280x800/record.json"
+    },
+    {
+      "id": "gt15-1-en-1024x768",
+      "origin": "original main",
+      "language": "en",
+      "size": "1024x768",
+      "step": "ma-purpose",
+      "overlapArea": 10070,
+      "panel": {
+        "x": 16,
+        "y": 577,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 270,
+        "y": 95,
+        "w": 732,
+        "h": 577
+      },
+      "screenshot": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-1-en-1024x768/assignments_populated_1-en-1024x768/01.png",
+      "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-1-en-1024x768/assignments_populated_1-en-1024x768/record.json"
+    },
+    {
+      "id": "gt15-1-reduced-en-1024x768",
+      "origin": "original main",
+      "language": "en",
+      "size": "1024x768",
+      "step": "ma-purpose",
+      "overlapArea": 10070,
+      "panel": {
+        "x": 16,
+        "y": 577,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 270,
+        "y": 95,
+        "w": 732,
+        "h": 577
+      },
+      "screenshot": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-1-reduced-en-1024x768/assignments_populated_1-en-1024x768/01.png",
+      "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-1-reduced-en-1024x768/assignments_populated_1-en-1024x768/record.json"
+    },
+    {
+      "id": "gt15-night-focus-hi-1280x800",
+      "origin": "original main",
+      "language": "hi",
+      "size": "1280x800",
+      "step": "ma-purpose",
+      "overlapArea": 5724,
+      "panel": {
+        "x": 16,
+        "y": 16,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 270,
+        "y": 137,
+        "w": 775,
+        "h": 609
+      },
+      "screenshot": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-night-focus-hi-1280x800/assignments_populated_1_shift_night_worker_11111111-1111-4111-8111-111111111111_machine_22222222-2222-4222-8222-222222222222-hi-1280x800/01.png",
+      "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-night-focus-hi-1280x800/assignments_populated_1_shift_night_worker_11111111-1111-4111-8111-111111111111_machine_22222222-2222-4222-8222-222222222222-hi-1280x800/record.json"
+    },
+    {
+      "id": "gt15-retry-night-focus-en-1024x768",
+      "origin": "unchanged retry",
+      "language": "en",
+      "size": "1024x768",
+      "step": "ma-purpose",
+      "overlapArea": 10070,
+      "panel": {
+        "x": 16,
+        "y": 577,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 270,
+        "y": 95,
+        "w": 732,
+        "h": 577
+      },
+      "screenshot": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-retry-night-focus-en-1024x768/assignments_populated_1_shift_night_worker_11111111-1111-4111-8111-111111111111_machine_22222222-2222-4222-8222-222222222222-en-1024x768/01.png",
+      "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-retry-night-focus-en-1024x768/assignments_populated_1_shift_night_worker_11111111-1111-4111-8111-111111111111_machine_22222222-2222-4222-8222-222222222222-en-1024x768/record.json"
+    }
+  ]
+}

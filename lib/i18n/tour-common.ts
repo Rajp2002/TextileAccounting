@@ -1,0 +1,73 @@
+import type { Language } from '@/lib/i18n/context'
+
+export interface TourCommonCopy {
+    exit: string
+    back: string
+    next: string
+    done: string
+    stepOf: string
+    sample: string
+    sampleBanner: string
+    moreDetail: string
+    preparing: string
+    unavailable: string
+    announce: string
+    guideTitle: string
+    startGuide: string
+    notNow: string
+    launcherAria: string
+}
+
+export const tourCommonCopy: Record<Language, TourCommonCopy> = {
+    "en": {
+        "exit": "Exit guide",
+        "back": "Back",
+        "next": "Next",
+        "done": "Done",
+        "stepOf": "Step {n} of {total}",
+        "sample": "Sample",
+        "sampleBanner": "Sample — nothing here is saved or sent.",
+        "moreDetail": "More detail",
+        "preparing": "Getting this part ready…",
+        "unavailable": "This part isn't showing on your screen right now. You can keep going; nothing has changed.",
+        "announce": "Step {n} of {total}: {title}",
+        "guideTitle": "{name} guide",
+        "startGuide": "Start guide",
+        "notNow": "Not now",
+        "launcherAria": "Start the {name} guide"
+    },
+    "gu": {
+        "exit": "માર્ગદર્શિકા બંધ કરો",
+        "back": "પાછળ",
+        "next": "આગળ",
+        "done": "પૂર્ણ",
+        "stepOf": "પગલું {n} / {total}",
+        "sample": "નમૂનો",
+        "sampleBanner": "નમૂનો — અહીં કંઈ સાચવાતું કે મોકલાતું નથી.",
+        "moreDetail": "વધુ વિગત",
+        "preparing": "આ ભાગ તૈયાર થઈ રહ્યો છે…",
+        "unavailable": "આ ભાગ અત્યારે તમારી સ્ક્રીન પર દેખાતો નથી. તમે આગળ વધી શકો છો; કંઈ બદલાયું નથી.",
+        "announce": "પગલું {n} / {total}: {title}",
+        "guideTitle": "{name} માર્ગદર્શિકા",
+        "startGuide": "માર્ગદર્શિકા શરૂ કરો",
+        "notNow": "હમણાં નહીં",
+        "launcherAria": "{name} માર્ગદર્શિકા શરૂ કરો"
+    },
+    "hi": {
+        "exit": "मार्गदर्शिका बंद करें",
+        "back": "पीछे",
+        "next": "आगे",
+        "done": "हो गया",
+        "stepOf": "चरण {n} / {total}",
+        "sample": "नमूना",
+        "sampleBanner": "नमूना — यहाँ कुछ भी सेव या भेजा नहीं जाता।",
+        "moreDetail": "और जानकारी",
+        "preparing": "यह हिस्सा तैयार हो रहा है…",
+        "unavailable": "यह हिस्सा अभी आपकी स्क्रीन पर नहीं दिख रहा। आप आगे बढ़ सकते हैं; कुछ नहीं बदला है।",
+        "announce": "चरण {n} / {total}: {title}",
+        "guideTitle": "{name} मार्गदर्शिका",
+        "startGuide": "मार्गदर्शिका शुरू करें",
+        "notNow": "अभी नहीं",
+        "launcherAria": "{name} मार्गदर्शिका शुरू करें"
+    }
+}

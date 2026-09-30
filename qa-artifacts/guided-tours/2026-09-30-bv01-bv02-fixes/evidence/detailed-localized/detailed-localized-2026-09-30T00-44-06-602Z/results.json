@@ -1,0 +1,53 @@
+{
+  "label": "detailed-localized",
+  "sets": "extra",
+  "filter": "localized",
+  "head": "9ae694bb4068963141dadfe1dfb0c4df3fafeb2f",
+  "workingTreeDiffSha256": "90efdc511f5fc3fbdcb9cbfea7a7a79f3986d8ceb9a2fff7efb40b05ebcf06f2",
+  "runnerSha256": "1638f82ee99d2e9cfa16e62d977534a0743a6463e072a63b226f6ed89d375987",
+  "cases": [
+    {
+      "id": "x05-base-gu-390x844-detailed-done-localized",
+      "set": "extra",
+      "scenario": "estimator",
+      "language": "gu",
+      "size": "390x844",
+      "env": {
+        "PRE_CLICK": "[role=tab]:text-is(\"વિગતવાર\")"
+      },
+      "exitCode": 0,
+      "signal": null,
+      "seconds": 49,
+      "output": "/Users/rajpatel/Projects/textile Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/scratch/tour-fix-review-results/detailed-localized-2026-09-30T00-44-06-602Z/x05-base-gu-390x844-detailed-done-localized"
+    },
+    {
+      "id": "x05-base-gu-390x844-detailed-exit9-localized",
+      "set": "extra",
+      "scenario": "estimator",
+      "language": "gu",
+      "size": "390x844",
+      "env": {
+        "PRE_CLICK": "[role=tab]:text-is(\"વિગતવાર\")",
+        "EXIT_AT": "9"
+      },
+      "exitCode": 0,
+      "signal": null,
+      "seconds": 46,
+      "output": "/Users/rajpatel/Projects/textile Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/scratch/tour-fix-review-results/detailed-localized-2026-09-30T00-44-06-602Z/x05-base-gu-390x844-detailed-exit9-localized"
+    },
+    {
+      "id": "x05-base-hi-390x844-detailed-done-localized",
+      "set": "extra",
+      "scenario": "estimator",
+      "language": "hi",
+      "size": "390x844",
+      "env": {
+        "PRE_CLICK": "[role=tab]:text-is(\"विस्तृत\")"
+      },
+      "exitCode": 0,
+      "signal": null,
+      "seconds": 47,
+      "output": "/Users/rajpatel/Projects/textile Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/scratch/tour-fix-review-results/detailed-localized-2026-09-30T00-44-06-602Z/x05-base-hi-390x844-detailed-done-localized"
+    }
+  ]
+}

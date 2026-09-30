@@ -1,0 +1,1 @@
+{"scenario":"yarn-stock","lang":"hi","size":"1280x800","steps":7,"logs":["warning: [harness] server action called recordTourEventAction","warning: [harness] server action called recordTourEventAction","warning: [harness] server action called recordTourEventAction"]}

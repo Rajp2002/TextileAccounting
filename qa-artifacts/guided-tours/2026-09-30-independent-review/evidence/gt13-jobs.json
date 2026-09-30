@@ -1,0 +1,98 @@
+[
+  {
+    "id": "gt13-0-en-1440x900",
+    "task": "GT-13",
+    "scenario": "machines",
+    "language": "en",
+    "size": "1440x900"
+  },
+  {
+    "id": "gt13-0-hi-1280x800",
+    "task": "GT-13",
+    "scenario": "machines",
+    "language": "hi",
+    "size": "1280x800"
+  },
+  {
+    "id": "gt13-0-en-1024x768",
+    "task": "GT-13",
+    "scenario": "machines",
+    "language": "en",
+    "size": "1024x768"
+  },
+  {
+    "id": "gt13-0-gu-390x844",
+    "task": "GT-13",
+    "scenario": "machines",
+    "language": "gu",
+    "size": "390x844"
+  },
+  {
+    "id": "gt13-0-reduced-en-1024x768",
+    "task": "GT-13",
+    "scenario": "machines",
+    "language": "en",
+    "size": "1024x768",
+    "env": {
+      "REDUCED_MOTION": "1"
+    }
+  },
+  {
+    "id": "gt13-1-en-1440x900",
+    "task": "GT-13",
+    "scenario": "machines?populated=1",
+    "language": "en",
+    "size": "1440x900"
+  },
+  {
+    "id": "gt13-1-hi-1280x800",
+    "task": "GT-13",
+    "scenario": "machines?populated=1",
+    "language": "hi",
+    "size": "1280x800"
+  },
+  {
+    "id": "gt13-1-en-1024x768",
+    "task": "GT-13",
+    "scenario": "machines?populated=1",
+    "language": "en",
+    "size": "1024x768"
+  },
+  {
+    "id": "gt13-1-gu-390x844",
+    "task": "GT-13",
+    "scenario": "machines?populated=1",
+    "language": "gu",
+    "size": "390x844"
+  },
+  {
+    "id": "gt13-1-reduced-en-1024x768",
+    "task": "GT-13",
+    "scenario": "machines?populated=1",
+    "language": "en",
+    "size": "1024x768",
+    "env": {
+      "REDUCED_MOTION": "1"
+    }
+  },
+  {
+    "id": "gt13-exit-machines-en-1440x900",
+    "task": "GT-13",
+    "scenario": "machines?populated=1",
+    "language": "en",
+    "size": "1440x900",
+    "env": {
+      "EXIT_AT": "3"
+    }
+  },
+  {
+    "id": "gt13-exit-machines-gu-390x844",
+    "task": "GT-13",
+    "scenario": "machines?populated=1",
+    "language": "gu",
+    "size": "390x844",
+    "env": {
+      "EXIT_AT": "3"
+    }
+  }
+]

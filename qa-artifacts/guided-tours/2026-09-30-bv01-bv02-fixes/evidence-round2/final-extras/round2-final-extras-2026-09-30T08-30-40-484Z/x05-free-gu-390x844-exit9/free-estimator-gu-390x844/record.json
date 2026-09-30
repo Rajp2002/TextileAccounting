@@ -1,0 +1,641 @@
+{
+  "scenario": "free-estimator",
+  "lang": "gu",
+  "size": "390x844",
+  "steps": [
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "પ્રતિ મીટર ખર્ચ અને ભાવ ગણો",
+      "body": "ઉપરથી નીચે વિભાગો ભરો; લખતાં જ ભાવ બદલાય છે. શરૂઆત કાપડના નામથી કરો.",
+      "step": "est-purpose",
+      "status": "ready",
+      "eyebrow": "પગલું 1 / 10",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 632,
+        "w": 374,
+        "h": 204
+      },
+      "highlight": {
+        "x": 22,
+        "y": 66,
+        "w": 346,
+        "h": 556
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "div(role=dialog)",
+      "scrollY": 451,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [
+        "ઝડપી"
+      ],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "તાણા: ડેનિયર, તાર અને ભાવ",
+      "body": "દરેક તાણા યાર્ન માટે ડેનિયર, કુલ તાર અને કિલોનો ભાવ લખો. Weavly 100 મીટરે કેટલા કિલો વપરાય અને મીટરદીઠ ખર્ચ ગણે છે.",
+      "step": "est-warp",
+      "status": "ready",
+      "eyebrow": "પગલું 2 / 10",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 555,
+        "w": 374,
+        "h": 281
+      },
+      "highlight": {
+        "x": 22,
+        "y": 155,
+        "w": 346,
+        "h": 299
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 970,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [
+        "ઝડપી"
+      ],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "ભરણ: પિક્સ અને પહોળાઈ",
+      "body": "દરેક ભરણ યાર્ન માટે ઇંચદીઠ પિક્સ, તૈયાર પહોળાઈ અને કિલોનો ભાવ લખો. ભરણનો વપરાશ આના પર આધાર રાખે છે, તાર પર નહીં.",
+      "step": "est-weft",
+      "status": "ready",
+      "eyebrow": "પગલું 3 / 10",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 609,
+        "w": 374,
+        "h": 227
+      },
+      "highlight": {
+        "x": 22,
+        "y": 185,
+        "w": 346,
+        "h": 295
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 1238,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [
+        "ઝડપી"
+      ],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "વીવિંગ ચાર્જ",
+      "body": "વીવિંગનો ખર્ચ મીટરદીઠ અથવા પિકદીઠ પૈસામાં લખો.",
+      "step": "est-weaving",
+      "status": "ready",
+      "eyebrow": "પગલું 4 / 10",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 655,
+        "w": 374,
+        "h": 181
+      },
+      "highlight": {
+        "x": 22,
+        "y": 116,
+        "w": 346,
+        "h": 478
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 1601,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [
+        "ઝડપી"
+      ],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "વૉર્પિંગ અને સાઇઝિંગ",
+      "body": "આ ચાર્જ તમે ચૂકવતા હો તો ઉમેરો, ઘરમાં કે બહાર. દરેક ચાર્જ એક જ વાર ગણો, ફરી ઓવરહેડમાં નહીં.",
+      "step": "est-warping",
+      "status": "ready",
+      "eyebrow": "પગલું 5 / 10",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 632,
+        "w": 374,
+        "h": 204
+      },
+      "highlight": {
+        "x": 22,
+        "y": 176,
+        "w": 346,
+        "h": 338
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 2018,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [
+        "ઝડપી"
+      ],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "મીટરદીઠ ફેક્ટરી ઓવરહેડ",
+      "body": "મીટરદીઠ ઓવરહેડ લખો, અથવા માસિક ખર્ચને માસિક ઉત્પાદનથી ભાગો: ₹60,000 ÷ 30,000 મીટર = ₹2/મીટર.",
+      "step": "est-overhead",
+      "status": "ready",
+      "eyebrow": "પગલું 6 / 10",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 632,
+        "w": 374,
+        "h": 204
+      },
+      "highlight": {
+        "x": 22,
+        "y": 66,
+        "w": 346,
+        "h": 556
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 2464,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [
+        "ઝડપી"
+      ],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "માર્જિન, દલાલી અને ભાડું",
+      "body": "તમારે જોઈતું માર્જિન અને દલાલી તથા ભાડું લખો. સૂચવેલા ભાવમાં ત્રણેય આવી જાય છે.",
+      "step": "est-pricing",
+      "status": "ready",
+      "eyebrow": "પગલું 7 / 10",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 632,
+        "w": 374,
+        "h": 204
+      },
+      "highlight": {
+        "x": 22,
+        "y": 66,
+        "w": 346,
+        "h": 556
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 3033,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [
+        "ઝડપી"
+      ],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "પરિણામ વાંચો",
+      "body": "“લાઇવ ખર્ચ”માં હજી ખૂટતું શું છે તે દેખાય છે. Free માં ગણતરી કરી સાચવ્યા પછી ખર્ચ અને ભાવ દેખાય છે.",
+      "step": "est-live",
+      "status": "ready",
+      "eyebrow": "પગલું 8 / 10",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 632,
+        "w": 374,
+        "h": 204
+      },
+      "highlight": {
+        "x": 2,
+        "y": 192,
+        "w": 386,
+        "h": 162
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 3033,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 0,
+        "y": 0,
+        "w": 390,
+        "h": 844
+      },
+      "estimatorMode": [
+        "ઝડપી"
+      ],
+      "liveEstimateOpen": true,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "ગણતરી કરી સાચવવાથી એક કોસ્ટિંગ વપરાય છે",
+      "body": "“ગણતરી કરો અને સાચવો · 1 કોસ્ટિંગ વપરાશે” તમારું પરિણામ બતાવે છે અને સાચવેલી કોસ્ટિંગમાં રાખે છે. દરેક વખતે તમારી માસિક Free કોસ્ટિંગમાંથી એક વપરાય છે.",
+      "step": "est-save",
+      "status": "ready",
+      "eyebrow": "પગલું 9 / 10",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 555,
+        "w": 374,
+        "h": 281
+      },
+      "highlight": {
+        "x": 2,
+        "y": 304,
+        "w": 386,
+        "h": 164
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 3033,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 0,
+        "y": 0,
+        "w": 390,
+        "h": 844
+      },
+      "estimatorMode": [
+        "ઝડપી"
+      ],
+      "liveEstimateOpen": true,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    }
+  ],
+  "logs": [
+    "warning: [harness] server action called recordTourEventAction",
+    "error: Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+    "warning: [harness] server action called recordTourEventAction"
+  ],
+  "apiRequests": [
+    {
+      "url": "http://localhost:5199/api/free/status",
+      "method": "GET"
+    }
+  ],
+  "preClick": null,
+  "sampling": "legacy-900ms",
+  "before": {
+    "x": 0,
+    "y": 0,
+    "inner": null
+  },
+  "estimatorBefore": {
+    "mode": [
+      "ઝડપી"
+    ],
+    "liveEstimateOpen": false,
+    "inputs": [
+      {
+        "field": "qualityLabel",
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": "warpConstruction",
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": "weftConstruction",
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "0",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": "perPickCostPaisa",
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      }
+    ],
+    "storage": {
+      "weavly_language": "gu",
+      "weavly-estimator-width-unit": "inch"
+    },
+    "serverCalls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "activeField": null,
+    "activeControl": null
+  },
+  "exitAt": 9,
+  "after": {
+    "scroll": {
+      "x": 0,
+      "y": 0,
+      "inner": null
+    },
+    "active": "<button type=\"button\" aria-label=\"કોસ્ટ એસ્ટીમેટર માર્ગદર્શિકા શરૂ કરો\" data-testid=\"tour-launcher-cost-estimate\" data-tour-control=\"quiet-tour\" class=\"estimato",
+    "activeAnchor": null,
+    "activeRateBookField": null,
+    "activeControl": "quiet-tour",
+    "serverCalls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "navigations": [],
+    "scrollCalls": [],
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"cost-estimate\":{\"firstShown\":\"2026-09-30T08:45:32.749Z\",\"version\":\"v1\",\"firstStarted\":true}}"
+    },
+    "search": null
+  },
+  "estimatorAfter": {
+    "mode": [
+      "ઝડપી"
+    ],
+    "liveEstimateOpen": false,
+    "inputs": [
+      {
+        "field": "qualityLabel",
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": "warpConstruction",
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": "weftConstruction",
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "0",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": "perPickCostPaisa",
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      },
+      {
+        "field": null,
+        "value": "",
+        "checked": false
+      }
+    ],
+    "storage": {
+      "weavly_language": "gu",
+      "weavly-estimator-width-unit": "inch"
+    },
+    "serverCalls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "activeField": null,
+    "activeControl": "quiet-tour"
+  },
+  "issues": []
+}

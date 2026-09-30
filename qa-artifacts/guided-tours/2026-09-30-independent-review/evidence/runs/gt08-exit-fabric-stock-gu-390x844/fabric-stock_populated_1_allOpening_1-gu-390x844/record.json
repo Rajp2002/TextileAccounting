@@ -1,0 +1,247 @@
+{
+  "scenario": "fabric-stock?populated=1&allOpening=1",
+  "lang": "gu",
+  "size": "390x844",
+  "steps": [
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "મોકલવા તૈયાર કાપડ, ક્વોલિટી પ્રમાણે",
+      "body": "સાચવેલી શિફ્ટ મીટર ઉમેરે છે અને ખાતરી કરેલા ડિસ્પેચ ઘટાડે છે. અહીં 200 મીટર બન્યું − 100 મીટર ગયું = 100 મીટર.",
+      "step": "fs-balance",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 1 / 6",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 609,
+        "w": 374,
+        "h": 227
+      },
+      "highlight": {
+        "x": 23,
+        "y": 181,
+        "w": 344,
+        "h": 96
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "div(role=dialog)",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": {
+        "replica": true,
+        "balance": "100 મી.",
+        "pending": true,
+        "mounts": 1,
+        "unmounts": 0,
+        "retainedSearch": "Retained",
+        "sameSearchNode": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Weavly પહેલાંનું કાપડ ઉમેરો",
+      "body": "“બાકી” લખેલી ક્વોલિટીનો શરૂઆતનો સ્ટોક હજી નોંધાયો નથી. તમારી પાસે પહેલેથી હતું તે તૈયાર કાપડ ગણી એક વાર નોંધો.",
+      "step": "fs-pending",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 2 / 6",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 632,
+        "w": 374,
+        "h": 204
+      },
+      "highlight": {
+        "x": 23,
+        "y": 258,
+        "w": 344,
+        "h": 109
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": {
+        "replica": true,
+        "balance": "100 મી.",
+        "pending": true,
+        "mounts": 1,
+        "unmounts": 0,
+        "retainedSearch": "Retained",
+        "sameSearchNode": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "શરૂઆતનો સ્ટોક એક જ વાર ઉમેરાય છે",
+      "body": "“શરૂઆતનો સ્ટોક” ગણેલા મીટર ઉત્પાદનમાં નોંધાયેલા મીટરમાં ઉમેરે છે: 100 + 500 = 600 મીટર. ગણતરીની તારીખ જેવી નોંધ લખો.",
+      "step": "fs-opening",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 3 / 6",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 609,
+        "w": 374,
+        "h": 227
+      },
+      "highlight": {
+        "x": 17,
+        "y": 98,
+        "w": 356,
+        "h": 332
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 8,
+        "y": 72,
+        "w": 374,
+        "h": 368
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": {
+        "replica": true,
+        "balance": "100 મી.",
+        "pending": true,
+        "mounts": 1,
+        "unmounts": 0,
+        "retainedSearch": "Retained",
+        "sameSearchNode": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    }
+  ],
+  "logs": [
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction"
+  ],
+  "apiRequests": [],
+  "preClick": null,
+  "sampling": "legacy-900ms",
+  "before": {
+    "x": 0,
+    "y": 0,
+    "inner": null
+  },
+  "exitAt": 3,
+  "after": {
+    "scroll": {
+      "x": 0,
+      "y": 0,
+      "inner": null
+    },
+    "active": "<button type=\"button\" aria-label=\"કાપડનો સ્ટોક માર્ગદર્શિકા શરૂ કરો\" data-testid=\"tour-launcher-fabric-stock\" data-tour-control=\"quiet-tour\" class=\"estimator-to",
+    "activeAnchor": null,
+    "activeRateBookField": null,
+    "activeControl": "quiet-tour",
+    "serverCalls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "navigations": [],
+    "scrollCalls": [
+      {
+        "owner": "element",
+        "method": "scrollTo",
+        "behavior": "smooth"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "element",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      }
+    ],
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"fabric-stock\":{\"firstShown\":\"2026-09-29T21:18:25.338Z\",\"version\":\"v1\",\"firstStarted\":true}}"
+    },
+    "stock": {
+      "mounts": 1,
+      "unmounts": 0,
+      "retainedSearch": "Retained",
+      "sameSearchNode": true,
+      "liveHidden": false,
+      "replica": false
+    },
+    "search": null
+  },
+  "issues": []
+}

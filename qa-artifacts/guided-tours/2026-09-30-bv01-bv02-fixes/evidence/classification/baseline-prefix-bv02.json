@@ -1,0 +1,241 @@
+{
+  "folder": "/Users/rajpatel/Projects/textile Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/scratch/tour-fix-review-results/BV-02-2026-09-29T23-37-55-203Z",
+  "runnerSha256": "1638f82ee99d2e9cfa16e62d977534a0743a6463e072a63b226f6ed89d375987",
+  "totals": {
+    "FAIL": 8
+  },
+  "runs": [
+    {
+      "id": "gt15-0-hi-1280x800",
+      "set": "BV-02",
+      "scenario": "assignments",
+      "language": "hi",
+      "size": "1280x800",
+      "env": {},
+      "exitCode": 1,
+      "class": "FAIL",
+      "steps": 7,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 5724,
+      "screenshots": 9,
+      "problems": [
+        "ma-purpose: panel/outline overlap 5724; MA-1/default board anchor remains unverified"
+      ],
+      "notes": [
+        "baseline mount request blocked: production_viewed"
+      ],
+      "runnerIssues": [
+        "ma-purpose: panel/outline overlap 5724; MA-1/default board anchor remains unverified",
+        "navigation/API request"
+      ],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "production_viewed"
+      ]
+    },
+    {
+      "id": "gt15-0-en-1024x768",
+      "set": "BV-02",
+      "scenario": "assignments",
+      "language": "en",
+      "size": "1024x768",
+      "env": {},
+      "exitCode": 1,
+      "class": "FAIL",
+      "steps": 7,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 10070,
+      "screenshots": 9,
+      "problems": [
+        "ma-purpose: panel/outline overlap 10070; MA-1/default board anchor remains unverified"
+      ],
+      "notes": [
+        "baseline mount request blocked: production_viewed"
+      ],
+      "runnerIssues": [
+        "ma-purpose: panel/outline overlap 10070; MA-1/default board anchor remains unverified",
+        "navigation/API request"
+      ],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "production_viewed"
+      ]
+    },
+    {
+      "id": "gt15-0-reduced-en-1024x768",
+      "set": "BV-02",
+      "scenario": "assignments",
+      "language": "en",
+      "size": "1024x768",
+      "env": {
+        "REDUCED_MOTION": "1"
+      },
+      "exitCode": 1,
+      "class": "FAIL",
+      "steps": 7,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 10070,
+      "screenshots": 9,
+      "problems": [
+        "ma-purpose: panel/outline overlap 10070; MA-1/default board anchor remains unverified"
+      ],
+      "notes": [
+        "baseline mount request blocked: production_viewed"
+      ],
+      "runnerIssues": [
+        "ma-purpose: panel/outline overlap 10070; MA-1/default board anchor remains unverified",
+        "navigation/API request"
+      ],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "production_viewed"
+      ]
+    },
+    {
+      "id": "gt15-1-hi-1280x800",
+      "set": "BV-02",
+      "scenario": "assignments?populated=1",
+      "language": "hi",
+      "size": "1280x800",
+      "env": {},
+      "exitCode": 1,
+      "class": "FAIL",
+      "steps": 7,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 5724,
+      "screenshots": 9,
+      "problems": [
+        "ma-purpose: panel/outline overlap 5724; MA-1/default board anchor remains unverified"
+      ],
+      "notes": [
+        "baseline mount request blocked: production_viewed"
+      ],
+      "runnerIssues": [
+        "ma-purpose: panel/outline overlap 5724; MA-1/default board anchor remains unverified",
+        "navigation/API request"
+      ],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "production_viewed"
+      ]
+    },
+    {
+      "id": "gt15-1-en-1024x768",
+      "set": "BV-02",
+      "scenario": "assignments?populated=1",
+      "language": "en",
+      "size": "1024x768",
+      "env": {},
+      "exitCode": 1,
+      "class": "FAIL",
+      "steps": 7,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 10070,
+      "screenshots": 9,
+      "problems": [
+        "ma-purpose: panel/outline overlap 10070; MA-1/default board anchor remains unverified"
+      ],
+      "notes": [
+        "baseline mount request blocked: production_viewed"
+      ],
+      "runnerIssues": [
+        "ma-purpose: panel/outline overlap 10070; MA-1/default board anchor remains unverified",
+        "navigation/API request"
+      ],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "production_viewed"
+      ]
+    },
+    {
+      "id": "gt15-1-reduced-en-1024x768",
+      "set": "BV-02",
+      "scenario": "assignments?populated=1",
+      "language": "en",
+      "size": "1024x768",
+      "env": {
+        "REDUCED_MOTION": "1"
+      },
+      "exitCode": 1,
+      "class": "FAIL",
+      "steps": 7,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 10070,
+      "screenshots": 9,
+      "problems": [
+        "ma-purpose: panel/outline overlap 10070; MA-1/default board anchor remains unverified"
+      ],
+      "notes": [
+        "baseline mount request blocked: production_viewed"
+      ],
+      "runnerIssues": [
+        "ma-purpose: panel/outline overlap 10070; MA-1/default board anchor remains unverified",
+        "navigation/API request"
+      ],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "production_viewed"
+      ]
+    },
+    {
+      "id": "gt15-night-focus-hi-1280x800",
+      "set": "BV-02",
+      "scenario": "assignments?populated=1&shift=night&worker=11111111-1111-4111-8111-111111111111&machine=22222222-2222-4222-8222-222222222222",
+      "language": "hi",
+      "size": "1280x800",
+      "env": {
+        "PRE_TYPE": "No matching retained worker"
+      },
+      "exitCode": 1,
+      "class": "FAIL",
+      "steps": 7,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 5724,
+      "screenshots": 9,
+      "problems": [
+        "ma-purpose: panel/outline overlap 5724; MA-1/default board anchor remains unverified"
+      ],
+      "notes": [
+        "baseline mount request blocked: production_viewed"
+      ],
+      "runnerIssues": [
+        "ma-purpose: panel/outline overlap 5724; MA-1/default board anchor remains unverified",
+        "navigation/API request"
+      ],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "production_viewed"
+      ]
+    },
+    {
+      "id": "gt15-night-focus-en-1024x768",
+      "set": "BV-02",
+      "scenario": "assignments?populated=1&shift=night&worker=11111111-1111-4111-8111-111111111111&machine=22222222-2222-4222-8222-222222222222",
+      "language": "en",
+      "size": "1024x768",
+      "env": {
+        "PRE_TYPE": "No matching retained worker"
+      },
+      "exitCode": 1,
+      "class": "FAIL",
+      "steps": 7,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 10070,
+      "screenshots": 9,
+      "problems": [
+        "ma-purpose: panel/outline overlap 10070; MA-1/default board anchor remains unverified"
+      ],
+      "notes": [
+        "baseline mount request blocked: production_viewed"
+      ],
+      "runnerIssues": [
+        "ma-purpose: panel/outline overlap 10070; MA-1/default board anchor remains unverified",
+        "navigation/API request"
+      ],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "production_viewed"
+      ]
+    }
+  ]
+}

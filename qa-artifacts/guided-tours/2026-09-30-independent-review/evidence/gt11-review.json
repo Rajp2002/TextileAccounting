@@ -1,0 +1,228 @@
+{
+  "task": "GT-11",
+  "runs": 12,
+  "steps": 78,
+  "classifications": {
+    "FAIL": 12
+  },
+  "failures": [
+    {
+      "id": "gt11-0-en-1440x900",
+      "exitCode": 1,
+      "error": null,
+      "issues": [
+        "pd-activate: rail intersects target",
+        "pd-looms: rail intersects target"
+      ],
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "id": "gt11-0-hi-1280x800",
+      "exitCode": 0,
+      "error": null,
+      "issues": [],
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "id": "gt11-0-en-1024x768",
+      "exitCode": 0,
+      "error": null,
+      "issues": [],
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "id": "gt11-0-gu-390x844",
+      "exitCode": 0,
+      "error": null,
+      "issues": [],
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "id": "gt11-0-reduced-en-1024x768",
+      "exitCode": 0,
+      "error": null,
+      "issues": [],
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "id": "gt11-1-en-1440x900",
+      "exitCode": 1,
+      "error": null,
+      "issues": [
+        "pd-activate: rail intersects target",
+        "pd-looms: rail intersects target"
+      ],
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "id": "gt11-1-hi-1280x800",
+      "exitCode": 0,
+      "error": null,
+      "issues": [],
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "id": "gt11-1-en-1024x768",
+      "exitCode": 0,
+      "error": null,
+      "issues": [],
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "id": "gt11-1-gu-390x844",
+      "exitCode": 0,
+      "error": null,
+      "issues": [],
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "id": "gt11-1-reduced-en-1024x768",
+      "exitCode": 0,
+      "error": null,
+      "issues": [],
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "id": "gt11-exit-production-en-1440x900",
+      "exitCode": 1,
+      "error": null,
+      "issues": [
+        "pd-activate: rail intersects target",
+        "pd-looms: rail intersects target"
+      ],
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "id": "gt11-exit-production-gu-390x844",
+      "exitCode": 0,
+      "error": null,
+      "issues": [],
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ]
+    }
+  ],
+  "reviewNotes": "Production empty/populated: 12 main runs / 78 steps plus one unchanged-runner paint diagnostic / 7 steps. All English desktop and Gujarati phone captures inspected, including Exit. Raw guard FAIL retains one unchanged production_viewed mount POST per run with no tour increment. Three main runs retain pd-activate/pd-looms numeric aside intersections; transparent rail z30 with only a top child, dialogs z50, no visible child/target intersection, and unobstructed screenshots establish harness false positives (gt11-paint-adjudication.json). Seven-step order, prerequisite yarn stock, live labels, same mounted client/search node, retained Available filter/storage, disabled samples, scroll cleanup and Activate Quality Done focus/launcher Exit focus verified. No activation/allocation/operator handlers called. Native, authenticated-shell, live-dialog and real-device behavior UNVERIFIED; no reproduced Major in modeled states.",
+  "status": "IN_PROGRESS",
+  "humanGates": "UNVERIFIED",
+  "visualReview": "Every captured English 1440x900 and Gujarati 390x844 step inspected",
+  "evidence": "gt11-results.json",
+  "supplementalPaintDiagnostics": [
+    {
+      "id": "gt11-paint-0-en-1440x900",
+      "task": "GT-11",
+      "scenario": "production",
+      "language": "en",
+      "size": "1440x900",
+      "script": "/private/tmp/weavly-review-run-paint.mjs",
+      "args": [
+        "production",
+        "en",
+        "1440x900",
+        "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-paint-0-en-1440x900"
+      ],
+      "command": [
+        "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+        "170",
+        "node",
+        "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+        "env",
+        "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+        "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+        "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-paint-0-en-1440x900/network.json",
+        "node",
+        "--import",
+        "/private/tmp/weavly-review-network.mjs",
+        "/private/tmp/weavly-review-run-paint.mjs",
+        "production",
+        "en",
+        "1440x900",
+        "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-paint-0-en-1440x900"
+      ],
+      "exitCode": 1,
+      "elapsedSeconds": 44.75,
+      "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-paint-0-en-1440x900/production-en-1440x900/record.json",
+      "steps": 7,
+      "error": null,
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ],
+      "classification": "FAIL",
+      "visualReview": "UNVERIFIED"
+    }
+  ]
+}

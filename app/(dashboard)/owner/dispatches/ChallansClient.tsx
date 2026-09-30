@@ -43,9 +43,9 @@ import { getChallan, listChallans, mutateChallan } from './challan-actions'
 import { businessDate, challanDueStatus } from '@/lib/challan-payment-terms'
 import ChallanDraftEditor from './ChallanDraftEditor'
 
-function NewDispatchButton({ onClick, disabled, label }: { onClick: () => void; disabled: boolean; label: string }) {
+function NewDispatchButton({ onClick, disabled, label, tourAnchor }: { onClick: () => void; disabled: boolean; label: string; tourAnchor?: "dispatch.new" }) {
     return (
-        <Button disabled={disabled} onClick={onClick} className={railPrimaryAction}>
+        <Button data-tour-anchor={tourAnchor} disabled={disabled} onClick={onClick} className={railPrimaryAction}>
             <Plus className="size-4" aria-hidden="true" />
             {label}
         </Button>
@@ -286,11 +286,11 @@ export default function ChallansClient({
                 </h1>
                 <p className="sr-only">{tx('intro')}</p>
                 <div className="dispatch-inline-action mt-3 flex justify-end sm:absolute sm:right-0 sm:top-0 sm:mt-0">
-                    <NewDispatchButton onClick={beginDraft} disabled={busy || !!pending} label={tx('new')} />
+                    <NewDispatchButton tourAnchor="dispatch.new" onClick={beginDraft} disabled={busy || !!pending} label={tx('new')} />
                 </div>
             </header>
             <aside className="dispatch-action-rail" aria-label={tx('new')}>
-                <NewDispatchButton onClick={beginDraft} disabled={busy || !!pending} label={tx('new')} />
+                <NewDispatchButton tourAnchor="dispatch.new" onClick={beginDraft} disabled={busy || !!pending} label={tx('new')} />
             </aside>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <LiquidSegmented

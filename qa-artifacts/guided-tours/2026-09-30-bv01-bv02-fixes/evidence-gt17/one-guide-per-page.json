@@ -1,0 +1,146 @@
+[
+  {
+    "scenario": "production",
+    "launchers": 1,
+    "kinds": [
+      "take-tour"
+    ],
+    "invitations": 1,
+    "ok": true
+  },
+  {
+    "scenario": "daily-sheet",
+    "launchers": 1,
+    "kinds": [
+      "take-tour"
+    ],
+    "invitations": 1,
+    "ok": true
+  },
+  {
+    "scenario": "daily-sheet?populated=1",
+    "launchers": 1,
+    "kinds": [
+      "take-tour"
+    ],
+    "invitations": 1,
+    "ok": true
+  },
+  {
+    "scenario": "fabric-stock",
+    "launchers": 1,
+    "kinds": [
+      "take-tour"
+    ],
+    "invitations": 1,
+    "ok": true
+  },
+  {
+    "scenario": "yarn-stock",
+    "launchers": 1,
+    "kinds": [
+      "take-tour"
+    ],
+    "invitations": 1,
+    "ok": true
+  },
+  {
+    "scenario": "dispatch",
+    "launchers": 1,
+    "kinds": [
+      "take-tour"
+    ],
+    "invitations": 1,
+    "ok": true
+  },
+  {
+    "scenario": "payroll",
+    "launchers": 1,
+    "kinds": [
+      "take-tour"
+    ],
+    "invitations": 1,
+    "ok": true
+  },
+  {
+    "scenario": "machines",
+    "launchers": 1,
+    "kinds": [
+      "take-tour"
+    ],
+    "invitations": 1,
+    "ok": true
+  },
+  {
+    "scenario": "workers",
+    "launchers": 1,
+    "kinds": [
+      "take-tour"
+    ],
+    "invitations": 1,
+    "ok": true
+  },
+  {
+    "scenario": "assignments",
+    "launchers": 1,
+    "kinds": [
+      "take-tour"
+    ],
+    "invitations": 1,
+    "ok": true
+  },
+  {
+    "scenario": "estimator",
+    "launchers": 1,
+    "kinds": [
+      "take-tour"
+    ],
+    "invitations": 1,
+    "ok": true
+  },
+  {
+    "scenario": "free-estimator",
+    "launchers": 1,
+    "kinds": [
+      "take-tour"
+    ],
+    "invitations": 1,
+    "ok": true
+  },
+  {
+    "scenario": "rates",
+    "launchers": 1,
+    "kinds": [
+      "take-tour"
+    ],
+    "invitations": 1,
+    "ok": true
+  },
+  {
+    "scenario": "quotes",
+    "launchers": 1,
+    "kinds": [
+      "take-tour"
+    ],
+    "invitations": 1,
+    "ok": true
+  },
+  {
+    "scenario": "free-costings",
+    "launchers": 1,
+    "kinds": [
+      "take-tour"
+    ],
+    "invitations": 1,
+    "ok": true
+  },
+  {
+    "scenario": "quotes-compare",
+    "launchers": 1,
+    "kinds": [
+      "take-tour"
+    ],
+    "invitations": 1,
+    "ok": true
+  }
+]

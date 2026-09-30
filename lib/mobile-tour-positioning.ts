@@ -1,28 +1,54 @@
 import { clipTourRect, findTourScrollContainer, isTourTargetVisible } from './tutorial-target'
+import { tourRectsStable } from './tours/target-readiness'
+import { scrollIntoSafeView, type ScrollRecord } from './tours/tour-scroll'
 
 export type TourRect = NonNullable<ReturnType<typeof clipTourRect>>
+export type MobileTourOptions = {
+    onUnavailable?: () => void
+    onPreparing?: () => void
+    /** New runtime records all tour-owned scrolls; legacy consumers keep their scroll policy. */
+    record?: ScrollRecord
+    reducedMotion?: boolean
+}
 
 /** One bounded positioning session per step; event feedback can only update measurements. */
-export function trackMobileTourTarget(resolve: () => HTMLElement | null, panel: () => HTMLElement | null, onMeasure: (rect: TourRect | null) => void) {
+export function trackMobileTourTarget(resolve: () => HTMLElement | null, panel: () => HTMLElement | null, onMeasure: (rect: TourRect | null) => void, options: MobileTourOptions = {}) {
     let frame = 0
     let stopped = false
     let positioned: HTMLElement | null = null
-    const start = performance.now()
+    let start = performance.now()
+    let previous: TourRect | null = null
+    let stable = 0
+    let ready = false
+    let recovered = false
+    let unavailable = false
+    let tracking = false
     const originalPadding = new Map<HTMLElement, string>()
     const originalBottom = new Map<HTMLElement, string>()
     const rememberPadding = (element: HTMLElement, padding: number) => {
         if (!originalPadding.has(element)) originalPadding.set(element, element.style.paddingBottom)
         element.style.paddingBottom = `${padding}px`
     }
+    const fail = () => {
+        if (unavailable) return
+        unavailable = true
+        stopTracking()
+        onMeasure(null)
+        options.onUnavailable?.()
+    }
     const measure = () => {
         frame = 0
-        if (stopped) return
+        if (stopped || unavailable) return
         const target = resolve()
         const panelRect = panel()?.getBoundingClientRect()
+        if (ready && (target !== positioned || !isTourTargetVisible(target))) {
+            if (!recover()) return
+        }
+        if (!ready && performance.now() - start >= 1500) { fail(); return }
         if (!isTourTargetVisible(target) || !panelRect) {
+            previous = null
+            stable = 0
             onMeasure(null)
-            // A late mount is not permission to remove or advance a step.
-            if (performance.now() - start > 1500) return
             frame = requestAnimationFrame(measure)
             return
         }
@@ -45,20 +71,25 @@ export function trackMobileTourTarget(resolve: () => HTMLElement | null, panel: 
             const rootScroller = document.scrollingElement ?? document.documentElement
             // Never resize the root viewport: Safari emits visualViewport resize while scrolling.
             rememberPadding(scroller === rootScroller ? document.body : scroller, panelRect.height + 100)
-            // One vertical scroll command: do not race scrollIntoView against a second scroll.
-            const rect = target.getBoundingClientRect()
-            const scrollport = scroller === rootScroller ? bounds : scroller.getBoundingClientRect()
-            const availableTop = Math.max(top, scrollport.top)
-            const availableBottom = Math.min(bottom, scrollport.bottom)
-            const desiredTop = availableTop + Math.max(0, (availableBottom - availableTop - rect.height) / 2)
-            const delta = rect.top - desiredTop
-            if (scroller === rootScroller) window.scrollBy({ top: delta, behavior: 'instant' })
-            else scroller.scrollBy({ top: delta, behavior: 'instant' })
+            if (options.record) {
+                scrollIntoSafeView(target, { ...bounds, width: bounds.right - bounds.left, height: bottom - top }, options.reducedMotion ?? false, options.record)
+            } else {
+                // Preserve the existing tours' single vertical scroll and final coordinates.
+                const rect = target.getBoundingClientRect()
+                const scrollport = scroller === rootScroller ? bounds : scroller.getBoundingClientRect()
+                const availableTop = Math.max(top, scrollport.top)
+                const availableBottom = Math.min(bottom, scrollport.bottom)
+                const desiredTop = availableTop + Math.max(0, (availableBottom - availableTop - rect.height) / 2)
+                const delta = rect.top - desiredTop
+                if (scroller === rootScroller) window.scrollBy({ top: delta, behavior: 'instant' })
+                else scroller.scrollBy({ top: delta, behavior: 'instant' })
+            }
             positioned = target
             frame = requestAnimationFrame(measure)
             return
         }
-        let clipped = clipTourRect(target.getBoundingClientRect(), bounds)
+        const rawRect = target.getBoundingClientRect()
+        let clipped = clipTourRect(rawRect, bounds)
         // Clip against nested scrollports too; a mounted field may still be concealed.
         for (let parent = target.parentElement; parent && clipped; parent = parent.parentElement) {
             const style = getComputedStyle(parent)
@@ -70,33 +101,64 @@ export function trackMobileTourTarget(resolve: () => HTMLElement | null, panel: 
                 bottom: /(auto|scroll|hidden|clip)/.test(style.overflowY) ? rect.bottom : bounds.bottom,
             })
         }
-        onMeasure(clipped)
-        // If positioning still fails, keep this step and its navigation intact.
+        if (ready) {
+            if (clipped) { onMeasure(clipped); return }
+            if (recover()) frame = requestAnimationFrame(measure)
+            return
+        }
+        stable = clipped && previous && tourRectsStable(previous, rawRect) ? stable + 1 : clipped ? 1 : 0
+        previous = clipped ? rawRect : null
+        if (clipped && stable >= 2) {
+            ready = true
+            onMeasure(clipped)
+            startTracking(target)
+        } else {
+            onMeasure(null)
+            frame = requestAnimationFrame(measure)
+        }
     }
-    const schedule = () => { if (!stopped && !frame) frame = requestAnimationFrame(measure) }
-    // Resize/scroll notifications measure only. They cannot reset the positioning budget.
+    function recover() {
+        stopTracking()
+        ready = false
+        onMeasure(null)
+        if (recovered) { fail(); return false }
+        recovered = true
+        positioned = null
+        previous = null
+        stable = 0
+        start = performance.now()
+        options.onPreparing?.()
+        return true
+    }
+    const schedule = () => { if (!stopped && !unavailable && !frame) frame = requestAnimationFrame(measure) }
     const resize = schedule
     const observer = new ResizeObserver(resize)
-    const panelElement = panel()
-    if (panelElement) observer.observe(panelElement)
-    window.addEventListener('scroll', schedule, true)
-    window.addEventListener('resize', resize)
-    window.addEventListener('scrollend', schedule, true)
-    window.visualViewport?.addEventListener('resize', resize)
-    window.visualViewport?.addEventListener('scroll', schedule)
-    // Some mobile browsers defer scroll delivery. Re-measure without another scroll command.
-    const settleTimers = [120, 350].map(delay => setTimeout(schedule, delay))
-    frame = requestAnimationFrame(measure)
-    return () => {
-        stopped = true
-        cancelAnimationFrame(frame)
-        settleTimers.forEach(timer => clearTimeout(timer))
+    function startTracking(target: HTMLElement) {
+        if (tracking) return
+        tracking = true
+        const panelElement = panel()
+        if (panelElement) observer.observe(panelElement)
+        observer.observe(target)
+        window.addEventListener('scroll', schedule, true)
+        window.addEventListener('resize', resize)
+        window.addEventListener('scrollend', schedule, true)
+        window.visualViewport?.addEventListener('resize', resize)
+        window.visualViewport?.addEventListener('scroll', schedule)
+    }
+    function stopTracking() {
+        tracking = false
         observer.disconnect()
         window.removeEventListener('scroll', schedule, true)
         window.removeEventListener('resize', resize)
         window.removeEventListener('scrollend', schedule, true)
         window.visualViewport?.removeEventListener('resize', resize)
         window.visualViewport?.removeEventListener('scroll', schedule)
+    }
+    frame = requestAnimationFrame(measure)
+    return () => {
+        stopped = true
+        cancelAnimationFrame(frame)
+        stopTracking()
         originalPadding.forEach((padding, element) => { element.style.paddingBottom = padding })
         originalBottom.forEach((bottom, element) => { element.style.bottom = bottom })
     }

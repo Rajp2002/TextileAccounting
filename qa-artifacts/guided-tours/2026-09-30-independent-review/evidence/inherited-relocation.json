@@ -1,0 +1,5 @@
+{
+  "from": "scratch/browser-verification/inherited-untracked",
+  "to": "/private/tmp/weavly-browser-verification-inherited-20260930",
+  "reason": "prevent copied source/tests from matching TypeScript and Vitest discovery"
+}

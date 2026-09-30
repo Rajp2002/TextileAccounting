@@ -1,0 +1,293 @@
+{
+  "scenario": "yarn-stock?populated=1&unlinked=1",
+  "lang": "gu",
+  "size": "390x844",
+  "steps": [
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "વણવપરાયેલું યાર્ન, યાર્ન પ્રમાણે",
+      "body": "આ હાથ પરનું હજી વણાયું ન હોય તેવું યાર્ન છે, કિલોમાં. અહીં 100 કિલો.",
+      "step": "ys-balance",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 1 / 7",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 577,
+        "w": 374,
+        "h": 259
+      },
+      "highlight": {
+        "x": 23,
+        "y": 287,
+        "w": 344,
+        "h": 110
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "div(role=dialog)",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": {
+        "replica": true,
+        "balance": "100 kg",
+        "pending": false,
+        "unmounts": 0,
+        "sameSearchNode": false,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "yarn": {
+        "mounts": 1,
+        "unmounts": 0,
+        "date": "2026-09-14",
+        "sameDateNode": true,
+        "anchors": 0,
+        "sections": [
+          "header",
+          "balance",
+          "date",
+          "yarns",
+          "costings",
+          "history"
+        ],
+        "sampleBanners": 1
+      },
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "તમારી પાસેનું યાર્ન નોંધો",
+      "body": "“શરૂઆતનું વજન” શરૂઆતમાં દરેક યાર્નનું વજન એક વાર નોંધે છે: અહીં 100 કિલો.",
+      "step": "ys-opening",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 2 / 7",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 632,
+        "w": 374,
+        "h": 204
+      },
+      "highlight": {
+        "x": 17,
+        "y": 94,
+        "w": 356,
+        "h": 335
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 8,
+        "y": 72,
+        "w": 374,
+        "h": 368
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": {
+        "replica": true,
+        "balance": "100 kg",
+        "pending": false,
+        "unmounts": 0,
+        "sameSearchNode": false,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "yarn": {
+        "mounts": 1,
+        "unmounts": 0,
+        "date": "2026-09-14",
+        "sameDateNode": true,
+        "anchors": 0,
+        "sections": [
+          "header",
+          "balance",
+          "date",
+          "yarns",
+          "costings",
+          "history"
+        ],
+        "sampleBanners": 1,
+        "weight": "100"
+      },
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "દરેક નવી આવક ઉમેરો",
+      "body": "“યાર્ન ઉમેરો” તે યાર્નમાં આવક ઉમેરે છે: 100 + 20 = 120 કિલો.",
+      "step": "ys-receipt",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 3 / 7",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 632,
+        "w": 374,
+        "h": 204
+      },
+      "highlight": {
+        "x": 17,
+        "y": 94,
+        "w": 356,
+        "h": 349
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 8,
+        "y": 72,
+        "w": 374,
+        "h": 368
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": {
+        "replica": true,
+        "balance": "120 kg",
+        "pending": false,
+        "unmounts": 0,
+        "sameSearchNode": false,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "yarn": {
+        "mounts": 1,
+        "unmounts": 0,
+        "date": "2026-09-14",
+        "sameDateNode": true,
+        "anchors": 0,
+        "sections": [
+          "header",
+          "balance",
+          "date",
+          "yarns",
+          "costings",
+          "history"
+        ],
+        "sampleBanners": 1,
+        "weight": "20"
+      },
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    }
+  ],
+  "logs": [
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction"
+  ],
+  "apiRequests": [],
+  "preClick": null,
+  "sampling": "legacy-900ms",
+  "before": {
+    "x": 0,
+    "y": 0,
+    "inner": null
+  },
+  "exitAt": 3,
+  "after": {
+    "scroll": {
+      "x": 0,
+      "y": 0,
+      "inner": null
+    },
+    "active": "<button type=\"button\" aria-label=\"યાર્ન સ્ટોક માર્ગદર્શિકા શરૂ કરો\" data-testid=\"tour-launcher-yarn-stock\" data-tour-control=\"quiet-tour\" class=\"estimator-touch",
+    "activeAnchor": null,
+    "activeRateBookField": null,
+    "activeControl": "quiet-tour",
+    "serverCalls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "navigations": [],
+    "scrollCalls": [
+      {
+        "owner": "element",
+        "method": "scrollTo",
+        "behavior": "smooth"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "element",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      }
+    ],
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"yarn-stock\":{\"firstShown\":\"2026-09-29T21:27:53.019Z\",\"version\":\"v1\",\"firstStarted\":true}}"
+    },
+    "yarn": {
+      "mounts": 1,
+      "unmounts": 0,
+      "date": "2026-09-14",
+      "sameDateNode": true,
+      "liveHidden": false,
+      "replica": false
+    },
+    "search": null
+  },
+  "issues": []
+}

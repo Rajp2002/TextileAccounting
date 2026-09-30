@@ -1,0 +1,27 @@
+[
+  {
+    "run": "gt15-retry-night-focus-gu-390x844",
+    "steps": [
+      "ma-purpose",
+      "ma-shift",
+      "ma-job"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt15-retry-night-focus-gu-390x844-01-03.png"
+  },
+  {
+    "run": "gt15-retry-night-focus-gu-390x844",
+    "steps": [
+      "ma-assign",
+      "ma-choose",
+      "ma-linked"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt15-retry-night-focus-gu-390x844-04-06.png"
+  },
+  {
+    "run": "gt15-retry-night-focus-gu-390x844",
+    "steps": [
+      "ma-handoff"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt15-retry-night-focus-gu-390x844-07-07.png"
+  }
+]

@@ -1,0 +1,42 @@
+[
+  {
+    "id": "gt09-retry-gu-390x844",
+    "task": "GT-09",
+    "scenario": "yarn-stock",
+    "language": "gu",
+    "size": "390x844",
+    "script": "/private/tmp/weavly-review-run-diagnostic.mjs",
+    "args": [
+      "yarn-stock",
+      "gu",
+      "390x844",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt09-retry-gu-390x844"
+    ],
+    "command": [
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+      "170",
+      "node",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+      "env",
+      "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+      "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+      "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt09-retry-gu-390x844/network.json",
+      "node",
+      "--import",
+      "/private/tmp/weavly-review-network.mjs",
+      "/private/tmp/weavly-review-run-diagnostic.mjs",
+      "yarn-stock",
+      "gu",
+      "390x844",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt09-retry-gu-390x844"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 44.69,
+    "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt09-retry-gu-390x844/yarn-stock-gu-390x844/record.json",
+    "steps": 7,
+    "error": null,
+    "blockedNetwork": [],
+    "classification": "AUTOMATED_PASS",
+    "visualReview": "UNVERIFIED"
+  }
+]

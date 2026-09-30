@@ -1,0 +1,520 @@
+{
+  "scenario": "assignments",
+  "lang": "hi",
+  "size": "1024x768",
+  "steps": [
+    {
+      "assignments": {
+        "names": [
+          "नमूना कारीगर",
+          "नमूना कारीगर"
+        ],
+        "inert": true,
+        "picker": false,
+        "enabledOptions": 0,
+        "visibleClose": 0,
+        "anchors": [
+          "assignments.add-worker"
+        ],
+        "focusBanner": false
+      },
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "हर शिफ्ट में कौन सा लूम कौन चलाए",
+      "body": "हर कारीगर को उसके लूम से जोड़ें। फिर दैनिक शीट में हर लूम अपने कारीगर के साथ आता है।",
+      "step": "ma-purpose",
+      "status": "ready",
+      "eyebrow": "नमूना · चरण 1 / 7",
+      "progress": null,
+      "panel": {
+        "x": 289,
+        "y": 452,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 289,
+        "y": 386,
+        "w": 695,
+        "h": 51
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "div(role=dialog)",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 768,
+      "vw": 1024
+    },
+    {
+      "assignments": {
+        "names": [
+          "नमूना कारीगर",
+          "नमूना कारीगर"
+        ],
+        "inert": true,
+        "picker": false,
+        "enabledOptions": 0,
+        "visibleClose": 0,
+        "anchors": [
+          "assignments.add-worker"
+        ],
+        "focusBanner": false
+      },
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "पहले शिफ्ट चुनें",
+      "body": "दिन और रात अलग तय होते हैं।",
+      "step": "ma-shift",
+      "status": "ready",
+      "eyebrow": "नमूना · चरण 2 / 7",
+      "progress": null,
+      "panel": {
+        "x": 499,
+        "y": 192,
+        "w": 360,
+        "h": 152
+      },
+      "highlight": {
+        "x": 282,
+        "y": 192,
+        "w": 202,
+        "h": 49
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 768,
+      "vw": 1024
+    },
+    {
+      "assignments": {
+        "names": [
+          "नमूना कारीगर"
+        ],
+        "inert": true,
+        "picker": false,
+        "enabledOptions": 0,
+        "visibleClose": 0,
+        "anchors": [
+          "assignments.add-worker"
+        ],
+        "focusBanner": false
+      },
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "लूम को पहले क्वालिटी चाहिए",
+      "body": "“उत्पादन काम नहीं” लिखे लूम के पास अभी बुनने को कुछ नहीं। उत्पादन में “लूम दें” से उस पर क्वालिटी लगाएँ।",
+      "step": "ma-job",
+      "status": "ready",
+      "eyebrow": "नमूना · चरण 3 / 7",
+      "progress": null,
+      "panel": {
+        "x": 292,
+        "y": 523,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 668,
+        "y": 523,
+        "w": 105,
+        "h": 26
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 768,
+      "vw": 1024
+    },
+    {
+      "assignments": {
+        "names": [
+          "नमूना कारीगर",
+          "नमूना कारीगर"
+        ],
+        "inert": true,
+        "picker": false,
+        "enabledOptions": 0,
+        "visibleClose": 0,
+        "anchors": [
+          "assignments.add-worker"
+        ],
+        "focusBanner": false
+      },
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "कारीगर से शुरू करें",
+      "body": "कारीगर के पास “लगाएँ” इस शिफ्ट के खाली लूम दिखाता है।",
+      "step": "ma-assign",
+      "status": "ready",
+      "eyebrow": "नमूना · चरण 4 / 7",
+      "progress": null,
+      "panel": {
+        "x": 575,
+        "y": 490,
+        "w": 360,
+        "h": 152
+      },
+      "highlight": {
+        "x": 501,
+        "y": 490,
+        "w": 57,
+        "h": 40
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 768,
+      "vw": 1024
+    },
+    {
+      "assignments": {
+        "names": [
+          "नमूना कारीगर",
+          "नमूना कारीगर"
+        ],
+        "inert": true,
+        "picker": true,
+        "enabledOptions": 0,
+        "visibleClose": 0,
+        "anchors": [
+          "assignments.add-worker"
+        ],
+        "focusBanner": false
+      },
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "लूम चुनते ही सेव हो जाता है",
+      "body": "“चुनें” आज से कारीगर को उस लूम से जोड़ता है। लूम पर पहले से कारीगर हो तो बदलने से पहले Weavly पूछता है।",
+      "step": "ma-choose",
+      "status": "ready",
+      "eyebrow": "नमूना · चरण 5 / 7",
+      "progress": null,
+      "panel": {
+        "x": 544,
+        "y": 16,
+        "w": 360,
+        "h": 221
+      },
+      "highlight": {
+        "x": 24,
+        "y": 150,
+        "w": 496,
+        "h": 75
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 16,
+        "y": 16,
+        "w": 512,
+        "h": 225
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 768,
+      "vw": 1024
+    },
+    {
+      "assignments": {
+        "names": [
+          "नमूना कारीगर"
+        ],
+        "inert": true,
+        "picker": false,
+        "enabledOptions": 0,
+        "visibleClose": 0,
+        "anchors": [
+          "assignments.add-worker"
+        ],
+        "focusBanner": false
+      },
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "जोड़ जाँचें",
+      "body": "अब इस शिफ्ट के लिए कारीगर और लूम साथ दिखते हैं। उनके मीटर दैनिक शीट में दर्ज होते हैं।",
+      "step": "ma-linked",
+      "status": "ready",
+      "eyebrow": "नमूना · चरण 6 / 7",
+      "progress": null,
+      "panel": {
+        "x": 270,
+        "y": 453,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 270,
+        "y": 645,
+        "w": 732,
+        "h": 81
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 440,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 768,
+      "vw": 1024
+    },
+    {
+      "assignments": {
+        "names": [],
+        "inert": true,
+        "picker": false,
+        "enabledOptions": 0,
+        "visibleClose": 0,
+        "anchors": [
+          "assignments.add-worker"
+        ],
+        "focusBanner": false
+      },
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "पहले कारीगर जोड़ें",
+      "body": "सिर्फ़ पीस रेट कारीगर लूम से जुड़ते हैं। जोड़ने के लिए “कारीगर जोड़ें” चुनें।",
+      "step": "ma-handoff",
+      "status": "ready",
+      "eyebrow": "चरण 7 / 7",
+      "progress": null,
+      "panel": {
+        "x": 282,
+        "y": 327,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 282,
+        "y": 518,
+        "w": 709,
+        "h": 51
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 372,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 768,
+      "vw": 1024
+    }
+  ],
+  "logs": [
+    "warning: [harness] server action called recordTourEventAction",
+    "error: Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction"
+  ],
+  "apiRequests": [
+    {
+      "url": "http://localhost:5199/api/analytics/plan-events",
+      "method": "POST"
+    }
+  ],
+  "preClick": null,
+  "sampling": "legacy-900ms",
+  "assignmentsBefore": {
+    "search": [
+      ""
+    ],
+    "shift": " दिन की शिफ्ट",
+    "mobileView": [],
+    "names": [],
+    "picker": false,
+    "url": "http://localhost:5199/owner/assignments?s=assignments&lang=hi&fresh=1",
+    "storage": {
+      "weavly_language": "hi"
+    }
+  },
+  "before": {
+    "x": 0,
+    "y": 0,
+    "inner": null
+  },
+  "assignmentsBack": true,
+  "after": {
+    "scroll": {
+      "x": 0,
+      "y": 0,
+      "inner": null
+    },
+    "active": "<a href=\"/owner/workers?add=worker&amp;returnTo=%2Fowner%2Fassignments%3Fshift%3Dday\" data-tour-anchor=\"assignments.add-worker\" data-configuration-tour=\"add-wor",
+    "activeAnchor": "assignments.add-worker",
+    "activeRateBookField": null,
+    "activeControl": null,
+    "serverCalls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "navigations": [],
+    "scrollCalls": [
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "smooth"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "smooth"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      }
+    ],
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"configuration\":{\"firstShown\":\"2026-09-30T00:36:35.807Z\",\"version\":\"v1\",\"firstStarted\":true,\"completed\":true,\"completedVersion\":\"v2\"}}"
+    },
+    "search": null
+  },
+  "assignmentsAfter": {
+    "search": [
+      ""
+    ],
+    "shift": " दिन की शिफ्ट",
+    "mobileView": [],
+    "names": [],
+    "picker": false,
+    "url": "http://localhost:5199/owner/assignments?s=assignments&lang=hi&fresh=1",
+    "storage": {
+      "weavly_language": "hi"
+    }
+  },
+  "issues": [
+    "navigation/API request"
+  ]
+}

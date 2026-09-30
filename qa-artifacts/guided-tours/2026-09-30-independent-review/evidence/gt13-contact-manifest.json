@@ -1,0 +1,92 @@
+[
+  {
+    "run": "gt13-0-en-1440x900",
+    "steps": [
+      "mc-purpose",
+      "mc-details",
+      "mc-readiness"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt13-0-en-1440x900-01-03.png"
+  },
+  {
+    "run": "gt13-0-en-1440x900",
+    "steps": [
+      "mc-quality",
+      "mc-worker",
+      "mc-handoff"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt13-0-en-1440x900-04-06.png"
+  },
+  {
+    "run": "gt13-0-gu-390x844",
+    "steps": [
+      "mc-purpose",
+      "mc-details",
+      "mc-readiness"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt13-0-gu-390x844-01-03.png"
+  },
+  {
+    "run": "gt13-0-gu-390x844",
+    "steps": [
+      "mc-quality",
+      "mc-worker",
+      "mc-handoff"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt13-0-gu-390x844-04-06.png"
+  },
+  {
+    "run": "gt13-1-en-1440x900",
+    "steps": [
+      "mc-purpose",
+      "mc-details",
+      "mc-readiness"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt13-1-en-1440x900-01-03.png"
+  },
+  {
+    "run": "gt13-1-en-1440x900",
+    "steps": [
+      "mc-quality",
+      "mc-worker",
+      "mc-handoff"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt13-1-en-1440x900-04-06.png"
+  },
+  {
+    "run": "gt13-1-gu-390x844",
+    "steps": [
+      "mc-purpose",
+      "mc-details",
+      "mc-readiness"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt13-1-gu-390x844-01-03.png"
+  },
+  {
+    "run": "gt13-1-gu-390x844",
+    "steps": [
+      "mc-quality",
+      "mc-worker",
+      "mc-handoff"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt13-1-gu-390x844-04-06.png"
+  },
+  {
+    "run": "gt13-exit-machines-en-1440x900",
+    "steps": [
+      "mc-purpose",
+      "mc-details",
+      "mc-readiness"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt13-exit-machines-en-1440x900-01-03.png"
+  },
+  {
+    "run": "gt13-exit-machines-gu-390x844",
+    "steps": [
+      "mc-purpose",
+      "mc-details",
+      "mc-readiness"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt13-exit-machines-gu-390x844-01-03.png"
+  }
+]

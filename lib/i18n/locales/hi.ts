@@ -1,4 +1,33 @@
 export const hi = {
+  dailySheet: {
+    "printSheet": "शीट छापें",
+    "notRunning": "नहीं चला",
+    "workerReview": "कारीगर जाँच",
+    "saveShift": "शिफ्ट सेव करें",
+    "editSavedLog": "सेव की गई एंट्री सुधारें",
+    "saveCorrection": "सुधार सेव करें",
+    "machineSheet": "मशीन की शीट",
+    "discardDraft": "ड्राफ्ट हटाएं",
+    "metres": "मीटर",
+    "draftOnDevice": "इस डिवाइस पर ड्राफ्ट",
+    "showPending": "बाकी दिखाएँ",
+    "shiftDetails": "शिफ्ट का विवरण"
+},
+  tourControls: {
+    rateBook: {"addRate": "धागा रेट जोड़ें", "needsReview": "समीक्षा बाकी", "advancedEdit": "विस्तृत बदलाव"},
+    estimator: {
+    "saveCosting": "कॉस्टिंग सेव करें",
+    "saveNewVersion": "नया वर्ज़न सेव करें"
+    },
+    savedCostings: {
+  "viewBreakdown": "विवरण देखें",
+  "use": "इस्तेमाल करें",
+  "archived": "आर्काइव की गई",
+  "internalEstimate": "आंतरिक लागत अनुमान",
+  "customerQuotation": "ग्राहक कोटेशन",
+  "activateForProduction": "उत्पादन के लिए सक्रिय करें",
+  "export": "एक्सपोर्ट करें"
+} },
  navigation: {
   "production_overview": "अवलोकन",
   "production_daily_sheet": "दैनिक शीट",
@@ -165,6 +194,8 @@ export const hi = {
 },
 
   qualityStock: {
+    audit: "स्टॉक ऑडिट",
+    pending: "बाकी",
         dispatch: "डिस्पैच",
         dispatch_reversal: "डिस्पैच वापसी",
     productionEntry: "उत्पादन",
@@ -352,6 +383,14 @@ export const hi = {
     app_update_failure_fallback: "अपडेट लोड न हो तो काम जारी रखें और बाद में फिर कोशिश करें।",
   },
   production: {
+    activateQuality: "क्वालिटी चालू करें",
+    assignLooms: "लूम दें",
+    manageWorkers: "कारीगर बदलें",
+    machineBoard: "मशीन बोर्ड",
+    switchQuality: "क्वालिटी बदलें",
+    qualityActions: "क्वालिटी के विकल्प",
+    manageOperatorsForLoom: "{loom} के ऑपरेटर प्रबंधित करें",
+    cost: "लागत",
     log_production: "प्रोडक्शन दर्ज करें (Log Prod)",
     save_all: "सभी दर्ज करें (Save All Entries)",
     saving: "दर्ज किया जा रहा है...",
@@ -417,6 +456,8 @@ export const hi = {
     }
   },
   assignments: {
+    assign: "लगाएँ",
+    noJob: "उत्पादन काम नहीं",
     title: "कारीगरों का कार्य आवंटन",
     day_shift: "दिन की पाली",
     night_shift: "रात की पाली",
@@ -564,6 +605,27 @@ export const hi = {
     }
   },
   payroll: {
+    preparingPdf: "PDF तैयार हो रहा है…",
+    "settlePayroll": "पेरोल निपटाएँ",
+    "resolve": "बंद करें",
+    "markPaid": "भुगतान दर्ज करें",
+    "completePayroll": "पेरोल पूरा करें",
+    "addAdvance": "उपाड़ जोड़ें",
+    "addDeduction": "कटौती जोड़ें",
+    "payrollRecords": "पेरोल रिकॉर्ड",
+    "exportCsv": "CSV एक्सपोर्ट करें",
+    "exportPdf": "PDF एक्सपोर्ट करें",
+    "resolveMistaken": "गलत भुगतान रिकॉर्ड सुधारें",
+    "continueSettlement": "निपटान जारी रखें",
+    "viewSettledPayroll": "निपटाया गया पेरोल देखें",
+    "reviewBeforePaying": "भुगतान से पहले जाँचें",
+    "confirmPayment": "भुगतान की पुष्टि करें",
+    "viewSettledRecords": "निपटाए गए रिकॉर्ड देखें",
+    "completePeriodTitle": "क्या {periodLabel} का पेरोल पूरा करें?",
+    "markPaidCard": "भुगतान दर्ज करें",
+    "completePayrollRail": "पेरोल पूरा करें",
+    "needsReview": "समीक्षा बाकी",
+
     monthly_payroll: "मासिक वेतन (Monthly Payroll)",
     track_settle: "कारीगरों के वेतन को ट्रैक करें और भुगतान करें",
     status: {
@@ -1032,6 +1094,14 @@ export const hi = {
     }
   },
   workers: {
+    addWorker: "कारीगर जोड़ें",
+    viewPayroll: "पेरोल देखें",
+    fixedMonthlySalary: "निश्चित मासिक वेतन",
+    salaryEffectiveFrom: "वेतन बदलाव लागू तारीख",
+    lastWorkingDay: "आख़िरी काम का दिन (वैकल्पिक)",
+    shiftAvailability: "शिफ्ट उपलब्धता",
+    joiningDate: "जुड़ने की तारीख",
+
     manage_workers: "कारीगर प्रबंधित करें",
     meter_workers: "मीटर आधारित कारीगर",
     fixed_staff: "तय वेतन कर्मचारी",
@@ -1505,5 +1575,12 @@ export const hi = {
       data_export_generated: "डेटा निर्यात तैयार है",
       latest_saved_costing_breakdown: "नवीनतम सेव की गई कॉस्टिंग का विवरण",
     },
-  }
+  },
+  // Approved Estimator phrases follow existing dictionary phrases with the same English source.
+  estimatorTourPhrases: {
+    "changeQuality": "क्वालिटी बदलें",
+    "liveCost": "लाइव लागत",
+    "calculateSave": "गणना करें और सेव करें · 1 कॉस्टिंग लगेगी",
+    "startProduction": "उत्पादन शुरू करें"
+}
 }

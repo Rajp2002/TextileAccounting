@@ -1,0 +1,152 @@
+{
+  "scenario": "workers-salary",
+  "lang": "en",
+  "size": "1440x900",
+  "steps": [
+    {
+      "step": "wks-salary",
+      "status": "ready",
+      "panel": {
+        "x": 816,
+        "y": 201.390625,
+        "w": 360,
+        "h": 175.15625
+      },
+      "highlight": {
+        "x": 304,
+        "y": 362.609375,
+        "w": 480,
+        "h": 66.25
+      },
+      "target": {
+        "x": 310,
+        "y": 505.109375,
+        "w": 468,
+        "h": 54.25
+      },
+      "overlapArea": 0,
+      "actualTargetOverlap": 0,
+      "focusInPanel": true,
+      "title": "Enter the agreed monthly salary",
+      "storage": {
+        "weavly_language": "en"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "animations": [
+        {
+          "state": "running"
+        }
+      ],
+      "afterBackNextMilliseconds": 0
+    },
+    {
+      "step": "wks-salary",
+      "status": "ready",
+      "panel": {
+        "x": 816,
+        "y": 201.390625,
+        "w": 360,
+        "h": 175.15625
+      },
+      "highlight": {
+        "x": 304,
+        "y": 499.109375,
+        "w": 480,
+        "h": 66.25
+      },
+      "target": {
+        "x": 310,
+        "y": 505.109375,
+        "w": 468,
+        "h": 54.25
+      },
+      "overlapArea": 0,
+      "actualTargetOverlap": 0,
+      "focusInPanel": true,
+      "title": "Enter the agreed monthly salary",
+      "storage": {
+        "weavly_language": "en"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "animations": [],
+      "afterBackNextMilliseconds": 500
+    },
+    {
+      "step": "wks-salary",
+      "status": "ready",
+      "panel": {
+        "x": 816,
+        "y": 201.390625,
+        "w": 360,
+        "h": 175.15625
+      },
+      "highlight": {
+        "x": 304,
+        "y": 499.109375,
+        "w": 480,
+        "h": 66.25
+      },
+      "target": {
+        "x": 310,
+        "y": 505.109375,
+        "w": 468,
+        "h": 54.25
+      },
+      "overlapArea": 0,
+      "actualTargetOverlap": 0,
+      "focusInPanel": true,
+      "title": "Enter the agreed monthly salary",
+      "storage": {
+        "weavly_language": "en"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "animations": [],
+      "afterBackNextMilliseconds": 2000
+    }
+  ],
+  "issues": [],
+  "purpose": "Read-only Back/Next timing diagnosis; original main run remains unchanged and preserved",
+  "after": {
+    "calls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"workers\":{\"firstShown\":\"2026-09-29T22:39:25.128Z\",\"version\":\"v1\",\"firstStarted\":true}}"
+    },
+    "activeControl": "quiet-tour"
+  }
+}

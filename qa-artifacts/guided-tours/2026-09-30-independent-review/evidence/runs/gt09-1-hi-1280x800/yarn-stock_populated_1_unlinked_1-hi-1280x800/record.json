@@ -1,0 +1,579 @@
+{
+  "scenario": "yarn-stock?populated=1&unlinked=1",
+  "lang": "hi",
+  "size": "1280x800",
+  "steps": [
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "बिना इस्तेमाल धागा, धागे के अनुसार",
+      "body": "यह हाथ में पड़ा, अभी न बुना गया धागा है, किलो में। यहाँ 100 किलो।",
+      "step": "ys-balance",
+      "status": "ready",
+      "eyebrow": "नमूना · चरण 1 / 7",
+      "progress": null,
+      "panel": {
+        "x": 285,
+        "y": 342,
+        "w": 360,
+        "h": 221
+      },
+      "highlight": {
+        "x": 285,
+        "y": 234,
+        "w": 958,
+        "h": 93
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "div(role=dialog)",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": {
+        "replica": true,
+        "balance": "100 kg",
+        "pending": false,
+        "unmounts": 0,
+        "sameSearchNode": false,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "yarn": {
+        "mounts": 1,
+        "unmounts": 0,
+        "date": "2026-09-14",
+        "sameDateNode": true,
+        "anchors": 0,
+        "sections": [
+          "header",
+          "balance",
+          "date",
+          "yarns",
+          "costings",
+          "history"
+        ],
+        "sampleBanners": 1
+      },
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "आपके पास पड़ा धागा दर्ज करें",
+      "body": "“शुरुआती वजन” शुरुआत में हर धागे का वज़न एक बार दर्ज करता है: यहाँ 100 किलो।",
+      "step": "ys-opening",
+      "status": "ready",
+      "eyebrow": "नमूना · चरण 2 / 7",
+      "progress": null,
+      "panel": {
+        "x": 736,
+        "y": 202,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 224,
+        "y": 300,
+        "w": 480,
+        "h": 282
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 208,
+        "y": 202,
+        "w": 512,
+        "h": 395
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": {
+        "replica": true,
+        "balance": "100 kg",
+        "pending": false,
+        "unmounts": 0,
+        "sameSearchNode": false,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "yarn": {
+        "mounts": 1,
+        "unmounts": 0,
+        "date": "2026-09-14",
+        "sameDateNode": true,
+        "anchors": 0,
+        "sections": [
+          "header",
+          "balance",
+          "date",
+          "yarns",
+          "costings",
+          "history"
+        ],
+        "sampleBanners": 1,
+        "weight": "100"
+      },
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "हर नई आवक जोड़ें",
+      "body": "“धागा जोड़ें” उस धागे में आवक जोड़ता है: 100 + 20 = 120 किलो।",
+      "step": "ys-receipt",
+      "status": "ready",
+      "eyebrow": "नमूना · चरण 3 / 7",
+      "progress": null,
+      "panel": {
+        "x": 736,
+        "y": 187,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 224,
+        "y": 284,
+        "w": 480,
+        "h": 313
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 208,
+        "y": 187,
+        "w": 512,
+        "h": 427
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": {
+        "replica": true,
+        "balance": "120 kg",
+        "pending": false,
+        "unmounts": 0,
+        "sameSearchNode": false,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "yarn": {
+        "mounts": 1,
+        "unmounts": 0,
+        "date": "2026-09-14",
+        "sameDateNode": true,
+        "anchors": 0,
+        "sections": [
+          "header",
+          "balance",
+          "date",
+          "yarns",
+          "costings",
+          "history"
+        ],
+        "sampleBanners": 1,
+        "weight": "20"
+      },
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "हर कपड़े को उसकी कॉस्टिंग से जोड़ें",
+      "body": "“लागत जोड़ें” सेव कॉस्टिंग से 100 मीटर पर हर धागे के किलो लेता है। यहाँ ताना 6 + बाना 4 = 100 मीटर पर 10 किलो।",
+      "step": "ys-link",
+      "status": "ready",
+      "eyebrow": "नमूना · चरण 4 / 7",
+      "progress": null,
+      "panel": {
+        "x": 736,
+        "y": 160,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 224,
+        "y": 258,
+        "w": 480,
+        "h": 367
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 208,
+        "y": 160,
+        "w": 512,
+        "h": 480
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": {
+        "replica": true,
+        "balance": "120 kg",
+        "pending": false,
+        "unmounts": 0,
+        "sameSearchNode": false,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "yarn": {
+        "mounts": 1,
+        "unmounts": 0,
+        "date": "2026-09-14",
+        "sameDateNode": true,
+        "anchors": 0,
+        "sections": [
+          "header",
+          "balance",
+          "date",
+          "yarns",
+          "costings",
+          "history"
+        ],
+        "sampleBanners": 1
+      },
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "उत्पादन सेव करने से धागा लगता है",
+      "body": "200 मीटर की शिफ्ट सेव होने पर 20 किलो घटता है (200 × 10 ÷ 100)। डिस्पैच दोबारा धागा नहीं घटाता।",
+      "step": "ys-usage",
+      "status": "ready",
+      "eyebrow": "नमूना · चरण 5 / 7",
+      "progress": null,
+      "panel": {
+        "x": 285,
+        "y": 374,
+        "w": 360,
+        "h": 221
+      },
+      "highlight": {
+        "x": 285,
+        "y": 611,
+        "w": 958,
+        "h": 96
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 299,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": {
+        "replica": true,
+        "balance": "100 kg",
+        "pending": false,
+        "unmounts": 0,
+        "sameSearchNode": false,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "yarn": {
+        "mounts": 1,
+        "unmounts": 0,
+        "date": "2026-09-14",
+        "sameDateNode": true,
+        "anchors": 0,
+        "sections": [
+          "header",
+          "balance",
+          "date",
+          "yarns",
+          "costings",
+          "history"
+        ],
+        "sampleBanners": 1,
+        "movement": "नमूना धागा · उत्पादन · −20 kg200 m × 10 ÷ 100 = 20 kgप्रविष्टि के बाद शेष: 100 kg"
+      },
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "तौलने के बाद कुल वज़न लिखें",
+      "body": "“शेष सुधारें” बैलेंस को आपके तौले वज़न से बदलता है। 98 लिखें, −2 नहीं।",
+      "step": "ys-correct",
+      "status": "ready",
+      "eyebrow": "नमूना · चरण 6 / 7",
+      "progress": null,
+      "panel": {
+        "x": 736,
+        "y": 195,
+        "w": 360,
+        "h": 221
+      },
+      "highlight": {
+        "x": 224,
+        "y": 293,
+        "w": 480,
+        "h": 296
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 248,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 208,
+        "y": 195,
+        "w": 512,
+        "h": 409
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": {
+        "replica": true,
+        "balance": "100 kg",
+        "pending": false,
+        "unmounts": 0,
+        "sameSearchNode": false,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "yarn": {
+        "mounts": 1,
+        "unmounts": 0,
+        "date": "2026-09-14",
+        "sameDateNode": true,
+        "anchors": 0,
+        "sections": [
+          "header",
+          "balance",
+          "date",
+          "yarns",
+          "costings",
+          "history"
+        ],
+        "sampleBanners": 1,
+        "weight": "98",
+        "movement": "नमूना धागा · उत्पादन · −20 kg200 m × 10 ÷ 100 = 20 kgप्रविष्टि के बाद शेष: 100 kg"
+      },
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "गोदाम का धागा दर्ज करें",
+      "body": "हर धागे के शुरुआती वज़न से शुरू करें, फिर कपड़े की कॉस्टिंग जोड़ें ताकि उत्पादन धागा घटा सके।",
+      "step": "ys-handoff",
+      "status": "ready",
+      "eyebrow": "चरण 7 / 7",
+      "progress": null,
+      "panel": {
+        "x": 694,
+        "y": 77,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 1070,
+        "y": 77,
+        "w": 108,
+        "h": 47
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": {
+        "replica": false,
+        "pending": false,
+        "unmounts": 0,
+        "sameSearchNode": false,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "yarn": {
+        "mounts": 1,
+        "unmounts": 0,
+        "date": "2026-09-14",
+        "sameDateNode": true,
+        "anchors": 1,
+        "sections": [],
+        "sampleBanners": 0
+      },
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280
+    }
+  ],
+  "logs": [
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction"
+  ],
+  "apiRequests": [],
+  "preClick": null,
+  "sampling": "legacy-900ms",
+  "before": {
+    "x": 0,
+    "y": 0,
+    "inner": null
+  },
+  "after": {
+    "scroll": {
+      "x": 0,
+      "y": 0,
+      "inner": null
+    },
+    "active": "<button data-slot=\"button\" data-variant=\"outline\" data-size=\"default\" class=\"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm ",
+    "activeAnchor": "yarn.opening",
+    "activeRateBookField": null,
+    "activeControl": null,
+    "serverCalls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "navigations": [],
+    "scrollCalls": [
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "smooth"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "smooth"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      }
+    ],
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"yarn-stock\":{\"firstShown\":\"2026-09-29T21:24:15.335Z\",\"version\":\"v1\",\"firstStarted\":true,\"completed\":true,\"completedVersion\":\"v2\"}}"
+    },
+    "yarn": {
+      "mounts": 1,
+      "unmounts": 0,
+      "date": "2026-09-14",
+      "sameDateNode": true,
+      "liveHidden": false,
+      "replica": false
+    },
+    "search": null
+  },
+  "issues": []
+}

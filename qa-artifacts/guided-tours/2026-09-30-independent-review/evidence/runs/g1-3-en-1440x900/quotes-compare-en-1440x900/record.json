@@ -1,0 +1,257 @@
+{
+  "scenario": "quotes-compare",
+  "lang": "en",
+  "size": "1440x900",
+  "steps": [
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Pick two versions of one quality",
+      "body": "Turn on “Compare”, open a quality and tick two versions. Then choose “Compare Costings”.",
+      "step": "compareSelect",
+      "status": "ready",
+      "eyebrow": "Sample · Step 1 of 4",
+      "progress": null,
+      "panel": {
+        "x": 1056,
+        "y": 43,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 50,
+        "y": 367,
+        "w": 957,
+        "h": 457
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "div(role=dialog)",
+      "scrollY": 0,
+      "serverCalls": 1,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 16,
+        "y": 43,
+        "w": 1024,
+        "h": 814
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": "",
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "See what changed",
+      "body": "Old, New and Change show every figure side by side. Here v2 costs ₹1.65/m more than v1.",
+      "step": "comparison",
+      "status": "ready",
+      "eyebrow": "Sample · Step 2 of 4",
+      "progress": null,
+      "panel": {
+        "x": 1062,
+        "y": 276,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 10,
+        "y": 276,
+        "w": 1036,
+        "h": 349
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 1,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 16,
+        "y": 282,
+        "w": 1024,
+        "h": 337
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": "",
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Find the input that caused it",
+      "body": "Open the calculation details to see which input moved, such as a yarn rate or the weaving charge.",
+      "step": "comparisonDetails",
+      "status": "ready",
+      "eyebrow": "Sample · Step 3 of 4",
+      "progress": null,
+      "panel": {
+        "x": 1056,
+        "y": 16,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 32,
+        "y": 282,
+        "w": 992,
+        "h": 593
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 1,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 16,
+        "y": 14,
+        "w": 1024,
+        "h": 872
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": "",
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Compare your own versions",
+      "body": "Choose “Compare” to start. You need two saved versions of the same quality.",
+      "step": "compareHandoff",
+      "status": "ready",
+      "eyebrow": "Step 4 of 4",
+      "progress": null,
+      "panel": {
+        "x": 988,
+        "y": 112,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 861,
+        "y": 112,
+        "w": 111,
+        "h": 51
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 1,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": "",
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440
+    }
+  ],
+  "logs": [
+    "warning: [harness] server action called recordTourEventAction"
+  ],
+  "apiRequests": [],
+  "preClick": null,
+  "sampling": "legacy-900ms",
+  "before": {
+    "x": 0,
+    "y": 0,
+    "inner": null
+  },
+  "after": {
+    "scroll": {
+      "x": 0,
+      "y": 0,
+      "inner": null
+    },
+    "active": "<button data-slot=\"button\" data-variant=\"outline\" data-size=\"default\" class=\"inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-semibo",
+    "activeAnchor": "costings.compare",
+    "activeRateBookField": null,
+    "activeControl": null,
+    "serverCalls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "navigations": [],
+    "scrollCalls": [],
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"saved-costings\":{\"firstShown\":\"2026-09-29T20:18:25.961Z\",\"version\":\"v1\"}}"
+    },
+    "search": ""
+  },
+  "issues": []
+}

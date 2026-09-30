@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
+import { en } from '../lib/i18n/locales/en'
 
 import { buildBasePayrollHistory, buildBasePayrollHistoryCsv } from '../lib/base-payroll-history'
 import type { BasePayrollSettlement, BasePayrollSettlementLine } from '../lib/base-production-core'
@@ -103,9 +104,12 @@ describe('Base payroll records', () => {
         const records = readFileSync(join(root, 'app/(dashboard)/owner/production/BasePayrollRecords.tsx'), 'utf8')
         const migration = readFileSync(join(root, 'supabase/migrations/20260830130000_add_base_payroll_history_snapshots.sql'), 'utf8')
 
-        expect(client).toContain('Payroll records')
-        expect(records).toContain('Export CSV')
-        expect(records).toContain('Export PDF')
+        expect(client).toContain("t('payroll.payrollRecords')")
+        expect(en.payroll.payrollRecords).toBe('Payroll records')
+        expect(records).toContain("t('payroll.exportCsv')")
+        expect(en.payroll.exportCsv).toBe('Export CSV')
+        expect(records).toContain("t('payroll.exportPdf')")
+        expect(en.payroll.exportPdf).toBe('Export PDF')
         expect(records).toContain('Cumulative worker total')
         expect(records).toContain('Period production')
         expect(migration).toContain('base_payroll_settlement_lines')

@@ -48,6 +48,7 @@ export function MachineAddButton({ onAdd, className }: { onAdd: () => void; clas
 
   return (
     <Button
+      data-tour-anchor="machines.add"
       onClick={onAdd}
       className={cn(railPrimaryAction, className)}
     >

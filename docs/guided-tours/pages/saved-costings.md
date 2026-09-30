@@ -1,6 +1,6 @@
 # P02 Saved Costings — tour specification (reference tour)
 
-Status: specified, not implemented. Implementation: **GT-03** (reference tour, gate G1). Gujarati/Hindi: native review pending (LR-08).
+Status: implemented and PASSED (2026-09-30; human verification deferred by the owner). Implementation: **GT-03** (reference tour, gate G1). Gujarati/Hindi: native review pending, not done (LR-08).
 Shared rules are cited by ID from [`GUIDED_TOURS_REFINEMENT_PLAN.md`](../../GUIDED_TOURS_REFINEMENT_PLAN.md). Evidence: [`audit/rate-book-and-saved-costings.md`](../audit/rate-book-and-saved-costings.md) §B.
 
 ## A. Identity and evidence

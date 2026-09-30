@@ -1,0 +1,302 @@
+{
+  "task": "GT-10",
+  "runs": 14,
+  "steps": 84,
+  "classifications": {
+    "FAIL": 14
+  },
+  "failures": [
+    {
+      "id": "gt10-0-en-1440x900",
+      "exitCode": 1,
+      "error": null,
+      "issues": [
+        "pr-settle: rail paints over target",
+        "pr-paid: rail paints over target",
+        "pr-complete: rail paints over target"
+      ],
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "id": "gt10-0-hi-1280x800",
+      "exitCode": 0,
+      "error": null,
+      "issues": [],
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "id": "gt10-0-en-1024x768",
+      "exitCode": 0,
+      "error": null,
+      "issues": [],
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "id": "gt10-0-gu-390x844",
+      "exitCode": 0,
+      "error": null,
+      "issues": [],
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "id": "gt10-0-reduced-en-1024x768",
+      "exitCode": 0,
+      "error": null,
+      "issues": [],
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "id": "gt10-1-en-1440x900",
+      "exitCode": 1,
+      "error": null,
+      "issues": [
+        "pra-advance: rail paints over target",
+        "pra-deduction: rail paints over target",
+        "pra-correct: rail paints over target"
+      ],
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "id": "gt10-1-hi-1280x800",
+      "exitCode": 0,
+      "error": null,
+      "issues": [],
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "id": "gt10-1-en-1024x768",
+      "exitCode": 0,
+      "error": null,
+      "issues": [],
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "id": "gt10-1-gu-390x844",
+      "exitCode": 0,
+      "error": null,
+      "issues": [],
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "id": "gt10-1-reduced-en-1024x768",
+      "exitCode": 0,
+      "error": null,
+      "issues": [],
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "id": "gt10-exit-payroll-en-1440x900",
+      "exitCode": 0,
+      "error": null,
+      "issues": [],
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "id": "gt10-exit-payroll-gu-390x844",
+      "exitCode": 0,
+      "error": null,
+      "issues": [],
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "id": "gt10-exit-payroll-extra-en-1440x900",
+      "exitCode": 1,
+      "error": null,
+      "issues": [
+        "pra-advance: rail paints over target",
+        "pra-deduction: rail paints over target"
+      ],
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "id": "gt10-exit-payroll-extra-gu-390x844",
+      "exitCode": 0,
+      "error": null,
+      "issues": [],
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ]
+    }
+  ],
+  "reviewNotes": "Payroll core and optional guides: 14 main runs / 84 steps plus two unchanged-runner paint probes / 14 steps. All required English desktop and Gujarati phone captures inspected. Raw guard FAIL retains one unchanged BaseProductionClient production_viewed mount POST per run; no tour-induced increment. Three main runs and both paint probes retain numeric aside/target intersections. Computed styles show transparent rail z30, dialogs z50, and no visible rail child crossing any of the six flagged targets; screenshots confirm no occlusion. Adjudicated as harness bounding-box false positives (gt10-paint-adjudication.json), without changing assertions. Preferences, live node identity, search/scroll restoration, optional guide non-completion, handoff/Exit focus and no money-handler calls verified in fixture scope. PI-01/02/03 behavior unchanged. Populated/blocked/completed live payroll and all human gates UNVERIFIED; no reproduced Major in modeled states.",
+  "status": "IN_PROGRESS",
+  "humanGates": "UNVERIFIED",
+  "visualReview": "Every captured English 1440x900 and Gujarati 390x844 step inspected",
+  "evidence": "gt10-results.json",
+  "supplementalPaintDiagnostics": [
+    {
+      "id": "gt10-paint-0-en-1440x900",
+      "task": "GT-10",
+      "scenario": "payroll",
+      "language": "en",
+      "size": "1440x900",
+      "script": "/private/tmp/weavly-review-run-paint.mjs",
+      "args": [
+        "payroll",
+        "en",
+        "1440x900",
+        "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-0-en-1440x900"
+      ],
+      "command": [
+        "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+        "170",
+        "node",
+        "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+        "env",
+        "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+        "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+        "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-0-en-1440x900/network.json",
+        "node",
+        "--import",
+        "/private/tmp/weavly-review-network.mjs",
+        "/private/tmp/weavly-review-run-paint.mjs",
+        "payroll",
+        "en",
+        "1440x900",
+        "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-0-en-1440x900"
+      ],
+      "exitCode": 1,
+      "elapsedSeconds": 46.46,
+      "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-0-en-1440x900/payroll-en-1440x900/record.json",
+      "steps": 8,
+      "error": null,
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ],
+      "classification": "FAIL",
+      "visualReview": "UNVERIFIED"
+    },
+    {
+      "id": "gt10-paint-1-en-1440x900",
+      "task": "GT-10",
+      "scenario": "payroll-extra",
+      "language": "en",
+      "size": "1440x900",
+      "script": "/private/tmp/weavly-review-run-paint.mjs",
+      "args": [
+        "payroll-extra",
+        "en",
+        "1440x900",
+        "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-1-en-1440x900"
+      ],
+      "command": [
+        "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+        "170",
+        "node",
+        "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+        "env",
+        "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+        "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+        "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-1-en-1440x900/network.json",
+        "node",
+        "--import",
+        "/private/tmp/weavly-review-network.mjs",
+        "/private/tmp/weavly-review-run-paint.mjs",
+        "payroll-extra",
+        "en",
+        "1440x900",
+        "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-1-en-1440x900"
+      ],
+      "exitCode": 1,
+      "elapsedSeconds": 43.55,
+      "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-1-en-1440x900/payroll-extra-en-1440x900/record.json",
+      "steps": 6,
+      "error": null,
+      "blockedNetwork": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ],
+      "classification": "FAIL",
+      "visualReview": "UNVERIFIED"
+    }
+  ]
+}

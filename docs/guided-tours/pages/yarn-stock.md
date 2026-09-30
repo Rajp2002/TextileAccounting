@@ -1,6 +1,6 @@
 # P10 Yarn Stock — tour specification
 
-Status: specified, not implemented. Implementation: **GT-09**. Gujarati/Hindi: native review pending.
+Status: implemented and PASSED (2026-09-30; human verification deferred by the owner). Implementation: **GT-09**. Gujarati/Hindi: native review pending, not done.
 Shared rules: [`GUIDED_TOURS_REFINEMENT_PLAN.md`](../../GUIDED_TOURS_REFINEMENT_PLAN.md). Evidence: [`audit/stock-and-dispatch.md`](../audit/stock-and-dispatch.md) §2.
 
 ## A. Identity and evidence

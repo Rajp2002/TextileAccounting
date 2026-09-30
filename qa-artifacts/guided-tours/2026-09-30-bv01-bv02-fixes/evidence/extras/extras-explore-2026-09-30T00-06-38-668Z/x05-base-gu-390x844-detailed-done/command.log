@@ -1,0 +1,16 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator('[role=tab]:text-is("Detailed")').filter({ visible: true }).first()
+
+    at /Users/rajpatel/Projects/textile Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/scratch/tour-fix-review/run-tour.mjs:80:117 {
+  log: [
+    `  - waiting for locator('[role=tab]:text-is("Detailed")').filter({ visible: true }).first()`
+  ],
+  name: 'TimeoutError'
+}
+
+Node.js v24.11.1

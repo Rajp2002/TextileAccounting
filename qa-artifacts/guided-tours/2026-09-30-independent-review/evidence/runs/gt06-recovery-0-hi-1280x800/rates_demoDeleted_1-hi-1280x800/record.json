@@ -1,0 +1,337 @@
+{
+  "scenario": "rates?demoDeleted=1",
+  "lang": "hi",
+  "size": "1280x800",
+  "steps": [
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": {
+        "x": 276,
+        "y": 144,
+        "w": 763,
+        "h": 61
+      },
+      "rateBookRow": null,
+      "rateBookSearch": "",
+      "title": "आपकी अपनी धागा रेट सूची",
+      "body": "हर ताना और बाना धागे का आपका दिया किलो रेट रखें। नई कॉस्टिंग में यही रेट सुझाए जाते हैं; धागा जोड़ने के लिए “धागा रेट जोड़ें”।",
+      "step": "rb-purpose",
+      "status": "ready",
+      "eyebrow": "चरण 1 / 6",
+      "progress": null,
+      "panel": {
+        "x": 270,
+        "y": 227,
+        "w": 360,
+        "h": 243
+      },
+      "highlight": {
+        "x": 270,
+        "y": 138,
+        "w": 775,
+        "h": 73
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "div(role=dialog)",
+      "scrollY": 0,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": {
+        "x": 291,
+        "y": 355,
+        "w": 300,
+        "h": 39
+      },
+      "rateBookRow": null,
+      "rateBookSearch": "",
+      "title": "धागा खोजें",
+      "body": "धागे के नाम या सप्लायर से खोजें। “समीक्षा बाकी” सिर्फ़ जाँच के लिए बाकी रेट दिखाता है।",
+      "step": "rb-find",
+      "status": "ready",
+      "eyebrow": "चरण 2 / 6",
+      "progress": null,
+      "panel": {
+        "x": 613,
+        "y": 349,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 285,
+        "y": 349,
+        "w": 312,
+        "h": 51
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": "",
+      "title": "सप्लायर रेट बदले तो रेट बदलें",
+      "body": "“रेट बदलें” से नया रेट और वह कहाँ से आया, जैसे बिल, लिख सकते हैं। पुराना रेट धागे के इतिहास में रहता है।",
+      "step": "rb-update",
+      "status": "unavailable",
+      "eyebrow": "चरण 3 / 6",
+      "progress": null,
+      "panel": {
+        "x": 613,
+        "y": 349,
+        "w": 360,
+        "h": 266
+      },
+      "highlight": null,
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": "",
+      "title": "याद दिलाने पर रेट दोबारा जाँचें",
+      "body": "जाँच बाकी वाला रेट अभी पुराना ही है। सप्लायर का रेट नहीं बदला तो पुष्टि करें; बदला तो सुधारें।",
+      "step": "rb-review",
+      "status": "unavailable",
+      "eyebrow": "चरण 4 / 6",
+      "progress": null,
+      "panel": {
+        "x": 613,
+        "y": 349,
+        "w": 360,
+        "h": 266
+      },
+      "highlight": null,
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": "",
+      "title": "धागा किन क्वालिटी में लगता है, यह देखें",
+      "body": "इस कॉलम में यह धागा इस्तेमाल करने वाली सेव क्वालिटी दिखती हैं। नया रेट उनकी अगली कॉस्टिंग में लगता है; सेव कॉस्टिंग के आँकड़े नहीं बदलते।",
+      "step": "rb-usage",
+      "status": "unavailable",
+      "eyebrow": "चरण 5 / 6",
+      "progress": null,
+      "panel": {
+        "x": 613,
+        "y": 349,
+        "w": 360,
+        "h": 243
+      },
+      "highlight": null,
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": {
+        "x": 1056,
+        "y": 21,
+        "w": 196,
+        "h": 39
+      },
+      "rateBookRow": null,
+      "rateBookSearch": "",
+      "title": "जो धागे आप खरीदते हैं, उन्हें जोड़ें",
+      "body": "“धागा रेट जोड़ें” चुनें और नाम, ताना या बाना, और पिछले बिल का किलो रेट लिखें।",
+      "step": "rb-handoff",
+      "status": "ready",
+      "eyebrow": "चरण 6 / 6",
+      "progress": null,
+      "panel": {
+        "x": 674,
+        "y": 16,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 1050,
+        "y": 15,
+        "w": 208,
+        "h": 51
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280
+    }
+  ],
+  "logs": [
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called getCostRateUsage",
+    "error: Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction"
+  ],
+  "apiRequests": [
+    {
+      "url": "http://localhost:5199/api/analytics/plan-events",
+      "method": "POST"
+    }
+  ],
+  "preClick": null,
+  "sampling": "legacy-900ms",
+  "rateBookBefore": {
+    "search": "",
+    "calls": 2
+  },
+  "before": {
+    "x": 0,
+    "y": 0,
+    "inner": null
+  },
+  "after": {
+    "scroll": {
+      "x": 0,
+      "y": 0,
+      "inner": null
+    },
+    "active": "<button data-slot=\"button\" data-variant=\"default\" data-size=\"default\" class=\"inline-flex items-center justify-center gap-2 whitespace-nowrap transition-[color,b",
+    "activeAnchor": null,
+    "activeRateBookField": "addRateAction",
+    "activeControl": null,
+    "serverCalls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "getCostRateUsage",
+        "file": "app/(dashboard)/owner/rates/actions.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "navigations": [],
+    "scrollCalls": [],
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"rate-book\":{\"firstShown\":\"2026-09-29T20:47:03.999Z\",\"version\":\"v1\",\"firstStarted\":true,\"completed\":true,\"completedVersion\":\"v2\"}}"
+    },
+    "search": ""
+  },
+  "issues": []
+}

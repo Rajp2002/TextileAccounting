@@ -1,12 +1,11 @@
 import type { BaseProductionMachineWithReadiness } from './machine-readiness'
+import type { TourStepSpec } from './tours/tour-types'
 
-export const machinesTourSteps = ['purpose', 'details', 'label', 'readiness', 'production', 'assignments'] as const
+export const machinesTourSteps = ['mc-purpose', 'mc-details', 'mc-readiness', 'mc-quality', 'mc-worker', 'mc-handoff'] as const
 export type MachinesTourStep = typeof machinesTourSteps[number]
+export type MachinesTourCopyKey = 'purpose' | 'details' | 'readiness' | 'quality' | 'worker' | 'handoff'
 export function machinesTourEditor(step: MachinesTourStep) {
-    return step === 'details' ? 'add' : null
-}
-export function machinesTourSection(step: MachinesTourStep) {
-    return machinesTourSteps.indexOf(step)
+    return step === 'mc-details' ? 'add' : null
 }
 export type MachinesTourExampleLabels = {
     readyName: string; incompleteName: string; label: string; worker: string; fabric: string
@@ -20,13 +19,17 @@ export function makeMachinesTourExamples(labels: MachinesTourExampleLabels = {
         { id: 'tour-machines-incomplete', name: labels.incompleteName, machine_type: 'power_loom', custom_label: null, is_active: true, hasWorker: false, hasCosting: false, assignedWorkerName: null, assignedCostingLabel: null },
     ]
 }
-const ready = '[data-machines-tour-id="tour-machines-ready"]'
 const preview = '[data-machines-tour-preview="true"][data-state="open"]'
 export const machinesTourSelectors: Record<MachinesTourStep, string> = {
-    purpose: '[data-machines-tour="header"]',
-    details: `${preview} [data-machines-tour-field="details"]`,
-    label: `${ready} [data-machines-tour="identity"]`,
-    readiness: '[data-machines-tour-id="tour-machines-incomplete"]',
-    production: '[data-machines-tour="production-next"]',
-    assignments: '[data-machines-tour="assignments-next"]',
+    'mc-purpose': '[data-machines-tour="header"]',
+    'mc-details': '[data-machines-tour-field="details"]',
+    'mc-readiness': '[data-machines-tour-id="tour-machines-incomplete"]',
+    'mc-quality': '[data-machines-tour="production-next"]',
+    'mc-worker': '[data-machines-tour="assignments-next"]',
+    'mc-handoff': '[data-tour-anchor="machines.add"]',
 }
+export const machinesTourSpecs: readonly TourStepSpec<MachinesTourStep>[] = machinesTourSteps.map(id => ({
+    id, anchor: machinesTourSelectors[id],
+    kind: id === 'mc-handoff' ? 'handoff' : id === 'mc-details' || id === 'mc-readiness' ? 'sample' : 'live',
+    ...(id === 'mc-details' ? { context: preview, detail: true } : {}),
+}))

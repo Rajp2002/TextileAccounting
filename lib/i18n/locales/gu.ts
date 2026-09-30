@@ -1,4 +1,33 @@
 export const gu = {
+  dailySheet: {
+    "printSheet": "શીટ છાપો",
+    "notRunning": "ચાલુ નથી",
+    "workerReview": "કારીગર તપાસ",
+    "saveShift": "શિફ્ટ સાચવો",
+    "editSavedLog": "સાચવેલી નોંધ સુધારો",
+    "saveCorrection": "સુધારો સેવ કરો",
+    "machineSheet": "મશીનની શીટ",
+    "discardDraft": "ડ્રાફ્ટ કાઢી નાખો",
+    "metres": "મીટર",
+    "draftOnDevice": "આ ઉપકરણ પર ડ્રાફ્ટ",
+    "showPending": "બાકી બતાવો",
+    "shiftDetails": "શિફ્ટની વિગતો"
+},
+  tourControls: {
+    rateBook: {"addRate": "યાર્ન ભાવ ઉમેરો", "needsReview": "સમીક્ષા બાકી", "advancedEdit": "વિગતવાર ફેરફાર"},
+    estimator: {
+    "saveCosting": "કોસ્ટિંગ સાચવો",
+    "saveNewVersion": "નવી વર્ઝન સાચવો"
+    },
+    savedCostings: {
+  "viewBreakdown": "વિગત જુઓ",
+  "use": "વાપરો",
+  "archived": "આર્કાઇવ કરેલી",
+  "internalEstimate": "આંતરિક ખર્ચ અંદાજ",
+  "customerQuotation": "ગ્રાહક ક્વોટેશન",
+  "activateForProduction": "ઉત્પાદન માટે ચાલુ કરો",
+  "export": "એક્સપોર્ટ કરો"
+} },
  navigation: {
   "production_overview": "ઝાંખી",
   "production_daily_sheet": "દૈનિક શીટ",
@@ -165,6 +194,8 @@ export const gu = {
 },
 
   qualityStock: {
+    audit: "સ્ટોક ઓડિટ",
+    pending: "બાકી",
         dispatch: "ડિસ્પેચ",
         dispatch_reversal: "ડિસ્પેચ ઉલટાવેલ",
     productionEntry: "ઉત્પાદન",
@@ -352,6 +383,14 @@ export const gu = {
     app_update_failure_fallback: "અપડેટ લોડ ન થાય તો કામ ચાલુ રાખો અને પછી ફરી પ્રયાસ કરો.",
   },
   production: {
+    activateQuality: "ક્વોલિટી ચાલુ કરો",
+    assignLooms: "લૂમ ફાળવો",
+    manageWorkers: "કારીગર બદલો",
+    machineBoard: "મશીન બોર્ડ",
+    switchQuality: "ક્વોલિટી બદલો",
+    qualityActions: "ક્વોલિટીના વિકલ્પો",
+    manageOperatorsForLoom: "{loom} માટે ઓપરેટરોનું સંચાલન કરો",
+    cost: "ખર્ચ",
     log_production: "પ્રોડક્શન નોંધો (Log Prod)",
     save_all: "બધા સેવ કરો (Save All Entries)",
     saving: "સેવ થઈ રહ્યું છે...",
@@ -419,6 +458,8 @@ export const gu = {
     }
   },
   assignments: {
+    assign: "ફાળવો",
+    noJob: "ઉત્પાદન કામ નથી",
     title: "કારીગરોની કામગીરી",
     day_shift: "દિવસની પાળી",
     night_shift: "રાતની પાળી",
@@ -566,6 +607,27 @@ export const gu = {
     }
   },
   payroll: {
+    preparingPdf: "PDF તૈયાર થઈ રહ્યું છે…",
+    "settlePayroll": "પેરોલ સેટલ કરો",
+    "resolve": "બંધ કરો",
+    "markPaid": "ચૂકવાયું નોંધો",
+    "completePayroll": "પેરોલ પૂર્ણ કરો",
+    "addAdvance": "ઉપાડ ઉમેરો",
+    "addDeduction": "કપાત ઉમેરો",
+    "payrollRecords": "પેરોલ રેકોર્ડ",
+    "exportCsv": "CSV એક્સપોર્ટ કરો",
+    "exportPdf": "PDF એક્સપોર્ટ કરો",
+    "resolveMistaken": "ખોટો ચુકવણી રેકોર્ડ સુધારો",
+    "continueSettlement": "સેટલમેન્ટ ચાલુ રાખો",
+    "viewSettledPayroll": "સેટલ થયેલો પેરોલ જુઓ",
+    "reviewBeforePaying": "ચૂકવતાં પહેલાં તપાસો",
+    "confirmPayment": "ચુકવણીની પુષ્ટિ કરો",
+    "viewSettledRecords": "સેટલ થયેલા રેકોર્ડ જુઓ",
+    "completePeriodTitle": "શું {periodLabel}નો પેરોલ પૂર્ણ કરવો છે?",
+    "markPaidCard": "ચૂકવાયું નોંધો",
+    "completePayrollRail": "પેરોલ પૂર્ણ કરો",
+    "needsReview": "સમીક્ષા બાકી",
+
     monthly_payroll: "માસિક પગાર (Monthly Payroll)",
     track_settle: "કારીગરોના પગારનું ધ્યાન રાખો અને ચૂકવણી કરો",
     status: {
@@ -1034,6 +1096,14 @@ export const gu = {
     }
   },
   workers: {
+    addWorker: "કારીગર ઉમેરો",
+    viewPayroll: "પેરોલ જુઓ",
+    fixedMonthlySalary: "સ્થિર માસિક પગાર",
+    salaryEffectiveFrom: "પગાર ફેરફાર લાગુ તારીખ",
+    lastWorkingDay: "છેલ્લો કામકાજનો દિવસ (વૈકલ્પિક)",
+    shiftAvailability: "શિફ્ટ ઉપલબ્ધતા",
+    joiningDate: "જોડાયાની તારીખ",
+
     manage_workers: "કારીગરો મેનેજ કરો",
     meter_workers: "પીસ-રેટ કારીગર",
     fixed_staff: "પગારદાર કારીગર",
@@ -1507,5 +1577,12 @@ export const gu = {
       data_export_generated: "ડેટા એક્સપોર્ટ તૈયાર છે",
       latest_saved_costing_breakdown: "નવીનતમ સાચવેલી કોસ્ટિંગની વિગતો",
     },
-  }
+  },
+  // Approved Estimator phrases follow existing dictionary phrases with the same English source.
+  estimatorTourPhrases: {
+    "changeQuality": "ક્વોલિટી બદલો",
+    "liveCost": "લાઇવ ખર્ચ",
+    "calculateSave": "ગણતરી કરો અને સાચવો · 1 કોસ્ટિંગ વપરાશે",
+    "startProduction": "ઉત્પાદન શરૂ કરો"
+}
 }

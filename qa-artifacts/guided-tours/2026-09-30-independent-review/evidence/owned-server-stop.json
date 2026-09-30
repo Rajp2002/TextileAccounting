@@ -1,0 +1,7 @@
+{
+  "pid": 70042,
+  "commandBefore": "70042 node node_modules/vite/bin/vite.js --config scratch/browser-verification-harness/vite.config.mjs --host 127.0.0.1",
+  "signal": "SIGTERM",
+  "stopped": true,
+  "scope": "Only the Vite process started for this isolated synthetic browser review"
+}

@@ -1,0 +1,622 @@
+{
+  "scenario": "production",
+  "lang": "en",
+  "size": "1440x900",
+  "steps": [
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "From costing to daily production",
+      "body": "Here a saved costing becomes a quality running on your looms. Metres recorded each shift then add fabric stock and worker pay.",
+      "step": "pd-overview",
+      "status": "ready",
+      "eyebrow": "Sample · Step 1 of 7",
+      "progress": null,
+      "panel": {
+        "x": 101,
+        "y": 112,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 477,
+        "y": 112,
+        "w": 735,
+        "h": 81
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "div(role=dialog)",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440,
+      "production": {
+        "mounts": 1,
+        "unmounts": 0,
+        "search": "Retained search",
+        "sameSearchNode": true,
+        "filter": [
+          false,
+          false,
+          true
+        ],
+        "storage": {
+          "weavly_language": "en"
+        },
+        "liveHidden": true,
+        "replica": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0,
+        "calls": 2,
+        "apiCalls": 1
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Four things must exist first",
+      "body": "A saved costing, stock of every yarn in it, your machines, and your workers. A quality cannot start while any of its yarns has no stock.",
+      "step": "pd-prereq",
+      "status": "ready",
+      "eyebrow": "Sample · Step 2 of 7",
+      "progress": null,
+      "panel": {
+        "x": 101,
+        "y": 112,
+        "w": 360,
+        "h": 243
+      },
+      "highlight": {
+        "x": 477,
+        "y": 112,
+        "w": 735,
+        "h": 144
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440,
+      "production": {
+        "mounts": 1,
+        "unmounts": 0,
+        "search": "Retained search",
+        "sameSearchNode": true,
+        "filter": [
+          false,
+          false,
+          true
+        ],
+        "storage": {
+          "weavly_language": "en"
+        },
+        "liveHidden": true,
+        "replica": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0,
+        "calls": 2,
+        "apiCalls": 1
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Activate a quality with its wage",
+      "body": "“Activate Quality” picks a saved costing version and the weaver wage per metre, here ₹2/m. The wage is what workers earn on this quality.",
+      "step": "pd-activate",
+      "status": "ready",
+      "eyebrow": "Sample · Step 3 of 7",
+      "progress": null,
+      "panel": {
+        "x": 816,
+        "y": 274,
+        "w": 360,
+        "h": 243
+      },
+      "highlight": {
+        "x": 304,
+        "y": 372,
+        "w": 480,
+        "h": 238
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 288,
+        "y": 274,
+        "w": 512,
+        "h": 352
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440,
+      "production": {
+        "mounts": 1,
+        "unmounts": 0,
+        "search": "Retained search",
+        "sameSearchNode": true,
+        "filter": [
+          false,
+          false,
+          true
+        ],
+        "storage": {
+          "weavly_language": "en"
+        },
+        "liveHidden": true,
+        "replica": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0,
+        "calls": 2,
+        "apiCalls": 1
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Put the quality on looms",
+      "body": "“Assign Looms” ticks the looms that will weave it. A loom weaves one quality at a time.",
+      "step": "pd-looms",
+      "status": "ready",
+      "eyebrow": "Sample · Step 4 of 7",
+      "progress": null,
+      "panel": {
+        "x": 816,
+        "y": 255,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 304,
+        "y": 353,
+        "w": 480,
+        "h": 276
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 288,
+        "y": 255,
+        "w": 512,
+        "h": 389
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440,
+      "production": {
+        "mounts": 1,
+        "unmounts": 0,
+        "search": "Retained search",
+        "sameSearchNode": true,
+        "filter": [
+          false,
+          false,
+          true
+        ],
+        "storage": {
+          "weavly_language": "en"
+        },
+        "liveHidden": true,
+        "replica": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0,
+        "calls": 2,
+        "apiCalls": 1
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Give each loom a worker per shift",
+      "body": "“Manage Workers” sets the day and night operator of a loom. You can also do this for many looms in Machine Assignments.",
+      "step": "pd-operators",
+      "status": "ready",
+      "eyebrow": "Sample · Step 5 of 7",
+      "progress": null,
+      "panel": {
+        "x": 101,
+        "y": 527,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 477,
+        "y": 527,
+        "w": 735,
+        "h": 319
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440,
+      "production": {
+        "mounts": 1,
+        "unmounts": 0,
+        "search": "Retained search",
+        "sameSearchNode": true,
+        "filter": [
+          false,
+          false,
+          true
+        ],
+        "storage": {
+          "weavly_language": "en"
+        },
+        "liveHidden": true,
+        "replica": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0,
+        "calls": 2,
+        "apiCalls": 1
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Read the machine board",
+      "body": "“Machine Board” shows each loom as running or available, with its quality and operators.",
+      "step": "pd-board",
+      "status": "ready",
+      "eyebrow": "Sample · Step 6 of 7",
+      "progress": null,
+      "panel": {
+        "x": 101,
+        "y": 587,
+        "w": 360,
+        "h": 221
+      },
+      "highlight": {
+        "x": 477,
+        "y": 587,
+        "w": 735,
+        "h": 270
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 264,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440,
+      "production": {
+        "mounts": 1,
+        "unmounts": 0,
+        "search": "Retained search",
+        "sameSearchNode": true,
+        "filter": [
+          false,
+          false,
+          true
+        ],
+        "storage": {
+          "weavly_language": "en"
+        },
+        "liveHidden": true,
+        "replica": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0,
+        "calls": 2,
+        "apiCalls": 1
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Start your first quality",
+      "body": "Choose “Activate Quality” to put a quality on your looms. Then record each shift's metres on the Daily Sheet.",
+      "step": "pd-handoff",
+      "status": "ready",
+      "eyebrow": "Step 7 of 7",
+      "progress": null,
+      "panel": {
+        "x": 841,
+        "y": 16,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 1217,
+        "y": 15,
+        "w": 208,
+        "h": 51
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 31,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440,
+      "production": {
+        "mounts": 1,
+        "unmounts": 0,
+        "search": "Retained search",
+        "sameSearchNode": true,
+        "filter": [
+          false,
+          false,
+          true
+        ],
+        "storage": {
+          "weavly_language": "en"
+        },
+        "liveHidden": false,
+        "replica": false,
+        "anchors": 1,
+        "enabledReplicaControls": 0,
+        "calls": 2,
+        "apiCalls": 1
+      }
+    }
+  ],
+  "logs": [
+    "warning: [harness] server action called recordTourEventAction",
+    "error: Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction"
+  ],
+  "apiRequests": [
+    {
+      "url": "http://localhost:5199/api/analytics/plan-events",
+      "method": "POST"
+    }
+  ],
+  "preClick": null,
+  "sampling": "legacy-900ms",
+  "before": {
+    "x": 0,
+    "y": 0,
+    "inner": null
+  },
+  "productionBefore": {
+    "mounts": 1,
+    "unmounts": 0,
+    "search": "Retained search",
+    "sameSearchNode": true,
+    "filter": [
+      false,
+      false,
+      true
+    ],
+    "storage": {
+      "weavly_language": "en"
+    },
+    "liveHidden": false,
+    "replica": false,
+    "anchors": 1,
+    "enabledReplicaControls": 0,
+    "calls": 1,
+    "apiCalls": 1
+  },
+  "after": {
+    "scroll": {
+      "x": 0,
+      "y": 0,
+      "inner": null
+    },
+    "active": "<button data-slot=\"button\" data-variant=\"default\" data-size=\"default\" class=\"inline-flex items-center justify-center gap-2 whitespace-nowrap transition-[color,b",
+    "activeAnchor": "production.activate",
+    "activeRateBookField": null,
+    "activeControl": null,
+    "serverCalls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "navigations": [],
+    "scrollCalls": [
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "smooth"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      }
+    ],
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"production\":{\"firstShown\":\"2026-09-29T21:50:07.026Z\",\"version\":\"v1\",\"firstStarted\":true,\"completed\":true,\"completedVersion\":\"v2\"}}"
+    },
+    "production": {
+      "mounts": 1,
+      "unmounts": 0,
+      "search": "Retained search",
+      "sameSearchNode": true,
+      "filter": [
+        false,
+        false,
+        true
+      ],
+      "storage": {
+        "weavly_language": "en"
+      },
+      "liveHidden": false,
+      "replica": false,
+      "anchors": 1,
+      "enabledReplicaControls": 0,
+      "calls": 3,
+      "apiCalls": 1
+    },
+    "search": null
+  },
+  "issues": [
+    "pd-activate: rail intersects target",
+    "pd-looms: rail intersects target"
+  ]
+}

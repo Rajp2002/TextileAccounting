@@ -18,6 +18,8 @@ GT-09. Rebuild the Yarn Stock tour (7 steps) on the GT-08 wrapper with the curre
 
 `YarnStockTourPreview.tsx`, `lib/stock-tour.ts` (yarn), `lib/i18n/stock-tutorial.ts` (yarn; remove `yarnStockTutorialHelp`), `YarnStockClient.tsx` (anchor `yarn.opening`), registry `yarn-stock` → `v2`, listed tests, contract test, harness.
 
+Owner-approved addition (2026-09-28): the owner answered “approved continue” to the GT-09 wrapper escalation in its worker chat. `components/stock/StockGuidedTour.tsx` may receive Yarn-only step/copy/control-token/detail wiring, remove the retired `YarnStockHelp`/`yarnStockTutorialHelp` integration, and supply the specified live Opening weight handoff. Preserve Fabric Stock behavior, the shared runtime and all business behavior. No additional translation or scope exception is granted.
+
 ## Protected surface
 
 Yarn RPCs, pending-request storage, dated view and CSV, `yarnStockText` values.

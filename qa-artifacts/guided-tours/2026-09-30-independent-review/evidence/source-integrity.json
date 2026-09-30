@@ -1,0 +1,14 @@
+{
+  "headUnchanged": true,
+  "branchUnchanged": true,
+  "applicationFingerprint": "a70241eef16e00357e5bb1be433f3e991f9a02777ba08e535c4ce2a091189167",
+  "applicationUnchanged": true,
+  "fileChanges": [
+    {
+      "file": "docs/guided-tours/EXECUTION_STATUS.md",
+      "before": "b785f18c98d830bc0769bfc417ab22e87e8d31159c0bab7386382772f870d2b7",
+      "after": "ed5c07f71acd6a6a87fe7f730bd6e15aad3866a50d996660ee30ea350da92458"
+    }
+  ],
+  "allowedChangesOnly": true
+}

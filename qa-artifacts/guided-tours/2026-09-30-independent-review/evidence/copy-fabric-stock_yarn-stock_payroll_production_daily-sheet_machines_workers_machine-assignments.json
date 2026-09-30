@@ -1,0 +1,1649 @@
+{
+  "fabric-stock": {
+    "matched": 45,
+    "mismatches": [],
+    "unmatched": [],
+    "spotChecks": [
+      {
+        "key": "balance.title",
+        "lang": "en",
+        "expected": "Fabric ready to send, by quality",
+        "actual": "Fabric ready to send, by quality"
+      },
+      {
+        "key": "balance.title",
+        "lang": "gu",
+        "expected": "મોકલવા તૈયાર કાપડ, ક્વોલિટી પ્રમાણે",
+        "actual": "મોકલવા તૈયાર કાપડ, ક્વોલિટી પ્રમાણે"
+      },
+      {
+        "key": "balance.title",
+        "lang": "hi",
+        "expected": "भेजने को तैयार कपड़ा, क्वालिटी के अनुसार",
+        "actual": "भेजने को तैयार कपड़ा, क्वालिटी के अनुसार"
+      },
+      {
+        "key": "balance.body",
+        "lang": "en",
+        "expected": "Saved shifts add metres and confirmed dispatches remove them. Here 200 m made − 100 m sent = 100 m.",
+        "actual": "Saved shifts add metres and confirmed dispatches remove them. Here 200 m made − 100 m sent = 100 m."
+      },
+      {
+        "key": "balance.body",
+        "lang": "gu",
+        "expected": "સાચવેલી શિફ્ટ મીટર ઉમેરે છે અને ખાતરી કરેલા ડિસ્પેચ ઘટાડે છે. અહીં 200 મીટર બન્યું − 100 મીટર ગયું = 100 મીટર.",
+        "actual": "સાચવેલી શિફ્ટ મીટર ઉમેરે છે અને ખાતરી કરેલા ડિસ્પેચ ઘટાડે છે. અહીં 200 મીટર બન્યું − 100 મીટર ગયું = 100 મીટર."
+      },
+      {
+        "key": "balance.body",
+        "lang": "hi",
+        "expected": "सेव शिफ्ट मीटर जोड़ती हैं और पुष्टि किए डिस्पैच घटाते हैं। यहाँ 200 मीटर बना − 100 मीटर गया = 100 मीटर।",
+        "actual": "सेव शिफ्ट मीटर जोड़ती हैं और पुष्टि किए डिस्पैच घटाते हैं। यहाँ 200 मीटर बना − 100 मीटर गया = 100 मीटर।"
+      },
+      {
+        "key": "pending.title",
+        "lang": "en",
+        "expected": "Add the fabric you had before Weavly",
+        "actual": "Add the fabric you had before Weavly"
+      },
+      {
+        "key": "pending.title",
+        "lang": "gu",
+        "expected": "Weavly પહેલાંનું કાપડ ઉમેરો",
+        "actual": "Weavly પહેલાંનું કાપડ ઉમેરો"
+      },
+      {
+        "key": "pending.title",
+        "lang": "hi",
+        "expected": "Weavly से पहले का कपड़ा जोड़ें",
+        "actual": "Weavly से पहले का कपड़ा जोड़ें"
+      },
+      {
+        "key": "pending.body",
+        "lang": "en",
+        "expected": "A quality marked {c:pending} has no opening stock yet. Count the finished fabric you already had and record it once.",
+        "actual": "A quality marked {c:pending} has no opening stock yet. Count the finished fabric you already had and record it once."
+      },
+      {
+        "key": "pending.body",
+        "lang": "gu",
+        "expected": "{c:pending} લખેલી ક્વોલિટીનો શરૂઆતનો સ્ટોક હજી નોંધાયો નથી. તમારી પાસે પહેલેથી હતું તે તૈયાર કાપડ ગણી એક વાર નોંધો.",
+        "actual": "{c:pending} લખેલી ક્વોલિટીનો શરૂઆતનો સ્ટોક હજી નોંધાયો નથી. તમારી પાસે પહેલેથી હતું તે તૈયાર કાપડ ગણી એક વાર નોંધો."
+      },
+      {
+        "key": "pending.body",
+        "lang": "hi",
+        "expected": "{c:pending} लिखी क्वालिटी का शुरुआती स्टॉक अभी दर्ज नहीं है। आपके पास पहले से पड़ा तैयार कपड़ा गिनकर एक बार दर्ज करें।",
+        "actual": "{c:pending} लिखी क्वालिटी का शुरुआती स्टॉक अभी दर्ज नहीं है। आपके पास पहले से पड़ा तैयार कपड़ा गिनकर एक बार दर्ज करें।"
+      },
+      {
+        "key": "opening.title",
+        "lang": "en",
+        "expected": "Opening stock is added once",
+        "actual": "Opening stock is added once"
+      },
+      {
+        "key": "opening.title",
+        "lang": "gu",
+        "expected": "શરૂઆતનો સ્ટોક એક જ વાર ઉમેરાય છે",
+        "actual": "શરૂઆતનો સ્ટોક એક જ વાર ઉમેરાય છે"
+      },
+      {
+        "key": "opening.title",
+        "lang": "hi",
+        "expected": "शुरुआती स्टॉक एक ही बार जुड़ता है",
+        "actual": "शुरुआती स्टॉक एक ही बार जुड़ता है"
+      }
+    ]
+  },
+  "yarn-stock": {
+    "matched": 54,
+    "mismatches": [],
+    "unmatched": [],
+    "spotChecks": [
+      {
+        "key": "balance.title",
+        "lang": "en",
+        "expected": "Unused yarn, by yarn",
+        "actual": "Unused yarn, by yarn"
+      },
+      {
+        "key": "balance.title",
+        "lang": "gu",
+        "expected": "વણવપરાયેલું યાર્ન, યાર્ન પ્રમાણે",
+        "actual": "વણવપરાયેલું યાર્ન, યાર્ન પ્રમાણે"
+      },
+      {
+        "key": "balance.title",
+        "lang": "hi",
+        "expected": "बिना इस्तेमाल धागा, धागे के अनुसार",
+        "actual": "बिना इस्तेमाल धागा, धागे के अनुसार"
+      },
+      {
+        "key": "balance.body",
+        "lang": "en",
+        "expected": "This is yarn on hand that has not been woven yet, in kg. Here 100 kg.",
+        "actual": "This is yarn on hand that has not been woven yet, in kg. Here 100 kg."
+      },
+      {
+        "key": "balance.body",
+        "lang": "gu",
+        "expected": "આ હાથ પરનું હજી વણાયું ન હોય તેવું યાર્ન છે, કિલોમાં. અહીં 100 કિલો.",
+        "actual": "આ હાથ પરનું હજી વણાયું ન હોય તેવું યાર્ન છે, કિલોમાં. અહીં 100 કિલો."
+      },
+      {
+        "key": "balance.body",
+        "lang": "hi",
+        "expected": "यह हाथ में पड़ा, अभी न बुना गया धागा है, किलो में। यहाँ 100 किलो।",
+        "actual": "यह हाथ में पड़ा, अभी न बुना गया धागा है, किलो में। यहाँ 100 किलो।"
+      },
+      {
+        "key": "balance.detail",
+        "lang": "en",
+        "expected": "Yarn already woven into fabric that is still in your stock is not lost. {c:auditInventory} adds it back from each quality's kg per 100 m, so you see all the yarn you own.",
+        "actual": "Yarn already woven into fabric that is still in your stock is not lost. {c:auditInventory} adds it back from each quality's kg per 100 m, so you see all the yarn you own."
+      },
+      {
+        "key": "balance.detail",
+        "lang": "gu",
+        "expected": "સ્ટોકમાં પડેલા કાપડમાં વણાઈ ગયેલું યાર્ન ખોવાતું નથી. {c:auditInventory} દરેક ક્વોલિટીના 100 મીટરે કિલો પ્રમાણે તે પાછું ઉમેરે છે, જેથી તમારી પાસેનું બધું યાર્ન દેખાય.",
+        "actual": "સ્ટોકમાં પડેલા કાપડમાં વણાઈ ગયેલું યાર્ન ખોવાતું નથી. {c:auditInventory} દરેક ક્વોલિટીના 100 મીટરે કિલો પ્રમાણે તે પાછું ઉમેરે છે, જેથી તમારી પાસેનું બધું યાર્ન દેખાય."
+      },
+      {
+        "key": "balance.detail",
+        "lang": "hi",
+        "expected": "स्टॉक में पड़े कपड़े में बुना जा चुका धागा खोता नहीं। {c:auditInventory} हर क्वालिटी के 100 मीटर पर किलो के हिसाब से उसे वापस जोड़ता है, ताकि आपके पास का सारा धागा दिखे।",
+        "actual": "स्टॉक में पड़े कपड़े में बुना जा चुका धागा खोता नहीं। {c:auditInventory} हर क्वालिटी के 100 मीटर पर किलो के हिसाब से उसे वापस जोड़ता है, ताकि आपके पास का सारा धागा दिखे।"
+      },
+      {
+        "key": "opening.title",
+        "lang": "en",
+        "expected": "Record the yarn you already have",
+        "actual": "Record the yarn you already have"
+      },
+      {
+        "key": "opening.title",
+        "lang": "gu",
+        "expected": "તમારી પાસેનું યાર્ન નોંધો",
+        "actual": "તમારી પાસેનું યાર્ન નોંધો"
+      },
+      {
+        "key": "opening.title",
+        "lang": "hi",
+        "expected": "आपके पास पड़ा धागा दर्ज करें",
+        "actual": "आपके पास पड़ा धागा दर्ज करें"
+      },
+      {
+        "key": "opening.body",
+        "lang": "en",
+        "expected": "{c:openingWeight} records each yarn's weight once, when you start: here 100 kg.",
+        "actual": "{c:openingWeight} records each yarn's weight once, when you start: here 100 kg."
+      },
+      {
+        "key": "opening.body",
+        "lang": "gu",
+        "expected": "{c:openingWeight} શરૂઆતમાં દરેક યાર્નનું વજન એક વાર નોંધે છે: અહીં 100 કિલો.",
+        "actual": "{c:openingWeight} શરૂઆતમાં દરેક યાર્નનું વજન એક વાર નોંધે છે: અહીં 100 કિલો."
+      },
+      {
+        "key": "opening.body",
+        "lang": "hi",
+        "expected": "{c:openingWeight} शुरुआत में हर धागे का वज़न एक बार दर्ज करता है: यहाँ 100 किलो।",
+        "actual": "{c:openingWeight} शुरुआत में हर धागे का वज़न एक बार दर्ज करता है: यहाँ 100 किलो।"
+      }
+    ]
+  },
+  "payroll": {
+    "matched": 21,
+    "mismatches": [],
+    "unmatched": [
+      {
+        "key": "period.title",
+        "lang": "en",
+        "expected": "Pay one period at a time"
+      },
+      {
+        "key": "period.title",
+        "lang": "gu",
+        "expected": "એક વખતે એક સમયગાળાનો પગાર"
+      },
+      {
+        "key": "period.title",
+        "lang": "hi",
+        "expected": "एक बार में एक अवधि का वेतन"
+      },
+      {
+        "key": "period.body",
+        "lang": "en",
+        "expected": "Each period follows your pay cycle. Paying a worker and completing the period are separate steps."
+      },
+      {
+        "key": "period.body",
+        "lang": "gu",
+        "expected": "દરેક સમયગાળો તમારા પગાર ચક્ર પ્રમાણે છે. કારીગરને ચૂકવવું અને સમયગાળો પૂર્ણ કરવો અલગ પગલાં છે."
+      },
+      {
+        "key": "period.body",
+        "lang": "hi",
+        "expected": "हर अवधि आपके वेतन चक्र के अनुसार है। कारीगर को भुगतान करना और अवधि पूरी करना अलग कदम हैं।"
+      },
+      {
+        "key": "period.detail",
+        "lang": "en",
+        "expected": "The cycle (for example monthly) is set in Settings → Payroll."
+      },
+      {
+        "key": "period.detail",
+        "lang": "gu",
+        "expected": "ચક્ર (જેમ કે માસિક) સેટિંગ્સ → પેરોલમાં નક્કી થાય છે."
+      },
+      {
+        "key": "period.detail",
+        "lang": "hi",
+        "expected": "चक्र (जैसे मासिक) सेटिंग्स → पेरोल में तय होता है।"
+      },
+      {
+        "key": "readiness.title",
+        "lang": "en",
+        "expected": "Fix readiness issues first"
+      },
+      {
+        "key": "readiness.title",
+        "lang": "gu",
+        "expected": "પહેલાં તૈયારીની ખામીઓ સુધારો"
+      },
+      {
+        "key": "readiness.title",
+        "lang": "hi",
+        "expected": "पहले तैयारी की कमियाँ ठीक करें"
+      },
+      {
+        "key": "readiness.body",
+        "lang": "en",
+        "expected": "Missing production readings or pay setup are listed here. Fix each one on the Daily Sheet or in Workers before paying."
+      },
+      {
+        "key": "readiness.body",
+        "lang": "gu",
+        "expected": "ખૂટતાં ઉત્પાદન રીડિંગ કે પગાર સેટઅપ અહીં દેખાય છે. ચૂકવતાં પહેલાં દરેકને દૈનિક શીટ કે કારીગરોમાં સુધારો."
+      },
+      {
+        "key": "readiness.body",
+        "lang": "hi",
+        "expected": "छूटी उत्पादन रीडिंग या वेतन सेटअप यहाँ दिखते हैं। भुगतान से पहले हर एक को दैनिक शीट या कारीगर में ठीक करें।"
+      },
+      {
+        "key": "earnings.title",
+        "lang": "en",
+        "expected": "How gross pay is worked out"
+      },
+      {
+        "key": "earnings.title",
+        "lang": "gu",
+        "expected": "કુલ પગાર કેવી રીતે ગણાય છે"
+      },
+      {
+        "key": "earnings.title",
+        "lang": "hi",
+        "expected": "कुल वेतन कैसे निकलता है"
+      },
+      {
+        "key": "earnings.body",
+        "lang": "en",
+        "expected": "Piece-rate pay is metres × wage: 1,000 m × ₹2/m = ₹2,000. A salary is paid for the days worked in the period."
+      },
+      {
+        "key": "earnings.body",
+        "lang": "gu",
+        "expected": "પીસ રેટ પગાર = મીટર × મજૂરી: 1,000 મીટર × ₹2/મીટર = ₹2,000. પગારદારને સમયગાળામાં કામ કરેલા દિવસોનો પગાર મળે છે."
+      },
+      {
+        "key": "earnings.body",
+        "lang": "hi",
+        "expected": "पीस रेट वेतन = मीटर × मजदूरी: 1,000 मीटर × ₹2/मीटर = ₹2,000। वेतन वालों को अवधि में काम के दिनों का वेतन मिलता है।"
+      },
+      {
+        "key": "recovery.title",
+        "lang": "en",
+        "expected": "Advances are recovered from pay"
+      },
+      {
+        "key": "recovery.title",
+        "lang": "gu",
+        "expected": "ઉપાડ પગારમાંથી વસૂલાય છે"
+      },
+      {
+        "key": "recovery.title",
+        "lang": "hi",
+        "expected": "उपाड़ वेतन से वसूला जाता है"
+      },
+      {
+        "key": "recovery.body",
+        "lang": "en",
+        "expected": "Up to half of gross pay recovers advances and deductions: ₹1,000 of ₹2,000 here, leaving ₹1,000 to pay. Any rest carries forward."
+      },
+      {
+        "key": "recovery.body",
+        "lang": "gu",
+        "expected": "કુલ પગારમાંથી વધુમાં વધુ અડધો ઉપાડ અને કપાતમાં જાય: અહીં ₹2,000 માંથી ₹1,000, ચૂકવવાના ₹1,000 રહે. બાકી આગળ જાય છે."
+      },
+      {
+        "key": "recovery.body",
+        "lang": "hi",
+        "expected": "कुल वेतन का अधिकतम आधा उपाड़ और कटौती में जाता है: यहाँ ₹2,000 में से ₹1,000, देने को ₹1,000 बचते हैं। बाकी आगे जाता है।"
+      },
+      {
+        "key": "settle.title",
+        "lang": "en",
+        "expected": "Open the settlement to pay"
+      },
+      {
+        "key": "settle.title",
+        "lang": "gu",
+        "expected": "ચૂકવવા સેટલમેન્ટ ખોલો"
+      },
+      {
+        "key": "settle.title",
+        "lang": "hi",
+        "expected": "भुगतान के लिए निपटान खोलें"
+      },
+      {
+        "key": "settle.body",
+        "lang": "en",
+        "expected": "{c:settlePayroll} lists every worker with the net amount to pay for this period."
+      },
+      {
+        "key": "settle.body",
+        "lang": "gu",
+        "expected": "{c:settlePayroll}માં આ સમયગાળામાં દરેક કારીગરને ચૂકવવાની ચોખ્ખી રકમ દેખાય છે."
+      },
+      {
+        "key": "settle.body",
+        "lang": "hi",
+        "expected": "{c:settlePayroll} में इस अवधि में हर कारीगर को देने की शुद्ध रकम दिखती है।"
+      },
+      {
+        "key": "settle.detail",
+        "lang": "en",
+        "expected": "A worker with nothing to pay is closed with {c:resolve} instead of a payment."
+      },
+      {
+        "key": "settle.detail",
+        "lang": "gu",
+        "expected": "ચૂકવવાનું કંઈ ન હોય તે કારીગરને ચુકવણીને બદલે {c:resolve}થી બંધ કરો."
+      },
+      {
+        "key": "settle.detail",
+        "lang": "hi",
+        "expected": "जिसे कुछ नहीं देना, उस कारीगर को भुगतान के बजाय {c:resolve} से बंद करें।"
+      },
+      {
+        "key": "paid.title",
+        "lang": "en",
+        "expected": "Record each payment you made"
+      },
+      {
+        "key": "paid.title",
+        "lang": "gu",
+        "expected": "તમે કરેલી દરેક ચુકવણી નોંધો"
+      },
+      {
+        "key": "paid.title",
+        "lang": "hi",
+        "expected": "अपना किया हर भुगतान दर्ज करें"
+      },
+      {
+        "key": "paid.body",
+        "lang": "en",
+        "expected": "{c:markPaid} records that you paid the worker in cash, bank or UPI. Weavly does not move any money."
+      },
+      {
+        "key": "paid.body",
+        "lang": "gu",
+        "expected": "{c:markPaid} નોંધે છે કે તમે કારીગરને રોકડ, બેંક કે UPIથી ચૂકવ્યા. Weavly કોઈ પૈસા મોકલતું નથી."
+      },
+      {
+        "key": "paid.body",
+        "lang": "hi",
+        "expected": "{c:markPaid} दर्ज करता है कि आपने कारीगर को नकद, बैंक या UPI से भुगतान किया। Weavly कोई पैसा नहीं भेजता।"
+      },
+      {
+        "key": "complete.title",
+        "lang": "en",
+        "expected": "Complete the period last"
+      },
+      {
+        "key": "complete.title",
+        "lang": "gu",
+        "expected": "સમયગાળો છેલ્લે પૂર્ણ કરો"
+      },
+      {
+        "key": "complete.title",
+        "lang": "hi",
+        "expected": "अवधि सबसे आख़िर में पूरी करें"
+      },
+      {
+        "key": "complete.body",
+        "lang": "en",
+        "expected": "When every worker is paid or resolved, {c:completePayroll} closes the period and keeps it in records."
+      },
+      {
+        "key": "complete.body",
+        "lang": "gu",
+        "expected": "દરેક કારીગર ચૂકવાઈ જાય કે બંધ થાય પછી {c:completePayroll} સમયગાળો બંધ કરી રેકોર્ડમાં રાખે છે."
+      },
+      {
+        "key": "complete.body",
+        "lang": "hi",
+        "expected": "हर कारीगर का भुगतान हो जाए या बंद हो जाए, तब {c:completePayroll} अवधि बंद करके रिकॉर्ड में रखता है।"
+      },
+      {
+        "key": "handoff.title",
+        "lang": "en",
+        "expected": "Pay this period's workers"
+      },
+      {
+        "key": "handoff.title",
+        "lang": "gu",
+        "expected": "આ સમયગાળાના કારીગરોને ચૂકવો"
+      },
+      {
+        "key": "handoff.title",
+        "lang": "hi",
+        "expected": "इस अवधि के कारीगरों को भुगतान करें"
+      },
+      {
+        "key": "handoff.body",
+        "lang": "en",
+        "expected": "When readiness is clear, open the settlement here and record each payment as you make it."
+      },
+      {
+        "key": "handoff.body",
+        "lang": "gu",
+        "expected": "તૈયારી પૂરી થાય એટલે અહીં સેટલમેન્ટ ખોલો અને દરેક ચુકવણી કરતાં જ નોંધો."
+      },
+      {
+        "key": "handoff.body",
+        "lang": "hi",
+        "expected": "तैयारी पूरी होने पर यहाँ निपटान खोलें और हर भुगतान करते ही दर्ज करें।"
+      },
+      {
+        "key": "advance.title",
+        "lang": "en",
+        "expected": "Record an advance when you give it"
+      },
+      {
+        "key": "advance.title",
+        "lang": "gu",
+        "expected": "ઉપાડ આપો ત્યારે નોંધો"
+      },
+      {
+        "key": "advance.title",
+        "lang": "hi",
+        "expected": "उपाड़ दें तब दर्ज करें"
+      },
+      {
+        "key": "advance.body",
+        "lang": "en",
+        "expected": "{c:addAdvance} on a worker records money given ahead of pay. It is recovered from later pay under the half-of-gross limit."
+      },
+      {
+        "key": "advance.body",
+        "lang": "gu",
+        "expected": "કારીગર પર {c:addAdvance} પગાર પહેલાં આપેલા પૈસા નોંધે છે. તે પછીના પગારમાંથી અડધા સુધીની મર્યાદામાં વસૂલાય છે."
+      },
+      {
+        "key": "advance.body",
+        "lang": "hi",
+        "expected": "कारीगर पर {c:addAdvance} वेतन से पहले दिए पैसे दर्ज करता है। यह बाद के वेतन से आधे तक की सीमा में वसूला जाता है।"
+      },
+      {
+        "key": "deduction.title",
+        "lang": "en",
+        "expected": "Record a deduction with its reason"
+      },
+      {
+        "key": "deduction.title",
+        "lang": "gu",
+        "expected": "કારણ સાથે કપાત નોંધો"
+      },
+      {
+        "key": "deduction.title",
+        "lang": "hi",
+        "expected": "कारण के साथ कटौती दर्ज करें"
+      },
+      {
+        "key": "deduction.body",
+        "lang": "en",
+        "expected": "{c:addDeduction} records an amount to recover, such as damage. It is recovered together with advances, under the same limit."
+      },
+      {
+        "key": "deduction.body",
+        "lang": "gu",
+        "expected": "{c:addDeduction} વસૂલવાની રકમ, જેમ કે નુકસાન, નોંધે છે. તે ઉપાડ સાથે એ જ મર્યાદામાં વસૂલાય છે."
+      },
+      {
+        "key": "deduction.body",
+        "lang": "hi",
+        "expected": "{c:addDeduction} वसूलने की रकम, जैसे नुकसान, दर्ज करता है। यह उपाड़ के साथ उसी सीमा में वसूली जाती है।"
+      },
+      {
+        "key": "records.title",
+        "lang": "en",
+        "expected": "Find past payments"
+      },
+      {
+        "key": "records.title",
+        "lang": "gu",
+        "expected": "જૂની ચુકવણીઓ શોધો"
+      },
+      {
+        "key": "records.title",
+        "lang": "hi",
+        "expected": "पुराने भुगतान खोजें"
+      },
+      {
+        "key": "records.body",
+        "lang": "en",
+        "expected": "{c:payrollRecords} shows each recorded payment by worker or by machine for the period you pick."
+      },
+      {
+        "key": "records.body",
+        "lang": "gu",
+        "expected": "{c:payrollRecords}માં પસંદ કરેલા સમયગાળાની દરેક નોંધાયેલી ચુકવણી કારીગર કે મશીન પ્રમાણે દેખાય છે."
+      },
+      {
+        "key": "records.body",
+        "lang": "hi",
+        "expected": "{c:payrollRecords} में चुनी अवधि का हर दर्ज भुगतान कारीगर या मशीन के अनुसार दिखता है।"
+      },
+      {
+        "key": "export.title",
+        "lang": "en",
+        "expected": "Export a period"
+      },
+      {
+        "key": "export.title",
+        "lang": "gu",
+        "expected": "સમયગાળો એક્સપોર્ટ કરો"
+      },
+      {
+        "key": "export.title",
+        "lang": "hi",
+        "expected": "अवधि एक्सपोर्ट करें"
+      },
+      {
+        "key": "export.body",
+        "lang": "en",
+        "expected": "{c:exportCsv} or {c:exportPdf} downloads the whole period, whatever you have searched."
+      },
+      {
+        "key": "export.body",
+        "lang": "gu",
+        "expected": "{c:exportCsv} કે {c:exportPdf} તમે શું શોધ્યું હોય તે છતાં આખો સમયગાળો ડાઉનલોડ કરે છે."
+      },
+      {
+        "key": "export.body",
+        "lang": "hi",
+        "expected": "{c:exportCsv} या {c:exportPdf} आपकी खोज चाहे जो हो, पूरी अवधि डाउनलोड करता है।"
+      },
+      {
+        "key": "correct.title",
+        "lang": "en",
+        "expected": "Correct a mistaken payment record"
+      },
+      {
+        "key": "correct.title",
+        "lang": "gu",
+        "expected": "ખોટો ચુકવણી રેકોર્ડ સુધારો"
+      },
+      {
+        "key": "correct.title",
+        "lang": "hi",
+        "expected": "गलत भुगतान रिकॉर्ड सुधारें"
+      },
+      {
+        "key": "correct.body",
+        "lang": "en",
+        "expected": "{c:resolveMistaken} reverses a payment recorded by mistake, with a reason. It does not return any cash."
+      },
+      {
+        "key": "correct.body",
+        "lang": "gu",
+        "expected": "{c:resolveMistaken} ભૂલથી નોંધાયેલી ચુકવણી કારણ સાથે ઉલટાવે છે. તે કોઈ રોકડ પાછી આપતું નથી."
+      },
+      {
+        "key": "correct.body",
+        "lang": "hi",
+        "expected": "{c:resolveMistaken} गलती से दर्ज भुगतान को कारण के साथ वापस करता है। यह कोई नकद वापस नहीं देता।"
+      },
+      {
+        "key": "extra.handoff.title",
+        "lang": "en",
+        "expected": "Open your payroll records"
+      },
+      {
+        "key": "extra.handoff.title",
+        "lang": "gu",
+        "expected": "તમારા પેરોલ રેકોર્ડ ખોલો"
+      },
+      {
+        "key": "extra.handoff.title",
+        "lang": "hi",
+        "expected": "अपने पेरोल रिकॉर्ड खोलें"
+      },
+      {
+        "key": "extra.handoff.body",
+        "lang": "en",
+        "expected": "Choose {c:payrollRecords} to see payments you have already recorded."
+      },
+      {
+        "key": "extra.handoff.body",
+        "lang": "gu",
+        "expected": "નોંધાયેલી ચુકવણીઓ જોવા {c:payrollRecords} પસંદ કરો."
+      },
+      {
+        "key": "extra.handoff.body",
+        "lang": "hi",
+        "expected": "दर्ज भुगतान देखने के लिए {c:payrollRecords} चुनें।"
+      },
+      {
+        "key": "guide.benefit",
+        "lang": "en",
+        "expected": "See how to check earnings, record payments and close a pay period."
+      },
+      {
+        "key": "guide.benefit",
+        "lang": "gu",
+        "expected": "કમાણી તપાસવી, ચુકવણી નોંધવી અને પગાર સમયગાળો બંધ કરવો કેવી રીતે તે જુઓ."
+      },
+      {
+        "key": "guide.benefit",
+        "lang": "hi",
+        "expected": "कमाई जाँचना, भुगतान दर्ज करना और वेतन अवधि बंद करना देखें।"
+      }
+    ],
+    "spotChecks": [
+      {
+        "key": "calculation.title",
+        "lang": "en",
+        "expected": "How pay is calculated",
+        "actual": "How pay is calculated"
+      },
+      {
+        "key": "calculation.title",
+        "lang": "gu",
+        "expected": "પગાર કેવી રીતે ગણાય છે",
+        "actual": "પગાર કેવી રીતે ગણાય છે"
+      },
+      {
+        "key": "calculation.title",
+        "lang": "hi",
+        "expected": "वेतन की गणना कैसे होती है",
+        "actual": "वेतन की गणना कैसे होती है"
+      },
+      {
+        "key": "calculation.piece.title",
+        "lang": "en",
+        "expected": "1. Piece-rate earnings",
+        "actual": "1. Piece-rate earnings"
+      },
+      {
+        "key": "calculation.piece.title",
+        "lang": "gu",
+        "expected": "1. પીસ રેટની કમાણી",
+        "actual": "1. પીસ રેટની કમાણી"
+      },
+      {
+        "key": "calculation.piece.title",
+        "lang": "hi",
+        "expected": "1. पीस रेट की कमाई",
+        "actual": "1. पीस रेट की कमाई"
+      },
+      {
+        "key": "calculation.piece.body",
+        "lang": "en",
+        "expected": "Piece-rate pay uses saved machine rates multiplied by verified metres produced per machine.",
+        "actual": "Piece-rate pay uses saved machine rates multiplied by verified metres produced per machine."
+      },
+      {
+        "key": "calculation.piece.body",
+        "lang": "gu",
+        "expected": "પીસ રેટનો પગાર દરેક મશીન માટે સાચવેલા મજૂરી દરને તે મશીન પર બનેલા ચકાસેલા મીટરથી ગુણવાથી ગણાય છે.",
+        "actual": "પીસ રેટનો પગાર દરેક મશીન માટે સાચવેલા મજૂરી દરને તે મશીન પર બનેલા ચકાસેલા મીટરથી ગુણવાથી ગણાય છે."
+      },
+      {
+        "key": "calculation.piece.body",
+        "lang": "hi",
+        "expected": "हर मशीन की सहेजी गई मजदूरी दर को उस मशीन पर बने कपड़े के जाँचे गए मीटर से गुणा करके पीस रेट वेतन निकाला जाता है।",
+        "actual": "हर मशीन की सहेजी गई मजदूरी दर को उस मशीन पर बने कपड़े के जाँचे गए मीटर से गुणा करके पीस रेट वेतन निकाला जाता है।"
+      },
+      {
+        "key": "calculation.salary.title",
+        "lang": "en",
+        "expected": "2. Fixed salaries",
+        "actual": "2. Fixed salaries"
+      },
+      {
+        "key": "calculation.salary.title",
+        "lang": "gu",
+        "expected": "2. નિશ્ચિત પગાર",
+        "actual": "2. નિશ્ચિત પગાર"
+      },
+      {
+        "key": "calculation.salary.title",
+        "lang": "hi",
+        "expected": "2. निश्चित वेतन",
+        "actual": "2. निश्चित वेतन"
+      },
+      {
+        "key": "calculation.salary.body",
+        "lang": "en",
+        "expected": "Fixed salaries accrue by calendar day, accounting for joining/leaving dates and effective-dated salary adjustments.",
+        "actual": "Fixed salaries accrue by calendar day, accounting for joining/leaving dates and effective-dated salary adjustments."
+      },
+      {
+        "key": "calculation.salary.body",
+        "lang": "gu",
+        "expected": "નિશ્ચિત પગાર કૅલેન્ડરના દરેક દિવસ પ્રમાણે ગણાય છે. તેમાં કામે જોડાવાની અને કામ છોડવાની તારીખો તથા જે તારીખથી પગારમાં ફેરફાર લાગુ પડે છે તે ધ્યાનમાં લેવાય છે.",
+        "actual": "નિશ્ચિત પગાર કૅલેન્ડરના દરેક દિવસ પ્રમાણે ગણાય છે. તેમાં કામે જોડાવાની અને કામ છોડવાની તારીખો તથા જે તારીખથી પગારમાં ફેરફાર લાગુ પડે છે તે ધ્યાનમાં લેવાય છે."
+      },
+      {
+        "key": "calculation.salary.body",
+        "lang": "hi",
+        "expected": "निश्चित वेतन की गणना कैलेंडर के दिनों के हिसाब से होती है। इसमें काम शुरू करने और छोड़ने की तारीखें तथा वेतन में बदलाव लागू होने की तारीखें ध्यान में रखी जाती हैं।",
+        "actual": "निश्चित वेतन की गणना कैलेंडर के दिनों के हिसाब से होती है। इसमें काम शुरू करने और छोड़ने की तारीखें तथा वेतन में बदलाव लागू होने की तारीखें ध्यान में रखी जाती हैं।"
+      }
+    ]
+  },
+  "production": {
+    "matched": 54,
+    "mismatches": [],
+    "unmatched": [],
+    "spotChecks": [
+      {
+        "key": "overview.title",
+        "lang": "en",
+        "expected": "From costing to daily production",
+        "actual": "From costing to daily production"
+      },
+      {
+        "key": "overview.title",
+        "lang": "gu",
+        "expected": "કોસ્ટિંગથી રોજિંદા ઉત્પાદન સુધી",
+        "actual": "કોસ્ટિંગથી રોજિંદા ઉત્પાદન સુધી"
+      },
+      {
+        "key": "overview.title",
+        "lang": "hi",
+        "expected": "कॉस्टिंग से रोज़ के उत्पादन तक",
+        "actual": "कॉस्टिंग से रोज़ के उत्पादन तक"
+      },
+      {
+        "key": "overview.body",
+        "lang": "en",
+        "expected": "Here a saved costing becomes a quality running on your looms. Metres recorded each shift then add fabric stock and worker pay.",
+        "actual": "Here a saved costing becomes a quality running on your looms. Metres recorded each shift then add fabric stock and worker pay."
+      },
+      {
+        "key": "overview.body",
+        "lang": "gu",
+        "expected": "અહીં સાચવેલી કોસ્ટિંગ તમારા લૂમ પર ચાલતી ક્વોલિટી બને છે. પછી દરેક શિફ્ટમાં નોંધાયેલા મીટર કાપડનો સ્ટોક અને કારીગરનો પગાર ઉમેરે છે.",
+        "actual": "અહીં સાચવેલી કોસ્ટિંગ તમારા લૂમ પર ચાલતી ક્વોલિટી બને છે. પછી દરેક શિફ્ટમાં નોંધાયેલા મીટર કાપડનો સ્ટોક અને કારીગરનો પગાર ઉમેરે છે."
+      },
+      {
+        "key": "overview.body",
+        "lang": "hi",
+        "expected": "यहाँ सेव की गई कॉस्टिंग आपके लूम पर चलती क्वालिटी बनती है। फिर हर शिफ्ट में दर्ज मीटर कपड़े का स्टॉक और कारीगर का वेतन जोड़ते हैं।",
+        "actual": "यहाँ सेव की गई कॉस्टिंग आपके लूम पर चलती क्वालिटी बनती है। फिर हर शिफ्ट में दर्ज मीटर कपड़े का स्टॉक और कारीगर का वेतन जोड़ते हैं।"
+      },
+      {
+        "key": "prereq.title",
+        "lang": "en",
+        "expected": "Four things must exist first",
+        "actual": "Four things must exist first"
+      },
+      {
+        "key": "prereq.title",
+        "lang": "gu",
+        "expected": "પહેલાં આ ચાર વસ્તુ જોઈએ",
+        "actual": "પહેલાં આ ચાર વસ્તુ જોઈએ"
+      },
+      {
+        "key": "prereq.title",
+        "lang": "hi",
+        "expected": "पहले ये चार चीज़ें चाहिए",
+        "actual": "पहले ये चार चीज़ें चाहिए"
+      },
+      {
+        "key": "prereq.body",
+        "lang": "en",
+        "expected": "A saved costing, stock of every yarn in it, your machines, and your workers. A quality cannot start while any of its yarns has no stock.",
+        "actual": "A saved costing, stock of every yarn in it, your machines, and your workers. A quality cannot start while any of its yarns has no stock."
+      },
+      {
+        "key": "prereq.body",
+        "lang": "gu",
+        "expected": "સાચવેલી કોસ્ટિંગ, તેમાંના દરેક યાર્નનો સ્ટોક, તમારાં મશીનો અને તમારા કારીગરો. કોઈ યાર્નનો સ્ટોક ન હોય ત્યાં સુધી ક્વોલિટી શરૂ ન થાય.",
+        "actual": "સાચવેલી કોસ્ટિંગ, તેમાંના દરેક યાર્નનો સ્ટોક, તમારાં મશીનો અને તમારા કારીગરો. કોઈ યાર્નનો સ્ટોક ન હોય ત્યાં સુધી ક્વોલિટી શરૂ ન થાય."
+      },
+      {
+        "key": "prereq.body",
+        "lang": "hi",
+        "expected": "सेव की गई कॉस्टिंग, उसके हर धागे का स्टॉक, आपकी मशीनें और आपके कारीगर। किसी धागे का स्टॉक न हो तो क्वालिटी शुरू नहीं होती।",
+        "actual": "सेव की गई कॉस्टिंग, उसके हर धागे का स्टॉक, आपकी मशीनें और आपके कारीगर। किसी धागे का स्टॉक न हो तो क्वालिटी शुरू नहीं होती।"
+      },
+      {
+        "key": "prereq.detail",
+        "lang": "en",
+        "expected": "Costings come from the Cost Estimator, yarn from Yarn Stock, and machines and workers from their own pages.",
+        "actual": "Costings come from the Cost Estimator, yarn from Yarn Stock, and machines and workers from their own pages."
+      },
+      {
+        "key": "prereq.detail",
+        "lang": "gu",
+        "expected": "કોસ્ટિંગ ખર્ચ અંદાજકમાંથી, યાર્ન યાર્નના સ્ટોકમાંથી, અને મશીનો તથા કારીગરો તેમના પોતાના પેજમાંથી આવે છે.",
+        "actual": "કોસ્ટિંગ ખર્ચ અંદાજકમાંથી, યાર્ન યાર્નના સ્ટોકમાંથી, અને મશીનો તથા કારીગરો તેમના પોતાના પેજમાંથી આવે છે."
+      },
+      {
+        "key": "prereq.detail",
+        "lang": "hi",
+        "expected": "कॉस्टिंग लागत अनुमानक से, धागा धागे के स्टॉक से, और मशीनें व कारीगर अपने-अपने पेज से आते हैं।",
+        "actual": "कॉस्टिंग लागत अनुमानक से, धागा धागे के स्टॉक से, और मशीनें व कारीगर अपने-अपने पेज से आते हैं।"
+      }
+    ]
+  },
+  "daily-sheet": {
+    "matched": 87,
+    "mismatches": [],
+    "unmatched": [],
+    "spotChecks": [
+      {
+        "key": "sheet.title",
+        "lang": "en",
+        "expected": "One sheet for each shift",
+        "actual": "One sheet for each shift"
+      },
+      {
+        "key": "sheet.title",
+        "lang": "gu",
+        "expected": "દરેક શિફ્ટ માટે એક શીટ",
+        "actual": "દરેક શિફ્ટ માટે એક શીટ"
+      },
+      {
+        "key": "sheet.title",
+        "lang": "hi",
+        "expected": "हर शिफ्ट के लिए एक शीट",
+        "actual": "हर शिफ्ट के लिए एक शीट"
+      },
+      {
+        "key": "sheet.body",
+        "lang": "en",
+        "expected": "Each day and night shift has its own sheet listing every running loom with its quality and operator.",
+        "actual": "Each day and night shift has its own sheet listing every running loom with its quality and operator."
+      },
+      {
+        "key": "sheet.body",
+        "lang": "gu",
+        "expected": "દિવસ અને રાતની દરેક શિફ્ટની પોતાની શીટ હોય છે, જેમાં દરેક ચાલુ લૂમ તેની ક્વોલિટી અને ઓપરેટર સાથે હોય છે.",
+        "actual": "દિવસ અને રાતની દરેક શિફ્ટની પોતાની શીટ હોય છે, જેમાં દરેક ચાલુ લૂમ તેની ક્વોલિટી અને ઓપરેટર સાથે હોય છે."
+      },
+      {
+        "key": "sheet.body",
+        "lang": "hi",
+        "expected": "दिन और रात की हर शिफ्ट की अपनी शीट होती है, जिसमें हर चालू लूम अपनी क्वालिटी और ऑपरेटर के साथ होता है।",
+        "actual": "दिन और रात की हर शिफ्ट की अपनी शीट होती है, जिसमें हर चालू लूम अपनी क्वालिटी और ऑपरेटर के साथ होता है।"
+      },
+      {
+        "key": "sheet.detail",
+        "lang": "en",
+        "expected": "{c:printSheet} prints the sheet so readings can be written on the floor and typed in later.",
+        "actual": "{c:printSheet} prints the sheet so readings can be written on the floor and typed in later."
+      },
+      {
+        "key": "sheet.detail",
+        "lang": "gu",
+        "expected": "{c:printSheet} શીટ છાપે છે, જેથી ફ્લોર પર રીડિંગ લખી પછી અહીં ભરી શકાય.",
+        "actual": "{c:printSheet} શીટ છાપે છે, જેથી ફ્લોર પર રીડિંગ લખી પછી અહીં ભરી શકાય."
+      },
+      {
+        "key": "sheet.detail",
+        "lang": "hi",
+        "expected": "{c:printSheet} शीट छापता है, ताकि फ़्लोर पर रीडिंग लिखकर बाद में यहाँ भरी जा सके।",
+        "actual": "{c:printSheet} शीट छापता है, ताकि फ़्लोर पर रीडिंग लिखकर बाद में यहाँ भरी जा सके।"
+      },
+      {
+        "key": "shift.title",
+        "lang": "en",
+        "expected": "Check the date and shift",
+        "actual": "Check the date and shift"
+      },
+      {
+        "key": "shift.title",
+        "lang": "gu",
+        "expected": "તારીખ અને શિફ્ટ તપાસો",
+        "actual": "તારીખ અને શિફ્ટ તપાસો"
+      },
+      {
+        "key": "shift.title",
+        "lang": "hi",
+        "expected": "तारीख और शिफ्ट जाँचें",
+        "actual": "तारीख और शिफ्ट जाँचें"
+      },
+      {
+        "key": "shift.body",
+        "lang": "en",
+        "expected": "Choose the shift you are recording. To check or fix an earlier shift, pick its date; future dates cannot be chosen.",
+        "actual": "Choose the shift you are recording. To check or fix an earlier shift, pick its date; future dates cannot be chosen."
+      },
+      {
+        "key": "shift.body",
+        "lang": "gu",
+        "expected": "તમે નોંધો છો તે શિફ્ટ પસંદ કરો. જૂની શિફ્ટ તપાસવા કે સુધારવા તેની તારીખ પસંદ કરો; આગળની તારીખ પસંદ કરી શકાતી નથી.",
+        "actual": "તમે નોંધો છો તે શિફ્ટ પસંદ કરો. જૂની શિફ્ટ તપાસવા કે સુધારવા તેની તારીખ પસંદ કરો; આગળની તારીખ પસંદ કરી શકાતી નથી."
+      },
+      {
+        "key": "shift.body",
+        "lang": "hi",
+        "expected": "आप जो शिफ्ट दर्ज कर रहे हैं, उसे चुनें। पुरानी शिफ्ट जाँचने या सुधारने के लिए उसकी तारीख चुनें; आगे की तारीख नहीं चुनी जा सकती।",
+        "actual": "आप जो शिफ्ट दर्ज कर रहे हैं, उसे चुनें। पुरानी शिफ्ट जाँचने या सुधारने के लिए उसकी तारीख चुनें; आगे की तारीख नहीं चुनी जा सकती।"
+      }
+    ]
+  },
+  "machines": {
+    "matched": 42,
+    "mismatches": [],
+    "unmatched": [],
+    "spotChecks": [
+      {
+        "key": "purpose.title",
+        "lang": "en",
+        "expected": "One record for each loom",
+        "actual": "One record for each loom"
+      },
+      {
+        "key": "purpose.title",
+        "lang": "gu",
+        "expected": "દરેક લૂમ માટે એક રેકોર્ડ",
+        "actual": "દરેક લૂમ માટે એક રેકોર્ડ"
+      },
+      {
+        "key": "purpose.title",
+        "lang": "hi",
+        "expected": "हर लूम के लिए एक रिकॉर्ड",
+        "actual": "हर लूम के लिए एक रिकॉर्ड"
+      },
+      {
+        "key": "purpose.body",
+        "lang": "en",
+        "expected": "Add every loom you run once. Production, assignments and payroll then refer to it by name.",
+        "actual": "Add every loom you run once. Production, assignments and payroll then refer to it by name."
+      },
+      {
+        "key": "purpose.body",
+        "lang": "gu",
+        "expected": "તમારો દરેક લૂમ એક વાર ઉમેરો. પછી ઉત્પાદન, ફાળવણી અને પેરોલ તેને નામથી ઓળખે છે.",
+        "actual": "તમારો દરેક લૂમ એક વાર ઉમેરો. પછી ઉત્પાદન, ફાળવણી અને પેરોલ તેને નામથી ઓળખે છે."
+      },
+      {
+        "key": "purpose.body",
+        "lang": "hi",
+        "expected": "अपना हर लूम एक बार जोड़ें। फिर उत्पादन, आवंटन और पेरोल उसे नाम से पहचानते हैं।",
+        "actual": "अपना हर लूम एक बार जोड़ें। फिर उत्पादन, आवंटन और पेरोल उसे नाम से पहचानते हैं।"
+      },
+      {
+        "key": "details.title",
+        "lang": "en",
+        "expected": "Name it the way your floor does",
+        "actual": "Name it the way your floor does"
+      },
+      {
+        "key": "details.title",
+        "lang": "gu",
+        "expected": "ફ્લોર પર કહો છો તેવું નામ આપો",
+        "actual": "ફ્લોર પર કહો છો તેવું નામ આપો"
+      },
+      {
+        "key": "details.title",
+        "lang": "hi",
+        "expected": "जैसा फ़्लोर पर कहते हैं, वैसा नाम दें",
+        "actual": "जैसा फ़्लोर पर कहते हैं, वैसा नाम दें"
+      },
+      {
+        "key": "details.body",
+        "lang": "en",
+        "expected": "Choose the machine type and an optional label such as \"Rapier 3\". If you leave the name blank, Weavly numbers it.",
+        "actual": "Choose the machine type and an optional label such as \"Rapier 3\". If you leave the name blank, Weavly numbers it."
+      },
+      {
+        "key": "details.body",
+        "lang": "gu",
+        "expected": "મશીનનો પ્રકાર અને \"રેપિયર 3\" જેવું વૈકલ્પિક લેબલ પસંદ કરો. નામ ખાલી રાખો તો Weavly નંબર આપે છે.",
+        "actual": "મશીનનો પ્રકાર અને \"રેપિયર 3\" જેવું વૈકલ્પિક લેબલ પસંદ કરો. નામ ખાલી રાખો તો Weavly નંબર આપે છે."
+      },
+      {
+        "key": "details.body",
+        "lang": "hi",
+        "expected": "मशीन का प्रकार और \"रेपियर 3\" जैसा वैकल्पिक लेबल चुनें। नाम खाली छोड़ें तो Weavly नंबर देता है।",
+        "actual": "मशीन का प्रकार और \"रेपियर 3\" जैसा वैकल्पिक लेबल चुनें। नाम खाली छोड़ें तो Weavly नंबर देता है।"
+      },
+      {
+        "key": "details.detail",
+        "lang": "en",
+        "expected": "Later, {c:edit} lets you rename it or stop offering it for new assignments.",
+        "actual": "Later, {c:edit} lets you rename it or stop offering it for new assignments."
+      },
+      {
+        "key": "details.detail",
+        "lang": "gu",
+        "expected": "પછી {c:edit}થી નામ બદલી શકો કે નવી ફાળવણી માટે બંધ કરી શકો.",
+        "actual": "પછી {c:edit}થી નામ બદલી શકો કે નવી ફાળવણી માટે બંધ કરી શકો."
+      },
+      {
+        "key": "details.detail",
+        "lang": "hi",
+        "expected": "बाद में {c:edit} से नाम बदल सकते हैं या नए आवंटन के लिए बंद कर सकते हैं।",
+        "actual": "बाद में {c:edit} से नाम बदल सकते हैं या नए आवंटन के लिए बंद कर सकते हैं।"
+      }
+    ]
+  },
+  "workers": {
+    "matched": 0,
+    "mismatches": [],
+    "unmatched": [
+      {
+        "key": "paytype.title",
+        "lang": "en",
+        "expected": "Choose how this worker is paid"
+      },
+      {
+        "key": "paytype.title",
+        "lang": "gu",
+        "expected": "આ કારીગરને કેવી રીતે પગાર મળે તે પસંદ કરો"
+      },
+      {
+        "key": "paytype.title",
+        "lang": "hi",
+        "expected": "यह कारीगर कैसे वेतन पाता है, यह चुनें"
+      },
+      {
+        "key": "paytype.body",
+        "lang": "en",
+        "expected": "Piece-rate workers earn per metre woven; salaried staff earn a monthly amount. This cannot be changed after saving."
+      },
+      {
+        "key": "paytype.body",
+        "lang": "gu",
+        "expected": "પીસ રેટ કારીગર વણેલા મીટર પ્રમાણે કમાય છે; પગારદાર સ્ટાફ માસિક રકમ કમાય છે. સાચવ્યા પછી આ બદલી શકાતું નથી."
+      },
+      {
+        "key": "paytype.body",
+        "lang": "hi",
+        "expected": "पीस रेट कारीगर बुने मीटर के हिसाब से कमाते हैं; वेतन वाला स्टाफ़ मासिक रकम कमाता है। सेव के बाद यह बदला नहीं जा सकता।"
+      },
+      {
+        "key": "availability.title",
+        "lang": "en",
+        "expected": "Set the shifts they can work"
+      },
+      {
+        "key": "availability.title",
+        "lang": "gu",
+        "expected": "તે કઈ શિફ્ટમાં કામ કરી શકે તે નક્કી કરો"
+      },
+      {
+        "key": "availability.title",
+        "lang": "hi",
+        "expected": "वह किन शिफ्ट में काम कर सकता है, यह तय करें"
+      },
+      {
+        "key": "availability.body",
+        "lang": "en",
+        "expected": "Day, night or both. Only matching workers can be put on a loom for that shift."
+      },
+      {
+        "key": "availability.body",
+        "lang": "gu",
+        "expected": "દિવસ, રાત કે બંને. ફક્ત મેળ ખાતા કારીગર જ તે શિફ્ટમાં લૂમ પર મુકાય છે."
+      },
+      {
+        "key": "availability.body",
+        "lang": "hi",
+        "expected": "दिन, रात या दोनों। सिर्फ़ मेल खाते कारीगर ही उस शिफ्ट में लूम पर लगते हैं।"
+      },
+      {
+        "key": "wage.title",
+        "lang": "en",
+        "expected": "The wage comes from the quality"
+      },
+      {
+        "key": "wage.title",
+        "lang": "gu",
+        "expected": "મજૂરી ક્વોલિટીમાંથી આવે છે"
+      },
+      {
+        "key": "wage.title",
+        "lang": "hi",
+        "expected": "मजदूरी क्वालिटी से आती है"
+      },
+      {
+        "key": "wage.body",
+        "lang": "en",
+        "expected": "You do not type a wage here. Each quality's weaver wage, set when it is activated in Production, applies to whoever weaves it."
+      },
+      {
+        "key": "wage.body",
+        "lang": "gu",
+        "expected": "અહીં મજૂરી લખવાની નથી. ઉત્પાદનમાં ચાલુ કરતી વખતે નક્કી થયેલી ક્વોલિટીની મજૂરી, જે કારીગર તેને વણે તેને લાગુ પડે છે."
+      },
+      {
+        "key": "wage.body",
+        "lang": "hi",
+        "expected": "यहाँ मजदूरी नहीं लिखनी। उत्पादन में चालू करते समय तय क्वालिटी की मजदूरी, जो कारीगर उसे बुने, उस पर लागू होती है।"
+      },
+      {
+        "key": "loom.title",
+        "lang": "en",
+        "expected": "Put them on a loom"
+      },
+      {
+        "key": "loom.title",
+        "lang": "gu",
+        "expected": "તેમને લૂમ પર મૂકો"
+      },
+      {
+        "key": "loom.title",
+        "lang": "hi",
+        "expected": "उन्हें लूम पर लगाएँ"
+      },
+      {
+        "key": "loom.body",
+        "lang": "en",
+        "expected": "A piece-rate worker earns only when assigned to a loom for a shift, in Machine Assignments."
+      },
+      {
+        "key": "loom.body",
+        "lang": "gu",
+        "expected": "પીસ રેટ કારીગર મશીન ફાળવણીમાં કોઈ શિફ્ટના લૂમ પર મુકાય ત્યારે જ કમાય છે."
+      },
+      {
+        "key": "loom.body",
+        "lang": "hi",
+        "expected": "पीस रेट कारीगर मशीन आवंटन में किसी शिफ्ट के लूम पर लगने पर ही कमाता है।"
+      },
+      {
+        "key": "earnings.title",
+        "lang": "en",
+        "expected": "Metres become earnings"
+      },
+      {
+        "key": "earnings.title",
+        "lang": "gu",
+        "expected": "મીટર કમાણી બને છે"
+      },
+      {
+        "key": "earnings.title",
+        "lang": "hi",
+        "expected": "मीटर कमाई बनते हैं"
+      },
+      {
+        "key": "earnings.body",
+        "lang": "en",
+        "expected": "Saved shifts add metres × wage: 100 m × ₹1.50 = ₹150. Payroll pays it."
+      },
+      {
+        "key": "earnings.body",
+        "lang": "gu",
+        "expected": "સાચવેલી શિફ્ટ મીટર × મજૂરી ઉમેરે છે: 100 મીટર × ₹1.50 = ₹150. પેરોલ તે ચૂકવે છે."
+      },
+      {
+        "key": "earnings.body",
+        "lang": "hi",
+        "expected": "सेव शिफ्ट मीटर × मजदूरी जोड़ती है: 100 मीटर × ₹1.50 = ₹150। पेरोल यह चुकाता है।"
+      },
+      {
+        "key": "salary.title",
+        "lang": "en",
+        "expected": "Enter the agreed monthly salary"
+      },
+      {
+        "key": "salary.title",
+        "lang": "gu",
+        "expected": "નક્કી થયેલો માસિક પગાર લખો"
+      },
+      {
+        "key": "salary.title",
+        "lang": "hi",
+        "expected": "तय मासिक वेतन लिखें"
+      },
+      {
+        "key": "salary.body",
+        "lang": "en",
+        "expected": "Enter the full monthly amount, here ₹18,000. Payroll works out each period from it."
+      },
+      {
+        "key": "salary.body",
+        "lang": "gu",
+        "expected": "આખી માસિક રકમ લખો, અહીં ₹18,000. પેરોલ તેમાંથી દરેક સમયગાળો ગણે છે."
+      },
+      {
+        "key": "salary.body",
+        "lang": "hi",
+        "expected": "पूरी मासिक रकम लिखें, यहाँ ₹18,000। पेरोल उससे हर अवधि निकालता है।"
+      },
+      {
+        "key": "joining.title",
+        "lang": "en",
+        "expected": "Salary starts on the joining date"
+      },
+      {
+        "key": "joining.title",
+        "lang": "gu",
+        "expected": "પગાર જોડાયાની તારીખથી શરૂ થાય"
+      },
+      {
+        "key": "joining.title",
+        "lang": "hi",
+        "expected": "वेतन जुड़ने की तारीख से शुरू होता है"
+      },
+      {
+        "key": "joining.body",
+        "lang": "en",
+        "expected": "Someone who joins halfway through a 30-day month is paid 15/30 × ₹18,000 = ₹9,000 for it."
+      },
+      {
+        "key": "joining.body",
+        "lang": "gu",
+        "expected": "30 દિવસના મહિનાની વચ્ચે જોડાનારને તે મહિનાના 15/30 × ₹18,000 = ₹9,000 મળે છે."
+      },
+      {
+        "key": "joining.body",
+        "lang": "hi",
+        "expected": "30 दिन के महीने के बीच में जुड़ने वाले को उस महीने के 15/30 × ₹18,000 = ₹9,000 मिलते हैं।"
+      },
+      {
+        "key": "changes.title",
+        "lang": "en",
+        "expected": "Date every change"
+      },
+      {
+        "key": "changes.title",
+        "lang": "gu",
+        "expected": "દરેક ફેરફારને તારીખ આપો"
+      },
+      {
+        "key": "changes.title",
+        "lang": "hi",
+        "expected": "हर बदलाव को तारीख दें"
+      },
+      {
+        "key": "changes.body",
+        "lang": "en",
+        "expected": "When the salary changes, set the date it applies from. When someone leaves, set their last working day before marking them inactive."
+      },
+      {
+        "key": "changes.body",
+        "lang": "gu",
+        "expected": "પગાર બદલાય ત્યારે તે કઈ તારીખથી લાગુ થાય તે લખો. કોઈ છોડે ત્યારે નિષ્ક્રિય કરતાં પહેલાં છેલ્લો કામકાજનો દિવસ લખો."
+      },
+      {
+        "key": "changes.body",
+        "lang": "hi",
+        "expected": "वेतन बदले तो किस तारीख से लागू हो, यह लिखें। कोई छोड़े तो निष्क्रिय करने से पहले आख़िरी काम का दिन लिखें।"
+      },
+      {
+        "key": "payroll.title",
+        "lang": "en",
+        "expected": "Salaries appear in payroll"
+      },
+      {
+        "key": "payroll.title",
+        "lang": "gu",
+        "expected": "પગાર પેરોલમાં દેખાય છે"
+      },
+      {
+        "key": "payroll.title",
+        "lang": "hi",
+        "expected": "वेतन पेरोल में दिखता है"
+      },
+      {
+        "key": "payroll.body",
+        "lang": "en",
+        "expected": "{c:viewPayroll} opens this worker's pay for the current period."
+      },
+      {
+        "key": "payroll.body",
+        "lang": "gu",
+        "expected": "{c:viewPayroll} આ કારીગરનો ચાલુ સમયગાળાનો પગાર ખોલે છે."
+      },
+      {
+        "key": "payroll.body",
+        "lang": "hi",
+        "expected": "{c:viewPayroll} इस कारीगर का चालू अवधि का वेतन खोलता है।"
+      },
+      {
+        "key": "handoff.title",
+        "lang": "en",
+        "expected": "Add your workers"
+      },
+      {
+        "key": "handoff.title",
+        "lang": "gu",
+        "expected": "તમારા કારીગરો ઉમેરો"
+      },
+      {
+        "key": "handoff.title",
+        "lang": "hi",
+        "expected": "अपने कारीगर जोड़ें"
+      },
+      {
+        "key": "handoff.body",
+        "lang": "en",
+        "expected": "Choose {c:addWorker} for each person and pick their pay type carefully."
+      },
+      {
+        "key": "handoff.body",
+        "lang": "gu",
+        "expected": "દરેક વ્યક્તિ માટે {c:addWorker} પસંદ કરો અને પગારનો પ્રકાર ધ્યાનથી પસંદ કરો."
+      },
+      {
+        "key": "handoff.body",
+        "lang": "hi",
+        "expected": "हर व्यक्ति के लिए {c:addWorker} चुनें और वेतन का प्रकार ध्यान से चुनें।"
+      },
+      {
+        "key": "guide.benefit",
+        "lang": "en",
+        "expected": "See how to add workers and set up their pay."
+      },
+      {
+        "key": "guide.benefit",
+        "lang": "gu",
+        "expected": "કારીગરો ઉમેરવા અને તેમનો પગાર ગોઠવવાનું જુઓ."
+      },
+      {
+        "key": "guide.benefit",
+        "lang": "hi",
+        "expected": "कारीगर जोड़ना और उनका वेतन तय करना देखें।"
+      }
+    ],
+    "spotChecks": []
+  },
+  "machine-assignments": {
+    "matched": 0,
+    "mismatches": [],
+    "unmatched": [
+      {
+        "key": "purpose.title",
+        "lang": "en",
+        "expected": "Who runs which loom, each shift"
+      },
+      {
+        "key": "purpose.title",
+        "lang": "gu",
+        "expected": "દરેક શિફ્ટમાં કયો લૂમ કોણ ચલાવે"
+      },
+      {
+        "key": "purpose.title",
+        "lang": "hi",
+        "expected": "हर शिफ्ट में कौन सा लूम कौन चलाए"
+      },
+      {
+        "key": "purpose.body",
+        "lang": "en",
+        "expected": "Link each worker to the loom they run. The Daily Sheet then lists each loom with its worker."
+      },
+      {
+        "key": "purpose.body",
+        "lang": "gu",
+        "expected": "દરેક કારીગરને તે ચલાવે તે લૂમ સાથે જોડો. પછી દૈનિક શીટમાં દરેક લૂમ તેના કારીગર સાથે આવે છે."
+      },
+      {
+        "key": "purpose.body",
+        "lang": "hi",
+        "expected": "हर कारीगर को उसके लूम से जोड़ें। फिर दैनिक शीट में हर लूम अपने कारीगर के साथ आता है।"
+      },
+      {
+        "key": "shift.title",
+        "lang": "en",
+        "expected": "Choose the shift first"
+      },
+      {
+        "key": "shift.title",
+        "lang": "gu",
+        "expected": "પહેલાં શિફ્ટ પસંદ કરો"
+      },
+      {
+        "key": "shift.title",
+        "lang": "hi",
+        "expected": "पहले शिफ्ट चुनें"
+      },
+      {
+        "key": "shift.body",
+        "lang": "en",
+        "expected": "Day and night are set separately."
+      },
+      {
+        "key": "shift.body",
+        "lang": "gu",
+        "expected": "દિવસ અને રાત અલગ નક્કી થાય છે."
+      },
+      {
+        "key": "shift.body",
+        "lang": "hi",
+        "expected": "दिन और रात अलग तय होते हैं।"
+      },
+      {
+        "key": "job.title",
+        "lang": "en",
+        "expected": "A loom needs a quality first"
+      },
+      {
+        "key": "job.title",
+        "lang": "gu",
+        "expected": "લૂમને પહેલાં ક્વોલિટી જોઈએ"
+      },
+      {
+        "key": "job.title",
+        "lang": "hi",
+        "expected": "लूम को पहले क्वालिटी चाहिए"
+      },
+      {
+        "key": "job.body",
+        "lang": "en",
+        "expected": "A loom marked {c:noJob} has nothing to weave yet. Put a quality on it in Production with {c:assignLooms}."
+      },
+      {
+        "key": "job.body",
+        "lang": "gu",
+        "expected": "{c:noJob} લખેલા લૂમ પાસે હજી વણવાનું કંઈ નથી. ઉત્પાદનમાં {c:assignLooms}થી તેના પર ક્વોલિટી મૂકો."
+      },
+      {
+        "key": "job.body",
+        "lang": "hi",
+        "expected": "{c:noJob} लिखे लूम के पास अभी बुनने को कुछ नहीं। उत्पादन में {c:assignLooms} से उस पर क्वालिटी लगाएँ।"
+      },
+      {
+        "key": "assign.title",
+        "lang": "en",
+        "expected": "Start from the worker"
+      },
+      {
+        "key": "assign.title",
+        "lang": "gu",
+        "expected": "કારીગરથી શરૂ કરો"
+      },
+      {
+        "key": "assign.title",
+        "lang": "hi",
+        "expected": "कारीगर से शुरू करें"
+      },
+      {
+        "key": "assign.body",
+        "lang": "en",
+        "expected": "{c:assign} next to a worker lists the looms free in this shift."
+      },
+      {
+        "key": "assign.body",
+        "lang": "gu",
+        "expected": "કારીગરની બાજુમાં {c:assign} આ શિફ્ટના ખાલી લૂમ બતાવે છે."
+      },
+      {
+        "key": "assign.body",
+        "lang": "hi",
+        "expected": "कारीगर के पास {c:assign} इस शिफ्ट के खाली लूम दिखाता है।"
+      },
+      {
+        "key": "choose.title",
+        "lang": "en",
+        "expected": "Choosing a loom saves at once"
+      },
+      {
+        "key": "choose.title",
+        "lang": "gu",
+        "expected": "લૂમ પસંદ કરતાં જ સચવાય છે"
+      },
+      {
+        "key": "choose.title",
+        "lang": "hi",
+        "expected": "लूम चुनते ही सेव हो जाता है"
+      },
+      {
+        "key": "choose.body",
+        "lang": "en",
+        "expected": "{c:choose} links the worker to that loom from today. If the loom already has a worker, Weavly asks before replacing."
+      },
+      {
+        "key": "choose.body",
+        "lang": "gu",
+        "expected": "{c:choose} આજથી કારીગરને તે લૂમ સાથે જોડે છે. લૂમ પર પહેલેથી કારીગર હોય તો બદલતાં પહેલાં Weavly પૂછે છે."
+      },
+      {
+        "key": "choose.body",
+        "lang": "hi",
+        "expected": "{c:choose} आज से कारीगर को उस लूम से जोड़ता है। लूम पर पहले से कारीगर हो तो बदलने से पहले Weavly पूछता है।"
+      },
+      {
+        "key": "choose.detail",
+        "lang": "en",
+        "expected": "Right after a change, {c:undo} in the message puts it back. On a computer you can also drag from a worker to a loom."
+      },
+      {
+        "key": "choose.detail",
+        "lang": "gu",
+        "expected": "ફેરફાર પછી તરત સંદેશમાં {c:undo} તેને પાછું કરે છે. કમ્પ્યુટર પર કારીગરથી લૂમ સુધી ખેંચીને પણ જોડી શકાય."
+      },
+      {
+        "key": "choose.detail",
+        "lang": "hi",
+        "expected": "बदलाव के तुरंत बाद संदेश में {c:undo} उसे वापस करता है। कंप्यूटर पर कारीगर से लूम तक खींचकर भी जोड़ सकते हैं।"
+      },
+      {
+        "key": "linked.title",
+        "lang": "en",
+        "expected": "Check the link"
+      },
+      {
+        "key": "linked.title",
+        "lang": "gu",
+        "expected": "જોડાણ તપાસો"
+      },
+      {
+        "key": "linked.title",
+        "lang": "hi",
+        "expected": "जोड़ जाँचें"
+      },
+      {
+        "key": "linked.body",
+        "lang": "en",
+        "expected": "The worker and loom now show together for this shift. Their metres are entered on the Daily Sheet."
+      },
+      {
+        "key": "linked.body",
+        "lang": "gu",
+        "expected": "હવે આ શિફ્ટ માટે કારીગર અને લૂમ સાથે દેખાય છે. તેમના મીટર દૈનિક શીટમાં નોંધાય છે."
+      },
+      {
+        "key": "linked.body",
+        "lang": "hi",
+        "expected": "अब इस शिफ्ट के लिए कारीगर और लूम साथ दिखते हैं। उनके मीटर दैनिक शीट में दर्ज होते हैं।"
+      },
+      {
+        "key": "handoff.title",
+        "lang": "en",
+        "expected": "Link your first worker"
+      },
+      {
+        "key": "handoff.title",
+        "lang": "gu",
+        "expected": "તમારા પહેલા કારીગરને જોડો"
+      },
+      {
+        "key": "handoff.title",
+        "lang": "hi",
+        "expected": "अपने पहले कारीगर को जोड़ें"
+      },
+      {
+        "key": "handoff.body",
+        "lang": "en",
+        "expected": "Choose {c:assign} next to a worker and pick their loom."
+      },
+      {
+        "key": "handoff.body",
+        "lang": "gu",
+        "expected": "કારીગરની બાજુમાં {c:assign} પસંદ કરો અને તેમનો લૂમ પસંદ કરો."
+      },
+      {
+        "key": "handoff.body",
+        "lang": "hi",
+        "expected": "कारीगर के पास {c:assign} चुनें और उसका लूम चुनें।"
+      },
+      {
+        "key": "handoff.empty.title",
+        "lang": "en",
+        "expected": "Add workers first"
+      },
+      {
+        "key": "handoff.empty.title",
+        "lang": "gu",
+        "expected": "પહેલાં કારીગરો ઉમેરો"
+      },
+      {
+        "key": "handoff.empty.title",
+        "lang": "hi",
+        "expected": "पहले कारीगर जोड़ें"
+      },
+      {
+        "key": "handoff.empty.body",
+        "lang": "en",
+        "expected": "Only piece-rate workers can be linked to looms. Choose {c:addWorker} to add one."
+      },
+      {
+        "key": "handoff.empty.body",
+        "lang": "gu",
+        "expected": "ફક્ત પીસ રેટ કારીગર લૂમ સાથે જોડાય છે. ઉમેરવા {c:addWorker} પસંદ કરો."
+      },
+      {
+        "key": "handoff.empty.body",
+        "lang": "hi",
+        "expected": "सिर्फ़ पीस रेट कारीगर लूम से जुड़ते हैं। जोड़ने के लिए {c:addWorker} चुनें।"
+      },
+      {
+        "key": "guide.benefit",
+        "lang": "en",
+        "expected": "See how to link workers to looms for each shift."
+      },
+      {
+        "key": "guide.benefit",
+        "lang": "gu",
+        "expected": "દરેક શિફ્ટ માટે કારીગરોને લૂમ સાથે જોડવાનું જુઓ."
+      },
+      {
+        "key": "guide.benefit",
+        "lang": "hi",
+        "expected": "हर शिफ्ट के लिए कारीगरों को लूम से जोड़ना देखें।"
+      }
+    ],
+    "spotChecks": []
+  }
+}

@@ -1,0 +1,527 @@
+{
+  "scenario": "workers-salary",
+  "lang": "en",
+  "size": "1024x768",
+  "steps": [
+    {
+      "assignments": null,
+      "workers": {
+        "search": "",
+        "shift": "all",
+        "status": "active",
+        "samples": true,
+        "bannerCount": 1,
+        "names": [
+          "Sample worker",
+          "Sample staff"
+        ],
+        "preview": true,
+        "available": false,
+        "effective": false,
+        "lastDay": false,
+        "enabledFields": 0,
+        "visibleClose": 0,
+        "selectedPath": "path-salary",
+        "anchors": 1,
+        "url": "http://localhost:5199/owner/workers?s=workers-salary&lang=en&fresh=1"
+      },
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Choose how this worker is paid",
+      "body": "Piece-rate workers earn per metre woven; salaried staff earn a monthly amount. This cannot be changed after saving.",
+      "step": "wk-paytype",
+      "status": "ready",
+      "eyebrow": "Sample · Step 1 of 6",
+      "progress": null,
+      "panel": {
+        "x": 608,
+        "y": 135,
+        "w": 360,
+        "h": 252
+      },
+      "highlight": {
+        "x": 96,
+        "y": 297,
+        "w": 480,
+        "h": 66
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[path-salary]",
+      "scrollY": 0,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 80,
+        "y": 135,
+        "w": 512,
+        "h": 497
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 768,
+      "vw": 1024
+    },
+    {
+      "assignments": null,
+      "workers": {
+        "search": "",
+        "shift": "all",
+        "status": "active",
+        "samples": true,
+        "bannerCount": 1,
+        "names": [
+          "Sample worker",
+          "Sample staff"
+        ],
+        "preview": true,
+        "available": false,
+        "effective": false,
+        "lastDay": false,
+        "enabledFields": 0,
+        "visibleClose": 0,
+        "anchors": 1,
+        "url": "http://localhost:5199/owner/workers?s=workers-salary&lang=en&fresh=1"
+      },
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Enter the agreed monthly salary",
+      "body": "Enter the full monthly amount, here ₹18,000. Payroll works out each period from it.",
+      "step": "wks-salary",
+      "status": "ready",
+      "eyebrow": "Sample · Step 2 of 6",
+      "progress": null,
+      "panel": {
+        "x": 608,
+        "y": 135,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 96,
+        "y": 433,
+        "w": 480,
+        "h": 66
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 80,
+        "y": 135,
+        "w": 512,
+        "h": 497
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 768,
+      "vw": 1024
+    },
+    {
+      "assignments": null,
+      "workers": {
+        "search": "",
+        "shift": "all",
+        "status": "active",
+        "samples": true,
+        "bannerCount": 1,
+        "names": [
+          "Sample worker",
+          "Sample staff"
+        ],
+        "preview": true,
+        "available": false,
+        "effective": false,
+        "lastDay": false,
+        "enabledFields": 0,
+        "visibleClose": 0,
+        "anchors": 1,
+        "url": "http://localhost:5199/owner/workers?s=workers-salary&lang=en&fresh=1"
+      },
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Salary starts on the joining date",
+      "body": "Someone who joins halfway through a 30-day month is paid 15/30 × ₹18,000 = ₹9,000 for it.",
+      "step": "wks-joining",
+      "status": "ready",
+      "eyebrow": "Sample · Step 3 of 6",
+      "progress": null,
+      "panel": {
+        "x": 608,
+        "y": 135,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 96,
+        "y": 501,
+        "w": 480,
+        "h": 66
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 80,
+        "y": 135,
+        "w": 512,
+        "h": 497
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 768,
+      "vw": 1024
+    },
+    {
+      "assignments": null,
+      "workers": {
+        "search": "",
+        "shift": "all",
+        "status": "active",
+        "samples": true,
+        "bannerCount": 1,
+        "names": [
+          "Sample worker",
+          "Sample staff"
+        ],
+        "preview": true,
+        "available": false,
+        "effective": true,
+        "lastDay": true,
+        "enabledFields": 0,
+        "visibleClose": 0,
+        "anchors": 1,
+        "url": "http://localhost:5199/owner/workers?s=workers-salary&lang=en&fresh=1"
+      },
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Date every change",
+      "body": "When the salary changes, set the date it applies from. When someone leaves, set their last working day before marking them inactive.",
+      "step": "wks-changes",
+      "status": "ready",
+      "eyebrow": "Sample · Step 4 of 6",
+      "progress": null,
+      "panel": {
+        "x": 608,
+        "y": 30,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 96,
+        "y": 465,
+        "w": 480,
+        "h": 87
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 80,
+        "y": 30,
+        "w": 512,
+        "h": 707
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 768,
+      "vw": 1024
+    },
+    {
+      "assignments": null,
+      "workers": {
+        "search": "",
+        "shift": "all",
+        "status": "active",
+        "samples": true,
+        "bannerCount": 1,
+        "names": [
+          "Sample worker",
+          "Sample staff"
+        ],
+        "preview": false,
+        "available": false,
+        "effective": false,
+        "lastDay": false,
+        "enabledFields": 0,
+        "visibleClose": 0,
+        "anchors": 1,
+        "url": "http://localhost:5199/owner/workers?s=workers-salary&lang=en&fresh=1"
+      },
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Salaries appear in payroll",
+      "body": "“View payroll” opens this worker's pay for the current period.",
+      "step": "wks-payroll",
+      "status": "ready",
+      "eyebrow": "Sample · Step 5 of 6",
+      "progress": null,
+      "panel": {
+        "x": 283,
+        "y": 462,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 659,
+        "y": 462,
+        "w": 124,
+        "h": 47
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 768,
+      "vw": 1024
+    },
+    {
+      "assignments": null,
+      "workers": {
+        "search": "",
+        "shift": "all",
+        "status": "active",
+        "samples": false,
+        "bannerCount": 0,
+        "names": [],
+        "preview": false,
+        "available": false,
+        "effective": false,
+        "lastDay": false,
+        "enabledFields": 0,
+        "visibleClose": 0,
+        "anchors": 1,
+        "url": "http://localhost:5199/owner/workers?s=workers-salary&lang=en&fresh=1"
+      },
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Add your workers",
+      "body": "Choose “Add worker” for each person and pick their pay type carefully.",
+      "step": "wk-handoff",
+      "status": "ready",
+      "eyebrow": "Step 6 of 6",
+      "progress": null,
+      "panel": {
+        "x": 503,
+        "y": 16,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 879,
+        "y": 15,
+        "w": 123,
+        "h": 51
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 768,
+      "vw": 1024
+    }
+  ],
+  "logs": [
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction"
+  ],
+  "apiRequests": [],
+  "preClick": null,
+  "sampling": "legacy-900ms",
+  "workersBefore": {
+    "search": "",
+    "shift": "all",
+    "status": "active",
+    "url": "http://localhost:5199/owner/workers?s=workers-salary&lang=en&fresh=1",
+    "calls": 1,
+    "storage": {
+      "weavly_language": "en"
+    },
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"workers\":{\"firstShown\":\"2026-09-29T22:29:51.969Z\",\"version\":\"v1\"}}"
+    },
+    "activeControl": null,
+    "activeAnchor": null,
+    "preview": false,
+    "samples": false
+  },
+  "workersExit": {
+    "search": "",
+    "shift": "all",
+    "status": "active",
+    "url": "http://localhost:5199/owner/workers?s=workers-salary&lang=en&fresh=1",
+    "calls": 2,
+    "storage": {
+      "weavly_language": "en"
+    },
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"workers\":{\"firstShown\":\"2026-09-29T22:29:51.969Z\",\"version\":\"v1\",\"firstStarted\":true}}"
+    },
+    "activeControl": "quiet-tour",
+    "activeAnchor": null,
+    "preview": false,
+    "samples": false
+  },
+  "before": {
+    "x": 0,
+    "y": 0,
+    "inner": null
+  },
+  "workersBack": true,
+  "after": {
+    "scroll": {
+      "x": 0,
+      "y": 0,
+      "inner": null
+    },
+    "active": "<button data-slot=\"button\" data-variant=\"default\" data-size=\"default\" class=\"inline-flex items-center justify-center gap-2 whitespace-nowrap transition-[color,b",
+    "activeAnchor": "workers.add",
+    "activeRateBookField": null,
+    "activeControl": null,
+    "serverCalls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "navigations": [],
+    "scrollCalls": [
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      }
+    ],
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"workers\":{\"firstShown\":\"2026-09-29T22:29:51.969Z\",\"version\":\"v1\",\"firstStarted\":true,\"completed\":true,\"completedVersion\":\"v2\"}}"
+    },
+    "search": null
+  },
+  "workersAfter": {
+    "search": "",
+    "shift": "all",
+    "status": "active",
+    "url": "http://localhost:5199/owner/workers?s=workers-salary&lang=en&fresh=1",
+    "calls": 4,
+    "storage": {
+      "weavly_language": "en"
+    },
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"workers\":{\"firstShown\":\"2026-09-29T22:29:51.969Z\",\"version\":\"v1\",\"firstStarted\":true,\"completed\":true,\"completedVersion\":\"v2\"}}"
+    },
+    "activeControl": null,
+    "activeAnchor": "workers.add",
+    "preview": false,
+    "samples": false
+  },
+  "issues": []
+}

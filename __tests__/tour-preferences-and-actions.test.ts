@@ -1,275 +1,142 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
+import { readFileSync } from 'node:fs'
 
-const mocks = vi.hoisted(() => ({
-  requireRole: vi.fn(),
-  updateUser: vi.fn(),
-  revalidatePath: vi.fn(),
-}))
-
+const mocks = vi.hoisted(() => ({ requireRole: vi.fn(), updateUser: vi.fn(), revalidatePath: vi.fn() }))
 vi.mock('@/lib/auth', () => ({ requireRole: mocks.requireRole }))
-vi.mock('@/lib/supabase/server', () => ({
-  createClient: async () => ({ auth: { updateUser: mocks.updateUser } }),
-}))
+vi.mock('@/lib/supabase/server', () => ({ createClient: async () => ({ auth: { updateUser: mocks.updateUser } }) }))
 vi.mock('next/cache', () => ({ revalidatePath: mocks.revalidatePath }))
 
-import {
-  getLocalTourPreferences,
-  saveLocalTourPreference,
-  getTourStatus,
-  persistTourImpression,
-  persistTourDismissal,
-  persistTourStarted,
-  persistTourCompleted,
-} from '../lib/tours/tour-preferences'
+import { getLocalTourPreferences, saveLocalTourPreference, getTourPresentation, persistTourImpression, persistTourDismissal, persistTourStarted, persistTourCompleted } from '../lib/tours/tour-preferences'
 import { recordTourEventAction } from '../app/actions/tour-preferences'
+import { supportedTours, getTourDefinition } from '../lib/tours/tour-registry'
 
-describe('Tour Preferences Adapter & Server Action', () => {
-  let mockLocalStorage: Record<string, string> = {}
-
-  beforeEach(() => {
+let storage: Record<string, string>
+beforeEach(() => {
     vi.resetAllMocks()
-    mockLocalStorage = {}
-    vi.stubGlobal('localStorage', {
-      getItem: (key: string) => mockLocalStorage[key] ?? null,
-      setItem: (key: string, value: string) => {
-        mockLocalStorage[key] = value
-      },
-      removeItem: (key: string) => {
-        delete mockLocalStorage[key]
-      },
-      clear: () => {
-        mockLocalStorage = {}
-      },
+    storage = {}
+    vi.stubGlobal('localStorage', { getItem: (key: string) => storage[key] ?? null, setItem: (key: string, value: string) => { storage[key] = value } })
+    vi.stubGlobal('window', { localStorage: globalThis.localStorage })
+    mocks.requireRole.mockResolvedValue({ user: { id: 'owner-1', user_metadata: { tour_preferences: {} } } })
+    mocks.updateUser.mockResolvedValue({ data: { user: { id: 'owner-1' } }, error: null })
+})
+afterEach(() => { expect(mocks.revalidatePath).not.toHaveBeenCalled(); vi.unstubAllGlobals() })
+
+describe('Local preferences', () => {
+    it('isolates users and keeps sticky decisions and the original impression', () => {
+        expect(getLocalTourPreferences('owner-1')).toEqual({})
+        saveLocalTourPreference('owner-1', 'cost-estimate', { firstShown: 'original', firstStarted: true, dismissed: true, completed: true, completedVersion: 'v2' })
+        saveLocalTourPreference('owner-1', 'cost-estimate', { firstShown: 'later', firstStarted: false, dismissed: false, completed: false })
+        expect(getLocalTourPreferences('owner-1')['cost-estimate']).toEqual({ firstShown: 'original', firstStarted: true, dismissed: true, completed: true, completedVersion: 'v2', version: 'v1' })
+        expect(getLocalTourPreferences('other-owner')).toEqual({})
     })
-    vi.stubGlobal('window', {
-      localStorage: globalThis.localStorage,
+    it.each(['broken', 'null', '[]'])('tolerates invalid stored preferences: %s', value => {
+        storage['weavly:tour-prefs:v1:owner-1'] = value
+        expect(getLocalTourPreferences('owner-1')).toEqual({})
     })
-
-    mocks.requireRole.mockResolvedValue({
-      user: {
-        id: 'owner-1',
-        user_metadata: { tour_preferences: {} },
-      },
+    it('tolerates inaccessible storage and still honors account decisions', () => {
+        vi.stubGlobal('localStorage', { getItem: () => { throw Error('blocked') }, setItem: () => { throw Error('blocked') } })
+        expect(() => saveLocalTourPreference('owner-1', 'dispatch', { dismissed: true })).not.toThrow()
+        expect(getTourPresentation('dispatch', { tour_preferences: { dispatch: { completed: true } } }, 'owner-1')).toBe('replay')
     })
-    mocks.updateUser.mockResolvedValue({
-      data: { user: { id: 'owner-1' } },
-      error: null,
+})
+
+describe('getTourPresentation', () => {
+    it('keeps a fresh or merely shown invitation across visits', () => {
+        expect(getTourPresentation('cost-estimate', null, 'owner-1')).toBe('invite')
+        const metadata = { tour_preferences: { 'cost-estimate': { firstShown: '2026-09-27', version: 'v1' } } }
+        saveLocalTourPreference('owner-1', 'cost-estimate', { firstShown: true })
+        expect(getTourPresentation('cost-estimate', metadata, 'owner-1')).toBe('invite')
     })
-  })
-
-  afterEach(() => {
-    vi.unstubAllGlobals()
-  })
-
-  describe('Local Preferences Storage', () => {
-    it('reads empty preferences when nothing is stored', () => {
-      expect(getLocalTourPreferences('user-1')).toEqual({})
+    it.each(['dismissed', 'firstStarted', 'completed'] as const)('replays for account or local %s independently', flag => {
+        expect(getTourPresentation('saved-costings', { tour_preferences: { 'saved-costings': { [flag]: true } } }, 'owner-1')).toBe('replay')
+        saveLocalTourPreference('owner-1', 'saved-costings', { [flag]: true })
+        expect(getTourPresentation('saved-costings', { tour_preferences: { 'saved-costings': { [flag]: false } } }, 'owner-1')).toBe('replay')
     })
-
-    it('saves and reads back local preferences namespaced by user ID', () => {
-      const userId = 'user-abc'
-      saveLocalTourPreference(userId, 'cost-estimate', {
-        dismissed: true,
-        firstShown: '2026-09-10T12:00:00Z',
-      })
-
-      const prefs = getLocalTourPreferences(userId)
-      expect(prefs['cost-estimate']?.dismissed).toBe(true)
-      expect(prefs['cost-estimate']?.firstShown).toBe('2026-09-10T12:00:00Z')
-      expect(prefs['cost-estimate']?.version).toBe('v1')
-
-      // Another user does not have this preference
-      expect(getLocalTourPreferences('other-user')).toEqual({})
+    it('does not re-invite for a different completion or policy version', () => {
+        expect(getTourPresentation('saved-costings', { tour_preferences: { 'saved-costings': { completed: true, completedVersion: 'v0', version: 'v99' } } })).toBe('replay')
     })
-
-    it('never overwrites a stronger state (completed/dismissed) with a weaker state', () => {
-      const userId = 'user-sticky'
-      saveLocalTourPreference(userId, 'cost-estimate', { completed: true })
-      saveLocalTourPreference(userId, 'cost-estimate', { dismissed: false })
-
-      const prefs = getLocalTourPreferences(userId)
-      expect(prefs['cost-estimate']?.completed).toBe(true)
+    it.each([
+        ['cost-estimate', 'cost_estimate_tutorial_dismissed', 'weavly:cost-estimate-tutorial:v1:org:owner-1'],
+        ['rate-book', 'ratebook_tutorial_dismissed', 'weavly:ratebook-tutorial:v1:org:owner-1'],
+    ] as const)('preserves both legacy reads for %s without writing them', (tourId, flag, key) => {
+        expect(getTourPresentation(tourId, { [flag]: true }, 'owner-1', 'org')).toBe('replay')
+        storage[key] = 'done'
+        expect(getTourPresentation(tourId, null, 'owner-1', 'org')).toBe('replay')
+        expect(getTourPresentation(tourId, null, 'another-owner', 'org')).toBe('invite')
+        expect(storage[key]).toBe('done')
     })
-  })
+})
 
-  describe('getTourStatus', () => {
-    it('returns isFirstEligibleVisit = true when tour has never been shown or dismissed', () => {
-      const status = getTourStatus('cost-estimate', {}, 'user-fresh')
-      expect(status.isFirstEligibleVisit).toBe(true)
-      expect(status.isDismissed).toBe(false)
-      expect(status.isCompleted).toBe(false)
-      expect(status.isSuppressed).toBe(false)
+describe('recordTourEventAction', () => {
+    it('records firstShown once, preserves existing preferences and authenticates the owner', async () => {
+        mocks.requireRole.mockResolvedValue({ user: { user_metadata: { tour_preferences: { dispatch: { firstShown: 'original', dismissed: true }, workers: { completed: true } } } } })
+        expect(await recordTourEventAction({ tourId: 'dispatch', action: 'shown' })).toMatchObject({ success: true })
+        expect(mocks.requireRole).toHaveBeenCalledWith(['owner'], { allowFreeAccount: true })
+        expect(mocks.updateUser).toHaveBeenCalledWith({ data: { tour_preferences: { dispatch: { firstShown: 'original', dismissed: true, version: 'v1' }, workers: { completed: true } } } })
     })
-
-    it('returns isFirstEligibleVisit = false and isSuppressed = true if impression was recorded', () => {
-      const status = getTourStatus(
-        'cost-estimate',
-        {
-          tour_preferences: {
-            'cost-estimate': { firstShown: '2026-09-10T00:00:00Z', version: 'v1' },
-          },
-        },
-        'user-revisit'
-      )
-      expect(status.isFirstEligibleVisit).toBe(false)
-      expect(status.isSuppressed).toBe(true)
+    it.each(supportedTours)('records completion/version for %s without a refresh', async tourId => {
+        const res = await recordTourEventAction({ tourId, action: 'completed', contentVersion: 'v2' })
+        expect(res.success).toBe(true)
+        expect(mocks.updateUser).toHaveBeenCalledWith({ data: { tour_preferences: { [tourId]: { completed: true, completedVersion: 'v2', version: 'v1', firstShown: expect.any(String) } } } })
     })
-
-    it('honors modern tour_preferences dismissed flag', () => {
-      const status = getTourStatus(
-        'rate-book',
-        {
-          tour_preferences: {
-            'rate-book': { dismissed: true, version: 'v1' },
-          },
-        },
-        'user-dismissed'
-      )
-      expect(status.isDismissed).toBe(true)
-      expect(status.isSuppressed).toBe(true)
-      expect(status.isFirstEligibleVisit).toBe(false)
+    it.each(['cost-estimate', 'rate-book'] as const)('records %s dismissal only in modern preferences', async tourId => {
+        expect((await recordTourEventAction({ tourId, action: 'dismissed' })).success).toBe(true)
+        expect(mocks.updateUser).toHaveBeenCalledWith({ data: { tour_preferences: { [tourId]: { dismissed: true, version: 'v1', firstShown: expect.any(String) } } } })
     })
-
-    it('honors legacy cost_estimate_tutorial_dismissed flag', () => {
-      const status = getTourStatus(
-        'cost-estimate',
-        { cost_estimate_tutorial_dismissed: true },
-        'user-legacy'
-      )
-      expect(status.isDismissed).toBe(true)
-      expect(status.isSuppressed).toBe(true)
-      expect(status.isFirstEligibleVisit).toBe(false)
+    it('accepts omitted versions for existing callers and stores a version only on completion', async () => {
+        await recordTourEventAction({ tourId: 'dispatch', action: 'completed' })
+        expect(mocks.updateUser.mock.calls[0][0].data.tour_preferences.dispatch).not.toHaveProperty('completedVersion')
+        await recordTourEventAction({ tourId: 'dispatch', action: 'started', contentVersion: 'v2' })
+        expect(mocks.updateUser.mock.calls[1][0].data.tour_preferences.dispatch).toMatchObject({ firstStarted: true })
+        expect(mocks.updateUser.mock.calls[1][0].data.tour_preferences.dispatch).not.toHaveProperty('completedVersion')
     })
-
-    it('honors legacy ratebook_tutorial_dismissed flag', () => {
-      const status = getTourStatus(
-        'rate-book',
-        { ratebook_tutorial_dismissed: true },
-        'user-legacy'
-      )
-      expect(status.isDismissed).toBe(true)
-      expect(status.isSuppressed).toBe(true)
-      expect(status.isFirstEligibleVisit).toBe(false)
+    it.each(['', '2', 'v-1', 'V2', 'v2x', 'v1234567890123456', null, 2])('rejects invalid contentVersion %s without writing', async contentVersion => {
+        const res = await recordTourEventAction({ tourId: 'dispatch', action: 'completed', contentVersion: contentVersion as string })
+        expect(res.success).toBe(false)
+        expect(mocks.updateUser).not.toHaveBeenCalled()
     })
-
-    it('honors legacy localStorage done marker for cost estimate', () => {
-      mockLocalStorage['weavly:cost-estimate-tutorial:v1:org-1:user-1'] = 'done'
-      const status = getTourStatus('cost-estimate', null, 'user-1', 'org-1')
-      expect(status.isDismissed).toBe(true)
-      expect(status.isSuppressed).toBe(true)
+    it('accepts the 16-character boundary', async () => {
+        expect((await recordTourEventAction({ tourId: 'dispatch', action: 'completed', contentVersion: 'v123456789012345' })).success).toBe(true)
     })
-
-    it('honors legacy localStorage done marker for rate book', () => {
-      mockLocalStorage['weavly:ratebook-tutorial:v1:org-2:user-2'] = 'done'
-      const status = getTourStatus('rate-book', null, 'user-2', 'org-2')
-      expect(status.isDismissed).toBe(true)
-      expect(status.isSuppressed).toBe(true)
+    it('does not write on an auth failure and reports unsuccessful account writes', async () => {
+        mocks.requireRole.mockRejectedValueOnce(Error('Access denied'))
+        expect((await recordTourEventAction({ tourId: 'dispatch', action: 'started' })).success).toBe(false)
+        expect(mocks.updateUser).not.toHaveBeenCalled()
+        mocks.updateUser.mockResolvedValueOnce({ data: { user: null }, error: null })
+        expect((await recordTourEventAction({ tourId: 'dispatch', action: 'started' })).success).toBe(false)
+        mocks.updateUser.mockResolvedValueOnce({ data: { user: null }, error: { message: 'offline' } })
+        expect((await recordTourEventAction({ tourId: 'dispatch', action: 'started' })).success).toBe(false)
     })
-  })
-
-  describe('Server Action: recordTourEventAction', () => {
-    it('records impression (shown) and saves v1 record with firstShown timestamp', async () => {
-      const res = await recordTourEventAction({ tourId: 'cost-estimate', action: 'shown' })
-      expect(res.success).toBe(true)
-      expect(mocks.updateUser).toHaveBeenCalledWith({
-        data: expect.objectContaining({
-          tour_preferences: expect.objectContaining({
-            'cost-estimate': expect.objectContaining({
-              version: 'v1',
-              firstShown: expect.any(String),
-            }),
-          }),
-        }),
-      })
+    it('contains no route invalidation at all', () => {
+        expect(readFileSync('app/actions/tour-preferences.ts', 'utf8')).not.toContain('revalidatePath')
     })
+})
 
-    it('records dismissal and synchronizes legacy cost_estimate_tutorial_dismissed key', async () => {
-      const res = await recordTourEventAction({ tourId: 'cost-estimate', action: 'dismissed' })
-      expect(res.success).toBe(true)
-      expect(mocks.updateUser).toHaveBeenCalledWith({
-        data: expect.objectContaining({
-          cost_estimate_tutorial_dismissed: true,
-          tour_preferences: expect.objectContaining({
-            'cost-estimate': expect.objectContaining({
-              dismissed: true,
-              version: 'v1',
-            }),
-          }),
-        }),
-      })
-      expect(mocks.revalidatePath).toHaveBeenCalledWith('/owner/estimator')
-      expect(mocks.revalidatePath).toHaveBeenCalledWith('/free')
+describe('Persistence helpers', () => {
+    it('records the impression once without changing invitation state', async () => {
+        await persistTourImpression('dispatch', 'owner-1')
+        await persistTourImpression('dispatch', 'owner-1')
+        expect(getLocalTourPreferences('owner-1').dispatch?.firstShown).toEqual(expect.any(String))
+        expect(mocks.updateUser).toHaveBeenCalledTimes(1)
+        expect(getTourPresentation('dispatch', null, 'owner-1')).toBe('invite')
     })
-
-    it('records dismissal for rate-book and synchronizes legacy ratebook_tutorial_dismissed key', async () => {
-      const res = await recordTourEventAction({ tourId: 'rate-book', action: 'dismissed' })
-      expect(res.success).toBe(true)
-      expect(mocks.updateUser).toHaveBeenCalledWith({
-        data: expect.objectContaining({
-          ratebook_tutorial_dismissed: true,
-          tour_preferences: expect.objectContaining({
-            'rate-book': expect.objectContaining({
-              dismissed: true,
-              version: 'v1',
-            }),
-          }),
-        }),
-      })
-      expect(mocks.revalidatePath).toHaveBeenCalledWith('/owner/rates')
+    it('writes decisions locally before a failed account request', async () => {
+        mocks.requireRole.mockImplementation(async () => {
+            expect(getLocalTourPreferences('owner-1').dispatch?.dismissed).toBe(true)
+            throw Error('offline')
+        })
+        await persistTourDismissal('dispatch', 'owner-1')
+        expect(getTourPresentation('dispatch', null, 'owner-1')).toBe('replay')
     })
-
-    it('records completed for saved-costings and revalidates quote routes', async () => {
-      const res = await recordTourEventAction({ tourId: 'saved-costings', action: 'completed' })
-      expect(res.success).toBe(true)
-      expect(mocks.updateUser).toHaveBeenCalledWith({
-        data: expect.objectContaining({
-          tour_preferences: expect.objectContaining({
-            'saved-costings': expect.objectContaining({
-              completed: true,
-              version: 'v1',
-            }),
-          }),
-        }),
-      })
-      expect(mocks.revalidatePath).toHaveBeenCalledWith('/owner/quotes')
-      expect(mocks.revalidatePath).toHaveBeenCalledWith('/free/costings')
+    it('persists start and a completed version locally and remotely', async () => {
+        await persistTourStarted('saved-costings', 'owner-1')
+        expect(getLocalTourPreferences('owner-1')['saved-costings']?.firstStarted).toBe(true)
+        await persistTourCompleted('saved-costings', 'owner-1', 'v2')
+        expect(getLocalTourPreferences('owner-1')['saved-costings']).toMatchObject({ firstStarted: true, completed: true, completedVersion: 'v2' })
+        expect(mocks.updateUser.mock.lastCall?.[0].data.tour_preferences['saved-costings']).toMatchObject({ completed: true, completedVersion: 'v2' })
     })
-  })
-
-  it('persists Configuration completion for the authenticated owner and revalidates its route', async () => {
-    await recordTourEventAction({ tourId: 'configuration', action: 'completed' })
-    expect(mocks.updateUser).toHaveBeenCalledWith({ data: { tour_preferences: { configuration: expect.objectContaining({ completed: true, version: 'v1' }) } } })
-    expect(mocks.revalidatePath).toHaveBeenCalledWith('/owner/operations')
-    expect(getTourStatus('configuration', { tour_preferences: { configuration: { completed: true } } }, 'owner-1').isFirstEligibleVisit).toBe(false)
-  })
-
-  describe('Client Persistence Helpers', () => {
-    it('persistTourImpression updates local storage and dispatches server action', async () => {
-      await persistTourImpression('cost-estimate', 'user-1')
-      const prefs = getLocalTourPreferences('user-1')
-      expect(prefs['cost-estimate']?.firstShown).toBeDefined()
-      expect(mocks.updateUser).toHaveBeenCalled()
+    it('defaults an untouched caller to the registry content version', async () => {
+        await persistTourCompleted('dispatch', 'owner-1')
+        expect(getLocalTourPreferences('owner-1').dispatch?.completedVersion).toBe(getTourDefinition('dispatch').contentVersion)
     })
-
-    it('persistTourDismissal updates local storage and dispatches server action', async () => {
-      await persistTourDismissal('rate-book', 'user-2')
-      const prefs = getLocalTourPreferences('user-2')
-      expect(prefs['rate-book']?.dismissed).toBe(true)
-      expect(mocks.updateUser).toHaveBeenCalled()
-    })
-
-    it('persistTourStarted updates local storage and dispatches server action', async () => {
-      await persistTourStarted('saved-costings', 'user-3')
-      const prefs = getLocalTourPreferences('user-3')
-      expect(prefs['saved-costings']?.firstStarted).toBe(true)
-      expect(mocks.updateUser).toHaveBeenCalled()
-    })
-
-    it('persistTourCompleted updates local storage and dispatches server action', async () => {
-      await persistTourCompleted('saved-costings', 'user-4')
-      const prefs = getLocalTourPreferences('user-4')
-      expect(prefs['saved-costings']?.completed).toBe(true)
-      expect(mocks.updateUser).toHaveBeenCalled()
-    })
-  })
 })

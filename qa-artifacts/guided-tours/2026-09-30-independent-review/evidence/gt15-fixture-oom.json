@@ -1,0 +1,18 @@
+{
+  "originalServerPid": 48739,
+  "originalServerSessionId": 91675,
+  "originalServerExitCode": 1,
+  "criticalServerLog": "[48739] Mark-Compact near 4199 MB; FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory",
+  "affectedOriginalRuns": [
+    "gt15-night-focus-en-1024x768",
+    "gt15-night-focus-gu-390x844"
+  ],
+  "classification": "Fixture infrastructure failure before any tour step; original results retained",
+  "restart": {
+    "identicalConfig": true,
+    "identicalPort": 5199,
+    "newSessionId": 12188
+  },
+  "runner": "Unchanged tracked run-tour.mjs; no assertion, timeout, fixture or source changes",
+  "auxiliaryObservation": "A sandboxed ps inventory command failed EPERM; no process data was emitted. Scoped listener discovery used for ownership proof."
+}

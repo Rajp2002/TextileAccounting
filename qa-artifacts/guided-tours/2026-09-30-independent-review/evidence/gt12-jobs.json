@@ -1,0 +1,98 @@
+[
+  {
+    "id": "gt12-0-en-1440x900",
+    "task": "GT-12",
+    "scenario": "daily-sheet",
+    "language": "en",
+    "size": "1440x900"
+  },
+  {
+    "id": "gt12-0-hi-1280x800",
+    "task": "GT-12",
+    "scenario": "daily-sheet",
+    "language": "hi",
+    "size": "1280x800"
+  },
+  {
+    "id": "gt12-0-en-1024x768",
+    "task": "GT-12",
+    "scenario": "daily-sheet",
+    "language": "en",
+    "size": "1024x768"
+  },
+  {
+    "id": "gt12-0-gu-390x844",
+    "task": "GT-12",
+    "scenario": "daily-sheet",
+    "language": "gu",
+    "size": "390x844"
+  },
+  {
+    "id": "gt12-0-reduced-en-1024x768",
+    "task": "GT-12",
+    "scenario": "daily-sheet",
+    "language": "en",
+    "size": "1024x768",
+    "env": {
+      "REDUCED_MOTION": "1"
+    }
+  },
+  {
+    "id": "gt12-1-en-1440x900",
+    "task": "GT-12",
+    "scenario": "daily-sheet?populated=1",
+    "language": "en",
+    "size": "1440x900"
+  },
+  {
+    "id": "gt12-1-hi-1280x800",
+    "task": "GT-12",
+    "scenario": "daily-sheet?populated=1",
+    "language": "hi",
+    "size": "1280x800"
+  },
+  {
+    "id": "gt12-1-en-1024x768",
+    "task": "GT-12",
+    "scenario": "daily-sheet?populated=1",
+    "language": "en",
+    "size": "1024x768"
+  },
+  {
+    "id": "gt12-1-gu-390x844",
+    "task": "GT-12",
+    "scenario": "daily-sheet?populated=1",
+    "language": "gu",
+    "size": "390x844"
+  },
+  {
+    "id": "gt12-1-reduced-en-1024x768",
+    "task": "GT-12",
+    "scenario": "daily-sheet?populated=1",
+    "language": "en",
+    "size": "1024x768",
+    "env": {
+      "REDUCED_MOTION": "1"
+    }
+  },
+  {
+    "id": "gt12-exit-daily-sheet-en-1440x900",
+    "task": "GT-12",
+    "scenario": "daily-sheet?populated=1",
+    "language": "en",
+    "size": "1440x900",
+    "env": {
+      "EXIT_AT": "8"
+    }
+  },
+  {
+    "id": "gt12-exit-daily-sheet-gu-390x844",
+    "task": "GT-12",
+    "scenario": "daily-sheet?populated=1",
+    "language": "gu",
+    "size": "390x844",
+    "env": {
+      "EXIT_AT": "8"
+    }
+  }
+]

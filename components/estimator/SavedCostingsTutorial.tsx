@@ -1,208 +1,155 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
-import { Button } from '@/components/ui/button'
-import { useTranslation } from '@/lib/i18n/context'
-import { rateBookTutorialCopy } from '@/lib/i18n/rate-book-tutorial'
-import { savedCostingStepCopy, savedCostingsTutorialCopy } from '@/lib/i18n/saved-costings-tutorial'
-import { comparisonCostingSteps, savedCostingTourSteps, type SavedCostingEnding, type SavedCostingStep } from '@/lib/saved-costings-tour'
-import { findTourTarget } from '@/lib/tutorial-target'
-import { useMobileTour } from '@/hooks/use-mobile-tour'
-import { lockTourViewport } from '@/lib/tutorial-viewport-lock'
-import { TourInvitation } from '@/components/tours/TourInvitation'
+import dynamic from 'next/dynamic'
+import { useRef, useState } from 'react'
 import { ChevronDown, ChevronRight, CircleHelp, GitCompareArrows } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { TourInvitation } from '@/components/tours/TourInvitation'
 import { railButton, railIcon, railSurface } from '@/components/ui/rail'
 import { cn } from '@/lib/utils'
-import { persistTourCompleted } from '@/lib/tours/tour-preferences'
+import { useTranslation } from '@/lib/i18n/context'
+import type { SavedCostingEnding, SavedCostingStep } from '@/lib/saved-costings-tour'
 
-const selectors: Partial<Record<SavedCostingStep, string>> = {
- find: '[data-costing-tour="sample"]', filters: '[data-costing-tour="filters"]',
- select: '[data-costing-tour="sample"]', versions: '[data-costing-tour="versions"]',
- breakdown: '[data-costing-tour="breakdown"]', economics: '[data-costing-tour="economics"]', reuse: '[data-costing-tour="reuse"]',
- organize: '[data-costing-tour="versions"]', production: '[data-costing-tour="production"]',
- internal: '[data-costing-tour="export-modes"]', customer: '[data-costing-tour="export-modes"]',
- share: '[data-costing-tour="export-actions"]', compareSelect: '[data-costing-tour="versions"]',
- comparisonDetails: '[data-costing-tour="comparison-details"]', comparison: '[data-costing-tour="comparison"]', snapshots: '[data-free-costing]',
- searchAndFilters: '[data-costing-tour="search-and-filters"]', search: '#saved-costings-search', freeFilters: '[data-costing-tour="free-filters"]',
- freeSelect: '[data-costing-tour="free-sample"]',
-}
-function resolveTarget(step: SavedCostingStep) {
- const target = findTourTarget(selectors[step] ?? '[data-costing-tour="launcher"]')
- return { target, card: target }
-}
+const SavedCostingsTourRuntime = dynamic(() => import('./SavedCostingsTourRuntime'), { ssr: false })
+// Existing rail help remains static; step copy is loaded only with the runtime.
+const railCopy = {
+  "en": {
+    "help": "More help: documents and library",
+    "compare": "Compare versions",
+    "fields": {
+      "freeHelp": [
+        "Find a Free snapshot",
+        "Search by label or use the date, cost and margin filters. Clear filters if a snapshot is missing. Load more shows older records; refresh the page if loading fails."
+      ],
+      "filters": [
+        "Narrow the library",
+        "Filters sort by update date, margin or production cost and restrict margin ranges. Favourites shows starred records; Archived shows archived snapshots. Clear filters if a saved record is missing."
+      ],
+      "breakdown": [
+        "Read the selected breakdown",
+        "The active version badge identifies the snapshot being shown. Review yarn and other cost components, production cost, selling price and profit. Saved numbers do not use today’s rates. Older incomplete snapshots may show a review notice instead of a detailed breakdown."
+      ],
+      "organize": [
+        "Find and maintain records",
+        "Star a version for Favourites. Archive snapshot hides it from the active list; restore it from Archived. Archiving is not deletion. On older records that offer it, Check saved numbers checks whether the saved numbers need review."
+      ],
+      "separateQuality": [
+        "Keep another quality separate",
+        "Save as separate quality starts a draft for a different quality. Give it a new name in Cost Estimate and save after review. It does not overwrite the original costing."
+      ],
+      "customer": [
+        "Customer-facing quotation",
+        "Customer mode shows selling price and customer terms while keeping internal costs, profit and internal notes private. Set the party, validity and optional GST note, and check validation messages before generating. Previewing alone does not send a quotation."
+      ],
+      "share": [
+        "Share after generating",
+        "After you generate a customer PDF, Share PDF becomes available for that current document. It opens the device share sheet or WhatsApp fallback; you choose the recipient and send. A handoff does not confirm delivery. Changes to document details require a fresh PDF. This tour does not generate, download or share."
+      ]
+    }
+  },
+  "gu": {
+    "help": "વધુ મદદ: દસ્તાવેજ અને યાદી",
+    "compare": "વર્ઝનની સરખામણી",
+    "fields": {
+      "freeHelp": [
+        "Free સ્નેપશોટ શોધો",
+        "લેબલ શોધો અથવા તારીખ, ખર્ચ અને માર્જિનના ફિલ્ટર વાપરો. સ્નેપશોટ ન મળે તો ફિલ્ટર દૂર કરો. Load more થી જૂના રેકોર્ડ જુઓ; લોડ ન થાય તો પેજ રિફ્રેશ કરો."
+      ],
+      "filters": [
+        "યાદી મર્યાદિત કરો",
+        "ફિલ્ટરમાં તારીખ, માર્જિન અથવા ઉત્પાદન ખર્ચ મુજબ ક્રમ અને માર્જિનની શ્રેણી પસંદ કરો. Favourites માં સ્ટાર કરેલા અને Archived માં આર્કાઇવ સ્નેપશોટ મળે છે. રેકોર્ડ ન મળે તો ફિલ્ટર દૂર કરો."
+      ],
+      "breakdown": [
+        "પસંદ કરેલી વિગતો વાંચો",
+        "Active breakdown બેજ પસંદ કરેલો સ્નેપશોટ બતાવે છે. યાર્ન, અન્ય ખર્ચ, ઉત્પાદન ખર્ચ, વેચાણ ભાવ અને નફો જુઓ. સાચવેલા આંકડા આજના રેટ વાપરતા નથી. જૂના અધૂરા સ્નેપશોટમાં વિગતોને બદલે સમીક્ષા સૂચના હોઈ શકે."
+      ],
+      "organize": [
+        "રેકોર્ડ શોધો અને જાળવો",
+        "આવૃત્તિ પર સ્ટાર કરીને તેને Favourites માં મેળવો. Archive snapshot સક્રિય યાદીમાંથી છુપાવે છે; Archived માંથી પાછી લાવો. આ ડિલીટ નથી. જૂના રેકોર્ડ પર Check saved numbers હોય તો સાચવેલા આંકડાની સમીક્ષા જરૂરી છે કે નહીં તે તપાસો."
+      ],
+      "separateQuality": [
+        "બીજી ક્વોલિટી અલગ રાખો",
+        "Save as separate quality બીજી ક્વોલિટીનો ડ્રાફ્ટ શરૂ કરે છે. Cost Estimate માં નવું નામ આપો અને તપાસીને સાચવો. મૂળ ગણતરી બદલાતી નથી."
+      ],
+      "customer": [
+        "ગ્રાહક ક્વોટેશન",
+        "Customer મોડ વેચાણ ભાવ અને ગ્રાહકની શરતો બતાવે છે; આંતરિક ખર્ચ, નફો અને નોંધો ખાનગી રહે છે. પાર્ટી, માન્યતા અને વૈકલ્પિક GST નોંધ ભરો અને ભૂલો તપાસો. પ્રીવ્યુ જોવાથી ક્વોટેશન મોકલાતું નથી."
+      ],
+      "share": [
+        "બનાવ્યા પછી શેર કરો",
+        "ગ્રાહક PDF બનાવ્યા પછી હાલના દસ્તાવેજ માટે Share PDF મળે છે. તે ડિવાઇસ શેર શીટ અથવા WhatsApp ખોલે છે; મેળવનાર અને મોકલવાનું તમે પસંદ કરો. તે ડિલિવરીની પુષ્ટિ નથી. વિગતો બદલાય તો નવો PDF બનાવો. ટૂર ફાઇલ બનાવતો, ડાઉનલોડ કે શેર કરતો નથી."
+      ]
+    }
+  },
+  "hi": {
+    "help": "और सहायता: दस्तावेज़ और सूची",
+    "compare": "वर्ज़न की तुलना",
+    "fields": {
+      "freeHelp": [
+        "Free स्नैपशॉट खोजें",
+        "लेबल खोजें या तारीख, लागत और मार्जिन के फ़िल्टर लगाएँ। स्नैपशॉट न मिले तो फ़िल्टर हटाएँ। Load more से पुराने रिकॉर्ड देखें; लोड न हो तो पेज रीफ़्रेश करें।"
+      ],
+      "filters": [
+        "सूची को सीमित करें",
+        "फ़िल्टर से तारीख, मार्जिन या उत्पादन लागत के अनुसार क्रम और मार्जिन सीमा चुनें। Favourites में स्टार वाले रिकॉर्ड और Archived में संग्रहित स्नैपशॉट मिलते हैं। रिकॉर्ड न मिले तो फ़िल्टर हटाएँ।"
+      ],
+      "breakdown": [
+        "चुना हुआ विवरण पढ़ें",
+        "Active breakdown बैज चुना स्नैपशॉट बताता है। धागा, अन्य खर्च, उत्पादन लागत, बिक्री मूल्य और लाभ देखें। सेव किए आंकड़े आज के रेट नहीं लेते। पुराने अधूरे स्नैपशॉट में विवरण की जगह समीक्षा सूचना हो सकती है।"
+      ],
+      "organize": [
+        "रिकॉर्ड खोजें और सँभालें",
+        "संस्करण पर स्टार लगाकर उसे Favourites में पाएँ। Archive snapshot सक्रिय सूची से छिपाता है; Archived से वापस लाएँ। यह डिलीट नहीं है। पुराने रिकॉर्ड पर Check saved numbers उपलब्ध हो तो उससे पता करें कि सेव आंकड़ों की समीक्षा चाहिए या नहीं।"
+      ],
+      "separateQuality": [
+        "दूसरी क्वालिटी अलग रखें",
+        "Save as separate quality दूसरी क्वालिटी का ड्राफ्ट शुरू करता है। Cost Estimate में नया नाम दें और जाँचकर सेव करें। मूल लागत नहीं बदलती।"
+      ],
+      "customer": [
+        "ग्राहक कोटेशन",
+        "Customer मोड बिक्री मूल्य और ग्राहक शर्तें दिखाता है; आंतरिक लागत, लाभ और नोट्स निजी रहते हैं। पार्टी, वैधता और वैकल्पिक GST नोट भरें तथा त्रुटियाँ जाँचें। प्रीव्यू देखने से कोटेशन नहीं भेजा जाता।"
+      ],
+      "share": [
+        "बनाने के बाद शेयर करें",
+        "ग्राहक PDF बनाने के बाद वर्तमान दस्तावेज़ के लिए Share PDF मिलता है। यह डिवाइस शेयर शीट या WhatsApp खोलता है; प्राप्तकर्ता और भेजना आप चुनते हैं। इससे डिलीवरी की पुष्टि नहीं होती। विवरण बदलें तो नया PDF बनाएँ। टूर कोई फ़ाइल नहीं बनाता, डाउनलोड या शेयर नहीं करता।"
+      ]
+    }
+  }
+} as const
 
-/** Controlled navigation lets the page derive sample dialogs without async data writes. */
-export function SavedCostingsTutorial({step, onStepChange, onComplete, free = false, production = false, inline = false, ending = 'empty', userId, orgId, userMetadata}: {
- step: SavedCostingStep | null; onStepChange: (step: SavedCostingStep | null) => void; onComplete?: () => void
- free?: boolean; production?: boolean; inline?: boolean; ending?: SavedCostingEnding
- userId?: string; orgId?: string; userMetadata?: Record<string, unknown> | null
+export function SavedCostingsTutorial({ step, onStepChange, onComplete, free = false, production = false, inline = false, ending = 'empty', userId, orgId, userMetadata }: {
+    step: SavedCostingStep | null; onStepChange: (step: SavedCostingStep | null) => void; onComplete?: () => void
+    free?: boolean; production?: boolean; inline?: boolean; ending?: SavedCostingEnding
+    userId?: string; orgId?: string; userMetadata?: Record<string, unknown> | null
 }) {
- const {language, tx} = useTranslation()
- const copy = savedCostingsTutorialCopy[language]
- const controls = rateBookTutorialCopy[language]
- const [comparisonTour, setComparisonTour] = useState(false)
- const steps = useMemo(() => comparisonTour && !free ? [...comparisonCostingSteps] : savedCostingTourSteps(free, production), [comparisonTour, free, production])
- const field = step ? savedCostingStepCopy(language, step, {
-  free, ending,
-  openLabel: tx('Use'),
-  previewLabel: free ? tx('View breakdown / Export') : tx('Export'),
-  newLabel: tx('New Costing'),
- }) : null
- const helpFields = free
-  ? [copy.fields.freeHelp, copy.fields.customer, copy.fields.share]
-  : [copy.fields.filters, copy.fields.breakdown, copy.fields.organize,
-     copy.fields.separateQuality, copy.fields.customer, copy.fields.share]
- const index = step ? steps.indexOf(step) : -1
- const panel = useRef<HTMLDivElement>(null)
- const launcher = useRef<HTMLDivElement>(null)
- const returnFocus = useRef<HTMLElement | null>(null)
- const portal = useRef<HTMLDivElement>(null)
- const advance = useCallback(() => {
-  if (index === steps.length - 1) {
-   if (!comparisonTour) {
-    if (userId) void persistTourCompleted('saved-costings', userId)
-    onComplete?.()
-   }
-   onStepChange(null)
-  } else onStepChange(steps[index + 1] ?? null)
- }, [comparisonTour, index, onComplete, onStepChange, steps, userId])
- const navigation = useRef({steps, index, onStepChange, advance})
- useEffect(() => { navigation.current = {steps, index, onStepChange, advance} })
- const [rect, setRect] = useState<{step: SavedCostingStep; bounds: DOMRect} | null>(null)
- const resolve = useCallback((current: SavedCostingStep) => {
-  if (selectors[current]) return resolveTarget(current)
-  const target = returnFocus.current ?? launcher.current?.querySelector<HTMLButtonElement>('button') ?? null
-  return {target, card: target}
- }, [])
- const mobile = useMobileTour(step ?? undefined, panel, resolve)
- const close = useCallback(() => onStepChange(null), [onStepChange])
- const active = step !== null
-
- useEffect(() => {
-  if (!active || !panel.current) return
-  const trigger = returnFocus.current ?? launcher.current?.querySelector<HTMLButtonElement>('button')
-  const originalScroll = {x: window.scrollX, y: window.scrollY}
-  const prior = new Map<HTMLElement, boolean>()
-  const makeInert = () => {
-   for (const el of Array.from(document.body.children)) {
-    if (!(el instanceof HTMLElement) || el === portal.current || el.contains(portal.current)) continue
-    if (!prior.has(el)) prior.set(el, el.inert)
-    el.inert = true
-   }
-  }
-  makeInert()
-  const observer = new MutationObserver(makeInert)
-  observer.observe(document.body, {childList: true})
-  const unlock = lockTourViewport(panel.current)
-  const block = (event: Event) => {
-   if (event.target instanceof Node && panel.current?.contains(event.target)) return
-   event.preventDefault(); event.stopImmediatePropagation()
-  }
-  const focus = () => {
-   if (!panel.current?.contains(document.activeElement)) panel.current?.focus({preventScroll: true})
-  }
-  const keyboard = (event: KeyboardEvent) => {
-   if (event.ctrlKey || event.metaKey || event.altKey) return
-   const {steps: currentSteps, index: currentIndex, onStepChange: change, advance: next} = navigation.current
-   if (event.key === 'Escape') {event.preventDefault(); event.stopImmediatePropagation(); change(null); return}
-   if (['Enter', 'ArrowRight', 'ArrowLeft'].includes(event.key)) {
-    if (event.key === 'Enter' && event.target instanceof HTMLButtonElement && ['skip', 'back'].includes(event.target.dataset.tourControl ?? '')) return
-    event.preventDefault(); event.stopImmediatePropagation()
-    if (event.key === 'ArrowLeft') change(currentSteps[Math.max(0, currentIndex - 1)])
-    else next()
-   }
-   if (event.key === 'Tab') {
-    const buttons = Array.from(panel.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') ?? [])
-    const i = buttons.indexOf(document.activeElement as HTMLButtonElement)
-    event.preventDefault(); event.stopImmediatePropagation()
-    buttons[(i + (event.shiftKey ? -1 : 1) + buttons.length) % buttons.length]?.focus()
-   }
-  }
-  const events = ['pointerdown', 'pointerup', 'click', 'dblclick', 'contextmenu', 'touchstart']
-  events.forEach(name => document.addEventListener(name, block, {capture: true, passive: false}))
-  document.addEventListener('keydown', keyboard, true)
-  document.addEventListener('focusin', focus, true)
-  panel.current.focus({preventScroll: true})
-  return () => {
-   observer.disconnect(); unlock()
-   events.forEach(name => document.removeEventListener(name, block, true))
-   document.removeEventListener('keydown', keyboard, true)
-   document.removeEventListener('focusin', focus, true)
-   prior.forEach((value, el) => {el.inert = value})
-   window.scrollTo({left: originalScroll.x, top: originalScroll.y, behavior: 'instant'})
-   trigger?.focus({preventScroll: true})
-   // Radix restores focus as its closing portal unmounts; restore the launcher after it.
-   window.setTimeout(() => { if (trigger?.isConnected && document.activeElement === document.body) trigger.focus({preventScroll: true}) }, 300)
-  }
- }, [active])
-
- useEffect(() => {
-  if (!step || mobile.mobile) return
-  let frame = 0
-  const start = performance.now()
-  let positioned: HTMLElement | null = null
-  const measure = () => {
-   const {target} = resolve(step)
-   if (target) {
-    if (target !== positioned) {target.scrollIntoView({block: 'start', inline: 'nearest', behavior: 'instant'}); positioned = target}
-    setRect({step, bounds: target.getBoundingClientRect()})
-   }
-   // Bounded mount/animation tracking: navigation remains available if a target is missing.
-   if (performance.now() - start < 1800) frame = requestAnimationFrame(measure)
-  }
-  const update = () => {const {target} = resolve(step); if (target) setRect({step, bounds: target.getBoundingClientRect()})}
-  frame = requestAnimationFrame(measure)
-  window.addEventListener('resize', update)
-  window.addEventListener('scroll', update, true)
-  return () => {cancelAnimationFrame(frame); window.removeEventListener('resize', update); window.removeEventListener('scroll', update, true)}
- }, [step, mobile.mobile, resolve])
- const spotlight = mobile.mobile ? mobile.rects?.field : rect?.step === step ? rect.bounds : null
- const bottom = spotlight && spotlight.top < 380 && spotlight.right > window.innerWidth - 300
- return <>
-  <div ref={launcher} data-costing-tour="guide" className={inline ? 'mb-4' : 'saved-costings-tour-launcher mb-4 flex min-h-0 flex-1 flex-col justify-between h-full'}>
-    <TourInvitation
-      tourId="saved-costings"
-      userId={userId}
-      orgId={orgId}
-      userMetadata={userMetadata}
-      onLaunch={() => {
-       returnFocus.current = launcher.current?.querySelector<HTMLButtonElement>('[data-tour-control="take-tour"], [data-tour-control="quiet-tour"]') ?? null
-       setComparisonTour(false)
-       onStepChange(savedCostingTourSteps(free, production)[0])
-      }}
-      align="full"
-      className="w-full"
-    />
-    <div data-i18n-skip="true" lang={language} className="@container left-rail-bottom mt-auto pt-3">
-     <div className="grid items-start gap-2 @lg:grid-cols-2">
-      {!free && <Button type="button" variant="outline" className={cn(railButton, 'h-auto whitespace-normal')} onClick={event => {
-       returnFocus.current = event.currentTarget
-       setComparisonTour(true)
-       onStepChange(comparisonCostingSteps[0])
-      }}><span className="flex min-w-0 items-center gap-2.5"><GitCompareArrows className={railIcon} aria-hidden="true" /><span className="min-w-0">{copy.compare}</span></span><ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" /></Button>}
-      <details className={cn(railSurface, 'group text-xs')}>
-       <summary className="flex min-h-11 cursor-pointer select-none list-none items-center justify-between gap-2.5 px-3.5 py-2.5 text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden"><span className="flex min-w-0 items-center gap-2.5"><CircleHelp className={railIcon} aria-hidden="true" /><span className="min-w-0">{copy.help}</span></span><ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" /></summary>
-       <div className="max-h-[40dvh] space-y-3 overflow-y-auto border-t border-hairline px-3.5 py-3">{helpFields.map(([title, description]) => <section key={title}>
-        <h3 className="font-semibold text-ink">{title}</h3><p className="mt-1 leading-relaxed text-body">{description}</p>
-       </section>)}</div>
-      </details>
-     </div>
-    </div>
-  </div>
-  {step && createPortal(<div ref={portal} data-testid="saved-costings-tutorial" data-i18n-skip="true" lang={language} className="guided-tour-portal fixed inset-0 z-[100]" style={{pointerEvents: 'auto'}}>
-   <div aria-hidden="true" className="guided-tour-backdrop absolute inset-0 bg-black/55 backdrop-blur-xs" style={spotlight ? {clipPath: `polygon(evenodd, 0% 0%,100% 0%,100% 100%,0% 100%,0% 0%,${spotlight.left}px ${spotlight.top}px,${spotlight.left}px ${spotlight.bottom}px,${spotlight.right}px ${spotlight.bottom}px,${spotlight.right}px ${spotlight.top}px,${spotlight.left}px ${spotlight.top}px)`} : undefined}/>
-   {spotlight && <div className="guided-tour-highlight pointer-events-none fixed rounded-lg border-2 border-saffron ring-4 ring-saffron/30" style={{left: spotlight.left - 4, top: spotlight.top - 4, width: spotlight.width + 8, height: spotlight.height + 8}}/>}
-   <div ref={panel} role="dialog" aria-modal="true" aria-labelledby="saved-costings-tour-title" aria-describedby="saved-costings-tour-description" tabIndex={-1} className={`guided-tour-panel fixed right-4 z-[101] flex w-[260px] max-w-[calc(100vw-2rem)] max-h-[calc(100dvh-2rem)] flex-col rounded-2xl border border-[var(--wv-saffron-200)]/90 bg-surface p-4 text-ink shadow-2xl outline-none ${bottom ? 'bottom-4' : 'top-4'}`}>
-    <div data-tour-description-scroll><div aria-live="polite"><span className="text-[11px] font-bold text-saffron-deep">{copy.sample}</span><h2 id="saved-costings-tour-title" className="mt-3 text-[17px] font-bold">{field?.[0]}</h2><p id="saved-costings-tour-description" className="mt-3 text-[13.5px] leading-relaxed">{field?.[1]}</p></div></div>
-    <div role="progressbar" aria-label={controls.progress} aria-valuenow={index + 1} aria-valuemin={1} aria-valuemax={steps.length} className="mt-4 h-1.5 rounded-full bg-[var(--wv-saffron-50)]"><div className="h-full rounded-full bg-saffron" style={{width: `${(index + 1) / steps.length * 100}%`}}/></div>
-    <div className="guided-tour-controls mt-3 flex items-center justify-between gap-1">
-      <Button variant="ghost" size="sm" data-tour-control="skip" onClick={close}>{controls.skip}</Button>
-      <span className="text-xs">{index + 1}/{steps.length}</span>
-      <Button variant="outline" size="sm" data-tour-control="back" disabled={index === 0} onClick={() => onStepChange(steps[index - 1])}>{controls.back}</Button>
-      <Button size="sm" data-tour-control="next" className="bg-saffron text-white" onClick={advance}>{index === steps.length - 1 ? controls.finish : controls.next}</Button>
-    </div>
-   </div>
-  </div>, document.body)}
- </>
+    const { language } = useTranslation()
+    const copy = railCopy[language]
+    const [comparisonTour, setComparisonTour] = useState(false)
+    const launcher = useRef<HTMLDivElement>(null)
+    const returnFocus = useRef<HTMLElement | null>(null)
+    const helpFields = free ? [copy.fields.freeHelp, copy.fields.customer, copy.fields.share]
+        : [copy.fields.filters, copy.fields.breakdown, copy.fields.organize, copy.fields.separateQuality, copy.fields.customer, copy.fields.share]
+    return <>
+        <div ref={launcher} data-costing-tour="guide" className={inline ? 'mb-4' : 'saved-costings-tour-launcher mb-4 flex min-h-0 flex-1 flex-col justify-between h-full'}>
+            <TourInvitation tourId="saved-costings" userId={userId} orgId={orgId} userMetadata={userMetadata} align="full" className="w-full" onLaunch={() => {
+                returnFocus.current = launcher.current?.querySelector<HTMLButtonElement>('[data-tour-control="take-tour"], [data-tour-control="quiet-tour"]') ?? null
+                setComparisonTour(false)
+                onStepChange(free ? 'snapshots' : 'find')
+            }} />
+            <div data-i18n-skip="true" lang={language} className="@container left-rail-bottom mt-auto pt-3">
+                <div className="grid items-start gap-2 @lg:grid-cols-2">
+                    {!free && <Button type="button" variant="outline" data-tour-control="compare-tour" className={cn(railButton, 'h-auto whitespace-normal')} onClick={event => {
+                        returnFocus.current = event.currentTarget
+                        setComparisonTour(true)
+                        onStepChange('compareSelect')
+                    }}><span className="flex min-w-0 items-center gap-2.5"><GitCompareArrows className={railIcon} aria-hidden="true" /><span className="min-w-0">{copy.compare}</span></span><ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" /></Button>}
+                    <details className={cn(railSurface, 'group text-xs')}>
+                        <summary className="flex min-h-[44px] cursor-pointer select-none list-none items-center justify-between gap-2.5 px-3.5 py-2.5 text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden"><span className="flex min-w-0 items-center gap-2.5"><CircleHelp className={railIcon} aria-hidden="true" /><span className="min-w-0">{copy.help}</span></span><ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" /></summary>
+                        <div className="max-h-[40dvh] space-y-3 overflow-y-auto border-t border-hairline px-3.5 py-3">{helpFields.map(([title, description]) => <section key={title}><h3 className="font-semibold text-ink">{title}</h3><p className="mt-1 leading-relaxed text-body">{description}</p></section>)}</div>
+                    </details>
+                </div>
+            </div>
+        </div>
+        {step && <SavedCostingsTourRuntime step={step} onStepChange={onStepChange} onComplete={onComplete} free={free} production={production} comparison={comparisonTour} ending={ending} userId={userId} launcher={launcher} returnFocus={returnFocus} />}
+    </>
 }

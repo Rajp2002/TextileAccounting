@@ -1,0 +1,579 @@
+{
+  "scenario": "yarn-stock",
+  "lang": "en",
+  "size": "1024x768",
+  "steps": [
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Unused yarn, by yarn",
+      "body": "This is yarn on hand that has not been woven yet, in kg. Here 100 kg.",
+      "step": "ys-balance",
+      "status": "ready",
+      "eyebrow": "Sample · Step 1 of 7",
+      "progress": null,
+      "panel": {
+        "x": 285,
+        "y": 342,
+        "w": 360,
+        "h": 221
+      },
+      "highlight": {
+        "x": 285,
+        "y": 234,
+        "w": 702,
+        "h": 93
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "div(role=dialog)",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": {
+        "replica": true,
+        "balance": "100 kg",
+        "pending": false,
+        "unmounts": 0,
+        "sameSearchNode": false,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "yarn": {
+        "mounts": 1,
+        "unmounts": 0,
+        "date": "2026-09-14",
+        "sameDateNode": true,
+        "anchors": 0,
+        "sections": [
+          "header",
+          "balance",
+          "date",
+          "yarns",
+          "costings",
+          "history"
+        ],
+        "sampleBanners": 1
+      },
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 768,
+      "vw": 1024
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Record the yarn you already have",
+      "body": "“Opening weight” records each yarn's weight once, when you start: here 100 kg.",
+      "step": "ys-opening",
+      "status": "ready",
+      "eyebrow": "Sample · Step 2 of 7",
+      "progress": null,
+      "panel": {
+        "x": 608,
+        "y": 178,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 96,
+        "y": 275,
+        "w": 480,
+        "h": 299
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 80,
+        "y": 178,
+        "w": 512,
+        "h": 413
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": {
+        "replica": true,
+        "balance": "100 kg",
+        "pending": false,
+        "unmounts": 0,
+        "sameSearchNode": false,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "yarn": {
+        "mounts": 1,
+        "unmounts": 0,
+        "date": "2026-09-14",
+        "sameDateNode": true,
+        "anchors": 0,
+        "sections": [
+          "header",
+          "balance",
+          "date",
+          "yarns",
+          "costings",
+          "history"
+        ],
+        "sampleBanners": 1,
+        "weight": "100"
+      },
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 768,
+      "vw": 1024
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Add each new delivery",
+      "body": "“Add yarn” adds a delivery to that yarn: 100 + 20 = 120 kg.",
+      "step": "ys-receipt",
+      "status": "ready",
+      "eyebrow": "Sample · Step 3 of 7",
+      "progress": null,
+      "panel": {
+        "x": 608,
+        "y": 171,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 96,
+        "y": 268,
+        "w": 480,
+        "h": 313
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 80,
+        "y": 171,
+        "w": 512,
+        "h": 427
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": {
+        "replica": true,
+        "balance": "120 kg",
+        "pending": false,
+        "unmounts": 0,
+        "sameSearchNode": false,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "yarn": {
+        "mounts": 1,
+        "unmounts": 0,
+        "date": "2026-09-14",
+        "sameDateNode": true,
+        "anchors": 0,
+        "sections": [
+          "header",
+          "balance",
+          "date",
+          "yarns",
+          "costings",
+          "history"
+        ],
+        "sampleBanners": 1,
+        "weight": "20"
+      },
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 768,
+      "vw": 1024
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Link each fabric to its costing",
+      "body": "“Link costing” copies the kg of each yarn per 100 m from a saved costing. Here warp 6 + weft 4 = 10 kg per 100 m.",
+      "step": "ys-link",
+      "status": "ready",
+      "eyebrow": "Sample · Step 4 of 7",
+      "progress": null,
+      "panel": {
+        "x": 608,
+        "y": 135,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 96,
+        "y": 233,
+        "w": 480,
+        "h": 384
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 80,
+        "y": 135,
+        "w": 512,
+        "h": 498
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": {
+        "replica": true,
+        "balance": "120 kg",
+        "pending": false,
+        "unmounts": 0,
+        "sameSearchNode": false,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "yarn": {
+        "mounts": 1,
+        "unmounts": 0,
+        "date": "2026-09-14",
+        "sameDateNode": true,
+        "anchors": 0,
+        "sections": [
+          "header",
+          "balance",
+          "date",
+          "yarns",
+          "costings",
+          "history"
+        ],
+        "sampleBanners": 1
+      },
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 768,
+      "vw": 1024
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Saving production uses yarn",
+      "body": "When a shift of 200 m is saved, 20 kg is deducted (200 × 10 ÷ 100). Dispatch does not deduct yarn again.",
+      "step": "ys-usage",
+      "status": "ready",
+      "eyebrow": "Sample · Step 5 of 7",
+      "progress": null,
+      "panel": {
+        "x": 285,
+        "y": 319,
+        "w": 360,
+        "h": 243
+      },
+      "highlight": {
+        "x": 285,
+        "y": 579,
+        "w": 702,
+        "h": 96
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 363,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": {
+        "replica": true,
+        "balance": "100 kg",
+        "pending": false,
+        "unmounts": 0,
+        "sameSearchNode": false,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "yarn": {
+        "mounts": 1,
+        "unmounts": 0,
+        "date": "2026-09-14",
+        "sameDateNode": true,
+        "anchors": 0,
+        "sections": [
+          "header",
+          "balance",
+          "date",
+          "yarns",
+          "costings",
+          "history"
+        ],
+        "sampleBanners": 1,
+        "movement": "Sample yarn · Production · −20 kg200 m × 10 ÷ 100 = 20 kgBalance after: 100 kg"
+      },
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 768,
+      "vw": 1024
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "After weighing, enter the weighed total",
+      "body": "“Correct balance” replaces the balance with what you weighed. Enter 98, not −2.",
+      "step": "ys-correct",
+      "status": "ready",
+      "eyebrow": "Sample · Step 6 of 7",
+      "progress": null,
+      "panel": {
+        "x": 608,
+        "y": 171,
+        "w": 360,
+        "h": 221
+      },
+      "highlight": {
+        "x": 96,
+        "y": 268,
+        "w": 480,
+        "h": 313
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 312,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 80,
+        "y": 171,
+        "w": 512,
+        "h": 427
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": {
+        "replica": true,
+        "balance": "100 kg",
+        "pending": false,
+        "unmounts": 0,
+        "sameSearchNode": false,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "yarn": {
+        "mounts": 1,
+        "unmounts": 0,
+        "date": "2026-09-14",
+        "sameDateNode": true,
+        "anchors": 0,
+        "sections": [
+          "header",
+          "balance",
+          "date",
+          "yarns",
+          "costings",
+          "history"
+        ],
+        "sampleBanners": 1,
+        "weight": "98",
+        "movement": "Sample yarn · Production · −20 kg200 m × 10 ÷ 100 = 20 kgBalance after: 100 kg"
+      },
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 768,
+      "vw": 1024
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Record the yarn in your godown",
+      "body": "Start with each yarn's opening weight, then link your fabric costings so production can deduct yarn.",
+      "step": "ys-handoff",
+      "status": "ready",
+      "eyebrow": "Step 7 of 7",
+      "progress": null,
+      "panel": {
+        "x": 368,
+        "y": 119,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 744,
+        "y": 119,
+        "w": 136,
+        "h": 47
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": {
+        "replica": false,
+        "pending": false,
+        "unmounts": 0,
+        "sameSearchNode": false,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "yarn": {
+        "mounts": 1,
+        "unmounts": 0,
+        "date": "2026-09-14",
+        "sameDateNode": true,
+        "anchors": 1,
+        "sections": [],
+        "sampleBanners": 0
+      },
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 768,
+      "vw": 1024
+    }
+  ],
+  "logs": [
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction"
+  ],
+  "apiRequests": [],
+  "preClick": null,
+  "sampling": "legacy-900ms",
+  "before": {
+    "x": 0,
+    "y": 0,
+    "inner": null
+  },
+  "after": {
+    "scroll": {
+      "x": 0,
+      "y": 0,
+      "inner": null
+    },
+    "active": "<button data-slot=\"button\" data-variant=\"outline\" data-size=\"default\" class=\"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm ",
+    "activeAnchor": "yarn.opening",
+    "activeRateBookField": null,
+    "activeControl": null,
+    "serverCalls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "navigations": [],
+    "scrollCalls": [
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "smooth"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "smooth"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      }
+    ],
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"yarn-stock\":{\"firstShown\":\"2026-09-29T21:21:31.765Z\",\"version\":\"v1\",\"firstStarted\":true,\"completed\":true,\"completedVersion\":\"v2\"}}"
+    },
+    "yarn": {
+      "mounts": 1,
+      "unmounts": 0,
+      "date": "2026-09-14",
+      "sameDateNode": true,
+      "liveHidden": false,
+      "replica": false
+    },
+    "search": null
+  },
+  "issues": []
+}

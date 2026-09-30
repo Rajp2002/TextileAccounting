@@ -128,14 +128,14 @@ export default function QualityStockClient({ initialData }: { initialData: Quali
                     <Button asChild variant="outline" className="h-10 rounded-xl border-loom/30 text-loom hover:bg-loom/5 gap-1.5 font-semibold shadow-xs">
                         <Link href="/owner/stock/audit">
                             <Warehouse className="h-4 w-4" />
-                            Audit Inventory
+                            {tx('audit')}
                         </Link>
                     </Button>
                     <Button variant="outline" disabled={busy} onClick={() => void load()} className="h-10 rounded-xl border-hairline font-semibold shadow-xs hover:bg-surface-soft">
                         <RefreshCw className={`mr-2 h-4 w-4 ${busy ? 'animate-spin' : ''}`} />
                         {tx('refresh')}
                     </Button>
-                    <Button onClick={() => open('opening')} className="h-10 rounded-xl bg-loom text-white font-semibold shadow-xs hover:bg-loom-hover">
+                    <Button data-tour-anchor="fabric.opening" onClick={() => open('opening')} className="h-10 rounded-xl bg-loom text-white font-semibold shadow-xs hover:bg-loom-hover">
                         <Plus className="mr-1.5 h-4 w-4" />
                         {tx('opening')}
                     </Button>
@@ -209,7 +209,7 @@ export default function QualityStockClient({ initialData }: { initialData: Quali
                                         {!quality.opening_recorded && (
                                             <span className="shrink-0 inline-flex items-center gap-1 rounded-full border border-[var(--wv-ochre-200)]/80 bg-[var(--wv-ochre-50)]/90 px-2 py-0.5 text-[10px] font-bold text-[var(--wv-ochre-800)]" title={tx('openingPending')}>
                                                 <AlertCircle className="h-3 w-3" />
-                                                <span>Pending</span>
+                                                <span>{tx('pending')}</span>
                                             </span>
                                         )}
                                     </div>

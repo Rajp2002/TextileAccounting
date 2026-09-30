@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo, useRef } from 'react'
+import React, { useState, useMemo, useRef, useEffect } from 'react'
 import { useLocalizedPageTitle } from '@/hooks/use-localized-page-title'
 import { useSearchParams } from 'next/navigation'
 import { useTranslation } from '@/lib/i18n/context'
@@ -16,7 +16,8 @@ import { railIcon, railSurface } from '@/components/ui/rail'
 import { cn } from '@/lib/utils'
 import { NavigationLink } from '@/components/navigation/navigation-link'
 import { TourInvitation } from '@/components/tours/TourInvitation'
-import MachinesTutorial from '@/components/tours/MachinesTutorial'
+import MachinesGuidedTour from '@/components/machines/MachinesGuidedTour'
+import { tourCommonCopy } from '@/lib/i18n/tour-common'
 import { makeMachinesTourExamples, machinesTourEditor, type MachinesTourStep } from '@/lib/machines-tour'
 import { machinesTutorialCopy } from '@/lib/i18n/machines-tutorial'
 
@@ -34,6 +35,16 @@ export default function MachinesRegister({
   const { tx, language } = useTranslation()
   const [tourStep, setTourStep] = useState<MachinesTourStep | null>(null)
   const tourLauncher = useRef<HTMLDivElement>(null)
+  const tourReturnFocus = useRef<HTMLElement | null>(null)
+  const launchScroll = useRef<{ x: number; y: number } | null>(null)
+  // Sample rows can shorten a long page before the lazy runtime captures scroll.
+  useEffect(() => {
+    if (tourStep === null && launchScroll.current) {
+      window.scrollTo({ left: launchScroll.current.x, top: launchScroll.current.y, behavior: 'instant' })
+      launchScroll.current = null
+    }
+  }, [tourStep])
+  const tourSampleActive = tourStep !== null && tourStep !== 'mc-handoff'
   const copy = machinesTutorialCopy[language]
   const examples = useMemo(() => makeMachinesTourExamples(machinesTutorialCopy[language].example), [language])
   const preview = tourStep ? machinesTourEditor(tourStep) : null
@@ -109,12 +120,12 @@ export default function MachinesRegister({
       returnTo={returnTo}
     >
       {({ add, edit, isOpen }) => (
-        <div className="machines-workspace-shell mx-auto w-full space-y-5 pb-10 sm:space-y-6">
+        <div inert={tourStep !== null} className="machines-workspace-shell mx-auto w-full space-y-5 pb-10 sm:space-y-6">
           {/* 1. Page Header */}
           <div data-machines-tour="header">
             <MachinesPageHeader
               onAdd={tourStep ? () => {} : add}
-              returnTo={tourStep ? undefined : returnTo}
+              returnTo={tourSampleActive ? undefined : returnTo}
             />
           </div>
           {!isOpen && (
@@ -127,38 +138,42 @@ export default function MachinesRegister({
                   userMetadata={userMetadata}
                   align="full"
                   className="w-full"
-                  onLaunch={() => setTourStep('purpose')}
+                  onLaunch={() => {
+                    tourReturnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+                    launchScroll.current = { x: window.scrollX, y: window.scrollY }
+                    setTourStep('mc-purpose')
+                  }}
                 />
               </div>
             </aside>
           )}
-          {tourStep && <p role="status" className="text-xs font-semibold text-saffron-deep">{machinesTutorialCopy[language].sample}</p>}
+          {tourSampleActive && <p data-tour-sample-banner role="status" className="text-xs text-muted-foreground">{tourCommonCopy[language].sampleBanner}</p>}
 
           {/* 2. Machine Toolbar */}
           <div data-machines-tour="toolbar">
             <MachineToolbar
-              search={tourStep ? '' : search}
+              search={tourSampleActive ? '' : search}
               onSearchChange={tourStep ? () => {} : handleSearchChange}
-              statusFilter={tourStep ? 'all' : statusFilter}
+              statusFilter={tourSampleActive ? 'all' : statusFilter}
               onStatusFilterChange={tourStep ? () => {} : handleFilterChange}
-              totalCount={tourStep ? examples.length : machines.length}
-              filteredCount={tourStep ? examples.length : visible.length}
+              totalCount={tourSampleActive ? examples.length : machines.length}
+              filteredCount={tourSampleActive ? examples.length : visible.length}
             />
           </div>
 
           {/* 3. Machine Card Grid or Empty State */}
-          {tourStep ? (
+          {tourSampleActive ? (
             <MachineGrid machines={examples} onEdit={() => {}} tourPreview />
           ) : visible.length > 0 ? (
-            <MachineGrid machines={visible} onEdit={edit} />
+            <MachineGrid machines={visible} onEdit={tourStep ? () => {} : edit} />
           ) : (
             <MachineEmptyState
               totalCount={machines.length}
               hasSearch={Boolean(search.trim())}
               statusFilter={statusFilter}
-              onAdd={add}
-              onClearSearch={() => handleSearchChange('')}
-              onClearFilter={() => handleFilterChange('all')}
+              onAdd={tourStep ? () => {} : add}
+              onClearSearch={() => { if (!tourStep) handleSearchChange('') }}
+              onClearFilter={() => { if (!tourStep) handleFilterChange('all') }}
             />
           )}
           {!isOpen && (
@@ -217,7 +232,7 @@ export default function MachinesRegister({
             </aside>
           )}
           {preview && <MachineEditor key={preview} today={today} tourPreview={{ machine: examples[0], editing: false }}>{() => null}</MachineEditor>}
-          {tourStep && <MachinesTutorial step={tourStep} onStepChange={setTourStep} launcher={tourLauncher} userId={userId} />}
+          {tourStep && <MachinesGuidedTour step={tourStep} onStepChange={setTourStep} launcher={tourLauncher} returnFocus={tourReturnFocus} userId={userId} />}
         </div>
       )}
     </MachineEditor>

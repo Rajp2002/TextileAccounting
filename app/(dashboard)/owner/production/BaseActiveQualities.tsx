@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslation } from '@/lib/i18n/context'
 import { toast } from 'sonner'
 import {
     AlertCircle,
@@ -100,6 +101,7 @@ export default function BaseActiveQualities({
     onOpenActivateModalChange,
 }: BaseActiveQualitiesProps) {
     const router = useRouter()
+    const { t } = useTranslation()
     const [pendingAction, setPendingAction] = useState<string | null>(null)
     const [costingSearch, setCostingSearch] = useState('')
 
@@ -406,9 +408,10 @@ export default function BaseActiveQualities({
                 <Button
                     size="sm"
                     onClick={onActivateQuality ?? (() => onOpenActivateModalChange?.(true))}
+                    data-tour-anchor="production.activate"
                     className="production-inline-activate h-9 px-3.5 rounded-xl bg-loom text-white font-bold shadow-xs hover:bg-loom-elevated"
                 >
-                    <Plus className="mr-1.5 h-4 w-4" /> Activate Quality
+                    <Plus className="mr-1.5 h-4 w-4" /> <span data-i18n-skip="true">{t('production.activateQuality')}</span>
                 </Button>
             </div>
 
@@ -462,7 +465,8 @@ export default function BaseActiveQualities({
                                                     variant="ghost"
                                                     size="icon-xs"
                                                     className="h-8 w-8 text-muted-foreground hover:text-ink rounded-lg"
-                                                    aria-label="Quality actions"
+                                                    data-i18n-skip="true"
+                                                    aria-label={t('production.qualityActions')}
                                                 >
                                                     <MoreVertical className="h-4 w-4" />
                                                 </Button>
@@ -505,7 +509,7 @@ export default function BaseActiveQualities({
                                         </div>
                                         {job.planned_cost_per_meter > 0 && (
                                             <div className="rounded-lg bg-surface-soft/60 px-2.5 py-1 text-body">
-                                                Cost: <span className="font-bold text-ink">{formatINR(job.planned_cost_per_meter)}/m</span>
+                                                <span data-i18n-skip="true">{t('production.cost')}</span>: <span className="font-bold text-ink">{formatINR(job.planned_cost_per_meter)}/m</span>
                                             </div>
                                         )}
                                     </div>
@@ -531,7 +535,7 @@ export default function BaseActiveQualities({
                                             onClick={() => openAssignMachines(job)}
                                             className="h-8 rounded-lg px-3 text-xs font-bold border-hairline bg-surface hover:bg-surface-soft"
                                         >
-                                            <Wrench className="mr-1.5 h-3.5 w-3.5" /> Assign Looms
+                                            <Wrench className="mr-1.5 h-3.5 w-3.5" /> <span data-i18n-skip="true">{t('production.assignLooms')}</span>
                                         </Button>
                                     </div>
                                 </div>
@@ -592,7 +596,7 @@ export default function BaseActiveQualities({
                                                 </span>
                                             </div>
                                             <p className="text-xs text-muted-foreground mt-0.5">
-                                                Weaver wage: {costing.worker_rate_per_meter > 0 ? formatINR(costing.worker_rate_per_meter) : '—'}/m · Cost: {costing.production_cost_per_meter > 0 ? formatINR(costing.production_cost_per_meter) : '—'}/m
+                                                Weaver wage: {costing.worker_rate_per_meter > 0 ? formatINR(costing.worker_rate_per_meter) : '—'}/m · <span data-i18n-skip="true">{t('production.cost')}</span>: {costing.production_cost_per_meter > 0 ? formatINR(costing.production_cost_per_meter) : '—'}/m
                                             </p>
                                         </div>
 
