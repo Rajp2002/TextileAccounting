@@ -24,17 +24,25 @@ export function useFreeMeter(enabled:boolean,state:EstimateState,label:string,on
   if(!enabled)return
   // Only Free uses the browser Supabase client, so load it here instead of in
   // the estimator bundle that Lite and Base owners land on after sign-in.
-  let cancelled=false,unsubscribe:(()=>void)|undefined
-  void import('@/lib/supabase/client').then(({createClient})=>{
-   if(cancelled)return
-   const {data:{subscription}}=createClient().auth.onAuthStateChange((event:AuthChangeEvent,session:Session|null)=>{
-    if(event==='SIGNED_OUT'||event==='SIGNED_IN'&&status?.account.id&&session?.user.id!==status.account.id){
-     pending.current=null;setCompleted(null);setStatus(null);window.location.assign('/login')
-    }
-   })
-   unsubscribe=()=>subscription.unsubscribe()
-  }).catch(()=>{})
-  return()=>{cancelled=true;unsubscribe?.()}
+  let cancelled=false,loading=false,unsubscribe:(()=>void)|undefined
+  const subscribe=()=>{
+   if(cancelled||loading||unsubscribe)return
+   loading=true
+   import('@/lib/supabase/client').then(({createClient})=>{
+    if(cancelled)return
+    const {data:{subscription}}=createClient().auth.onAuthStateChange((event:AuthChangeEvent,session:Session|null)=>{
+     if(event==='SIGNED_OUT'||event==='SIGNED_IN'&&status?.account.id&&session?.user.id!==status.account.id){
+      pending.current=null;setCompleted(null);setStatus(null);window.location.assign('/login')
+     }
+    })
+    unsubscribe=()=>subscription.unsubscribe()
+   }).catch(()=>{}).finally(()=>{loading=false})
+  }
+  subscribe()
+  // A failed chunk load must not leave Free without its cross-tab sign-out
+  // redirect, so retry when the tab regains focus or the network returns.
+  window.addEventListener('focus',subscribe);window.addEventListener('online',subscribe)
+  return()=>{cancelled=true;window.removeEventListener('focus',subscribe);window.removeEventListener('online',subscribe);unsubscribe?.()}
  },[enabled,status?.account.id])
  const signature=JSON.stringify(canonicalFreeInputs(state))
  const stale=!!completed&&completed.signature!==signature

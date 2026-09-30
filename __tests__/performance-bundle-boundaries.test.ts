@@ -47,6 +47,10 @@ describe('performance-sensitive bundle boundaries', () => {
         // Only Free needs the browser Supabase client, so it loads on demand.
         expect(freeMeter).not.toContain("import {createClient} from '@/lib/supabase/client'")
         expect(freeMeter).toContain("import('@/lib/supabase/client')")
+        // ...and a failed chunk load retries instead of silently dropping the
+        // cross-tab sign-out redirect.
+        expect(freeMeter).toContain("window.addEventListener('focus',subscribe);window.addEventListener('online',subscribe)")
+        expect(freeMeter).toContain('if(cancelled||loading||unsubscribe)return')
     })
 
     it('loads Sentry Session Replay after the page is idle instead of in every first-load bundle', () => {
