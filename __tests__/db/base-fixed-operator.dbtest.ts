@@ -16,7 +16,7 @@ async function fixture(approved = true, jobRate = 2) {
     await db.query(`INSERT INTO public.estimator_quotes(id, org_id, record_kind, quality_label, yarn_denier, meters, yarn_rate_per_kg,
         landed_cost_per_meter, quote_price_per_meter, intended_margin_percent, worker_rate_per_m)
         VALUES ($1, $2, 'costing', 'Cotton', 100, 1000, 100, 20, 40, 50, $3)`, [ids.costing, owner.orgId, jobRate])
-    await db.query("INSERT INTO public.base_production_jobs(id, org_id, costing_id, quality_label, target_meters, start_date, status) VALUES ($1, $2, $3, 'Cotton', 10000, $4, 'active')", [ids.job, owner.orgId, ids.costing, monthStart])
+    await db.query("INSERT INTO public.base_production_jobs(id, org_id, costing_id, quality_label, target_meters, start_date, status, worker_rate_per_meter) VALUES ($1, $2, $3, 'Cotton', 10000, $4, 'active', $5)", [ids.job, owner.orgId, ids.costing, monthStart, jobRate])
     for (const machine of ids.machines) {
         await db.query("INSERT INTO public.base_production_machines(id, org_id, name, machine_type) VALUES ($1, $2, $3, 'air_jet')", [machine, owner.orgId, machine])
         await db.query('INSERT INTO public.base_machine_job_contexts(org_id, machine_id, job_id, effective_from) VALUES ($1, $2, $3, $4)', [owner.orgId, machine, ids.job, monthStart])
@@ -93,11 +93,11 @@ describe('Base fixed operator production', () => {
         const { rows } = await db.query(`SELECT worker_id, meters::float8 AS meters, worker_rate_snapshot::float8 AS rate,
             pay_basis_snapshot AS basis, piece_earning_state AS state FROM public.base_daily_production_allocations
             WHERE org_id = $1 ORDER BY meters`, [f.owner.orgId])
-        expect(rows.filter(row => row.worker_id === f.fixed)).toEqual([
+        expect(rows.filter((row: { worker_id: string }) => row.worker_id === f.fixed)).toEqual([
             { worker_id: f.fixed, meters: 100, rate: 0, basis: 'fixed_monthly', state: 'inapplicable' },
             { worker_id: f.fixed, meters: 200, rate: 0, basis: 'fixed_monthly', state: 'inapplicable' },
         ])
-        expect(rows.find(row => row.worker_id === f.piece)).toMatchObject({ rate: 2, state: 'applicable' })
+        expect(rows.find((row: { worker_id: string }) => row.worker_id === f.piece)).toMatchObject({ rate: 2, state: 'applicable' })
         expect((await db.query('SELECT worker_rate_per_meter::float8 AS rate FROM public.base_production_jobs WHERE id = $1', [f.job])).rows[0].rate).toBe(2)
         expect((await db.query('SELECT count(*)::int AS count FROM public.base_daily_production_entries WHERE org_id = $1', [f.owner.orgId])).rows[0].count).toBe(2)
     })

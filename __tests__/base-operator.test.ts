@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { hasBaseOperatorEligibility, isBaseOperatorAvailable, resolveBasePieceRate } from '../lib/base-operator'
 import { calculateBaseEntryGrossPay, calculateBaseWorkerPayables, type BaseProductionWorker } from '../lib/base-production-core'
+import { buildBasePayrollReadiness } from '../lib/base-payroll-readiness'
 import { normalizeWorker } from '../app/(dashboard)/owner/production/registers/normalize'
 
 const fixed: BaseProductionWorker = {
@@ -13,7 +14,8 @@ const fixed: BaseProductionWorker = {
 describe('Base operator eligibility', () => {
     it('keeps legacy piece workers eligible without approving monthly support staff by title', () => {
         expect(hasBaseOperatorEligibility({ ...fixed, pay_type: 'piece_rate', operator_eligible: undefined })).toBe(true)
-        expect(hasBaseOperatorEligibility({ ...fixed, operator_eligible: undefined, role: 'Loom operator' })).toBe(false)
+        const unapprovedOperator = { ...fixed, operator_eligible: undefined, role: 'Loom operator' }
+        expect(hasBaseOperatorEligibility(unapprovedOperator)).toBe(false)
         expect(hasBaseOperatorEligibility({ ...fixed, pay_type: 'piece_rate', operator_eligible: false })).toBe(false)
     })
     it('checks approval, shift, active state and employment bounds independently of pay', () => {
@@ -53,5 +55,19 @@ describe('Base prospective piece rate contract', () => {
         const payable = calculateBaseWorkerPayables({ workers: [fixed], entries, advances: [], settlements: [], periodEnd: '2026-09-30' })[0]
         expect(payable).toMatchObject({ meters: 600, gross_pay: 18000 })
         expect(calculateBaseWorkerPayables({ workers: [{ ...fixed, operator_eligible: false }], entries: [], advances: [], settlements: [], periodEnd: '2026-09-30' })[0].gross_pay).toBe(18000)
+    })
+})
+
+describe('Fixed production payroll readiness', () => {
+    const entry = { id: 'entry', worker_id: fixed.id, job_id: 'job', production_date: '2026-09-02', meters: 100,
+        worker_rate_snapshot: 0, piece_earning_state: 'inapplicable' as const, allocation_mode: 'machine_breakdown' as const, notes: null, created_at: '' }
+    const allocation = { id: 'allocation', entry_id: entry.id, worker_id: fixed.id, assignment_id: 'assignment', machine_id: 'machine',
+        job_id: 'job', meters: 100, worker_rate_snapshot: 0, machine_label: 'Loom', job_label: 'Cotton',
+        piece_earning_state: 'inapplicable' as const, assignment_snapshot: {}, created_at: '' }
+    const payables = calculateBaseWorkerPayables({ workers: [fixed], entries: [entry], advances: [], settlements: [], periodEnd: '2026-09-30' })
+    it('accepts inapplicable piece rates while checking machine attribution', () => {
+        expect(buildBasePayrollReadiness({ payables, entries: [entry], allocations: [allocation] })).toMatchObject({ readyWorkerCount: 1, issueCount: 0 })
+        expect(buildBasePayrollReadiness({ payables, entries: [entry], allocations: [] }).workers[0].issues[0].code).toBe('missing_allocation')
+        expect(buildBasePayrollReadiness({ payables, entries: [entry], allocations: [{ ...allocation, meters: 90 }] }).workers[0].issues[0].code).toBe('allocation_mismatch')
     })
 })
