@@ -130,52 +130,6 @@ export function useGuidedTourModal({ panel, portal, navigation, launcher, return
     }, [panel, portal, navigation, launcher, returnScroll, returnFocus, focusReturn])
 }
 
-export type TourPlacement<Step> = { step: Step; rect: DOMRect; bottom: boolean; left: boolean }
-
-/**
- * @deprecated New tours use useTourStep. Kept until all existing tours migrate in GT-16.
- * Keeps the desktop panel beside the current target: scrolls the target into
- * view once, then re-measures for 1.5s and on resize or scroll. The panel
- * moves to the left or bottom when it would cover the target, except for
- * targets inside the tour's own preview (`previewSelector`).
- */
-export function useGuidedTourPlacement<Step>({ step, mobile, resolve, language, panel, previewSelector }: {
-    step: Step
-    mobile: boolean
-    resolve: (step: Step) => { target: HTMLElement | null }
-    language: string
-    panel: RefObject<HTMLDivElement | null>
-    previewSelector: string
-}): TourPlacement<Step> | null {
-    const [measurement, setMeasurement] = useState<TourPlacement<Step> | null>(null)
-    useEffect(() => {
-        if (mobile) return
-        let frame = 0
-        let positioned: HTMLElement | null = null
-        const start = performance.now()
-        const measure = () => {
-            const { target } = resolve(step)
-            if (target && panel.current) {
-                if (target !== positioned) { target.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' }); positioned = target }
-                const rect = target.getBoundingClientRect()
-                const bounds = panel.current.getBoundingClientRect()
-                const inPreview = Boolean(target.closest(previewSelector))
-                const left = !inPreview && rect.right > window.innerWidth - bounds.width - 32 && rect.left > window.innerWidth / 2
-                const bottom = !inPreview && !left && rect.top < bounds.height + 32 && rect.right > window.innerWidth - bounds.width - 32
-                setMeasurement({ step, rect, left, bottom })
-            }
-            if (performance.now() - start < 1500) frame = requestAnimationFrame(measure)
-        }
-        const update = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(measure) }
-        frame = requestAnimationFrame(measure)
-        window.addEventListener('resize', update)
-        window.addEventListener('scroll', update, true)
-        return () => { cancelAnimationFrame(frame); window.removeEventListener('resize', update); window.removeEventListener('scroll', update, true) }
-    }, [step, mobile, resolve, language, panel, previewSelector])
-    return measurement?.step === step ? measurement : null
-}
-
-
 export type TourStepStatus = 'preparing' | 'ready' | 'unavailable'
 type StepMeasurement = { key: object; status: TourStepStatus; rect: Rect | null; placement: Placement | null }
 

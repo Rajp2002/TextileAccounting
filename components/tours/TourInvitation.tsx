@@ -18,12 +18,13 @@ export interface TourInvitationProps {
     orgId?: string
     onLaunch?: () => void | Promise<void>
     className?: string
-    align?: 'start' | 'end' | 'full'
+    /** The full-width guide card is the only invitation layout; callers keep passing it. */
+    align?: 'full'
     /** Optional test locator */
     dataTestId?: string
 }
 
-export function TourInvitation({ tourId, userId, userMetadata, orgId, onLaunch, className = '', align = 'start', dataTestId }: TourInvitationProps) {
+export function TourInvitation({ tourId, userId, userMetadata, orgId, onLaunch, className = '', dataTestId }: TourInvitationProps) {
     const { language } = useTranslation()
     const copy = tourInvitationCopy[language]
     const common = tourCommonCopy[language]
@@ -51,7 +52,7 @@ export function TourInvitation({ tourId, userId, userMetadata, orgId, onLaunch, 
         className="min-h-[44px] min-w-[44px] shrink-0"
     >{common.notNow}</Button>
 
-    if (presentation === 'invite' && align === 'full') {
+    if (presentation === 'invite') {
         return <section
             data-testid={dataTestId ?? `tour-guide-${tourId}`}
             data-tour-id={tourId}
@@ -87,37 +88,6 @@ export function TourInvitation({ tourId, userId, userMetadata, orgId, onLaunch, 
         </section>
     }
 
-    if (presentation === 'invite') {
-        return <div
-            data-testid={dataTestId ?? `tour-invitation-${tourId}`}
-            data-tour-invitation="true"
-            data-tour-id={tourId}
-            className={cn('tour-invitation-container flex flex-wrap items-center gap-2.5 p-2.5 text-ink sm:px-3.5 sm:py-2', railSurface, className)}
-        >
-            <div className="flex min-w-0 items-center gap-2">
-                <Compass className={railIcon} aria-hidden="true" />
-                <p id={benefitId} className="text-xs font-medium leading-snug text-ink">{copy.benefits[tourId]}</p>
-            </div>
-            <div className="ml-auto flex shrink-0 items-center gap-2 sm:ml-0">
-                <button
-                    ref={launcherRef}
-                    type="button"
-                    onClick={() => void handleLaunch()}
-                    disabled={isStarting}
-                    aria-describedby={benefitId}
-                    aria-label={launcherAria}
-                    data-testid="tour-invitation-launch"
-                    data-tour-control="take-tour"
-                    className="estimator-touch-target inline-flex min-h-[44px] min-w-[44px] items-center justify-center gap-1.5 rounded-lg border border-hairline-strong bg-surface px-3 py-1.5 text-xs font-semibold text-ink transition-colors hover:bg-surface-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/50 disabled:opacity-50"
-                >
-                    <span>{isStarting ? copy.loading : copy.takeTour}</span>
-                    <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-                </button>
-                {dismiss}
-            </div>
-        </div>
-    }
-
     return <button
         ref={launcherRef}
         type="button"
@@ -127,7 +97,7 @@ export function TourInvitation({ tourId, userId, userMetadata, orgId, onLaunch, 
         data-testid={dataTestId ?? `tour-launcher-${tourId}`}
         data-tour-control="quiet-tour"
         data-costing-tour={tourId === 'saved-costings' ? 'launcher' : undefined}
-        className={cn('estimator-touch-target', railButton, 'px-3 py-2 text-xs', align !== 'full' && 'w-auto', className)}
+        className={cn('estimator-touch-target', railButton, 'px-3 py-2 text-xs', className)}
     >
         <span className="flex min-w-0 items-center gap-2">
             <Compass className={railIcon} aria-hidden="true" />

@@ -16,7 +16,7 @@ import { TourInvitation } from '../components/tours/TourInvitation'
 const read = (file: string) => fs.readFileSync(path.resolve(__dirname, '..', file), 'utf8')
 const component = read('components/tours/TourInvitation.tsx')
 const hook = read('hooks/use-tour-invitation.ts')
-const render = (align: 'full' | 'start' = 'full') => renderToStaticMarkup(createElement(TourInvitation, { tourId: 'dispatch', userId: 'owner', align }))
+const render = () => renderToStaticMarkup(createElement(TourInvitation, { tourId: 'dispatch', userId: 'owner', align: 'full' }))
 
 beforeEach(() => { state.language = 'en'; state.presentation = 'invite' })
 
@@ -48,13 +48,6 @@ describe('Tour invitation lifecycle', () => {
         expect(html).not.toContain('data-tour-control="dismiss"')
         expect(html).not.toContain(tourInvitationCopy[language].benefits.dispatch)
         expect(html).toContain('min-h-11')
-    })
-
-    it('retains the start-aligned invitation variant', () => {
-        const html = render('start')
-        expect(html).toContain('tour-invitation-container')
-        expect(html).toContain('Take a tour')
-        expect(html).toContain('Not now')
     })
 
     it('removes attention animation and its coordinator completely', () => {
