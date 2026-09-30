@@ -19,6 +19,9 @@ const eslintConfig = defineConfig([
     "public/worker-*.js",
     // Local diagnostic scratchpads are gitignored and are not application code.
     "scratch/**",
+    // Tracked QA evidence (reviewer helpers, run records, verification scripts), not application code.
+    // Preserved evidence must not be edited to satisfy lint (its manifests carry hashes).
+    "qa-artifacts/**",
   ]),
   {
     files: ["**/*.{ts,tsx}"],
