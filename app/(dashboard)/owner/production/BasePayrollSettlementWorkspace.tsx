@@ -32,6 +32,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { formatINR } from '@/lib/finance'
+import { useTranslation } from '@/lib/i18n/context'
 import {
     calculateBasePayrollPeriodSummary,
     type BasePayrollPaymentMode,
@@ -95,6 +96,7 @@ export default function BasePayrollSettlementWorkspace({
     onViewRecords?: () => void
 }) {
     const router = useRouter()
+    const { tx } = useTranslation()
 
     // Local mutable state for optimistic live updates
     const [localPayables, setLocalPayables] = useState<BaseWorkerPayable[]>(externalPayables)
@@ -219,7 +221,7 @@ export default function BasePayrollSettlementWorkspace({
 
     // Mark Paid handler
     async function handleConfirmPayment() {
-        if (!payingWorker || isPaying) return
+        if (!payingWorker || isPaying || payingWorker.incentive_review_ids?.length) return
         setIsPaying(true)
 
         const requestId = crypto.randomUUID()
@@ -353,6 +355,8 @@ export default function BasePayrollSettlementWorkspace({
                     gross_pay: p.gross_pay,
                     meters: p.meters,
                     salary_lines: p.salary_lines ?? [],
+                    incentive_pay: p.incentive_pay ?? 0,
+                    incentive_lines: p.incentive_lines ?? [],
                     pending_advance: p.pending_advance,
                     advance_recovery: p.advance_recovery,
                     net_payout: p.net_payout,
@@ -623,10 +627,10 @@ export default function BasePayrollSettlementWorkspace({
                                 const isPaid = payable.status === 'paid'
                                 const isResolved =
                                     (payable.gross_pay === 0 || payable.net_payout === 0) &&
-                                    resolvedWorkerIds.includes(payable.worker_id)
+                                    resolvedWorkerIds.includes(payable.worker_id) && !payable.incentive_review_ids?.length
                                 const isExpanded = expandedWorkerIds.has(payable.worker_id)
                                 const readiness = readinessByWorker.get(payable.worker_id)
-                                const hasIssues = Boolean(readiness?.issueCount)
+                                const hasIssues = Boolean(readiness?.issueCount || payable.incentive_review_ids?.length)
 
                                 return (
                                     <div
@@ -729,6 +733,7 @@ export default function BasePayrollSettlementWorkspace({
                                                         <Button
                                                             size="sm"
                                                             variant="outline"
+                                                            disabled={hasIssues || summary.isSettled}
                                                             onClick={() => handleResolveZeroWorker(payable.worker_id, payable.worker_name)}
                                                             className="h-8 rounded-xl text-xs font-bold border-hairline"
                                                         >
@@ -788,11 +793,16 @@ export default function BasePayrollSettlementWorkspace({
                                                     <div className="space-y-1 text-body">
                                                         <div className="flex justify-between py-0.5">
                                                             <span>Production earnings ({formatMeters(payable.meters)})</span>
-                                                            <span className="font-medium text-ink">{formatINR(payable.gross_pay)}</span>
+                                                            <span className="font-medium text-ink">{formatINR(payable.base_pay ?? payable.gross_pay)}</span>
                                                         </div>
                                                     </div>
                                                 )}
 
+                                                {(payable.incentive_lines ?? []).map(item => <div key={item.id} className="flex flex-wrap justify-between gap-2 py-1 text-body">
+                                                    <span>{tx('Approved incentive earnings')}: {item.service_start} – {item.service_end} · {item.evidence_reference}</span>
+                                                    <span className="font-medium text-ink">{formatINR(item.amount)}</span>
+                                                </div>)}
+                                                {payable.incentive_review_ids?.length ? <p className="text-body">{tx('Review incentives and include their complete service periods before payment.')}</p> : null}
                                                 {payable.pending_advance > 0 && (
                                                     <div className="flex justify-between py-0.5 text-muted-foreground border-t border-hairline/60 pt-1">
                                                         <span>

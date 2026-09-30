@@ -50,6 +50,7 @@ import { trackPlanEvent } from '@/lib/plan-analytics'
 import {
     calculateBaseEntryGrossPay,
     calculateBasePayrollPeriodSummary,
+    calculateBaseWorkerPayables,
     type BasePayrollPaymentMode,
 } from '@/lib/base-production-core'
 import {
@@ -70,6 +71,7 @@ import BaseMachineBoard from './BaseMachineBoard'
 import BaseAssignmentWorkspace from './BaseAssignmentWorkspace'
 import BaseDailyProductionSheet from './BaseDailyProductionSheet'
 import BasePayrollReadinessPanel from './BasePayrollReadinessPanel'
+import BaseWorkerIncentives from './BaseWorkerIncentives'
 import BasePayrollRecords from './BasePayrollRecords'
 import BasePayrollSettlementWorkspace from './BasePayrollSettlementWorkspace'
 import type { BaseProductionInitialData } from './loaders'
@@ -182,6 +184,12 @@ export default function BaseProductionClient({
         setActivePeriod({ start: next.start, end: next.end })
     }
 
+    const payrollCutoff = activePeriodBounds.end < initialData.today ? activePeriodBounds.end : initialData.today
+    const periodPayables = useMemo(() => calculateBaseWorkerPayables({
+        workers: initialData.workers, entries: initialData.entries, allocations: initialData.allocations,
+        incentives: initialData.incentives ?? [], advances: initialData.advances, settlements: initialData.settlements,
+        periodEnd: payrollCutoff,
+    }), [initialData, payrollCutoff])
     const activePeriodRecord = useMemo(() => {
         return (initialData.payrollPeriods || []).find(
             (p) => p.period_start === activePeriodBounds.start && p.period_end === activePeriodBounds.end
@@ -190,10 +198,10 @@ export default function BaseProductionClient({
 
     const activePeriodSummary = useMemo(() => {
         return calculateBasePayrollPeriodSummary({
-            payables: initialData.payables,
+            payables: periodPayables,
             periodRecord: activePeriodRecord ?? undefined,
         })
-    }, [initialData.payables, activePeriodRecord])
+    }, [periodPayables, activePeriodRecord])
 
     const activePeriodLabel = useMemo(() => {
         if (activeCycleRule.type === 'monthly' && activeCycleRule.anchorDay === 1) {
@@ -266,17 +274,17 @@ export default function BaseProductionClient({
         }
         return set
     }, [initialData.assignments, initialData.today])
-    const settlingWorker = initialData.payables.find((payable) => payable.worker_id === settlingWorkerId)
+    const settlingWorker = periodPayables.find((payable) => payable.worker_id === settlingWorkerId)
     const payrollReadiness = useMemo(() => buildBasePayrollReadiness({
-        payables: initialData.payables,
+        payables: periodPayables,
         entries: initialData.entries,
         allocations: initialData.allocations,
-    }), [initialData.allocations, initialData.entries, initialData.payables])
+    }), [initialData.allocations, initialData.entries, periodPayables])
     const readinessByWorker = useMemo(
         () => new Map(payrollReadiness.workers.map((worker) => [worker.workerId, worker])),
         [payrollReadiness.workers],
     )
-    const visiblePayables = initialData.payables.filter(payable => {
+    const visiblePayables = periodPayables.filter(payable => {
                                 if (!payable.worker_name.toLocaleLowerCase().includes(payrollSearch.trim().toLocaleLowerCase())) return false
                                 const readiness = readinessByWorker.get(payable.worker_id)
                                 return payrollFilter === 'all' || (payrollFilter === 'ready' && readiness?.readyToSettle) || (payrollFilter === 'review' && Boolean(readiness?.issueCount)) || (payrollFilter === 'paid' && payable.status === 'paid') || (payrollFilter === 'empty' && payable.gross_pay === 0)
@@ -683,6 +691,7 @@ export default function BaseProductionClient({
                                 <SelectTrigger className="h-10 w-[150px] rounded-xl border-hairline bg-surface shadow-xs" aria-label="Payment mode"><SelectValue /></SelectTrigger>
                                 <SelectContent><SelectItem value="cash">Paid by cash</SelectItem><SelectItem value="bank_transfer">Bank transfer</SelectItem><SelectItem value="upi">UPI</SelectItem><SelectItem value="cheque">Cheque</SelectItem></SelectContent>
                             </Select>
+                            <BaseWorkerIncentives workers={initialData.workers} incentives={initialData.incentives ?? []} today={initialData.today} periodStart={activePeriodBounds.start} />
                             <Button variant="outline" onClick={() => openSetup()} className="h-10 rounded-xl border-hairline bg-surface shadow-xs"><Settings2 className="h-4 w-4" /> Manage workers</Button>
                         </div>
                     </div>
@@ -737,6 +746,8 @@ export default function BaseProductionClient({
                                             </div>
                                             <div className="rounded-xl border border-hairline/70 bg-surface-soft/55 p-3 text-xs leading-relaxed text-body">
                                                 {payable.pay_type === 'fixed_monthly' && payable.status !== 'paid' && <div className="mb-2 space-y-1">{payable.salary_lines?.map(line => <p key={line.start}>{formatDateOnly(line.start)} – {formatDateOnly(line.end)}: {formatINR(line.monthlySalary)} × {line.days}/{line.monthDays} days = {formatINR(line.grossPay)}</p>)}</div>}
+                                                {(payable.incentive_pay ?? 0) > 0 && <p className="mb-2">{tx('Approved incentive earnings')}: {formatINR(payable.incentive_pay ?? 0)}</p>}
+                                                {payable.incentive_review_ids?.length ? <p className="mb-2">{tx('Review incentives and include their complete service periods before payment.')}</p> : null}
                                                 {payable.status === 'paid'
                                                     ? <>Paid on {formatDateOnly(payable.paid_at)} · {formatINR(payable.advance_recovery, { hideDecimals: true })} advance recovered.</>
                                                     : payable.pending_advance > 0
@@ -886,7 +897,7 @@ export default function BaseProductionClient({
                         end: activePeriodBounds.end,
                         label: activePeriodLabel,
                     }}
-                    payables={initialData.payables}
+                    payables={periodPayables}
                     periodRecord={activePeriodRecord}
                     workers={initialData.workers}
                     readinessByWorker={readinessByWorker}
