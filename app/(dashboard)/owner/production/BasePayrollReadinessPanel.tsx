@@ -18,7 +18,7 @@ function formatDateOnly(value: string) {
 }
 
 export default function BasePayrollReadinessPanel({ readiness }: { readiness: BasePayrollReadiness }) {
-    const hasProduction = readiness.verifiedLineCount > 0 || readiness.issueCount > 0 || readiness.salaryLineCount > 0
+    const hasProduction = readiness.verifiedLineCount > 0 || readiness.issueCount > 0 || readiness.salaryLineCount > 0 || (readiness.incentiveLineCount ?? 0) > 0
     const hasIssues = readiness.issueCount > 0
 
     return (
@@ -33,9 +33,9 @@ export default function BasePayrollReadinessPanel({ readiness }: { readiness: Ba
                             <CardTitle className="text-sm font-semibold text-ink">Payroll readiness</CardTitle>
                             <CardDescription className="mt-0.5 text-xs leading-relaxed text-body">
                                 {hasIssues
-                                    ? `${readiness.issueCount} production ${readiness.issueCount === 1 ? 'issue needs' : 'issues need'} attention before payment.`
+                                    ? `${readiness.issueCount} ${readiness.issueCount === 1 ? 'issue needs' : 'issues need'} attention before payment.`
                                     : hasProduction
-                                        ? readiness.salaryLineCount > 0 ? 'Dated staff salaries and saved production are included in worker pay.' : 'Every current production line is included in worker pay.'
+                                        ? readiness.incentiveLineCount ? 'Approved incentive earnings' : readiness.salaryLineCount > 0 ? 'Dated staff salaries and saved production are included in worker pay.' : 'Every current production line is included in worker pay.'
                                         : 'No production has been recorded since the latest settlement.'}
                             </CardDescription>
                         </div>
@@ -49,7 +49,7 @@ export default function BasePayrollReadinessPanel({ readiness }: { readiness: Ba
             {hasProduction && (
                 <CardContent className="space-y-2.5 border-t border-hairline bg-surface-soft/15 p-3.5 sm:p-4">
                     <div className="grid grid-cols-3 divide-x divide-hairline rounded-xl border border-hairline/80 bg-surface py-2 text-center">
-                        <Metric label="Verified earnings" value={readiness.verifiedLineCount + readiness.salaryLineCount} />
+                        <Metric label="Verified earnings" value={readiness.verifiedLineCount + readiness.salaryLineCount + (readiness.incentiveLineCount ?? 0)} />
                         <Metric label="Machine lines" value={readiness.machineLineCount} />
                         <Metric label="Ready workers" value={readiness.readyWorkerCount} />
                     </div>
@@ -68,7 +68,7 @@ export default function BasePayrollReadinessPanel({ readiness }: { readiness: Ba
                             {readiness.workers.flatMap((worker) => worker.issues).map((item) => (
                                 <div key={`${item.entryId}:${item.code}`} className="flex items-start justify-between gap-3 rounded-xl border border-warning/30 bg-surface p-3 text-xs shadow-xs">
                                     <div><p className="font-bold text-ink">{item.message}</p><p className="mt-0.5 text-xs text-muted-foreground">{formatDateOnly(item.productionDate)}{item.shift ? ` · ${item.shift} shift` : ''}</p></div>
-                                    <Button asChild variant="outline" size="xs" className="shrink-0 h-7 rounded-lg bg-surface text-xs font-bold shadow-xs"><Link href={baseDailySheetHref({ date: item.productionDate, shift: item.shift === 'day' || item.shift === 'night' ? item.shift : undefined, entry: item.entryId, returnTo: '/owner/payroll' })}>Review</Link></Button>
+                                    <Button asChild variant="outline" size="xs" className="shrink-0 h-7 rounded-lg bg-surface text-xs font-bold shadow-xs"><Link href={item.code === 'incentive_review' ? `/owner/payroll?incentive=${encodeURIComponent(item.entryId)}` : baseDailySheetHref({ date: item.productionDate, shift: item.shift === 'day' || item.shift === 'night' ? item.shift : undefined, entry: item.entryId, returnTo: '/owner/payroll' })}>Review</Link></Button>
                                 </div>
                             ))}
                         </div>

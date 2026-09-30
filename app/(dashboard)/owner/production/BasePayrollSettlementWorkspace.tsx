@@ -77,6 +77,7 @@ export default function BasePayrollSettlementWorkspace({
     open,
     onOpenChange,
     period,
+    today,
     payables: externalPayables,
     periodRecord: externalPeriodRecord,
     workers,
@@ -88,6 +89,7 @@ export default function BasePayrollSettlementWorkspace({
     open: boolean
     onOpenChange: (open: boolean) => void
     period: { start: string; end: string; label: string }
+    today?: string
     payables: BaseWorkerPayable[]
     periodRecord?: BasePayrollPeriod | null
     workers: BaseProductionWorker[]
@@ -96,7 +98,7 @@ export default function BasePayrollSettlementWorkspace({
     onSuccess?: () => void
     onViewRecords?: () => void
 }) {
-    const { t } = useTranslation()
+    const { t, tx } = useTranslation()
     const router = useRouter()
 
     // Local mutable state for optimistic live updates
@@ -222,7 +224,7 @@ export default function BasePayrollSettlementWorkspace({
 
     // Mark Paid handler
     async function handleConfirmPayment() {
-        if (!payingWorker || isPaying) return
+        if (!payingWorker || isPaying || payingWorker.incentive_review_ids?.length) return
         setIsPaying(true)
 
         const requestId = crypto.randomUUID()
@@ -332,7 +334,7 @@ export default function BasePayrollSettlementWorkspace({
 
     // Complete Payroll Period handler
     async function handleCompletePayroll() {
-        if (isCompleting) return
+        if (isCompleting || (today && period.end > today)) return
         setIsCompleting(true)
 
         // Capture frozen calculation snapshot of every worker
@@ -356,6 +358,8 @@ export default function BasePayrollSettlementWorkspace({
                     gross_pay: p.gross_pay,
                     meters: p.meters,
                     salary_lines: p.salary_lines ?? [],
+                    incentive_pay: p.incentive_pay ?? 0,
+                    incentive_lines: p.incentive_lines ?? [],
                     pending_advance: p.pending_advance,
                     advance_recovery: p.advance_recovery,
                     net_payout: p.net_payout,
@@ -626,10 +630,10 @@ export default function BasePayrollSettlementWorkspace({
                                 const isPaid = payable.status === 'paid'
                                 const isResolved =
                                     (payable.gross_pay === 0 || payable.net_payout === 0) &&
-                                    resolvedWorkerIds.includes(payable.worker_id)
+                                    resolvedWorkerIds.includes(payable.worker_id) && !payable.incentive_review_ids?.length
                                 const isExpanded = expandedWorkerIds.has(payable.worker_id)
                                 const readiness = readinessByWorker.get(payable.worker_id)
-                                const hasIssues = Boolean(readiness?.issueCount)
+                                const hasIssues = Boolean(readiness?.issueCount || payable.incentive_review_ids?.length)
 
                                 return (
                                     <div
@@ -732,6 +736,7 @@ export default function BasePayrollSettlementWorkspace({
                                                         <Button
                                                             size="sm"
                                                             variant="outline"
+                                                            disabled={hasIssues || summary.isSettled}
                                                             onClick={() => handleResolveZeroWorker(payable.worker_id, payable.worker_name)}
                                                             className="h-8 rounded-xl text-xs font-bold border-hairline"
                                                         >
@@ -791,11 +796,16 @@ export default function BasePayrollSettlementWorkspace({
                                                     <div className="space-y-1 text-body">
                                                         <div className="flex justify-between py-0.5">
                                                             <span>Production earnings ({formatMeters(payable.meters)})</span>
-                                                            <span className="font-medium text-ink">{formatINR(payable.gross_pay)}</span>
+                                                            <span className="font-medium text-ink">{formatINR(payable.base_pay ?? payable.gross_pay)}</span>
                                                         </div>
                                                     </div>
                                                 )}
 
+                                                {(payable.incentive_lines ?? []).map(item => <div key={item.id} className="flex flex-wrap justify-between gap-2 py-1 text-body">
+                                                    <span>{tx('Approved incentive earnings')}: {item.service_start} – {item.service_end} · {item.evidence_reference}</span>
+                                                    <span className="font-medium text-ink">{formatINR(item.amount)}</span>
+                                                </div>)}
+                                                {payable.incentive_review_ids?.length ? <p className="text-body">{tx('Review incentives and include their complete service periods before payment.')}</p> : null}
                                                 {payable.pending_advance > 0 && (
                                                     <div className="flex justify-between py-0.5 text-muted-foreground border-t border-hairline/60 pt-1">
                                                         <span>
@@ -853,7 +863,7 @@ export default function BasePayrollSettlementWorkspace({
                             </Button>
                         ) : (
                             <Button
-                                disabled={!summary.isReadyToComplete || isCompleting}
+                                disabled={!summary.isReadyToComplete || isCompleting || Boolean(today && period.end > today)}
                                 onClick={() => setCompleteConfirmOpen(true)}
                                 className={`rounded-xl text-xs sm:text-sm font-bold shadow-xs ${
                                     summary.isReadyToComplete
@@ -1139,7 +1149,7 @@ export default function BasePayrollSettlementWorkspace({
                                 </Button>
                                 <Button
                                     type="button"
-                                    disabled={isCompleting}
+                                    disabled={isCompleting || Boolean(today && period.end > today)}
                                     onClick={handleCompletePayroll}
                                     className="rounded-xl bg-loom text-white font-bold text-xs hover:bg-loom-elevated"
                                 >

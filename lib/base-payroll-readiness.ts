@@ -5,6 +5,7 @@ import type {
 } from './base-production-core'
 
 export type BasePayrollReadinessIssueCode =
+    | 'incentive_review'
     | 'allocation_mismatch'
     | 'missing_allocation'
     | 'missing_context'
@@ -29,6 +30,7 @@ export type BaseWorkerPayrollReadiness = {
 }
 
 export type BasePayrollReadiness = {
+    incentiveLineCount?: number
     salaryLineCount: number
     verifiedLineCount: number
     machineLineCount: number
@@ -90,7 +92,10 @@ export function buildBasePayrollReadiness({
             && entry.entry_status !== 'zero'
             && entry.entry_status !== 'absent'
         ))
-        const issues: BasePayrollReadinessIssue[] = []
+        const issues: BasePayrollReadinessIssue[] = (payable.incentive_review_ids ?? []).map(id => ({
+            code: 'incentive_review', entryId: id, productionDate: payable.period_end, shift: null,
+            message: 'Review incentives and include their complete service periods before payment.',
+        }))
         let machineLineCount = 0
         let legacyLineCount = 0
 
@@ -142,6 +147,8 @@ export function buildBasePayrollReadiness({
         readyWorkerCount: 0,
         workers,
     }
+    const incentiveLineCount = payables.filter(item => item.status !== 'paid').reduce((sum, item) => sum + (item.incentive_lines?.length ?? 0), 0)
+    if (incentiveLineCount > 0) summary.incentiveLineCount = incentiveLineCount
     for (const worker of workers) {
         summary.verifiedLineCount += worker.verifiedLineCount
         summary.machineLineCount += worker.machineLineCount

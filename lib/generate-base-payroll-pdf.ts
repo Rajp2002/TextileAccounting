@@ -722,8 +722,8 @@ export class BasePayrollPdfRenderer {
             this.doc.text(costingLines, this.left + 105, y + 11)
 
             // Right-aligned numbers (tabular)
-            this.doc.text(earning.payType === 'fixed_monthly' ? '-' : formatPdfMeters(earning.meters), this.left + 320, y + 11, { align: 'right' })
-            this.doc.text(earning.payType === 'fixed_monthly' ? `${formatPdfINR(earning.rate)}/mo` : formatPdfRate(earning.rate), this.left + 410, y + 11, { align: 'right' })
+            this.doc.text(earning.payType === 'fixed_monthly' || earning.kind === 'manual_incentive' ? '-' : formatPdfMeters(earning.meters), this.left + 320, y + 11, { align: 'right' })
+            this.doc.text(earning.kind === 'manual_incentive' ? '-' : earning.payType === 'fixed_monthly' ? `${formatPdfINR(earning.rate)}/mo` : formatPdfRate(earning.rate), this.left + 410, y + 11, { align: 'right' })
 
             this.doc.setFont('helvetica', 'bold')
             this.doc.setTextColor(...PDF_THEME.colors.navyRgb)
@@ -746,7 +746,7 @@ export class BasePayrollPdfRenderer {
         this.doc.setFont('helvetica', 'bold')
         this.doc.setFontSize(7.5)
         this.doc.setTextColor(...PDF_THEME.colors.textMutedRgb)
-        this.doc.text(isSalary ? 'Total salary earnings' : 'Cumulative worker production', this.left + 8, y + 11)
+        this.doc.text(worker.earnings.some(earning => earning.kind === 'manual_incentive') ? 'Total earnings' : isSalary ? 'Total salary earnings' : 'Cumulative worker production', this.left + 8, y + 11)
 
         this.doc.setTextColor(...PDF_THEME.colors.navyRgb)
         this.doc.text(isSalary ? '-' : formatPdfMeters(worker.meters), this.left + 320, y + 11, { align: 'right' })

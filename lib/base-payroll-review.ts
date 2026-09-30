@@ -7,6 +7,8 @@ export function basePayrollReview(payable: BaseWorkerPayable, requestId: string)
         client_request_id: requestId,
         period_start: payable.period_start,
         gross_pay: payable.gross_pay,
+        incentive_pay: payable.incentive_pay ?? 0,
+        incentives: (payable.incentive_lines ?? []).map(item => ({ id: item.id, amount: item.amount, updated_at: item.updated_at })).sort((a, b) => a.id.localeCompare(b.id)),
         advance_deducted: payable.advance_recovery,
         net_payout: payable.net_payout,
         advance_balance_before: payable.pending_advance,

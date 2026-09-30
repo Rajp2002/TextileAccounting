@@ -1,4 +1,5 @@
 import type {
+    BaseIncentiveSnapshot,
     BasePayrollPaymentMode,
     BasePayrollPeriod,
     BasePayrollPeriodStatus,
@@ -7,6 +8,8 @@ import type {
 } from './base-production-core'
 
 export type BasePayrollHistoryEarning = {
+    kind?: 'manual_incentive'
+    incentiveSnapshot?: BaseIncentiveSnapshot | null
     payType?: 'piece_rate' | 'fixed_monthly'
     machineId: string | null
     machineLabel: string
@@ -111,8 +114,10 @@ export function buildBasePayrollHistory(
             const earningGroups = new Map<string, BasePayrollHistoryEarning>()
 
             for (const line of linesBySettlement.get(settlement.id) ?? []) {
-                const earningKey = `${line.machine_id ?? line.machine_label}:${line.costing_label}:${line.worker_rate_snapshot}`
-                const current = earningGroups.get(earningKey) ?? {
+                const earningKey = line.source_kind === 'manual_incentive' ? `incentive:${line.source_id ?? line.id}` : `${line.machine_id ?? line.machine_label}:${line.costing_label}:${line.worker_rate_snapshot}`
+                const current: BasePayrollHistoryEarning = earningGroups.get(earningKey) ?? {
+                    kind: line.source_kind === 'manual_incentive' ? 'manual_incentive' : undefined,
+                    incentiveSnapshot: line.earning_snapshot,
                     payType: line.source_kind === 'fixed_salary' ? 'fixed_monthly' as const : 'piece_rate' as const,
                     machineId: line.machine_id,
                     machineLabel: line.machine_label,
@@ -155,7 +160,7 @@ export function buildBasePayrollHistory(
         const machineGroups = new Map<string, BasePayrollHistoryMachine>()
         for (const worker of workers.filter(worker => worker.status !== 'reversed')) {
             for (const earning of worker.earnings) {
-                if (earning.payType === 'fixed_monthly') continue
+                if (earning.payType === 'fixed_monthly' || earning.kind === 'manual_incentive') continue
                 const machineKey = earning.machineId ?? earning.machineLabel
                 const current = machineGroups.get(machineKey) ?? {
                     machineId: earning.machineId,
@@ -218,13 +223,14 @@ export function buildBasePayrollHistoryCsv(period: BasePayrollHistoryPeriod) {
         'Period Start', 'Period End', 'Worker', 'Machine / Pay Basis', 'Costing / Salary Period', 'Rate',
         'Metres', 'Line Gross Pay', 'Worker Gross Pay', 'Advance Balance Before',
         'Advance Recovered', 'Remaining Advance Balance', 'Worker Net Pay', 'Payment Mode', 'Paid At', 'Record Status', 'Reversal Reason', 'Rate Unit',
+        'Incentive Service Start', 'Incentive Service End', 'Evidence Reference', 'Approved By', 'Approved At', 'Calculation Version',
     ]
     const rows: Array<Array<string | number>> = []
 
     for (const worker of period.workers) {
-        const earnings = worker.earnings.length > 0 ? worker.earnings : [{
+        const earnings: BasePayrollHistoryEarning[] = worker.earnings.length > 0 ? worker.earnings : [{
             payType: 'piece_rate' as const,
-            machineLabel: '', costingLabel: '', rate: 0, meters: 0, grossPay: 0,
+            machineId: null, productionDates: [], machineLabel: '', costingLabel: '', rate: 0, meters: 0, grossPay: 0,
         }]
         for (const earning of earnings) {
             rows.push([
@@ -232,7 +238,10 @@ export function buildBasePayrollHistoryCsv(period: BasePayrollHistoryPeriod) {
                 earning.rate, earning.meters, earning.grossPay, worker.grossPay,
                 worker.advanceBalanceBefore, worker.advanceRecovered, worker.remainingAdvanceBalance,
                 worker.netPayout, worker.paymentMode, worker.paidAt, worker.status ?? 'paid', worker.reversalReason ?? '',
-                earning.payType === 'fixed_monthly' ? 'per month' : 'per metre',
+                earning.kind === 'manual_incentive' ? 'amount' : earning.payType === 'fixed_monthly' ? 'per month' : 'per metre',
+                earning.incentiveSnapshot?.service_start ?? '', earning.incentiveSnapshot?.service_end ?? '',
+                earning.incentiveSnapshot?.evidence_reference ?? '', earning.incentiveSnapshot?.approved_by ?? '',
+                earning.incentiveSnapshot?.approved_at ?? '', earning.incentiveSnapshot?.calculation_version ?? '',
             ])
         }
     }
