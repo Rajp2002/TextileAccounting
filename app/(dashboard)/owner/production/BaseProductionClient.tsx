@@ -691,7 +691,7 @@ export default function BaseProductionClient({
                                 <SelectTrigger className="h-10 w-[150px] rounded-xl border-hairline bg-surface shadow-xs" aria-label="Payment mode"><SelectValue /></SelectTrigger>
                                 <SelectContent><SelectItem value="cash">Paid by cash</SelectItem><SelectItem value="bank_transfer">Bank transfer</SelectItem><SelectItem value="upi">UPI</SelectItem><SelectItem value="cheque">Cheque</SelectItem></SelectContent>
                             </Select>
-                            <BaseWorkerIncentives workers={initialData.workers} incentives={initialData.incentives ?? []} today={initialData.today} periodStart={activePeriodBounds.start} />
+                            <BaseWorkerIncentives key={searchParams.get('incentive') ?? 'all'} focusIncentiveId={searchParams.get('incentive')} workers={initialData.workers} incentives={initialData.incentives ?? []} today={initialData.today} periodStart={activePeriodBounds.start} />
                             <Button variant="outline" onClick={() => openSetup()} className="h-10 rounded-xl border-hairline bg-surface shadow-xs"><Settings2 className="h-4 w-4" /> Manage workers</Button>
                         </div>
                     </div>

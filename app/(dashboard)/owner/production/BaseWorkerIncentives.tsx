@@ -12,13 +12,14 @@ import { formatINR } from '@/lib/finance'
 import type { BaseProductionWorker, BaseWorkerIncentive } from '@/lib/base-production-core'
 import { createBaseWorkerIncentive, reviewBaseWorkerIncentive } from './actions'
 
-export default function BaseWorkerIncentives({ workers, incentives, today, periodStart }: {
-    workers: BaseProductionWorker[]; incentives: BaseWorkerIncentive[]; today: string; periodStart: string
+export default function BaseWorkerIncentives({ workers, incentives, today, periodStart, focusIncentiveId }: {
+    workers: BaseProductionWorker[]; incentives: BaseWorkerIncentive[]; today: string; periodStart: string; focusIncentiveId?: string | null
 }) {
     const { tx } = useTranslation()
     const router = useRouter()
-    const [open, setOpen] = useState(false)
-    const [workerId, setWorkerId] = useState(workers[0]?.id ?? '')
+    const focus = incentives.find(item => item.id === focusIncentiveId)
+    const [open, setOpen] = useState(Boolean(focus))
+    const [workerId, setWorkerId] = useState(focus?.worker_id ?? workers[0]?.id ?? '')
     const [adding, setAdding] = useState(false)
     const [start, setStart] = useState(periodStart < today ? periodStart : today)
     const [end, setEnd] = useState(today)

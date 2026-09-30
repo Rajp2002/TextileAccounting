@@ -18,3 +18,5 @@ The [first implementation increment](../worker-payroll-refinement.md) documents 
 ## Historical reference
 
 The June 2026 [`USER_WORKFLOWS.md`](../../USER_WORKFLOWS.md), [`TECHNICAL_ANALYSIS.md`](../../TECHNICAL_ANALYSIS.md), and [`TESTING_GUIDE.md`](../../TESTING_GUIDE.md) describe an earlier product. Previous scope and QA records in this directory remain for audit context; they do not define current routes or plan access.
+
+- [Base manual production incentives](../base-manual-incentives.md) — approved positive earnings, receipts and reversal.

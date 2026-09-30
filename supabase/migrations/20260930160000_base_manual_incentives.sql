@@ -57,7 +57,7 @@ RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog,pub
 DECLARE v_org uuid; existing public.base_worker_incentives%ROWTYPE;
 BEGIN
  SELECT org_id INTO v_org FROM public.profiles WHERE id = auth.uid() AND role::text = 'owner';
- IF v_org IS NULL OR NOT private.base_production_core_access(v_org) THEN RAISE EXCEPTION 'Base Production Core access is required' USING ERRCODE = '42501'; END IF;
+ IF v_org IS NULL OR NOT private.base_production_core_access(v_org) OR EXISTS (SELECT 1 FROM public.organizations WHERE id = v_org AND is_locked_down) THEN RAISE EXCEPTION 'Base Production Core access is required' USING ERRCODE = '42501'; END IF;
  IF p_client_request_id IS NULL OR p_worker_id IS NULL OR p_amount IS NULL OR p_amount <= 0 OR p_amount > 10000000 OR p_amount <> round(p_amount,2)
   OR p_evidence_reference IS NULL OR char_length(btrim(p_evidence_reference)) NOT BETWEEN 3 AND 240 THEN
   RAISE EXCEPTION 'Enter a positive incentive amount with at most two decimals and an evidence reference.' USING ERRCODE = '22023'; END IF;
@@ -82,7 +82,7 @@ RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog,pub
 DECLARE v_org uuid; incentive public.base_worker_incentives%ROWTYPE;
 BEGIN
  SELECT org_id INTO v_org FROM public.profiles WHERE id = auth.uid() AND role::text = 'owner';
- IF v_org IS NULL OR NOT private.base_production_core_access(v_org) THEN RAISE EXCEPTION 'Base Production Core access is required' USING ERRCODE = '42501'; END IF;
+ IF v_org IS NULL OR NOT private.base_production_core_access(v_org) OR EXISTS (SELECT 1 FROM public.organizations WHERE id = v_org AND is_locked_down) THEN RAISE EXCEPTION 'Base Production Core access is required' USING ERRCODE = '42501'; END IF;
  IF p_action IS NULL OR p_action NOT IN ('approve','void') OR p_expected_updated_at IS NULL THEN RAISE EXCEPTION 'Reload and review the incentive.' USING ERRCODE = '22023'; END IF;
  IF p_action = 'void' AND (p_reason IS NULL OR char_length(btrim(p_reason)) NOT BETWEEN 3 AND 240) THEN RAISE EXCEPTION 'Explain why the incentive is being voided.' USING ERRCODE = '22023'; END IF;
  PERFORM pg_advisory_xact_lock(hashtextextended(v_org::text || ':base-incentives',0));
@@ -126,6 +126,9 @@ DO $migration$
 DECLARE definition text; anchor text;
 BEGIN
  definition := pg_get_functiondef('public.settle_base_worker_payroll(uuid,date,text)'::regprocedure);
+ anchor := 'v_org_id IS NULL OR NOT private.base_production_core_access(v_org_id)';
+ IF position(anchor in definition) = 0 THEN RAISE EXCEPTION 'Unexpected payroll access guard'; END IF;
+ definition := replace(definition,anchor,anchor || ' OR EXISTS (SELECT 1 FROM public.organizations WHERE id = v_org_id AND is_locked_down)');
  anchor := '  PERFORM pg_advisory_xact_lock(';
  IF (length(definition)-length(replace(definition,anchor,'')))/length(anchor) <> 1 THEN RAISE EXCEPTION 'Unexpected payroll lock'; END IF;
  definition := replace(definition,anchor,'  PERFORM pg_advisory_xact_lock(hashtextextended(v_org_id::text || '':base-incentives'',0));' || chr(10) || anchor);
@@ -161,6 +164,9 @@ $start$ || anchor);
  EXECUTE definition;
 
  definition := pg_get_functiondef('public.settle_base_worker_payroll_reviewed(uuid,date,text,jsonb,text)'::regprocedure);
+ anchor := 'v_org_id IS NULL OR NOT private.base_production_core_access(v_org_id)';
+ IF position(anchor in definition) = 0 THEN RAISE EXCEPTION 'Unexpected payroll access guard'; END IF;
+ definition := replace(definition,anchor,anchor || ' OR EXISTS (SELECT 1 FROM public.organizations WHERE id = v_org_id AND is_locked_down)');
  anchor := '  v_request_id uuid;';
  IF position(anchor in definition) = 0 THEN RAISE EXCEPTION 'Unexpected reviewed declaration'; END IF;
  definition := replace(definition,anchor,anchor || ' v_incentive_expected jsonb;');
@@ -195,6 +201,9 @@ $review$ || anchor);
  EXECUTE definition;
 
  definition := pg_get_functiondef('public.complete_base_payroll_period(date,date,jsonb,text[])'::regprocedure);
+ anchor := 'v_org_id IS NULL OR NOT private.base_production_core_access(v_org_id)';
+ IF position(anchor in definition) = 0 THEN RAISE EXCEPTION 'Unexpected payroll access guard'; END IF;
+ definition := replace(definition,anchor,anchor || ' OR EXISTS (SELECT 1 FROM public.organizations WHERE id = v_org_id AND is_locked_down)');
  anchor := '    PERFORM pg_advisory_xact_lock(';
  IF position(anchor in definition) = 0 THEN RAISE EXCEPTION 'Unexpected completion lock'; END IF;
  definition := replace(definition,anchor,'    PERFORM pg_advisory_xact_lock(hashtextextended(v_org_id::text || '':base-incentives'',0));' || chr(10) || anchor);
@@ -209,6 +218,9 @@ $complete$ || anchor);
  EXECUTE definition;
 
  definition := pg_get_functiondef('public.reverse_base_payroll_settlement(uuid,text,boolean)'::regprocedure);
+ anchor := 'v_org_id IS NULL OR NOT private.base_production_core_access(v_org_id)';
+ IF position(anchor in definition) = 0 THEN RAISE EXCEPTION 'Unexpected payroll access guard'; END IF;
+ definition := replace(definition,anchor,anchor || ' OR EXISTS (SELECT 1 FROM public.organizations WHERE id = v_org_id AND is_locked_down)');
  anchor := '  PERFORM pg_advisory_xact_lock(hashtextextended(v_org_id::text || '':base-payroll:'' || v_settlement.worker_id::text, 0));';
  IF position(anchor in definition) = 0 THEN RAISE EXCEPTION 'Unexpected reversal lock'; END IF;
  definition := replace(definition,anchor,'  PERFORM pg_advisory_xact_lock(hashtextextended(v_org_id::text || '':base-incentives'',0));' || chr(10) || anchor);

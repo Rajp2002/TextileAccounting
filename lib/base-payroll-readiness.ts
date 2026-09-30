@@ -30,6 +30,7 @@ export type BaseWorkerPayrollReadiness = {
 }
 
 export type BasePayrollReadiness = {
+    incentiveLineCount?: number
     salaryLineCount: number
     verifiedLineCount: number
     machineLineCount: number
@@ -146,6 +147,8 @@ export function buildBasePayrollReadiness({
         readyWorkerCount: 0,
         workers,
     }
+    const incentiveLineCount = payables.filter(item => item.status !== 'paid').reduce((sum, item) => sum + (item.incentive_lines?.length ?? 0), 0)
+    if (incentiveLineCount > 0) summary.incentiveLineCount = incentiveLineCount
     for (const worker of workers) {
         summary.verifiedLineCount += worker.verifiedLineCount
         summary.machineLineCount += worker.machineLineCount

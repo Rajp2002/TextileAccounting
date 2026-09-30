@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { calculateBaseWorkerPayables, type BaseProductionWorker, type BaseWorkerIncentive, type BasePayrollSettlement, type BasePayrollSettlementLine } from '../lib/base-production-core'
+import { calculateBasePayrollPeriodSummary, calculateBaseWorkerPayables, type BaseProductionWorker, type BaseWorkerIncentive, type BasePayrollSettlement, type BasePayrollSettlementLine } from '../lib/base-production-core'
 import { basePayrollReview } from '../lib/base-payroll-review'
 import { buildBasePayrollReadiness } from '../lib/base-payroll-readiness'
 import { buildBasePayrollHistory, buildBasePayrollHistoryCsv } from '../lib/base-payroll-history'
@@ -31,6 +31,8 @@ describe('Manual incentive preview', () => {
         }
         expect(preview([incentive], { end: '2026-09-15' })).toMatchObject({ incentive_pay: 0, incentive_review_ids: [incentive.id] })
         expect(preview([{ ...incentive, status: 'voided' }])).toMatchObject({ incentive_pay: 0, incentive_review_ids: [] })
+        const zeroPiece = preview([{ ...incentive, status: 'draft' }], { worker: { ...worker, pay_type: 'piece_rate' } })
+        expect(calculateBasePayrollPeriodSummary({ payables: [zeroPiece], resolvedWorkerIds: [worker.id] })).toMatchObject({ status: 'open', outstandingWorkers: 1, resolvedWorkers: 0 })
     })
     it('includes old unpaid piece incentives and keeps paid components out of later periods', () => {
         const piece = { ...worker, pay_type: 'piece_rate' as const, start_date: undefined }

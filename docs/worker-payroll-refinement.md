@@ -32,11 +32,14 @@ Disposable PostgreSQL cases exercise the real assignment and reviewed production
 
 CI results are the execution evidence; this document does not claim checks passed before they run. Browser review and a hosted migration rollout have not been performed.
 
+## Manual incentive increment
+
+Approved manual incentives are implemented in the follow-up branch. See [manual incentive contract](./base-manual-incentives.md) for approval, preview, settlement, export and reversal rules. The remaining stages below remain outside that increment.
+
 ## Next increments
 
-1. Approved manual positive incentives through preview, SQL settlement, receipts and reversal.
-2. Explicit, nonoverlapping labour coverage for new/revised estimates.
-3. One factory-approved automatic excess-output formula, compared with the manual calculation.
-4. Effective-dated pay-type transitions and intrashift handovers as separate extensions.
+1. Explicit, nonoverlapping labour coverage for new/revised estimates.
+2. One factory-approved automatic excess-output formula, compared with the manual calculation.
+3. Effective-dated pay-type transitions and intrashift handovers as separate extensions.
 
 No incentive formula, attendance deductions, machine-based wage defaults or pay-type transitions are enabled here.

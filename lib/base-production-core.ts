@@ -679,7 +679,7 @@ export function calculateBasePayrollPeriodSummary({
         if (payable.status === 'paid') {
             paidAmount = paidAmount.plus(toDecimal(payable.net_payout))
             paidCount += 1
-        } else if (payable.gross_pay === 0 && allResolved.has(payable.worker_id)) {
+        } else if (payable.gross_pay === 0 && !payable.incentive_review_ids?.length && allResolved.has(payable.worker_id)) {
             resolvedCount += 1
         }
     }
