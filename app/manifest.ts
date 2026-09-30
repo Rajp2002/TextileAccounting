@@ -13,8 +13,8 @@ export default function manifest(): MetadataRoute.Manifest {
         lang: 'en',
         display: 'standalone',
         display_override: ['standalone', 'minimal-ui'],
-        // Warm brand color painted by the OS before JS loads — eliminates black flash.
-        background_color: '#F4F2EC',
+        // Match the opening intro stage while an installed app's document loads.
+        background_color: '#000000',
         orientation: 'any',
         theme_color: '#F4F2EC',
         categories: ['business', 'productivity', 'finance'],

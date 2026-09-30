@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import vm from 'node:vm'
 import { describe, expect, it } from 'vitest'
-import { buildIntroPrePaintScript, INTRO_ATTRIBUTE, INTRO_LEAVING_ATTRIBUTE } from '../lib/intro/intro-policy'
+import { buildAppIntroPrePaintScript, buildIntroPrePaintScript, INTRO_ATTRIBUTE, INTRO_LEAVING_ATTRIBUTE } from '../lib/intro/intro-policy'
 import { containedImageRect, inkRect, parseObjectPosition } from '../lib/intro/target-geometry'
 import { BINDING, buildWeaveMask, FIGURE, LOGO_INK_BOX, LOGO_SOURCE } from '../lib/intro/weave-mask'
 import {
@@ -249,6 +249,10 @@ describe('woven intro target geometry', () => {
 })
 
 type PolicyEnv = {
+    bootstrap?: boolean
+    pathname?: string
+    readyState?: string
+    bodyAbsent?: boolean
     search?: string
     hash?: string
     referrer?: string
@@ -264,6 +268,10 @@ function runPolicy(surface: IntroSurface, env: PolicyEnv = {}) {
     const storageTouched: string[] = []
     const listeners = new Set<string>()
     const timers: Array<() => void> = []
+    const documentListeners = new Map<string, () => void>()
+    const rootStyle = { backgroundColor: '' }
+    const bodyStyle = { backgroundColor: '', transition: '' }
+    const preloads: unknown[] = []
     const win: Record<string, unknown> = {
         matchMedia: (query: string) => ({ matches: (env.media ?? []).includes(query) }),
         localStorage: {
@@ -279,21 +287,27 @@ function runPolicy(surface: IntroSurface, env: PolicyEnv = {}) {
         window: win,
         document: {
             documentElement: {
+                style: rootStyle,
                 setAttribute: (k: string, v: string) => attrs.set(k, v),
                 removeAttribute: (k: string) => attrs.delete(k),
             },
+            body: env.bodyAbsent ? null : { style: bodyStyle },
+            readyState: env.readyState ?? 'complete',
+            addEventListener: (type: string, fn: () => void) => documentListeners.set(type, fn),
+            removeEventListener: (type: string) => documentListeners.delete(type),
             referrer: env.referrer ?? '',
             createElement: () => ({}),
-            head: { appendChild: () => undefined },
+            head: { appendChild: (link: unknown) => preloads.push(link) },
         },
-        location: { search: env.search ?? '', hash: env.hash ?? '', origin: 'https://weavly.example' },
+        location: { pathname: env.pathname ?? '/login', search: env.search ?? '', hash: env.hash ?? '', origin: 'https://weavly.example' },
         navigator: { connection: env.saveData ? { saveData: true } : undefined, standalone: env.iosStandalone },
         setTimeout: (fn: () => void) => { timers.push(fn); return timers.length },
         clearTimeout: () => undefined,
     })
-    vm.runInContext(buildIntroPrePaintScript(surface), context)
-    const handle = win.__weavlyIntro as { state: string; abort: () => void } | undefined
-    return { attrs, storageTouched, listeners, timers, handle, plays: attrs.get(INTRO_ATTRIBUTE) === surface }
+    vm.runInContext(env.bootstrap ? buildAppIntroPrePaintScript() : buildIntroPrePaintScript(surface), context)
+    const handle = win.__weavlyIntro as { state: string; release: () => void; abort: () => void } | undefined
+    const runPageScript = () => vm.runInContext(buildIntroPrePaintScript(surface), context)
+    return { attrs, storageTouched, listeners, timers, handle, documentListeners, rootStyle, bodyStyle, preloads, runPageScript, plays: attrs.get(INTRO_ATTRIBUTE) === surface }
 }
 
 describe('woven intro playback policy (pre-paint script)', () => {
@@ -338,6 +352,69 @@ describe('woven intro playback policy (pre-paint script)', () => {
         expect(runPolicy('app-login', { media: STANDALONE, referrer: 'https://weavly.example/owner/estimator' }).plays).toBe(false)
     })
 
+    it('paints installed login launches dark from the head, before the body exists', () => {
+        const r = runPolicy('app-login', { bootstrap: true, iosStandalone: true, bodyAbsent: true, readyState: 'loading' })
+        expect(r.plays).toBe(true)
+        expect(r.rootStyle.backgroundColor).toBe('rgb(7,7,6)')
+        // A delayed HTML stream must not consume the hydration start budget.
+        expect(r.timers).toHaveLength(0)
+        r.documentListeners.get('DOMContentLoaded')?.()
+        expect(r.timers).toHaveLength(1)
+        r.timers[0]()
+        expect(r.handle?.state).toBe('done')
+        r.timers[1]()
+        expect(r.rootStyle.backgroundColor).toBe('')
+        expect(r.attrs.has(INTRO_ATTRIBUTE)).toBe(false)
+    })
+
+    it('reuses the head decision without restarting the watchdog or a completed intro', () => {
+        const r = runPolicy('app-login', { bootstrap: true, media: STANDALONE })
+        r.runPageScript()
+        expect(r.timers).toHaveLength(1)
+        expect(r.preloads).toHaveLength(1)
+        r.handle?.abort()
+        r.timers[1]()
+        r.runPageScript()
+        expect(r.handle?.state).toBe('done')
+        expect(r.attrs.has(INTRO_ATTRIBUTE)).toBe(false)
+        expect(r.rootStyle.backgroundColor).toBe('')
+        expect(r.bodyStyle.backgroundColor).toBe('')
+        expect(r.bodyStyle.transition).toBe('')
+    })
+
+    it('leaves other routes and ineligible launches on their normal backgrounds', () => {
+        for (const env of [
+            { pathname: '/owner/estimator', iosStandalone: true },
+            { pathname: '/', search: '?intro=1', iosStandalone: true },
+            {},
+            { iosStandalone: true, search: '?intro=0' },
+            { iosStandalone: true, media: ['(prefers-reduced-motion: reduce)'] },
+            { iosStandalone: true, saveData: true },
+            { iosStandalone: true, webgl2: false },
+            { iosStandalone: true, referrer: 'https://weavly.example/owner/estimator' },
+        ]) {
+            const r = runPolicy('app-login', { ...env, bootstrap: true })
+            expect(r.plays).toBe(false)
+            expect(r.rootStyle.backgroundColor).toBe('')
+            expect(r.bodyStyle.backgroundColor).toBe('')
+            expect(r.timers).toHaveLength(0)
+        }
+    })
+
+    it('cancels the deferred watchdog if playback starts or is skipped before parsing finishes', () => {
+        const running = runPolicy('app-login', { bootstrap: true, iosStandalone: true, readyState: 'loading' })
+        running.handle!.state = 'running'
+        running.handle!.release()
+        expect(running.documentListeners.size).toBe(0)
+        expect(running.timers).toHaveLength(0)
+
+        const skipped = runPolicy('app-login', { bootstrap: true, iosStandalone: true, readyState: 'loading' })
+        skipped.handle?.abort()
+        expect(skipped.documentListeners.size).toBe(0)
+        expect(skipped.handle?.state).toBe('done')
+        expect(skipped.timers).toHaveLength(1) // only the exit fade
+    })
+
     it('removes the stage if the animation has not started in time, or on an early interaction', () => {
         const slow = runPolicy('landing')
         slow.timers[0]() // start watchdog fires while still pending
@@ -351,6 +428,14 @@ describe('woven intro playback policy (pre-paint script)', () => {
 })
 
 describe('woven intro integration contracts', () => {
+    it('places the app startup policy in the root head and avoids a competing body transition', () => {
+        const layout = read('app/layout.tsx')
+        expect(layout.indexOf('<head>')).toBeLessThan(layout.indexOf('<AppIntroPrePaintScript />'))
+        expect(layout.indexOf('<AppIntroPrePaintScript />')).toBeLessThan(layout.indexOf('<body'))
+        expect(read('app/globals.css')).not.toContain('body.app-ready')
+        expect(read('app/manifest.ts')).toContain("background_color: '#000000'")
+    })
+
     it('keeps the stage hidden unless the pre-paint script chose to play it', () => {
         const css = read('app/globals.css')
         expect(css).toMatch(/\.weavly-intro,\s*\.weavly-intro-skip\s*\{\s*display:\s*none;/)

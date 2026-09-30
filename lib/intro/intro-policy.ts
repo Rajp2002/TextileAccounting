@@ -23,6 +23,10 @@ export const INTRO_ATTRIBUTE = 'data-weavly-intro'
 export const INTRO_LEAVING_ATTRIBUTE = 'data-weavly-intro-leaving'
 export const INTRO_START_TIMEOUT_MS = 1500
 
+// Inline in <head>: the login body may arrive before the intro stage or the
+// external stylesheet. Runtime inline colours still win during the handoff.
+export const APP_INTRO_PRE_PAINT_CSS = `html[data-weavly-intro="app-login"],html[data-weavly-intro="app-login"] body{background-color:#000;transition:none}`
+
 export type IntroHandle = {
     surface: IntroSurface
     state: 'pending' | 'running' | 'done'
@@ -36,6 +40,7 @@ export type IntroWindow = Window & { __weavlyIntro?: IntroHandle }
 
 const SCRIPT = `(function(surface){
 var d=document.documentElement,w=window;
+if(!surface||(w.__weavlyIntro&&w.__weavlyIntro.surface===surface))return;
 var paint=function(c){var b=document.body;d.style.backgroundColor=c;if(b){b.style.backgroundColor=c;b.style.transition=c?"none":""}};
 try{
 var q=location.search;
@@ -58,14 +63,20 @@ var link=document.createElement("link");link.rel="preload";link.as="image";link.
 var evs=["keydown","wheel","touchstart","pointerdown"],timer;
 var api=w.__weavlyIntro={surface:surface,state:"pending"};
 var early=function(){if(api.state==="pending")api.abort()};
-api.release=function(){clearTimeout(timer);for(var i=0;i<evs.length;i++)w.removeEventListener(evs[i],early,true)};
+var arm=function(){if(api.state==="pending")timer=setTimeout(function(){if(api.state==="pending")api.abort()},${INTRO_START_TIMEOUT_MS})};
+api.release=function(){clearTimeout(timer);document.removeEventListener("DOMContentLoaded",arm);for(var i=0;i<evs.length;i++)w.removeEventListener(evs[i],early,true)};
 api.abort=function(){if(api.state==="done")return;api.state="done";api.release();if(d.style&&d.style.backgroundColor)paint("rgb(244,243,236)");d.setAttribute("${INTRO_LEAVING_ATTRIBUTE}","");setTimeout(function(){d.removeAttribute("${INTRO_ATTRIBUTE}");d.removeAttribute("${INTRO_LEAVING_ATTRIBUTE}");if(d.style)paint("")},200)};
 for(var i=0;i<evs.length;i++)w.addEventListener(evs[i],early,true);
-timer=setTimeout(function(){if(api.state==="pending")api.abort()},${INTRO_START_TIMEOUT_MS});
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",arm,{once:true});else arm();
 }catch(e){d.removeAttribute("${INTRO_ATTRIBUTE}");if(d.style)paint("")}
 })`
 
 /** Static inline script (no user input) that decides whether the intro plays. */
 export function buildIntroPrePaintScript(surface: IntroSurface): string {
     return `${SCRIPT}(${JSON.stringify(surface)});`
+}
+
+/** Runs in the root head, before a streamed login page or its body can paint. */
+export function buildAppIntroPrePaintScript(): string {
+    return `${SCRIPT}(location.pathname==="/login"?"app-login":null);`
 }

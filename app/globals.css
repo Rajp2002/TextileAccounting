@@ -1599,23 +1599,13 @@
 /**
  * PWA Splash / Cold-Start Background
  *
- * When the PWA launches on iOS, the OS briefly shows the background_color from
- * the manifest before JS runs. We match it here with CSS so the transition from
- * the OS splash → app shell is seamless (no jarring color change or flash).
- *
- * Only active in standalone (installed PWA) mode — doesn't affect the browser.
+ * Use the normal canvas when no intro is selected. The root-head intro policy
+ * and critical styles paint eligible login launches dark before this sheet or
+ * the streamed page arrives; the runtime controls the handoff to the canvas.
  */
 @media (display-mode: standalone) {
   html, body {
-    /* Match the manifest background_color exactly */
     background-color: var(--wv-bg-canvas);
-  }
-
-  /* Once the app shell has mounted and React takes over, transition back to
-     the real app background smoothly so there's no harsh jump. */
-  body.app-ready {
-    background-color: var(--background);
-    transition: background-color 0.25s ease;
   }
 }
 
