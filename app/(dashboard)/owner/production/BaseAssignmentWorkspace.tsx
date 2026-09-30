@@ -1,5 +1,7 @@
 'use client'
 
+import { hasBaseOperatorEligibility } from '@/lib/base-operator'
+
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { TourInvitation } from '@/components/tours/TourInvitation'
@@ -195,12 +197,12 @@ export default function BaseAssignmentWorkspace({
 
     const visibleWorkers = useMemo(() => initialData.workers.filter((worker) => {
         if (!tourStep && focusWorkerId && worker.id !== focusWorkerId) return false
-        if (worker.pay_type === 'fixed_monthly') return false
+        if (!hasBaseOperatorEligibility(worker, initialData.today)) return false
         if (!showInactive && !worker.is_active) return false
         const isAvailable = worker.shift_availability === 'both' || worker.shift_availability === shift
         if (!isAvailable && !assignmentByWorker.has(worker.id)) return false
         return worker.name.toLowerCase().includes(workerSearch.trim().toLowerCase())
-    }), [assignmentByWorker, initialData.workers, shift, showInactive, workerSearch, focusWorkerId, tourStep])
+    }), [assignmentByWorker, initialData.workers, shift, showInactive, workerSearch, focusWorkerId, tourStep, initialData.today])
     const machineTypes = useMemo(() => Array.from(new Set(
         initialData.machines
             .filter((machine) => showInactive || machine.is_active)

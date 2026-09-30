@@ -1,5 +1,7 @@
 'use client'
 
+import { isBaseOperatorAvailable } from '@/lib/base-operator'
+
 import Link from 'next/link'
 import { WorkerPayBasis } from '@/components/workers/WorkerPayBasis'
 import { useState, useMemo } from 'react'
@@ -293,14 +295,11 @@ export default function BaseMachineBoard({
     const availableWorkersForShift = useMemo(() => {
         const query = workerSearch.trim().toLowerCase()
         return workers.filter((w) => {
-            if (!w.is_active) return false
-            if (w.pay_type === 'fixed_monthly') return false
-            const matchesShift = w.shift_availability === 'both' || w.shift_availability === manageWorkerShift
-            if (!matchesShift) return false
+            if (!isBaseOperatorAvailable(w, manageWorkerShift, today)) return false
             if (!query) return true
             return w.name.toLowerCase().includes(query)
         })
-    }, [workers, manageWorkerShift, workerSearch])
+    }, [workers, manageWorkerShift, workerSearch, today])
 
     return (
         <section className="space-y-4 pt-2">

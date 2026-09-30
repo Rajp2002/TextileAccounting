@@ -164,7 +164,7 @@ export function WorkerCard({ worker, onEdit, tourPreview = false }: WorkerCardPr
       {/* C. Card Actions */}
       <div className="mt-3.5 flex items-center justify-between gap-2 border-t border-hairline/60 pt-3">
         {/* Primary Contextual Action */}
-        {summary.isPieceRate || summary.assignedMachineCount > 0 ? (
+        {summary.isPieceRate || worker.operator_eligible || summary.assignedMachineCount > 0 ? (
           <NavigationLink
             data-workers-tour="assignments"
             href={tourPreview ? "#" : `/owner/assignments?worker=${worker.id}`}

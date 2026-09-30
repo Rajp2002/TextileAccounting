@@ -2,10 +2,15 @@ import { z } from 'zod'
 import type { BaseProductionRevisionSnapshot } from './base-production-core'
 
 const amount = z.coerce.number().finite().nonnegative()
+const applicability = {
+    pay_basis_snapshot: z.enum(['piece_rate', 'fixed_monthly']).optional(),
+    piece_earning_state: z.enum(['applicable', 'inapplicable']).optional(),
+}
 const entrySchema = z.object({
+    ...applicability,
     worker_id: z.string(), entry_status: z.enum(['blank', 'entered', 'zero', 'absent']),
     meters: amount.nullable().transform(value => value ?? 0), worker_rate_snapshot: amount,
-    allocations: z.array(z.object({ machine_id: z.string(), machine_label: z.string(), job_id: z.string(), job_label: z.string(), meters: amount, worker_rate_snapshot: amount })).default([]),
+    allocations: z.array(z.object({ ...applicability, machine_id: z.string(), machine_label: z.string(), job_id: z.string(), job_label: z.string(), meters: amount, worker_rate_snapshot: amount })).default([]),
 })
 export function readBaseRevisionEntries(value: unknown) {
     const result = z.array(entrySchema).safeParse(value)
