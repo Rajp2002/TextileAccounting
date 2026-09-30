@@ -97,7 +97,7 @@ export function buildBasePayrollReadiness({
         for (const entry of periodEntries) {
             if (entry.allocation_mode !== 'machine_breakdown') {
                 legacyLineCount += 1
-                if (!positive(entry.worker_rate_snapshot)) {
+                if (entry.piece_earning_state !== 'inapplicable' && !positive(entry.worker_rate_snapshot)) {
                     issues.push(issue(entry, 'missing_rate', 'A saved worker total has no positive pay rate.'))
                 }
                 continue
@@ -117,7 +117,7 @@ export function buildBasePayrollReadiness({
             if (entryAllocations.some((allocation) => allocation.worker_id !== entry.worker_id || !allocation.machine_id || !allocation.job_id)) {
                 issues.push(issue(entry, 'missing_context', 'A machine line is missing its worker, machine, or costing context.'))
             }
-            if (entryAllocations.some((allocation) => !positive(allocation.worker_rate_snapshot))) {
+            if (entryAllocations.some((allocation) => allocation.piece_earning_state !== 'inapplicable' && !positive(allocation.worker_rate_snapshot))) {
                 issues.push(issue(entry, 'missing_rate', 'A machine line has no positive saved weaver rate.'))
             }
         }

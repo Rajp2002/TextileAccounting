@@ -22,7 +22,7 @@ async function workerWithProduction() {
         [ids.costing, owner.orgId],
     )
     await db.query(
-        "INSERT INTO public.base_production_jobs(id, org_id, costing_id, quality_label, target_meters, start_date, status) VALUES ($1, $2, $3, 'Cotton', 10000, '2026-08-01', 'active')",
+        "INSERT INTO public.base_production_jobs(id, org_id, costing_id, quality_label, target_meters, start_date, status, worker_rate_per_meter) VALUES ($1, $2, $3, 'Cotton', 10000, '2026-08-01', 'active', 2)",
         [ids.job, owner.orgId, ids.costing],
     )
     await db.query("INSERT INTO public.base_production_workers(id, org_id, name, rate_per_meter, shift_availability) VALUES ($1, $2, $3, 2, 'both')", [ids.worker, owner.orgId, `Worker ${ids.worker.slice(0, 8)}`])

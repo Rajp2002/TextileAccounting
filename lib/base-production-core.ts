@@ -59,10 +59,12 @@ export type BaseProductionRevisionSnapshot = {
     worker_count: number
     entries?: Array<{
         worker_id: string
+        pay_basis_snapshot?: 'piece_rate' | 'fixed_monthly'
+        piece_earning_state?: 'applicable' | 'inapplicable'
         entry_status: BaseDailyProductionStatus
         meters: number
         worker_rate_snapshot: number
-        allocations: Array<{ machine_id: string; machine_label: string; job_id: string; job_label: string; meters: number; worker_rate_snapshot: number }>
+        allocations: Array<{ machine_id: string; machine_label: string; job_id: string; job_label: string; meters: number; worker_rate_snapshot: number; pay_basis_snapshot?: 'piece_rate' | 'fixed_monthly'; piece_earning_state?: 'applicable' | 'inapplicable' }>
     }>
 }
 
@@ -82,6 +84,10 @@ export type BaseProductionWorker = {
     updated_at?: string
     pay_type?: 'piece_rate' | 'fixed_monthly'
     role?: string
+    operator_eligible?: boolean
+    operator_effective_from?: string | null
+    operator_approved_by?: string | null
+    operator_approved_at?: string | null
     monthly_salary?: number
     salary_effective_from?: string | null
     salary_history?: BaseSalaryRate[]
@@ -125,6 +131,8 @@ export type BaseProductionJob = {
 }
 
 export type BaseProductionEntry = {
+    pay_basis_snapshot?: 'piece_rate' | 'fixed_monthly'
+    piece_earning_state?: 'applicable' | 'inapplicable'
     id: string
     job_id: string
     worker_id: string
@@ -144,6 +152,8 @@ export type BaseProductionEntry = {
 }
 
 export type BaseProductionAllocation = {
+    pay_basis_snapshot?: 'piece_rate' | 'fixed_monthly'
+    piece_earning_state?: 'applicable' | 'inapplicable'
     id: string
     entry_id: string
     worker_id: string
@@ -380,12 +390,13 @@ export function reconcileBaseProductionJobStatuses<TJob extends Pick<BaseProduct
 }
 
 function calculateBaseEntryGrossDecimal(
-    entry: Pick<BaseProductionEntry, 'meters' | 'worker_rate_snapshot' | 'allocation_mode' | 'id'>,
-    allocations: Pick<BaseProductionAllocation, 'entry_id' | 'meters' | 'worker_rate_snapshot'>[],
+    entry: Pick<BaseProductionEntry, 'meters' | 'worker_rate_snapshot' | 'allocation_mode' | 'id' | 'piece_earning_state'>,
+    allocations: Pick<BaseProductionAllocation, 'entry_id' | 'meters' | 'worker_rate_snapshot' | 'piece_earning_state'>[],
 ) {
+    if (entry.piece_earning_state === 'inapplicable') return new Decimal(0)
     if (entry.allocation_mode === 'machine_breakdown') {
         return allocations
-            .filter((allocation) => allocation.entry_id === entry.id)
+            .filter((allocation) => allocation.entry_id === entry.id && allocation.piece_earning_state !== 'inapplicable')
             .reduce(
                 (total, allocation) => total.plus(toDecimal(allocation.meters).times(toDecimal(allocation.worker_rate_snapshot))),
                 new Decimal(0),
@@ -396,8 +407,8 @@ function calculateBaseEntryGrossDecimal(
 }
 
 export function calculateBaseEntryGrossPay(
-    entry: Pick<BaseProductionEntry, 'meters' | 'worker_rate_snapshot' | 'allocation_mode' | 'id'>,
-    allocations: Pick<BaseProductionAllocation, 'entry_id' | 'meters' | 'worker_rate_snapshot'>[] = [],
+    entry: Pick<BaseProductionEntry, 'meters' | 'worker_rate_snapshot' | 'allocation_mode' | 'id' | 'piece_earning_state'>,
+    allocations: Pick<BaseProductionAllocation, 'entry_id' | 'meters' | 'worker_rate_snapshot' | 'piece_earning_state'>[] = [],
 ) {
     return toRoundedNumber(calculateBaseEntryGrossDecimal(entry, allocations))
 }
