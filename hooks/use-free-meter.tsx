@@ -4,11 +4,10 @@ import Link from 'next/link'
 import {UpgradeBenefitsPreview} from '@/components/estimator/UpgradeBenefitsPreview'
 import type {EstimateState,EstimatorV3Totals,CostingResultSnapshot} from '@/lib/estimator'
 import type {freeStatus} from '@/lib/free-service'
-import {canonicalFreeInputs} from '@/lib/free-estimator-input'
+import {canonicalFreeInputs} from '@/lib/free-estimator-canonical'
 import {freeText,freeErrorText} from '@/lib/i18n/free-tier'
 import {useTranslation} from '@/lib/i18n/context'
 import {Button} from '@/components/ui/button'
-import {createClient} from '@/lib/supabase/client'
 import type {SubscriptionTier} from '@/lib/subscription-access'
 import type {AuthChangeEvent,Session} from '@supabase/supabase-js'
 
@@ -23,13 +22,19 @@ export function useFreeMeter(enabled:boolean,state:EstimateState,label:string,on
  useEffect(()=>{if(!enabled)return;const load=()=>{void refresh().catch(()=>setStatusError('FREE_TEMPORARY_ERROR'))};load();window.addEventListener('focus',load);return()=>window.removeEventListener('focus',load)},[enabled,refresh])
  useEffect(()=>{
   if(!enabled)return
-  const client=createClient()
-  const {data:{subscription}}=client.auth.onAuthStateChange((event:AuthChangeEvent,session:Session|null)=>{
-   if(event==='SIGNED_OUT'||event==='SIGNED_IN'&&status?.account.id&&session?.user.id!==status.account.id){
-    pending.current=null;setCompleted(null);setStatus(null);window.location.assign('/login')
-   }
-  })
-  return()=>subscription.unsubscribe()
+  // Only Free uses the browser Supabase client, so load it here instead of in
+  // the estimator bundle that Lite and Base owners land on after sign-in.
+  let cancelled=false,unsubscribe:(()=>void)|undefined
+  void import('@/lib/supabase/client').then(({createClient})=>{
+   if(cancelled)return
+   const {data:{subscription}}=createClient().auth.onAuthStateChange((event:AuthChangeEvent,session:Session|null)=>{
+    if(event==='SIGNED_OUT'||event==='SIGNED_IN'&&status?.account.id&&session?.user.id!==status.account.id){
+     pending.current=null;setCompleted(null);setStatus(null);window.location.assign('/login')
+    }
+   })
+   unsubscribe=()=>subscription.unsubscribe()
+  }).catch(()=>{})
+  return()=>{cancelled=true;unsubscribe?.()}
  },[enabled,status?.account.id])
  const signature=JSON.stringify(canonicalFreeInputs(state))
  const stale=!!completed&&completed.signature!==signature

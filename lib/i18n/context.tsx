@@ -2,8 +2,16 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, ReactNode } from "react"
 import { en } from "./locales/en"
-import { BASE_PLAN_PHRASES, isBasePlanSurfacePath } from "./base-plan-phrases"
-import { applyTranslationGuards, translateStrictBasePlanText } from "./runtime"
+import { isBasePlanSurfacePath } from "./base-plan-surface"
+
+type TranslationRuntime = typeof import("./runtime")
+
+// Hindi/Gujarati-only helpers. They load with the language resources below so
+// English first loads (landing, login, app shell) don't download them. Every
+// caller runs only after those resources resolve.
+let BASE_PLAN_PHRASES: typeof import("./base-plan-phrases").BASE_PLAN_PHRASES = { hi: {}, gu: {} }
+let applyTranslationGuards: TranslationRuntime["applyTranslationGuards"] = (_source, target) => target
+let translateStrictBasePlanText: TranslationRuntime["translateStrictBasePlanText"] = () => undefined
 
 export type Language = "en" | "hi" | "gu"
 interface TranslationTree {
@@ -56,8 +64,15 @@ function loadLanguageResources(language: Exclude<Language, "en">) {
     localePromise,
     import("./legacy").then(({ legacyPhraseTranslations }) => legacyPhraseTranslations[language]),
     import("./legacy-generated").then(({ generatedLegacyPhraseTranslations }) => generatedLegacyPhraseTranslations[language]),
+    import("./base-plan-phrases"),
+    import("./runtime"),
   ])
-    .then(([translation, legacy, generatedLegacy]) => ({ translation, legacy, generatedLegacy }))
+    .then(([translation, legacy, generatedLegacy, basePlan, runtime]) => {
+      BASE_PLAN_PHRASES = basePlan.BASE_PLAN_PHRASES
+      applyTranslationGuards = runtime.applyTranslationGuards
+      translateStrictBasePlanText = runtime.translateStrictBasePlanText
+      return { translation, legacy, generatedLegacy }
+    })
     .catch((error) => {
       resourcePromises.delete(language)
       throw error
