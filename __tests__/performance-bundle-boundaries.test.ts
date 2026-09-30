@@ -20,6 +20,48 @@ describe('performance-sensitive bundle boundaries', () => {
         expect(context).toContain('const activeLang = isMounted && resources[language] ? language : "en"')
     })
 
+    it('loads the Hindi/Gujarati Base-plan phrases and runtime with the language, not on first load', () => {
+        const context = source('lib/i18n/context.tsx')
+
+        expect(context).not.toContain('from "./base-plan-phrases"')
+        expect(context).not.toContain('from "./runtime"')
+        expect(context).toContain('import("./base-plan-phrases")')
+        expect(context).toContain('import("./runtime")')
+        expect(context).toContain('import { isBasePlanSurfacePath } from "./base-plan-surface"')
+    })
+
+    it('keeps Node crypto, zod, and the Supabase browser SDK out of the estimator bundle', () => {
+        const estimator = source('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
+        const freeMeter = source('hooks/use-free-meter.tsx')
+        const inputChanges = source('lib/costing-input-changes.ts')
+        const freeCanonical = source('lib/free-estimator-canonical.ts')
+
+        // costing-save-trust.ts imports Node crypto, which webpack polyfills (~100 KB gzip).
+        expect(estimator).toContain("import { summarizeCostingInputChanges } from '@/lib/costing-input-changes'")
+        expect(estimator).not.toContain("from '@/lib/costing-save-trust'")
+        expect(inputChanges).not.toMatch(/from ['"](node:)?crypto['"]/)
+        // free-estimator-input.ts carries the server-side zod schema.
+        expect(freeMeter).toContain("import {canonicalFreeInputs} from '@/lib/free-estimator-canonical'")
+        expect(freeMeter).not.toContain("from '@/lib/free-estimator-input'")
+        expect(freeCanonical).not.toContain("from 'zod'")
+        // Only Free needs the browser Supabase client, so it loads on demand.
+        expect(freeMeter).not.toContain("import {createClient} from '@/lib/supabase/client'")
+        expect(freeMeter).toContain("import('@/lib/supabase/client')")
+        // ...and a failed chunk load retries instead of silently dropping the
+        // cross-tab sign-out redirect.
+        expect(freeMeter).toContain("window.addEventListener('focus',subscribe);window.addEventListener('online',subscribe)")
+        expect(freeMeter).toContain('if(cancelled||loading||unsubscribe)return')
+    })
+
+    it('loads Sentry Session Replay after the page is idle instead of in every first-load bundle', () => {
+        const client = source('instrumentation-client.ts')
+
+        expect(client).not.toContain('Sentry.replayIntegration(')
+        expect(client).toContain("import('@sentry/replay')")
+        expect(client).toContain('Sentry.addIntegration(replayIntegration(')
+        expect(client).toContain('replaysOnErrorSampleRate === 0) return')
+    })
+
     it('keeps Base payroll PDF loading inside the guarded export failure boundary', () => {
         const payroll = source('app/(dashboard)/owner/production/BasePayrollRecords.tsx')
         expect(payroll).not.toContain("import { generateBasePayrollPdf } from")

@@ -187,4 +187,9 @@ export default withSentryConfig(withPWA(nextConfig), {
   widenClientFileUpload: true,
   // Route Sentry tunnel to avoid ad-blocker interference
   tunnelRoute: '/monitoring',
+  // Client init sets debug: false, so the SDK's debug logging is dead weight
+  // in every first-load bundle.
+  bundleSizeOptimizations: {
+    excludeDebugStatements: true,
+  },
 });

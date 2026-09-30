@@ -140,7 +140,7 @@ import {
 } from '@/lib/estimator-validation'
 import { shouldAutoRestoreEstimatorDraft } from '@/lib/estimator-drafts'
 import type { EstimatorDraftInput, EstimatorQuoteStatus } from '@/lib/estimator-drafts'
-import { summarizeCostingInputChanges } from '@/lib/costing-save-trust'
+import { summarizeCostingInputChanges } from '@/lib/costing-input-changes'
 import { createClientRequestUuid } from '@/lib/client-request-id'
 import { runMutationWithTimeout } from '@/lib/mutation-outcome'
 import { getEstimatorFieldTarget } from '@/lib/estimator-field-target'

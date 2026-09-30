@@ -19,6 +19,27 @@ function createTraceId() {
     return Array.from(bytes, (value) => value.toString(16).padStart(2, '0')).join('')
 }
 
+let workspaceCodeRequested = false
+
+// Owners on every plan land on the estimator after sign-in (Free reuses it at
+// /free). Fetch its code while they type so the post-login page load mostly
+// comes from the browser cache. The workspace navigation is a full page load,
+// so this only warms the cache; it grants nothing and skips Save-Data users.
+function warmWorkspaceCode() {
+    if (workspaceCodeRequested) return
+    workspaceCodeRequested = true
+    const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection
+    if (connection?.saveData) return
+
+    const load = () => {
+        void import('@/app/(dashboard)/owner/estimator/EstimatorClient').catch(() => {
+            // A failed warm-up only means the workspace downloads normally.
+        })
+    }
+    if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(load, { timeout: 2000 })
+    else window.setTimeout(load, 300)
+}
+
 export default function LoginForm({ recoveryDestination }: { recoveryDestination?: string | null }) {
     const [loading, setLoading]             = useState(false)
     const [isRedirecting, setIsRedirecting] = useState(false)
@@ -31,7 +52,10 @@ export default function LoginForm({ recoveryDestination }: { recoveryDestination
     // whose credential fields are in the tab order (read-only does not stop it),
     // so the fields stay out of it until the user clicks one or presses Tab.
     const [credentialsArmed, setCredentialsArmed] = useState(false)
-    const armCredentials = () => setCredentialsArmed(true)
+    const armCredentials = () => {
+        setCredentialsArmed(true)
+        warmWorkspaceCode()
+    }
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search)
@@ -51,6 +75,7 @@ export default function LoginForm({ recoveryDestination }: { recoveryDestination
                 if (field) field.tabIndex = 0
             }
             setCredentialsArmed(true)
+            warmWorkspaceCode()
         }
         window.addEventListener('keydown', armOnTab, true)
         return () => window.removeEventListener('keydown', armOnTab, true)
@@ -59,6 +84,8 @@ export default function LoginForm({ recoveryDestination }: { recoveryDestination
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
+        // Saved-password autofill can submit without focusing a field.
+        warmWorkspaceCode()
 
         const traceId = createTraceId()
         const clickStartedAt = Date.now()

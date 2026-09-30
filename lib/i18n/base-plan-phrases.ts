@@ -1311,23 +1311,4 @@ export const BASE_PLAN_PHRASES: Record<BasePlanLocalLanguage, Record<string, str
   },
 }
 
-export const BASE_PLAN_SURFACE_PREFIXES = [
-  '/free',
-  '/onboarding',
-  '/owner/estimator',
-  '/owner/quotes',
-  '/owner/rates',
-  '/owner/production',
-  '/owner/operations',
-  '/owner/setup',
-  '/owner/workers',
-  '/owner/machines',
-  '/owner/assignments',
-  '/owner/payroll',
-  '/owner/settings',
-  '/owner/billing',
-]
-
-export function isBasePlanSurfacePath(pathname: string) {
-  return BASE_PLAN_SURFACE_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
-}
+export { BASE_PLAN_SURFACE_PREFIXES, isBasePlanSurfacePath } from './base-plan-surface'
