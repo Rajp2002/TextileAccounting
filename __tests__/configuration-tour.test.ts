@@ -23,6 +23,32 @@ describe('Assignment tour workflow', () => {
         expect(configurationTourSelectors['ma-handoff']).toContain('assignments.first-assign')
     })
 
+    it('marks the columns anchor on the desktop Workers/Machines grid (content-height on sample steps) and on the mobile board', () => {
+        // Round 2 (owner-requested): the control-row anchor put the panel over the Workers column at <=1280. The anchor is
+        // now the columns themselves, and that grid is content-height only while a sample step runs, so the panel lands
+        // in the board's empty lower area instead of on the rows.
+        const anchor = 'data-tour-anchor="assignments.columns"'
+        const lines = workspace.split('\n')
+        const marked = lines.map((line, index) => ({ line, index })).filter(({ line }) => line.includes(anchor))
+        expect(marked).toHaveLength(2)
+        // Desktop: the drag-linked columns grid (ref, connections marker and its class list are its neighbours).
+        const desktop = lines.slice(marked[0].index - 3, marked[0].index + 6).join('\n')
+        expect(desktop).toContain('ref={boardRef}')
+        expect(desktop).toContain('data-configuration-tour-connections')
+        expect(desktop).toContain("${tourSampleActive ? 'flex-none' : 'flex-1'}")
+        expect(desktop).toContain('grid-cols-[minmax(0,1fr)_minmax(0,1fr)]')
+        // The height change is limited to sample steps: the live handoff keeps the scrolling flex-1 board.
+        expect(workspace.match(/tourSampleActive \? 'flex-none' : 'flex-1'/g)).toHaveLength(1)
+        // The former control-row anchor is gone: the search/filter row is unmarked again.
+        const controlRow = lines.find(line => line.includes('mb-5 grid grid-cols-2 gap-4'))!
+        expect(controlRow).not.toContain('data-tour-anchor')
+        // Phone: the mobile board card keeps the geometry the tour already had there.
+        expect(marked[1].line).toContain('data-configuration-tour="board"')
+        expect(marked[1].line).toContain('md:hidden')
+        // Board markers used by the CSS, the harness and other tests stay on both boards.
+        expect(workspace.match(/data-configuration-tour="board"/g)).toHaveLength(2)
+    })
+
     it('isolates examples from persisted records and regenerates them on replay', () => {
         for (const step of configurationTourSteps) {
             const sample = makeConfigurationTourExample('2026-09-17', step)
@@ -132,9 +158,14 @@ describe('Assignment tour workflow', () => {
         expect(workspace).toContain("t('assignments.noJob')")
     })
 
-    it('keeps the default board anchor and picker context, with eligible real-worker or Add worker handoffs', () => {
-        expect(configurationTourSelectors['ma-purpose']).toBe('[data-configuration-tour="board"]')
-        expect(JSON.stringify(configurationTourSpecs(true))).not.toContain('assignments.columns')
+    it('anchors ma-purpose to the columns row (MA-1 fallback) and keeps every other anchor, the picker context and the handoffs', () => {
+        // Browser evidence (BV-02): the whole-board anchor overlapped the panel at 1024x768 and 1280x800, so the
+        // spec §E fallback applies. Phones resolve the same selector to the mobile board card, as before.
+        expect(configurationTourSelectors['ma-purpose']).toBe('[data-tour-anchor="assignments.columns"]')
+        expect(configurationTourSelectors['ma-shift']).toBe('[data-configuration-tour="shift"]')
+        expect(configurationTourSelectors['ma-job']).toBe('[data-configuration-tour="job"]')
+        expect(configurationTourSelectors['ma-assign']).toBe('[data-configuration-tour="assign"]')
+        expect(configurationTourSelectors['ma-choose']).toBe('[data-configuration-picker-state="available"]')
         for (const hasWorker of [true, false]) {
             const specs = configurationTourSpecs(hasWorker)
             expect(specs.map(step => step.id)).toEqual([...configurationTourSteps])

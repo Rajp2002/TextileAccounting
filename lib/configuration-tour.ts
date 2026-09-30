@@ -49,7 +49,10 @@ export function makeConfigurationTourExample(today: string, step: ConfigurationT
 }
 
 export const configurationTourSelectors: Record<ConfigurationTourStep, string> = {
-    'ma-purpose': '[data-configuration-tour="board"]',
+    // MA-1 fallback (spec §E): the whole board overlapped the panel at 1024x768 and 1280x800. On desktop the
+    // anchor is the Workers/Machines columns grid, content-height while a sample step runs, so the panel sits in the
+    // board's empty lower area and never on the rows; on phones it marks the mobile board card, as before.
+    'ma-purpose': '[data-tour-anchor="assignments.columns"]',
     'ma-shift': '[data-configuration-tour="shift"]',
     'ma-job': '[data-configuration-tour="job"]',
     'ma-assign': '[data-configuration-tour="assign"]',

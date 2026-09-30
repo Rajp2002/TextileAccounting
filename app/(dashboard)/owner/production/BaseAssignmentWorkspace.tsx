@@ -566,8 +566,9 @@ export default function BaseAssignmentWorkspace({
                     <div
                         ref={boardRef}
                         data-configuration-tour-connections
+                        data-tour-anchor="assignments.columns"
                         onScroll={updateConnectorPositions}
-                        className={`relative grid flex-1 min-h-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-12 lg:gap-16 overflow-y-auto overscroll-contain pr-2 ${draggingWorkerId ? 'select-none' : ''}`}
+                        className={`relative grid ${tourSampleActive ? 'flex-none' : 'flex-1'} min-h-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-12 lg:gap-16 overflow-y-auto overscroll-contain pr-2 ${draggingWorkerId ? 'select-none' : ''}`}
                     >
                         <svg className="pointer-events-none absolute inset-0 z-0 h-full w-full overflow-visible" aria-hidden="true">
                             {visibleWorkers.flatMap((worker) => {
@@ -784,7 +785,7 @@ export default function BaseAssignmentWorkspace({
                 </CardContent>
             </Card>
 
-            <Card data-configuration-tour="board" className="gap-3 rounded-2xl border border-hairline bg-surface shadow-xs md:hidden min-h-[calc(100vh-14.5rem)] flex flex-col">
+            <Card data-configuration-tour="board" data-tour-anchor="assignments.columns" className="gap-3 rounded-2xl border border-hairline bg-surface shadow-xs md:hidden min-h-[calc(100vh-14.5rem)] flex flex-col">
                 <CardHeader className="border-b border-hairline/70 p-4 pb-3">
                     <CardTitle className="flex items-center gap-2 text-base font-bold text-ink">
                         <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-hairline bg-surface-soft text-loom">
