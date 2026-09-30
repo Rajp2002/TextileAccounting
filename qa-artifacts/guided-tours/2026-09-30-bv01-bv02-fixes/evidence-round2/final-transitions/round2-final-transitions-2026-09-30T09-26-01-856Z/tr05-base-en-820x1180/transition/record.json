@@ -1,0 +1,2538 @@
+{
+  "scenario": "estimator",
+  "lang": "en",
+  "size": "820x1180",
+  "kind": "estimator",
+  "compactPhone": false,
+  "frames": [
+    {
+      "id": "est-purpose",
+      "via": "start",
+      "delayMs": 0,
+      "step": "est-purpose",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 457,
+        "w": 360,
+        "h": 221
+      },
+      "highlight": {
+        "x": 404,
+        "y": 457,
+        "w": 380,
+        "h": 425
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": [
+        "running"
+      ]
+    },
+    {
+      "id": "est-purpose",
+      "via": "start",
+      "delayMs": 500,
+      "step": "est-purpose",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 457,
+        "w": 360,
+        "h": 221
+      },
+      "highlight": {
+        "x": 404,
+        "y": 457,
+        "w": 380,
+        "h": 425
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-purpose",
+      "via": "start",
+      "delayMs": 2000,
+      "step": "est-purpose",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 457,
+        "w": 360,
+        "h": 221
+      },
+      "highlight": {
+        "x": 404,
+        "y": 457,
+        "w": 380,
+        "h": 425
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-warp",
+      "via": "next",
+      "delayMs": 0,
+      "step": "est-warp",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 286,
+        "w": 360,
+        "h": 243
+      },
+      "highlight": {
+        "x": 404,
+        "y": 286,
+        "w": 380,
+        "h": 608
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-warp",
+      "via": "next",
+      "delayMs": 500,
+      "step": "est-warp",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 286,
+        "w": 360,
+        "h": 243
+      },
+      "highlight": {
+        "x": 404,
+        "y": 286,
+        "w": 380,
+        "h": 608
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-warp",
+      "via": "next",
+      "delayMs": 2000,
+      "step": "est-warp",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 286,
+        "w": 360,
+        "h": 243
+      },
+      "highlight": {
+        "x": 404,
+        "y": 286,
+        "w": 380,
+        "h": 608
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-weft",
+      "via": "next",
+      "delayMs": 0,
+      "step": "est-weft",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 268,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 268,
+        "w": 380,
+        "h": 643
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-weft",
+      "via": "next",
+      "delayMs": 500,
+      "step": "est-weft",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 268,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 268,
+        "w": 380,
+        "h": 643
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-weft",
+      "via": "next",
+      "delayMs": 2000,
+      "step": "est-weft",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 268,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 268,
+        "w": 380,
+        "h": 643
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-weaving",
+      "via": "next",
+      "delayMs": 0,
+      "step": "est-weaving",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 412,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 404,
+        "y": 412,
+        "w": 380,
+        "h": 357
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-weaving",
+      "via": "next",
+      "delayMs": 500,
+      "step": "est-weaving",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 412,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 404,
+        "y": 412,
+        "w": 380,
+        "h": 357
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-weaving",
+      "via": "next",
+      "delayMs": 2000,
+      "step": "est-weaving",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 412,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 404,
+        "y": 412,
+        "w": 380,
+        "h": 357
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-warping",
+      "via": "next",
+      "delayMs": 0,
+      "step": "est-warping",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 412,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 412,
+        "w": 380,
+        "h": 357
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": [
+        "running",
+        "running",
+        "running",
+        "running"
+      ]
+    },
+    {
+      "id": "est-warping",
+      "via": "next",
+      "delayMs": 500,
+      "step": "est-warping",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 767,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 767,
+        "w": 380,
+        "h": 227
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-warping",
+      "via": "next",
+      "delayMs": 2000,
+      "step": "est-warping",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 767,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 767,
+        "w": 380,
+        "h": 227
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-overhead",
+      "via": "next",
+      "delayMs": 0,
+      "step": "est-overhead",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 377,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 377,
+        "w": 380,
+        "h": 426
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-overhead",
+      "via": "next",
+      "delayMs": 500,
+      "step": "est-overhead",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 377,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 377,
+        "w": 380,
+        "h": 426
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-overhead",
+      "via": "next",
+      "delayMs": 2000,
+      "step": "est-overhead",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 377,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 377,
+        "w": 380,
+        "h": 426
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-pricing",
+      "via": "next",
+      "delayMs": 0,
+      "step": "est-pricing",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 624,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 456,
+        "w": 380,
+        "h": 416
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": [
+        "running",
+        "running",
+        "running",
+        "running",
+        "running",
+        "running"
+      ]
+    },
+    {
+      "id": "est-pricing",
+      "via": "next",
+      "delayMs": 500,
+      "step": "est-pricing",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 623,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 623,
+        "w": 380,
+        "h": 406
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-pricing",
+      "via": "next",
+      "delayMs": 2000,
+      "step": "est-pricing",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 623,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 623,
+        "w": 380,
+        "h": 406
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-live",
+      "via": "next",
+      "delayMs": 0,
+      "step": "est-live",
+      "status": "ready",
+      "panel": {
+        "x": 23,
+        "y": 21,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 400,
+        "y": 331,
+        "w": 387,
+        "h": 234
+      },
+      "target": {
+        "x": 405,
+        "y": 217,
+        "w": 378,
+        "h": 150
+      },
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": [
+        "running",
+        "running",
+        "running",
+        "running",
+        "running",
+        "running"
+      ]
+    },
+    {
+      "id": "est-live",
+      "via": "next",
+      "delayMs": 500,
+      "step": "est-live",
+      "status": "ready",
+      "panel": {
+        "x": 23,
+        "y": 21,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 399,
+        "y": 211,
+        "w": 390,
+        "h": 162
+      },
+      "target": {
+        "x": 405,
+        "y": 217,
+        "w": 378,
+        "h": 150
+      },
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": true,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-live",
+      "via": "next",
+      "delayMs": 2000,
+      "step": "est-live",
+      "status": "ready",
+      "panel": {
+        "x": 23,
+        "y": 21,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 399,
+        "y": 211,
+        "w": 390,
+        "h": 162
+      },
+      "target": {
+        "x": 405,
+        "y": 217,
+        "w": 378,
+        "h": 150
+      },
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": true,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-save",
+      "via": "next",
+      "delayMs": 0,
+      "step": "est-save",
+      "status": "ready",
+      "panel": {
+        "x": 23,
+        "y": 21,
+        "w": 360,
+        "h": 243
+      },
+      "highlight": {
+        "x": 399,
+        "y": 211,
+        "w": 390,
+        "h": 162
+      },
+      "target": {
+        "x": 405,
+        "y": 542,
+        "w": 378,
+        "h": 264
+      },
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": true,
+      "focusInPanel": true,
+      "animations": [
+        "running",
+        "running",
+        "running"
+      ]
+    },
+    {
+      "id": "est-save",
+      "via": "next",
+      "delayMs": 500,
+      "step": "est-save",
+      "status": "ready",
+      "panel": {
+        "x": 23,
+        "y": 21,
+        "w": 360,
+        "h": 243
+      },
+      "highlight": {
+        "x": 399,
+        "y": 536,
+        "w": 390,
+        "h": 276
+      },
+      "target": {
+        "x": 405,
+        "y": 542,
+        "w": 378,
+        "h": 264
+      },
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": true,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-save",
+      "via": "next",
+      "delayMs": 2000,
+      "step": "est-save",
+      "status": "ready",
+      "panel": {
+        "x": 23,
+        "y": 21,
+        "w": 360,
+        "h": 243
+      },
+      "highlight": {
+        "x": 399,
+        "y": 536,
+        "w": 390,
+        "h": 276
+      },
+      "target": {
+        "x": 405,
+        "y": 542,
+        "w": 378,
+        "h": 264
+      },
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": true,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-handoff",
+      "via": "next",
+      "delayMs": 0,
+      "step": "est-handoff",
+      "status": "ready",
+      "panel": {
+        "x": 47,
+        "y": 565,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 423,
+        "y": 565,
+        "w": 343,
+        "h": 51
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-handoff",
+      "via": "next",
+      "delayMs": 500,
+      "step": "est-handoff",
+      "status": "ready",
+      "panel": {
+        "x": 47,
+        "y": 565,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 423,
+        "y": 565,
+        "w": 343,
+        "h": 51
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-handoff",
+      "via": "next",
+      "delayMs": 2000,
+      "step": "est-handoff",
+      "status": "ready",
+      "panel": {
+        "x": 47,
+        "y": 565,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 423,
+        "y": 565,
+        "w": 343,
+        "h": 51
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-save",
+      "via": "back",
+      "delayMs": 0,
+      "step": "est-save",
+      "status": "ready",
+      "panel": {
+        "x": 47,
+        "y": 565,
+        "w": 360,
+        "h": 243
+      },
+      "highlight": {
+        "x": 423,
+        "y": 565,
+        "w": 343,
+        "h": 51
+      },
+      "target": {
+        "x": 405,
+        "y": 542,
+        "w": 378,
+        "h": 264
+      },
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 482,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": true,
+      "focusInPanel": true,
+      "animations": [
+        "running",
+        "running",
+        "running",
+        "running",
+        "running"
+      ]
+    },
+    {
+      "id": "est-save",
+      "via": "back",
+      "delayMs": 500,
+      "step": "est-save",
+      "status": "ready",
+      "panel": {
+        "x": 23,
+        "y": 21,
+        "w": 360,
+        "h": 243
+      },
+      "highlight": {
+        "x": 399,
+        "y": 536,
+        "w": 390,
+        "h": 276
+      },
+      "target": {
+        "x": 405,
+        "y": 542,
+        "w": 378,
+        "h": 264
+      },
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": true,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-save",
+      "via": "back",
+      "delayMs": 2000,
+      "step": "est-save",
+      "status": "ready",
+      "panel": {
+        "x": 23,
+        "y": 21,
+        "w": 360,
+        "h": 243
+      },
+      "highlight": {
+        "x": 399,
+        "y": 536,
+        "w": 390,
+        "h": 276
+      },
+      "target": {
+        "x": 405,
+        "y": 542,
+        "w": 378,
+        "h": 264
+      },
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": true,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-live",
+      "via": "back",
+      "delayMs": 0,
+      "step": "est-live",
+      "status": "ready",
+      "panel": {
+        "x": 23,
+        "y": 21,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 399,
+        "y": 432,
+        "w": 390,
+        "h": 240
+      },
+      "target": {
+        "x": 405,
+        "y": 217,
+        "w": 378,
+        "h": 150
+      },
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": [
+        "running",
+        "running",
+        "running"
+      ]
+    },
+    {
+      "id": "est-live",
+      "via": "back",
+      "delayMs": 500,
+      "step": "est-live",
+      "status": "ready",
+      "panel": {
+        "x": 23,
+        "y": 21,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 399,
+        "y": 211,
+        "w": 390,
+        "h": 162
+      },
+      "target": {
+        "x": 405,
+        "y": 217,
+        "w": 378,
+        "h": 150
+      },
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": true,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-live",
+      "via": "back",
+      "delayMs": 2000,
+      "step": "est-live",
+      "status": "ready",
+      "panel": {
+        "x": 23,
+        "y": 21,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 399,
+        "y": 211,
+        "w": 390,
+        "h": 162
+      },
+      "target": {
+        "x": 405,
+        "y": 217,
+        "w": 378,
+        "h": 150
+      },
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": true,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-pricing",
+      "via": "back",
+      "delayMs": 0,
+      "step": "est-pricing",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 623,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 623,
+        "w": 380,
+        "h": 406
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-pricing",
+      "via": "back",
+      "delayMs": 500,
+      "step": "est-pricing",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 623,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 623,
+        "w": 380,
+        "h": 406
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-pricing",
+      "via": "back",
+      "delayMs": 2000,
+      "step": "est-pricing",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 623,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 623,
+        "w": 380,
+        "h": 406
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-overhead",
+      "via": "back",
+      "delayMs": 0,
+      "step": "est-overhead",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 623,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 487,
+        "w": 380,
+        "h": 412
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": [
+        "running",
+        "running",
+        "running",
+        "running",
+        "running",
+        "running",
+        "running",
+        "running"
+      ]
+    },
+    {
+      "id": "est-overhead",
+      "via": "back",
+      "delayMs": 500,
+      "step": "est-overhead",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 198,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 198,
+        "w": 380,
+        "h": 426
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-overhead",
+      "via": "back",
+      "delayMs": 2000,
+      "step": "est-overhead",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 198,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 198,
+        "w": 380,
+        "h": 426
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-warping",
+      "via": "back",
+      "delayMs": 0,
+      "step": "est-warping",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 477,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 477,
+        "w": 380,
+        "h": 227
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-warping",
+      "via": "back",
+      "delayMs": 500,
+      "step": "est-warping",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 477,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 477,
+        "w": 380,
+        "h": 227
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-warping",
+      "via": "back",
+      "delayMs": 2000,
+      "step": "est-warping",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 477,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 477,
+        "w": 380,
+        "h": 227
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-weaving",
+      "via": "back",
+      "delayMs": 0,
+      "step": "est-weaving",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 477,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 404,
+        "y": 363,
+        "w": 380,
+        "h": 268
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": [
+        "running",
+        "running",
+        "running"
+      ]
+    },
+    {
+      "id": "est-weaving",
+      "via": "back",
+      "delayMs": 500,
+      "step": "est-weaving",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 122,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 404,
+        "y": 122,
+        "w": 380,
+        "h": 357
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-weaving",
+      "via": "back",
+      "delayMs": 2000,
+      "step": "est-weaving",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 122,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 404,
+        "y": 122,
+        "w": 380,
+        "h": 357
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-weft",
+      "via": "back",
+      "delayMs": 0,
+      "step": "est-weft",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 268,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 268,
+        "w": 380,
+        "h": 643
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-weft",
+      "via": "back",
+      "delayMs": 500,
+      "step": "est-weft",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 268,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 268,
+        "w": 380,
+        "h": 643
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-weft",
+      "via": "back",
+      "delayMs": 2000,
+      "step": "est-weft",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 268,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 268,
+        "w": 380,
+        "h": 643
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-warp",
+      "via": "back",
+      "delayMs": 0,
+      "step": "est-warp",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 286,
+        "w": 360,
+        "h": 243
+      },
+      "highlight": {
+        "x": 404,
+        "y": 286,
+        "w": 380,
+        "h": 608
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-warp",
+      "via": "back",
+      "delayMs": 500,
+      "step": "est-warp",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 286,
+        "w": 360,
+        "h": 243
+      },
+      "highlight": {
+        "x": 404,
+        "y": 286,
+        "w": 380,
+        "h": 608
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-warp",
+      "via": "back",
+      "delayMs": 2000,
+      "step": "est-warp",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 286,
+        "w": 360,
+        "h": 243
+      },
+      "highlight": {
+        "x": 404,
+        "y": 286,
+        "w": 380,
+        "h": 608
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-purpose",
+      "via": "back",
+      "delayMs": 0,
+      "step": "est-purpose",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 377,
+        "w": 360,
+        "h": 221
+      },
+      "highlight": {
+        "x": 404,
+        "y": 377,
+        "w": 380,
+        "h": 425
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-purpose",
+      "via": "back",
+      "delayMs": 500,
+      "step": "est-purpose",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 377,
+        "w": 360,
+        "h": 221
+      },
+      "highlight": {
+        "x": 404,
+        "y": 377,
+        "w": 380,
+        "h": 425
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-purpose",
+      "via": "back",
+      "delayMs": 2000,
+      "step": "est-purpose",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 377,
+        "w": 360,
+        "h": 221
+      },
+      "highlight": {
+        "x": 404,
+        "y": 377,
+        "w": 380,
+        "h": 425
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-warp",
+      "via": "next-again",
+      "delayMs": 0,
+      "step": "est-warp",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 286,
+        "w": 360,
+        "h": 243
+      },
+      "highlight": {
+        "x": 404,
+        "y": 286,
+        "w": 380,
+        "h": 608
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-warp",
+      "via": "next-again",
+      "delayMs": 500,
+      "step": "est-warp",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 286,
+        "w": 360,
+        "h": 243
+      },
+      "highlight": {
+        "x": 404,
+        "y": 286,
+        "w": 380,
+        "h": 608
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-warp",
+      "via": "next-again",
+      "delayMs": 2000,
+      "step": "est-warp",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 286,
+        "w": 360,
+        "h": 243
+      },
+      "highlight": {
+        "x": 404,
+        "y": 286,
+        "w": 380,
+        "h": 608
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-weft",
+      "via": "next-again",
+      "delayMs": 0,
+      "step": "est-weft",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 268,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 268,
+        "w": 380,
+        "h": 643
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-weft",
+      "via": "next-again",
+      "delayMs": 500,
+      "step": "est-weft",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 268,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 268,
+        "w": 380,
+        "h": 643
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-weft",
+      "via": "next-again",
+      "delayMs": 2000,
+      "step": "est-weft",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 268,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 268,
+        "w": 380,
+        "h": 643
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-weaving",
+      "via": "next-again",
+      "delayMs": 0,
+      "step": "est-weaving",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 412,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 404,
+        "y": 412,
+        "w": 380,
+        "h": 357
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-weaving",
+      "via": "next-again",
+      "delayMs": 500,
+      "step": "est-weaving",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 412,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 404,
+        "y": 412,
+        "w": 380,
+        "h": 357
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-weaving",
+      "via": "next-again",
+      "delayMs": 2000,
+      "step": "est-weaving",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 412,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 404,
+        "y": 412,
+        "w": 380,
+        "h": 357
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-warping",
+      "via": "next-again",
+      "delayMs": 0,
+      "step": "est-warping",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 412,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 412,
+        "w": 380,
+        "h": 357
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": [
+        "running",
+        "running",
+        "running",
+        "running"
+      ]
+    },
+    {
+      "id": "est-warping",
+      "via": "next-again",
+      "delayMs": 500,
+      "step": "est-warping",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 767,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 767,
+        "w": 380,
+        "h": 227
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-warping",
+      "via": "next-again",
+      "delayMs": 2000,
+      "step": "est-warping",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 767,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 767,
+        "w": 380,
+        "h": 227
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-overhead",
+      "via": "next-again",
+      "delayMs": 0,
+      "step": "est-overhead",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 377,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 377,
+        "w": 380,
+        "h": 426
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-overhead",
+      "via": "next-again",
+      "delayMs": 500,
+      "step": "est-overhead",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 377,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 377,
+        "w": 380,
+        "h": 426
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-overhead",
+      "via": "next-again",
+      "delayMs": 2000,
+      "step": "est-overhead",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 377,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 377,
+        "w": 380,
+        "h": 426
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-pricing",
+      "via": "next-again",
+      "delayMs": 0,
+      "step": "est-pricing",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 624,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 456,
+        "w": 380,
+        "h": 416
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": [
+        "running",
+        "running",
+        "running",
+        "running",
+        "running",
+        "running"
+      ]
+    },
+    {
+      "id": "est-pricing",
+      "via": "next-again",
+      "delayMs": 500,
+      "step": "est-pricing",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 623,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 623,
+        "w": 380,
+        "h": 406
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-pricing",
+      "via": "next-again",
+      "delayMs": 2000,
+      "step": "est-pricing",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 623,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 623,
+        "w": 380,
+        "h": 406
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-live",
+      "via": "next-again",
+      "delayMs": 0,
+      "step": "est-live",
+      "status": "ready",
+      "panel": {
+        "x": 28,
+        "y": 623,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 404,
+        "y": 623,
+        "w": 380,
+        "h": 406
+      },
+      "target": {
+        "x": 405,
+        "y": 217,
+        "w": 378,
+        "h": 150
+      },
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": [
+        "running",
+        "running",
+        "running",
+        "running",
+        "running",
+        "running"
+      ]
+    },
+    {
+      "id": "est-live",
+      "via": "next-again",
+      "delayMs": 500,
+      "step": "est-live",
+      "status": "ready",
+      "panel": {
+        "x": 23,
+        "y": 21,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 399,
+        "y": 211,
+        "w": 390,
+        "h": 162
+      },
+      "target": {
+        "x": 405,
+        "y": 217,
+        "w": 378,
+        "h": 150
+      },
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": true,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-live",
+      "via": "next-again",
+      "delayMs": 2000,
+      "step": "est-live",
+      "status": "ready",
+      "panel": {
+        "x": 23,
+        "y": 21,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 399,
+        "y": 211,
+        "w": 390,
+        "h": 162
+      },
+      "target": {
+        "x": 405,
+        "y": 217,
+        "w": 378,
+        "h": 150
+      },
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": true,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-save",
+      "via": "next-again",
+      "delayMs": 0,
+      "step": "est-save",
+      "status": "ready",
+      "panel": {
+        "x": 23,
+        "y": 21,
+        "w": 360,
+        "h": 243
+      },
+      "highlight": {
+        "x": 399,
+        "y": 211,
+        "w": 390,
+        "h": 162
+      },
+      "target": {
+        "x": 405,
+        "y": 542,
+        "w": 378,
+        "h": 264
+      },
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": true,
+      "focusInPanel": true,
+      "animations": [
+        "running",
+        "running",
+        "running"
+      ]
+    },
+    {
+      "id": "est-save",
+      "via": "next-again",
+      "delayMs": 500,
+      "step": "est-save",
+      "status": "ready",
+      "panel": {
+        "x": 23,
+        "y": 21,
+        "w": 360,
+        "h": 243
+      },
+      "highlight": {
+        "x": 399,
+        "y": 536,
+        "w": 390,
+        "h": 276
+      },
+      "target": {
+        "x": 405,
+        "y": 542,
+        "w": 378,
+        "h": 264
+      },
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": true,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-save",
+      "via": "next-again",
+      "delayMs": 2000,
+      "step": "est-save",
+      "status": "ready",
+      "panel": {
+        "x": 23,
+        "y": 21,
+        "w": 360,
+        "h": 243
+      },
+      "highlight": {
+        "x": 399,
+        "y": 536,
+        "w": 390,
+        "h": 276
+      },
+      "target": {
+        "x": 405,
+        "y": 542,
+        "w": 378,
+        "h": 264
+      },
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": true,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-handoff",
+      "via": "next-again",
+      "delayMs": 0,
+      "step": "est-handoff",
+      "status": "ready",
+      "panel": {
+        "x": 47,
+        "y": 565,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 423,
+        "y": 565,
+        "w": 343,
+        "h": 51
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-handoff",
+      "via": "next-again",
+      "delayMs": 500,
+      "step": "est-handoff",
+      "status": "ready",
+      "panel": {
+        "x": 47,
+        "y": 565,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 423,
+        "y": 565,
+        "w": 343,
+        "h": 51
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    },
+    {
+      "id": "est-handoff",
+      "via": "next-again",
+      "delayMs": 2000,
+      "step": "est-handoff",
+      "status": "ready",
+      "panel": {
+        "x": 47,
+        "y": 565,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 423,
+        "y": 565,
+        "w": 343,
+        "h": 51
+      },
+      "target": null,
+      "panelOutlineOverlap": 0,
+      "panelTargetOverlap": 0,
+      "panelOffscreen": false,
+      "highlightOffscreen": false,
+      "highlightTracksTarget": false,
+      "targetClipped": false,
+      "focusInPanel": true,
+      "animations": []
+    }
+  ],
+  "issues": [],
+  "notes": [],
+  "purpose": "Read-only Back/Next settle diagnosis for the BV-01/BV-02 steps",
+  "after": {
+    "calls": [
+      "recordTourEventAction",
+      "getEstimatorSecondaryData",
+      "recordTourEventAction"
+    ],
+    "activeControl": "quiet-tour",
+    "sheetOpen": false,
+    "inertBody": false,
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"cost-estimate\":{\"firstShown\":\"2026-09-30T09:47:17.354Z\",\"version\":\"v1\",\"firstStarted\":true}}"
+    }
+  }
+}

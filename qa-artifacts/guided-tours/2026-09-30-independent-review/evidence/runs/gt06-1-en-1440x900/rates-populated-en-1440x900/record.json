@@ -1,0 +1,406 @@
+{
+  "scenario": "rates-populated",
+  "lang": "en",
+  "size": "1440x900",
+  "steps": [
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": {
+        "x": 483,
+        "y": 21,
+        "w": 723,
+        "h": 61
+      },
+      "rateBookRow": null,
+      "rateBookSearch": "",
+      "title": "Your own yarn price list",
+      "body": "Keep the price per kg you pay for each warp and weft yarn. New costings suggest these prices; add a yarn with “Add Yarn Rate”.",
+      "step": "rb-purpose",
+      "status": "ready",
+      "eyebrow": "Step 1 of 6",
+      "progress": null,
+      "panel": {
+        "x": 101,
+        "y": 16,
+        "w": 360,
+        "h": 243
+      },
+      "highlight": {
+        "x": 477,
+        "y": 15,
+        "w": 735,
+        "h": 73
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "div(role=dialog)",
+      "scrollY": 0,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": {
+        "x": 498,
+        "y": 232,
+        "w": 235,
+        "h": 39
+      },
+      "rateBookRow": null,
+      "rateBookSearch": "",
+      "title": "Find a yarn",
+      "body": "Search by yarn name or supplier. “Needs Review” shows only the prices that are due for a check.",
+      "step": "rb-find",
+      "status": "ready",
+      "eyebrow": "Step 2 of 6",
+      "progress": null,
+      "panel": {
+        "x": 754,
+        "y": 226,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 492,
+        "y": 226,
+        "w": 247,
+        "h": 51
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": {
+        "x": 1023,
+        "y": 436,
+        "w": 138,
+        "h": 28
+      },
+      "rateBookRow": "11111111-1111-4111-8111-111111111111",
+      "rateBookSearch": "",
+      "title": "Update a price when your supplier changes it",
+      "body": "“Edit rate” lets you enter the new price and where it came from, such as an invoice. The old price stays in the yarn's history.",
+      "step": "rb-update",
+      "status": "ready",
+      "eyebrow": "Step 3 of 6",
+      "progress": null,
+      "panel": {
+        "x": 641,
+        "y": 430,
+        "w": 360,
+        "h": 265
+      },
+      "highlight": {
+        "x": 1017,
+        "y": 430,
+        "w": 150,
+        "h": 40
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": {
+        "x": 786,
+        "y": 392,
+        "w": 130,
+        "h": 132
+      },
+      "rateBookRow": "11111111-1111-4111-8111-111111111111",
+      "rateBookSearch": "",
+      "title": "Recheck prices when reminded",
+      "body": "A price due for review still has its old value. If your supplier's price is unchanged, confirm it; if it changed, update it.",
+      "step": "rb-review",
+      "status": "ready",
+      "eyebrow": "Step 4 of 6",
+      "progress": null,
+      "panel": {
+        "x": 938,
+        "y": 386,
+        "w": 360,
+        "h": 243
+      },
+      "highlight": {
+        "x": 780,
+        "y": 386,
+        "w": 142,
+        "h": 144
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": {
+        "x": 916,
+        "y": 392,
+        "w": 130,
+        "h": 132
+      },
+      "rateBookRow": "11111111-1111-4111-8111-111111111111",
+      "rateBookSearch": "",
+      "title": "See which qualities use a yarn",
+      "body": "This column lists the saved qualities that use this yarn. A new price is used by their next costing; costings already saved keep their numbers.",
+      "step": "rb-usage",
+      "status": "ready",
+      "eyebrow": "Step 5 of 6",
+      "progress": null,
+      "panel": {
+        "x": 534,
+        "y": 386,
+        "w": 360,
+        "h": 198
+      },
+      "highlight": {
+        "x": 910,
+        "y": 386,
+        "w": 142,
+        "h": 144
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": {
+        "x": 498,
+        "y": 232,
+        "w": 235,
+        "h": 39
+      },
+      "rateBookRow": null,
+      "rateBookSearch": "",
+      "title": "Check a yarn you bought recently",
+      "body": "Search for it and compare its price with your latest bill.",
+      "step": "rb-handoff",
+      "status": "ready",
+      "eyebrow": "Step 6 of 6",
+      "progress": null,
+      "panel": {
+        "x": 754,
+        "y": 226,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 492,
+        "y": 226,
+        "w": 247,
+        "h": 51
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "vh": 900,
+      "vw": 1440
+    }
+  ],
+  "logs": [
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called getCostRateUsage",
+    "error: Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [tour] duplicate target rate-book rb-update",
+    "warning: [tour] duplicate target rate-book rb-update",
+    "warning: [tour] duplicate target rate-book rb-update",
+    "warning: [tour] duplicate target rate-book rb-review",
+    "warning: [tour] duplicate target rate-book rb-review",
+    "warning: [tour] duplicate target rate-book rb-review",
+    "warning: [tour] duplicate target rate-book rb-usage",
+    "warning: [tour] duplicate target rate-book rb-usage",
+    "warning: [tour] duplicate target rate-book rb-usage",
+    "warning: [harness] server action called recordTourEventAction"
+  ],
+  "apiRequests": [
+    {
+      "url": "http://localhost:5199/api/analytics/plan-events",
+      "method": "POST"
+    }
+  ],
+  "preClick": null,
+  "sampling": "legacy-900ms",
+  "rateBookBefore": {
+    "search": "",
+    "calls": 2
+  },
+  "before": {
+    "x": 0,
+    "y": 0,
+    "inner": null
+  },
+  "after": {
+    "scroll": {
+      "x": 0,
+      "y": 0,
+      "inner": null
+    },
+    "active": "<div data-ratebook-field=\"yarnSearch\" tabindex=\"-1\" class=\"relative min-w-[min(100%,14rem)] flex-1 sm:max-w-xs md:max-w-sm\"><svg xmlns=\"http://www.w3.org/2000/s",
+    "activeAnchor": null,
+    "activeRateBookField": "yarnSearch",
+    "activeControl": null,
+    "serverCalls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "getCostRateUsage",
+        "file": "app/(dashboard)/owner/rates/actions.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "navigations": [],
+    "scrollCalls": [],
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"rate-book\":{\"firstShown\":\"2026-09-29T20:44:20.010Z\",\"version\":\"v1\",\"firstStarted\":true,\"completed\":true,\"completedVersion\":\"v2\"}}"
+    },
+    "search": ""
+  },
+  "issues": []
+}

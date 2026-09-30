@@ -1,0 +1,164 @@
+{
+  "scenario": "machines?populated=1",
+  "lang": "gu",
+  "size": "390x844",
+  "steps": [
+    {
+      "step": "mc-readiness",
+      "status": "ready",
+      "panel": {
+        "x": 8,
+        "y": 631.84375,
+        "w": 374,
+        "h": 204.15625
+      },
+      "highlight": {
+        "x": 17,
+        "y": 140.21875,
+        "w": 356,
+        "h": 287.75
+      },
+      "target": {
+        "x": 14,
+        "y": 238,
+        "w": 362,
+        "h": 211.375
+      },
+      "overlapArea": 0,
+      "actualTargetOverlap": 0,
+      "focusInPanel": true,
+      "title": "ઉમેર્યું એટલે તૈયાર નહીં",
+      "storage": {
+        "weavly_language": "gu"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "animations": [
+        {
+          "state": "running"
+        },
+        {
+          "state": "running"
+        },
+        {
+          "state": "running"
+        },
+        {
+          "state": "running"
+        },
+        {
+          "state": "running"
+        }
+      ],
+      "afterBackNextMilliseconds": 0
+    },
+    {
+      "step": "mc-readiness",
+      "status": "ready",
+      "panel": {
+        "x": 8,
+        "y": 631.84375,
+        "w": 374,
+        "h": 204.15625
+      },
+      "highlight": {
+        "x": 8,
+        "y": 232,
+        "w": 374,
+        "h": 223.375
+      },
+      "target": {
+        "x": 14,
+        "y": 238,
+        "w": 362,
+        "h": 211.375
+      },
+      "overlapArea": 0,
+      "actualTargetOverlap": 0,
+      "focusInPanel": true,
+      "title": "ઉમેર્યું એટલે તૈયાર નહીં",
+      "storage": {
+        "weavly_language": "gu"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "animations": [],
+      "afterBackNextMilliseconds": 500
+    },
+    {
+      "step": "mc-readiness",
+      "status": "ready",
+      "panel": {
+        "x": 8,
+        "y": 631.84375,
+        "w": 374,
+        "h": 204.15625
+      },
+      "highlight": {
+        "x": 8,
+        "y": 232,
+        "w": 374,
+        "h": 223.375
+      },
+      "target": {
+        "x": 14,
+        "y": 238,
+        "w": 362,
+        "h": 211.375
+      },
+      "overlapArea": 0,
+      "actualTargetOverlap": 0,
+      "focusInPanel": true,
+      "title": "ઉમેર્યું એટલે તૈયાર નહીં",
+      "storage": {
+        "weavly_language": "gu"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "animations": [],
+      "afterBackNextMilliseconds": 2000
+    }
+  ],
+  "issues": [],
+  "purpose": "Read-only Back/Next timing diagnosis; original main run remains unchanged and preserved",
+  "after": {
+    "calls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"machines\":{\"firstShown\":\"2026-09-29T22:21:15.006Z\",\"version\":\"v1\",\"firstStarted\":true}}"
+    },
+    "activeControl": "quiet-tour"
+  }
+}

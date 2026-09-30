@@ -19,7 +19,7 @@ import type { EstimateState, EstimatorV3Totals, CostingResultSnapshot } from '@/
 import { createCostingExportModel } from '@/lib/estimator-export'
 import { CostingExportDialog } from '@/components/estimator/CostingExportDialog'
 import { SavedCostingsTutorial } from '@/components/estimator/SavedCostingsTutorial'
-import { savedCostingTourEnding, costingTourSurface, makeSavedCostingTourExport, makeSavedCostingTourExamples, type SavedCostingStep } from '@/lib/saved-costings-tour'
+import { savedCostingTourEnding, isSavedCostingHandoff, costingTourSurface, makeSavedCostingTourExport, makeSavedCostingTourExamples, type SavedCostingStep } from '@/lib/saved-costings-tour'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -35,6 +35,7 @@ import {
 } from '@/components/ui/dialog'
 import { EmptyState, PageHeader, Toolbar } from '@/components/ui/page-header'
 import { useTranslation } from '@/lib/i18n/context'
+import { tourCommonCopy } from '@/lib/i18n/tour-common'
 import { freeText } from '@/lib/i18n/free-tier'
 import { formatTimestampDate } from '@/lib/format'
 
@@ -52,7 +53,9 @@ type MarginFilter = 'all' | 'negative' | 'under_10' | '10_to_20' | 'over_20'
 
 const DEMO_STORAGE_KEY = 'weavly:free-demo-costing-deleted'
 
-export default function SavedFreeCostings() {
+export default function SavedFreeCostings({ userId, orgId, userMetadata, embedded = false }: {
+  userId?: string; orgId?: string; userMetadata?: Record<string, unknown>; embedded?: boolean
+}) {
   const router = useRouter()
   const { language, tx } = useTranslation()
   const [tourStep, setTourStep] = useState<SavedCostingStep | null>(null)
@@ -132,7 +135,8 @@ export default function SavedFreeCostings() {
     }
   }
 
-  const showDemoCard = (!demoDeleted && rows.length === 0) || tourStep !== null
+  const tourSampleActive = tourStep !== null && !isSavedCostingHandoff(tourStep)
+  const showDemoCard = (!demoDeleted && rows.length === 0) || tourSampleActive
 
   const filteredRows = useMemo(() => {
     let list = [...rows]
@@ -160,6 +164,7 @@ export default function SavedFreeCostings() {
   }, [rows, searchQuery, marginFilter, costingSort])
 
   const demoMatchesFilters = useMemo(() => {
+    if (tourSampleActive) return true
     if (!showDemoCard) return false
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase()
@@ -173,9 +178,9 @@ export default function SavedFreeCostings() {
       if (marginFilter === 'over_20' && margin <= 20) return false
     }
     return true
-  }, [showDemoCard, searchQuery, marginFilter, demoCosting])
+  }, [tourSampleActive, showDemoCard, searchQuery, marginFilter, demoCosting])
 
-  const totalVisibleCount = filteredRows.length + (demoMatchesFilters ? 1 : 0)
+  const totalVisibleCount = (tourSampleActive ? 0 : filteredRows.length) + (demoMatchesFilters ? 1 : 0)
 
   // Derive detailed cost lines for inspection dialog
   const activeDetailCostLines: Array<[string, number]> = useMemo(() => {
@@ -203,15 +208,15 @@ export default function SavedFreeCostings() {
 
   return (
     <>
-      <aside className="saved-costings-left-rail" aria-label={tx('Saved Costings guides and tools')}>
-        <SavedCostingsTutorial free ending={savedCostingTourEnding(rows.length, loading || error)} step={tourStep} onStepChange={setTourStep} onComplete={() => setShowDeleteNudge(true)} />
-      </aside>
+      {!embedded && <aside className="saved-costings-left-rail" aria-label={tx('Saved Costings guides and tools')}>
+        <SavedCostingsTutorial free userId={userId} orgId={orgId} userMetadata={userMetadata} ending={savedCostingTourEnding(rows.length, loading || error)} step={tourStep} onStepChange={setTourStep} onComplete={() => setShowDeleteNudge(true)} />
+      </aside>}
 
       <div className="saved-costings-workspace ui-route-enter max-w-6xl mx-auto space-y-6" data-free-costing data-sentry-block>
         <PageHeader
           title={freeText(language, 'savedCostings')}
           actions={(
-            <Button variant="saffron" onClick={() => router.push('/free')}>
+            <Button data-tour-anchor="free-costings.new" variant="saffron" onClick={() => router.push('/free')}>
               <Plus className="h-4 w-4" /> {tx('New Costing')}
             </Button>
           )}
@@ -351,6 +356,7 @@ export default function SavedFreeCostings() {
         )}
 
         <div className="space-y-3">
+          {tourSampleActive && <p data-i18n-skip="true" lang={language} className="rounded-lg border border-hairline bg-surface-soft px-3 py-2 text-sm font-semibold text-ink">{tourCommonCopy[language].sampleBanner}</p>}
           {/* Demo sample card */}
           {demoMatchesFilters && (
             <Card
@@ -412,6 +418,7 @@ export default function SavedFreeCostings() {
                     <Button
                       variant="outline"
                       size="sm"
+                      data-tour-anchor="free-costings.sample-export"
                       onClick={() => setSelected(demoCosting)}
                       className="border-[var(--wv-saffron-300)] bg-white text-xs font-semibold text-ink hover:bg-[var(--wv-saffron-100)]/60"
                     >
@@ -444,9 +451,11 @@ export default function SavedFreeCostings() {
           )}
 
           {/* User saved costings as independent cards */}
-          {filteredRows.map(row => (
+          {!tourSampleActive && filteredRows.map((row, index) => (
             <Card
               key={row.id}
+              data-tour-anchor={index === 0 ? "free-costings.first-card" : undefined}
+              tabIndex={index === 0 ? -1 : undefined}
               onClick={event => {
                 const target = event.target
                 if (target instanceof Element && target.closest('button, [data-slot="dialog-content"], [data-slot="dialog-overlay"]')) return

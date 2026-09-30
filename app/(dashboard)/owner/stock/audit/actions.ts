@@ -113,9 +113,15 @@ export async function applyAuditAdjustmentAction(
             p_item_id: parsed.data.itemId,
             p_physical_count: parsed.data.physicalCount,
             p_reason: parsed.data.reason,
+            p_expected_variance: parsed.data.expectedVariance,
         })
 
         if (error) {
+            // PGRST202: the database does not have the function with this argument list yet, that is, the audit
+            // migration has not been applied. Say so, instead of surfacing a schema-cache message.
+            if (error.code === 'PGRST202') {
+                return { error: 'Audit adjustments need a database update (migration 20260930150000) that has not been applied yet. Nothing was changed.' }
+            }
             return { error: error.message || 'Failed to apply inventory audit adjustment.' }
         }
 

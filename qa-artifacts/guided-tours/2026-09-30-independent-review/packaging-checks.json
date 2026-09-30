@@ -1,0 +1,9 @@
+{
+  "copiedEvidenceHashMismatches": [],
+  "readmeLinksValid": true,
+  "reproductionHelperSyntax": "PASS",
+  "stagedApplicationMatchesReview": true,
+  "sourceAndNewHandoffWhitespace": "PASS",
+  "originalEvidenceWhitespace": "Five archived log/report files retain their original trailing blank lines; raw evidence was not edited to normalize formatting",
+  "scope": "No new browser, application test, build, live data or finding fix was run during packaging"
+}

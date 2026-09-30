@@ -1,0 +1,13 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+locator.waitFor: Timeout 15000ms exceeded.
+Call log:
+  - waiting for locator('.guided-tour-panel') to be visible
+
+    at /Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification-harness/run-tour.mjs:160:184 {
+  name: 'TimeoutError'
+}
+
+Node.js v24.11.1

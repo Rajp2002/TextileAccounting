@@ -1,0 +1,46 @@
+[
+  {
+    "run": "gt10-paint-0-en-1440x900",
+    "steps": [
+      "pr-period",
+      "pr-readiness",
+      "pr-earnings"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt10-paint-0-en-1440x900-01-03.png"
+  },
+  {
+    "run": "gt10-paint-0-en-1440x900",
+    "steps": [
+      "pr-recovery",
+      "pr-settle",
+      "pr-paid"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt10-paint-0-en-1440x900-04-06.png"
+  },
+  {
+    "run": "gt10-paint-0-en-1440x900",
+    "steps": [
+      "pr-complete",
+      "pr-handoff"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt10-paint-0-en-1440x900-07-08.png"
+  },
+  {
+    "run": "gt10-paint-1-en-1440x900",
+    "steps": [
+      "pra-advance",
+      "pra-deduction",
+      "pra-records"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt10-paint-1-en-1440x900-01-03.png"
+  },
+  {
+    "run": "gt10-paint-1-en-1440x900",
+    "steps": [
+      "pra-export",
+      "pra-correct",
+      "pra-handoff"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt10-paint-1-en-1440x900-04-06.png"
+  }
+]

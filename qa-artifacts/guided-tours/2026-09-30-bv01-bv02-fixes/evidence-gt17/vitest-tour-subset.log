@@ -1,0 +1,102 @@
+
+ RUN  v4.1.8 /Users/rajpatel/Projects/textile Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b
+
+ ✓ __tests__/tour-legacy-retired.test.ts (5 tests) 363ms
+ ✓ __tests__/payroll-tour.test.ts (8 tests) 94ms
+stdout | __tests__/tour-program-consistency.test.ts > GT-17 cross-tour consistency review > holds English titles, bodies and details to DR-27, DR-28 and DR-29
+
+DR-27/28/29 English limits (tokens counted as 30 characters)
+Cost Estimator       entries= 29  longest title 39/48  body 149/190  detail 124/260
+Saved Costings       entries= 39  longest title 38/48  body 182/190  detail 149/260
+Yarn Rate Book       entries= 17  longest title 44/48  body 146/190  detail 127/260
+Dispatches           entries= 22  longest title 39/48  body 140/190  detail 160/260
+Fabric Stock         entries= 14  longest title 38/48  body 146/190  detail 157/260
+Yarn Stock           entries= 17  longest title 39/48  body 129/190  detail 261/260
+Payroll              entries= 37  longest title 34/48  body 148/190  detail 96/260
+Production           entries= 17  longest title 33/48  body 149/190  detail 141/260
+Daily Sheet          entries= 28  longest title 44/48  body 127/190  detail 116/260
+Machines             entries= 13  longest title 31/48  body 113/190  detail 97/260
+Workers              entries= 20  longest title 33/48  body 132/190  detail 0/260
+Machine Assignments  entries= 17  longest title 31/48  body 141/190  detail 138/260
+RECORDED EXCEPTIONS: Yarn Stock correct.detail (detail is 261, limit 260)
+
+stdout | __tests__/tour-program-consistency.test.ts > GT-17 cross-tour consistency review > keeps Gujarati and Hindi within DR-34: at most 60% longer than English, and the same number of sentences
+
+DR-34 Gujarati/Hindi length ratio
+Cost Estimator       longest gu/hi ratio 1.15x  sentence-count differences 0
+Saved Costings       longest gu/hi ratio 1.37x  sentence-count differences 0
+Yarn Rate Book       longest gu/hi ratio 1.71x  sentence-count differences 0
+Dispatches           longest gu/hi ratio 1.17x  sentence-count differences 0
+Fabric Stock         longest gu/hi ratio 1.25x  sentence-count differences 0
+Yarn Stock           longest gu/hi ratio 1.70x  sentence-count differences 0
+Payroll              longest gu/hi ratio 1.42x  sentence-count differences 4
+Production           longest gu/hi ratio 1.17x  sentence-count differences 0
+Daily Sheet          longest gu/hi ratio 1.29x  sentence-count differences 0
+Machines             longest gu/hi ratio 1.19x  sentence-count differences 0
+Workers              longest gu/hi ratio 1.54x  sentence-count differences 0
+Machine Assignments  longest gu/hi ratio 1.18x  sentence-count differences 0
+RECORDED EXCEPTIONS: Yarn Rate Book handoff.empty.title hi (1.71x English (21 -> 36)); Yarn Stock balance.title hi (1.70x English (20 -> 34)); Payroll calculation.salary.body gu (sentence count 2 vs English 1); Payroll calculation.salary.body hi (sentence count 2 vs English 1); Payroll calculation.recovery.body gu (sentence count 2 vs English 1); Payroll calculation.recovery.body hi (sentence count 2 vs English 1)
+
+ ✓ __tests__/dispatch-tour-preview.test.tsx (31 tests) 266ms
+ ✓ __tests__/dispatch-tutorial-panel.test.tsx (31 tests) 212ms
+ ✓ __tests__/production-tour-preview.test.tsx (25 tests) 240ms
+ ✓ __tests__/tour-program-consistency.test.ts (7 tests) 366ms
+ ✓ __tests__/payroll-tour-preview.test.tsx (47 tests) 618ms
+ ✓ __tests__/worker-pay-basis.test.tsx (6 tests) 66ms
+ ✓ __tests__/tour-data-safety-contract.test.ts (66 tests) 82ms
+ ✓ __tests__/stock-tour.test.tsx (33 tests) 565ms
+ ✓ __tests__/management-register-rendering.test.ts (5 tests) 183ms
+ ✓ __tests__/machines-register-tour-help.test.tsx (4 tests) 99ms
+ ✓ __tests__/worker-register-refinement.test.ts (17 tests) 474ms
+ ✓ __tests__/machine-register-refinement.test.ts (16 tests) 501ms
+ ✓ __tests__/tour-invitation-lifecycle.test.ts (10 tests) 67ms
+ ✓ __tests__/daily-sheet-tour-preview.test.tsx (33 tests) 432ms
+ ✓ __tests__/configuration-tour-preview.test.tsx (25 tests) 870ms
+ ✓ __tests__/production-tour.test.ts (10 tests) 44ms
+ ✓ __tests__/tour-preferences-and-actions.test.ts (43 tests) 56ms
+ ✓ __tests__/cost-estimate-tutorial-i18n.test.ts (7 tests) 97ms
+ ✓ __tests__/machines-tour-preview.test.tsx (4 tests) 85ms
+ ✓ __tests__/daily-sheet-tour.test.ts (7 tests) 51ms
+ ✓ __tests__/saved-costings-tour.test.ts (12 tests) 62ms
+ ✓ __tests__/cost-estimate-tutorial-transitions.test.ts (3 tests) 39ms
+ ✓ __tests__/mobile-tour-positioning.test.ts (5 tests) 36ms
+ ✓ __tests__/tour-panel-render.test.tsx (6 tests) 66ms
+ ✓ __tests__/dispatch-tour.test.ts (8 tests) 50ms
+ ✓ __tests__/tour-i18n-parity.test.ts (4 tests) 42ms
+ ✓ __tests__/workers-tour-preview.test.tsx (14 tests) 1678ms
+     ✓ en: both six-step paths mount real targets and the panel choice  507ms
+     ✓ gu: both six-step paths mount real targets and the panel choice  311ms
+     ✓ hi: both six-step paths mount real targets and the panel choice  441ms
+ ✓ __tests__/guided-tour-left-rails.test.ts (11 tests) 31ms
+ ✓ __tests__/rate-book-tour-flow.test.tsx (7 tests) 100ms
+ ✓ __tests__/tour-common-i18n.test.ts (3 tests) 27ms
+ ✓ __tests__/estimator-core-tour.test.ts (7 tests) 27ms
+ ✓ __tests__/tour-target-readiness.test.ts (7 tests) 22ms
+ ✓ __tests__/tour-quota-and-data-safety.test.ts (4 tests) 23ms
+ ✓ __tests__/tutorial-target.test.ts (18 tests) 20ms
+ ✓ __tests__/cost-estimate-tutorial-ordering.test.ts (7 tests) 15ms
+ ✓ __tests__/tutorial-viewport-lock.test.ts (5 tests) 20ms
+ ✓ __tests__/estimator-tour-tablet-column.test.ts (4 tests) 17ms
+ ✓ __tests__/estimator-tour-phone-live-sheet.test.ts (4 tests) 16ms
+ ✓ __tests__/rate-review-rail.test.ts (7 tests) 15ms
+ ✓ __tests__/desktop-dimensions-responsive.test.ts (7 tests) 18ms
+ ✓ __tests__/free-plan-guided-tour.test.ts (6 tests) 14ms
+ ✓ __tests__/tour-placement.test.ts (10 tests) 14ms
+ ✓ __tests__/tour-no-autostart.test.ts (5 tests) 11ms
+ ✓ __tests__/tour-text.test.ts (5 tests) 12ms
+ ✓ __tests__/cost-estimate-tutorial-modal.test.ts (3 tests) 9ms
+ ✓ __tests__/estimator-left-rail.test.ts (3 tests) 10ms
+ ✓ __tests__/guided-tour-focus.test.ts (3 tests) 10ms
+ ✓ __tests__/tour-sample-ids.test.ts (12 tests) 7ms
+ ✓ __tests__/tour-active-guard.test.ts (1 test) 5ms
+ ✓ __tests__/rate-book-tutorial.test.ts (14 tests) 457ms
+ ✓ __tests__/configuration-tour.test.ts (10 tests) 34ms
+ ✓ __tests__/workers-tour.test.ts (7 tests) 28ms
+ ✓ __tests__/machines-tour.test.ts (8 tests) 20ms
+ ✓ __tests__/guided-tour-fixes-and-demo-data.test.ts (11 tests) 18ms
+
+ Test Files  56 passed (56)
+      Tests  681 passed (681)
+   Start at  18:54:59
+   Duration  6.52s (transform 14.80s, setup 0ms, import 44.29s, tests 8.80s, environment 15ms)
+

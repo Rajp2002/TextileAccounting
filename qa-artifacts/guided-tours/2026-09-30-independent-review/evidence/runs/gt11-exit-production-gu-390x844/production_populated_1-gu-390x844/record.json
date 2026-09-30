@@ -1,0 +1,375 @@
+{
+  "scenario": "production?populated=1",
+  "lang": "gu",
+  "size": "390x844",
+  "steps": [
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "કોસ્ટિંગથી રોજિંદા ઉત્પાદન સુધી",
+      "body": "અહીં સાચવેલી કોસ્ટિંગ તમારા લૂમ પર ચાલતી ક્વોલિટી બને છે. પછી દરેક શિફ્ટમાં નોંધાયેલા મીટર કાપડનો સ્ટોક અને કારીગરનો પગાર ઉમેરે છે.",
+      "step": "pd-overview",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 1 / 7",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 609,
+        "w": 374,
+        "h": 227
+      },
+      "highlight": {
+        "x": 8,
+        "y": 166,
+        "w": 374,
+        "h": 133
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "div(role=dialog)",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390,
+      "production": {
+        "mounts": 1,
+        "unmounts": 0,
+        "search": "Retained search",
+        "sameSearchNode": true,
+        "filter": [
+          false,
+          false,
+          true
+        ],
+        "storage": {
+          "weavly_language": "gu"
+        },
+        "liveHidden": true,
+        "replica": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0,
+        "calls": 2,
+        "apiCalls": 1
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "પહેલાં આ ચાર વસ્તુ જોઈએ",
+      "body": "સાચવેલી કોસ્ટિંગ, તેમાંના દરેક યાર્નનો સ્ટોક, તમારાં મશીનો અને તમારા કારીગરો. કોઈ યાર્નનો સ્ટોક ન હોય ત્યાં સુધી ક્વોલિટી શરૂ ન થાય.",
+      "step": "pd-prereq",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 2 / 7",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 555,
+        "w": 374,
+        "h": 281
+      },
+      "highlight": {
+        "x": 8,
+        "y": 166,
+        "w": 374,
+        "h": 144
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390,
+      "production": {
+        "mounts": 1,
+        "unmounts": 0,
+        "search": "Retained search",
+        "sameSearchNode": true,
+        "filter": [
+          false,
+          false,
+          true
+        ],
+        "storage": {
+          "weavly_language": "gu"
+        },
+        "liveHidden": true,
+        "replica": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0,
+        "calls": 2,
+        "apiCalls": 1
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "મજૂરી સાથે ક્વોલિટી ચાલુ કરો",
+      "body": "“ક્વોલિટી ચાલુ કરો” સાચવેલી કોસ્ટિંગનું વર્ઝન અને મીટરદીઠ મજૂરી પસંદ કરે છે, અહીં ₹2/મીટર. આ ક્વોલિટી પર કારીગરો આ મજૂરી કમાય છે.",
+      "step": "pd-activate",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 3 / 7",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 555,
+        "w": 374,
+        "h": 281
+      },
+      "highlight": {
+        "x": 17,
+        "y": 163,
+        "w": 356,
+        "h": 253
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 8,
+        "y": 72,
+        "w": 374,
+        "h": 354
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390,
+      "production": {
+        "mounts": 1,
+        "unmounts": 0,
+        "search": "Retained search",
+        "sameSearchNode": true,
+        "filter": [
+          false,
+          false,
+          true
+        ],
+        "storage": {
+          "weavly_language": "gu"
+        },
+        "liveHidden": true,
+        "replica": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0,
+        "calls": 2,
+        "apiCalls": 1
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "ક્વોલિટીને લૂમ પર મૂકો",
+      "body": "“લૂમ ફાળવો” તેને વણનારા લૂમ પર ટિક કરે છે. એક લૂમ એક વખતે એક જ ક્વોલિટી વણે છે.",
+      "step": "pd-looms",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 4 / 7",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 632,
+        "w": 374,
+        "h": 204
+      },
+      "highlight": {
+        "x": 17,
+        "y": 163,
+        "w": 356,
+        "h": 281
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 8,
+        "y": 72,
+        "w": 374,
+        "h": 368
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390,
+      "production": {
+        "mounts": 1,
+        "unmounts": 0,
+        "search": "Retained search",
+        "sameSearchNode": true,
+        "filter": [
+          false,
+          false,
+          true
+        ],
+        "storage": {
+          "weavly_language": "gu"
+        },
+        "liveHidden": true,
+        "replica": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0,
+        "calls": 2,
+        "apiCalls": 1
+      }
+    }
+  ],
+  "logs": [
+    "warning: [harness] server action called recordTourEventAction",
+    "error: Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+    "warning: [harness] server action called recordTourEventAction"
+  ],
+  "apiRequests": [
+    {
+      "url": "http://localhost:5199/api/analytics/plan-events",
+      "method": "POST"
+    }
+  ],
+  "preClick": null,
+  "sampling": "legacy-900ms",
+  "before": {
+    "x": 0,
+    "y": 0,
+    "inner": null
+  },
+  "productionBefore": {
+    "mounts": 1,
+    "unmounts": 0,
+    "search": "Retained search",
+    "sameSearchNode": true,
+    "filter": [
+      false,
+      false,
+      true
+    ],
+    "storage": {
+      "weavly_language": "gu"
+    },
+    "liveHidden": false,
+    "replica": false,
+    "anchors": 1,
+    "enabledReplicaControls": 0,
+    "calls": 1,
+    "apiCalls": 1
+  },
+  "exitAt": 4,
+  "after": {
+    "scroll": {
+      "x": 0,
+      "y": 0,
+      "inner": null
+    },
+    "active": "<button type=\"button\" aria-label=\"ઉત્પાદન માર્ગદર્શિકા શરૂ કરો\" data-testid=\"tour-launcher-production\" data-tour-control=\"quiet-tour\" class=\"estimator-touch-tar",
+    "activeAnchor": null,
+    "activeRateBookField": null,
+    "activeControl": "quiet-tour",
+    "serverCalls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "navigations": [],
+    "scrollCalls": [
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      }
+    ],
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"production\":{\"firstShown\":\"2026-09-29T21:58:15.080Z\",\"version\":\"v1\",\"firstStarted\":true}}"
+    },
+    "production": {
+      "mounts": 1,
+      "unmounts": 0,
+      "search": "Retained search",
+      "sameSearchNode": true,
+      "filter": [
+        false,
+        false,
+        true
+      ],
+      "storage": {
+        "weavly_language": "gu"
+      },
+      "liveHidden": false,
+      "replica": false,
+      "anchors": 1,
+      "enabledReplicaControls": 0,
+      "calls": 2,
+      "apiCalls": 1
+    },
+    "search": null
+  },
+  "issues": []
+}

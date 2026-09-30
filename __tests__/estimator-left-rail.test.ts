@@ -43,7 +43,8 @@ describe('Estimator Left Rail & Guided Tour CTA', () => {
         // The guide card owns its look; callers only size it.
         const invitationStart = tutorialComponent.indexOf('<TourInvitation')
         expect(tutorialComponent.slice(invitationStart, tutorialComponent.indexOf('/>', invitationStart))).not.toContain('amber')
-        expect(tutorialComponent).toContain('estimator-touch-target')
-        expect(tutorialComponent).toContain('railButton')
+        expect(invitation).toContain('estimator-touch-target')
+        expect(invitation).toContain('railButton')
+        expect(tutorialComponent).not.toContain('fieldGuide')
     })
 })

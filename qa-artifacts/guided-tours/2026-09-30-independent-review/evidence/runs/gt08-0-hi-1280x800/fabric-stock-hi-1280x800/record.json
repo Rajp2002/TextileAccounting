@@ -1,0 +1,410 @@
+{
+  "scenario": "fabric-stock",
+  "lang": "hi",
+  "size": "1280x800",
+  "steps": [
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "भेजने को तैयार कपड़ा, क्वालिटी के अनुसार",
+      "body": "सेव शिफ्ट मीटर जोड़ती हैं और पुष्टि किए डिस्पैच घटाते हैं। यहाँ 200 मीटर बना − 100 मीटर गया = 100 मीटर।",
+      "step": "fs-balance",
+      "status": "ready",
+      "eyebrow": "नमूना · चरण 1 / 6",
+      "progress": null,
+      "panel": {
+        "x": 285,
+        "y": 300,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 285,
+        "y": 188,
+        "w": 745,
+        "h": 96
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "div(role=dialog)",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": {
+        "replica": true,
+        "balance": "100 मी.",
+        "pending": true,
+        "mounts": 1,
+        "unmounts": 0,
+        "retainedSearch": "Retained",
+        "sameSearchNode": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Weavly से पहले का कपड़ा जोड़ें",
+      "body": "“बाकी” लिखी क्वालिटी का शुरुआती स्टॉक अभी दर्ज नहीं है। आपके पास पहले से पड़ा तैयार कपड़ा गिनकर एक बार दर्ज करें।",
+      "step": "fs-pending",
+      "status": "ready",
+      "eyebrow": "नमूना · चरण 2 / 6",
+      "progress": null,
+      "panel": {
+        "x": 285,
+        "y": 381,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 285,
+        "y": 265,
+        "w": 745,
+        "h": 100
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": {
+        "replica": true,
+        "balance": "100 मी.",
+        "pending": true,
+        "mounts": 1,
+        "unmounts": 0,
+        "retainedSearch": "Retained",
+        "sameSearchNode": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "शुरुआती स्टॉक एक ही बार जुड़ता है",
+      "body": "“शुरुआती स्टॉक” गिने हुए मीटर उत्पादन में दर्ज मीटर में जोड़ता है: 100 + 500 = 600 मीटर। गिनती की तारीख जैसा नोट लिखें।",
+      "step": "fs-opening",
+      "status": "ready",
+      "eyebrow": "नमूना · चरण 3 / 6",
+      "progress": null,
+      "panel": {
+        "x": 736,
+        "y": 195,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 224,
+        "y": 293,
+        "w": 480,
+        "h": 296
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 208,
+        "y": 195,
+        "w": 512,
+        "h": 409
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": {
+        "replica": true,
+        "balance": "100 मी.",
+        "pending": true,
+        "mounts": 1,
+        "unmounts": 0,
+        "retainedSearch": "Retained",
+        "sameSearchNode": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "गिनती के बाद गिना हुआ कुल लिखें",
+      "body": "“स्टॉक सुधारें” बैलेंस को गिनी हुई मात्रा से बदलता है। 590 लिखें, −10 नहीं; Weavly −10 मीटर का फ़र्क दर्ज करता है।",
+      "step": "fs-correct",
+      "status": "ready",
+      "eyebrow": "नमूना · चरण 4 / 6",
+      "progress": null,
+      "panel": {
+        "x": 736,
+        "y": 195,
+        "w": 360,
+        "h": 221
+      },
+      "highlight": {
+        "x": 224,
+        "y": 293,
+        "w": 480,
+        "h": 296
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 208,
+        "y": 195,
+        "w": 512,
+        "h": 409
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": {
+        "replica": true,
+        "balance": "600 मी.",
+        "pending": false,
+        "mounts": 1,
+        "unmounts": 0,
+        "retainedSearch": "Retained",
+        "sameSearchNode": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "हर बदलाव देखें",
+      "body": "“स्टॉक बदलाव का इतिहास” में हर उत्पादन, डिस्पैच, शुरुआती स्टॉक और सुधार, उसके बाद के बैलेंस के साथ दिखता है।",
+      "step": "fs-history",
+      "status": "ready",
+      "eyebrow": "नमूना · चरण 5 / 6",
+      "progress": null,
+      "panel": {
+        "x": 285,
+        "y": 28,
+        "w": 360,
+        "h": 221
+      },
+      "highlight": {
+        "x": 285,
+        "y": 265,
+        "w": 745,
+        "h": 296
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": {
+        "replica": true,
+        "balance": "590 मी.",
+        "pending": false,
+        "mounts": 1,
+        "unmounts": 0,
+        "retainedSearch": "Retained",
+        "sameSearchNode": true,
+        "anchors": 0,
+        "enabledReplicaControls": 0
+      },
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "आपके पास पड़ा कपड़ा दर्ज करें",
+      "body": "Weavly इस्तेमाल करने से पहले तैयार कपड़ा था तो उसे यहाँ एक बार दर्ज करें। अब से सेव शिफ्ट खुद स्टॉक जोड़ेंगी।",
+      "step": "fs-handoff",
+      "status": "ready",
+      "eyebrow": "चरण 6 / 6",
+      "progress": null,
+      "panel": {
+        "x": 453,
+        "y": 119,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 829,
+        "y": 119,
+        "w": 127,
+        "h": 47
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": {
+        "replica": false,
+        "pending": false,
+        "mounts": 1,
+        "unmounts": 0,
+        "retainedSearch": "Retained",
+        "sameSearchNode": true,
+        "anchors": 1,
+        "enabledReplicaControls": 0
+      },
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280
+    }
+  ],
+  "logs": [
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction"
+  ],
+  "apiRequests": [],
+  "preClick": null,
+  "sampling": "legacy-900ms",
+  "before": {
+    "x": 0,
+    "y": 0,
+    "inner": null
+  },
+  "after": {
+    "scroll": {
+      "x": 0,
+      "y": 0,
+      "inner": null
+    },
+    "active": "<button data-slot=\"button\" data-variant=\"default\" data-size=\"default\" class=\"inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm leading-[1.",
+    "activeAnchor": "fabric.opening",
+    "activeRateBookField": null,
+    "activeControl": null,
+    "serverCalls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "navigations": [],
+    "scrollCalls": [
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      }
+    ],
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"fabric-stock\":{\"firstShown\":\"2026-09-29T21:10:50.873Z\",\"version\":\"v1\",\"firstStarted\":true,\"completed\":true,\"completedVersion\":\"v2\"}}"
+    },
+    "stock": {
+      "mounts": 1,
+      "unmounts": 0,
+      "retainedSearch": "Retained",
+      "sameSearchNode": true,
+      "liveHidden": false,
+      "replica": false
+    },
+    "search": null
+  },
+  "issues": []
+}

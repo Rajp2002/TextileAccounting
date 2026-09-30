@@ -2,84 +2,92 @@ import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
 import fs from 'node:fs'
-import { payrollTourSteps } from '../lib/payroll-tour'
+import { payrollTourSteps, payrollTourSelector } from '../lib/payroll-tour'
 import { payrollPreviewLabels } from '../lib/i18n/payroll-tutorial'
 
 const locale = vi.hoisted(() => ({ language: 'en' as 'en' | 'gu' | 'hi' }))
-vi.mock('@/lib/i18n/context', () => ({ useTranslation: () => ({ language: locale.language, tx: (text: string) => text }) }))
+vi.mock('@/lib/i18n/context', async () => {
+    const dictionaries = { en: (await import('../lib/i18n/locales/en')).en, gu: (await import('../lib/i18n/locales/gu')).gu, hi: (await import('../lib/i18n/locales/hi')).hi }
+    return { useTranslation: () => ({ language: locale.language, t: (key: string) => {
+        let value: unknown = dictionaries[locale.language]
+        for (const part of key.split('.')) value = (value as Record<string, unknown>)[part]
+        if (typeof value !== 'string') throw new Error(`Unresolved translation: ${key}`)
+        return value
+    } }) }
+})
 vi.mock('@/components/ui/dialog', () => {
     const Container = ({ children }: { children: React.ReactNode }) => <div>{children}</div>
     return { Dialog: Container, DialogContent: Container, DialogDescription: Container, DialogHeader: Container, DialogTitle: Container }
 })
 import PayrollTourPreview from '../components/payroll/PayrollTourPreview'
 
-describe('Payroll sample preview targets and isolation', () => {
-    for (const variant of ['base', 'full'] as const) {
-        for (const track of ['core', 'help'] as const) for (const language of ['en', 'gu', 'hi'] as const) for (const step of payrollTourSteps(variant, track)) {
-            it(`${variant}/${track}/${language}: ${step} has one target and no actionable business controls`, () => {
-                locale.language = language
-                const html = renderToStaticMarkup(<PayrollTourPreview variant={variant} step={step} />)
-                expect(html.match(new RegExp(`data-payroll-tour="${step}"`, 'g'))).toHaveLength(1)
-                expect(html).not.toMatch(/<(form|a)\b/)
-                for (const tag of html.match(/<(button|input|select)\b[^>]*>/g) ?? []) expect(tag).toContain('disabled=""')
-            })
-        }
+describe('Payroll replica targets and isolation', () => {
+    for (const track of ['core', 'help'] as const) for (const language of ['en', 'gu', 'hi'] as const) for (const step of payrollTourSteps(track)) {
+        it(`${track}/${language}: ${step} has the specified target and disabled business controls`, () => {
+            locale.language = language
+            const html = renderToStaticMarkup(<PayrollTourPreview step={step} />)
+            if (step.endsWith('handoff')) { expect(html).toBe(''); return }
+            const attribute = payrollTourSelector(step).slice(1, -1)
+            expect(html.split(attribute)).toHaveLength(2)
+            expect(html).not.toMatch(/<(form|a)\b/)
+            for (const tag of html.match(/<(button|input|select)\b[^>]*>/g) ?? []) expect(tag).toContain('disabled=""')
+        })
     }
-    it('does not import payment actions, live data, navigation or sending integrations', () => {
+    it('has no actions, persistence, draft, navigation, export or messaging paths', () => {
         const source = fs.readFileSync('components/payroll/PayrollTourPreview.tsx', 'utf8')
         expect(source).not.toMatch(/from ['"].*(actions|supabase|next\/navigation|loaders|whatsapp)/)
-        expect(source).not.toMatch(/fetch\(|window\.open|\.click\(|onSubmit=|onClick=/)
+        expect(source).not.toMatch(/fetch\(|window\.open|\.click\(|onSubmit=|onClick=|localStorage|sessionStorage|translatePage|\btx\(/)
     })
-    it('does not show Base-only controls in Full Suite settlement', () => {
+    it('shows method and note without the unsaved payment date and keeps zero-pay resolution separate', () => {
         locale.language = 'en'
-        const html = renderToStaticMarkup(<PayrollTourPreview variant="full" step="finalSettlement" />)
-        expect(html).toContain('Mark as Final Settlement')
-        expect(html).not.toContain('data-payroll-tour="complete"')
-        expect(html).not.toContain('data-payroll-tour="paymentDetails"')
-    })
-    it('renders translated resolution and completion controls without legacy phrase lookup', () => {
-        for (const language of ['gu', 'hi'] as const) {
-            locale.language = language
-            const obligations = renderToStaticMarkup(<PayrollTourPreview variant="base" step="obligations" />)
-            expect(obligations).toContain(payrollPreviewLabels[language].Resolve)
-            expect(obligations).toContain(payrollPreviewLabels[language]['Resolved (₹0)'])
-            expect(obligations).not.toContain('>Resolve<')
-            const complete = renderToStaticMarkup(<PayrollTourPreview variant="base" step="complete" />)
-            expect(complete).toContain(payrollPreviewLabels[language]['Complete Payroll'])
-        }
-    })
-    it('shows one combined Base payment form and the explicit zero-pay resolution path', () => {
-        locale.language = 'en'
-        const details = renderToStaticMarkup(<PayrollTourPreview variant="base" step="paymentDetails" />)
-        for (const label of ['Payment method', 'Payment date', 'Note (optional)']) expect(details).toContain(label)
-        const obligations = renderToStaticMarkup(<PayrollTourPreview variant="base" step="obligations" />)
-        expect(obligations).toContain('Resolve')
-        expect(obligations).toContain('Resolved (₹0)')
-        expect(obligations).not.toContain('Mark as paid')
-        const complete = renderToStaticMarkup(<PayrollTourPreview variant="base" step="complete" />)
+        const details = renderToStaticMarkup(<PayrollTourPreview step="pr-paid" />)
+        for (const label of ['Payment method', 'Note (optional)', 'Confirm Payment']) expect(details).toContain(label)
+        expect(details).not.toContain('Payment date')
+        const settlement = renderToStaticMarkup(<PayrollTourPreview step="pr-settle" />)
+        expect(settlement).toContain('Resolve')
+        expect(settlement).toContain('Mark Paid')
+        expect(settlement).toContain('Sample worker · no earnings')
+        const complete = renderToStaticMarkup(<PayrollTourPreview step="pr-complete" />)
         expect(complete).toContain('Complete Payroll')
         expect(complete).toContain('3/3')
     })
-    it('keeps optional help opt-in and separate from core completion, with focus restoration', () => {
-        const wrapper = fs.readFileSync('components/payroll/PayrollGuidedTour.tsx', 'utf8')
-        const tutorial = fs.readFileSync('components/tours/PayrollTutorial.tsx', 'utf8')
-        expect(wrapper).toContain("onClick={() => launch('help')}")
-        expect(wrapper).toContain("onLaunch={() => launch('core')}")
-        expect(wrapper).toContain('returnFocus.current = launcher.current?.querySelector<HTMLElement>')
-        expect(wrapper).toContain("nextTrack === 'help' ? '[data-tour-control=\"payroll-help\"]'")
-        expect(tutorial).toContain("if (track === 'core') void persistTourCompleted('payroll', userId)")
-        // Package 2D: the focus strategy is named here and implemented in the
-        // shared tour hook (behavior covered by guided-tour-focus.test.ts).
-        expect(tutorial).toContain("focusReturn: 'return-focus-at-close'")
-        const tourHook = fs.readFileSync('hooks/use-guided-tour.ts', 'utf8')
-        expect(tourHook).toContain('launchElement?.isConnected ? launchElement : launcherContainer')
-        expect(tourHook).toContain("event.key === 'Escape'")
-        expect(tourHook).toContain('trigger?.focus({ preventScroll: true })')
+    it('matches worker gross lines, chevrons and the current settlement label', () => {
+        locale.language = 'en'
+        const earnings = renderToStaticMarkup(<PayrollTourPreview step="pr-earnings" />)
+        expect(earnings).toContain('Gross earnings')
+        expect(earnings).not.toContain('×')
+        expect(earnings).not.toContain('Payment date')
+        const period = renderToStaticMarkup(<PayrollTourPreview step="pr-period" settlementLabel="View settled payroll" />)
+        expect(period).toContain('View settled payroll')
+        expect(period).toContain('lucide-chevron-left')
+        expect(period).not.toContain('>Previous<')
     })
-    it('keeps the live page mounted and saves scroll before starting', () => {
-        const source = fs.readFileSync('components/payroll/PayrollGuidedTour.tsx', 'utf8')
-        expect(source).toContain('<div hidden={step !== null}>{children}</div>')
-        expect(source.indexOf('returnScroll.current =')).toBeLessThan(source.indexOf('setStep(payrollTourSteps'))
-        expect(source).toContain('useState<PayrollTourStep | null>(null)')
+    it('renders keyed native controls and the records/reversal surfaces without fallback', () => {
+        for (const language of ['gu', 'hi'] as const) {
+            locale.language = language
+            const complete = renderToStaticMarkup(<PayrollTourPreview step="pr-complete" />)
+            expect(complete).not.toContain('Complete Payroll')
+            const correction = renderToStaticMarkup(<PayrollTourPreview step="pra-correct" />)
+            expect(correction).toContain(payrollPreviewLabels[language]['Record reversal'])
+            const records = renderToStaticMarkup(<PayrollTourPreview step="pra-records" />)
+            expect(records).toContain(payrollPreviewLabels[language].Workers)
+            expect(records).toContain(payrollPreviewLabels[language].Machines)
+        }
+    })
+    it('uses the replica shell and shared runtime while the optional walkthrough records nothing', () => {
+        const wrapper = fs.readFileSync('components/payroll/PayrollGuidedTour.tsx', 'utf8')
+        const shell = fs.readFileSync('components/tours/ReplicaGuidedTour.tsx', 'utf8')
+        expect(wrapper).toContain('<ReplicaGuidedTour tourId="payroll"')
+        expect(wrapper).toContain('handoffStepId="pr-handoff"')
+        expect(wrapper).toContain('workspaceClassName="payroll-workspace-shell')
+        expect(wrapper).toContain('recordCompletion={false}')
+        expect(wrapper).not.toMatch(/persistTour|recordTourEvent|router\.refresh/)
+        expect(wrapper).toContain('data-tour-control="payroll-help"')
+        expect(wrapper).toContain("<div hidden={extraStep !== null && extraStep !== 'pra-handoff'}>{children}</div>")
+        expect(wrapper).toContain('launcher={extraLauncher}')
+        expect(wrapper).toContain('window.scrollTo(')
+        expect(shell).toContain('<div hidden={step !== null && step !== handoffStepId}>{children}</div>')
+        expect(wrapper).toContain('copy.calculation.title')
+        expect(wrapper).toContain('copy.calculation.description')
     })
 })

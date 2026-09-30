@@ -1,0 +1,237 @@
+{
+  "scenario": "quotes-compare",
+  "lang": "gu",
+  "size": "390x844",
+  "steps": [
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "એક ક્વોલિટીના બે વર્ઝન પસંદ કરો",
+      "body": "“સરખામણી કરો” ચાલુ કરો, ક્વોલિટી ખોલો અને બે વર્ઝન પર ટિક કરો. પછી “કોસ્ટિંગની તુલના કરો” પસંદ કરો.",
+      "step": "compareSelect",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 1 / 4",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 632,
+        "w": 374,
+        "h": 204
+      },
+      "highlight": {
+        "x": 17,
+        "y": 66,
+        "w": 356,
+        "h": 556
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "div(role=dialog)",
+      "scrollY": 0,
+      "serverCalls": 1,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 8,
+        "y": 16,
+        "w": 374,
+        "h": 820
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": "",
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "શું બદલાયું તે જુઓ",
+      "body": "જૂનું, નવું અને ફેરફાર દરેક આંકડો બાજુબાજુમાં બતાવે છે. અહીં v2 નો ખર્ચ v1 કરતાં ₹1.65/મીટર વધુ છે.",
+      "step": "comparison",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 2 / 4",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 632,
+        "w": 374,
+        "h": 204
+      },
+      "highlight": {
+        "x": 2,
+        "y": 170,
+        "w": 386,
+        "h": 452
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 104,
+      "serverCalls": 1,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 8,
+        "y": 176,
+        "w": 374,
+        "h": 660
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": "",
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "ફેરફારનું કારણ બનેલો ઇનપુટ શોધો",
+      "body": "કયો ઇનપુટ બદલાયો, જેમ કે યાર્નનો ભાવ કે વીવિંગ ચાર્જ, તે જોવા ગણતરીની વિગત ખોલો.",
+      "step": "comparisonDetails",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 3 / 4",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 632,
+        "w": 374,
+        "h": 204
+      },
+      "highlight": {
+        "x": 2,
+        "y": 266,
+        "w": 386,
+        "h": 356
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 104,
+      "serverCalls": 1,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 8,
+        "y": 16,
+        "w": 374,
+        "h": 820
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": "",
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "તમારા પોતાના વર્ઝનની સરખામણી કરો",
+      "body": "શરૂ કરવા “સરખામણી કરો” પસંદ કરો. એક જ ક્વોલિટીના બે સાચવેલા વર્ઝન જોઈએ.",
+      "step": "compareHandoff",
+      "status": "ready",
+      "eyebrow": "પગલું 4 / 4",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 632,
+        "w": 374,
+        "h": 204
+      },
+      "highlight": {
+        "x": 23,
+        "y": 473,
+        "w": 344,
+        "h": 56
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 104,
+      "serverCalls": 1,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": "",
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    }
+  ],
+  "logs": [
+    "warning: [harness] server action called recordTourEventAction"
+  ],
+  "apiRequests": [],
+  "preClick": null,
+  "sampling": "legacy-900ms",
+  "before": {
+    "x": 0,
+    "y": 0,
+    "inner": null
+  },
+  "after": {
+    "scroll": {
+      "x": 0,
+      "y": 0,
+      "inner": null
+    },
+    "active": "<button data-slot=\"button\" data-variant=\"outline\" data-size=\"default\" class=\"inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-semibo",
+    "activeAnchor": "costings.compare",
+    "activeRateBookField": null,
+    "activeControl": null,
+    "serverCalls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "navigations": [],
+    "scrollCalls": [],
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"saved-costings\":{\"firstShown\":\"2026-09-29T20:18:57.090Z\",\"version\":\"v1\"}}"
+    },
+    "search": ""
+  },
+  "issues": []
+}

@@ -1,0 +1,167 @@
+[
+  {
+    "source": "/private/tmp/weavly-review-assignment-adjudication.py",
+    "copy": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/provenance-final/weavly-review-assignment-adjudication.py",
+    "sha256": "b22da357cb71d25b3c8e7bc6169c5d1da6eccd649213c032025df3dacdc597be"
+  },
+  {
+    "source": "/private/tmp/weavly-review-assignment-retry-jobs.py",
+    "copy": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/provenance-final/weavly-review-assignment-retry-jobs.py",
+    "sha256": "c284b22a22001b8ac8a6feb0b1aac75f8591285aab099faa5851a41dbe66e725"
+  },
+  {
+    "source": "/private/tmp/weavly-review-assignment-transition-jobs.py",
+    "copy": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/provenance-final/weavly-review-assignment-transition-jobs.py",
+    "sha256": "7f6dff12ee5b63ab2e6b142c487ae8c2c885d2d19595168680ec13d95d35a6d1"
+  },
+  {
+    "source": "/private/tmp/weavly-review-assignment-transition.mjs",
+    "copy": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/provenance-final/weavly-review-assignment-transition.mjs",
+    "sha256": "5fef7a55ffd4a4e531c05fd4929c7d9bec2d5fd2547e70250b0523b4cca28542"
+  },
+  {
+    "source": "/private/tmp/weavly-review-board-correction.py",
+    "copy": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/provenance-final/weavly-review-board-correction.py",
+    "sha256": "2136ea16fd34e45c7826575c34dab7e9fb9f0f21cc67b11fe8d1cec8acad3017"
+  },
+  {
+    "source": "/private/tmp/weavly-review-browser-diagnostics.mjs",
+    "copy": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/provenance-final/weavly-review-browser-diagnostics.mjs",
+    "sha256": "3d15a3d53188610adae6b5fa6c8ecb57a583060fa38fc6c2ad2928ef985757f4"
+  },
+  {
+    "source": "/private/tmp/weavly-review-checkpoint.py",
+    "copy": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/provenance-final/weavly-review-checkpoint.py",
+    "sha256": "be38cfe066f54c6a9720a5664a1224857b00690ed7b48af06aa576a1d4fb4459"
+  },
+  {
+    "source": "/private/tmp/weavly-review-checks.py",
+    "copy": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/provenance-final/weavly-review-checks.py",
+    "sha256": "abba4ef6451dd2b3a3ce97c5204d4ea3b1f03bc2e1f59476cd0995529c56fb26"
+  },
+  {
+    "source": "/private/tmp/weavly-review-closeout.py",
+    "copy": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/provenance-final/weavly-review-closeout.py",
+    "sha256": "303d27df5a5aadc99c874b9bd72072a9d4a66a68c22b9b553ba26ae471f5e690"
+  },
+  {
+    "source": "/private/tmp/weavly-review-contacts.py",
+    "copy": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/provenance-final/weavly-review-contacts.py",
+    "sha256": "7b23c0f3ab2a491240d6b003b6740ac8686dcab267e30a7b0a0ffb0fc567e0f6"
+  },
+  {
+    "source": "/private/tmp/weavly-review-copy.cjs",
+    "copy": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/provenance-final/weavly-review-copy.cjs",
+    "sha256": "070d291767373bbd2e46602a39560c55b3f47d2ae695383d2644bd84befe5277"
+  },
+  {
+    "source": "/private/tmp/weavly-review-defect-checkpoint.py",
+    "copy": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/provenance-final/weavly-review-defect-checkpoint.py",
+    "sha256": "0864a540b0ebfe20569c604a8093822fd1d55b41ec48a5eb9f26599c876d5d88"
+  },
+  {
+    "source": "/private/tmp/weavly-review-groups.py",
+    "copy": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/provenance-final/weavly-review-groups.py",
+    "sha256": "fb7c8aa9cb36c1f75bc3eae33c6c42acce4a3af610657fafcca95ff0e4bb4ee0"
+  },
+  {
+    "source": "/private/tmp/weavly-review-integrity.py",
+    "copy": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/provenance-final/weavly-review-integrity.py",
+    "sha256": "d9d80c4d444ddd9619ecc2498eaa25d0745fdd4a68c9138a7560dcdae2055942"
+  },
+  {
+    "source": "/private/tmp/weavly-review-keyboard.mjs",
+    "copy": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/provenance-final/weavly-review-keyboard.mjs",
+    "sha256": "d726e992a635f4ca2ad714fdab6a41b76b6d83f73fc209546ba6ca9d41d2166f"
+  },
+  {
+    "source": "/private/tmp/weavly-review-machine-transition-jobs.py",
+    "copy": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/provenance-final/weavly-review-machine-transition-jobs.py",
+    "sha256": "74c6a057d83add4275932579d1e6acdc45392fd3d3ae602e0b78e9bb01698cf7"
+  },
+  {
+    "source": "/private/tmp/weavly-review-machine-transition.mjs",
+    "copy": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/provenance-final/weavly-review-machine-transition.mjs",
+    "sha256": "45330e3f19cdd87be476d64e393462c96f349ad4c0e6a2cc3353a89c475cb1d6"
+  },
+  {
+    "source": "/private/tmp/weavly-review-matrix.py",
+    "copy": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/provenance-final/weavly-review-matrix.py",
+    "sha256": "f9b8267ef27149c9abd748faffdcd72e1413ed26471288327312241fd6db24e2"
+  },
+  {
+    "source": "/private/tmp/weavly-review-network.mjs",
+    "copy": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/provenance-final/weavly-review-network.mjs",
+    "sha256": "376ce65cdc3e68ae5e879cda8d491315fdaa26a61a27c202aaaaedf4c872ccf8"
+  },
+  {
+    "source": "/private/tmp/weavly-review-paint-adjudication.py",
+    "copy": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/provenance-final/weavly-review-paint-adjudication.py",
+    "sha256": "c421005656269e11b977697701062a5782961d70975f9fcf2472903565181aa7"
+  },
+  {
+    "source": "/private/tmp/weavly-review-paint-jobs.py",
+    "copy": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/provenance-final/weavly-review-paint-jobs.py",
+    "sha256": "0310c6290dabb779d7a92741779e3e0d2acc3956b2d5f7f09e48ca5e83901fff"
+  },
+  {
+    "source": "/private/tmp/weavly-review-paint.mjs",
+    "copy": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/provenance-final/weavly-review-paint.mjs",
+    "sha256": "23bcd1956c61259895a9406b9d784b136bc84b8e8466dcab10129dc2c635fb08"
+  },
+  {
+    "source": "/private/tmp/weavly-review-payroll-adjudication.py",
+    "copy": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/provenance-final/weavly-review-payroll-adjudication.py",
+    "sha256": "ba25f0b836b953d568e81b2a06e04b55f3b63bb1eba7156a808b370a5bc87722"
+  },
+  {
+    "source": "/private/tmp/weavly-review-progress.py",
+    "copy": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/provenance-final/weavly-review-progress.py",
+    "sha256": "97385cc1b75cf84a2970b6da5167519da001b3713a383255e206914d985c52af"
+  },
+  {
+    "source": "/private/tmp/weavly-review-report.py",
+    "copy": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/provenance-final/weavly-review-report.py",
+    "sha256": "eecc2e56e78ebea4657609a2ed9b03f76f723ad8b4ce3ac555a81faec96474bb"
+  },
+  {
+    "source": "/private/tmp/weavly-review-run-diagnostic.mjs",
+    "copy": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/provenance-final/weavly-review-run-diagnostic.mjs",
+    "sha256": "18a4d4329faf85e8937b37b97aa7b1b9088cdda4da0b53748f79366f696f323f"
+  },
+  {
+    "source": "/private/tmp/weavly-review-run-paint.mjs",
+    "copy": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/provenance-final/weavly-review-run-paint.mjs",
+    "sha256": "43ecc5914481613761085d611e35afe6655bf0b70bafea2c8a45e7ca5037ae26"
+  },
+  {
+    "source": "/private/tmp/weavly-review-stop-server.py",
+    "copy": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/provenance-final/weavly-review-stop-server.py",
+    "sha256": "514d54b0e50171bfe69ea45ff77ed1bf01a8f45d070522f34327b0c8a00159b1"
+  },
+  {
+    "source": "/private/tmp/weavly-review-suppcontacts.py",
+    "copy": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/provenance-final/weavly-review-suppcontacts.py",
+    "sha256": "ada3aef73655013112b8c731444c12fb196cd3cfdcbc66c537c9fe9b275125df"
+  },
+  {
+    "source": "/private/tmp/weavly-review-task.py",
+    "copy": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/provenance-final/weavly-review-task.py",
+    "sha256": "c40fef8af1c99fa8e706e1c46243e144d7cd368f827fe3e80ca0edf6e7f5b2ba"
+  },
+  {
+    "source": "/private/tmp/weavly-review-worker-transition-jobs.py",
+    "copy": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/provenance-final/weavly-review-worker-transition-jobs.py",
+    "sha256": "be7bfaca83ad64def50abe8c4e140c6321bd5c1e5fbf5ce9e636aadd95078c39"
+  },
+  {
+    "source": "/private/tmp/weavly-review-worker-transition.mjs",
+    "copy": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/provenance-final/weavly-review-worker-transition.mjs",
+    "sha256": "7221b3731eb68487c43310bed4c4a1bdf123b92e2ebe9a1196d91dab6aa106f1"
+  },
+  {
+    "source": "/private/tmp/weavly-review-yarn-retry.py",
+    "copy": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/provenance-final/weavly-review-yarn-retry.py",
+    "sha256": "b32a9e5743f137ab48300e370d010b9adaef38c702c446308f6d4326277fde8f"
+  }
+]

@@ -5,6 +5,9 @@ import path from 'node:path'
 describe('Tour Quota and Data Safety Verification', () => {
   const tourFiles = [
     'components/estimator/CostEstimateTutorial.tsx',
+    'components/estimator/CostEstimateTourRuntime.tsx',
+    'lib/estimator-tour.ts',
+    'lib/i18n/cost-estimate-tutorial.ts',
     'components/rates/RateBookTutorial.tsx',
     'components/estimator/SavedCostingsTutorial.tsx',
     'components/tours/TourInvitation.tsx',
@@ -19,6 +22,9 @@ describe('Tour Quota and Data Safety Verification', () => {
 
   it('no tour file invokes free allowance quota consumption or decrements quota', () => {
     const quotaTokens = [
+      'freeMeter',
+      '/api/free/calculate',
+      'complete_free_saved_costing',
       'consumeFreeAllowance',
       'decrementFreeAllowance',
       'deductAllowance',
@@ -64,7 +70,7 @@ describe('Tour Quota and Data Safety Verification', () => {
   it('SavedCostingsTutorial uses synthetic mock examples and exports without database roundtrips', () => {
     const savedTutorial = fileContents.find(f => f.file === 'components/estimator/SavedCostingsTutorial.tsx')!
     // Steps derive in-memory sample dialogs without async data writes
-    expect(savedTutorial.content).toContain('savedCostingTourSteps')
+    expect(savedTutorial.content).toContain('SavedCostingsTourRuntime')
     expect(savedTutorial.content).not.toContain('fetch(')
   })
 })

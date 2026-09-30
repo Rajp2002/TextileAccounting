@@ -1,0 +1,94 @@
+[
+  {
+    "id": "gt10-paint-0-en-1440x900",
+    "task": "GT-10",
+    "scenario": "payroll",
+    "language": "en",
+    "size": "1440x900",
+    "script": "/private/tmp/weavly-review-run-paint.mjs",
+    "args": [
+      "payroll",
+      "en",
+      "1440x900",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-0-en-1440x900"
+    ],
+    "command": [
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+      "170",
+      "node",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+      "env",
+      "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+      "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+      "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-0-en-1440x900/network.json",
+      "node",
+      "--import",
+      "/private/tmp/weavly-review-network.mjs",
+      "/private/tmp/weavly-review-run-paint.mjs",
+      "payroll",
+      "en",
+      "1440x900",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-0-en-1440x900"
+    ],
+    "exitCode": 1,
+    "elapsedSeconds": 46.46,
+    "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-0-en-1440x900/payroll-en-1440x900/record.json",
+    "steps": 8,
+    "error": null,
+    "blockedNetwork": [
+      {
+        "type": "blocked-api",
+        "url": "http://localhost:5199/api/analytics/plan-events",
+        "method": "POST"
+      }
+    ],
+    "classification": "FAIL",
+    "visualReview": "UNVERIFIED"
+  },
+  {
+    "id": "gt10-paint-1-en-1440x900",
+    "task": "GT-10",
+    "scenario": "payroll-extra",
+    "language": "en",
+    "size": "1440x900",
+    "script": "/private/tmp/weavly-review-run-paint.mjs",
+    "args": [
+      "payroll-extra",
+      "en",
+      "1440x900",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-1-en-1440x900"
+    ],
+    "command": [
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+      "170",
+      "node",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+      "env",
+      "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+      "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+      "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-1-en-1440x900/network.json",
+      "node",
+      "--import",
+      "/private/tmp/weavly-review-network.mjs",
+      "/private/tmp/weavly-review-run-paint.mjs",
+      "payroll-extra",
+      "en",
+      "1440x900",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-1-en-1440x900"
+    ],
+    "exitCode": 1,
+    "elapsedSeconds": 43.55,
+    "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-1-en-1440x900/payroll-extra-en-1440x900/record.json",
+    "steps": 6,
+    "error": null,
+    "blockedNetwork": [
+      {
+        "type": "blocked-api",
+        "url": "http://localhost:5199/api/analytics/plan-events",
+        "method": "POST"
+      }
+    ],
+    "classification": "FAIL",
+    "visualReview": "UNVERIFIED"
+  }
+]

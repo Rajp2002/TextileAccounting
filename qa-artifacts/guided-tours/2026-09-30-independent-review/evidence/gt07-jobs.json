@@ -1,0 +1,154 @@
+[
+  {
+    "id": "gt07-0-en-1440x900",
+    "task": "GT-07",
+    "scenario": "dispatch",
+    "language": "en",
+    "size": "1440x900"
+  },
+  {
+    "id": "gt07-0-hi-1280x800",
+    "task": "GT-07",
+    "scenario": "dispatch",
+    "language": "hi",
+    "size": "1280x800"
+  },
+  {
+    "id": "gt07-0-en-1024x768",
+    "task": "GT-07",
+    "scenario": "dispatch",
+    "language": "en",
+    "size": "1024x768"
+  },
+  {
+    "id": "gt07-0-gu-390x844",
+    "task": "GT-07",
+    "scenario": "dispatch",
+    "language": "gu",
+    "size": "390x844"
+  },
+  {
+    "id": "gt07-0-reduced-en-1024x768",
+    "task": "GT-07",
+    "scenario": "dispatch",
+    "language": "en",
+    "size": "1024x768",
+    "env": {
+      "REDUCED_MOTION": "1"
+    }
+  },
+  {
+    "id": "gt07-1-en-1440x900",
+    "task": "GT-07",
+    "scenario": "dispatch?populated=1",
+    "language": "en",
+    "size": "1440x900"
+  },
+  {
+    "id": "gt07-1-hi-1280x800",
+    "task": "GT-07",
+    "scenario": "dispatch?populated=1",
+    "language": "hi",
+    "size": "1280x800"
+  },
+  {
+    "id": "gt07-1-en-1024x768",
+    "task": "GT-07",
+    "scenario": "dispatch?populated=1",
+    "language": "en",
+    "size": "1024x768"
+  },
+  {
+    "id": "gt07-1-gu-390x844",
+    "task": "GT-07",
+    "scenario": "dispatch?populated=1",
+    "language": "gu",
+    "size": "390x844"
+  },
+  {
+    "id": "gt07-1-reduced-en-1024x768",
+    "task": "GT-07",
+    "scenario": "dispatch?populated=1",
+    "language": "en",
+    "size": "1024x768",
+    "env": {
+      "REDUCED_MOTION": "1"
+    }
+  },
+  {
+    "id": "gt07-2-en-1440x900",
+    "task": "GT-07",
+    "scenario": "dispatch?pending=1",
+    "language": "en",
+    "size": "1440x900"
+  },
+  {
+    "id": "gt07-2-hi-1280x800",
+    "task": "GT-07",
+    "scenario": "dispatch?pending=1",
+    "language": "hi",
+    "size": "1280x800"
+  },
+  {
+    "id": "gt07-2-en-1024x768",
+    "task": "GT-07",
+    "scenario": "dispatch?pending=1",
+    "language": "en",
+    "size": "1024x768"
+  },
+  {
+    "id": "gt07-2-gu-390x844",
+    "task": "GT-07",
+    "scenario": "dispatch?pending=1",
+    "language": "gu",
+    "size": "390x844"
+  },
+  {
+    "id": "gt07-2-reduced-en-1024x768",
+    "task": "GT-07",
+    "scenario": "dispatch?pending=1",
+    "language": "en",
+    "size": "1024x768",
+    "env": {
+      "REDUCED_MOTION": "1"
+    }
+  },
+  {
+    "id": "gt07-3-en-1440x900",
+    "task": "GT-07",
+    "scenario": "dispatch?noStock=1",
+    "language": "en",
+    "size": "1440x900"
+  },
+  {
+    "id": "gt07-3-hi-1280x800",
+    "task": "GT-07",
+    "scenario": "dispatch?noStock=1",
+    "language": "hi",
+    "size": "1280x800"
+  },
+  {
+    "id": "gt07-3-en-1024x768",
+    "task": "GT-07",
+    "scenario": "dispatch?noStock=1",
+    "language": "en",
+    "size": "1024x768"
+  },
+  {
+    "id": "gt07-3-gu-390x844",
+    "task": "GT-07",
+    "scenario": "dispatch?noStock=1",
+    "language": "gu",
+    "size": "390x844"
+  },
+  {
+    "id": "gt07-3-reduced-en-1024x768",
+    "task": "GT-07",
+    "scenario": "dispatch?noStock=1",
+    "language": "en",
+    "size": "1024x768",
+    "env": {
+      "REDUCED_MOTION": "1"
+    }
+  }
+]

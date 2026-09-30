@@ -4,7 +4,8 @@ import { isBaseOperatorAvailable, resolveBasePieceRate } from '@/lib/base-operat
 
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import Link from 'next/link'
-import { baseProductionHref, validBaseDate, type BaseProductionNavigation } from '@/lib/base-production-navigation'
+import DailySheetGuidedTour from '@/components/production/DailySheetGuidedTour'
+import { baseDailySheetHref, baseProductionHref, validBaseDate, type BaseProductionNavigation } from '@/lib/base-production-navigation'
 import { baseProductionDraftKey, parseBaseProductionDraft } from '@/lib/base-production-draft'
 import { baseProductionAuditChanges } from '@/lib/base-production-audit'
 import { buildMachineCollectionSheet, compareMachineLabels, machineReadingState, machineWorkerStatus, summarizeMachineRegister } from '@/lib/base-machine-register'
@@ -117,7 +118,7 @@ export default function BaseDailyProductionSheet({
     navigation?: BaseProductionNavigation
 }) {
     const router = useRouter()
-    const { tx } = useTranslation()
+    const { tx, t } = useTranslation()
     const [productionDate, setProductionDate] = useState(navigation.date ?? initialData.today)
     const [shift, setShift] = useState<'day' | 'night'>(navigation.shift ?? 'day')
     const [rows, setRows] = useState<Record<string, DraftRow>>({})
@@ -178,19 +179,19 @@ export default function BaseDailyProductionSheet({
         setShift(nextShift)
         setShowPending(false)
         setIsReviewOpen(false)
-        window.history.replaceState(null, '', baseProductionHref({ ...navigation, date, shift: nextShift, entry: undefined }))
+        window.history.replaceState(null, '', baseDailySheetHref({ ...navigation, date, shift: nextShift, entry: undefined }))
     }
 
     function openConfiguration() {
         if (draftStatus === 'error' && !window.confirm(tx('This draft could not be saved on this device. Discard these unsaved changes?'))) return
-        const params = new URLSearchParams({ shift, returnTo: baseProductionHref({ ...navigation, date: productionDate, shift }) })
+        const params = new URLSearchParams({ shift, returnTo: baseDailySheetHref({ ...navigation, date: productionDate, shift }) })
         if (focusedWorker) params.set('worker', focusedWorker)
         router.push(`/owner/assignments?${params}`)
     }
 
     function openMachineJobs() {
         if (draftStatus === 'error' && !window.confirm(tx('This draft could not be saved on this device. Discard these unsaved changes?'))) return
-        router.push(`${baseProductionHref({ tab: 'jobs', returnTo: baseProductionHref({ ...navigation, date: productionDate, shift }) })}#machine-jobs`)
+        router.push(`${baseProductionHref({ tab: 'jobs', returnTo: baseDailySheetHref({ ...navigation, date: productionDate, shift }) })}#machine-jobs`)
     }
 
     const jobById = useMemo(
@@ -652,11 +653,17 @@ export default function BaseDailyProductionSheet({
         )
     }
 
+    // Prefer the first visible enabled reading; retain a disabled target for locked-sheet fallback.
+    const visibleReadingContexts = machineContexts.filter(context => context.workerId && (!showPending || pendingMachineIds.includes(context.machineId)))
+    const firstReadingMachineId = draftStatus === 'error' ? undefined : (visibleReadingContexts.find(context => !areInputsDisabled && !settledWorkerIds.has(context.workerId!) && getRow(context.workerId!).status !== 'absent' && context.jobId) ?? visibleReadingContexts[0])?.machineId
+
     const saveDisabled = isSaving || areInputsDisabled || Boolean(unmatchedDraftMeters) || invalidEnteredCount > 0 || registerSummary.invalid > 0 || summary.entered_count + summary.zero_count + summary.absent_count === 0
 
     return (
         <div className="production-daily-sheet-workspace relative min-w-0 pb-28 min-[1280px]:pb-0">
-            <aside aria-label="Daily sheet controls" className="production-daily-sheet-rail flex min-w-0 flex-col">
+            <DailySheetGuidedTour userId={initialData.actorId ?? ''} orgId={initialData.orgId}
+                empty={sheetWorkers.length === 0} dialogOpen={isReviewOpen || isUnlockDialogOpen || isHistoryDialogOpen || isPayrollExpanded}
+                controls={<>
                 <div className="production-daily-sheet-rail-top flex flex-col gap-3">
                     <div className="production-daily-sheet-action">
                         <Button
@@ -665,12 +672,12 @@ export default function BaseDailyProductionSheet({
                             className={cn(railPrimaryAction, 'w-full gap-2')}
                         >
                             {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                            <span>{isSaving ? 'Saving…' : currentBatch ? 'Save correction' : 'Save shift'}</span>
+                            <span>{isSaving ? 'Saving…' : currentBatch ? t('dailySheet.saveCorrection') : t('dailySheet.saveShift')}</span>
                         </Button>
                     </div>
 
                     <div className={cn(railSurface, 'p-4 2xl:p-5')}>
-                        <p className="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Shift details</p>
+                        <p className="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">{t('dailySheet.shiftDetails')}</p>
                         <div className="grid grid-cols-1 gap-3">
                             <div className="space-y-1.5">
                                 <Label htmlFor="base-daily-date" className="text-xs font-bold text-body">Date</Label>
@@ -687,7 +694,7 @@ export default function BaseDailyProductionSheet({
                                 </Select>
                             </div>
                             <Button variant="outline" className="h-10 w-full rounded-xl border-hairline bg-surface font-semibold shadow-xs hover:bg-surface-soft mt-1" onClick={printCollectionSheet} disabled={machineContexts.length === 0}>
-                                <Printer className="h-4 w-4" /> Print sheet
+                                <Printer className="h-4 w-4" /> {t('dailySheet.printSheet')}
                             </Button>
                         </div>
                     </div>
@@ -696,7 +703,7 @@ export default function BaseDailyProductionSheet({
                         <div className="flex items-center justify-between gap-2">
                             <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Shift progress</p>
                             <span className="text-[11px] font-medium text-body">
-                                {draftStatus === 'local' ? 'Draft on device' : currentBatch ? 'Saved shift' : 'Not submitted'}
+                                {draftStatus === 'local' ? t('dailySheet.draftOnDevice') : currentBatch ? 'Saved shift' : 'Not submitted'}
                             </span>
                         </div>
                         <div className="mt-3 flex items-baseline gap-2">
@@ -723,7 +730,7 @@ export default function BaseDailyProductionSheet({
                             <span className="flex items-start gap-2.5 min-w-0">
                                 <Users className={cn(railIcon, 'mt-0.5')} />
                                 <span className="min-w-0 flex-1">
-                                    <span className="block text-sm font-semibold text-ink">Worker review</span>
+                                    <span className="block text-sm font-semibold text-ink">{t('dailySheet.workerReview')}</span>
                                     <span className="block text-xs text-body truncate font-normal">
                                         {assignedWorkers.length} {assignedWorkers.length === 1 ? 'worker' : 'workers'} · Check totals & pay
                                     </span>
@@ -750,7 +757,7 @@ export default function BaseDailyProductionSheet({
                         <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
                     </button>
                 </div>
-            </aside>
+                </>}>
 
             <div ref={sheetRef} className="flex min-w-0 flex-col 2xl:min-h-[calc(100svh-3rem)] 2xl:pb-20">
             {unmatchedDraftMeters && <p role="alert" className="rounded-lg border border-warning/40 bg-warning/5 p-3 text-sm">Some draft metres no longer match the current worker assignments. Restore the assignment in Machine Assignments or discard the local draft before saving; no metres have been silently removed.</p>}
@@ -781,7 +788,7 @@ export default function BaseDailyProductionSheet({
                         )}
                         {isSavedBatchProtected && (
                             <Button variant="outline" size="sm" className="h-8 rounded-xl border-[var(--wv-ochre-300)] bg-surface text-[var(--wv-ochre-900)] hover:bg-[var(--wv-ochre-100)] text-xs font-bold shadow-xs" onClick={() => setIsUnlockDialogOpen(true)}>
-                                <LockOpen className="h-4 w-4" /> Edit saved log
+                                <LockOpen className="h-4 w-4" /> {t('dailySheet.editSavedLog')}
                             </Button>
                         )}
                     </div>
@@ -798,7 +805,7 @@ export default function BaseDailyProductionSheet({
                             <p className="mt-1 max-w-md text-sm leading-relaxed text-body">Add workers in Workers and choose which shift they are available for.</p>
                         </div>
                         <div className="flex flex-wrap justify-center gap-2 pt-2">
-                            <Button onClick={onAddWorker} className="rounded-xl bg-loom text-white font-bold shadow-xs hover:bg-loom-elevated"><Plus className="h-4 w-4" /> Add worker</Button>
+                            <Button data-tour-anchor={draftStatus === 'error' || draftStatus === 'conflict' ? undefined : 'daily.empty-action'} onClick={onAddWorker} className="rounded-xl bg-loom text-white font-bold shadow-xs hover:bg-loom-elevated"><Plus className="h-4 w-4" /> Add worker</Button>
                             <Button variant="outline" onClick={onAddMachine} className="rounded-xl border-hairline hover:bg-surface-soft font-semibold"><Plus className="h-4 w-4" /> Add machine</Button>
                         </div>
                     </CardContent>
@@ -811,13 +818,13 @@ export default function BaseDailyProductionSheet({
                                 <div className="flex items-center gap-3">
                                     <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-saffron-soft text-saffron-deep"><ClipboardList className="h-5 w-5" /></span>
                                     <div>
-                                        <CardTitle className="text-lg font-bold tracking-tight text-ink">Machine sheet</CardTitle>
+                                        <CardTitle className="text-lg font-bold tracking-tight text-ink">{t('dailySheet.machineSheet')}</CardTitle>
                                         <p className="text-xs text-muted-foreground">{machineContexts.length} {machineContexts.length === 1 ? 'machine' : 'machines'} on this shift</p>
                                     </div>
                                 </div>
                                 <div className="flex flex-wrap gap-2">
-                                    {draftStatus === 'local' && <Button variant="ghost" size="sm" disabled={isSaving} onClick={discardDraft} className="h-8 rounded-xl text-xs font-semibold text-muted-foreground hover:text-ink">Discard draft</Button>}
-                                    {(registerSummary.pending + registerSummary.invalid > 0 || showPending) && <SwitchField variant="pill" checked={showPending} onCheckedChange={togglePending}>{`Show pending (${registerSummary.pending + registerSummary.invalid})`}</SwitchField>}
+                                    {draftStatus === 'local' && <Button variant="ghost" size="sm" disabled={isSaving} onClick={discardDraft} className="h-8 rounded-xl text-xs font-semibold text-muted-foreground hover:text-ink">{t('dailySheet.discardDraft')}</Button>}
+                                    {(registerSummary.pending + registerSummary.invalid > 0 || showPending) && <SwitchField variant="pill" checked={showPending} onCheckedChange={togglePending}>{`${t('dailySheet.showPending')} (${registerSummary.pending + registerSummary.invalid})`}</SwitchField>}
                                 </div>
                             </div>
                             <CardDescription className="text-xs text-body">Leave a reading blank if it is pending. Enter 0 if the machine did not run.</CardDescription>
@@ -825,7 +832,7 @@ export default function BaseDailyProductionSheet({
                         </CardHeader>
                         <CardContent className="p-0 flex flex-1 flex-col min-h-0">
                             <div className="hidden grid-cols-[minmax(0,1.1fr)_minmax(0,.8fr)_145px_160px] gap-3 border-b border-hairline bg-surface-soft/70 px-5 py-2.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground md:grid">
-                                <span>Machine / job</span><span>Worker</span><span className="text-right">Metres</span><span>Status / action</span>
+                                <span>Machine / job</span><span>Worker</span><span className="text-right">{t('dailySheet.metres')}</span><span>Status / action</span>
                             </div>
                             <div role="region" aria-label="Machine readings" className="divide-y divide-hairline overflow-y-auto overscroll-contain flex-1 min-h-0 max-h-[calc(100vh-25rem)] 2xl:max-h-[calc(100vh-24rem)]">
                                 {machineContexts.map((context, index) => {
@@ -863,8 +870,9 @@ export default function BaseDailyProductionSheet({
                                                     inputMode="decimal"
                                                     enterKeyHint="next"
                                                     autoComplete="off"
-                                                    placeholder="Metres"
+                                                    placeholder={t('dailySheet.metres')}
                                                     data-base-machine-meters
+                                                    data-tour-anchor={context.machineId === firstReadingMachineId ? 'daily.first-reading' : undefined}
                                                     value={value}
                                                     disabled={row.status === 'absent' || disabled || !context.jobId}
                                                     onChange={(event) => handleMachineMetersChange(context, event.target.value)}
@@ -875,12 +883,12 @@ export default function BaseDailyProductionSheet({
                                                 {state === 'invalid' && <p id={`reading-error-${context.machineId}`} className="mt-1 text-xs font-semibold text-destructive">Use 0–100,000, up to 2 decimals.</p>}
                                             </div>
                                             <div className="col-span-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs md:col-span-1 md:flex-col md:items-start">
-                                                <span className={`inline-flex rounded-full px-2 py-0.5 font-bold ${state === 'entered' ? 'bg-[var(--wv-moss-50)] text-[var(--wv-moss-700)]' : state === 'pending' || state === 'invalid' ? 'bg-[var(--wv-ochre-50)] text-[var(--wv-ochre-800)]' : 'bg-surface-soft text-body'}`}>{state === 'entered' ? 'Entered' : state === 'not_running' ? 'Not running' : state === 'absent' ? 'Worker absent' : state === 'invalid' ? 'Check reading' : 'Pending'}</span>
+                                                <span className={`inline-flex rounded-full px-2 py-0.5 font-bold ${state === 'entered' ? 'bg-[var(--wv-moss-50)] text-[var(--wv-moss-700)]' : state === 'pending' || state === 'invalid' ? 'bg-[var(--wv-ochre-50)] text-[var(--wv-ochre-800)]' : 'bg-surface-soft text-body'}`}>{state === 'entered' ? 'Entered' : state === 'not_running' ? t('dailySheet.notRunning') : state === 'absent' ? 'Worker absent' : state === 'invalid' ? 'Check reading' : 'Pending'}</span>
                                                 {!disabled && row.status !== 'absent' && (
                                                     <Button type="button" variant="ghost" size="sm" aria-label={`${state === 'not_running' ? 'Clear' : 'Mark not running'} ${context.machineLabel}`} onClick={() => {
                                                         if (state === 'entered' && !window.confirm(tx('Replace this machine’s production with zero?'))) return
                                                         handleMachineMetersChange(context, state === 'not_running' ? '' : '0')
-                                                    }} className="h-7 rounded-lg px-2 text-xs text-muted-foreground hover:text-ink">{state === 'not_running' ? 'Undo' : 'Not running'}</Button>
+                                                    }} className="h-7 rounded-lg px-2 text-xs text-muted-foreground hover:text-ink">{state === 'not_running' ? 'Undo' : t('dailySheet.notRunning')}</Button>
                                                 )}
                                                 {!context.jobId && <Button variant="link" size="sm" onClick={openMachineJobs} className="h-7 px-1 text-xs font-bold text-loom hover:underline">Assign a production job</Button>}
                                             </div>
@@ -902,7 +910,7 @@ export default function BaseDailyProductionSheet({
                                             <Users className="h-5 w-5" />
                                         </span>
                                         <div>
-                                            <DialogTitle className="text-lg font-bold text-ink">Worker review</DialogTitle>
+                                            <DialogTitle className="text-lg font-bold text-ink">{t('dailySheet.workerReview')}</DialogTitle>
                                             <DialogDescription className="text-xs text-muted-foreground">
                                                 Check totals and pay, or mark a worker zero or absent.
                                             </DialogDescription>
@@ -952,7 +960,7 @@ export default function BaseDailyProductionSheet({
                                                     min="0.01"
                                                     step="0.01"
                                                     inputMode="decimal"
-                                                    placeholder="Metres"
+                                                    placeholder={t('dailySheet.metres')}
                                                     value={row.meters}
                                                     disabled={row.status === 'zero' || row.status === 'absent' || areInputsDisabled || settledWorkerIds.has(worker.id)}
                                                     onChange={(event) => handleUnassignedMetersChange(worker.id, event.target.value)}
@@ -988,7 +996,7 @@ export default function BaseDailyProductionSheet({
                     </div>
                     <Button onClick={() => handleSave()} disabled={saveDisabled} className="h-10 sm:h-11 min-w-[132px] sm:min-w-[160px] rounded-xl bg-loom hover:bg-loom-elevated text-white font-bold tracking-wide shadow-xs">
                         {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                        <span>{isSaving ? 'Saving…' : currentBatch ? 'Save correction' : 'Save shift'}</span>
+                        <span>{isSaving ? 'Saving…' : currentBatch ? t('dailySheet.saveCorrection') : t('dailySheet.saveShift')}</span>
                     </Button>
                 </div>
             )}
@@ -1102,6 +1110,7 @@ export default function BaseDailyProductionSheet({
                     <DialogFooter className="pt-2"><Button variant="outline" onClick={() => setIsHistoryDialogOpen(false)} className="rounded-xl border-hairline hover:bg-surface-soft font-semibold">Close</Button></DialogFooter>
                 </DialogContent>
             </Dialog>
+            </DailySheetGuidedTour>
         </div>
     )
 }

@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useState, useMemo, useRef } from 'react'
+import React, { useState, useMemo, useRef, useEffect } from 'react'
+import dynamic from 'next/dynamic'
 import { useLocalizedPageTitle } from '@/hooks/use-localized-page-title'
 import { useSearchParams } from 'next/navigation'
 import { useTranslation } from '@/lib/i18n/context'
@@ -16,12 +17,17 @@ import { WorkforceGroup } from '@/components/workers/WorkforceGroup'
 import { WorkerEmptyState } from '@/components/workers/WorkerEmptyState'
 import WorkerEditor from './WorkerEditor'
 import { TourInvitation } from '@/components/tours/TourInvitation'
-import WorkersTutorial from '@/components/tours/WorkersTutorial'
-import { makeWorkersTourExamples, workersTourEditor, workersHelpSteps, type WorkersTourStep, type WorkersTourPath } from '@/lib/workers-tour'
+import type { GuidedTour as GuidedTourComponent } from '@/components/tours/GuidedTour'
+import { Button } from '@/components/ui/button'
+import { tourCommonCopy } from '@/lib/i18n/tour-common'
+import { formatTourText } from '@/lib/tours/tour-text'
+import { makeWorkersTourExamples, workersTourEditor, workersHelpSteps, workersTourSpecs, workersTourCopyKey, workersTourControlLabels, type WorkersTourStep, type WorkersTourPath } from '@/lib/workers-tour'
 import { workersTutorialCopy } from '@/lib/i18n/workers-tutorial'
 import { ChevronDown, CircleHelp } from 'lucide-react'
 import { railIcon, railSurface } from '@/components/ui/rail'
 import { cn } from '@/lib/utils'
+
+const GuidedTour = dynamic(() => import('@/components/tours/GuidedTour').then(module => module.GuidedTour), { ssr: false }) as typeof GuidedTourComponent
 
 export default function WorkersRegister({
   workers,
@@ -34,13 +40,25 @@ export default function WorkersRegister({
   userMetadata?: Record<string, unknown>
 }) {
   const params = useSearchParams()
-  const { tx, language } = useTranslation()
+  const { tx, t, language } = useTranslation()
   const [tourStep, setTourStep] = useState<WorkersTourStep | null>(null)
   const [tourPath, setTourPath] = useState<WorkersTourPath>('piece')
   const tourLauncher = useRef<HTMLDivElement>(null)
-  const sampleWorkers = useMemo(() => makeWorkersTourExamples(today), [today])
+  const tourReturnFocus = useRef<HTMLElement | null>(null)
+  const launchScroll = useRef<{ x: number; y: number } | null>(null)
+  // The sample register can clamp a long live page before the lazy runtime mounts.
+  useEffect(() => {
+    if (tourStep === null && launchScroll.current) {
+      window.scrollTo({ left: launchScroll.current.x, top: launchScroll.current.y, behavior: 'instant' })
+      launchScroll.current = null
+    }
+  }, [tourStep])
+  const tourSampleActive = tourStep !== null && tourStep !== 'wk-handoff'
+  const sampleWorkers = useMemo(() => tourSampleActive ? makeWorkersTourExamples(language) : [], [tourSampleActive, language])
+  const steps = useMemo(() => workersTourSpecs(tourPath), [tourPath])
   const preview = tourStep ? workersTourEditor(tourStep, tourPath) : null
   const tourCopy = workersTutorialCopy[language]
+  const labels = workersTourControlLabels(t)
   useLocalizedPageTitle(`${tx('Workers')} | Weavly`)
 
   const focus = params.get('worker')
@@ -189,8 +207,8 @@ export default function WorkersRegister({
           {/* 1. Page Header */}
           <div data-workers-tour="header"><WorkersPageHeader
             onAdd={tourStep ? () => {} : add}
-            returnTo={tourStep ? undefined : returnTo}
-            focus={tourStep ? null : focus}
+            returnTo={tourSampleActive ? undefined : returnTo}
+            focus={tourSampleActive ? null : focus}
             hasFocusedWorker={hasFocusedWorker}
             onClearFocus={() => {
               const next = new URLSearchParams(params)
@@ -209,28 +227,33 @@ export default function WorkersRegister({
                   userMetadata={userMetadata}
                   align="full"
                   className="w-full"
-                  onLaunch={() => setTourStep('purpose')}
+                  onLaunch={() => {
+                    tourReturnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+                    launchScroll.current = { x: window.scrollX, y: window.scrollY }
+                    setTourPath('piece')
+                    setTourStep('wk-paytype')
+                  }}
                 />
               </div>
             </aside>
           )}
-          {tourStep && <p role="status" className="text-xs font-semibold text-saffron-deep">{tourCopy.sample}</p>}
+          {tourSampleActive && <p data-tour-sample-banner role="status" data-i18n-skip="true" lang={language} className="rounded-lg border border-hairline bg-surface-soft px-3 py-2 text-sm font-semibold text-ink">{tourCommonCopy[language].sampleBanner}</p>}
           {/* 2. Global Toolbar */}
           <div data-workers-tour="toolbar" className="w-full">
             <WorkerToolbar
-              search={tourStep ? '' : search}
+              search={tourSampleActive ? '' : search}
               onSearchChange={tourStep ? () => {} : handleSearchChange}
-              shiftFilter={tourStep ? 'all' : shiftFilter}
+              shiftFilter={tourSampleActive ? 'all' : shiftFilter}
               onShiftFilterChange={tourStep ? () => {} : handleShiftChange}
-              statusFilter={tourStep ? 'active' : statusFilter}
+              statusFilter={tourSampleActive ? 'active' : statusFilter}
               onStatusFilterChange={tourStep ? () => {} : handleStatusChange}
-              totalCount={tourStep ? sampleWorkers.length : workers.length}
-              filteredCount={tourStep ? sampleWorkers.length : visible.length}
+              totalCount={tourSampleActive ? sampleWorkers.length : workers.length}
+              filteredCount={tourSampleActive ? sampleWorkers.length : visible.length}
             />
           </div>
 
           {/* 3. Workforce Groups or Global Empty State */}
-          {tourStep ? (
+          {tourSampleActive ? (
             <div data-workers-tour="groups" className="mx-auto grid w-full max-w-5xl grid-cols-1 items-start gap-8 lg:grid-cols-2">
               {sampleWorkers.map((worker, index) => (
                 <div key={worker.id} data-workers-tour={index === 0 ? 'piece' : 'salary-card'}>
@@ -298,8 +321,21 @@ export default function WorkersRegister({
               </div>
             </aside>
           )}
-          {preview && <WorkerEditor key={preview} today={today} tourPreview={{ worker: preview === 'piece' ? sampleWorkers[0] : sampleWorkers[1], editing: preview === 'edit' }}>{() => null}</WorkerEditor>}
-          {tourStep && <WorkersTutorial path={tourPath} onPathChange={setTourPath} step={tourStep} onStepChange={setTourStep} launcher={tourLauncher} userId={userId} />}
+          {preview && <WorkerEditor key={`${preview}-${language}`} today={today} tourPreview={{ worker: preview === 'piece' ? sampleWorkers[0] : sampleWorkers[1], editing: preview === 'edit' }}>{() => null}</WorkerEditor>}
+          {preview && <style>{'[data-workers-tour-preview="true"] [data-slot="dialog-close"] { display: none; }'}</style>}
+          {tourStep && <GuidedTour tourId="workers" steps={steps} step={tourStep}
+            onStepChange={setTourStep} launcher={tourLauncher} returnFocus={tourReturnFocus} userId={userId}
+            copy={step => {
+              const content = tourCopy.steps[workersTourCopyKey(step)]
+              return { ...content, body: formatTourText(content.body, { addWorker: `“${labels.addWorker}”`, viewPayroll: `“${labels.viewPayroll}”` }) }
+            }}
+            extra={tourStep === 'wk-paytype' ? <div className="mt-3 flex flex-wrap gap-2">
+              {(['piece', 'salary'] as const).map(path => <Button key={path} type="button"
+                data-tour-control={`path-${path}`} aria-pressed={tourPath === path}
+                variant={tourPath === path ? 'default' : 'outline'}
+                className="h-auto min-h-[44px] flex-1 whitespace-normal px-3 py-2"
+                onClick={() => setTourPath(path)}>{tourCopy.paths[path]}</Button>)}
+            </div> : undefined} />}
         </div>
       )}
     </WorkerEditor>

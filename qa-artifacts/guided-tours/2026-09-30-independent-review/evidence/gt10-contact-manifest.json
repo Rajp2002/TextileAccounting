@@ -1,0 +1,140 @@
+[
+  {
+    "run": "gt10-0-en-1440x900",
+    "steps": [
+      "pr-period",
+      "pr-readiness",
+      "pr-earnings"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt10-0-en-1440x900-01-03.png"
+  },
+  {
+    "run": "gt10-0-en-1440x900",
+    "steps": [
+      "pr-recovery",
+      "pr-settle",
+      "pr-paid"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt10-0-en-1440x900-04-06.png"
+  },
+  {
+    "run": "gt10-0-en-1440x900",
+    "steps": [
+      "pr-complete",
+      "pr-handoff"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt10-0-en-1440x900-07-08.png"
+  },
+  {
+    "run": "gt10-0-gu-390x844",
+    "steps": [
+      "pr-period",
+      "pr-readiness",
+      "pr-earnings"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt10-0-gu-390x844-01-03.png"
+  },
+  {
+    "run": "gt10-0-gu-390x844",
+    "steps": [
+      "pr-recovery",
+      "pr-settle",
+      "pr-paid"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt10-0-gu-390x844-04-06.png"
+  },
+  {
+    "run": "gt10-0-gu-390x844",
+    "steps": [
+      "pr-complete",
+      "pr-handoff"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt10-0-gu-390x844-07-08.png"
+  },
+  {
+    "run": "gt10-1-en-1440x900",
+    "steps": [
+      "pra-advance",
+      "pra-deduction",
+      "pra-records"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt10-1-en-1440x900-01-03.png"
+  },
+  {
+    "run": "gt10-1-en-1440x900",
+    "steps": [
+      "pra-export",
+      "pra-correct",
+      "pra-handoff"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt10-1-en-1440x900-04-06.png"
+  },
+  {
+    "run": "gt10-1-gu-390x844",
+    "steps": [
+      "pra-advance",
+      "pra-deduction",
+      "pra-records"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt10-1-gu-390x844-01-03.png"
+  },
+  {
+    "run": "gt10-1-gu-390x844",
+    "steps": [
+      "pra-export",
+      "pra-correct",
+      "pra-handoff"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt10-1-gu-390x844-04-06.png"
+  },
+  {
+    "run": "gt10-exit-payroll-en-1440x900",
+    "steps": [
+      "pr-period",
+      "pr-readiness",
+      "pr-earnings"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt10-exit-payroll-en-1440x900-01-03.png"
+  },
+  {
+    "run": "gt10-exit-payroll-en-1440x900",
+    "steps": [
+      "pr-recovery"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt10-exit-payroll-en-1440x900-04-04.png"
+  },
+  {
+    "run": "gt10-exit-payroll-gu-390x844",
+    "steps": [
+      "pr-period",
+      "pr-readiness",
+      "pr-earnings"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt10-exit-payroll-gu-390x844-01-03.png"
+  },
+  {
+    "run": "gt10-exit-payroll-gu-390x844",
+    "steps": [
+      "pr-recovery"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt10-exit-payroll-gu-390x844-04-04.png"
+  },
+  {
+    "run": "gt10-exit-payroll-extra-en-1440x900",
+    "steps": [
+      "pra-advance",
+      "pra-deduction",
+      "pra-records"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt10-exit-payroll-extra-en-1440x900-01-03.png"
+  },
+  {
+    "run": "gt10-exit-payroll-extra-gu-390x844",
+    "steps": [
+      "pra-advance",
+      "pra-deduction",
+      "pra-records"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt10-exit-payroll-extra-gu-390x844-01-03.png"
+  }
+]

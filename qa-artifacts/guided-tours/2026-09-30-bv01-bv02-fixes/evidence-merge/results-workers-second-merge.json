@@ -1,0 +1,82 @@
+{
+  "label": "post-main-merge2-workers",
+  "sets": "gt14",
+  "filter": "^gt14-[01]-(en-1440x900|en-1024x768|gu-390x844)$",
+  "head": "323a4e72e5247172ebebcfa2bb4d90525ef7e7ea",
+  "workingTreeDiffSha256": "6def59d499f0f197b62cf6d83256f85224de0fa925cca81ae06f38785fe40353",
+  "runnerSha256": "1638f82ee99d2e9cfa16e62d977534a0743a6463e072a63b226f6ed89d375987",
+  "cases": [
+    {
+      "id": "gt14-0-en-1440x900",
+      "set": "gt14",
+      "scenario": "workers",
+      "language": "en",
+      "size": "1440x900",
+      "env": {},
+      "exitCode": 0,
+      "signal": null,
+      "seconds": 45,
+      "output": "/Users/rajpatel/Projects/textile Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/scratch/tour-fix-review-results/post-main-merge2-workers-2026-09-30T15-51-33-405Z/gt14-0-en-1440x900"
+    },
+    {
+      "id": "gt14-0-en-1024x768",
+      "set": "gt14",
+      "scenario": "workers",
+      "language": "en",
+      "size": "1024x768",
+      "env": {},
+      "exitCode": 0,
+      "signal": null,
+      "seconds": 44,
+      "output": "/Users/rajpatel/Projects/textile Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/scratch/tour-fix-review-results/post-main-merge2-workers-2026-09-30T15-51-33-405Z/gt14-0-en-1024x768"
+    },
+    {
+      "id": "gt14-0-gu-390x844",
+      "set": "gt14",
+      "scenario": "workers",
+      "language": "gu",
+      "size": "390x844",
+      "env": {},
+      "exitCode": 0,
+      "signal": null,
+      "seconds": 44,
+      "output": "/Users/rajpatel/Projects/textile Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/scratch/tour-fix-review-results/post-main-merge2-workers-2026-09-30T15-51-33-405Z/gt14-0-gu-390x844"
+    },
+    {
+      "id": "gt14-1-en-1440x900",
+      "set": "gt14",
+      "scenario": "workers-salary",
+      "language": "en",
+      "size": "1440x900",
+      "env": {},
+      "exitCode": 0,
+      "signal": null,
+      "seconds": 44,
+      "output": "/Users/rajpatel/Projects/textile Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/scratch/tour-fix-review-results/post-main-merge2-workers-2026-09-30T15-51-33-405Z/gt14-1-en-1440x900"
+    },
+    {
+      "id": "gt14-1-en-1024x768",
+      "set": "gt14",
+      "scenario": "workers-salary",
+      "language": "en",
+      "size": "1024x768",
+      "env": {},
+      "exitCode": 0,
+      "signal": null,
+      "seconds": 44,
+      "output": "/Users/rajpatel/Projects/textile Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/scratch/tour-fix-review-results/post-main-merge2-workers-2026-09-30T15-51-33-405Z/gt14-1-en-1024x768"
+    },
+    {
+      "id": "gt14-1-gu-390x844",
+      "set": "gt14",
+      "scenario": "workers-salary",
+      "language": "gu",
+      "size": "390x844",
+      "env": {},
+      "exitCode": 0,
+      "signal": null,
+      "seconds": 45,
+      "output": "/Users/rajpatel/Projects/textile Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/scratch/tour-fix-review-results/post-main-merge2-workers-2026-09-30T15-51-33-405Z/gt14-1-gu-390x844"
+    }
+  ]
+}

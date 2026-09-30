@@ -1,0 +1,155 @@
+{
+  "scenario": "workers",
+  "lang": "gu",
+  "size": "390x844",
+  "steps": [
+    {
+      "step": "wkp-availability",
+      "status": "ready",
+      "panel": {
+        "x": 8,
+        "y": 631.84375,
+        "w": 374,
+        "h": 204.15625
+      },
+      "highlight": {
+        "x": 17,
+        "y": 235.21875,
+        "w": 356,
+        "h": 75.25
+      },
+      "target": {
+        "x": 23,
+        "y": 318.46875,
+        "w": 344,
+        "h": 98.25
+      },
+      "overlapArea": 0,
+      "actualTargetOverlap": 0,
+      "focusInPanel": true,
+      "title": "તે કઈ શિફ્ટમાં કામ કરી શકે તે નક્કી કરો",
+      "storage": {
+        "weavly_language": "gu"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "animations": [
+        {
+          "state": "running"
+        },
+        {
+          "state": "running"
+        }
+      ],
+      "afterBackNextMilliseconds": 0
+    },
+    {
+      "step": "wkp-availability",
+      "status": "ready",
+      "panel": {
+        "x": 8,
+        "y": 631.84375,
+        "w": 374,
+        "h": 204.15625
+      },
+      "highlight": {
+        "x": 17,
+        "y": 312.46875,
+        "w": 356,
+        "h": 110.25
+      },
+      "target": {
+        "x": 23,
+        "y": 318.46875,
+        "w": 344,
+        "h": 98.25
+      },
+      "overlapArea": 0,
+      "actualTargetOverlap": 0,
+      "focusInPanel": true,
+      "title": "તે કઈ શિફ્ટમાં કામ કરી શકે તે નક્કી કરો",
+      "storage": {
+        "weavly_language": "gu"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "animations": [],
+      "afterBackNextMilliseconds": 500
+    },
+    {
+      "step": "wkp-availability",
+      "status": "ready",
+      "panel": {
+        "x": 8,
+        "y": 631.84375,
+        "w": 374,
+        "h": 204.15625
+      },
+      "highlight": {
+        "x": 17,
+        "y": 312.46875,
+        "w": 356,
+        "h": 110.25
+      },
+      "target": {
+        "x": 23,
+        "y": 318.46875,
+        "w": 344,
+        "h": 98.25
+      },
+      "overlapArea": 0,
+      "actualTargetOverlap": 0,
+      "focusInPanel": true,
+      "title": "તે કઈ શિફ્ટમાં કામ કરી શકે તે નક્કી કરો",
+      "storage": {
+        "weavly_language": "gu"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "animations": [],
+      "afterBackNextMilliseconds": 2000
+    }
+  ],
+  "issues": [],
+  "purpose": "Read-only Back/Next timing diagnosis; original main run remains unchanged and preserved",
+  "after": {
+    "calls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"workers\":{\"firstShown\":\"2026-09-29T22:39:16.571Z\",\"version\":\"v1\",\"firstStarted\":true}}"
+    },
+    "activeControl": "quiet-tour"
+  }
+}

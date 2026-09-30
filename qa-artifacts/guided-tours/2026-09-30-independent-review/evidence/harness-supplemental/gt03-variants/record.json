@@ -1,0 +1,214 @@
+[
+  {
+    "scenario": "quotes",
+    "query": "populated=1",
+    "anchor": "costings.first-card",
+    "title": "Start with your own costing",
+    "errors": [],
+    "requests": 0,
+    "steps": [
+      "find",
+      "versions",
+      "economics",
+      "reuse",
+      "internal",
+      "production",
+      "finish"
+    ],
+    "guides": 1,
+    "rails": 1,
+    "requestsBefore": 0,
+    "handoffTitle": "Open one of your costings",
+    "focus": "costings.first-card",
+    "calls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "nav": [],
+    "pass": true
+  },
+  {
+    "scenario": "free-costings",
+    "query": "populated=1",
+    "anchor": "free-costings.first-card",
+    "title": "Open your saved costing",
+    "errors": [],
+    "requests": 1,
+    "steps": [
+      "snapshots",
+      "freeSelect",
+      "internal",
+      "finish"
+    ],
+    "guides": 1,
+    "rails": 1,
+    "requestsBefore": 1,
+    "handoffTitle": "Open one of your costings",
+    "focus": "free-costings.first-card",
+    "calls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "nav": [],
+    "pass": true
+  },
+  {
+    "scenario": "quotes",
+    "query": "error=1",
+    "anchor": "costings.new",
+    "title": "Your list didn't load",
+    "errors": [],
+    "requests": 0,
+    "steps": [
+      "find",
+      "versions",
+      "economics",
+      "reuse",
+      "internal",
+      "production",
+      "finish"
+    ],
+    "guides": 1,
+    "rails": 1,
+    "requestsBefore": 0,
+    "handoffTitle": "Your list didn't load",
+    "focus": "costings.new",
+    "calls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "nav": [],
+    "pass": true
+  },
+  {
+    "scenario": "free-costings",
+    "query": "error=1",
+    "anchor": "free-costings.new",
+    "title": "Your list didn't load",
+    "errors": [],
+    "requests": 1,
+    "steps": [
+      "snapshots",
+      "freeSelect",
+      "internal",
+      "finish"
+    ],
+    "guides": 1,
+    "rails": 1,
+    "requestsBefore": 1,
+    "handoffTitle": "Your list didn't load",
+    "focus": "free-costings.new",
+    "calls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "nav": [],
+    "pass": true
+  },
+  {
+    "scenario": "quotes",
+    "query": "populated=1&retained=1",
+    "anchor": "costings.first-card",
+    "title": "Start with your own costing",
+    "errors": [],
+    "requests": 1,
+    "steps": [
+      "find",
+      "versions",
+      "economics",
+      "reuse",
+      "internal",
+      "production",
+      "finish"
+    ],
+    "guides": 1,
+    "rails": 1,
+    "retainedVisible": true,
+    "retainedRect": {
+      "x": 482.5,
+      "y": 21,
+      "width": 723,
+      "height": 527.5
+    },
+    "railRect": {
+      "x": 269,
+      "y": 21,
+      "width": 196,
+      "height": 858
+    },
+    "requestsBefore": 1,
+    "handoffTitle": "Open one of your costings",
+    "focus": "costings.first-card",
+    "calls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "nav": [],
+    "pass": true
+  },
+  {
+    "scenario": "free-costings",
+    "query": "populated=1&embedded=1",
+    "embedded": true,
+    "errors": [],
+    "requests": 1,
+    "steps": [],
+    "guides": 0,
+    "rails": 0,
+    "retainedVisible": true,
+    "requestsBefore": 1,
+    "calls": [],
+    "nav": [],
+    "pass": true
+  }
+]

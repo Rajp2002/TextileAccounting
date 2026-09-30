@@ -1,0 +1,1495 @@
+{
+  "folder": "scratch/tour-fix-review-results/gt16-batch-2026-09-30T12-03-27-370Z",
+  "head": "9ae694bb4068963141dadfe1dfb0c4df3fafeb2f",
+  "workingTreeDiffSha256": "b841786088dae7bc06748b9649997e723562df40ccf94258890882ef0f043589",
+  "runnerSha256": "1638f82ee99d2e9cfa16e62d977534a0743a6463e072a63b226f6ed89d375987",
+  "totals": {
+    "FAIL": 3,
+    "PASS": 61,
+    "BASELINE_ANALYTICS_ONLY": 4
+  },
+  "runs": [
+    {
+      "id": "b16-production-en-1440x900",
+      "set": "batch",
+      "scenario": "production",
+      "language": "en",
+      "size": "1440x900",
+      "env": {},
+      "exitCode": 1,
+      "class": "FAIL",
+      "steps": 7,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 9,
+      "problems": [
+        "pd-activate: rail intersects target",
+        "pd-looms: rail intersects target"
+      ],
+      "notes": [
+        "baseline mount request blocked: production_viewed"
+      ],
+      "runnerIssues": [
+        "pd-activate: rail intersects target",
+        "pd-looms: rail intersects target"
+      ],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "production_viewed"
+      ]
+    },
+    {
+      "id": "b16-production-gu-390x844",
+      "set": "batch",
+      "scenario": "production",
+      "language": "gu",
+      "size": "390x844",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 7,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 9,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: production_viewed"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "production_viewed"
+      ]
+    },
+    {
+      "id": "b16-production-hi-1280x800",
+      "set": "batch",
+      "scenario": "production",
+      "language": "hi",
+      "size": "1280x800",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 7,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 9,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: production_viewed"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "production_viewed"
+      ]
+    },
+    {
+      "id": "b16-production-en-1024x768",
+      "set": "batch",
+      "scenario": "production",
+      "language": "en",
+      "size": "1024x768",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 7,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 9,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: production_viewed"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "production_viewed"
+      ]
+    },
+    {
+      "id": "b16-daily-sheet-en-1440x900",
+      "set": "batch",
+      "scenario": "daily-sheet",
+      "language": "en",
+      "size": "1440x900",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 9,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 11,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: production_viewed"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "production_viewed"
+      ]
+    },
+    {
+      "id": "b16-daily-sheet-gu-390x844",
+      "set": "batch",
+      "scenario": "daily-sheet",
+      "language": "gu",
+      "size": "390x844",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 9,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 11,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: production_viewed"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "production_viewed"
+      ]
+    },
+    {
+      "id": "b16-daily-sheet-hi-1280x800",
+      "set": "batch",
+      "scenario": "daily-sheet",
+      "language": "hi",
+      "size": "1280x800",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 9,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 11,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: production_viewed"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "production_viewed"
+      ]
+    },
+    {
+      "id": "b16-daily-sheet-en-1024x768",
+      "set": "batch",
+      "scenario": "daily-sheet",
+      "language": "en",
+      "size": "1024x768",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 9,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 11,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: production_viewed"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "production_viewed"
+      ]
+    },
+    {
+      "id": "b16-daily-sheet-populated-1-en-1440x900",
+      "set": "batch",
+      "scenario": "daily-sheet?populated=1",
+      "language": "en",
+      "size": "1440x900",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 9,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 11,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: production_viewed"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "production_viewed"
+      ]
+    },
+    {
+      "id": "b16-daily-sheet-populated-1-gu-390x844",
+      "set": "batch",
+      "scenario": "daily-sheet?populated=1",
+      "language": "gu",
+      "size": "390x844",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 9,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 11,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: production_viewed"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "production_viewed"
+      ]
+    },
+    {
+      "id": "b16-daily-sheet-populated-1-hi-1280x800",
+      "set": "batch",
+      "scenario": "daily-sheet?populated=1",
+      "language": "hi",
+      "size": "1280x800",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 9,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 11,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: production_viewed"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "production_viewed"
+      ]
+    },
+    {
+      "id": "b16-daily-sheet-populated-1-en-1024x768",
+      "set": "batch",
+      "scenario": "daily-sheet?populated=1",
+      "language": "en",
+      "size": "1024x768",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 9,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 11,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: production_viewed"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "production_viewed"
+      ]
+    },
+    {
+      "id": "b16-fabric-stock-en-1440x900",
+      "set": "batch",
+      "scenario": "fabric-stock",
+      "language": "en",
+      "size": "1440x900",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 6,
+      "statuses": "ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 8,
+      "problems": [],
+      "notes": [],
+      "runnerIssues": [],
+      "apiRequests": 0,
+      "baselineRequests": []
+    },
+    {
+      "id": "b16-fabric-stock-gu-390x844",
+      "set": "batch",
+      "scenario": "fabric-stock",
+      "language": "gu",
+      "size": "390x844",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 6,
+      "statuses": "ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 8,
+      "problems": [],
+      "notes": [],
+      "runnerIssues": [],
+      "apiRequests": 0,
+      "baselineRequests": []
+    },
+    {
+      "id": "b16-fabric-stock-hi-1280x800",
+      "set": "batch",
+      "scenario": "fabric-stock",
+      "language": "hi",
+      "size": "1280x800",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 6,
+      "statuses": "ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 8,
+      "problems": [],
+      "notes": [],
+      "runnerIssues": [],
+      "apiRequests": 0,
+      "baselineRequests": []
+    },
+    {
+      "id": "b16-fabric-stock-en-1024x768",
+      "set": "batch",
+      "scenario": "fabric-stock",
+      "language": "en",
+      "size": "1024x768",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 6,
+      "statuses": "ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 8,
+      "problems": [],
+      "notes": [],
+      "runnerIssues": [],
+      "apiRequests": 0,
+      "baselineRequests": []
+    },
+    {
+      "id": "b16-yarn-stock-en-1440x900",
+      "set": "batch",
+      "scenario": "yarn-stock",
+      "language": "en",
+      "size": "1440x900",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 7,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 9,
+      "problems": [],
+      "notes": [],
+      "runnerIssues": [],
+      "apiRequests": 0,
+      "baselineRequests": []
+    },
+    {
+      "id": "b16-yarn-stock-gu-390x844",
+      "set": "batch",
+      "scenario": "yarn-stock",
+      "language": "gu",
+      "size": "390x844",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 7,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 9,
+      "problems": [],
+      "notes": [],
+      "runnerIssues": [],
+      "apiRequests": 0,
+      "baselineRequests": []
+    },
+    {
+      "id": "b16-yarn-stock-hi-1280x800",
+      "set": "batch",
+      "scenario": "yarn-stock",
+      "language": "hi",
+      "size": "1280x800",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 7,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 9,
+      "problems": [],
+      "notes": [],
+      "runnerIssues": [],
+      "apiRequests": 0,
+      "baselineRequests": []
+    },
+    {
+      "id": "b16-yarn-stock-en-1024x768",
+      "set": "batch",
+      "scenario": "yarn-stock",
+      "language": "en",
+      "size": "1024x768",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 7,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 9,
+      "problems": [],
+      "notes": [],
+      "runnerIssues": [],
+      "apiRequests": 0,
+      "baselineRequests": []
+    },
+    {
+      "id": "b16-dispatch-en-1440x900",
+      "set": "batch",
+      "scenario": "dispatch",
+      "language": "en",
+      "size": "1440x900",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 10,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 12,
+      "problems": [],
+      "notes": [],
+      "runnerIssues": [],
+      "apiRequests": 0,
+      "baselineRequests": []
+    },
+    {
+      "id": "b16-dispatch-gu-390x844",
+      "set": "batch",
+      "scenario": "dispatch",
+      "language": "gu",
+      "size": "390x844",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 10,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 12,
+      "problems": [],
+      "notes": [],
+      "runnerIssues": [],
+      "apiRequests": 0,
+      "baselineRequests": []
+    },
+    {
+      "id": "b16-dispatch-hi-1280x800",
+      "set": "batch",
+      "scenario": "dispatch",
+      "language": "hi",
+      "size": "1280x800",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 10,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 12,
+      "problems": [],
+      "notes": [],
+      "runnerIssues": [],
+      "apiRequests": 0,
+      "baselineRequests": []
+    },
+    {
+      "id": "b16-dispatch-en-1024x768",
+      "set": "batch",
+      "scenario": "dispatch",
+      "language": "en",
+      "size": "1024x768",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 10,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 12,
+      "problems": [],
+      "notes": [],
+      "runnerIssues": [],
+      "apiRequests": 0,
+      "baselineRequests": []
+    },
+    {
+      "id": "b16-payroll-en-1440x900",
+      "set": "batch",
+      "scenario": "payroll",
+      "language": "en",
+      "size": "1440x900",
+      "env": {},
+      "exitCode": 1,
+      "class": "FAIL",
+      "steps": 8,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 10,
+      "problems": [
+        "pr-settle: rail paints over target",
+        "pr-paid: rail paints over target",
+        "pr-complete: rail paints over target"
+      ],
+      "notes": [
+        "baseline mount request blocked: production_viewed"
+      ],
+      "runnerIssues": [
+        "pr-settle: rail paints over target",
+        "pr-paid: rail paints over target",
+        "pr-complete: rail paints over target"
+      ],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "production_viewed"
+      ]
+    },
+    {
+      "id": "b16-payroll-gu-390x844",
+      "set": "batch",
+      "scenario": "payroll",
+      "language": "gu",
+      "size": "390x844",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 8,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 10,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: production_viewed"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "production_viewed"
+      ]
+    },
+    {
+      "id": "b16-payroll-hi-1280x800",
+      "set": "batch",
+      "scenario": "payroll",
+      "language": "hi",
+      "size": "1280x800",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 8,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 10,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: production_viewed"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "production_viewed"
+      ]
+    },
+    {
+      "id": "b16-payroll-en-1024x768",
+      "set": "batch",
+      "scenario": "payroll",
+      "language": "en",
+      "size": "1024x768",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 8,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 10,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: production_viewed"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "production_viewed"
+      ]
+    },
+    {
+      "id": "b16-payroll-extra-en-1440x900",
+      "set": "batch",
+      "scenario": "payroll-extra",
+      "language": "en",
+      "size": "1440x900",
+      "env": {},
+      "exitCode": 1,
+      "class": "FAIL",
+      "steps": 6,
+      "statuses": "ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 8,
+      "problems": [
+        "pra-advance: rail paints over target",
+        "pra-deduction: rail paints over target",
+        "pra-correct: rail paints over target"
+      ],
+      "notes": [
+        "baseline mount request blocked: production_viewed"
+      ],
+      "runnerIssues": [
+        "pra-advance: rail paints over target",
+        "pra-deduction: rail paints over target",
+        "pra-correct: rail paints over target"
+      ],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "production_viewed"
+      ]
+    },
+    {
+      "id": "b16-payroll-extra-gu-390x844",
+      "set": "batch",
+      "scenario": "payroll-extra",
+      "language": "gu",
+      "size": "390x844",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 6,
+      "statuses": "ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 8,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: production_viewed"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "production_viewed"
+      ]
+    },
+    {
+      "id": "b16-payroll-extra-hi-1280x800",
+      "set": "batch",
+      "scenario": "payroll-extra",
+      "language": "hi",
+      "size": "1280x800",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 6,
+      "statuses": "ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 8,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: production_viewed"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "production_viewed"
+      ]
+    },
+    {
+      "id": "b16-payroll-extra-en-1024x768",
+      "set": "batch",
+      "scenario": "payroll-extra",
+      "language": "en",
+      "size": "1024x768",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 6,
+      "statuses": "ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 8,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: production_viewed"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "production_viewed"
+      ]
+    },
+    {
+      "id": "b16-machines-en-1440x900",
+      "set": "batch",
+      "scenario": "machines",
+      "language": "en",
+      "size": "1440x900",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 6,
+      "statuses": "ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 8,
+      "problems": [],
+      "notes": [],
+      "runnerIssues": [],
+      "apiRequests": 0,
+      "baselineRequests": []
+    },
+    {
+      "id": "b16-machines-gu-390x844",
+      "set": "batch",
+      "scenario": "machines",
+      "language": "gu",
+      "size": "390x844",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 6,
+      "statuses": "ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 8,
+      "problems": [],
+      "notes": [],
+      "runnerIssues": [],
+      "apiRequests": 0,
+      "baselineRequests": []
+    },
+    {
+      "id": "b16-machines-hi-1280x800",
+      "set": "batch",
+      "scenario": "machines",
+      "language": "hi",
+      "size": "1280x800",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 6,
+      "statuses": "ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 8,
+      "problems": [],
+      "notes": [],
+      "runnerIssues": [],
+      "apiRequests": 0,
+      "baselineRequests": []
+    },
+    {
+      "id": "b16-machines-en-1024x768",
+      "set": "batch",
+      "scenario": "machines",
+      "language": "en",
+      "size": "1024x768",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 6,
+      "statuses": "ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 8,
+      "problems": [],
+      "notes": [],
+      "runnerIssues": [],
+      "apiRequests": 0,
+      "baselineRequests": []
+    },
+    {
+      "id": "b16-workers-en-1440x900",
+      "set": "batch",
+      "scenario": "workers",
+      "language": "en",
+      "size": "1440x900",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 6,
+      "statuses": "ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 8,
+      "problems": [],
+      "notes": [],
+      "runnerIssues": [],
+      "apiRequests": 0,
+      "baselineRequests": []
+    },
+    {
+      "id": "b16-workers-gu-390x844",
+      "set": "batch",
+      "scenario": "workers",
+      "language": "gu",
+      "size": "390x844",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 6,
+      "statuses": "ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 8,
+      "problems": [],
+      "notes": [],
+      "runnerIssues": [],
+      "apiRequests": 0,
+      "baselineRequests": []
+    },
+    {
+      "id": "b16-workers-hi-1280x800",
+      "set": "batch",
+      "scenario": "workers",
+      "language": "hi",
+      "size": "1280x800",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 6,
+      "statuses": "ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 8,
+      "problems": [],
+      "notes": [],
+      "runnerIssues": [],
+      "apiRequests": 0,
+      "baselineRequests": []
+    },
+    {
+      "id": "b16-workers-en-1024x768",
+      "set": "batch",
+      "scenario": "workers",
+      "language": "en",
+      "size": "1024x768",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 6,
+      "statuses": "ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 8,
+      "problems": [],
+      "notes": [],
+      "runnerIssues": [],
+      "apiRequests": 0,
+      "baselineRequests": []
+    },
+    {
+      "id": "b16-workers-salary-en-1440x900",
+      "set": "batch",
+      "scenario": "workers-salary",
+      "language": "en",
+      "size": "1440x900",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 6,
+      "statuses": "ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 8,
+      "problems": [],
+      "notes": [],
+      "runnerIssues": [],
+      "apiRequests": 0,
+      "baselineRequests": []
+    },
+    {
+      "id": "b16-workers-salary-gu-390x844",
+      "set": "batch",
+      "scenario": "workers-salary",
+      "language": "gu",
+      "size": "390x844",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 6,
+      "statuses": "ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 8,
+      "problems": [],
+      "notes": [],
+      "runnerIssues": [],
+      "apiRequests": 0,
+      "baselineRequests": []
+    },
+    {
+      "id": "b16-workers-salary-hi-1280x800",
+      "set": "batch",
+      "scenario": "workers-salary",
+      "language": "hi",
+      "size": "1280x800",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 6,
+      "statuses": "ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 8,
+      "problems": [],
+      "notes": [],
+      "runnerIssues": [],
+      "apiRequests": 0,
+      "baselineRequests": []
+    },
+    {
+      "id": "b16-workers-salary-en-1024x768",
+      "set": "batch",
+      "scenario": "workers-salary",
+      "language": "en",
+      "size": "1024x768",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 6,
+      "statuses": "ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 8,
+      "problems": [],
+      "notes": [],
+      "runnerIssues": [],
+      "apiRequests": 0,
+      "baselineRequests": []
+    },
+    {
+      "id": "b16-assignments-en-1440x900",
+      "set": "batch",
+      "scenario": "assignments",
+      "language": "en",
+      "size": "1440x900",
+      "env": {},
+      "exitCode": 1,
+      "class": "BASELINE_ANALYTICS_ONLY",
+      "steps": 7,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 9,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: production_viewed"
+      ],
+      "runnerIssues": [
+        "navigation/API request"
+      ],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "production_viewed"
+      ]
+    },
+    {
+      "id": "b16-assignments-gu-390x844",
+      "set": "batch",
+      "scenario": "assignments",
+      "language": "gu",
+      "size": "390x844",
+      "env": {},
+      "exitCode": 1,
+      "class": "BASELINE_ANALYTICS_ONLY",
+      "steps": 7,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 9,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: production_viewed"
+      ],
+      "runnerIssues": [
+        "navigation/API request"
+      ],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "production_viewed"
+      ]
+    },
+    {
+      "id": "b16-assignments-hi-1280x800",
+      "set": "batch",
+      "scenario": "assignments",
+      "language": "hi",
+      "size": "1280x800",
+      "env": {},
+      "exitCode": 1,
+      "class": "BASELINE_ANALYTICS_ONLY",
+      "steps": 7,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 9,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: production_viewed"
+      ],
+      "runnerIssues": [
+        "navigation/API request"
+      ],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "production_viewed"
+      ]
+    },
+    {
+      "id": "b16-assignments-en-1024x768",
+      "set": "batch",
+      "scenario": "assignments",
+      "language": "en",
+      "size": "1024x768",
+      "env": {},
+      "exitCode": 1,
+      "class": "BASELINE_ANALYTICS_ONLY",
+      "steps": 7,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 9,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: production_viewed"
+      ],
+      "runnerIssues": [
+        "navigation/API request"
+      ],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "production_viewed"
+      ]
+    },
+    {
+      "id": "b16-estimator-en-1440x900",
+      "set": "batch",
+      "scenario": "estimator",
+      "language": "en",
+      "size": "1440x900",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 10,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 12,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: estimator_opened"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "estimator_opened"
+      ]
+    },
+    {
+      "id": "b16-estimator-gu-390x844",
+      "set": "batch",
+      "scenario": "estimator",
+      "language": "gu",
+      "size": "390x844",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 10,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 12,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: estimator_opened"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "estimator_opened"
+      ]
+    },
+    {
+      "id": "b16-estimator-hi-1280x800",
+      "set": "batch",
+      "scenario": "estimator",
+      "language": "hi",
+      "size": "1280x800",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 10,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 12,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: estimator_opened"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "estimator_opened"
+      ]
+    },
+    {
+      "id": "b16-estimator-en-1024x768",
+      "set": "batch",
+      "scenario": "estimator",
+      "language": "en",
+      "size": "1024x768",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 10,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 12,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: estimator_opened"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "estimator_opened"
+      ]
+    },
+    {
+      "id": "b16-free-estimator-en-1440x900",
+      "set": "batch",
+      "scenario": "free-estimator",
+      "language": "en",
+      "size": "1440x900",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 10,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 12,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: free_status"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "free_status"
+      ]
+    },
+    {
+      "id": "b16-free-estimator-gu-390x844",
+      "set": "batch",
+      "scenario": "free-estimator",
+      "language": "gu",
+      "size": "390x844",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 10,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 12,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: free_status"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "free_status"
+      ]
+    },
+    {
+      "id": "b16-free-estimator-hi-1280x800",
+      "set": "batch",
+      "scenario": "free-estimator",
+      "language": "hi",
+      "size": "1280x800",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 10,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 12,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: free_status"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "free_status"
+      ]
+    },
+    {
+      "id": "b16-free-estimator-en-1024x768",
+      "set": "batch",
+      "scenario": "free-estimator",
+      "language": "en",
+      "size": "1024x768",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 10,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 12,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: free_status"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "free_status"
+      ]
+    },
+    {
+      "id": "b16-rates-en-1440x900",
+      "set": "batch",
+      "scenario": "rates",
+      "language": "en",
+      "size": "1440x900",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 6,
+      "statuses": "ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 8,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: rate_book_viewed"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "rate_book_viewed"
+      ]
+    },
+    {
+      "id": "b16-rates-gu-390x844",
+      "set": "batch",
+      "scenario": "rates",
+      "language": "gu",
+      "size": "390x844",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 6,
+      "statuses": "ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 8,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: rate_book_viewed"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "rate_book_viewed"
+      ]
+    },
+    {
+      "id": "b16-rates-hi-1280x800",
+      "set": "batch",
+      "scenario": "rates",
+      "language": "hi",
+      "size": "1280x800",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 6,
+      "statuses": "ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 8,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: rate_book_viewed"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "rate_book_viewed"
+      ]
+    },
+    {
+      "id": "b16-rates-en-1024x768",
+      "set": "batch",
+      "scenario": "rates",
+      "language": "en",
+      "size": "1024x768",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 6,
+      "statuses": "ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 8,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: rate_book_viewed"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "rate_book_viewed"
+      ]
+    },
+    {
+      "id": "b16-quotes-en-1440x900",
+      "set": "batch",
+      "scenario": "quotes",
+      "language": "en",
+      "size": "1440x900",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 7,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 9,
+      "problems": [],
+      "notes": [],
+      "runnerIssues": [],
+      "apiRequests": 0,
+      "baselineRequests": []
+    },
+    {
+      "id": "b16-quotes-gu-390x844",
+      "set": "batch",
+      "scenario": "quotes",
+      "language": "gu",
+      "size": "390x844",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 7,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 9,
+      "problems": [],
+      "notes": [],
+      "runnerIssues": [],
+      "apiRequests": 0,
+      "baselineRequests": []
+    },
+    {
+      "id": "b16-quotes-hi-1280x800",
+      "set": "batch",
+      "scenario": "quotes",
+      "language": "hi",
+      "size": "1280x800",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 7,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 9,
+      "problems": [],
+      "notes": [],
+      "runnerIssues": [],
+      "apiRequests": 0,
+      "baselineRequests": []
+    },
+    {
+      "id": "b16-quotes-en-1024x768",
+      "set": "batch",
+      "scenario": "quotes",
+      "language": "en",
+      "size": "1024x768",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 7,
+      "statuses": "ready,ready,ready,ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 9,
+      "problems": [],
+      "notes": [],
+      "runnerIssues": [],
+      "apiRequests": 0,
+      "baselineRequests": []
+    },
+    {
+      "id": "b16-free-costings-en-1440x900",
+      "set": "batch",
+      "scenario": "free-costings",
+      "language": "en",
+      "size": "1440x900",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 4,
+      "statuses": "ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 6,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: free_costings_list_stub"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "free_costings_list_stub"
+      ]
+    },
+    {
+      "id": "b16-free-costings-gu-390x844",
+      "set": "batch",
+      "scenario": "free-costings",
+      "language": "gu",
+      "size": "390x844",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 4,
+      "statuses": "ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 6,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: free_costings_list_stub"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "free_costings_list_stub"
+      ]
+    },
+    {
+      "id": "b16-free-costings-hi-1280x800",
+      "set": "batch",
+      "scenario": "free-costings",
+      "language": "hi",
+      "size": "1280x800",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 4,
+      "statuses": "ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 6,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: free_costings_list_stub"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "free_costings_list_stub"
+      ]
+    },
+    {
+      "id": "b16-free-costings-en-1024x768",
+      "set": "batch",
+      "scenario": "free-costings",
+      "language": "en",
+      "size": "1024x768",
+      "env": {},
+      "exitCode": 0,
+      "class": "PASS",
+      "steps": 4,
+      "statuses": "ready,ready,ready,ready",
+      "maxPanelOutlineOverlap": 0,
+      "screenshots": 6,
+      "problems": [],
+      "notes": [
+        "baseline mount request blocked: free_costings_list_stub"
+      ],
+      "runnerIssues": [],
+      "apiRequests": 1,
+      "baselineRequests": [
+        "free_costings_list_stub"
+      ]
+    }
+  ]
+}

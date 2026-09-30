@@ -1,0 +1,5 @@
+[
+  'pra-advance: rail paints over target',
+  'pra-deduction: rail paints over target'
+]
+{"scenario":"payroll-extra","lang":"en","size":"1440x900","steps":3,"logs":["warning: [harness] server action called recordTourEventAction","error: Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"]}

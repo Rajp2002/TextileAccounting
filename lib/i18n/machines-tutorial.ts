@@ -1,34 +1,51 @@
 import type { Language } from './context'
-import type { MachinesTourStep, MachinesTourExampleLabels } from '../machines-tour'
-import { configurationTutorialCopy } from './configuration-tutorial'
+import type { MachinesTourStep, MachinesTourCopyKey, MachinesTourExampleLabels } from '../machines-tour'
+import { formatTourText } from '../tours/tour-text'
 
-type MachinesCopy = {
-    sample: string; sections: string[]
+type MachinesCopy = Record<MachinesTourCopyKey, { title: string; body: string; detail?: string }> & {
+    sample: string
+    guide: { benefit: string }
     example: MachinesTourExampleLabels
-    fields: Record<MachinesTourStep, readonly [string, string]>
     setupTitle: string
     productionLink: string; productionHelp: string
     assignmentsLink: string; assignmentsHelp: string
     helpTitle: string
     help: readonly (readonly [string, string])[]
-    skip: string; back: string; next: string; finish: string; progress: string
 }
 export const machinesTutorialCopy: Record<Language, MachinesCopy> = {
     en: {
-        ...configurationTutorialCopy.en,
         sample: 'Tour samples · Nothing will be saved',
-        sections: ['Register a loom', 'Enter details', 'Recognise the result', 'Check readiness', 'Set the quality', 'Assign the worker'],
         example: { readyName: 'Sample loom 1', incompleteName: 'Sample loom 2', label: 'Sample Rapier', worker: 'Sample worker', fabric: 'Sample fabric' },
-        fields: {
-            purpose: ['One record for each physical loom', 'Use Add machine to register a loom so you can attach its fabric quality and worker before recording output. No costing or worker is needed to register it. This walkthrough uses read-only examples; your register and filters return on exit.'],
-            details: ['Identify the loom', 'For this example, choose Rapier and name it Sample loom 1. A new loom can have a blank name; Weavly generates one such as Loom #1. The optional custom label Sample Rapier is the name your team will see. Add machine saves the real form.'],
-            label: ['Recognise the saved record', 'With that custom label, the card reads Sample Rapier instead of Sample loom 1. Without a label, it shows the machine name. Registration creates the loom record; the worker and quality shown on this configured example require separate setup.'],
-            readiness: ['Registered does not mean ready', 'Sample loom 2 is registered but has no worker or costing, so it shows Needs setup. Active requires both assignments effective today, in at least one shift. It does not confirm both shifts, physical running or availability for new assignments.'],
-            production: ['First, give the loom a quality', 'Open Production → Overview & Looms. Use Activate Quality to choose a saved costing, then Assign Looms on that quality to select this loom and its start date. If no costing exists, save one in Cost Estimator first.'],
-            assignments: ['Then assign its worker', 'Add the worker in Workers if needed. Open Machine Assignments, select Day or Night, then use Assign on the worker to choose the loom. Repeat for the other shift if needed. Finish restores your register; start with Add machine or the setup links below. Replay is always available.'],
+        purpose: {
+            title: "One record for each loom",
+            body: "Add every loom you run once. Production, assignments and payroll then refer to it by name.",
+        },
+        details: {
+            title: "Name it the way your floor does",
+            body: "Choose the machine type and an optional label such as \"Rapier 3\". If you leave the name blank, Weavly numbers it.",
+            detail: "Later, {c:edit} lets you rename it or stop offering it for new assignments.",
+        },
+        readiness: {
+            title: "Added is not the same as ready",
+            body: "A machine shows {c:needsSetup} until it has a quality to weave and a worker for a shift.",
+        },
+        quality: {
+            title: "First, give it a quality",
+            body: "In Production, {c:assignLooms} on a quality puts it on this loom.",
+        },
+        worker: {
+            title: "Then give it a worker",
+            body: "In Machine Assignments, choose who runs this loom in each shift.",
+        },
+        handoff: {
+            title: "Add your looms",
+            body: "Choose {c:addMachine} once for each loom on your floor.",
+        },
+        guide: {
+            benefit: "See how to add looms and get them ready for production.",
         },
         setupTitle: 'Activating your machine',
-        productionLink: '1. Production → Overview & Looms',
+        productionLink: "1. Production",
         productionHelp: 'Activate Quality from a saved costing, then use Assign Looms on that quality.',
         assignmentsLink: '2. Machine Assignments',
         assignmentsHelp: 'Choose the shift and use Assign on a registered worker to select the loom.',
@@ -41,20 +58,38 @@ export const machinesTutorialCopy: Record<Language, MachinesCopy> = {
         ],
     },
     gu: {
-        ...configurationTutorialCopy.gu,
         sample: 'ટૂરના નમૂના · કંઈ સાચવવામાં આવશે નહીં',
-        sections: ['લૂમ નોંધો', 'વિગતો આપો', 'પરિણામ ઓળખો', 'તૈયારી તપાસો', 'ક્વોલિટી ગોઠવો', 'કારીગર ફાળવો'],
         example: { readyName: 'નમૂના લૂમ 1', incompleteName: 'નમૂના લૂમ 2', label: 'નમૂના રેપિયર', worker: 'નમૂના કારીગર', fabric: 'નમૂના કાપડ' },
-        fields: {
-            purpose: ['દરેક વાસ્તવિક લૂમ માટે એક નોંધ', 'મશીન ઉમેરો વડે લૂમ નોંધો, જેથી ઉત્પાદન નોંધતા પહેલાં તેની ક્વોલિટી અને કારીગર ફાળવી શકો. નોંધણી માટે કોસ્ટિંગ કે કારીગર જરૂરી નથી. આ માત્ર જોવા માટેના નમૂના છે; બહાર નીકળતાં તમારું રજિસ્ટર અને ફિલ્ટર પાછાં આવશે.'],
-            details: ['લૂમની ઓળખ આપો', 'આ ઉદાહરણમાં Rapier પસંદ કરો અને નામ નમૂના લૂમ 1 આપો. નવા લૂમનું નામ ખાલી રાખો તો Weavly Loom #1 જેવું નામ આપે છે. વૈકલ્પિક કસ્ટમ લેબલ નમૂના રેપિયર તમારી ટીમને દેખાશે. સાચા ફોર્મમાં મશીન ઉમેરો દબાવવાથી નોંધ સાચવાય છે.'],
-            label: ['સાચવેલી નોંધ ઓળખો', 'કસ્ટમ લેબલ આપવાથી કાર્ડ પર નમૂના લૂમ 1 ને બદલે નમૂના રેપિયર દેખાય છે. લેબલ વિના મશીનનું નામ દેખાય છે. નોંધણીથી લૂમની નોંધ બને છે; આ તૈયાર નમૂનામાં દેખાતા કારીગર અને ક્વોલિટી માટે અલગ ગોઠવણી જરૂરી છે.'],
-            readiness: ['નોંધાયેલું એટલે તૈયાર નહીં', 'નમૂના લૂમ 2 નોંધાયેલું છે, પણ કારીગર કે કોસ્ટિંગ નથી, એટલે ગોઠવણી જરૂરી દેખાય છે. સક્રિય માટે આજે લાગુ ક્વોલિટી અને ઓછામાં ઓછી એક શિફ્ટમાં કારીગર જરૂરી છે. તે બંને શિફ્ટ, મશીન ચાલે છે કે નવી ફાળવણી માટે ઉપલબ્ધ છે તેની ખાતરી નથી.'],
-            production: ['પહેલાં લૂમને ક્વોલિટી આપો', 'Production → Overview & Looms ખોલો. Activate Quality વડે સાચવેલું કોસ્ટિંગ પસંદ કરો, પછી તે ક્વોલિટી પર Assign Looms વડે આ લૂમ અને શરૂઆતની તારીખ પસંદ કરો. કોસ્ટિંગ ન હોય તો પહેલાં Cost Estimator માં એક સાચવો.'],
-            assignments: ['પછી કારીગર ફાળવો', 'જરૂર હોય તો કારીગરોમાં કારીગર ઉમેરો. મશીન ફાળવણી ખોલો, દિવસ કે રાત પસંદ કરો, પછી કારીગર પર Assign વડે લૂમ પસંદ કરો. જરૂર હોય તો બીજી શિફ્ટ માટે પણ કરો. પૂર્ણ કરતાં રજિસ્ટર પાછું આવશે; મશીન ઉમેરો અથવા નીચેની ગોઠવણી લિંકથી શરૂ કરો. ટૂર ફરી જોઈ શકો છો.'],
+        purpose: {
+            title: "દરેક લૂમ માટે એક રેકોર્ડ",
+            body: "તમારો દરેક લૂમ એક વાર ઉમેરો. પછી ઉત્પાદન, ફાળવણી અને પેરોલ તેને નામથી ઓળખે છે.",
+        },
+        details: {
+            title: "ફ્લોર પર કહો છો તેવું નામ આપો",
+            body: "મશીનનો પ્રકાર અને \"રેપિયર 3\" જેવું વૈકલ્પિક લેબલ પસંદ કરો. નામ ખાલી રાખો તો Weavly નંબર આપે છે.",
+            detail: "પછી {c:edit}થી નામ બદલી શકો કે નવી ફાળવણી માટે બંધ કરી શકો.",
+        },
+        readiness: {
+            title: "ઉમેર્યું એટલે તૈયાર નહીં",
+            body: "મશીન પાસે વણવા ક્વોલિટી અને શિફ્ટ માટે કારીગર ન હોય ત્યાં સુધી {c:needsSetup} દેખાય છે.",
+        },
+        quality: {
+            title: "પહેલાં તેને ક્વોલિટી આપો",
+            body: "ઉત્પાદનમાં ક્વોલિટી પર {c:assignLooms} તેને આ લૂમ પર મૂકે છે.",
+        },
+        worker: {
+            title: "પછી તેને કારીગર આપો",
+            body: "મશીન ફાળવણીમાં દરેક શિફ્ટમાં આ લૂમ કોણ ચલાવે તે પસંદ કરો.",
+        },
+        handoff: {
+            title: "તમારા લૂમ ઉમેરો",
+            body: "તમારા ફ્લોરના દરેક લૂમ માટે એક વાર {c:addMachine} પસંદ કરો.",
+        },
+        guide: {
+            benefit: "લૂમ ઉમેરવા અને ઉત્પાદન માટે તૈયાર કરવાનું જુઓ.",
         },
         setupTitle: 'તમારું મશીન સક્રિય કરો',
-        productionLink: '1. Production → Overview & Looms',
+        productionLink: "1. ઉત્પાદન",
         productionHelp: 'સાચવેલા કોસ્ટિંગથી Activate Quality કરો, પછી તે ક્વોલિટી પર Assign Looms પસંદ કરો.',
         assignmentsLink: '2. મશીન ફાળવણી',
         assignmentsHelp: 'શિફ્ટ પસંદ કરો અને નોંધાયેલા કારીગર પર Assign વડે લૂમ પસંદ કરો.',
@@ -67,20 +102,38 @@ export const machinesTutorialCopy: Record<Language, MachinesCopy> = {
         ],
     },
     hi: {
-        ...configurationTutorialCopy.hi,
         sample: 'टूर के नमूने · कुछ भी सहेजा नहीं जाएगा',
-        sections: ['लूम दर्ज करें', 'विवरण दें', 'परिणाम पहचानें', 'तैयारी जाँचें', 'क्वालिटी तय करें', 'कारीगर आवंटित करें'],
         example: { readyName: 'नमूना लूम 1', incompleteName: 'नमूना लूम 2', label: 'नमूना रैपियर', worker: 'नमूना कारीगर', fabric: 'नमूना कपड़ा' },
-        fields: {
-            purpose: ['हर वास्तविक लूम का एक रिकॉर्ड', 'मशीन जोड़ें से लूम दर्ज करें ताकि उत्पादन दर्ज करने से पहले उसकी क्वालिटी और कारीगर तय कर सकें। पंजीकरण के लिए कॉस्टिंग या कारीगर ज़रूरी नहीं। ये केवल देखने योग्य नमूने हैं; बाहर निकलने पर आपका रजिस्टर और फ़िल्टर वापस आएंगे।'],
-            details: ['लूम की पहचान दें', 'इस उदाहरण में Rapier चुनें और नाम नमूना लूम 1 दें। नए लूम का नाम खाली हो तो Weavly Loom #1 जैसा नाम देता है। वैकल्पिक कस्टम लेबल नमूना रैपियर आपकी टीम को दिखेगा। असली फ़ॉर्म में मशीन जोड़ें दबाने पर रिकॉर्ड सहेजा जाता है।'],
-            label: ['सहेजा हुआ रिकॉर्ड पहचानें', 'इस कस्टम लेबल से कार्ड पर नमूना लूम 1 की जगह नमूना रैपियर दिखता है। लेबल के बिना मशीन का नाम दिखता है। पंजीकरण से लूम का रिकॉर्ड बनता है; इस तैयार नमूने में दिख रहे कारीगर और क्वालिटी के लिए अलग सेटअप चाहिए।'],
-            readiness: ['दर्ज होने का अर्थ तैयार होना नहीं', 'नमूना लूम 2 दर्ज है पर कारीगर या कॉस्टिंग नहीं है, इसलिए सेटअप आवश्यक दिखता है। सक्रिय के लिए आज लागू क्वालिटी और कम से कम एक शिफ्ट में कारीगर चाहिए। इससे दोनों शिफ्ट, मशीन के चलने या नए आवंटन के लिए उपलब्ध होने की पुष्टि नहीं होती।'],
-            production: ['पहले लूम को क्वालिटी दें', 'Production → Overview & Looms खोलें। Activate Quality से सहेजी हुई कॉस्टिंग चुनें, फिर उस क्वालिटी पर Assign Looms से यह लूम और शुरू होने की तारीख चुनें। कॉस्टिंग न हो तो पहले Cost Estimator में एक सहेजें।'],
-            assignments: ['फिर कारीगर आवंटित करें', 'ज़रूरत हो तो कारीगर में नया कारीगर जोड़ें। मशीन आवंटन खोलें, दिन या रात चुनें, फिर कारीगर पर Assign से लूम चुनें। ज़रूरत हो तो दूसरी शिफ्ट के लिए दोहराएँ। समाप्त करने पर रजिस्टर वापस आएगा; मशीन जोड़ें या नीचे के सेटअप लिंक से शुरू करें। टूर दोबारा देख सकते हैं।'],
+        purpose: {
+            title: "हर लूम के लिए एक रिकॉर्ड",
+            body: "अपना हर लूम एक बार जोड़ें। फिर उत्पादन, आवंटन और पेरोल उसे नाम से पहचानते हैं।",
+        },
+        details: {
+            title: "जैसा फ़्लोर पर कहते हैं, वैसा नाम दें",
+            body: "मशीन का प्रकार और \"रेपियर 3\" जैसा वैकल्पिक लेबल चुनें। नाम खाली छोड़ें तो Weavly नंबर देता है।",
+            detail: "बाद में {c:edit} से नाम बदल सकते हैं या नए आवंटन के लिए बंद कर सकते हैं।",
+        },
+        readiness: {
+            title: "जोड़ा मतलब तैयार नहीं",
+            body: "मशीन के पास बुनने को क्वालिटी और शिफ्ट के लिए कारीगर न हो तब तक {c:needsSetup} दिखता है।",
+        },
+        quality: {
+            title: "पहले उसे क्वालिटी दें",
+            body: "उत्पादन में क्वालिटी पर {c:assignLooms} उसे इस लूम पर लगाता है।",
+        },
+        worker: {
+            title: "फिर उसे कारीगर दें",
+            body: "मशीन आवंटन में हर शिफ्ट में यह लूम कौन चलाए, यह चुनें।",
+        },
+        handoff: {
+            title: "अपने लूम जोड़ें",
+            body: "अपने फ़्लोर के हर लूम के लिए एक बार {c:addMachine} चुनें।",
+        },
+        guide: {
+            benefit: "लूम जोड़ना और उत्पादन के लिए तैयार करना देखें।",
         },
         setupTitle: 'अपनी मशीन सक्रिय करें',
-        productionLink: '1. Production → Overview & Looms',
+        productionLink: "1. उत्पादन",
         productionHelp: 'सहेजी हुई कॉस्टिंग से Activate Quality करें, फिर उस क्वालिटी पर Assign Looms चुनें।',
         assignmentsLink: '2. मशीन आवंटन',
         assignmentsHelp: 'शिफ्ट चुनें और दर्ज कारीगर पर Assign से लूम चुनें।',
@@ -92,4 +145,18 @@ export const machinesTutorialCopy: Record<Language, MachinesCopy> = {
             ['एक लूम का आवंटन देखें', 'कार्ड पर आवंटन देखें इस लूम के लिए फ़िल्टर किया हुआ मशीन आवंटन बोर्ड खोलता है। क्वालिटी गायब हो तो ऊपर के लिंक से पहले Production सेटअप पूरा करें।'],
         ],
     },
+}
+
+/** Resolve the same labels used by the live header, card and Production controls. */
+export function machinesTourControlLabels(tx: (text: string) => string, t: (key: string) => string) {
+    return { addMachine: tx('Add machine'), edit: tx('Edit'), needsSetup: tx('Needs setup'), assignLooms: t('production.assignLooms') }
+}
+
+export function machinesStepCopy(language: Language, step: MachinesTourStep, controls: Record<string, string>) {
+    const copy = machinesTutorialCopy[language][step.slice(3) as MachinesTourCopyKey]
+    return {
+        title: copy.title,
+        body: formatTourText(copy.body, controls),
+        ...(copy.detail ? { detail: formatTourText(copy.detail, controls) } : {}),
+    }
 }

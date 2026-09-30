@@ -1,0 +1,486 @@
+[
+  {
+    "id": "gt11-0-en-1440x900",
+    "task": "GT-11",
+    "scenario": "production",
+    "language": "en",
+    "size": "1440x900",
+    "command": [
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+      "170",
+      "node",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+      "env",
+      "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+      "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+      "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-0-en-1440x900/network.json",
+      "node",
+      "--import",
+      "/private/tmp/weavly-review-network.mjs",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification-harness/run-tour.mjs",
+      "production",
+      "en",
+      "1440x900",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-0-en-1440x900"
+    ],
+    "exitCode": 1,
+    "elapsedSeconds": 57.0,
+    "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-0-en-1440x900/production-en-1440x900/record.json",
+    "steps": 7,
+    "error": null,
+    "blockedNetwork": [
+      {
+        "type": "blocked-api",
+        "url": "http://localhost:5199/api/analytics/plan-events",
+        "method": "POST"
+      }
+    ],
+    "classification": "FAIL",
+    "visualReview": "UNVERIFIED"
+  },
+  {
+    "id": "gt11-0-hi-1280x800",
+    "task": "GT-11",
+    "scenario": "production",
+    "language": "hi",
+    "size": "1280x800",
+    "command": [
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+      "170",
+      "node",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+      "env",
+      "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+      "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+      "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-0-hi-1280x800/network.json",
+      "node",
+      "--import",
+      "/private/tmp/weavly-review-network.mjs",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification-harness/run-tour.mjs",
+      "production",
+      "hi",
+      "1280x800",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-0-hi-1280x800"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 44.45,
+    "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-0-hi-1280x800/production-hi-1280x800/record.json",
+    "steps": 7,
+    "error": null,
+    "blockedNetwork": [
+      {
+        "type": "blocked-api",
+        "url": "http://localhost:5199/api/analytics/plan-events",
+        "method": "POST"
+      }
+    ],
+    "classification": "FAIL",
+    "visualReview": "UNVERIFIED"
+  },
+  {
+    "id": "gt11-0-en-1024x768",
+    "task": "GT-11",
+    "scenario": "production",
+    "language": "en",
+    "size": "1024x768",
+    "command": [
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+      "170",
+      "node",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+      "env",
+      "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+      "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+      "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-0-en-1024x768/network.json",
+      "node",
+      "--import",
+      "/private/tmp/weavly-review-network.mjs",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification-harness/run-tour.mjs",
+      "production",
+      "en",
+      "1024x768",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-0-en-1024x768"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 44.3,
+    "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-0-en-1024x768/production-en-1024x768/record.json",
+    "steps": 7,
+    "error": null,
+    "blockedNetwork": [
+      {
+        "type": "blocked-api",
+        "url": "http://localhost:5199/api/analytics/plan-events",
+        "method": "POST"
+      }
+    ],
+    "classification": "FAIL",
+    "visualReview": "UNVERIFIED"
+  },
+  {
+    "id": "gt11-0-gu-390x844",
+    "task": "GT-11",
+    "scenario": "production",
+    "language": "gu",
+    "size": "390x844",
+    "command": [
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+      "170",
+      "node",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+      "env",
+      "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+      "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+      "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-0-gu-390x844/network.json",
+      "node",
+      "--import",
+      "/private/tmp/weavly-review-network.mjs",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification-harness/run-tour.mjs",
+      "production",
+      "gu",
+      "390x844",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-0-gu-390x844"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 44.07,
+    "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-0-gu-390x844/production-gu-390x844/record.json",
+    "steps": 7,
+    "error": null,
+    "blockedNetwork": [
+      {
+        "type": "blocked-api",
+        "url": "http://localhost:5199/api/analytics/plan-events",
+        "method": "POST"
+      }
+    ],
+    "classification": "FAIL",
+    "visualReview": "UNVERIFIED"
+  },
+  {
+    "id": "gt11-0-reduced-en-1024x768",
+    "task": "GT-11",
+    "scenario": "production",
+    "language": "en",
+    "size": "1024x768",
+    "env": {
+      "REDUCED_MOTION": "1"
+    },
+    "command": [
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+      "170",
+      "node",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+      "env",
+      "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+      "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+      "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-0-reduced-en-1024x768/network.json",
+      "REDUCED_MOTION=1",
+      "node",
+      "--import",
+      "/private/tmp/weavly-review-network.mjs",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification-harness/run-tour.mjs",
+      "production",
+      "en",
+      "1024x768",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-0-reduced-en-1024x768"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 44.27,
+    "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-0-reduced-en-1024x768/production-en-1024x768/record.json",
+    "steps": 7,
+    "error": null,
+    "blockedNetwork": [
+      {
+        "type": "blocked-api",
+        "url": "http://localhost:5199/api/analytics/plan-events",
+        "method": "POST"
+      }
+    ],
+    "classification": "FAIL",
+    "visualReview": "UNVERIFIED"
+  },
+  {
+    "id": "gt11-1-en-1440x900",
+    "task": "GT-11",
+    "scenario": "production?populated=1",
+    "language": "en",
+    "size": "1440x900",
+    "command": [
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+      "170",
+      "node",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+      "env",
+      "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+      "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+      "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-1-en-1440x900/network.json",
+      "node",
+      "--import",
+      "/private/tmp/weavly-review-network.mjs",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification-harness/run-tour.mjs",
+      "production?populated=1",
+      "en",
+      "1440x900",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-1-en-1440x900"
+    ],
+    "exitCode": 1,
+    "elapsedSeconds": 44.65,
+    "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-1-en-1440x900/production_populated_1-en-1440x900/record.json",
+    "steps": 7,
+    "error": null,
+    "blockedNetwork": [
+      {
+        "type": "blocked-api",
+        "url": "http://localhost:5199/api/analytics/plan-events",
+        "method": "POST"
+      }
+    ],
+    "classification": "FAIL",
+    "visualReview": "UNVERIFIED"
+  },
+  {
+    "id": "gt11-1-hi-1280x800",
+    "task": "GT-11",
+    "scenario": "production?populated=1",
+    "language": "hi",
+    "size": "1280x800",
+    "command": [
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+      "170",
+      "node",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+      "env",
+      "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+      "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+      "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-1-hi-1280x800/network.json",
+      "node",
+      "--import",
+      "/private/tmp/weavly-review-network.mjs",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification-harness/run-tour.mjs",
+      "production?populated=1",
+      "hi",
+      "1280x800",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-1-hi-1280x800"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 45.64,
+    "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-1-hi-1280x800/production_populated_1-hi-1280x800/record.json",
+    "steps": 7,
+    "error": null,
+    "blockedNetwork": [
+      {
+        "type": "blocked-api",
+        "url": "http://localhost:5199/api/analytics/plan-events",
+        "method": "POST"
+      }
+    ],
+    "classification": "FAIL",
+    "visualReview": "UNVERIFIED"
+  },
+  {
+    "id": "gt11-1-en-1024x768",
+    "task": "GT-11",
+    "scenario": "production?populated=1",
+    "language": "en",
+    "size": "1024x768",
+    "command": [
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+      "170",
+      "node",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+      "env",
+      "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+      "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+      "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-1-en-1024x768/network.json",
+      "node",
+      "--import",
+      "/private/tmp/weavly-review-network.mjs",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification-harness/run-tour.mjs",
+      "production?populated=1",
+      "en",
+      "1024x768",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-1-en-1024x768"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 44.57,
+    "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-1-en-1024x768/production_populated_1-en-1024x768/record.json",
+    "steps": 7,
+    "error": null,
+    "blockedNetwork": [
+      {
+        "type": "blocked-api",
+        "url": "http://localhost:5199/api/analytics/plan-events",
+        "method": "POST"
+      }
+    ],
+    "classification": "FAIL",
+    "visualReview": "UNVERIFIED"
+  },
+  {
+    "id": "gt11-1-gu-390x844",
+    "task": "GT-11",
+    "scenario": "production?populated=1",
+    "language": "gu",
+    "size": "390x844",
+    "command": [
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+      "170",
+      "node",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+      "env",
+      "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+      "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+      "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-1-gu-390x844/network.json",
+      "node",
+      "--import",
+      "/private/tmp/weavly-review-network.mjs",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification-harness/run-tour.mjs",
+      "production?populated=1",
+      "gu",
+      "390x844",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-1-gu-390x844"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 44.31,
+    "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-1-gu-390x844/production_populated_1-gu-390x844/record.json",
+    "steps": 7,
+    "error": null,
+    "blockedNetwork": [
+      {
+        "type": "blocked-api",
+        "url": "http://localhost:5199/api/analytics/plan-events",
+        "method": "POST"
+      }
+    ],
+    "classification": "FAIL",
+    "visualReview": "UNVERIFIED"
+  },
+  {
+    "id": "gt11-1-reduced-en-1024x768",
+    "task": "GT-11",
+    "scenario": "production?populated=1",
+    "language": "en",
+    "size": "1024x768",
+    "env": {
+      "REDUCED_MOTION": "1"
+    },
+    "command": [
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+      "170",
+      "node",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+      "env",
+      "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+      "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+      "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-1-reduced-en-1024x768/network.json",
+      "REDUCED_MOTION=1",
+      "node",
+      "--import",
+      "/private/tmp/weavly-review-network.mjs",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification-harness/run-tour.mjs",
+      "production?populated=1",
+      "en",
+      "1024x768",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-1-reduced-en-1024x768"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 44.68,
+    "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-1-reduced-en-1024x768/production_populated_1-en-1024x768/record.json",
+    "steps": 7,
+    "error": null,
+    "blockedNetwork": [
+      {
+        "type": "blocked-api",
+        "url": "http://localhost:5199/api/analytics/plan-events",
+        "method": "POST"
+      }
+    ],
+    "classification": "FAIL",
+    "visualReview": "UNVERIFIED"
+  },
+  {
+    "id": "gt11-exit-production-en-1440x900",
+    "task": "GT-11",
+    "scenario": "production?populated=1",
+    "language": "en",
+    "size": "1440x900",
+    "env": {
+      "EXIT_AT": "4"
+    },
+    "command": [
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+      "170",
+      "node",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+      "env",
+      "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+      "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+      "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-exit-production-en-1440x900/network.json",
+      "EXIT_AT=4",
+      "node",
+      "--import",
+      "/private/tmp/weavly-review-network.mjs",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification-harness/run-tour.mjs",
+      "production?populated=1",
+      "en",
+      "1440x900",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-exit-production-en-1440x900"
+    ],
+    "exitCode": 1,
+    "elapsedSeconds": 42.48,
+    "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-exit-production-en-1440x900/production_populated_1-en-1440x900/record.json",
+    "steps": 4,
+    "error": null,
+    "blockedNetwork": [
+      {
+        "type": "blocked-api",
+        "url": "http://localhost:5199/api/analytics/plan-events",
+        "method": "POST"
+      }
+    ],
+    "classification": "FAIL",
+    "visualReview": "UNVERIFIED"
+  },
+  {
+    "id": "gt11-exit-production-gu-390x844",
+    "task": "GT-11",
+    "scenario": "production?populated=1",
+    "language": "gu",
+    "size": "390x844",
+    "env": {
+      "EXIT_AT": "4"
+    },
+    "command": [
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+      "170",
+      "node",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+      "env",
+      "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+      "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+      "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-exit-production-gu-390x844/network.json",
+      "EXIT_AT=4",
+      "node",
+      "--import",
+      "/private/tmp/weavly-review-network.mjs",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification-harness/run-tour.mjs",
+      "production?populated=1",
+      "gu",
+      "390x844",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-exit-production-gu-390x844"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 40.05,
+    "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt11-exit-production-gu-390x844/production_populated_1-gu-390x844/record.json",
+    "steps": 4,
+    "error": null,
+    "blockedNetwork": [
+      {
+        "type": "blocked-api",
+        "url": "http://localhost:5199/api/analytics/plan-events",
+        "method": "POST"
+      }
+    ],
+    "classification": "FAIL",
+    "visualReview": "UNVERIFIED"
+  }
+]

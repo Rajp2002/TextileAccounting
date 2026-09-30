@@ -1,0 +1,69 @@
+{
+  "headUnchanged": true,
+  "branchUnchanged": true,
+  "applicationFingerprint": "119a67772b5df9bb16b835078c730d5271bd43aa70b3cb8ec19672477e04a676",
+  "applicationUnchanged": false,
+  "fileChanges": [
+    {
+      "file": "__tests__/cost-estimate-tutorial-account.test.ts",
+      "before": "DELETED",
+      "after": null
+    },
+    {
+      "file": "app/(dashboard)/owner/estimator/tutorial-actions.ts",
+      "before": "DELETED",
+      "after": null
+    },
+    {
+      "file": "app/(dashboard)/owner/rates/tutorial-actions.ts",
+      "before": "DELETED",
+      "after": null
+    },
+    {
+      "file": "components/tours/ConfigurationTutorial.tsx",
+      "before": "DELETED",
+      "after": null
+    },
+    {
+      "file": "components/tours/DispatchTutorial.tsx",
+      "before": "DELETED",
+      "after": null
+    },
+    {
+      "file": "components/tours/MachinesTutorial.tsx",
+      "before": "DELETED",
+      "after": null
+    },
+    {
+      "file": "components/tours/PayrollTutorial.tsx",
+      "before": "DELETED",
+      "after": null
+    },
+    {
+      "file": "components/tours/ProductionTutorial.tsx",
+      "before": "DELETED",
+      "after": null
+    },
+    {
+      "file": "components/tours/StockTutorial.tsx",
+      "before": "DELETED",
+      "after": null
+    },
+    {
+      "file": "components/tours/WorkersTutorial.tsx",
+      "before": "DELETED",
+      "after": null
+    },
+    {
+      "file": "docs/guided-tours/EXECUTION_STATUS.md",
+      "before": "b785f18c98d830bc0769bfc417ab22e87e8d31159c0bab7386382772f870d2b7",
+      "after": "08daedd962a1ea4bab3db87040e0f3e6e9569f206dfc1164c07a9245f156024d"
+    },
+    {
+      "file": "lib/i18n/cost-estimate-workflow.ts",
+      "before": "DELETED",
+      "after": null
+    }
+  ],
+  "allowedChangesOnly": false
+}

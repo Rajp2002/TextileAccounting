@@ -1,0 +1,2332 @@
+[
+  {
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-1-en-1440x900/payroll-extra-en-1440x900/00-page.png",
+    "at": 1790718170030,
+    "rail": {
+      "tag": "ASIDE",
+      "classes": "payroll-left-rail guided-tour-left-rail space-y-2",
+      "role": null,
+      "rect": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "zIndex": "30",
+      "position": "fixed",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "1",
+      "pointerEvents": "auto",
+      "inert": false,
+      "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+    },
+    "railChildren": [
+      {
+        "tag": "DIV",
+        "classes": "",
+        "role": null,
+        "rect": {
+          "x": 269,
+          "y": 21,
+          "w": 196,
+          "h": 213.046875
+        },
+        "zIndex": "auto",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "opacity": "1",
+        "pointerEvents": "auto",
+        "inert": false,
+        "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+      },
+      {
+        "tag": "DIV",
+        "classes": "left-rail-bottom mt-auto space-y-2 pt-3",
+        "role": null,
+        "rect": {
+          "x": 269,
+          "y": 752.5,
+          "w": 196,
+          "h": 126.5
+        },
+        "zIndex": "auto",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "opacity": "1",
+        "pointerEvents": "auto",
+        "inert": false,
+        "text": "Advances, records and correctionsHow pay is calculated"
+      }
+    ],
+    "dialog": null,
+    "highlight": null,
+    "intersection": null,
+    "points": []
+  },
+  {
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-1-en-1440x900/payroll-extra-en-1440x900/01.png",
+    "at": 1790718171605,
+    "step": "pra-advance",
+    "status": "ready",
+    "rail": {
+      "tag": "ASIDE",
+      "classes": "payroll-left-rail guided-tour-left-rail space-y-2",
+      "role": null,
+      "rect": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "zIndex": "30",
+      "position": "fixed",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "1",
+      "pointerEvents": "auto",
+      "inert": false,
+      "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+    },
+    "railChildren": [
+      {
+        "tag": "DIV",
+        "classes": "",
+        "role": null,
+        "rect": {
+          "x": 269,
+          "y": 21,
+          "w": 196,
+          "h": 213.046875
+        },
+        "zIndex": "auto",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "opacity": "1",
+        "pointerEvents": "auto",
+        "inert": false,
+        "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+      },
+      {
+        "tag": "DIV",
+        "classes": "left-rail-bottom mt-auto space-y-2 pt-3",
+        "role": null,
+        "rect": {
+          "x": 269,
+          "y": 752.5,
+          "w": 196,
+          "h": 126.5
+        },
+        "zIndex": "auto",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "opacity": "1",
+        "pointerEvents": "auto",
+        "inert": false,
+        "text": "Advances, records and correctionsHow pay is calculated"
+      }
+    ],
+    "dialog": {
+      "tag": "DIV",
+      "classes": "bg-surface text-ink data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100vw-1rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-xl border border-hairline p-4 shadow-[var(--shadow-modal)] duration-200 outline-none sm:max-h-[calc(100dvh-2rem)] sm:max-w-lg sm:rounded-2xl sm:p-6 max-h-[calc(100dvh-2rem)] overflow-y-auto",
+      "role": "dialog",
+      "rect": {
+        "x": 288,
+        "y": 241.640625,
+        "w": 512,
+        "h": 416.71875
+      },
+      "zIndex": "50",
+      "position": "fixed",
+      "background": "rgb(255, 255, 255)",
+      "opacity": "1",
+      "pointerEvents": "auto",
+      "inert": true,
+      "text": "Record worker advanceSample — nothing here is saved or sent.Add advanceWorkerAmountDescrip"
+    },
+    "highlight": {
+      "tag": "DIV",
+      "classes": "guided-tour-highlight pointer-events-none fixed rounded-xl border-2 border-saffron",
+      "role": null,
+      "rect": {
+        "x": 304,
+        "y": 316.859375,
+        "w": 480,
+        "h": 325.5
+      },
+      "zIndex": "auto",
+      "position": "fixed",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "1",
+      "pointerEvents": "none",
+      "inert": false,
+      "text": ""
+    },
+    "intersection": {
+      "left": 304,
+      "top": 316.859375,
+      "right": 465,
+      "bottom": 642.359375
+    },
+    "points": [
+      {
+        "x": 344.25,
+        "y": 398.234375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 1 of 6Record an advance when you give itAdd advance on a worker records mone"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 344.25,
+        "y": 479.609375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 1 of 6Record an advance when you give itAdd advance on a worker records mone"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 344.25,
+        "y": 560.984375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 1 of 6Record an advance when you give itAdd advance on a worker records mone"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 384.5,
+        "y": 398.234375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 1 of 6Record an advance when you give itAdd advance on a worker records mone"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 384.5,
+        "y": 479.609375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 1 of 6Record an advance when you give itAdd advance on a worker records mone"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 384.5,
+        "y": 560.984375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 1 of 6Record an advance when you give itAdd advance on a worker records mone"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 424.75,
+        "y": 398.234375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 1 of 6Record an advance when you give itAdd advance on a worker records mone"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 424.75,
+        "y": 479.609375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 1 of 6Record an advance when you give itAdd advance on a worker records mone"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 424.75,
+        "y": 560.984375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 1 of 6Record an advance when you give itAdd advance on a worker records mone"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-1-en-1440x900/payroll-extra-en-1440x900/02.png",
+    "at": 1790718172756,
+    "step": "pra-deduction",
+    "status": "ready",
+    "rail": {
+      "tag": "ASIDE",
+      "classes": "payroll-left-rail guided-tour-left-rail space-y-2",
+      "role": null,
+      "rect": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "zIndex": "30",
+      "position": "fixed",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "1",
+      "pointerEvents": "auto",
+      "inert": false,
+      "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+    },
+    "railChildren": [
+      {
+        "tag": "DIV",
+        "classes": "",
+        "role": null,
+        "rect": {
+          "x": 269,
+          "y": 21,
+          "w": 196,
+          "h": 213.046875
+        },
+        "zIndex": "auto",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "opacity": "1",
+        "pointerEvents": "auto",
+        "inert": false,
+        "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+      },
+      {
+        "tag": "DIV",
+        "classes": "left-rail-bottom mt-auto space-y-2 pt-3",
+        "role": null,
+        "rect": {
+          "x": 269,
+          "y": 752.5,
+          "w": 196,
+          "h": 126.5
+        },
+        "zIndex": "auto",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "opacity": "1",
+        "pointerEvents": "auto",
+        "inert": false,
+        "text": "Advances, records and correctionsHow pay is calculated"
+      }
+    ],
+    "dialog": {
+      "tag": "DIV",
+      "classes": "bg-surface text-ink data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100vw-1rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-xl border border-hairline p-4 shadow-[var(--shadow-modal)] duration-200 outline-none sm:max-h-[calc(100dvh-2rem)] sm:max-w-lg sm:rounded-2xl sm:p-6 max-h-[calc(100dvh-2rem)] overflow-y-auto",
+      "role": "dialog",
+      "rect": {
+        "x": 288,
+        "y": 208.390625,
+        "w": 512,
+        "h": 483.21875
+      },
+      "zIndex": "50",
+      "position": "fixed",
+      "background": "rgb(255, 255, 255)",
+      "opacity": "1",
+      "pointerEvents": "auto",
+      "inert": true,
+      "text": "Record worker deductionSample — nothing here is saved or sent.Add deductionWorkerReason / "
+    },
+    "highlight": {
+      "tag": "DIV",
+      "classes": "guided-tour-highlight pointer-events-none fixed rounded-xl border-2 border-saffron",
+      "role": null,
+      "rect": {
+        "x": 304,
+        "y": 283.609375,
+        "w": 480,
+        "h": 392
+      },
+      "zIndex": "auto",
+      "position": "fixed",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "1",
+      "pointerEvents": "none",
+      "inert": false,
+      "text": ""
+    },
+    "intersection": {
+      "left": 304,
+      "top": 283.609375,
+      "right": 465,
+      "bottom": 675.609375
+    },
+    "points": [
+      {
+        "x": 344.25,
+        "y": 381.609375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 2 of 6Record a deduction with its reasonAdd deduction records an amount to r"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 344.25,
+        "y": 479.609375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 2 of 6Record a deduction with its reasonAdd deduction records an amount to r"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 344.25,
+        "y": 577.609375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 2 of 6Record a deduction with its reasonAdd deduction records an amount to r"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 384.5,
+        "y": 381.609375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 2 of 6Record a deduction with its reasonAdd deduction records an amount to r"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 384.5,
+        "y": 479.609375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 2 of 6Record a deduction with its reasonAdd deduction records an amount to r"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 384.5,
+        "y": 577.609375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 2 of 6Record a deduction with its reasonAdd deduction records an amount to r"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 424.75,
+        "y": 381.609375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 2 of 6Record a deduction with its reasonAdd deduction records an amount to r"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 424.75,
+        "y": 479.609375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 2 of 6Record a deduction with its reasonAdd deduction records an amount to r"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 424.75,
+        "y": 577.609375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 2 of 6Record a deduction with its reasonAdd deduction records an amount to r"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-1-en-1440x900/payroll-extra-en-1440x900/03.png",
+    "at": 1790718173860,
+    "step": "pra-records",
+    "status": "ready",
+    "rail": {
+      "tag": "ASIDE",
+      "classes": "payroll-left-rail guided-tour-left-rail space-y-2",
+      "role": null,
+      "rect": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "zIndex": "30",
+      "position": "fixed",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "1",
+      "pointerEvents": "auto",
+      "inert": false,
+      "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+    },
+    "railChildren": [
+      {
+        "tag": "DIV",
+        "classes": "",
+        "role": null,
+        "rect": {
+          "x": 269,
+          "y": 21,
+          "w": 196,
+          "h": 213.046875
+        },
+        "zIndex": "auto",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "opacity": "1",
+        "pointerEvents": "auto",
+        "inert": false,
+        "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+      },
+      {
+        "tag": "DIV",
+        "classes": "left-rail-bottom mt-auto space-y-2 pt-3",
+        "role": null,
+        "rect": {
+          "x": 269,
+          "y": 752.5,
+          "w": 196,
+          "h": 126.5
+        },
+        "zIndex": "auto",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "opacity": "1",
+        "pointerEvents": "auto",
+        "inert": false,
+        "text": "Advances, records and correctionsHow pay is calculated"
+      }
+    ],
+    "dialog": null,
+    "highlight": {
+      "tag": "DIV",
+      "classes": "guided-tour-highlight pointer-events-none fixed rounded-xl border-2 border-saffron",
+      "role": null,
+      "rect": {
+        "x": 476.5,
+        "y": 78,
+        "w": 735,
+        "h": 329
+      },
+      "zIndex": "auto",
+      "position": "fixed",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "1",
+      "pointerEvents": "none",
+      "inert": false,
+      "text": ""
+    },
+    "intersection": {
+      "left": 476.5,
+      "top": 78,
+      "right": 465,
+      "bottom": 407
+    },
+    "points": []
+  },
+  {
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-1-en-1440x900/payroll-extra-en-1440x900/04.png",
+    "at": 1790718174953,
+    "step": "pra-export",
+    "status": "ready",
+    "rail": {
+      "tag": "ASIDE",
+      "classes": "payroll-left-rail guided-tour-left-rail space-y-2",
+      "role": null,
+      "rect": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "zIndex": "30",
+      "position": "fixed",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "1",
+      "pointerEvents": "auto",
+      "inert": false,
+      "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+    },
+    "railChildren": [
+      {
+        "tag": "DIV",
+        "classes": "",
+        "role": null,
+        "rect": {
+          "x": 269,
+          "y": 21,
+          "w": 196,
+          "h": 213.046875
+        },
+        "zIndex": "auto",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "opacity": "1",
+        "pointerEvents": "auto",
+        "inert": false,
+        "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+      },
+      {
+        "tag": "DIV",
+        "classes": "left-rail-bottom mt-auto space-y-2 pt-3",
+        "role": null,
+        "rect": {
+          "x": 269,
+          "y": 752.5,
+          "w": 196,
+          "h": 126.5
+        },
+        "zIndex": "auto",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "opacity": "1",
+        "pointerEvents": "auto",
+        "inert": false,
+        "text": "Advances, records and correctionsHow pay is calculated"
+      }
+    ],
+    "dialog": null,
+    "highlight": {
+      "tag": "DIV",
+      "classes": "guided-tour-highlight pointer-events-none fixed rounded-xl border-2 border-saffron",
+      "role": null,
+      "rect": {
+        "x": 476.5,
+        "y": 78,
+        "w": 735,
+        "h": 112
+      },
+      "zIndex": "auto",
+      "position": "fixed",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "1",
+      "pointerEvents": "none",
+      "inert": false,
+      "text": ""
+    },
+    "intersection": {
+      "left": 476.5,
+      "top": 78,
+      "right": 465,
+      "bottom": 190
+    },
+    "points": []
+  },
+  {
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-1-en-1440x900/payroll-extra-en-1440x900/05.png",
+    "at": 1790718176055,
+    "step": "pra-correct",
+    "status": "ready",
+    "rail": {
+      "tag": "ASIDE",
+      "classes": "payroll-left-rail guided-tour-left-rail space-y-2",
+      "role": null,
+      "rect": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "zIndex": "30",
+      "position": "fixed",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "1",
+      "pointerEvents": "auto",
+      "inert": false,
+      "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+    },
+    "railChildren": [
+      {
+        "tag": "DIV",
+        "classes": "",
+        "role": null,
+        "rect": {
+          "x": 269,
+          "y": 21,
+          "w": 196,
+          "h": 213.046875
+        },
+        "zIndex": "auto",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "opacity": "1",
+        "pointerEvents": "auto",
+        "inert": false,
+        "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+      },
+      {
+        "tag": "DIV",
+        "classes": "left-rail-bottom mt-auto space-y-2 pt-3",
+        "role": null,
+        "rect": {
+          "x": 269,
+          "y": 752.5,
+          "w": 196,
+          "h": 126.5
+        },
+        "zIndex": "auto",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "opacity": "1",
+        "pointerEvents": "auto",
+        "inert": false,
+        "text": "Advances, records and correctionsHow pay is calculated"
+      }
+    ],
+    "dialog": {
+      "tag": "DIV",
+      "classes": "bg-surface text-ink data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100vw-1rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-xl border border-hairline p-4 shadow-[var(--shadow-modal)] duration-200 outline-none sm:max-h-[calc(100dvh-2rem)] sm:max-w-lg sm:rounded-2xl sm:p-6 max-h-[calc(100dvh-2rem)] overflow-y-auto",
+      "role": "dialog",
+      "rect": {
+        "x": 288,
+        "y": 316.890625,
+        "w": 512,
+        "h": 266.21875
+      },
+      "zIndex": "50",
+      "position": "fixed",
+      "background": "rgb(255, 255, 255)",
+      "opacity": "1",
+      "pointerEvents": "auto",
+      "inert": true,
+      "text": "Reverse a mistaken payment record?Sample — nothing here is saved or sent.Reason for revers"
+    },
+    "highlight": {
+      "tag": "DIV",
+      "classes": "guided-tour-highlight pointer-events-none fixed rounded-xl border-2 border-saffron",
+      "role": null,
+      "rect": {
+        "x": 304,
+        "y": 392.109375,
+        "w": 480,
+        "h": 175
+      },
+      "zIndex": "auto",
+      "position": "fixed",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "1",
+      "pointerEvents": "none",
+      "inert": false,
+      "text": ""
+    },
+    "intersection": {
+      "left": 304,
+      "top": 392.109375,
+      "right": 465,
+      "bottom": 567.109375
+    },
+    "points": [
+      {
+        "x": 344.25,
+        "y": 435.859375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 5 of 6Correct a mistaken payment recordResolve mistaken payment record rever"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 344.25,
+        "y": 479.609375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 5 of 6Correct a mistaken payment recordResolve mistaken payment record rever"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 344.25,
+        "y": 523.359375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 5 of 6Correct a mistaken payment recordResolve mistaken payment record rever"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 384.5,
+        "y": 435.859375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 5 of 6Correct a mistaken payment recordResolve mistaken payment record rever"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 384.5,
+        "y": 479.609375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 5 of 6Correct a mistaken payment recordResolve mistaken payment record rever"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 384.5,
+        "y": 523.359375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 5 of 6Correct a mistaken payment recordResolve mistaken payment record rever"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 424.75,
+        "y": 435.859375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 5 of 6Correct a mistaken payment recordResolve mistaken payment record rever"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 424.75,
+        "y": 479.609375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 5 of 6Correct a mistaken payment recordResolve mistaken payment record rever"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      },
+      {
+        "x": 424.75,
+        "y": 523.359375,
+        "elements": [
+          {
+            "tag": "DIV",
+            "classes": "guided-tour-portal fixed inset-0 z-[100]",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "100",
+            "position": "fixed",
+            "background": "rgba(0, 0, 0, 0)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Sample · Step 5 of 6Correct a mistaken payment recordResolve mistaken payment record rever"
+          },
+          {
+            "tag": "BODY",
+            "classes": "antialiased",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+          },
+          {
+            "tag": "HTML",
+            "classes": "",
+            "role": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 1440,
+              "h": 900
+            },
+            "zIndex": "auto",
+            "position": "static",
+            "background": "rgb(255, 248, 234)",
+            "opacity": "1",
+            "pointerEvents": "auto",
+            "inert": false,
+            "text": "window.process = { env: { NODE_ENV: 'development' } }\n.harness-sidebar{display:none}@media"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-1-en-1440x900/payroll-extra-en-1440x900/06.png",
+    "at": 1790718177172,
+    "step": "pra-handoff",
+    "status": "ready",
+    "rail": {
+      "tag": "ASIDE",
+      "classes": "payroll-left-rail guided-tour-left-rail space-y-2",
+      "role": null,
+      "rect": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "zIndex": "30",
+      "position": "fixed",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "1",
+      "pointerEvents": "auto",
+      "inert": false,
+      "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+    },
+    "railChildren": [
+      {
+        "tag": "DIV",
+        "classes": "",
+        "role": null,
+        "rect": {
+          "x": 269,
+          "y": 21,
+          "w": 196,
+          "h": 213.046875
+        },
+        "zIndex": "auto",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "opacity": "1",
+        "pointerEvents": "auto",
+        "inert": false,
+        "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+      },
+      {
+        "tag": "DIV",
+        "classes": "left-rail-bottom mt-auto space-y-2 pt-3",
+        "role": null,
+        "rect": {
+          "x": 269,
+          "y": 752.5,
+          "w": 196,
+          "h": 126.5
+        },
+        "zIndex": "auto",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "opacity": "1",
+        "pointerEvents": "auto",
+        "inert": false,
+        "text": "Advances, records and correctionsHow pay is calculated"
+      }
+    ],
+    "dialog": null,
+    "highlight": {
+      "tag": "DIV",
+      "classes": "guided-tour-highlight pointer-events-none fixed rounded-xl border-2 border-saffron",
+      "role": null,
+      "rect": {
+        "x": 1217,
+        "y": 834.5,
+        "w": 208,
+        "h": 50.5
+      },
+      "zIndex": "auto",
+      "position": "fixed",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "1",
+      "pointerEvents": "none",
+      "inert": false,
+      "text": ""
+    },
+    "intersection": {
+      "left": 1217,
+      "top": 834.5,
+      "right": 465,
+      "bottom": 879
+    },
+    "points": []
+  },
+  {
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt10-paint-1-en-1440x900/payroll-extra-en-1440x900/99-after.png",
+    "at": 1790718209056,
+    "rail": {
+      "tag": "ASIDE",
+      "classes": "payroll-left-rail guided-tour-left-rail space-y-2",
+      "role": null,
+      "rect": {
+        "x": 269,
+        "y": 21,
+        "w": 196,
+        "h": 858
+      },
+      "zIndex": "30",
+      "position": "fixed",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "1",
+      "pointerEvents": "auto",
+      "inert": false,
+      "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+    },
+    "railChildren": [
+      {
+        "tag": "DIV",
+        "classes": "",
+        "role": null,
+        "rect": {
+          "x": 269,
+          "y": 21,
+          "w": 196,
+          "h": 213.046875
+        },
+        "zIndex": "auto",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "opacity": "1",
+        "pointerEvents": "auto",
+        "inert": false,
+        "text": "Payroll guideSee how to check earnings, record payments and close a pay period.Start guide"
+      },
+      {
+        "tag": "DIV",
+        "classes": "left-rail-bottom mt-auto space-y-2 pt-3",
+        "role": null,
+        "rect": {
+          "x": 269,
+          "y": 752.5,
+          "w": 196,
+          "h": 126.5
+        },
+        "zIndex": "auto",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "opacity": "1",
+        "pointerEvents": "auto",
+        "inert": false,
+        "text": "Advances, records and correctionsHow pay is calculated"
+      }
+    ],
+    "dialog": null,
+    "highlight": null,
+    "intersection": null,
+    "points": []
+  }
+]

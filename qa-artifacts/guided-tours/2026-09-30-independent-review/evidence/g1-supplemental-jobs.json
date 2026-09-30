@@ -1,0 +1,32 @@
+[
+  {
+    "id": "g1-runtime-recovery",
+    "task": "GT-01",
+    "script": "gt01-runtime-probe.mjs",
+    "record": "gt01-runtime-probe.json"
+  },
+  {
+    "id": "g1-motion",
+    "task": "GT-01",
+    "script": "gt01-motion-probe.mjs",
+    "record": "gt01-motion-probe.json"
+  },
+  {
+    "id": "g1-invitations",
+    "task": "GT-02",
+    "script": "gt02-invitation-probe.mjs",
+    "record": "gt02-invitations-final/dispatch-en-1440x900/record.json"
+  },
+  {
+    "id": "g1-lifecycle",
+    "task": "GT-03",
+    "script": "gt03-lifecycle.mjs",
+    "record": "gt03-lifecycle/record.json"
+  },
+  {
+    "id": "g1-variants",
+    "task": "GT-03",
+    "script": "gt03-variants.mjs",
+    "record": "gt03-variants/record.json"
+  }
+]

@@ -1,0 +1,92 @@
+[
+  {
+    "run": "gt08-0-en-1440x900",
+    "steps": [
+      "fs-balance",
+      "fs-pending",
+      "fs-opening"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt08-0-en-1440x900-01-03.png"
+  },
+  {
+    "run": "gt08-0-en-1440x900",
+    "steps": [
+      "fs-correct",
+      "fs-history",
+      "fs-handoff"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt08-0-en-1440x900-04-06.png"
+  },
+  {
+    "run": "gt08-0-gu-390x844",
+    "steps": [
+      "fs-balance",
+      "fs-pending",
+      "fs-opening"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt08-0-gu-390x844-01-03.png"
+  },
+  {
+    "run": "gt08-0-gu-390x844",
+    "steps": [
+      "fs-correct",
+      "fs-history",
+      "fs-handoff"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt08-0-gu-390x844-04-06.png"
+  },
+  {
+    "run": "gt08-1-en-1440x900",
+    "steps": [
+      "fs-balance",
+      "fs-pending",
+      "fs-opening"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt08-1-en-1440x900-01-03.png"
+  },
+  {
+    "run": "gt08-1-en-1440x900",
+    "steps": [
+      "fs-correct",
+      "fs-history",
+      "fs-handoff"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt08-1-en-1440x900-04-06.png"
+  },
+  {
+    "run": "gt08-1-gu-390x844",
+    "steps": [
+      "fs-balance",
+      "fs-pending",
+      "fs-opening"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt08-1-gu-390x844-01-03.png"
+  },
+  {
+    "run": "gt08-1-gu-390x844",
+    "steps": [
+      "fs-correct",
+      "fs-history",
+      "fs-handoff"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt08-1-gu-390x844-04-06.png"
+  },
+  {
+    "run": "gt08-exit-fabric-stock-en-1440x900",
+    "steps": [
+      "fs-balance",
+      "fs-pending",
+      "fs-opening"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt08-exit-fabric-stock-en-1440x900-01-03.png"
+  },
+  {
+    "run": "gt08-exit-fabric-stock-gu-390x844",
+    "steps": [
+      "fs-balance",
+      "fs-pending",
+      "fs-opening"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt08-exit-fabric-stock-gu-390x844-01-03.png"
+  }
+]

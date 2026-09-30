@@ -1,6 +1,6 @@
 # P03 Yarn Rate Book — tour specification
 
-Status: specified, not implemented. Implementation: **GT-06**. Gujarati/Hindi: native review pending (LR-08).
+Status: implemented and PASSED (2026-09-30; human verification deferred by the owner). Implementation: **GT-06**. Gujarati/Hindi: native review pending, not done (LR-08).
 Shared rules: [`GUIDED_TOURS_REFINEMENT_PLAN.md`](../../GUIDED_TOURS_REFINEMENT_PLAN.md). Evidence: [`audit/rate-book-and-saved-costings.md`](../audit/rate-book-and-saved-costings.md) §A.
 
 ## A. Identity and evidence

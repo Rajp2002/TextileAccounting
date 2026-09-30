@@ -1,6 +1,6 @@
 # P14 Payroll — tour specification
 
-Status: specified, not implemented. Implementation: **GT-10**. Gujarati/Hindi: native review pending.
+Status: implemented and PASSED (2026-09-30; human verification deferred by the owner). Implementation: **GT-10**. Gujarati/Hindi: native review pending, not done.
 Shared rules: [`GUIDED_TOURS_REFINEMENT_PLAN.md`](../../GUIDED_TOURS_REFINEMENT_PLAN.md). Evidence: [`audit/payroll.md`](../audit/payroll.md).
 
 ## A. Identity and evidence
@@ -129,6 +129,50 @@ Payroll labels are hard-coded English and display word-by-word in Gujarati/Hindi
 | `resolveMistaken` | records (~305) | ખોટો ચુકવણી રેકોર્ડ સુધારો | गलत भुगतान रिकॉर्ड सुधारें |
 
 "Continue settlement", "Confirm Payment", "Complete Payroll" (dialog title) and the other labels on the same controls get keys in the same namespace so the whole button family is consistent. Gujarati "પૂર્ણ કરો" is also the shared "Done" verb; the tour's Done is "પૂર્ણ" (§9.3), which the reviewer should check for confusion.
+
+### F.1 Owner-authorized Payroll copy completion — 2026-09-28
+
+Authority: the owner replied **“Gt-10, Approved Payroll-only terminology research and selection”** to the coordinator's specific request covering the 8 retained calculation-help strings and 6 sibling-control labels below. This delegates selection of these missing strings and resumes GT-10. It does not authorize broader copy or business changes. Native-language review remains **UNVERIFIED**.
+
+The exact wording below is the fixed implementation copy selected by the coordinator under that authority. Key names remain local implementation discretion. Keep calculation-help strings in `lib/i18n/payroll-tutorial.ts`; keep sibling live/replica labels in the `payroll.*` locale namespace. Use the same calculation title for the rail trigger and dialog title. Preserve the existing English wording, including capitalization. Preserve the dynamic period label in the completion title; `{period.label}` denotes the existing value and may be wired through the existing interpolation mechanism without changing its content or semantics.
+
+#### Retained calculation-help copy
+
+| Suggested key | English (unchanged) | Gujarati | Hindi |
+| --- | --- | --- | --- |
+| `calculation.title` | How pay is calculated | પગાર કેવી રીતે ગણાય છે | वेतन की गणना कैसे होती है |
+| `calculation.description` | Payroll settlement calculation and advance recovery rules | પેરોલ સેટલમેન્ટની ગણતરી અને ઉપાડની વસૂલાતના નિયમો | पेरोल निपटान की गणना और उपाड़ की वसूली के नियम |
+| `calculation.piece.title` | 1. Piece-rate earnings | 1. પીસ રેટની કમાણી | 1. पीस रेट की कमाई |
+| `calculation.piece.body` | Piece-rate pay uses saved machine rates multiplied by verified metres produced per machine. | પીસ રેટનો પગાર દરેક મશીન માટે સાચવેલા મજૂરી દરને તે મશીન પર બનેલા ચકાસેલા મીટરથી ગુણવાથી ગણાય છે. | हर मशीन की सहेजी गई मजदूरी दर को उस मशीन पर बने कपड़े के जाँचे गए मीटर से गुणा करके पीस रेट वेतन निकाला जाता है। |
+| `calculation.salary.title` | 2. Fixed salaries | 2. નિશ્ચિત પગાર | 2. निश्चित वेतन |
+| `calculation.salary.body` | Fixed salaries accrue by calendar day, accounting for joining/leaving dates and effective-dated salary adjustments. | નિશ્ચિત પગાર કૅલેન્ડરના દરેક દિવસ પ્રમાણે ગણાય છે. તેમાં કામે જોડાવાની અને કામ છોડવાની તારીખો તથા જે તારીખથી પગારમાં ફેરફાર લાગુ પડે છે તે ધ્યાનમાં લેવાય છે. | निश्चित वेतन की गणना कैलेंडर के दिनों के हिसाब से होती है। इसमें काम शुरू करने और छोड़ने की तारीखें तथा वेतन में बदलाव लागू होने की तारीखें ध्यान में रखी जाती हैं। |
+| `calculation.recovery.title` | 3. Advance recovery | 3. ઉપાડની વસૂલાત | 3. उपाड़ की वसूली |
+| `calculation.recovery.body` | Recovery is capped at the lower of the outstanding advance balance or 50% of gross pay; any remaining balance carries forward to the next pay cycle. | વસૂલાતની મર્યાદા ઉપાડની બાકી રકમ અને કુલ પગારના 50%માંથી જે ઓછી રકમ હોય તેટલી છે. બાકી રહેલી રકમ આવતા પગાર ચક્રમાં આગળ જાય છે. | वसूली की सीमा बकाया उपाड़ और कुल वेतन के 50% में से जो रकम कम हो, उतनी है। बची रकम अगले वेतन चक्र में आगे ले जाई जाती है। |
+
+#### Sibling controls and dynamic completion title
+
+| Suggested key | English (unchanged) | Gujarati | Hindi |
+| --- | --- | --- | --- |
+| `continueSettlement` | Continue settlement | સેટલમેન્ટ ચાલુ રાખો | निपटान जारी रखें |
+| `viewSettledPayroll` | View settled payroll | સેટલ થયેલો પેરોલ જુઓ | निपटाया गया पेरोल देखें |
+| `reviewBeforePaying` | Review before paying | ચૂકવતાં પહેલાં તપાસો | भुगतान से पहले जाँचें |
+| `confirmPayment` | Confirm Payment | ચુકવણીની પુષ્ટિ કરો | भुगतान की पुष्टि करें |
+| `viewSettledRecords` | View Settled Records | સેટલ થયેલા રેકોર્ડ જુઓ | निपटाए गए रिकॉर्ड देखें |
+| `completePeriodTitle` | Complete {period.label} payroll? | શું {period.label}નો પેરોલ પૂર્ણ કરવો છે? | क्या {period.label} का पेरोल पूरा करें? |
+
+Scope: the live substitutions stay within the existing GT-10 packet's three named live files and same-control sibling labels. These strings do not modify settlement actions, salary accrual, recovery rules, payment dates, period-scoped payables or PI-01/PI-02/PI-03. The 50% limit and calculation description come from existing application copy; external language sources do not establish product or legal rules. No other missing translations are pre-authorized.
+
+Research basis (consulted 2026-09-28): [Cambridge English–Gujarati salary](https://dictionary.cambridge.org/dictionary/english-gujarati/salary) supports `પગાર` and lists Hindi `वेतन`; [Google Pay's Hindi verification help](https://support.google.com/pay/india/answer/11179491?hl=hi) supports the confirmation imperative `पुष्टि करें`. Search results for [Gujaratilexicon's વસૂલાતી entry](https://www.gujaratilexicon.com/dictionary/gujarati-to-gujarati-translation/વસૂલાતી/) and [Income Tax Department Hindi advance-recovery terminology](https://www.incometaxindia.gov.in/hi/w/section-12-202) corroborate recovery/payment vocabulary (the latter direct page opening was unavailable). These are terminology references, not sources for the complete sentences. The coordinator's wording deliberately follows this page's approved `સેટલમેન્ટ`/`ઉપાડ` and `निपटान`/`उपाड़` product vocabulary. The complete sentences are coordinator-authored selections, not quoted or certified translations; browser/native/reviewer/owner acceptance remains deferred.
+
+### F.2 Owner-approved PDF loading label — 2026-09-28
+
+The owner explicitly answered **“Approve this loading label”** to the coordinator's exact English/Gujarati/Hindi proposal below. This supplements §F.1 with the omitted loading state of the existing Export PDF button; the earlier 14 entries remain approved.
+
+| Suggested key (`payroll.*`) | English | Gujarati | Hindi |
+| --- | --- | --- | --- |
+| `preparingPdf` | Preparing PDF… | PDF તૈયાર થઈ રહ્યું છે… | PDF तैयार हो रहा है… |
+
+Use this exact copy for the existing same-button loading state in `BasePayrollRecords.tsx` and the matching replica state if shown. Key names remain discretionary within `payroll.*`. This permits only label localization: preserve the export handler, busy/disabled semantics and all export behavior. No other new wording or change surface is authorized. Browser/native-language/reviewer/owner acceptance remains UNVERIFIED.
 
 ## G. State variants
 

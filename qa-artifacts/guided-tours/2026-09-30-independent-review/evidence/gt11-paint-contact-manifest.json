@@ -1,0 +1,27 @@
+[
+  {
+    "run": "gt11-paint-0-en-1440x900",
+    "steps": [
+      "pd-overview",
+      "pd-prereq",
+      "pd-activate"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt11-paint-0-en-1440x900-01-03.png"
+  },
+  {
+    "run": "gt11-paint-0-en-1440x900",
+    "steps": [
+      "pd-looms",
+      "pd-operators",
+      "pd-board"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt11-paint-0-en-1440x900-04-06.png"
+  },
+  {
+    "run": "gt11-paint-0-en-1440x900",
+    "steps": [
+      "pd-handoff"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt11-paint-0-en-1440x900-07-07.png"
+  }
+]

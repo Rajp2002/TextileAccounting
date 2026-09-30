@@ -1000,11 +1000,12 @@ function SectionHeader({ title, icon: Icon, accent = 'warp', badgeContent, detai
     )
 }
 
-function EstimatorCard({ children, accent = 'neutral' }: { children: React.ReactNode; accent?: EstimatorAccent }) {
+function EstimatorCard({ children, accent = 'neutral', 'data-tour-anchor': tourAnchor }: { children: React.ReactNode; accent?: EstimatorAccent; 'data-tour-anchor'?: string }) {
     const accentClass = getAccentStyles(accent).rail
     return (
         <Card
             data-enter-scroll-target="true"
+            data-tour-anchor={tourAnchor}
             onFocusCapture={event => {
                 const field = event.target
                 if (!(field instanceof HTMLElement) || !event.currentTarget.contains(field)) return
@@ -1441,6 +1442,7 @@ function MobileLiveEstimateShortcut({
     onOpenChange?: (open: boolean) => void
     isTutorialActive?: boolean
 }) {
+    const { tx } = useTranslation()
     const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
     const open = controlledOpen !== undefined ? controlledOpen : uncontrolledOpen
     const setOpen = setControlledOpen ?? setUncontrolledOpen
@@ -1490,7 +1492,7 @@ function MobileLiveEstimateShortcut({
                         className="group flex items-center justify-end gap-3 sm:gap-3.5 rounded-full border-2 border-[var(--color-yarn-orange)]/25 bg-[var(--color-canvas-white)]/95 p-2 pl-4 sm:p-2.5 sm:pl-5 text-left shadow-[0_12px_32px_rgba(30,37,40,0.18),0_2px_8px_rgba(30,37,40,0.06)] backdrop-blur-xl transition-all duration-200 motion-reduce:transition-none hover:border-[var(--color-yarn-orange)]/45 hover:shadow-[0_16px_38px_rgba(30,37,40,0.22),0_4px_12px_rgba(30,37,40,0.08)] hover:-translate-y-0.5 active:translate-y-0 active:shadow-[0_8px_20px_rgba(30,37,40,0.16)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] focus-visible:ring-offset-2"
                     >
                         <span className="min-w-0 max-w-[12rem] sm:max-w-[14.5rem] pr-1">
-                            <span className="block text-[11px] sm:text-xs font-bold uppercase tracking-[0.09em] text-[var(--color-yarn-orange-dark)]">Live cost</span>
+                            <span className="block text-[11px] sm:text-xs font-bold uppercase tracking-[0.09em] text-[var(--color-yarn-orange-dark)]">{tx('Live cost')}</span>
                             <span className="mt-0.5 block truncate text-[13px] sm:text-[15px] font-bold text-[var(--color-ink)]">
                                 {hasValidCostResult ? 'View costing' : 'Complete inputs'}
                             </span>
@@ -1541,7 +1543,7 @@ function MobileLiveEstimateShortcut({
                     className={`max-h-[min(84dvh,44rem)] overflow-y-auto rounded-t-[22px] border-x-0 border-b-0 px-0 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] pt-0 md:inset-x-0 md:bottom-6 md:top-6 md:mx-auto md:h-auto md:max-h-none md:w-[min(calc(100vw-3rem),38rem)] md:overflow-y-auto md:rounded-b-[22px] md:border md:border-[var(--color-hairline)] ${isTutorialActive ? '!animate-none !transition-none data-[state=open]:!animate-none data-[state=open]:!transition-none' : ''}`}
                 >
                     <SheetHeader className="border-b border-[var(--color-hairline)] bg-[var(--color-warning-amber-soft)]/70 px-5 pb-4 pt-5 pr-16 text-left">
-                        <SheetTitle className="text-[17px]">Live cost estimate</SheetTitle>
+                        <SheetTitle className="text-[17px]">{tx('Live cost')}</SheetTitle>
                         <SheetDescription className="truncate text-[12px] font-semibold text-[var(--color-ink)]">
                             {activeName}{versionLabel ? ` · ${versionLabel}` : ''}
                         </SheetDescription>
@@ -2331,18 +2333,7 @@ function RowCard({
     const cardRef = useRef<HTMLDivElement | null>(null)
     const detailsId = `yarn-component-${accent}-${index}-details`
     const displayName = componentName?.trim() || `${title} ${index + 1}`
-    const [tutorialExpanded, setTutorialExpanded] = useState(false)
-    const isExpanded = expanded || tutorialExpanded
-
-    useEffect(() => {
-        const el = cardRef.current
-        if (!el) return
-        const handleTutorial = (event: Event) => {
-            setTutorialExpanded((event as CustomEvent<boolean>).detail)
-        }
-        el.addEventListener('tutorial-expand-row', handleTutorial)
-        return () => el.removeEventListener('tutorial-expand-row', handleTutorial)
-    }, [])
+    const isExpanded = expanded
 
     const costPerM = costPer100m / 100
 
@@ -2816,7 +2807,7 @@ function QuickCostingView({
             data-enter-navigate-container="true"
             onKeyDown={handleEnterKeyNavigation}
         >
-            <EstimatorCard accent="neutral">
+            <EstimatorCard accent="neutral" data-tour-anchor="estimator.quick-basics">
                 <SectionHeader title="Quality basics" icon={Layers} accent="neutral" step={1} tutorialSection={2} />
                 <CardContent className="grid gap-4 p-4 sm:grid-cols-2 sm:p-5">
                     <div className="space-y-1.5 sm:col-span-2">
@@ -2858,7 +2849,7 @@ function QuickCostingView({
                 </CardContent>
             </EstimatorCard>
 
-            <EstimatorCard accent="warp">
+            <EstimatorCard accent="warp" data-tour-anchor="estimator.quick-warp">
                 <SectionHeader
                     title="Warp yarn"
                     icon={Sparkles}
@@ -2956,7 +2947,7 @@ function QuickCostingView({
                 </CardContent>
             </EstimatorCard>
 
-            <EstimatorCard accent="weft">
+            <EstimatorCard accent="weft" data-tour-anchor="estimator.quick-weft">
                 <SectionHeader
                     title="Weft yarn"
                     icon={Scissors}
@@ -3046,7 +3037,7 @@ function QuickCostingView({
                 </CardContent>
             </EstimatorCard>
 
-            <EstimatorCard accent="weave">
+            <EstimatorCard accent="weave" data-tour-anchor="estimator.quick-weaving">
                 <SectionHeader title="Weaving cost" icon={Gauge} accent="weave" step={4} tutorialSection={5} badgeContent={<SectionCostPill value={totals.weaveCostPerM} valid={hasValidCostResult} />} />
                 <CardContent className="space-y-4 p-4 sm:p-5">
                     <WeavingRateFields
@@ -3062,7 +3053,7 @@ function QuickCostingView({
                 </CardContent>
             </EstimatorCard>
 
-            <EstimatorCard accent="post">
+            <EstimatorCard accent="post" data-tour-anchor="estimator.quick-warping">
                 <SectionHeader title="Warping and sizing" icon={TrendingUp} accent="post" step={5} tutorialSection={6} badgeContent={<SectionCostPill value={totals.warpingAndSizingPerM} valid={hasValidCostResult} />} />
                 <CardContent className="space-y-4 p-4 sm:p-5">
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -3127,7 +3118,7 @@ function QuickCostingView({
                 </CardContent>
             </EstimatorCard>
 
-            <EstimatorCard accent="overhead">
+            <EstimatorCard accent="overhead" data-tour-anchor="estimator.quick-overhead">
                 <SectionHeader title="Factory overhead" icon={Calculator} accent="overhead" step={6} tutorialSection={7} badgeContent={<SectionCostPill value={costingResult.overheadPerM} valid={overheadReady} />} />
                 <CardContent className="space-y-4 p-4 sm:p-5">
                     <div className="space-y-2">
@@ -3172,7 +3163,7 @@ function QuickCostingView({
                 </CardContent>
             </EstimatorCard>
 
-            <EstimatorCard accent="neutral">
+            <EstimatorCard accent="neutral" data-tour-anchor="estimator.quick-pricing">
                 <SectionHeader
                     title={t("estimator.simulation.base_title")}
                     detail={<p className="text-[11px] text-[var(--color-muted)] font-normal">{t("estimator.simulation.base_description")}</p>}
@@ -3271,6 +3262,7 @@ export default function EstimatorClient({
     staleDefaultRateNames,
     organizationName,
     tutorialDismissed,
+    userMetadata,
     wizardDismissed = false,
     freeMode = false,
     onFreeUpgrade,
@@ -3280,6 +3272,7 @@ export default function EstimatorClient({
     onFreeUpgrade?: (tier: import('@/lib/subscription-access').SubscriptionTier) => void
     disableAutosave?: boolean
     tutorialDismissed: boolean
+    userMetadata?: Record<string, unknown> | null
     wizardDismissed?: boolean
     initialProfile?: FactoryCostProfile
     initialTemplates?: EstimatorTemplate[]
@@ -3520,11 +3513,13 @@ export default function EstimatorClient({
     const prepareTutorial = useCallback(() => {
         const previous = { ...tutorialViewRef.current }
         tutorialPreparingRef.current = true
-        setEntryMode('detailed')
+        setEntryMode('quick')
         setShowAdvancedOverhead(false)
+        setShowQualityLibrary(false)
+        setLiveEstimateOpen(false)
         return () => {
             tutorialPreparingRef.current = false
-            skipRestoredAssumptionsEffect.current = previous.entryMode !== 'detailed'
+            skipRestoredAssumptionsEffect.current = previous.entryMode !== 'quick'
             setEntryMode(previous.entryMode)
             setShowAdvancedOverhead(previous.showAdvancedOverhead)
             setLiveEstimateOpen(previous.liveEstimateOpen)
@@ -4122,9 +4117,9 @@ export default function EstimatorClient({
     const hasActiveQualityRecipeChanges = appliedTemplate
         ? hasSavedQualityRecipeChanges(appliedTemplate, state)
         : false
-    const topCostingActionLabel = freeMode ? 'Calculate & save · uses 1 costing' : sourceQuoteId && sourceRecordKind === 'costing'
-        ? 'Save New Version'
-        : 'Save Costing'
+    const topCostingActionLabel = freeMode ? tx('Calculate & save · uses 1 costing') : sourceQuoteId && sourceRecordKind === 'costing'
+        ? t('tourControls.estimator.saveNewVersion')
+        : t('tourControls.estimator.saveCosting')
 
     const applyTemplate = useCallback((tpl: EstimatorTemplate, confirmed = false) => {
         if (saveQuoteLockRef.current || unconfirmedRequestId) return
@@ -5284,17 +5279,15 @@ export default function EstimatorClient({
                 >
                     <CostEstimateTutorial
                         accountDismissed={tutorialDismissed}
+                        userMetadata={userMetadata}
                         enabled={state.isConfigured && !saving}
                         freePlan={freeMode}
                         existingCosting={Boolean(sourceQuoteId && sourceRecordKind === 'costing')}
                         productionPipeline={canUseProductionPipeline}
-                        overheadMode={state.overheadMode}
                         orgId={orgId}
                         userId={userId}
                         onPrepare={prepareTutorial}
                         onOpenLiveCostModal={setLiveEstimateOpen}
-                        onOpenMonthlyExpensesModal={setShowAdvancedOverhead}
-                        onOpenQualityLibraryModal={setShowQualityLibrary}
                         onActiveChange={setIsTutorialActive}
                     />
                 </aside>
@@ -5348,7 +5341,7 @@ export default function EstimatorClient({
                                 onValueChange={handleEntryModeChange}
                                 options={[
                                     { value: 'quick', label: 'Quick', controls: 'estimator-form-panel', title: tx('Essential construction inputs · same calculation engine') },
-                                    { value: 'detailed', label: 'Detailed', controls: 'estimator-form-panel', title: tx('Full technical inputs & factory assumptions · same calculation engine') },
+                                    { value: 'detailed', label: tx('Detailed'), controls: 'estimator-form-panel', title: tx('Full technical inputs & factory assumptions · same calculation engine') },
                                 ]}
                             />
                         </div>
@@ -5678,7 +5671,7 @@ export default function EstimatorClient({
                                     onValueChange={handleEntryModeChange}
                                     options={[
                                         { value: 'quick', label: 'Quick', controls: 'estimator-form-panel', title: tx('Quick Costing · same calculation engine') },
-                                        { value: 'detailed', label: 'Detailed', controls: 'estimator-form-panel', title: tx('Full technical inputs & factory assumptions · same calculation engine') },
+                                        { value: 'detailed', label: tx('Detailed'), controls: 'estimator-form-panel', title: tx('Full technical inputs & factory assumptions · same calculation engine') },
                                     ]}
                                 />
                             </div>
@@ -5739,7 +5732,7 @@ export default function EstimatorClient({
                         className={`max-h-[min(88dvh,48rem)] overflow-y-auto rounded-t-[22px] border-x-0 border-b-0 px-0 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] pt-0 md:top-1/2 md:bottom-auto md:left-1/2 md:right-auto md:-translate-x-1/2 md:-translate-y-1/2 md:w-[min(calc(100vw-3rem),48rem)] md:rounded-[22px] md:border md:border-[var(--color-hairline)] ${isTutorialActive ? '!animate-none !transition-none data-[state=open]:!animate-none data-[state=open]:!transition-none' : ''}`}
                     >
                         <SheetHeader className="border-b border-[var(--color-hairline)] bg-[var(--color-warning-amber-soft)]/70 px-5 pb-4 pt-5 pr-16 text-left">
-                            <SheetTitle className="text-[17px]">Change quality</SheetTitle>
+                            <SheetTitle className="text-[17px]">{tx('Change quality')}</SheetTitle>
                             <SheetDescription className="text-[12px] font-medium text-[var(--color-muted)]">Search and select a saved fabric recipe. Your current costing stays in place until you choose one.</SheetDescription>
                         </SheetHeader>
                         <div className="p-4 sm:p-5">

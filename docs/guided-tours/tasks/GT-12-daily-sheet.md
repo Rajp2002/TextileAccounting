@@ -20,6 +20,8 @@ GT-12. Give the Daily Sheet its own guide slot and a 9-step replica tour, keyed 
 
 New: `components/production/DailySheetGuidedTour.tsx`, `components/production/DailySheetTourPreview.tsx` (moved daily surfaces), `lib/daily-sheet-tour.ts`, `lib/i18n/daily-sheet-tutorial.ts`, tests `__tests__/daily-sheet-tour.test.ts`, `__tests__/daily-sheet-tour-preview.test.tsx`. Modified: `BaseDailyProductionSheet.tsx` (wrapper, guide slot, two anchors, label keys), `ProductionTourPreview.tsx` and `lib/production-tour.ts` / `lib/i18n/production-tutorial.ts` (remove the daily surfaces/ids/keys now moved), locales `dailySheet.*`, registry `daily-sheet` → `v2`, tests that assert the old literals (deliberate), contract test, harness (`daily-sheet` scenario rendering `BaseProductionClient` on the daily-sheet path with empty and one-machine data).
 
+Owner-approved clarification (2026-09-28): the owner answered “approve all three” to the coordinator’s three decisions. Page spec §F.1 now supplies the exact researched `dailySheet.draftOnDevice`, `dailySheet.showPending` and `dailySheet.shiftDetails` labels; use them in the already allowed live/replica sites. Page spec §F.2 permits implementation while PI-04 remains a separately tracked unresolved product defect, without navigation or U-06 copy changes. Preserve the source evidence. The browser/native/reviewer/owner requirements remain UNVERIFIED; status cannot become PASSED. These packet/page addenda are owner-approved documentation changes and must be preserved in the task patch.
+
 ## Protected surface
 
 Draft storage and restore, save/incomplete/correction/conflict flows, keyboard row navigation, print popup, settled-row locking.

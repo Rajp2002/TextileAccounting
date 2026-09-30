@@ -1,0 +1,2 @@
+{"scenario":"assignments","lang":"gu","size":"1024x768","steps":7,"logs":["warning: [harness] server action called recordTourEventAction","error: Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector","warning: [harness] server action called recordTourEventAction","warning: [harness] server action called recordTourEventAction","warning: [harness] server action called recordTourEventAction"]}
+[ 'navigation/API request' ]

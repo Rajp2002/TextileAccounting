@@ -1,0 +1,242 @@
+{
+  "scenario": "free-costings",
+  "lang": "en",
+  "size": "1024x768",
+  "steps": [
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Each Free costing is kept here",
+      "body": "Every costing you calculate and save appears here as a fixed record. Opening or exporting it does not use your monthly allowance.",
+      "step": "snapshots",
+      "status": "ready",
+      "eyebrow": "Sample · Step 1 of 4",
+      "progress": null,
+      "panel": {
+        "x": 270,
+        "y": 103,
+        "w": 360,
+        "h": 243
+      },
+      "highlight": {
+        "x": 270,
+        "y": 362,
+        "w": 732,
+        "h": 273
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "div(role=dialog)",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": "",
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 768,
+      "vw": 1024
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Export a costing sheet",
+      "body": "“Export” on a card opens its cost per metre and selling price as a document you can print or save.",
+      "step": "freeSelect",
+      "status": "ready",
+      "eyebrow": "Sample · Step 2 of 4",
+      "progress": null,
+      "panel": {
+        "x": 426,
+        "y": 477,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 802,
+        "y": 477,
+        "w": 91,
+        "h": 44
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": "",
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 768,
+      "vw": 1024
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Choose who will see the document",
+      "body": "“Internal Cost Estimate” shows your costs and margin. “Customer Quotation” shows only the price and your terms.",
+      "step": "internal",
+      "status": "ready",
+      "eyebrow": "Sample · Step 3 of 4",
+      "progress": null,
+      "panel": {
+        "x": 640,
+        "y": 21,
+        "w": 360,
+        "h": 243
+      },
+      "highlight": {
+        "x": 276,
+        "y": 96,
+        "w": 332,
+        "h": 256
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 16,
+        "y": 21,
+        "w": 608,
+        "h": 727
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": "",
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 768,
+      "vw": 1024
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "Calculate your first costing",
+      "body": "Choose “New Costing” to open the Cost Estimator. Saved costings appear here.",
+      "step": "finish",
+      "status": "ready",
+      "eyebrow": "Step 4 of 4",
+      "progress": null,
+      "panel": {
+        "x": 496,
+        "y": 137,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 872,
+        "y": 137,
+        "w": 130,
+        "h": 47
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": "",
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 768,
+      "vw": 1024
+    }
+  ],
+  "logs": [
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction"
+  ],
+  "apiRequests": [
+    {
+      "url": "http://localhost:5199/api/free/costings",
+      "method": "GET"
+    }
+  ],
+  "preClick": null,
+  "sampling": "legacy-900ms",
+  "before": {
+    "x": 0,
+    "y": 0,
+    "inner": null
+  },
+  "after": {
+    "scroll": {
+      "x": 0,
+      "y": 0,
+      "inner": null
+    },
+    "active": "<button data-slot=\"button\" data-variant=\"saffron\" data-size=\"default\" class=\"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm ",
+    "activeAnchor": "free-costings.new",
+    "activeRateBookField": null,
+    "activeControl": null,
+    "serverCalls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "navigations": [],
+    "scrollCalls": [],
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"saved-costings\":{\"firstShown\":\"2026-09-29T20:18:02.099Z\",\"version\":\"v1\",\"firstStarted\":true,\"completed\":true,\"completedVersion\":\"v2\"}}"
+    },
+    "search": ""
+  },
+  "issues": []
+}

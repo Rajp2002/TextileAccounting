@@ -1,0 +1,43 @@
+{
+  "label": "round2-baseline-tr768",
+  "cases": [
+    {
+      "id": "tr05-base-en-768x1024",
+      "kind": "estimator",
+      "language": "en",
+      "size": "768x1024",
+      "env": {},
+      "exitCode": 1,
+      "signal": null,
+      "frames": 84,
+      "issues": [
+        "est-warp/next@2000ms: status ready, overlap 4048, outline offscreen false",
+        "est-weft/next@2000ms: status ready, overlap 1656, outline offscreen false",
+        "est-weft/back@2000ms: status ready, overlap 1656, outline offscreen false",
+        "est-warp/back@2000ms: status ready, overlap 4048, outline offscreen false",
+        "est-warp/next-again@2000ms: status ready, overlap 4048, outline offscreen false",
+        "est-weft/next-again@2000ms: status ready, overlap 1656, outline offscreen false"
+      ],
+      "output": "/Users/rajpatel/Projects/textile Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/scratch/tour-fix-review-results/round2-baseline-tr768-2026-09-30T07-26-17-434Z/tr05-base-en-768x1024"
+    },
+    {
+      "id": "tr05-base-gu-768x1024",
+      "kind": "estimator",
+      "language": "gu",
+      "size": "768x1024",
+      "env": {},
+      "exitCode": 1,
+      "signal": null,
+      "frames": 84,
+      "issues": [
+        "est-warp/next@2000ms: status ready, overlap 4048, outline offscreen false",
+        "est-weft/next@2000ms: status ready, overlap 1656, outline offscreen false",
+        "est-weft/back@2000ms: status ready, overlap 1656, outline offscreen false",
+        "est-warp/back@2000ms: status ready, overlap 4048, outline offscreen false",
+        "est-warp/next-again@2000ms: status ready, overlap 4048, outline offscreen false",
+        "est-weft/next-again@2000ms: status ready, overlap 1656, outline offscreen false"
+      ],
+      "output": "/Users/rajpatel/Projects/textile Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b/scratch/tour-fix-review-results/round2-baseline-tr768-2026-09-30T07-26-17-434Z/tr05-base-gu-768x1024"
+    }
+  ]
+}

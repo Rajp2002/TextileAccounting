@@ -1,0 +1,8 @@
+PASS                     exit=0    gt14-0-en-1440x900                             en 1440x900  steps=6 maxOverlap=0 shots=8
+PASS                     exit=0    gt14-0-en-1024x768                             en 1024x768  steps=6 maxOverlap=0 shots=8
+PASS                     exit=0    gt14-0-gu-390x844                              gu 390x844   steps=6 maxOverlap=0 shots=8
+PASS                     exit=0    gt14-1-en-1440x900                             en 1440x900  steps=6 maxOverlap=0 shots=8
+PASS                     exit=0    gt14-1-en-1024x768                             en 1024x768  steps=6 maxOverlap=0 shots=8
+PASS                     exit=0    gt14-1-gu-390x844                              gu 390x844   steps=6 maxOverlap=0 shots=8
+
+6 runs, 36 captured steps: {"PASS":6}

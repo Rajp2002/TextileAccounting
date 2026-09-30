@@ -43,8 +43,11 @@ describe('Desktop workspace composition (sidebar | left rail | workspace | right
         expect(estimator).toMatch(/className="[^"]*fixed bottom-\[calc\(76px\+env\(safe-area-inset-bottom,0px\)\)\] right-4[^"]*lg:right-6 xl:right-8"/)
     })
 
-    it('shows the inline Rate Book tour launcher only on phones, where the guide rail is hidden', () => {
-        expect(rates).toContain('className="lg:hidden"')
+    it('uses one Rate Book guide rail inline on phones and pinned on wide desktops', () => {
+        expect(rates.match(/<RateBookTutorial\b/g)).toHaveLength(1)
+        expect(rates).not.toContain('RateBookTutorialLauncher')
+        expect(styles).toMatch(/\.rates-left-rail-desktop \{\s*display: block;\s*width: 100%;/)
+        expect(styles).not.toMatch(/\.rates-left-rail-desktop \{\s*display: none/)
     })
 
     it('orders the inline rail rules before the tier media queries so a rail never expands to full width on desktop', () => {

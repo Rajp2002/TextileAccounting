@@ -230,7 +230,7 @@ export function buildBasePayrollHistoryCsv(period: BasePayrollHistoryPeriod) {
     for (const worker of period.workers) {
         const earnings: BasePayrollHistoryEarning[] = worker.earnings.length > 0 ? worker.earnings : [{
             payType: 'piece_rate' as const,
-            machineLabel: '', costingLabel: '', rate: 0, meters: 0, grossPay: 0,
+            machineId: null, productionDates: [], machineLabel: '', costingLabel: '', rate: 0, meters: 0, grossPay: 0,
         }]
         for (const earning of earnings) {
             rows.push([

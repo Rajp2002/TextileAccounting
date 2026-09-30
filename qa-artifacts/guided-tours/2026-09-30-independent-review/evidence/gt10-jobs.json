@@ -1,0 +1,118 @@
+[
+  {
+    "id": "gt10-0-en-1440x900",
+    "task": "GT-10",
+    "scenario": "payroll",
+    "language": "en",
+    "size": "1440x900"
+  },
+  {
+    "id": "gt10-0-hi-1280x800",
+    "task": "GT-10",
+    "scenario": "payroll",
+    "language": "hi",
+    "size": "1280x800"
+  },
+  {
+    "id": "gt10-0-en-1024x768",
+    "task": "GT-10",
+    "scenario": "payroll",
+    "language": "en",
+    "size": "1024x768"
+  },
+  {
+    "id": "gt10-0-gu-390x844",
+    "task": "GT-10",
+    "scenario": "payroll",
+    "language": "gu",
+    "size": "390x844"
+  },
+  {
+    "id": "gt10-0-reduced-en-1024x768",
+    "task": "GT-10",
+    "scenario": "payroll",
+    "language": "en",
+    "size": "1024x768",
+    "env": {
+      "REDUCED_MOTION": "1"
+    }
+  },
+  {
+    "id": "gt10-1-en-1440x900",
+    "task": "GT-10",
+    "scenario": "payroll-extra",
+    "language": "en",
+    "size": "1440x900"
+  },
+  {
+    "id": "gt10-1-hi-1280x800",
+    "task": "GT-10",
+    "scenario": "payroll-extra",
+    "language": "hi",
+    "size": "1280x800"
+  },
+  {
+    "id": "gt10-1-en-1024x768",
+    "task": "GT-10",
+    "scenario": "payroll-extra",
+    "language": "en",
+    "size": "1024x768"
+  },
+  {
+    "id": "gt10-1-gu-390x844",
+    "task": "GT-10",
+    "scenario": "payroll-extra",
+    "language": "gu",
+    "size": "390x844"
+  },
+  {
+    "id": "gt10-1-reduced-en-1024x768",
+    "task": "GT-10",
+    "scenario": "payroll-extra",
+    "language": "en",
+    "size": "1024x768",
+    "env": {
+      "REDUCED_MOTION": "1"
+    }
+  },
+  {
+    "id": "gt10-exit-payroll-en-1440x900",
+    "task": "GT-10",
+    "scenario": "payroll",
+    "language": "en",
+    "size": "1440x900",
+    "env": {
+      "EXIT_AT": "4"
+    }
+  },
+  {
+    "id": "gt10-exit-payroll-gu-390x844",
+    "task": "GT-10",
+    "scenario": "payroll",
+    "language": "gu",
+    "size": "390x844",
+    "env": {
+      "EXIT_AT": "4"
+    }
+  },
+  {
+    "id": "gt10-exit-payroll-extra-en-1440x900",
+    "task": "GT-10",
+    "scenario": "payroll-extra",
+    "language": "en",
+    "size": "1440x900",
+    "env": {
+      "EXIT_AT": "3"
+    }
+  },
+  {
+    "id": "gt10-exit-payroll-extra-gu-390x844",
+    "task": "GT-10",
+    "scenario": "payroll-extra",
+    "language": "gu",
+    "size": "390x844",
+    "env": {
+      "EXIT_AT": "3"
+    }
+  }
+]

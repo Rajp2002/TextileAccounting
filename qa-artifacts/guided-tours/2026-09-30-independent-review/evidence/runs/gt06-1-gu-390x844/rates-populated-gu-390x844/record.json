@@ -1,0 +1,402 @@
+{
+  "scenario": "rates-populated",
+  "lang": "gu",
+  "size": "390x844",
+  "steps": [
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": {
+        "x": 14,
+        "y": 137,
+        "w": 362,
+        "h": 113
+      },
+      "rateBookRow": null,
+      "rateBookSearch": "",
+      "title": "તમારું પોતાનું યાર્ન ભાવપત્રક",
+      "body": "દરેક તાણા અને ભરણ યાર્ન માટે તમે ચૂકવો તે કિલોનો ભાવ રાખો. નવી કોસ્ટિંગમાં આ ભાવ સૂચવાય છે; યાર્ન ઉમેરવા “યાર્ન ભાવ ઉમેરો”.",
+      "step": "rb-purpose",
+      "status": "ready",
+      "eyebrow": "પગલું 1 / 6",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 555,
+        "w": 374,
+        "h": 281
+      },
+      "highlight": {
+        "x": 8,
+        "y": 131,
+        "w": 374,
+        "h": 125
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "div(role=dialog)",
+      "scrollY": 0,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": {
+        "x": 29,
+        "y": 466,
+        "w": 332,
+        "h": 44
+      },
+      "rateBookRow": null,
+      "rateBookSearch": "",
+      "title": "યાર્ન શોધો",
+      "body": "યાર્નના નામ કે સપ્લાયરથી શોધો. “સમીક્ષા બાકી” ફક્ત તપાસવાના બાકી ભાવ બતાવે છે.",
+      "step": "rb-find",
+      "status": "ready",
+      "eyebrow": "પગલું 2 / 6",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 632,
+        "w": 374,
+        "h": 204
+      },
+      "highlight": {
+        "x": 23,
+        "y": 460,
+        "w": 344,
+        "h": 56
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": {
+        "x": 178,
+        "y": 299,
+        "w": 130,
+        "h": 35
+      },
+      "rateBookRow": "11111111-1111-4111-8111-111111111111",
+      "rateBookSearch": "",
+      "title": "સપ્લાયર ભાવ બદલે ત્યારે ભાવ બદલો",
+      "body": "“ભાવ બદલો”થી નવો ભાવ અને તે ક્યાંથી આવ્યો, જેમ કે બિલ, લખી શકો છો. જૂનો ભાવ યાર્નના ઇતિહાસમાં રહે છે.",
+      "step": "rb-update",
+      "status": "ready",
+      "eyebrow": "પગલું 3 / 6",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 577,
+        "w": 374,
+        "h": 259
+      },
+      "highlight": {
+        "x": 172,
+        "y": 293,
+        "w": 142,
+        "h": 47
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 530,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": {
+        "x": 225,
+        "y": 178,
+        "w": 125,
+        "h": 21
+      },
+      "rateBookRow": "11111111-1111-4111-8111-111111111111",
+      "rateBookSearch": "",
+      "title": "યાદ અપાય ત્યારે ભાવ ફરી તપાસો",
+      "body": "તપાસ બાકી હોય તે ભાવ હજી જૂનો જ છે. સપ્લાયરનો ભાવ ન બદલાયો હોય તો ખાતરી કરો; બદલાયો હોય તો સુધારો.",
+      "step": "rb-review",
+      "status": "ready",
+      "eyebrow": "પગલું 4 / 6",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 577,
+        "w": 374,
+        "h": 259
+      },
+      "highlight": {
+        "x": 219,
+        "y": 172,
+        "w": 137,
+        "h": 33
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 499,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": {
+        "x": 44,
+        "y": 284,
+        "w": 306,
+        "h": 17
+      },
+      "rateBookRow": "11111111-1111-4111-8111-111111111111",
+      "rateBookSearch": "",
+      "title": "યાર્ન કઈ ક્વોલિટીમાં વપરાય છે તે જુઓ",
+      "body": "આ કૉલમમાં આ યાર્ન વાપરતી સાચવેલી ક્વોલિટી દેખાય છે. નવો ભાવ તેમની આગલી કોસ્ટિંગમાં વપરાય છે; સાચવેલી કોસ્ટિંગના આંકડા બદલાતા નથી.",
+      "step": "rb-usage",
+      "status": "ready",
+      "eyebrow": "પગલું 5 / 6",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 609,
+        "w": 374,
+        "h": 227
+      },
+      "highlight": {
+        "x": 38,
+        "y": 278,
+        "w": 318,
+        "h": 29
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 499,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": {
+        "x": 29,
+        "y": 333,
+        "w": 332,
+        "h": 44
+      },
+      "rateBookRow": null,
+      "rateBookSearch": "",
+      "title": "હમણાં ખરીદેલું યાર્ન તપાસો",
+      "body": "તેને શોધો અને તેનો ભાવ છેલ્લા બિલ સાથે મેળવો.",
+      "step": "rb-handoff",
+      "status": "ready",
+      "eyebrow": "પગલું 6 / 6",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 655,
+        "w": 374,
+        "h": 181
+      },
+      "highlight": {
+        "x": 23,
+        "y": 327,
+        "w": 344,
+        "h": 56
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 133,
+      "serverCalls": 3,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390
+    }
+  ],
+  "logs": [
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called getCostRateUsage",
+    "error: Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [tour] duplicate target rate-book rb-update",
+    "warning: [tour] duplicate target rate-book rb-update",
+    "warning: [tour] duplicate target rate-book rb-update",
+    "warning: [tour] duplicate target rate-book rb-update",
+    "warning: [tour] duplicate target rate-book rb-update",
+    "warning: [tour] duplicate target rate-book rb-update",
+    "warning: [tour] duplicate target rate-book rb-update",
+    "warning: [tour] duplicate target rate-book rb-update",
+    "warning: [tour] duplicate target rate-book rb-update",
+    "warning: [tour] duplicate target rate-book rb-update",
+    "warning: [tour] duplicate target rate-book rb-update",
+    "warning: [tour] duplicate target rate-book rb-update",
+    "warning: [tour] duplicate target rate-book rb-update",
+    "warning: [tour] duplicate target rate-book rb-update",
+    "warning: [tour] duplicate target rate-book rb-update",
+    "warning: [tour] duplicate target rate-book rb-update",
+    "warning: [tour] duplicate target rate-book rb-update",
+    "warning: [tour] duplicate target rate-book rb-update",
+    "warning: [tour] duplicate target rate-book rb-update",
+    "warning: [tour] duplicate target rate-book rb-update",
+    "warning: [tour] duplicate target rate-book rb-update",
+    "warning: [tour] duplicate target rate-book rb-update",
+    "warning: [tour] duplicate target rate-book rb-update",
+    "warning: [tour] duplicate target rate-book rb-update",
+    "warning: [tour] duplicate target rate-book rb-update",
+    "warning: [tour] duplicate target rate-book rb-update",
+    "warning: [tour] duplicate target rate-book rb-update",
+    "warning: [tour] duplicate target rate-book rb-review",
+    "warning: [tour] duplicate target rate-book rb-review",
+    "warning: [tour] duplicate target rate-book rb-review",
+    "warning: [tour] duplicate target rate-book rb-review",
+    "warning: [tour] duplicate target rate-book rb-usage",
+    "warning: [tour] duplicate target rate-book rb-usage",
+    "warning: [tour] duplicate target rate-book rb-usage",
+    "warning: [tour] duplicate target rate-book rb-usage",
+    "warning: [harness] server action called recordTourEventAction"
+  ],
+  "apiRequests": [
+    {
+      "url": "http://localhost:5199/api/analytics/plan-events",
+      "method": "POST"
+    }
+  ],
+  "preClick": null,
+  "sampling": "legacy-900ms",
+  "rateBookBefore": {
+    "search": "",
+    "calls": 2
+  },
+  "before": {
+    "x": 0,
+    "y": 0,
+    "inner": null
+  },
+  "after": {
+    "scroll": {
+      "x": 0,
+      "y": 0,
+      "inner": null
+    },
+    "active": "<div data-ratebook-field=\"yarnSearch\" tabindex=\"-1\" class=\"relative min-w-[min(100%,14rem)] flex-1 sm:max-w-xs md:max-w-sm\"><svg xmlns=\"http://www.w3.org/2000/s",
+    "activeAnchor": null,
+    "activeRateBookField": "yarnSearch",
+    "activeControl": null,
+    "serverCalls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "getCostRateUsage",
+        "file": "app/(dashboard)/owner/rates/actions.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "navigations": [],
+    "scrollCalls": [],
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"rate-book\":{\"firstShown\":\"2026-09-29T20:45:01.563Z\",\"version\":\"v1\",\"firstStarted\":true,\"completed\":true,\"completedVersion\":\"v2\"}}"
+    },
+    "search": ""
+  },
+  "issues": []
+}

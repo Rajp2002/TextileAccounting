@@ -1,0 +1,162 @@
+[
+  {
+    "run": "gt12-0-en-1440x900",
+    "steps": [
+      "ds-sheet",
+      "ds-shift",
+      "ds-reading"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt12-0-en-1440x900-01-03.png"
+  },
+  {
+    "run": "gt12-0-en-1440x900",
+    "steps": [
+      "ds-pending",
+      "ds-earnings",
+      "ds-draft"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt12-0-en-1440x900-04-06.png"
+  },
+  {
+    "run": "gt12-0-en-1440x900",
+    "steps": [
+      "ds-save",
+      "ds-correct",
+      "ds-handoff"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt12-0-en-1440x900-07-09.png"
+  },
+  {
+    "run": "gt12-0-gu-390x844",
+    "steps": [
+      "ds-sheet",
+      "ds-shift",
+      "ds-reading"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt12-0-gu-390x844-01-03.png"
+  },
+  {
+    "run": "gt12-0-gu-390x844",
+    "steps": [
+      "ds-pending",
+      "ds-earnings",
+      "ds-draft"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt12-0-gu-390x844-04-06.png"
+  },
+  {
+    "run": "gt12-0-gu-390x844",
+    "steps": [
+      "ds-save",
+      "ds-correct",
+      "ds-handoff"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt12-0-gu-390x844-07-09.png"
+  },
+  {
+    "run": "gt12-1-en-1440x900",
+    "steps": [
+      "ds-sheet",
+      "ds-shift",
+      "ds-reading"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt12-1-en-1440x900-01-03.png"
+  },
+  {
+    "run": "gt12-1-en-1440x900",
+    "steps": [
+      "ds-pending",
+      "ds-earnings",
+      "ds-draft"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt12-1-en-1440x900-04-06.png"
+  },
+  {
+    "run": "gt12-1-en-1440x900",
+    "steps": [
+      "ds-save",
+      "ds-correct",
+      "ds-handoff"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt12-1-en-1440x900-07-09.png"
+  },
+  {
+    "run": "gt12-1-gu-390x844",
+    "steps": [
+      "ds-sheet",
+      "ds-shift",
+      "ds-reading"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt12-1-gu-390x844-01-03.png"
+  },
+  {
+    "run": "gt12-1-gu-390x844",
+    "steps": [
+      "ds-pending",
+      "ds-earnings",
+      "ds-draft"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt12-1-gu-390x844-04-06.png"
+  },
+  {
+    "run": "gt12-1-gu-390x844",
+    "steps": [
+      "ds-save",
+      "ds-correct",
+      "ds-handoff"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt12-1-gu-390x844-07-09.png"
+  },
+  {
+    "run": "gt12-exit-daily-sheet-en-1440x900",
+    "steps": [
+      "ds-sheet",
+      "ds-shift",
+      "ds-reading"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt12-exit-daily-sheet-en-1440x900-01-03.png"
+  },
+  {
+    "run": "gt12-exit-daily-sheet-en-1440x900",
+    "steps": [
+      "ds-pending",
+      "ds-earnings",
+      "ds-draft"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt12-exit-daily-sheet-en-1440x900-04-06.png"
+  },
+  {
+    "run": "gt12-exit-daily-sheet-en-1440x900",
+    "steps": [
+      "ds-save",
+      "ds-correct"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt12-exit-daily-sheet-en-1440x900-07-08.png"
+  },
+  {
+    "run": "gt12-exit-daily-sheet-gu-390x844",
+    "steps": [
+      "ds-sheet",
+      "ds-shift",
+      "ds-reading"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt12-exit-daily-sheet-gu-390x844-01-03.png"
+  },
+  {
+    "run": "gt12-exit-daily-sheet-gu-390x844",
+    "steps": [
+      "ds-pending",
+      "ds-earnings",
+      "ds-draft"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt12-exit-daily-sheet-gu-390x844-04-06.png"
+  },
+  {
+    "run": "gt12-exit-daily-sheet-gu-390x844",
+    "steps": [
+      "ds-save",
+      "ds-correct"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt12-exit-daily-sheet-gu-390x844-07-08.png"
+  }
+]

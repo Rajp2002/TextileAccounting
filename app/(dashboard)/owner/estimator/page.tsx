@@ -28,6 +28,7 @@ export default async function EstimatorPage() {
         initialWorkers={undefined}
         tutorialDismissed={user.user_metadata?.cost_estimate_tutorial_dismissed === true}
         wizardDismissed={wizardDismissed}
+        userMetadata={{ tour_preferences: user.user_metadata?.tour_preferences }}
         userId={user.id}
         orgId={profile.org_id}
         canUseProductionPipeline={canUseProductionPipeline}

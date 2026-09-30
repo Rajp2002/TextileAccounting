@@ -1,0 +1,366 @@
+{
+  "observation": "One unchanged BaseProduction mount production_viewed event per main run, blocked by the safety guard. Original raw FAIL and API assertions are retained. Tour-added server calls are preference events only.",
+  "source": "app/(dashboard)/owner/production/BaseProductionClient.tsx:287",
+  "cases": [
+    {
+      "id": "gt15-0-en-1440x900",
+      "apiRequests": [
+        {
+          "type": "request",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST",
+          "at": 1790721883210,
+          "body": "{\"eventName\":\"production_viewed\",\"properties\":{\"surface\":\"base_production_core\"}}"
+        }
+      ],
+      "blocked": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ],
+      "issues": [
+        "navigation/API request"
+      ]
+    },
+    {
+      "id": "gt15-0-hi-1280x800",
+      "apiRequests": [
+        {
+          "type": "request",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST",
+          "at": 1790721951665,
+          "body": "{\"eventName\":\"production_viewed\",\"properties\":{\"surface\":\"base_production_core\"}}"
+        }
+      ],
+      "blocked": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ],
+      "issues": [
+        "ma-purpose: panel/outline overlap 5724; MA-1/default board anchor remains unverified",
+        "navigation/API request"
+      ]
+    },
+    {
+      "id": "gt15-0-en-1024x768",
+      "apiRequests": [
+        {
+          "type": "request",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST",
+          "at": 1790722006644,
+          "body": "{\"eventName\":\"production_viewed\",\"properties\":{\"surface\":\"base_production_core\"}}"
+        }
+      ],
+      "blocked": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ],
+      "issues": [
+        "ma-purpose: panel/outline overlap 10070; MA-1/default board anchor remains unverified",
+        "navigation/API request"
+      ]
+    },
+    {
+      "id": "gt15-0-gu-390x844",
+      "apiRequests": [
+        {
+          "type": "request",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST",
+          "at": 1790722051450,
+          "body": "{\"eventName\":\"production_viewed\",\"properties\":{\"surface\":\"base_production_core\"}}"
+        }
+      ],
+      "blocked": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ],
+      "issues": [
+        "navigation/API request"
+      ]
+    },
+    {
+      "id": "gt15-0-reduced-en-1024x768",
+      "apiRequests": [
+        {
+          "type": "request",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST",
+          "at": 1790722096321,
+          "body": "{\"eventName\":\"production_viewed\",\"properties\":{\"surface\":\"base_production_core\"}}"
+        }
+      ],
+      "blocked": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ],
+      "issues": [
+        "ma-purpose: panel/outline overlap 10070; MA-1/default board anchor remains unverified",
+        "navigation/API request"
+      ]
+    },
+    {
+      "id": "gt15-1-en-1440x900",
+      "apiRequests": [
+        {
+          "type": "request",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST",
+          "at": 1790722141373,
+          "body": "{\"eventName\":\"production_viewed\",\"properties\":{\"surface\":\"base_production_core\"}}"
+        }
+      ],
+      "blocked": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ],
+      "issues": [
+        "navigation/API request"
+      ]
+    },
+    {
+      "id": "gt15-1-hi-1280x800",
+      "apiRequests": [
+        {
+          "type": "request",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST",
+          "at": 1790722188112,
+          "body": "{\"eventName\":\"production_viewed\",\"properties\":{\"surface\":\"base_production_core\"}}"
+        }
+      ],
+      "blocked": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ],
+      "issues": [
+        "ma-purpose: panel/outline overlap 5724; MA-1/default board anchor remains unverified",
+        "navigation/API request"
+      ]
+    },
+    {
+      "id": "gt15-1-en-1024x768",
+      "apiRequests": [
+        {
+          "type": "request",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST",
+          "at": 1790722246885,
+          "body": "{\"eventName\":\"production_viewed\",\"properties\":{\"surface\":\"base_production_core\"}}"
+        }
+      ],
+      "blocked": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ],
+      "issues": [
+        "ma-purpose: panel/outline overlap 10070; MA-1/default board anchor remains unverified",
+        "navigation/API request"
+      ]
+    },
+    {
+      "id": "gt15-1-gu-390x844",
+      "apiRequests": [
+        {
+          "type": "request",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST",
+          "at": 1790722291857,
+          "body": "{\"eventName\":\"production_viewed\",\"properties\":{\"surface\":\"base_production_core\"}}"
+        }
+      ],
+      "blocked": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ],
+      "issues": [
+        "navigation/API request"
+      ]
+    },
+    {
+      "id": "gt15-1-reduced-en-1024x768",
+      "apiRequests": [
+        {
+          "type": "request",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST",
+          "at": 1790722336776,
+          "body": "{\"eventName\":\"production_viewed\",\"properties\":{\"surface\":\"base_production_core\"}}"
+        }
+      ],
+      "blocked": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ],
+      "issues": [
+        "ma-purpose: panel/outline overlap 10070; MA-1/default board anchor remains unverified",
+        "navigation/API request"
+      ]
+    },
+    {
+      "id": "gt15-exit-assignments-en-1440x900",
+      "apiRequests": [
+        {
+          "type": "request",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST",
+          "at": 1790722381903,
+          "body": "{\"eventName\":\"production_viewed\",\"properties\":{\"surface\":\"base_production_core\"}}"
+        }
+      ],
+      "blocked": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ],
+      "issues": [
+        "navigation/API request"
+      ]
+    },
+    {
+      "id": "gt15-exit-assignments-gu-390x844",
+      "apiRequests": [
+        {
+          "type": "request",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST",
+          "at": 1790722430178,
+          "body": "{\"eventName\":\"production_viewed\",\"properties\":{\"surface\":\"base_production_core\"}}"
+        }
+      ],
+      "blocked": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ],
+      "issues": [
+        "navigation/API request"
+      ]
+    },
+    {
+      "id": "gt15-night-focus-en-1440x900",
+      "apiRequests": [
+        {
+          "type": "request",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST",
+          "at": 1790722471408,
+          "body": "{\"eventName\":\"production_viewed\",\"properties\":{\"surface\":\"base_production_core\"}}"
+        }
+      ],
+      "blocked": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ],
+      "issues": [
+        "navigation/API request"
+      ]
+    },
+    {
+      "id": "gt15-night-focus-hi-1280x800",
+      "apiRequests": [
+        {
+          "type": "request",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST",
+          "at": 1790722516531,
+          "body": "{\"eventName\":\"production_viewed\",\"properties\":{\"surface\":\"base_production_core\"}}"
+        }
+      ],
+      "blocked": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ],
+      "issues": [
+        "ma-purpose: panel/outline overlap 5724; MA-1/default board anchor remains unverified",
+        "navigation/API request"
+      ]
+    },
+    {
+      "id": "gt15-retry-night-focus-en-1024x768",
+      "apiRequests": [
+        {
+          "type": "request",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST",
+          "at": 1790722716027,
+          "body": "{\"eventName\":\"production_viewed\",\"properties\":{\"surface\":\"base_production_core\"}}"
+        }
+      ],
+      "blocked": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ],
+      "issues": [
+        "ma-purpose: panel/outline overlap 10070; MA-1/default board anchor remains unverified",
+        "navigation/API request"
+      ]
+    },
+    {
+      "id": "gt15-retry-night-focus-gu-390x844",
+      "apiRequests": [
+        {
+          "type": "request",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST",
+          "at": 1790722761311,
+          "body": "{\"eventName\":\"production_viewed\",\"properties\":{\"surface\":\"base_production_core\"}}"
+        }
+      ],
+      "blocked": [
+        {
+          "type": "blocked-api",
+          "url": "http://localhost:5199/api/analytics/plan-events",
+          "method": "POST"
+        }
+      ],
+      "issues": [
+        "navigation/API request"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,505 @@
+{
+  "scenario": "machines?populated=1",
+  "lang": "hi",
+  "size": "1280x800",
+  "steps": [
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "हर लूम के लिए एक रिकॉर्ड",
+      "body": "अपना हर लूम एक बार जोड़ें। फिर उत्पादन, आवंटन और पेरोल उसे नाम से पहचानते हैं।",
+      "step": "mc-purpose",
+      "status": "ready",
+      "eyebrow": "चरण 1 / 6",
+      "progress": null,
+      "panel": {
+        "x": 270,
+        "y": 100,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 270,
+        "y": 15,
+        "w": 775,
+        "h": 69
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "div(role=dialog)",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280,
+      "machines": {
+        "search": "",
+        "status": "all",
+        "names": [
+          "नमूना रैपियर",
+          "नमूना लूम 2"
+        ],
+        "samples": true,
+        "sampleCount": 2,
+        "bannerCount": 1,
+        "preview": false,
+        "enabledFields": 0,
+        "visibleClose": 0,
+        "anchors": 1,
+        "inert": true,
+        "url": "http://localhost:5199/owner/machines?search=Retained&status=needs_setup",
+        "calls": 2,
+        "storage": {
+          "weavly_language": "hi"
+        }
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "जैसा फ़्लोर पर कहते हैं, वैसा नाम दें",
+      "body": "मशीन का प्रकार और \"रेपियर 3\" जैसा वैकल्पिक लेबल चुनें। नाम खाली छोड़ें तो Weavly नंबर देता है।",
+      "step": "mc-details",
+      "status": "ready",
+      "eyebrow": "नमूना · चरण 2 / 6",
+      "progress": null,
+      "panel": {
+        "x": 736,
+        "y": 229,
+        "w": 360,
+        "h": 221
+      },
+      "highlight": {
+        "x": 224,
+        "y": 304,
+        "w": 480,
+        "h": 252
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 208,
+        "y": 229,
+        "w": 512,
+        "h": 343
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280,
+      "machines": {
+        "search": "",
+        "status": "all",
+        "names": [
+          "नमूना रैपियर",
+          "नमूना लूम 2"
+        ],
+        "samples": true,
+        "sampleCount": 2,
+        "bannerCount": 1,
+        "preview": true,
+        "enabledFields": 0,
+        "visibleClose": 0,
+        "anchors": 1,
+        "inert": true,
+        "url": "http://localhost:5199/owner/machines?search=Retained&status=needs_setup",
+        "calls": 2,
+        "storage": {
+          "weavly_language": "hi"
+        }
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "जोड़ा मतलब तैयार नहीं",
+      "body": "मशीन के पास बुनने को क्वालिटी और शिफ्ट के लिए कारीगर न हो तब तक सेटअप आवश्यक दिखता है।",
+      "step": "mc-readiness",
+      "status": "ready",
+      "eyebrow": "नमूना · चरण 3 / 6",
+      "progress": null,
+      "panel": {
+        "x": 284,
+        "y": 249,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 660,
+        "y": 249,
+        "w": 385,
+        "h": 222
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280,
+      "machines": {
+        "search": "",
+        "status": "all",
+        "names": [
+          "नमूना रैपियर",
+          "नमूना लूम 2"
+        ],
+        "samples": true,
+        "sampleCount": 2,
+        "bannerCount": 1,
+        "preview": false,
+        "enabledFields": 0,
+        "visibleClose": 0,
+        "anchors": 1,
+        "inert": true,
+        "url": "http://localhost:5199/owner/machines?search=Retained&status=needs_setup",
+        "calls": 2,
+        "storage": {
+          "weavly_language": "hi"
+        }
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "पहले उसे क्वालिटी दें",
+      "body": "उत्पादन में क्वालिटी पर लूम दें उसे इस लूम पर लगाता है।",
+      "step": "mc-quality",
+      "status": "ready",
+      "eyebrow": "चरण 4 / 6",
+      "progress": null,
+      "panel": {
+        "x": 689,
+        "y": 492,
+        "w": 360,
+        "h": 152
+      },
+      "highlight": {
+        "x": 1065,
+        "y": 492,
+        "w": 178,
+        "h": 129
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280,
+      "machines": {
+        "search": "",
+        "status": "all",
+        "names": [
+          "नमूना रैपियर",
+          "नमूना लूम 2"
+        ],
+        "samples": true,
+        "sampleCount": 2,
+        "bannerCount": 1,
+        "preview": false,
+        "enabledFields": 0,
+        "visibleClose": 0,
+        "anchors": 1,
+        "inert": true,
+        "url": "http://localhost:5199/owner/machines?search=Retained&status=needs_setup",
+        "calls": 2,
+        "storage": {
+          "weavly_language": "hi"
+        }
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "फिर उसे कारीगर दें",
+      "body": "मशीन आवंटन में हर शिफ्ट में यह लूम कौन चलाए, यह चुनें।",
+      "step": "mc-worker",
+      "status": "ready",
+      "eyebrow": "चरण 5 / 6",
+      "progress": null,
+      "panel": {
+        "x": 689,
+        "y": 609,
+        "w": 360,
+        "h": 152
+      },
+      "highlight": {
+        "x": 1065,
+        "y": 609,
+        "w": 178,
+        "h": 97
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280,
+      "machines": {
+        "search": "",
+        "status": "all",
+        "names": [
+          "नमूना रैपियर",
+          "नमूना लूम 2"
+        ],
+        "samples": true,
+        "sampleCount": 2,
+        "bannerCount": 1,
+        "preview": false,
+        "enabledFields": 0,
+        "visibleClose": 0,
+        "anchors": 1,
+        "inert": true,
+        "url": "http://localhost:5199/owner/machines?search=Retained&status=needs_setup",
+        "calls": 2,
+        "storage": {
+          "weavly_language": "hi"
+        }
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "अपने लूम जोड़ें",
+      "body": "अपने फ़्लोर के हर लूम के लिए एक बार मशीन जोड़ें चुनें।",
+      "step": "mc-handoff",
+      "status": "ready",
+      "eyebrow": "चरण 6 / 6",
+      "progress": null,
+      "panel": {
+        "x": 674,
+        "y": 16,
+        "w": 360,
+        "h": 152
+      },
+      "highlight": {
+        "x": 1050,
+        "y": 15,
+        "w": 208,
+        "h": 51
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280,
+      "machines": {
+        "search": "Retained",
+        "status": "needs_setup",
+        "names": [
+          "Retained loom"
+        ],
+        "samples": false,
+        "sampleCount": 0,
+        "bannerCount": 0,
+        "preview": false,
+        "enabledFields": 0,
+        "visibleClose": 0,
+        "anchors": 1,
+        "inert": true,
+        "url": "http://localhost:5199/owner/machines?search=Retained&status=needs_setup",
+        "calls": 2,
+        "storage": {
+          "weavly_language": "hi"
+        }
+      }
+    }
+  ],
+  "logs": [
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction",
+    "warning: [harness] server action called recordTourEventAction"
+  ],
+  "apiRequests": [],
+  "preClick": null,
+  "sampling": "legacy-900ms",
+  "machinesBefore": {
+    "search": "Retained",
+    "status": "needs_setup",
+    "names": [
+      "Retained loom"
+    ],
+    "samples": false,
+    "sampleCount": 0,
+    "bannerCount": 0,
+    "preview": false,
+    "enabledFields": 0,
+    "visibleClose": 0,
+    "anchors": 1,
+    "inert": false,
+    "url": "http://localhost:5199/owner/machines?search=Retained&status=needs_setup",
+    "calls": 1,
+    "storage": {
+      "weavly_language": "hi"
+    }
+  },
+  "before": {
+    "x": 0,
+    "y": 0,
+    "inner": null
+  },
+  "machinesBack": true,
+  "after": {
+    "scroll": {
+      "x": 0,
+      "y": 0,
+      "inner": null
+    },
+    "active": "<button data-slot=\"button\" data-variant=\"default\" data-size=\"default\" class=\"inline-flex items-center justify-center gap-2 whitespace-nowrap transition-[color,b",
+    "activeAnchor": "machines.add",
+    "activeRateBookField": null,
+    "activeControl": null,
+    "serverCalls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "navigations": [],
+    "scrollCalls": [
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      }
+    ],
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"machines\":{\"firstShown\":\"2026-09-29T22:16:21.416Z\",\"version\":\"v1\",\"firstStarted\":true,\"completed\":true,\"completedVersion\":\"v2\"}}"
+    },
+    "search": null
+  },
+  "machinesAfter": {
+    "search": "Retained",
+    "status": "needs_setup",
+    "names": [
+      "Retained loom"
+    ],
+    "samples": false,
+    "sampleCount": 0,
+    "bannerCount": 0,
+    "preview": false,
+    "enabledFields": 0,
+    "visibleClose": 0,
+    "anchors": 1,
+    "inert": false,
+    "url": "http://localhost:5199/owner/machines?search=Retained&status=needs_setup",
+    "calls": 3,
+    "storage": {
+      "weavly_language": "hi"
+    }
+  },
+  "issues": []
+}

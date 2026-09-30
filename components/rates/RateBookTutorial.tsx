@@ -1,700 +1,165 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
-import { dismissRatebookTutorial } from '@/app/(dashboard)/owner/rates/tutorial-actions'
-import { useTranslation } from '@/lib/i18n/context'
-import { rateBookTutorialCopy, type RatebookTutorialField } from '@/lib/i18n/rate-book-tutorial'
+import dynamic from 'next/dynamic'
+import { useRef } from 'react'
 import { ChevronDown, CircleHelp } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { TourInvitation } from '@/components/tours/TourInvitation'
 import { railIcon, railSurface } from '@/components/ui/rail'
 import { cn } from '@/lib/utils'
-import { findTourTarget, isTourTargetVisible } from '@/lib/tutorial-target'
-import { useMobileTour } from '@/hooks/use-mobile-tour'
-import { useTourViewportLock } from '@/hooks/use-tour-viewport-lock'
-import { TourInvitation } from '@/components/tours/TourInvitation'
-import { RATE_BOOK_TOUR_STEPS, RATE_BOOK_HELP_FIELDS, formatRateBookTourText } from '@/lib/rate-book-tour'
+import { useTranslation } from '@/lib/i18n/context'
+import type { RateBookStep } from '@/lib/rate-book-tour'
 
-export type RatebookStep = {
-    section: number
-    target: HTMLElement | null
-    card: HTMLElement | null
-    field: RatebookTutorialField
-    inSheet?: boolean
-    inPopover?: boolean
-}
+const RateBookTourRuntime = dynamic(() => import('./RateBookTourRuntime'), { ssr: false })
+// Existing product help and principles stay static; step copy loads with the runtime.
+export const rateBookHelpCopy = {
+  "en": {
+    "helpTitle": "Rate Book help: reviews, trends and maintenance",
+    "fields": {
+      "directionFilter": {
+        "title": "Find the rates needing attention",
+        "description": "Use All, Warp or Weft to narrow the list. Needs Review includes overdue prices and yarns discovered from saved qualities or costings that still need owner confirmation. Clear filters to see other yarns."
+      },
+      "quickReviewAction": {
+        "title": "Confirm only a checked price",
+        "description": "When the supplier price is unchanged, use the row’s review action to confirm it without changing the value. Confirm All as Current applies to all pending reviews, so check every included rate first. Rate Review opens the pending list."
+      },
+      "rateAndTrend": {
+        "title": "Read the change from your last price",
+        "description": "The current price is in ₹/kg. The change badge compares it with the previous recorded value: ₹200 to ₹220 is +₹20 (+10%). Initial rate means there is no previous value to compare."
+      },
+      "rateDrawerFields": {
+        "title": "Use {advancedEdit} for full details",
+        "description": "{advancedEdit} contains dates, Source, notes and {reviewEvery} (30–365 days). Existing yarn names are locked; to rename one, add a replacement rate and intentionally update Saved Qualities. A discovery source stays tied to the original quality or costing."
+      },
+      "reviewRailWidget": {
+        "title": "Check discovered yarns and conflicts",
+        "description": "Saving a quality or costing can discover a yarn for owner review. If different prices are found, review their usages before choosing the current rate. This is discovery from your records, not supplier verification."
+      },
+      "activityAndArchive": {
+        "title": "Keep history when retiring a yarn",
+        "description": "Use the row menu’s {activity} to inspect recorded prices and reviews. {archiveRate} removes an unused yarn from the active list without changing Saved Qualities or historical costings. Find it under {archivedRates} and choose {restoreRate} when needed."
+      }
+    },
+    "principles": [
+      "Saving a rate updates matching yarn prices in linked Saved Qualities for future estimates.",
+      "Historical costing snapshots keep their original numbers.",
+      "Yarns discovered from saved qualities or costings need your supplier-price check."
+    ]
+  },
+  "hi": {
+    "helpTitle": "रेट बुक सहायता: समीक्षा, भाव का अंतर और रखरखाव",
+    "fields": {
+      "directionFilter": {
+        "title": "समीक्षा वाले भाव खोजें",
+        "description": "सभी, ताना या बाना से सूची सीमित करें। समीक्षा आवश्यक में पुराने भाव और सेव की गई क्वालिटी या कॉस्टिंग से मिले अपुष्ट धागे आते हैं। अन्य धागे देखने के लिए फ़िल्टर हटाएँ।"
+      },
+      "quickReviewAction": {
+        "title": "जाँचे हुए भाव की ही पुष्टि करें",
+        "description": "सप्लायर का भाव नहीं बदला तो पंक्ति की समीक्षा क्रिया से पुष्टि करें; मूल्य नहीं बदलेगा। सभी को वर्तमान के रूप में पुष्टि करें सभी लंबित रेट पर लागू होता है, इसलिए पहले हर भाव जाँचें। रेट समीक्षा से लंबित सूची खोलें।"
+      },
+      "rateAndTrend": {
+        "title": "पिछले दर्ज भाव से अंतर देखें",
+        "description": "वर्तमान भाव ₹/किग्रा में है। बैज पिछले दर्ज मूल्य से तुलना करता है: ₹200 से ₹220 यानी +₹20 (+10%)। शुरुआती रेट का मतलब तुलना के लिए कोई पिछला मूल्य नहीं है।"
+      },
+      "rateDrawerFields": {
+        "title": "पूरा विवरण {advancedEdit} में देखें",
+        "description": "{advancedEdit} में तारीखें, स्रोत, नोट और {reviewEvery} (30–365 दिन) हैं। मौजूदा यार्न का नाम लॉक है; नया नाम चाहिए तो नया रेट जोड़कर सेव की गई क्वालिटीज़ बदलें। खोज का स्रोत मूल क्वालिटी या कॉस्टिंग से जुड़ा रहता है।"
+      },
+      "reviewRailWidget": {
+        "title": "मिले हुए धागे और अलग भाव जाँचें",
+        "description": "क्वालिटी या कॉस्टिंग सेव करने से नया यार्न समीक्षा के लिए मिल सकता है। अलग-अलग भाव मिले तो वर्तमान भाव चुनने से पहले उनके उपयोग देखें। यह आपके रिकॉर्ड से मिली जानकारी है, सप्लायर की पुष्टि नहीं।"
+      },
+      "activityAndArchive": {
+        "title": "धागा हटाते समय इतिहास रखें",
+        "description": "पंक्ति मेनू की {activity} में दर्ज भाव और समीक्षाएँ देखें। {archiveRate} से धागा सक्रिय सूची से हटता है; सेव की गई क्वालिटीज़ और पुराने कॉस्टिंग नहीं बदलते। {archivedRates} में उसे ढूँढकर {restoreRate} चुनें।"
+      }
+    },
+    "principles": [
+      "रेट सेव करने पर जुड़ी सेव की गई क्वालिटीज़ के मेल खाते यार्न भाव आगे के अनुमानों के लिए बदलते हैं।",
+      "पुराने कॉस्टिंग स्नैपशॉट अपने मूल आँकड़े रखते हैं।",
+      "सेव की गई क्वालिटी या कॉस्टिंग से मिले यार्न का भाव सप्लायर से जाँचना ज़रूरी है।"
+    ]
+  },
+  "gu": {
+    "helpTitle": "રેટ બુક સહાય: સમીક્ષા, ભાવનો તફાવત અને જાળવણી",
+    "fields": {
+      "directionFilter": {
+        "title": "સમીક્ષા જોઈતા ભાવ શોધો",
+        "description": "બધા, તાણા કે વાણા વડે યાદી નાની કરો. સમીક્ષા જરૂરીમાં જૂના ભાવ અને સેવ કરેલી ક્વોલિટી કે કોસ્ટિંગમાંથી મળેલા અચકાસેલા દોરા આવે છે. બીજા દોરા જોવા ફિલ્ટર દૂર કરો."
+      },
+      "quickReviewAction": {
+        "title": "ચકાસેલા ભાવની જ પુષ્ટિ કરો",
+        "description": "સપ્લાયરનો ભાવ ન બદલાયો હોય તો પંક્તિની સમીક્ષા ક્રિયાથી પુષ્ટિ કરો; કિંમત બદલાશે નહીં. બધાને વર્તમાન તરીકે પુષ્ટિ કરો બધા બાકી રેટ પર લાગુ પડે છે, તેથી પહેલાં દરેક ભાવ તપાસો. રેટ સમીક્ષાથી બાકી યાદી ખોલો."
+      },
+      "rateAndTrend": {
+        "title": "પાછલા નોંધેલા ભાવથી તફાવત જુઓ",
+        "description": "વર્તમાન ભાવ ₹/કિગ્રામાં છે. બેજ અગાઉ નોંધેલી કિંમત સાથે સરખાવે છે: ₹200થી ₹220 એટલે +₹20 (+10%). શરૂઆતનો રેટ એટલે સરખામણી માટે અગાઉની કિંમત નથી."
+      },
+      "rateDrawerFields": {
+        "title": "{advancedEdit}માં પૂરી વિગતો જુઓ",
+        "description": "{advancedEdit}માં તારીખો, સ્રોત, નોંધો અને {reviewEvery} (30–365 દિવસ) છે. હાલના યાર્નનું નામ લોક છે; નવું નામ જોઈએ તો નવો રેટ ઉમેરીને સેવ કરેલી ક્વોલિટી બદલો. શોધનો સ્રોત મૂળ ક્વોલિટી કે કોસ્ટિંગ સાથે જોડાયેલો રહે છે."
+      },
+      "reviewRailWidget": {
+        "title": "મળેલા દોરા અને જુદા ભાવ તપાસો",
+        "description": "ક્વોલિટી કે કોસ્ટિંગ સેવ કરવાથી નવો યાર્ન સમીક્ષા માટે મળી શકે છે. જુદા ભાવ મળે તો વર્તમાન ભાવ પસંદ કરતાં પહેલાં તેમના ઉપયોગ જુઓ. આ તમારા રેકોર્ડમાંથી મળેલી માહિતી છે, સપ્લાયરની પુષ્ટિ નહીં."
+      },
+      "activityAndArchive": {
+        "title": "દોરો દૂર કરતી વખતે ઇતિહાસ રાખો",
+        "description": "પંક્તિ મેનૂની {activity}માં નોંધેલા ભાવ અને સમીક્ષાઓ જુઓ. {archiveRate} દોરાને સક્રિય યાદીમાંથી દૂર કરે છે; સેવ કરેલી ક્વોલિટી અને જૂનાં કોસ્ટિંગ બદલાતાં નથી. {archivedRates}માં તેને શોધીને {restoreRate} પસંદ કરો."
+      }
+    },
+    "principles": [
+      "રેટ સેવ કરતાં જોડાયેલી સેવ કરેલી ક્વોલિટીના મળતા યાર્ન ભાવ આગળના અંદાજ માટે બદલાય છે.",
+      "જૂનાં કોસ્ટિંગ સ્નેપશોટ મૂળ આંકડા જ રાખે છે.",
+      "સેવ કરેલી ક્વોલિટી કે કોસ્ટિંગમાંથી મળેલા યાર્નનો ભાવ સપ્લાયર પાસે ચકાસવો જરૂરી છે."
+    ]
+  }
+} as const
 
-function resolveStepElements(step: RatebookStep): { target: HTMLElement | null; card: HTMLElement | null } {
-    let target = isTourTargetVisible(step.target) ? step.target : null
-    let card = isTourTargetVisible(step.card) ? step.card : null
+const helpLabels = {
+    advancedEdit: 'Advanced edit', effectiveDate: 'Effective from', reviewDate: 'Review date',
+    reviewEvery: 'Review every', activity: 'Activity', archiveRate: 'Archive rate',
+    archivedRates: 'Archived rates', restoreRate: 'Restore rate',
+} as const
 
-    if (!target) {
-        card = null
-        target = findTourTarget(`[data-ratebook-field="${step.field}"]`)
-    }
-
-    if (!card && target) {
-        card = target.closest<HTMLElement>('[data-slot="sheet-content"]') ??
-               target.closest<HTMLElement>('[data-slot="popover-content"]') ??
-               target.closest<HTMLElement>('tbody tr') ??
-               target.closest<HTMLElement>('[data-ratebook-section-card]') ??
-               target.closest<HTMLElement>('[data-slot="card"]') ??
-               target.closest<HTMLElement>('table') ??
-               target
-    }
-
-    return { target, card }
-}
-
-export function RateBookTutorialLauncher({
-    onClick,
-    className = '',
-    userId,
-    orgId,
-}: {
-    onClick: () => void
-    disabled?: boolean
-    className?: string
-    userId?: string
-    orgId?: string
-}) {
-    return (
-        <TourInvitation
-            tourId="rate-book"
-            userId={userId}
-            orgId={orgId}
-            onLaunch={onClick}
-            className={className}
-        />
-    )
+export function formatRateBookHelpText(text: string, tx: (phrase: string) => string) {
+    return Object.entries(helpLabels).reduce((result, [token, label]) => result.replaceAll(`{${token}}`, tx(label)), text)
 }
 
 export function RateBookHelp() {
     const { language, tx } = useTranslation()
-    const copy = rateBookTutorialCopy[language] ?? rateBookTutorialCopy.en
-    return (
-        <details data-i18n-skip="true" lang={language} className={cn(railSurface, 'group text-xs')}>
-            <summary className="flex min-h-11 cursor-pointer select-none list-none items-center justify-between gap-2.5 px-3.5 py-2.5 text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden">
-                <span className="flex min-w-0 items-center gap-2.5"><CircleHelp className={railIcon} aria-hidden="true" /><span className="min-w-0">{copy.helpTitle}</span></span>
-                <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" />
-            </summary>
-            <div className="max-h-[35vh] space-y-2.5 overflow-y-auto border-t border-hairline px-3.5 py-3">
-                {RATE_BOOK_HELP_FIELDS.map(field => (
-                    <details key={field} className="rounded-xl border border-hairline/60 bg-surface-soft/60 p-2.5 text-xs">
-                        <summary className="cursor-pointer font-semibold text-ink">{formatRateBookTourText(copy.fields[field].title, tx)}</summary>
-                        <p className="mt-1.5 leading-relaxed text-body">{formatRateBookTourText(copy.fields[field].description, tx)}</p>
-                    </details>
-                ))}
-            </div>
-        </details>
-    )
+    const copy = rateBookHelpCopy[language]
+    return <details data-i18n-skip="true" lang={language} className={cn(railSurface, 'group text-xs')}>
+        <summary className="flex min-h-11 cursor-pointer select-none list-none items-center justify-between gap-2.5 px-3.5 py-2.5 text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden">
+            <span className="flex min-w-0 items-center gap-2.5"><CircleHelp className={railIcon} aria-hidden="true" /><span className="min-w-0">{copy.helpTitle}</span></span>
+            <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" />
+        </summary>
+        <div className="max-h-[35vh] space-y-2.5 overflow-y-auto border-t border-hairline px-3.5 py-3">
+            {Object.entries(copy.fields).map(([field, text]) => <details key={field} className="rounded-xl border border-hairline/60 bg-surface-soft/60 p-2.5 text-xs">
+                <summary className="cursor-pointer font-semibold text-ink">{formatRateBookHelpText(text.title, tx)}</summary>
+                <p className="mt-1.5 leading-relaxed text-body">{formatRateBookHelpText(text.description, tx)}</p>
+            </details>)}
+        </div>
+    </details>
 }
 
-export function RateBookTutorial({
-    accountDismissed,
-    enabled,
-    orgId,
-    userId,
-    requestTrigger,
-    onActiveChange,
-    onTourFinish,
-}: {
-    accountDismissed: boolean
-    enabled: boolean
-    orgId: string
-    userId: string
-    requestTrigger?: number
-    onActiveChange?: (active: boolean) => void
+export function RateBookTutorial({ step, onStepChange, enabled, sampleRow, hasRealRates, userId, orgId, userMetadata, onTourFinish }: {
+    step: RateBookStep | null; onStepChange: (step: RateBookStep | null) => void
+    enabled: boolean; sampleRow: boolean; hasRealRates: boolean
+    userId: string; orgId: string; userMetadata?: Record<string, unknown> | null
     onTourFinish?: () => void
 }) {
-    const { language, languageStatus, tx } = useTranslation()
-    const copy = rateBookTutorialCopy[language] ?? rateBookTutorialCopy.en
-    const [steps, setSteps] = useState<RatebookStep[]>([])
-    const [index, setIndex] = useState(0)
-    const [requested, setRequested] = useState(false)
-    const [rects, setRects] = useState<{ field: DOMRect; card: DOMRect } | null>(null)
-    const panel = useRef<HTMLDivElement>(null)
-    const isScrollingRef = useRef(false)
-    const key = `weavly:ratebook-tutorial:v1:${orgId}:${userId}`
-    const active = steps[index]
-    const visibleSections = [...new Set(steps.map(step => step.section))]
-    const dismissed = useRef(accountDismissed)
-    const syncing = useRef(false)
-    const [syncFailed, setSyncFailed] = useState(false)
-    const prevSectionRef = useRef<number | null>(null)
-    const [isSectionTransition, setIsSectionTransition] = useState(false)
-    const [panelPlacement, setPanelPlacement] = useState<'top-right' | 'bottom-right'>('top-right')
-
-    useEffect(() => {
-        if (requestTrigger && requestTrigger > 0) {
-            setRequested(true)
-        }
-    }, [requestTrigger])
-
-    const syncDismissal = useCallback(async () => {
-        if (syncing.current) return
-        syncing.current = true
-        try {
-            const result = await dismissRatebookTutorial()
-            setSyncFailed(!result.success)
-            if (result.success) {
-                try { localStorage.removeItem(key) } catch { /* Optional retry cache. */ }
-            }
-        } catch {
-            setSyncFailed(true)
-        } finally {
-            syncing.current = false
-        }
-    }, [key])
-
-    // Legacy migration only (NO automatic starts on page entry, timer, or reload)
-    useEffect(() => {
-        if (!enabled || languageStatus === 'loading') return
-        try {
-            if (localStorage.getItem(key) === 'done') {
-                dismissed.current = true
-                void syncDismissal()
-            }
-        } catch { /* Account state works without browser storage. */ }
-    }, [enabled, key, syncDismissal, languageStatus])
-
-    // Offline retry
-    useEffect(() => {
-        const retry = () => { if (syncFailed) void syncDismissal() }
-        window.addEventListener('online', retry)
-        return () => window.removeEventListener('online', retry)
-    }, [syncFailed, syncDismissal])
-
-    const isTutorialActive = Boolean(active)
-    useEffect(() => {
-        onActiveChange?.(isTutorialActive)
-    }, [isTutorialActive, onActiveChange])
-
-    // Explicit launch only. Keep every core lesson even if its target is absent.
-    // This walkthrough never opens an editor or changes the user's filters/data.
-    useEffect(() => {
-        if (!requested || !enabled || languageStatus === 'loading') return
-        setIndex(0)
-        setSteps(RATE_BOOK_TOUR_STEPS.map(item => ({ ...item, target: null, card: null })))
-        setRequested(false)
-    }, [requested, enabled, languageStatus])
-
-    const isPopoverStep = Boolean(active?.inPopover)
-    const isSheetStep = Boolean(active?.inSheet)
-
-    const close = useCallback(() => {
-        dismissed.current = true
-        try { localStorage.setItem(key, 'done') } catch { /* Storage retry marker */ }
-        void syncDismissal()
-        prevSectionRef.current = null
-        setIsSectionTransition(false)
-        setPanelPlacement('top-right')
-        setSteps([])
-        setRects(null)
-    }, [key, syncDismissal])
-
-    const handleNext = useCallback(() => {
-        if (!steps.length) return
-        if (index === steps.length - 1) {
-            close()
-            onTourFinish?.()
-        } else {
-            setIndex(i => Math.min(steps.length - 1, i + 1))
-        }
-    }, [close, index, steps.length, onTourFinish])
-
-    const handleBack = useCallback(() => {
-        setIndex(i => Math.max(0, i - 1))
-    }, [])
-
-    useTourViewportLock(isTutorialActive, panel)
-    const mobileTour = useMobileTour(active, panel, resolveStepElements)
-    const spotlight = mobileTour.mobile ? mobileTour.rects : rects
-
-
-    // Focus management and background element inertia
-    useEffect(() => {
-        if (!isTutorialActive) return
-        // Hold focus/inert state for the entire tour, never restore page inputs between steps.
-        const previousFocus = document.activeElement as HTMLElement | null
-        const siblings = Array.from(document.body.children).filter(
-            (el): el is HTMLElement =>
-                el instanceof HTMLElement &&
-                !el.contains(panel.current) &&
-                el.getAttribute('data-testid') !== 'rate-book-tutorial' &&
-                !el.hasAttribute('data-ratebook-portal') &&
-                !el.hasAttribute('data-radix-popper-content-wrapper') &&
-                !el.hasAttribute('data-radix-portal') &&
-                !el.querySelector('[data-slot="popover-content"]') &&
-                !el.querySelector('[data-slot="sheet-content"]') &&
-                !el.querySelector('[data-ratebook-field="quickEditPopover"]') &&
-                !el.querySelector('[data-ratebook-field="rateDrawerFields"]')
-        )
-        const prior = siblings.map(el => el.inert)
-        siblings.forEach(el => { el.inert = true })
-        panel.current?.focus({ preventScroll: true })
-        return () => {
-            siblings.forEach((el, i) => { el.inert = prior[i] })
-            previousFocus?.focus({ preventScroll: true })
-        }
-    }, [isTutorialActive])
-
-    // Keyboard navigation
-    useEffect(() => {
-        if (!active) return
-        const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') {
-                event.preventDefault()
-                close()
-                return
-            }
-            if (event.key === 'Enter') {
-                const activeEl = document.activeElement
-                if (activeEl instanceof HTMLButtonElement && (activeEl.dataset.tourControl === 'back' || activeEl.dataset.tourControl === 'skip')) {
-                    return
-                }
-                event.preventDefault()
-                handleNext()
-                return
-            }
-            if (event.key === 'ArrowRight') {
-                event.preventDefault()
-                handleNext()
-                return
-            }
-            if (event.key === 'ArrowLeft') {
-                event.preventDefault()
-                handleBack()
-                return
-            }
-            if (event.key === 'Tab') {
-                const buttons = Array.from(panel.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') ?? [])
-                if (!buttons.length) return
-                const first = buttons[0], last = buttons[buttons.length - 1]
-                if (event.shiftKey && (document.activeElement === first || document.activeElement === panel.current)) {
-                    event.preventDefault()
-                    last.focus()
-                } else if (!event.shiftKey && document.activeElement === last) {
-                    event.preventDefault()
-                    first.focus()
-                }
-            }
-        }
-        window.addEventListener('keydown', handleKeyDown)
-        return () => window.removeEventListener('keydown', handleKeyDown)
-    }, [active, close, handleNext, handleBack])
-
-    // Spotlight measurement & adaptive viewport positioning
-    useEffect(() => {
-        if (!active || mobileTour.mobile) {
-            setRects(null)
-            return
-        }
-
-        let retryRaf: number | undefined
-        let isMounted = true
-        const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-        const scrollBehavior = prefersReducedMotion ? 'instant' : 'smooth'
-        const fixedPadding = 20
-
-        const isModal = isPopoverStep || isSheetStep
-        let stableFrames = 0
-        let lastRect = { top: -9999, left: -9999, width: -9999, height: -9999 }
-        const startTime = typeof performance !== 'undefined' ? performance.now() : Date.now()
-
-        const measureAndPosition = () => {
-            if (!isMounted) return
-
-            const { target: targetEl, card: cardEl } = resolveStepElements(active)
-
-            if (!targetEl || !cardEl || !targetEl.getClientRects().length || !cardEl.getClientRects().length) {
-                setRects(null)
-                if (performance.now() - startTime > 1500) return
-
-                retryRaf = window.requestAnimationFrame(measureAndPosition)
-                return
-            }
-
-            const cardRect = cardEl.getBoundingClientRect()
-            const targetRect = targetEl.getBoundingClientRect()
-
-            if (cardRect.width === 0 || cardRect.height === 0 || targetRect.width === 0 || targetRect.height === 0) {
-                retryRaf = window.requestAnimationFrame(measureAndPosition)
-                return
-            }
-
-            const now = typeof performance !== 'undefined' ? performance.now() : Date.now()
-            const elapsed = now - startTime
-            const isMoving = Math.abs(cardRect.top - lastRect.top) > 0.5 ||
-                             Math.abs(cardRect.left - lastRect.left) > 0.5 ||
-                             Math.abs(cardRect.height - lastRect.height) > 0.5 ||
-                             Math.abs(cardRect.width - lastRect.width) > 0.5
-
-            if (isMoving && elapsed < 350) {
-                lastRect = { top: cardRect.top, left: cardRect.left, width: cardRect.width, height: cardRect.height }
-                stableFrames = 0
-                retryRaf = window.requestAnimationFrame(measureAndPosition)
-                return
-            } else if (stableFrames < 1 && elapsed < 200) {
-                stableFrames++
-                lastRect = { top: cardRect.top, left: cardRect.left, width: cardRect.width, height: cardRect.height }
-                retryRaf = window.requestAnimationFrame(measureAndPosition)
-                return
-            }
-
-            const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1200
-            const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 800
-            const panelRect = panel.current?.getBoundingClientRect()
-            const modalBottom = panelRect ? panelRect.bottom : 220
-            const modalLeft = panelRect ? panelRect.left : viewportWidth - 268
-
-            const rightThreshold = viewportWidth - 300
-            const topThreshold = Math.max(380, modalBottom + 20)
-
-            const targetOverlapsTopRight = !isSheetStep && (
-                (targetRect.top < topThreshold && targetRect.bottom > 0 && targetRect.right > rightThreshold) ||
-                (cardRect.top < topThreshold && cardRect.bottom > 0 && cardRect.right > rightThreshold)
-            )
-
-            const panelHeight = panelRect ? panelRect.height : 320
-            const targetOverlapsBottomRight = (
-                (targetRect.bottom > viewportHeight - panelHeight && targetRect.top < viewportHeight && targetRect.right > rightThreshold) ||
-                (cardRect.bottom > viewportHeight - panelHeight && cardRect.top < viewportHeight && cardRect.right > rightThreshold)
-            )
-
-            const targetIsTopRight = (!isSheetStep && targetRect.top < 380 && (targetOverlapsTopRight || targetRect.right > rightThreshold)) || (targetOverlapsTopRight && !targetOverlapsBottomRight)
-            setPanelPlacement(targetIsTopRight ? 'bottom-right' : 'top-right')
-
-            const isNewSection = prevSectionRef.current !== active.section
-            prevSectionRef.current = active.section
-
-            const isFixed = isModal ||
-                window.getComputedStyle(targetEl).position === 'fixed' ||
-                window.getComputedStyle(cardEl).position === 'fixed' ||
-                Boolean(targetEl.closest('.fixed') || cardEl.closest('.fixed'))
-
-            let deltaY = 0
-            active.card = cardEl
-            active.target = targetEl
-
-            if (isFixed) {
-                deltaY = 0
-                targetEl.scrollIntoView({ block: 'nearest', behavior: 'auto' })
-            } else {
-                const isHorizontallyOverlapping = cardRect.right > modalLeft - fixedPadding && cardRect.left < (panelRect ? panelRect.right : window.innerWidth)
-                const isPanelAtTop = !targetIsTopRight
-                const minAllowedTop = isHorizontallyOverlapping && isPanelAtTop ? modalBottom + fixedPadding : 16
-
-                if (isNewSection) {
-                    setIsSectionTransition(true)
-                    const centeredTop = Math.max(16, (viewportHeight - active.card.offsetHeight) / 2)
-                    const targetCardTop = active.card.offsetHeight <= viewportHeight
-                        ? Math.max(centeredTop, minAllowedTop)
-                        : minAllowedTop
-                    deltaY = cardRect.top - targetCardTop
-                } else if (active.card.offsetHeight <= viewportHeight) {
-                    const minAllowedTargetTop = isHorizontallyOverlapping ? modalBottom + fixedPadding : 16
-                    if (targetRect.top < minAllowedTargetTop) {
-                        deltaY = targetRect.top - minAllowedTargetTop
-                    } else if (targetRect.bottom > viewportHeight - 20) {
-                        deltaY = targetRect.bottom - (viewportHeight - 20)
-                    } else {
-                        deltaY = 0
-                    }
-                } else {
-                    const minAllowedTargetTop = isHorizontallyOverlapping ? modalBottom + fixedPadding : 16
-                    if (targetRect.top < minAllowedTargetTop) {
-                        deltaY = targetRect.top - minAllowedTargetTop
-                    } else if (targetRect.bottom > viewportHeight - 20) {
-                        deltaY = targetRect.bottom - (viewportHeight - 20)
-                    }
-                }
-
-                const maxScrollY = typeof document !== 'undefined'
-                    ? Math.max(0, document.documentElement.scrollHeight - viewportHeight)
-                    : 0
-                const currentScrollY = typeof window !== 'undefined' ? window.scrollY || window.pageYOffset || 0 : 0
-                const maxDeltaDown = Math.max(0, maxScrollY - currentScrollY)
-                const maxDeltaUp = -currentScrollY
-                deltaY = Math.max(maxDeltaUp, Math.min(deltaY, maxDeltaDown))
-            }
-
-            const update = () => {
-                if (!isMounted) return
-                const { target: curTarget, card: curCard } = resolveStepElements(active)
-                if (curTarget && curCard && curTarget.getClientRects().length && curCard.getClientRects().length) {
-                    setRects({
-                        field: curTarget.getBoundingClientRect(),
-                        card: curCard.getBoundingClientRect(),
-                    })
-                }
-            }
-
-            if (Math.abs(deltaY) > 2 && scrollBehavior === 'smooth') {
-                isScrollingRef.current = true
-                window.scrollBy({ top: deltaY, behavior: 'smooth' })
-
-                const targetCardRect = {
-                    left: cardRect.left,
-                    right: cardRect.right,
-                    width: cardRect.width,
-                    height: cardRect.height,
-                    top: cardRect.top - deltaY,
-                    bottom: cardRect.bottom - deltaY,
-                    x: cardRect.x,
-                    y: cardRect.y - deltaY,
-                    toJSON: () => ({}),
-                } as DOMRect
-
-                const targetFieldRect = {
-                    left: targetRect.left,
-                    right: targetRect.right,
-                    width: targetRect.width,
-                    height: targetRect.height,
-                    top: targetRect.top - deltaY,
-                    bottom: targetRect.bottom - deltaY,
-                    x: targetRect.x,
-                    y: targetRect.y - deltaY,
-                    toJSON: () => ({}),
-                } as DOMRect
-
-                setRects({ field: targetFieldRect, card: targetCardRect })
-
-                settleTimer = window.setTimeout(() => {
-                    isScrollingRef.current = false
-                    update()
-                    setIsSectionTransition(false)
-                }, isNewSection ? 550 : 350)
-            } else {
-                if (Math.abs(deltaY) > 2) {
-                    window.scrollBy({ top: deltaY, behavior: 'auto' })
-                }
-                update()
-                if (isNewSection) {
-                    settleTimer = window.setTimeout(() => {
-                        setIsSectionTransition(false)
-                    }, 500)
-                }
-            }
-        }
-
-        let settleTimer: number | undefined
-        retryRaf = window.requestAnimationFrame(measureAndPosition)
-
-        const backupTimer = window.setTimeout(() => {
-            if (!isMounted || isScrollingRef.current) return
-            const { target: curTarget, card: curCard } = resolveStepElements(active)
-            if (curTarget && curCard && curTarget.getClientRects().length && curCard.getClientRects().length) {
-                setRects({
-                    field: curTarget.getBoundingClientRect(),
-                    card: curCard.getBoundingClientRect(),
-                })
-            }
-        }, 350)
-
-        const handleManualScrollOrResize = () => {
-            if (isScrollingRef.current) return
-            const { target: curTarget, card: curCard } = resolveStepElements(active)
-            if (curTarget && curCard && curTarget.getClientRects().length && curCard.getClientRects().length) {
-                setRects({
-                    field: curTarget.getBoundingClientRect(),
-                    card: curCard.getBoundingClientRect(),
-                })
-            }
-        }
-
-        window.addEventListener('scroll', handleManualScrollOrResize, true)
-        window.addEventListener('resize', handleManualScrollOrResize)
-
-        return () => {
-            isMounted = false
-            if (retryRaf) window.cancelAnimationFrame(retryRaf)
-            if (settleTimer) window.clearTimeout(settleTimer)
-            window.clearTimeout(backupTimer)
-            window.removeEventListener('scroll', handleManualScrollOrResize, true)
-            window.removeEventListener('resize', handleManualScrollOrResize)
-        }
-    }, [active, isPopoverStep, isSheetStep, mobileTour.mobile])
-
-    const sheetPanelStyle: React.CSSProperties | undefined =
-        isSheetStep && spotlight?.card && !mobileTour.mobile
-            ? {
-                right: (typeof window !== 'undefined' && spotlight.card.left >= 288)
-                    ? `${Math.round(window.innerWidth - spotlight.card.left + 20)}px`
-                    : undefined,
-                left: (spotlight.card.left < 288) ? '16px' : undefined,
-                top: '20px',
-            }
-            : undefined
-
-    return (
-        <>
-            {syncFailed && (
-                <div data-i18n-skip="true" lang={language} role="status" className="flex flex-wrap items-center gap-2 rounded-xl border border-[var(--wv-ochre-200)]/80 bg-[var(--wv-ochre-50)]/60 p-2.5 text-xs text-[var(--color-muted)]">
-                    <span className="text-[var(--wv-ochre-800)]">{copy.syncFailed}</span>
-                    <button type="button" className="font-semibold text-[var(--wv-ochre-700)] underline hover:text-[var(--wv-ochre-800)]" onClick={() => void syncDismissal()}>{copy.retry}</button>
-                </div>
-            )}
-
-            {enabled && (
-                <TourInvitation
-                    tourId="rate-book"
-                    userId={userId}
-                    orgId={orgId}
-                    align="full"
-                    onLaunch={() => setRequested(true)}
-                    className="w-full"
-                />
-            )}
-
-            {active && createPortal(
-                <div data-i18n-skip="true" lang={language} data-ratebook-portal="true" className="guided-tour-portal fixed inset-0 z-[100]" data-testid="rate-book-tutorial">
-                    <div
-                        aria-hidden="true"
-                        onClick={(e) => {
-                            e.preventDefault()
-                            e.stopPropagation()
-                        }}
-                        className="guided-tour-backdrop absolute inset-0 bg-black/55 backdrop-blur-xs transition-opacity duration-300 select-none cursor-default"
-                        style={{
-                            transition: 'clip-path 500ms cubic-bezier(0.16, 1, 0.3, 1), opacity 300ms ease',
-                            ...(spotlight ? {
-                                clipPath: `polygon(evenodd, 0% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, ${spotlight.card.left}px ${spotlight.card.top}px, ${spotlight.card.left}px ${spotlight.card.bottom}px, ${spotlight.card.right}px ${spotlight.card.bottom}px, ${spotlight.card.right}px ${spotlight.card.top}px, ${spotlight.card.left}px ${spotlight.card.top}px)`
-                            } : {})
-                        }}
-                    />
-
-                    {spotlight && !mobileTour.mobile && (
-                        <div
-                            className={`guided-tour-highlight pointer-events-none fixed rounded-[18px] border-2 transition-all duration-500 ease-out ${
-                                isSectionTransition
-                                    ? 'border-saffron/80 shadow-[0_0_0_1px_rgba(217,119,6,0.5),0_0_50px_rgba(217,119,6,0.35)] ring-2 ring-saffron/30'
-                                    : 'border-saffron/40 shadow-[0_0_0_1px_rgba(217,119,6,0.3),0_0_35px_rgba(217,119,6,0.2)]'
-                            }`}
-                            style={{
-                                left: spotlight.card.left - 4,
-                                top: spotlight.card.top - 4,
-                                width: spotlight.card.width + 8,
-                                height: spotlight.card.height + 8,
-                            }}
-                        />
-                    )}
-
-                    {spotlight && (
-                        <div
-                            className={`guided-tour-highlight pointer-events-none fixed rounded-lg border-2 border-saffron ring-4 ring-saffron/30 transition-all ${
-                                isSectionTransition ? 'duration-500 ease-out' : 'duration-300 ease-out'
-                            }`}
-                            style={{
-                                left: spotlight.field.left - 4,
-                                top: spotlight.field.top - 4,
-                                width: spotlight.field.width + 8,
-                                height: spotlight.field.height + 8,
-                            }}
-                        />
-                    )}
-
-                    <div
-                        ref={panel}
-                        role="dialog"
-                        aria-modal="true"
-                        aria-labelledby="ratebook-tour-title"
-                        aria-describedby="ratebook-tour-description"
-                        tabIndex={-1}
-                        onClick={(e) => e.stopPropagation()}
-                        className={`guided-tour-panel fixed z-[101] w-[calc(100vw-2rem)] sm:w-[260px] max-w-[268px] h-auto max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-3rem)] overflow-y-auto rounded-2xl border border-[var(--wv-saffron-200)]/90 bg-[var(--color-surface)] p-3.5 sm:p-4 text-[var(--color-ink)] shadow-2xl outline-none transition-all duration-300 flex flex-col ${
-                            isSheetStep && !mobileTour.mobile
-                                ? 'top-4 right-4 sm:top-5 sm:right-[calc(32rem+1.25rem)]'
-                                : panelPlacement === 'bottom-right'
-                                    ? 'bottom-4 right-4 sm:bottom-5 sm:right-5'
-                                    : 'top-4 right-4 sm:top-5 sm:right-5'
-                        }`}
-                        style={sheetPanelStyle}
-                    >
-                        <div data-tour-description-scroll className="flex flex-col">
-                            <div aria-live="polite" key={`step-${active.section}-${active.field}`} className="animate-in fade-in-0 slide-in-from-right-3 duration-300">
-                                <div className="flex items-center gap-1.5 flex-wrap">
-                                    <span className={`inline-flex items-center rounded-md px-2.5 py-0.5 text-[11px] font-bold ring-1 ring-inset transition-all duration-300 ${
-                                        isSectionTransition
-                                            ? 'bg-saffron text-white ring-saffron shadow-sm scale-105'
-                                            : 'bg-saffron/10 text-saffron-deep ring-saffron/25'
-                                    }`}>
-                                        {copy.sectionProgress.replace('{current}', String(visibleSections.indexOf(active.section) + 1)).replace('{total}', String(visibleSections.length))}
-                                    </span>
-                                    <span className="text-xs font-semibold text-[var(--color-ink)]/75">· {copy.sections[active.section]}</span>
-                                </div>
-                                <h2 id="ratebook-tour-title" className="mt-3 text-base sm:text-[17px] font-bold tracking-tight text-[var(--color-ink)] leading-snug sm:leading-[1.4]">
-                                    {formatRateBookTourText(copy.fields[active.field].title, tx)}
-                                </h2>
-                                <p id="ratebook-tour-description" className="mt-3 text-xs sm:text-[13.5px] leading-relaxed sm:leading-[1.72] text-[var(--color-ink)]/90">
-                                    {formatRateBookTourText(copy.fields[active.field].description, tx)}
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="mt-4 pt-3.5 border-t border-hairline/60 space-y-3 shrink-0">
-                            <p className="hidden sm:block text-[11.5px] text-[var(--color-muted)] leading-relaxed sm:leading-[1.65]">{copy.hint}</p>
-
-                            <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--wv-saffron-50)]" role="progressbar" aria-valuenow={index + 1} aria-valuemin={1} aria-valuemax={steps.length} aria-label={copy.progress}>
-                                <div
-                                    className="h-full rounded-full bg-saffron transition-all duration-300 ease-out"
-                                    style={{ width: `${Math.round(((index + 1) / steps.length) * 100)}%` }}
-                                />
-                            </div>
-
-                            <div className="guided-tour-controls flex items-center justify-between gap-1.5 pt-0.5">
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    data-tour-control="skip"
-                                    className="h-8 px-2 text-xs font-medium text-subtle hover:text-ink"
-                                    onClick={(e) => {
-                                        e.preventDefault()
-                                        e.stopPropagation()
-                                        close()
-                                    }}
-                                >
-                                    {copy.skip}
-                                </Button>
-                                <span className="text-xs font-semibold text-[var(--color-muted)] shrink-0">{index + 1}/{steps.length}</span>
-                                <div className="flex items-center gap-1.5">
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        data-tour-control="back"
-                                        disabled={index === 0}
-                                        className="h-8 px-2.5 text-xs font-medium"
-                                        onClick={(e) => {
-                                            e.preventDefault()
-                                            e.stopPropagation()
-                                            handleBack()
-                                        }}
-                                    >
-                                        {copy.back}
-                                    </Button>
-                                    <Button
-                                        type="button"
-                                        size="sm"
-                                        data-tour-control="next"
-                                        onClick={(e) => {
-                                            e.preventDefault()
-                                            e.stopPropagation()
-                                            handleNext()
-                                        }}
-                                        className="group h-8 gap-1 px-3 text-xs font-semibold bg-saffron text-white hover:bg-saffron-deep shadow-sm transition-all"
-                                    >
-                                        <span>{index === steps.length - 1 ? copy.finish : copy.next}</span>
-                                        <kbd className="hidden sm:inline-flex h-3.5 items-center rounded border border-white/25 bg-white/20 px-1 text-[9px] font-sans font-semibold leading-none text-white shadow-xs group-hover:bg-white/30 transition-colors">↵</kbd>
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>,
-                document.body
-            )}
-        </>
-    )
+    const launcher = useRef<HTMLDivElement>(null)
+    const returnFocus = useRef<HTMLElement | null>(null)
+    return <>
+        <div ref={launcher}>
+            {enabled && <TourInvitation tourId="rate-book" userId={userId} orgId={orgId} userMetadata={userMetadata}
+                align="full" className="w-full" onLaunch={() => {
+                    returnFocus.current = launcher.current?.querySelector<HTMLButtonElement>('[data-tour-control="take-tour"], [data-tour-control="quiet-tour"]') ?? null
+                    onStepChange('rb-purpose')
+                }} />}
+        </div>
+        {step && <RateBookTourRuntime step={step} onStepChange={onStepChange} onDone={onTourFinish}
+            sampleRow={sampleRow} hasRealRates={hasRealRates} userId={userId} launcher={launcher} returnFocus={returnFocus} />}
+    </>
 }

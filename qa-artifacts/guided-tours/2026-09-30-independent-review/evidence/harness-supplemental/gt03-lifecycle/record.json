@@ -1,0 +1,1266 @@
+[
+  {
+    "scenario": "quotes",
+    "lang": "en",
+    "width": 1440,
+    "height": 900,
+    "errors": [],
+    "before": {
+      "search": "unmatched-search",
+      "sort": "oldest",
+      "margin": "negative",
+      "toolbar": "Search quality or costing…Filters · 1Sort byRecently updatedOldest updatedHighest marginLowest production costMarginAll marginsNegative marginUnder 10%10–20%Over 20% Compare All costings Active0 qualities",
+      "prefs": {
+        "saved-costings": {
+          "firstShown": "2026-09-29T20:22:55.925Z",
+          "version": "v1"
+        }
+      },
+      "businessStorage": {
+        "weavly_language": "en"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "navigations": [],
+      "active": null,
+      "anchor": null,
+      "sample": false
+    },
+    "first": "find",
+    "second": "versions",
+    "active": {
+      "search": "unmatched-search",
+      "sort": "oldest",
+      "margin": "negative",
+      "toolbar": "Search quality or costing…Filters · 1Sort byRecently updatedOldest updatedHighest marginLowest production costMarginAll marginsNegative marginUnder 10%10–20%Over 20% Compare All costings Active1 sample quality",
+      "prefs": {
+        "saved-costings": {
+          "firstShown": "2026-09-29T20:22:55.925Z",
+          "version": "v1",
+          "firstStarted": true
+        }
+      },
+      "businessStorage": {
+        "weavly_language": "en"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "navigations": [],
+      "active": "more",
+      "anchor": null,
+      "sample": true
+    },
+    "requestsAtLaunch": 0,
+    "exited": {
+      "search": "unmatched-search",
+      "sort": "oldest",
+      "margin": "negative",
+      "toolbar": "Search quality or costing…Filters · 1Sort byRecently updatedOldest updatedHighest marginLowest production costMarginAll marginsNegative marginUnder 10%10–20%Over 20% Compare All costings Active0 qualities",
+      "prefs": {
+        "saved-costings": {
+          "firstShown": "2026-09-29T20:22:55.925Z",
+          "version": "v1",
+          "firstStarted": true
+        }
+      },
+      "businessStorage": {
+        "weavly_language": "en"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "navigations": [],
+      "active": "quiet-tour",
+      "anchor": null,
+      "sample": false
+    },
+    "completedSteps": [
+      "find",
+      "versions",
+      "economics",
+      "reuse",
+      "internal",
+      "production",
+      "finish"
+    ],
+    "done": {
+      "search": "unmatched-search",
+      "sort": "oldest",
+      "margin": "negative",
+      "toolbar": "Search quality or costing…Filters · 1Sort byRecently updatedOldest updatedHighest marginLowest production costMarginAll marginsNegative marginUnder 10%10–20%Over 20% Compare All costings Active0 qualities",
+      "prefs": {
+        "saved-costings": {
+          "firstShown": "2026-09-29T20:22:55.925Z",
+          "version": "v1",
+          "firstStarted": true,
+          "completed": true,
+          "completedVersion": "v2"
+        }
+      },
+      "businessStorage": {
+        "weavly_language": "en"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "navigations": [],
+      "active": null,
+      "anchor": "costings.new",
+      "sample": false
+    },
+    "reloaded": {
+      "search": "unmatched-search",
+      "sort": "recent",
+      "margin": "all",
+      "toolbar": "Search quality or costing…FiltersSort byRecently updatedOldest updatedHighest marginLowest production costMarginAll marginsNegative marginUnder 10%10–20%Over 20% Compare Favourites Archived0 qualities",
+      "prefs": {
+        "saved-costings": {
+          "firstShown": "2026-09-29T20:22:55.925Z",
+          "version": "v1",
+          "firstStarted": true,
+          "completed": true,
+          "completedVersion": "v2"
+        }
+      },
+      "businessStorage": {
+        "weavly_language": "en"
+      },
+      "calls": [],
+      "navigations": [],
+      "active": null,
+      "anchor": null,
+      "sample": false
+    },
+    "pass": true
+  },
+  {
+    "scenario": "quotes",
+    "lang": "gu",
+    "width": 390,
+    "height": 844,
+    "errors": [],
+    "before": {
+      "search": "unmatched-search",
+      "sort": "oldest",
+      "margin": "negative",
+      "toolbar": "ક્વોલિટી અથવા કોસ્ટિંગ શોધો…Filters · 1Sort દ્વારાહમણાં અપડેટ થયેલીસૌથી જૂની અપડેટસૌથી વધુ માર્જિનસૌથી ઓછો ઉત્પાદન ખર્ચમાર્જિનબધા માર્જિનનેગેટિવ માર્જિન10%થી ઓછું10–20%20%થી વધુ સરખામણી કરો બધા costings ચાલુ0 ક્વોલિટી",
+      "prefs": {
+        "saved-costings": {
+          "firstShown": "2026-09-29T20:23:18.011Z",
+          "version": "v1"
+        }
+      },
+      "businessStorage": {
+        "weavly_language": "gu"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "navigations": [],
+      "active": null,
+      "anchor": null,
+      "sample": false
+    },
+    "first": "find",
+    "second": "versions",
+    "active": {
+      "search": "unmatched-search",
+      "sort": "oldest",
+      "margin": "negative",
+      "toolbar": "ક્વોલિટી અથવા કોસ્ટિંગ શોધો…Filters · 1Sort દ્વારાહમણાં અપડેટ થયેલીસૌથી જૂની અપડેટસૌથી વધુ માર્જિનસૌથી ઓછો ઉત્પાદન ખર્ચમાર્જિનબધા માર્જિનનેગેટિવ માર્જિન10%થી ઓછું10–20%20%થી વધુ સરખામણી કરો બધા costings ચાલુ1 sample ક્વોલિટી",
+      "prefs": {
+        "saved-costings": {
+          "firstShown": "2026-09-29T20:23:18.011Z",
+          "version": "v1",
+          "firstStarted": true
+        }
+      },
+      "businessStorage": {
+        "weavly_language": "gu"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "navigations": [],
+      "active": "more",
+      "anchor": null,
+      "sample": true
+    },
+    "requestsAtLaunch": 0,
+    "exited": {
+      "search": "unmatched-search",
+      "sort": "oldest",
+      "margin": "negative",
+      "toolbar": "ક્વોલિટી અથવા કોસ્ટિંગ શોધો…Filters · 1Sort દ્વારાહમણાં અપડેટ થયેલીસૌથી જૂની અપડેટસૌથી વધુ માર્જિનસૌથી ઓછો ઉત્પાદન ખર્ચમાર્જિનબધા માર્જિનનેગેટિવ માર્જિન10%થી ઓછું10–20%20%થી વધુ સરખામણી કરો બધા costings ચાલુ0 ક્વોલિટી",
+      "prefs": {
+        "saved-costings": {
+          "firstShown": "2026-09-29T20:23:18.011Z",
+          "version": "v1",
+          "firstStarted": true
+        }
+      },
+      "businessStorage": {
+        "weavly_language": "gu"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "navigations": [],
+      "active": "quiet-tour",
+      "anchor": null,
+      "sample": false
+    },
+    "completedSteps": [
+      "find",
+      "versions",
+      "economics",
+      "reuse",
+      "internal",
+      "production",
+      "finish"
+    ],
+    "done": {
+      "search": "unmatched-search",
+      "sort": "oldest",
+      "margin": "negative",
+      "toolbar": "ક્વોલિટી અથવા કોસ્ટિંગ શોધો…Filters · 1Sort દ્વારાહમણાં અપડેટ થયેલીસૌથી જૂની અપડેટસૌથી વધુ માર્જિનસૌથી ઓછો ઉત્પાદન ખર્ચમાર્જિનબધા માર્જિનનેગેટિવ માર્જિન10%થી ઓછું10–20%20%થી વધુ સરખામણી કરો બધા costings ચાલુ0 ક્વોલિટી",
+      "prefs": {
+        "saved-costings": {
+          "firstShown": "2026-09-29T20:23:18.011Z",
+          "version": "v1",
+          "firstStarted": true,
+          "completed": true,
+          "completedVersion": "v2"
+        }
+      },
+      "businessStorage": {
+        "weavly_language": "gu"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "navigations": [],
+      "active": null,
+      "anchor": "costings.new",
+      "sample": false
+    },
+    "reloaded": {
+      "search": "unmatched-search",
+      "sort": "recent",
+      "margin": "all",
+      "toolbar": "ક્વોલિટી અથવા કોસ્ટિંગ શોધો…FiltersSort દ્વારાહમણાં અપડેટ થયેલીસૌથી જૂની અપડેટસૌથી વધુ માર્જિનસૌથી ઓછો ઉત્પાદન ખર્ચમાર્જિનબધા માર્જિનનેગેટિવ માર્જિન10%થી ઓછું10–20%20%થી વધુ સરખામણી કરો મનપસંદ આર્કાઇવ કરેલી0 ક્વોલિટી",
+      "prefs": {
+        "saved-costings": {
+          "firstShown": "2026-09-29T20:23:18.011Z",
+          "version": "v1",
+          "firstStarted": true,
+          "completed": true,
+          "completedVersion": "v2"
+        }
+      },
+      "businessStorage": {
+        "weavly_language": "gu"
+      },
+      "calls": [],
+      "navigations": [],
+      "active": null,
+      "anchor": null,
+      "sample": false
+    },
+    "pass": true
+  },
+  {
+    "scenario": "quotes?tier=lite",
+    "lang": "en",
+    "width": 1440,
+    "height": 900,
+    "errors": [],
+    "before": {
+      "search": "unmatched-search",
+      "sort": "oldest",
+      "margin": "negative",
+      "toolbar": "Search quality or costing…Filters · 1Sort byRecently updatedOldest updatedHighest marginLowest production costMarginAll marginsNegative marginUnder 10%10–20%Over 20% Compare All costings Active0 qualities",
+      "prefs": {
+        "saved-costings": {
+          "firstShown": "2026-09-29T20:23:33.364Z",
+          "version": "v1"
+        }
+      },
+      "businessStorage": {
+        "weavly_language": "en"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "navigations": [],
+      "active": null,
+      "anchor": null,
+      "sample": false
+    },
+    "first": "find",
+    "second": "versions",
+    "active": {
+      "search": "unmatched-search",
+      "sort": "oldest",
+      "margin": "negative",
+      "toolbar": "Search quality or costing…Filters · 1Sort byRecently updatedOldest updatedHighest marginLowest production costMarginAll marginsNegative marginUnder 10%10–20%Over 20% Compare All costings Active1 sample quality",
+      "prefs": {
+        "saved-costings": {
+          "firstShown": "2026-09-29T20:23:33.364Z",
+          "version": "v1",
+          "firstStarted": true
+        }
+      },
+      "businessStorage": {
+        "weavly_language": "en"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "navigations": [],
+      "active": "more",
+      "anchor": null,
+      "sample": true
+    },
+    "requestsAtLaunch": 0,
+    "exited": {
+      "search": "unmatched-search",
+      "sort": "oldest",
+      "margin": "negative",
+      "toolbar": "Search quality or costing…Filters · 1Sort byRecently updatedOldest updatedHighest marginLowest production costMarginAll marginsNegative marginUnder 10%10–20%Over 20% Compare All costings Active0 qualities",
+      "prefs": {
+        "saved-costings": {
+          "firstShown": "2026-09-29T20:23:33.364Z",
+          "version": "v1",
+          "firstStarted": true
+        }
+      },
+      "businessStorage": {
+        "weavly_language": "en"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "navigations": [],
+      "active": "quiet-tour",
+      "anchor": null,
+      "sample": false
+    },
+    "completedSteps": [
+      "find",
+      "versions",
+      "economics",
+      "reuse",
+      "internal",
+      "finish"
+    ],
+    "done": {
+      "search": "unmatched-search",
+      "sort": "oldest",
+      "margin": "negative",
+      "toolbar": "Search quality or costing…Filters · 1Sort byRecently updatedOldest updatedHighest marginLowest production costMarginAll marginsNegative marginUnder 10%10–20%Over 20% Compare All costings Active0 qualities",
+      "prefs": {
+        "saved-costings": {
+          "firstShown": "2026-09-29T20:23:33.364Z",
+          "version": "v1",
+          "firstStarted": true,
+          "completed": true,
+          "completedVersion": "v2"
+        }
+      },
+      "businessStorage": {
+        "weavly_language": "en"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "navigations": [],
+      "active": null,
+      "anchor": "costings.new",
+      "sample": false
+    },
+    "reloaded": {
+      "search": "unmatched-search",
+      "sort": "recent",
+      "margin": "all",
+      "toolbar": "Search quality or costing…FiltersSort byRecently updatedOldest updatedHighest marginLowest production costMarginAll marginsNegative marginUnder 10%10–20%Over 20% Compare Favourites Archived0 qualities",
+      "prefs": {
+        "saved-costings": {
+          "firstShown": "2026-09-29T20:23:33.364Z",
+          "version": "v1",
+          "firstStarted": true,
+          "completed": true,
+          "completedVersion": "v2"
+        }
+      },
+      "businessStorage": {
+        "weavly_language": "en"
+      },
+      "calls": [],
+      "navigations": [],
+      "active": null,
+      "anchor": null,
+      "sample": false
+    },
+    "pass": true
+  },
+  {
+    "scenario": "quotes?tier=lite",
+    "lang": "gu",
+    "width": 390,
+    "height": 844,
+    "errors": [],
+    "before": {
+      "search": "unmatched-search",
+      "sort": "oldest",
+      "margin": "negative",
+      "toolbar": "ક્વોલિટી અથવા કોસ્ટિંગ શોધો…Filters · 1Sort દ્વારાહમણાં અપડેટ થયેલીસૌથી જૂની અપડેટસૌથી વધુ માર્જિનસૌથી ઓછો ઉત્પાદન ખર્ચમાર્જિનબધા માર્જિનનેગેટિવ માર્જિન10%થી ઓછું10–20%20%થી વધુ સરખામણી કરો બધા costings ચાલુ0 ક્વોલિટી",
+      "prefs": {
+        "saved-costings": {
+          "firstShown": "2026-09-29T20:23:45.575Z",
+          "version": "v1"
+        }
+      },
+      "businessStorage": {
+        "weavly_language": "gu"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "navigations": [],
+      "active": null,
+      "anchor": null,
+      "sample": false
+    },
+    "first": "find",
+    "second": "versions",
+    "active": {
+      "search": "unmatched-search",
+      "sort": "oldest",
+      "margin": "negative",
+      "toolbar": "ક્વોલિટી અથવા કોસ્ટિંગ શોધો…Filters · 1Sort દ્વારાહમણાં અપડેટ થયેલીસૌથી જૂની અપડેટસૌથી વધુ માર્જિનસૌથી ઓછો ઉત્પાદન ખર્ચમાર્જિનબધા માર્જિનનેગેટિવ માર્જિન10%થી ઓછું10–20%20%થી વધુ સરખામણી કરો બધા costings ચાલુ1 sample ક્વોલિટી",
+      "prefs": {
+        "saved-costings": {
+          "firstShown": "2026-09-29T20:23:45.575Z",
+          "version": "v1",
+          "firstStarted": true
+        }
+      },
+      "businessStorage": {
+        "weavly_language": "gu"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "navigations": [],
+      "active": "more",
+      "anchor": null,
+      "sample": true
+    },
+    "requestsAtLaunch": 0,
+    "exited": {
+      "search": "unmatched-search",
+      "sort": "oldest",
+      "margin": "negative",
+      "toolbar": "ક્વોલિટી અથવા કોસ્ટિંગ શોધો…Filters · 1Sort દ્વારાહમણાં અપડેટ થયેલીસૌથી જૂની અપડેટસૌથી વધુ માર્જિનસૌથી ઓછો ઉત્પાદન ખર્ચમાર્જિનબધા માર્જિનનેગેટિવ માર્જિન10%થી ઓછું10–20%20%થી વધુ સરખામણી કરો બધા costings ચાલુ0 ક્વોલિટી",
+      "prefs": {
+        "saved-costings": {
+          "firstShown": "2026-09-29T20:23:45.575Z",
+          "version": "v1",
+          "firstStarted": true
+        }
+      },
+      "businessStorage": {
+        "weavly_language": "gu"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "navigations": [],
+      "active": "quiet-tour",
+      "anchor": null,
+      "sample": false
+    },
+    "completedSteps": [
+      "find",
+      "versions",
+      "economics",
+      "reuse",
+      "internal",
+      "finish"
+    ],
+    "done": {
+      "search": "unmatched-search",
+      "sort": "oldest",
+      "margin": "negative",
+      "toolbar": "ક્વોલિટી અથવા કોસ્ટિંગ શોધો…Filters · 1Sort દ્વારાહમણાં અપડેટ થયેલીસૌથી જૂની અપડેટસૌથી વધુ માર્જિનસૌથી ઓછો ઉત્પાદન ખર્ચમાર્જિનબધા માર્જિનનેગેટિવ માર્જિન10%થી ઓછું10–20%20%થી વધુ સરખામણી કરો બધા costings ચાલુ0 ક્વોલિટી",
+      "prefs": {
+        "saved-costings": {
+          "firstShown": "2026-09-29T20:23:45.575Z",
+          "version": "v1",
+          "firstStarted": true,
+          "completed": true,
+          "completedVersion": "v2"
+        }
+      },
+      "businessStorage": {
+        "weavly_language": "gu"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "navigations": [],
+      "active": null,
+      "anchor": "costings.new",
+      "sample": false
+    },
+    "reloaded": {
+      "search": "unmatched-search",
+      "sort": "recent",
+      "margin": "all",
+      "toolbar": "ક્વોલિટી અથવા કોસ્ટિંગ શોધો…FiltersSort byRecently updatedOldest updatedHighest marginLowest production costMarginAll marginsNegative marginUnder 10%10–20%Over 20% સરખામણી કરો Favourites આર્કાઇવ કરેલી0 qualities",
+      "prefs": {
+        "saved-costings": {
+          "firstShown": "2026-09-29T20:23:45.575Z",
+          "version": "v1",
+          "firstStarted": true,
+          "completed": true,
+          "completedVersion": "v2"
+        }
+      },
+      "businessStorage": {
+        "weavly_language": "gu"
+      },
+      "calls": [],
+      "navigations": [],
+      "active": null,
+      "anchor": null,
+      "sample": false
+    },
+    "pass": true
+  },
+  {
+    "scenario": "free-costings",
+    "lang": "en",
+    "width": 1440,
+    "height": 900,
+    "errors": [],
+    "before": {
+      "search": "unmatched-search",
+      "sort": "oldest",
+      "margin": "negative",
+      "prefs": {
+        "saved-costings": {
+          "firstShown": "2026-09-29T20:23:59.888Z",
+          "version": "v1"
+        }
+      },
+      "businessStorage": {
+        "weavly_language": "en"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "navigations": [],
+      "active": null,
+      "anchor": null,
+      "sample": false
+    },
+    "first": "snapshots",
+    "second": "freeSelect",
+    "active": {
+      "search": "unmatched-search",
+      "sort": "oldest",
+      "margin": "negative",
+      "prefs": {
+        "saved-costings": {
+          "firstShown": "2026-09-29T20:23:59.888Z",
+          "version": "v1",
+          "firstStarted": true
+        }
+      },
+      "businessStorage": {
+        "weavly_language": "en"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "navigations": [],
+      "active": "next",
+      "anchor": null,
+      "sample": true
+    },
+    "requestsAtLaunch": 1,
+    "exited": {
+      "search": "unmatched-search",
+      "sort": "oldest",
+      "margin": "negative",
+      "prefs": {
+        "saved-costings": {
+          "firstShown": "2026-09-29T20:23:59.888Z",
+          "version": "v1",
+          "firstStarted": true
+        }
+      },
+      "businessStorage": {
+        "weavly_language": "en"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "navigations": [],
+      "active": "quiet-tour",
+      "anchor": null,
+      "sample": false
+    },
+    "completedSteps": [
+      "snapshots",
+      "freeSelect",
+      "internal",
+      "finish"
+    ],
+    "done": {
+      "search": "unmatched-search",
+      "sort": "oldest",
+      "margin": "negative",
+      "prefs": {
+        "saved-costings": {
+          "firstShown": "2026-09-29T20:23:59.888Z",
+          "version": "v1",
+          "firstStarted": true,
+          "completed": true,
+          "completedVersion": "v2"
+        }
+      },
+      "businessStorage": {
+        "weavly_language": "en"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "navigations": [],
+      "active": null,
+      "anchor": "free-costings.new",
+      "sample": false
+    },
+    "reloaded": {
+      "search": "unmatched-search",
+      "sort": "recent",
+      "margin": "all",
+      "prefs": {
+        "saved-costings": {
+          "firstShown": "2026-09-29T20:23:59.888Z",
+          "version": "v1",
+          "firstStarted": true,
+          "completed": true,
+          "completedVersion": "v2"
+        }
+      },
+      "businessStorage": {
+        "weavly_language": "en"
+      },
+      "calls": [],
+      "navigations": [],
+      "active": null,
+      "anchor": null,
+      "sample": false
+    },
+    "pass": true
+  },
+  {
+    "scenario": "free-costings",
+    "lang": "gu",
+    "width": 390,
+    "height": 844,
+    "errors": [],
+    "before": {
+      "search": "unmatched-search",
+      "sort": "oldest",
+      "margin": "negative",
+      "prefs": {
+        "saved-costings": {
+          "firstShown": "2026-09-29T20:24:18.994Z",
+          "version": "v1"
+        }
+      },
+      "businessStorage": {
+        "weavly_language": "gu"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "navigations": [],
+      "active": null,
+      "anchor": null,
+      "sample": false
+    },
+    "first": "snapshots",
+    "second": "freeSelect",
+    "active": {
+      "search": "unmatched-search",
+      "sort": "oldest",
+      "margin": "negative",
+      "prefs": {
+        "saved-costings": {
+          "firstShown": "2026-09-29T20:24:18.994Z",
+          "version": "v1",
+          "firstStarted": true
+        }
+      },
+      "businessStorage": {
+        "weavly_language": "gu"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "navigations": [],
+      "active": "next",
+      "anchor": null,
+      "sample": true
+    },
+    "requestsAtLaunch": 1,
+    "exited": {
+      "search": "unmatched-search",
+      "sort": "oldest",
+      "margin": "negative",
+      "prefs": {
+        "saved-costings": {
+          "firstShown": "2026-09-29T20:24:18.994Z",
+          "version": "v1",
+          "firstStarted": true
+        }
+      },
+      "businessStorage": {
+        "weavly_language": "gu"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "navigations": [],
+      "active": "quiet-tour",
+      "anchor": null,
+      "sample": false
+    },
+    "completedSteps": [
+      "snapshots",
+      "freeSelect",
+      "internal",
+      "finish"
+    ],
+    "done": {
+      "search": "unmatched-search",
+      "sort": "oldest",
+      "margin": "negative",
+      "prefs": {
+        "saved-costings": {
+          "firstShown": "2026-09-29T20:24:18.994Z",
+          "version": "v1",
+          "firstStarted": true,
+          "completed": true,
+          "completedVersion": "v2"
+        }
+      },
+      "businessStorage": {
+        "weavly_language": "gu"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        },
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "navigations": [],
+      "active": null,
+      "anchor": "free-costings.new",
+      "sample": false
+    },
+    "reloaded": {
+      "search": "unmatched-search",
+      "sort": "recent",
+      "margin": "all",
+      "prefs": {
+        "saved-costings": {
+          "firstShown": "2026-09-29T20:24:18.994Z",
+          "version": "v1",
+          "firstStarted": true,
+          "completed": true,
+          "completedVersion": "v2"
+        }
+      },
+      "businessStorage": {
+        "weavly_language": "gu"
+      },
+      "calls": [],
+      "navigations": [],
+      "active": null,
+      "anchor": null,
+      "sample": false
+    },
+    "pass": true
+  },
+  {
+    "scenario": "quotes-compare",
+    "lang": "en",
+    "width": 1440,
+    "height": 900,
+    "errors": [],
+    "before": {
+      "search": "unmatched-search",
+      "sort": "oldest",
+      "margin": "negative",
+      "toolbar": "Search quality or costing…Filters · 1Sort byRecently updatedOldest updatedHighest marginLowest production costMarginAll marginsNegative marginUnder 10%10–20%Over 20% Compare All costings Active0 qualities",
+      "prefs": {
+        "saved-costings": {
+          "firstShown": "2026-09-29T20:24:30.379Z",
+          "version": "v1"
+        }
+      },
+      "businessStorage": {
+        "weavly_language": "en"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "navigations": [],
+      "active": null,
+      "anchor": null,
+      "sample": false
+    },
+    "first": "compareSelect",
+    "second": "comparison",
+    "active": {
+      "search": "unmatched-search",
+      "sort": "oldest",
+      "margin": "negative",
+      "toolbar": "Search quality or costing…Filters · 1Sort byRecently updatedOldest updatedHighest marginLowest production costMarginAll marginsNegative marginUnder 10%10–20%Over 20% Compare All costings Active1 sample quality",
+      "prefs": {
+        "saved-costings": {
+          "firstShown": "2026-09-29T20:24:30.379Z",
+          "version": "v1"
+        }
+      },
+      "businessStorage": {
+        "weavly_language": "en"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "navigations": [],
+      "active": "next",
+      "anchor": null,
+      "sample": true
+    },
+    "requestsAtLaunch": 0,
+    "exited": {
+      "search": "unmatched-search",
+      "sort": "oldest",
+      "margin": "negative",
+      "toolbar": "Search quality or costing…Filters · 1Sort byRecently updatedOldest updatedHighest marginLowest production costMarginAll marginsNegative marginUnder 10%10–20%Over 20% Compare All costings Active0 qualities",
+      "prefs": {
+        "saved-costings": {
+          "firstShown": "2026-09-29T20:24:30.379Z",
+          "version": "v1"
+        }
+      },
+      "businessStorage": {
+        "weavly_language": "en"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "navigations": [],
+      "active": "compare-tour",
+      "anchor": null,
+      "sample": false
+    },
+    "completedSteps": [
+      "compareSelect",
+      "comparison",
+      "comparisonDetails",
+      "compareHandoff"
+    ],
+    "done": {
+      "search": "unmatched-search",
+      "sort": "oldest",
+      "margin": "negative",
+      "toolbar": "Search quality or costing…Filters · 1Sort byRecently updatedOldest updatedHighest marginLowest production costMarginAll marginsNegative marginUnder 10%10–20%Over 20% Compare All costings Active0 qualities",
+      "prefs": {
+        "saved-costings": {
+          "firstShown": "2026-09-29T20:24:30.379Z",
+          "version": "v1"
+        }
+      },
+      "businessStorage": {
+        "weavly_language": "en"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "navigations": [],
+      "active": null,
+      "anchor": "costings.compare",
+      "sample": false
+    },
+    "reloaded": {
+      "search": "unmatched-search",
+      "sort": "recent",
+      "margin": "all",
+      "toolbar": "Search quality or costing…FiltersSort byRecently updatedOldest updatedHighest marginLowest production costMarginAll marginsNegative marginUnder 10%10–20%Over 20% Compare Favourites Archived0 qualities",
+      "prefs": {
+        "saved-costings": {
+          "firstShown": "2026-09-29T20:24:30.379Z",
+          "version": "v1"
+        }
+      },
+      "businessStorage": {
+        "weavly_language": "en"
+      },
+      "calls": [],
+      "navigations": [],
+      "active": null,
+      "anchor": null,
+      "sample": false
+    },
+    "pass": true
+  },
+  {
+    "scenario": "quotes-compare",
+    "lang": "gu",
+    "width": 390,
+    "height": 844,
+    "errors": [],
+    "before": {
+      "search": "unmatched-search",
+      "sort": "oldest",
+      "margin": "negative",
+      "toolbar": "ક્વોલિટી અથવા કોસ્ટિંગ શોધો…Filters · 1Sort દ્વારાહમણાં અપડેટ થયેલીસૌથી જૂની અપડેટસૌથી વધુ માર્જિનસૌથી ઓછો ઉત્પાદન ખર્ચમાર્જિનબધા માર્જિનનેગેટિવ માર્જિન10%થી ઓછું10–20%20%થી વધુ સરખામણી કરો બધા costings ચાલુ0 ક્વોલિટી",
+      "prefs": {
+        "saved-costings": {
+          "firstShown": "2026-09-29T20:24:40.638Z",
+          "version": "v1"
+        }
+      },
+      "businessStorage": {
+        "weavly_language": "gu"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "navigations": [],
+      "active": null,
+      "anchor": null,
+      "sample": false
+    },
+    "first": "compareSelect",
+    "second": "comparison",
+    "active": {
+      "search": "unmatched-search",
+      "sort": "oldest",
+      "margin": "negative",
+      "toolbar": "ક્વોલિટી અથવા કોસ્ટિંગ શોધો…Filters · 1Sort દ્વારાહમણાં અપડેટ થયેલીસૌથી જૂની અપડેટસૌથી વધુ માર્જિનસૌથી ઓછો ઉત્પાદન ખર્ચમાર્જિનબધા માર્જિનનેગેટિવ માર્જિન10%થી ઓછું10–20%20%થી વધુ સરખામણી કરો બધા costings ચાલુ1 sample ક્વોલિટી",
+      "prefs": {
+        "saved-costings": {
+          "firstShown": "2026-09-29T20:24:40.638Z",
+          "version": "v1"
+        }
+      },
+      "businessStorage": {
+        "weavly_language": "gu"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "navigations": [],
+      "active": "next",
+      "anchor": null,
+      "sample": true
+    },
+    "requestsAtLaunch": 0,
+    "exited": {
+      "search": "unmatched-search",
+      "sort": "oldest",
+      "margin": "negative",
+      "toolbar": "ક્વોલિટી અથવા કોસ્ટિંગ શોધો…Filters · 1Sort દ્વારાહમણાં અપડેટ થયેલીસૌથી જૂની અપડેટસૌથી વધુ માર્જિનસૌથી ઓછો ઉત્પાદન ખર્ચમાર્જિનબધા માર્જિનનેગેટિવ માર્જિન10%થી ઓછું10–20%20%થી વધુ સરખામણી કરો બધા costings ચાલુ0 ક્વોલિટી",
+      "prefs": {
+        "saved-costings": {
+          "firstShown": "2026-09-29T20:24:40.638Z",
+          "version": "v1"
+        }
+      },
+      "businessStorage": {
+        "weavly_language": "gu"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "navigations": [],
+      "active": "compare-tour",
+      "anchor": null,
+      "sample": false
+    },
+    "completedSteps": [
+      "compareSelect",
+      "comparison",
+      "comparisonDetails",
+      "compareHandoff"
+    ],
+    "done": {
+      "search": "unmatched-search",
+      "sort": "oldest",
+      "margin": "negative",
+      "toolbar": "ક્વોલિટી અથવા કોસ્ટિંગ શોધો…Filters · 1Sort દ્વારાહમણાં અપડેટ થયેલીસૌથી જૂની અપડેટસૌથી વધુ માર્જિનસૌથી ઓછો ઉત્પાદન ખર્ચમાર્જિનબધા માર્જિનનેગેટિવ માર્જિન10%થી ઓછું10–20%20%થી વધુ સરખામણી કરો બધા costings ચાલુ0 ક્વોલિટી",
+      "prefs": {
+        "saved-costings": {
+          "firstShown": "2026-09-29T20:24:40.638Z",
+          "version": "v1"
+        }
+      },
+      "businessStorage": {
+        "weavly_language": "gu"
+      },
+      "calls": [
+        {
+          "fn": "recordTourEventAction",
+          "file": "app/actions/tour-preferences.ts"
+        }
+      ],
+      "navigations": [],
+      "active": null,
+      "anchor": "costings.compare",
+      "sample": false
+    },
+    "reloaded": {
+      "search": "unmatched-search",
+      "sort": "recent",
+      "margin": "all",
+      "toolbar": "ક્વોલિટી અથવા કોસ્ટિંગ શોધો…FiltersSort દ્વારાહમણાં અપડેટ થયેલીસૌથી જૂની અપડેટસૌથી વધુ માર્જિનસૌથી ઓછો ઉત્પાદન ખર્ચમાર્જિનબધા માર્જિનનેગેટિવ માર્જિન10%થી ઓછું10–20%20%થી વધુ સરખામણી કરો મનપસંદ આર્કાઇવ કરેલી0 ક્વોલિટી",
+      "prefs": {
+        "saved-costings": {
+          "firstShown": "2026-09-29T20:24:40.638Z",
+          "version": "v1"
+        }
+      },
+      "businessStorage": {
+        "weavly_language": "gu"
+      },
+      "calls": [],
+      "navigations": [],
+      "active": null,
+      "anchor": null,
+      "sample": false
+    },
+    "pass": true
+  }
+]

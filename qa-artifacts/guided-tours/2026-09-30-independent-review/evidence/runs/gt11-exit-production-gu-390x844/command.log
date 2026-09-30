@@ -1,0 +1,1 @@
+{"scenario":"production?populated=1","lang":"gu","size":"390x844","steps":4,"logs":["warning: [harness] server action called recordTourEventAction","error: Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector","warning: [harness] server action called recordTourEventAction"]}

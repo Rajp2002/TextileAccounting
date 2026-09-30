@@ -1,227 +1,140 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import fs from 'node:fs'
-import path from 'node:path'
+import { describe, expect, it, vi } from 'vitest'
+import { readFileSync, existsSync } from 'node:fs'
+import ts from 'typescript'
+import { rateBookTourSpecs, RATE_BOOK_TOUR_STEPS } from '../lib/rate-book-tour'
+import { isSampleRecordId } from '../lib/tours/sample-ids'
+import { tourCommonCopy } from '../lib/i18n/tour-common'
+import { filterCostRates } from '../lib/cost-rates'
+import { getTourPresentation } from '../lib/tours/tour-preferences'
+import { tourRegistry } from '../lib/tours/tour-registry'
 
-const mocks = vi.hoisted(() => ({
-    requireRole: vi.fn(),
-    updateUser: vi.fn(),
-    revalidatePath: vi.fn(),
-}))
+vi.mock('@/app/actions/tour-preferences', () => ({ recordTourEventAction: vi.fn() }))
 
-vi.mock('@/lib/auth', () => ({ requireRole: mocks.requireRole }))
-vi.mock('@/lib/supabase/server', () => ({
-    createClient: async () => ({ auth: { updateUser: mocks.updateUser } }),
-}))
-vi.mock('next/cache', () => ({ revalidatePath: mocks.revalidatePath }))
+const read = (path: string) => readFileSync(path, 'utf8')
+const rates = read('app/(dashboard)/owner/rates/RatesClient.tsx')
+const wrapper = read('components/rates/RateBookTutorial.tsx')
+const runtime = read('components/rates/RateBookTourRuntime.tsx')
+const page = read('app/(dashboard)/owner/rates/page.tsx')
 
-import {
-    rateBookTutorialCopy,
-    isRatebookTutorialField,
-} from '../lib/i18n/rate-book-tutorial'
-import { dismissRatebookTutorial } from '../app/(dashboard)/owner/rates/tutorial-actions'
+// Execute the actual handler/filter expressions without mounting the business page.
+const source = ts.createSourceFile('RatesClient.tsx', rates, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
+function initializer(name: string) {
+    let value = ''
+    const visit = (node: ts.Node) => {
+        if (ts.isVariableDeclaration(node) && node.name.getText(source) === name) value = node.initializer!.getText(source)
+        ts.forEachChild(node, visit)
+    }
+    visit(source)
+    if (!value) throw new Error(`Missing ${name}`)
+    return value
+}
+function evaluate(name: string, scope: Record<string, unknown>) {
+    const code = ts.transpileModule(`const value = ${initializer(name)};`, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText
+    return new Function(...Object.keys(scope), `${code}; return value`)(...Object.values(scope))
+}
 
-beforeEach(() => {
-    vi.resetAllMocks()
-    mocks.requireRole.mockResolvedValue({ user: { id: 'owner-1', user_metadata: { name: 'Owner' } } })
-    mocks.updateUser.mockResolvedValue({
-        data: { user: { user_metadata: { ratebook_tutorial_dismissed: true } } },
-        error: null,
+describe('Rate Book shared-runtime integration', () => {
+    it('keeps six ordered steps, row targets, sample variants and real handoffs', () => {
+        expect(RATE_BOOK_TOUR_STEPS).toEqual(['rb-purpose', 'rb-find', 'rb-update', 'rb-review', 'rb-usage', 'rb-handoff'])
+        for (const sample of [false, true]) for (const populated of [false, true]) {
+            const specs = rateBookTourSpecs(sample, populated)
+            expect(specs.map(step => step.id)).toEqual(RATE_BOOK_TOUR_STEPS)
+            expect(specs.map(step => step.anchor)).toEqual(['overview', 'yarnSearch', 'quickEditAction', 'reviewStatusBadge', 'linkedQualitiesPopover', populated ? 'yarnSearch' : 'addRateAction'].map(field => `[data-ratebook-field="${field}"]`))
+            expect(specs.slice(2, 5).map(step => step.kind)).toEqual(Array(3).fill(sample ? 'sample' : 'live'))
+            expect(specs.at(-1)?.kind).toBe('handoff')
+            for (const step of specs) expect(rates).toContain(step.anchor.slice(1, -1))
+        }
+        expect(rates.match(/data-ratebook-field="addRateAction"/g)).toHaveLength(2)
+        expect(rates).toContain('data-ratebook-field="yarnSearch" tabIndex={-1}')
+        expect(rates).toContain('sampleRow={isSampleRecordId(visibleRates[0]?.id)}')
+        expect(rates).toContain('hasRealRates={activeYarnRates.some(rate => !isSampleRecordId(rate.id))}')
+    })
+
+    it('mounts one invitation, lazy-loads all step code, and keeps shared focus/persistence', () => {
+        expect(wrapper.match(/<TourInvitation\b/g)).toHaveLength(1)
+        expect(rates.match(/<RateBookTutorial\b/g)).toHaveLength(1)
+        expect(rates).not.toContain('RateBookTutorialLauncher')
+        expect(wrapper).toContain("dynamic(() => import('./RateBookTourRuntime'), { ssr: false })")
+        expect(wrapper).toContain('{step && <RateBookTourRuntime')
+        expect(wrapper).not.toContain("from '@/lib/i18n/rate-book-tutorial'")
+        expect(rates).not.toContain("from '@/lib/i18n/rate-book-tutorial'")
+        expect(runtime).toContain('<GuidedTour tourId="rate-book"')
+        expect(runtime).toContain('returnFocus={returnFocus} userId={userId}')
+        expect(wrapper).toContain('userMetadata={userMetadata}')
+        expect(page).toContain('userMetadata={user.user_metadata}')
+        expect(page).toContain('userId={user.id}')
+        expect(page).toContain('orgId={profile.org_id}')
+        expect(getTourPresentation('rate-book', { ratebook_tutorial_dismissed: true })).toBe('replay')
+        expect(tourRegistry['rate-book'].contentVersion).toBe('v2')
+        expect(existsSync('app/(dashboard)/owner/rates/tutorial-actions.ts')).toBe(false)
+        for (const text of [wrapper, runtime, rates]) expect(text).not.toMatch(/dismissRatebookTutorial|accountDismissed|requestTrigger|isTutorialActive|isSheetStep|isPopoverStep/)
+        expect(wrapper).not.toMatch(/setTimeout|setInterval|localStorage|createPortal/)
+    })
+
+    it('keeps the sample deletion nudge tied to Done, never Exit', () => {
+        expect(wrapper).toContain('onDone={onTourFinish}')
+        expect(runtime).toContain('onStepChange={onStepChange} onDone={onDone}')
+        expect(wrapper).not.toContain('onTourFinish?.()')
+        expect(rates).toContain('if (!demoYarnDeleted && rates.some(r => r.id === DEMO_YARN_RATE.id))')
+        expect(rates).toContain('setShowDeleteNudge(true)')
+        expect(rates).toContain("tx('Delete sample yarn')")
+        expect(rates).toContain('return [DEMO_YARN_RATE]')
+        expect(rates).toContain('tourCommonCopy[language].sampleBanner')
+    })
+
+    it('makes the rail inline at every narrow width while preserving the pinned tier', () => {
+        const css = read('app/globals.css')
+        expect(css).toMatch(/\.rates-left-rail-desktop \{\s*display: block;\s*width: 100%;\s*margin-bottom: 1.25rem;/)
+        expect(css).not.toMatch(/\.rates-left-rail-desktop \{\s*display: none/)
+        expect(css).toMatch(/@media\s*\(min-width:\s*1440px\)[\s\S]*?\.rates-left-rail-desktop,[\s\S]*?position: fixed/)
+        expect(rates.indexOf('<aside className="rates-left-rail-desktop')).toBeLessThan(rates.indexOf('data-ratebook-tutorial-root'))
     })
 })
 
-describe('Rate Book Guided Tour i18n & Integrity', () => {
-    it('provides exactly 6 sections for en, hi, and gu', () => {
-        for (const lang of ['en', 'hi', 'gu'] as const) {
-            const copy = rateBookTutorialCopy[lang]
-            expect(copy.sections).toHaveLength(6)
-            expect(copy.replay).toBeTruthy()
-            expect(copy.skip).toBeTruthy()
-            expect(copy.next).toBeTruthy()
-            expect(copy.back).toBeTruthy()
-            expect(copy.finish).toBeTruthy()
+describe('Rate Book render-only filter shadowing', () => {
+    const active = [{ id: 'real-active', name: 'Cotton', category: 'yarn_warp', is_active: true, is_reviewed: true, last_reviewed_at: '2099-01-01', review_interval_days: 90 }]
+    const archived = [{ ...active[0], id: 'real-archived', is_active: false }]
+    it.each([null, 'rb-purpose', 'rb-update', 'rb-review', 'rb-usage', 'rb-handoff'] as const)('derives rows without writing filter state at %s', tourStep => {
+        const filterState = Object.freeze({ searchQuery: 'no-matching-yarn', categoryFilter: 'yarn_weft', statusFilter: 'needs_review', showArchived: true })
+        const scope = { ...filterState, tourStep, activeYarnRates: active, archivedYarnRates: archived }
+        const targetYarnRates = evaluate('targetYarnRates', scope)
+        const result = evaluate('filteredRates', { ...scope, targetYarnRates, filterCostRates, useMemo: (fn: () => unknown) => fn() })
+        expect(result).toEqual(tourStep ? active : [])
+        expect(targetYarnRates).toEqual(tourStep ? active : archived)
+        expect(filterState).toEqual({ searchQuery: 'no-matching-yarn', categoryFilter: 'yarn_weft', statusFilter: 'needs_review', showArchived: true })
+        expect(initializer('filteredRates')).not.toMatch(/set\w+\(/)
+    })
+    it('keeps the page keyboard actions inert during a tour without resetting state', () => {
+        expect(rates).toContain('if (tourStep !== null || event.ctrlKey')
+        expect(rates).toContain('value={searchQuery}')
+        expect(wrapper).not.toMatch(/setSearch|setCategory|setStatus|setDraft|setRates|router/)
+    })
+})
+
+describe('Sample rate guards run before any business action or UI mutation', () => {
+    it.each(['handleSave', 'openHistory', 'handleArchive'])('%s blocks demo and tour ids and retains the real action path', async name => {
+        for (const id of ['demo-sample-yarn-rate', 'tour-rate', 'real-rate']) {
+            const rate = { id, is_active: true, updated_at: '2026-09-01' }
+            const business = vi.fn(() => new Promise(() => {}))
+            const mutate = vi.fn()
+            const toast = { info: vi.fn() }
+            const scope = { draft: rate, archiveRate: rate, isSampleRecordId, toast, tourCommonCopy, language: 'gu',
+                setPendingAction: mutate, setArchiveError: mutate, setHistoryRate: mutate, setHistoryRows: mutate,
+                setHistoryError: mutate, setHistoryLoading: mutate,
+                startTransition: (fn: () => void) => fn(), saveCostRate: business, getCostRateHistory: business, archiveCostRate: business,
+            }
+            const handler = evaluate(name, scope)
+            const result = handler(rate)
+            if (isSampleRecordId(id)) {
+                await result
+                expect(toast.info).toHaveBeenCalledExactlyOnceWith(tourCommonCopy.gu.sampleBanner)
+                expect(business).not.toHaveBeenCalled()
+                expect(mutate).not.toHaveBeenCalled()
+            } else {
+                expect(toast.info).not.toHaveBeenCalled()
+                expect(business).toHaveBeenCalledTimes(1)
+                expect(mutate).toHaveBeenCalled()
+            }
         }
     })
-
-    it('has matching field keys across en, hi, and gu', () => {
-        const enFields = Object.keys(rateBookTutorialCopy.en.fields).sort()
-        const hiFields = Object.keys(rateBookTutorialCopy.hi.fields).sort()
-        const guFields = Object.keys(rateBookTutorialCopy.gu.fields).sort()
-
-        expect(enFields).toEqual(hiFields)
-        expect(enFields).toEqual(guFields)
-        expect(enFields.length).toBeGreaterThanOrEqual(20)
-    })
-
-    it('validates fields with isRatebookTutorialField', () => {
-        expect(isRatebookTutorialField('yarnRow')).toBe(true)
-        expect(isRatebookTutorialField('yarnSearch')).toBe(true)
-        expect(isRatebookTutorialField('confirmAll')).toBe(true)
-        expect(isRatebookTutorialField('quickEditPopover')).toBe(true)
-        expect(isRatebookTutorialField('nonExistentField')).toBe(false)
-    })
 })
-
-describe('RatesClient Integration & Overlay Stability', () => {
-    const ratesClientPath = path.resolve(__dirname, '../app/(dashboard)/owner/rates/RatesClient.tsx')
-    const ratesClientSource = fs.readFileSync(ratesClientPath, 'utf8')
-    const tutorialPath = path.resolve(__dirname, '../components/rates/RateBookTutorial.tsx')
-    const tutorialSource = fs.readFileSync(tutorialPath, 'utf8')
-    const ratesPagePath = path.resolve(__dirname, '../app/(dashboard)/owner/rates/page.tsx')
-    const ratesPageSource = fs.readFileSync(ratesPagePath, 'utf8')
-
-    it('attaches data-ratebook-tutorial-root to RatesClient container', () => {
-        expect(ratesClientSource).toContain('data-ratebook-tutorial-root="true"')
-    })
-
-    it('embeds RateBookTutorial component in RatesClient', () => {
-        expect(ratesClientSource).toContain('<RateBookTutorial')
-        expect(ratesClientSource).toContain("import { RateBookTutorial } from '@/components/rates/RateBookTutorial'")
-    })
-
-    it('passes tutorialDismissed, userId, and orgId from RatesPage', () => {
-        expect(ratesPageSource).toContain('tutorialDismissed={user.user_metadata?.ratebook_tutorial_dismissed === true}')
-        expect(ratesPageSource).toContain('userId={user.id}')
-        expect(ratesPageSource).toContain('orgId={profile.org_id}')
-    })
-
-    it('tags core sections and interactive fields with data-ratebook attributes', () => {
-        const expectedFields = [
-            'yarnSearch',
-            'directionFilter',
-            'needsReviewFilter',
-            'confirmAll',
-            'yarnRow',
-            'yarnNameCell',
-            'rateAndTrend',
-            'reviewStatusBadge',
-            'linkedQualitiesPopover',
-            'quickReviewAction',
-            'quickEditAction',
-            'quickEditPopover',
-            'addRateAction',
-            'rateDrawerFields',
-            'reviewRailWidget',
-        ]
-
-        for (const field of expectedFields) {
-            expect(ratesClientSource).toContain(`data-ratebook-field="${field}"`)
-        }
-    })
-
-    it('passes hideOverlay={isTutorialActive} to SheetContent and DueForReviewDialog to prevent overlay clash', () => {
-        expect(ratesClientSource).toContain('hideOverlay={isTutorialActive}')
-    })
-
-    it('RateBookTutorial component includes dual spotlight and smart panel placement', () => {
-        expect(tutorialSource).toContain('clipPath')
-        expect(tutorialSource).toContain('panelPlacement')
-        expect(tutorialSource).toContain('data-testid="rate-book-tutorial"')
-    })
-
-    it('RateBookTutorial manages keyboard navigation (Enter, Escape, ArrowLeft, ArrowRight)', () => {
-        expect(tutorialSource).toContain("event.key === 'Escape'")
-        expect(tutorialSource).toContain("event.key === 'Enter'")
-        expect(tutorialSource).toContain("event.key === 'ArrowRight'")
-        expect(tutorialSource).toContain("event.key === 'ArrowLeft'")
-    })
-
-    it('renders RateBookTutorial inside .rates-left-rail-desktop pinned to top of left rail', () => {
-        expect(ratesClientSource).toContain('<aside className="rates-left-rail-desktop')
-        const leftRailIndex = ratesClientSource.indexOf('className="rates-left-rail-desktop')
-        const tutorialIndex = ratesClientSource.indexOf('<RateBookTutorial', leftRailIndex)
-        expect(tutorialIndex).toBeGreaterThan(leftRailIndex)
-    })
-
-    it('defines responsive positioning for .rates-left-rail-desktop in globals.css matching Cost Estimator', () => {
-        const stylesPath = path.resolve(__dirname, '../app/globals.css')
-        const styles = fs.readFileSync(stylesPath, 'utf8')
-
-        expect(styles).toContain('.rates-left-rail-desktop')
-        // Inline above the Rate Book from 1024px, pinned beside it from 1440px.
-        expect(styles).toMatch(/@media\s*\(min-width:\s*1024px\)\s*\{[\s\S]*?\.rates-left-rail-desktop\s*\{[\s\S]*?display:\s*block/)
-        expect(styles).toMatch(/@media\s*\(min-width:\s*1440px\)\s*\{[\s\S]*?\.rates-left-rail-desktop,[\s\S]*?position:\s*fixed;[\s\S]*?top:\s*var\(--rail-top\);[\s\S]*?left:\s*var\(--rail-left\);[\s\S]*?width:\s*var\(--rail-w\);/)
-    })
-
-    it('dismissRatebookTutorial updates user metadata and revalidates /owner/rates', async () => {
-        const res = await dismissRatebookTutorial()
-        expect(res).toEqual({ success: true })
-        expect(mocks.requireRole).toHaveBeenCalledWith(['owner'])
-        expect(mocks.updateUser).toHaveBeenCalledWith({
-            data: { ratebook_tutorial_dismissed: true },
-        })
-        expect(mocks.revalidatePath).toHaveBeenCalledWith('/owner/rates')
-    })
-
-    it('mounts RateBookTutorial exactly once to prevent duplicate portals and inert focus collisions', () => {
-        const matches = ratesClientSource.match(/<RateBookTutorial\b/g)
-        expect(matches).toHaveLength(1)
-        expect(ratesClientSource).toContain('<RateBookTutorialLauncher')
-    })
-
-    it('ensures tour only skips via skip tour button or Escape shortcut, disabling outside click dismissal', () => {
-        expect(tutorialSource).toContain('data-tour-control="skip"')
-        expect(tutorialSource).toContain("event.key === 'Escape'")
-        expect(tutorialSource).toContain('data-ratebook-portal="true"')
-        expect(tutorialSource).not.toMatch(/role="button"[\s\S]*?aria-label=\{copy\.skip\}[\s\S]*?close\(\)/)
-    })
-
-    it('protects QuickRateEditPopover from premature dismissal during tutorial', () => {
-        expect(ratesClientSource).toContain('onPointerDownOutside={(e) => {')
-        expect(ratesClientSource).toContain('onInteractOutside={(e) => {')
-        expect(ratesClientSource).toContain('onFocusOutside={(e) => {')
-        expect(ratesClientSource).toContain('else if (!isTutorialActive) {')
-        expect(ratesClientSource).toContain('isTutorialActive={isTutorialActive}')
-    })
-
-    it('keeps the tour in control when the rate editor mounts', () => {
-        expect(ratesClientSource).toContain('<Sheet modal={!isTutorialActive} open={Boolean(draft)}')
-        expect(ratesClientSource).toContain('onOpenAutoFocus={(event) => { if (isTutorialActive) event.preventDefault() }}')
-        expect(ratesClientSource).toContain('onCloseAutoFocus={(event) => { if (isTutorialActive) event.preventDefault() }}')
-    })
-
-    it('exempts Radix popover and sheet portals from inert state during tutorial', () => {
-        expect(tutorialSource).toContain("!el.hasAttribute('data-radix-popper-content-wrapper')")
-        expect(tutorialSource).toContain("!el.querySelector('[data-slot=\"popover-content\"]')")
-        expect(tutorialSource).toContain("!el.querySelector('[data-slot=\"sheet-content\"]')")
-    })
-
-    it('dynamically docks tutorial panel to bottom-right when spotlighting top-right popover or toolbar section', () => {
-        expect(tutorialSource).toContain('!isSheetStep && targetRect.top < 380')
-        expect(tutorialSource).toContain("setPanelPlacement(targetIsTopRight ? 'bottom-right' : 'top-right')")
-        expect(tutorialSource).toContain('cardRect.top < topThreshold && cardRect.bottom > 0 && cardRect.right > rightThreshold')
-        expect(tutorialSource).toContain('targetOverlapsTopRight && !targetOverlapsBottomRight')
-    })
-
-    it('adapts tutorial panel height to content with minimal blank space and safe width', () => {
-        expect(tutorialSource).toContain('sm:w-[260px] max-w-[268px]')
-        expect(tutorialSource).toContain('h-auto')
-        expect(tutorialSource).toContain('flex flex-col')
-        expect(tutorialSource).not.toContain('min-h-[420px]')
-        expect(tutorialSource).toContain('modalLeft = panelRect ? panelRect.left : viewportWidth - 268')
-    })
-
-    it('prioritizes table rows and section cards over outer cards to avoid massive card spotlights', () => {
-        const trIndex = tutorialSource.indexOf("target.closest<HTMLElement>('tbody tr')")
-        const sectionCardIndex = tutorialSource.indexOf("target.closest<HTMLElement>('[data-ratebook-section-card]')")
-        const outerCardIndex = tutorialSource.indexOf("target.closest<HTMLElement>('[data-slot=\"card\"]')")
-
-        expect(trIndex).toBeGreaterThan(-1)
-        expect(sectionCardIndex).toBeGreaterThan(-1)
-        expect(outerCardIndex).toBeGreaterThan(-1)
-        expect(trIndex).toBeLessThan(outerCardIndex)
-        expect(sectionCardIndex).toBeLessThan(outerCardIndex)
-    })
-
-    it('scales up typography across title, description, and badge for improved readability', () => {
-        expect(tutorialSource).toContain('text-base sm:text-[17px] font-bold')
-        expect(tutorialSource).toContain('text-xs sm:text-[13.5px] leading-relaxed')
-        expect(tutorialSource).toContain('text-[11px] font-bold')
-    })
-
-    it('positions explainer panel to the left of the drawer for step 14 to avoid overlapping the focused section', () => {
-        expect(tutorialSource).toContain('isSheetStep && !mobileTour.mobile')
-        expect(tutorialSource).toContain('sm:right-[calc(32rem+1.25rem)]')
-        expect(tutorialSource).toContain('window.innerWidth - spotlight.card.left + 20')
-    })
-})
-

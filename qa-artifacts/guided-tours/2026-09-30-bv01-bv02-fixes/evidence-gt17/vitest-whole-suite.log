@@ -1,0 +1,317 @@
+
+ RUN  v4.1.8 /Users/rajpatel/Projects/textile Saas/.claude/worktrees/weavly-guided-tour-bv01-bv02-9ff08b
+
+ ✓ __tests__/build-type-cache.test.ts (1 test) 243ms
+ ✓ __tests__/backup-inventory-comparison.test.ts (3 tests) 365ms
+ ✓ __tests__/tour-legacy-retired.test.ts (5 tests) 368ms
+ ✓ __tests__/base-payroll-pdf.test.ts (19 tests) 277ms
+ ✓ __tests__/base-payroll-readiness.test.ts (29 tests) 927ms
+ ✓ __tests__/payroll-tour-preview.test.tsx (47 tests) 580ms
+ ✓ __tests__/dispatch-tour-preview.test.tsx (31 tests) 257ms
+ ✓ __tests__/estimator-scenario-selection.test.ts (16 tests) 136ms
+ ✓ __tests__/stock-tour.test.tsx (33 tests) 504ms
+ ✓ __tests__/dispatch-tutorial-panel.test.tsx (31 tests) 231ms
+ ✓ __tests__/p1-billing-orders.test.ts (19 tests) 183ms
+ ✓ __tests__/management-register-rendering.test.ts (5 tests) 181ms
+ ✓ __tests__/payroll-cycle-integration.test.ts (6 tests) 149ms
+ ✓ __tests__/worker-register-refinement.test.ts (17 tests) 475ms
+ ✓ __tests__/daily-sheet-tour-preview.test.tsx (33 tests) 421ms
+ ✓ __tests__/production-tour-preview.test.tsx (25 tests) 256ms
+ ✓ __tests__/machine-register-refinement.test.ts (16 tests) 521ms
+stdout | __tests__/tour-program-consistency.test.ts > GT-17 cross-tour consistency review > holds English titles, bodies and details to DR-27, DR-28 and DR-29
+
+DR-27/28/29 English limits (tokens counted as 30 characters)
+Cost Estimator       entries= 29  longest title 39/48  body 149/190  detail 124/260
+Saved Costings       entries= 39  longest title 38/48  body 182/190  detail 149/260
+Yarn Rate Book       entries= 17  longest title 44/48  body 146/190  detail 127/260
+Dispatches           entries= 22  longest title 39/48  body 140/190  detail 160/260
+Fabric Stock         entries= 14  longest title 38/48  body 146/190  detail 157/260
+Yarn Stock           entries= 17  longest title 39/48  body 129/190  detail 261/260
+Payroll              entries= 37  longest title 34/48  body 148/190  detail 96/260
+Production           entries= 17  longest title 33/48  body 149/190  detail 141/260
+Daily Sheet          entries= 28  longest title 44/48  body 127/190  detail 116/260
+Machines             entries= 13  longest title 31/48  body 113/190  detail 97/260
+Workers              entries= 20  longest title 33/48  body 132/190  detail 0/260
+Machine Assignments  entries= 17  longest title 31/48  body 141/190  detail 138/260
+RECORDED EXCEPTIONS: Yarn Stock correct.detail (detail is 261, limit 260)
+
+stdout | __tests__/tour-program-consistency.test.ts > GT-17 cross-tour consistency review > keeps Gujarati and Hindi within DR-34: at most 60% longer than English, and the same number of sentences
+
+DR-34 Gujarati/Hindi length ratio
+Cost Estimator       longest gu/hi ratio 1.15x  sentence-count differences 0
+Saved Costings       longest gu/hi ratio 1.37x  sentence-count differences 0
+Yarn Rate Book       longest gu/hi ratio 1.71x  sentence-count differences 0
+Dispatches           longest gu/hi ratio 1.17x  sentence-count differences 0
+Fabric Stock         longest gu/hi ratio 1.25x  sentence-count differences 0
+Yarn Stock           longest gu/hi ratio 1.70x  sentence-count differences 0
+Payroll              longest gu/hi ratio 1.42x  sentence-count differences 4
+Production           longest gu/hi ratio 1.17x  sentence-count differences 0
+Daily Sheet          longest gu/hi ratio 1.29x  sentence-count differences 0
+Machines             longest gu/hi ratio 1.19x  sentence-count differences 0
+Workers              longest gu/hi ratio 1.54x  sentence-count differences 0
+Machine Assignments  longest gu/hi ratio 1.18x  sentence-count differences 0
+RECORDED EXCEPTIONS: Yarn Rate Book handoff.empty.title hi (1.71x English (21 -> 36)); Yarn Stock balance.title hi (1.70x English (20 -> 34)); Payroll calculation.salary.body gu (sentence count 2 vs English 1); Payroll calculation.salary.body hi (sentence count 2 vs English 1); Payroll calculation.recovery.body gu (sentence count 2 vs English 1); Payroll calculation.recovery.body hi (sentence count 2 vs English 1)
+
+ ✓ __tests__/configuration-tour-preview.test.tsx (25 tests) 912ms
+ ✓ __tests__/sprint10-saved-costings-rates-comparison.test.ts (20 tests) 123ms
+ ✓ __tests__/tour-program-consistency.test.ts (7 tests) 489ms
+     ✓ keeps the plain, direct tone of DR-31 in English and never uses a retired name in any language  314ms
+ ✓ __tests__/free-service.test.ts (7 tests) 162ms
+ ✓ __tests__/payroll-tour.test.ts (8 tests) 144ms
+ ✓ __tests__/payroll-cycle-engine.test.ts (43 tests) 106ms
+ ✓ __tests__/navigation-disclosure.test.tsx (15 tests) 137ms
+ ✓ __tests__/sprint15-trust-gate.test.ts (7 tests) 96ms
+ ✓ __tests__/sprint5-quotations-pdf-export.test.ts (5 tests) 103ms
+ ✓ __tests__/sprint17-costing-quotation-hardening.test.ts (7 tests) 126ms
+ ✓ __tests__/free-usage-counter.test.ts (18 tests) 169ms
+ ✓ __tests__/free-estimator.test.ts (8 tests) 118ms
+ ✓ __tests__/tour-data-safety-contract.test.ts (66 tests) 90ms
+ ✓ __tests__/workers-tour-preview.test.tsx (14 tests) 1885ms
+     ✓ en: both six-step paths mount real targets and the panel choice  527ms
+     ✓ gu: both six-step paths mount real targets and the panel choice  551ms
+     ✓ hi: both six-step paths mount real targets and the panel choice  411ms
+ ✓ __tests__/lite-task-validation.test.ts (5 tests) 130ms
+ ✓ __tests__/base-p1-remediation.test.ts (5 tests) 109ms
+ ✓ __tests__/base-estimator-refinements.test.ts (9 tests) 104ms
+ ✓ __tests__/machines-register-tour-help.test.tsx (4 tests) 100ms
+ ✓ __tests__/lite-quick-detailed-parity.test.ts (4 tests) 96ms
+ ✓ __tests__/estimator.test.ts (35 tests) 103ms
+ ✓ __tests__/lite-document-privacy.test.ts (2 tests) 106ms
+ ✓ __tests__/monthly-overhead-calculator.test.ts (9 tests) 111ms
+ ✓ __tests__/lite-telemetry-lifecycle.test.ts (4 tests) 91ms
+ ✓ __tests__/finance.test.ts (43 tests | 1 skipped) 77ms
+ ✓ __tests__/machines-tour-preview.test.tsx (4 tests) 82ms
+ ✓ __tests__/auth-rate-limit-fallback.test.ts (3 tests) 163ms
+ ✓ __tests__/costing-characterization.test.ts (16 tests) 87ms
+ ✓ __tests__/tour-preferences-and-actions.test.ts (43 tests) 61ms
+ ✓ __tests__/b17-razorpay-lifecycle-boundaries.test.ts (8 tests) 83ms
+ ✓ __tests__/base-payroll-settlement-period.test.ts (10 tests) 84ms
+ ✓ __tests__/cost-estimate-tutorial-i18n.test.ts (7 tests) 141ms
+ ✓ __tests__/challan-payment-terms.test.ts (4 tests) 70ms
+ ✓ __tests__/tour-panel-render.test.tsx (6 tests) 75ms
+ ✓ __tests__/tour-invitation-lifecycle.test.ts (10 tests) 86ms
+ ✓ __tests__/saved-costings-tour.test.ts (12 tests) 78ms
+ ✓ __tests__/rate-book-tour-flow.test.tsx (7 tests) 128ms
+ ✓ __tests__/lite-recovery-matrix.test.ts (3 tests) 63ms
+ ✓ __tests__/rate-book-tutorial.test.ts (14 tests) 875ms
+ ✓ __tests__/base-production-core.test.ts (11 tests) 42ms
+ ✓ __tests__/daily-sheet-tour.test.ts (7 tests) 54ms
+ ✓ __tests__/p1-estimator-draft-recovery.test.ts (7 tests) 83ms
+stderr | __tests__/proxy-terminal-session-recovery.test.ts > Proxy terminal Auth session recovery > expires every auth chunk and redirects a protected request to login
+{"level":"warning","event":"terminal_auth_session_recovered","code":"refresh_token_not_found","route":"/owner/estimator"}
+
+stderr | __tests__/proxy-terminal-session-recovery.test.ts > Proxy terminal Auth session recovery > renders a clean login request when Auth returns a terminal session error
+{"level":"warning","event":"terminal_auth_session_recovered","code":"session_not_found","route":"/login"}
+
+stderr | __tests__/proxy-terminal-session-recovery.test.ts > Proxy post-login session handling > still expires a genuinely idle current session locally
+{"level":"warning","event":"auth_session_inactivity_expired","route":"/owner/estimator","idle_ms":90774668527}
+
+stderr | __tests__/proxy-terminal-session-recovery.test.ts > PWA idle-session cold start > renders login in one response and clears both browser and forwarded session cookies
+{"level":"warning","event":"auth_session_inactivity_expired","route":"/login","idle_ms":90774668532}
+
+stderr | __tests__/proxy-terminal-session-recovery.test.ts > PWA idle-session cold start > redirects an idle protected page with cookie deletions so login does not revalidate it
+{"level":"warning","event":"auth_session_inactivity_expired","route":"/owner/estimator","idle_ms":90774668534}
+
+stderr | __tests__/proxy-terminal-session-recovery.test.ts > PWA idle-session cold start > returns JSON and clears cookies for an idle protected API request
+{"level":"warning","event":"auth_session_inactivity_expired","route":"/api/private","idle_ms":90774668538}
+
+ ✓ __tests__/proxy-terminal-session-recovery.test.ts (10 tests) 63ms
+ ✓ __tests__/base-machine-register.test.ts (15 tests) 62ms
+ ✓ __tests__/sprint8-costing-trust.test.ts (4 tests) 47ms
+ ✓ __tests__/estimator-quote-payload.test.ts (5 tests) 44ms
+ ✓ __tests__/yarn-rate-reconciliation.test.ts (13 tests) 53ms
+ ✓ __tests__/estimator-yarn-ratebook-dropdown.test.ts (11 tests) 65ms
+ ✓ __tests__/production-tour.test.ts (10 tests) 78ms
+ ✓ __tests__/worker-pay-basis.test.tsx (6 tests) 134ms
+ ✓ __tests__/base-assignment-connectors.test.ts (3 tests) 42ms
+ ✓ __tests__/base-payroll-history.test.ts (4 tests) 51ms
+ ✓ __tests__/saved-quality-costing-library.test.ts (9 tests) 44ms
+ ✓ __tests__/lite-rate-impact.test.ts (8 tests) 42ms
+ ✓ __tests__/lite-historical-immutability.test.ts (1 test) 41ms
+ ✓ __tests__/dispatch-tour.test.ts (8 tests) 52ms
+ ✓ __tests__/cost-estimate-tutorial-transitions.test.ts (3 tests) 43ms
+ ✓ __tests__/mobile-viewport.test.ts (16 tests) 34ms
+ ✓ __tests__/sprint0-costing-truth.test.ts (4 tests) 39ms
+ ✓ __tests__/free-continuation-integration.test.ts (23 tests) 93ms
+ ✓ __tests__/runtime-source-map-traces.test.ts (1 test) 38ms
+ ✓ __tests__/estimator-placeholder-ux.test.ts (8 tests) 35ms
+ ✓ __tests__/batch10-estimator-quote-order-snapshots.test.ts (9 tests) 41ms
+ ✓ __tests__/lite-web-vitals-route.test.ts (5 tests) 39ms
+ ✓ __tests__/tour-i18n-parity.test.ts (4 tests) 37ms
+ ✓ __tests__/sprint7-ux-polish.test.ts (7 tests) 36ms
+ ✓ __tests__/cost-rates.test.ts (4 tests) 29ms
+ ✓ __tests__/rate-book-p1-features.test.ts (14 tests) 22ms
+ ✓ __tests__/rate-book-quick-edit.test.ts (21 tests) 44ms
+ ✓ __tests__/estimator-production-readiness.test.ts (15 tests) 39ms
+ ✓ __tests__/costing-export-boundary.test.ts (4 tests) 34ms
+ ✓ __tests__/configuration-tour.test.ts (10 tests) 57ms
+ ✓ __tests__/width-field.test.ts (6 tests) 32ms
+ ✓ __tests__/mobile-tour-positioning.test.ts (5 tests) 37ms
+ ✓ __tests__/yarn-stock.test.ts (6 tests) 37ms
+ ✓ __tests__/sprint16-billing-language.test.ts (4 tests) 49ms
+ ✓ __tests__/base-estimator-go-readiness.test.ts (12 tests) 34ms
+ ✓ __tests__/base-fixed-salary.test.ts (9 tests) 34ms
+ ✓ __tests__/free-request-identity.test.ts (8 tests) 31ms
+ ✓ __tests__/guided-tour-fixes-and-demo-data.test.ts (11 tests) 30ms
+ ✓ __tests__/workers-tour.test.ts (7 tests) 48ms
+ ✓ __tests__/challan-draft-entry.test.ts (4 tests) 24ms
+ ✓ __tests__/pilot-no-go-remediation.test.ts (5 tests) 29ms
+ ✓ __tests__/costing-save-boundary.test.ts (4 tests) 57ms
+ ✓ __tests__/sprint3-estimator-simplicity.test.ts (4 tests) 28ms
+ ✓ __tests__/enter-key-navigation.test.ts (12 tests) 32ms
+ ✓ __tests__/estimator-only-experience.test.ts (8 tests) 27ms
+ ✓ __tests__/guided-tour-left-rails.test.ts (11 tests) 30ms
+ ✓ __tests__/quality-stock.test.ts (5 tests) 26ms
+ ✓ __tests__/base-onboarding-wizard.test.ts (15 tests) 29ms
+ ✓ __tests__/sprint9-editor-reliability.test.ts (2 tests) 20ms
+ ✓ __tests__/base-production-continuity.test.ts (5 tests) 27ms
+ ✓ __tests__/management-register-loaders.test.ts (7 tests) 57ms
+ ✓ __tests__/mobile-input-navigation.test.ts (9 tests) 25ms
+ ✓ __tests__/sprint3-profile-draft-recovery.test.ts (5 tests) 28ms
+ ✓ __tests__/plan-selection-actions.test.ts (12 tests) 27ms
+ ✓ __tests__/management-navigation.test.ts (18 tests) 24ms
+ ✓ __tests__/tour-common-i18n.test.ts (3 tests) 25ms
+ ✓ __tests__/backup-sanitized-inventory.test.ts (13 tests) 10767ms
+     ✓ emits valid JSON and allows continuation for zero Storage counts  1075ms
+     ✓ fails closed when Storage contains objects  688ms
+     ✓ fails closed for aligned or otherwise malformed psql output  947ms
+     ✓ fails closed when required Storage fields are missing  920ms
+     ✓ fails closed when psql returns more than one JSON row  847ms
+     ✓ rejects non-integer or invalid Storage counts: { bucket_count: -1 }  820ms
+     ✓ rejects non-integer or invalid Storage counts: { object_count: 0.5 }  937ms
+     ✓ rejects non-integer or invalid Storage counts: { total_bytes: '0' }  776ms
+     ✓ keeps psql stderr separate from the JSON file and sanitized workflow output  927ms
+     ✓ fails closed without echoing psql stderr when the query command fails  900ms
+     ✓ accepts valid JSON with unusual whitespace and Unicode identifiers  1050ms
+     ✓ does not echo the database URL or fixture credential  873ms
+ ✓ __tests__/lite-winding-scope.test.ts (2 tests) 22ms
+ ✓ __tests__/sprint22-auth-boundary.test.ts (8 tests) 24ms
+ ✓ __tests__/lite-trust-journey.test.ts (10 tests) 24ms
+ ✓ __tests__/inventory-audit.test.ts (6 tests) 24ms
+ ✓ __tests__/sprint2-calculation-safety.test.ts (9 tests) 83ms
+ ✓ __tests__/lite-web-vitals.test.ts (5 tests) 13ms
+ ✓ __tests__/estimator-core-tour.test.ts (7 tests) 29ms
+ ✓ __tests__/delivery-challans.test.ts (4 tests) 27ms
+ ✓ __tests__/standalone-plan-chooser.test.ts (15 tests) 22ms
+ ✓ __tests__/tour-target-readiness.test.ts (7 tests) 21ms
+ ✓ __tests__/free-tier-policy.test.ts (7 tests) 19ms
+ ✓ __tests__/billing-live-readiness.test.ts (6 tests) 17ms
+ ✓ __tests__/base-payroll-continuity.test.ts (6 tests) 22ms
+ ✓ __tests__/disclosure-navigation.test.ts (15 tests) 21ms
+ ✓ __tests__/estimator-tour-phone-live-sheet.test.ts (4 tests) 17ms
+ ✓ __tests__/lite-draft-identity-isolation.test.ts (1 test) 12ms
+ ✓ __tests__/tutorial-viewport-lock.test.ts (5 tests) 19ms
+ ✓ __tests__/summary-view-security-invoker.test.ts (7 tests) 12ms
+ ✓ __tests__/tour-scroll.test.ts (5 tests) 18ms
+ ✓ __tests__/date-only-format.test.ts (6 tests) 28ms
+ ✓ __tests__/sprint4-billing-trust.test.ts (5 tests) 20ms
+ ✓ __tests__/active-qualities-production-flow.test.ts (6 tests) 16ms
+ ✓ __tests__/machines-tour.test.ts (8 tests) 35ms
+ ✓ __tests__/guided-tour-focus.test.ts (3 tests) 12ms
+ ✓ __tests__/production-mode.test.ts (6 tests) 15ms
+ ✓ __tests__/current-plan-boundary.test.ts (3 tests) 16ms
+ ✓ __tests__/paid-plan-standardized-billing.test.ts (4 tests) 12ms
+ ✓ __tests__/sign-in-telemetry.test.ts (4 tests) 19ms
+ ✓ __tests__/sprint5-rate-book-ui.test.ts (6 tests) 38ms
+ ✓ __tests__/tutorial-target.test.ts (18 tests) 19ms
+ ✓ __tests__/factory-cost-wizard-account.test.ts (11 tests) 18ms
+ ✓ __tests__/saved-quality-commercial-reuse.test.ts (3 tests) 19ms
+ ✓ __tests__/off-009-mutation-outcome.test.ts (3 tests) 19ms
+ ✓ __tests__/base-p0-remediation.test.ts (4 tests) 11ms
+ ✓ __tests__/rate-book-search-filter.test.ts (13 tests) 34ms
+ ✓ __tests__/sprint21-base-route-boundaries.test.ts (4 tests) 22ms
+ ✓ __tests__/tour-sample-ids.test.ts (12 tests) 11ms
+ ✓ __tests__/tour-quota-and-data-safety.test.ts (4 tests) 19ms
+ ✓ __tests__/tour-placement.test.ts (10 tests) 16ms
+ ✓ __tests__/costing-save-trust.test.ts (3 tests) 14ms
+ ✓ __tests__/p0-provisioning-audit-actor.test.ts (5 tests) 11ms
+ ✓ __tests__/i18n-runtime.test.ts (7 tests) 19ms
+ ✓ __tests__/base-organization-metadata.test.ts (2 tests) 14ms
+ ✓ __tests__/estimator-autofill.test.ts (4 tests) 13ms
+ ✓ __tests__/r0-stop-line-stabilization.test.ts (4 tests) 12ms
+ ✓ __tests__/estimator-tour-tablet-column.test.ts (4 tests) 18ms
+ ✓ __tests__/estimator-overhead-dialog.test.ts (4 tests) 18ms
+ ✓ __tests__/auth-login-performance.test.ts (8 tests) 17ms
+ ✓ __tests__/cost-estimate-tutorial-ordering.test.ts (7 tests) 19ms
+ ✓ __tests__/rate-review-rail.test.ts (7 tests) 17ms
+ ✓ __tests__/rate-book-table-deltas.test.ts (9 tests) 31ms
+ ✓ __tests__/base-onboarding-payroll-step.test.ts (11 tests) 17ms
+ ✓ __tests__/free-plan-guided-tour.test.ts (6 tests) 16ms
+ ✓ __tests__/batch1-auth-waterfall-elimination.test.ts (17 tests) 21ms
+ ✓ __tests__/gutter-dock.test.ts (5 tests) 14ms
+ ✓ __tests__/customer-contact-channels.test.ts (10 tests) 19ms
+ ✓ __tests__/p1-razorpay-idempotency.test.ts (13 tests) 16ms
+ ✓ __tests__/b12-stock-source-integrity.test.ts (5 tests) 10ms
+ ✓ __tests__/tour-text.test.ts (5 tests) 13ms
+ ✓ __tests__/desktop-dimensions-responsive.test.ts (7 tests) 16ms
+ ✓ __tests__/base-p1-coverage.test.ts (3 tests) 23ms
+ ✓ __tests__/yarn-component-minimize-complete.test.ts (12 tests) 25ms
+ ✓ __tests__/cost-estimate-tutorial-modal.test.ts (3 tests) 12ms
+ ✓ __tests__/sprint-estimator-aesthetic.test.ts (5 tests) 16ms
+ ✓ __tests__/base-complete-query.test.ts (3 tests) 20ms
+ ✓ __tests__/costing-defaults-initialization.test.ts (7 tests) 16ms
+ ✓ __tests__/sprint1-costing-save-trust.test.ts (4 tests) 15ms
+ ✓ __tests__/base-security-incident-workflow.test.ts (5 tests) 12ms
+ ✓ __tests__/sprint4-record-management.test.ts (3 tests) 17ms
+ ✓ __tests__/estimator-left-rail.test.ts (3 tests) 11ms
+ ✓ __tests__/base-plan-localization.test.ts (3 tests) 16ms
+ ✓ __tests__/release-runtime-config.test.ts (7 tests) 15ms
+ ✓ __tests__/base-privacy-request-workflow.test.ts (4 tests) 15ms
+ ✓ __tests__/plan-aware-settings-permissions.test.ts (12 tests) 18ms
+ ✓ __tests__/stock-navigation.test.ts (13 tests) 22ms
+ ✓ __tests__/estimator-first-billing-rollout.test.ts (2 tests) 10ms
+ ✓ __tests__/bill-009-referral-year-credit.test.ts (5 tests) 13ms
+ ✓ __tests__/base-worker-deductions.test.ts (5 tests) 16ms
+ ✓ __tests__/privacy-policy-accuracy.test.ts (8 tests) 15ms
+ ✓ __tests__/lite-analytics-privacy.test.ts (2 tests) 15ms
+ ✓ __tests__/base-pilot-blockers.test.ts (2 tests) 15ms
+ ✓ __tests__/p0-authz-boundary.test.ts (5 tests) 26ms
+ ✓ __tests__/account-deletion.test.ts (5 tests) 22ms
+ ✓ __tests__/machine-readiness.test.ts (6 tests) 15ms
+ ✓ __tests__/estimator-boundary-migrations.test.ts (8 tests) 17ms
+ ✓ __tests__/base-release-blocker-remediation.test.ts (5 tests) 33ms
+ ✓ __tests__/free-plan-settings-billing.test.ts (4 tests) 13ms
+ ✓ __tests__/lite-plan-copy-regression.test.ts (4 tests) 11ms
+ ✓ __tests__/worker-operational.test.ts (7 tests) 15ms
+ ✓ __tests__/shift-log-safe-update-guard.test.ts (4 tests) 13ms
+ ✓ __tests__/signup-legal-acceptance.test.ts (5 tests) 52ms
+ ✓ __tests__/lite-accessibility-interaction.test.ts (3 tests) 11ms
+ ✓ __tests__/auth-012-organization-rls.test.ts (2 tests) 11ms
+ ✓ __tests__/lite-localization-regression.test.ts (3 tests) 12ms
+ ✓ __tests__/base-production-correction-history.test.ts (4 tests) 12ms
+ ✓ __tests__/auth-reset-flow.test.ts (5 tests) 12ms
+ ✓ __tests__/performance-bundle-boundaries.test.ts (2 tests) 11ms
+ ✓ __tests__/tour-no-autostart.test.ts (5 tests) 12ms
+ ✓ __tests__/machine-link-rpc-tenant-boundary.test.ts (4 tests) 14ms
+ ✓ __tests__/base-rate-book-production-readiness.test.ts (2 tests) 14ms
+ ✓ __tests__/b10-rate-limit-retry.test.ts (3 tests) 21ms
+ ✓ __tests__/yarn-review-margin-preferences.test.ts (4 tests) 16ms
+ ✓ __tests__/bill-010-referral-staged-rewards.test.ts (3 tests) 9ms
+ ✓ __tests__/prod-002-single-shift-activation.test.ts (3 tests) 9ms
+ ✓ __tests__/security-advisor-hardening.test.ts (4 tests) 11ms
+ ✓ __tests__/pwa-install-nudge.test.ts (4 tests) 18ms
+ ✓ __tests__/costing-workspace-foundation.test.ts (2 tests) 9ms
+ ✓ __tests__/bill-008-referral-boundary.test.ts (3 tests) 9ms
+ ✓ __tests__/logout-route.test.ts (2 tests) 12ms
+ ✓ __tests__/base-costing-export-status-boundary.test.ts (1 test) 9ms
+ ✓ __tests__/phase1-scope.test.ts (4 tests) 9ms
+ ✓ __tests__/auth-015-session-revocation.test.ts (2 tests) 8ms
+ ✓ __tests__/settings-responsive-layout.test.ts (1 test) 7ms
+ ✓ __tests__/saved-costing-plan-panels.test.ts (1 test) 7ms
+ ✓ __tests__/base-onboarding-route-guard.test.ts (1 test) 8ms
+ ✓ __tests__/saved-costings-archive-rail.test.ts (1 test) 8ms
+ ✓ __tests__/machine-operator-payroll.test.ts (2 tests) 6ms
+ ✓ __tests__/saved-costing-archive-state.test.ts (2 tests) 6ms
+ ✓ __tests__/base-settings-cold-load.test.ts (2 tests) 7ms
+ ✓ __tests__/client-request-id.test.ts (2 tests) 6ms
+ ✓ __tests__/tour-active-guard.test.ts (1 test) 5ms
+ ✓ __tests__/p1-auth-login-route.test.ts (1 test) 5ms
+ ✓ __tests__/rate-book-popover-usage.test.ts (16 tests) 10ms
+ ✓ __tests__/b10-india-calendar-boundaries.test.ts (2 tests) 9ms
+ ✓ __tests__/terms-base-rollout-accuracy.test.ts (7 tests) 10ms
+
+ Test Files  240 passed (240)
+      Tests  2015 passed | 1 skipped (2016)
+   Start at  18:54:21
+   Duration  18.62s (transform 19.91s, setup 0ms, import 121.26s, tests 29.19s, environment 68ms)
+

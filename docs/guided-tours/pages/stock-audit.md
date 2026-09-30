@@ -1,6 +1,6 @@
 # P11 Stock audit — tour decision and blocked specification
 
-Status: **the wrong tour is removed in GT-08; the dedicated tour (GT-B1) is BLOCKED.** Gujarati/Hindi: native review pending.
+Status: **the wrong tour is removed in GT-08. PI-06 and PI-07 are fixed (2026-09-30); the dedicated tour (GT-B1) is still BLOCKED only on the senior designer finishing §D against the fixed page.** Gujarati/Hindi: native review pending, not done.
 Shared rules: [`GUIDED_TOURS_REFINEMENT_PLAN.md`](../../GUIDED_TOURS_REFINEMENT_PLAN.md) D-11. Evidence: [`audit/stock-and-dispatch.md`](../audit/stock-and-dispatch.md) §3.
 
 ## A. Identity and evidence
@@ -19,17 +19,17 @@ Shared rules: [`GUIDED_TOURS_REFINEMENT_PLAN.md`](../../GUIDED_TOURS_REFINEMENT_
 | ID | Sev | Type | Finding |
 | --- | --- | --- | --- |
 | SA-1 | Major | Tour | The page runs a tour for a different page (opening stock, correct balance) and records Fabric completion. |
-| SA-2 | Major | Product | Changing the date keeps the old audit id, mixing two audits (PI-06). |
-| SA-3 | Major | Product | The adjustment shown can differ from the one applied (PI-06). |
-| SA-4 | Major | Product | The whole page is English only (PI-07). |
-| SA-5 | Minor | Product | "No variances recorded…" shows when nothing has been counted; no way back to an earlier date after finalizing. |
+| SA-2 | Major | Product | Changing the date keeps the old audit id, mixing two audits (PI-06). **Fixed 2026-09-30:** the page asks for the new date only, ignores older answers, and the database lets an audit id decide the date. |
+| SA-3 | Major | Product | The adjustment shown can differ from the one applied (PI-06). **Fixed 2026-09-30:** the page shows count minus stock as of the audit date and sends it; the database applies that same variance on top of current stock and refuses it if it changed. |
+| SA-4 | Major | Product | The whole page is English only (PI-07). **Fixed 2026-09-30:** every label, toast, dialog and aria-label reads `stockAudit.*` keys in en/gu/hi, numbers use the owner's language locale, and the loading skeleton title is translated. Gujarati/Hindi wording is unreviewed by a native speaker. |
+| SA-5 | Minor | Product | "No variances recorded…" shows when nothing has been counted; no way back to an earlier date after finalizing. **Fixed 2026-09-30:** an empty Reconciliation tab now says nothing is counted yet, and the date picker stays enabled after finalizing (a finalized date loads read-only). |
 
 ## C. Decision
 
 1. **Now (GT-08):** render `InventoryAuditClient` without `StockGuidedTour`. The page gets no guide slot. Owners learn that the page exists and what it is for from the Fabric and Yarn tours (`correct.detail` in both).
 2. **Later (GT-B1, BLOCKED):** a dedicated tour, specified below, may be built only after all of these hold:
-   - PI-06 fixed (date change loads the right audit; the adjustment shown equals the one applied);
-   - PI-07 fixed (page strings through translation keys in en/gu/hi);
+   - ~~PI-06 fixed (date change loads the right audit; the adjustment shown equals the one applied)~~ **done 2026-09-30**;
+   - ~~PI-07 fixed (page strings through translation keys in en/gu/hi)~~ **done 2026-09-30**;
    - ~~the owner confirms which correction path owners should use for a routine count~~ **resolved 2026-09-27 (D-20):** routine counts use Correct balance; the audit is the full dated record.
 
 Why not now: a tour that teaches a date picker which mixes audits, or a page Gujarati and Hindi owners cannot read, would make the problem look like the owner's mistake.

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -27,7 +27,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
+    auditVariance,
+    formatAuditQuantity,
     generateMaterialPositionCsv,
+    type AuditLine,
     type FabricAuditItem,
     type InventoryAuditBoard,
     type YarnAuditItem,
@@ -39,17 +42,23 @@ import {
     getInventoryAuditDataAction,
     saveAuditPhysicalCountAction,
 } from './actions'
+import { useTranslation } from '@/lib/i18n/context'
 
 interface Props {
     initialData: InventoryAuditBoard
+    /** Which tab opens first. Defaults to the material position. */
+    initialTab?: 'material-position' | 'fabric' | 'yarn' | 'reconciliation'
 }
 
-export default function InventoryAuditClient({ initialData }: Props) {
+export default function InventoryAuditClient({ initialData, initialTab = 'material-position' }: Props) {
     const router = useRouter()
+    const { t, language } = useTranslation()
+    const fmt = (value: number, decimals: number, signed = false) => formatAuditQuantity(value, language, decimals, { signed })
     const [isPending, startTransition] = useTransition()
     const [data, setData] = useState<InventoryAuditBoard>(initialData)
     const [auditDate, setAuditDate] = useState<string>(initialData.audit_date)
-    const [activeTab, setActiveTab] = useState<string>('material-position')
+    const [activeTab, setActiveTab] = useState<string>(initialTab)
+    const dateRequest = useRef(0)
     const [expandedYarns, setExpandedYarns] = useState<Set<string>>(new Set())
 
     // Physical reconciliation dialog
@@ -76,6 +85,23 @@ export default function InventoryAuditClient({ initialData }: Props) {
     const [finalizeModal, setFinalizeModal] = useState<boolean>(false)
 
     const isFinalized = data.audit?.status === 'finalized'
+    const adjustDecimals = adjustDialog?.type === 'fabric' ? 2 : 3
+
+    // What the owner sees for a counted line, and what the database applies (PI-06): the count against stock as of
+    // the audit date. A finalized audit shows its frozen record instead.
+    function figures(line: AuditLine) {
+        const decimals = line.item_type === 'fabric' ? 2 : 3
+        const live = line.item_type === 'fabric'
+            ? data.fabric.find(item => item.id === line.item_id)?.system_meters
+            : data.yarns.find(item => item.id === line.item_id)?.system_loose_kg
+        const system = isFinalized || live === undefined ? line.system_quantity : live
+        const variance = isFinalized ? line.variance : auditVariance(line.physical_count, system, decimals)
+        return { decimals, system, variance }
+    }
+    const countedLines = data.lines.filter(line => line.physical_count !== null)
+    const differingLines = countedLines
+        .map(line => ({ line, ...figures(line) }))
+        .filter((row): row is typeof row & { variance: number } => row.variance !== null && row.variance !== 0)
 
     function toggleExpand(yarnKey: string) {
         setExpandedYarns(prev => {
@@ -86,15 +112,23 @@ export default function InventoryAuditClient({ initialData }: Props) {
         })
     }
 
+    // An answer to an older date change is dropped, so the board on screen always belongs to the date in the picker.
     async function handleDateChange(newDate: string) {
+        if (!newDate) return
+        const request = ++dateRequest.current
         setAuditDate(newDate)
         startTransition(async () => {
-            const res = await getInventoryAuditDataAction({ auditDate: newDate, auditId: data.audit?.id })
+            // Only the date is sent. Sending the previous audit's id with it used to show this date's stock beside
+            // the old audit's lines and save counts against the old audit (PI-06).
+            const res = await getInventoryAuditDataAction({ auditDate: newDate })
+            if (request !== dateRequest.current) return
             if ('error' in res) {
                 toast.error(res.error)
+                setAuditDate(data.audit_date)
                 return
             }
             setData(res.data)
+            setAuditDate(res.data.audit_date)
         })
     }
 
@@ -108,9 +142,9 @@ export default function InventoryAuditClient({ initialData }: Props) {
             a.download = `inventory-audit-${data.audit_date}.csv`
             a.click()
             URL.revokeObjectURL(url)
-            toast.success('Audit CSV downloaded successfully.')
+            toast.success(t('stockAudit.toastCsvDone'))
         } catch {
-            toast.error('Failed to export CSV.')
+            toast.error(t('stockAudit.toastCsvFailed'))
         }
     }
 
@@ -118,15 +152,16 @@ export default function InventoryAuditClient({ initialData }: Props) {
         if (!countDialog) return
         const count = Number(countDialog.physicalCount)
         if (isNaN(count) || count < 0) {
-            toast.error('Enter a valid non-negative physical count.')
+            toast.error(t('stockAudit.toastInvalidCount'))
             return
         }
 
         startTransition(async () => {
-            // The first count for a date opens (or reuses) that date's draft audit.
+            // The first count for a date opens (or reuses) that date's draft audit. It belongs to the board on screen,
+            // so it uses that board's own date, not only the picker's value.
             let auditId = data.audit?.id
             if (!auditId) {
-                const draft = await createInventoryAuditAction({ auditDate, title: 'Stock Audit' })
+                const draft = await createInventoryAuditAction({ auditDate: data.audit_date, title: 'Stock Audit' })
                 if ('error' in draft) {
                     toast.error(draft.error)
                     return
@@ -149,37 +184,37 @@ export default function InventoryAuditClient({ initialData }: Props) {
                 return
             }
 
-            toast.success('Physical count recorded.')
+            toast.success(t('stockAudit.toastCountSaved'))
             setCountDialog(null)
 
             // Refresh board
-            const updated = await getInventoryAuditDataAction({ auditDate, auditId })
+            const updated = await getInventoryAuditDataAction({ auditDate: data.audit_date, auditId })
             if ('data' in updated) setData(updated.data)
         })
     }
 
     async function handleApplyAdjustment() {
         if (!adjustDialog || !data.audit?.id) return
+        const dialog = adjustDialog
+        const auditId = data.audit.id
 
         startTransition(async () => {
             const res = await applyAuditAdjustmentAction({
-                auditId: data.audit!.id,
-                itemType: adjustDialog.type,
-                itemId: adjustDialog.itemId,
-                physicalCount: adjustDialog.physicalCount,
-                reason: adjustDialog.reason.trim() || 'Physical audit reconciliation',
+                auditId,
+                itemType: dialog.type,
+                itemId: dialog.itemId,
+                physicalCount: dialog.physicalCount,
+                // The database refuses the adjustment if it would now be a different number from the one on screen.
+                expectedVariance: dialog.variance,
+                reason: dialog.reason.trim() || 'Physical audit reconciliation',
             })
 
-            if ('error' in res) {
-                toast.error(res.error)
-                return
-            }
-
-            toast.success(`Operational stock updated by ${res.variance > 0 ? '+' : ''}${res.variance} via audit adjustment.`)
             setAdjustDialog(null)
+            if ('error' in res) toast.error(res.error)
+            else toast.success(t('stockAudit.toastAdjusted', { variance: fmt(res.variance, dialog.type === 'fabric' ? 2 : 3, true) }))
 
-            // Refresh board
-            const updated = await getInventoryAuditDataAction({ auditDate, auditId: data.audit!.id })
+            // Refresh board: after a refusal it shows the figures the adjustment was checked against.
+            const updated = await getInventoryAuditDataAction({ auditDate: data.audit_date, auditId })
             if ('data' in updated) setData(updated.data)
             router.refresh()
         })
@@ -187,18 +222,19 @@ export default function InventoryAuditClient({ initialData }: Props) {
 
     async function handleFinalizeAudit() {
         if (!data.audit?.id) return
+        const auditId = data.audit.id
 
         startTransition(async () => {
-            const res = await finalizeInventoryAuditAction({ auditId: data.audit!.id })
+            const res = await finalizeInventoryAuditAction({ auditId })
             if ('error' in res) {
                 toast.error(res.error)
                 return
             }
 
-            toast.success('Inventory Audit finalized and frozen.')
+            toast.success(t('stockAudit.toastFinalized'))
             setFinalizeModal(false)
 
-            const updated = await getInventoryAuditDataAction({ auditDate, auditId: data.audit!.id })
+            const updated = await getInventoryAuditDataAction({ auditDate: data.audit_date, auditId })
             if ('data' in updated) setData(updated.data)
             router.refresh()
         })
@@ -208,20 +244,20 @@ export default function InventoryAuditClient({ initialData }: Props) {
         <div className="space-y-6 pb-12">
             {/* Header */}
             <header className="grid gap-4 border-b border-hairline/80 pb-4 text-center sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center">
-                <Button variant="ghost" size="icon" asChild className="justify-self-start rounded-xl" aria-label="Back to stock">
+                <Button variant="ghost" size="icon" asChild className="justify-self-start rounded-xl" aria-label={t('stockAudit.backToStock')}>
                     <Link href="/owner/stock">
                         <ArrowLeft className="h-5 w-5" />
                     </Link>
                 </Button>
                 <div className="flex flex-wrap items-center justify-center gap-2 sm:col-start-2 sm:row-start-1">
-                    <h1 className="text-[1.4rem] font-bold tracking-tight text-ink sm:text-2xl">Inventory Audit & Material Position</h1>
+                    <h1 className="text-[1.4rem] font-bold tracking-tight text-ink sm:text-2xl">{t('stockAudit.title')}</h1>
                     {isFinalized ? (
                         <Badge variant="secondary" className="border-[var(--wv-moss-200)] bg-[var(--wv-moss-50)] text-[var(--wv-moss-700)]">
-                            <Lock className="mr-1 h-3 w-3" /> Finalized
+                            <Lock className="mr-1 h-3 w-3" /> {t('stockAudit.statusFinalized')}
                         </Badge>
                     ) : (
                         <Badge variant="outline" className="border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] text-[var(--wv-ochre-800)]">
-                            Draft / Working
+                            {t('stockAudit.statusDraft')}
                         </Badge>
                     )}
                 </div>
@@ -230,12 +266,13 @@ export default function InventoryAuditClient({ initialData }: Props) {
                     {/* Date picker */}
                     <div className="flex items-center gap-1.5 rounded-xl border px-3 py-1.5 bg-surface text-xs font-medium">
                         <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                        <span>Audit Date:</span>
+                        <span>{t('stockAudit.auditDate')}</span>
                         <input
                             type="date"
                             value={auditDate}
+                            max={initialData.audit_date}
                             onChange={(e) => handleDateChange(e.target.value)}
-                            disabled={isPending || isFinalized}
+                            disabled={isPending}
                             className="bg-transparent font-bold text-ink focus:outline-none cursor-pointer"
                         />
                     </div>
@@ -247,17 +284,18 @@ export default function InventoryAuditClient({ initialData }: Props) {
                         className="rounded-xl gap-1.5 text-xs font-semibold"
                     >
                         <Download className="h-3.5 w-3.5" />
-                        Export CSV
+                        {t('stockAudit.exportCsv')}
                     </Button>
 
                     {!isFinalized && data.audit?.id && (
                         <Button
                             size="sm"
+                            disabled={isPending}
                             onClick={() => setFinalizeModal(true)}
                             className="rounded-xl bg-loom text-white hover:bg-loom-elevated font-bold gap-1.5 text-xs"
                         >
                             <ClipboardCheck className="h-3.5 w-3.5" />
-                            Finalize Audit
+                            {t('stockAudit.finalizeAudit')}
                         </Button>
                     )}
                 </div>
@@ -268,61 +306,61 @@ export default function InventoryAuditClient({ initialData }: Props) {
                 {/* Finished Fabric */}
                 <Card className="rounded-2xl border border-hairline shadow-xs">
                     <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                        <CardTitle className="text-xs font-medium text-muted-foreground">Fabric on Hand</CardTitle>
+                        <CardTitle className="text-xs font-medium text-muted-foreground">{t('stockAudit.kpiFabricTitle')}</CardTitle>
                         <Warehouse className="h-4 w-4 text-loom" />
                     </CardHeader>
                     <CardContent>
                         <p className="text-2xl font-bold tabular-nums text-ink">
-                            {data.summary.total_fabric_meters.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
-                            <span className="text-sm font-normal text-muted-foreground ml-1">metres</span>
+                            {fmt(data.summary.total_fabric_meters, 2)}
+                            <span className="text-sm font-normal text-muted-foreground ml-1">{t('stockAudit.unitMetres')}</span>
                         </p>
-                        <p className="text-[11px] text-muted-foreground mt-1">Finished fabric held in Fabric Stock</p>
+                        <p className="text-[11px] text-muted-foreground mt-1">{t('stockAudit.kpiFabricHelp')}</p>
                     </CardContent>
                 </Card>
 
                 {/* Loose Usable Yarn */}
                 <Card className="rounded-2xl border border-hairline shadow-xs">
                     <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                        <CardTitle className="text-xs font-medium text-muted-foreground">Loose Usable Yarn</CardTitle>
+                        <CardTitle className="text-xs font-medium text-muted-foreground">{t('stockAudit.kpiLooseTitle')}</CardTitle>
                         <Package className="h-4 w-4 text-[var(--wv-moss-700)]" />
                     </CardHeader>
                     <CardContent>
                         <p className="text-2xl font-bold tabular-nums text-[var(--wv-moss-700)]">
-                            {data.summary.total_loose_yarn_kg.toLocaleString('en-IN', { maximumFractionDigits: 3 })}
-                            <span className="text-sm font-normal text-muted-foreground ml-1">kg</span>
+                            {fmt(data.summary.total_loose_yarn_kg, 3)}
+                            <span className="text-sm font-normal text-muted-foreground ml-1">{t('stockAudit.unitKg')}</span>
                         </p>
-                        <p className="text-[11px] text-muted-foreground mt-1">Raw yarn physically in Yarn Stock</p>
+                        <p className="text-[11px] text-muted-foreground mt-1">{t('stockAudit.kpiLooseHelp')}</p>
                     </CardContent>
                 </Card>
 
                 {/* Yarn Embodied in Fabric */}
                 <Card className="rounded-2xl border border-hairline shadow-xs">
                     <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                        <CardTitle className="text-xs font-medium text-muted-foreground">Yarn Embodied in Fabric</CardTitle>
+                        <CardTitle className="text-xs font-medium text-muted-foreground">{t('stockAudit.kpiEmbodiedTitle')}</CardTitle>
                         <Layers className="h-4 w-4 text-[var(--wv-neel-600)]" />
                     </CardHeader>
                     <CardContent>
                         <p className="text-2xl font-bold tabular-nums text-ink">
-                            {data.summary.total_embodied_yarn_kg.toLocaleString('en-IN', { maximumFractionDigits: 3 })}
-                            <span className="text-sm font-normal text-muted-foreground ml-1">kg</span>
+                            {fmt(data.summary.total_embodied_yarn_kg, 3)}
+                            <span className="text-sm font-normal text-muted-foreground ml-1">{t('stockAudit.unitKg')}</span>
                         </p>
-                        <p className="text-[11px] text-muted-foreground mt-1">Derived from unsold production lots</p>
+                        <p className="text-[11px] text-muted-foreground mt-1">{t('stockAudit.kpiEmbodiedHelp')}</p>
                     </CardContent>
                 </Card>
 
                 {/* Total Yarn Represented */}
                 <Card className="rounded-2xl border-2 border-loom/40 bg-loom/5 shadow-xs">
                     <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                        <CardTitle className="text-xs font-bold text-loom">Total Represented</CardTitle>
+                        <CardTitle className="text-xs font-bold text-loom">{t('stockAudit.kpiTotalTitle')}</CardTitle>
                         <Scale className="h-4 w-4 text-loom" />
                     </CardHeader>
                     <CardContent>
                         <p className="text-2xl font-bold tabular-nums text-ink">
-                            {data.summary.total_yarn_represented_kg.toLocaleString('en-IN', { maximumFractionDigits: 3 })}
-                            <span className="text-sm font-normal text-muted-foreground ml-1">kg</span>
+                            {fmt(data.summary.total_yarn_represented_kg, 3)}
+                            <span className="text-sm font-normal text-muted-foreground ml-1">{t('stockAudit.unitKg')}</span>
                         </p>
                         <p className="text-[11px] text-muted-foreground mt-1 font-medium">
-                            Loose usable + embodied in finished fabric
+                            {t('stockAudit.kpiTotalHelp')}
                         </p>
                     </CardContent>
                 </Card>
@@ -333,9 +371,9 @@ export default function InventoryAuditClient({ initialData }: Props) {
                 <div className="rounded-xl border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] p-3.5 text-xs text-[var(--wv-ochre-800)] flex items-start gap-2.5">
                     <Info className="h-4 w-4 text-[var(--wv-ochre-800)] shrink-0 mt-0.5" />
                     <div>
-                        <p className="font-semibold">Notice regarding legacy fabric stock</p>
+                        <p className="font-semibold">{t('stockAudit.legacyTitle')}</p>
                         <p className="mt-0.5 text-[var(--wv-ochre-800)]">
-                            {data.summary.unresolved_fabric_meters.toLocaleString()} metres of fabric stock predate production lot tracking. In accordance with system audit integrity, yarn composition is not guessed or fabricated for historical inventory.
+                            {t('stockAudit.legacyBody', { metres: fmt(data.summary.unresolved_fabric_meters, 2) })}
                         </p>
                     </div>
                 </div>
@@ -346,19 +384,19 @@ export default function InventoryAuditClient({ initialData }: Props) {
                 <TabsList className="rounded-xl bg-surface-soft p-1 border border-hairline">
                     <TabsTrigger value="material-position" className="rounded-lg text-xs font-bold gap-1.5 data-[state=active]:bg-surface data-[state=active]:shadow-xs">
                         <Scale className="h-3.5 w-3.5 text-loom" />
-                        Material Position (Audit)
+                        {t('stockAudit.tabMaterial')}
                     </TabsTrigger>
                     <TabsTrigger value="fabric" className="rounded-lg text-xs font-medium gap-1.5 data-[state=active]:bg-surface data-[state=active]:shadow-xs">
                         <Warehouse className="h-3.5 w-3.5" />
-                        Fabric Stock ({data.fabric.length})
+                        {t('stockAudit.tabFabric', { count: data.fabric.length })}
                     </TabsTrigger>
                     <TabsTrigger value="yarn" className="rounded-lg text-xs font-medium gap-1.5 data-[state=active]:bg-surface data-[state=active]:shadow-xs">
                         <Package className="h-3.5 w-3.5" />
-                        Yarn Stock ({data.yarns.length})
+                        {t('stockAudit.tabYarn', { count: data.yarns.length })}
                     </TabsTrigger>
                     <TabsTrigger value="reconciliation" className="rounded-lg text-xs font-medium gap-1.5 data-[state=active]:bg-surface data-[state=active]:shadow-xs">
                         <ClipboardCheck className="h-3.5 w-3.5" />
-                        Reconciliation
+                        {t('stockAudit.tabReconciliation')}
                     </TabsTrigger>
                 </TabsList>
 
@@ -369,14 +407,14 @@ export default function InventoryAuditClient({ initialData }: Props) {
                             <div className="flex flex-wrap items-center justify-between gap-2">
                                 <div>
                                     <CardTitle className="text-base font-bold text-ink">
-                                        Material Position / Yarn Equivalent
+                                        {t('stockAudit.mpTitle')}
                                     </CardTitle>
                                     <CardDescription className="text-xs text-muted-foreground">
-                                        Loose yarn currently in stock plus yarn currently embodied in unsold finished fabric inventory.
+                                        {t('stockAudit.mpHelp')}
                                     </CardDescription>
                                 </div>
                                 <span className="text-[11px] text-muted-foreground bg-surface px-2.5 py-1 rounded-lg border">
-                                    Formula: Loose Yarn + Embodied in Fabric = Total Represented
+                                    {t('stockAudit.mpFormula')}
                                 </span>
                             </div>
                         </CardHeader>
@@ -385,18 +423,18 @@ export default function InventoryAuditClient({ initialData }: Props) {
                                 <table className="w-full text-left text-xs">
                                     <thead className="bg-surface-soft/60 border-b border-hairline text-muted-foreground font-semibold">
                                         <tr>
-                                            <th className="p-3">Yarn Specification</th>
-                                            <th className="p-3 text-right">Loose Usable Yarn</th>
-                                            <th className="p-3 text-right">In Fabric Stock</th>
-                                            <th className="p-3 text-right bg-loom/5 font-bold text-loom">Total Represented</th>
-                                            <th className="p-3 text-center">Drill-Down</th>
+                                            <th className="p-3">{t('stockAudit.colYarnSpec')}</th>
+                                            <th className="p-3 text-right">{t('stockAudit.colLoose')}</th>
+                                            <th className="p-3 text-right">{t('stockAudit.colInFabric')}</th>
+                                            <th className="p-3 text-right bg-loom/5 font-bold text-loom">{t('stockAudit.colTotal')}</th>
+                                            <th className="p-3 text-center">{t('stockAudit.colDrill')}</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-hairline">
                                         {data.material_position.length === 0 ? (
                                             <tr>
                                                 <td colSpan={5} className="p-8 text-center text-muted-foreground">
-                                                    No yarn positions recorded as of {data.audit_date}.
+                                                    {t('stockAudit.mpEmpty', { date: data.audit_date })}
                                                 </td>
                                             </tr>
                                         ) : (
@@ -406,7 +444,7 @@ export default function InventoryAuditClient({ initialData }: Props) {
                                                     <tr key={row.yarn_key} className="hover:bg-surface-soft/20 transition-colors">
                                                         <td className="p-3 font-bold text-ink">{row.yarn_name}</td>
                                                         <td className="p-3 text-right tabular-nums font-semibold text-[var(--wv-moss-700)]">
-                                                            {row.loose_kg.toFixed(3)} kg
+                                                            {fmt(row.loose_kg, 3)} {t('stockAudit.unitKg')}
                                                         </td>
                                                         <td className="p-3 text-right tabular-nums">
                                                             {row.embodied_kg > 0 ? (
@@ -414,14 +452,14 @@ export default function InventoryAuditClient({ initialData }: Props) {
                                                                     onClick={() => toggleExpand(row.yarn_key)}
                                                                     className="font-semibold text-loom hover:underline inline-flex items-center gap-1"
                                                                 >
-                                                                    {row.embodied_kg.toFixed(3)} kg
+                                                                    {fmt(row.embodied_kg, 3)} {t('stockAudit.unitKg')}
                                                                 </button>
                                                             ) : (
-                                                                <span className="text-muted-foreground">0.000 kg</span>
+                                                                <span className="text-muted-foreground">{fmt(0, 3)} {t('stockAudit.unitKg')}</span>
                                                             )}
                                                         </td>
                                                         <td className="p-3 text-right tabular-nums font-bold text-ink bg-loom/5">
-                                                            {row.total_represented_kg.toFixed(3)} kg
+                                                            {fmt(row.total_represented_kg, 3)} {t('stockAudit.unitKg')}
                                                         </td>
                                                         <td className="p-3 text-center">
                                                             {row.drilldown.length > 0 ? (
@@ -433,11 +471,11 @@ export default function InventoryAuditClient({ initialData }: Props) {
                                                                 >
                                                                     {isExpanded ? (
                                                                         <>
-                                                                            <EyeOff className="h-3 w-3" /> Hide
+                                                                            <EyeOff className="h-3 w-3" /> {t('stockAudit.hide')}
                                                                         </>
                                                                     ) : (
                                                                         <>
-                                                                            <Eye className="h-3 w-3" /> Breakdown ({row.drilldown.length})
+                                                                            <Eye className="h-3 w-3" /> {t('stockAudit.breakdown', { count: row.drilldown.length })}
                                                                         </>
                                                                     )}
                                                                 </Button>
@@ -457,7 +495,7 @@ export default function InventoryAuditClient({ initialData }: Props) {
                             {data.material_position.some(row => expandedYarns.has(row.yarn_key)) && (
                                 <div className="border-t border-hairline bg-surface-soft/30 p-4 space-y-4">
                                     <h4 className="text-xs font-bold text-ink uppercase tracking-wider">
-                                        Embodied Yarn Provenance & Breakdown
+                                        {t('stockAudit.provenanceTitle')}
                                     </h4>
                                     {data.material_position
                                         .filter(row => expandedYarns.has(row.yarn_key))
@@ -465,7 +503,7 @@ export default function InventoryAuditClient({ initialData }: Props) {
                                             <div key={`drilldown-${row.yarn_key}`} className="rounded-xl border bg-surface p-3 space-y-2">
                                                 <div className="flex items-center justify-between text-xs">
                                                     <span className="font-bold text-ink">
-                                                        {row.yarn_name} — {row.embodied_kg.toFixed(3)} kg in Fabric
+                                                        {t('stockAudit.inFabricLine', { yarn: row.yarn_name, kg: fmt(row.embodied_kg, 3) })}
                                                     </span>
                                                     <Button
                                                         variant="ghost"
@@ -473,7 +511,7 @@ export default function InventoryAuditClient({ initialData }: Props) {
                                                         onClick={() => toggleExpand(row.yarn_key)}
                                                         className="h-6 text-[10px]"
                                                     >
-                                                        Close
+                                                        {t('stockAudit.close')}
                                                     </Button>
                                                 </div>
 
@@ -481,30 +519,30 @@ export default function InventoryAuditClient({ initialData }: Props) {
                                                     <table className="w-full text-left text-[11px]">
                                                         <thead className="bg-surface-soft text-muted-foreground font-semibold">
                                                             <tr>
-                                                                <th className="p-2">Quality</th>
-                                                                <th className="p-2">Production Date</th>
-                                                                <th className="p-2 text-right">Produced</th>
-                                                                <th className="p-2 text-right">Remaining in Stock</th>
-                                                                <th className="p-2 text-right text-loom">Embodied Yarn</th>
+                                                                <th className="p-2">{t('stockAudit.colQuality')}</th>
+                                                                <th className="p-2">{t('stockAudit.colProdDate')}</th>
+                                                                <th className="p-2 text-right">{t('stockAudit.colProduced')}</th>
+                                                                <th className="p-2 text-right">{t('stockAudit.colRemaining')}</th>
+                                                                <th className="p-2 text-right text-loom">{t('stockAudit.colEmbodied')}</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody className="divide-y divide-hairline">
                                                             {row.drilldown.map(item => (
                                                                 <tr key={item.lot_id} className="hover:bg-surface-soft/20">
                                                                     <td className="p-2 font-medium text-ink">
-                                                                        {item.quality_label} (v{item.costing_version})
+                                                                        {t('stockAudit.qualityVersion', { quality: item.quality_label, version: item.costing_version })}
                                                                     </td>
                                                                     <td className="p-2 text-muted-foreground">
                                                                         {item.production_date}
                                                                     </td>
                                                                     <td className="p-2 text-right tabular-nums">
-                                                                        {item.produced_meters.toFixed(2)} m
+                                                                        {fmt(item.produced_meters, 2)} {t('stockAudit.unitM')}
                                                                     </td>
                                                                     <td className="p-2 text-right tabular-nums font-semibold text-ink">
-                                                                        {item.remaining_meters.toFixed(2)} m
+                                                                        {fmt(item.remaining_meters, 2)} {t('stockAudit.unitM')}
                                                                     </td>
                                                                     <td className="p-2 text-right tabular-nums font-bold text-loom">
-                                                                        {item.embodied_kg.toFixed(3)} kg
+                                                                        {fmt(item.embodied_kg, 3)} {t('stockAudit.unitKg')}
                                                                     </td>
                                                                 </tr>
                                                             ))}
@@ -524,9 +562,9 @@ export default function InventoryAuditClient({ initialData }: Props) {
                     <Card className="rounded-2xl border border-hairline overflow-hidden">
                         <CardHeader className="border-b border-hairline bg-surface-soft/40 p-4 flex flex-row items-center justify-between">
                             <div>
-                                <CardTitle className="text-base font-bold text-ink">Fabric Physical Audit</CardTitle>
+                                <CardTitle className="text-base font-bold text-ink">{t('stockAudit.fabricTitle')}</CardTitle>
                                 <CardDescription className="text-xs text-muted-foreground">
-                                    Finished fabric physically held in stock. Compare system metres with physical inventory counts.
+                                    {t('stockAudit.fabricHelp')}
                                 </CardDescription>
                             </div>
                         </CardHeader>
@@ -534,39 +572,39 @@ export default function InventoryAuditClient({ initialData }: Props) {
                             <table className="w-full text-left text-xs">
                                 <thead className="bg-surface-soft/60 border-b border-hairline text-muted-foreground font-semibold">
                                     <tr>
-                                        <th className="p-3">Quality</th>
-                                        <th className="p-3 text-right">System Stock</th>
-                                        <th className="p-3 text-right">Physical Count</th>
-                                        <th className="p-3 text-right">Variance</th>
-                                        <th className="p-3 text-right">Action</th>
+                                        <th className="p-3">{t('stockAudit.colQuality')}</th>
+                                        <th className="p-3 text-right">{t('stockAudit.colSystemStock')}</th>
+                                        <th className="p-3 text-right">{t('stockAudit.colPhysical')}</th>
+                                        <th className="p-3 text-right">{t('stockAudit.colVariance')}</th>
+                                        <th className="p-3 text-right">{t('stockAudit.colAction')}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-hairline">
                                     {data.fabric.length === 0 ? (
                                         <tr>
                                             <td colSpan={5} className="p-8 text-center text-muted-foreground">
-                                                No fabric qualities in stock.
+                                                {t('stockAudit.fabricEmpty')}
                                             </td>
                                         </tr>
                                     ) : (
                                         data.fabric.map(item => {
                                             const line = data.lines.find(l => l.item_type === 'fabric' && l.item_id === item.id)
                                             const physical = line?.physical_count ?? null
-                                            const variance = line?.variance ?? null
+                                            const variance = isFinalized ? line?.variance ?? null : auditVariance(physical, item.system_meters, 2)
 
                                             return (
                                                 <tr key={item.id} className="hover:bg-surface-soft/20">
                                                     <td className="p-3 font-bold text-ink">{item.quality_label}</td>
                                                     <td className="p-3 text-right tabular-nums font-semibold text-ink">
-                                                        {item.system_meters.toFixed(2)} m
+                                                        {fmt(item.system_meters, 2)} {t('stockAudit.unitM')}
                                                     </td>
                                                     <td className="p-3 text-right tabular-nums">
-                                                        {physical !== null ? `${physical.toFixed(2)} m` : '—'}
+                                                        {physical !== null ? `${fmt(physical, 2)} ${t('stockAudit.unitM')}` : '—'}
                                                     </td>
                                                     <td className="p-3 text-right tabular-nums font-bold">
                                                         {variance !== null && variance !== 0 ? (
                                                             <span className={variance < 0 ? 'text-[var(--wv-madder-600)]' : 'text-[var(--wv-moss-700)]'}>
-                                                                {variance > 0 ? '+' : ''}{variance.toFixed(2)} m
+                                                                {fmt(variance, 2, true)} {t('stockAudit.unitM')}
                                                             </span>
                                                         ) : (
                                                             <span className="text-muted-foreground">—</span>
@@ -578,6 +616,7 @@ export default function InventoryAuditClient({ initialData }: Props) {
                                                                 <Button
                                                                     variant="outline"
                                                                     size="sm"
+                                                                    disabled={isPending}
                                                                     onClick={() => setCountDialog({
                                                                         type: 'fabric',
                                                                         item,
@@ -587,12 +626,13 @@ export default function InventoryAuditClient({ initialData }: Props) {
                                                                     })}
                                                                     className="h-7 text-[11px] rounded-lg"
                                                                 >
-                                                                    {physical !== null ? 'Edit Count' : 'Record Count'}
+                                                                    {physical !== null ? t('stockAudit.editCount') : t('stockAudit.recordCount')}
                                                                 </Button>
                                                                 {physical !== null && variance !== 0 && !line?.adjustment_applied && (
                                                                     <Button
                                                                         variant="outline"
                                                                         size="sm"
+                                                                        disabled={isPending}
                                                                         onClick={() => setAdjustDialog({
                                                                             type: 'fabric',
                                                                             itemId: item.id,
@@ -600,11 +640,11 @@ export default function InventoryAuditClient({ initialData }: Props) {
                                                                             systemQty: item.system_meters,
                                                                             physicalCount: physical,
                                                                             variance: variance!,
-                                                                            reason: 'Physical count reconciliation adjustment',
+                                                                            reason: t('stockAudit.defaultReasonFabric'),
                                                                         })}
                                                                         className="h-7 text-[11px] font-bold text-loom border-loom/40 hover:bg-loom/10 rounded-lg"
                                                                     >
-                                                                        Adjust
+                                                                        {t('stockAudit.adjust')}
                                                                     </Button>
                                                                 )}
                                                             </div>
@@ -624,48 +664,48 @@ export default function InventoryAuditClient({ initialData }: Props) {
                 <TabsContent value="yarn" className="space-y-4">
                     <Card className="rounded-2xl border border-hairline overflow-hidden">
                         <CardHeader className="border-b border-hairline bg-surface-soft/40 p-4">
-                            <CardTitle className="text-base font-bold text-ink">Loose Yarn Physical Audit</CardTitle>
+                            <CardTitle className="text-base font-bold text-ink">{t('stockAudit.yarnTitle')}</CardTitle>
                             <CardDescription className="text-xs text-muted-foreground">
-                                Raw/loose yarn physically stored in factory. Does not include yarn already woven into fabric.
+                                {t('stockAudit.yarnHelp')}
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="p-0">
                             <table className="w-full text-left text-xs">
                                 <thead className="bg-surface-soft/60 border-b border-hairline text-muted-foreground font-semibold">
                                     <tr>
-                                        <th className="p-3">Yarn Name</th>
-                                        <th className="p-3 text-right">System Loose Stock</th>
-                                        <th className="p-3 text-right">Physical Count</th>
-                                        <th className="p-3 text-right">Variance</th>
-                                        <th className="p-3 text-right">Action</th>
+                                        <th className="p-3">{t('stockAudit.colYarnName')}</th>
+                                        <th className="p-3 text-right">{t('stockAudit.colSystemLoose')}</th>
+                                        <th className="p-3 text-right">{t('stockAudit.colPhysical')}</th>
+                                        <th className="p-3 text-right">{t('stockAudit.colVariance')}</th>
+                                        <th className="p-3 text-right">{t('stockAudit.colAction')}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-hairline">
                                     {data.yarns.length === 0 ? (
                                         <tr>
                                             <td colSpan={5} className="p-8 text-center text-muted-foreground">
-                                                No yarn stock recorded.
+                                                {t('stockAudit.yarnEmpty')}
                                             </td>
                                         </tr>
                                     ) : (
                                         data.yarns.map(item => {
                                             const line = data.lines.find(l => l.item_type === 'yarn' && l.item_id === item.id)
                                             const physical = line?.physical_count ?? null
-                                            const variance = line?.variance ?? null
+                                            const variance = isFinalized ? line?.variance ?? null : auditVariance(physical, item.system_loose_kg, 3)
 
                                             return (
                                                 <tr key={item.id} className="hover:bg-surface-soft/20">
                                                     <td className="p-3 font-bold text-ink">{item.yarn_name}</td>
                                                     <td className="p-3 text-right tabular-nums font-semibold text-ink">
-                                                        {item.system_loose_kg.toFixed(3)} kg
+                                                        {fmt(item.system_loose_kg, 3)} {t('stockAudit.unitKg')}
                                                     </td>
                                                     <td className="p-3 text-right tabular-nums">
-                                                        {physical !== null ? `${physical.toFixed(3)} kg` : '—'}
+                                                        {physical !== null ? `${fmt(physical, 3)} ${t('stockAudit.unitKg')}` : '—'}
                                                     </td>
                                                     <td className="p-3 text-right tabular-nums font-bold">
                                                         {variance !== null && variance !== 0 ? (
                                                             <span className={variance < 0 ? 'text-[var(--wv-madder-600)]' : 'text-[var(--wv-moss-700)]'}>
-                                                                {variance > 0 ? '+' : ''}{variance.toFixed(3)} kg
+                                                                {fmt(variance, 3, true)} {t('stockAudit.unitKg')}
                                                             </span>
                                                         ) : (
                                                             <span className="text-muted-foreground">—</span>
@@ -677,6 +717,7 @@ export default function InventoryAuditClient({ initialData }: Props) {
                                                                 <Button
                                                                     variant="outline"
                                                                     size="sm"
+                                                                    disabled={isPending}
                                                                     onClick={() => setCountDialog({
                                                                         type: 'yarn',
                                                                         item,
@@ -686,12 +727,13 @@ export default function InventoryAuditClient({ initialData }: Props) {
                                                                     })}
                                                                     className="h-7 text-[11px] rounded-lg"
                                                                 >
-                                                                    {physical !== null ? 'Edit Count' : 'Record Count'}
+                                                                    {physical !== null ? t('stockAudit.editCount') : t('stockAudit.recordCount')}
                                                                 </Button>
                                                                 {physical !== null && variance !== 0 && !line?.adjustment_applied && (
                                                                     <Button
                                                                         variant="outline"
                                                                         size="sm"
+                                                                        disabled={isPending}
                                                                         onClick={() => setAdjustDialog({
                                                                             type: 'yarn',
                                                                             itemId: item.id,
@@ -699,11 +741,11 @@ export default function InventoryAuditClient({ initialData }: Props) {
                                                                             systemQty: item.system_loose_kg,
                                                                             physicalCount: physical,
                                                                             variance: variance!,
-                                                                            reason: 'Physical stock reconciliation adjustment',
+                                                                            reason: t('stockAudit.defaultReasonYarn'),
                                                                         })}
                                                                         className="h-7 text-[11px] font-bold text-loom border-loom/40 hover:bg-loom/10 rounded-lg"
                                                                     >
-                                                                        Adjust
+                                                                        {t('stockAudit.adjust')}
                                                                     </Button>
                                                                 )}
                                                             </div>
@@ -723,21 +765,23 @@ export default function InventoryAuditClient({ initialData }: Props) {
                 <TabsContent value="reconciliation" className="space-y-4">
                     <Card className="rounded-2xl border border-hairline">
                         <CardHeader className="p-5">
-                            <CardTitle className="text-base font-bold text-ink">Reconciliation Status</CardTitle>
+                            <CardTitle className="text-base font-bold text-ink">{t('stockAudit.recTitle')}</CardTitle>
                             <CardDescription className="text-xs text-muted-foreground">
-                                Overview of recorded physical count differences and reconciliation adjustments.
+                                {t('stockAudit.recHelp')}
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="p-5 pt-0 space-y-4">
-                            {data.lines.filter(l => l.variance !== null && l.variance !== 0).length === 0 ? (
+                            {countedLines.length === 0 ? (
                                 <p className="text-xs text-muted-foreground italic">
-                                    No variances recorded. All verified physical counts match system stock.
+                                    {t('stockAudit.recNoCounts')}
+                                </p>
+                            ) : differingLines.length === 0 ? (
+                                <p className="text-xs text-muted-foreground italic">
+                                    {t('stockAudit.recNoVariance')}
                                 </p>
                             ) : (
                                 <div className="space-y-2">
-                                    {data.lines
-                                        .filter(l => l.variance !== null && l.variance !== 0)
-                                        .map(line => (
+                                    {differingLines.map(({ line, system, variance, decimals }) => (
                                             <div
                                                 key={line.id}
                                                 className="flex items-center justify-between p-3 rounded-xl border border-hairline text-xs"
@@ -746,13 +790,13 @@ export default function InventoryAuditClient({ initialData }: Props) {
                                                     <p className="font-bold text-ink">
                                                         {line.item_label}{' '}
                                                         <span className="text-[10px] text-muted-foreground uppercase">
-                                                            ({line.item_type})
+                                                            ({line.item_type === 'fabric' ? t('stockAudit.typeFabric') : t('stockAudit.typeYarn')})
                                                         </span>
                                                     </p>
                                                     <p className="text-muted-foreground">
-                                                        System: {line.system_quantity} | Physical: {line.physical_count} |{' '}
-                                                        <span className={line.variance! < 0 ? 'text-[var(--wv-madder-600)] font-bold' : 'text-[var(--wv-moss-700)] font-bold'}>
-                                                            Variance: {line.variance! > 0 ? '+' : ''}{line.variance}
+                                                        {t('stockAudit.recSystem', { value: fmt(system, decimals) })} | {t('stockAudit.recPhysical', { value: fmt(line.physical_count ?? 0, decimals) })} |{' '}
+                                                        <span className={variance < 0 ? 'text-[var(--wv-madder-600)] font-bold' : 'text-[var(--wv-moss-700)] font-bold'}>
+                                                            {t('stockAudit.recVariance', { value: fmt(variance, decimals, true) })}
                                                         </span>
                                                     </p>
                                                 </div>
@@ -760,11 +804,11 @@ export default function InventoryAuditClient({ initialData }: Props) {
                                                 <div>
                                                     {line.adjustment_applied ? (
                                                         <Badge variant="outline" className="text-[var(--wv-moss-700)] bg-[var(--wv-moss-50)] border-[var(--wv-moss-200)] font-semibold">
-                                                            ✓ Adjustment Applied
+                                                            ✓ {t('stockAudit.adjustmentApplied')}
                                                         </Badge>
                                                     ) : (
                                                         <Badge variant="outline" className="text-[var(--wv-ochre-800)] bg-[var(--wv-ochre-50)] border-[var(--wv-ochre-200)]">
-                                                            Pending Adjustment
+                                                            {t('stockAudit.pendingAdjustment')}
                                                         </Badge>
                                                     )}
                                                 </div>
@@ -782,29 +826,29 @@ export default function InventoryAuditClient({ initialData }: Props) {
                 <DialogContent className="max-w-sm rounded-2xl p-5">
                     <DialogHeader>
                         <DialogTitle className="text-base font-bold text-ink">
-                            Record Physical Count: {countDialog ? ('quality_label' in countDialog.item ? countDialog.item.quality_label : countDialog.item.yarn_name) : ''}
+                            {t('stockAudit.countTitle', { item: countDialog ? ('quality_label' in countDialog.item ? countDialog.item.quality_label : countDialog.item.yarn_name) : '' })}
                         </DialogTitle>
                         <DialogDescription className="text-xs text-muted-foreground">
-                            Enter the verified physical quantity found during inventory count.
+                            {t('stockAudit.countHelp')}
                         </DialogDescription>
                     </DialogHeader>
 
                     <div className="space-y-3 py-2">
                         <div className="rounded-lg bg-surface-soft/60 p-2.5 text-xs text-muted-foreground">
-                            System Quantity:{' '}
+                            {t('stockAudit.systemQuantity')}{' '}
                             <strong className="text-ink">
-                                {countDialog?.currentSystem}{' '}
-                                {countDialog?.type === 'fabric' ? 'metres' : 'kg'}
+                                {countDialog ? fmt(countDialog.currentSystem, countDialog.type === 'fabric' ? 2 : 3) : ''}{' '}
+                                {countDialog?.type === 'fabric' ? t('stockAudit.unitMetres') : t('stockAudit.unitKg')}
                             </strong>
                         </div>
 
                         <div>
-                            <Label className="text-xs font-semibold text-ink">Physical Count *</Label>
+                            <Label className="text-xs font-semibold text-ink">{t('stockAudit.physicalLabel')}</Label>
                             <Input
                                 type="number"
                                 step="0.001"
                                 min="0"
-                                placeholder="e.g. 246.5"
+                                placeholder={t('stockAudit.physicalPlaceholder')}
                                 value={countDialog?.physicalCount ?? ''}
                                 onChange={(e) => setCountDialog(prev => prev ? { ...prev, physicalCount: e.target.value } : null)}
                                 className="mt-1 h-9 rounded-lg"
@@ -813,9 +857,9 @@ export default function InventoryAuditClient({ initialData }: Props) {
                         </div>
 
                         <div>
-                            <Label className="text-xs font-semibold text-ink">Notes (optional)</Label>
+                            <Label className="text-xs font-semibold text-ink">{t('stockAudit.notesLabel')}</Label>
                             <Input
-                                placeholder="e.g. Verified by Floor Supervisor"
+                                placeholder={t('stockAudit.notesPlaceholder')}
                                 value={countDialog?.notes ?? ''}
                                 onChange={(e) => setCountDialog(prev => prev ? { ...prev, notes: e.target.value } : null)}
                                 className="mt-1 h-9 rounded-lg text-xs"
@@ -825,7 +869,7 @@ export default function InventoryAuditClient({ initialData }: Props) {
 
                     <DialogFooter className="mt-4 flex justify-end gap-2">
                         <Button variant="ghost" size="sm" onClick={() => setCountDialog(null)} className="rounded-xl">
-                            Cancel
+                            {t('stockAudit.cancel')}
                         </Button>
                         <Button
                             size="sm"
@@ -833,7 +877,7 @@ export default function InventoryAuditClient({ initialData }: Props) {
                             onClick={handleSavePhysicalCount}
                             className="rounded-xl font-bold bg-loom text-white shadow-xs hover:bg-loom-elevated"
                         >
-                            Save Count
+                            {t('stockAudit.saveCount')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -844,23 +888,23 @@ export default function InventoryAuditClient({ initialData }: Props) {
                 <DialogContent className="max-w-md rounded-2xl p-5">
                     <DialogHeader>
                         <DialogTitle className="text-base font-bold text-ink">
-                            Apply Audit Adjustment: {adjustDialog?.itemLabel}
+                            {t('stockAudit.adjustTitle', { item: adjustDialog?.itemLabel ?? '' })}
                         </DialogTitle>
                         <DialogDescription className="text-xs text-muted-foreground pt-1">
-                            This will create an official <strong>AUDIT_ADJUSTMENT</strong> ledger movement and update current operational stock.
+                            {t('stockAudit.adjustHelp')}
                         </DialogDescription>
                     </DialogHeader>
 
                     <div className="rounded-xl border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] p-3.5 text-xs text-[var(--wv-ochre-800)] space-y-1">
-                        <p>Previous System Balance: <strong>{adjustDialog?.systemQty}</strong></p>
-                        <p>Physical Count Verified: <strong>{adjustDialog?.physicalCount}</strong></p>
+                        <p>{t('stockAudit.adjustSystemOn', { date: data.audit_date })} <strong>{adjustDialog ? fmt(adjustDialog.systemQty, adjustDecimals) : ''}</strong></p>
+                        <p>{t('stockAudit.adjustPhysical')} <strong>{adjustDialog ? fmt(adjustDialog.physicalCount, adjustDecimals) : ''}</strong></p>
                         <p className="font-bold text-[var(--wv-madder-600)]">
-                            Adjustment Delta: {adjustDialog && adjustDialog.variance > 0 ? '+' : ''}{adjustDialog?.variance}
+                            {t('stockAudit.adjustDelta')} {adjustDialog ? fmt(adjustDialog.variance, adjustDecimals, true) : ''}
                         </p>
                     </div>
 
                     <div className="py-2">
-                        <Label className="text-xs font-semibold text-ink">Adjustment Reason</Label>
+                        <Label className="text-xs font-semibold text-ink">{t('stockAudit.adjustReasonLabel')}</Label>
                         <Input
                             value={adjustDialog?.reason ?? ''}
                             onChange={(e) => setAdjustDialog(prev => prev ? { ...prev, reason: e.target.value } : null)}
@@ -870,14 +914,14 @@ export default function InventoryAuditClient({ initialData }: Props) {
 
                     <DialogFooter className="mt-4 flex justify-end gap-2">
                         <Button variant="ghost" size="sm" onClick={() => setAdjustDialog(null)} className="rounded-xl">
-                            Cancel
+                            {t('stockAudit.cancel')}
                         </Button>
                         <Button
                             size="sm"
                             onClick={handleApplyAdjustment}
                             className="rounded-xl font-bold bg-loom text-white shadow-xs hover:bg-loom-elevated"
                         >
-                            Confirm Adjustment
+                            {t('stockAudit.confirmAdjustment')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -888,30 +932,30 @@ export default function InventoryAuditClient({ initialData }: Props) {
                 <DialogContent className="max-w-md rounded-2xl p-5">
                     <DialogHeader>
                         <DialogTitle className="text-base font-bold text-ink">
-                            Finalize Inventory Audit ({data.audit_date})?
+                            {t('stockAudit.finalizeTitle', { date: data.audit_date })}
                         </DialogTitle>
                         <DialogDescription className="text-xs text-muted-foreground pt-1">
-                            Finalizing creates an immutable, permanent snapshot of all fabric, loose yarn, embodied yarn, and material position calculations. Once finalized, historical calculations will remain permanently frozen.
+                            {t('stockAudit.finalizeHelp')}
                         </DialogDescription>
                     </DialogHeader>
 
                     <div className="rounded-xl bg-surface-soft/60 p-3 text-xs space-y-1">
-                        <p>✓ Fabric On Hand: <strong>{data.summary.total_fabric_meters} m</strong></p>
-                        <p>✓ Loose Usable Yarn: <strong>{data.summary.total_loose_yarn_kg} kg</strong></p>
-                        <p>✓ Embodied Yarn: <strong>{data.summary.total_embodied_yarn_kg} kg</strong></p>
-                        <p className="font-bold text-loom">✓ Total Represented: {data.summary.total_yarn_represented_kg} kg</p>
+                        <p>✓ {t('stockAudit.finFabric')}: <strong>{fmt(data.summary.total_fabric_meters, 2)} {t('stockAudit.unitM')}</strong></p>
+                        <p>✓ {t('stockAudit.finLoose')}: <strong>{fmt(data.summary.total_loose_yarn_kg, 3)} {t('stockAudit.unitKg')}</strong></p>
+                        <p>✓ {t('stockAudit.finEmbodied')}: <strong>{fmt(data.summary.total_embodied_yarn_kg, 3)} {t('stockAudit.unitKg')}</strong></p>
+                        <p className="font-bold text-loom">✓ {t('stockAudit.finTotal')}: {fmt(data.summary.total_yarn_represented_kg, 3)} {t('stockAudit.unitKg')}</p>
                     </div>
 
                     <DialogFooter className="mt-4 flex justify-end gap-2">
                         <Button variant="ghost" size="sm" onClick={() => setFinalizeModal(false)} className="rounded-xl">
-                            Cancel
+                            {t('stockAudit.cancel')}
                         </Button>
                         <Button
                             size="sm"
                             onClick={handleFinalizeAudit}
                             className="rounded-xl font-bold bg-loom text-white shadow-xs hover:bg-loom-elevated"
                         >
-                            Yes, Finalize & Freeze Audit
+                            {t('stockAudit.confirmFinalize')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

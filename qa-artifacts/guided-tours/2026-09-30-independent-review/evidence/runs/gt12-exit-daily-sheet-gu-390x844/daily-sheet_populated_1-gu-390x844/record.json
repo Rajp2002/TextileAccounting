@@ -1,0 +1,670 @@
+{
+  "scenario": "daily-sheet?populated=1",
+  "lang": "gu",
+  "size": "390x844",
+  "steps": [
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "દરેક શિફ્ટ માટે એક શીટ",
+      "body": "દિવસ અને રાતની દરેક શિફ્ટની પોતાની શીટ હોય છે, જેમાં દરેક ચાલુ લૂમ તેની ક્વોલિટી અને ઓપરેટર સાથે હોય છે.",
+      "step": "ds-sheet",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 1 / 9",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 577,
+        "w": 374,
+        "h": 259
+      },
+      "highlight": {
+        "x": 9,
+        "y": 319,
+        "w": 372,
+        "h": 62
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "div(role=dialog)",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390,
+      "daily": {
+        "sameNode": true,
+        "value": "37.5",
+        "anchor": "daily.first-reading",
+        "date": "2026-09-27",
+        "url": "http://localhost:5199/owner/production/daily-sheet?s=daily-sheet&populated=1&lang=gu&fresh=1",
+        "storage": {
+          "weavly_language": "gu",
+          "weavly:base-production:v1:o1:u1:2026-09-27:day": "{\"version\":1,\"revision\":null,\"requestId\":\"cb1a5e1b-c661-4b09-b082-1dfcd30c3d12\",\"reason\":\"\",\"rows\":{\"tour-fixture-worker\":{\"status\":\"entered\",\"meters\":\"\",\"machineMeters\":{\"tour-fixture-loom:tour-fixture-quality\":\"37.5\"},\"savedUnallocatedMeters\":null}}}"
+        },
+        "calls": 2,
+        "liveHidden": true,
+        "replica": true,
+        "enabledReplicaControls": 0,
+        "visibleAnchors": 0,
+        "guides": 1,
+        "guideInRightRail": false,
+        "guideLast": false,
+        "guideAboveSheet": false,
+        "apiCalls": 1
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "તારીખ અને શિફ્ટ તપાસો",
+      "body": "તમે નોંધો છો તે શિફ્ટ પસંદ કરો. જૂની શિફ્ટ તપાસવા કે સુધારવા તેની તારીખ પસંદ કરો; આગળની તારીખ પસંદ કરી શકાતી નથી.",
+      "step": "ds-shift",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 2 / 9",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 555,
+        "w": 374,
+        "h": 281
+      },
+      "highlight": {
+        "x": 8,
+        "y": 66,
+        "w": 374,
+        "h": 250
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390,
+      "daily": {
+        "sameNode": true,
+        "value": "37.5",
+        "anchor": "daily.first-reading",
+        "date": "2026-09-27",
+        "url": "http://localhost:5199/owner/production/daily-sheet?s=daily-sheet&populated=1&lang=gu&fresh=1",
+        "storage": {
+          "weavly_language": "gu",
+          "weavly:base-production:v1:o1:u1:2026-09-27:day": "{\"version\":1,\"revision\":null,\"requestId\":\"cb1a5e1b-c661-4b09-b082-1dfcd30c3d12\",\"reason\":\"\",\"rows\":{\"tour-fixture-worker\":{\"status\":\"entered\",\"meters\":\"\",\"machineMeters\":{\"tour-fixture-loom:tour-fixture-quality\":\"37.5\"},\"savedUnallocatedMeters\":null}}}"
+        },
+        "calls": 2,
+        "liveHidden": true,
+        "replica": true,
+        "enabledReplicaControls": 0,
+        "visibleAnchors": 0,
+        "guides": 1,
+        "guideInRightRail": false,
+        "guideLast": false,
+        "guideAboveSheet": false,
+        "apiCalls": 1
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "આ શિફ્ટમાં વણાયેલા મીટર લખો",
+      "body": "દરેક લૂમે આ શિફ્ટમાં જે વણ્યું તે લખો, અહીં 120 મીટર, મીટરનો ચાલુ કુલ આંકડો નહીં.",
+      "step": "ds-reading",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 3 / 9",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 577,
+        "w": 374,
+        "h": 259
+      },
+      "highlight": {
+        "x": 9,
+        "y": 369,
+        "w": 372,
+        "h": 134
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390,
+      "daily": {
+        "sameNode": true,
+        "value": "37.5",
+        "anchor": "daily.first-reading",
+        "date": "2026-09-27",
+        "url": "http://localhost:5199/owner/production/daily-sheet?s=daily-sheet&populated=1&lang=gu&fresh=1",
+        "storage": {
+          "weavly_language": "gu",
+          "weavly:base-production:v1:o1:u1:2026-09-27:day": "{\"version\":1,\"revision\":null,\"requestId\":\"cb1a5e1b-c661-4b09-b082-1dfcd30c3d12\",\"reason\":\"\",\"rows\":{\"tour-fixture-worker\":{\"status\":\"entered\",\"meters\":\"\",\"machineMeters\":{\"tour-fixture-loom:tour-fixture-quality\":\"37.5\"},\"savedUnallocatedMeters\":null}}}"
+        },
+        "calls": 2,
+        "liveHidden": true,
+        "replica": true,
+        "enabledReplicaControls": 0,
+        "visibleAnchors": 0,
+        "guides": 1,
+        "guideInRightRail": false,
+        "guideLast": false,
+        "guideAboveSheet": false,
+        "apiCalls": 1
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "ન ચાલેલા લૂમ ચિહ્નિત કરો",
+      "body": "રીડિંગ વગરનો લૂમ બાકી રહે છે. બંધ રહેલા લૂમ માટે “ચાલુ નથી” વાપરો, જેથી શિફ્ટ પૂરી થાય.",
+      "step": "ds-pending",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 4 / 9",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 577,
+        "w": 374,
+        "h": 259
+      },
+      "highlight": {
+        "x": 9,
+        "y": 195,
+        "w": 372,
+        "h": 243
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 296,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390,
+      "daily": {
+        "sameNode": true,
+        "value": "37.5",
+        "anchor": "daily.first-reading",
+        "date": "2026-09-27",
+        "url": "http://localhost:5199/owner/production/daily-sheet?s=daily-sheet&populated=1&lang=gu&fresh=1",
+        "storage": {
+          "weavly_language": "gu",
+          "weavly:base-production:v1:o1:u1:2026-09-27:day": "{\"version\":1,\"revision\":null,\"requestId\":\"cb1a5e1b-c661-4b09-b082-1dfcd30c3d12\",\"reason\":\"\",\"rows\":{\"tour-fixture-worker\":{\"status\":\"entered\",\"meters\":\"\",\"machineMeters\":{\"tour-fixture-loom:tour-fixture-quality\":\"37.5\"},\"savedUnallocatedMeters\":null}}}"
+        },
+        "calls": 2,
+        "liveHidden": true,
+        "replica": true,
+        "enabledReplicaControls": 0,
+        "visibleAnchors": 0,
+        "guides": 1,
+        "guideInRightRail": false,
+        "guideLast": false,
+        "guideAboveSheet": false,
+        "apiCalls": 1
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "દરેક કારીગરની કમાણી તપાસો",
+      "body": "“કારીગર તપાસ”માં દરેક કારીગરના મીટર અને પગાર દેખાય છે: 120 મીટર × ₹2/મીટર = ₹240.",
+      "step": "ds-earnings",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 5 / 9",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 577,
+        "w": 374,
+        "h": 259
+      },
+      "highlight": {
+        "x": 17,
+        "y": 163,
+        "w": 356,
+        "h": 220
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 12,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 8,
+        "y": 72,
+        "w": 374,
+        "h": 322
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390,
+      "daily": {
+        "sameNode": true,
+        "value": "37.5",
+        "anchor": "daily.first-reading",
+        "date": "2026-09-27",
+        "url": "http://localhost:5199/owner/production/daily-sheet?s=daily-sheet&populated=1&lang=gu&fresh=1",
+        "storage": {
+          "weavly_language": "gu",
+          "weavly:base-production:v1:o1:u1:2026-09-27:day": "{\"version\":1,\"revision\":null,\"requestId\":\"cb1a5e1b-c661-4b09-b082-1dfcd30c3d12\",\"reason\":\"\",\"rows\":{\"tour-fixture-worker\":{\"status\":\"entered\",\"meters\":\"\",\"machineMeters\":{\"tour-fixture-loom:tour-fixture-quality\":\"37.5\"},\"savedUnallocatedMeters\":null}}}"
+        },
+        "calls": 2,
+        "liveHidden": true,
+        "replica": true,
+        "enabledReplicaControls": 0,
+        "visibleAnchors": 0,
+        "guides": 1,
+        "guideInRightRail": false,
+        "guideLast": false,
+        "guideAboveSheet": false,
+        "apiCalls": 1
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "સાચવો નહીં ત્યાં સુધી આ ઉપકરણ પર ડ્રાફ્ટ છે",
+      "body": "રીડિંગ ફક્ત આ ફોન કે કમ્પ્યુટર પર રહે છે. બીજાને દેખાતાં નથી અને પેરોલ હજી વાપરતું નથી.",
+      "step": "ds-draft",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 6 / 9",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 632,
+        "w": 374,
+        "h": 204
+      },
+      "highlight": {
+        "x": 8,
+        "y": 286,
+        "w": 374,
+        "h": 117
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 495,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390,
+      "daily": {
+        "sameNode": true,
+        "value": "37.5",
+        "anchor": "daily.first-reading",
+        "date": "2026-09-27",
+        "url": "http://localhost:5199/owner/production/daily-sheet?s=daily-sheet&populated=1&lang=gu&fresh=1",
+        "storage": {
+          "weavly_language": "gu",
+          "weavly:base-production:v1:o1:u1:2026-09-27:day": "{\"version\":1,\"revision\":null,\"requestId\":\"cb1a5e1b-c661-4b09-b082-1dfcd30c3d12\",\"reason\":\"\",\"rows\":{\"tour-fixture-worker\":{\"status\":\"entered\",\"meters\":\"\",\"machineMeters\":{\"tour-fixture-loom:tour-fixture-quality\":\"37.5\"},\"savedUnallocatedMeters\":null}}}"
+        },
+        "calls": 2,
+        "liveHidden": true,
+        "replica": true,
+        "enabledReplicaControls": 0,
+        "visibleAnchors": 0,
+        "guides": 1,
+        "guideInRightRail": false,
+        "guideLast": false,
+        "guideAboveSheet": false,
+        "apiCalls": 1
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "શિફ્ટ સાચવો",
+      "body": "“શિફ્ટ સાચવો” કાપડના સ્ટોકમાં 120 મીટર અને કારીગરની કમાણીમાં ₹240 ઉમેરે છે, અને વપરાયેલું યાર્ન ઘટાડે છે.",
+      "step": "ds-save",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 7 / 9",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 577,
+        "w": 374,
+        "h": 259
+      },
+      "highlight": {
+        "x": 8,
+        "y": 259,
+        "w": 374,
+        "h": 117
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 641,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390,
+      "daily": {
+        "sameNode": true,
+        "value": "37.5",
+        "anchor": "daily.first-reading",
+        "date": "2026-09-27",
+        "url": "http://localhost:5199/owner/production/daily-sheet?s=daily-sheet&populated=1&lang=gu&fresh=1",
+        "storage": {
+          "weavly_language": "gu",
+          "weavly:base-production:v1:o1:u1:2026-09-27:day": "{\"version\":1,\"revision\":null,\"requestId\":\"cb1a5e1b-c661-4b09-b082-1dfcd30c3d12\",\"reason\":\"\",\"rows\":{\"tour-fixture-worker\":{\"status\":\"entered\",\"meters\":\"\",\"machineMeters\":{\"tour-fixture-loom:tour-fixture-quality\":\"37.5\"},\"savedUnallocatedMeters\":null}}}"
+        },
+        "calls": 2,
+        "liveHidden": true,
+        "replica": true,
+        "enabledReplicaControls": 0,
+        "visibleAnchors": 0,
+        "guides": 1,
+        "guideInRightRail": false,
+        "guideLast": false,
+        "guideAboveSheet": false,
+        "apiCalls": 1
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "કારણ સાથે સાચવેલી શિફ્ટ સુધારો",
+      "body": "“સાચવેલી નોંધ સુધારો” કારણ આપ્યા પછી સાચવેલી શિફ્ટ ખોલે છે. ફેરફાર અને કારણ તેના ઇતિહાસમાં રહે છે.",
+      "step": "ds-correct",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 8 / 9",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 577,
+        "w": 374,
+        "h": 259
+      },
+      "highlight": {
+        "x": 17,
+        "y": 163,
+        "w": 356,
+        "h": 185
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 12,
+      "serverCalls": 2,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 8,
+        "y": 72,
+        "w": 374,
+        "h": 287
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390,
+      "daily": {
+        "sameNode": true,
+        "value": "37.5",
+        "anchor": "daily.first-reading",
+        "date": "2026-09-27",
+        "url": "http://localhost:5199/owner/production/daily-sheet?s=daily-sheet&populated=1&lang=gu&fresh=1",
+        "storage": {
+          "weavly_language": "gu",
+          "weavly:base-production:v1:o1:u1:2026-09-27:day": "{\"version\":1,\"revision\":null,\"requestId\":\"cb1a5e1b-c661-4b09-b082-1dfcd30c3d12\",\"reason\":\"\",\"rows\":{\"tour-fixture-worker\":{\"status\":\"entered\",\"meters\":\"\",\"machineMeters\":{\"tour-fixture-loom:tour-fixture-quality\":\"37.5\"},\"savedUnallocatedMeters\":null}}}"
+        },
+        "calls": 2,
+        "liveHidden": true,
+        "replica": true,
+        "enabledReplicaControls": 0,
+        "visibleAnchors": 0,
+        "guides": 1,
+        "guideInRightRail": false,
+        "guideLast": false,
+        "guideAboveSheet": false,
+        "apiCalls": 1
+      }
+    }
+  ],
+  "logs": [
+    "warning: [harness] server action called recordTourEventAction",
+    "error: Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+    "warning: [harness] server action called recordTourEventAction"
+  ],
+  "apiRequests": [
+    {
+      "url": "http://localhost:5199/api/analytics/plan-events",
+      "method": "POST"
+    }
+  ],
+  "preClick": null,
+  "sampling": "legacy-900ms",
+  "before": {
+    "x": 0,
+    "y": 0,
+    "inner": null
+  },
+  "dailyBefore": {
+    "sameNode": true,
+    "value": "37.5",
+    "anchor": "daily.first-reading",
+    "date": "2026-09-27",
+    "url": "http://localhost:5199/owner/production/daily-sheet?s=daily-sheet&populated=1&lang=gu&fresh=1",
+    "storage": {
+      "weavly_language": "gu",
+      "weavly:base-production:v1:o1:u1:2026-09-27:day": "{\"version\":1,\"revision\":null,\"requestId\":\"cb1a5e1b-c661-4b09-b082-1dfcd30c3d12\",\"reason\":\"\",\"rows\":{\"tour-fixture-worker\":{\"status\":\"entered\",\"meters\":\"\",\"machineMeters\":{\"tour-fixture-loom:tour-fixture-quality\":\"37.5\"},\"savedUnallocatedMeters\":null}}}"
+    },
+    "calls": 1,
+    "liveHidden": false,
+    "replica": false,
+    "enabledReplicaControls": 0,
+    "visibleAnchors": 1,
+    "guides": 1,
+    "guideInRightRail": false,
+    "guideLast": false,
+    "guideAboveSheet": true,
+    "apiCalls": 1
+  },
+  "exitAt": 8,
+  "after": {
+    "scroll": {
+      "x": 0,
+      "y": 0,
+      "inner": null
+    },
+    "active": "<button type=\"button\" aria-label=\"દૈનિક શીટ માર્ગદર્શિકા શરૂ કરો\" data-testid=\"tour-launcher-daily-sheet\" data-tour-control=\"quiet-tour\" class=\"estimator-touch-",
+    "activeAnchor": null,
+    "activeRateBookField": null,
+    "activeControl": "quiet-tour",
+    "serverCalls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      },
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "navigations": [],
+    "scrollCalls": [
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "smooth"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "smooth"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "smooth"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "smooth"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      }
+    ],
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"daily-sheet\":{\"firstShown\":\"2026-09-29T22:09:50.640Z\",\"version\":\"v1\",\"firstStarted\":true}}"
+    },
+    "daily": {
+      "sameNode": true,
+      "value": "37.5",
+      "anchor": "daily.first-reading",
+      "date": "2026-09-27",
+      "url": "http://localhost:5199/owner/production/daily-sheet?s=daily-sheet&populated=1&lang=gu&fresh=1",
+      "storage": {
+        "weavly_language": "gu",
+        "weavly:base-production:v1:o1:u1:2026-09-27:day": "{\"version\":1,\"revision\":null,\"requestId\":\"cb1a5e1b-c661-4b09-b082-1dfcd30c3d12\",\"reason\":\"\",\"rows\":{\"tour-fixture-worker\":{\"status\":\"entered\",\"meters\":\"\",\"machineMeters\":{\"tour-fixture-loom:tour-fixture-quality\":\"37.5\"},\"savedUnallocatedMeters\":null}}}"
+      },
+      "calls": 2,
+      "liveHidden": false,
+      "replica": false,
+      "enabledReplicaControls": 0,
+      "visibleAnchors": 1,
+      "guides": 0,
+      "guideInRightRail": false,
+      "guideLast": false,
+      "guideAboveSheet": false,
+      "apiCalls": 1
+    },
+    "search": null
+  },
+  "issues": []
+}

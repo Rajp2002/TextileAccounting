@@ -1,0 +1,96 @@
+{
+  "task": "GT-13",
+  "runs": 12,
+  "steps": 66,
+  "classifications": {
+    "AUTOMATED_PASS": 12
+  },
+  "failures": [],
+  "reviewNotes": "Machines empty/populated: 12 main runs / 66 steps AUTOMATED_PASS; two separate read-only Back/Next transition probes / 6 frames also pass. All required English desktop/Gujarati phone main, Exit and diagnostic captures inspected. Six steps, read-only editor/no Close, Back restore, disabled fields, inline Production/Assignments links ready below 1280, sample guards, retained search/Needs setup filter/URL/storage, Add machine Done focus and launcher Exit focus verified; no business handler or blocked network request. Original readiness screenshots are taken immediately after the runner Back/Next check, after its pre-Back geometry measurement: they retain transitioning old outlines and a fading desktop panel across the new card. Separate frames show correct outline and zero actual-target/panel overlap by 500ms and at 2000ms on desktop/phone; original captures preserved, exact frame-level transition duration UNVERIFIED. No persistent obstruction or reproduced Major in modeled states. Native, real-device, authenticated editor/dirty-check and human gates remain UNVERIFIED.",
+  "status": "IN_PROGRESS",
+  "humanGates": "UNVERIFIED",
+  "visualReview": "Every captured English 1440x900 and Gujarati 390x844 step inspected",
+  "evidence": "gt13-results.json",
+  "supplementalTransitionDiagnostics": [
+    {
+      "id": "gt13-transition-0-en-1440x900",
+      "task": "GT-13",
+      "scenario": "machines",
+      "language": "en",
+      "size": "1440x900",
+      "script": "/private/tmp/weavly-review-machine-transition.mjs",
+      "args": [
+        "machines",
+        "en",
+        "1440x900",
+        "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt13-transition-0-en-1440x900"
+      ],
+      "command": [
+        "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+        "170",
+        "node",
+        "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+        "env",
+        "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+        "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+        "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt13-transition-0-en-1440x900/network.json",
+        "node",
+        "--import",
+        "/private/tmp/weavly-review-network.mjs",
+        "/private/tmp/weavly-review-machine-transition.mjs",
+        "machines",
+        "en",
+        "1440x900",
+        "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt13-transition-0-en-1440x900"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 10.05,
+      "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt13-transition-0-en-1440x900/transition/record.json",
+      "steps": 3,
+      "error": null,
+      "blockedNetwork": [],
+      "classification": "AUTOMATED_PASS",
+      "visualReview": "UNVERIFIED"
+    },
+    {
+      "id": "gt13-transition-1-gu-390x844",
+      "task": "GT-13",
+      "scenario": "machines?populated=1",
+      "language": "gu",
+      "size": "390x844",
+      "script": "/private/tmp/weavly-review-machine-transition.mjs",
+      "args": [
+        "machines?populated=1",
+        "gu",
+        "390x844",
+        "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt13-transition-1-gu-390x844"
+      ],
+      "command": [
+        "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/tour-harness/bin/timeout",
+        "170",
+        "node",
+        "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scripts/performance/isolated-command.mjs",
+        "env",
+        "PLAYWRIGHT_ROOT=/Users/rajpatel/.npm/_npx/5e2e484947874241/node_modules/",
+        "CHROMIUM_PATH=/Users/rajpatel/Library/Caches/ms-playwright/chromium-1234/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+        "NETWORK_LOG=/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt13-transition-1-gu-390x844/network.json",
+        "node",
+        "--import",
+        "/private/tmp/weavly-review-network.mjs",
+        "/private/tmp/weavly-review-machine-transition.mjs",
+        "machines?populated=1",
+        "gu",
+        "390x844",
+        "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt13-transition-1-gu-390x844"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 10.39,
+      "record": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt13-transition-1-gu-390x844/transition/record.json",
+      "steps": 3,
+      "error": null,
+      "blockedNetwork": [],
+      "classification": "AUTOMATED_PASS",
+      "visualReview": "UNVERIFIED"
+    }
+  ]
+}

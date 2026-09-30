@@ -15,7 +15,7 @@ export default async function RatesPage() {
             initialRates={(result.data ?? []) as CostRateRow[]}
             initialConflicts={(result.conflicts ?? []) as YarnRateConflict[]}
             defaultReviewIntervalDays={result.yarnReviewIntervalDays ?? 90}
-            tutorialDismissed={user.user_metadata?.ratebook_tutorial_dismissed === true}
+            userMetadata={user.user_metadata}
             userId={user.id}
             orgId={profile.org_id}
         />

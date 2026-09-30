@@ -1,0 +1,21 @@
+PASS                     exit=0    gt05-0-en-1440x900                             en 1440x900  steps=10 maxOverlap=0 shots=12
+PASS                     exit=0    gt05-0-en-1024x768                             en 1024x768  steps=10 maxOverlap=0 shots=12
+PASS                     exit=0    gt05-0-gu-390x844                              gu 390x844   steps=10 maxOverlap=0 shots=12
+PASS                     exit=0    gt05-1-en-1440x900                             en 1440x900  steps=10 maxOverlap=0 shots=12
+PASS                     exit=0    gt05-1-en-1024x768                             en 1024x768  steps=10 maxOverlap=0 shots=12
+PASS                     exit=0    gt05-1-gu-390x844                              gu 390x844   steps=10 maxOverlap=0 shots=12
+PASS                     exit=0    gt05-2-en-1440x900                             en 1440x900  steps=10 maxOverlap=0 shots=12
+PASS                     exit=0    gt05-2-en-1024x768                             en 1024x768  steps=10 maxOverlap=0 shots=12
+PASS                     exit=0    gt05-2-gu-390x844                              gu 390x844   steps=10 maxOverlap=0 shots=12
+BASELINE_ANALYTICS_ONLY  exit=1    gt15-0-en-1440x900                             en 1440x900  steps=7 maxOverlap=0 shots=9
+BASELINE_ANALYTICS_ONLY  exit=1    gt15-0-hi-1280x800                             hi 1280x800  steps=7 maxOverlap=0 shots=9
+BASELINE_ANALYTICS_ONLY  exit=1    gt15-0-en-1024x768                             en 1024x768  steps=7 maxOverlap=0 shots=9
+BASELINE_ANALYTICS_ONLY  exit=1    gt15-0-gu-390x844                              gu 390x844   steps=7 maxOverlap=0 shots=9
+BASELINE_ANALYTICS_ONLY  exit=1    gt15-1-en-1440x900                             en 1440x900  steps=7 maxOverlap=0 shots=9
+BASELINE_ANALYTICS_ONLY  exit=1    gt15-1-hi-1280x800                             hi 1280x800  steps=7 maxOverlap=0 shots=9
+BASELINE_ANALYTICS_ONLY  exit=1    gt15-1-en-1024x768                             en 1024x768  steps=7 maxOverlap=0 shots=9
+BASELINE_ANALYTICS_ONLY  exit=1    gt15-1-gu-390x844                              gu 390x844   steps=7 maxOverlap=0 shots=9
+PASS                     exit=0    x05-base-en-768x1024                           en 768x1024  steps=10 maxOverlap=0 shots=12
+PASS                     exit=0    x05-base-gu-768x1024                           gu 768x1024  steps=10 maxOverlap=0 shots=12
+
+19 runs, 166 captured steps: {"PASS":11,"BASELINE_ANALYTICS_ONLY":8}

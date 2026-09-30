@@ -1,0 +1,44 @@
+[
+  {
+    "id": "gt15-transition-en-1440x900",
+    "task": "GT-15",
+    "scenario": "assignments?populated=1",
+    "language": "en",
+    "size": "1440x900",
+    "script": "/private/tmp/weavly-review-assignment-transition.mjs",
+    "args": [
+      "assignments?populated=1",
+      "en",
+      "1440x900",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-transition-en-1440x900"
+    ]
+  },
+  {
+    "id": "gt15-transition-en-1024x768",
+    "task": "GT-15",
+    "scenario": "assignments?populated=1",
+    "language": "en",
+    "size": "1024x768",
+    "script": "/private/tmp/weavly-review-assignment-transition.mjs",
+    "args": [
+      "assignments?populated=1",
+      "en",
+      "1024x768",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-transition-en-1024x768"
+    ]
+  },
+  {
+    "id": "gt15-transition-gu-390x844",
+    "task": "GT-15",
+    "scenario": "assignments?populated=1",
+    "language": "gu",
+    "size": "390x844",
+    "script": "/private/tmp/weavly-review-assignment-transition.mjs",
+    "args": [
+      "assignments?populated=1",
+      "gu",
+      "390x844",
+      "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/runs/gt15-transition-gu-390x844"
+    ]
+  }
+]

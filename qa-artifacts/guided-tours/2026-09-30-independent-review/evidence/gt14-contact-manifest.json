@@ -1,0 +1,146 @@
+[
+  {
+    "run": "gt14-0-en-1440x900",
+    "steps": [
+      "wk-paytype",
+      "wkp-availability",
+      "wkp-wage"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt14-0-en-1440x900-01-03.png"
+  },
+  {
+    "run": "gt14-0-en-1440x900",
+    "steps": [
+      "wkp-loom",
+      "wkp-earnings",
+      "wk-handoff"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt14-0-en-1440x900-04-06.png"
+  },
+  {
+    "run": "gt14-0-gu-390x844",
+    "steps": [
+      "wk-paytype",
+      "wkp-availability",
+      "wkp-wage"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt14-0-gu-390x844-01-03.png"
+  },
+  {
+    "run": "gt14-0-gu-390x844",
+    "steps": [
+      "wkp-loom",
+      "wkp-earnings",
+      "wk-handoff"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt14-0-gu-390x844-04-06.png"
+  },
+  {
+    "run": "gt14-1-en-1440x900",
+    "steps": [
+      "wk-paytype",
+      "wks-salary",
+      "wks-joining"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt14-1-en-1440x900-01-03.png"
+  },
+  {
+    "run": "gt14-1-en-1440x900",
+    "steps": [
+      "wks-changes",
+      "wks-payroll",
+      "wk-handoff"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt14-1-en-1440x900-04-06.png"
+  },
+  {
+    "run": "gt14-1-gu-390x844",
+    "steps": [
+      "wk-paytype",
+      "wks-salary",
+      "wks-joining"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt14-1-gu-390x844-01-03.png"
+  },
+  {
+    "run": "gt14-1-gu-390x844",
+    "steps": [
+      "wks-changes",
+      "wks-payroll",
+      "wk-handoff"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt14-1-gu-390x844-04-06.png"
+  },
+  {
+    "run": "gt14-2-en-1440x900",
+    "steps": [
+      "wk-paytype",
+      "wkp-availability",
+      "wkp-wage"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt14-2-en-1440x900-01-03.png"
+  },
+  {
+    "run": "gt14-2-en-1440x900",
+    "steps": [
+      "wkp-loom",
+      "wkp-earnings",
+      "wk-handoff"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt14-2-en-1440x900-04-06.png"
+  },
+  {
+    "run": "gt14-2-gu-390x844",
+    "steps": [
+      "wk-paytype",
+      "wkp-availability",
+      "wkp-wage"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt14-2-gu-390x844-01-03.png"
+  },
+  {
+    "run": "gt14-2-gu-390x844",
+    "steps": [
+      "wkp-loom",
+      "wkp-earnings",
+      "wk-handoff"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt14-2-gu-390x844-04-06.png"
+  },
+  {
+    "run": "gt14-3-en-1440x900",
+    "steps": [
+      "wk-paytype",
+      "wks-salary",
+      "wks-joining"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt14-3-en-1440x900-01-03.png"
+  },
+  {
+    "run": "gt14-3-en-1440x900",
+    "steps": [
+      "wks-changes",
+      "wks-payroll",
+      "wk-handoff"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt14-3-en-1440x900-04-06.png"
+  },
+  {
+    "run": "gt14-3-gu-390x844",
+    "steps": [
+      "wk-paytype",
+      "wks-salary",
+      "wks-joining"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt14-3-gu-390x844-01-03.png"
+  },
+  {
+    "run": "gt14-3-gu-390x844",
+    "steps": [
+      "wks-changes",
+      "wks-payroll",
+      "wk-handoff"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt14-3-gu-390x844-04-06.png"
+  }
+]

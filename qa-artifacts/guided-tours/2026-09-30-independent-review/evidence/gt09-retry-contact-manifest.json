@@ -1,0 +1,27 @@
+[
+  {
+    "run": "gt09-retry-gu-390x844",
+    "steps": [
+      "ys-balance",
+      "ys-opening",
+      "ys-receipt"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt09-retry-gu-390x844-01-03.png"
+  },
+  {
+    "run": "gt09-retry-gu-390x844",
+    "steps": [
+      "ys-link",
+      "ys-usage",
+      "ys-correct"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt09-retry-gu-390x844-04-06.png"
+  },
+  {
+    "run": "gt09-retry-gu-390x844",
+    "steps": [
+      "ys-handoff"
+    ],
+    "path": "/Users/rajpatel/.codex/worktrees/tours-implementation/textile Saas/scratch/browser-verification/contacts/gt09-retry-gu-390x844-07-07.png"
+  }
+]

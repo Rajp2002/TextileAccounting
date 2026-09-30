@@ -1,0 +1,320 @@
+{
+  "scenario": "payroll-extra",
+  "lang": "gu",
+  "size": "390x844",
+  "steps": [
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "ઉપાડ આપો ત્યારે નોંધો",
+      "body": "કારીગર પર ઉપાડ ઉમેરો પગાર પહેલાં આપેલા પૈસા નોંધે છે. તે પછીના પગારમાંથી અડધા સુધીની મર્યાદામાં વસૂલાય છે.",
+      "step": "pra-advance",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 1 / 6",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 632,
+        "w": 374,
+        "h": 204
+      },
+      "highlight": {
+        "x": 17,
+        "y": 70,
+        "w": 356,
+        "h": 371
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "div(role=dialog)",
+      "scrollY": 0,
+      "serverCalls": 1,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 8,
+        "y": 72,
+        "w": 374,
+        "h": 368
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390,
+      "payroll": {
+        "mounts": 1,
+        "unmounts": 0,
+        "sameSearchNode": true,
+        "search": "Retained payroll",
+        "liveHidden": true,
+        "replica": true,
+        "enabledReplicaControls": 0,
+        "paymentDate": false,
+        "storage": {
+          "weavly_language": "gu"
+        },
+        "prefs": {
+          "weavly:tour-prefs:v1:u1": "{\"payroll\":{\"firstShown\":\"2026-09-29T21:40:49.585Z\",\"version\":\"v1\"}}"
+        },
+        "calls": 1,
+        "apiCalls": 1
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "કારણ સાથે કપાત નોંધો",
+      "body": "કપાત ઉમેરો વસૂલવાની રકમ, જેમ કે નુકસાન, નોંધે છે. તે ઉપાડ સાથે એ જ મર્યાદામાં વસૂલાય છે.",
+      "step": "pra-deduction",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 2 / 6",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 632,
+        "w": 374,
+        "h": 204
+      },
+      "highlight": {
+        "x": 17,
+        "y": 66,
+        "w": 356,
+        "h": 380
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 1,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 8,
+        "y": 72,
+        "w": 374,
+        "h": 368
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390,
+      "payroll": {
+        "mounts": 1,
+        "unmounts": 0,
+        "sameSearchNode": true,
+        "search": "Retained payroll",
+        "liveHidden": true,
+        "replica": true,
+        "enabledReplicaControls": 0,
+        "paymentDate": false,
+        "storage": {
+          "weavly_language": "gu"
+        },
+        "prefs": {
+          "weavly:tour-prefs:v1:u1": "{\"payroll\":{\"firstShown\":\"2026-09-29T21:40:49.585Z\",\"version\":\"v1\"}}"
+        },
+        "calls": 1,
+        "apiCalls": 1
+      }
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "જૂની ચુકવણીઓ શોધો",
+      "body": "પેરોલ રેકોર્ડમાં પસંદ કરેલા સમયગાળાની દરેક નોંધાયેલી ચુકવણી કારીગર કે મશીન પ્રમાણે દેખાય છે.",
+      "step": "pra-records",
+      "status": "ready",
+      "eyebrow": "નમૂનો · પગલું 3 / 6",
+      "progress": null,
+      "panel": {
+        "x": 8,
+        "y": 632,
+        "w": 374,
+        "h": 204
+      },
+      "highlight": {
+        "x": 8,
+        "y": 171,
+        "w": 374,
+        "h": 347
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 225,
+      "serverCalls": 1,
+      "liveHidden": true,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": null,
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 844,
+      "vw": 390,
+      "payroll": {
+        "mounts": 1,
+        "unmounts": 0,
+        "sameSearchNode": true,
+        "search": "Retained payroll",
+        "liveHidden": true,
+        "replica": true,
+        "enabledReplicaControls": 0,
+        "paymentDate": false,
+        "storage": {
+          "weavly_language": "gu"
+        },
+        "prefs": {
+          "weavly:tour-prefs:v1:u1": "{\"payroll\":{\"firstShown\":\"2026-09-29T21:40:49.585Z\",\"version\":\"v1\"}}"
+        },
+        "calls": 1,
+        "apiCalls": 1
+      }
+    }
+  ],
+  "logs": [
+    "warning: [harness] server action called recordTourEventAction",
+    "error: Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+  ],
+  "apiRequests": [
+    {
+      "url": "http://localhost:5199/api/analytics/plan-events",
+      "method": "POST"
+    }
+  ],
+  "preClick": null,
+  "sampling": "legacy-900ms",
+  "before": {
+    "x": 0,
+    "y": 0,
+    "inner": null
+  },
+  "payrollBefore": {
+    "mounts": 1,
+    "unmounts": 0,
+    "sameSearchNode": true,
+    "search": "Retained payroll",
+    "liveHidden": false,
+    "replica": false,
+    "enabledReplicaControls": 0,
+    "paymentDate": false,
+    "storage": {
+      "weavly_language": "gu"
+    },
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"payroll\":{\"firstShown\":\"2026-09-29T21:40:49.585Z\",\"version\":\"v1\"}}"
+    },
+    "calls": 1,
+    "apiCalls": 1
+  },
+  "exitAt": 3,
+  "after": {
+    "scroll": {
+      "x": 0,
+      "y": 0,
+      "inner": null
+    },
+    "active": "<button type=\"button\" data-tour-control=\"payroll-help\" class=\"estimator-touch-target group flex min-h-11 w-full cursor-pointer items-center justify-between gap-",
+    "activeAnchor": null,
+    "activeRateBookField": null,
+    "activeControl": "payroll-help",
+    "serverCalls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "navigations": [],
+    "scrollCalls": [
+      {
+        "owner": "element",
+        "method": "scrollTo",
+        "behavior": "smooth"
+      },
+      {
+        "owner": "element",
+        "method": "scrollTo",
+        "behavior": "smooth"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "smooth"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "element",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      },
+      {
+        "owner": "window",
+        "method": "scrollTo",
+        "behavior": "instant"
+      }
+    ],
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"payroll\":{\"firstShown\":\"2026-09-29T21:40:49.585Z\",\"version\":\"v1\"}}"
+    },
+    "payroll": {
+      "mounts": 1,
+      "unmounts": 0,
+      "sameSearchNode": true,
+      "search": "Retained payroll",
+      "liveHidden": false,
+      "replica": false,
+      "enabledReplicaControls": 0,
+      "paymentDate": false,
+      "storage": {
+        "weavly_language": "gu"
+      },
+      "prefs": {
+        "weavly:tour-prefs:v1:u1": "{\"payroll\":{\"firstShown\":\"2026-09-29T21:40:49.585Z\",\"version\":\"v1\"}}"
+      },
+      "calls": 1,
+      "apiCalls": 1
+    },
+    "search": null
+  },
+  "issues": []
+}

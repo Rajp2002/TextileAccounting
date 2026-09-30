@@ -1,0 +1,237 @@
+{
+  "scenario": "quotes-compare",
+  "lang": "hi",
+  "size": "1280x800",
+  "steps": [
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "एक क्वालिटी के दो वर्ज़न चुनें",
+      "body": "“तुलना करें” चालू करें, क्वालिटी खोलें और दो वर्ज़न पर टिक करें। फिर “कॉस्टिंग की तुलना करें” चुनें।",
+      "step": "compareSelect",
+      "status": "ready",
+      "eyebrow": "नमूना · चरण 1 / 4",
+      "progress": null,
+      "panel": {
+        "x": 896,
+        "y": 16,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 50,
+        "y": 296,
+        "w": 797,
+        "h": 457
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "div(role=dialog)",
+      "scrollY": 0,
+      "serverCalls": 1,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 16,
+        "y": 14,
+        "w": 864,
+        "h": 772
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": "",
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "देखें क्या बदला",
+      "body": "पुराना, नया और बदलाव हर आँकड़ा साथ-साथ दिखाते हैं। यहाँ v2 की लागत v1 से ₹1.65/मीटर ज़्यादा है।",
+      "step": "comparison",
+      "status": "ready",
+      "eyebrow": "नमूना · चरण 2 / 4",
+      "progress": null,
+      "panel": {
+        "x": 902,
+        "y": 226,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 10,
+        "y": 226,
+        "w": 876,
+        "h": 349
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 1,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 16,
+        "y": 232,
+        "w": 864,
+        "h": 337
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": "",
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "बदलाव की वजह बना इनपुट खोजें",
+      "body": "कौन सा इनपुट बदला, जैसे धागे का रेट या बुनाई शुल्क, यह देखने के लिए गणना का विवरण खोलें।",
+      "step": "comparisonDetails",
+      "status": "ready",
+      "eyebrow": "नमूना · चरण 3 / 4",
+      "progress": null,
+      "panel": {
+        "x": 896,
+        "y": 16,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 32,
+        "y": 237,
+        "w": 832,
+        "h": 533
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 1,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": {
+        "x": 16,
+        "y": 14,
+        "w": 864,
+        "h": 772
+      },
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": "",
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280
+    },
+    {
+      "assignments": null,
+      "workers": null,
+      "rateBookTarget": null,
+      "rateBookRow": null,
+      "rateBookSearch": null,
+      "title": "अपने वर्ज़न की तुलना करें",
+      "body": "शुरू करने के लिए “तुलना करें” चुनें। एक ही क्वालिटी के दो सेव वर्ज़न चाहिए।",
+      "step": "compareHandoff",
+      "status": "ready",
+      "eyebrow": "चरण 4 / 4",
+      "progress": null,
+      "panel": {
+        "x": 828,
+        "y": 260,
+        "w": 360,
+        "h": 175
+      },
+      "highlight": {
+        "x": 712,
+        "y": 260,
+        "w": 100,
+        "h": 51
+      },
+      "overlapArea": 0,
+      "panelOffscreen": false,
+      "descriptionScrollable": false,
+      "activeElement": "button[next]",
+      "scrollY": 0,
+      "serverCalls": 1,
+      "liveHidden": false,
+      "focusInPanel": true,
+      "innerScroll": null,
+      "context": null,
+      "estimatorMode": [],
+      "liveEstimateOpen": false,
+      "search": "",
+      "dispatch": null,
+      "stock": null,
+      "yarn": null,
+      "sampleCloseControls": 0,
+      "rail": null,
+      "vh": 800,
+      "vw": 1280
+    }
+  ],
+  "logs": [
+    "warning: [harness] server action called recordTourEventAction"
+  ],
+  "apiRequests": [],
+  "preClick": null,
+  "sampling": "legacy-900ms",
+  "before": {
+    "x": 0,
+    "y": 0,
+    "inner": null
+  },
+  "after": {
+    "scroll": {
+      "x": 0,
+      "y": 0,
+      "inner": null
+    },
+    "active": "<button data-slot=\"button\" data-variant=\"outline\" data-size=\"default\" class=\"inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-semibo",
+    "activeAnchor": "costings.compare",
+    "activeRateBookField": null,
+    "activeControl": null,
+    "serverCalls": [
+      {
+        "fn": "recordTourEventAction",
+        "file": "app/actions/tour-preferences.ts"
+      }
+    ],
+    "navigations": [],
+    "scrollCalls": [],
+    "prefs": {
+      "weavly:tour-prefs:v1:u1": "{\"saved-costings\":{\"firstShown\":\"2026-09-29T20:18:36.400Z\",\"version\":\"v1\"}}"
+    },
+    "search": ""
+  },
+  "issues": []
+}

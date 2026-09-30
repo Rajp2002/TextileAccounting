@@ -1,0 +1,98 @@
+[
+  {
+    "id": "gt09-0-en-1440x900",
+    "task": "GT-09",
+    "scenario": "yarn-stock",
+    "language": "en",
+    "size": "1440x900"
+  },
+  {
+    "id": "gt09-0-hi-1280x800",
+    "task": "GT-09",
+    "scenario": "yarn-stock",
+    "language": "hi",
+    "size": "1280x800"
+  },
+  {
+    "id": "gt09-0-en-1024x768",
+    "task": "GT-09",
+    "scenario": "yarn-stock",
+    "language": "en",
+    "size": "1024x768"
+  },
+  {
+    "id": "gt09-0-gu-390x844",
+    "task": "GT-09",
+    "scenario": "yarn-stock",
+    "language": "gu",
+    "size": "390x844"
+  },
+  {
+    "id": "gt09-0-reduced-en-1024x768",
+    "task": "GT-09",
+    "scenario": "yarn-stock",
+    "language": "en",
+    "size": "1024x768",
+    "env": {
+      "REDUCED_MOTION": "1"
+    }
+  },
+  {
+    "id": "gt09-1-en-1440x900",
+    "task": "GT-09",
+    "scenario": "yarn-stock?populated=1&unlinked=1",
+    "language": "en",
+    "size": "1440x900"
+  },
+  {
+    "id": "gt09-1-hi-1280x800",
+    "task": "GT-09",
+    "scenario": "yarn-stock?populated=1&unlinked=1",
+    "language": "hi",
+    "size": "1280x800"
+  },
+  {
+    "id": "gt09-1-en-1024x768",
+    "task": "GT-09",
+    "scenario": "yarn-stock?populated=1&unlinked=1",
+    "language": "en",
+    "size": "1024x768"
+  },
+  {
+    "id": "gt09-1-gu-390x844",
+    "task": "GT-09",
+    "scenario": "yarn-stock?populated=1&unlinked=1",
+    "language": "gu",
+    "size": "390x844"
+  },
+  {
+    "id": "gt09-1-reduced-en-1024x768",
+    "task": "GT-09",
+    "scenario": "yarn-stock?populated=1&unlinked=1",
+    "language": "en",
+    "size": "1024x768",
+    "env": {
+      "REDUCED_MOTION": "1"
+    }
+  },
+  {
+    "id": "gt09-exit-yarn-stock-en-1440x900",
+    "task": "GT-09",
+    "scenario": "yarn-stock?populated=1&unlinked=1",
+    "language": "en",
+    "size": "1440x900",
+    "env": {
+      "EXIT_AT": "3"
+    }
+  },
+  {
+    "id": "gt09-exit-yarn-stock-gu-390x844",
+    "task": "GT-09",
+    "scenario": "yarn-stock?populated=1&unlinked=1",
+    "language": "gu",
+    "size": "390x844",
+    "env": {
+      "EXIT_AT": "3"
+    }
+  }
+]
