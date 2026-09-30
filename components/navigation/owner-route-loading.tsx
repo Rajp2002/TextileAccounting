@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation'
 import { RouteMilestones } from '@/components/performance/route-milestones'
 import { pageTitleLayoutClass } from '@/components/navigation/page-title-layout'
+import { useTranslation } from '@/lib/i18n/context'
 
 const ROUTE_TITLES: Array<[string, string]> = [
     ['/free/costings', 'Saved Costings'],
@@ -47,10 +48,13 @@ function routeForPath(pathname: string | null) {
 /** Route-aware fallback used while secure owner context resolves. */
 export function OwnerRouteLoading() {
     const pathname = usePathname()
-    const title = titleForPath(pathname)
+    const { t } = useTranslation()
+    // The Stock audit page is available in every language (PI-07), so its skeleton shows the translated title too.
+    const isStockAudit = pathname === '/owner/stock/audit' || Boolean(pathname?.startsWith('/owner/stock/audit/'))
+    const title = isStockAudit ? t('stockAudit.title') : titleForPath(pathname)
     const route = routeForPath(pathname)
     return (
-        <div className="w-full space-y-6 pt-2 pb-8" role="status" aria-busy="true" aria-label={`Loading ${title}`}>
+        <div className="w-full space-y-6 pt-2 pb-8" role="status" aria-busy="true" aria-label={isStockAudit ? t('stockAudit.loadingLabel', { title }) : `Loading ${title}`}>
             <RouteMilestones route={route} shellVisible primaryUsable={false} />
             <div className={`${pageTitleLayoutClass(pathname ?? route)} border-b border-hairline/80 pb-5 text-center`}>
                 <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-ink sm:text-[2rem]">{title}</h1>

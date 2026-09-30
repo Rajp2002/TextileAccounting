@@ -7,8 +7,9 @@ GT-B1. A dedicated tour for `/owner/stock/audit`, outlined in [`pages/stock-audi
 ## Dependencies and entry conditions (all required)
 
 - GT-17 PASSED.
-- PI-06 fixed: changing the audit date loads that date's audit; the adjustment shown equals the one applied.
-- PI-07 fixed: the audit page's strings go through translation keys in en/gu/hi.
+- [x] PI-06 fixed (2026-09-30): changing the audit date loads that date's audit; the adjustment shown equals the one applied.
+- [x] PI-07 fixed (2026-09-30): the audit page's strings go through translation keys in en/gu/hi.
+- [ ] The senior designer completes the page spec (steps, copy in three languages, variants) against the fixed page. This is the only entry condition still open, and it is a design task, not code.
 - [x] Owner decision recorded (2026-09-27, plan D-20): routine counts use Correct balance; the audit is the full dated record.
 
 ## Read first
@@ -33,4 +34,4 @@ Starting while any entry condition is unmet is not allowed.
 
 ## Checkpoint
 
-Stays **BLOCKED**.
+Stays **BLOCKED**, on the page spec only.

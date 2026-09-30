@@ -45,7 +45,7 @@ import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
 import { formatINR } from '@/lib/finance'
 import { buildBasePayrollReadiness } from '@/lib/base-payroll-readiness'
 import { basePayrollReview } from '@/lib/base-payroll-review'
-import { baseProductionHref, readBaseProductionNavigation } from '@/lib/base-production-navigation'
+import { baseDailySheetHref, baseProductionHref, baseProductionTabForPath, readBaseProductionNavigation } from '@/lib/base-production-navigation'
 import { trackPlanEvent } from '@/lib/plan-analytics'
 import {
     calculateBaseEntryGrossPay,
@@ -148,7 +148,7 @@ export default function BaseProductionClient({
     const searchParams = useSearchParams()
     const navigation = readBaseProductionNavigation(searchParams)
     const [payrollTab, setPayrollTab] = useState('pay')
-    const activeTab = view === 'production' ? (pathname.endsWith('/daily-sheet') ? 'production' : 'jobs') : payrollTab
+    const activeTab = view === 'production' ? baseProductionTabForPath(pathname) : payrollTab
     const isDailySheetView = view === 'production' && activeTab === 'production'
     const [isActivateModalOpen, setIsActivateModalOpen] = useState(Boolean(initialCostingId))
     const [productionSearch, setProductionSearch] = useState('')
@@ -335,7 +335,7 @@ export default function BaseProductionClient({
     }
 
     function openSetup(add?: 'worker' | 'machine', workerId?: string) {
-        const params = new URLSearchParams({ returnTo: view === 'payroll' ? '/owner/payroll' : baseProductionHref(navigation) })
+        const params = new URLSearchParams({ returnTo: view === 'payroll' ? '/owner/payroll' : baseProductionTabForPath(pathname) === 'production' ? baseDailySheetHref(navigation) : baseProductionHref(navigation) })
         if (add) { params.set('add', add); params.set('section', add === 'machine' ? 'machines' : 'workers') }
         if (workerId) params.set('worker', workerId)
         if (add === 'machine') params.set('register', 'base')
@@ -655,7 +655,7 @@ export default function BaseProductionClient({
                                                     </div>
                                                     <div className="flex shrink-0 items-center gap-3">
                                                         <div className="font-black text-ink">{entry.entry_status === 'zero' ? '0 m' : entry.entry_status === 'absent' ? 'Absent' : `${formatMeters(entry.meters)} · ${formatINR(calculateBaseEntryGrossPay(entry, initialData.allocations.filter((allocation) => allocation.entry_id === entry.id)))}`}</div>
-                                                        <Button asChild variant="outline" size="sm" className="h-8 rounded-lg border-hairline bg-surface text-xs font-medium hover:bg-surface-soft"><Link onClick={() => setIsHistoryOpen(false)} href={baseProductionHref({ date: entry.production_date, shift: entry.shift, entry: entry.id, worker: entry.worker_id })}>View log</Link></Button>
+                                                        <Button asChild variant="outline" size="sm" className="h-8 rounded-lg border-hairline bg-surface text-xs font-medium hover:bg-surface-soft"><Link onClick={() => setIsHistoryOpen(false)} href={baseDailySheetHref({ date: entry.production_date, shift: entry.shift, entry: entry.id, worker: entry.worker_id })}>View log</Link></Button>
                                                     </div>
                                                 </div>
                                             )

@@ -54,3 +54,16 @@ export function baseProductionHref(context: BaseProductionNavigation) {
     for (const [key, value] of Object.entries(context)) if (value) params.set(key, value)
     return `/owner/production${params.size ? `?${params}` : ''}`
 }
+
+// The Overview and the Daily Sheet are separate routes. `baseProductionHref` is the Overview. Anything that carries a
+// Daily Sheet selection (date, shift, entry) needs the Daily Sheet's own path: `history.replaceState` skips the
+// `?tab=production` server redirect, and the client chooses its tab from the pathname alone (PI-04).
+export function baseDailySheetHref(context: BaseProductionNavigation) {
+    const params = new URLSearchParams()
+    for (const [key, value] of Object.entries(context)) if (value && key !== 'tab') params.set(key, value)
+    return `/owner/production/daily-sheet${params.size ? `?${params}` : ''}`
+}
+
+export function baseProductionTabForPath(pathname: string): 'production' | 'jobs' {
+    return pathname.endsWith('/daily-sheet') ? 'production' : 'jobs'
+}
