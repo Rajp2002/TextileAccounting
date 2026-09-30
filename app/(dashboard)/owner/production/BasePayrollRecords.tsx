@@ -26,7 +26,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { reverseBasePayrollSettlement } from './actions'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { LiquidSegmented } from '@/components/ui/liquid-segmented'
 import { formatINR } from '@/lib/finance'
 import {
     buildBasePayrollHistory,
@@ -123,6 +123,7 @@ export default function BasePayrollRecords({
     )
     const [selectedKey, setSelectedKey] = useState(periods[0]?.key ?? '')
     const [search, setSearch] = useState('')
+    const [recordsView, setRecordsView] = useState<'workers' | 'machines'>('workers')
     const [expandedWorkers, setExpandedWorkers] = useState<Set<string>>(new Set())
     const [expandedMachines, setExpandedMachines] = useState<Set<string>>(new Set())
     const [exportingPdf, setExportingPdf] = useState(false)
@@ -232,7 +233,7 @@ export default function BasePayrollRecords({
                                     <div className="flex items-center justify-between">
                                         <label className="text-xs font-semibold text-body" htmlFor="payroll-history-period">Pay period</label>
                                         {selectedPeriod.isSettled ? (
-                                            <Badge className="bg-emerald-600 text-white font-bold text-[10px]">
+                                            <Badge className="bg-[var(--wv-moss-700)] text-white font-bold text-[10px]">
                                                 <CheckCircle2 className="h-3 w-3 mr-1" /> Settled
                                             </Badge>
                                         ) : null}
@@ -271,13 +272,20 @@ export default function BasePayrollRecords({
                     </div>
                     {selectedPeriod.workers.some(worker => worker.status === 'reversed') && <p className="rounded-lg border border-warning/30 bg-warning/5 p-3 text-sm">Reversed records remain below and in the CSV audit export. They are excluded from payment totals, machine totals, and the active-payment PDF.</p>}
 
-                    <Tabs defaultValue="workers" className="space-y-4">
-                        <TabsList className="grid h-auto w-full grid-cols-2 sm:w-[360px]">
-                            <TabsTrigger value="workers">Workers ({visibleWorkers.length})</TabsTrigger>
-                            <TabsTrigger value="machines">Machines ({visibleMachines.length})</TabsTrigger>
-                        </TabsList>
+                    <div className="space-y-4">
+                        <LiquidSegmented
+                            className="sm:w-[360px]"
+                            fullWidth
+                            aria-label="Payment records view"
+                            value={recordsView}
+                            onValueChange={setRecordsView}
+                            options={[
+                                { value: 'workers', label: `Workers (${visibleWorkers.length})` },
+                                { value: 'machines', label: `Machines (${visibleMachines.length})` },
+                            ]}
+                        />
 
-                        <TabsContent value="workers" className="space-y-3">
+                        {recordsView === 'workers' && <div className="space-y-3">
                             {visibleWorkers.map((worker) => {
                                 const original = initialData.settlements.find(settlement => settlement.id === worker.settlementId)
                                 const hasLaterPayment = initialData.settlements.some(settlement => settlement.worker_id === worker.workerId && settlement.status !== 'reversed' && settlement.period_end > (original?.period_end ?? ''))
@@ -335,9 +343,9 @@ export default function BasePayrollRecords({
                                     </Card>
                                 )
                             })}
-                        </TabsContent>
+                        </div>}
 
-                        <TabsContent value="machines" className="space-y-3">
+                        {recordsView === 'machines' && <div className="space-y-3">
                             {visibleMachines.map((machine) => {
                                 const key = machine.machineId ?? machine.machineLabel
                                 const expanded = expandedMachines.has(key)
@@ -355,8 +363,8 @@ export default function BasePayrollRecords({
                                     </Card>
                                 )
                             })}
-                        </TabsContent>
-                    </Tabs>
+                        </div>}
+                    </div>
 
                     <div className="flex items-start gap-2 rounded-lg border border-hairline bg-surface-soft/45 p-3 text-xs text-body">
                         <Download className="mt-0.5 h-4 w-4 shrink-0 text-saffron-deep" />

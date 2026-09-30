@@ -27,7 +27,7 @@ export function MachineStatusBadge({ status, className }: MachineStatusBadgeProp
       <span
         className={cn(
           'h-1.5 w-1.5 rounded-full',
-          isActive ? 'bg-success' : 'bg-amber-500'
+          isActive ? 'bg-success' : 'bg-warning'
         )}
         aria-hidden="true"
       />

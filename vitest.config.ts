@@ -9,6 +9,8 @@ export default defineConfig({
     resolve: {
         alias: {
             '@': path.resolve(__dirname, './'),
+            // next/font only works inside Next's compiler; tests render with a stub.
+            'next/font/google': path.resolve(__dirname, './__tests__/stubs/next-font-google.ts'),
         },
     },
 })

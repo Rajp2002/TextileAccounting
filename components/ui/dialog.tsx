@@ -39,7 +39,7 @@ function DialogOverlay({
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-ink/45",
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-ink/35 backdrop-blur-[3px]",
         className
       )}
       {...props}
@@ -53,8 +53,14 @@ function DialogContent({
   showCloseButton = true,
   hideOverlay = false,
   mobilePresentation = "sheet",
+  tone,
+  watermark: Watermark,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
+  /** Solid brand-coloured card for short confirmations; omit for standard surface dialogs. */
+  tone?: "brand" | "danger"
+  /** Large faded icon drawn behind the content of a toned dialog. */
+  watermark?: React.ElementType
   showCloseButton?: boolean
   hideOverlay?: boolean
   mobilePresentation?: "sheet" | "center"
@@ -66,12 +72,22 @@ function DialogContent({
         data-slot="dialog-content"
         data-mobile-presentation={hideOverlay ? "center" : mobilePresentation}
         data-close-button={showCloseButton}
+        data-tone={tone}
         className={cn(
-          "bg-surface text-ink data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-h-[calc(100dvh-1rem)] max-w-[calc(100vw-1rem)] translate-x-[-50%] translate-y-[-50%] gap-4 overflow-y-auto rounded-xl border border-hairline p-4 shadow-[var(--shadow-modal)] duration-200 outline-none sm:max-h-[calc(100dvh-2rem)] sm:max-w-lg sm:rounded-2xl sm:p-6",
+          tone && "relative overflow-hidden border-transparent text-white",
+          tone === "brand" && "bg-gradient-to-br from-[#2a3a6b] to-[#16213e]",
+          tone === "danger" && "bg-gradient-to-br from-[#b4432f] to-[#7a2418]",
+          "bg-surface text-ink modal-spring fixed top-[50%] left-[50%] z-50 grid w-full max-h-[calc(100dvh-1rem)] max-w-[calc(100vw-1rem)] translate-x-[-50%] translate-y-[-50%] gap-4 overflow-y-auto rounded-xl border border-hairline p-4 shadow-[var(--shadow-modal)] duration-200 outline-none sm:max-h-[calc(100dvh-2rem)] sm:max-w-lg sm:rounded-2xl sm:p-6",
           className
         )}
         {...props}
       >
+        {tone && Watermark && (
+          <Watermark
+            aria-hidden
+            className="pointer-events-none absolute -top-16 -left-16 z-0 size-64 rotate-12 text-white/10"
+          />
+        )}
         {children}
         {showCloseButton && (
           <DialogPrimitive.Close
@@ -84,6 +100,30 @@ function DialogContent({
         )}
       </DialogPrimitive.Content>
     </DialogPortal>
+  )
+}
+
+/**
+ * Hero block for short confirmation modals: a faded watermark icon behind a
+ * circular badge, centred above the title. Pair with `tone` on DialogContent.
+ */
+function DialogHero({
+  icon: Icon,
+  className,
+  children,
+  ...props
+}: React.ComponentProps<"div"> & { icon: React.ElementType }) {
+  return (
+    <div
+      data-slot="dialog-hero"
+      className={cn("relative z-10 flex flex-col items-center gap-2 text-center", className)}
+      {...props}
+    >
+      <div className="grid size-16 place-items-center rounded-full bg-white text-3xl text-[#1f2d54] shadow-xs [&_svg]:size-8">
+        <Icon aria-hidden />
+      </div>
+      {children}
+    </div>
   )
 }
 
@@ -160,6 +200,7 @@ export {
   DialogDescription,
   DialogFooter,
   DialogHeader,
+  DialogHero,
   DialogOverlay,
   DialogPortal,
   DialogTitle,

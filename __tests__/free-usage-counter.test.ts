@@ -45,8 +45,8 @@ describe('Premium Free-Plan Usage Counter & Estimator Integration', () => {
       expect(html).toContain('2 / 2')
       expect(html).toContain('left this month')
       expect(html).toContain('Free costings')
-      // Both segments filled (bg-stone-800)
-      const filledCount = (html.match(/bg-stone-800/g) || []).length
+      // Both segments filled (bg-wv-neel-600)
+      const filledCount = (html.match(/bg-wv-neel-600/g) || []).length
       expect(filledCount).toBe(2)
       // No exhausted warning
       expect(html).not.toContain('Monthly limit reached')
@@ -66,8 +66,8 @@ describe('Premium Free-Plan Usage Counter & Estimator Integration', () => {
       expect(html).toContain('1 / 2')
       expect(html).toContain('left this month')
       // Exactly 1 filled segment and 1 track segment
-      const filledCount = (html.match(/bg-stone-800/g) || []).length
-      const trackCount = (html.match(/bg-stone-200/g) || []).length
+      const filledCount = (html.match(/bg-wv-neel-600/g) || []).length
+      const trackCount = (html.match(/bg-wv-cotton-300/g) || []).length
       expect(filledCount).toBe(1)
       expect(trackCount).toBe(1)
       // Still positive state, not exhausted
@@ -88,8 +88,8 @@ describe('Premium Free-Plan Usage Counter & Estimator Integration', () => {
       expect(html).toContain('/plans?from=estimator')
       expect(html).toContain('Resets')
       // 0 filled segments, 2 track segments
-      const filledCount = (html.match(/bg-stone-800/g) || []).length
-      const trackCount = (html.match(/bg-stone-200/g) || []).length
+      const filledCount = (html.match(/bg-wv-neel-600/g) || []).length
+      const trackCount = (html.match(/bg-wv-cotton-300/g) || []).length
       expect(filledCount).toBe(0)
       expect(trackCount).toBe(2)
       expect(html).toContain('value="0"')

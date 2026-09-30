@@ -400,7 +400,7 @@ export function PayrollCycleSettingsCard({
                                 </SelectContent>
                             </Select>
                             {monthlyAnchor >= 29 && (
-                                <p className="text-xs text-amber-800 dark:text-amber-300">
+                                <p className="text-xs text-[var(--wv-ochre-800)]">
                                     For shorter months, Weavly automatically uses the final calendar day.
                                 </p>
                             )}
@@ -547,7 +547,7 @@ export function PayrollCycleSettingsCard({
 
                 {/* Validation Error Banner */}
                 {!ruleValidation.valid && (
-                    <div className="flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50/60 p-3 text-xs text-rose-800 dark:border-rose-900/40 dark:bg-rose-950/20 dark:text-rose-300">
+                    <div className="flex items-center gap-2 rounded-xl border border-[var(--wv-madder-200)] bg-[var(--wv-madder-50)]/60 p-3 text-xs text-[var(--wv-madder-800)]">
                         <AlertCircle className="h-4 w-4 shrink-0" />
                         <span>{ruleValidation.error}</span>
                     </div>
@@ -620,7 +620,7 @@ export function PayrollCycleSettingsCard({
                 <DialogContent className="max-w-md rounded-2xl p-6">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2 font-heading text-lg font-bold text-ink">
-                            <Calendar className="h-5 w-5 text-amber-600" />
+                            <Calendar className="h-5 w-5 text-saffron-deep" />
                             Update payroll cycle?
                         </DialogTitle>
                         <DialogDescription className="text-xs text-muted-foreground sm:text-sm">
@@ -641,7 +641,7 @@ export function PayrollCycleSettingsCard({
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-muted-foreground">New cycle</span>
-                                    <span className="font-bold text-amber-700 dark:text-amber-400">
+                                    <span className="font-bold text-saffron-deep">
                                         {plainExplanation}
                                     </span>
                                 </div>
@@ -662,8 +662,8 @@ export function PayrollCycleSettingsCard({
                             </div>
 
                             {/* Non-negotiable guarantee callout */}
-                            <div className="flex items-start gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50/60 p-3 text-xs text-emerald-900 dark:border-emerald-900/40 dark:bg-emerald-950/20 dark:text-emerald-300">
-                                <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 mt-0.5" />
+                            <div className="flex items-start gap-2.5 rounded-xl border border-[var(--wv-moss-200)] bg-[var(--wv-moss-50)]/60 p-3 text-xs text-[var(--wv-moss-900,#14532D)]">
+                                <CheckCircle2 className="h-4 w-4 shrink-0 text-[var(--wv-moss-600)] mt-0.5" />
                                 <div>
                                     <p className="font-bold">Accounting Integrity Guaranteed</p>
                                     <p className="mt-0.5">Existing settled and active payroll periods will not change.</p>

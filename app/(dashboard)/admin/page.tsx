@@ -49,14 +49,14 @@ export default async function AdminDashboardPage() {
         <div className="p-6 lg:p-10 space-y-8">
             <span hidden data-signin-ready="true" />
             <header className="grid gap-4 border-b border-hairline/80 pb-5 text-center sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center">
-                <h1 className="text-[1.75rem] font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:col-start-2 sm:row-start-1 sm:text-[2rem]">
+                <h1 className="text-[1.75rem] font-bold tracking-tight text-ink sm:col-start-2 sm:row-start-1 sm:text-[2rem]">
                     Compliance Dashboard
                 </h1>
                 <div className="flex items-center justify-center gap-3 sm:col-start-3 sm:row-start-1 sm:justify-self-end">
                     <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
                         hasLockedFactory
-                        ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400' 
-                        : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400'
+                        ? 'bg-wv-status-warning-bg text-wv-status-warning-fg'
+                        : 'bg-wv-status-success-bg text-wv-status-success-fg'
                     }`}>
                         {hasLockedFactory ? 'Incident Active' : 'Operational'}
                     </span>

@@ -25,6 +25,13 @@ export default function LoginForm({ recoveryDestination }: { recoveryDestination
     const [email, setEmail]                 = useState('')
     const [password, setPassword]           = useState('')
     const [showPassword, setShowPassword]   = useState(false)
+    // When a login page loads, Safari focuses the email or password field itself
+    // ("streamlined login"), and that focus opens its saved-password popover on
+    // top of the installed app's woven intro. Safari only does this for a form
+    // whose credential fields are in the tab order (read-only does not stop it),
+    // so the fields stay out of it until the user clicks one or presses Tab.
+    const [credentialsArmed, setCredentialsArmed] = useState(false)
+    const armCredentials = () => setCredentialsArmed(true)
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search)
@@ -33,6 +40,21 @@ export default function LoginForm({ recoveryDestination }: { recoveryDestination
             window.history.replaceState(null, '', window.location.pathname)
         }
     }, [])
+
+    useEffect(() => {
+        if (credentialsArmed) return
+        const armOnTab = (event: KeyboardEvent) => {
+            if (event.key !== 'Tab') return
+            // Restore the tab order before this Tab moves focus.
+            for (const id of ['email', 'password']) {
+                const field = document.getElementById(id)
+                if (field) field.tabIndex = 0
+            }
+            setCredentialsArmed(true)
+        }
+        window.addEventListener('keydown', armOnTab, true)
+        return () => window.removeEventListener('keydown', armOnTab, true)
+    }, [credentialsArmed])
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -87,7 +109,7 @@ export default function LoginForm({ recoveryDestination }: { recoveryDestination
                 <div
                     role="status"
                     aria-live="polite"
-                    className="mb-5 rounded-lg border border-saffron/30 bg-saffron-soft/40 p-4"
+                    className="mb-5 rounded-lg border border-[var(--wv-saffron-200)] bg-[var(--wv-saffron-50)] p-4"
                 >
                     <p className="font-semibold text-ink">Your session is already active.</p>
                     <p className="mt-1 text-sm text-body">
@@ -113,6 +135,8 @@ export default function LoginForm({ recoveryDestination }: { recoveryDestination
                         onChange={(e) => setEmail(e.target.value)}
                         required
                         autoComplete="email"
+                        tabIndex={credentialsArmed ? undefined : -1}
+                        onFocus={armCredentials}
                         className="h-12 transition-all focus:bg-surface"
                         disabled={loading}
                     />
@@ -124,7 +148,7 @@ export default function LoginForm({ recoveryDestination }: { recoveryDestination
                         <Label htmlFor="password" className="font-medium text-body">
                             Password
                         </Label>
-                        <Link href="/forgot-password" className="text-xs font-medium text-saffron-deep hover:underline">
+                        <Link href="/forgot-password" className="text-xs font-semibold text-ink underline decoration-[var(--wv-cotton-400)] hover:decoration-[var(--wv-brand-accent)] underline-offset-4">
                             Forgot password?
                         </Link>
                     </div>
@@ -137,13 +161,15 @@ export default function LoginForm({ recoveryDestination }: { recoveryDestination
                             onChange={(e) => setPassword(e.target.value)}
                             required
                             autoComplete="current-password"
+                            tabIndex={credentialsArmed ? undefined : -1}
+                            onFocus={armCredentials}
                             className="h-12 pr-10 transition-all focus:bg-surface"
                             disabled={loading}
                         />
                         <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-surface-soft hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/25"
+                            className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-surface-soft hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wv-border-focus)]/25"
                             aria-label={showPassword ? 'Hide password' : 'Show password'}
                             aria-pressed={showPassword}
                         >
@@ -176,7 +202,7 @@ export default function LoginForm({ recoveryDestination }: { recoveryDestination
                 <div className="space-y-2 pt-1 text-center text-sm text-muted-foreground">
                     <p>
                         Don&apos;t have an account?{' '}
-                        <Link href="/signup" className="font-medium text-saffron-deep hover:underline">
+                        <Link href="/signup" className="font-semibold text-ink underline decoration-[var(--wv-cotton-400)] hover:decoration-[var(--wv-brand-accent)] underline-offset-4">
                             Sign up
                         </Link>
                     </p>

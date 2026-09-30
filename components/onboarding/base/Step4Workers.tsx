@@ -107,34 +107,34 @@ export function Step4Workers({
         <div className="mx-auto max-w-2xl space-y-6">
             <div className="space-y-2 text-center sm:text-left">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] px-3 py-1 text-xs font-semibold text-[var(--wv-ochre-800)]">
                         <Users className="h-3.5 w-3.5" />
                         <span>{tx('Step 4 of 6 · Workforce Setup')}</span>
                     </div>
 
-                    <div className="rounded-full bg-stone-100 px-3 py-1 font-mono text-xs font-semibold text-stone-700 dark:bg-stone-800 dark:text-stone-300">
-                        {tx('Total Workers')}: <span className="font-bold text-amber-600">{counts.total}</span>
+                    <div className="rounded-full bg-[var(--wv-cotton-200)] px-3 py-1 font-mono text-xs font-semibold text-[var(--wv-neel-800)]">
+                        {tx('Total Workers')}: <span className="font-bold text-[var(--wv-brand-accent-strong)]">{counts.total}</span>
                     </div>
                 </div>
 
-                <h2 className="text-2xl font-bold tracking-tight text-stone-900 dark:text-stone-100 sm:text-3xl">
+                <h2 className="text-2xl font-bold tracking-tight text-[var(--wv-neel-900)] sm:text-3xl">
                     {tx('Initialize your workforce')}
                 </h2>
-                <p className="text-sm text-stone-600 dark:text-stone-400">
+                <p className="text-sm text-[var(--wv-neel-700)]">
                     {tx('Add piece-rate weavers and salaried staff. Press Enter to quickly add the next worker, or paste a list from Excel/WhatsApp.')}
                 </p>
             </div>
 
             {/* Segmented Control Tabs */}
-            <div className="flex rounded-xl bg-stone-100 p-1 dark:bg-stone-800">
+            <div className="flex rounded-xl bg-[var(--wv-cotton-200)] p-1">
                 <button
                     type="button"
                     onClick={() => setActiveTab('pieceRate')}
                     className={cn(
                         'flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold transition-all',
                         activeTab === 'pieceRate'
-                            ? 'bg-white text-stone-900 shadow-sm dark:bg-stone-900 dark:text-stone-100'
-                            : 'text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-200'
+                            ? 'bg-white text-[var(--wv-neel-900)] shadow-sm'
+                            : 'text-[var(--wv-neel-600)] hover:text-[var(--wv-neel-900)]'
                     )}
                 >
                     <span>{tx('Piece Rate')}</span>
@@ -142,8 +142,8 @@ export function Step4Workers({
                         className={cn(
                             'rounded-full px-2 py-0.5 font-mono text-[11px] font-bold',
                             activeTab === 'pieceRate'
-                                ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300'
-                                : 'bg-stone-200 text-stone-700 dark:bg-stone-700 dark:text-stone-300'
+                                ? 'bg-[var(--wv-saffron-100)] text-[var(--wv-brand-ink)]'
+                                : 'bg-[var(--wv-cotton-300)] text-[var(--wv-neel-700)]'
                         )}
                     >
                         {counts.pieceRate}
@@ -156,8 +156,8 @@ export function Step4Workers({
                     className={cn(
                         'flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold transition-all',
                         activeTab === 'fixedSalary'
-                            ? 'bg-white text-stone-900 shadow-sm dark:bg-stone-900 dark:text-stone-100'
-                            : 'text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-200'
+                            ? 'bg-white text-[var(--wv-neel-900)] shadow-sm'
+                            : 'text-[var(--wv-neel-600)] hover:text-[var(--wv-neel-900)]'
                     )}
                 >
                     <span>{tx('Fixed Salary')}</span>
@@ -165,8 +165,8 @@ export function Step4Workers({
                         className={cn(
                             'rounded-full px-2 py-0.5 font-mono text-[11px] font-bold',
                             activeTab === 'fixedSalary'
-                                ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300'
-                                : 'bg-stone-200 text-stone-700 dark:bg-stone-700 dark:text-stone-300'
+                                ? 'bg-[var(--wv-saffron-100)] text-[var(--wv-brand-ink)]'
+                                : 'bg-[var(--wv-cotton-300)] text-[var(--wv-neel-700)]'
                         )}
                     >
                         {counts.fixedSalary}
@@ -177,7 +177,7 @@ export function Step4Workers({
             {/* Active Workforce Workspace */}
             {activeTab === 'pieceRate' ? (
                 <div className="space-y-3">
-                    <div className="flex items-center justify-between text-xs font-medium text-stone-500 dark:text-stone-400">
+                    <div className="flex items-center justify-between text-xs font-medium text-[var(--wv-neel-600)]">
                         <span>{tx('Piece-Rate Weavers (Paid per meter produced)')}</span>
                         <span>{counts.pieceRate} {tx('entered')}</span>
                     </div>
@@ -195,7 +195,7 @@ export function Step4Workers({
                 </div>
             ) : (
                 <div className="space-y-3">
-                    <div className="flex items-center justify-between text-xs font-medium text-stone-500 dark:text-stone-400">
+                    <div className="flex items-center justify-between text-xs font-medium text-[var(--wv-neel-600)]">
                         <span>{tx('Fixed-Salary Staff (Supervisors, managers, operators)')}</span>
                         <span>{counts.fixedSalary} {tx('entered')}</span>
                     </div>
@@ -214,7 +214,7 @@ export function Step4Workers({
             )}
 
             {error && (
-                <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+                <div className="rounded-lg border border-[var(--wv-madder-200)] bg-[var(--wv-madder-50)] p-3 text-sm text-[var(--wv-madder-700)]">
                     {tx(error)}
                 </div>
             )}

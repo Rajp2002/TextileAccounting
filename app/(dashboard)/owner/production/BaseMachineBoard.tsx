@@ -22,6 +22,7 @@ import {
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { LiquidSegmented } from '@/components/ui/liquid-segmented'
 import { Card } from '@/components/ui/card'
 import {
     Dialog,
@@ -311,44 +312,17 @@ export default function BaseMachineBoard({
                     </p>
                 </div>
 
-                <div className="flex items-center gap-1.5 rounded-xl border border-hairline bg-surface p-1 shadow-xs">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setFilterStatus('all')}
-                        className={`h-7 px-3 text-xs font-semibold rounded-lg ${
-                            filterStatus === 'all'
-                                ? 'bg-loom text-white hover:bg-loom hover:text-white shadow-xs'
-                                : 'text-muted-foreground hover:text-ink'
-                        }`}
-                    >
-                        All ({activeMachines.length})
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setFilterStatus('running')}
-                        className={`h-7 px-3 text-xs font-semibold rounded-lg ${
-                            filterStatus === 'running'
-                                ? 'bg-loom text-white hover:bg-loom hover:text-white shadow-xs'
-                                : 'text-muted-foreground hover:text-ink'
-                        }`}
-                    >
-                        Running ({runningCount})
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setFilterStatus('available')}
-                        className={`h-7 px-3 text-xs font-semibold rounded-lg ${
-                            filterStatus === 'available'
-                                ? 'bg-loom text-white hover:bg-loom hover:text-white shadow-xs'
-                                : 'text-muted-foreground hover:text-ink'
-                        }`}
-                    >
-                        Available ({availableCount})
-                    </Button>
-                </div>
+                <LiquidSegmented
+                    size="sm"
+                    aria-label="Filter machines by status"
+                    value={filterStatus}
+                    onValueChange={setFilterStatus}
+                    options={[
+                        { value: 'all', label: `All (${activeMachines.length})` },
+                        { value: 'running', label: `Running (${runningCount})` },
+                        { value: 'available', label: `Available (${availableCount})` },
+                    ]}
+                />
             </div>
 
             {/* Search filter bar */}
@@ -421,7 +395,7 @@ export default function BaseMachineBoard({
                                         </div>
 
                                         {isRunning ? (
-                                            <Badge className="bg-emerald-600 hover:bg-emerald-600 text-white font-bold text-[10px] px-2 py-0.5 shadow-2xs">
+                                            <Badge className="bg-[var(--wv-moss-700)] hover:bg-[var(--wv-moss-700)] text-white font-bold text-[10px] px-2 py-0.5 shadow-2xs">
                                                 Running
                                             </Badge>
                                         ) : (
@@ -452,7 +426,7 @@ export default function BaseMachineBoard({
                                                 </p>
                                                 <div className="grid grid-cols-2 gap-2">
                                                     <div className="rounded-lg border border-hairline/80 bg-surface p-2">
-                                                        <div className="flex items-center gap-1 text-[10px] font-bold text-amber-700 mb-0.5">
+                                                        <div className="flex items-center gap-1 text-[10px] font-bold text-[var(--wv-ochre-700)] mb-0.5">
                                                             <Sun className="h-3 w-3" /> Day Shift
                                                         </div>
                                                         <p className="font-semibold text-ink truncate">
@@ -461,7 +435,7 @@ export default function BaseMachineBoard({
                                                     </div>
 
                                                     <div className="rounded-lg border border-hairline/80 bg-surface p-2">
-                                                        <div className="flex items-center gap-1 text-[10px] font-bold text-indigo-700 mb-0.5">
+                                                        <div className="flex items-center gap-1 text-[10px] font-bold text-[var(--wv-neel-700)] mb-0.5">
                                                             <Moon className="h-3 w-3" /> Night Shift
                                                         </div>
                                                         <p className="font-semibold text-ink truncate">
@@ -556,12 +530,12 @@ export default function BaseMachineBoard({
                             </Select>
                         </div>
 
-                        <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3 text-xs text-emerald-950">
+                        <div className="rounded-xl border border-[var(--wv-moss-200)] bg-[var(--wv-moss-50)]/70 p-3 text-xs text-[var(--wv-moss-900)]">
                             <p className="font-semibold flex items-center gap-1.5">
-                                <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                                <CheckCircle2 className="h-4 w-4 text-[var(--wv-moss-600)] shrink-0" />
                                 Operator assignments will remain unchanged.
                             </p>
-                            <p className="mt-1 text-[11px] text-emerald-800">
+                            <p className="mt-1 text-[11px] text-[var(--wv-moss-800)]">
                                 Operators on this loom will continue operating it seamlessly under the new quality.
                             </p>
                         </div>
@@ -654,7 +628,7 @@ export default function BaseMachineBoard({
                                         : 'text-muted-foreground hover:text-ink'
                                 }`}
                             >
-                                <Sun className="mr-1.5 h-3.5 w-3.5 text-amber-500" /> Day Shift
+                                <Sun className="mr-1.5 h-3.5 w-3.5 text-[var(--wv-ochre-700)]" /> Day Shift
                             </Button>
                             <Button
                                 size="sm"
@@ -666,7 +640,7 @@ export default function BaseMachineBoard({
                                         : 'text-muted-foreground hover:text-ink'
                                 }`}
                             >
-                                <Moon className="mr-1.5 h-3.5 w-3.5 text-indigo-500" /> Night Shift
+                                <Moon className="mr-1.5 h-3.5 w-3.5 text-[var(--wv-neel-600)]" /> Night Shift
                             </Button>
                         </div>
 
@@ -703,7 +677,7 @@ export default function BaseMachineBoard({
                                                     variant="ghost"
                                                     onClick={() => handleRemoveWorker(currentAssignmentId)}
                                                     disabled={pendingKey !== null}
-                                                    className="h-8 text-rose-600 hover:text-rose-700 hover:bg-rose-50 text-xs rounded-lg"
+                                                    className="h-8 text-[var(--wv-madder-600)] hover:text-[var(--wv-madder-700)] hover:bg-[var(--wv-madder-50)] text-xs rounded-lg"
                                                 >
                                                     <Trash2 className="mr-1.5 h-3.5 w-3.5" /> Unassign
                                                 </Button>
@@ -748,8 +722,8 @@ export default function BaseMachineBoard({
                                     const isCurrent =
                                         managingMachine &&
                                         (manageWorkerShift === 'day'
-                                            ? machineWorkers.get(managingMachine.id)?.day?.id === worker.id
-                                            : machineWorkers.get(managingMachine.id)?.night?.id === worker.id)
+                                             ? machineWorkers.get(managingMachine.id)?.day?.id === worker.id
+                                             : machineWorkers.get(managingMachine.id)?.night?.id === worker.id)
 
                                     return (
                                         <div
@@ -764,7 +738,7 @@ export default function BaseMachineBoard({
                                             </div>
 
                                             {isCurrent ? (
-                                                <Badge variant="outline" className="text-[10px] text-emerald-700 bg-emerald-50 border-emerald-200">
+                                                <Badge variant="outline" className="text-[10px] text-[var(--wv-moss-700)] bg-[var(--wv-moss-50)] border-[var(--wv-moss-200)]">
                                                     <Check className="mr-1 h-3 w-3" /> Assigned
                                                 </Badge>
                                             ) : (

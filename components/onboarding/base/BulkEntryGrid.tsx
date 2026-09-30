@@ -172,14 +172,14 @@ export function BulkEntryGrid<T extends { id: string; error?: string }>({
     return (
         <div className={cn('space-y-2', className)}>
             {helperText && (
-                <p className="text-xs text-stone-500 dark:text-stone-400">
+                <p className="text-xs text-[var(--wv-neel-500)]">
                     {tx(helperText)}
                 </p>
             )}
 
-            <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm dark:border-stone-800 dark:bg-stone-900">
+            <div className="overflow-hidden rounded-xl border border-[var(--wv-cotton-400)] bg-[var(--wv-cotton-0)] shadow-sm">
                 {/* Table Header */}
-                <div className="grid grid-cols-[3rem_1fr_3rem] items-center border-b border-stone-200 bg-stone-50 px-3 py-2 text-xs font-semibold text-stone-600 dark:border-stone-800 dark:bg-stone-800/50 dark:text-stone-400">
+                <div className="grid grid-cols-[3rem_1fr_3rem] items-center border-b border-[var(--wv-cotton-300)] bg-[var(--wv-cotton-200)] px-3 py-2 text-xs font-semibold text-[var(--wv-neel-500)]">
                     <div className="text-center font-mono">#</div>
                     <div className={cn('grid gap-3', columns.length === 1 ? 'grid-cols-1' : columns.length === 2 ? 'grid-cols-2' : 'grid-cols-3')}>
                         {columns.map(col => (
@@ -190,7 +190,7 @@ export function BulkEntryGrid<T extends { id: string; error?: string }>({
                 </div>
 
                 {/* Table Rows */}
-                <div className="max-h-[380px] divide-y divide-stone-100 overflow-y-auto dark:divide-stone-800/60">
+                <div className="max-h-[380px] divide-y divide-[var(--wv-cotton-200)] overflow-y-auto">
                     {rows.map((row, rowIndex) => {
                         const empty = isRowEmpty(row)
                         return (
@@ -198,11 +198,11 @@ export function BulkEntryGrid<T extends { id: string; error?: string }>({
                                 key={row.id}
                                 className={cn(
                                     'group grid grid-cols-[3rem_1fr_3rem] items-center px-3 py-1.5 transition-colors',
-                                    empty ? 'bg-stone-50/40 opacity-70 hover:opacity-100' : 'hover:bg-amber-50/30 dark:hover:bg-amber-950/10',
-                                    row.error && 'bg-red-50/60 dark:bg-red-950/20'
+                                    empty ? 'bg-[var(--wv-cotton-100)]/40 opacity-70 hover:opacity-100' : 'hover:bg-[var(--wv-cotton-100)]',
+                                    row.error && 'bg-[var(--wv-madder-50)]/60'
                                 )}
                             >
-                                <div className="text-center font-mono text-xs text-stone-400">
+                                <div className="text-center font-mono text-xs text-[var(--wv-cotton-500)]">
                                     {rowIndex + 1}
                                 </div>
 
@@ -214,7 +214,7 @@ export function BulkEntryGrid<T extends { id: string; error?: string }>({
                                         return (
                                             <div key={String(col.key)} className="relative flex items-center">
                                                 {col.prefix && (
-                                                    <span className="pointer-events-none absolute left-2 text-xs text-stone-400">
+                                                    <span className="pointer-events-none absolute left-2 text-xs text-[var(--wv-cotton-500)]">
                                                         {col.prefix}
                                                     </span>
                                                 )}
@@ -234,9 +234,9 @@ export function BulkEntryGrid<T extends { id: string; error?: string }>({
                                                     onKeyDown={e => handleKeyDown(e, rowIndex, colIndex, row.id)}
                                                     onPaste={e => handlePaste(e, rowIndex)}
                                                     className={cn(
-                                                        'h-9 w-full rounded-md border border-stone-200 bg-white px-2.5 text-sm text-stone-900 transition-all placeholder:text-stone-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100 dark:placeholder:text-stone-500',
+                                                        'h-9 w-full rounded-md border border-[var(--wv-cotton-400)] bg-white px-2.5 text-sm text-[var(--wv-neel-900)] transition-all placeholder:text-[var(--wv-cotton-500)] focus:border-[var(--wv-brand-accent-strong)] focus:outline-none focus:ring-1 focus:ring-[var(--wv-brand-accent-strong)]',
                                                         col.prefix && 'pl-6',
-                                                        row.error && 'border-red-400 focus:border-red-500 focus:ring-red-500'
+                                                        row.error && 'border-[var(--wv-madder-600)] focus:border-[var(--wv-madder-600)] focus:ring-[var(--wv-madder-600)]'
                                                     )}
                                                 />
                                             </div>
@@ -250,7 +250,7 @@ export function BulkEntryGrid<T extends { id: string; error?: string }>({
                                             type="button"
                                             onClick={() => handleDeleteRow(rowIndex)}
                                             title={tx(`Remove ${entityName}`)}
-                                            className="rounded p-1 text-stone-300 opacity-0 transition hover:bg-stone-100 hover:text-red-600 group-hover:opacity-100 focus:opacity-100 dark:text-stone-600 dark:hover:bg-stone-800 dark:hover:text-red-400"
+                                            className="rounded p-1 text-[var(--wv-cotton-400)] opacity-0 transition hover:bg-[var(--wv-cotton-200)] hover:text-[var(--wv-madder-600)] group-hover:opacity-100 focus:opacity-100"
                                         >
                                             <Trash2 className="h-4 w-4" />
                                         </button>
@@ -258,7 +258,7 @@ export function BulkEntryGrid<T extends { id: string; error?: string }>({
                                 </div>
 
                                 {row.error && (
-                                    <div className="col-span-3 mt-1 flex items-center gap-1.5 px-2 text-xs text-red-600 dark:text-red-400">
+                                    <div className="col-span-3 mt-1 flex items-center gap-1.5 px-2 text-xs text-[var(--wv-madder-600)]">
                                         <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                                         <span>{row.error}</span>
                                     </div>

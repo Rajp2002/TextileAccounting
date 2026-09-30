@@ -176,7 +176,7 @@ function OwnerSidebarLoading() {
         <>
             <aside data-workspace-sidebar="true"
                 aria-hidden="true"
-                className="hidden md:fixed md:inset-y-0 md:z-30 md:flex md:w-[248px] md:flex-col border-r border-white/10 bg-[#111111]"
+                className="hidden md:fixed md:inset-y-0 md:z-30 md:flex md:w-[248px] md:flex-col border-r border-white/10 bg-[var(--wv-bg-inverse)]"
             >
                 <div className="border-b border-white/10 px-4 py-5">
                     <div className="mx-auto h-20 w-44 rounded-lg bg-white/[0.06]" />

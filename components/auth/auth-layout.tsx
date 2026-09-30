@@ -18,16 +18,16 @@ export default function AuthLayout({ children, title, subtitle }: AuthLayoutProp
         <div className="relative isolate flex min-h-[100svh] w-full items-center justify-center overflow-hidden bg-background px-3 py-[calc(1rem+env(safe-area-inset-top,0px))] pb-[calc(1rem+env(safe-area-inset-bottom,0px))] xs:p-4">
             <BrandBackground variant="auth" />
             <div className="absolute right-3 top-[calc(0.75rem+env(safe-area-inset-top,0px))] z-20 xs:right-4">
-                <LanguageSwitcher placement="bottom" className="bg-surface/80 text-ink shadow-sm backdrop-blur hover:bg-surface" />
+                <LanguageSwitcher placement="bottom" className="border border-[var(--wv-border-subtle)] bg-surface text-ink shadow-sm hover:border-[var(--wv-border-control)]" />
             </div>
 
             {/* Keep auth content visible in server HTML, before hydration. */}
             <div className="relative z-10 w-full max-w-[440px]">
-                <div className="overflow-hidden rounded-2xl border border-hairline bg-surface/88 shadow-[var(--shadow-panel)] backdrop-blur-xl">
+                <div className="overflow-hidden rounded-2xl border border-[var(--wv-border-default)] bg-surface shadow-[var(--shadow-panel)]">
                     <div className="p-5 pb-3 text-center xs:p-6 xs:pb-4 sm:p-8 sm:pb-4">
                         {/* App Logo */}
                         <div className="mx-auto mb-2 h-24 w-40 relative flex items-center justify-center group cursor-default">
-                            <div className="relative h-full w-full">
+                            <div data-weavly-intro-target="app-login" className="relative h-full w-full">
                                 <Image src="/images/WeavlyLogo.png" alt="Weavly Logo" fill sizes="10rem" className="object-contain transition-transform group-hover:scale-105 duration-500" priority />
                             </div>
                         </div>

@@ -376,7 +376,7 @@ describe('Base Production Core boundary contracts', () => {
         expect(assignments).toContain('<MachineTypeFilters')
         expect(assignments).not.toContain('placeholder="Search machines"')
         expect(assignments).toContain('Assignment workspace view')
-        expect(assignments).toContain("mobileView === 'machines'")
+        expect(assignments).toContain('value={mobileView}')
         expect(dailySheet).toContain('aria-controls="base-payroll-rollup"')
         expect(dailySheet).toContain("isPayrollExpanded ? 'block' : 'hidden'")
         expect(dailySheet).toContain('assignedWorkers.map')

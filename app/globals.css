@@ -84,117 +84,347 @@
   --color-info-soft: var(--weavly-info-soft);
   --breakpoint-xs: 340px;
   --breakpoint-folding: 280px;
+
+  /* Weavly Primitives */
+  --color-wv-cotton-0: var(--wv-cotton-0);
+  --color-wv-cotton-100: var(--wv-cotton-100);
+  --color-wv-cotton-200: var(--wv-cotton-200);
+  --color-wv-cotton-300: var(--wv-cotton-300);
+  --color-wv-cotton-400: var(--wv-cotton-400);
+  --color-wv-cotton-500: var(--wv-cotton-500);
+
+  --color-wv-neel-50: var(--wv-neel-50);
+  --color-wv-neel-200: var(--wv-neel-200);
+  --color-wv-neel-300: var(--wv-neel-300);
+  --color-wv-neel-500: var(--wv-neel-500);
+  --color-wv-neel-600: var(--wv-neel-600);
+  --color-wv-neel-700: var(--wv-neel-700);
+  --color-wv-neel-900: var(--wv-neel-900);
+  --color-wv-neel-950: var(--wv-neel-950);
+
+  --color-wv-saffron-50: var(--wv-saffron-50);
+  --color-wv-saffron-200: var(--wv-saffron-200);
+  --color-wv-saffron-500: var(--wv-saffron-500);
+  --color-wv-saffron-600: var(--wv-saffron-600);
+  --color-wv-saffron-700: var(--wv-saffron-700);
+
+  --color-wv-moss-50: var(--wv-moss-50);
+  --color-wv-moss-200: var(--wv-moss-200);
+  --color-wv-moss-700: var(--wv-moss-700);
+
+  --color-wv-ochre-50: var(--wv-ochre-50);
+  --color-wv-ochre-200: var(--wv-ochre-200);
+  --color-wv-ochre-400: var(--wv-ochre-400);
+  --color-wv-ochre-800: var(--wv-ochre-800);
+
+  --color-wv-madder-50: var(--wv-madder-50);
+  --color-wv-madder-200: var(--wv-madder-200);
+  --color-wv-madder-600: var(--wv-madder-600);
+
+  --color-wv-lagoon-50: var(--wv-lagoon-50);
+  --color-wv-lagoon-200: var(--wv-lagoon-200);
+  --color-wv-lagoon-700: var(--wv-lagoon-700);
+
+  --color-wv-stone-400: var(--wv-stone-400);
+  --color-wv-disabled: var(--wv-disabled);
+  --color-wv-viz-teal: var(--wv-viz-teal);
+
+  /* Weavly Semantic Surfaces */
+  --color-wv-bg-canvas: var(--wv-bg-canvas);
+  --color-wv-bg-surface: var(--wv-bg-surface);
+  --color-wv-bg-subtle: var(--wv-bg-subtle);
+  --color-wv-bg-selected: var(--wv-bg-selected);
+  --color-wv-bg-brand-soft: var(--wv-bg-brand-soft);
+  --color-wv-bg-inverse: var(--wv-bg-inverse);
+  --color-wv-bg-inverse-raised: var(--wv-bg-inverse-raised);
+
+  /* Weavly Semantic Text */
+  --color-wv-text-primary: var(--wv-text-primary);
+  --color-wv-text-body: var(--wv-text-body);
+  --color-wv-text-secondary: var(--wv-text-secondary);
+  --color-wv-text-disabled: var(--wv-text-disabled);
+  --color-wv-text-inverse: var(--wv-text-inverse);
+  --color-wv-text-inverse-secondary: var(--wv-text-inverse-secondary);
+  --color-wv-text-brand: var(--wv-text-brand);
+  --color-wv-text-brand-on-inverse: var(--wv-text-brand-on-inverse);
+  --color-wv-text-link: var(--wv-text-link);
+  --color-wv-text-on-action: var(--wv-text-on-action);
+  --color-wv-text-on-accent: var(--wv-text-on-accent);
+
+  /* Weavly Semantic Borders */
+  --color-wv-border-subtle: var(--wv-border-subtle);
+  --color-wv-border-default: var(--wv-border-default);
+  --color-wv-border-control: var(--wv-border-control);
+  --color-wv-border-strong: var(--wv-border-strong);
+  --color-wv-border-inverse: var(--wv-border-inverse);
+  --color-wv-border-focus: var(--wv-border-focus);
+  --color-wv-border-focus-inverse: var(--wv-border-focus-inverse);
+
+  /* Weavly Semantic Actions */
+  --color-wv-action-primary: var(--wv-action-primary);
+  --color-wv-action-primary-hover: var(--wv-action-primary-hover);
+  --color-wv-action-primary-active: var(--wv-action-primary-active);
+  --color-wv-action-accent: var(--wv-action-accent);
+  --color-wv-action-accent-hover: var(--wv-action-accent-hover);
+  --color-wv-action-destructive: var(--wv-action-destructive);
+  --color-wv-action-selected-marker: var(--wv-action-selected-marker);
+
+  /* Weavly Brand & Status */
+  --color-wv-brand-accent: var(--wv-brand-accent);
+  --color-wv-brand-accent-strong: var(--wv-brand-accent-strong);
+  --color-wv-brand-ink: var(--wv-brand-ink);
+  --color-wv-brand-loom: var(--wv-brand-loom);
+
+  --color-wv-status-success-fg: var(--wv-status-success-fg);
+  --color-wv-status-success-bg: var(--wv-status-success-bg);
+  --color-wv-status-success-border: var(--wv-status-success-border);
+  --color-wv-status-success-solid: var(--wv-status-success-solid);
+
+  --color-wv-status-warning-fg: var(--wv-status-warning-fg);
+  --color-wv-status-warning-bg: var(--wv-status-warning-bg);
+  --color-wv-status-warning-border: var(--wv-status-warning-border);
+  --color-wv-status-warning-solid: var(--wv-status-warning-solid);
+
+  --color-wv-status-danger-fg: var(--wv-status-danger-fg);
+  --color-wv-status-danger-bg: var(--wv-status-danger-bg);
+  --color-wv-status-danger-border: var(--wv-status-danger-border);
+  --color-wv-status-danger-solid: var(--wv-status-danger-solid);
+
+  --color-wv-status-info-fg: var(--wv-status-info-fg);
+  --color-wv-status-info-bg: var(--wv-status-info-bg);
+  --color-wv-status-info-border: var(--wv-status-info-border);
+  --color-wv-status-info-solid: var(--wv-status-info-solid);
 }
 
 :root {
   --radius: 0.625rem;
 
-  --color-primary: #1E2528;
-  --color-primary-active: #111719;
-  --color-canvas: #FFFDF7;
-  --color-canvas-white: #FFFFFF;
-  --color-surface-soft: #FAF3E4;
-  --color-surface-strong: #EAD8B8;
-  --color-ledger-cream: #F5E8CF;
-  --color-cotton-beige: #EFE1C5;
-  --color-loom-navy: #18252E;
-  --color-loom-navy-elevated: #22313A;
-  --color-hairline: #DED2BD;
-  --color-hairline-strong: #CBB894;
-  --color-ink: #1E2528;
+  /* ── Weavly Color System: Primitives (spec §C, §D, §E) ── */
+  --wv-cotton-0: #FFFFFF;
+  --wv-cotton-100: #F4F2EC;
+  --wv-cotton-200: #E9E6DD;
+  --wv-cotton-300: #D9D5CA;
+  --wv-cotton-400: #B5AFA1;
+  --wv-cotton-500: #8A867C;
+
+  --wv-neel-50: #EEF0F6;
+  --wv-neel-200: #C9D0E4;
+  --wv-neel-300: #A9B0C4;
+  --wv-neel-500: #535A6D;
+  --wv-neel-600: #34487A;
+  --wv-neel-700: #28324D;
+  --wv-neel-900: #16213E;
+  --wv-neel-950: #101A33;
+
+  --wv-saffron-50: #FCF1E7;
+  --wv-saffron-200: #F0CFB2;
+  --wv-saffron-500: #E8762A;
+  --wv-saffron-600: #DA6912;
+  --wv-saffron-700: #A8430E;
+
+  --wv-moss-50: #E1F0E5;
+  --wv-moss-200: #AED6B8;
+  --wv-moss-700: #2F6B43;
+
+  --wv-ochre-50: #F7E8C2;
+  --wv-ochre-200: #E1C88E;
+  --wv-ochre-400: #D9A441;
+  --wv-ochre-800: #755900;
+
+  --wv-madder-50: #FFE6E6;
+  --wv-madder-200: #EFBBBD;
+  --wv-madder-600: #AC1637;
+
+  --wv-lagoon-50: #DDEAF0;
+  --wv-lagoon-200: #B4CFE2;
+  --wv-lagoon-700: #315C78;
+
+  --wv-stone-400: #A39D8F;
+  --wv-disabled: #8A8F9C;
+  --wv-viz-teal: #29706C;
+
+  /* ── Weavly Color System: Semantic Tokens (spec §K) ── */
+  --wv-bg-canvas: var(--wv-cotton-100);
+  --wv-bg-surface: var(--wv-cotton-0);
+  --wv-bg-subtle: var(--wv-cotton-200);
+  --wv-bg-selected: var(--wv-neel-50);
+  --wv-bg-brand-soft: var(--wv-saffron-50);
+  --wv-bg-inverse: var(--wv-neel-950);
+  --wv-bg-inverse-raised: var(--wv-neel-900);
+
+  --wv-text-primary: var(--wv-neel-900);
+  --wv-text-body: var(--wv-neel-700);
+  --wv-text-secondary: var(--wv-neel-500);
+  --wv-text-disabled: var(--wv-disabled);
+  --wv-text-inverse: var(--wv-neel-50);
+  --wv-text-inverse-secondary: var(--wv-neel-300);
+  --wv-text-brand: var(--wv-saffron-700);
+  --wv-text-brand-on-inverse: var(--wv-saffron-500);
+  --wv-text-link: var(--wv-neel-900);
+  --wv-text-on-action: var(--wv-cotton-100);
+  --wv-text-on-accent: var(--wv-neel-900);
+
+  --wv-border-subtle: var(--wv-cotton-300);
+  --wv-border-default: var(--wv-cotton-400);
+  --wv-border-control: var(--wv-cotton-500);
+  --wv-border-strong: var(--wv-neel-900);
+  --wv-border-inverse: var(--wv-neel-700);
+  --wv-border-focus: var(--wv-saffron-700);
+  --wv-border-focus-inverse: var(--wv-saffron-500);
+
+  --wv-action-primary: var(--wv-neel-900);
+  --wv-action-primary-hover: var(--wv-neel-700);
+  --wv-action-primary-active: var(--wv-neel-950);
+  --wv-action-accent: var(--wv-saffron-500);
+  --wv-action-accent-hover: var(--wv-saffron-600);
+  --wv-action-destructive: var(--wv-madder-600);
+  --wv-action-selected-marker: var(--wv-saffron-500);
+
+  --wv-brand-accent: var(--wv-saffron-500);
+  --wv-brand-accent-strong: var(--wv-saffron-700);
+  --wv-brand-ink: var(--wv-neel-900);
+  --wv-brand-loom: var(--wv-neel-950);
+
+  --wv-status-success-fg: var(--wv-moss-700);
+  --wv-status-success-bg: var(--wv-moss-50);
+  --wv-status-success-border: var(--wv-moss-200);
+  --wv-status-success-solid: var(--wv-moss-700);
+
+  --wv-status-warning-fg: var(--wv-ochre-800);
+  --wv-status-warning-bg: var(--wv-ochre-50);
+  --wv-status-warning-border: var(--wv-ochre-200);
+  --wv-status-warning-solid: var(--wv-ochre-400);
+
+  --wv-status-danger-fg: var(--wv-madder-600);
+  --wv-status-danger-bg: var(--wv-madder-50);
+  --wv-status-danger-border: var(--wv-madder-200);
+  --wv-status-danger-solid: var(--wv-madder-600);
+
+  --wv-status-info-fg: var(--wv-lagoon-700);
+  --wv-status-info-bg: var(--wv-lagoon-50);
+  --wv-status-info-border: var(--wv-lagoon-200);
+  --wv-status-info-solid: var(--wv-lagoon-700);
+
+  --wv-viz-1: var(--wv-neel-600);
+  --wv-viz-2: var(--wv-ochre-400);
+  --wv-viz-3: var(--wv-saffron-700);
+  --wv-viz-4: var(--wv-stone-400);
+  --wv-viz-5: var(--wv-viz-teal);
+  --wv-viz-highlight: var(--wv-saffron-500);
+  --wv-viz-muted: var(--wv-stone-400);
+
+  /* ── Re-pointed variables (spec §K migration mapping) ── */
+  --color-primary: var(--wv-action-primary);
+  --color-primary-active: var(--wv-action-primary-active);
+  --color-canvas: var(--wv-bg-canvas);
+  --color-canvas-white: var(--wv-bg-surface);
+  --color-surface-soft: var(--wv-bg-subtle);
+  --color-surface-strong: var(--wv-cotton-300);
+  --color-ledger-cream: var(--wv-cotton-200);
+  --color-cotton-beige: var(--wv-cotton-300);
+  --color-loom-navy: var(--wv-bg-inverse);
+  --color-loom-navy-elevated: var(--wv-neel-700);
+  --color-hairline: var(--wv-border-subtle);
+  --color-hairline-strong: var(--wv-border-control);
+  --color-ink: var(--wv-text-primary);
   /* Secondary text steps down from ink but stays at AAA contrast (≥ 7:1)
      on the warm canvas, so hierarchy never costs legibility. */
-  --color-body: #2C3331;
-  --color-muted: #454C48;
-  --color-subtle: #4B5350;
-  /* Hints must read as hints, never as an entered value (4.9:1 on white). */
-  --color-placeholder: #6E7269;
-  --color-yarn-orange: #D96B1C;
-  --color-yarn-orange-dark: #9E4212;
-  --color-factory-green: #285C3B;
-  --color-factory-green-soft: #E1F0E5;
-  --color-warning-amber: #C98A13;
-  --color-warning-amber-soft: #F7E8C2;
-  --color-risk-red: #A6402D;
-  --color-risk-red-soft: #F2D8D1;
-  --color-info-blue: #315C78;
-  --color-info-blue-soft: #DDEAF0;
+  --color-body: var(--wv-text-body);
+  --color-muted: var(--wv-text-secondary);
+  --color-subtle: var(--wv-text-secondary);
+  /* Hints must read as hints, never as an entered value. */
+  --color-placeholder: var(--wv-cotton-500);
 
-  --weavly-primary: #1E2528;
-  --weavly-primary-active: #111719;
-  --weavly-saffron: #E27025;
-  --weavly-saffron-deep: #A94713;
-  --weavly-saffron-soft: #F9DFC8;
-  --weavly-amber-gold: #F59E0B;
+  /* Compatibility aliases still used by estimator surfaces. Keep every value
+     on the canonical palette; yarn-orange is the readable saffron step. */
+  --color-yarn-orange: var(--wv-saffron-700);
+  --color-yarn-orange-dark: var(--wv-saffron-700);
+  --color-factory-green: var(--wv-status-success-fg);
+  --color-factory-green-soft: var(--wv-status-success-bg);
+  --color-warning-amber: var(--wv-status-warning-fg);
+  --color-warning-amber-soft: var(--wv-status-warning-bg);
+  --color-risk-red: var(--wv-status-danger-fg);
+  --color-risk-red-soft: var(--wv-status-danger-bg);
+  --color-info-blue: var(--wv-status-info-fg);
+  --color-info-blue-soft: var(--wv-status-info-bg);
 
-  --weavly-app-bg: #FFF8EA;
-  --weavly-canvas: #FFFDF7;
-  --weavly-surface: #FFFFFF;
-  --weavly-surface-soft: #FAF1E2;
-  --weavly-surface-muted: #F0DFC2;
-  --weavly-ledger-cream: #F6E8CF;
-  --weavly-cotton-beige: #EAD8B8;
-  --weavly-loom-navy: #18252E;
-  --weavly-loom-navy-elevated: #22313A;
+  --weavly-primary: var(--wv-action-primary);
+  --weavly-primary-active: var(--wv-action-primary-active);
+  --weavly-saffron: var(--wv-brand-accent);
+  --weavly-saffron-deep: var(--wv-brand-accent-strong);
+  --weavly-saffron-soft: var(--wv-bg-brand-soft);
+  --weavly-amber-gold: var(--wv-ochre-400);
 
-  --weavly-ink: #1E2528;
-  --weavly-body: #2C3331;
-  --weavly-muted: #454C48;
-  --weavly-subtle: #4B5350;
+  --weavly-app-bg: var(--wv-bg-canvas);
+  --weavly-canvas: var(--wv-bg-canvas);
+  --weavly-surface: var(--wv-bg-surface);
+  --weavly-surface-soft: var(--wv-bg-subtle);
+  --weavly-surface-muted: var(--wv-cotton-300);
+  --weavly-ledger-cream: var(--wv-cotton-200);
+  --weavly-cotton-beige: var(--wv-cotton-300);
+  --weavly-loom-navy: var(--wv-bg-inverse);
+  --weavly-loom-navy-elevated: var(--wv-neel-700);
 
-  --weavly-hairline: #DED2BD;
-  --weavly-hairline-strong: #CBB894;
-  --weavly-focus-ring: #E27025;
+  --weavly-ink: var(--wv-text-primary);
+  --weavly-body: var(--wv-text-body);
+  --weavly-muted: var(--wv-text-secondary);
+  --weavly-subtle: var(--wv-text-secondary);
 
-  --weavly-success: #2F6B43;
-  --weavly-success-soft: #E1F0E5;
-  --weavly-warning: #B87908;
-  --weavly-warning-soft: #F7E8C2;
-  --weavly-risk: #A6402D;
-  --weavly-risk-soft: #F2D8D1;
-  --weavly-info: #315C78;
-  --weavly-info-soft: #DDEAF0;
+  --weavly-hairline: var(--wv-border-subtle);
+  --weavly-hairline-strong: var(--wv-border-control);
+  --weavly-focus-ring: var(--wv-border-focus);
 
-  --shadow-card: 0 1px 2px rgba(30, 37, 40, 0.05), 0 8px 24px rgba(30, 37, 40, 0.04);
-  --shadow-panel: 0 12px 32px rgba(30, 37, 40, 0.08);
-  --shadow-modal: 0 20px 64px rgba(30, 37, 40, 0.18);
-  --shadow-button: 0 1px 2px rgba(30, 37, 40, 0.16);
+  --weavly-success: var(--wv-status-success-fg);
+  --weavly-success-soft: var(--wv-status-success-bg);
+  --weavly-warning: var(--wv-status-warning-fg);
+  --weavly-warning-soft: var(--wv-status-warning-bg);
+  --weavly-risk: var(--wv-status-danger-fg);
+  --weavly-risk-soft: var(--wv-status-danger-bg);
+  --weavly-info: var(--wv-status-info-fg);
+  --weavly-info-soft: var(--wv-status-info-bg);
 
-  --background: var(--weavly-app-bg);
-  --foreground: var(--weavly-ink);
-  --card: var(--weavly-surface);
-  --card-foreground: var(--weavly-ink);
-  --popover: var(--weavly-surface);
-  --popover-foreground: var(--weavly-ink);
-  --primary: var(--weavly-primary);
-  --primary-foreground: #FFFFFF;
-  --color-primary-active: var(--weavly-primary-active);
-  --secondary: var(--weavly-surface-soft);
-  --secondary-foreground: var(--weavly-ink);
-  --muted: var(--weavly-surface-soft);
-  --muted-foreground: var(--weavly-muted);
-  --accent: var(--weavly-saffron-soft);
-  --accent-foreground: var(--weavly-saffron-deep);
-  --destructive: var(--weavly-risk);
-  --border: var(--weavly-hairline);
-  --input: var(--weavly-hairline);
-  --ring: var(--weavly-focus-ring);
-  --brand-accent: var(--weavly-saffron);
+  --ease-liquid: linear(0, 0.18 5%, 0.58 12%, 0.9 20%, 1.05 28%, 1.07 34%, 1.03 44%, 0.995 58%, 1);
 
-  --chart-1: var(--weavly-saffron);
-  --chart-2: var(--weavly-success);
-  --chart-3: var(--weavly-warning);
-  --chart-4: var(--weavly-info);
-  --chart-5: var(--weavly-risk);
+  --shadow-card: 0 1px 0 rgba(22, 33, 62, 0.04), 0 18px 40px -24px rgba(22, 33, 62, 0.3);
+  --shadow-panel: 0 1px 0 rgba(22, 33, 62, 0.06), 0 24px 48px -24px rgba(22, 33, 62, 0.35);
+  --shadow-modal: 0 20px 64px rgba(22, 33, 62, 0.22);
+  --shadow-button: 0 1px 2px rgba(22, 33, 62, 0.16);
 
-  --sidebar: rgba(255, 253, 247, 0.82);
-  --sidebar-foreground: var(--weavly-body);
-  --sidebar-primary: var(--weavly-saffron);
-  --sidebar-primary-foreground: var(--weavly-saffron-deep);
-  --sidebar-accent: var(--weavly-saffron-soft);
-  --sidebar-accent-foreground: var(--weavly-ink);
-  --sidebar-border: var(--weavly-hairline);
-  --sidebar-ring: var(--weavly-focus-ring);
+  --background: var(--wv-bg-canvas);
+  --foreground: var(--wv-text-primary);
+  --card: var(--wv-bg-surface);
+  --card-foreground: var(--wv-text-primary);
+  --popover: var(--wv-bg-surface);
+  --popover-foreground: var(--wv-text-primary);
+  --primary: var(--wv-action-primary);
+  --primary-foreground: var(--wv-text-on-action);
+  --color-primary-active: var(--wv-action-primary-active);
+  --secondary: var(--wv-bg-subtle);
+  --secondary-foreground: var(--wv-text-primary);
+  --muted: var(--wv-bg-subtle);
+  --muted-foreground: var(--wv-text-secondary);
+  --accent: var(--wv-bg-brand-soft);
+  --accent-foreground: var(--wv-text-brand);
+  --destructive: var(--wv-action-destructive);
+  --border: var(--wv-border-default);
+  --input: var(--wv-border-control);
+  --ring: var(--wv-border-focus);
+  --brand-accent: var(--wv-brand-accent);
+
+  --chart-1: var(--wv-brand-accent);
+  --chart-2: var(--wv-status-success-fg);
+  --chart-3: var(--wv-status-warning-solid);
+  --chart-4: var(--wv-status-info-fg);
+  --chart-5: var(--wv-status-danger-fg);
+
+  --sidebar: rgba(244, 242, 236, 0.92);
+  --sidebar-foreground: var(--wv-text-body);
+  --sidebar-primary: var(--wv-brand-accent);
+  --sidebar-primary-foreground: var(--wv-brand-accent-strong);
+  --sidebar-accent: var(--wv-bg-brand-soft);
+  --sidebar-accent-foreground: var(--wv-text-primary);
+  --sidebar-border: var(--wv-border-subtle);
+  --sidebar-ring: var(--wv-border-focus);
 
   /* Navigation Disclosure Animation Tokens */
   --nav-disclosure-expand-duration: 180ms;
@@ -282,7 +512,7 @@
   }
 
   ::selection {
-    background: rgba(226, 112, 37, 0.18);
+    background: var(--wv-bg-selected);
     color: var(--color-ink);
   }
 
@@ -305,22 +535,6 @@
 }
 
 @layer utilities {
-  /* Keep light-theme helper text readable everywhere, including pages that
-     use raw Tailwind grey/slate/zinc utilities instead of semantic tokens. */
-  :root:not(.dark) :where(
-    [class*="text-slate-300"],
-    [class*="text-slate-400"],
-    [class*="text-slate-500"],
-    [class*="text-gray-300"],
-    [class*="text-gray-400"],
-    [class*="text-gray-500"],
-    [class*="text-zinc-300"],
-    [class*="text-zinc-400"],
-    [class*="text-zinc-500"]
-  ) {
-    color: var(--color-muted);
-  }
-
   /* Preserve light text when a dark navigation, solid modal, or summary panel is
      the reading surface. Modal backdrops and overlays (e.g. fixed inset-0, backdrop-blur)
      are excluded so light dialog cards nested inside them keep high-contrast dark text.
@@ -328,120 +542,119 @@
   :root:not(.dark) :is(
     [class*="bg-[#111111]"],
     [class*="bg-black"],
-    [class*="bg-slate-900"],
-    [class*="bg-slate-950"],
-    [class*="bg-zinc-900"],
-    [class*="bg-zinc-950"],
     [class~="bg-loom"],
     [class~="bg-loom-elevated"]
   ):not([class*="fixed inset-0"]):not([class*="backdrop-blur"]):not([data-slot="dialog-overlay"]):not([data-slot="sheet-overlay"]) :is(
     [class*="text-muted-foreground"],
     [class*="text-body"],
     [class*="text-subtle"],
-    [class~="text-muted"],
-    [class*="text-slate-300"],
-    [class*="text-slate-400"],
-    [class*="text-slate-500"],
-    [class*="text-gray-300"],
-    [class*="text-gray-400"],
-    [class*="text-gray-500"],
-    [class*="text-zinc-300"],
-    [class*="text-zinc-400"],
-    [class*="text-zinc-500"]
+    [class~="text-muted"]
   ) {
-    color: #CBD5E1;
+    color: var(--wv-text-inverse-secondary);
   }
 
   /* When a light reading surface (card, modal, dialog, sheet) appears inside
-     a dark overlay or backdrop (such as bg-slate-900/60 or bg-black/60), ensure
+     a dark overlay or backdrop (such as bg-black/60), ensure
      text inside the light surface remains crisp, dark and clearly readable. */
   :root:not(.dark) :is(
     [class*="bg-[#111111]"],
     [class*="bg-black"],
-    [class*="bg-slate-900"],
-    [class*="bg-slate-950"],
-    [class*="bg-zinc-900"],
-    [class*="bg-zinc-950"],
     [class~="bg-loom"],
     [class~="bg-loom-elevated"]
   ) :is(
     [class*="bg-white"],
     [class*="bg-surface"],
     [class*="bg-card"],
-    [class*="bg-background"],
-    [class*="bg-slate-50"],
-    [class*="bg-slate-100"]
+    [class*="bg-background"]
   ) :is(
     [class*="text-muted-foreground"],
     [class*="text-body"],
     [class*="text-subtle"],
-    [class~="text-muted"],
-    [class*="text-slate-300"],
-    [class*="text-slate-400"],
-    [class*="text-slate-500"],
-    [class*="text-slate-600"],
-    [class*="text-gray-300"],
-    [class*="text-gray-400"],
-    [class*="text-gray-500"],
-    [class*="text-zinc-300"],
-    [class*="text-zinc-400"],
-    [class*="text-zinc-500"]
+    [class~="text-muted"]
   ),
   :root:not(.dark) :is(
     [class*="bg-[#111111]"],
     [class*="bg-black"],
-    [class*="bg-slate-900"],
-    [class*="bg-slate-950"],
-    [class*="bg-zinc-900"],
-    [class*="bg-zinc-950"],
     [class~="bg-loom"],
     [class~="bg-loom-elevated"]
   ) :is(
     [class*="bg-white"],
     [class*="bg-surface"],
     [class*="bg-card"],
-    [class*="bg-background"],
-    [class*="bg-slate-50"],
-    [class*="bg-slate-100"]
+    [class*="bg-background"]
   ):is(
     [class*="text-muted-foreground"],
     [class*="text-body"],
     [class*="text-subtle"],
-    [class~="text-muted"],
-    [class*="text-slate-300"],
-    [class*="text-slate-400"],
-    [class*="text-slate-500"],
-    [class*="text-slate-600"],
-    [class*="text-gray-300"],
-    [class*="text-gray-400"],
-    [class*="text-gray-500"],
-    [class*="text-zinc-300"],
-    [class*="text-zinc-400"],
-    [class*="text-zinc-500"]
+    [class~="text-muted"]
   ) {
-    color: #475569;
+    color: var(--wv-text-secondary);
   }
 
-  /* Landing-page sections become discrete slides on roomy desktop viewports.
-     Small and short screens keep natural document flow so content is never clipped. */
-  .landing-section {
-    min-height: 100svh;
+  /* Woven brand intro (components/intro). Hidden unless the pre-paint script chose to
+     play it, so the first paint is right either way: black stage, or the page itself. */
+  .weavly-intro,
+  .weavly-intro-skip {
+    display: none;
   }
 
-  @media (min-width: 1024px) and (min-height: 760px) {
-    .landing-section {
-      display: flex;
-      min-height: 100svh;
-      align-items: center;
-      scroll-snap-align: start;
-      scroll-snap-stop: always;
-    }
+  html[data-weavly-intro="landing"] .weavly-intro[data-surface="landing"],
+  html[data-weavly-intro="app-login"] .weavly-intro[data-surface="app-login"] {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    overflow: hidden;
+    background: #000;
+    touch-action: none;
+  }
 
-    .landing-scroll {
-      scroll-snap-type: y mandatory !important;
-      scroll-padding-top: 7rem;
-      overscroll-behavior-y: contain;
-    }
+  html[data-weavly-intro="landing"] .weavly-intro-skip[data-surface="landing"],
+  html[data-weavly-intro="app-login"] .weavly-intro-skip[data-surface="app-login"] {
+    position: fixed;
+    right: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    z-index: 101;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 16px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.35);
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 13px;
+    font-weight: 500;
+    transition: color 200ms ease, background-color 200ms ease, border-color 200ms ease;
+  }
+
+  html[data-weavly-intro] .weavly-intro-skip[data-tone="light"] {
+    border-color: var(--color-hairline);
+    background: rgba(255, 255, 255, 0.6);
+    color: var(--color-ink);
+  }
+
+  html[data-weavly-intro] .weavly-intro-skip:focus-visible {
+    outline: 2px solid var(--weavly-focus-ring);
+    outline-offset: 2px;
+  }
+
+  html[data-weavly-intro-leaving] .weavly-intro,
+  html[data-weavly-intro-leaving] .weavly-intro-skip {
+    opacity: 0;
+    transition: opacity 180ms ease;
+  }
+
+  html[data-weavly-intro] body,
+  html[data-weavly-intro] .landing-scroll {
+    overflow: hidden;
+  }
+
+  html[data-weavly-intro] .animate-blob-drift-1,
+  html[data-weavly-intro] .animate-blob-drift-2,
+  html[data-weavly-intro] .animate-blob-drift-3,
+  html[data-weavly-intro] .animate-blob-drift-4 {
+    animation-play-state: paused;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -454,27 +667,10 @@
 
   .weavly-app-bg {
     background-color: var(--color-app-bg);
-    background-image:
-      radial-gradient(ellipse 38% 32% at 12% 8%, rgba(194, 65, 12, 0.30), rgba(194, 65, 12, 0.10) 30%, transparent 62%),
-      radial-gradient(ellipse 34% 30% at 88% 18%, rgba(234, 88, 12, 0.26), rgba(234, 88, 12, 0.09) 28%, transparent 58%),
-      radial-gradient(ellipse 36% 34% at 72% 82%, rgba(194, 65, 12, 0.23), rgba(194, 65, 12, 0.08) 32%, transparent 64%),
-      linear-gradient(rgba(126, 91, 47, 0.045) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(126, 91, 47, 0.045) 1px, transparent 1px);
-    background-size:
-      auto,
-      auto,
-      auto,
-      36px 36px,
-      36px 36px;
   }
 
   .weavly-app-bg-machines {
-    background-image:
-      radial-gradient(ellipse 44% 32% at 52% -8%, rgba(226, 112, 37, 0.11), transparent 72%),
-      radial-gradient(ellipse 38% 36% at 86% 88%, rgba(226, 112, 37, 0.08), transparent 72%),
-      linear-gradient(rgba(126, 91, 47, 0.032) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(126, 91, 47, 0.032) 1px, transparent 1px);
-    background-size: auto, auto, 36px 36px, 36px 36px;
+    background-color: var(--color-app-bg);
   }
 
   .weavly-canvas {
@@ -494,8 +690,8 @@
   .bg-grid-pattern {
     background-size: 40px 40px;
     background-image:
-      linear-gradient(to right, rgba(126, 91, 47, 0.045) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(126, 91, 47, 0.045) 1px, transparent 1px);
+      linear-gradient(to right, color-mix(in srgb, var(--wv-text-body) 4.5%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in srgb, var(--wv-text-body) 4.5%, transparent) 1px, transparent 1px);
   }
 
   .settings-page-frame {
@@ -949,10 +1145,12 @@
       --rail-right: var(--rail-outer);
     }
 
-    /* Routes without a guide keep the wider two-column composition. */
+    /* Routes without a guide keep the wider two-column composition, but their
+       right rail sits at the same viewport offset as every other route. The
+       workspace stays in the content column and ends one rail gap before it. */
     .production-daily-sheet-workspace,
     .billing-workspace-shell {
-      margin-right: var(--rail-span);
+      margin-right: max(0px, calc(var(--rail-right) + var(--rail-span) - var(--main-inset)));
     }
 
     .estimator-workspace-shell,
@@ -967,11 +1165,6 @@
     .rates-workspace {
       width: min(100%, var(--workspace-w));
       margin-inline: auto;
-    }
-
-    .production-daily-sheet-rail,
-    .billing-right-rail {
-      right: var(--main-inset);
     }
 
     .estimator-left-rail,
@@ -1268,7 +1461,7 @@
     appearance: none;
     margin-top: -5px; /* (8px track height - 18px thumb height) / 2 = -5px */
     background-color: var(--color-yarn-orange);
-    border: 2px solid #FFFFFF;
+    border: 2px solid var(--wv-bg-surface);
     height: 18px;
     width: 18px;
     border-radius: 9999px;
@@ -1285,7 +1478,7 @@
 
   .modern-slider::-moz-range-thumb {
     background-color: var(--color-yarn-orange);
-    border: 2px solid #FFFFFF;
+    border: 2px solid var(--wv-bg-surface);
     height: 18px;
     width: 18px;
     border-radius: 9999px;
@@ -1415,7 +1608,7 @@
 @media (display-mode: standalone) {
   html, body {
     /* Match the manifest background_color exactly */
-    background-color: #FFF8EA;
+    background-color: var(--wv-bg-canvas);
   }
 
   /* Once the app shell has mounted and React takes over, transition back to
@@ -1608,4 +1801,25 @@ button[aria-expanded="true"] .nav-chevron {
 }
 @media (max-width: 767px), (max-height: 500px) and (pointer: coarse) {
   [data-configuration-picker-preview="true"] { top: 72px !important; left: 8px !important; width: calc(100vw - 16px) !important; max-height: calc(54dvh - 88px) !important; }
+}
+
+/* Spring pop shared by every modal (Dialog): scale + slight tilt on enter, quick shrink on exit.
+   Uses the individual `scale`/`rotate` properties so the centring `translate` is untouched. */
+@keyframes modal-spring-in {
+  from { opacity: 0; scale: var(--modal-enter-scale, 0.6); rotate: var(--modal-enter-rotate, 8deg); }
+  60% { opacity: 1; }
+  to { opacity: 1; scale: 1; rotate: 0deg; }
+}
+@keyframes modal-spring-out {
+  from { opacity: 1; scale: 1; }
+  to { opacity: 0; scale: var(--modal-exit-scale, 0.85); }
+}
+.modal-spring[data-state="open"] {
+  animation: modal-spring-in 420ms linear(0, 0.35 8%, 0.85 20%, 1.06 34%, 1.07 44%, 0.99 62%, 1.005 78%, 1) both;
+}
+.modal-spring[data-state="closed"] {
+  animation: modal-spring-out 160ms ease-in both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .modal-spring[data-state] { animation-duration: 0.01ms !important; }
 }

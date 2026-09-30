@@ -19,6 +19,7 @@ import {
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { SwitchField } from '@/components/ui/switch-field'
 import { railPrimaryAction } from '@/components/ui/rail'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
@@ -90,11 +91,7 @@ const CostingExportDialog = dynamic(
     { ssr: false, loading: () => null },
 )
 
-/* Source-regression fixture: historical tests reference the pre-tokenized costing/production panel markup. */
 /* Historical copy reference retained for source-regression coverage: expand a quality to review its costing history. */
-/* <section className="rounded-xl border border-slate-200 bg-white p-4">
-                                                <div className="flex flex-wrap items-start justify-between gap-3">
-<p className="text-sm font-black text-slate-950">{tx('Latest Saved Costing breakdown')}</p> */
 
 type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected'
 type QuoteDraftState = ReturnType<typeof makeDefaultEstimateState>
@@ -701,7 +698,7 @@ function SavedQualityLibraryView({
                                                         >
                                                             <div className="flex min-w-0 items-start gap-3">
                                                                 {comparisonMode && <span className="flex shrink-0 items-center gap-1.5 pt-0.5">
-                                                                    <input type="checkbox" checked={selected} onChange={() => onToggleComparison(record.id)} aria-label={`Select ${group.name} version ${Number(record.version_number ?? 1)} for comparison`} className="h-4 w-4 accent-blue-600" />
+                                                                    <input type="checkbox" checked={selected} onChange={() => onToggleComparison(record.id)} aria-label={`Select ${group.name} version ${Number(record.version_number ?? 1)} for comparison`} className="h-4 w-4 accent-loom" />
                                                                     {preparing && <Loader2 className="h-3.5 w-3.5 animate-spin text-info" aria-hidden="true" />}
                                                                 </span>}
                                                                 <div className="min-w-0 flex-1">
@@ -1259,29 +1256,29 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             {showCostingDeleteNudge && !tourStep && !demoCostingDeleted && quotes.length === 0 && initialTemplates.length === 0 && !searchQuery.trim() && !showArchived && ['all', 'costings', 'draft'].includes(filterStatus) && (
                 <div
                     role="status"
-                    className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50/90 p-3.5 text-sm text-amber-950 shadow-xs animate-in fade-in-0 duration-200"
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)]/90 p-3.5 text-sm text-[var(--wv-ochre-800)] shadow-xs animate-in fade-in-0 duration-200"
                 >
                     <div className="flex items-center gap-2.5">
-                        <Sparkles className="h-5 w-5 shrink-0 text-amber-700" aria-hidden="true" />
+                        <Sparkles className="h-5 w-5 shrink-0 text-[var(--wv-ochre-800)]" aria-hidden="true" />
                         <div>
-                            <p className="font-semibold text-amber-900">{tx('Guided tour completed!')}</p>
-                            <p className="text-xs text-amber-800/90">{tx('Explore exports with this sample costing, or delete it whenever you are ready to create your own costings.')}</p>
+                            <p className="font-semibold text-ink">{tx('Guided tour completed!')}</p>
+                            <p className="text-xs text-[var(--wv-ochre-800)]/90">{tx('Explore exports with this sample costing, or delete it whenever you are ready to create your own costings.')}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
                         <Button
                             size="sm"
                             variant="outline"
-                            className="border-amber-300 bg-white text-xs font-semibold text-amber-900 hover:bg-amber-100/70"
+                            className="border-[var(--wv-ochre-200)] bg-surface text-xs font-semibold text-[var(--wv-ochre-800)] hover:bg-[var(--wv-ochre-50)]"
                             onClick={handleDeleteDemoCosting}
                         >
-                            <Trash2 className="mr-1.5 h-3.5 w-3.5 text-amber-700" aria-hidden="true" />
+                            <Trash2 className="mr-1.5 h-3.5 w-3.5 text-[var(--wv-ochre-800)]" aria-hidden="true" />
                             {tx('Delete sample costing')}
                         </Button>
                         <Button
                             size="sm"
                             variant="ghost"
-                            className="text-xs text-amber-700 hover:text-amber-900"
+                            className="text-xs text-[var(--wv-ochre-800)] hover:text-ink"
                             onClick={() => setShowCostingDeleteNudge(false)}
                         >
                             {tx('Dismiss')}
@@ -1319,23 +1316,23 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                 </select>
                             </div>
                         </details>
-                        <Button
+                        <SwitchField
                             data-tour-anchor="costings.compare"
-                            variant={comparisonMode ? 'secondary' : 'outline'}
-                            onClick={() => { setComparisonMode(current => !current); setSelectedCostingIds([]) }}
-                            className="h-10 sm:h-11 rounded-xl"
-                            aria-pressed={comparisonMode}
+                            variant="pill"
+                            icon={<GitCompareArrows className="h-4 w-4" />}
+                            checked={comparisonMode}
+                            onCheckedChange={() => { setComparisonMode(current => !current); setSelectedCostingIds([]) }}
                         >
-                            <GitCompareArrows className="h-4 w-4" /> {comparisonMode ? tx('Done') : tx('Compare')}
-                        </Button>
-                        <Button
-                            variant={showFavoritesOnly ? 'secondary' : 'outline'}
-                            onClick={() => { setOpenQualityKey(null); setShowFavoritesOnly(current => !current); setSelectedCostingIds([]) }}
-                            className="h-10 sm:h-11 rounded-xl"
-                            aria-pressed={showFavoritesOnly}
+                            {tx('Compare')}
+                        </SwitchField>
+                        <SwitchField
+                            variant="pill"
+                            icon={<Star className={`h-4 w-4 ${showFavoritesOnly ? 'fill-current' : ''}`} />}
+                            checked={showFavoritesOnly}
+                            onCheckedChange={() => { setOpenQualityKey(null); setShowFavoritesOnly(current => !current); setSelectedCostingIds([]) }}
                         >
-                            <Star className={`h-4 w-4 ${showFavoritesOnly ? 'fill-current' : ''}`} /> {showFavoritesOnly ? 'All costings' : 'Favourites'}
-                        </Button>
+                            Favourites
+                        </SwitchField>
                         <Button variant={showArchived ? 'secondary' : 'outline'} onClick={() => { setOpenQualityKey(null); setShowArchived(current => !current); setSelectedCostingIds([]) }} className="h-10 sm:h-11 rounded-xl">
                             {showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />} {showArchived ? t('common.active') : t('tourControls.savedCostings.archived')}
                         </Button>

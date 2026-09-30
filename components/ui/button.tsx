@@ -10,15 +10,15 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground shadow-[var(--shadow-button)] hover:bg-loom-elevated hover:text-white",
+          "bg-primary text-primary-foreground shadow-[var(--shadow-button)] hover:bg-[var(--wv-action-primary-hover)] hover:text-primary-foreground",
         saffron:
-          "bg-saffron text-white shadow-[var(--shadow-button)] hover:bg-saffron-deep",
+          "bg-saffron text-ink shadow-[var(--shadow-button)] hover:bg-[var(--wv-action-accent-hover)]",
         destructive:
           "bg-risk text-white shadow-[var(--shadow-button)] hover:bg-risk/90 focus-visible:ring-risk/20 dark:focus-visible:ring-risk/40",
         outline:
-          "border border-hairline bg-surface text-ink shadow-xs hover:border-hairline-strong hover:bg-surface-soft hover:text-ink",
+          "border border-input bg-surface text-ink shadow-xs hover:border-[var(--wv-border-strong)] hover:bg-surface-soft hover:text-ink",
         secondary:
-          "border border-hairline bg-surface text-ink shadow-xs hover:border-hairline-strong hover:bg-surface-soft hover:text-ink",
+          "border border-input bg-surface text-ink shadow-xs hover:border-[var(--wv-border-strong)] hover:bg-surface-soft hover:text-ink",
         ghost:
           "text-body hover:bg-surface-soft hover:text-ink",
         link: "text-saffron-deep underline-offset-4 hover:underline",

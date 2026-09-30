@@ -5,15 +5,15 @@ import { Card, CardContent } from '@/components/ui/card'
 
 export default function FeatureArchivedPage() {
     return (
-        <main className="min-h-screen bg-slate-50 px-4 py-16">
-            <Card className="mx-auto max-w-md border-slate-200 shadow-sm">
+        <main className="min-h-screen bg-canvas px-4 py-16">
+            <Card className="mx-auto max-w-md border-wv-border-default shadow-sm">
                 <CardContent className="space-y-5 p-6 text-center">
-                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
-                        <Archive className="h-6 w-6 text-slate-500" />
+                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-surface-soft">
+                        <Archive className="h-6 w-6 text-subtle" />
                     </div>
                     <div className="space-y-2">
-                        <h1 className="text-xl font-black text-slate-900">Feature unavailable</h1>
-                        <p className="text-sm font-medium text-slate-500">
+                        <h1 className="text-xl font-black text-ink">Feature unavailable</h1>
+                        <p className="text-sm font-medium text-subtle">
                             This workspace is no longer available. Owners can continue in the current Free, Lite, or Base workspace.
                         </p>
                     </div>

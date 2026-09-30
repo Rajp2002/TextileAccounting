@@ -10,7 +10,7 @@ export function BillingAttemptStatus({ attempt }: { attempt: BillingAttemptRow }
   const [message, setMessage] = useState<string | null>(null)
   const presentation = getBillingAttemptPresentation(attempt.status)
   const Icon = presentation.tone === 'success' ? CheckCircle2 : presentation.tone === 'danger' ? AlertTriangle : Clock
-  const border = presentation.tone === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-900' : presentation.tone === 'danger' ? 'border-red-200 bg-red-50 text-red-900' : presentation.tone === 'warning' ? 'border-amber-200 bg-amber-50 text-amber-950' : 'border-blue-200 bg-blue-50 text-blue-950'
+  const border = presentation.tone === 'success' ? 'border-[var(--wv-moss-200)] bg-[var(--wv-moss-50)] text-[var(--wv-moss-700)]' : presentation.tone === 'danger' ? 'border-[var(--wv-madder-200)] bg-[var(--wv-madder-50)] text-[var(--wv-madder-600)]' : presentation.tone === 'warning' ? 'border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] text-[var(--wv-ochre-800)]' : 'border-[var(--wv-lagoon-200)] bg-[var(--wv-lagoon-50)] text-[var(--wv-lagoon-700)]'
 
   async function checkStatus() {
     if (!attempt.provider_order_id) return

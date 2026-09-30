@@ -1,71 +1,80 @@
+import type { ReactNode } from 'react'
 import Link from 'next/link'
+import { Plus } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { Beam, Eyebrow } from './beam'
+import s from './landing.module.css'
 
 const faqs = [
     {
-        question: 'Which plan should I choose?',
-        answer: 'Choose Weavly Free for occasional fabric costings, Weavly Lite for unlimited costings, reusable qualities, and Rate Book, or Weavly Base for everything in Lite plus owner-led production, machines, piece-rate worker earnings, advances, and settlements.',
+        question: 'Which plan should I start with?',
+        answer: 'Start with Free if you cost an enquiry now and then. Choose Lite when costing is a daily job and you want reusable qualities and the Yarn Rate Book. Choose Base when you also want production, stock, dispatch and piece-rate pay to run from the same costings.',
     },
     {
-        question: 'What can I do on Free?',
-        answer: 'Create two costings per month with no subscription fee or card required. Successful calculations are saved automatically so you can return to their breakdowns and export Cost Sheets. Reusable saved qualities, Rate Book, production, and worker settlement are available on the paid plans described above.',
-    },
-    {
-        question: 'How does the Free monthly allowance work?',
-        answer: 'The allowance resets on the first day of every month at 12:00 am IST, with no rollover. Each successful new calculation uses one costing, including a new calculation after changing inputs. Viewing saved costings and exporting their Cost Sheets use no allowance. When you reach the limit, you can wait for the reset or choose Lite or Base.',
-    },
-    {
-        question: 'Are GST and renewals included in the prices?',
-        answer: 'The paid prices shown include 18% GST. The first-year payment covers 365 days; the lower renewal price applies from year two. Renewals are manual, with no automatic debit. Same-plan renewal opens in the final 30 days of your paid period. Free has no subscription payment or annual renewal.',
+        question: 'How does the Free allowance work?',
+        answer: 'Free gives two successful costings a month, with no subscription fee and no card. The allowance resets on the first day of every month at 12:00 am IST and does not roll over. A new calculation after changing inputs counts as a new costing. Viewing saved costings and exporting their Cost Sheets does not use the allowance.',
     },
     {
         question: 'Can I start on Free and upgrade later?',
-        answer: 'Yes. Compare plans from your account and choose Lite or Base when you need more. Your existing Free costing records remain in your account. Lite removes the monthly limit; Base also unlocks the production and piece-rate settlement workflow.',
+        answer: 'Yes. Choose Lite or Base from your account when you need more. Your Free costing records stay in your account. Lite removes the monthly limit; Base also unlocks production and piece-rate settlement.',
     },
     {
-        question: 'What happens if the factory internet is unreliable?',
-        answer: 'Weavly is an installable PWA. Free needs an internet connection to calculate and save a costing; unfinished Free inputs are not saved as recoverable drafts. Lite and Base can keep local estimator drafts while you are signed in. Saving a costing and exporting a Cost Sheet requires an internet connection.',
+        question: 'Are GST and renewals included in the prices?',
+        answer: 'The paid prices shown include 18% GST. The first-year payment covers 365 days, and the lower renewal price applies from year two. Renewal is manual, with no automatic debit, and opens in the final 30 days of your paid period.',
     },
     {
-        question: 'Does Base include a separate supervisor app or statutory payroll?',
-        answer: 'Base is for owner-led production entry and piece-rate worker settlement. Separate supervisor accounts, attendance, statutory payroll, and broader ERP modules are outside the current plan. The production and worker-pay features listed above are included.',
+        question: 'What happens if I do not renew?',
+        answer: 'Nothing is charged. An expired Lite subscription restricts paid costing access unless another entitlement applies. When a paid Base period ends, the Lite costing desk stays available and Base production actions are restricted. Records are kept while the account is kept, and expiry does not move a paid account onto Free.',
     },
     {
-        question: 'What happens if I do not renew a paid plan?',
-        answer: 'There is no automatic charge. An expired Lite subscription restricts paid costing access unless another entitlement applies. After a paid Base period ends, the current access policy retains the Lite costing desk and restricts Base production actions. Records are retained while the account is retained; expiry does not automatically move a paid account onto Free.',
+        question: 'Does it work when the factory internet is poor?',
+        answer: 'Weavly is an installable web app. Calculating, saving and exporting need an internet connection. On Lite and Base, unfinished estimator drafts are kept on your device while you are signed in; on Free, unfinished inputs are not kept as drafts.',
     },
     {
-        question: 'How do you handle my data and refund requests?',
-        answer: 'Costing records are stored in your account, including completed Free costings. We use account access controls and tenant-scoped storage, and provide privacy request, export, and deletion options. Paid refunds follow the Refund Policy; the seven-day initial-payment review window depends on substantive delivery and use.',
+        question: 'Does Base include supervisor accounts or statutory payroll?',
+        answer: 'No. Base is for owner-led production entry and piece-rate worker settlement. Separate supervisor accounts, attendance, statutory payroll and broader ERP modules are outside the current plans.',
     },
-]
+    {
+        question: 'How is my data handled, and what about refunds?',
+        answer: (
+            <>
+                Costing records are stored in your account, including completed Free costings, with account access controls and
+                storage separated by business. You can ask for access, export or deletion through the{' '}
+                <Link href="/privacy-request" className={s.textLink}>privacy request page</Link>. Paid refunds follow the Refund
+                Policy; the seven-day review window for an initial payment depends on substantive delivery and use.
+            </>
+        ),
+    },
+] satisfies Array<{ question: string; answer: ReactNode }>
 
 export default function LandingFAQ() {
     return (
-        <section className="landing-section py-20 sm:py-28 lg:py-12 relative overflow-hidden" id="faq">
-            <div className="mx-auto max-w-7xl px-6 lg:px-8 relative z-10">
-                <div className="mx-auto max-w-3xl text-center">
-                    <p className="text-xs font-black leading-7 text-orange-700 dark:text-orange-500 tracking-[0.28em] uppercase">FAQ</p>
-                    <h2 className="mt-2 text-4xl font-black tracking-tight text-zinc-950 sm:text-5xl dark:text-white">
-                        Questions a factory owner should ask before switching.
+        <Beam id="faq" tone="deep" labelledBy="faq-title" innerClassName="py-20 sm:py-24 lg:py-28">
+            <div className="grid gap-10 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-16">
+                <div className="lg:sticky lg:top-36 lg:self-start">
+                    <Eyebrow>Questions</Eyebrow>
+                    <h2 id="faq-title" className={cn(s.display, 'mt-5 text-[34px] font-semibold leading-[1.05] text-[color:var(--lp-ink)] sm:text-[46px]')}>
+                        What owners ask before they switch.
                     </h2>
-                    <p className="mt-6 text-lg leading-8 text-[var(--color-body)]">
-                        Practical answers about adoption, floor usage, data, and what Weavly replaces.
+                    <p className="mt-5 max-w-[26rem] text-[15px] leading-[1.6] text-[color:var(--lp-body)]">
+                        The full detail is in the <Link href="/terms" className={s.textLink}>Terms</Link>,{' '}
+                        <Link href="/privacy" className={s.textLink}>Privacy Policy</Link> and{' '}
+                        <Link href="/refund-policy" className={s.textLink}>Refund Policy</Link>.
                     </p>
                 </div>
 
-                <div className="mx-auto mt-12 max-w-5xl border-y border-zinc-200 bg-white/70 backdrop-blur dark:border-white/10 dark:bg-zinc-950/60">
-                    {faqs.map((faq, index) => (
-                        <div key={faq.question} className="grid gap-3 border-b border-zinc-200 px-4 py-6 last:border-b-0 dark:border-white/10 md:grid-cols-[4rem_0.8fr_1.2fr] md:gap-6 md:px-6">
-                            <p className="text-xs font-black uppercase tracking-[0.22em] text-zinc-600">0{index + 1}</p>
-                            <h3 className="text-lg font-black leading-7 text-zinc-950 dark:text-white">{faq.question}</h3>
-                            <p className="text-sm leading-6 text-[var(--color-body)]">{faq.answer}</p>
-                        </div>
+                <div className="border-t-2 border-[color:var(--lp-ink)]">
+                    {faqs.map((faq) => (
+                        <details key={faq.question} name="landing-faq" className={cn(s.faq, 'group border-b border-[color:var(--lp-line-strong)]')}>
+                            <summary className="flex min-h-[56px] items-center justify-between gap-6 py-4 text-[16px] font-semibold leading-snug text-[color:var(--lp-ink)] sm:text-[17px]">
+                                {faq.question}
+                                <Plus className={cn(s.marker, 'h-5 w-5 flex-none text-[color:var(--lp-muted)]')} aria-hidden="true" />
+                            </summary>
+                            <p className="max-w-[40rem] pb-6 pr-10 text-[15px] leading-[1.65] text-[color:var(--lp-body)]">{faq.answer}</p>
+                        </details>
                     ))}
                 </div>
-                <p className="mx-auto mt-6 max-w-5xl text-center text-sm leading-6 text-zinc-700">
-                    Read the <Link href="/terms" className="font-semibold text-orange-700 underline underline-offset-4">Terms of Service</Link>, <Link href="/privacy" className="font-semibold text-orange-700 underline underline-offset-4">Privacy Policy</Link>, and <Link href="/refund-policy" className="font-semibold text-orange-700 underline underline-offset-4">Refund Policy</Link> for the full details.
-                </p>
             </div>
-        </section>
+        </Beam>
     )
 }

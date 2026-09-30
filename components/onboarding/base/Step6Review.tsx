@@ -62,96 +62,96 @@ export function Step6Review({
     return (
         <div className="mx-auto max-w-2xl space-y-6">
             <div className="space-y-2 text-center sm:text-left">
-                <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-300">
+                <div className="inline-flex items-center gap-2 rounded-full border border-[var(--wv-moss-200)] bg-[var(--wv-moss-50)] px-3 py-1 text-xs font-semibold text-[var(--wv-moss-700)]">
                     <Sparkles className="h-3.5 w-3.5" />
                     <span>{tx('Step 6 of 6 · Factory Readiness Review')}</span>
                 </div>
 
-                <h2 className="text-2xl font-bold tracking-tight text-stone-900 dark:text-stone-100 sm:text-3xl">
+                <h2 className="text-2xl font-bold tracking-tight text-[var(--wv-neel-900)] sm:text-3xl">
                     {tx('Your factory setup summary')}
                 </h2>
-                <p className="text-sm text-stone-600 dark:text-stone-400">
+                <p className="text-sm text-[var(--wv-neel-700)]">
                     {tx('Review your configuration before activating your Base workspace. You can edit any section at any time.')}
                 </p>
             </div>
 
             <div className="space-y-4">
                 {/* 1. Factory Profile */}
-                <div className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm dark:border-stone-800 dark:bg-stone-900 sm:p-5">
+                <div className="rounded-2xl border border-[var(--wv-cotton-400)] bg-white p-4 shadow-sm sm:p-5">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
-                            <Building2 className="h-5 w-5 text-amber-600" />
-                            <h3 className="text-sm font-bold text-stone-900 dark:text-stone-100">
+                            <Building2 className="h-5 w-5 text-[var(--wv-brand-accent-strong)]" />
+                            <h3 className="text-sm font-bold text-[var(--wv-neel-900)]">
                                 {tx('Factory Profile')}
                             </h3>
                         </div>
                         <button
                             type="button"
                             onClick={() => onEditStep('factory')}
-                            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-950/40"
+                            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-[var(--wv-brand-accent-strong)] hover:bg-[var(--wv-saffron-50)]"
                         >
                             <Edit3 className="h-3.5 w-3.5" />
                             <span>{tx('Edit')}</span>
                         </button>
                     </div>
 
-                    <div className="mt-3 grid gap-2 border-t border-stone-100 pt-3 text-xs text-stone-600 dark:border-stone-800 dark:text-stone-400 sm:grid-cols-2">
+                    <div className="mt-3 grid gap-2 border-t border-[var(--wv-cotton-200)] pt-3 text-xs text-[var(--wv-neel-700)] sm:grid-cols-2">
                         <div>
-                            <span className="font-semibold text-stone-700 dark:text-stone-300">{tx('Factory Name')}:</span>{' '}
-                            <span className="font-medium text-stone-900 dark:text-stone-100">{draft.factory.name || '—'}</span>
+                            <span className="font-semibold text-[var(--wv-neel-800)]">{tx('Factory Name')}:</span>{' '}
+                            <span className="font-medium text-[var(--wv-neel-900)]">{draft.factory.name || '—'}</span>
                         </div>
                         {draft.factory.ownerContact && (
                             <div>
-                                <span className="font-semibold text-stone-700 dark:text-stone-300">{tx('Contact')}:</span>{' '}
-                                <span className="font-medium text-stone-900 dark:text-stone-100">{draft.factory.ownerContact}</span>
+                                <span className="font-semibold text-[var(--wv-neel-800)]">{tx('Contact')}:</span>{' '}
+                                <span className="font-medium text-[var(--wv-neel-900)]">{draft.factory.ownerContact}</span>
                             </div>
                         )}
                     </div>
                 </div>
 
                 {/* 2. Factory & Costing Defaults */}
-                <div className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm dark:border-stone-800 dark:bg-stone-900 sm:p-5">
+                <div className="rounded-2xl border border-[var(--wv-cotton-400)] bg-white p-4 shadow-sm sm:p-5">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
-                            <Sliders className="h-5 w-5 text-amber-600" />
-                            <h3 className="text-sm font-bold text-stone-900 dark:text-stone-100">
+                            <Sliders className="h-5 w-5 text-[var(--wv-brand-accent-strong)]" />
+                            <h3 className="text-sm font-bold text-[var(--wv-neel-900)]">
                                 {tx('Factory & Costing Defaults')}
                             </h3>
                         </div>
                         <button
                             type="button"
                             onClick={() => onEditStep('defaults')}
-                            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-950/40"
+                            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-[var(--wv-brand-accent-strong)] hover:bg-[var(--wv-saffron-50)]"
                         >
                             <Edit3 className="h-3.5 w-3.5" />
                             <span>{tx('Edit')}</span>
                         </button>
                     </div>
 
-                    <div className="mt-3 grid grid-cols-2 gap-2 border-t border-stone-100 pt-3 text-xs text-stone-600 dark:border-stone-800 dark:text-stone-400 sm:grid-cols-3">
+                    <div className="mt-3 grid grid-cols-2 gap-2 border-t border-[var(--wv-cotton-200)] pt-3 text-xs text-[var(--wv-neel-700)] sm:grid-cols-3">
                         <div>
-                            <span className="text-stone-500">{tx('Wastage')}:</span>{' '}
-                            <span className="font-bold text-stone-900 dark:text-stone-100">{draft.defaults.yarnShortagePct}%</span>
+                            <span className="text-[var(--wv-neel-600)]">{tx('Wastage')}:</span>{' '}
+                            <span className="font-bold text-[var(--wv-neel-900)]">{draft.defaults.yarnShortagePct}%</span>
                         </div>
                         <div>
-                            <span className="text-stone-500">{tx('Margin')}:</span>{' '}
-                            <span className="font-bold text-stone-900 dark:text-stone-100">{draft.defaults.defaultMarginPct}%</span>
+                            <span className="text-[var(--wv-neel-600)]">{tx('Margin')}:</span>{' '}
+                            <span className="font-bold text-[var(--wv-neel-900)]">{draft.defaults.defaultMarginPct}%</span>
                         </div>
                         <div>
-                            <span className="text-stone-500">{tx('Overhead')}:</span>{' '}
-                            <span className="font-medium text-stone-900 dark:text-stone-100">
+                            <span className="text-[var(--wv-neel-600)]">{tx('Overhead')}:</span>{' '}
+                            <span className="font-medium text-[var(--wv-neel-900)]">
                                 {draft.defaults.overheadMode === 'direct' ? tx('Direct') : tx('Monthly Allocation')}
                             </span>
                         </div>
                         <div>
-                            <span className="text-stone-500">{tx('Warping')}:</span>{' '}
-                            <span className="font-medium text-stone-900 dark:text-stone-100">
+                            <span className="text-[var(--wv-neel-600)]">{tx('Warping')}:</span>{' '}
+                            <span className="font-medium text-[var(--wv-neel-900)]">
                                 {draft.defaults.warpingMode === 'in_house' ? tx('In-house') : tx('Outsourced')}
                             </span>
                         </div>
                         <div>
-                            <span className="text-stone-500">{tx('Sizing')}:</span>{' '}
-                            <span className="font-medium text-stone-900 dark:text-stone-100">
+                            <span className="text-[var(--wv-neel-600)]">{tx('Sizing')}:</span>{' '}
+                            <span className="font-medium text-[var(--wv-neel-900)]">
                                 {draft.defaults.sizingMode === 'in_house' ? tx('In-house') : tx('Outsourced')}
                             </span>
                         </div>
@@ -159,15 +159,15 @@ export function Step6Review({
                 </div>
 
                 {/* 3. Machines */}
-                <div className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm dark:border-stone-800 dark:bg-stone-900 sm:p-5">
+                <div className="rounded-2xl border border-[var(--wv-cotton-400)] bg-white p-4 shadow-sm sm:p-5">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
-                            <Cpu className="h-5 w-5 text-amber-600" />
+                            <Cpu className="h-5 w-5 text-[var(--wv-brand-accent-strong)]" />
                             <div className="flex items-center gap-2">
-                                <h3 className="text-sm font-bold text-stone-900 dark:text-stone-100">
+                                <h3 className="text-sm font-bold text-[var(--wv-neel-900)]">
                                     {tx('Machines')}
                                 </h3>
-                                <span className="rounded-full bg-amber-100 px-2 py-0.5 font-mono text-[11px] font-bold text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                                <span className="rounded-full bg-[var(--wv-saffron-100)] px-2 py-0.5 font-mono text-[11px] font-bold text-[var(--wv-brand-ink)]">
                                     {totalDraftMachines} {tx('machines')}
                                 </span>
                             </div>
@@ -175,26 +175,26 @@ export function Step6Review({
                         <button
                             type="button"
                             onClick={() => onEditStep('machines')}
-                            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-950/40"
+                            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-[var(--wv-brand-accent-strong)] hover:bg-[var(--wv-saffron-50)]"
                         >
                             <Edit3 className="h-3.5 w-3.5" />
                             <span>{tx('Edit')}</span>
                         </button>
                     </div>
 
-                    <div className="mt-3 border-t border-stone-100 pt-3 text-xs text-stone-600 dark:border-stone-800 dark:text-stone-400">
+                    <div className="mt-3 border-t border-[var(--wv-cotton-200)] pt-3 text-xs text-[var(--wv-neel-700)]">
                         {machineTypeBreakdown.length > 0 ? (
                             <div className="flex flex-wrap gap-2">
                                 {machineTypeBreakdown.map(m => (
-                                    <span key={m.type} className="inline-flex items-center gap-1 rounded-md bg-stone-100 px-2.5 py-1 font-medium text-stone-700 dark:bg-stone-800 dark:text-stone-300">
+                                    <span key={m.type} className="inline-flex items-center gap-1 rounded-md bg-[var(--wv-cotton-200)] px-2.5 py-1 font-medium text-[var(--wv-neel-800)]">
                                         <span>{tx(m.label)}:</span>
-                                        <span className="font-bold text-stone-900 dark:text-stone-100">{m.count}</span>
+                                        <span className="font-bold text-[var(--wv-neel-900)]">{m.count}</span>
                                     </span>
                                 ))}
                             </div>
                         ) : (
-                            <div className="flex items-center gap-1.5 text-stone-400">
-                                <AlertCircle className="h-3.5 w-3.5 text-amber-500" />
+                            <div className="flex items-center gap-1.5 text-[var(--wv-neel-600)]">
+                                <AlertCircle className="h-3.5 w-3.5 text-[var(--wv-ochre-700)]" />
                                 <span>{tx('No machines added yet. You can add them later in Machines.')}</span>
                             </div>
                         )}
@@ -202,15 +202,15 @@ export function Step6Review({
                 </div>
 
                 {/* 4. Workforce */}
-                <div className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm dark:border-stone-800 dark:bg-stone-900 sm:p-5">
+                <div className="rounded-2xl border border-[var(--wv-cotton-400)] bg-white p-4 shadow-sm sm:p-5">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
-                            <Users className="h-5 w-5 text-amber-600" />
+                            <Users className="h-5 w-5 text-[var(--wv-brand-accent-strong)]" />
                             <div className="flex items-center gap-2">
-                                <h3 className="text-sm font-bold text-stone-900 dark:text-stone-100">
+                                <h3 className="text-sm font-bold text-[var(--wv-neel-900)]">
                                     {tx('Workforce')}
                                 </h3>
-                                <span className="rounded-full bg-amber-100 px-2 py-0.5 font-mono text-[11px] font-bold text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                                <span className="rounded-full bg-[var(--wv-saffron-100)] px-2 py-0.5 font-mono text-[11px] font-bold text-[var(--wv-brand-ink)]">
                                     {totalDraftWorkers} {tx('workers')}
                                 </span>
                             </div>
@@ -218,28 +218,28 @@ export function Step6Review({
                         <button
                             type="button"
                             onClick={() => onEditStep('workers')}
-                            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-950/40"
+                            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-[var(--wv-brand-accent-strong)] hover:bg-[var(--wv-saffron-50)]"
                         >
                             <Edit3 className="h-3.5 w-3.5" />
                             <span>{tx('Edit')}</span>
                         </button>
                     </div>
 
-                    <div className="mt-3 border-t border-stone-100 pt-3 text-xs text-stone-600 dark:border-stone-800 dark:text-stone-400">
+                    <div className="mt-3 border-t border-[var(--wv-cotton-200)] pt-3 text-xs text-[var(--wv-neel-700)]">
                         {totalDraftWorkers > 0 ? (
                             <div className="flex gap-4">
                                 <div>
-                                    <span className="text-stone-500">{tx('Piece Rate')}:</span>{' '}
-                                    <span className="font-bold text-stone-900 dark:text-stone-100">{draftPieceRateCount}</span>
+                                    <span className="text-[var(--wv-neel-600)]">{tx('Piece Rate')}:</span>{' '}
+                                    <span className="font-bold text-[var(--wv-neel-900)]">{draftPieceRateCount}</span>
                                 </div>
                                 <div>
-                                    <span className="text-stone-500">{tx('Fixed Salary')}:</span>{' '}
-                                    <span className="font-bold text-stone-900 dark:text-stone-100">{draftFixedSalaryCount}</span>
+                                    <span className="text-[var(--wv-neel-600)]">{tx('Fixed Salary')}:</span>{' '}
+                                    <span className="font-bold text-[var(--wv-neel-900)]">{draftFixedSalaryCount}</span>
                                 </div>
                             </div>
                         ) : (
-                            <div className="flex items-center gap-1.5 text-stone-400">
-                                <AlertCircle className="h-3.5 w-3.5 text-amber-500" />
+                            <div className="flex items-center gap-1.5 text-[var(--wv-neel-600)]">
+                                <AlertCircle className="h-3.5 w-3.5 text-[var(--wv-ochre-700)]" />
                                 <span>{tx('No workers added yet. You can add them later in Workforce.')}</span>
                             </div>
                         )}
@@ -247,33 +247,33 @@ export function Step6Review({
                 </div>
 
                 {/* 5. Payroll Cycle */}
-                <div className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm dark:border-stone-800 dark:bg-stone-900 sm:p-5">
+                <div className="rounded-2xl border border-[var(--wv-cotton-400)] bg-white p-4 shadow-sm sm:p-5">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
-                            <Calendar className="h-5 w-5 text-amber-600" />
-                            <h3 className="text-sm font-bold text-stone-900 dark:text-stone-100">
+                            <Calendar className="h-5 w-5 text-[var(--wv-brand-accent-strong)]" />
+                            <h3 className="text-sm font-bold text-[var(--wv-neel-900)]">
                                 {tx('Payroll Cycle')}
                             </h3>
                         </div>
                         <button
                             type="button"
                             onClick={() => onEditStep('payroll')}
-                            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-950/40"
+                            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-[var(--wv-brand-accent-strong)] hover:bg-[var(--wv-saffron-50)]"
                         >
                             <Edit3 className="h-3.5 w-3.5" />
                             <span>{tx('Edit')}</span>
                         </button>
                     </div>
 
-                    <div className="mt-3 border-t border-stone-100 pt-3 text-xs text-stone-600 dark:border-stone-800 dark:text-stone-400">
-                        <span className="font-semibold text-stone-900 dark:text-stone-100">
+                    <div className="mt-3 border-t border-[var(--wv-cotton-200)] pt-3 text-xs text-[var(--wv-neel-700)]">
+                        <span className="font-semibold text-[var(--wv-neel-900)]">
                             {tx(payrollDescription)}
                         </span>
                     </div>
                 </div>
 
                 {error && (
-                    <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+                    <div className="rounded-lg border border-[var(--wv-madder-200)] bg-[var(--wv-madder-50)] p-3 text-sm text-[var(--wv-madder-700)]">
                         {tx(error)}
                     </div>
                 )}

@@ -40,12 +40,12 @@ export function OnboardingShell({
     const { tx } = useTranslation()
 
     return (
-        <div className="relative flex min-h-screen flex-col bg-stone-50 text-stone-900 dark:bg-stone-950 dark:text-stone-100">
+        <div className="relative flex min-h-screen flex-col bg-[var(--wv-cotton-100)] text-[var(--wv-neel-900)]">
             {/* Top Navigation Header */}
-            <header className="sticky top-0 z-30 border-b border-stone-200 bg-white/90 backdrop-blur-md dark:border-stone-800 dark:bg-stone-900/90">
+            <header className="sticky top-0 z-30 border-b border-[var(--wv-cotton-300)] bg-[var(--wv-cotton-0)]/90 backdrop-blur-md">
                 <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
                     <div className="flex items-center gap-3">
-                        <Link href="/owner/estimator" className="flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-amber-500 rounded-lg">
+                        <Link href="/owner/estimator" className="flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-[var(--wv-brand-accent-strong)] rounded-lg">
                             <Image
                                 src="/images/WeavlyLogo.png"
                                 alt="Weavly"
@@ -55,20 +55,20 @@ export function OnboardingShell({
                                 className="h-8 w-auto object-contain"
                             />
                         </Link>
-                        <div className="hidden h-5 w-px bg-stone-200 sm:block dark:bg-stone-700" />
-                        <span className="hidden text-xs font-semibold text-stone-500 sm:inline dark:text-stone-400">
+                        <div className="hidden h-5 w-px bg-[var(--wv-cotton-300)] sm:block" />
+                        <span className="hidden text-xs font-semibold text-[var(--wv-neel-500)] sm:inline">
                             {tx('Factory Setup')}
                         </span>
                     </div>
 
                     <div className="flex items-center gap-2">
-                        <LanguageSwitcher placement="bottom" className="bg-stone-100 text-xs dark:bg-stone-800" />
+                        <LanguageSwitcher placement="bottom" className="bg-[var(--wv-cotton-200)] text-xs" />
                     </div>
                 </div>
 
                 {/* Progress Stepper (hidden on completed screen) */}
                 {!isCompleted && (
-                    <div className="border-t border-stone-100 bg-stone-50/70 px-4 py-2 dark:border-stone-800/80 dark:bg-stone-900/40 sm:px-6">
+                    <div className="border-t border-[var(--wv-cotton-200)] bg-[var(--wv-cotton-100)]/70 px-4 py-2 sm:px-6">
                         <div className="mx-auto max-w-5xl">
                             <OnboardingStepper
                                 currentStep={currentStep}
@@ -89,7 +89,7 @@ export function OnboardingShell({
 
             {/* Sticky Action Footer (hidden on completed screen) */}
             {!isCompleted && (
-                <footer className="fixed bottom-0 left-0 right-0 z-30 border-t border-stone-200 bg-white/95 py-3.5 backdrop-blur-md dark:border-stone-800 dark:bg-stone-900/95">
+                <footer className="fixed bottom-0 left-0 right-0 z-30 border-t border-[var(--wv-cotton-300)] bg-[var(--wv-cotton-0)]/95 py-3.5 backdrop-blur-md">
                     <div className="mx-auto flex max-w-5xl items-center justify-between px-4 sm:px-6">
                         <div>
                             {onBack && (
@@ -98,7 +98,7 @@ export function OnboardingShell({
                                     variant="ghost"
                                     onClick={onBack}
                                     disabled={isSaving}
-                                    className="gap-2 text-xs font-semibold text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-100"
+                                    className="gap-2 text-xs font-semibold text-[var(--wv-neel-600)] hover:text-[var(--wv-neel-900)]"
                                 >
                                     <ArrowLeft className="h-4 w-4" />
                                     <span>{tx('Back')}</span>
@@ -113,7 +113,7 @@ export function OnboardingShell({
                                     variant="outline"
                                     onClick={onSkip}
                                     disabled={isSaving}
-                                    className="text-xs font-medium text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-100"
+                                    className="text-xs font-medium text-[var(--wv-neel-600)] hover:text-[var(--wv-neel-900)]"
                                 >
                                     {tx("I'll add these later")}
                                 </Button>
@@ -123,7 +123,7 @@ export function OnboardingShell({
                                 type="button"
                                 onClick={onSaveAndContinue}
                                 disabled={isSaving}
-                                className="min-w-[140px] gap-2 bg-amber-600 text-xs font-bold text-white shadow-md shadow-amber-500/20 hover:bg-amber-700"
+                                className="min-w-[140px] gap-2 bg-[var(--wv-action-primary)] text-xs font-bold text-white shadow-sm hover:bg-[var(--wv-action-primary-hover)] focus-visible:ring-2 focus-visible:ring-[var(--wv-brand-accent-strong)]"
                             >
                                 {isSaving ? (
                                     <>

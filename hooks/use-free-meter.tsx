@@ -60,7 +60,7 @@ export function FreeMeterPanel({meter}:{meter:ReturnType<typeof useFreeMeter>}) 
  function finishTour(completed=false){setTour(null);void fetch('/api/free/events',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({eventId:crypto.randomUUID(),name:completed?'tour_completed':'tour_skipped',language,entryPoint:'tour'})}).catch(()=>{});document.getElementById('free-tour-help')?.focus()}
  const t=(key:Parameters<typeof freeText>[1],values:Record<string,string|number>={})=>freeText(language,key,values)
  if(!meter.enabled)return null
- return <section data-i18n-skip="true" className="space-y-3 rounded-xl border border-slate-200 bg-white p-4" aria-live="polite">
+ return <section data-i18n-skip="true" className="space-y-3 rounded-xl border border-wv-border-default bg-surface p-4" aria-live="polite">
   <p>{t('freeSavedPolicy')}</p>
   {meter.status?.tourEnabled&&<Button id="free-tour-help" variant="outline" onClick={()=>setTour(0)}>{t('help')}</Button>}
   {tour!==null&&meter.status?.tourEnabled&&<div className="space-y-2 rounded border p-3"><p>{t('sample')} · {tour+1}/5</p><p>{t(`tour${tour+1}` as Parameters<typeof freeText>[1])}</p>{tour===3&&<p>₹{meter.status.demo?.productionCostPerM.toFixed(2)}/m</p>}<Button variant="outline" disabled={tour===0} onClick={()=>setTour(tour-1)}>{t('back')}</Button> <Button onClick={()=>tour===4?finishTour(true):setTour(tour+1)}>{t(tour===4?'done':'next')}</Button> <Button variant="ghost" onClick={()=>finishTour()}>{t('skip')}</Button></div>}

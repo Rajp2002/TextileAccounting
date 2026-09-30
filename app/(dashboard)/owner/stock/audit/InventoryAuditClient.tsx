@@ -216,11 +216,11 @@ export default function InventoryAuditClient({ initialData }: Props) {
                 <div className="flex flex-wrap items-center justify-center gap-2 sm:col-start-2 sm:row-start-1">
                     <h1 className="text-[1.4rem] font-bold tracking-tight text-ink sm:text-2xl">Inventory Audit & Material Position</h1>
                     {isFinalized ? (
-                        <Badge variant="secondary" className="border-emerald-200 bg-emerald-50 text-emerald-800">
+                        <Badge variant="secondary" className="border-[var(--wv-moss-200)] bg-[var(--wv-moss-50)] text-[var(--wv-moss-700)]">
                             <Lock className="mr-1 h-3 w-3" /> Finalized
                         </Badge>
                     ) : (
-                        <Badge variant="outline" className="border-amber-300 bg-amber-50 text-amber-800">
+                        <Badge variant="outline" className="border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] text-[var(--wv-ochre-800)]">
                             Draft / Working
                         </Badge>
                     )}
@@ -284,10 +284,10 @@ export default function InventoryAuditClient({ initialData }: Props) {
                 <Card className="rounded-2xl border border-hairline shadow-xs">
                     <CardHeader className="pb-2 flex flex-row items-center justify-between">
                         <CardTitle className="text-xs font-medium text-muted-foreground">Loose Usable Yarn</CardTitle>
-                        <Package className="h-4 w-4 text-emerald-600" />
+                        <Package className="h-4 w-4 text-[var(--wv-moss-700)]" />
                     </CardHeader>
                     <CardContent>
-                        <p className="text-2xl font-bold tabular-nums text-emerald-700">
+                        <p className="text-2xl font-bold tabular-nums text-[var(--wv-moss-700)]">
                             {data.summary.total_loose_yarn_kg.toLocaleString('en-IN', { maximumFractionDigits: 3 })}
                             <span className="text-sm font-normal text-muted-foreground ml-1">kg</span>
                         </p>
@@ -299,10 +299,10 @@ export default function InventoryAuditClient({ initialData }: Props) {
                 <Card className="rounded-2xl border border-hairline shadow-xs">
                     <CardHeader className="pb-2 flex flex-row items-center justify-between">
                         <CardTitle className="text-xs font-medium text-muted-foreground">Yarn Embodied in Fabric</CardTitle>
-                        <Layers className="h-4 w-4 text-indigo-600" />
+                        <Layers className="h-4 w-4 text-[var(--wv-neel-600)]" />
                     </CardHeader>
                     <CardContent>
-                        <p className="text-2xl font-bold tabular-nums text-indigo-700">
+                        <p className="text-2xl font-bold tabular-nums text-ink">
                             {data.summary.total_embodied_yarn_kg.toLocaleString('en-IN', { maximumFractionDigits: 3 })}
                             <span className="text-sm font-normal text-muted-foreground ml-1">kg</span>
                         </p>
@@ -330,11 +330,11 @@ export default function InventoryAuditClient({ initialData }: Props) {
 
             {/* Legacy Fabric Unresolved Notice (Rule 44) */}
             {data.summary.unresolved_fabric_meters > 0 && (
-                <div className="rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-xs text-amber-900 flex items-start gap-2.5">
-                    <Info className="h-4 w-4 text-amber-700 shrink-0 mt-0.5" />
+                <div className="rounded-xl border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] p-3.5 text-xs text-[var(--wv-ochre-800)] flex items-start gap-2.5">
+                    <Info className="h-4 w-4 text-[var(--wv-ochre-800)] shrink-0 mt-0.5" />
                     <div>
                         <p className="font-semibold">Notice regarding legacy fabric stock</p>
-                        <p className="mt-0.5 text-amber-800">
+                        <p className="mt-0.5 text-[var(--wv-ochre-800)]">
                             {data.summary.unresolved_fabric_meters.toLocaleString()} metres of fabric stock predate production lot tracking. In accordance with system audit integrity, yarn composition is not guessed or fabricated for historical inventory.
                         </p>
                     </div>
@@ -405,14 +405,14 @@ export default function InventoryAuditClient({ initialData }: Props) {
                                                 return (
                                                     <tr key={row.yarn_key} className="hover:bg-surface-soft/20 transition-colors">
                                                         <td className="p-3 font-bold text-ink">{row.yarn_name}</td>
-                                                        <td className="p-3 text-right tabular-nums font-semibold text-emerald-700">
+                                                        <td className="p-3 text-right tabular-nums font-semibold text-[var(--wv-moss-700)]">
                                                             {row.loose_kg.toFixed(3)} kg
                                                         </td>
                                                         <td className="p-3 text-right tabular-nums">
                                                             {row.embodied_kg > 0 ? (
                                                                 <button
                                                                     onClick={() => toggleExpand(row.yarn_key)}
-                                                                    className="font-semibold text-indigo-600 hover:underline inline-flex items-center gap-1"
+                                                                    className="font-semibold text-loom hover:underline inline-flex items-center gap-1"
                                                                 >
                                                                     {row.embodied_kg.toFixed(3)} kg
                                                                 </button>
@@ -485,7 +485,7 @@ export default function InventoryAuditClient({ initialData }: Props) {
                                                                 <th className="p-2">Production Date</th>
                                                                 <th className="p-2 text-right">Produced</th>
                                                                 <th className="p-2 text-right">Remaining in Stock</th>
-                                                                <th className="p-2 text-right text-indigo-700">Embodied Yarn</th>
+                                                                <th className="p-2 text-right text-loom">Embodied Yarn</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody className="divide-y divide-hairline">
@@ -503,7 +503,7 @@ export default function InventoryAuditClient({ initialData }: Props) {
                                                                     <td className="p-2 text-right tabular-nums font-semibold text-ink">
                                                                         {item.remaining_meters.toFixed(2)} m
                                                                     </td>
-                                                                    <td className="p-2 text-right tabular-nums font-bold text-indigo-700">
+                                                                    <td className="p-2 text-right tabular-nums font-bold text-loom">
                                                                         {item.embodied_kg.toFixed(3)} kg
                                                                     </td>
                                                                 </tr>
@@ -565,7 +565,7 @@ export default function InventoryAuditClient({ initialData }: Props) {
                                                     </td>
                                                     <td className="p-3 text-right tabular-nums font-bold">
                                                         {variance !== null && variance !== 0 ? (
-                                                            <span className={variance < 0 ? 'text-rose-600' : 'text-emerald-600'}>
+                                                            <span className={variance < 0 ? 'text-[var(--wv-madder-600)]' : 'text-[var(--wv-moss-700)]'}>
                                                                 {variance > 0 ? '+' : ''}{variance.toFixed(2)} m
                                                             </span>
                                                         ) : (
@@ -664,7 +664,7 @@ export default function InventoryAuditClient({ initialData }: Props) {
                                                     </td>
                                                     <td className="p-3 text-right tabular-nums font-bold">
                                                         {variance !== null && variance !== 0 ? (
-                                                            <span className={variance < 0 ? 'text-rose-600' : 'text-emerald-600'}>
+                                                            <span className={variance < 0 ? 'text-[var(--wv-madder-600)]' : 'text-[var(--wv-moss-700)]'}>
                                                                 {variance > 0 ? '+' : ''}{variance.toFixed(3)} kg
                                                             </span>
                                                         ) : (
@@ -751,7 +751,7 @@ export default function InventoryAuditClient({ initialData }: Props) {
                                                     </p>
                                                     <p className="text-muted-foreground">
                                                         System: {line.system_quantity} | Physical: {line.physical_count} |{' '}
-                                                        <span className={line.variance! < 0 ? 'text-rose-600 font-bold' : 'text-emerald-600 font-bold'}>
+                                                        <span className={line.variance! < 0 ? 'text-[var(--wv-madder-600)] font-bold' : 'text-[var(--wv-moss-700)] font-bold'}>
                                                             Variance: {line.variance! > 0 ? '+' : ''}{line.variance}
                                                         </span>
                                                     </p>
@@ -759,11 +759,11 @@ export default function InventoryAuditClient({ initialData }: Props) {
 
                                                 <div>
                                                     {line.adjustment_applied ? (
-                                                        <Badge variant="outline" className="text-emerald-700 bg-emerald-50 border-emerald-300 font-semibold">
+                                                        <Badge variant="outline" className="text-[var(--wv-moss-700)] bg-[var(--wv-moss-50)] border-[var(--wv-moss-200)] font-semibold">
                                                             ✓ Adjustment Applied
                                                         </Badge>
                                                     ) : (
-                                                        <Badge variant="outline" className="text-amber-700 bg-amber-50 border-amber-300">
+                                                        <Badge variant="outline" className="text-[var(--wv-ochre-800)] bg-[var(--wv-ochre-50)] border-[var(--wv-ochre-200)]">
                                                             Pending Adjustment
                                                         </Badge>
                                                     )}
@@ -851,10 +851,10 @@ export default function InventoryAuditClient({ initialData }: Props) {
                         </DialogDescription>
                     </DialogHeader>
 
-                    <div className="rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-xs text-amber-950 space-y-1">
+                    <div className="rounded-xl border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] p-3.5 text-xs text-[var(--wv-ochre-800)] space-y-1">
                         <p>Previous System Balance: <strong>{adjustDialog?.systemQty}</strong></p>
                         <p>Physical Count Verified: <strong>{adjustDialog?.physicalCount}</strong></p>
-                        <p className="font-bold text-rose-800">
+                        <p className="font-bold text-[var(--wv-madder-600)]">
                             Adjustment Delta: {adjustDialog && adjustDialog.variance > 0 ? '+' : ''}{adjustDialog?.variance}
                         </p>
                     </div>

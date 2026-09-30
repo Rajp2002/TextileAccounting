@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 })
 
 export const viewport: Viewport = {
-  themeColor: "#FFF8EA",
+  themeColor: "#F4F2EC",
   width: "device-width",
   initialScale: 1,
   minimumScale: 1,
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
   },
   other: {
     "mobile-web-app-capable": "yes",
-    "msapplication-TileColor": "#FFF8EA",
+    "msapplication-TileColor": "#F4F2EC",
     "msapplication-tap-highlight": "no",
   },
 }

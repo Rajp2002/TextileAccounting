@@ -37,7 +37,7 @@ export default function RefundPolicyPage() {
                 { label: 'Contact', value: LEGAL_OPERATOR.contactEmail, icon: Mail },
             ]}
         >
-            <p className="mb-10 max-w-3xl text-lg font-medium leading-8 text-zinc-700 dark:text-zinc-300">
+            <p className="mb-10 max-w-3xl text-lg font-medium leading-8 text-body">
                 This policy covers Weavly Free accounts and Weavly Lite and Weavly Base purchases offered by {LEGAL_OPERATOR.displayName}. It should be read with the <a href="/terms">Terms of Service</a>. Free has no subscription payment to cancel or refund. If you purchase Lite or Base from Free, the paid-plan rules below apply to that purchase.
             </p>
 
@@ -116,7 +116,7 @@ export default function RefundPolicyPage() {
                         { label: 'Operator', value: LEGAL_OPERATOR.displayName },
                         {
                             label: 'Email',
-                            value: <a href={`mailto:${LEGAL_OPERATOR.contactEmail}`} className="text-orange-700 hover:underline dark:text-orange-300">{LEGAL_OPERATOR.contactEmail}</a>,
+                            value: <a href={`mailto:${LEGAL_OPERATOR.contactEmail}`} className="text-saffron-deep hover:underline">{LEGAL_OPERATOR.contactEmail}</a>,
                         },
                         { label: 'Postal address', value: LEGAL_OPERATOR.postalAddress },
                     ]}

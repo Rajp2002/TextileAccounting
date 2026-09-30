@@ -19,6 +19,7 @@ import { railButton, railIcon } from '@/components/ui/rail'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { LiquidSegmented } from '@/components/ui/liquid-segmented'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -290,12 +291,6 @@ export default function BaseAssignmentWorkspace({
         if (machineId) void handleAssign(workerId, machineId)
     }
 
-    function toggleMachineType(machineType: string) {
-        setSelectedMachineTypes((current) => current.includes(machineType)
-            ? current.filter((value) => value !== machineType)
-            : [...current, machineType])
-    }
-
     async function handleAssign(workerId: string, machineId: string, replaceExisting = false) {
         if (tourStep) return
         if (isSampleRecordId(workerId) || isSampleRecordId(machineId)) {
@@ -462,7 +457,7 @@ export default function BaseAssignmentWorkspace({
                         <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-y-auto rounded-2xl border border-hairline bg-surface p-6 shadow-2xl">
                             <DialogHeader>
                                 <div className="flex items-center gap-3">
-                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700 shadow-xs border border-amber-200/60">
+                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--wv-ochre-100)] text-[var(--wv-ochre-800)] shadow-xs border border-[var(--wv-ochre-200)]/60">
                                         <CircleHelp className="h-5 w-5" aria-hidden="true" />
                                     </div>
                                     <div>
@@ -497,40 +492,18 @@ export default function BaseAssignmentWorkspace({
             </aside>
             <div className="min-w-0 space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-hairline/70 bg-surface/80 p-2 shadow-xs sm:px-3">
-                    <div data-configuration-tour="shift" role="group" aria-label="Assignment shift" className="inline-flex rounded-full border border-hairline bg-surface p-1 shadow-xs">
-                        <Button
-                            type="button"
-                            size="sm"
-                            variant="ghost"
-                            className={cn(
-                                "h-8 rounded-full px-4 text-xs font-semibold transition-all",
-                                shift === 'day'
-                                    ? "bg-loom text-white shadow-xs hover:bg-loom-elevated hover:text-white"
-                                    : "text-muted-foreground hover:bg-surface-soft hover:text-ink"
-                            )}
-                            aria-pressed={shift === 'day'}
-                            disabled={pendingKey !== null}
-                            onClick={() => setShift('day')}
-                        >
-                            <Sun className="h-3.5 w-3.5" /> Day shift
-                        </Button>
-                        <Button
-                            type="button"
-                            size="sm"
-                            variant="ghost"
-                            className={cn(
-                                "h-8 rounded-full px-4 text-xs font-semibold transition-all",
-                                shift === 'night'
-                                    ? "bg-loom text-white shadow-xs hover:bg-loom-elevated hover:text-white"
-                                    : "text-muted-foreground hover:bg-surface-soft hover:text-ink"
-                            )}
-                            aria-pressed={shift === 'night'}
-                            disabled={pendingKey !== null}
-                            onClick={() => setShift('night')}
-                        >
-                            <Moon className="h-3.5 w-3.5" /> Night shift
-                        </Button>
-                    </div>
+                    <LiquidSegmented
+                        data-configuration-tour="shift"
+                        aria-label="Assignment shift"
+                        size="sm"
+                        disabled={pendingKey !== null}
+                        value={shift}
+                        onValueChange={setShift}
+                        options={[
+                            { value: 'day', label: 'Day shift', icon: <Sun /> },
+                            { value: 'night', label: 'Night shift', icon: <Moon /> },
+                        ]}
+                    />
                     <span data-configuration-tour="count" className="inline-flex items-center gap-1.5 rounded-full border border-hairline bg-surface px-3 py-1 text-xs font-medium text-body shadow-xs" aria-live="polite">
                         {tx('Assignments: {count}', { count: contextAssignmentCount })} · {tx(shift === 'day' ? 'Day shift' : 'Night shift')}
                     </span>
@@ -561,7 +534,7 @@ export default function BaseAssignmentWorkspace({
                                 className="h-10 sm:h-11 rounded-xl border border-hairline bg-surface pl-9 text-sm text-ink placeholder:text-muted-foreground/70 focus:border-loom-subtle focus:ring-2 focus:ring-loom/10"
                             />
                         </div>
-                        <MachineTypeFilters machineTypes={machineTypes} selected={selectedMachineTypes} onToggle={toggleMachineType} onShowAll={() => setSelectedMachineTypes([])} />
+                        <MachineTypeFilters machineTypes={machineTypes} selected={selectedMachineTypes} onSelect={(machineType) => setSelectedMachineTypes(machineType ? [machineType] : [])} />
                     </div>
                     <div
                         ref={boardRef}
@@ -793,38 +766,16 @@ export default function BaseAssignmentWorkspace({
                         </span>
                         Connect workers to machines
                     </CardTitle>
-                    <div className="grid grid-cols-2 rounded-xl bg-surface-soft p-1 border border-hairline/60" role="group" aria-label="Assignment workspace view">
-                        <Button
-                            type="button"
-                            size="sm"
-                            variant="ghost"
-                            className={cn(
-                                "h-8 rounded-lg text-xs font-semibold transition-all",
-                                mobileView === 'workers'
-                                    ? "bg-surface text-ink shadow-xs border border-hairline"
-                                    : "text-muted-foreground hover:text-ink"
-                            )}
-                            aria-pressed={mobileView === 'workers'}
-                            onClick={() => setMobileView('workers')}
-                        >
-                            <Users className="h-3.5 w-3.5" /> Workers
-                        </Button>
-                        <Button
-                            type="button"
-                            size="sm"
-                            variant="ghost"
-                            className={cn(
-                                "h-8 rounded-lg text-xs font-semibold transition-all",
-                                mobileView === 'machines'
-                                    ? "bg-surface text-ink shadow-xs border border-hairline"
-                                    : "text-muted-foreground hover:text-ink"
-                            )}
-                            aria-pressed={mobileView === 'machines'}
-                            onClick={() => setMobileView('machines')}
-                        >
-                            <Wrench className="h-3.5 w-3.5" /> Machines
-                        </Button>
-                    </div>
+                    <LiquidSegmented
+                        aria-label="Assignment workspace view"
+                        size="sm"
+                        value={mobileView}
+                        onValueChange={setMobileView}
+                        options={[
+                            { value: 'workers', label: 'Workers', icon: <Users /> },
+                            { value: 'machines', label: 'Machines', icon: <Wrench /> },
+                        ]}
+                    />
                 </CardHeader>
                 {mobileView === 'workers' ? (
                     <CardContent className="p-4 pt-3">
@@ -888,7 +839,7 @@ export default function BaseAssignmentWorkspace({
                     <CardContent className="p-4 pt-3">
                         <p className="mb-3 text-xs text-body">View the worker connected to each machine for this shift.</p>
                         <div className="mb-3">
-                            <MachineTypeFilters machineTypes={machineTypes} selected={selectedMachineTypes} onToggle={toggleMachineType} onShowAll={() => setSelectedMachineTypes([])} />
+                            <MachineTypeFilters machineTypes={machineTypes} selected={selectedMachineTypes} onSelect={(machineType) => setSelectedMachineTypes(machineType ? [machineType] : [])} />
                         </div>
                         <div className="space-y-2">
                             {visibleMachines.length === 0 ? <EmptyInline label="No machines match this view." /> : visibleMachines.map((machine) => {
@@ -992,7 +943,7 @@ export default function BaseAssignmentWorkspace({
                         <SheetDescription className="text-xs text-body">Choose a machine for the {shift} shift. Saving happens immediately.</SheetDescription>
                     </SheetHeader>
                     <div className="space-y-3 overflow-y-auto px-4 pt-3">
-                        <MachineTypeFilters machineTypes={machineTypes} selected={selectedMachineTypes} onToggle={toggleMachineType} onShowAll={() => setSelectedMachineTypes([])} />
+                        <MachineTypeFilters machineTypes={machineTypes} selected={selectedMachineTypes} onSelect={(machineType) => setSelectedMachineTypes(machineType ? [machineType] : [])} />
                         {selectableMachines.length === 0 ? <EmptyInline label="No active machines found." /> : selectableMachines.map((machine) => {
                             const assignment = assignmentByMachine.get(machine.id)
                             const assignedWorker = assignment ? workerById.get(assignment.worker_id) : null
@@ -1067,54 +1018,26 @@ function EmptyInline({ label }: { label: string }) {
 function MachineTypeFilters({
     machineTypes,
     selected,
-    onToggle,
-    onShowAll,
+    onSelect,
 }: {
     machineTypes: string[]
     selected: string[]
-    onToggle: (machineType: string) => void
-    onShowAll: () => void
+    onSelect: (machineType: string | null) => void
 }) {
     if (machineTypes.length === 0) return null
 
     return (
-        <div className="flex min-h-10 flex-wrap items-center gap-1.5" data-configuration-tour="types" aria-label="Filter by machine type">
-            <Button
-                type="button"
+        <div className="max-w-full overflow-x-auto pb-0.5" data-configuration-tour="types">
+            <LiquidSegmented
                 size="sm"
-                variant="ghost"
-                onClick={onShowAll}
-                aria-pressed={selected.length === 0}
-                className={cn(
-                    "h-8 rounded-full px-3 text-xs font-semibold transition-all border",
-                    selected.length === 0
-                        ? "border-loom bg-loom text-white shadow-xs hover:bg-loom-elevated hover:text-white"
-                        : "border-hairline bg-surface text-body hover:border-hairline-strong hover:text-ink hover:bg-surface-soft"
-                )}
-            >
-                All
-            </Button>
-            {machineTypes.map((machineType) => {
-                const isSelected = selected.includes(machineType)
-                return (
-                    <Button
-                        key={machineType}
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => onToggle(machineType)}
-                        aria-pressed={isSelected}
-                        className={cn(
-                            "h-8 rounded-full px-3 text-xs font-semibold transition-all border",
-                            isSelected
-                                ? "border-loom bg-loom text-white shadow-xs hover:bg-loom-elevated hover:text-white"
-                                : "border-hairline bg-surface text-body hover:border-hairline-strong hover:text-ink hover:bg-surface-soft"
-                        )}
-                    >
-                        {formatMachineType(machineType)}
-                    </Button>
-                )
-            })}
+                aria-label="Filter by machine type"
+                value={selected.length === 1 ? selected[0] : 'all'}
+                onValueChange={(value) => onSelect(value === 'all' ? null : value)}
+                options={[
+                    { value: 'all', label: 'All' },
+                    ...machineTypes.map((machineType) => ({ value: machineType, label: formatMachineType(machineType) })),
+                ]}
+            />
         </div>
     )
 }

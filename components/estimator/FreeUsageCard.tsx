@@ -70,7 +70,7 @@ export function FreeUsageCard({
   const hasFatalError = Boolean(error && remaining === null)
 
   const containerClasses = [
-    'rounded-xl border border-stone-200/90 bg-white/95 backdrop-blur-xs p-3.5 shadow-sm transition-all duration-200 text-stone-900',
+    'rounded-xl border border-wv-border-default/90 bg-surface/95 backdrop-blur-xs p-3.5 shadow-sm transition-all duration-200 text-ink',
     isDocked ? 'pointer-events-auto' : 'w-full max-w-sm',
     className,
   ]
@@ -89,12 +89,12 @@ export function FreeUsageCard({
       {/* Header Row: Label & Disclosure Toggle */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
-          <span className="text-xs font-semibold text-stone-800 tracking-wide uppercase">
+          <span className="text-xs font-semibold text-ink tracking-wide uppercase">
             {t('freeCostings')}
           </span>
           {isPending && (
             <span
-              className="inline-flex items-center gap-1 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800"
+              className="inline-flex items-center gap-1 rounded bg-wv-status-warning-bg px-1.5 py-0.5 text-[10px] font-medium text-wv-status-warning-fg"
               title={t('confirmingCosting')}
             >
               <Loader2 className="h-2.5 w-2.5 animate-spin" />
@@ -103,7 +103,7 @@ export function FreeUsageCard({
           )}
           {stale && !isPending && (
             <span
-              className="inline-flex items-center rounded bg-stone-100 px-1.5 py-0.5 text-[10px] font-medium text-stone-600"
+              className="inline-flex items-center rounded bg-surface-soft px-1.5 py-0.5 text-[10px] font-medium text-body"
               title={t('offlineStale')}
             >
               {t('lastConfirmed')}
@@ -118,7 +118,7 @@ export function FreeUsageCard({
               onClick={() => void onRefresh()}
               aria-label={t('refresh')}
               disabled={loading || isPending}
-              className="inline-flex h-6 w-6 items-center justify-center rounded text-stone-400 hover:text-stone-700 hover:bg-stone-100 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-stone-400 transition-colors"
+              className="inline-flex h-6 w-6 items-center justify-center rounded text-subtle hover:text-body hover:bg-surface-soft focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-wv-border-focus transition-colors"
             >
               <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
             </button>
@@ -130,7 +130,7 @@ export function FreeUsageCard({
             aria-expanded={expanded}
             aria-controls={detailsId}
             aria-label={t('toggleDetails')}
-            className="inline-flex h-6 w-6 items-center justify-center rounded text-stone-500 hover:text-stone-900 hover:bg-stone-100 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-stone-400 transition-colors"
+            className="inline-flex h-6 w-6 items-center justify-center rounded text-subtle hover:text-ink hover:bg-surface-soft focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-wv-border-focus transition-colors"
           >
             {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
           </button>
@@ -141,19 +141,19 @@ export function FreeUsageCard({
       {isInitialLoading ? (
         <div className="mt-2 space-y-2" aria-busy="true">
           <div className="flex items-baseline gap-2">
-            <span className="text-xl font-bold tracking-tight text-stone-400 tabular-nums animate-pulse">
+            <span className="text-xl font-bold tracking-tight text-subtle tabular-nums animate-pulse">
               – / –
             </span>
-            <span className="text-xs text-stone-400">{t('checkingUsage')}</span>
+            <span className="text-xs text-subtle">{t('checkingUsage')}</span>
           </div>
           <div className="flex gap-1.5 h-1.5 w-full">
-            <div className="h-full flex-1 rounded-full bg-stone-200 animate-pulse" />
-            <div className="h-full flex-1 rounded-full bg-stone-200 animate-pulse" />
+            <div className="h-full flex-1 rounded-full bg-wv-cotton-300 animate-pulse" />
+            <div className="h-full flex-1 rounded-full bg-wv-cotton-300 animate-pulse" />
           </div>
         </div>
       ) : hasFatalError ? (
         <div className="mt-2 space-y-2">
-          <div className="flex items-center gap-1.5 text-xs text-rose-700 font-medium">
+          <div className="flex items-center gap-1.5 text-xs text-wv-status-danger-fg font-medium">
             <AlertCircle className="h-3.5 w-3.5 shrink-0" />
             <span>{t('usageUnavailable')}</span>
           </div>
@@ -163,7 +163,7 @@ export function FreeUsageCard({
               variant="outline"
               size="sm"
               onClick={() => void onRefresh()}
-              className="h-7 text-xs px-2.5 mt-1 border-stone-300 text-stone-700"
+              className="h-7 text-xs px-2.5 mt-1 border-wv-border-control text-body"
             >
               <RefreshCw className="h-3 w-3 mr-1" />
               {t('refresh')}
@@ -174,16 +174,16 @@ export function FreeUsageCard({
         <div className="mt-2">
           <div className="flex items-baseline justify-between gap-1">
             <div className="flex items-baseline gap-1.5" data-testid="free-usage-counter">
-              <span className="text-xl font-bold tracking-tight text-stone-900 tabular-nums">
+              <span className="text-xl font-bold tracking-tight text-ink tabular-nums">
                 {remaining} / {limit}
               </span>
-              <span className="text-xs font-medium text-stone-600">
+              <span className="text-xs font-medium text-body">
                 {t('leftThisMonth')}
               </span>
             </div>
 
             {isExhausted && (
-              <span className="inline-flex rounded bg-amber-50 border border-amber-200/80 px-1.5 py-0.5 text-[10px] font-semibold text-amber-900">
+              <span className="inline-flex rounded bg-wv-status-warning-bg border border-wv-status-warning-border/80 px-1.5 py-0.5 text-[10px] font-semibold text-wv-status-warning-fg">
                 {t('monthlyLimitReached')}
               </span>
             )}
@@ -201,7 +201,7 @@ export function FreeUsageCard({
                 <div
                   key={index}
                   className={`h-full flex-1 rounded-full transition-colors duration-300 ${
-                    isFilled ? 'bg-stone-800' : 'bg-stone-200'
+                    isFilled ? 'bg-wv-neel-600' : 'bg-wv-cotton-300'
                   }`}
                 />
               )
@@ -219,7 +219,7 @@ export function FreeUsageCard({
 
           {/* Confirmed 0/2 Exhausted State: Clean, calm reset date and view plans link */}
           {isExhausted && (
-            <div className="mt-1.5 flex items-center justify-between text-[11px] text-stone-600">
+            <div className="mt-1.5 flex items-center justify-between text-[11px] text-body">
               {formattedResetDate && (
                 <span className="truncate">
                   {t('reset', { date: formattedResetDate })}
@@ -228,7 +228,7 @@ export function FreeUsageCard({
               <Link
                 href="/plans?from=estimator"
                 data-testid="free-usage-plans-link"
-                className="font-medium text-stone-900 hover:text-stone-700 underline underline-offset-2 shrink-0 ml-2"
+                className="font-medium text-ink hover:text-body underline underline-offset-2 shrink-0 ml-2"
               >
                 {t('viewPlans')}
               </Link>
@@ -242,26 +242,26 @@ export function FreeUsageCard({
         <div
           id={detailsId}
           data-testid="free-usage-details"
-          className="mt-3 pt-2.5 border-t border-stone-200/80 space-y-2 text-xs"
+          className="mt-3 pt-2.5 border-t border-wv-border-default/80 space-y-2 text-xs"
         >
-          <div className="font-semibold text-stone-900">
+          <div className="font-semibold text-ink">
             {t('yourMonthlyAllowance')}
           </div>
-          <div className="text-stone-600">
+          <div className="text-body">
             {t('remainingOfLimit', { remaining: remaining ?? 0, limit })}.
           </div>
           {formattedResetDate && (
-            <div className="text-stone-500 text-[11px]">
+            <div className="text-subtle text-[11px]">
               {t('reset', { date: formattedResetDate })}
             </div>
           )}
-          <p className="text-[11px] leading-relaxed text-stone-500">
+          <p className="text-[11px] leading-relaxed text-subtle">
             {t('costingConsumptionExplanation')}
           </p>
           <div className="pt-1">
             <Link
               href="/plans?from=estimator"
-              className="inline-flex items-center text-xs font-semibold text-stone-900 hover:text-stone-700 hover:underline"
+              className="inline-flex items-center text-xs font-semibold text-ink hover:text-body hover:underline"
             >
               {t('explorePlansArrow')}
             </Link>

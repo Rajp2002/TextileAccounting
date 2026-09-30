@@ -37,7 +37,7 @@ export default function FabricStockTourPreview({ step }: { step: FabricStockTour
             {target('balance', <><p>{tx('available')} · {preview.quality}</p><strong data-fabric-tour-balance className="text-3xl">{currentBalance} {tx('metres')}</strong>{step === 'fs-balance' && <p>{sample.production} − {sample.dispatch} = {currentBalance} {tx('metres')}</p>}</>)}
             {step === 'fs-history' ? history : target('openingPending', <>
                 <h2 className="font-semibold">{preview.quality}</h2>
-                {beforeOpening && <span title={tx('openingPending')} className="text-sm text-amber-700">{tx('pending')}</span>}
+                {beforeOpening && <span title={tx('openingPending')} className="text-sm text-[var(--wv-ochre-700)]">{tx('pending')}</span>}
                 <div className="flex flex-wrap gap-2">{action(beforeOpening ? 'opening' : 'correct')}{action('history')}</div>
             </>)}
         </div>

@@ -6,10 +6,11 @@ import {
     DialogContent,
     DialogDescription,
     DialogFooter,
-    DialogHeader,
+    DialogHero,
     DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { TriangleAlert } from 'lucide-react'
 import { useTranslation } from '@/lib/i18n/context'
 
 interface UnsavedChangesDialogProps {
@@ -41,30 +42,29 @@ export function UnsavedChangesDialog({
 
     return (
         <Dialog open={open} onOpenChange={isOpen => { if (!isOpen) onKeepEditing() }}>
-            <DialogContent className="max-w-md">
-                <DialogHeader>
-                    <DialogTitle className="text-base font-semibold text-ink">
+            <DialogContent tone="danger" watermark={TriangleAlert} showCloseButton={false} className="max-w-md">
+                <DialogHero icon={TriangleAlert}>
+                    <DialogTitle className="text-2xl font-bold text-white">
                         {tx('Discard unsaved changes?')}
                     </DialogTitle>
-                    <DialogDescription className="text-sm leading-relaxed text-muted-foreground">
+                    <DialogDescription className="text-sm leading-relaxed text-white/85">
                         {tx('You have unsaved changes on this settings page. If you leave now, your changes will be discarded.')}
                     </DialogDescription>
-                </DialogHeader>
+                </DialogHero>
 
-                <DialogFooter className="gap-2 sm:gap-0">
+                <DialogFooter className="relative z-10 gap-2 sm:gap-2 sm:justify-stretch">
                     <Button
                         type="button"
-                        variant="outline"
+                        variant="ghost"
                         onClick={onKeepEditing}
-                        className="min-h-11"
+                        className="min-h-11 text-white hover:bg-white/10 hover:text-white sm:flex-1"
                     >
                         {tx('Keep editing')}
                     </Button>
                     <Button
                         type="button"
-                        variant="destructive"
                         onClick={onDiscard}
-                        className="min-h-11 font-semibold"
+                        className="min-h-11 bg-white font-semibold text-[#7a2418] hover:bg-white/90 sm:flex-1"
                     >
                         {tx('Discard changes')}
                     </Button>

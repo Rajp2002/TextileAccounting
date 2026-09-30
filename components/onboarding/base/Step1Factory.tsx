@@ -24,28 +24,28 @@ export function Step1Factory({
     return (
         <div className="mx-auto max-w-xl space-y-6">
             <div className="space-y-2 text-center sm:text-left">
-                <div className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300">
+                <div className="inline-flex items-center gap-2 rounded-full border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] px-3 py-1 text-xs font-semibold text-[var(--wv-ochre-800)]">
                     <Sparkles className="h-3.5 w-3.5" />
                     <span>{tx('Step 1 of 6 · Factory Profile')}</span>
                 </div>
-                <h2 className="text-2xl font-bold tracking-tight text-stone-900 dark:text-stone-100 sm:text-3xl">
+                <h2 className="text-2xl font-bold tracking-tight text-[var(--wv-neel-900)] sm:text-3xl">
                     {tx('Confirm your factory details')}
                 </h2>
-                <p className="text-sm text-stone-600 dark:text-stone-400">
+                <p className="text-sm text-[var(--wv-neel-700)]">
                     {tx('We’ve prefilled what we already know. This name will appear on cost estimates, production reports, and delivery challans.')}
                 </p>
             </div>
 
-            <div className="space-y-4 rounded-2xl border border-stone-200 bg-white p-5 shadow-sm dark:border-stone-800 dark:bg-stone-900 sm:p-6">
+            <div className="space-y-4 rounded-2xl border border-[var(--wv-cotton-400)] bg-white p-5 shadow-sm sm:p-6">
                 {/* Factory Name */}
                 <div className="space-y-1.5">
                     <label
                         htmlFor="factory-name-input"
-                        className="flex items-center gap-2 text-sm font-semibold text-stone-800 dark:text-stone-200"
+                        className="flex items-center gap-2 text-sm font-semibold text-[var(--wv-neel-800)]"
                     >
-                        <Building2 className="h-4 w-4 text-amber-600" />
+                        <Building2 className="h-4 w-4 text-[var(--wv-brand-accent)]" />
                         <span>{tx('Factory Name')}</span>
-                        <span className="text-red-500">*</span>
+                        <span className="text-[var(--wv-madder-600)]">*</span>
                     </label>
                     <input
                         id="factory-name-input"
@@ -53,9 +53,9 @@ export function Step1Factory({
                         value={factoryName}
                         onChange={e => onChangeFactoryName(e.target.value)}
                         placeholder={tx('e.g. Surat Weaving Mills')}
-                        className="h-11 w-full rounded-lg border border-stone-200 bg-stone-50/50 px-3 text-base text-stone-900 transition focus:border-amber-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100 dark:focus:bg-stone-900"
+                        className="h-11 w-full rounded-lg border border-[var(--wv-cotton-400)] bg-[var(--wv-cotton-100)]/50 px-3 text-base text-[var(--wv-neel-900)] transition focus:border-[var(--wv-brand-accent-strong)] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[var(--wv-brand-accent-strong)]"
                     />
-                    <p className="text-xs text-stone-500 dark:text-stone-400">
+                    <p className="text-xs text-[var(--wv-cotton-500)]">
                         {tx('Used for customer quotes, quality cards, and worker registers.')}
                     </p>
                 </div>
@@ -64,9 +64,9 @@ export function Step1Factory({
                 <div className="space-y-1.5 pt-2">
                     <label
                         htmlFor="owner-contact-input"
-                        className="flex items-center gap-2 text-sm font-semibold text-stone-800 dark:text-stone-200"
+                        className="flex items-center gap-2 text-sm font-semibold text-[var(--wv-neel-800)]"
                     >
-                        <User className="h-4 w-4 text-amber-600" />
+                        <User className="h-4 w-4 text-[var(--wv-brand-accent)]" />
                         <span>{tx('Owner / Primary Contact')}</span>
                     </label>
                     <input
@@ -75,15 +75,15 @@ export function Step1Factory({
                         value={ownerContact}
                         onChange={e => onChangeOwnerContact(e.target.value)}
                         placeholder={tx('e.g. Ramesh Patel')}
-                        className="h-11 w-full rounded-lg border border-stone-200 bg-stone-50/50 px-3 text-base text-stone-900 transition focus:border-amber-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100 dark:focus:bg-stone-900"
+                        className="h-11 w-full rounded-lg border border-[var(--wv-cotton-400)] bg-[var(--wv-cotton-100)]/50 px-3 text-base text-[var(--wv-neel-900)] transition focus:border-[var(--wv-brand-accent-strong)] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[var(--wv-brand-accent-strong)]"
                     />
-                    <p className="text-xs text-stone-500 dark:text-stone-400">
+                    <p className="text-xs text-[var(--wv-cotton-500)]">
                         {tx('Your name or phone number for internal factory logs.')}
                     </p>
                 </div>
 
                 {error && (
-                    <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+                    <div className="rounded-lg border border-[var(--wv-madder-200)] bg-[var(--wv-madder-50)] p-3 text-sm text-[var(--wv-madder-600)]">
                         {tx(error)}
                     </div>
                 )}

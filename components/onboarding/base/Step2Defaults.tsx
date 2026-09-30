@@ -29,30 +29,30 @@ export function Step2Defaults({
     return (
         <div className="mx-auto max-w-xl space-y-6">
             <div className="space-y-2 text-center sm:text-left">
-                <div className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300">
+                <div className="inline-flex items-center gap-2 rounded-full border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] px-3 py-1 text-xs font-semibold text-[var(--wv-ochre-800)]">
                     <Sliders className="h-3.5 w-3.5" />
                     <span>{tx('Step 2 of 6 · Costing & Process Defaults')}</span>
                 </div>
-                <h2 className="text-2xl font-bold tracking-tight text-stone-900 dark:text-stone-100 sm:text-3xl">
+                <h2 className="text-2xl font-bold tracking-tight text-[var(--wv-neel-900)] sm:text-3xl">
                     {tx('Set your factory defaults')}
                 </h2>
-                <p className="text-sm text-stone-600 dark:text-stone-400">
+                <p className="text-sm text-[var(--wv-neel-700)]">
                     {tx('These baseline assumptions speed up your costing and job setups. You can always override them for any individual fabric.')}
                 </p>
             </div>
 
-            <div className="space-y-6 rounded-2xl border border-stone-200 bg-white p-5 shadow-sm dark:border-stone-800 dark:bg-stone-900 sm:p-6">
+            <div className="space-y-6 rounded-2xl border border-[var(--wv-cotton-400)] bg-white p-5 shadow-sm sm:p-6">
                 {/* Costing Defaults (Wastage & Margin) */}
                 <div className="grid gap-4 sm:grid-cols-2">
                     {/* Wastage */}
-                    <div className="space-y-1.5 rounded-xl border border-stone-100 bg-stone-50/60 p-3.5 dark:border-stone-800 dark:bg-stone-800/30">
+                    <div className="space-y-1.5 rounded-xl border border-[var(--wv-cotton-300)] bg-[var(--wv-cotton-100)]/60 p-3.5">
                         <div className="flex items-center justify-between">
-                            <label htmlFor="wastage-input" className="text-xs font-bold text-stone-800 dark:text-stone-200">
+                            <label htmlFor="wastage-input" className="text-xs font-bold text-[var(--wv-neel-800)]">
                                 {tx('Default Wastage')}
                             </label>
-                            <Percent className="h-3.5 w-3.5 text-stone-400" />
+                            <Percent className="h-3.5 w-3.5 text-[var(--wv-cotton-500)]" />
                         </div>
-                        <p className="text-[11px] leading-tight text-stone-500 dark:text-stone-400">
+                        <p className="text-[11px] leading-tight text-[var(--wv-neel-600)]">
                             {tx('Used automatically when creating a costing.')}
                         </p>
                         <div className="relative mt-2 flex items-center">
@@ -64,23 +64,23 @@ export function Step2Defaults({
                                 max="50"
                                 value={defaults.yarnShortagePct}
                                 onChange={e => updateField('yarnShortagePct', Number(e.target.value) || 0)}
-                                className="h-10 w-full rounded-md border border-stone-200 bg-white pr-8 pl-3 text-base font-semibold text-stone-900 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100"
+                                className="h-10 w-full rounded-md border border-[var(--wv-cotton-400)] bg-white pr-8 pl-3 text-base font-semibold text-[var(--wv-neel-900)] focus:border-[var(--wv-brand-accent-strong)] focus:outline-none focus:ring-1 focus:ring-[var(--wv-brand-accent-strong)]"
                             />
-                            <span className="pointer-events-none absolute right-3 text-sm font-semibold text-stone-400">
+                            <span className="pointer-events-none absolute right-3 text-sm font-semibold text-[var(--wv-cotton-500)]">
                                 %
                             </span>
                         </div>
                     </div>
 
                     {/* Margin */}
-                    <div className="space-y-1.5 rounded-xl border border-stone-100 bg-stone-50/60 p-3.5 dark:border-stone-800 dark:bg-stone-800/30">
+                    <div className="space-y-1.5 rounded-xl border border-[var(--wv-cotton-300)] bg-[var(--wv-cotton-100)]/60 p-3.5">
                         <div className="flex items-center justify-between">
-                            <label htmlFor="margin-input" className="text-xs font-bold text-stone-800 dark:text-stone-200">
+                            <label htmlFor="margin-input" className="text-xs font-bold text-[var(--wv-neel-800)]">
                                 {tx('Default Margin')}
                             </label>
-                            <DollarSign className="h-3.5 w-3.5 text-stone-400" />
+                            <DollarSign className="h-3.5 w-3.5 text-[var(--wv-cotton-500)]" />
                         </div>
-                        <p className="text-[11px] leading-tight text-stone-500 dark:text-stone-400">
+                        <p className="text-[11px] leading-tight text-[var(--wv-neel-600)]">
                             {tx('Target profit margin for suggested rate.')}
                         </p>
                         <div className="relative mt-2 flex items-center">
@@ -92,9 +92,9 @@ export function Step2Defaults({
                                 max="90"
                                 value={defaults.defaultMarginPct}
                                 onChange={e => updateField('defaultMarginPct', Number(e.target.value) || 0)}
-                                className="h-10 w-full rounded-md border border-stone-200 bg-white pr-8 pl-3 text-base font-semibold text-stone-900 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100"
+                                className="h-10 w-full rounded-md border border-[var(--wv-cotton-400)] bg-white pr-8 pl-3 text-base font-semibold text-[var(--wv-neel-900)] focus:border-[var(--wv-brand-accent-strong)] focus:outline-none focus:ring-1 focus:ring-[var(--wv-brand-accent-strong)]"
                             />
-                            <span className="pointer-events-none absolute right-3 text-sm font-semibold text-stone-400">
+                            <span className="pointer-events-none absolute right-3 text-sm font-semibold text-[var(--wv-cotton-500)]">
                                 %
                             </span>
                         </div>
@@ -103,7 +103,7 @@ export function Step2Defaults({
 
                 {/* Overhead Mode */}
                 <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">
+                    <label className="text-xs font-bold uppercase tracking-wider text-[var(--wv-neel-600)]">
                         {tx('How do you normally account for overhead?')}
                     </label>
                     <div className="grid gap-2.5 sm:grid-cols-2">
@@ -113,12 +113,12 @@ export function Step2Defaults({
                             className={cn(
                                 'flex flex-col items-start rounded-xl border p-3.5 text-left transition-all',
                                 defaults.overheadMode === 'direct'
-                                    ? 'border-amber-600 bg-amber-50/60 text-amber-900 shadow-sm dark:bg-amber-950/30 dark:text-amber-200'
-                                    : 'border-stone-200 bg-stone-50/40 text-stone-700 hover:border-stone-300 dark:border-stone-800 dark:bg-stone-800/20 dark:text-stone-300'
+                                    ? 'border-[var(--wv-brand-accent)] bg-[var(--wv-saffron-50)] text-[var(--wv-neel-900)] shadow-sm'
+                                    : 'border-[var(--wv-cotton-300)] bg-[var(--wv-cotton-100)]/40 text-[var(--wv-neel-700)] hover:border-[var(--wv-cotton-400)]'
                             )}
                         >
                             <span className="text-sm font-semibold">{tx('Direct Overhead')}</span>
-                            <span className="mt-1 text-xs text-stone-500 dark:text-stone-400">
+                            <span className="mt-1 text-xs text-[var(--wv-neel-600)]">
                                 {tx('Fixed ₹ per meter added directly to each quality.')}
                             </span>
                         </button>
@@ -129,12 +129,12 @@ export function Step2Defaults({
                             className={cn(
                                 'flex flex-col items-start rounded-xl border p-3.5 text-left transition-all',
                                 defaults.overheadMode === 'monthly_expenses'
-                                    ? 'border-amber-600 bg-amber-50/60 text-amber-900 shadow-sm dark:bg-amber-950/30 dark:text-amber-200'
-                                    : 'border-stone-200 bg-stone-50/40 text-stone-700 hover:border-stone-300 dark:border-stone-800 dark:bg-stone-800/20 dark:text-stone-300'
+                                    ? 'border-[var(--wv-brand-accent)] bg-[var(--wv-saffron-50)] text-[var(--wv-neel-900)] shadow-sm'
+                                    : 'border-[var(--wv-cotton-300)] bg-[var(--wv-cotton-100)]/40 text-[var(--wv-neel-700)] hover:border-[var(--wv-cotton-400)]'
                             )}
                         >
                             <span className="text-sm font-semibold">{tx('Monthly Overhead Allocation')}</span>
-                            <span className="mt-1 text-xs text-stone-500 dark:text-stone-400">
+                            <span className="mt-1 text-xs text-[var(--wv-neel-600)]">
                                 {tx('Monthly factory expenses divided across production capacity.')}
                             </span>
                         </button>
@@ -145,7 +145,7 @@ export function Step2Defaults({
                 <div className="grid gap-4 sm:grid-cols-2">
                     {/* Warping */}
                     <div className="space-y-2">
-                        <label className="text-xs font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">
+                        <label className="text-xs font-bold uppercase tracking-wider text-[var(--wv-neel-600)]">
                             {tx('Warping Process')}
                         </label>
                         <div className="grid grid-cols-2 gap-2">
@@ -155,8 +155,8 @@ export function Step2Defaults({
                                 className={cn(
                                     'rounded-lg border px-3 py-2 text-xs font-semibold transition',
                                     defaults.warpingMode === 'in_house'
-                                        ? 'border-amber-600 bg-amber-600 text-white'
-                                        : 'border-stone-200 bg-white text-stone-700 hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-200'
+                                        ? 'border-[var(--wv-action-primary)] bg-[var(--wv-action-primary)] text-white'
+                                        : 'border-[var(--wv-cotton-300)] bg-white text-[var(--wv-neel-700)] hover:bg-[var(--wv-cotton-100)]'
                                 )}
                             >
                                 {tx('In-house')}
@@ -167,8 +167,8 @@ export function Step2Defaults({
                                 className={cn(
                                     'rounded-lg border px-3 py-2 text-xs font-semibold transition',
                                     defaults.warpingMode === 'outsourced'
-                                        ? 'border-amber-600 bg-amber-600 text-white'
-                                        : 'border-stone-200 bg-white text-stone-700 hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-200'
+                                        ? 'border-[var(--wv-action-primary)] bg-[var(--wv-action-primary)] text-white'
+                                        : 'border-[var(--wv-cotton-300)] bg-white text-[var(--wv-neel-700)] hover:bg-[var(--wv-cotton-100)]'
                                 )}
                             >
                                 {tx('Outsourced')}
@@ -178,7 +178,7 @@ export function Step2Defaults({
 
                     {/* Sizing */}
                     <div className="space-y-2">
-                        <label className="text-xs font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">
+                        <label className="text-xs font-bold uppercase tracking-wider text-[var(--wv-neel-600)]">
                             {tx('Sizing Process')}
                         </label>
                         <div className="grid grid-cols-2 gap-2">
@@ -188,8 +188,8 @@ export function Step2Defaults({
                                 className={cn(
                                     'rounded-lg border px-3 py-2 text-xs font-semibold transition',
                                     defaults.sizingMode === 'in_house'
-                                        ? 'border-amber-600 bg-amber-600 text-white'
-                                        : 'border-stone-200 bg-white text-stone-700 hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-200'
+                                        ? 'border-[var(--wv-action-primary)] bg-[var(--wv-action-primary)] text-white'
+                                        : 'border-[var(--wv-cotton-300)] bg-white text-[var(--wv-neel-700)] hover:bg-[var(--wv-cotton-100)]'
                                 )}
                             >
                                 {tx('In-house')}
@@ -200,8 +200,8 @@ export function Step2Defaults({
                                 className={cn(
                                     'rounded-lg border px-3 py-2 text-xs font-semibold transition',
                                     defaults.sizingMode === 'outsourced'
-                                        ? 'border-amber-600 bg-amber-600 text-white'
-                                        : 'border-stone-200 bg-white text-stone-700 hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-200'
+                                        ? 'border-[var(--wv-action-primary)] bg-[var(--wv-action-primary)] text-white'
+                                        : 'border-[var(--wv-cotton-300)] bg-white text-[var(--wv-neel-700)] hover:bg-[var(--wv-cotton-100)]'
                                 )}
                             >
                                 {tx('Outsourced')}
@@ -211,7 +211,7 @@ export function Step2Defaults({
                 </div>
 
                 {error && (
-                    <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+                    <div className="rounded-lg border border-[var(--wv-madder-200)] bg-[var(--wv-madder-50)] p-3 text-sm text-[var(--wv-madder-700)]">
                         {tx(error)}
                     </div>
                 )}

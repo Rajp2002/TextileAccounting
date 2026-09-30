@@ -26,7 +26,7 @@ function FeaturePlanCard({ plan, current, selected, children }: { plan: UpgradeP
 
   return (
     <article aria-labelledby={`${id}-plan`} className={`flex min-w-0 flex-col overflow-hidden rounded-2xl border bg-surface shadow-[var(--shadow-card)] ${selected ? 'border-saffron ring-2 ring-saffron/30' : plan === 'lite' ? 'border-saffron/60' : 'border-hairline'}`}>
-      <div className={`h-1.5 ${plan === 'free' ? 'bg-slate-300' : plan === 'lite' ? 'bg-saffron' : 'bg-loom'}`} />
+      <div className={`h-1.5 ${plan === 'free' ? 'bg-[var(--wv-cotton-300)]' : plan === 'lite' ? 'bg-saffron' : 'bg-loom'}`} />
       <header data-i18n-skip="true" className="px-5 pb-4 pt-5">
         <div className="flex min-h-8 flex-wrap items-center justify-between gap-2">
           <h3 id={`${id}-plan`} className="text-2xl font-bold tracking-tight text-ink">{name}</h3>

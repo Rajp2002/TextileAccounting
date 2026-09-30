@@ -486,7 +486,7 @@ export default function BaseActiveQualities({
                                                 <DropdownMenuSeparator />
                                                 <DropdownMenuItem
                                                     onClick={() => setDeactivatingJob(job)}
-                                                    className="text-rose-600 focus:text-rose-600 focus:bg-rose-50"
+                                                    className="text-[var(--wv-madder-600)] focus:text-[var(--wv-madder-600)] focus:bg-[var(--wv-madder-50)]"
                                                 >
                                                     <StopCircle className="mr-2 h-4 w-4" /> Deactivate Quality
                                                 </DropdownMenuItem>
@@ -496,8 +496,8 @@ export default function BaseActiveQualities({
 
                                     {/* Newer costing version badge if available */}
                                     {hasNewerVersion && (
-                                        <div className="mt-2.5 flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50/80 px-2.5 py-1 text-[11px] font-semibold text-amber-900">
-                                            <AlertCircle className="h-3.5 w-3.5 shrink-0 text-amber-600" />
+                                        <div className="mt-2.5 flex items-center gap-1.5 rounded-lg border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)]/80 px-2.5 py-1 text-[11px] font-semibold text-[var(--wv-ochre-900)]">
+                                            <AlertCircle className="h-3.5 w-3.5 shrink-0 text-[var(--wv-ochre-700)]" />
                                             <span>Newer costing v{latestVersion} available</span>
                                         </div>
                                     )}
@@ -520,7 +520,7 @@ export default function BaseActiveQualities({
                                             <Factory className="h-4 w-4 text-muted-foreground" />
                                             <span className="text-xs font-semibold text-ink">
                                                 {machineCount > 0 ? (
-                                                    <span className="text-emerald-700 font-bold">
+                                                    <span className="text-[var(--wv-moss-700)] font-bold">
                                                         {machineCount} {machineCount === 1 ? 'Loom' : 'Looms'} running
                                                     </span>
                                                 ) : (
@@ -602,7 +602,7 @@ export default function BaseActiveQualities({
 
                                         <div className="shrink-0">
                                             {isAlreadyActive ? (
-                                                <Badge variant="outline" className="text-emerald-700 border-emerald-300 bg-emerald-50 text-xs font-semibold py-1">
+                                                <Badge variant="outline" className="text-[var(--wv-moss-700)] border-[var(--wv-moss-200)] bg-[var(--wv-moss-50)] text-xs font-semibold py-1">
                                                     <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
                                                     Active ({runningCount} {runningCount === 1 ? 'loom' : 'looms'})
                                                 </Badge>
@@ -701,11 +701,11 @@ export default function BaseActiveQualities({
 
                                         <div className="shrink-0 text-right">
                                             {isOtherQuality ? (
-                                                <Badge variant="outline" className="text-[10px] text-amber-800 border-amber-200 bg-amber-50">
+                                                <Badge variant="outline" className="text-[10px] text-[var(--wv-ochre-800)] border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)]">
                                                     Producing {otherJob?.quality_label ?? 'other quality'}
                                                 </Badge>
                                             ) : isCurrentQuality ? (
-                                                <Badge variant="secondary" className="text-[10px] font-semibold text-emerald-700 bg-emerald-50">
+                                                <Badge variant="secondary" className="text-[10px] font-semibold text-[var(--wv-moss-700)] bg-[var(--wv-moss-50)]">
                                                     Currently assigned
                                                 </Badge>
                                             ) : (
@@ -757,7 +757,7 @@ export default function BaseActiveQualities({
                                     . Deactivating it will stop production of this quality on those looms.
                                     <br />
                                     <br />
-                                    <span className="text-emerald-700 font-semibold">
+                                    <span className="text-[var(--wv-moss-700)] font-semibold">
                                         ✓ Worker-machine assignments will remain unchanged.
                                     </span>
                                     <br />
@@ -804,9 +804,9 @@ export default function BaseActiveQualities({
             {/* Modal: Rule 1 Quality Activation Gate - Yarn Required Before Production */}
             <Dialog open={yarnGateModal !== null} onOpenChange={(open) => !open && setYarnGateModal(null)}>
                 <DialogContent className="max-w-lg rounded-2xl p-0 overflow-hidden">
-                    <DialogHeader className="p-5 pb-3 border-b border-hairline bg-amber-50/50">
+                    <DialogHeader className="p-5 pb-3 border-b border-hairline bg-[var(--wv-ochre-50)]/50">
                         <div className="flex items-center gap-2">
-                            <AlertCircle className="h-5 w-5 text-amber-600 shrink-0" />
+                            <AlertCircle className="h-5 w-5 text-[var(--wv-ochre-700)] shrink-0" />
                             <DialogTitle className="text-base font-bold text-ink">
                                 Yarn required before production
                             </DialogTitle>
@@ -841,16 +841,16 @@ export default function BaseActiveQualities({
                                                 </td>
                                                 <td className="p-2.5 text-right tabular-nums">
                                                     {isAvailable ? (
-                                                        <span className="font-semibold text-emerald-700">{item.current_stock_kg.toFixed(2)} kg</span>
+                                                        <span className="font-semibold text-[var(--wv-moss-700)]">{item.current_stock_kg.toFixed(2)} kg</span>
                                                     ) : item.status === 'zero_stock' ? (
-                                                        <span className="font-medium text-amber-700">0 kg</span>
+                                                        <span className="font-medium text-[var(--wv-ochre-700)]">0 kg</span>
                                                     ) : (
                                                         <span className="text-muted-foreground italic">None</span>
                                                     )}
                                                 </td>
                                                 <td className="p-2.5 text-right">
                                                     {isAvailable ? (
-                                                        <Badge variant="outline" className="text-emerald-700 border-emerald-300 bg-emerald-50 text-[10px] font-semibold">
+                                                        <Badge variant="outline" className="text-[var(--wv-moss-700)] border-[var(--wv-moss-200)] bg-[var(--wv-moss-50)] text-[10px] font-semibold">
                                                             <CheckCircle2 className="mr-1 h-3 w-3" /> Available
                                                         </Badge>
                                                     ) : (
@@ -877,8 +877,8 @@ export default function BaseActiveQualities({
                         </div>
 
                         {yarnGateModal?.yarns.every(y => y.status === 'available') ? (
-                            <p className="text-xs text-emerald-800 bg-emerald-50 p-2.5 rounded-lg border border-emerald-200 flex items-center gap-2">
-                                <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                            <p className="text-xs text-[var(--wv-moss-800)] bg-[var(--wv-moss-50)] p-2.5 rounded-lg border border-[var(--wv-moss-200)] flex items-center gap-2">
+                                <CheckCircle2 className="h-4 w-4 text-[var(--wv-moss-600)] shrink-0" />
                                 All required yarns are now available! You can proceed to activate this quality.
                             </p>
                         ) : (

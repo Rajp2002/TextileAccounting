@@ -36,20 +36,20 @@ export function Step5Payroll({
     return (
         <div className="mx-auto max-w-xl space-y-6">
             <div className="space-y-2 text-center sm:text-left">
-                <div className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300">
+                <div className="inline-flex items-center gap-2 rounded-full border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] px-3 py-1 text-xs font-semibold text-[var(--wv-ochre-800)]">
                     <Calendar className="h-3.5 w-3.5" />
                     <span>{tx('Step 5 of 6 · Payroll Schedule')}</span>
                 </div>
 
-                <h2 className="text-2xl font-bold tracking-tight text-stone-900 dark:text-stone-100 sm:text-3xl">
+                <h2 className="text-2xl font-bold tracking-tight text-[var(--wv-neel-900)] sm:text-3xl">
                     {tx('Configure your factory payroll cycle')}
                 </h2>
-                <p className="text-sm text-stone-600 dark:text-stone-400">
+                <p className="text-sm text-[var(--wv-neel-700)]">
                     {tx('Workers’ pay periods and settlement records will automatically be created using this schedule.')}
                 </p>
             </div>
 
-            <div className="space-y-6 rounded-2xl border border-stone-200 bg-white p-5 shadow-sm dark:border-stone-800 dark:bg-stone-900 sm:p-6">
+            <div className="space-y-6 rounded-2xl border border-[var(--wv-cotton-400)] bg-white p-5 shadow-sm sm:p-6">
                 {/* Cycle Presets */}
                 <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
                     <button
@@ -58,12 +58,12 @@ export function Step5Payroll({
                         className={cn(
                             'flex flex-col items-center justify-center rounded-xl border p-3 text-center transition-all',
                             currentType === 'monthly'
-                                ? 'border-amber-600 bg-amber-50/70 text-amber-900 shadow-sm dark:bg-amber-950/40 dark:text-amber-200'
-                                : 'border-stone-200 bg-stone-50/40 text-stone-700 hover:border-stone-300 dark:border-stone-800 dark:bg-stone-800/30 dark:text-stone-300'
+                                ? 'border-[var(--wv-brand-accent)] bg-[var(--wv-saffron-50)] text-[var(--wv-neel-900)] shadow-sm'
+                                : 'border-[var(--wv-cotton-300)] bg-[var(--wv-cotton-100)]/40 text-[var(--wv-neel-700)] hover:border-[var(--wv-cotton-400)]'
                         )}
                     >
                         <span className="text-xs font-bold">{tx('Monthly')}</span>
-                        <span className="mt-1 text-[11px] text-stone-500 dark:text-stone-400">1st of month</span>
+                        <span className="mt-1 text-[11px] text-[var(--wv-neel-600)]">1st of month</span>
                     </button>
 
                     <button
@@ -72,12 +72,12 @@ export function Step5Payroll({
                         className={cn(
                             'flex flex-col items-center justify-center rounded-xl border p-3 text-center transition-all',
                             currentType === 'weekly'
-                                ? 'border-amber-600 bg-amber-50/70 text-amber-900 shadow-sm dark:bg-amber-950/40 dark:text-amber-200'
-                                : 'border-stone-200 bg-stone-50/40 text-stone-700 hover:border-stone-300 dark:border-stone-800 dark:bg-stone-800/30 dark:text-stone-300'
+                                ? 'border-[var(--wv-brand-accent)] bg-[var(--wv-saffron-50)] text-[var(--wv-neel-900)] shadow-sm'
+                                : 'border-[var(--wv-cotton-300)] bg-[var(--wv-cotton-100)]/40 text-[var(--wv-neel-700)] hover:border-[var(--wv-cotton-400)]'
                         )}
                     >
                         <span className="text-xs font-bold">{tx('Weekly')}</span>
-                        <span className="mt-1 text-[11px] text-stone-500 dark:text-stone-400">Every 7 days</span>
+                        <span className="mt-1 text-[11px] text-[var(--wv-neel-600)]">Every 7 days</span>
                     </button>
 
                     <button
@@ -90,12 +90,12 @@ export function Step5Payroll({
                         className={cn(
                             'flex flex-col items-center justify-center rounded-xl border p-3 text-center transition-all',
                             isFortnightly
-                                ? 'border-amber-600 bg-amber-50/70 text-amber-900 shadow-sm dark:bg-amber-950/40 dark:text-amber-200'
-                                : 'border-stone-200 bg-stone-50/40 text-stone-700 hover:border-stone-300 dark:border-stone-800 dark:bg-stone-800/30 dark:text-stone-300'
+                                ? 'border-[var(--wv-brand-accent)] bg-[var(--wv-saffron-50)] text-[var(--wv-neel-900)] shadow-sm'
+                                : 'border-[var(--wv-cotton-300)] bg-[var(--wv-cotton-100)]/40 text-[var(--wv-neel-700)] hover:border-[var(--wv-cotton-400)]'
                         )}
                     >
                         <span className="text-xs font-bold">{tx('Every 14 days')}</span>
-                        <span className="mt-1 text-[11px] text-stone-500 dark:text-stone-400">Fortnightly</span>
+                        <span className="mt-1 text-[11px] text-[var(--wv-neel-600)]">Fortnightly</span>
                     </button>
 
                     <button
@@ -108,22 +108,22 @@ export function Step5Payroll({
                         className={cn(
                             'flex flex-col items-center justify-center rounded-xl border p-3 text-center transition-all',
                             isCustom
-                                ? 'border-amber-600 bg-amber-50/70 text-amber-900 shadow-sm dark:bg-amber-950/40 dark:text-amber-200'
-                                : 'border-stone-200 bg-stone-50/40 text-stone-700 hover:border-stone-300 dark:border-stone-800 dark:bg-stone-800/30 dark:text-stone-300'
+                                ? 'border-[var(--wv-brand-accent)] bg-[var(--wv-saffron-50)] text-[var(--wv-neel-900)] shadow-sm'
+                                : 'border-[var(--wv-cotton-300)] bg-[var(--wv-cotton-100)]/40 text-[var(--wv-neel-700)] hover:border-[var(--wv-cotton-400)]'
                         )}
                     >
                         <span className="text-xs font-bold">{tx('Custom')}</span>
-                        <span className="mt-1 text-[11px] text-stone-500 dark:text-stone-400">e.g. 24 days</span>
+                        <span className="mt-1 text-[11px] text-[var(--wv-neel-600)]">e.g. 24 days</span>
                     </button>
                 </div>
 
                 {/* Detailed Config Options depending on Selection */}
                 {currentType === 'monthly' && (
-                    <div className="rounded-xl border border-stone-100 bg-stone-50/50 p-4 dark:border-stone-800 dark:bg-stone-800/20">
-                        <label htmlFor="anchor-day-input" className="block text-xs font-bold text-stone-700 dark:text-stone-300">
+                    <div className="rounded-xl border border-[var(--wv-cotton-300)] bg-[var(--wv-cotton-100)]/50 p-4">
+                        <label htmlFor="anchor-day-input" className="block text-xs font-bold text-[var(--wv-neel-800)]">
                             {tx('Monthly Cycle Anchor Day')}
                         </label>
-                        <p className="mt-0.5 text-xs text-stone-500 dark:text-stone-400">
+                        <p className="mt-0.5 text-xs text-[var(--wv-neel-600)]">
                             {tx('The day of each month on which a new pay cycle begins.')}
                         </p>
                         <div className="mt-3 flex items-center gap-3">
@@ -137,9 +137,9 @@ export function Step5Payroll({
                                     const val = e.target.value === '' ? 1 : Number(e.target.value)
                                     updatePayroll({ anchorDay: isNaN(val) ? 1 : Math.min(31, Math.max(1, val)) })
                                 }}
-                                className="h-10 w-24 rounded-lg border border-stone-300 bg-white px-3 text-center text-sm font-bold text-stone-900 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100"
+                                className="h-10 w-24 rounded-lg border border-[var(--wv-cotton-400)] bg-white px-3 text-center text-sm font-bold text-[var(--wv-neel-900)] focus:border-[var(--wv-brand-accent-strong)] focus:outline-none focus:ring-1 focus:ring-[var(--wv-brand-accent-strong)]"
                             />
-                            <span className="text-xs text-stone-600 dark:text-stone-400">
+                            <span className="text-xs text-[var(--wv-neel-700)]">
                                 {tx('Day of month (e.g. 1st or 26th of month)')}
                             </span>
                         </div>
@@ -147,18 +147,18 @@ export function Step5Payroll({
                 )}
 
                 {currentType === 'weekly' && (
-                    <div className="rounded-xl border border-stone-100 bg-stone-50/50 p-4 dark:border-stone-800 dark:bg-stone-800/20">
-                        <label htmlFor="anchor-weekday-select" className="block text-xs font-bold text-stone-700 dark:text-stone-300">
+                    <div className="rounded-xl border border-[var(--wv-cotton-300)] bg-[var(--wv-cotton-100)]/50 p-4">
+                        <label htmlFor="anchor-weekday-select" className="block text-xs font-bold text-[var(--wv-neel-800)]">
                             {tx('Weekly Cycle Anchor Weekday')}
                         </label>
-                        <p className="mt-0.5 text-xs text-stone-500 dark:text-stone-400">
+                        <p className="mt-0.5 text-xs text-[var(--wv-neel-600)]">
                             {tx('The day of the week on which each weekly period begins.')}
                         </p>
                         <select
                             id="anchor-weekday-select"
                             value={payroll.anchorWeekday || 'monday'}
                             onChange={e => updatePayroll({ anchorWeekday: e.target.value as WeekdayName })}
-                            className="mt-3 h-10 w-full rounded-lg border border-stone-300 bg-white px-3 text-sm font-medium text-stone-900 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100"
+                            className="mt-3 h-10 w-full rounded-lg border border-[var(--wv-cotton-400)] bg-white px-3 text-sm font-medium text-[var(--wv-neel-900)] focus:border-[var(--wv-brand-accent-strong)] focus:outline-none focus:ring-1 focus:ring-[var(--wv-brand-accent-strong)]"
                         >
                             {WEEKDAYS.map(w => (
                                 <option key={w} value={w}>
@@ -170,12 +170,12 @@ export function Step5Payroll({
                 )}
 
                 {currentType === 'interval_days' && (
-                    <div className="space-y-4 rounded-xl border border-stone-100 bg-stone-50/50 p-4 dark:border-stone-800 dark:bg-stone-800/20">
+                    <div className="space-y-4 rounded-xl border border-[var(--wv-cotton-300)] bg-[var(--wv-cotton-100)]/50 p-4">
                         <div>
-                            <label htmlFor="interval-days-input" className="block text-xs font-bold text-stone-700 dark:text-stone-300">
+                            <label htmlFor="interval-days-input" className="block text-xs font-bold text-[var(--wv-neel-800)]">
                                 {tx('Cycle Length (Days)')}
                             </label>
-                            <p className="mt-0.5 text-xs text-stone-500 dark:text-stone-400">
+                            <p className="mt-0.5 text-xs text-[var(--wv-neel-600)]">
                                 {tx('Number of days in each recurring payroll period.')}
                             </p>
                             <input
@@ -188,15 +188,15 @@ export function Step5Payroll({
                                     const val = e.target.value === '' ? 14 : Number(e.target.value)
                                     updatePayroll({ intervalDays: isNaN(val) ? 14 : Math.min(60, Math.max(1, val)) })
                                 }}
-                                className="mt-2 h-10 w-32 rounded-lg border border-stone-300 bg-white px-3 text-sm font-bold text-stone-900 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100"
+                                className="mt-2 h-10 w-32 rounded-lg border border-[var(--wv-cotton-400)] bg-white px-3 text-sm font-bold text-[var(--wv-neel-900)] focus:border-[var(--wv-brand-accent-strong)] focus:outline-none focus:ring-1 focus:ring-[var(--wv-brand-accent-strong)]"
                             />
                         </div>
 
                         <div>
-                            <label htmlFor="anchor-date-input" className="block text-xs font-bold text-stone-700 dark:text-stone-300">
+                            <label htmlFor="anchor-date-input" className="block text-xs font-bold text-[var(--wv-neel-800)]">
                                 {tx('Anchor / Reference Date')}
                             </label>
-                            <p className="mt-0.5 text-xs text-stone-500 dark:text-stone-400">
+                            <p className="mt-0.5 text-xs text-[var(--wv-neel-600)]">
                                 {tx('A starting date to align the recurring interval.')}
                             </p>
                             <input
@@ -204,14 +204,14 @@ export function Step5Payroll({
                                 type="date"
                                 value={payroll.anchorDate || today}
                                 onChange={e => updatePayroll({ anchorDate: e.target.value || today })}
-                                className="mt-2 h-10 w-44 rounded-lg border border-stone-300 bg-white px-3 text-sm font-medium text-stone-900 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100"
+                                className="mt-2 h-10 w-44 rounded-lg border border-[var(--wv-cotton-400)] bg-white px-3 text-sm font-medium text-[var(--wv-neel-900)] focus:border-[var(--wv-brand-accent-strong)] focus:outline-none focus:ring-1 focus:ring-[var(--wv-brand-accent-strong)]"
                             />
                         </div>
                     </div>
                 )}
 
                 {error && (
-                    <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+                    <div className="rounded-lg border border-[var(--wv-madder-200)] bg-[var(--wv-madder-50)] p-3 text-sm text-[var(--wv-madder-700)]">
                         {tx(error)}
                     </div>
                 )}

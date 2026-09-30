@@ -31,6 +31,7 @@ import {
     X,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { SwitchField } from '@/components/ui/switch-field'
 import { railPrimaryAction } from '@/components/ui/rail'
 import { cn } from '@/lib/utils'
 import { Card, CardContent } from '@/components/ui/card'
@@ -77,6 +78,7 @@ import { formatDateOnly } from '@/lib/format'
 import { formatSuratDateTime, formatToSurat, getSuratTodayString } from '@/lib/time'
 import { RouteMilestones } from '@/components/performance/route-milestones'
 import { EmptyState, PageHeader, StatusBadge, Toolbar } from '@/components/ui/page-header'
+import { LiquidSegmented } from '@/components/ui/liquid-segmented'
 import PlanAnalyticsBeacon from '@/components/billing/PlanAnalyticsBeacon'
 import { trackPlanEvent } from '@/lib/plan-analytics'
 
@@ -665,10 +667,10 @@ function PriceDeltaBadge({
     if (delta.direction === 'increased') {
         return (
             <span
-                className={`inline-flex items-center gap-1 rounded-md border border-amber-500/25 bg-amber-500/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-amber-700 dark:border-amber-400/25 dark:bg-amber-400/10 dark:text-amber-300 ${className}`}
+                className={`inline-flex items-center gap-1 rounded-md border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] px-1.5 py-0.5 font-mono text-[10px] font-semibold text-[var(--wv-ochre-800)] ${className}`}
                 title={delta.previousValueFormatted ? `Previous rate: ${delta.previousValueFormatted}` : undefined}
             >
-                <TrendingUp className="h-3 w-3 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+                <TrendingUp className="h-3 w-3 shrink-0 text-[var(--wv-ochre-800)]" aria-hidden="true" />
                 <span>{delta.formattedDifference}</span>
                 {delta.formattedPercent && <span className="opacity-80">({delta.formattedPercent})</span>}
             </span>
@@ -678,10 +680,10 @@ function PriceDeltaBadge({
     if (delta.direction === 'decreased') {
         return (
             <span
-                className={`inline-flex items-center gap-1 rounded-md border border-emerald-500/25 bg-emerald-500/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-emerald-700 dark:border-emerald-400/25 dark:bg-emerald-400/10 dark:text-emerald-300 ${className}`}
+                className={`inline-flex items-center gap-1 rounded-md border border-[var(--wv-moss-200)] bg-[var(--wv-moss-50)] px-1.5 py-0.5 font-mono text-[10px] font-semibold text-[var(--wv-moss-700)] ${className}`}
                 title={delta.previousValueFormatted ? `Previous rate: ${delta.previousValueFormatted}` : undefined}
             >
-                <TrendingDown className="h-3 w-3 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+                <TrendingDown className="h-3 w-3 shrink-0 text-[var(--wv-moss-700)]" aria-hidden="true" />
                 <span>{delta.formattedDifference}</span>
                 {delta.formattedPercent && <span className="opacity-80">({delta.formattedPercent})</span>}
             </span>
@@ -1543,29 +1545,29 @@ export default function RatesClient({
             {showDeleteNudge && !demoYarnDeleted && rates.some(r => r.id === DEMO_YARN_RATE.id) && (
                 <div
                     role="status"
-                    className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50/90 p-3.5 text-sm text-amber-950 shadow-xs animate-in fade-in-0 duration-200"
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)]/90 p-3.5 text-sm text-[var(--wv-ochre-800)] shadow-xs animate-in fade-in-0 duration-200"
                 >
                     <div className="flex items-center gap-2.5">
-                        <Sparkles className="h-5 w-5 shrink-0 text-amber-700" aria-hidden="true" />
+                        <Sparkles className="h-5 w-5 shrink-0 text-[var(--wv-ochre-800)]" aria-hidden="true" />
                         <div>
-                            <p className="font-semibold text-amber-900">{tx('Tour completed')}</p>
-                            <p className="text-xs text-amber-800/90">{tx('A sample yarn rate was added so you could explore Rate Book features. You can delete it anytime.')}</p>
+                            <p className="font-semibold text-ink">{tx('Tour completed')}</p>
+                            <p className="text-xs text-[var(--wv-ochre-800)]/90">{tx('A sample yarn rate was added so you could explore Rate Book features. You can delete it anytime.')}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
                         <Button
                             size="sm"
                             variant="outline"
-                            className="border-amber-300 bg-white text-xs font-semibold text-amber-900 hover:bg-amber-100/70"
+                            className="border-[var(--wv-ochre-200)] bg-surface text-xs font-semibold text-[var(--wv-ochre-800)] hover:bg-[var(--wv-ochre-50)]"
                             onClick={handleDeleteDemoYarn}
                         >
-                            <Trash2 className="mr-1.5 h-3.5 w-3.5 text-amber-700" aria-hidden="true" />
+                            <Trash2 className="mr-1.5 h-3.5 w-3.5 text-[var(--wv-ochre-800)]" aria-hidden="true" />
                             {tx('Delete sample yarn')}
                         </Button>
                         <Button
                             size="sm"
                             variant="ghost"
-                            className="text-xs text-amber-700 hover:text-amber-900"
+                            className="text-xs text-[var(--wv-ochre-800)] hover:text-ink"
                             onClick={() => setShowDeleteNudge(false)}
                         >
                             {tx('Dismiss')}
@@ -1664,59 +1666,50 @@ export default function RatesClient({
                             )}
                         </div>
 
-                        <div
+                        <LiquidSegmented
                             data-ratebook-field="directionFilter"
-                            role="group"
+                            fullWidth
+                            className="sm:w-80"
                             aria-label="Show yarn rates by direction"
-                            className="relative grid min-h-11 w-full grid-cols-3 overflow-hidden rounded-xl border border-hairline-strong/70 bg-surface-soft/75 p-1 sm:w-80"
-                        >
-                            <span
-                                aria-hidden="true"
-                                className={`pointer-events-none absolute inset-y-1 left-1 w-[calc(33.333%_-_0.25rem)] rounded-lg border border-saffron/35 bg-saffron-soft shadow-[0_2px_8px_rgba(169,71,19,0.15),0_1px_2px_rgba(30,37,40,0.05)] transition-transform duration-200 ease-out motion-reduce:transition-none ${categoryFilter === 'yarn_warp' ? 'translate-x-full' : categoryFilter === 'yarn_weft' ? 'translate-x-[200%]' : 'translate-x-0'}`}
-                            />
-                            {DIRECTION_OPTIONS.map(({ value, label }) => {
-                                const isSelected = categoryFilter === value
+                            value={categoryFilter}
+                            onValueChange={setCategoryFilter}
+                            options={DIRECTION_OPTIONS.map(({ value, label }) => {
                                 const count = value === 'all' ? allRatesCount : value === 'yarn_warp' ? warpRatesCount : weftRatesCount
-                                return (
-                                    <button
-                                        key={value}
-                                        type="button"
-                                        aria-pressed={isSelected}
-                                        onClick={() => setCategoryFilter(value)}
-                                        className={`relative z-10 flex min-h-10 items-center justify-center gap-1.5 rounded-lg px-2 text-xs font-semibold sm:text-sm leading-none outline-none transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-saffron focus-visible:ring-offset-2 focus-visible:ring-offset-surface-soft motion-reduce:transition-none ${isSelected ? 'font-bold text-saffron-deep' : 'text-subtle hover:text-ink'}`}
-                                    >
-                                        <span>{label}</span>
-                                        <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${isSelected ? 'bg-saffron/20 text-saffron-deep' : 'bg-surface-soft text-subtle'}`}>{count}</span>
-                                    </button>
-                                )
+                                return {
+                                    value,
+                                    label: (
+                                        <>
+                                            <span>{label}</span>
+                                            <span className="rounded-full bg-surface px-1.5 py-0.5 text-[10px] font-bold text-subtle group-aria-checked/option:bg-white/20 group-aria-checked/option:text-white">{count}</span>
+                                        </>
+                                    ),
+                                }
                             })}
-                        </div>
+                        />
 
-                        <button
+                        <SwitchField
                             data-ratebook-field="needsReviewFilter"
-                            type="button"
-                            aria-pressed={statusFilter === 'needs_review'}
-                            onClick={() => setStatusFilter(current => current === 'needs_review' ? 'all' : 'needs_review')}
-                            className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-3.5 text-xs sm:text-sm font-semibold transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-saffron focus-visible:ring-offset-2 ${
-                                statusFilter === 'needs_review'
-                                    ? 'border-warning/60 bg-warning-soft text-ink ring-1 ring-warning/30 shadow-sm'
-                                    : 'border-hairline-strong/70 bg-surface-soft/75 text-body hover:bg-surface-soft hover:text-ink'
-                            }`}
-                        >
-                            <CalendarClock className={`h-4 w-4 shrink-0 ${statusFilter === 'needs_review' ? 'text-warning' : 'text-subtle'}`} aria-hidden="true" />
-                            <span>{tx('Needs Review')}</span>
-                            <span
-                                className={`rounded-full px-1.5 py-0.5 text-[10px] font-black tracking-wide ${
-                                    dueReviewRates.length > 0
-                                        ? statusFilter === 'needs_review'
-                                            ? 'bg-warning text-white'
-                                            : 'bg-warning-soft text-warning border border-warning/30'
-                                        : 'bg-surface text-subtle'
+                            variant="pill"
+                            checked={statusFilter === 'needs_review'}
+                            onCheckedChange={(on) => setStatusFilter(on ? 'needs_review' : 'all')}
+                            checkedClassName="border-warning/60 bg-warning-soft ring-1 ring-warning/30"
+                            icon={<CalendarClock className={`h-4 w-4 shrink-0 ${statusFilter === 'needs_review' ? 'text-warning' : 'text-subtle'}`} aria-hidden="true" />}
+                            trailing={
+                                <span
+                                    className={`rounded-full px-1.5 py-0.5 text-[10px] font-black tracking-wide ${
+                                        dueReviewRates.length > 0
+                                            ? statusFilter === 'needs_review'
+                                                ? 'bg-warning text-white'
+                                                : 'bg-warning-soft text-warning border border-warning/30'
+                                            : 'bg-surface text-subtle'
                                     }`}
-                            >
-                                {dueReviewRates.length}
-                            </span>
-                        </button>
+                                >
+                                    {dueReviewRates.length}
+                                </span>
+                            }
+                        >
+                            {tx('Needs Review')}
+                        </SwitchField>
 
                         {dueReviewRates.length > 0 && (
                             <Button
@@ -1801,8 +1794,6 @@ export default function RatesClient({
                     />
                 ) : (
                     <>
-                        {/* Review-state branches remain explicit for source-level regression checks; their rendered surfaces use Weavly semantic tokens. */}
-                        {/* reviewState === 'overdue' ? 'bg-red-50/70' : reviewState === 'due_soon' ? 'bg-amber-50/70' */}
                         <div key={`table-${resultMotionKey}`} className="ui-content-swap hidden lg:block">
                             <table className="w-full table-fixed text-left text-[12px]">
                                 <colgroup>

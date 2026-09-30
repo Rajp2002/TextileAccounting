@@ -96,7 +96,7 @@ function BillingHistoryRow({ entry }: { entry: BillingHistoryEntry }) {
                         <p className="text-sm font-semibold tracking-tight text-ink">{getBillingPlanName(entry.planTier)}</p>
                         <StatusBadge status={statusPresentation.status} label={statusPresentation.label} />
                         {entry.receiptPaymentId && (
-                            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-800">
+                            <span className="inline-flex items-center gap-1 rounded-full border border-[var(--wv-moss-200)] bg-[var(--wv-moss-50)] px-2 py-1 text-[10px] font-semibold text-[var(--wv-moss-700)]">
                                 <ReceiptText className="h-3 w-3" aria-hidden="true" /> Receipt available
                             </span>
                         )}

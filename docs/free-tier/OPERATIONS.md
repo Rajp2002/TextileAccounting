@@ -1,4 +1,4 @@
-# Free beta operations (disabled; review before use)
+# Free operations
 
 No commands in this document have been run against production. The migrations and application guards must ship together through the established approval process. Preserve the guards when pausing Free.
 
@@ -8,9 +8,9 @@ Apply the foundation, runtime, first-saved-quality, shared-saved-costing and `20
 
 Set server-only `WEAVLY_FREE_SIGNING_KEY_ID` and `WEAVLY_FREE_SIGNING_KEYS` (JSON object mapping key IDs to independent random secrets of at least 32 bytes). Keep previous keys for the entire signed request lifetime. Never use a `NEXT_PUBLIC_` key. In production (including Vercel previews) a missing, unparseable or short active key fails closed: Free status and calculations return 503 `FREE_TEMPORARY_ERROR` and the server logs the setting names; there is no built-in fallback key. The current engine version must remain compatible for outstanding retries; an engine-changing deployment invalidates incompatible requests explicitly, without charging a replacement automatically.
 
-Set `WEAVLY_FREE_BETA_EMAILS` to the approved comma-separated beta email list. The private list plus `free_rollout.enrollment_enabled` govern `/signup?plan=free`. Existing accounts are not automatically enrolled. New owner grants are anchored to the original owner's Auth UUID, across any linked organizations; supervisors do not get separate allowances. Ownership transfer needs a reviewed mapping. Existing normal signup auto-confirms Auth emails; this is not proof of an email challenge or a new OTP system.
+`free_rollout.enrollment_enabled` governs Free signup (`canEnrollFree` in `lib/free-account.ts`); the earlier `WEAVLY_FREE_BETA_EMAILS` private list is no longer read by any code. Free is the default plan for new accounts: `/signup` without a `plan` parameter signs up on Free, and only `plan=lite` or `plan=base` skips it (owner decision, 2026-09-28). Existing accounts are not automatically enrolled. New owner grants are anchored to the original owner's Auth UUID, across any linked organizations; supervisors do not get separate allowances. Ownership transfer needs a reviewed mapping. Existing normal signup auto-confirms Auth emails; this is not proof of an email challenge or a new OTP system.
 
-The three flags in `public.free_rollout` are independently controlled: enrollment, estimation, tour. All start false. Start with approved test accounts, then the approved small beta. Public enrollment is not implemented as an unguarded toggle; it requires removing/replacing the private beta eligibility check through review. Do not enable estimation without the signing key, retention schedule, privacy/authorization evidence and reviewed launch policy.
+The three flags in `public.free_rollout` are independently controlled: enrollment, estimation, tour. The foundation migration created them false; `20260928160000_free_enrollment_default_on.sql` turns enrollment and estimation on (and makes on the column default) following the owner's decision that Free is open to every new account. `tour_enabled` is unchanged. Estimation still needs the signing key described above, and fails closed without it.
 
 ## Retention and reporting
 

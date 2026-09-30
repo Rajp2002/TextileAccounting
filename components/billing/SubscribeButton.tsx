@@ -233,14 +233,14 @@ export function SubscribeButton({ planTier = BILLING_SELF_SERVE_DEFAULT_TIER, ti
     }
 
     const outcomeTone = outcome?.state === 'success'
-        ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
+        ? 'border-[var(--wv-moss-200)] bg-[var(--wv-moss-50)] text-[var(--wv-moss-700)]'
         : outcome?.state === 'retryable'
-            ? 'border-red-200 bg-red-50 text-red-900'
-            : 'border-blue-200 bg-blue-50 text-blue-900'
+            ? 'border-[var(--wv-madder-200)] bg-[var(--wv-madder-50)] text-[var(--wv-madder-600)]'
+            : 'border-[var(--wv-lagoon-200)] bg-[var(--wv-lagoon-50)] text-[var(--wv-lagoon-700)]'
 
     return (
         <div className="space-y-3">
-            <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-950" role="note">
+            <p className="rounded-lg border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] px-3 py-2 text-xs leading-relaxed text-[var(--wv-ochre-800)]" role="note">
                 <span className="font-bold">Payment document:</span> {t('base_plan.billing.checkout')}
             </p>
             {outcome ? (
@@ -256,23 +256,23 @@ export function SubscribeButton({ planTier = BILLING_SELF_SERVE_DEFAULT_TIER, ti
                     </p>
                     {outcome.paymentId && <p className="mt-2 text-[10px] font-semibold uppercase tracking-wider opacity-60">Payment ref. {outcome.paymentId.slice(-8)}</p>}
                     {outcome.state !== 'success' && outcome.orderId && outcome.state !== 'retryable' && (
-                        <Button type="button" variant="outline" size="sm" onClick={() => void checkPaymentStatus({ orderId: outcome.orderId as string, paymentId: outcome.paymentId, planName: outcome.planName, purchaseType: outcome.purchaseType, amount: outcome.amount })} disabled={loading} className="mt-3 gap-2 bg-white/70">
+                        <Button type="button" variant="outline" size="sm" onClick={() => void checkPaymentStatus({ orderId: outcome.orderId as string, paymentId: outcome.paymentId, planName: outcome.planName, purchaseType: outcome.purchaseType, amount: outcome.amount })} disabled={loading} className="mt-3 gap-2 bg-surface/70">
                             {loading && <Loader2 className="h-3.5 w-3.5 animate-spin" />} {tx('Check payment status')}
                         </Button>
                     )}
                     {outcome.state === 'retryable' && (
-                        <Button type="button" size="sm" onClick={handleSubscribe} disabled={loading} className="mt-3 gap-2 bg-red-700 text-white hover:bg-red-800">
+                        <Button type="button" size="sm" onClick={handleSubscribe} disabled={loading} className="mt-3 gap-2 bg-[var(--wv-madder-600)] text-white hover:bg-[var(--wv-madder-600)]/90">
                             {loading && <Loader2 className="h-3.5 w-3.5 animate-spin" />} {tx('Try again')}
                         </Button>
                     )}
                     {outcome.state === 'success' && successHref && (
-                        <Link href={successHref} className="mt-3 inline-flex items-center rounded-lg bg-white/80 px-3 py-2 text-xs font-bold text-emerald-800 shadow-sm hover:bg-white">
+                        <Link href={successHref} className="mt-3 inline-flex items-center rounded-lg bg-surface px-3 py-2 text-xs font-bold text-[var(--wv-moss-700)] shadow-sm hover:bg-surface-soft">
                             {tx(successLabel ?? 'Continue')}
                         </Link>
                     )}
                 </div>
             ) : (
-                <Button type="button" id={`subscribe-btn-${planTier}`} onClick={handleSubscribe} disabled={loading} size="lg" className={cn('w-full gap-2 bg-amber-600 text-white shadow-lg shadow-amber-200/50 transition-all hover:bg-amber-700', className)}>
+                <Button type="button" id={`subscribe-btn-${planTier}`} onClick={handleSubscribe} disabled={loading} size="lg" className={cn('w-full gap-2 bg-loom text-white shadow-md transition-all hover:bg-loom-elevated', className)}>
                     {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> {tx('Opening secure payment...')}</> : <><CreditCard className="h-4 w-4" /> {tx(buttonLabel ?? `Pay ${displayAmount ?? (planTier === 'lite' ? '₹2,999' : '₹9,999')} & Activate`)}</>}
                 </Button>
             )}

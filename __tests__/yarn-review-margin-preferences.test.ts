@@ -32,7 +32,7 @@ describe('yarn review and selling-margin preferences', () => {
   it('surfaces due reviews in navigation and highlights affected yarns', () => {
     expect(sidebar).toContain('yarnReviewDueCount')
     expect(sidebar).toContain('BellRing')
-    expect(rates).toContain("reviewState === 'overdue' ? 'bg-red-50/70")
-    expect(rates).toContain("reviewState === 'due_soon' ? 'bg-amber-50/70")
+    expect(rates).toContain("reviewState === 'overdue' ? 'bg-risk-soft/70")
+    expect(rates).toContain("reviewState === 'due_soon' ? 'bg-warning-soft/70")
   })
 })

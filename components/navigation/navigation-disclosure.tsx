@@ -59,10 +59,10 @@ export function NavigationDisclosure({ group, expanded, onToggle, onCollapse, on
                 aria-controls={id}
                 onClick={onToggle}
                 className={cn(
-                    'group flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-semibold transition-colors duration-150 motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron',
+                    'group relative flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-semibold transition-colors duration-150 motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--wv-brand-accent)]',
                     active
-                        ? 'bg-saffron-deep text-white shadow-sm'
-                        : 'text-zinc-300 hover:bg-saffron/15 hover:text-white'
+                        ? 'bg-[var(--wv-neel-700)] text-[var(--wv-neel-50)] shadow-sm before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[2.5px] before:rounded-r before:bg-[var(--wv-brand-accent)]'
+                        : 'text-[var(--wv-neel-300)] hover:bg-[var(--wv-bg-inverse-raised)] hover:text-[var(--wv-neel-50)]'
                 )}
             >
                 <Icon aria-hidden="true" className="h-[18px] w-[18px] shrink-0" />
@@ -72,7 +72,7 @@ export function NavigationDisclosure({ group, expanded, onToggle, onCollapse, on
                     className={cn(
                         'nav-chevron h-4 w-4 shrink-0 transition-transform motion-reduce:transition-none',
                         expanded ? 'rotate-90' : 'rotate-0',
-                        active ? 'text-white/80' : 'text-zinc-400 group-hover:text-zinc-200'
+                        active ? 'text-[var(--wv-neel-50)]/90' : 'text-[var(--wv-neel-300)] group-hover:text-[var(--wv-neel-50)]'
                     )}
                 />
             </button>
@@ -89,7 +89,7 @@ export function NavigationDisclosure({ group, expanded, onToggle, onCollapse, on
                     >
                         <span
                             aria-hidden="true"
-                            className="pointer-events-none absolute bottom-1.5 left-0 top-1.5 w-[2.5px] rounded-full bg-saffron"
+                            className="pointer-events-none absolute bottom-1.5 left-0 top-1.5 w-[2.5px] rounded-full bg-[var(--wv-brand-accent)]"
                         />
                         {group.children.map(destination => (
                             <li key={destination.id}>
@@ -123,10 +123,10 @@ export function NavigationDisclosure({ group, expanded, onToggle, onCollapse, on
                                         }
                                     }}
                                     className={cn(
-                                        'flex min-h-11 items-center gap-2 rounded-lg px-3 py-2.5 text-sm transition-colors duration-120 motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron',
+                                        'relative flex min-h-11 items-center gap-2 rounded-lg px-3 py-2.5 text-sm transition-colors duration-120 motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--wv-brand-accent)]',
                                         destination.active(pathname, destination.href)
-                                            ? 'bg-saffron/20 font-semibold text-white hover:bg-saffron/25'
-                                            : 'text-zinc-300 hover:bg-saffron/20 hover:text-white'
+                                            ? 'bg-[var(--wv-neel-700)] font-semibold text-[var(--wv-neel-50)] shadow-sm before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[2px] before:rounded-r before:bg-[var(--wv-brand-accent)]'
+                                            : 'text-[var(--wv-neel-300)] hover:bg-[var(--wv-bg-inverse-raised)] hover:text-[var(--wv-neel-50)]'
                                     )}
                                 >
                                     <span className="min-w-0 break-words">{t(destination.translationKey)}</span>
