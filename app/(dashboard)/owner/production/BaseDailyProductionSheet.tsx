@@ -5,7 +5,7 @@ import { isBaseOperatorAvailable, resolveBasePieceRate } from '@/lib/base-operat
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import Link from 'next/link'
 import DailySheetGuidedTour from '@/components/production/DailySheetGuidedTour'
-import { baseProductionHref, validBaseDate, type BaseProductionNavigation } from '@/lib/base-production-navigation'
+import { baseDailySheetHref, baseProductionHref, validBaseDate, type BaseProductionNavigation } from '@/lib/base-production-navigation'
 import { baseProductionDraftKey, parseBaseProductionDraft } from '@/lib/base-production-draft'
 import { baseProductionAuditChanges } from '@/lib/base-production-audit'
 import { buildMachineCollectionSheet, compareMachineLabels, machineReadingState, machineWorkerStatus, summarizeMachineRegister } from '@/lib/base-machine-register'
@@ -179,19 +179,19 @@ export default function BaseDailyProductionSheet({
         setShift(nextShift)
         setShowPending(false)
         setIsReviewOpen(false)
-        window.history.replaceState(null, '', baseProductionHref({ ...navigation, date, shift: nextShift, entry: undefined }))
+        window.history.replaceState(null, '', baseDailySheetHref({ ...navigation, date, shift: nextShift, entry: undefined }))
     }
 
     function openConfiguration() {
         if (draftStatus === 'error' && !window.confirm(tx('This draft could not be saved on this device. Discard these unsaved changes?'))) return
-        const params = new URLSearchParams({ shift, returnTo: baseProductionHref({ ...navigation, date: productionDate, shift }) })
+        const params = new URLSearchParams({ shift, returnTo: baseDailySheetHref({ ...navigation, date: productionDate, shift }) })
         if (focusedWorker) params.set('worker', focusedWorker)
         router.push(`/owner/assignments?${params}`)
     }
 
     function openMachineJobs() {
         if (draftStatus === 'error' && !window.confirm(tx('This draft could not be saved on this device. Discard these unsaved changes?'))) return
-        router.push(`${baseProductionHref({ tab: 'jobs', returnTo: baseProductionHref({ ...navigation, date: productionDate, shift }) })}#machine-jobs`)
+        router.push(`${baseProductionHref({ tab: 'jobs', returnTo: baseDailySheetHref({ ...navigation, date: productionDate, shift }) })}#machine-jobs`)
     }
 
     const jobById = useMemo(

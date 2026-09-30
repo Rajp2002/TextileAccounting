@@ -88,6 +88,24 @@ export type InventoryAuditBoard = {
     material_position: MaterialPositionItem[]
 }
 
+/**
+ * The variance shown for a counted line: the physical count minus the system quantity as of the audit date, rounded
+ * half away from zero at the unit scale (metres 2, kg 3). The database computes the same figure when it applies an
+ * adjustment (round(physical - system as of the audit date)), so what the owner sees is what is applied (PI-06).
+ */
+export function auditVariance(physical: number | null | undefined, system: number, decimals: 2 | 3): number | null {
+    if (physical === null || physical === undefined) return null
+    return new Decimal(physical).minus(system).toDecimalPlaces(decimals, Decimal.ROUND_HALF_UP).toNumber()
+}
+
+const AUDIT_LOCALES = { en: 'en-IN', hi: 'hi-IN', gu: 'gu-IN' } as const
+
+/** A quantity with Indian digit grouping in the owner's language. Digits stay Latin so figures read the same everywhere. */
+export function formatAuditQuantity(value: number, language: keyof typeof AUDIT_LOCALES, decimals: number, options: { signed?: boolean } = {}) {
+    const text = value.toLocaleString(AUDIT_LOCALES[language], { minimumFractionDigits: decimals, maximumFractionDigits: decimals, numberingSystem: 'latn' })
+    return options.signed && value > 0 ? `+${text}` : text
+}
+
 export const CreateAuditSchema = z.object({
     auditDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)'),
     title: z.string().trim().min(1).max(160),
@@ -109,6 +127,8 @@ export const AuditAdjustmentSchema = z.object({
     itemType: z.enum(['fabric', 'yarn']),
     itemId: z.string().uuid(),
     physicalCount: z.number().finite().min(0),
+    // The variance the owner was shown. The database refuses the adjustment if it would now be a different number.
+    expectedVariance: z.number().finite().optional(),
     reason: z.string().trim().min(3).max(500),
 })
 

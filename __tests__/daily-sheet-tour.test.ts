@@ -76,8 +76,8 @@ describe('Daily Sheet tour contract', () => {
         expect(sheet).toContain("context.machineId === firstReadingMachineId ? 'daily.first-reading' : undefined")
         expect(sheet).toContain("getRow(context.workerId!).status !== 'absent' && context.jobId")
         expect(sheet).toContain("currentBatch ? t('dailySheet.saveCorrection') : t('dailySheet.saveShift')")
-        // PI-04 is deliberately unresolved under the approved resumption.
-        expect(sheet).toContain("window.history.replaceState(null, '', baseProductionHref({ ...navigation, date, shift: nextShift, entry: undefined }))")
+        // PI-04 (fixed): a date or shift change stays on the Daily Sheet's own path; see base-daily-sheet-navigation.test.ts.
+        expect(sheet).toContain("window.history.replaceState(null, '', baseDailySheetHref({ ...navigation, date, shift: nextShift, entry: undefined }))")
         expect(sheet).toContain('max={initialData.today}')
     })
     it('uses the existing mounted-child runtime and a single responsive guide slot', () => {
