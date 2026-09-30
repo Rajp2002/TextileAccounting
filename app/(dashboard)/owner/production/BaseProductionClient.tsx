@@ -684,7 +684,7 @@ export default function BaseProductionClient({
                     <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
                         <div className="min-w-0">
                             <h2 className="text-lg font-semibold text-ink">Worker pay</h2>
-                            <p className="mt-0.5 max-w-[21rem] text-xs leading-relaxed text-body">Outstanding earnings through {formatDateOnly(activePeriodBounds.end)}. Earlier unpaid work is included.</p>
+                            <p className="mt-0.5 max-w-[21rem] text-xs leading-relaxed text-body">Outstanding earnings through {formatDateOnly(payrollCutoff)}. Earlier unpaid work is included.</p>
                         </div>
                         <div className="flex shrink-0 flex-wrap items-center gap-2">
                             <Select value={paymentMode} onValueChange={(value) => setPaymentMode(value as BasePayrollPaymentMode)}>
@@ -899,6 +899,7 @@ export default function BaseProductionClient({
                     }}
                     payables={periodPayables}
                     periodRecord={activePeriodRecord}
+                    today={initialData.today}
                     workers={initialData.workers}
                     readinessByWorker={readinessByWorker}
                     defaultPaymentMode={paymentMode}

@@ -166,6 +166,7 @@ describe('Incentive payroll settlement', () => {
         const f = await fixture(), { incentive_id: id } = await create(f)
         await asUser(db,f.owner.userId,f.owner.orgId)
         expect((await pgError(db.query("SELECT public.complete_base_payroll_period($1,$2,$3,$4)",[employmentStart,today,JSON.stringify({ workers: [] }),[f.worker]]))).code).toBe('23514')
+        expect((await pgError(db.query("SELECT public.complete_base_payroll_period($1,$2,$3,'{}')",[employmentStart,tomorrow,JSON.stringify({ workers: [] })]))).code).toBe('22023')
         await review(f,id); await settle(f,(await preview(f)).expected)
         await asUser(db,f.owner.userId,f.owner.orgId)
         const result = await db.query("SELECT public.complete_base_payroll_period($1,$2,$3,'{}') AS result",[employmentStart,today,JSON.stringify({ workers: [] })])

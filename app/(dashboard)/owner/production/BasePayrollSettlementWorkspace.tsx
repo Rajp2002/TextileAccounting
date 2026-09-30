@@ -77,6 +77,7 @@ export default function BasePayrollSettlementWorkspace({
     open,
     onOpenChange,
     period,
+    today,
     payables: externalPayables,
     periodRecord: externalPeriodRecord,
     workers,
@@ -88,6 +89,7 @@ export default function BasePayrollSettlementWorkspace({
     open: boolean
     onOpenChange: (open: boolean) => void
     period: { start: string; end: string; label: string }
+    today?: string
     payables: BaseWorkerPayable[]
     periodRecord?: BasePayrollPeriod | null
     workers: BaseProductionWorker[]
@@ -332,7 +334,7 @@ export default function BasePayrollSettlementWorkspace({
 
     // Complete Payroll Period handler
     async function handleCompletePayroll() {
-        if (isCompleting) return
+        if (isCompleting || (today && period.end > today)) return
         setIsCompleting(true)
 
         // Capture frozen calculation snapshot of every worker
@@ -861,7 +863,7 @@ export default function BasePayrollSettlementWorkspace({
                             </Button>
                         ) : (
                             <Button
-                                disabled={!summary.isReadyToComplete || isCompleting}
+                                disabled={!summary.isReadyToComplete || isCompleting || Boolean(today && period.end > today)}
                                 onClick={() => setCompleteConfirmOpen(true)}
                                 className={`rounded-xl text-xs sm:text-sm font-bold shadow-xs ${
                                     summary.isReadyToComplete
@@ -1147,7 +1149,7 @@ export default function BasePayrollSettlementWorkspace({
                                 </Button>
                                 <Button
                                     type="button"
-                                    disabled={isCompleting}
+                                    disabled={isCompleting || Boolean(today && period.end > today)}
                                     onClick={handleCompletePayroll}
                                     className="rounded-xl bg-loom text-white font-bold text-xs hover:bg-loom-elevated"
                                 >

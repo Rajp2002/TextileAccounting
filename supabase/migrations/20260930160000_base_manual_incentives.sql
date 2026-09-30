@@ -201,6 +201,9 @@ $review$ || anchor);
  EXECUTE definition;
 
  definition := pg_get_functiondef('public.complete_base_payroll_period(date,date,jsonb,text[])'::regprocedure);
+ anchor := 'p_period_start IS NULL OR p_period_end IS NULL OR p_period_start > p_period_end';
+ IF position(anchor in definition) = 0 THEN RAISE EXCEPTION 'Unexpected payroll period validation'; END IF;
+ definition := replace(definition,anchor,anchor || ' OR p_period_end > (now() AT TIME ZONE ''Asia/Kolkata'')::date');
  anchor := 'v_org_id IS NULL OR NOT private.base_production_core_access(v_org_id)';
  IF position(anchor in definition) = 0 THEN RAISE EXCEPTION 'Unexpected payroll access guard'; END IF;
  definition := replace(definition,anchor,anchor || ' OR EXISTS (SELECT 1 FROM public.organizations WHERE id = v_org_id AND is_locked_down)');
