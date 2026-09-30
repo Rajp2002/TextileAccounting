@@ -37,6 +37,7 @@ function revalidatePath(path: string) {
 const BaseWorkerSchema = z.object({
     payType: z.enum(['piece_rate', 'fixed_monthly']).default('piece_rate'),
     role: z.string().trim().max(80).default(''),
+    operatorEligible: z.boolean().optional(),
     monthlySalary: z.number().finite().min(0).max(10_000_000).default(0),
     startDate: DateSchema.optional().or(z.literal('')),
     endDate: DateSchema.optional().or(z.literal('')),
@@ -54,6 +55,7 @@ const UpdateWorkerSchema = BaseWorkerSchema.extend({
 type BaseWorkerCompensationInput = {
     payType?: 'piece_rate' | 'fixed_monthly'
     role?: string
+    operatorEligible?: boolean
     monthlySalary?: number
     startDate?: string
     endDate?: string
@@ -677,6 +679,7 @@ export async function createBaseProductionWorker(input: BaseWorkerCompensationIn
             name: parsed.data.name,
             rate_per_meter: 0,
             pay_type: parsed.data.payType,
+            operator_eligible: parsed.data.operatorEligible,
             role: parsed.data.role,
             monthly_salary: parsed.data.monthlySalary,
             start_date: parsed.data.startDate || null,
@@ -711,12 +714,13 @@ export async function updateBaseProductionWorker(input: BaseWorkerCompensationIn
     if (compensationError) return { error: compensationError }
 
     const supabase = await createServerClient()
-    if (parsed.data.payType === 'fixed_monthly' && !parsed.data.expectedUpdatedAt) return { error: 'Reload staff before updating salary details.' }
+    if ((parsed.data.payType === 'fixed_monthly' || parsed.data.operatorEligible !== undefined) && !parsed.data.expectedUpdatedAt) return { error: 'Reload staff before updating salary details.' }
     let update = supabase
         .from('base_production_workers')
         .update({
             name: parsed.data.name,
             shift_availability: parsed.data.shiftAvailability,
+            operator_eligible: parsed.data.operatorEligible,
             pay_type: parsed.data.payType,
             role: parsed.data.role,
             monthly_salary: parsed.data.monthlySalary,

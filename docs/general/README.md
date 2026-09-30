@@ -11,6 +11,10 @@ The current subscription plans are **Free, Lite, and Base**. The active product 
 
 Plan prices and checkout eligibility are defined in [`lib/billing-constants.ts`](../../lib/billing-constants.ts) and [`lib/billing-lifecycle.ts`](../../lib/billing-lifecycle.ts). The retirement migration is [`20260924085030_retire_full_suite_tier.sql`](../../supabase/migrations/20260924085030_retire_full_suite_tier.sql).
 
+## Worker payroll refinement
+
+The [first implementation increment](../worker-payroll-refinement.md) documents fixed operator approval, production applicability snapshots, prospective zero-rate resolution and the remaining incentive/costing scope.
+
 ## Historical reference
 
 The June 2026 [`USER_WORKFLOWS.md`](../../USER_WORKFLOWS.md), [`TECHNICAL_ANALYSIS.md`](../../TECHNICAL_ANALYSIS.md), and [`TESTING_GUIDE.md`](../../TESTING_GUIDE.md) describe an earlier product. Previous scope and QA records in this directory remain for audit context; they do not define current routes or plan access.

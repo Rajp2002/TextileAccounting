@@ -1,5 +1,10 @@
 /** Runtime phrases for Base operational recovery. */
 const workflowPhrases = [
+  ["Choose piece-rate or monthly pay independently of operator approval. Pay type cannot be changed later.","ऑपरेटर की अनुमति से अलग पीस-रेट या मासिक वेतन चुनें। भुगतान का प्रकार बाद में नहीं बदला जा सकता।","ઓપરેટરની મંજૂરીથી અલગ પીસ-રેટ અથવા માસિક પગાર પસંદ કરો. ચુકવણીનો પ્રકાર પછી બદલી શકાશે નહીં."],
+  ["Approved loom operator","स्वीकृत लूम ऑपरेटर","મંજૂર લૂમ ઓપરેટર"],
+  ["Owner approval for primary loom operation in this factory. Assignments define the machine and shift. Job title and pay do not grant app permissions.","इस फैक्टरी में मुख्य लूम संचालन के लिए मालिक की स्वीकृति। आवंटन मशीन और शिफ्ट तय करता है। पद और वेतन से ऐप की अनुमति नहीं मिलती।","આ ફેક્ટરીમાં મુખ્ય લૂમ સંચાલન માટે માલિકની મંજૂરી. ફાળવણી મશીન અને શિફ્ટ નક્કી કરે છે. હોદ્દો અને પગાર ઍપની પરવાનગી આપતા નથી."],
+  ["Production is recorded without piece earnings. Monthly salary accrues once per worker.","उत्पादन दर्ज होगा, पीस-रेट कमाई नहीं जुड़ेगी। मासिक वेतन प्रति कारीगर एक बार बनेगा।","ઉત્પાદન નોંધાશે, પીસ-રેટ કમાણી ઉમેરાશે નહીં. માસિક પગાર દરેક કારીગર માટે એક વાર ગણાશે."],
+  ["Monthly pay; piece earnings do not apply","मासिक वेतन; पीस-रेट कमाई लागू नहीं","માસિક પગાર; પીસ-રેટ કમાણી લાગુ નથી"],
   ["Assignments: {count}", "आवंटन: {count}", "ફાળવણી: {count}"],
   ["Assignment shift", "आवंटन की शिफ्ट", "ફાળવણીની શિફ્ટ"],
   ["Connect workers to machines", "कारीगरों को मशीनों से जोड़ें", "કારીગરોને મશીનો સાથે જોડો"],

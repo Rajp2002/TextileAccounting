@@ -185,7 +185,7 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
             .range(from, to)),
         readCompleteBaseRows((from, to) => supabase
             .from('base_production_entries')
-            .select('id, job_id, worker_id, production_date, meters, worker_rate_snapshot, notes, created_at', from === 0 ? { count: 'exact' } : {})
+            .select('id, job_id, worker_id, production_date, meters, worker_rate_snapshot, pay_basis_snapshot, piece_earning_state, notes, created_at', from === 0 ? { count: 'exact' } : {})
             .eq('org_id', orgId)
             .order('production_date', { ascending: false })
             .order('created_at', { ascending: false })
@@ -193,7 +193,7 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
             .range(from, to)),
         readCompleteBaseRows((from, to) => supabase
             .from('base_production_workers')
-            .select('id, name, rate_per_meter, shift_availability, is_active, pay_type, role, monthly_salary, salary_effective_from, salary_history, start_date, end_date, updated_at', from === 0 ? { count: 'exact' } : {})
+            .select('id, name, rate_per_meter, shift_availability, is_active, pay_type, role, operator_eligible, operator_effective_from, operator_approved_by, operator_approved_at, monthly_salary, salary_effective_from, salary_history, start_date, end_date, updated_at', from === 0 ? { count: 'exact' } : {})
             .eq('org_id', orgId)
             .order('is_active', { ascending: false })
             .order('name')
@@ -262,14 +262,14 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
             .range(from, to)),
         readCompleteBaseRows((from, to) => supabase
             .from('base_daily_production_entries')
-            .select('id, batch_id, worker_id, entry_status, meters, worker_rate_snapshot, machine_id, job_id, machine_label, job_label, assignment_snapshot, allocation_mode, notes, updated_at', from === 0 ? { count: 'exact' } : {})
+            .select('id, batch_id, worker_id, entry_status, meters, worker_rate_snapshot, pay_basis_snapshot, piece_earning_state, machine_id, job_id, machine_label, job_label, assignment_snapshot, allocation_mode, notes, updated_at', from === 0 ? { count: 'exact' } : {})
             .eq('org_id', orgId)
             .order('updated_at', { ascending: false })
             .order('id')
             .range(from, to)),
         readCompleteBaseRows((from, to) => supabase
             .from('base_daily_production_allocations')
-            .select('id, entry_id, worker_id, assignment_id, machine_id, job_id, meters, worker_rate_snapshot, machine_label, job_label, assignment_snapshot, created_at', from === 0 ? { count: 'exact' } : {})
+            .select('id, entry_id, worker_id, assignment_id, machine_id, job_id, meters, worker_rate_snapshot, pay_basis_snapshot, piece_earning_state, machine_label, job_label, assignment_snapshot, created_at', from === 0 ? { count: 'exact' } : {})
             .eq('org_id', orgId)
             .order('created_at', { ascending: false })
             .order('id')
@@ -366,6 +366,8 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
         production_date: toDate(row.production_date, today),
         meters: toBaseNumber(row.meters),
         worker_rate_snapshot: toBaseNumber(row.worker_rate_snapshot),
+        pay_basis_snapshot: row.pay_basis_snapshot === 'fixed_monthly' ? 'fixed_monthly' : 'piece_rate',
+        piece_earning_state: row.piece_earning_state === 'inapplicable' ? 'inapplicable' : 'applicable',
         notes: toStringOrNull(row.notes),
         created_at: String(row.created_at || new Date(0).toISOString()),
     }))
@@ -479,6 +481,8 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
             production_date: batch?.production_date ?? today,
             meters: toBaseNumber(row.meters),
             worker_rate_snapshot: toBaseNumber(row.worker_rate_snapshot),
+        pay_basis_snapshot: row.pay_basis_snapshot === 'fixed_monthly' ? 'fixed_monthly' : 'piece_rate',
+        piece_earning_state: row.piece_earning_state === 'inapplicable' ? 'inapplicable' : 'applicable',
             notes: toStringOrNull(row.notes),
             created_at: String(row.updated_at || batch?.updated_at || new Date(0).toISOString()),
             batch_id: String(row.batch_id),
@@ -501,6 +505,8 @@ export async function loadBaseProductionInitialData(orgId: string, today: string
         job_id: String(row.job_id),
         meters: toBaseNumber(row.meters),
         worker_rate_snapshot: toBaseNumber(row.worker_rate_snapshot),
+        pay_basis_snapshot: row.pay_basis_snapshot === 'fixed_monthly' ? 'fixed_monthly' : 'piece_rate',
+        piece_earning_state: row.piece_earning_state === 'inapplicable' ? 'inapplicable' : 'applicable',
         machine_label: String(row.machine_label || 'Machine'),
         job_label: String(row.job_label || 'Production job'),
         assignment_snapshot: row.assignment_snapshot ?? {},

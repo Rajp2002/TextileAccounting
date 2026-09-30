@@ -1,5 +1,7 @@
 'use client'
 
+import { isBaseOperatorAvailable, resolveBasePieceRate } from '@/lib/base-operator'
+
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import Link from 'next/link'
 import { baseProductionHref, validBaseDate, type BaseProductionNavigation } from '@/lib/base-production-navigation'
@@ -221,11 +223,11 @@ export default function BaseDailyProductionSheet({
     const sheetWorkers = useMemo(() => {
         const savedWorkerIds = new Set([...currentBatchEntries.map((entry) => entry.worker_id), ...(currentBatch?.machine_records ?? []).map(record => record.worker_id)])
         return initialData.workers.filter((worker) => (
-            (worker.pay_type !== 'fixed_monthly' && worker.is_active && (worker.shift_availability === 'both' || worker.shift_availability === shift))
+            isBaseOperatorAvailable(worker, shift, productionDate)
             || savedWorkerIds.has(worker.id)
             || assignedWorkerIds.has(worker.id)
         ))
-    }, [assignedWorkerIds, currentBatch, currentBatchEntries, initialData.workers, shift])
+    }, [assignedWorkerIds, currentBatch, currentBatchEntries, initialData.workers, shift, productionDate])
     const settledWorkerIds = useMemo(
         () => new Set(
             initialData.settlements
@@ -266,7 +268,7 @@ export default function BaseDailyProductionSheet({
                     effectiveFrom: context.effective_from,
                     jobId: job.id,
                     jobLabel: job.quality_label,
-                    ratePerMeter: job.worker_rate_per_meter > 0 ? job.worker_rate_per_meter : 0,
+                    ratePerMeter: job.worker_rate_per_meter ?? 0,
                 })
             }
         }
@@ -310,7 +312,7 @@ export default function BaseDailyProductionSheet({
                     assignmentId: null, workerId: record.worker_id,
                     workerName: workerById.get(record.worker_id)?.name ?? 'Worker',
                     jobId: record.job_id ?? jobContext?.jobId ?? null, jobLabel: record.job_label ?? jobContext?.jobLabel ?? null,
-                    ratePerMeter: record.job_id ? jobById.get(record.job_id)?.worker_rate_per_meter ?? 0 : jobContext?.ratePerMeter ?? 0,
+                    ratePerMeter: resolveBasePieceRate(workerById.get(record.worker_id)?.pay_type, record.job_id ? jobById.get(record.job_id)?.worker_rate_per_meter : jobContext?.ratePerMeter).rate ?? 0,
                     rateSource: 'costing',
                 }
                 const assignment = currentAssignments.get(machine.id)
@@ -324,7 +326,7 @@ export default function BaseDailyProductionSheet({
                     workerName: worker?.name ?? null,
                     jobId: jobContext?.jobId ?? null,
                     jobLabel: jobContext?.jobLabel ?? null,
-                    ratePerMeter: jobContext?.ratePerMeter ?? 0,
+                    ratePerMeter: resolveBasePieceRate(worker?.pay_type, jobContext?.ratePerMeter).rate ?? 0,
                     rateSource: 'costing',
                 }
             })
@@ -428,6 +430,7 @@ export default function BaseDailyProductionSheet({
     }
 
     function getRowGrossPay(workerId: string) {
+        if (workerById.get(workerId)?.pay_type === 'fixed_monthly') return 0
         const row = getRow(workerId)
         const contexts = contextsByWorker.get(workerId) ?? []
         if (contexts.length === 0) return 0
@@ -930,7 +933,7 @@ export default function BaseDailyProductionSheet({
                                                 </Select>
                                                 <div className="text-left md:text-right">
                                                     <p className="text-sm sm:text-base font-black text-ink">{formatMeters(rowTotal)}</p>
-                                                    <p className="text-xs font-semibold text-muted-foreground">{formatINR(rowGrossPay)}</p>
+                                                    <p className="text-xs font-semibold text-muted-foreground">{worker.pay_type === 'fixed_monthly' ? tx('Monthly pay; piece earnings do not apply') : formatINR(rowGrossPay)}</p>
                                                 </div>
                                                 {row.savedUnallocatedMeters !== null && <div className="md:col-span-4 rounded-xl border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)]/50 px-3 py-2 text-xs text-body"><AlertTriangle className="mr-1 inline h-3.5 w-3.5 text-warning" /> Previously saved as {formatMeters(row.savedUnallocatedMeters)} without an exact machine split. Enter the machine allocation before saving this correction.</div>}
                                             </div>

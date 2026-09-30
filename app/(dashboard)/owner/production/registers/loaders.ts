@@ -28,7 +28,7 @@ export async function loadWorkersRegister(today?: string) {
 
     const [workersResult, assignmentsResult] = await Promise.all([
         readCompleteBaseRows((from, to) => db.from('base_production_workers')
-            .select('id, name, rate_per_meter, shift_availability, is_active, pay_type, role, monthly_salary, salary_effective_from, salary_history, start_date, end_date, updated_at', from === 0 ? { count: 'exact' } : {})
+            .select('id, name, rate_per_meter, shift_availability, is_active, pay_type, role, operator_eligible, operator_effective_from, operator_approved_by, operator_approved_at, monthly_salary, salary_effective_from, salary_history, start_date, end_date, updated_at', from === 0 ? { count: 'exact' } : {})
             .eq('org_id', orgId).order('is_active', { ascending: false }).order('name').order('id').range(from, to)),
         readCompleteBaseRows((from, to) => db.from('base_worker_machine_assignments')
             .select('id, worker_id, machine_id, shift, active, effective_from, effective_to', from === 0 ? { count: 'exact' } : {})
