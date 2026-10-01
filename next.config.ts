@@ -178,9 +178,20 @@ export default withSentryConfig(withPWA(nextConfig), {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
   authToken: process.env.SENTRY_AUTH_TOKEN,
-  release: {
-    name: process.env.SENTRY_RELEASE ?? process.env.VERCEL_GIT_COMMIT_SHA,
-    deploy: process.env.VERCEL_ENV ? { env: process.env.VERCEL_ENV } : undefined,
+  // The SDK compiles the release into client code when it creates one, which
+  // changed the shared Sentry chunk on every deploy and made every user
+  // re-download and recompile it. Turn that off here, and let the plugin below
+  // still create the release, upload source maps and mark the deploy. The
+  // browser reads the release from the page (lib/sentry-release.ts).
+  release: { create: false },
+  webpack: {
+    unstable_sentryWebpackPluginOptions: {
+      release: {
+        name: process.env.SENTRY_RELEASE ?? process.env.VERCEL_GIT_COMMIT_SHA,
+        inject: false,
+        deploy: process.env.VERCEL_ENV ? { env: process.env.VERCEL_ENV } : undefined,
+      },
+    },
   },
   // Upload source maps silently (they're hidden from the browser, only for readable stack traces)
   silent: !process.env.CI,

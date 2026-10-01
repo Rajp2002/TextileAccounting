@@ -1,12 +1,15 @@
 import * as Sentry from "@sentry/nextjs"
 import { isFreeTelemetryEvent } from '@/lib/free-telemetry'
 import { redactSentryEvent } from "@/lib/sentry-redaction"
+import { readRuntimeSentryRelease, withRuntimeRelease } from "@/lib/sentry-release"
 
 const freePage = () => typeof window !== 'undefined' && /^\/free(?:\/|$)/.test(window.location.pathname)
 const replaysOnErrorSampleRate = freePage() ? 0 : 0.1
 
 Sentry.init({
     dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+    // Read from the page, not compiled in, so this chunk survives deploys.
+    release: readRuntimeSentryRelease(),
     tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1.0,
     replaysSessionSampleRate: 0,
     replaysOnErrorSampleRate,
@@ -14,11 +17,13 @@ Sentry.init({
     debug: false,
     // Session Replay is added by loadReplayWhenIdle() below.
     integrations: [],
-    beforeSendTransaction(event) { return freePage() || isFreeTelemetryEvent(event) ? null : event },
+    beforeSendTransaction(event) { return freePage() || isFreeTelemetryEvent(event) ? null : withRuntimeRelease(event) },
     beforeSendLog(log) { return freePage() ? null : log },
     beforeBreadcrumb(breadcrumb) { return freePage() ? null : breadcrumb },
     beforeSend(event) {
-        return freePage() || isFreeTelemetryEvent(event) ? null : redactSentryEvent(event)
+        if (freePage() || isFreeTelemetryEvent(event)) return null
+        withRuntimeRelease(event)
+        return redactSentryEvent(event)
     },
 })
 

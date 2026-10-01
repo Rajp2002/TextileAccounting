@@ -50,6 +50,7 @@ import { Toaster } from "@/components/ui/sonner"
 import { SignInTimingReporter } from "@/components/telemetry/sign-in-timing-reporter"
 import { LogoutTimingReporter } from "@/components/telemetry/logout-timing-reporter"
 import { AppIntroPrePaintScript } from "@/components/intro/intro-pre-paint-script"
+import { SentryReleaseScript } from "@/components/telemetry/sentry-release-script"
 
 export default function RootLayout({
   children,
@@ -60,6 +61,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <AppIntroPrePaintScript />
+        <SentryReleaseScript />
       </head>
       <body
         className={`${inter.variable} ${geistMono.variable} antialiased font-sans`}

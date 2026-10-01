@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { redactSensitiveText, redactSentryEvent } from '../lib/sentry-redaction'
+import { buildSentryReleaseScript } from '../lib/sentry-release'
 
 function read(path: string) {
   return readFileSync(path, 'utf8')
@@ -46,6 +47,31 @@ describe('release/runtime configuration', () => {
     expect(nextConfig).toContain('release:')
     expect(nextConfig).toContain('process.env.SENTRY_RELEASE ?? process.env.VERCEL_GIT_COMMIT_SHA')
     expect(nextConfig).toContain('widenClientFileUpload: true')
+  })
+
+  it('creates Sentry releases at build time without compiling the release into client bundles', () => {
+    const nextConfig = read('next.config.ts')
+    const layout = read('app/layout.tsx')
+    const clientInstrumentation = read('instrumentation-client.ts')
+
+    // A commit SHA inside the shared Sentry chunk changed it on every deploy,
+    // so every user re-downloaded and recompiled it on their next open.
+    expect(nextConfig).toContain('release: { create: false }')
+    expect(nextConfig).toContain('unstable_sentryWebpackPluginOptions')
+    expect(nextConfig).toContain('inject: false')
+    expect(nextConfig).toContain('deploy: process.env.VERCEL_ENV ? { env: process.env.VERCEL_ENV } : undefined')
+    // The browser gets the release from the page at runtime instead.
+    expect(layout).toContain('<SentryReleaseScript />')
+    expect(layout.indexOf('<SentryReleaseScript />')).toBeLessThan(layout.indexOf('<body'))
+    expect(clientInstrumentation).toContain('release: readRuntimeSentryRelease()')
+    expect(clientInstrumentation).toContain('withRuntimeRelease(')
+  })
+
+  it('hands the browser a release script that cannot close its script element', () => {
+    expect(buildSentryReleaseScript('2904d7a44cc0247ee3d68c62e645406036e0036b')).toBe(
+      'window.SENTRY_RELEASE={id:"2904d7a44cc0247ee3d68c62e645406036e0036b"};'
+    )
+    expect(buildSentryReleaseScript('</script><script>alert(1)</script>')).not.toContain('</script>')
   })
 
   it('allows only self and blob workers in the production CSP', () => {
