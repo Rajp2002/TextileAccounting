@@ -18,6 +18,7 @@ describe('disposable database harness', () => {
             '20260402090000_pace_check_cron.sql',
             '20260402100000_monthly_brief_cron.sql',
             '20260402120000_retry_cron.sql',
+            '20261001120000_keep_render_function_warm.sql',
         ])
         expect(migrations.applied).toBe(migrations.total - migrations.skipped.length)
         expect(migrations.applied).toBeGreaterThanOrEqual(296)
