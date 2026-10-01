@@ -22,6 +22,7 @@ import { createSignInServerTimer, persistSignInTraceCookie } from '@/lib/sign-in
 import { isValidIndianPhone, normalizeIndianPhone } from '@/lib/phone'
 import { LEGAL_DOCUMENTS } from '@/lib/legal-documents'
 import { LEGAL_OPERATOR } from '@/lib/legal-operator'
+import { freeWorkspaceHintValue, WORKSPACE_HINT_COOKIE, WORKSPACE_HINT_COOKIE_OPTIONS } from '@/lib/workspace-hint'
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -295,7 +296,7 @@ export async function signIn(input: { email: string; password: string; traceId?:
         telemetry.log(outcome)
         return { error }
     }
-    const succeed = async (redirectTo: string) => {
+    const succeed = async (redirectTo: string, freeWorkspaceUserId?: string) => {
         // A previous session can leave an old inactivity timestamp behind. The
         // newly-created Supabase session and this cookie are committed in the
         // same Server Action response so Proxy never mistakes a fresh login for
@@ -308,6 +309,13 @@ export async function signIn(input: { email: string; password: string; traceId?:
             secure: process.env.NODE_ENV === 'production',
             httpOnly: true,
         })
+        // Routing hint for the next app launch, written from the tier this
+        // action just resolved. Proxy only guesses with it (lib/workspace-hint.ts).
+        if (freeWorkspaceUserId) {
+            cookieStore.set(WORKSPACE_HINT_COOKIE, freeWorkspaceHintValue(freeWorkspaceUserId), WORKSPACE_HINT_COOKIE_OPTIONS)
+        } else {
+            cookieStore.delete(WORKSPACE_HINT_COOKIE)
+        }
         await persistSignInTraceCookie(input.traceId)
         telemetry.log('success', { destination: redirectTo })
         return { redirectTo }
@@ -387,7 +395,7 @@ export async function signIn(input: { email: string; password: string; traceId?:
 
         if (data.session.user.app_metadata?.plan_selection_pending === true) return succeed('/plans?from=onboarding')
         const tier = await telemetry.measure('tier_lookup', () => getOrgTier(orgId))
-        if (tier === 'free' || data.session.user.app_metadata.free_signup === true && tier === 'none') return succeed('/free')
+        if (tier === 'free' || data.session.user.app_metadata.free_signup === true && tier === 'none') return succeed('/free', data.session.user.id)
 
         if (!onboardingComplete) {
             if (tier === 'lite' || tier === 'base') return succeed('/owner/estimator')

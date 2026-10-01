@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createSignInServerTimer } from '@/lib/sign-in-telemetry.server'
+import { WORKSPACE_HINT_COOKIE } from '@/lib/workspace-hint'
 
 export async function POST(request: NextRequest) {
     const origin = request.headers.get('origin')
@@ -40,5 +41,6 @@ export async function POST(request: NextRequest) {
     // Do not carry inactivity state into the next session if Supabase cleanup
     // is unavailable or an older browser retained this app-owned cookie.
     response.cookies.delete('last_activity')
+    response.cookies.delete(WORKSPACE_HINT_COOKIE)
     return response
 }

@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
-import { headers } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { OwnerSidebar } from '@/components/navigation/owner-sidebar'
 import { OwnerRouteLoading } from '@/components/navigation/owner-route-loading'
 import { requireRole } from '@/lib/auth'
@@ -15,6 +15,8 @@ import { getRateReviewStatus } from '@/lib/cost-rates'
 import { getCachedOwnerOrganization } from '@/lib/owner-organization'
 import { createPrincipalCacheScope } from '@/lib/auth-cache-scope'
 import { AuthBoundaryCleanup } from '@/components/auth/auth-boundary-cleanup'
+import { WorkspaceHintSync } from '@/components/auth/workspace-hint-sync'
+import { hasFreeWorkspaceHint, WORKSPACE_HINT_COOKIE } from '@/lib/workspace-hint'
 
 /**
  * The owner chrome is intentionally split into a static frame and two secure
@@ -23,7 +25,7 @@ import { AuthBoundaryCleanup } from '@/components/auth/auth-boundary-cleanup'
  * retain the existing server-side role, entitlement, RLS, and lockdown checks.
  */
 export default async function OwnerLayout({ children }: { children: React.ReactNode }) {
-    const { profile } = await requireRole(['owner'], { allowFreeAccount: true })
+    const { profile, user } = await requireRole(['owner'], { allowFreeAccount: true })
     const access = await getCachedOrgPlanAccess(profile.org_id)
     const requestHeaders = await headers()
     const pathname = requestHeaders.get('x-pathname') || ''
@@ -45,8 +47,13 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
             }
         }
     }
+    // Only non-Free orgs reach this point, so a Free routing hint is stale
+    // (for example after an upgrade on another device). Proxy uses it only as
+    // a launch guess; clear it so the next launch skips the /free detour.
+    const staleFreeWorkspaceHint = hasFreeWorkspaceHint((await cookies()).get(WORKSPACE_HINT_COOKIE)?.value, user.id)
     return (
         <div className="relative isolate min-h-svh overflow-x-hidden bg-background" data-owner-shell>
+            {staleFreeWorkspaceHint && <WorkspaceHintSync />}
             <BrandBackground variant={pathname.startsWith('/owner/billing') ? 'billing' : pathname.startsWith('/owner/payroll') ? 'payroll' : pathname.startsWith('/owner/machines') ? 'machines' : pathname === '/owner/dispatches' ? 'dispatches' : pathname === '/owner/workers' ? 'workers' : 'app'} />
             <a href="#owner-main" className="sr-only fixed left-3 top-3 z-[100] rounded bg-surface p-3 text-ink focus:not-sr-only">Skip to content</a>
 
