@@ -1,4 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { getEarliestSafeCycleChangeDate } from '@/lib/payroll-cycle-engine'
+import { getSuratTodayString } from '@/lib/time'
 import { asSuperuser, freshDatabase, seedOwnerOrg, type Db } from './helpers'
 import { createTestSupabase, type RpcCall } from './supabase-adapter'
 
@@ -26,7 +28,7 @@ vi.mock('@/lib/supabase/server', () => ({
 const { saveBasePayrollCycleConfig } = await import('@/app/(dashboard)/owner/production/actions')
 
 let db: Db
-let day: (offset: number) => string
+let safeDay: (offset: number) => string
 
 const monthly = (effectiveFrom: string) => saveBasePayrollCycleConfig({ cycleType: 'monthly', rule: { type: 'monthly', anchorDay: 1 }, effectiveFrom })
 const weekly = (effectiveFrom: string) => saveBasePayrollCycleConfig({ cycleType: 'weekly', rule: { type: 'weekly', anchorWeekday: 'monday' }, effectiveFrom })
@@ -48,9 +50,13 @@ async function newOwner() {
 beforeAll(async () => {
     db = await freshDatabase()
     ctx.db = db
-    const { rows: [{ today }] } = await db.query("SELECT (now() AT TIME ZONE 'Asia/Kolkata')::date AS today")
-    day = (offset: number) => {
-        const date = new Date(today)
+    // The action refuses a cycle that starts before the next payroll period, so
+    // dates a fixed number of days from today only clear that guard late in the
+    // month. Offset from the earliest date the action accepts instead, which
+    // keeps every case the same on any day of the month.
+    const earliest = getEarliestSafeCycleChangeDate({ today: getSuratTodayString() }).safeEffectiveDate
+    safeDay = (offset: number) => {
+        const date = new Date(earliest)
         date.setUTCDate(date.getUTCDate() + offset)
         return date.toISOString().slice(0, 10)
     }
@@ -61,26 +67,26 @@ beforeEach(() => { (ctx.calls as RpcCall[]).length = 0 })
 describe('payroll cycle settings (OS-13 fixed)', () => {
     it('INVARIANT: a later effective date goes through the RPC and closes the previous cycle', async () => {
         const owner = await newOwner()
-        expect(await monthly(day(10))).toMatchObject({ success: true, effectiveFrom: day(10) })
-        expect(await weekly(day(20))).toMatchObject({ success: true, effectiveFrom: day(20) })
+        expect(await monthly(safeDay(10))).toMatchObject({ success: true, effectiveFrom: safeDay(10) })
+        expect(await weekly(safeDay(20))).toMatchObject({ success: true, effectiveFrom: safeDay(20) })
         expect(await configs(owner.orgId)).toEqual([
-            { cycle_type: 'monthly', from: day(10), until: day(19) },
-            { cycle_type: 'weekly', from: day(20), until: null },
+            { cycle_type: 'monthly', from: safeDay(10), until: safeDay(19) },
+            { cycle_type: 'weekly', from: safeDay(20), until: null },
         ])
         expect((ctx.calls as RpcCall[]).map(call => `${call.identity}:${call.fn}`)).toEqual(['user:update_base_payroll_cycle', 'user:update_base_payroll_cycle'])
     })
 
     it('INVARIANT OS-13: an effective date before the current cycle is refused and nothing changes', async () => {
         const owner = await newOwner()
-        await monthly(day(10))
-        expect(await weekly(day(5))).toEqual({ error: 'Failed to save payroll cycle configuration. Your existing settings have not changed.' })
-        expect(await configs(owner.orgId)).toEqual([{ cycle_type: 'monthly', from: day(10), until: null }])
+        await monthly(safeDay(10))
+        expect(await weekly(safeDay(5))).toEqual({ error: 'Failed to save payroll cycle configuration. Your existing settings have not changed.' })
+        expect(await configs(owner.orgId)).toEqual([{ cycle_type: 'monthly', from: safeDay(10), until: null }])
     })
 
     it('INVARIANT: a same-day change updates the current cycle in place', async () => {
         const owner = await newOwner()
-        await monthly(day(10))
-        expect(await weekly(day(10))).toMatchObject({ success: true })
-        expect(await configs(owner.orgId)).toEqual([{ cycle_type: 'weekly', from: day(10), until: null }])
+        await monthly(safeDay(10))
+        expect(await weekly(safeDay(10))).toMatchObject({ success: true })
+        expect(await configs(owner.orgId)).toEqual([{ cycle_type: 'weekly', from: safeDay(10), until: null }])
     })
 })
