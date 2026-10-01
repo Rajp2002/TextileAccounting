@@ -43,6 +43,7 @@ npx tsc --noEmit                     # type check
 npm test                             # vitest run (whole suite)
 npx vitest run __tests__/<file>.test.ts   # single file
 npx vitest run -t "<test name>"      # single test by name
+npm run test:db                      # database behavior tests (__tests__/db) on a disposable local PostgreSQL cluster; not part of npm test
 npm run build                        # prebuild runs npm test, then reset-build-type-cache + next build --webpack  ⚠ loads production env
 npm start                            # next start  ⚠ loads production env
 npm run qa:provisioning-smoke        # provisions against QA via .env.qa.local (writes data)
@@ -50,25 +51,31 @@ npm run qa:provisioning-smoke        # provisions against QA via .env.qa.local (
 
 - Only use `npm run build` for builds (never bare `next build`). It runs `scripts/reset-build-type-cache.mjs` to delete `.next/cache/.tsbuildinfo`, which works around a Vercel TypeScript stall (see `docs/deployment-typescript-cache-incident.md`). Webpack is required by the PWA plugin.
 - Use `npm ci` for lockfile parity; dependency drift has caused misleading local results before.
-- Deploys go to Vercel, region `bom1` (`vercel.json`). The only GitHub Actions are the Supabase production backup and restore-drill workflows (`.github/workflows/`, `scripts/backup/`). There is no CI lint/test gate.
+- Deploys go to Vercel, region `bom1` (`vercel.json`).
 
-### Baseline (2026-09-26, `main` @ `c29dfe15`)
+### CI
+
+`.github/workflows/ci.yml` runs on every pull request, on pushes to `main`, and on manual dispatch (Node 24, `npm ci`, about 3.5 minutes). It has two jobs:
+- **Types, tests and lint**: `tsc --noEmit`, `vitest run`, and `npm run lint`.
+- **Disposable PostgreSQL regression tests**: `npm run test:db` against PostgreSQL 16 installed on the runner.
+
+Every command goes through `scripts/performance/isolated-command.mjs`, which blanks `.env*` values and service credentials and points Supabase at a closed loopback port, so CI has no secrets and never touches QA or production. CI does not run `npm run build`.
+
+The checks are **informational, not required**. The repo is private on the GitHub free plan, which has no branch protection or required checks, so a red run does not block a merge. Look at the run before merging. The Supabase production backup and restore-drill workflows in `.github/workflows/` (`scripts/backup/`) are separate and unrelated to CI.
+
+### Baseline (2026-10-02, `main` @ `74773dcd`)
 
 | Check | Status | Result |
 | --- | --- | --- |
-| `npx tsc --noEmit` | verified | passes (~8s) |
-| `npx vitest run` | verified | 228 files, 1988 passed, 1 skipped (~16s) |
-| `npm run lint` | verified, **failing** | 3 errors and 81 warnings (58 `no-unused-vars`, 23 `no-explicit-any`) |
+| `npx tsc --noEmit` | verified locally and in CI | passes (~37s locally) |
+| `npm run lint` | verified locally and in CI | clean: 0 errors, 0 warnings (~45s locally) |
+| `npx vitest run` | passed in CI, not re-run locally | last local count (2026-09-26): 228 files, 1988 passed, 1 skipped |
+| `npm run test:db` | passed in CI, not run locally | |
 | `npm run dev` | found, not run | |
 | `npm run build` / `npm start` | found, not run | they load production env |
 | `npm run qa:*` | found, not run | they write to QA |
 
-The pre-existing lint errors (all `react-hooks` rules) are:
-- `components/estimator/FreeUsageCard.tsx:50`: `preserve-manual-memoization`
-- `components/navigation/navigation-disclosure.tsx:30`: `set-state-in-effect`
-- `hooks/use-gutter-dock.ts:120`: `set-state-in-effect`
-
-Because of these, lint is red on `main`. When checking a change, compare the lint output for the files you touched against this baseline, and don't expect a clean run.
+Lint is clean and CI fails on any warning (`--max-warnings=0`), so run `npm run lint` before finishing a change and keep it at zero.
 
 `npm ls` reports a few extraneous `@emnapi/*`, `@tybys/wasm-util`, and `@img/sharp-wasm32` packages in `node_modules`, which is minor drift from the lockfile.
 
@@ -127,7 +134,6 @@ These need a decision from the user. Until then, prefer the stricter `.agents/ru
 4. **Nested cards.** CLAUDE.md says "no nested cards". `design.md` allows them "when there is a clear repeated item or modal-like sub-surface".
 5. **Stale `design.md` Source Files.** It lists `components/navigation/supervisor-nav.tsx`, `app/(dashboard)/supervisor/*`, and `app/(dashboard)/owner/today/FactoryTodayClient.tsx`, none of which exist.
 6. **Build guidance and safety.** "Always build via `npm run build`" conflicts with the fact that a local build loads `.env.production.local`. Decide whether local builds are allowed, or whether that file should be moved out of the repo root.
-7. **Lint policy vs. reality.** `--max-warnings=0` is the stated gate, but `main` currently fails it (see Baseline). Decide whether to fix the baseline first or allow per-file comparison during the redesign.
 
 ## Repo hygiene
 
