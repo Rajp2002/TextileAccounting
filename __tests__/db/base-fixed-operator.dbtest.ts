@@ -9,22 +9,22 @@ let monthStart: string
 let yesterday: string
 type Fixture = Awaited<ReturnType<typeof fixture>>
 
-async function fixture(approved = true, jobRate = 2) {
+async function fixture(approved = true, jobRate = 2, start = monthStart) {
     const owner = await seedOwnerOrg(db)
     const ids = { owner, fixed: randomUUID(), piece: randomUUID(), job: randomUUID(), costing: randomUUID(), machines: [randomUUID(), randomUUID(), randomUUID()] }
     await asSuperuser(db)
     await db.query(`INSERT INTO public.estimator_quotes(id, org_id, record_kind, quality_label, yarn_denier, meters, yarn_rate_per_kg,
         landed_cost_per_meter, quote_price_per_meter, intended_margin_percent, worker_rate_per_m)
         VALUES ($1, $2, 'costing', 'Cotton', 100, 1000, 100, 20, 40, 50, $3)`, [ids.costing, owner.orgId, jobRate])
-    await db.query("INSERT INTO public.base_production_jobs(id, org_id, costing_id, quality_label, target_meters, start_date, status, worker_rate_per_meter) VALUES ($1, $2, $3, 'Cotton', 10000, $4, 'active', $5)", [ids.job, owner.orgId, ids.costing, monthStart, jobRate])
+    await db.query("INSERT INTO public.base_production_jobs(id, org_id, costing_id, quality_label, target_meters, start_date, status, worker_rate_per_meter) VALUES ($1, $2, $3, 'Cotton', 10000, $4, 'active', $5)", [ids.job, owner.orgId, ids.costing, start, jobRate])
     for (const machine of ids.machines) {
         await db.query("INSERT INTO public.base_production_machines(id, org_id, name, machine_type) VALUES ($1, $2, $3, 'air_jet')", [machine, owner.orgId, machine])
-        await db.query('INSERT INTO public.base_machine_job_contexts(org_id, machine_id, job_id, effective_from) VALUES ($1, $2, $3, $4)', [owner.orgId, machine, ids.job, monthStart])
+        await db.query('INSERT INTO public.base_machine_job_contexts(org_id, machine_id, job_id, effective_from) VALUES ($1, $2, $3, $4)', [owner.orgId, machine, ids.job, start])
     }
     await db.query("INSERT INTO public.base_production_workers(id, org_id, name, rate_per_meter, shift_availability) VALUES ($1, $2, $3, 9, 'both')", [ids.piece, owner.orgId, ids.piece])
     await asUser(db, owner.userId, owner.orgId)
     await db.query(`INSERT INTO public.base_production_workers(id, org_id, name, rate_per_meter, pay_type, monthly_salary, start_date, shift_availability, operator_eligible)
-        VALUES ($1, $2, $3, 0, 'fixed_monthly', 18000, $4, 'day', $5)`, [ids.fixed, owner.orgId, ids.fixed, monthStart, approved])
+        VALUES ($1, $2, $3, 0, 'fixed_monthly', 18000, $4, 'day', $5)`, [ids.fixed, owner.orgId, ids.fixed, start, approved])
     return ids
 }
 
@@ -129,7 +129,10 @@ describe('Base fixed operator production', () => {
         await assign(f, f.fixed, f.machines[0])
     })
     it('enforces fixed shifts and prospective approval dates in the assignment RPC', async () => {
-        const f = await fixture()
+        // On the 1st, yesterday precedes monthStart, so the RPC would refuse it
+        // first for having no active job (23503). Start the fixture a day early so
+        // only the approval date can refuse the backdated assignment.
+        const f = await fixture(true, 2, yesterday)
         expect((await pgError(assign(f, f.fixed, f.machines[0], 'night'))).code).toBe('22023')
         expect((await pgError(assign(f, f.fixed, f.machines[0], 'day', yesterday))).code).toBe('22023')
     })
