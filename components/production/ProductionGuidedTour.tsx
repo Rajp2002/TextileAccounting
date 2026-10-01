@@ -7,7 +7,7 @@ import ReplicaGuidedTour from '@/components/tours/ReplicaGuidedTour'
 import { useTranslation } from '@/lib/i18n/context'
 import { productionTourSpecs } from '@/lib/production-tour'
 
-const ProductionTourPreview = dynamic(() => import('./ProductionTourPreview'), { ssr: false })
+const ProductionSampleWorkspace = dynamic(() => import('./ProductionSampleWorkspace'), { ssr: false })
 type CopyModule = typeof import('@/lib/i18n/production-tutorial')
 
 export default function ProductionGuidedTour({ userId, orgId, userMetadata, children }: {
@@ -23,7 +23,7 @@ export default function ProductionGuidedTour({ userId, orgId, userMetadata, chil
     if (pathname === '/owner/production/daily-sheet') return <>{children}</>
 
     return <ReplicaGuidedTour tourId="production" steps={productionTourSpecs} handoffStepId="pd-handoff"
-        workspaceClassName="production-overview-workspace space-y-5 pb-8"
+        workspaceClassName=""
         railClassName="production-left-rail" railLabel={t('navigation.production')}
         userId={userId} orgId={orgId} userMetadata={userMetadata}
         prepare={async () => { setContent(await import('@/lib/i18n/production-tutorial')) }}
@@ -31,7 +31,7 @@ export default function ProductionGuidedTour({ userId, orgId, userMetadata, chil
             if (!content) throw new Error('Production tour copy must load before launch')
             return content.productionStepCopy(language, step, content.productionTourControlLabels(t))
         }}
-        renderReplica={step => <ProductionTourPreview step={step} />}>
+        renderReplica={() => <ProductionSampleWorkspace />}>
         {children}
     </ReplicaGuidedTour>
 }

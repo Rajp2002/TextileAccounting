@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { productionTourSteps, productionTourSpecs, productionTourSelector, productionTourSurface, productionTourExample } from '../lib/production-tour'
+import { productionTourSteps, productionTourSpecs, productionTourSelector } from '../lib/production-tour'
+import { productionSampleData } from '../lib/tours/sample-data/production'
 import { productionTutorialCopy, productionStepCopy, productionTourControlLabels } from '../lib/i18n/production-tutorial'
 import { isTourEligible, tourRegistry } from '../lib/tours/tour-registry'
 import { tourInvitationCopy } from '../lib/i18n/tour-invitations'
@@ -13,18 +14,15 @@ const languages = ['en', 'gu', 'hi'] as const
 const page = readFileSync('docs/guided-tours/pages/production.md', 'utf8')
 
 describe('Production Overview tour', () => {
-    it('teaches seven setup steps then hands off to live activation, with only two sample dialogs', () => {
+    it('teaches seven setup steps then hands off to live activation, opening three real dialogs and sheets', () => {
         expect(productionTourSteps).toEqual(['pd-overview', 'pd-prereq', 'pd-activate', 'pd-looms', 'pd-operators', 'pd-board', 'pd-handoff'])
         expect(productionTourSpecs.map(step => step.id)).toEqual(productionTourSteps)
         expect(productionTourSpecs.map(step => step.kind)).toEqual(['sample', 'sample', 'sample', 'sample', 'sample', 'sample', 'handoff'])
-        expect(productionTourSpecs.filter(step => step.context).map(step => step.id)).toEqual(['pd-activate', 'pd-looms'])
+        expect(productionTourSpecs.filter(step => step.context).map(step => step.id)).toEqual(['pd-activate', 'pd-looms', 'pd-operators'])
+        expect(productionTourSpecs.filter(step => step.context).every(step => step.context === '[data-tour-surface="true"]')).toBe(true)
         expect(productionTourSpecs.filter(step => step.detail).map(step => step.id)).toEqual(['pd-prereq', 'pd-activate', 'pd-board'])
-        expect(productionTourSpecs.map(step => step.anchor)).toEqual(['overview', 'prerequisites', 'activate', 'allocate', 'operators', 'board'].map(field => `[data-production-tour="${field}"]`).concat('[data-tour-anchor="production.activate"]'))
-        expect(productionTourSurface('pd-handoff')).toBe('live')
-        expect(productionTourSurface('pd-activate')).toBe('activate')
-        expect(productionTourSurface('pd-looms')).toBe('allocate')
-        expect(productionTourSurface('pd-board')).toBe('overview')
-        expect(productionTourSelector('pd-prereq')).toBe('[data-production-tour="prerequisites"]')
+        expect(productionTourSpecs.map(step => step.anchor)).toEqual(['overview', 'qualities', 'activate', 'allocate', 'operators', 'board'].map(field => `[data-production-tour="${field}"]`).concat('[data-tour-anchor="production.activate"]'))
+        expect(productionTourSelector('pd-prereq')).toBe('[data-production-tour="qualities"]')
     })
     it.each(languages)('%s transcribes every approved Overview copy row exactly and resolves live tokens', language => {
         const copy = productionTutorialCopy[language]
@@ -72,17 +70,19 @@ describe('Production Overview tour', () => {
         expect(dictionary.manageOperatorsForLoom).toContain('{loom}')
     })
     it('moves Daily Sheet ownership out of Overview', () => {
-        const source = readFileSync('components/production/ProductionTourPreview.tsx', 'utf8')
-        expect(source).not.toContain('function DailySheetPreview')
+        const source = readFileSync('components/production/ProductionSampleWorkspace.tsx', 'utf8')
+        expect(source).not.toMatch(/daily/i)
         for (const language of languages) expect(productionTutorialCopy[language]).not.toHaveProperty('fields')
         expect(readFileSync('lib/daily-sheet-tour.ts', 'utf8')).toContain("'ds-reading'")
         expect(readFileSync('lib/i18n/daily-sheet-tutorial.ts', 'utf8')).toContain('120 m')
     })
-    it('keeps sample earnings consistent and production eligibility unchanged at v2', () => {
-        const sample = productionTourExample
-        expect(sample.metres * sample.rate).toBe(sample.earnings)
-        expect(sample.correctedMetres * sample.rate).toBe(sample.correctedEarnings)
-        expect((sample.correctedMetres - sample.metres) * sample.rate).toBe(sample.correctedEarnings - sample.earnings)
+    it('shows the real page a running quality, a free loom and the ₹2/m wage the copy quotes, and keeps eligibility at v2', () => {
+        const data = productionSampleData('en')
+        expect(data.jobs).toHaveLength(1)
+        expect(data.jobs[0]).toMatchObject({ status: 'active', worker_rate_per_meter: 2, costing_version: 2 })
+        expect(data.machines).toHaveLength(3)
+        expect(data.machineJobContexts).toHaveLength(2)
+        expect(data.costings.filter(costing => !data.jobs.some(job => job.costing_id === costing.id))).toHaveLength(1) // one to choose in Activate Quality
         expect(tourRegistry.production.contentVersion).toBe('v2')
         expect(isTourEligible('production', 'base', 'owner')).toBe(true)
         expect(isTourEligible('production', 'lite', 'owner')).toBe(false)

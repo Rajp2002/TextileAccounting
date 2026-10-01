@@ -1830,7 +1830,7 @@ export default function RatesClient({
                                                     <p className="mt-1 text-[11px] text-subtle">{COST_RATE_CATEGORY_LABELS[rate.category]} {archived && '· Archived'}</p>
                                                     {rate.apply_as_default && <p className="mt-1 text-[10px] font-semibold text-success">Default for new costings</p>}
                                                 </td>
-                                                <td data-ratebook-field="rateAndTrend" className="px-3 py-3 align-top">
+                                                <td data-ratebook-field="rateAndTrend" tabIndex={-1} className="px-3 py-3 align-top">
                                                     <p className="font-mono text-sm font-bold text-ink">{formatRateValue(rate.current_value, rate.unit)}</p>
                                                     <div className="mt-1.5">
                                                         <PriceDeltaBadge currentValue={rate.current_value} previousValue={rate.previous_value} unit={rate.unit} />
@@ -1980,7 +1980,7 @@ export default function RatesClient({
                                             </div>
 
                                             <div className="mt-3.5 flex items-baseline justify-between gap-3 border-y border-hairline/70 py-2.5">
-                                                <div data-ratebook-field="rateAndTrend" className="flex flex-wrap items-baseline gap-2">
+                                                <div data-ratebook-field="rateAndTrend" tabIndex={-1} className="flex flex-wrap items-baseline gap-2">
                                                     <span className="font-mono text-xl font-black tracking-tight text-ink">
                                                         {formatRateValue(rate.current_value, rate.unit)}
                                                     </span>

@@ -22,7 +22,7 @@ export default function BasePayrollReadinessPanel({ readiness }: { readiness: Ba
     const hasIssues = readiness.issueCount > 0
 
     return (
-        <Card className={hasIssues ? 'gap-0 overflow-hidden rounded-2xl border border-warning/30 bg-warning-soft/40 py-0 shadow-[var(--shadow-card)]' : 'gap-0 overflow-hidden rounded-2xl border border-hairline bg-surface py-0 shadow-[var(--shadow-card)]'}>
+        <Card data-payroll-tour="readiness" className={hasIssues ? 'gap-0 overflow-hidden rounded-2xl border border-warning/30 bg-warning-soft/40 py-0 shadow-[var(--shadow-card)]' : 'gap-0 overflow-hidden rounded-2xl border border-hairline bg-surface py-0 shadow-[var(--shadow-card)]'}>
             <CardHeader className="p-4">
                 <div className="flex items-start justify-between gap-3">
                     <div className="flex min-w-0 items-start gap-2.5">

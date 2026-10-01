@@ -34,18 +34,27 @@ function evaluate(name: string, scope: Record<string, unknown>) {
 }
 
 describe('Rate Book shared-runtime integration', () => {
+    it('never points two steps at the same element, so each step highlights its own section', () => {
+        for (const sample of [false, true]) for (const populated of [false, true]) {
+            const anchors = rateBookTourSpecs(sample, populated).map(step => step.anchor)
+            expect(new Set(anchors).size, `duplicate anchor (sample=${sample}, populated=${populated}): ${anchors.join(' ')}`).toBe(anchors.length)
+        }
+    })
+
     it('keeps six ordered steps, row targets, sample variants and real handoffs', () => {
         expect(RATE_BOOK_TOUR_STEPS).toEqual(['rb-purpose', 'rb-find', 'rb-update', 'rb-review', 'rb-usage', 'rb-handoff'])
         for (const sample of [false, true]) for (const populated of [false, true]) {
             const specs = rateBookTourSpecs(sample, populated)
             expect(specs.map(step => step.id)).toEqual(RATE_BOOK_TOUR_STEPS)
-            expect(specs.map(step => step.anchor)).toEqual(['overview', 'yarnSearch', 'quickEditAction', 'reviewStatusBadge', 'linkedQualitiesPopover', populated ? 'yarnSearch' : 'addRateAction'].map(field => `[data-ratebook-field="${field}"]`))
+            expect(specs.map(step => step.anchor)).toEqual(['overview', 'yarnSearch', 'quickEditAction', 'reviewStatusBadge', 'linkedQualitiesPopover', populated ? 'rateAndTrend' : 'addRateAction'].map(field => `[data-ratebook-field="${field}"]`))
             expect(specs.slice(2, 5).map(step => step.kind)).toEqual(Array(3).fill(sample ? 'sample' : 'live'))
             expect(specs.at(-1)?.kind).toBe('handoff')
             for (const step of specs) expect(rates).toContain(step.anchor.slice(1, -1))
         }
         expect(rates.match(/data-ratebook-field="addRateAction"/g)).toHaveLength(2)
         expect(rates).toContain('data-ratebook-field="yarnSearch" tabIndex={-1}')
+        // The populated handoff lands focus on the first row's price, desktop cell and mobile card alike.
+        expect(rates.match(/data-ratebook-field="rateAndTrend" tabIndex=\{-1\}/g)).toHaveLength(2)
         expect(rates).toContain('sampleRow={isSampleRecordId(visibleRates[0]?.id)}')
         expect(rates).toContain('hasRealRates={activeYarnRates.some(rate => !isSampleRecordId(rate.id))}')
     })

@@ -378,7 +378,7 @@ describe('Base Production Core boundary contracts', () => {
         expect(assignments).toContain('Assignment workspace view')
         expect(assignments).toContain('value={mobileView}')
         expect(dailySheet).toContain('aria-controls="base-payroll-rollup"')
-        expect(dailySheet).toContain("isPayrollExpanded ? 'block' : 'hidden'")
+        expect(dailySheet).toContain("isPayrollExpanded || tourStep === 'ds-earnings' ? 'block' : 'hidden'")
         expect(dailySheet).toContain('assignedWorkers.map')
         const costingGuardMigration = read('supabase/migrations/20260901100000_require_active_costing_for_machine_assignment.sql')
         expect(costingGuardMigration).toContain('This machine does not have an active costing')

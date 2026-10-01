@@ -41,6 +41,8 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { formatINR } from '@/lib/finance'
+import { useTourSample } from '@/lib/tours/sample-context'
+import { tourSurfaceProps } from '@/lib/tours/sample-surface'
 import {
     activateSavedCostingForProduction,
     bulkAssignMachinesToQuality,
@@ -102,6 +104,8 @@ export default function BaseActiveQualities({
 }: BaseActiveQualitiesProps) {
     const router = useRouter()
     const { t } = useTranslation()
+    const tourStep = useTourSample('production')?.step
+    const surface = tourSurfaceProps(Boolean(tourStep))
     const [pendingAction, setPendingAction] = useState<string | null>(null)
     const [costingSearch, setCostingSearch] = useState('')
 
@@ -145,6 +149,14 @@ export default function BaseActiveQualities({
         }
         return map
     }, [activeMachines, currentJobIdByMachine])
+
+    // While the Production tour teaches a dialog, show the real one for the first running quality.
+    const tourAssigningJob = tourStep === 'pd-looms' ? activeJobs[0] ?? null : null
+    const shownAssigningJob = tourAssigningJob ?? assigningJob
+    const shownSelectedMachineIds = tourAssigningJob
+        ? new Set((runningMachinesByJobId.get(tourAssigningJob.id) ?? []).map((m) => m.id))
+        : selectedMachineIds
+    const activateDialogOpen = isActivateModalOpen || tourStep === 'pd-activate'
 
     // Costing group -> latest costing version
     const latestVersionByGroup = useMemo(() => {
@@ -391,7 +403,7 @@ export default function BaseActiveQualities({
     }
 
     return (
-        <section className="space-y-4">
+        <section className="space-y-4" data-production-tour="qualities">
             <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
                 <div>
                     <div className="flex items-center gap-2">
@@ -546,8 +558,8 @@ export default function BaseActiveQualities({
             )}
 
             {/* Modal: Activate Quality from Saved Costings */}
-            <Dialog open={isActivateModalOpen} onOpenChange={onOpenActivateModalChange}>
-                <DialogContent className="max-w-xl rounded-2xl p-0 overflow-hidden">
+            <Dialog open={activateDialogOpen} onOpenChange={onOpenActivateModalChange} {...surface.root}>
+                <DialogContent className="max-w-xl rounded-2xl p-0 overflow-hidden" {...surface.content}>
                     <DialogHeader className="p-5 pb-3 border-b border-hairline bg-surface-soft/40">
                         <DialogTitle className="text-base font-bold text-ink">Activate Quality for Production</DialogTitle>
                         <DialogDescription className="text-xs text-muted-foreground">
@@ -566,7 +578,7 @@ export default function BaseActiveQualities({
                             />
                         </div>
 
-                        <div className="max-h-80 overflow-y-auto divide-y divide-hairline rounded-xl border border-hairline">
+                        <div data-production-tour="activate" className="max-h-80 overflow-y-auto divide-y divide-hairline rounded-xl border border-hairline">
                             {filteredCostings.length === 0 && (
                                 <div className="p-6 text-center text-xs text-muted-foreground">
                                     No saved costings found. Create one in{' '}
@@ -635,11 +647,11 @@ export default function BaseActiveQualities({
             </Dialog>
 
             {/* Modal: Bulk Assign Machines */}
-            <Dialog open={assigningJob !== null} onOpenChange={(open) => !open && setAssigningJob(null)}>
-                <DialogContent className="max-w-lg rounded-2xl p-0 overflow-hidden">
+            <Dialog open={shownAssigningJob !== null} onOpenChange={(open) => !open && setAssigningJob(null)} {...surface.root}>
+                <DialogContent className="max-w-lg rounded-2xl p-0 overflow-hidden" {...surface.content}>
                     <DialogHeader className="p-5 pb-3 border-b border-hairline bg-surface-soft/40">
                         <DialogTitle className="text-base font-bold text-ink">
-                            Assign Looms to {assigningJob?.quality_label}
+                            Assign Looms to {shownAssigningJob?.quality_label}
                         </DialogTitle>
                         <DialogDescription className="text-xs text-muted-foreground">
                             Select the looms that should produce this quality. Workers already operating these looms remain assigned.
@@ -649,10 +661,10 @@ export default function BaseActiveQualities({
                     <div className="p-5 space-y-3">
                         <div className="flex items-center justify-between text-xs text-muted-foreground pb-1">
                             <span>Available Looms ({activeMachines.length} total)</span>
-                            <span className="font-bold text-ink">{selectedMachineIds.size} Selected</span>
+                            <span className="font-bold text-ink">{shownSelectedMachineIds.size} Selected</span>
                         </div>
 
-                        <div className="max-h-80 overflow-y-auto space-y-2 rounded-xl border border-hairline p-3">
+                        <div data-production-tour="allocate" className="max-h-80 overflow-y-auto space-y-2 rounded-xl border border-hairline p-3">
                             {activeMachines.length === 0 && (
                                 <p className="text-center text-xs text-muted-foreground py-4">
                                     No active machines found. Add machines in{' '}
@@ -665,10 +677,10 @@ export default function BaseActiveQualities({
 
                             {activeMachines.map((machine) => {
                                 const currentJobId = currentJobIdByMachine.get(machine.id)
-                                const isCurrentQuality = currentJobId === assigningJob?.id
-                                const isOtherQuality = Boolean(currentJobId && currentJobId !== assigningJob?.id)
+                                const isCurrentQuality = currentJobId === shownAssigningJob?.id
+                                const isOtherQuality = Boolean(currentJobId && currentJobId !== shownAssigningJob?.id)
                                 const otherJob = isOtherQuality ? jobs.find((j) => j.id === currentJobId) : null
-                                const isSelected = selectedMachineIds.has(machine.id)
+                                const isSelected = shownSelectedMachineIds.has(machine.id)
 
                                 return (
                                     <label
@@ -733,7 +745,7 @@ export default function BaseActiveQualities({
                             {pendingAction === 'bulk-assign' ? (
                                 <Loader2 className="h-4 w-4 animate-spin" />
                             ) : (
-                                `Assign ${selectedMachineIds.size} Loom(s)`
+                                `Assign ${shownSelectedMachineIds.size} Loom(s)`
                             )}
                         </Button>
                     </DialogFooter>

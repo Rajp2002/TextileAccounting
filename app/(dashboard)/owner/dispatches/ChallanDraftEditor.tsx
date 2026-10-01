@@ -241,7 +241,7 @@ export default function ChallanDraftEditor({
                     disabled={disabled}
                     className={`${showPreview ? 'hidden' : 'block'} min-w-0 space-y-6 overflow-y-auto px-1 pb-6 pr-3 lg:block lg:pr-6`}
                 >
-                    <section className="space-y-4 rounded-2xl border border-hairline bg-surface p-4 sm:p-5 shadow-xs">
+                    <section data-dispatch-tour="quality" className="space-y-4 rounded-2xl border border-hairline bg-surface p-4 sm:p-5 shadow-xs">
                         <div className="flex items-center gap-2">
                             <span className="flex h-6 w-6 items-center justify-center rounded-full bg-loom text-white text-xs font-bold">1</span>
                             <h3 className="font-extrabold text-ink text-sm sm:text-base">
@@ -310,7 +310,7 @@ export default function ChallanDraftEditor({
                             {tx('paymentTermsHelp')}
                         </p>
                     </section>
-                    <section className="space-y-4 rounded-2xl border border-hairline bg-surface p-4 sm:p-5 shadow-xs">
+                    <section data-dispatch-tour="parties" className="space-y-4 rounded-2xl border border-hairline bg-surface p-4 sm:p-5 shadow-xs">
                         <div className="flex items-center gap-2">
                             <span className="flex h-6 w-6 items-center justify-center rounded-full bg-loom text-white text-xs font-bold">2</span>
                             <h3 className="font-extrabold text-ink text-sm sm:text-base">
@@ -321,7 +321,7 @@ export default function ChallanDraftEditor({
                             {required.map(documentField)}
                         </div>
                     </section>
-                    <section className="space-y-4 rounded-2xl border border-hairline bg-surface p-4 sm:p-5 shadow-xs">
+                    <section data-dispatch-tour="lots" className="space-y-4 rounded-2xl border border-hairline bg-surface p-4 sm:p-5 shadow-xs">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-loom text-white text-xs font-bold">3</span>
@@ -621,7 +621,7 @@ export default function ChallanDraftEditor({
                     </div>
                 </aside>
             </div>
-            <footer className="z-10 flex flex-wrap items-center justify-between gap-3 border-t border-hairline bg-surface/95 backdrop-blur-md px-4 py-3.5 shadow-xs">
+            <footer data-dispatch-tour="saveDraft" className="z-10 flex flex-wrap items-center justify-between gap-3 border-t border-hairline bg-surface/95 backdrop-blur-md px-4 py-3.5 shadow-xs">
                 <div aria-live="polite" aria-atomic="true" className="min-w-0">
                     <p className="font-extrabold text-ink tabular-nums text-sm sm:text-base">
                         {progress.count} {tx('lots')} — {tx('totalSent')}:{' '}

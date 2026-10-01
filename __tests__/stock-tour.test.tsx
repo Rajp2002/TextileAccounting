@@ -1,39 +1,26 @@
-import React from 'react'
-import { renderToStaticMarkup } from 'react-dom/server'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import fs from 'node:fs'
-import { stockTourSteps, stockTourSection, stockTourSelector, stockTourSurface, fabricStockBalance, fabricStockExample, yarnStockExample, fabricStockTourSteps, fabricStockTourSpecs, yarnStockTourSpecs, yarnStockTourSteps } from '../lib/stock-tour'
-import { fabricStockTutorialCopy, fabricStockStepCopy, fabricStockTourControlLabels, fabricStockPreviewCopy, yarnStockTutorialCopy, yarnStockStepCopy, yarnStockTourControlLabels } from '../lib/i18n/stock-tutorial'
+import { stockTourSteps, stockTourSection, stockTourSelector, fabricStockTourSteps, fabricStockTourSpecs, yarnStockTourSpecs, yarnStockTourSteps } from '../lib/stock-tour'
+import { fabricStockTutorialCopy, fabricStockStepCopy, fabricStockTourControlLabels, yarnStockTutorialCopy, yarnStockStepCopy, yarnStockTourControlLabels } from '../lib/i18n/stock-tutorial'
 import { getTourDefinition, isTourEligible } from '../lib/tours/tour-registry'
 import { tourInvitationCopy } from '../lib/i18n/tour-invitations'
 import { en } from '../lib/i18n/locales/en'
 import { gu } from '../lib/i18n/locales/gu'
 import { hi } from '../lib/i18n/locales/hi'
-import { tourCommonCopy } from '../lib/i18n/tour-common'
 const locales = { en, gu, hi }
-const locale = vi.hoisted(() => ({ language: 'en' as 'en' | 'gu' | 'hi' }))
-vi.mock('@/lib/i18n/context', () => ({ useTranslation: () => ({ language: locale.language, t: (key: string) => {
-    const [section, name] = key.split('.')
-    return (locales[locale.language][section as keyof typeof en] as Record<string, string>)?.[name] ?? key
-} }) }))
-vi.mock('@/app/actions/tour-preferences', () => ({ recordTourEventAction: vi.fn() }))
-vi.mock('@/components/ui/dialog', () => {
-    const Container = ({ children }: { children: React.ReactNode }) => <div>{children}</div>
-    return { Dialog: Container, DialogContent: Container, DialogDescription: Container, DialogHeader: Container, DialogTitle: Container }
-})
 import { yarnStockText } from '../lib/i18n/yarn-stock'
-import StockTourPreview from '../components/stock/StockTourPreview'
+import { FABRIC_SAMPLE, YARN_SAMPLE, fabricStockPhase, fabricStockSample, fabricStockSampleForm, yarnStockPhase, yarnStockSample, yarnStockSampleEntry } from '../lib/tours/sample-data/stock'
+import { TOUR_SURFACE_SELECTOR } from '../lib/tours/sample-surface'
+import type { FabricStockTourStep, YarnStockTourStep } from '../lib/stock-tour'
 import { totalYarnKg, yarnMovementUsage } from '../lib/yarn-stock'
 const read = (file: string) => fs.readFileSync(file, 'utf8')
 const approved = read('docs/guided-tours/pages/fabric-stock.md').split('\n').filter(line => /^\| `\w+\.(title|body|detail|benefit)`/.test(line)).map(line => line.split('|').slice(1, -1).map(cell => cell.trim()))
 
 for (const kind of ['fabric-stock', 'yarn-stock'] as const) describe(kind, () => {
-    for (const step of stockTourSteps(kind).filter(id => !id.endsWith('-handoff'))) it(`${step}: target exists and business controls are disabled`, () => {
-        const html = renderToStaticMarkup(<StockTourPreview kind={kind} step={step} />)
-        const anchor = stockTourSelector(step).slice(1, -1)
-        expect(html.split(anchor).length - 1).toBe(1)
-        expect(html).not.toMatch(/<(form|a)\b/)
-        for (const tag of html.match(/<(button|input|select|textarea)\b[^>]*>/g) ?? []) expect(tag).toContain('disabled=""')
+    const client = read(kind === 'fabric-stock' ? 'app/(dashboard)/owner/stock/QualityStockClient.tsx' : 'app/(dashboard)/owner/stock/YarnStockClient.tsx')
+    for (const step of stockTourSteps(kind).filter(id => !id.endsWith('-handoff'))) it(`${step}: its target is an element of the real page`, () => {
+        const [, attribute, value] = stockTourSelector(step).match(/^\[(data-[\w-]+)="([^"]+)"\]$/)!
+        expect(client, `${step} needs ${attribute}="${value}" on the real page`).toMatch(new RegExp(`${attribute}=\\{[^}]*['"]${value}['"]|${attribute}="${value}"|${attribute}=\\{entry\\?\\.kind`))
     })
     it('has complete localized explanations and remains Base-owner only', () => {
         const steps = stockTourSteps(kind)
@@ -60,19 +47,19 @@ describe('GT-08 Fabric Stock', () => {
         expect(fabricStockTourSpecs.map(spec => spec.anchor)).toEqual(['[data-stock-tour="balance"]', '[data-stock-tour="openingPending"]', '[data-stock-tour="opening"]', '[data-stock-tour="correction"]', '[data-stock-tour="history"]', '[data-tour-anchor="fabric.opening"]'])
         for (const spec of fabricStockTourSpecs) {
             expect(spec.kind).toBe(spec.id === 'fs-handoff' ? 'handoff' : 'sample')
-            expect(spec.context).toBe(['fs-opening', 'fs-correct'].includes(spec.id) ? '[data-stock-tour-preview="true"]' : undefined)
+            expect(spec.context).toBe(['fs-opening', 'fs-correct', 'fs-history'].includes(spec.id) ? TOUR_SURFACE_SELECTOR : undefined)
             expect(Boolean(spec.detail)).toBe(['fs-correct', 'fs-history'].includes(spec.id))
         }
     })
-    it('reconciles the 100 → 600 → 590 example at each step', () => {
-        const s = fabricStockExample
+    it('reconciles the 100 → 600 → 590 example at each step on the real board', () => {
+        const s = FABRIC_SAMPLE
         expect(s.production - s.dispatch).toBe(100)
         expect(s.opening).toBe(500)
-        expect(s.opening + s.production - s.dispatch).toBe(s.balance)
-        expect(s.balance + s.correction).toBe(s.counted)
-        expect(fabricStockTourSteps.map(fabricStockBalance)).toEqual([100, 100, 100, 600, 590, null])
-        expect(s).not.toHaveProperty('preStartPhysical')
-        expect(s).not.toHaveProperty('historicalCommitted')
+        const balances = fabricStockTourSteps.filter(step => step !== 'fs-handoff').map(step => fabricStockSample('en', fabricStockPhase(step as FabricStockTourStep)).total_meters)
+        expect(balances).toEqual([100, 100, 100, 600, 590])
+        expect(fabricStockSampleForm('en', 'fs-opening')).toMatchObject({ kind: 'opening', meters: '500' })
+        expect(fabricStockSampleForm('en', 'fs-correct')).toMatchObject({ kind: 'correction', meters: '590' })
+        expect(fabricStockSampleForm('en', 'fs-balance')).toBeNull()
     })
     it.each(['en', 'gu', 'hi'] as const)('%s: matches approved copy, tokens, limits, native script and invitation benefit', language => {
         const copy = fabricStockTutorialCopy[language]
@@ -102,35 +89,14 @@ describe('GT-08 Fabric Stock', () => {
         expect(copy.guide.benefit).toBe(tourInvitationCopy[language].benefits['fabric-stock'])
         expect(JSON.stringify(copy)).not.toMatch(/Pending Dispatches|Earlier dispatch records|જૂના ડિસ્પેચ રેકોર્ડ|पुराने डिस्पैच रिकॉर्ड|650|150/)
     })
-    it.each(['en', 'gu', 'hi'] as const)('%s: shows the correct balances, form amounts, history and only one sample banner', language => {
-        locale.language = language
-        try {
-            const labels = locales[language].qualityStock
-            for (const step of fabricStockTourSteps) {
-                const html = renderToStaticMarkup(<StockTourPreview kind="fabric-stock" step={step} />)
-                if (step === 'fs-handoff') { expect(html).toBe(''); continue }
-                expect(html).toContain(`${fabricStockBalance(step)} ${labels.metres}</strong>`)
-                expect(html).toContain(fabricStockPreviewCopy[language].quality)
-                expect(html).not.toMatch(/<(form|a)\b/)
-                for (const tag of html.match(/<(button|input|select|textarea)\b[^>]*>/g) ?? []) expect(tag).toContain('disabled=""')
-                if (language !== 'en') for (const value of Object.values(fabricStockPreviewCopy[language])) expect(value).toMatch(language === 'gu' ? /[\u0a80-\u0aff]/ : /[\u0900-\u097f]/)
-                expect(html.split(tourCommonCopy[language].sampleBanner).length - 1).toBe(1)
-                expect(html).not.toContain('data-stock-tour="tracking"')
-                expect(html.includes(`title="${labels.openingPending}"`)).toBe(['fs-balance', 'fs-pending', 'fs-opening'].includes(step))
-            }
-            const opening = renderToStaticMarkup(<StockTourPreview kind="fabric-stock" step="fs-opening" />)
-            expect(opening).toContain('value="500"')
-            expect(opening).toContain(`100 + 500 = 600 ${labels.metres}`)
-            expect(opening).toContain(fabricStockPreviewCopy[language].countReference)
-            const correction = renderToStaticMarkup(<StockTourPreview kind="fabric-stock" step="fs-correct" />)
-            expect(correction).toContain('value="590"')
-            expect(correction).toContain(`600 → 590 ${labels.metres} (-10 ${labels.metres})`)
-            const history = renderToStaticMarkup(<StockTourPreview kind="fabric-stock" step="fs-history" />)
-            expect(history).toContain(labels.correction)
-            expect(history).toContain(`-10 ${labels.metres}`)
-            expect(history).toContain(`${labels.balanceAfter}: 590 ${labels.metres}`)
-            expect(history).toContain(fabricStockPreviewCopy[language].correctionReference)
-        } finally { locale.language = 'en' }
+    it.each(['en', 'gu', 'hi'] as const)('%s: the sample board tells the opening, dispatch and correction story in its own language', language => {
+        const pending = fabricStockSample(language, 'pending'), corrected = fabricStockSample(language, 'corrected')
+        expect(pending.qualities[0]).toMatchObject({ opening_recorded: false, meters: 100, production_meters: 200 })
+        expect(corrected.qualities[0]).toMatchObject({ opening_recorded: true, meters: 590 })
+        expect(corrected.movements.map(row => row.kind)).toEqual(['correction', 'opening', 'dispatch', 'production'])
+        expect(corrected.movements[0]).toMatchObject({ meters_delta: -10, balance_after: 590 })
+        expect(corrected.movements.every(row => row.id.startsWith('tour-') && row.quality_id.startsWith('tour-'))).toBe(true)
+        if (language !== 'en') expect(corrected.qualities[0].quality_label).toMatch(language === 'gu' ? /[\u0a80-\u0aff]/ : /[\u0900-\u097f]/)
     })
     it('keys the exact live controls and keeps the audit client in the same layout without a guide', () => {
         expect(fabricStockTourControlLabels(key => key)).toEqual({ pending: 'qualityStock.pending', openingStock: 'qualityStock.opening', correctBalance: 'qualityStock.correct', movementHistory: 'qualityStock.history', refresh: 'qualityStock.refresh', auditInventory: 'qualityStock.audit' })
@@ -161,34 +127,28 @@ describe('GT-08 Fabric Stock', () => {
         expect(shell).toContain('extra={renderExtra?.(step)}')
         expect(fs.existsSync('components/tours/StockTutorial.tsx')).toBe(false)
         expect(read('lib/i18n/stock-tutorial.ts')).not.toContain('fabricStockTutorialHelp')
-        for (const file of ['FabricStockTourPreview', 'YarnStockTourPreview']) {
-            const source = read(`components/stock/${file}.tsx`)
-            expect(source).not.toMatch(/from ['"].*(actions|supabase|next\/navigation|loaders)/)
-            expect(source).not.toMatch(/fetch\(|localStorage|sessionStorage|window\.(open|print)|onSubmit=|onClick=/)
-            expect(source).toContain('Dialog open modal={false}')
-            expect(source).toContain('data-stock-tour-preview="true"')
-            expect(source).toContain('showCloseButton={false}')
-            expect(source).toContain('onOpenAutoFocus={event => event.preventDefault()}')
-            expect(source).toContain('onCloseAutoFocus={event => event.preventDefault()}')
-        }
+        // The sample is the real page, never a hand-built lookalike.
+        const sample = read('components/stock/StockSampleWorkspace.tsx')
+        expect(sample).toContain("import QualityStockClient from '@/app/(dashboard)/owner/stock/QualityStockClient'")
+        expect(sample).toContain("import YarnStockClient from '@/app/(dashboard)/owner/stock/YarnStockClient'")
+        expect(wrapper).toContain("dynamic(() => import('./StockSampleWorkspace'), { ssr: false })")
+        expect(fs.existsSync('components/stock/StockTourPreview.tsx')).toBe(false)
         expect(yarnStockTourSpecs.map(spec => spec.id)).toEqual(stockTourSteps('yarn-stock'))
         for (const spec of yarnStockTourSpecs) {
             expect(spec.kind).toBe(spec.id === 'ys-handoff' ? 'handoff' : 'sample')
             expect(spec.anchor).toBe(stockTourSelector(spec.id))
-            expect(spec.context).toBe(stockTourSurface(spec.id) === 'page' ? undefined : '[data-stock-tour-preview="true"]')
+            expect(spec.context).toBe(['ys-opening', 'ys-receipt', 'ys-link', 'ys-correct'].includes(spec.id) ? TOUR_SURFACE_SELECTOR : undefined)
         }
     })
 })
 describe('GT-09 Yarn Stock', () => {
     const approvedYarn = read('docs/guided-tours/pages/yarn-stock.md').split('\n').filter(line => /^\| `\w+\.(title|body|detail|benefit)`/.test(line)).map(line => line.split('|').slice(1, -1).map(cell => cell.trim()))
-    const expectedBalances = { 'ys-balance': 100, 'ys-opening': 100, 'ys-receipt': 120, 'ys-link': 120, 'ys-usage': 100, 'ys-correct': 100 }
     it('uses the seven approved steps, dialog contexts, shared details and live handoff', () => {
         expect(yarnStockTourSteps).toEqual(['ys-balance', 'ys-opening', 'ys-receipt', 'ys-link', 'ys-usage', 'ys-correct', 'ys-handoff'])
         expect(yarnStockTourSpecs.map(spec => spec.anchor)).toEqual(['[data-stock-tour="balance"]', '[data-stock-tour="opening"]', '[data-stock-tour="receipt"]', '[data-stock-tour="link"]', '[data-stock-tour="movement"]', '[data-stock-tour="correction"]', '[data-tour-anchor="yarn.opening"]'])
-        expect(yarnStockTourSteps.map(stockTourSurface)).toEqual(['page', 'opening', 'receipt', 'link', 'page', 'correction', 'page'])
         for (const spec of yarnStockTourSpecs) {
             expect(spec.kind).toBe(spec.id === 'ys-handoff' ? 'handoff' : 'sample')
-            expect(spec.context).toBe(['ys-opening', 'ys-receipt', 'ys-link', 'ys-correct'].includes(spec.id) ? '[data-stock-tour-preview="true"]' : undefined)
+            expect(spec.context).toBe(['ys-opening', 'ys-receipt', 'ys-link', 'ys-correct'].includes(spec.id) ? TOUR_SURFACE_SELECTOR : undefined)
             expect(Boolean(spec.detail)).toBe(['ys-balance', 'ys-usage', 'ys-correct'].includes(spec.id))
         }
         const sections = yarnStockTourSteps.map(step => stockTourSection(step, 'yarn-stock'))
@@ -200,15 +160,15 @@ describe('GT-09 Yarn Stock', () => {
         expect(read('lib/i18n/stock-tutorial.ts')).not.toContain('yarnStockTutorialHelp')
     })
     it('reconciles receipt, production consumption and absolute correction with live stock arithmetic', () => {
-        const s = yarnStockExample
-        expect(s).toEqual({ warpKgPer100: 6, weftKgPer100: 4, opening: 100, receipt: 20, producedMetres: 200, kgPer100: 10, deduction: 20, balance: 100, counted: 98 })
+        const s = YARN_SAMPLE
+        expect(s).toEqual({ warpKgPer100: 6, weftKgPer100: 4, opening: 100, receipt: 20, producedMetres: 200, kgPer100: 10, used: 20, counted: 98 })
         const yarns = [{ id: 'tour-yarn', yarn_name: 'Sample yarn', yarn_key: 'sample yarn', weight_kg: s.opening + s.receipt, opening_recorded: true }]
         const recipe = [{ yarn_name: 'Sample yarn', yarn_key: 'sample yarn', role: 'warp' as const, kg_per_100m: s.warpKgPer100 }, { yarn_name: 'Sample yarn', yarn_key: 'sample yarn', role: 'weft' as const, kg_per_100m: s.weftKgPer100 }]
         const usage = yarnMovementUsage({ yarn_id: 'tour-yarn', recipe_snapshot: { meters: s.producedMetres, recipe } }, yarns)!
         expect(usage).toEqual({ meters: 200, kgPer100m: 10 })
-        expect(usage.meters * usage.kgPer100m / 100).toBe(s.deduction)
-        expect(totalYarnKg(yarns) - s.deduction).toBe(s.balance)
-        expect(s.counted - s.balance).toBe(-2)
+        expect(usage.meters * usage.kgPer100m / 100).toBe(s.used)
+        expect(totalYarnKg(yarns) - s.used).toBe(100)
+        expect(s.counted - 100).toBe(-2)
     })
     it.each(['en', 'gu', 'hi'] as const)('%s: matches approved copy, live control labels, length limits and invitation', language => {
         const copy = yarnStockTutorialCopy[language]
@@ -249,38 +209,20 @@ describe('GT-09 Yarn Stock', () => {
         expect(copy.correct.detail).toContain('full dated audit of fabric and yarn, kept as a record')
         expect(JSON.stringify(copy)).not.toMatch(/dispatch deducts|dispatch deductions|Dispatch uses yarn/)
     })
-    it.each(['en', 'gu', 'hi'] as const)('%s: mirrors live sections, sample amounts and disabled controls with one banner', language => {
-        locale.language = language
-        try {
-            const text = yarnStockText[language]
-            for (const step of yarnStockTourSteps) {
-                const html = renderToStaticMarkup(<StockTourPreview kind="yarn-stock" step={step} />)
-                if (step === 'ys-handoff') { expect(html).toBe(''); continue }
-                expect(html).toContain(`lang="${language}"`)
-                expect(html).toContain(`${expectedBalances[step]} kg</strong>`)
-                expect([...html.matchAll(/data-yarn-tour-section="([^"]+)"/g)].map(match => match[1])).toEqual(['header', 'balance', 'date', 'yarns', 'costings', 'history'])
-                expect(html.split(stockTourSelector(step).slice(1, -1)).length - 1).toBe(1)
-                expect(html.split(tourCommonCopy[language].sampleBanner).length - 1).toBe(1)
-                for (const tag of html.match(/<(button|input|select|textarea)\b[^>]*>/g) ?? []) expect(tag).toContain('disabled=""')
-                expect(html).not.toMatch(/<(form|a)\b/)
-                for (const label of [text.refresh, text.opening, text.receipt, text.correction, text.history, text.audit, text.apply, text.export, text.formulas, text.link, locales[language].qualityStock.audit]) expect(html).toContain(label)
-            }
-            const opening = renderToStaticMarkup(<StockTourPreview kind="yarn-stock" step="ys-opening" />)
-            expect(opening).toContain('value="100"')
-            const receipt = renderToStaticMarkup(<StockTourPreview kind="yarn-stock" step="ys-receipt" />)
-            expect(receipt).toContain('value="20"')
-            expect(receipt).toContain('100 + 20 = 120 kg')
-            const link = renderToStaticMarkup(<StockTourPreview kind="yarn-stock" step="ys-link" />)
-            expect(link).toContain(text.noCostings)
-            expect(link).toContain('v2')
-            expect(link).toContain(`6 + 4 = 10 ${text.per100}`)
-            const usage = renderToStaticMarkup(<StockTourPreview kind="yarn-stock" step="ys-usage" />)
-            expect(usage).toContain(`${text.production_consumption} · −20 kg`)
-            expect(usage).toContain('200 m × 10 ÷ 100 = 20 kg')
-            const correction = renderToStaticMarkup(<StockTourPreview kind="yarn-stock" step="ys-correct" />)
-            expect(correction).toContain('value="98"')
-            expect(correction).toContain('100 → 98 kg (-2 kg)')
-        } finally { locale.language = 'en' }
+    it.each(['en', 'gu', 'hi'] as const)('%s: the sample board and dialogs carry the approved amounts in their own language', language => {
+        const phases = yarnStockTourSteps.filter(step => step !== 'ys-handoff').map(step => yarnStockSample(language, yarnStockPhase(step as YarnStockTourStep), step !== 'ys-link').yarns[0].weight_kg)
+        expect(phases).toEqual([100, 100, 120, 120, 100, 100])
+        const used = yarnStockSample(language, 'used', true)
+        expect(used.movements[0]).toMatchObject({ kind: 'production_consumption', kg_delta: -20, balance_after: 100 })
+        expect(yarnMovementUsage(used.movements[0], used.yarns)).toEqual({ meters: 200, kgPer100m: 10 })
+        expect(used.movements.every(row => row.id.startsWith('tour-') && row.yarn_id.startsWith('tour-'))).toBe(true)
+        expect(yarnStockSample(language, 'received', false).qualities[0]).toMatchObject({ recipe: null, costing_id: null })
+        expect(yarnStockSampleEntry(language, 'ys-opening')).toMatchObject({ kind: 'opening', weight: '100' })
+        expect(yarnStockSampleEntry(language, 'ys-receipt')).toMatchObject({ kind: 'receipt', weight: '20' })
+        expect(yarnStockSampleEntry(language, 'ys-correct')).toMatchObject({ kind: 'correction', weight: '98' })
+        expect(yarnStockSampleEntry(language, 'ys-link')).toMatchObject({ kind: 'recipe' })
+        expect(yarnStockSampleEntry(language, 'ys-balance')).toBeNull()
+        if (language !== 'en') expect(used.yarns[0].yarn_name).toMatch(language === 'gu' ? /[\u0a80-\u0aff]/ : /[\u0900-\u097f]/)
     })
     it('anchors only the real Opening weight control and keeps its existing lock and action', () => {
         const live = read('app/(dashboard)/owner/stock/YarnStockClient.tsx')

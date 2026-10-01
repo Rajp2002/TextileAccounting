@@ -21,7 +21,11 @@ export default function CostEstimateTourRuntime({ step, onStepChange, onDone, on
             On phones the Live cost sheet fits without scrolling, so the shared
             tracker finds no scrollport to lift Save above the docked panel; the
             extra room lets it scroll, and it then replaces this with its own
-            measured reserve. On tablets (768-1023px) the fixed 248px sidebar
+            measured reserve. From 768px the Live cost sheet stays centred, where
+            it opens outside the tour, and slides left only as far as it must to
+            leave the 360px card beside it: left = clamp(16px, centred, viewport
+            - sheet - 392px), where 392px is the card plus its 16px gap and
+            16px edge margin. With the 14px root size the sheet is 532px wide, so it is centred from 1316px up. On tablets (768-1023px) the fixed 248px sidebar
             leaves a 448px column, too narrow for the 360px panel beside a
             card, so the reading column goes on the left over the sidebar:
             cards start at 404px (248 + 36 gutter + 120) and the sheet joins
@@ -33,10 +37,11 @@ export default function CostEstimateTourRuntime({ step, onStepChange, onDone, on
             }
             @media (min-width: 768px) {
                 #mobile-live-estimate-panel {
-                    left: 16px !important;
+                    --tour-sheet-width: min(38rem, calc(100vw - 416px));
+                    width: var(--tour-sheet-width) !important;
+                    left: clamp(16px, calc((100vw - var(--tour-sheet-width)) / 2), calc(100vw - var(--tour-sheet-width) - 392px)) !important;
                     right: auto !important;
                     margin-inline: 0 !important;
-                    width: min(38rem, calc(100vw - 416px)) !important;
                 }
             }
             @media (min-width: 768px) and (max-width: 1023.98px) {

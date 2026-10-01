@@ -11,8 +11,9 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { useTranslation } from '@/lib/i18n/context'
 import { payrollStepCopy, payrollTourControlLabels, payrollTutorialCopy } from '@/lib/i18n/payroll-tutorial'
 import { payrollHelpSpecs, payrollTourSpecs, type PayrollTourStep, type PayrollTourVariant } from '@/lib/payroll-tour'
+import { TourSampleProvider } from '@/lib/tours/sample-context'
 
-const PayrollTourPreview = dynamic(() => import('./PayrollTourPreview'), { ssr: false })
+const PayrollSampleWorkspace = dynamic(() => import('./PayrollSampleWorkspace'), { ssr: false })
 const GuidedTour = dynamic(() => import('@/components/tours/GuidedTour').then(module => module.GuidedTour), { ssr: false }) as typeof GuidedTourComponent
 
 /** The optional walkthrough uses the shared runtime without writing tour preferences. */
@@ -39,13 +40,12 @@ export default function PayrollGuidedTour({ userId, orgId, userMetadata, childre
     const controls = () => payrollTourControlLabels(t,
         document.querySelector<HTMLElement>('[data-tour-anchor="payroll.settle"]')?.textContent?.trim())
     const stepCopy = (step: PayrollTourStep) => payrollStepCopy(language, step, controls())
-    const preview = (step: PayrollTourStep) => <PayrollTourPreview step={step} settlementLabel={controls().settlePayroll} />
 
     return <ReplicaGuidedTour tourId="payroll" steps={payrollTourSpecs} handoffStepId="pr-handoff"
-        workspaceClassName="payroll-workspace-shell space-y-5 pb-10"
+        workspaceClassName=""
         railClassName="payroll-left-rail" railLabel={t('navigation.payroll')}
         userId={userId} orgId={orgId} userMetadata={userMetadata}
-        copy={stepCopy} renderReplica={preview}
+        copy={stepCopy} renderReplica={() => <PayrollSampleWorkspace />}
         walkthrough={<div className="left-rail-bottom mt-auto space-y-2 pt-3" data-i18n-skip="true" lang={language}>
             <button ref={extraLauncher} type="button" data-tour-control="payroll-help"
                 onClick={() => {
@@ -72,7 +72,9 @@ export default function PayrollGuidedTour({ userId, orgId, userMetadata, childre
             </Dialog>
         </div>}>
         <div hidden={extraStep !== null && extraStep !== 'pra-handoff'}>{children}</div>
-        {extraStep !== null && extraStep !== 'pra-handoff' && <div className="payroll-workspace-shell space-y-5 pb-10" data-tour-replica="payroll">{preview(extraStep)}</div>}
+        {extraStep !== null && extraStep !== 'pra-handoff' && <div data-tour-replica="payroll">
+            <TourSampleProvider tourId="payroll" step={extraStep}><PayrollSampleWorkspace /></TourSampleProvider>
+        </div>}
         {extraStep !== null && <GuidedTour tourId="payroll" steps={payrollHelpSpecs} step={extraStep}
             copy={stepCopy} onStepChange={setExtraStep} launcher={extraLauncher}
             recordCompletion={false} userId={userId} />}

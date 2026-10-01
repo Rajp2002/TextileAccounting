@@ -9,23 +9,21 @@ const tourFiles = [
     'lib/machines-tour.ts',
     'lib/i18n/machines-tutorial.ts',
     'components/payroll/PayrollGuidedTour.tsx',
-    'components/payroll/PayrollTourPreview.tsx',
+    'components/payroll/PayrollSampleWorkspace.tsx',
     'lib/payroll-tour.ts',
     'lib/i18n/payroll-tutorial.ts',
     'components/production/DailySheetGuidedTour.tsx',
-    'components/production/DailySheetTourPreview.tsx',
+    'components/production/DailySheetSampleWorkspace.tsx',
     'lib/daily-sheet-tour.ts',
     'lib/i18n/daily-sheet-tutorial.ts',
     'lib/configuration-tour.ts',
     'lib/i18n/configuration-tutorial.ts',
     'components/stock/StockGuidedTour.tsx',
-    'components/stock/StockTourPreview.tsx',
-    'components/stock/FabricStockTourPreview.tsx',
-    'components/stock/YarnStockTourPreview.tsx',
+    'components/stock/StockSampleWorkspace.tsx',
     'lib/stock-tour.ts',
     'lib/i18n/stock-tutorial.ts',
     'components/production/ProductionGuidedTour.tsx',
-    'components/production/ProductionTourPreview.tsx',
+    'components/production/ProductionSampleWorkspace.tsx',
     'lib/production-tour.ts',
     'lib/i18n/production-tutorial.ts',
     'app/(dashboard)/owner/production/registers/WorkersRegister.tsx',
@@ -34,7 +32,7 @@ const tourFiles = [
     'components/tours/GuidedTour.tsx',
     'components/tours/ReplicaGuidedTour.tsx',
     'components/dispatches/DispatchGuidedTour.tsx',
-    'components/dispatches/DispatchTourPreview.tsx',
+    'components/dispatches/DispatchSampleWorkspace.tsx',
     'lib/dispatch-tour.ts',
     'lib/i18n/dispatch-tutorial.ts',
     'components/tours/TourPanel.tsx',
@@ -43,6 +41,12 @@ const tourFiles = [
     'hooks/use-guided-tour.ts',
     'hooks/use-tour-invitation.ts',
     'lib/tours/active-tour.ts',
+    'lib/tours/sample-context.tsx',
+    'lib/tours/sample-surface.ts',
+    'lib/tours/sample-data/production.ts',
+    'lib/tours/sample-data/dispatch.ts',
+    'lib/tours/sample-data/stock.ts',
+    'components/tours/TourSampleBanner.tsx',
     'lib/tours/placement.ts',
     'lib/tours/sample-ids.ts',
     'lib/tours/target-readiness.ts',
@@ -69,7 +73,8 @@ const forbidden = ['freeMeter', '/api/free/calculate', 'complete_free_saved_cost
 
 describe('Tour data-safety contract', () => {
     it('lists every shared tour library file explicitly', () => {
-        expect(tourFiles.filter(file => file.startsWith('lib/tours/')).sort()).toEqual(readdirSync('lib/tours').filter(file => file.endsWith('.ts')).map(file => `lib/tours/${file}`).sort())
+        expect(tourFiles.filter(file => file.startsWith('lib/tours/') && !file.includes('/sample-data/') && file.endsWith('.ts')).sort()).toEqual(readdirSync('lib/tours').filter(file => file.endsWith('.ts')).map(file => `lib/tours/${file}`).sort())
+        expect(tourFiles.filter(file => file.startsWith('lib/tours/sample-data/')).sort()).toEqual(readdirSync('lib/tours/sample-data').map(file => `lib/tours/sample-data/${file}`).sort())
     })
     it.each(tourFiles)('%s has no business action, fetch, quota or refresh path', file => {
         const source = readFileSync(file, 'utf8')
@@ -84,13 +89,24 @@ describe('Tour data-safety contract', () => {
         expect(source).not.toMatch(/\b(?:revalidatePath|invalidateQueries)\s*\(|\brouter\.refresh\s*\(/)
         for (const token of forbidden) expect(source, `${file}: ${token}`).not.toContain(token)
     })
-    it('keeps Yarn previews isolated from drafts, submissions and live-state changes', () => {
-        const preview = readFileSync('components/stock/YarnStockTourPreview.tsx', 'utf8')
-        expect(preview).not.toMatch(/sessionStorage|localStorage|onSubmit=|onClick=|window\.(?:open|print|location)|<form|<a\s/)
-        expect(preview).toContain("if (step === 'ys-handoff') return null")
+    it('keeps every tour sample on its own data: real clients skip storage, refresh and analytics, and the wrapper keeps the live page mounted', () => {
+        // The sample is the real page, so the real page must not touch the account's own drafts, pending requests or metrics.
+        const sheet = readFileSync('app/(dashboard)/owner/production/BaseDailyProductionSheet.tsx', 'utf8')
+        expect(sheet).toContain('const draftKey = initialData.actorId && !sample ? baseProductionDraftKey(')
+        const production = readFileSync('app/(dashboard)/owner/production/BaseProductionClient.tsx', 'utf8')
+        expect(production).toContain("if (tourSample) return // a tour sample is not a page view")
+        const dispatch = readFileSync('app/(dashboard)/owner/dispatches/ChallansClient.tsx', 'utf8')
+        expect(dispatch).toContain("if (tourSample) return // a tour sample never reads the real page's pending request")
+        const yarn = readFileSync('app/(dashboard)/owner/stock/YarnStockClient.tsx', 'utf8')
+        expect(yarn).toContain("if (tourSample) return // a tour sample never reads the real page's pending request")
+        const fabric = readFileSync('app/(dashboard)/owner/stock/QualityStockClient.tsx', 'utf8')
+        expect(fabric).toContain('if (tourSample) return // a tour sample has nothing to refresh')
         const wrapper = readFileSync('components/stock/StockGuidedTour.tsx', 'utf8')
         expect(wrapper).toContain("'fs-handoff' : 'ys-handoff'")
         expect(wrapper).toContain('<div className="stock-workspace-shell">{children}</div>')
+        // Sample surfaces are non-modal with no outside dismissal, so the tour card stays usable and nothing can be submitted by accident.
+        const surface = readFileSync('lib/tours/sample-surface.ts', 'utf8')
+        for (const token of ['modal: false as const', 'showCloseButton: false', 'hideOverlay: true', 'onPointerDownOutside: stop', 'onInteractOutside: stop', 'onEscapeKeyDown: stop', 'onOpenAutoFocus: stop', 'onCloseAutoFocus: stop']) expect(surface).toContain(token)
     })
     it('keeps Workers samples inside guarded, disabled editors and inert card callbacks', () => {
         const editor = readFileSync('app/(dashboard)/owner/production/registers/WorkerEditor.tsx', 'utf8')

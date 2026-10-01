@@ -9,6 +9,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useTranslation } from '@/lib/i18n/context'
+import { useTourSample } from '@/lib/tours/sample-context'
+import { tourSurfaceProps } from '@/lib/tours/sample-surface'
+import { yarnStockSampleEntry } from '@/lib/tours/sample-data/stock'
+import type { YarnStockTourStep } from '@/lib/stock-tour'
 import { yarnStockText } from '@/lib/i18n/yarn-stock'
 import { YarnMutationSchema, totalYarnKg, yarnAuditCsv, yarnMovementUsage, type YarnBalance, type YarnBoard, type YarnMutation, type YarnQuality } from '@/lib/yarn-stock'
 import { getYarnStockBoard, mutateYarnStock } from './yarn-actions'
@@ -17,11 +21,14 @@ type Entry = { kind: 'opening' | 'receipt' | 'correction'; yarn?: YarnBalance } 
 
 export default function YarnStockClient({ initialData }: { initialData: YarnBoard }) {
     const { language, t } = useTranslation(), text = yarnStockText[language]
+    const tourSample = useTourSample('yarn-stock')
+    const tourStep = tourSample?.step as YarnStockTourStep | undefined
+    const surface = tourSurfaceProps(Boolean(tourSample))
     const [data, setData] = useState(initialData)
     const [date, setDate] = useState(''), [filter, setFilter] = useState('')
     const [busy, setBusy] = useState(false), [error, setError] = useState(''), [notice, setNotice] = useState(false)
-    const [entry, setEntry] = useState<Entry | null>(null)
-    const [name, setName] = useState(''), [weight, setWeight] = useState(''), [reason, setReason] = useState(''), [costing, setCosting] = useState('')
+    const [entryState, setEntry] = useState<Entry | null>(null)
+    const [nameState, setName] = useState(''), [weightState, setWeight] = useState(''), [reasonState, setReason] = useState(''), [costingState, setCosting] = useState('')
     const [saving, setSaving] = useState(false), [saveError, setSaveError] = useState(''), [request, setRequest] = useState<YarnMutation | null>(null)
     const loading = useRef(false), writing = useRef(false)
     const storageKey = `weavly-yarn-stock-request:${initialData.org_id}`
@@ -30,6 +37,7 @@ export default function YarnStockClient({ initialData }: { initialData: YarnBoar
 
     // Scope recovery to the tenant. A retry retains the original immutable payload.
     useEffect(() => {
+        if (tourSample) return // a tour sample never reads the real page's pending request
         try {
             const raw = sessionStorage.getItem(storageKey)
             if (!raw) return
@@ -46,7 +54,7 @@ export default function YarnStockClient({ initialData }: { initialData: YarnBoar
                 setName(pending.payload.yarn_name); setWeight(String(pending.payload.weight_kg))
             }
         } catch { /* Session storage can be unavailable; in-memory retry still works. */ }
-    }, [storageKey, initialData])
+    }, [storageKey, initialData, tourSample])
 
     async function load(asOf = data.as_of ?? '', yarnId = filter, more = false) {
         if (loading.current) return
@@ -95,6 +103,17 @@ export default function YarnStockClient({ initialData }: { initialData: YarnBoar
         const link = document.createElement('a'); link.href = url; link.download = `yarn-stock-${data.as_of ?? 'current'}.csv`; link.click()
         setTimeout(() => URL.revokeObjectURL(url), 1000)
     }
+    // While the Yarn Stock tour teaches a dialog, show the real one, filled with sample values.
+    const tourEntry = tourStep ? yarnStockSampleEntry(language, tourStep) : null
+    const tourYarn = data.yarns[0], tourQuality = data.qualities[0]
+    const entry: Entry | null = tourEntry
+        ? tourEntry.kind === 'recipe' ? (tourQuality ? { kind: 'recipe', quality: tourQuality } : null)
+            : { kind: tourEntry.kind, yarn: tourEntry.kind === 'opening' ? undefined : tourYarn }
+        : entryState
+    const name = tourEntry ? tourEntry.name : nameState, weight = tourEntry ? tourEntry.weight : weightState
+    const reason = tourEntry ? tourEntry.reason : reasonState
+    const costing = tourEntry?.kind === 'recipe' ? data.costings[0]?.id ?? '' : costingState
+    const usageRowId = data.movements.find(row => row.kind === 'production_consumption')?.id
     const current = !data.as_of
     const options = entry?.kind === 'recipe' ? data.costings.filter(row => row.quality_key === entry.quality.quality_key) : []
     const selected = options.find(row => row.id === costing)
@@ -115,7 +134,7 @@ export default function YarnStockClient({ initialData }: { initialData: YarnBoar
         {notice && <p role="status" className="rounded-lg border border-[var(--wv-moss-200)] bg-[var(--wv-moss-50)] p-3 text-[var(--wv-moss-700)]">{text.saved}</p>}
         {error && <p role="alert" className="rounded-lg border border-[var(--wv-madder-200)] bg-[var(--wv-madder-50)] p-3 text-[var(--wv-madder-600)]">{error} <button className="underline" onClick={() => void load()}>{text.retry}</button></p>}
         {!data.started_at && <p className="rounded-lg border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] p-4 text-sm text-[var(--wv-ochre-800)]">{text.startHelp}</p>}
-        <Card><CardContent className="space-y-2 p-6"><p className="text-sm text-muted-foreground">{text.total} · {data.as_of ?? text.current}</p><p className="text-3xl font-semibold tabular-nums">{kg(totalYarnKg(data.yarns))} kg</p>{data.started_at && <p className="text-xs text-muted-foreground">{text.started}: {dateTime(data.started_at)}</p>}</CardContent></Card>
+        <Card data-stock-tour="balance"><CardContent className="space-y-2 p-6"><p className="text-sm text-muted-foreground">{text.total} · {data.as_of ?? text.current}</p><p className="text-3xl font-semibold tabular-nums">{kg(totalYarnKg(data.yarns))} kg</p>{data.started_at && <p className="text-xs text-muted-foreground">{text.started}: {dateTime(data.started_at)}</p>}</CardContent></Card>
         <section className="space-y-3 rounded-xl border p-4"><div className="flex flex-wrap items-end gap-3"><div className="space-y-2"><Label htmlFor="yarn-audit-date">{text.audit}</Label><Input id="yarn-audit-date" type="date" value={date} onChange={e => setDate(e.target.value)} /></div><Button disabled={busy} variant="outline" onClick={() => void load(date)}>{text.apply}</Button><Button disabled={busy} variant="outline" onClick={download}>{text.export}</Button></div><p className="text-xs text-muted-foreground">{text.auditHelp}</p></section>
         {data.yarns.length === 0 ? <p className="rounded-xl border border-dashed p-8 text-center">{text.empty}</p> : <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{data.yarns.map(yarn => <Card key={yarn.id}><CardContent className="space-y-3 p-5"><h2 className="break-words font-semibold">{yarn.yarn_name}</h2><p className="text-2xl font-semibold tabular-nums">{kg(yarn.weight_kg)} kg</p>{current && !yarn.opening_recorded && <p className="text-xs text-muted-foreground">{text.missing}</p>}
             <div className="flex flex-wrap gap-2">{current && <><Button size="sm" variant="outline" disabled={Boolean(request)} onClick={() => open({ kind: 'receipt', yarn })}>{text.receipt}</Button><Button size="sm" variant="outline" disabled={Boolean(request)} onClick={() => open({ kind: 'correction', yarn })}>{text.correction}</Button></>}<Button size="sm" variant="ghost" disabled={busy} onClick={() => void load(data.as_of ?? '', yarn.id)}>{text.history}</Button></div></CardContent></Card>)}</div>}
@@ -123,7 +142,7 @@ export default function YarnStockClient({ initialData }: { initialData: YarnBoar
         <section className="space-y-3" aria-busy={busy}><div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-xl font-semibold">{text.history}</h2><Label htmlFor="yarn-history-filter" className="sr-only">{text.name}</Label><select id="yarn-history-filter" value={filter} disabled={busy} className="max-w-full rounded-md border bg-background p-2 text-sm" onChange={e => void load(data.as_of ?? '', e.target.value)}><option value="">{text.all}</option>{data.yarns.map(row => <option key={row.id} value={row.id}>{row.yarn_name}</option>)}</select></div>
             {data.movements.length === 0 ? <p className="rounded-xl border border-dashed p-6 text-muted-foreground">{text.noHistory}</p> : <ol className="divide-y rounded-xl border">{data.movements.map(row => {
                 const usage = yarnMovementUsage(row, data.yarns)
-                return <li key={row.id} className="flex flex-wrap justify-between gap-3 p-4">
+                return <li key={row.id} data-stock-tour={row.id === usageRowId ? 'movement' : undefined} className="flex flex-wrap justify-between gap-3 p-4">
                     <div className="min-w-0 space-y-1">
                         <p className="break-words font-medium">{row.yarn_name} · {text[row.kind]}</p>
                         <p className="max-w-xl break-words text-sm">{row.reason}</p>
@@ -139,8 +158,8 @@ export default function YarnStockClient({ initialData }: { initialData: YarnBoar
             })}</ol>}
             {data.nextCursor && <Button variant="outline" disabled={busy} onClick={() => void load(data.as_of ?? '', filter, true)}>{text.more}</Button>}
         </section>
-        <Dialog open={Boolean(entry)} onOpenChange={value => { if (!value && !saving && !request) setEntry(null) }}><DialogContent showCloseButton={false} data-i18n-skip="true"><DialogHeader><DialogTitle>{entry?.kind === 'recipe' ? `${text.link} · ${entry.quality.quality_label}` : entry ? text[entry.kind] : ''}</DialogTitle><DialogDescription>{entry?.kind === 'recipe' ? text.formulaHelp : entry?.kind === 'opening' ? text.openingHelp : entry?.kind === 'correction' ? text.correctionHelp : text.receiptHelp}</DialogDescription></DialogHeader>
-            <form className="space-y-4" onSubmit={e => { e.preventDefault(); void save() }}>
+        <Dialog open={Boolean(entry)} onOpenChange={value => { if (!value && !saving && !request) setEntry(null) }} {...surface.root}><DialogContent showCloseButton={false} data-i18n-skip="true" {...surface.content}><DialogHeader><DialogTitle>{entry?.kind === 'recipe' ? `${text.link} · ${entry.quality.quality_label}` : entry ? text[entry.kind] : ''}</DialogTitle><DialogDescription>{entry?.kind === 'recipe' ? text.formulaHelp : entry?.kind === 'opening' ? text.openingHelp : entry?.kind === 'correction' ? text.correctionHelp : text.receiptHelp}</DialogDescription></DialogHeader>
+            <form data-stock-tour={entry?.kind === 'recipe' ? 'link' : entry?.kind} className="space-y-4" onSubmit={e => { e.preventDefault(); void save() }}>
                 {entry?.kind === 'recipe' ? <><Label htmlFor="yarn-costing">{text.costing}</Label><select id="yarn-costing" className="w-full rounded-md border bg-background p-2" value={costing} disabled={Boolean(request)} onChange={e => setCosting(e.target.value)} required><option value="">{text.choose}</option>{options.map(row => <option key={row.id} value={row.id}>{row.quality_label} · v{row.version_number} · {dateTime(row.saved_at)}</option>)}</select>{options.length === 0 && <p className="text-sm text-[var(--wv-ochre-800)]">{text.noCostings} <Link className="underline" href="/owner/estimator">{text.costing}</Link></p>}{selected && <ul className="text-sm">{selected.recipe.map((row, index) => <li key={index}>{row.yarn_name} · {text[row.role]} · {kg(row.kg_per_100m)} {text.per100}</li>)}</ul>}</>
                     : <><div className="space-y-2"><Label htmlFor="yarn-name">{text.name}</Label><Input id="yarn-name" list="known-yarns" value={name} disabled={Boolean(request) || Boolean(entry && 'yarn' in entry && entry.yarn)} onChange={e => setName(e.target.value)} maxLength={160} required /><datalist id="known-yarns">{names.map(value => <option key={value} value={value} />)}</datalist></div><div className="space-y-2"><Label htmlFor="yarn-weight">{text.weight}</Label><Input id="yarn-weight" type="number" inputMode="decimal" min={entry?.kind === 'receipt' ? '0.001' : '0'} max="100000000" step="0.001" value={weight} disabled={Boolean(request)} onChange={e => setWeight(e.target.value)} required /></div></>}
                 <div className="space-y-2"><Label htmlFor="yarn-reason">{entry?.kind === 'recipe' ? text.formulaReason : text.reason}</Label><textarea id="yarn-reason" className="min-h-20 w-full rounded-md border bg-background p-3 text-sm" value={reason} disabled={Boolean(request)} onChange={e => setReason(e.target.value)} minLength={3} maxLength={500} required /></div>

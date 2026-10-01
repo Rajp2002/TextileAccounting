@@ -11,6 +11,7 @@ export function rateBookTourSpecs(sampleRow: boolean, hasRealRates: boolean): To
         { id: 'rb-update', anchor: '[data-ratebook-field="quickEditAction"]', kind: rowKind, detail: true },
         { id: 'rb-review', anchor: '[data-ratebook-field="reviewStatusBadge"]', kind: rowKind, detail: true },
         { id: 'rb-usage', anchor: '[data-ratebook-field="linkedQualitiesPopover"]', kind: rowKind },
-        { id: 'rb-handoff', anchor: hasRealRates ? '[data-ratebook-field="yarnSearch"]' : '[data-ratebook-field="addRateAction"]', kind: 'handoff' },
+        // Step 2 already outlines the search box, so the populated handoff outlines the price to compare instead.
+        { id: 'rb-handoff', anchor: hasRealRates ? '[data-ratebook-field="rateAndTrend"]' : '[data-ratebook-field="addRateAction"]', kind: 'handoff' },
     ]
 }

@@ -520,7 +520,7 @@ function SavedQualityLibraryView({
 
                             <Dialog modal={!tourStep} open={isOpen} onOpenChange={open => { if (!open && !tourStep) onCloseDetails() }}>
                                 <DialogContent
-                                    data-costing-tour-dialog={tourStep ? "true" : undefined}
+                                    data-costing-tour-dialog={tourStep ? "true" : undefined} data-tour-surface={tourStep ? "true" : undefined}
                                     showCloseButton={false}
                                     onPointerDownOutside={event => { if (tourStep) event.preventDefault(); else onCloseDetails() }}
                                     onEscapeKeyDown={event => { if (tourStep) event.preventDefault(); else onCloseDetails() }}
@@ -1555,7 +1555,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             />
 
             <Dialog modal={!tourStep} open={tourStep ? tourSurface === 'comparison' : showComparison} onOpenChange={open => {if (!tourStep) setShowComparison(open)}}>
-                <DialogContent showCloseButton={!tourStep} data-costing-tour-dialog={tourStep ? "true" : undefined} data-costing-tour="comparison" onOpenAutoFocus={event => {if (tourStep) event.preventDefault()}} onCloseAutoFocus={event => {if (tourStep) event.preventDefault()}} onInteractOutside={event => {if (tourStep) event.preventDefault()}} onEscapeKeyDown={event => {if (tourStep) event.preventDefault()}} className="sm:max-w-4xl">
+                <DialogContent showCloseButton={!tourStep} data-costing-tour-dialog={tourStep ? "true" : undefined} data-tour-surface={tourStep ? "true" : undefined} data-costing-tour="comparison" onOpenAutoFocus={event => {if (tourStep) event.preventDefault()}} onCloseAutoFocus={event => {if (tourStep) event.preventDefault()}} onInteractOutside={event => {if (tourStep) event.preventDefault()}} onEscapeKeyDown={event => {if (tourStep) event.preventDefault()}} className="sm:max-w-4xl">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <GitCompareArrows className="h-5 w-5 text-info" /> Compare Saved Costings

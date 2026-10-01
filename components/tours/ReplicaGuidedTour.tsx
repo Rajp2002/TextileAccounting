@@ -3,13 +3,19 @@
 import dynamic from 'next/dynamic'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { TourInvitation } from './TourInvitation'
+import { TourSampleProvider } from '@/lib/tours/sample-context'
 import type { GuidedTour as GuidedTourComponent } from './GuidedTour'
 import type { TourId, TourStepSpec } from '@/lib/tours/tour-types'
 
 const GuidedTour = dynamic(() => import('./GuidedTour').then(module => module.GuidedTour), { ssr: false }) as typeof GuidedTourComponent
 
 /** EC-21: the live subtree stays in the same position for its entire lifetime.
- * Only its visibility changes; replicas occupy the page's workspace until handoff.
+ * Only its visibility changes; the sample occupies the page's workspace until handoff.
+ *
+ * The sample must be the REAL page component rendered with sample data, never a hand-built lookalike: a tour
+ * that looks different from the page it teaches is worse than no tour. Real components read the step through
+ * useTourSample() to open the real dialog or sheet a step is about, and render <TourSampleBanner /> in their own
+ * content column. (The prop keeps its historical name.)
  * prepare loads feature copy before launch; the runtime itself is loaded on demand.
  */
 export default function ReplicaGuidedTour<S extends string>({
@@ -65,7 +71,7 @@ export default function ReplicaGuidedTour<S extends string>({
         </aside>
         <div hidden={step !== null && step !== handoffStepId}>{children}</div>
         {step !== null && step !== handoffStepId && <div className={workspaceClassName} data-tour-replica={tourId}>
-            {renderReplica(step)}
+            <TourSampleProvider tourId={tourId} step={step}>{renderReplica(step)}</TourSampleProvider>
         </div>}
         {step !== null && <GuidedTour tourId={tourId} steps={steps} step={step} copy={copy}
             extra={renderExtra?.(step)} onStepChange={setStep} launcher={launcher} returnFocus={returnFocus} userId={userId} />}

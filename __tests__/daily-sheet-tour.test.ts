@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { dailySheetTourSteps, dailySheetTourSpecs, dailySheetTourSelector, dailySheetTourExample } from '../lib/daily-sheet-tour'
+import { dailySheetTourSteps, dailySheetTourSpecs, dailySheetTourSelector } from '../lib/daily-sheet-tour'
+import { DAILY_SAMPLE_READINGS, productionSampleData } from '../lib/tours/sample-data/production'
 import { dailySheetTutorialCopy, dailySheetStepCopy, dailySheetTourControlLabels } from '../lib/i18n/daily-sheet-tutorial'
 import { tourRegistry, isTourEligible } from '../lib/tours/tour-registry'
 import { en } from '../lib/i18n/locales/en'
@@ -25,7 +26,11 @@ describe('Daily Sheet tour contract', () => {
             expect(specs.map(spec => spec.kind)).toEqual([...Array(8).fill('sample'), 'handoff'])
         }
         expect(dailySheetTourSelector('ds-handoff', true)).toContain('daily.empty-action')
-        expect(dailySheetTourExample.metres * dailySheetTourExample.rate).toBe(dailySheetTourExample.earnings)
+        // The sheet shows 120 m at ₹2/m, the figures the copy quotes: loom 1 wove 120, loom 2 is pending, loom 3 did not run.
+        expect(DAILY_SAMPLE_READINGS).toEqual({ 'tour-machine-1': '120', 'tour-machine-3': '0' })
+        const daily = productionSampleData('en', 'daily')
+        expect(daily.machineJobContexts).toHaveLength(3)
+        expect(Number(DAILY_SAMPLE_READINGS['tour-machine-1']) * daily.jobs[0].worker_rate_per_meter).toBe(240)
     })
     it.each(languages)('%s exactly preserves all approved copy, U-06, tokens and label addenda', language => {
         const dictionary = dictionaries[language].dailySheet
@@ -85,7 +90,7 @@ describe('Daily Sheet tour contract', () => {
         const runtime = readFileSync('components/tours/ReplicaGuidedTour.tsx', 'utf8')
         expect(wrapper).toContain('<ReplicaGuidedTour tourId="daily-sheet"')
         expect(wrapper).toContain('handoffStepId="ds-handoff"')
-        expect(wrapper).toContain("dynamic(() => import('./DailySheetTourPreview'), { ssr: false })")
+        expect(wrapper).toContain("dynamic(() => import('./DailySheetSampleWorkspace'), { ssr: false })")
         expect(wrapper).toContain("import('@/lib/i18n/daily-sheet-tutorial')")
         expect(wrapper).toContain('[&>div:first-child]:min-[1280px]:order-last')
         expect(wrapper).toContain('production-daily-sheet-rail')
@@ -93,7 +98,7 @@ describe('Daily Sheet tour contract', () => {
         expect(runtime.match(/<TourInvitation\b/g)).toHaveLength(1)
         expect(runtime).toContain('<div hidden={step !== null && step !== handoffStepId}>{children}</div>')
         expect(sheet).toContain('dialogOpen={isReviewOpen || isUnlockDialogOpen || isHistoryDialogOpen || isPayrollExpanded}')
-        for (const file of ['DailySheetGuidedTour', 'DailySheetTourPreview']) expect(readFileSync(`components/production/${file}.tsx`, 'utf8')).not.toMatch(/saveBaseDailyProductionBatch|weavly:base-production:|localStorage/)
+        for (const file of ['DailySheetGuidedTour', 'DailySheetSampleWorkspace']) expect(readFileSync(`components/production/${file}.tsx`, 'utf8')).not.toMatch(/saveBaseDailyProductionBatch|weavly:base-production:|localStorage/)
     })
     it('is opt-in Base-owner content v2', () => {
         expect(tourRegistry['daily-sheet'].contentVersion).toBe('v2')

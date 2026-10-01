@@ -7,6 +7,8 @@ import { WorkerPayBasis } from '@/components/workers/WorkerPayBasis'
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslation } from '@/lib/i18n/context'
+import { useTourSample } from '@/lib/tours/sample-context'
+import { tourSurfaceProps } from '@/lib/tours/sample-surface'
 import { toast } from 'sonner'
 import {
     ArrowRightLeft,
@@ -82,6 +84,8 @@ export default function BaseMachineBoard({
 }: BaseMachineBoardProps) {
     const router = useRouter()
     const { t } = useTranslation()
+    const tourStep = useTourSample('production')?.step
+    const surface = tourSurfaceProps(Boolean(tourStep))
     const [search, setSearch] = useState('')
     const [filterStatus, setFilterStatus] = useState<'all' | 'running' | 'available'>('all')
     const [pendingKey, setPendingKey] = useState<string | null>(null)
@@ -95,7 +99,7 @@ export default function BaseMachineBoard({
     const [selectedAssignJobId, setSelectedAssignJobId] = useState<string>('')
 
     // Manage Workers sheet
-    const [managingMachine, setManagingMachine] = useState<BaseProductionMachine | null>(null)
+    const [managedMachine, setManagingMachine] = useState<BaseProductionMachine | null>(null)
     const [manageWorkerShift, setManageWorkerShift] = useState<'day' | 'night'>('day')
     const [workerSearch, setWorkerSearch] = useState('')
 
@@ -120,6 +124,10 @@ export default function BaseMachineBoard({
         }
         return map
     }, [machineJobContexts, today, jobById])
+    // The Production tour opens the real Manage Operators sheet for the first loom that has a quality.
+    const managingMachine = tourStep === 'pd-operators'
+        ? machines.find((machine) => machine.is_active && currentJobByMachine.has(machine.id)) ?? null
+        : managedMachine
 
     // Machine worker assignments (day & night)
     const machineWorkers = useMemo(() => {
@@ -302,7 +310,7 @@ export default function BaseMachineBoard({
     }, [workers, manageWorkerShift, workerSearch, today])
 
     return (
-        <section className="space-y-4 pt-2">
+        <section className="space-y-4 pt-2" data-production-tour="board">
             <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
                 <div>
                     <h2 data-i18n-skip="true" className="text-lg font-bold text-ink">{t('production.machineBoard')}</h2>
@@ -603,8 +611,8 @@ export default function BaseMachineBoard({
             </Dialog>
 
             {/* Sheet: Manage Workers for machine */}
-            <Sheet open={managingMachine !== null} onOpenChange={(open) => !open && setManagingMachine(null)}>
-                <SheetContent side="right" className="w-[min(440px,95vw)] p-0 flex flex-col">
+            <Sheet open={managingMachine !== null} onOpenChange={(open) => !open && setManagingMachine(null)} {...surface.root}>
+                <SheetContent side="right" className="w-[min(440px,95vw)] p-0 flex flex-col" data-production-tour="operators" {...surface.content}>
                     <SheetHeader className="p-5 pb-3 border-b border-hairline bg-surface-soft/40">
                         <SheetTitle data-i18n-skip="true" className="text-base font-bold text-ink">
                             {t('production.manageOperatorsForLoom', { loom: managingMachine?.custom_label || managingMachine?.name || '' })}
