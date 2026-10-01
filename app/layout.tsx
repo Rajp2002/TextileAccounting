@@ -49,6 +49,7 @@ import Providers from "@/components/providers"
 import { Toaster } from "@/components/ui/sonner"
 import { SignInTimingReporter } from "@/components/telemetry/sign-in-timing-reporter"
 import { LogoutTimingReporter } from "@/components/telemetry/logout-timing-reporter"
+import { AppIntroPrePaintScript } from "@/components/intro/intro-pre-paint-script"
 
 export default function RootLayout({
   children,
@@ -57,18 +58,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <AppIntroPrePaintScript />
+      </head>
       <body
         className={`${inter.variable} ${geistMono.variable} antialiased font-sans`}
         suppressHydrationWarning
       >
-        {/* Inline script: adds app-ready class to body as early as possible
-            so the PWA splash background (#fdf6e9) transitions to the real
-            app background without waiting for a full React render cycle.
-            dangerouslySetInnerHTML is safe here — this is static JS with no
-            user input. */}
+        {/* Static timing mark, recorded before the route content arrives. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `document.body.classList.add('app-ready'); if (window.performance && typeof window.performance.mark === 'function') window.performance.mark('route_navigation_start');`,
+            __html: `if (window.performance && typeof window.performance.mark === 'function') window.performance.mark('route_navigation_start');`,
           }}
         />
         <Providers>

@@ -12,7 +12,7 @@ export default async function LoginPage() {
 
     return (
         <>
-            {/* The installed app opens here: its first launch gets the woven intro. */}
+            {/* Reuse the root head's intro decision before rendering the stage. */}
             <IntroPrePaintScript surface="app-login" />
             <WeavingIntro surface="app-login" />
             <LoginForm recoveryDestination={recoveryDestination} />
