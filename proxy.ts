@@ -12,9 +12,14 @@ import {
     getTerminalAuthSessionErrorCode,
     isSupabaseAuthSessionCookie,
 } from '@/lib/supabase/auth-cookie'
+import {
+    FREE_WORKSPACE_PATH,
+    hasFreeWorkspaceHint,
+    WORKSPACE_HINT_COOKIE,
+} from '@/lib/workspace-hint'
 
-function getRoleHomePath(role?: string): string {
-    if (role === 'owner') return '/owner/estimator'
+function getRoleHomePath(role?: string, freeWorkspaceHint = false): string {
+    if (role === 'owner') return freeWorkspaceHint ? FREE_WORKSPACE_PATH : '/owner/estimator'
     if (role === 'supervisor') return '/feature-archived'
     if (role === 'admin') return '/admin'
     return '/login'
@@ -341,9 +346,13 @@ export async function updateSession(request: NextRequest) {
 
     const role = typeof optimisticClaims.user_role === 'string' ? optimisticClaims.user_role : undefined
     const onboardingComplete = optimisticClaims.onboarding_complete === true
+    // Optimistic only: a Free owner's launch skips the /owner/estimator hop.
+    // The Free and owner layouts re-resolve the plan and correct a stale hint,
+    // so it is used only for home redirects, never to rewrite a protected route.
+    const freeWorkspaceHint = hasFreeWorkspaceHint(request.cookies.get(WORKSPACE_HINT_COOKIE)?.value, userId)
     const roleDestination = role === 'owner' && !onboardingComplete
         ? '/onboarding'
-        : getRoleHomePath(role)
+        : getRoleHomePath(role, freeWorkspaceHint)
 
     const applyAuthenticatedResponseCookies = (target: NextResponse) => {
         applySessionCookies.forEach(applyCookie => applyCookie(target))
@@ -398,7 +407,7 @@ export async function updateSession(request: NextRequest) {
             if (!onboardingComplete) {
                 return NextResponse.redirect(new URL('/onboarding', request.url))
             }
-            return NextResponse.redirect(new URL('/owner/estimator', request.url))
+            return NextResponse.redirect(new URL(getRoleHomePath(role, freeWorkspaceHint), request.url))
         } else if (role === 'supervisor') {
             return NextResponse.redirect(new URL('/feature-archived', request.url))
         } else if (role === 'admin') {

@@ -45,6 +45,7 @@ vi.mock('@/lib/supabase/auth-cookie', () => ({
 }))
 
 import { updateSession } from '../proxy'
+import { isRecentPwaLoginRedirect } from '@/lib/pwa-auth-recovery'
 
 const projectId = process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID ?? 'exampleprojectref'
 const authCookieBase = `sb-${projectId}-auth-token`
@@ -53,6 +54,7 @@ function requestFor(
     pathname: string,
     method = 'GET',
     lastActivity = '1700000000000',
+    extraCookies: string[] = [],
 ) {
     return new NextRequest(`https://textile-accounting.vercel.app${pathname}`, {
         method,
@@ -62,6 +64,7 @@ function requestFor(
                 `${authCookieBase}.1=stale-part-one`,
                 `last_activity=${lastActivity}`,
                 'unrelated_cookie=keep-me',
+                ...extraCookies,
             ].join('; '),
         },
     })
@@ -253,5 +256,89 @@ describe('PWA idle-session cold start', () => {
         expect(authMock.getClaims).toHaveBeenCalledOnce()
         expect(revocationMock).toHaveBeenCalledWith('owner-user-id')
         expect(authMock.signOut).not.toHaveBeenCalled()
+    })
+})
+
+describe('Free workspace launch hint', () => {
+    const freeHint = 'weavly_workspace_hint=free.owner-user-id'
+    const reopen = (pathname: string, cookies: string[] = [freeHint]) => updateSession(
+        requestFor(pathname, 'GET', Date.now().toString(), cookies),
+    )
+
+    beforeEach(() => {
+        authMock.getClaims.mockResolvedValue({
+            data: { claims: { sub: 'owner-user-id', app_metadata: {
+                role: 'owner', onboarding_complete: true,
+            } } },
+            error: null,
+        })
+    })
+
+    it('sends a hinted owner launch straight to /free after the usual session checks', async () => {
+        const response = await reopen('/login')
+
+        expect(response.status).toBe(307)
+        expect(response.headers.get('location')).toBe('https://textile-accounting.vercel.app/free')
+        expect(authMock.getClaims).toHaveBeenCalledOnce()
+        expect(revocationMock).toHaveBeenCalledWith('owner-user-id')
+    })
+
+    it('uses the hint for the signed-in landing page as well', async () => {
+        const response = await reopen('/')
+
+        expect(response.status).toBe(307)
+        expect(response.headers.get('location')).toBe('https://textile-accounting.vercel.app/free')
+    })
+
+    it('points the stale-PWA login recovery link at /free', async () => {
+        vi.mocked(isRecentPwaLoginRedirect).mockReturnValueOnce(true)
+
+        const response = await reopen('/login')
+
+        expect(response.status).toBe(200)
+        expect(response.headers.get('x-middleware-request-x-weavly-pwa-login-recovery')).toBe('/free')
+    })
+
+    it('ignores a hint written for another account on the same browser', async () => {
+        const response = await reopen('/login', ['weavly_workspace_hint=free.previous-user-id'])
+
+        expect(response.headers.get('location')).toBe('https://textile-accounting.vercel.app/owner/estimator')
+    })
+
+    it('keeps the estimator home when no hint is present', async () => {
+        const response = await reopen('/', [])
+
+        expect(response.headers.get('location')).toBe('https://textile-accounting.vercel.app/owner/estimator')
+    })
+
+    it('never rewrites a protected owner route from the hint', async () => {
+        const response = await reopen('/owner/estimator')
+
+        expect(response.status).toBe(200)
+        expect(response.headers.get('location')).toBeNull()
+    })
+
+    it('still sends an owner who has not finished onboarding to /onboarding', async () => {
+        authMock.getClaims.mockResolvedValue({
+            data: { claims: { sub: 'owner-user-id', app_metadata: {
+                role: 'owner', onboarding_complete: false,
+            } } },
+            error: null,
+        })
+
+        const response = await reopen('/login')
+
+        expect(response.headers.get('location')).toBe('https://textile-accounting.vercel.app/onboarding')
+    })
+
+    it('does not use the hint for other roles', async () => {
+        authMock.getClaims.mockResolvedValue({
+            data: { claims: { sub: 'owner-user-id', app_metadata: { role: 'admin' } } },
+            error: null,
+        })
+
+        const response = await reopen('/login')
+
+        expect(response.headers.get('location')).toBe('https://textile-accounting.vercel.app/admin')
     })
 })
