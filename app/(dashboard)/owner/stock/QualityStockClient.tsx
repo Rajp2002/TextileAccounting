@@ -22,23 +22,30 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useTranslation } from '@/lib/i18n/context'
+import { useTourSample } from '@/lib/tours/sample-context'
+import { tourSurfaceProps } from '@/lib/tours/sample-surface'
+import { fabricStockSampleForm } from '@/lib/tours/sample-data/stock'
+import type { FabricStockTourStep } from '@/lib/stock-tour'
 import { StockAdjustmentSchema, type QualityStockBoard, type StockAdjustmentInput, type StockQuality } from '@/lib/quality-stock'
 import { getQualityStockBoard, recordQualityStockAdjustment } from './actions'
 
 export default function QualityStockClient({ initialData }: { initialData: QualityStockBoard }) {
     const { t, language } = useTranslation()
     const router = useRouter()
+    const tourSample = useTourSample('fabric-stock')
+    const tourStep = tourSample?.step as FabricStockTourStep | undefined
+    const surface = tourSurfaceProps(Boolean(tourSample))
     const [data, setData] = useState(initialData)
     const [search, setSearch] = useState('')
     const [qualityId, setQualityId] = useState('')
     const [busy, setBusy] = useState(false)
     const [error, setError] = useState('')
     const [notice, setNotice] = useState('')
-    const [form, setForm] = useState<{ kind: 'opening' | 'correction'; quality?: StockQuality } | null>(null)
+    const [formState, setForm] = useState<{ kind: 'opening' | 'correction'; quality?: StockQuality } | null>(null)
     const [isHistoryOpen, setIsHistoryOpen] = useState(false)
-    const [label, setLabel] = useState('')
-    const [meters, setMeters] = useState('')
-    const [reason, setReason] = useState('')
+    const [labelState, setLabel] = useState('')
+    const [metersState, setMeters] = useState('')
+    const [reasonState, setReason] = useState('')
     const [saving, setSaving] = useState(false)
     const [saveError, setSaveError] = useState('')
     const [request, setRequest] = useState<StockAdjustmentInput | null>(null)
@@ -48,14 +55,22 @@ export default function QualityStockClient({ initialData }: { initialData: Quali
     const metres = (value: number) => Number(value).toLocaleString(language === 'en' ? 'en-IN' : `${language}-IN`, { maximumFractionDigits: 2 })
 
     useEffect(() => { setData(initialData); setQualityId('') }, [initialData])
+    // While the Fabric Stock tour teaches opening or correction, show the real dialog for the first quality.
+    const tourForm = tourStep ? fabricStockSampleForm(language, tourStep) : null
+    const tourQuality = tourForm ? data.qualities[0] : undefined
+    const form = tourForm && tourQuality ? { kind: tourForm.kind, quality: tourQuality } : formState
+    const label = tourForm && tourQuality ? tourQuality.quality_label : labelState
+    const meters = tourForm ? tourForm.meters : metersState
+    const reason = tourForm ? tourForm.reason : reasonState
     // A tab returning from Production should show current stock. Explicit refresh
     // also works when the browser cannot deliver a focus event.
     useEffect(() => {
+        if (tourSample) return // a tour sample has nothing to refresh
         const refresh = () => { if (!document.hidden) router.refresh() }
         document.addEventListener('visibilitychange', refresh)
         window.addEventListener('focus', refresh)
         return () => { document.removeEventListener('visibilitychange', refresh); window.removeEventListener('focus', refresh) }
-    }, [router])
+    }, [router, tourSample])
 
     async function load(filter = qualityId, more = false) {
         if (loading.current) return
@@ -146,7 +161,7 @@ export default function QualityStockClient({ initialData }: { initialData: Quali
             {error && <p role="alert" className="rounded-xl border border-[var(--wv-madder-200)] bg-[var(--wv-madder-50)]/80 p-3.5 text-xs sm:text-sm font-medium text-[var(--wv-madder-600)] shadow-xs">{error} <button className="underline font-bold ml-1 hover:text-[var(--wv-madder-600)]" onClick={() => void load()}>{tx('retry')}</button></p>}
 
             {/* Available stock card */}
-            <div className="rounded-2xl border border-hairline/80 bg-surface/95 p-6 shadow-[var(--shadow-card)] backdrop-blur-sm">
+            <div data-stock-tour="balance" className="rounded-2xl border border-hairline/80 bg-surface/95 p-6 shadow-[var(--shadow-card)] backdrop-blur-sm">
                 <div className="flex items-center gap-4">
                     <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-loom/10 text-loom shadow-xs">
                         <Warehouse className="h-7 w-7" />
@@ -199,6 +214,7 @@ export default function QualityStockClient({ initialData }: { initialData: Quali
                         {qualities.map(quality => (
                             <div
                                 key={quality.id}
+                                data-stock-tour={quality.id === qualities[0]?.id ? 'openingPending' : undefined}
                                 className="group relative flex flex-col justify-between rounded-2xl border border-hairline/80 bg-surface/95 p-5 shadow-[var(--shadow-card)] backdrop-blur-sm transition-all hover:border-loom/40 hover:shadow-md"
                             >
                                 <div className="space-y-3">
@@ -271,8 +287,8 @@ export default function QualityStockClient({ initialData }: { initialData: Quali
             </aside>
 
             {/* Movement History Modal */}
-            <Dialog open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
-                <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0 overflow-hidden rounded-2xl border-hairline shadow-2xl" data-i18n-skip="true" showCloseButton={false}>
+            <Dialog open={isHistoryOpen || tourStep === 'fs-history'} onOpenChange={setIsHistoryOpen} {...surface.root}>
+                <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0 overflow-hidden rounded-2xl border-hairline shadow-2xl" data-i18n-skip="true" {...surface.content}>
                     {/* Header */}
                     <div className="border-b border-hairline/80 px-6 py-5 bg-surface/50 backdrop-blur-sm">
                         <div className="flex items-center justify-between gap-4">
@@ -341,7 +357,7 @@ export default function QualityStockClient({ initialData }: { initialData: Quali
                     </div>
 
                     {/* Movements list */}
-                    <div className="flex-1 overflow-y-auto p-6 space-y-3" aria-busy={busy}>
+                    <div data-stock-tour="history" className="flex-1 overflow-y-auto p-6 space-y-3" aria-busy={busy}>
                         {data.movements.length === 0 ? (
                             <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-hairline py-12 px-4 text-center">
                                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-surface-soft text-muted-foreground mb-3">
@@ -455,8 +471,8 @@ export default function QualityStockClient({ initialData }: { initialData: Quali
             </Dialog>
 
             {/* Opening / Correction Modal */}
-            <Dialog open={Boolean(form)} onOpenChange={value => { if (!value && !saving) setForm(null) }}>
-                <DialogContent className="max-w-md rounded-2xl border-hairline shadow-2xl" data-i18n-skip="true" showCloseButton={false}>
+            <Dialog open={Boolean(form)} onOpenChange={value => { if (!value && !saving) setForm(null) }} {...surface.root}>
+                <DialogContent className="max-w-md rounded-2xl border-hairline shadow-2xl" data-i18n-skip="true" {...surface.content}>
                     <DialogHeader>
                         <DialogTitle className="text-lg font-bold text-ink">
                             {form?.kind === 'opening' ? tx('opening') : tx('correct')}
@@ -465,7 +481,7 @@ export default function QualityStockClient({ initialData }: { initialData: Quali
                             {form?.kind === 'opening' ? tx('openingHelp') : tx('correctHelp')}
                         </DialogDescription>
                     </DialogHeader>
-                    <form className="space-y-4" onSubmit={event => { event.preventDefault(); void save() }}>
+                    <form data-stock-tour={form?.kind === 'opening' ? 'opening' : 'correction'} className="space-y-4" onSubmit={event => { event.preventDefault(); void save() }}>
                         <div className="space-y-1.5">
                             <Label htmlFor="stock-quality" className="text-xs font-semibold text-body">{tx('quality')}</Label>
                             <Input

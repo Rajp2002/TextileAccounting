@@ -1,5 +1,5 @@
 import type { TourStepSpec } from './tours/tour-types'
-import type { Language } from './i18n/context'
+import { TOUR_SURFACE_SELECTOR } from './tours/sample-surface'
 
 export type PayrollTourVariant = 'base'
 export type PayrollTourTrack = 'core' | 'help'
@@ -9,13 +9,8 @@ export type PayrollTourStep = typeof basePayrollTourSteps[number] | typeof baseP
 export function payrollTourSteps(track: PayrollTourTrack = 'core'): readonly PayrollTourStep[] {
     return track === 'help' ? basePayrollHelpSteps : basePayrollTourSteps
 }
-export function payrollTourSurface(step: PayrollTourStep) {
-    if (['pr-settle', 'pr-paid', 'pr-complete'].includes(step)) return 'settlement'
-    if (step === 'pra-advance') return 'advance'
-    if (step === 'pra-deduction') return 'deduction'
-    if (step === 'pra-correct') return 'correction'
-    return 'page'
-}
+/** Steps that teach a real dialog: the settlement workspace, Mark paid, Record advance, Record deduction, Reverse payment. */
+const DIALOG_STEPS: readonly PayrollTourStep[] = ['pr-settle', 'pr-paid', 'pr-complete', 'pra-advance', 'pra-deduction', 'pra-correct']
 const anchors: Record<PayrollTourStep, string> = {
     'pr-period': 'period', 'pr-readiness': 'readiness', 'pr-earnings': 'earnings',
     'pr-recovery': 'recovery', 'pr-settle': 'settle', 'pr-paid': 'paymentDetails',
@@ -27,24 +22,8 @@ export const payrollTourSelector = (step: PayrollTourStep) => step.endsWith('han
     ? `[data-tour-anchor="${anchors[step]}"]` : `[data-payroll-tour="${anchors[step]}"]`
 const specs = (steps: readonly PayrollTourStep[]): readonly TourStepSpec<PayrollTourStep>[] => steps.map(id => ({
     id, anchor: payrollTourSelector(id), kind: id.endsWith('handoff') ? 'handoff' : 'sample',
-    ...(payrollTourSurface(id) !== 'page' ? { context: '[data-payroll-tour-preview="true"]' } : {}),
+    ...(DIALOG_STEPS.includes(id) ? { context: TOUR_SURFACE_SELECTOR } : {}),
     ...(['pr-period', 'pr-settle'].includes(id) ? { detail: true } : {}),
 }))
 export const payrollTourSpecs = specs(basePayrollTourSteps)
 export const payrollHelpSpecs = specs(basePayrollHelpSteps)
-
-/** Same date-only parsing, calendar and options as the Payroll page, localized for the replica. */
-export function formatPayrollTourDate(value: string, language: Language) {
-    const [year, month, day] = value.slice(0, 10).split('-').map(Number)
-    return new Intl.DateTimeFormat(`${language}-IN`, {
-        day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata',
-    }).format(new Date(Date.UTC(year, month - 1, day)))
-}
-
-/** Display-only examples, deliberately separate from business action payloads. */
-export function makePayrollTourExample() {
-    const piece = { id: 'tour-payroll-piece', metres: 1000, rate: 2, gross: 2000, debt: 1000, recovery: 1000, net: 1000, carry: 0 }
-    const salary = { id: 'tour-payroll-salary', monthly: 18000, days: 30, monthDays: 30, gross: 18000, recovery: 0, net: 18000 }
-    const zero = { id: 'tour-payroll-zero', gross: 0, net: 0 }
-    return { piece, salary, zero, period: '01–30 Sep 2026', periodStart: '2026-09-01', periodEnd: '2026-09-30', gross: piece.gross + salary.gross, recovery: piece.recovery, net: piece.net + salary.net, paid: salary.net, remaining: piece.net }
-}

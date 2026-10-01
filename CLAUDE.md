@@ -94,7 +94,7 @@ Next.js 16 App Router + React 19, TypeScript strict, Tailwind v4 + shadcn/ui (Ra
 
 **i18n.** `lib/i18n/context.tsx` provides `useTranslation()`; dictionaries in `lib/i18n/locales/{en,hi,gu}.ts` plus feature phrase files in `lib/i18n/`. New user-facing strings need all three languages and layouts that tolerate longer Gujarati/Hindi text.
 
-**Guided tours.** Per-feature tours (`lib/*-tour.ts`, `lib/tours/`, `components/tours/`, `lib/i18n/*-tutorial.ts`) anchor to DOM targets; renaming/moving UI can break them.
+**Guided tours.** Per-feature tours (`lib/*-tour.ts`, `lib/tours/`, `components/tours/`, `lib/i18n/*-tutorial.ts`) anchor to DOM targets; renaming/moving UI can break them. A tour teaches the REAL page, never a hand-built lookalike: when an account has nothing to show, the tour renders the same page component with sample data (`lib/tours/sample-data/`, `components/*/*SampleWorkspace.tsx`), and the real components open their own dialogs and sheets from `useTourSample()` (`lib/tours/sample-context.tsx`, `tourSurfaceProps` in `lib/tours/sample-surface.ts`). A step's anchor must be a `data-*-tour` attribute on a real component; `__tests__/tour-real-page-guard.test.ts` fails if an anchor disappears or a `*TourPreview` component comes back. A tour never moves or resizes an app modal where the 360px card fits beside it: the modal opens where it always opens and the card adapts (`lib/tours/placement.ts` tries right, then left, even over the sidebar). Squeezing a modal into a reading column is allowed only on viewports too narrow for that, with the rule capped at the width derived in `__tests__/tour-modal-placement-guard.test.ts`, which fails any tour modal rule that applies wider.
 
 ## Tests
 

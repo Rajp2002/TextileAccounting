@@ -7,7 +7,7 @@ import { useTranslation } from '@/lib/i18n/context'
 import { fabricStockTourSpecs, yarnStockTourSpecs, type FabricStockTourStep, type YarnStockTourStep } from '@/lib/stock-tour'
 import type { StockTourKind } from '@/lib/stock-tour'
 
-const StockTourPreview = dynamic(() => import('./StockTourPreview'), { ssr: false })
+const StockSampleWorkspace = dynamic(() => import('./StockSampleWorkspace'), { ssr: false })
 type CopyModule = typeof import('@/lib/i18n/stock-tutorial')
 
 export default function StockGuidedTour({ kind, userId, orgId, userMetadata, children }: {
@@ -22,7 +22,7 @@ export default function StockGuidedTour({ kind, userId, orgId, userMetadata, chi
     return <ReplicaGuidedTour tourId={kind}
         steps={kind === 'fabric-stock' ? fabricStockTourSpecs : yarnStockTourSpecs}
         handoffStepId={kind === 'fabric-stock' ? 'fs-handoff' : 'ys-handoff'}
-        workspaceClassName="stock-workspace-shell space-y-5"
+        workspaceClassName="stock-workspace-shell"
         railClassName="stock-left-rail" railLabel={t(kind === 'fabric-stock' ? 'qualityStock.title' : 'navigation.yarnStock')}
         userId={userId} orgId={orgId} userMetadata={userMetadata}
         prepare={async () => { setContent(await import('@/lib/i18n/stock-tutorial')) }}
@@ -31,7 +31,7 @@ export default function StockGuidedTour({ kind, userId, orgId, userMetadata, chi
             if (kind === 'fabric-stock') return content.fabricStockStepCopy(language, step as FabricStockTourStep, content.fabricStockTourControlLabels(t))
             return content.yarnStockStepCopy(language, step as YarnStockTourStep, content.yarnStockTourControlLabels(language, t))
         }}
-        renderReplica={step => <StockTourPreview kind={kind} step={step} />}>
+        renderReplica={step => <StockSampleWorkspace kind={kind} step={step} />}>
         <div className="stock-workspace-shell">{children}</div>
     </ReplicaGuidedTour>
 }

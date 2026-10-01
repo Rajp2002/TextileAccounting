@@ -1,21 +1,16 @@
 import type { TourStepSpec } from './tours/tour-types'
+import { TOUR_SURFACE_SELECTOR } from './tours/sample-surface'
 
 /** Overview setup only. Daily Sheet gets its own launcher and runtime in GT-12. */
 export const productionTourSteps = ['pd-overview', 'pd-prereq', 'pd-activate', 'pd-looms', 'pd-operators', 'pd-board', 'pd-handoff'] as const
 export type ProductionOverviewTourStep = typeof productionTourSteps[number]
 
 export type ProductionTourStep = ProductionOverviewTourStep
-export type ProductionTourField = 'overview' | 'prerequisites' | 'activate' | 'allocate' | 'operators' | 'board' | 'qualities' | 'filters'
-
-export function productionTourSurface(step: ProductionTourStep) {
-    if (step === 'pd-handoff') return 'live'
-    if (step === 'pd-activate') return 'activate'
-    if (step === 'pd-looms') return 'allocate'
-    return 'overview'
-}
+/** Every field is an element of the REAL Production page (or one of its real dialogs), tagged `data-production-tour`. */
+export type ProductionTourField = 'overview' | 'qualities' | 'activate' | 'allocate' | 'operators' | 'board'
 
 const overviewAnchors: Record<ProductionOverviewTourStep, string> = {
-    'pd-overview': 'overview', 'pd-prereq': 'prerequisites', 'pd-activate': 'activate',
+    'pd-overview': 'overview', 'pd-prereq': 'qualities', 'pd-activate': 'activate',
     'pd-looms': 'allocate', 'pd-operators': 'operators', 'pd-board': 'board', 'pd-handoff': 'production.activate',
 }
 export const productionTourSelector = (step: ProductionTourStep) => step === 'pd-handoff'
@@ -26,9 +21,6 @@ export const productionTourSpecs: readonly TourStepSpec<ProductionOverviewTourSt
     id,
     anchor: productionTourSelector(id),
     kind: id === 'pd-handoff' ? 'handoff' : 'sample',
-    ...(['pd-activate', 'pd-looms'].includes(id) ? { context: '[data-production-tour-preview="true"]' } : {}),
+    ...(['pd-activate', 'pd-looms', 'pd-operators'].includes(id) ? { context: TOUR_SURFACE_SELECTOR } : {}),
     ...(['pd-prereq', 'pd-activate', 'pd-board'].includes(id) ? { detail: true } : {}),
 }))
-
-/** Display-only numbers. No business record identifiers or action payloads. */
-export const productionTourExample = { date: '2026-09-16', metres: 120, rate: 2, earnings: 240, correctedMetres: 125, correctedEarnings: 250 } as const

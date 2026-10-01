@@ -1,6 +1,8 @@
 'use client'
 
 import { useTranslation } from '@/lib/i18n/context'
+import { useTourSample } from '@/lib/tours/sample-context'
+import { tourSurfaceProps } from '@/lib/tours/sample-surface'
 
 import { useDeferredValue, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -100,6 +102,8 @@ export default function BasePayrollSettlementWorkspace({
 }) {
     const { t, tx } = useTranslation()
     const router = useRouter()
+    const payrollTourStep = useTourSample('payroll')?.step
+    const surface = tourSurfaceProps(Boolean(payrollTourStep))
 
     // Local mutable state for optimistic live updates
     const [localPayables, setLocalPayables] = useState<BaseWorkerPayable[]>(externalPayables)
@@ -204,8 +208,12 @@ export default function BasePayrollSettlementWorkspace({
     const fixedCount = localPayables.filter((p) => p.pay_type === 'fixed_monthly').length
 
     // Target paying worker
-    const payingWorker = payingWorkerId
-        ? localPayables.find((p) => p.worker_id === payingWorkerId)
+    const tourPayingWorkerId = payrollTourStep === 'pr-paid'
+        ? localPayables.find((p) => p.status !== 'paid' && p.net_payout > 0)?.worker_id ?? null
+        : null
+    const shownPayingWorkerId = tourPayingWorkerId ?? payingWorkerId
+    const payingWorker = shownPayingWorkerId
+        ? localPayables.find((p) => p.worker_id === shownPayingWorkerId)
         : null
 
     // Target viewing worker
@@ -417,8 +425,8 @@ export default function BasePayrollSettlementWorkspace({
     }
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="fixed inset-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 w-full sm:w-[92vw] sm:max-w-6xl h-full sm:h-[90vh] sm:max-h-[920px] rounded-none sm:rounded-3xl border border-hairline bg-surface p-0 shadow-2xl flex flex-col overflow-hidden">
+        <Dialog open={open} onOpenChange={onOpenChange} {...surface.root}>
+            <DialogContent {...surface.content} className="fixed inset-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 w-full sm:w-[92vw] sm:max-w-6xl h-full sm:h-[90vh] sm:max-h-[920px] rounded-none sm:rounded-3xl border border-hairline bg-surface p-0 shadow-2xl flex flex-col overflow-hidden">
                 {/* 1. Header */}
                 <div className="sticky top-0 z-20 flex items-center justify-between border-b border-hairline bg-surface px-4 py-3 sm:px-6 sm:py-4">
                     <div className="min-w-0 flex items-center gap-3">
@@ -615,7 +623,7 @@ export default function BasePayrollSettlementWorkspace({
                             </p>
                         </div>
                     ) : (
-                        <div className="space-y-2">
+                        <div data-payroll-tour="settle" className="space-y-2">
                             {/* Desktop Table Header */}
                             <div className="hidden lg:grid lg:grid-cols-12 gap-3 px-4 py-2 text-xs font-bold uppercase tracking-wider text-muted-foreground border-b border-hairline">
                                 <div className="col-span-4">Worker</div>
@@ -835,7 +843,7 @@ export default function BasePayrollSettlementWorkspace({
                 </div>
 
                 {/* 6. Sticky Footer / Complete Payroll CTA */}
-                <div className="sticky bottom-0 z-20 border-t border-hairline bg-surface px-4 py-3 sm:px-6 sm:py-4 flex items-center justify-between gap-3">
+                <div data-payroll-tour="complete" className="sticky bottom-0 z-20 border-t border-hairline bg-surface px-4 py-3 sm:px-6 sm:py-4 flex items-center justify-between gap-3">
                     <div className="text-xs text-muted-foreground">
                         {summary.outstandingWorkers === 0 ? (
                             <span className="text-[var(--wv-moss-700)] font-bold flex items-center gap-1.5">
@@ -881,8 +889,8 @@ export default function BasePayrollSettlementWorkspace({
                 {/* --- MODALS --- */}
 
                 {/* 1. Mark Paid Confirmation Dialog */}
-                <Dialog open={Boolean(payingWorkerId)} onOpenChange={(o) => !o && !isPaying && setPayingWorkerId(null)}>
-                    <DialogContent className="max-w-md rounded-2xl border border-hairline bg-surface p-6 shadow-2xl">
+                <Dialog open={Boolean(shownPayingWorkerId)} onOpenChange={(o) => !o && !isPaying && setPayingWorkerId(null)} {...surface.root}>
+                    <DialogContent className="max-w-md rounded-2xl border border-hairline bg-surface p-6 shadow-2xl" {...surface.content}>
                         <DialogHeader>
                             <DialogTitle className="text-xl font-bold text-ink">
                                 Mark {payingWorker?.worker_name} as paid
@@ -893,7 +901,7 @@ export default function BasePayrollSettlementWorkspace({
                         </DialogHeader>
 
                         {payingWorker && (
-                            <div className="space-y-4 pt-2">
+                            <div data-payroll-tour="paymentDetails" className="space-y-4 pt-2">
                                 <div className="rounded-xl border border-hairline bg-surface-soft/60 p-4">
                                     <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                                         Net amount payable

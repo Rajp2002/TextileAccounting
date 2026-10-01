@@ -366,7 +366,7 @@ export function CostingExportDialog({
 
   return (
     <Dialog modal={!tutorialPreview} open={open} onOpenChange={value => { if (!tutorialPreview) onOpenChange(value) }}>
-      <DialogContent showCloseButton={!tutorialPreview} data-costing-tour-dialog={tutorialPreview ? "true" : undefined} onOpenAutoFocus={event => {if (tutorialPreview) event.preventDefault()}} onCloseAutoFocus={event => {if (tutorialPreview) event.preventDefault()}} onInteractOutside={event => {if (tutorialPreview) event.preventDefault()}} onEscapeKeyDown={event => {if (tutorialPreview) event.preventDefault()}} className="max-h-[95vh] overflow-y-auto sm:max-w-6xl">
+      <DialogContent showCloseButton={!tutorialPreview} data-costing-tour-dialog={tutorialPreview ? "true" : undefined} data-tour-surface={tutorialPreview ? "true" : undefined} onOpenAutoFocus={event => {if (tutorialPreview) event.preventDefault()}} onCloseAutoFocus={event => {if (tutorialPreview) event.preventDefault()}} onInteractOutside={event => {if (tutorialPreview) event.preventDefault()}} onEscapeKeyDown={event => {if (tutorialPreview) event.preventDefault()}} className="max-h-[95vh] overflow-y-auto sm:max-w-6xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Eye className="h-5 w-5 text-[var(--wv-action-primary)]" />

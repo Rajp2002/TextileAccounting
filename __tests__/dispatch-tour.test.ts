@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { dispatchTourSteps, dispatchTourSpecs, dispatchTourSelector, dispatchTourSurface, dispatchTourExample as s } from '../lib/dispatch-tour'
+import { dispatchTourSteps, dispatchTourSpecs, dispatchTourSelector } from '../lib/dispatch-tour'
+import { DISPATCH_SAMPLE as s, dispatchSampleChallans, dispatchSampleDraft, dispatchSampleSelectedId } from '../lib/tours/sample-data/dispatch'
 import { dispatchTutorialCopy, dispatchStepCopy, dispatchTourControlLabels } from '../lib/i18n/dispatch-tutorial'
 import { supportedTours, isTourEligible, getTourDefinition } from '../lib/tours/tour-registry'
 import { tourInvitationCopy } from '../lib/i18n/tour-invitations'
@@ -17,12 +18,11 @@ describe('Dispatch tour', () => {
     it('follows the approved ten steps, surfaces, contexts and live handoff', () => {
         expect(dispatchTourSteps).toEqual(['overview', 'quality', 'parties', 'lots', 'saveDraft', 'confirm', 'receipt', 'difference', 'payment', 'handoff'])
         expect(new Set(dispatchTourSteps).size).toBe(10)
-        expect(dispatchTourSteps.map(dispatchTourSurface)).toEqual(['page', 'draft', 'draft', 'draft', 'draft', 'confirm', 'receipt', 'detail', 'payment', 'live'])
         for (const spec of dispatchTourSpecs) {
             expect(spec.anchor).toBe(dispatchTourSelector(spec.id))
             expect(spec.anchor).toBe(spec.id === 'handoff' ? '[data-tour-anchor="dispatch.new"]' : `[data-dispatch-tour="${spec.id}"]`)
             expect(spec.kind).toBe(spec.id === 'handoff' ? 'handoff' : 'sample')
-            expect(spec.context).toBe(['overview', 'difference', 'handoff'].includes(spec.id) ? undefined : '[data-dispatch-tour-preview="true"]')
+            expect(spec.context).toBe(['overview', 'difference', 'handoff'].includes(spec.id) ? undefined : '[data-tour-surface="true"]')
             expect(Boolean(spec.detail)).toBe(['confirm', 'payment'].includes(spec.id))
         }
     })
@@ -63,12 +63,21 @@ describe('Dispatch tour', () => {
         expect(dispatchTutorialCopy.en.difference.body).toContain('₹3,920')
         expect(dispatchTutorialCopy.en.payment.body).toContain('₹1,920')
     })
-    it('reconciles the fabric, receipt and payment example without yarn fields', () => {
-        expect(s.sent).toBe(60 + 40)
-        expect(s.sent * s.rate).toBe(s.value)
-        expect(s.received * s.rate).toBe(s.acceptedValue)
-        expect(s.acceptedValue - s.payment).toBe(s.balance)
-        expect(s.value - s.acceptedValue).toBe(s.credit)
+    it('reconciles the fabric, receipt and payment example on the real sample dispatches, without yarn fields', () => {
+        const draft = dispatchSampleDraft('en')
+        expect(draft.lines.reduce((total, line) => total + line.meters, 0)).toBe(s.sent)
+        expect(draft.lines.map(line => line.meters)).toEqual([60, 40])
+        const value = s.sent * s.rate, accepted = s.received * s.rate
+        expect(value).toBe(4000) // "worth ₹4,000 at ₹40/m"
+        expect(accepted).toBe(3920) // "The amount due becomes ₹3,920"
+        expect(accepted - s.payment).toBe(1920) // "₹1,920" after a ₹2,000 payment
+        expect(value - accepted).toBe(80)
+        const challans = dispatchSampleChallans('en')
+        expect(challans.map(row => row.delivery_status)).toEqual(['received', 'received', 'sent', 'draft'])
+        expect(challans.find(row => row.difference_status === 'review')).toMatchObject({ sent_meters: 100, acknowledged_meters: 98 })
+        expect(challans.find(row => row.difference_status === 'accepted')?.balance).toBe(accepted)
+        expect(challans.every(row => row.id.startsWith('tour-'))).toBe(true)
+        for (const step of dispatchTourSteps) { const id = dispatchSampleSelectedId(step); if (id) expect(challans.some(row => row.id === id)).toBe(true) }
         expect(Object.keys(s).some(key => /yarn/i.test(key))).toBe(false)
     })
     it('resolves control labels from the exact live keys and anchors both button instances', () => {
@@ -80,7 +89,7 @@ describe('Dispatch tour', () => {
         expect(page).toContain("'payment',")
         expect(read('app/(dashboard)/owner/dispatches/ChallanDraftEditor.tsx')).toContain("tx('saveDraft')")
         const wrapper = read('components/dispatches/DispatchGuidedTour.tsx')
-        expect(wrapper).toContain("dynamic(() => import('./DispatchTourPreview'), { ssr: false })")
+        expect(wrapper).toContain("dynamic(() => import('./DispatchSampleWorkspace'), { ssr: false })")
         expect(wrapper).toContain("await import('@/lib/i18n/dispatch-tutorial')")
         expect(read('components/tours/ReplicaGuidedTour.tsx')).toContain("dynamic(() => import('./GuidedTour')")
     })

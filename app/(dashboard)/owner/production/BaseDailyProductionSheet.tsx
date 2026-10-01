@@ -5,6 +5,9 @@ import { isBaseOperatorAvailable, resolveBasePieceRate } from '@/lib/base-operat
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import Link from 'next/link'
 import DailySheetGuidedTour from '@/components/production/DailySheetGuidedTour'
+import { useTourSample } from '@/lib/tours/sample-context'
+import { tourSurfaceProps } from '@/lib/tours/sample-surface'
+import { DAILY_SAMPLE_READINGS } from '@/lib/tours/sample-data/production'
 import { baseDailySheetHref, baseProductionHref, validBaseDate, type BaseProductionNavigation } from '@/lib/base-production-navigation'
 import { baseProductionDraftKey, parseBaseProductionDraft } from '@/lib/base-production-draft'
 import { baseProductionAuditChanges } from '@/lib/base-production-audit'
@@ -119,6 +122,10 @@ export default function BaseDailyProductionSheet({
 }) {
     const router = useRouter()
     const { tx, t } = useTranslation()
+    const tourSample = useTourSample('daily-sheet')
+    const sample = Boolean(tourSample)
+    const tourStep = tourSample?.step
+    const surface = tourSurfaceProps(sample)
     const [productionDate, setProductionDate] = useState(navigation.date ?? initialData.today)
     const [shift, setShift] = useState<'day' | 'night'>(navigation.shift ?? 'day')
     const [rows, setRows] = useState<Record<string, DraftRow>>({})
@@ -138,7 +145,8 @@ export default function BaseDailyProductionSheet({
     const [draftReset, setDraftReset] = useState(0)
     const selectedEntry = initialData.entries.find((entry) => entry.id === navigation.entry)
     const focusedWorker = selectedEntry?.worker_id ?? navigation.worker
-    const draftKey = initialData.actorId ? baseProductionDraftKey(initialData.orgId, initialData.actorId, productionDate, shift) : null
+    // A tour sample never reads or writes the on-device draft, which belongs to the real sheet.
+    const draftKey = initialData.actorId && !sample ? baseProductionDraftKey(initialData.orgId, initialData.actorId, productionDate, shift) : null
 
     useEffect(() => {
         const sheet = sheetRef.current
@@ -397,6 +405,20 @@ export default function BaseDailyProductionSheet({
                 savedUnallocatedMeters: hasUnallocatedHistoricalTotal ? existing!.meters : null,
             }]
         }))
+        if (sample) {
+            // The tour shows a sheet part-way through a shift: readings typed, so it is a draft on this device.
+            setDraftStatus('local')
+            setCorrectionReason('')
+            setRows(Object.fromEntries(Object.entries(baseline).map(([workerId, row]) => {
+                const machineMeters = { ...row.machineMeters }
+                for (const context of contextsByWorker.get(workerId) ?? []) {
+                    const reading = DAILY_SAMPLE_READINGS[context.machineId]
+                    if (reading !== undefined) machineMeters[contextKey(context)] = reading
+                }
+                return [workerId, { ...row, machineMeters, status: machineWorkerStatus(Object.values(machineMeters)) }]
+            })))
+            return
+        }
         setDraftStatus('none')
         setCorrectionReason('')
         try {
@@ -413,7 +435,7 @@ export default function BaseDailyProductionSheet({
         } catch { setDraftStatus('error') }
         setRows(baseline)
         setRequestId(newClientRequestId())
-    }, [allocationsByEntry, contextsByWorker, currentBatchEntries, sheetWorkers, draftKey, currentBatch?.client_request_id, currentBatch?.updated_at, currentBatch?.machine_records, draftReset])
+    }, [allocationsByEntry, contextsByWorker, currentBatchEntries, sheetWorkers, draftKey, currentBatch?.client_request_id, currentBatch?.updated_at, currentBatch?.machine_records, draftReset, sample])
 
     useEffect(() => {
         setUnlockedBatchId(null)
@@ -655,6 +677,7 @@ export default function BaseDailyProductionSheet({
 
     // Prefer the first visible enabled reading; retain a disabled target for locked-sheet fallback.
     const visibleReadingContexts = machineContexts.filter(context => context.workerId && (!showPending || pendingMachineIds.includes(context.machineId)))
+    const firstPendingMachineId = machineContexts.find(context => context.workerId && machineState(context) === 'pending')?.machineId
     const firstReadingMachineId = draftStatus === 'error' ? undefined : (visibleReadingContexts.find(context => !areInputsDisabled && !settledWorkerIds.has(context.workerId!) && getRow(context.workerId!).status !== 'absent' && context.jobId) ?? visibleReadingContexts[0])?.machineId
 
     const saveDisabled = isSaving || areInputsDisabled || Boolean(unmatchedDraftMeters) || invalidEnteredCount > 0 || registerSummary.invalid > 0 || summary.entered_count + summary.zero_count + summary.absent_count === 0
@@ -667,6 +690,7 @@ export default function BaseDailyProductionSheet({
                 <div className="production-daily-sheet-rail-top flex flex-col gap-3">
                     <div className="production-daily-sheet-action">
                         <Button
+                            data-daily-tour="save"
                             onClick={() => handleSave()}
                             disabled={saveDisabled}
                             className={cn(railPrimaryAction, 'w-full gap-2')}
@@ -676,7 +700,7 @@ export default function BaseDailyProductionSheet({
                         </Button>
                     </div>
 
-                    <div className={cn(railSurface, 'p-4 2xl:p-5')}>
+                    <div data-daily-tour="shift" className={cn(railSurface, 'p-4 2xl:p-5')}>
                         <p className="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">{t('dailySheet.shiftDetails')}</p>
                         <div className="grid grid-cols-1 gap-3">
                             <div className="space-y-1.5">
@@ -699,7 +723,7 @@ export default function BaseDailyProductionSheet({
                         </div>
                     </div>
 
-                    <div className={cn(railSurface, 'p-4 2xl:p-5')}>
+                    <div data-daily-tour="draft" className={cn(railSurface, 'p-4 2xl:p-5')}>
                         <div className="flex items-center justify-between gap-2">
                             <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Shift progress</p>
                             <span className="text-[11px] font-medium text-body">
@@ -812,7 +836,7 @@ export default function BaseDailyProductionSheet({
                 </Card>
             ) : (
                 <>
-                    <Card className="gap-0 overflow-hidden rounded-[22px] border border-hairline border-t-[3px] border-t-saffron-deep bg-surface p-0 shadow-lg shadow-ink/5 flex flex-1 flex-col min-h-[calc(100vh-17.5rem)] 2xl:min-h-[calc(100vh-16rem)]">
+                    <Card data-daily-tour="sheet" className="gap-0 overflow-hidden rounded-[22px] border border-hairline border-t-[3px] border-t-saffron-deep bg-surface p-0 shadow-lg shadow-ink/5 flex flex-1 flex-col min-h-[calc(100vh-17.5rem)] 2xl:min-h-[calc(100vh-16rem)]">
                         <CardHeader className="border-b border-hairline bg-surface px-4 py-4 sm:px-5 sm:py-5">
                             <div className="flex flex-wrap items-center justify-between gap-3">
                                 <div className="flex items-center gap-3">
@@ -848,7 +872,7 @@ export default function BaseDailyProductionSheet({
                                     const state = machineState(context)
                                     const disabled = areInputsDisabled || settledWorkerIds.has(context.workerId!)
                                     return (
-                                        <div key={context.machineId} data-base-highlight={context.workerId === focusedWorker || context.jobId === navigation.job} className="data-[base-highlight=true]:bg-saffron-soft/60 data-[base-highlight=true]:ring-1 data-[base-highlight=true]:ring-inset data-[base-highlight=true]:ring-saffron grid grid-cols-[minmax(0,1fr)_132px] items-center gap-x-3 gap-y-2 px-4 py-3.5 transition-colors focus-within:bg-saffron-soft/30 hover:bg-surface-soft/40 md:grid-cols-[minmax(0,1.1fr)_minmax(0,.8fr)_145px_160px] md:px-5">
+                                        <div key={context.machineId} data-daily-tour={index === 0 ? 'reading' : context.machineId === firstPendingMachineId ? 'pending' : undefined} data-base-highlight={context.workerId === focusedWorker || context.jobId === navigation.job} className="data-[base-highlight=true]:bg-saffron-soft/60 data-[base-highlight=true]:ring-1 data-[base-highlight=true]:ring-inset data-[base-highlight=true]:ring-saffron grid grid-cols-[minmax(0,1fr)_132px] items-center gap-x-3 gap-y-2 px-4 py-3.5 transition-colors focus-within:bg-saffron-soft/30 hover:bg-surface-soft/40 md:grid-cols-[minmax(0,1.1fr)_minmax(0,.8fr)_145px_160px] md:px-5">
                                             <div className="flex min-w-0 items-center gap-3">
                                                 <span className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-soft text-xs font-bold tabular-nums text-muted-foreground sm:flex">{String(index + 1).padStart(2, '0')}</span>
                                                 <div className="min-w-0">
@@ -902,8 +926,8 @@ export default function BaseDailyProductionSheet({
                     </Card>
 
                     {(assignedWorkers.length > 0 || unassignedWorkers.length > 0) && (
-                        <Dialog open={isPayrollExpanded} onOpenChange={setIsPayrollExpanded}>
-                            <DialogContent className="sm:max-w-3xl max-h-[85vh] flex flex-col p-0 overflow-hidden rounded-2xl border-hairline bg-surface shadow-2xl">
+                        <Dialog open={isPayrollExpanded || tourStep === 'ds-earnings'} onOpenChange={setIsPayrollExpanded} {...surface.root}>
+                            <DialogContent className="sm:max-w-3xl max-h-[85vh] flex flex-col p-0 overflow-hidden rounded-2xl border-hairline bg-surface shadow-2xl" {...surface.content}>
                                 <DialogHeader className="border-b border-hairline bg-surface-soft/40 p-5">
                                     <div className="flex items-center gap-3">
                                         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-loom/10 text-loom">
@@ -917,7 +941,7 @@ export default function BaseDailyProductionSheet({
                                         </div>
                                     </div>
                                 </DialogHeader>
-                                <div id="base-payroll-rollup" className={`${isPayrollExpanded ? 'block' : 'hidden'} divide-y divide-hairline overflow-y-auto p-0 flex-1 max-h-[60vh]`}>
+                                <div id="base-payroll-rollup" data-daily-tour="review" className={`${isPayrollExpanded || tourStep === 'ds-earnings' ? 'block' : 'hidden'} divide-y divide-hairline overflow-y-auto p-0 flex-1 max-h-[60vh]`}>
                                     {assignedWorkers.map((worker) => {
                                         const row = getRow(worker.id)
                                         const contexts = contextsByWorker.get(worker.id) ?? []
@@ -981,7 +1005,7 @@ export default function BaseDailyProductionSheet({
             </div>
 
             {sheetWorkers.length > 0 && (
-                <div style={toolbarBounds ? { position: 'fixed', left: toolbarBounds.left, width: toolbarBounds.width } : undefined} className="production-daily-sheet-toolbar-mobile sticky bottom-[calc(80px+env(safe-area-inset-bottom,0px))] z-20 flex items-center justify-between gap-3 rounded-2xl border border-hairline bg-surface/95 p-3 sm:p-4 shadow-xl backdrop-blur md:bottom-3 min-[1280px]:hidden">
+                <div data-tour-floating="true" style={toolbarBounds ? { position: 'fixed', left: toolbarBounds.left, width: toolbarBounds.width } : undefined} className="production-daily-sheet-toolbar-mobile sticky bottom-[calc(80px+env(safe-area-inset-bottom,0px))] z-20 flex items-center justify-between gap-3 rounded-2xl border border-hairline bg-surface/95 p-3 sm:p-4 shadow-xl backdrop-blur md:bottom-3 min-[1280px]:hidden">
                     <div className="flex items-center gap-3 text-sm">
                         <div className="hidden rounded-xl border border-hairline bg-surface-soft p-2.5 text-ink sm:block"><Save className="h-4 w-4" /></div>
                         <div>
@@ -994,7 +1018,7 @@ export default function BaseDailyProductionSheet({
                             </p>
                         </div>
                     </div>
-                    <Button onClick={() => handleSave()} disabled={saveDisabled} className="h-10 sm:h-11 min-w-[132px] sm:min-w-[160px] rounded-xl bg-loom hover:bg-loom-elevated text-white font-bold tracking-wide shadow-xs">
+                    <Button data-daily-tour="save" onClick={() => handleSave()} disabled={saveDisabled} className="h-10 sm:h-11 min-w-[132px] sm:min-w-[160px] rounded-xl bg-loom hover:bg-loom-elevated text-white font-bold tracking-wide shadow-xs">
                         {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                         <span>{isSaving ? 'Saving…' : currentBatch ? t('dailySheet.saveCorrection') : t('dailySheet.saveShift')}</span>
                     </Button>
@@ -1027,8 +1051,8 @@ export default function BaseDailyProductionSheet({
                 </DialogContent>
             </Dialog>
 
-            <Dialog open={isUnlockDialogOpen} onOpenChange={setIsUnlockDialogOpen}>
-                <DialogContent className="max-w-md rounded-2xl border border-hairline bg-surface p-6 shadow-2xl">
+            <Dialog open={isUnlockDialogOpen || tourStep === 'ds-correct'} onOpenChange={setIsUnlockDialogOpen} {...surface.root}>
+                <DialogContent className="max-w-md rounded-2xl border border-hairline bg-surface p-6 shadow-2xl" {...surface.content}>
                     <DialogHeader>
                         <DialogTitle className="text-xl font-bold text-ink">Edit this saved production log?</DialogTitle>
                         <DialogDescription className="text-sm text-body">
@@ -1038,7 +1062,7 @@ export default function BaseDailyProductionSheet({
                     <div className="rounded-xl border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)]/50 p-3 text-xs leading-relaxed text-body">
                         Check the machine, worker, and metres carefully. Editing stays unlocked only for this saved shift and locks again after you save.
                     </div>
-                    <div className="space-y-2">
+                    <div data-daily-tour="correct" className="space-y-2">
                         <Label htmlFor="base-correction-reason" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Reason for correction</Label>
                         <Textarea
                             id="base-correction-reason"

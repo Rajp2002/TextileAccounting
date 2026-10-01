@@ -1659,15 +1659,31 @@
   [data-configuration-picker-preview="true"] [data-slot="sheet-footer"] { display: none; }
 }
 
-/* Reserve the desktop reading panel beside tour-controlled previews. */
+/* TOUR MODAL PLACEMENT RULE: a tour never moves or resizes an app modal where it fits.
+   A dialog shown by a tour (data-tour-surface, set by tourSurfaceProps) opens where it always opens, and the
+   360px tour card is placed beside it: the placer in lib/tours/placement.ts tries the right, then the left,
+   even over the sidebar. Only when the card fits on neither side does the dialog give way, by the least amount,
+   so it stays on screen with the card beside it. This one rule replaces per-tour reading-column overrides;
+   every tour dialog gets it, and __tests__/tour-modal-placement-guard.test.ts fails any other rule that moves one.
+
+   392px = the card (360) + its gap (16) + the viewport-edge margin (16).
+   --tour-cx is where the dialog centres when it opens normally (the viewport centre unless the dialog sets it).
+   Width: a dialog never gets wider than the room left of the card (its own max-width still caps it).
+   Shift: R is the slack to the right of the dialog for the card, L the slack to its left. The dialog moves left by
+   R only if both are negative, since 1000 x L keeps a fitting left side from triggering a shift. In a translate
+   value, 50% is half the dialog's own width. */
 @media (min-width: 768px) {
-  [data-costing-tour-dialog="true"] {
-    /* Reading column plus outline, gutter and viewport-edge clearance. */
-    left: calc((100vw - 384px) / 2) !important;
-    width: calc(100vw - 416px) !important;
-    max-width: 1180px !important;
+  [data-tour-surface="true"][data-slot="dialog-content"] {
+    --tour-cx: 50vw;
+    width: calc(100vw - 408px) !important;
+    --tw-translate-x: calc(-50% + min(0px, max(calc(100vw - 392px - var(--tour-cx) - 50%), calc(1000 * (var(--tour-cx) - 50% - 392px))))) !important;
+  }
+  /* The Saved Costings dialogs centre in the content area beside the sidebar (QuotesClient: left: 50% + clamp(...)). */
+  [data-tour-surface="true"][data-slot="dialog-content"][data-costing-tour-dialog="true"] {
+    --tour-cx: calc(50vw + clamp(0px, calc((100vw - 1212px) / 2), 124px));
   }
 }
+[data-tour-surface="true"] [data-slot="dialog-header"],
 [data-costing-tour-dialog="true"] [data-slot="dialog-header"] { position: static; }
 
 /* A slow route acknowledges the click without flashing on cached transitions. */
@@ -1746,23 +1762,11 @@ button[aria-expanded="true"] .nav-chevron {
   }
 }
 
-/* Reserve a separate reading area for editor previews. Keep translate variable-based:
-   CSS optimization can otherwise fold it into transform and discard it alongside
+/* Phones and touch landscape: the card docks to the bottom, so a tour dialog takes the top of the screen. Keep the
+   translate variable-based: CSS optimization can otherwise fold it into transform and discard it alongside
    transform:none, allowing the dialog utilities or phone sheet rule to win. */
-@media (min-width: 768px) {
-  [data-workers-tour-preview="true"], [data-machines-tour-preview="true"], [data-stock-tour-preview="true"], [data-dispatch-tour-preview="true"], [data-production-tour-preview="true"], [data-payroll-tour-preview="true"] {
-    left: max(16px, calc((100vw - 864px) / 2));
-    width: calc(100vw - 368px);
-    max-width: 512px;
-    --tw-translate-x: 0px !important;
-    --tw-translate-y: -50% !important;
-    --tour-preview-translate: 0 -50%;
-    translate: var(--tour-preview-translate) !important;
-    transform: none !important;
-  }
-}
 @media (max-width: 767px), (max-height: 500px) and (pointer: coarse) {
-  [data-workers-tour-preview="true"], [data-machines-tour-preview="true"], [data-stock-tour-preview="true"], [data-dispatch-tour-preview="true"], [data-production-tour-preview="true"], [data-payroll-tour-preview="true"] {
+  [data-tour-surface="true"][data-slot="dialog-content"], [data-workers-tour-preview="true"], [data-machines-tour-preview="true"], [data-stock-tour-preview="true"], [data-dispatch-tour-preview="true"], [data-production-tour-preview="true"], [data-payroll-tour-preview="true"] {
     top: 72px !important;
     bottom: auto !important;
     left: 8px !important;

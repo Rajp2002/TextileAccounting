@@ -1,6 +1,8 @@
 'use client'
 
 import { useTranslation } from '@/lib/i18n/context'
+import { useTourSample } from '@/lib/tours/sample-context'
+import { tourSurfaceProps } from '@/lib/tours/sample-surface'
 
 import { useDeferredValue, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -98,7 +100,12 @@ export default function BasePayrollRecords({
 }) {
     const { t } = useTranslation()
     const router = useRouter()
-    const [reversingId, setReversingId] = useState<string | null>(null)
+    const payrollTourStep = useTourSample('payroll')?.step
+    const surface = tourSurfaceProps(Boolean(payrollTourStep))
+    const [reversingSettlementId, setReversingId] = useState<string | null>(null)
+    // The Payroll tour shows the real reversal dialog for the first recorded payment.
+    const tourReversingId = payrollTourStep === 'pra-correct' ? initialData.settlements.find(settlement => settlement.status !== 'reversed')?.id ?? null : null
+    const reversingId = tourReversingId ?? reversingSettlementId
     const [reversalReason, setReversalReason] = useState('')
     const [paymentNotMade, setPaymentNotMade] = useState(false)
     const [reversing, setReversing] = useState(false)
@@ -197,8 +204,8 @@ export default function BasePayrollRecords({
 
     return (
         <div className="space-y-5">
-            <Dialog open={Boolean(reversingId)} onOpenChange={open => { if (!open && !reversing) setReversingId(null) }}>
-                <DialogContent><DialogHeader><DialogTitle>Reverse a mistaken payment record?</DialogTitle><DialogDescription>This preserves the original receipt, restores its recorded advance recovery, and makes the earnings outstanding again. It does not reverse cash or a bank transfer. Use this only when payment was not actually made.</DialogDescription></DialogHeader>
+            <Dialog open={Boolean(reversingId)} onOpenChange={open => { if (!open && !reversing) setReversingId(null) }} {...surface.root}>
+                <DialogContent data-payroll-tour="correction" {...surface.content}><DialogHeader><DialogTitle>Reverse a mistaken payment record?</DialogTitle><DialogDescription>This preserves the original receipt, restores its recorded advance recovery, and makes the earnings outstanding again. It does not reverse cash or a bank transfer. Use this only when payment was not actually made.</DialogDescription></DialogHeader>
                     <p className="rounded-lg border border-hairline bg-surface-soft p-3 text-sm"><strong>{reversalTarget?.worker_name_snapshot}</strong> · {formatINR(reversalTarget?.net_payout ?? 0)}<br />{formatDateOnly(reversalTarget?.period_start)} – {formatDateOnly(reversalTarget?.period_end)}</p>
                     <Label htmlFor="base-reversal-reason">Reason for reversal</Label><Textarea id="base-reversal-reason" value={reversalReason} onChange={event => setReversalReason(event.target.value)} maxLength={240} disabled={reversing} />
                     <label className="flex items-start gap-2 text-sm"><input type="checkbox" checked={paymentNotMade} disabled={reversing} onChange={event => setPaymentNotMade(event.target.checked)} />I confirm this payment was not actually made.</label>
@@ -257,7 +264,7 @@ export default function BasePayrollRecords({
                                     </div>
                                 </div>
                             </div>
-                            <div className="flex flex-wrap gap-2">
+                            <div data-payroll-tour="export" className="flex flex-wrap gap-2">
                                 <Button variant="outline" className="h-10 rounded-xl border-hairline bg-surface text-ink shadow-xs hover:border-hairline-strong hover:bg-surface-soft" onClick={exportCsv}><FileSpreadsheet className="h-4 w-4" /> <span data-i18n-skip="true">{t('payroll.exportCsv')}</span></Button>
                                 <Button className="h-10 rounded-xl bg-loom text-white shadow-xs hover:bg-loom-elevated" onClick={() => void exportPdf()} disabled={exportingPdf || selectedPeriod.workers.every(worker => worker.status === 'reversed')}><FileText className="h-4 w-4" /> <span data-i18n-skip="true">{exportingPdf ? t('payroll.preparingPdf') : t('payroll.exportPdf')}</span></Button>
                             </div>
@@ -272,7 +279,7 @@ export default function BasePayrollRecords({
                     </div>
                     {selectedPeriod.workers.some(worker => worker.status === 'reversed') && <p className="rounded-lg border border-warning/30 bg-warning/5 p-3 text-sm">Reversed records remain below and in the CSV audit export. They are excluded from payment totals, machine totals, and the active-payment PDF.</p>}
 
-                    <div className="space-y-4">
+                    <div data-payroll-tour="records" className="space-y-4">
                         <LiquidSegmented
                             className="sm:w-[360px]"
                             fullWidth

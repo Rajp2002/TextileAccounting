@@ -73,9 +73,10 @@ describe('Saved Costings Dialog Centering & Sample Pre-population', () => {
         expect(globalsCssSource).toContain('[data-costing-tour-dialog="true"]')
     })
 
-    it('reserves a reading column for sample dialogs while retaining live centering', () => {
-        expect(globalsCssSource).toContain('left: calc((100vw - 384px) / 2) !important')
-        expect(globalsCssSource).toContain('width: calc(100vw - 416px) !important')
+    it('keeps the regular centring and lets the generic tour-surface rule make room for the card only when it must', () => {
+        // The per-tour reading-column override is gone; tour-modal-placement-guard.test.ts evaluates the generic rule.
+        expect(globalsCssSource).not.toContain('left: calc((100vw - 384px) / 2) !important')
+        expect(globalsCssSource).toContain('[data-tour-surface="true"][data-slot="dialog-content"]')
         expect(quotesClientSource).toContain("left: 'calc(50% + clamp(0px, calc((100vw - 1212px) / 2), 124px))'")
     })
 

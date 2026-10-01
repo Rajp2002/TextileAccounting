@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import {
     Plus,
@@ -30,6 +30,10 @@ import {
 import { EmptyState } from '@/components/ui/page-header'
 import { LiquidSegmented } from '@/components/ui/liquid-segmented'
 import { useTranslation } from '@/lib/i18n/context'
+import { useTourSample } from '@/lib/tours/sample-context'
+import { tourSurfaceProps } from '@/lib/tours/sample-surface'
+import { dispatchSampleDraft, dispatchSampleFields, dispatchSampleSelectedId } from '@/lib/tours/sample-data/dispatch'
+import type { DispatchTourStep } from '@/lib/dispatch-tour'
 import {
     paymentStatus,
     safeEvidenceUrl,
@@ -107,8 +111,11 @@ export default function ChallansClient({
     initialData: Challan[]
     qualities: StockQuality[]
 }) {
-    const { t } = useTranslation()
+    const { t, language } = useTranslation()
     const tx = (s: string) => t(`challan.${s}`)
+    const tourSample = useTourSample('dispatch')
+    const tourStep = tourSample?.step as DispatchTourStep | undefined
+    const surface = tourSurfaceProps(Boolean(tourSample))
     const [today, setToday] = useState(businessDate)
     useEffect(() => {
         const refresh = () => setToday(businessDate())
@@ -128,24 +135,32 @@ export default function ChallansClient({
         [search, setSearch] = useState(''),
         [busy, setBusy] = useState(false),
         [error, setError] = useState('')
-    const [selected, setSelected] = useState<Challan | null>(null),
+    const [selectedState, setSelected] = useState<Challan | null>(null),
         [events, setEvents] = useState<ChallanEvent[]>([]),
-        [draft, setDraft] = useState<ChallanDraft | null>(null)
-    const [operation, setOperation] = useState<
+        [draftState, setDraft] = useState<ChallanDraft | null>(null)
+    const [operationState, setOperation] = useState<
             ChallanMutation['action'] | null
         >(null),
-        [fields, setFields] = useState<Record<string, string>>({}),
+        [fieldsState, setFields] = useState<Record<string, string>>({}),
         [pending, setPending] = useState<ChallanMutation | null>(null)
+    // While the Dispatch tour teaches a step, show the real editor, detail or dialog it is about, filled with sample data.
+    const sampleDraft = useMemo(() => dispatchSampleDraft(language), [language])
+    const tourSelectedId = tourStep ? dispatchSampleSelectedId(tourStep) : null
+    const selected = (tourSelectedId ? rows.find((row) => row.id === tourSelectedId) : undefined) ?? selectedState
+    const draft = tourStep && ['quality', 'parties', 'lots', 'saveDraft'].includes(tourStep) ? sampleDraft : draftState
+    const operation: ChallanMutation['action'] | null = tourStep === 'confirm' || tourStep === 'receipt' || tourStep === 'payment' ? tourStep : operationState
+    const fields = (tourStep && dispatchSampleFields(tourStep)) || fieldsState
     const lock = useRef(false),
         draftId = useRef('')
     useEffect(() => {
+        if (tourSample) return // a tour sample never reads the real page's pending request
         try {
             const stored = sessionStorage.getItem('weavly-challan-pending')
             if (stored) setPending(JSON.parse(stored))
         } catch {
             /* Storage may be unavailable. */
         }
-    }, [])
+    }, [tourSample])
     function remember(req: ChallanMutation | null) {
         setPending(req)
         try {
@@ -353,7 +368,7 @@ export default function ChallansClient({
                     {tx('retryButton')}
                 </Button>
             )}
-            <section aria-labelledby="challan-list-heading" className="space-y-3">
+            <section data-dispatch-tour="overview" aria-labelledby="challan-list-heading" className="space-y-3">
                 <div className="flex items-center justify-between gap-3">
                     <h2 id="challan-list-heading" className="text-[11px] font-semibold uppercase tracking-[0.14em] text-subtle">
                         {tx(history ? 'historyHeading' : 'activeHeading')}
@@ -447,9 +462,11 @@ export default function ChallansClient({
                 onOpenChange={(open) => {
                     if (!open && !busy && !pending) setDraft(null)
                 }}
+                {...surface.root}
             >
                 <DialogContent
                     data-i18n-skip="true"
+                    {...surface.content}
                     className="flex h-[92dvh] max-h-[92dvh] w-[calc(100%-1rem)] flex-col overflow-hidden sm:max-w-6xl"
                 >
                     <DialogHeader>
@@ -576,7 +593,7 @@ export default function ChallansClient({
                                 </span>
                                 <Truck className="h-3.5 w-3.5 text-muted-foreground" />
                             </div>
-                            <div className="grid grid-cols-2 gap-2 text-sm">
+                            <div data-dispatch-tour="difference" className="grid grid-cols-2 gap-2 text-sm">
                                 <div>
                                     <span className="text-xs text-muted-foreground block">{tx('sentMeters')}</span>
                                     <span className="font-bold text-ink tabular-nums">{selected.sent_meters} m</span>
@@ -964,8 +981,9 @@ export default function ChallansClient({
                 onOpenChange={(open) => {
                     if (!open && !busy && !pending) setOperation(null)
                 }}
+                {...surface.root}
             >
-                <DialogContent data-i18n-skip="true" className="max-w-md rounded-2xl border border-hairline bg-surface p-6 shadow-2xl">
+                <DialogContent data-i18n-skip="true" data-dispatch-tour={operation ?? undefined} {...surface.content} className="max-w-md rounded-2xl border border-hairline bg-surface p-6 shadow-2xl">
                     <DialogHeader>
                         <DialogTitle className="text-lg font-extrabold tracking-tight text-ink">
                             {operation

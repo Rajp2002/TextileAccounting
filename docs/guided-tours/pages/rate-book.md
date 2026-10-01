@@ -66,7 +66,7 @@ All steps: observe only; recovery TC-8 with the shared text unless given. "Row" 
 | 3 | `rb-update` | PS-LIVE or PS-SAMPLE (demo row) | `[data-ratebook-field="quickEditAction"]` (existing, first visible row) | Eyebrow shows "Sample" when the row is the demo row |
 | 4 | `rb-review` | as 3 | `[data-ratebook-field="reviewStatusBadge"]` (existing, same row) | |
 | 5 | `rb-usage` | as 3 | `[data-ratebook-field="linkedQualitiesPopover"]` (existing, same row) | Copy does not promise a badge (fixes RB-3) |
-| 6 | `rb-handoff` | PS-HANDOFF | no real (non-demo) active rates: `[data-ratebook-field="addRateAction"]` (existing on the header Add; **add the same attribute to the right-rail Add ~2295**); otherwise `[data-ratebook-field="yarnSearch"]` | Done focuses the anchor |
+| 6 | `rb-handoff` | PS-HANDOFF | no real (non-demo) active rates: `[data-ratebook-field="addRateAction"]` (existing on the header Add; **add the same attribute to the right-rail Add ~2295**); otherwise `[data-ratebook-field="rateAndTrend"]` (first visible row's price; must differ from step 2's anchor, so the two steps never outline the same element) | Done focuses the anchor |
 
 Unavailable text for steps 3–5 (only if the account has no rates and the demo row was deleted): `rows.unavailable` (§F).
 

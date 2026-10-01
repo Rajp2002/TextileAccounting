@@ -6,6 +6,9 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { useTranslation } from '@/lib/i18n/context'
+import { useTourSample } from '@/lib/tours/sample-context'
+import { tourSurfaceProps } from '@/lib/tours/sample-surface'
+import { TourSampleBanner } from '@/components/tours/TourSampleBanner'
 import {
     ArrowLeft,
     CheckCircle2,
@@ -146,11 +149,15 @@ export default function BaseProductionClient({
     const router = useRouter()
     const pathname = usePathname()
     const { tx, t } = useTranslation()
+    const tourSample = useTourSample()
+    const payrollTourStep = useTourSample('payroll')?.step
+    const surface = tourSurfaceProps(Boolean(tourSample))
     useLocalizedPageTitle(view === 'operations' ? `${tx('Worker–Machine Assignments')} | Weavly` : null)
     const searchParams = useSearchParams()
     const navigation = readBaseProductionNavigation(searchParams)
     const [payrollTab, setPayrollTab] = useState('pay')
-    const activeTab = view === 'production' ? baseProductionTabForPath(pathname) : payrollTab
+    const tourShowsRecords = payrollTourStep === 'pra-records' || payrollTourStep === 'pra-export' || payrollTourStep === 'pra-correct'
+    const activeTab = view === 'production' ? baseProductionTabForPath(pathname) : tourShowsRecords ? 'history' : payrollTab
     const isDailySheetView = view === 'production' && activeTab === 'production'
     const [isActivateModalOpen, setIsActivateModalOpen] = useState(Boolean(initialCostingId))
     const [productionSearch, setProductionSearch] = useState('')
@@ -159,14 +166,16 @@ export default function BaseProductionClient({
     const [payrollSearch, setPayrollSearch] = useState('')
     const [payrollFilter, setPayrollFilter] = useState('all')
 
-    const [dialog, setDialog] = useState<DialogName>(null)
+    const [openDialog, setDialog] = useState<DialogName>(null)
+    const dialog: DialogName = payrollTourStep === 'pra-advance' ? 'advance' : payrollTourStep === 'pra-deduction' ? 'deduction' : openDialog
     const [pendingAction, setPendingAction] = useState<string | null>(null)
     const [settlingWorkerId, setSettlingWorkerId] = useState<string | null>(null)
     const [settlementRequestId, setSettlementRequestId] = useState('')
     const [paymentMode, setPaymentMode] = useState<BasePayrollPaymentMode>('cash')
-    const [advanceDraft, setAdvanceDraft] = useState<AdvanceDraft>(emptyAdvanceDraft)
-    const [deductionDraft, setDeductionDraft] = useState<DeductionDraft>(emptyDeductionDraft)
-    const [workspaceOpen, setWorkspaceOpen] = useState(false)
+    const [advanceDraft, setAdvanceDraft] = useState<AdvanceDraft>(() => emptyAdvanceDraft(tourSample ? initialData.workers[0]?.id : ''))
+    const [deductionDraft, setDeductionDraft] = useState<DeductionDraft>(() => emptyDeductionDraft(tourSample ? initialData.workers[0]?.id : ''))
+    const [workspaceOpened, setWorkspaceOpen] = useState(false)
+    const workspaceOpen = workspaceOpened || payrollTourStep === 'pr-settle' || payrollTourStep === 'pr-paid' || payrollTourStep === 'pr-complete'
     const activeCycleRule = useMemo<PayrollCycleRule>(() => {
         return initialData.payrollCycleConfig?.rule ?? DEFAULT_MONTHLY_CYCLE_RULE
     }, [initialData.payrollCycleConfig])
@@ -292,8 +301,9 @@ export default function BaseProductionClient({
     const settlingReadiness = settlingWorkerId ? readinessByWorker.get(settlingWorkerId) : null
 
     useEffect(() => {
+        if (tourSample) return // a tour sample is not a page view
         trackPlanEvent('production_viewed', { surface: 'base_production_core' })
-    }, [])
+    }, [tourSample])
 
     async function runAction(
         key: string,
@@ -415,6 +425,7 @@ export default function BaseProductionClient({
 
     return (
         <div className={`${isDailySheetView ? 'space-y-4' : 'space-y-5'} ${view === 'payroll' ? 'payroll-workspace-shell pb-10' : 'pb-8'} ${view === 'production' && !isDailySheetView ? 'production-overview-workspace' : ''} ${view === 'operations' ? 'configuration-page-frame' : ''}`}>
+            <TourSampleBanner />
             {navigation.returnTo && (
                 <Button asChild variant="outline" size="sm" className="h-9 rounded-xl border-hairline bg-surface text-ink shadow-xs hover:border-hairline-strong hover:bg-surface-soft hover:text-ink">
                     <Link href={navigation.returnTo} className="inline-flex items-center gap-1.5">
@@ -457,7 +468,7 @@ export default function BaseProductionClient({
                         </Button>
                     ) : (
                         <>
-                            <div className="rounded-2xl border border-hairline/80 bg-surface/95 p-4 shadow-[var(--shadow-card)]">
+                            <div data-payroll-tour="period" className="rounded-2xl border border-hairline/80 bg-surface/95 p-4 shadow-[var(--shadow-card)]">
                                 <div className="mb-3 flex flex-wrap items-center justify-between gap-1.5">
                                     <p className="text-xs font-semibold uppercase tracking-[0.12em] text-subtle">Pay period</p>
                                     {activePeriodSummary.status === 'settled' ? (
@@ -501,7 +512,7 @@ export default function BaseProductionClient({
             )}
 
             {view === 'production' && !isDailySheetView && (
-                <Card className="overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs">
+                <Card data-production-tour="overview" className="overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs">
                     <div className="grid grid-cols-2 divide-y sm:grid-cols-4 sm:divide-y-0 sm:divide-x divide-hairline">
                         <div className="p-4 sm:p-5">
                             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
@@ -707,8 +718,8 @@ export default function BaseProductionClient({
                     ) : visiblePayables.length === 0 ? (
                         <EmptyState title="No matching workers" description="Try another name or payment status." action={<Button variant="outline" onClick={() => { setPayrollSearch(''); setPayrollFilter('all') }} className="rounded-xl border-hairline hover:bg-surface-soft font-semibold">Clear filters</Button>} />
                     ) : (
-                        <div className="grid gap-4 lg:grid-cols-2">
-                            {visiblePayables.map((payable) => {
+                        <div data-payroll-tour="earnings" className="grid gap-4 lg:grid-cols-2">
+                            {visiblePayables.map((payable, index) => {
                                 const worker = workerById.get(payable.worker_id)
                                 const workerReadiness = readinessByWorker.get(payable.worker_id)
                                 const settlePending = pendingAction === `settle-${payable.worker_id}`
@@ -744,7 +755,7 @@ export default function BaseProductionClient({
                                                 <Metric label="Recovery" value={formatINR(payable.advance_recovery, { hideDecimals: true })} />
                                                 <Metric label="Net pay" value={formatINR(payable.net_payout, { hideDecimals: true })} emphasis />
                                             </div>
-                                            <div className="rounded-xl border border-hairline/70 bg-surface-soft/55 p-3 text-xs leading-relaxed text-body">
+                                            <div data-payroll-tour={index === 0 ? 'recovery' : undefined} className="rounded-xl border border-hairline/70 bg-surface-soft/55 p-3 text-xs leading-relaxed text-body">
                                                 {payable.pay_type === 'fixed_monthly' && payable.status !== 'paid' && <div className="mb-2 space-y-1">{payable.salary_lines?.map(line => <p key={line.start}>{formatDateOnly(line.start)} – {formatDateOnly(line.end)}: {formatINR(line.monthlySalary)} × {line.days}/{line.monthDays} days = {formatINR(line.grossPay)}</p>)}</div>}
                                                 {(payable.incentive_pay ?? 0) > 0 && <p className="mb-2">{tx('Approved incentive earnings')}: {formatINR(payable.incentive_pay ?? 0)}</p>}
                                                 {payable.incentive_review_ids?.length ? <p className="mb-2">{tx('Review incentives and include their complete service periods before payment.')}</p> : null}
@@ -803,13 +814,13 @@ export default function BaseProductionClient({
                 </div>
             )}
 
-            <Dialog open={dialog === 'advance'} onOpenChange={(open) => !open && closeDialog()}>
-                <DialogContent className="max-w-md rounded-2xl border border-hairline bg-surface p-6 shadow-2xl">
+            <Dialog open={dialog === 'advance'} onOpenChange={(open) => !open && closeDialog()} {...surface.root}>
+                <DialogContent className="max-w-md rounded-2xl border border-hairline bg-surface p-6 shadow-2xl" {...surface.content}>
                     <DialogHeader>
                         <DialogTitle className="text-xl font-bold text-ink">Record worker advance</DialogTitle>
                         <DialogDescription className="text-sm text-body">The advance stays pending until a later Base payroll settlement recovers it.</DialogDescription>
                     </DialogHeader>
-                    <form className="space-y-4" onSubmit={handleAdvanceSubmit}>
+                    <form data-payroll-tour="advance" className="space-y-4" onSubmit={handleAdvanceSubmit}>
                         <div className="space-y-2">
                             <Label htmlFor="base-advance-worker" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Worker</Label>
                             <Select value={advanceDraft.workerId} onValueChange={(value) => setAdvanceDraft((current) => ({ ...current, workerId: value }))}>
@@ -835,13 +846,13 @@ export default function BaseProductionClient({
                 </DialogContent>
             </Dialog>
 
-            <Dialog open={dialog === 'deduction'} onOpenChange={(open) => !open && closeDialog()}>
-                <DialogContent className="max-w-md rounded-2xl border border-hairline bg-surface p-6 shadow-2xl">
+            <Dialog open={dialog === 'deduction'} onOpenChange={(open) => !open && closeDialog()} {...surface.root}>
+                <DialogContent className="max-w-md rounded-2xl border border-hairline bg-surface p-6 shadow-2xl" {...surface.content}>
                     <DialogHeader>
                         <DialogTitle className="text-xl font-bold text-ink">Record worker deduction</DialogTitle>
                         <DialogDescription className="text-sm text-body">Record a deduction for mistakes, damages, water/facility access, or other charges. It will be deducted during payroll settlement.</DialogDescription>
                     </DialogHeader>
-                    <form className="space-y-4" onSubmit={handleDeductionSubmit}>
+                    <form data-payroll-tour="deduction" className="space-y-4" onSubmit={handleDeductionSubmit}>
                         <div className="space-y-2">
                             <Label htmlFor="base-deduction-worker" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Worker</Label>
                             <Select value={deductionDraft.workerId} onValueChange={(value) => setDeductionDraft((current) => ({ ...current, workerId: value }))}>

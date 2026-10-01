@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { readFileSync, existsSync } from 'node:fs'
-import { basePayrollTourSteps, basePayrollHelpSteps, makePayrollTourExample, payrollTourSteps, payrollTourSpecs, payrollHelpSpecs, payrollTourSurface, formatPayrollTourDate } from '../lib/payroll-tour'
-import { payrollPreviewLabels, payrollStepCopy, payrollTourControlLabels, payrollTutorialCopy } from '../lib/i18n/payroll-tutorial'
+import { basePayrollTourSteps, basePayrollHelpSteps, payrollTourSteps, payrollTourSpecs, payrollHelpSpecs } from '../lib/payroll-tour'
+import { payrollSampleData } from '../lib/tours/sample-data/production'
+import { calculateBaseWorkerPayables } from '../lib/base-production-core'
+import { buildBasePayrollReadiness } from '../lib/base-payroll-readiness'
+import { payrollStepCopy, payrollTourControlLabels, payrollTutorialCopy } from '../lib/i18n/payroll-tutorial'
 import { isTourEligible, TOUR_REGISTRY } from '../lib/tours/tour-registry'
 import { calculateAdvanceRecovery } from '../lib/finance'
 import { en } from '../lib/i18n/locales/en'
@@ -24,11 +27,11 @@ describe('Payroll core and optional walkthrough', () => {
         expect(payrollHelpSpecs.at(-1)).toEqual({ id: 'pra-handoff', kind: 'handoff', anchor: '[data-tour-anchor="payroll.records"]' })
         for (const spec of [...payrollTourSpecs, ...payrollHelpSpecs]) {
             expect(spec.kind).toBe(spec.id.endsWith('handoff') ? 'handoff' : 'sample')
-            expect(spec.context).toBe(payrollTourSurface(spec.id) === 'page' ? undefined : '[data-payroll-tour-preview="true"]')
+            expect(spec.context).toBe(['pr-settle', 'pr-paid', 'pr-complete', 'pra-advance', 'pra-deduction', 'pra-correct'].includes(spec.id) ? '[data-tour-surface="true"]' : undefined)
         }
     })
     it('removes only the retired variant/runtime and does not retain old payment-date or Review teaching', () => {
-        for (const file of ['lib/payroll-tour.ts', 'lib/i18n/payroll-tutorial.ts', 'components/payroll/PayrollTourPreview.tsx', 'components/payroll/PayrollGuidedTour.tsx']) {
+        for (const file of ['lib/payroll-tour.ts', 'lib/i18n/payroll-tutorial.ts', 'components/payroll/PayrollSampleWorkspace.tsx', 'components/payroll/PayrollGuidedTour.tsx']) {
             const source = readFileSync(file, 'utf8')
             expect(source).not.toMatch(/fullPayroll|fullEarnings|fullSettlement|fullRecovery|finalSettlement|variant === 'full'|Full[’']|ફુલ|फुल|WhatsApp/)
         }
@@ -36,20 +39,21 @@ describe('Payroll core and optional walkthrough', () => {
         expect(payrollTutorialCopy.en.steps['pr-paid'].body).not.toMatch(/date|when/)
         expect(payrollTutorialCopy.en.steps['pr-readiness'].body).not.toContain('Review opens')
     })
-    it('matches unchanged recovery, salary and carry-forward sample arithmetic', () => {
-        const sample = makePayrollTourExample()
-        const recovery = calculateAdvanceRecovery(sample.piece.gross, sample.piece.debt)
-        expect(sample.piece.recovery).toBe(Number(recovery.recommendedRecovery))
-        expect(sample.piece.carry).toBe(Number(recovery.remainingDebt))
-        expect(sample.piece).toMatchObject({ gross: 2000, debt: 1000, recovery: 1000, net: 1000, carry: 0 })
-        expect(sample.piece.metres * sample.piece.rate).toBe(sample.piece.gross)
-        expect(sample.piece.gross - sample.piece.recovery).toBe(sample.piece.net)
-        expect(sample.salary.monthly * sample.salary.days / sample.salary.monthDays).toBe(sample.salary.gross)
-        expect(sample.gross - sample.recovery).toBe(sample.net)
-        expect(sample.net - sample.paid).toBe(sample.remaining)
-        expect(sample.zero).toMatchObject({ gross: 0, net: 0 })
-        sample.piece.gross = 0
-        expect(makePayrollTourExample().piece.gross).toBe(2000)
+    it('computes the copy\'s figures from the real sample data: 1,000 m × ₹2/m, half recovered, ₹1,000 to pay', () => {
+        const data = payrollSampleData('en')
+        const payables = calculateBaseWorkerPayables({ workers: data.workers, entries: data.entries, allocations: data.allocations, incentives: [], advances: data.advances, settlements: data.settlements, periodEnd: data.payrollPeriod.end })
+        const piece = payables.find(payable => payable.worker_id === 'tour-worker-1')!, salary = payables.find(payable => payable.worker_id === 'tour-worker-2')!, zero = payables.find(payable => payable.worker_id === 'tour-worker-3')!
+        expect(piece).toMatchObject({ meters: 1000, gross_pay: 2000, pending_advance: 1000, advance_recovery: 1000, net_payout: 1000, status: 'unsettled' })
+        const recovery = calculateAdvanceRecovery(piece.gross_pay, piece.pending_advance)
+        expect(piece.advance_recovery).toBe(Number(recovery.recommendedRecovery))
+        expect(piece.remaining_debt).toBe(Number(recovery.remainingDebt)) // nothing carries forward
+        expect(salary).toMatchObject({ pay_type: 'fixed_monthly', gross_pay: 18000, net_payout: 18000 })
+        expect(zero).toMatchObject({ gross_pay: 0, net_payout: 0 })
+        // The period is over (today is after it), so Complete payroll is meaningful, and July is already settled for the records steps.
+        expect(data.payrollPeriod.end < data.today).toBe(true)
+        expect(data.settlements.every(row => row.period_end === '2026-07-31' && row.status === 'paid')).toBe(true)
+        expect(buildBasePayrollReadiness({ payables, entries: data.entries, allocations: data.allocations }).issueCount).toBe(0)
+        for (const language of ['en', 'gu', 'hi'] as const) expect(payrollSampleData(language).workers.every(worker => worker.id.startsWith('tour-'))).toBe(true)
     })
     it('uses fixed trilingual spec copy, complete native labels and bounded English step text', () => {
         const page = readFileSync('docs/guided-tours/pages/payroll.md', 'utf8')
@@ -72,11 +76,6 @@ describe('Payroll core and optional walkthrough', () => {
                 }
             }
             for (const text of Object.values(payrollTutorialCopy[language].calculation)) expect(page).toContain(text)
-            for (const label of Object.keys(payrollPreviewLabels.en)) {
-                const text = payrollPreviewLabels[language][label]
-                expect(text).toBeTruthy()
-                if (language !== 'en') expect(text).toMatch(language === 'gu' ? /[\u0a80-\u0aff]/ : /[\u0900-\u097f]/)
-            }
         }
     })
     it('resolves current settlement labels and preserves the dynamic completion period', () => {
@@ -89,15 +88,6 @@ describe('Payroll core and optional walkthrough', () => {
             const title = translation(language, 'payroll.completePeriodTitle')
             expect(title).toContain('{periodLabel}')
             expect(title.replace('{periodLabel}', 'Sep 2026')).toContain('Sep 2026')
-        }
-    })
-    it('formats sample dates with the page calendar/options and localized months', () => {
-        expect(formatPayrollTourDate('2026-09-01', 'en')).toBe('1 Sept 2026')
-        for (const language of ['gu', 'hi'] as const) {
-            const date = formatPayrollTourDate('2026-09-30', language)
-            expect(date).not.toMatch(/Sep/)
-            expect(date).toMatch(language === 'gu' ? /[\u0a80-\u0aff]/ : /[\u0900-\u097f]/)
-            expect(date).toContain('2026')
         }
     })
     it('uses the same label keys on live controls and keeps both handoff anchors', () => {
