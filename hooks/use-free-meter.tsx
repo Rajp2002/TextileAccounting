@@ -1,5 +1,6 @@
 'use client'
 import {useCallback,useEffect,useRef,useState} from 'react'
+import {reportPwaWorkflowSuccess} from '@/lib/pwa-workflow-success'
 import Link from 'next/link'
 import {UpgradeBenefitsPreview} from '@/components/estimator/UpgradeBenefitsPreview'
 import type {EstimateState,EstimatorV3Totals,CostingResultSnapshot} from '@/lib/estimator'
@@ -58,6 +59,7 @@ export function useFreeMeter(enabled:boolean,state:EstimateState,label:string,on
    if(data.needsAcknowledgement){setWarning(true);return}
    setCompleted({estimate:payload.estimate,result:data.result,totals:data.totals,signature:JSON.stringify(canonicalFreeInputs(payload.estimate)),id:data.savedCostingId})
    pending.current=null;setWarning(false);
+   reportPwaWorkflowSuccess('costing')
    void fetch('/api/free/events',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({eventId:data.requestId,name:'result_viewed',language,entryPoint:'estimator'})}).catch(()=>{})
    if(data.quota?.remaining===0)void fetch('/api/free/events',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({eventId:data.requestId,name:'quota_reached',language,entryPoint:'quota'})}).catch(()=>{})
    await refresh()

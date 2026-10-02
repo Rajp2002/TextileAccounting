@@ -21,6 +21,16 @@ function isLegacyProtectedRuntimeCache(cacheName: string) {
 
 const serviceWorkerSelf = self as unknown as ServiceWorkerGlobalScope
 
+// Defined by Next's webpack configuration and inherited by the custom-worker
+// child compilation. The URL stays /sw.js across deployments.
+declare const __WEAVLY_BUILD_ID__: string
+
+serviceWorkerSelf.addEventListener('message', (event) => {
+  if (event.data?.type === 'WEAVLY_GET_BUILD_ID') {
+    event.ports[0]?.postMessage({ type: 'WEAVLY_BUILD_ID', buildId: __WEAVLY_BUILD_ID__ })
+  }
+})
+
 serviceWorkerSelf.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => Promise.all(

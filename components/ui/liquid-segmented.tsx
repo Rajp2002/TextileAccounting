@@ -169,7 +169,7 @@ function LiquidSegmented<T extends string>({
               if (!selected) onValueChange(option.value)
             }}
             className={cn(
-              "group/option relative z-10 inline-flex items-center justify-center gap-1.5 rounded-full font-semibold leading-tight whitespace-nowrap transition-colors duration-300 outline-none focus-visible:ring-2 focus-visible:ring-saffron/70 focus-visible:ring-offset-1 focus-visible:ring-offset-surface-soft disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:size-3.5 [&_svg]:shrink-0",
+              "mobile-touch-target group/option relative z-10 inline-flex items-center justify-center gap-1.5 rounded-full font-semibold leading-tight whitespace-nowrap transition-colors duration-300 outline-none focus-visible:ring-2 focus-visible:ring-saffron/70 focus-visible:ring-offset-1 focus-visible:ring-offset-surface-soft disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:size-3.5 [&_svg]:shrink-0",
               SIZE_CLASS[size],
               selected ? "text-white" : "text-body/70 hover:text-ink",
               optionClassName

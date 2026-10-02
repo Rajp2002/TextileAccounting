@@ -59,7 +59,7 @@ export function NavigationDisclosure({ group, expanded, onToggle, onCollapse, on
                 aria-controls={id}
                 onClick={onToggle}
                 className={cn(
-                    'group relative flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-semibold transition-colors duration-150 motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--wv-brand-accent)]',
+                    'mobile-touch-target group relative flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-semibold transition-colors duration-150 motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--wv-brand-accent)]',
                     active
                         ? 'ui-nav-mark bg-[var(--wv-neel-700)] text-[var(--wv-neel-50)] shadow-sm before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[2.5px] before:rounded-r before:bg-[var(--wv-brand-accent)]'
                         : 'text-[var(--wv-neel-300)] hover:bg-[var(--wv-bg-inverse-raised)] hover:text-[var(--wv-neel-50)]'
@@ -145,4 +145,3 @@ export function NavigationDisclosure({ group, expanded, onToggle, onCollapse, on
         </li>
     )
 }
-

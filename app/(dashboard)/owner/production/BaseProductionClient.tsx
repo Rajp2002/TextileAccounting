@@ -1,8 +1,10 @@
 'use client'
 import { useLocalizedPageTitle } from '@/hooks/use-localized-page-title'
+import { RouteMilestones } from '@/components/performance/route-milestones'
 
 import Link from 'next/link'
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import dynamic, { type DynamicOptionsLoadingProps } from 'next/dynamic'
+import { createContext, useContext, useEffect, useMemo, useState, type ComponentType, type FormEvent } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { useTranslation } from '@/lib/i18n/context'
@@ -75,9 +77,105 @@ import BaseAssignmentWorkspace from './BaseAssignmentWorkspace'
 import BaseDailyProductionSheet from './BaseDailyProductionSheet'
 import BasePayrollReadinessPanel from './BasePayrollReadinessPanel'
 import BaseWorkerIncentives from './BaseWorkerIncentives'
-import BasePayrollRecords from './BasePayrollRecords'
-import BasePayrollSettlementWorkspace from './BasePayrollSettlementWorkspace'
 import type { BaseProductionInitialData } from './loaders'
+
+// App Router's dynamic loader only supplies a loading fallback: rejected imports
+// otherwise escape to the page boundary. Resolve failures to a local retry screen
+// so connectivity recovery never requires throwing away the current page state.
+export function payrollImportRecovery<Props extends object>(
+    load: () => Promise<{ default: ComponentType<Props> }>,
+    Loading: ComponentType<DynamicOptionsLoadingProps>,
+    initialError: Error,
+): ComponentType<Props> {
+    let resolved: ComponentType<Props> | null = null
+    return function PayrollImportRecovery(props: Props) {
+        const [Loaded, setLoaded] = useState<ComponentType<Props> | null>(() => resolved)
+        const [error, setError] = useState<Error | null>(initialError)
+        const [loading, setLoading] = useState(false)
+        async function retry() {
+            if (loading) return
+            setLoading(true)
+            setError(null)
+            try {
+                const screen = await load()
+                resolved = screen.default
+                setLoaded(() => screen.default)
+            } catch (failure) {
+                setError(failure instanceof Error ? failure : new Error('Payroll screen could not be loaded'))
+            } finally {
+                setLoading(false)
+            }
+        }
+        return Loaded ? <Loaded {...props} /> : <Loading error={error} isLoading={loading} retry={retry} />
+    }
+}
+
+const BasePayrollRecords = dynamic(() => import('./BasePayrollRecords').catch(error => ({
+    default: payrollImportRecovery(() => import('./BasePayrollRecords'), PayrollRecordsLoading, error),
+})), { loading: PayrollRecordsLoading })
+const BasePayrollSettlementWorkspace = dynamic(() => import('./BasePayrollSettlementWorkspace').catch(error => ({
+    default: payrollImportRecovery(() => import('./BasePayrollSettlementWorkspace'), PayrollSettlementLoading, error),
+})), { loading: PayrollSettlementLoading })
+
+const SettlementLoadingContext = createContext<{ open: boolean; onOpenChange: (open: boolean) => void }>({ open: false, onOpenChange: () => {} })
+
+function PayrollLoadStatus({ error, retry, settlement = false }: DynamicOptionsLoadingProps & { settlement?: boolean }) {
+    const { t } = useTranslation()
+    return <div className="space-y-3">
+        <p role={error ? 'alert' : 'status'} className="flex items-center gap-2 text-sm text-body" data-i18n-skip="true">
+            {!error && <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden="true" />}
+            {error ? t('payroll.loadFailed') : t(settlement ? 'payroll.loadingSettlement' : 'payroll.loadingRecords')}
+        </p>
+        {error && retry && <Button variant="outline" onClick={retry} data-i18n-skip="true">{t('common.retry')}</Button>}
+    </div>
+}
+
+function PayrollRecordsLoading(props: DynamicOptionsLoadingProps) {
+    const { t } = useTranslation()
+    return <section className="space-y-3 rounded-xl border border-hairline bg-surface p-5" aria-busy={!props.error}>
+        <h2 className="text-lg font-semibold text-ink" data-i18n-skip="true">{t('payroll.payrollRecords')}</h2>
+        <PayrollLoadStatus {...props} />
+    </section>
+}
+
+function PayrollSettlementLoading(props: DynamicOptionsLoadingProps) {
+    const { t } = useTranslation()
+    const { open, onOpenChange } = useContext(SettlementLoadingContext)
+    return <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent aria-busy={!props.error}>
+            <DialogHeader>
+                <DialogTitle data-i18n-skip="true">{t('payroll.settlePayroll')}</DialogTitle>
+                <DialogDescription className="sr-only" data-i18n-skip="true">{t(props.error ? 'payroll.loadFailed' : 'payroll.loadingSettlement')}</DialogDescription>
+            </DialogHeader>
+            <PayrollLoadStatus {...props} settlement />
+            <DialogFooter><Button variant="outline" onClick={() => onOpenChange(false)} data-i18n-skip="true">{t('common.cancel')}</Button></DialogFooter>
+        </DialogContent>
+    </Dialog>
+}
+
+type BaseProductionView = 'production' | 'operations' | 'payroll'
+
+// The shared production client also serves daily entry and assignments. Keep
+// payroll's full-history calculations dormant until the payroll view needs them.
+export function useBasePayrollForView(view: BaseProductionView, initialData: BaseProductionInitialData, period: { start: string; end: string }) {
+    const { workers, entries, allocations, incentives, advances, settlements, payrollPeriods, today } = initialData
+    return useMemo(() => {
+        if (view !== 'payroll') return null
+        const cutoff = period.end < today ? period.end : today
+        const payables = calculateBaseWorkerPayables({
+            workers, entries, allocations, incentives: incentives ?? [], advances, settlements, periodEnd: cutoff,
+        })
+        const periodRecord = (payrollPeriods ?? []).find(record => record.period_start === period.start && record.period_end === period.end) ?? null
+        return {
+            payables,
+            periodRecord,
+            summary: calculateBasePayrollPeriodSummary({ payables, periodRecord: periodRecord ?? undefined }),
+            readiness: buildBasePayrollReadiness({ payables, entries, allocations }),
+        }
+    }, [view, workers, entries, allocations, incentives, advances, settlements, payrollPeriods, today, period.start, period.end])
+}
+
+const NO_PAYABLES: ReturnType<typeof calculateBaseWorkerPayables> = []
 
 type DialogName = 'job' | 'advance' | 'deduction' | null
 
@@ -143,7 +241,7 @@ export default function BaseProductionClient({
 }: {
     initialData: BaseProductionInitialData
     initialCostingId?: string | null
-    view?: 'production' | 'operations' | 'payroll'
+    view?: BaseProductionView
     tourMetadata?: Record<string, unknown>
 }) {
     const router = useRouter()
@@ -176,6 +274,10 @@ export default function BaseProductionClient({
     const [deductionDraft, setDeductionDraft] = useState<DeductionDraft>(() => emptyDeductionDraft(tourSample ? initialData.workers[0]?.id : ''))
     const [workspaceOpened, setWorkspaceOpen] = useState(false)
     const workspaceOpen = workspaceOpened || payrollTourStep === 'pr-settle' || payrollTourStep === 'pr-paid' || payrollTourStep === 'pr-complete'
+    const [workspaceHasOpened, setWorkspaceHasOpened] = useState(workspaceOpen)
+    // Retain optimistic payment progress and nested dialog state after closing.
+    // Tour-driven opens use the same first-mount boundary as a user action.
+    if (workspaceOpen && !workspaceHasOpened) setWorkspaceHasOpened(true)
     const activeCycleRule = useMemo<PayrollCycleRule>(() => {
         return initialData.payrollCycleConfig?.rule ?? DEFAULT_MONTHLY_CYCLE_RULE
     }, [initialData.payrollCycleConfig])
@@ -194,23 +296,10 @@ export default function BaseProductionClient({
     }
 
     const payrollCutoff = activePeriodBounds.end < initialData.today ? activePeriodBounds.end : initialData.today
-    const periodPayables = useMemo(() => calculateBaseWorkerPayables({
-        workers: initialData.workers, entries: initialData.entries, allocations: initialData.allocations,
-        incentives: initialData.incentives ?? [], advances: initialData.advances, settlements: initialData.settlements,
-        periodEnd: payrollCutoff,
-    }), [initialData, payrollCutoff])
-    const activePeriodRecord = useMemo(() => {
-        return (initialData.payrollPeriods || []).find(
-            (p) => p.period_start === activePeriodBounds.start && p.period_end === activePeriodBounds.end
-        ) || null
-    }, [initialData.payrollPeriods, activePeriodBounds])
-
-    const activePeriodSummary = useMemo(() => {
-        return calculateBasePayrollPeriodSummary({
-            payables: periodPayables,
-            periodRecord: activePeriodRecord ?? undefined,
-        })
-    }, [periodPayables, activePeriodRecord])
+    const payroll = useBasePayrollForView(view, initialData, activePeriodBounds)
+    const periodPayables = payroll?.payables ?? NO_PAYABLES
+    const activePeriodRecord = payroll?.periodRecord ?? null
+    const activePeriodSummary = payroll?.summary
 
     const activePeriodLabel = useMemo(() => {
         if (activeCycleRule.type === 'monthly' && activeCycleRule.anchorDay === 1) {
@@ -232,22 +321,32 @@ export default function BaseProductionClient({
         () => new Map(initialData.jobs.map((job) => [job.id, job])),
         [initialData.jobs],
     )
-    const productionAllocationLabels = useMemo(() => {
+    const productionHistoryIndex = useMemo(() => {
         const labels = new Map<string, string[]>()
+        const allocations = new Map<string, BaseProductionInitialData['allocations']>()
+        if (!isHistoryOpen) return { labels, allocations }
         for (const allocation of initialData.allocations) {
             const current = labels.get(allocation.entry_id) ?? []
             current.push(`${allocation.machine_label} ${allocation.job_label}`)
             labels.set(allocation.entry_id, current)
+            const entryAllocations = allocations.get(allocation.entry_id) ?? []
+            entryAllocations.push(allocation)
+            allocations.set(allocation.entry_id, entryAllocations)
         }
-        return labels
-    }, [initialData.allocations])
-    const visibleProduction = initialData.entries.filter(entry => {
-        if (!(entry.meters > 0 || entry.entry_status === 'zero' || entry.entry_status === 'absent')) return false
-        const labels = [entry.production_date, entry.shift, entry.machine_label, entry.job_label,
-            workerById.get(entry.worker_id)?.name, jobById.get(entry.job_id)?.quality_label,
-            ...(productionAllocationLabels.get(entry.id) ?? [])]
-        return labels.join(' ').toLocaleLowerCase().includes(productionSearch.trim().toLocaleLowerCase())
-    })
+        return { labels, allocations }
+    }, [initialData.allocations, isHistoryOpen])
+    const visibleProduction = useMemo(() => {
+        if (!isHistoryOpen) return []
+        const query = productionSearch.trim().toLocaleLowerCase()
+        return initialData.entries.filter(entry => {
+            if (!(entry.meters > 0 || entry.entry_status === 'zero' || entry.entry_status === 'absent')) return false
+            if (!query) return true
+            const labels = [entry.production_date, entry.shift, entry.machine_label, entry.job_label,
+                workerById.get(entry.worker_id)?.name, jobById.get(entry.job_id)?.quality_label,
+                ...(productionHistoryIndex.labels.get(entry.id) ?? [])]
+            return labels.join(' ').toLocaleLowerCase().includes(query)
+        })
+    }, [initialData.entries, isHistoryOpen, productionSearch, workerById, jobById, productionHistoryIndex])
     const activeJobs = useMemo(
         () => initialData.jobs.filter((job) => job.status === 'planned' || job.status === 'active'),
         [initialData.jobs]
@@ -284,14 +383,10 @@ export default function BaseProductionClient({
         return set
     }, [initialData.assignments, initialData.today])
     const settlingWorker = periodPayables.find((payable) => payable.worker_id === settlingWorkerId)
-    const payrollReadiness = useMemo(() => buildBasePayrollReadiness({
-        payables: periodPayables,
-        entries: initialData.entries,
-        allocations: initialData.allocations,
-    }), [initialData.allocations, initialData.entries, periodPayables])
+    const payrollReadiness = payroll?.readiness
     const readinessByWorker = useMemo(
-        () => new Map(payrollReadiness.workers.map((worker) => [worker.workerId, worker])),
-        [payrollReadiness.workers],
+        () => new Map(payrollReadiness?.workers.map((worker) => [worker.workerId, worker])),
+        [payrollReadiness],
     )
     const visiblePayables = periodPayables.filter(payable => {
                                 if (!payable.worker_name.toLocaleLowerCase().includes(payrollSearch.trim().toLocaleLowerCase())) return false
@@ -425,6 +520,7 @@ export default function BaseProductionClient({
 
     return (
         <div className={`${isDailySheetView ? 'space-y-4' : 'space-y-5'} ${view === 'payroll' ? 'payroll-workspace-shell pb-10' : 'pb-8'} ${view === 'production' && !isDailySheetView ? 'production-overview-workspace' : ''} ${view === 'operations' ? 'configuration-page-frame' : ''}`}>
+            <RouteMilestones route={view === 'payroll' ? '/owner/payroll' : view === 'operations' ? '/owner/assignments' : isDailySheetView ? '/owner/production/daily-sheet' : '/owner/production'} shellVisible primaryUsable />
             <TourSampleBanner />
             {navigation.returnTo && (
                 <Button asChild variant="outline" size="sm" className="h-9 rounded-xl border-hairline bg-surface text-ink shadow-xs hover:border-hairline-strong hover:bg-surface-soft hover:text-ink">
@@ -460,7 +556,7 @@ export default function BaseProductionClient({
                 </aside>
             )}
 
-            {view === 'payroll' && (
+            {view === 'payroll' && activePeriodSummary && (
                 <aside className="payroll-period-rail" aria-label="Payroll period and settlement">
                     {activeTab === 'history' ? (
                         <Button variant="outline" className="min-h-11 w-full rounded-lg px-4" onClick={() => setPayrollTab('pay')}>
@@ -554,7 +650,7 @@ export default function BaseProductionClient({
                 </Card>
             )}
 
-            {view === 'payroll' && activeTab !== 'history' && (
+            {view === 'payroll' && activeTab !== 'history' && activePeriodSummary && (
                 <Card className="gap-0 overflow-hidden rounded-2xl border border-hairline bg-surface py-0 shadow-[var(--shadow-card)]">
                     <div className="grid grid-cols-1 divide-y divide-hairline sm:grid-cols-3 sm:divide-y-0 sm:divide-x">
                         <div className="p-4">
@@ -673,7 +769,7 @@ export default function BaseProductionClient({
                                                         <p className="mt-0.5 text-xs text-muted-foreground">{formatDateOnly(entry.production_date)}{entry.shift ? ` · ${entry.shift} shift` : ''}{entry.machine_label ? ` · ${entry.machine_label}` : ''}{isLegacyWorkerTotal ? ' · payroll included at saved rate' : ''}</p>
                                                     </div>
                                                     <div className="flex shrink-0 items-center gap-3">
-                                                        <div className="font-black text-ink">{entry.entry_status === 'zero' ? '0 m' : entry.entry_status === 'absent' ? 'Absent' : `${formatMeters(entry.meters)} · ${formatINR(calculateBaseEntryGrossPay(entry, initialData.allocations.filter((allocation) => allocation.entry_id === entry.id)))}`}</div>
+                                                        <div className="font-black text-ink">{entry.entry_status === 'zero' ? '0 m' : entry.entry_status === 'absent' ? 'Absent' : `${formatMeters(entry.meters)} · ${formatINR(calculateBaseEntryGrossPay(entry, productionHistoryIndex.allocations.get(entry.id) ?? []))}`}</div>
                                                         <Button asChild variant="outline" size="sm" className="h-8 rounded-lg border-hairline bg-surface text-xs font-medium hover:bg-surface-soft"><Link onClick={() => setIsHistoryOpen(false)} href={baseDailySheetHref({ date: entry.production_date, shift: entry.shift, entry: entry.id, worker: entry.worker_id })}>View log</Link></Button>
                                                     </div>
                                                 </div>
@@ -707,7 +803,7 @@ export default function BaseProductionClient({
                         </div>
                     </div>
 
-                    <BasePayrollReadinessPanel readiness={payrollReadiness} />
+                    {payrollReadiness && <BasePayrollReadinessPanel readiness={payrollReadiness} />}
                     <div className="grid gap-3 sm:grid-cols-2">
                         <div><Label htmlFor="base-payroll-search" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Find worker</Label><Input id="base-payroll-search" className="mt-1 h-10 sm:h-11 rounded-xl border-hairline bg-surface text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom" value={payrollSearch} onChange={event => setPayrollSearch(event.target.value)} placeholder="Worker name" /></div>
                         <div><Label htmlFor="base-payroll-filter" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Payment status</Label><Select value={payrollFilter} onValueChange={setPayrollFilter}><SelectTrigger id="base-payroll-filter" className="mt-1 h-10 sm:h-11 rounded-xl border-hairline bg-surface text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom"><SelectValue /></SelectTrigger><SelectContent className="rounded-xl border-hairline bg-surface shadow-lg"><SelectItem value="all">All workers</SelectItem><SelectItem value="ready">Ready to pay</SelectItem><SelectItem value="review">Needs review</SelectItem><SelectItem value="paid">Paid</SelectItem><SelectItem value="empty">No earnings</SelectItem></SelectContent></Select></div>
@@ -899,7 +995,7 @@ export default function BaseProductionClient({
                 isLoading={pendingAction === `settle-${settlingWorkerId}`}
             />
 
-            {view === 'payroll' && (
+            {view === 'payroll' && workspaceHasOpened && <SettlementLoadingContext.Provider value={{ open: workspaceOpen, onOpenChange: setWorkspaceOpen }}>
                 <BasePayrollSettlementWorkspace
                     open={workspaceOpen}
                     onOpenChange={setWorkspaceOpen}
@@ -921,7 +1017,7 @@ export default function BaseProductionClient({
                         setPayrollTab('history')
                     }}
                 />
-            )}
+            </SettlementLoadingContext.Provider>}
         </div>
     )
 }

@@ -78,7 +78,9 @@ describe('expandable panels', () => {
 
     it('keeps the saved-costings filter popover out: its menu is positioned, not a panel', () => {
         const quotes = read('app/(dashboard)/owner/quotes/QuotesClient.tsx')
-        expect(quotes).toContain('<details className="group relative z-20">')
+        const filterClasses = quotes.match(/<details className="(group relative z-20[^\"]*)">/)?.[1]
+        expect(filterClasses).toBeDefined()
+        expect(filterClasses).not.toContain('ui-details')
     })
 })
 

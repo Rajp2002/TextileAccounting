@@ -12,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { TriangleAlert } from 'lucide-react'
 import { useTranslation } from '@/lib/i18n/context'
+import { usePwaRefreshGuard } from '@/hooks/use-pwa-refresh-guard'
 
 interface UnsavedChangesDialogProps {
     open: boolean
@@ -20,6 +21,7 @@ interface UnsavedChangesDialogProps {
 }
 
 export function useUnloadProtection(isDirty: boolean) {
+    usePwaRefreshGuard(() => !isDirty)
     useEffect(() => {
         if (!isDirty) return
 

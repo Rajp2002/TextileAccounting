@@ -3,6 +3,7 @@ import { join } from 'node:path'
 import vm from 'node:vm'
 import { describe, expect, it } from 'vitest'
 import { buildAppIntroPrePaintScript, buildIntroPrePaintScript, INTRO_ATTRIBUTE, INTRO_LEAVING_ATTRIBUTE } from '../lib/intro/intro-policy'
+import { readStartupIntroPreference, saveStartupIntroPreference, STARTUP_INTRO_PREFERENCE_KEY, STARTUP_INTRO_SEEN_KEY } from '../lib/intro/startup-preference'
 import { containedImageRect, inkRect, parseObjectPosition } from '../lib/intro/target-geometry'
 import { BINDING, buildWeaveMask, FIGURE, LOGO_INK_BOX, LOGO_SOURCE } from '../lib/intro/weave-mask'
 import {
@@ -261,11 +262,15 @@ type PolicyEnv = {
     saveData?: boolean
     navType?: string
     iosStandalone?: boolean
+    storage?: Map<string, string>
+    storageReadFails?: boolean
+    storageWriteFails?: boolean
 }
 
 function runPolicy(surface: IntroSurface, env: PolicyEnv = {}) {
     const attrs = new Map<string, string>()
     const storageTouched: string[] = []
+    const stored = env.storage ?? new Map<string, string>()
     const listeners = new Set<string>()
     const timers: Array<() => void> = []
     const documentListeners = new Map<string, () => void>()
@@ -275,8 +280,9 @@ function runPolicy(surface: IntroSurface, env: PolicyEnv = {}) {
     const win: Record<string, unknown> = {
         matchMedia: (query: string) => ({ matches: (env.media ?? []).includes(query) }),
         localStorage: {
-            getItem: (k: string) => { storageTouched.push(k); return null },
-            setItem: (k: string) => { storageTouched.push(k) },
+            getItem: (k: string) => { storageTouched.push(k); if (env.storageReadFails) throw new Error('blocked'); return stored.get(k) ?? null },
+            setItem: (k: string, value: string) => { storageTouched.push(k); if (env.storageWriteFails) throw new Error('quota'); stored.set(k, value) },
+            removeItem: (k: string) => { storageTouched.push(k); stored.delete(k) },
         },
         performance: { getEntriesByType: () => (env.navType ? [{ type: env.navType }] : []) },
         addEventListener: (type: string) => listeners.add(type),
@@ -305,9 +311,9 @@ function runPolicy(surface: IntroSurface, env: PolicyEnv = {}) {
         clearTimeout: () => undefined,
     })
     vm.runInContext(env.bootstrap ? buildAppIntroPrePaintScript() : buildIntroPrePaintScript(surface), context)
-    const handle = win.__weavlyIntro as { state: string; release: () => void; abort: () => void } | undefined
+    const handle = win.__weavlyIntro as { state: string; release: () => void; abort: (remember?: boolean) => void; markSeen: () => void } | undefined
     const runPageScript = () => vm.runInContext(buildIntroPrePaintScript(surface), context)
-    return { attrs, storageTouched, listeners, timers, handle, documentListeners, rootStyle, bodyStyle, preloads, runPageScript, plays: attrs.get(INTRO_ATTRIBUTE) === surface }
+    return { attrs, storageTouched, stored, listeners, timers, handle, documentListeners, rootStyle, bodyStyle, preloads, runPageScript, plays: attrs.get(INTRO_ATTRIBUTE) === surface }
 }
 
 describe('woven intro playback policy (pre-paint script)', () => {
@@ -344,12 +350,58 @@ describe('woven intro playback policy (pre-paint script)', () => {
         expect(runPolicy('app-login', { search: '?intro=1' }).plays).toBe(true)
     })
 
-    it('plays on every launch of the installed app, but not in a browser tab or after moving inside the app', () => {
+    it('plays on the first eligible launch of the installed app, but not in a browser tab or after moving inside the app', () => {
         expect(runPolicy('app-login').plays).toBe(false)
         expect(runPolicy('app-login', { media: STANDALONE }).plays).toBe(true)
         expect(runPolicy('app-login', { media: STANDALONE, navType: 'reload' }).plays).toBe(true)
         expect(runPolicy('app-login', { iosStandalone: true }).plays).toBe(true)
         expect(runPolicy('app-login', { media: STANDALONE, referrer: 'https://weavly.example/owner/estimator' }).plays).toBe(false)
+    })
+
+    it('remembers a completed or explicitly skipped installed intro and goes straight to login next time', () => {
+        for (const finish of ['complete', 'skip'] as const) {
+            const storage = new Map<string, string>()
+            const first = runPolicy('app-login', { media: STANDALONE, storage })
+            expect(first.plays).toBe(true)
+            expect(storage.has(STARTUP_INTRO_SEEN_KEY)).toBe(false)
+            if (finish === 'skip') first.handle?.abort(true)
+            else first.handle?.markSeen()
+            expect(storage.get(STARTUP_INTRO_SEEN_KEY)).toBe('1')
+            const later = runPolicy('app-login', { media: STANDALONE, storage, navType: 'reload' })
+            expect(later.plays).toBe(false)
+            expect(later.rootStyle.backgroundColor).toBe('')
+            expect(later.preloads).toHaveLength(0)
+        }
+    })
+
+    it('honours an explicit every-launch or off preference while retaining URL overrides', () => {
+        const storage = new Map([[STARTUP_INTRO_SEEN_KEY, '1'], [STARTUP_INTRO_PREFERENCE_KEY, 'always']])
+        expect(runPolicy('app-login', { media: STANDALONE, storage }).plays).toBe(true)
+        storage.set(STARTUP_INTRO_PREFERENCE_KEY, 'never')
+        const off = runPolicy('app-login', { media: STANDALONE, storage })
+        expect(off.plays).toBe(false)
+        expect(off.rootStyle.backgroundColor).toBe('')
+        expect(runPolicy('app-login', { storage, search: '?intro=1' }).plays).toBe(true)
+        expect(runPolicy('app-login', { storage, search: '?intro=1&intro=0', media: STANDALONE }).plays).toBe(false)
+        expect(runPolicy('landing', { storage }).plays).toBe(true)
+    })
+
+    it('goes straight to login before painting a stage when device storage is unavailable', () => {
+        for (const failure of [{ storageReadFails: true }, { storageWriteFails: true }]) {
+            const result = runPolicy('app-login', { media: STANDALONE, ...failure })
+            expect(result.plays).toBe(false)
+            expect(result.rootStyle.backgroundColor).toBe('')
+            expect(result.bodyStyle.backgroundColor).toBe('')
+            expect(result.preloads).toHaveLength(0)
+            expect(result.timers).toHaveLength(0)
+            expect(runPolicy('landing', failure).plays).toBe(true)
+        }
+    })
+
+    it('does not count a startup failure as a completed intro', () => {
+        const result = runPolicy('app-login', { media: STANDALONE })
+        result.timers[0]()
+        expect(result.stored.has(STARTUP_INTRO_SEEN_KEY)).toBe(false)
     })
 
     it('paints installed login launches dark from the head, before the body exists', () => {
@@ -424,6 +476,27 @@ describe('woven intro playback policy (pre-paint script)', () => {
         expect(slow.attrs.has(INTRO_ATTRIBUTE)).toBe(false)
         expect(slow.attrs.has(INTRO_LEAVING_ATTRIBUTE)).toBe(false)
         expect(slow.listeners.size).toBe(0)
+    })
+})
+
+describe('device startup preference storage', () => {
+    it('has a first-launch-only default and stores explicit choices without changing completion history', () => {
+        const values = new Map<string, string>([[STARTUP_INTRO_SEEN_KEY, '1']])
+        const storage = { getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => { values.set(key, value) } }
+        expect(readStartupIntroPreference(storage)).toBe('first-launch')
+        for (const value of ['always', 'never', 'first-launch'] as const) {
+            expect(saveStartupIntroPreference(storage, value)).toBe(true)
+            expect(readStartupIntroPreference(storage)).toBe(value)
+            expect(values.get(STARTUP_INTRO_SEEN_KEY)).toBe('1')
+        }
+        values.set(STARTUP_INTRO_PREFERENCE_KEY, 'invalid')
+        expect(readStartupIntroPreference(storage)).toBe('first-launch')
+    })
+
+    it('reports storage failures instead of pretending a preference was saved', () => {
+        const storage = { getItem: () => { throw new Error('blocked') }, setItem: () => { throw new Error('quota') } }
+        expect(readStartupIntroPreference(storage)).toBeNull()
+        expect(saveStartupIntroPreference(storage, 'never')).toBe(false)
     })
 })
 

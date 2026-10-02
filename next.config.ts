@@ -130,6 +130,12 @@ const withPWA = withPWAInit({
 })
 
 const nextConfig: NextConfig = {
+  webpack(config, { buildId, webpack }) {
+    config.plugins.push(new webpack.DefinePlugin({
+      __WEAVLY_BUILD_ID__: JSON.stringify(buildId),
+    }))
+    return config
+  },
   compiler: {
     async runAfterProductionCompile({ distDir }) {
       console.log('[build] Archived uploaded server source maps:', await archiveRuntimeSourceMaps(distDir))

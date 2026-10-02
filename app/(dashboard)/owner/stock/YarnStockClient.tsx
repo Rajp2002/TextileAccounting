@@ -1,4 +1,6 @@
 'use client'
+import { reportPwaWorkflowSuccess } from '@/lib/pwa-workflow-success'
+import { RouteMilestones } from '@/components/performance/route-milestones'
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
@@ -94,7 +96,7 @@ export default function YarnStockClient({ initialData }: { initialData: YarnBoar
         try {
             const result = await mutateYarnStock(input)
             if ('error' in result) { setSaveError(result.error); if (!result.uncertain) clearRequest(); return }
-            clearRequest(); setEntry(null); setNotice(true); await load()
+            clearRequest(); setEntry(null); setNotice(true); if (!tourSample) reportPwaWorkflowSuccess('stock'); await load()
         } catch { setSaveError(text.retrySame) }
         finally { writing.current = false; setSaving(false) }
     }
@@ -119,6 +121,7 @@ export default function YarnStockClient({ initialData }: { initialData: YarnBoar
     const selected = options.find(row => row.id === costing)
     const names = [...new Set([...data.yarns.map(row => row.yarn_name), ...data.costings.flatMap(row => row.recipe.map(layer => layer.yarn_name))])].sort()
     return <div className="space-y-6" data-i18n-skip="true">
+        <RouteMilestones route="/owner/stock/yarn" shellVisible primaryUsable />
         <header className="grid gap-4 border-b border-hairline/80 pb-5 text-center sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center sm:pb-6">
             <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-ink sm:col-start-2 sm:row-start-1 sm:text-[2rem]">{text.title}</h1>
             <div className="flex flex-wrap justify-center gap-2 sm:col-start-3 sm:row-start-1 sm:justify-self-end">

@@ -1238,7 +1238,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             <aside className="saved-costings-left-rail space-y-3" aria-label={tx('Saved Costings guides and tools')}>
                 <SavedCostingsTutorial step={tourStep} onStepChange={setTourStep} onComplete={() => setShowCostingDeleteNudge(true)} production={canUseProductionPipeline} ending={savedCostingTourEnding(quotes.filter(quote => isStandaloneCosting(quote.record_kind)).length, tourUnavailable)} userId={userId} orgId={orgId} userMetadata={userMetadata} />
             </aside>
-            <div className="saved-costings-workspace ui-route-enter max-w-6xl mx-auto space-y-6">
+            <div className="saved-costings-workspace ui-route-enter max-w-6xl mx-auto space-y-4 sm:space-y-6">
             <RouteMilestones route="/owner/quotes" shellVisible primaryUsable secondaryReady />
             {detailLoadingId && <p role="status" aria-live="polite" className="ui-status-enter rounded-lg border border-info/25 bg-info-soft px-3 py-2 text-xs font-semibold text-info">{tx('Selection saved. Loading the complete snapshot for comparison…')}</p>}
             <PageHeader
@@ -1286,9 +1286,9 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     </div>
                 </div>
             )}
-            <Toolbar data-costing-tour="filters" className="overflow-visible rounded-2xl border border-hairline bg-surface shadow-xs p-4">
-                    <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(260px,1fr)_auto_auto_auto_auto]">
-                        <div className="relative min-w-0">
+            <Toolbar data-costing-tour="filters" className="overflow-visible rounded-2xl border border-hairline bg-surface shadow-xs p-3 sm:p-4">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2 sm:grid sm:gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(260px,1fr)_auto_auto_auto_auto]">
+                        <div className="relative min-w-0 w-full sm:w-auto">
                             <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle/60" />
                             <Label htmlFor="saved-costings-search" className="sr-only">{t('common.search_quality_costing')}</Label>
                             <Input
@@ -1300,12 +1300,12 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                 className="h-10 sm:h-11 w-full min-w-0 rounded-xl border-hairline bg-surface pl-10 pr-4 text-sm text-ink placeholder:text-subtle/50 focus-visible:border-saffron focus-visible:ring-saffron"
                             />
                         </div>
-                        <details className="group relative z-20">
-                            <summary className="flex h-10 sm:h-11 cursor-pointer list-none items-center justify-center gap-2 rounded-xl border border-hairline bg-surface px-3.5 text-sm font-semibold text-ink hover:bg-surface-soft [&::-webkit-details-marker]:hidden">
+                        <details className="group relative z-20 min-w-0 flex-[1_1_auto]">
+                            <summary className="mobile-touch-target flex min-h-11 cursor-pointer list-none items-center justify-center gap-2 rounded-xl border border-hairline bg-surface px-3 text-sm font-semibold text-ink hover:bg-surface-soft [&::-webkit-details-marker]:hidden">
                                 Filters{marginFilter !== 'all' ? ' · 1' : ''}
                                 <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180 text-subtle/70" />
                             </summary>
-                            <div className="absolute right-0 mt-2 grid w-64 gap-3 rounded-xl border border-hairline bg-surface p-3 shadow-xs">
+                            <div className="absolute left-0 sm:left-auto sm:right-0 mt-2 grid w-64 max-w-[calc(100vw-3rem)] gap-3 rounded-xl border border-hairline bg-surface p-3 shadow-xs">
                                 <Label htmlFor="saved-costings-sort" className="text-xs font-semibold text-body">Sort by</Label>
                                 <select id="saved-costings-sort" value={costingSort} onChange={event => setCostingSort(event.target.value as SavedCostingSort)} className="h-10 rounded-xl border border-hairline bg-surface px-3 text-sm font-medium text-ink">
                                     <option value="recent">Recently updated</option><option value="oldest">Oldest updated</option><option value="margin_desc">Highest margin</option><option value="cost_asc">Lowest production cost</option>
@@ -1319,7 +1319,8 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                         <SwitchField
                             data-tour-anchor="costings.compare"
                             variant="pill"
-                            icon={<GitCompareArrows className="h-4 w-4" />}
+                            className="min-w-0 flex-[1_1_auto] gap-2 px-2.5 sm:gap-2.5 sm:px-3 [&>span:last-child]:min-w-0 [&>span:last-child]:break-words"
+                            icon={<GitCompareArrows className="hidden h-4 w-4 sm:block" />}
                             checked={comparisonMode}
                             onCheckedChange={() => { setComparisonMode(current => !current); setSelectedCostingIds([]) }}
                         >
@@ -1327,13 +1328,14 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                         </SwitchField>
                         <SwitchField
                             variant="pill"
-                            icon={<Star className={`h-4 w-4 ${showFavoritesOnly ? 'fill-current' : ''}`} />}
+                            className="min-w-0 flex-[1_1_auto] gap-2 px-2.5 sm:gap-2.5 sm:px-3 [&>span:last-child]:min-w-0 [&>span:last-child]:break-words"
+                            icon={<Star className={`hidden h-4 w-4 sm:block ${showFavoritesOnly ? 'fill-current' : ''}`} />}
                             checked={showFavoritesOnly}
                             onCheckedChange={() => { setOpenQualityKey(null); setShowFavoritesOnly(current => !current); setSelectedCostingIds([]) }}
                         >
                             Favourites
                         </SwitchField>
-                        <Button variant={showArchived ? 'secondary' : 'outline'} onClick={() => { setOpenQualityKey(null); setShowArchived(current => !current); setSelectedCostingIds([]) }} className="h-10 sm:h-11 rounded-xl">
+                        <Button variant={showArchived ? 'secondary' : 'outline'} onClick={() => { setOpenQualityKey(null); setShowArchived(current => !current); setSelectedCostingIds([]) }} className="min-h-11 min-w-0 flex-[1_1_auto] whitespace-normal rounded-xl">
                             {showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />} {showArchived ? t('common.active') : t('tourControls.savedCostings.archived')}
                         </Button>
                     </div>
@@ -1588,36 +1590,36 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                 ))}
                             </div>
                             <details data-costing-tour="comparison-details" open={tourStep ? tourStep === 'comparisonDetails' : undefined} className="ui-details group rounded-xl border border-hairline bg-surface">
-                                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-bold text-body marker:content-none">
+                                <summary className="mobile-touch-target flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-bold text-body marker:content-none">
                                     <span>View calculation details (optional)</span>
                                     <ChevronDown className="h-4 w-4 text-subtle transition-transform group-open:rotate-180" />
                                 </summary>
-                                <div className="max-h-[60vh] overflow-auto border-t border-hairline">
-                                    <table className="w-full min-w-[760px] text-sm">
-                                    <thead className="bg-surface-soft text-left">
-                                        <tr>
-                                            <th className="px-4 py-3 text-xs uppercase tracking-wide text-subtle">Metric</th>
+                                <div className="mobile-comparison-scroll max-h-[60vh] overflow-auto border-t border-hairline">
+                                    <table role="table" className="mobile-comparison-table w-full min-w-[760px] text-sm">
+                                    <thead role="rowgroup" className="bg-surface-soft text-left">
+                                        <tr role="row">
+                                            <th scope="col" className="comparison-column-label px-4 py-3 text-xs uppercase tracking-wide text-subtle">Metric</th>
                                             {comparisonCostings.map((costing, index) => {
                                                 const identity = getSavedCostingIdentity(costing)
-                                                return <th key={costing.id} className="px-4 py-3 font-bold text-ink"><span className="block">{index === 0 ? 'Old snapshot' : 'New snapshot'}</span><span className="mt-1 block max-w-[220px] truncate text-xs font-semibold text-body" title={identity.label}>{identity.label}</span><span className="mt-1 block text-[10px] font-medium text-subtle">saved {formatTimestampDate(costing.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}</span></th>
+                                                return <th role="columnheader" scope="col" key={costing.id} className="px-4 py-3 font-bold text-ink"><span className="block">{index === 0 ? 'Old snapshot' : 'New snapshot'}</span><span className="mt-1 block max-w-[220px] break-words text-xs font-semibold text-body" title={identity.label}>{identity.label}</span><span className="mt-1 block text-[10px] font-medium text-subtle">saved {formatTimestampDate(costing.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}</span></th>
                                             })}
-                                            <th className="px-4 py-3 text-xs uppercase tracking-wide text-subtle">Change</th>
+                                            <th scope="col" className="comparison-column-label px-4 py-3 text-xs uppercase tracking-wide text-subtle">Change</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-hairline">
+                                    <tbody role="rowgroup" className="divide-y divide-hairline">
                                         {comparisonGroups.map(group => (
                                             <Fragment key={group.key}>
-                                                <tr className="bg-info-soft/70">
+                                                <tr role="row" className="bg-info-soft/70">
                                                     <th colSpan={4} className="px-4 py-2.5 text-left text-[11px] font-black uppercase tracking-wider text-info">
                                                         {group.title}
                                                     </th>
                                                 </tr>
-                                                <tr className="bg-info-soft/30">
+                                                <tr role="row" className="bg-info-soft/30">
                                                     <td colSpan={4} className="px-4 py-2 text-xs leading-relaxed text-body">{group.description}</td>
                                                 </tr>
                                                 {group.sections.map(section => (
                                                     <Fragment key={`${group.key}-${section.title}`}>
-                                                        <tr key={`${group.key}-${section.title}-heading`} className="bg-surface-soft/70">
+                                                        <tr role="row" key={`${group.key}-${section.title}-heading`} className="bg-surface-soft/70">
                                                             <th colSpan={4} className="px-4 py-2 text-left text-[11px] font-black uppercase tracking-wider text-body">
                                                                 <span>{section.title}</span>{section.changed && <Badge variant="outline" className="ml-2 border-info/25 bg-info-soft text-[10px] text-info">Changed</Badge>}
                                                             </th>
@@ -1630,17 +1632,19 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                                                 : formatComparisonDelta(row.value, row.unit === 'rate' ? 'number' : row.unit)
                                                             const numericDelta = row.unit === 'text' ? null : row.value.delta
                                                             return (
-                                                                <tr key={`${group.key}-${section.title}-${row.label}`}>
-                                                                    <td className="px-4 py-3 font-semibold text-body">{row.label}</td>
-                                                                    <td className="px-4 py-3 font-mono font-semibold text-ink">
+                                                                <tr role="row" key={`${group.key}-${section.title}-${row.label}`}>
+                                                                    <th scope="row" className="comparison-metric px-4 py-3 text-left font-semibold text-body">{row.label}</th>
+                                                                    <td role="cell" className="px-4 py-3 font-mono font-semibold text-ink">
+                                                                        <span aria-hidden="true" className="mobile-comparison-label">{tx('Old')}</span>
                                                                         <span>{left}{row.unit === 'rate' && left !== 'Not available' ? '/kg' : ''}</span>
                                                                         {row.context?.left && <span className="mt-1 block font-sans text-[10px] font-medium leading-4 text-subtle">{row.context.left}</span>}
                                                                     </td>
-                                                                    <td className="px-4 py-3 font-mono font-semibold text-ink">
+                                                                    <td role="cell" className="px-4 py-3 font-mono font-semibold text-ink">
+                                                                        <span aria-hidden="true" className="mobile-comparison-label">{tx('New')}</span>
                                                                         <span>{right}{row.unit === 'rate' && right !== 'Not available' ? '/kg' : ''}</span>
                                                                         {row.context?.right && <span className="mt-1 block font-sans text-[10px] font-medium leading-4 text-subtle">{row.context.right}</span>}
                                                                     </td>
-                                                                    <td className={`px-4 py-3 font-mono font-bold ${row.changed ? numericDelta != null && numericDelta > 0 ? 'text-warning' : 'text-info' : 'text-subtle'}`}>{change}</td>
+                                                                    <td role="cell" className={`comparison-change px-4 py-3 font-mono font-bold ${row.changed ? numericDelta != null && numericDelta > 0 ? 'text-warning' : 'text-info' : 'text-subtle'}`}><span aria-hidden="true" className="mobile-comparison-label">{tx('Change')}</span>{change}</td>
                                                                 </tr>
                                                             )
                                                         })}

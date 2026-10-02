@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import { cookies, headers } from 'next/headers'
 import { OwnerSidebar } from '@/components/navigation/owner-sidebar'
+import { MobileWorkflowNavigation } from '@/components/navigation/mobile-workflow-navigation'
 import { OwnerRouteLoading } from '@/components/navigation/owner-route-loading'
 import { requireRole } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
@@ -123,6 +124,7 @@ async function OwnerRouteBoundary({ children }: { children: React.ReactNode }) {
     return (
         <OwnerPlanProvider access={planAccess}>
             <AuthBoundaryCleanup scope={cacheScope} />
+            <MobileWorkflowNavigation tier={planAccess.effectiveTier} productionMode={normalizeProductionMode(organization.production_mode)} />
             {children}
         </OwnerPlanProvider>
     )

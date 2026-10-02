@@ -1,4 +1,6 @@
 'use client'
+import { reportPwaWorkflowSuccess } from '@/lib/pwa-workflow-success'
+import { RouteMilestones } from '@/components/performance/route-milestones'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import {
@@ -238,6 +240,7 @@ export default function ChallansClient({
             remember(null)
             setDraft(null)
             setOperation(null)
+            if (!tourSample) reportPwaWorkflowSuccess('dispatch')
             await view(result.id)
             await load()
         } catch {
@@ -295,6 +298,7 @@ export default function ChallansClient({
             data-i18n-skip="true"
             className="dispatch-workspace-shell mx-auto w-full space-y-5 pb-10 sm:space-y-6"
         >
+            <RouteMilestones route="/owner/dispatches" shellVisible primaryUsable />
             <header className="relative border-b border-hairline/70 pb-5 text-center sm:pb-6">
                 <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-ink sm:text-[2rem]">
                     {tx('title')}

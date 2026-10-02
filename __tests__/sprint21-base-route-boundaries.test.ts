@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
+import { createRouteMilestoneTracker } from '../lib/route-milestones'
 
 const read = (file: string) => readFileSync(file, 'utf8')
 
@@ -50,7 +51,11 @@ describe('Sprint 21 Base route boundaries', () => {
         const bundleReport = read('scripts/performance/sprint21-bundle-report.mjs')
 
         expect(milestones).toContain('data-route-primary-usable')
-        expect(milestones).toContain("mark('route_primary_usable')")
+        expect(milestones).toContain('createRouteMilestoneTracker(mark)')
+        const names: string[] = []
+        createRouteMilestoneTracker(name => names.push(name))('/owner/payroll', { shell: true, primary: true, secondary: false })
+        expect(names).toContain('route_primary_usable')
+        expect(names).toContain('route_primary_usable:/owner/payroll')
         expect(bundleReport).toContain('page_client-reference-manifest.js')
         expect(bundleReport).toContain('gzipSync')
     })
