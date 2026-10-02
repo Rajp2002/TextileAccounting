@@ -1768,6 +1768,12 @@
     animation: auth-transition-leave 180ms ease-in forwards;
   }
 
+  /* A page left behind the handoff (its session already ended) must not toast
+     over it. Toasts show again as soon as the overlay closes. */
+  body:has(> .auth-transition[data-state="open"]) [data-sonner-toaster] {
+    visibility: hidden;
+  }
+
   .auth-transition-mark {
     width: 120px;
     height: 120px;
@@ -1812,11 +1818,15 @@
     from { opacity: 0; transform: translateY(4px); }
   }
 
-  /* Loom: indigo warp, saffron weft. Two picks per loop, then the cloth
-     has moved down two rows and the loop restarts on an identical frame. */
-  .wv-loom {
-    --loom-loop: 1.8s;
+  /* One round of either mark. Sign-in and log out stay up for at least one
+     (AUTH_TRANSITION_ROUND_MS in components/auth/auth-transition-timing.ts). */
+  .wv-loom,
+  .wv-spool {
+    --auth-round: 1.6s;
   }
+
+  /* Loom: indigo warp, saffron weft. Two picks per round, then the cloth
+     has moved down two rows and the round restarts on an identical frame. */
 
   .wv-loom-warp { stroke: var(--wv-neel-700); }
   .wv-loom-weft { stroke: var(--wv-saffron-500); }
@@ -1826,11 +1836,11 @@
   /* The return pick is unwoven at rest; reduced motion shows one finished pick. */
   .wv-loom-pass-back { stroke-dashoffset: 66; }
 
-  .wv-loom-cloth { animation: wv-loom-take-up var(--loom-loop) infinite; }
-  .wv-loom-pass-there { animation: wv-loom-there var(--loom-loop) infinite; }
-  .wv-loom-pass-back { animation: wv-loom-back var(--loom-loop) infinite; }
-  .wv-loom-shuttle { animation: wv-loom-shuttle var(--loom-loop) infinite; }
-  .wv-loom-reed { animation: wv-loom-beat var(--loom-loop) infinite; }
+  .wv-loom-cloth { animation: wv-loom-take-up var(--auth-round) infinite; }
+  .wv-loom-pass-there { animation: wv-loom-there var(--auth-round) infinite; }
+  .wv-loom-pass-back { animation: wv-loom-back var(--auth-round) infinite; }
+  .wv-loom-shuttle { animation: wv-loom-shuttle var(--auth-round) infinite; }
+  .wv-loom-reed { animation: wv-loom-beat var(--auth-round) infinite; }
 
   @keyframes wv-loom-there {
     0% { stroke-dashoffset: 66; animation-timing-function: cubic-bezier(0.55, 0, 0.3, 1); }
@@ -1862,35 +1872,53 @@
     98%, 100% { transform: translateY(20px); }
   }
 
-  /* Spool: the wraps travel as it turns, the strand's twist flows in, and
-     the strand sways along the barrel like a winder's traverse guide. */
+  /* Spool: each wind lays one wrap across the front of the barrel while the
+     spool turns half a revolution (the flange holes orbit), then the wound
+     thread steps down one wrap. Two winds per round; the thread flows in. */
   .wv-spool-rim { fill: var(--wv-neel-900); }
   .wv-spool-face { fill: var(--wv-neel-600); }
   .wv-spool-hole { fill: var(--wv-neel-950); }
-  .wv-spool-thread { fill: var(--wv-saffron-500); }
-  .wv-spool-wrap { stroke: var(--wv-saffron-700); stroke-opacity: 0.55; }
+  .wv-spool-core { fill: var(--wv-cotton-200); }
+  .wv-spool-band { stroke: var(--wv-saffron-700); }
+  .wv-spool-wrap { stroke: var(--wv-saffron-500); }
   .wv-spool-strand { stroke: var(--wv-saffron-500); }
-  .wv-spool-twist { stroke: var(--wv-saffron-700); stroke-opacity: 0.5; }
+  .wv-spool-twist { stroke: var(--wv-saffron-700); stroke-opacity: 0.45; }
 
-  .wv-spool-wraps { animation: wv-spool-turn 320ms linear infinite; }
-  .wv-spool-twist { animation: wv-spool-reel 320ms linear infinite; }
+  .wv-spool-stack { animation: wv-spool-take-up calc(var(--auth-round) / 2) infinite; }
+  .wv-spool-lay { animation: wv-spool-lay calc(var(--auth-round) / 2) infinite; }
+  .wv-spool-spin {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: wv-spool-spin calc(var(--auth-round) / 2) linear infinite;
+  }
+  .wv-spool-twist { animation: wv-spool-reel calc(var(--auth-round) / 8) linear infinite; }
   .wv-spool-lead {
     transform-box: view-box;
-    transform-origin: 106px 41px;
-    animation: wv-spool-traverse 2.4s ease-in-out infinite alternate;
+    transform-origin: 58px 27px;
+    animation: wv-spool-sway var(--auth-round) ease-in-out infinite;
   }
 
-  @keyframes wv-spool-turn {
-    to { transform: translateY(-4px); }
+  @keyframes wv-spool-lay {
+    0% { stroke-dashoffset: 100; animation-timing-function: cubic-bezier(0.45, 0, 0.35, 1); }
+    50%, 100% { stroke-dashoffset: 0; }
+  }
+
+  @keyframes wv-spool-take-up {
+    0%, 55% { transform: translateY(0); animation-timing-function: ease-in-out; }
+    85%, 100% { transform: translateY(5px); }
+  }
+
+  @keyframes wv-spool-spin {
+    to { transform: rotate(360deg); }
   }
 
   @keyframes wv-spool-reel {
-    to { stroke-dashoffset: 4; }
+    to { stroke-dashoffset: 3; }
   }
 
-  @keyframes wv-spool-traverse {
-    from { transform: rotate(-6deg); }
-    to { transform: rotate(7deg); }
+  @keyframes wv-spool-sway {
+    0%, 100% { transform: rotate(-3deg); }
+    50% { transform: rotate(3deg); }
   }
 
   @media (prefers-reduced-motion: reduce) {
