@@ -2,7 +2,7 @@
 
 Capture source: the production UI at https://textile-accounting.vercel.app on 2 October 2026, using the supplied Base demo account. Capture starts after authentication. New business records use the `Demo` prefix; no production readings or payments are entered for existing workers.
 
-Each video is a recording of real UI actions, with a visible pointer, reading pauses, and short chapter descriptions. The recordings have no audio. Preparation and investigation are excluded from the finished clips.
+Each video is a recording of real UI actions, with a visible pointer, reading pauses, and short chapter descriptions. English narration is generated locally with Kokoro and aligned to the recorded actions. Preparation and investigation are excluded from the finished clips.
 
 | Feature | Demonstration |
 | --- | --- |
@@ -27,13 +27,15 @@ These clearly named demo records remain in the supplied account so the recording
 
 ## Media and maintenance
 
-The six MP4 files, JPEG posters, optional English WebVTT captions, text walkthroughs and chapter metadata live in `public/videos/features/`. Each MP4 is H.264/yuv420p, 24 fps, 1440 × 960, has no audio, and has its metadata at the start for streaming and seeking. A 60 px chapter strip is added above the original 1440 × 900 recording. The application uses native video controls and serves assets from its own origin.
+The six MP4 files, JPEG posters, optional English WebVTT speech captions, narration transcripts and chapter metadata live in `public/videos/features/`. Each MP4 is H.264/yuv420p, 24 fps, 1440 × 960, with mono AAC narration at 48 kHz and its metadata at the start for streaming and seeking. A 60 px chapter strip is added above the original 1440 × 900 recording. The application uses native video controls and serves assets from its own origin.
 
-The reviewed assembly manifests are in `docs/feature-demos/manifests/`. To rebuild after recording a replacement take at the referenced local path:
+The reviewed assembly manifests are in `docs/feature-demos/manifests/`. To rebuild the silent picture after recording a replacement take at the referenced local path:
 
 ```sh
 python scripts/media/assemble-feature-demos.py docs/feature-demos/manifests/estimator.json
 ```
+
+Then review the narration windows against the new footage and follow [the Kokoro generation instructions](voiceovers/README.md). Do not publish the silent assembly over a narrated preview without regenerating its audio and captions.
 
 The script requires FFmpeg/ffprobe with libx264 and the DejaVu Sans font. Raw takes and browser sessions are private, ignored workspace artifacts under `scratch/feature-demos/`; they are not required to deploy the finished assets. Do not include login screens, credentials, browser storage or session files in replacement media.
 

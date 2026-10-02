@@ -1,29 +1,142 @@
 WEBVTT
 
 1
-00:00:00.000 --> 00:00:26.333
-Create Demo Loom 01 and select its machine type, Rapier.
+00:00:00.500 --> 00:00:02.745
+Start by adding a production machine.
 
 2
-00:00:26.333 --> 00:00:55.500
-Create Demo Operator 01 as a piece-rate weaver and approved loom operator, available for the day shift.
+00:00:02.985 --> 00:00:07.495
+Name it Demo Loom Zero One, and select Rapier as
+the machine type.
 
 3
-00:00:55.500 --> 00:01:57.500
-Choose saved costing v2 for the demo fabric. Add 200 kg each of the required warp and weft yarns, then activate the quality for production.
+00:00:20.000 --> 00:00:22.391
+Add the machine, ready for assignment.
 
 4
-00:01:57.500 --> 00:02:22.292
-Assign the demo quality to Demo Loom 01, then find the loom on the machine board.
+00:00:26.800 --> 00:00:29.501
+Next, add Demo Operator Zero One.
 
 5
-00:02:22.292 --> 00:02:49.750
-Open Manage Workers, select Day Shift, find Demo Operator 01, and assign the operator to the loom.
+00:00:29.741 --> 00:00:32.431
+Select piece rate for this worker's pay type.
 
 6
-00:02:49.750 --> 00:03:21.833
-Enter 240 metres for the demo loom. Review worker totals and earnings, then save the shift. Other machines remain pending so their readings can be entered later.
+00:00:39.300 --> 00:00:44.849
+Set the role, keep the worker approved as a loom
+operator, and choose day availability.
 
 7
-00:03:21.833 --> 00:03:45.417
-Open the permanent production audit receipt and worker review. The demo operator produced 240 metres at the saved Rs 16/m rate, earning Rs 3,840.
+00:00:45.089 --> 00:00:46.651
+Then save the worker.
+
+8
+00:00:56.000 --> 00:01:01.441
+Activate a quality for production, and choose
+version two of the saved demo fabric.
+
+9
+00:01:07.000 --> 00:01:10.744
+Before production can start, check the required
+yarn stock.
+
+10
+00:01:10.984 --> 00:01:13.610
+This fabric needs both warp and weft.
+
+11
+00:01:17.800 --> 00:01:22.737
+Add two hundred kilograms of warp yarn, with a
+short stock note, then save.
+
+12
+00:01:32.000 --> 00:01:33.711
+Repeat for the weft yarn.
+
+13
+00:01:33.951 --> 00:01:38.068
+Add two hundred kilograms and a reference note,
+then save the stock.
+
+14
+00:01:48.000 --> 00:01:52.374
+With both yarn stocks available, activate the
+quality for production.
+
+15
+00:01:58.000 --> 00:02:00.704
+Open Assign Looms for the active quality.
+
+16
+00:02:00.944 --> 00:02:04.571
+Select Demo Loom Zero One and confirm the
+assignment.
+
+17
+00:02:14.000 --> 00:02:16.893
+The machine board connects your fabric to its
+loom.
+
+18
+00:02:17.133 --> 00:02:18.727
+Search for the demo loom.
+
+19
+00:02:22.800 --> 00:02:26.736
+Open Manage Workers on the demo loom, and select
+Day Shift.
+
+20
+00:02:35.000 --> 00:02:39.533
+Find Demo Operator Zero One and assign the
+worker to the day shift.
+
+21
+00:02:39.773 --> 00:02:41.133
+Then finish setup.
+
+22
+00:02:50.200 --> 00:02:53.157
+Open the daily sheet for the correct date and
+shift.
+
+23
+00:02:53.397 --> 00:02:56.813
+Enter two hundred and forty metres for the demo
+loom.
+
+24
+00:03:00.900 --> 00:03:05.445
+Open Worker Review to check output and earnings,
+then return to the sheet.
+
+25
+00:03:09.800 --> 00:03:11.046
+Save the shift.
+
+26
+00:03:11.286 --> 00:03:17.388
+Other machines remain pending, so only the demo
+loom has recorded output in this example.
+
+27
+00:03:22.300 --> 00:03:25.649
+Open the saved receipt to review the production
+record,
+
+28
+00:03:25.769 --> 00:03:27.007
+including the loom,
+
+29
+00:03:27.127 --> 00:03:28.087
+quality,
+
+30
+00:03:28.207 --> 00:03:29.831
+operator and metres.
+
+31
+00:03:39.000 --> 00:03:42.701
+The worker earned three thousand eight hundred
+and forty rupees.

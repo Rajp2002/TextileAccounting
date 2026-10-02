@@ -1,7 +1,7 @@
 {
   "feature": "estimator",
   "duration": 118.75,
-  "bytes": 2525158,
+  "bytes": 3362099,
   "chapters": [
     {
       "start": 0,
@@ -18,5 +18,15 @@
       "title": "Understand the cost breakdown",
       "description": "Switch to Detailed to inspect the yarn-consumption formulas, waste and crimp adjustments, and production-cost breakdown. Quick and Detailed use the same calculation engine."
     }
-  ]
+  ],
+  "narration": {
+    "engine": "Kokoro-82M v1.0 via kokoro-onnx 0.6.1",
+    "voice": "af_heart",
+    "language": "en",
+    "audio_codec": "aac",
+    "sample_rate": 48000,
+    "channels": 1,
+    "cue_count": 10,
+    "caption_count": 18
+  }
 }

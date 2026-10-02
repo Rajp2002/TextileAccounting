@@ -1,25 +1,87 @@
 WEBVTT
 
 1
-00:00:00.000 --> 00:00:18.875
-Search for the demo fabric and open its saved cost breakdown. Review the original production cost, selling price, margin and quantity.
+00:00:00.500 --> 00:00:05.982
+Search for the fabric and open its saved costing
+to inspect the original figures.
 
 2
-00:00:18.875 --> 00:00:42.042
-Choose Use to reopen the saved snapshot. Change the weaving rate to Rs 16/m and target margin to 20%, then inspect the new live result.
+00:00:09.200 --> 00:00:14.715
+This snapshot preserves the original inputs and
+results, so you can refer back to them.
 
 3
-00:00:42.042 --> 00:00:52.875
-Save New Version creates costing v2 while preserving v1 and its original numbers.
+00:00:20.000 --> 00:00:22.051
+Choose Use to restore the inputs.
 
 4
-00:00:52.875 --> 00:01:15.000
-Enable Compare, open the fabric's history, and select v1 and v2 for comparison.
+00:00:22.291 --> 00:00:25.473
+Change the weaving rate to sixteen rupees per
+metre.
 
 5
-00:01:15.000 --> 00:01:31.708
-Open Compare Costings to inspect the differences in cost components, selling price, margin and profit.
+00:00:33.500 --> 00:00:39.527
+Set the target margin to twenty percent, then
+open Live Cost to review the updated result.
 
 6
-00:01:31.708 --> 00:02:14.750
-Preview and download the internal cost sheet. Switch to Customer Quotation, enter a demo buyer and terms, and download a quotation that hides internal costs and margins. Nothing is sent to a customer.
+00:00:42.500 --> 00:00:44.126
+Choose Save New Version.
+
+7
+00:00:44.366 --> 00:00:49.549
+Version two preserves your changes while version
+one keeps its original figures.
+
+8
+00:00:53.300 --> 00:00:58.355
+Enable Compare, then open the fabric's version
+history to choose the estimates.
+
+9
+00:01:02.000 --> 00:01:03.946
+Select versions one and two.
+
+10
+00:01:04.186 --> 00:01:08.623
+You can now compare how the changed assumptions
+affect the same fabric.
+
+11
+00:01:15.500 --> 00:01:17.358
+Open Compare Costings.
+
+12
+00:01:17.598 --> 00:01:19.902
+Review the differences in production cost,
+
+13
+00:01:20.022 --> 00:01:21.259
+selling price,
+
+14
+00:01:21.379 --> 00:01:25.475
+margin and quantity to understand the effect of
+your changes.
+
+15
+00:01:34.000 --> 00:01:37.053
+Open Export to preview an internal cost sheet.
+
+16
+00:01:43.000 --> 00:01:47.374
+Enter your business name and notes, then
+download the detailed cost sheet.
+
+17
+00:01:58.000 --> 00:02:00.061
+Switch to Customer Quotation.
+
+18
+00:02:00.301 --> 00:02:02.822
+Add the buyer’s name and delivery terms.
+
+19
+00:02:07.000 --> 00:02:11.097
+Download a quote that keeps your internal costs
+and margins private.

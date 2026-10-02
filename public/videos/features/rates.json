@@ -1,7 +1,7 @@
 {
   "feature": "rates",
   "duration": 84.208,
-  "bytes": 1888014,
+  "bytes": 2476432,
   "chapters": [
     {
       "start": 0,
@@ -18,5 +18,15 @@
       "title": "Earlier costings keep their original figures",
       "description": "Open the earlier saved costing. Its production cost remains Rs 33.23/m and its suggested price remains Rs 39.09/m. Updating Rate Book does not rewrite historical snapshots."
     }
-  ]
+  ],
+  "narration": {
+    "engine": "Kokoro-82M v1.0 via kokoro-onnx 0.6.1",
+    "voice": "af_heart",
+    "language": "en",
+    "audio_codec": "aac",
+    "sample_rate": 48000,
+    "channels": 1,
+    "cue_count": 8,
+    "caption_count": 11
+  }
 }

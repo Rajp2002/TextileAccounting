@@ -1,7 +1,7 @@
 {
   "feature": "costings",
   "duration": 134.75,
-  "bytes": 3217616,
+  "bytes": 4138584,
   "chapters": [
     {
       "start": 0,
@@ -33,5 +33,15 @@
       "title": "Export a cost sheet or customer quotation",
       "description": "Preview and download the internal cost sheet. Switch to Customer Quotation, enter a demo buyer and terms, and download a quotation that hides internal costs and margins. Nothing is sent to a customer."
     }
-  ]
+  ],
+  "narration": {
+    "engine": "Kokoro-82M v1.0 via kokoro-onnx 0.6.1",
+    "voice": "af_heart",
+    "language": "en",
+    "audio_codec": "aac",
+    "sample_rate": 48000,
+    "channels": 1,
+    "cue_count": 12,
+    "caption_count": 19
+  }
 }

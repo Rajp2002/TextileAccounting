@@ -1,7 +1,7 @@
 {
   "feature": "payroll",
   "duration": 141.708,
-  "bytes": 2299459,
+  "bytes": 3187165,
   "chapters": [
     {
       "start": 0,
@@ -23,5 +23,15 @@
       "title": "Inspect and export saved payroll records",
       "description": "Open Payroll records, find the demo worker, and expand the saved payment to inspect the loom, costing, rate, metres and earnings. Switch to the Machines view and download the payroll CSV and PDF."
     }
-  ]
+  ],
+  "narration": {
+    "engine": "Kokoro-82M v1.0 via kokoro-onnx 0.6.1",
+    "voice": "af_heart",
+    "language": "en",
+    "audio_codec": "aac",
+    "sample_rate": 48000,
+    "channels": 1,
+    "cue_count": 14,
+    "caption_count": 18
+  }
 }
