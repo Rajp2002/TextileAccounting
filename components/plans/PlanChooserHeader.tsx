@@ -45,9 +45,9 @@ export function PlanChooserHeader({ effectiveTier = 'unassigned', isUnassigned =
   }
 
   return (
-    <header className="flex items-center justify-between gap-4 py-4 border-b border-hairline/60">
+    <header className="flex flex-wrap items-center justify-between gap-3 py-4 border-b border-hairline/60">
       <div className="flex items-center gap-4">
-        <Link href={backHref ?? '/'} className="flex items-center gap-2 group focus:outline-none focus-visible:ring-2 focus-visible:ring-saffron rounded-lg">
+        <Link href={backHref ?? '/'} className="flex min-h-[44px] items-center gap-2 group focus:outline-none focus-visible:ring-2 focus-visible:ring-saffron rounded-lg">
           <Image
             src="/images/WeavlyLogo.png"
             alt="Weavly"
@@ -59,13 +59,13 @@ export function PlanChooserHeader({ effectiveTier = 'unassigned', isUnassigned =
         </Link>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="ml-auto flex flex-wrap items-center justify-end gap-2 sm:gap-3">
         {backHref ? (
           <Link
             href={backHref}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-hairline bg-surface px-3 py-1.5 text-xs font-semibold text-body hover:border-saffron/40 hover:bg-surface-soft hover:text-ink transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-hairline bg-surface px-3 py-2 text-xs font-semibold text-body hover:border-saffron/40 hover:bg-surface-soft hover:text-ink transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
           >
-            <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+            <ArrowLeft className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
             <span>{backLabel}</span>
           </Link>
         ) : (

@@ -42,7 +42,7 @@ export function OnboardingShell({
     return (
         <div className="relative flex min-h-screen flex-col bg-[var(--wv-cotton-100)] text-[var(--wv-neel-900)]">
             {/* Top Navigation Header */}
-            <header className="sticky top-0 z-30 border-b border-[var(--wv-cotton-300)] bg-[var(--wv-cotton-0)]/90 backdrop-blur-md">
+            <header className="safe-area-header px-safe sticky top-0 z-30 border-b border-[var(--wv-cotton-300)] bg-[var(--wv-cotton-0)]/90 backdrop-blur-md">
                 <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
                     <div className="flex items-center gap-3">
                         <Link href="/owner/estimator" className="flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-[var(--wv-brand-accent-strong)] rounded-lg">
@@ -81,7 +81,7 @@ export function OnboardingShell({
             </header>
 
             {/* Main Content Area */}
-            <main className="flex-1 px-4 py-6 pb-28 sm:px-6 sm:py-8">
+            <main className="flex-1 px-4 pt-6 pb-[calc(7rem+var(--safe-area-bottom))] sm:px-6 sm:pt-8">
                 <div className="mx-auto max-w-5xl">
                     {children}
                 </div>
@@ -89,7 +89,7 @@ export function OnboardingShell({
 
             {/* Sticky Action Footer (hidden on completed screen) */}
             {!isCompleted && (
-                <footer className="fixed bottom-0 left-0 right-0 z-30 border-t border-[var(--wv-cotton-300)] bg-[var(--wv-cotton-0)]/95 py-3.5 backdrop-blur-md">
+                <footer className="px-safe fixed bottom-0 left-0 right-0 z-30 border-t border-[var(--wv-cotton-300)] bg-[var(--wv-cotton-0)]/95 pt-3.5 pb-[calc(0.875rem+var(--safe-area-bottom))] backdrop-blur-md">
                     <div className="mx-auto flex max-w-5xl items-center justify-between px-4 sm:px-6">
                         <div>
                             {onBack && (

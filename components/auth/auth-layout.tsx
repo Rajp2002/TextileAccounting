@@ -15,9 +15,9 @@ interface AuthLayoutProps {
 
 export default function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
     return (
-        <div className="relative isolate flex min-h-[100svh] w-full items-center justify-center overflow-hidden bg-background px-3 py-[calc(1rem+env(safe-area-inset-top,0px))] pb-[calc(1rem+env(safe-area-inset-bottom,0px))] xs:p-4">
+        <div className="safe-area-page relative isolate flex min-h-svh w-full items-center justify-center overflow-hidden bg-background [--page-gutter-x:0.75rem] [--page-gutter-y:1rem] xs:[--page-gutter-x:1rem]">
             <BrandBackground variant="auth" />
-            <div className="absolute right-3 top-[calc(0.75rem+env(safe-area-inset-top,0px))] z-20 xs:right-4">
+            <div className="absolute right-[calc(var(--page-gutter-x)+var(--safe-area-right))] top-[calc(0.75rem+var(--safe-area-top))] z-20">
                 <LanguageSwitcher placement="bottom" className="border border-[var(--wv-border-subtle)] bg-surface text-ink shadow-sm hover:border-[var(--wv-border-control)]" />
             </div>
 
