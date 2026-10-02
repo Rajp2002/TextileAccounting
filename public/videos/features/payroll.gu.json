@@ -1,0 +1,42 @@
+{
+  "feature": "payroll",
+  "duration": 141.708,
+  "bytes": 3494260,
+  "chapters": [
+    {
+      "start": 0,
+      "title": "Review earnings and record an advance",
+      "description": "Find Demo Operator 01. The saved 240 metres at Rs 16/m earned Rs 3,840. Record a Rs 400 advance with a description and review the updated recovery and net pay."
+    },
+    {
+      "start": 32.833,
+      "title": "Record a worker deduction",
+      "description": "Add a Rs 50 deduction in the Other category, with a demo note. Total recovery becomes Rs 450 and net pay becomes Rs 3,390."
+    },
+    {
+      "start": 68.458,
+      "title": "Review and record the payment",
+      "description": "Review how piece-rate earnings, salaries and advance recovery are calculated. Mark only the demo operator as paid by cash, confirm Rs 3,390, and review the paid state. This records a payment; it does not send money."
+    },
+    {
+      "start": 94.083,
+      "title": "Inspect and export saved payroll records",
+      "description": "Open Payroll records, find the demo worker, and expand the saved payment to inspect the loom, costing, rate, metres and earnings. Switch to the Machines view and download the payroll CSV and PDF."
+    }
+  ],
+  "narration": {
+    "engine": "AI4Bharat Indic Parler-TTS",
+    "speaker": "Neha",
+    "model_revision": "7b527af5ee8ed1f9a28d80b19703ed9bb8ba10ca",
+    "description": "Neha speaks at a moderate pace in a clear, calm, slightly expressive voice. The recording is very high quality, with very clear audio, no background noise and a close-sounding voice.",
+    "language": "gu",
+    "audio_codec": "aac",
+    "sample_rate": 48000,
+    "channels": 1,
+    "cue_count": 14,
+    "caption_count": 14,
+    "generation": [
+      "Local CPU"
+    ]
+  }
+}

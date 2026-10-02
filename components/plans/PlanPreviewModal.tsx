@@ -1,10 +1,10 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useId, useRef, useState } from 'react'
 import { Check, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
-import { FEATURE_DEMOS } from '@/lib/feature-demos'
+import { getFeatureDemo, isNarrationLanguage, NARRATION_LANGUAGES, NARRATION_LANGUAGE_LABELS, type NarrationLanguage } from '@/lib/feature-demos'
 import { upgradeFeatureBullets, upgradeText, type UpgradeFeature, type UpgradePlan } from '@/lib/upgrade-wall'
 import { useTranslation } from '@/lib/i18n/context'
 
@@ -14,24 +14,104 @@ interface PlanPreviewModalProps {
   onClose: () => void
 }
 
+const NARRATION_STORAGE_KEY = 'weavly_demo_narration_language'
+
+interface PlaybackPosition {
+  time: number
+  playing: boolean
+  muted: boolean
+  volume: number
+  rate: number
+  captions: boolean
+}
+
+function readNarrationPreference(): NarrationLanguage | null {
+  try {
+    const stored = localStorage.getItem(NARRATION_STORAGE_KEY)
+    return isNarrationLanguage(stored) ? stored : null
+  } catch {
+    return null
+  }
+}
+
 function FeatureVideo({ feature }: { feature: UpgradeFeature }) {
   const { language } = useTranslation()
   const [failed, setFailed] = useState(false)
-  const demo = FEATURE_DEMOS[feature]
+  const [preference, setPreference] = useState(readNarrationPreference)
+  const [playback, setPlayback] = useState<PlaybackPosition | null>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const selectorId = useId()
+  const narrationLanguage = preference ?? language
+  const demo = getFeatureDemo(feature, narrationLanguage)
+
+  function changeNarration(next: string) {
+    if (!isNarrationLanguage(next) || next === narrationLanguage) return
+    const video = videoRef.current
+    // A second selection can arrive before the replacement video has metadata.
+    // Keep the previous snapshot in that case instead of resetting to time zero.
+    if (video && video.readyState >= HTMLMediaElement.HAVE_METADATA) {
+      setPlayback({
+        time: video.currentTime,
+        playing: !video.paused && !video.ended,
+        muted: video.muted,
+        volume: video.volume,
+        rate: video.playbackRate,
+        captions: video.textTracks[0]?.mode === 'showing',
+      })
+    }
+    video?.pause()
+    setFailed(false)
+    setPreference(next)
+    try {
+      localStorage.setItem(NARRATION_STORAGE_KEY, next)
+    } catch {
+      // Selection still works when browser storage is unavailable.
+    }
+  }
+
   return (
     <>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <label htmlFor={selectorId} className="text-sm font-semibold text-ink">
+          {upgradeText(language, 'demoNarrationLanguage')}
+        </label>
+        <select
+          id={selectorId}
+          className="min-h-11 rounded-lg border border-hairline bg-surface px-3 py-2 text-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron-deep"
+          value={narrationLanguage}
+          onChange={event => changeNarration(event.target.value)}
+          data-i18n-skip="true"
+          translate="no"
+        >
+          {NARRATION_LANGUAGES.map(option => (
+            <option key={option} value={option} lang={option}>{NARRATION_LANGUAGE_LABELS[option]}</option>
+          ))}
+        </select>
+      </div>
       <video
+        key={narrationLanguage}
+        ref={videoRef}
         className="mx-auto max-h-[65dvh] w-full rounded-xl border border-hairline bg-black"
         src={demo.src}
         poster={demo.poster}
         controls
         playsInline
-        autoPlay
+        autoPlay={playback?.playing ?? true}
         preload="metadata"
         aria-label={upgradeText(language, 'watchFeatureDemo', { feature: upgradeText(language, feature) })}
         onError={() => setFailed(true)}
+        onLoadedMetadata={event => {
+          if (!playback) return
+          const video = event.currentTarget
+          video.currentTime = Math.min(playback.time, video.duration)
+          video.muted = playback.muted
+          video.volume = playback.volume
+          video.playbackRate = playback.rate
+          if (video.textTracks[0]) video.textTracks[0].mode = playback.captions ? 'showing' : 'disabled'
+          if (playback.playing) void video.play().catch(() => { /* Native controls remain available if autoplay is blocked. */ })
+        }}
       >
-        <track kind="captions" src={demo.captions} srcLang="en" label="English" />
+        <track kind="captions" src={demo.captions} srcLang={narrationLanguage} label={NARRATION_LANGUAGE_LABELS[narrationLanguage]} />
         <a href={demo.src}>{upgradeText(language, 'openVideo')}</a>
       </video>
       {failed && (
@@ -43,11 +123,12 @@ function FeatureVideo({ feature }: { feature: UpgradeFeature }) {
         </p>
       )}
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-subtle">
-        <span>{upgradeText(language, 'demoHelp')}</span>
+        <span>{upgradeText(language, 'demoHelp', { language: NARRATION_LANGUAGE_LABELS[narrationLanguage] })}</span>
         <a href={demo.transcript} target="_blank" rel="noopener noreferrer" className="font-semibold text-saffron-deep underline underline-offset-2">
           {upgradeText(language, 'demoTranscript')}
         </a>
       </div>
+      {narrationLanguage !== 'en' && <p className="text-xs text-subtle">{upgradeText(language, 'demoScreenLanguage')}</p>}
     </>
   )
 }

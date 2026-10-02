@@ -1,0 +1,37 @@
+{
+  "feature": "rates",
+  "duration": 84.208,
+  "bytes": 2692387,
+  "chapters": [
+    {
+      "start": 0,
+      "title": "Update a yarn price and inspect its history",
+      "description": "Find the demo yarns, inspect their linked quality, change the weft rate from Rs 128 to Rs 140/kg, add a supplier note, and save. Open Activity to review the recorded change."
+    },
+    {
+      "start": 36.75,
+      "title": "Use the updated linked quality",
+      "description": "Reopen the saved quality and inspect its updated weft rate. Apply the recipe, check the yarn inputs, then review the recalculated live cost."
+    },
+    {
+      "start": 65.333,
+      "title": "Earlier costings keep their original figures",
+      "description": "Open the earlier saved costing. Its production cost remains Rs 33.23/m and its suggested price remains Rs 39.09/m. Updating Rate Book does not rewrite historical snapshots."
+    }
+  ],
+  "narration": {
+    "engine": "AI4Bharat Indic Parler-TTS",
+    "speaker": "Neha",
+    "model_revision": "7b527af5ee8ed1f9a28d80b19703ed9bb8ba10ca",
+    "description": "Neha speaks at a moderate pace in a clear, calm, slightly expressive voice. The recording is very high quality, with very clear audio, no background noise and a close-sounding voice.",
+    "language": "gu",
+    "audio_codec": "aac",
+    "sample_rate": 48000,
+    "channels": 1,
+    "cue_count": 8,
+    "caption_count": 8,
+    "generation": [
+      "Local CPU"
+    ]
+  }
+}

@@ -1,0 +1,1179 @@
+{
+  "estimator": {
+    "duration_seconds": 118.75,
+    "video_frames": 2850,
+    "video_packet_sha256": "67e0d52799da34d7a7d100ee3d9f8c75b2dc945964c4b354095eeb12732aea3f",
+    "bytes": 3293262,
+    "cues": [
+      {
+        "id": "estimator-01",
+        "start_seconds": 2,
+        "end_seconds": 16.5,
+        "visual_anchor": "Name, construction, crimp and waste inputs",
+        "narration": "कपड़े की नई कॉस्टिंग बनाएँ। नाम, ताने और बाने की बनावट भरें। क्रिम्प और वेस्टेज का प्रतिशत भी जोड़ें।",
+        "speech_end_seconds": 9.616,
+        "speech_duration_seconds": 7.616,
+        "original_speech_duration_seconds": 7.616,
+        "tempo": 1.0,
+        "source_audio_sha256": "68ca63d34c1e4c82c47fc602c52a1b17b02b11dbbc58d0d3c9b718f11320c713",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "estimator-02",
+        "start_seconds": 18,
+        "end_seconds": 29.5,
+        "visual_anchor": "Warp yarn inputs",
+        "narration": "ताने का डेनियर, बीम के धागे, भाव और जी एस टी भरें। इनसे धागे की खपत और लागत निकलती है।",
+        "speech_end_seconds": 24.208,
+        "speech_duration_seconds": 6.208,
+        "original_speech_duration_seconds": 6.208,
+        "tempo": 1.0,
+        "source_audio_sha256": "bd9688fcb44469f0e2b9e216dc3957bb6c3117dc1c55e44138ecaee8840f6829",
+        "generation": {
+          "backend": "Official AI4Bharat Hugging Face Space"
+        }
+      },
+      {
+        "id": "estimator-03",
+        "start_seconds": 31,
+        "end_seconds": 44.8,
+        "visual_anchor": "Weft yarn inputs",
+        "narration": "बाने का धागा, प्रति इंच पिक्स, कपड़े की चौड़ाई, डेनियर, भाव और जी एस टी भरें।",
+        "speech_end_seconds": 36.547,
+        "speech_duration_seconds": 5.547,
+        "original_speech_duration_seconds": 5.547,
+        "tempo": 1.0,
+        "source_audio_sha256": "181472cdb47dcb31b660ee7878250bbd50f64064e105276f12f92bb2981aea5e",
+        "generation": {
+          "backend": "Official AI4Bharat Hugging Face Space"
+        }
+      },
+      {
+        "id": "estimator-04",
+        "start_seconds": 46,
+        "end_seconds": 56.5,
+        "visual_anchor": "Weaving, overhead, margin and quantity inputs",
+        "narration": "बुनाई और अतिरिक्त खर्च जाँचें। फिर अपना मार्जिन और ऑर्डर की मात्रा भरें।",
+        "speech_end_seconds": 51.515,
+        "speech_duration_seconds": 5.515,
+        "original_speech_duration_seconds": 5.515,
+        "tempo": 1.0,
+        "source_audio_sha256": "a65071881a7562357028848e9e1b2ef4b96aef029f965ab384408456573e2e7e",
+        "generation": {
+          "backend": "Official AI4Bharat Hugging Face Space"
+        }
+      },
+      {
+        "id": "estimator-05",
+        "start_seconds": 57,
+        "end_seconds": 61.7,
+        "visual_anchor": "Open Live Cost; first estimate visible by 60 seconds",
+        "narration": "अनुमान देखने के लिए लाइव कॉस्ट खोलें।",
+        "speech_end_seconds": 59.837,
+        "speech_duration_seconds": 2.837,
+        "original_speech_duration_seconds": 2.837,
+        "tempo": 1.0,
+        "source_audio_sha256": "1f9934607a26e3310d2ef88dc2e1ff85eba0bde5a989e30e96816e417ca5fb60",
+        "generation": {
+          "backend": "Official AI4Bharat Hugging Face Space"
+        }
+      },
+      {
+        "id": "estimator-06",
+        "start_seconds": 65,
+        "end_seconds": 73,
+        "visual_anchor": "Expand Pricing assumptions, then close Live Cost",
+        "narration": "कीमत की धारणाएँ जाँचें। फिर दूसरी स्थिति की लागत देखने के लिए वापस इनपुट पर जाएँ।",
+        "speech_end_seconds": 71.123,
+        "speech_duration_seconds": 6.123,
+        "original_speech_duration_seconds": 6.123,
+        "tempo": 1.0,
+        "source_audio_sha256": "b854b479c027630684de1f9b4b82a15a5072720924cb0d536084135450caad05",
+        "generation": {
+          "backend": "Official AI4Bharat Hugging Face Space"
+        }
+      },
+      {
+        "id": "estimator-07",
+        "start_seconds": 75,
+        "end_seconds": 86.3,
+        "visual_anchor": "Change weft rate to ₹128/kg and margin to 15%",
+        "narration": "बाने का भाव एक सौ अट्ठाईस रुपये प्रति किलो करें। मार्जिन पंद्रह प्रतिशत रखें।",
+        "speech_end_seconds": 80.888,
+        "speech_duration_seconds": 5.888,
+        "original_speech_duration_seconds": 5.888,
+        "tempo": 1.0,
+        "source_audio_sha256": "4e1a207aec748080dcbb818cd1a491e76044e7b6952d259f145260d290592296",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "estimator-08",
+        "start_seconds": 88,
+        "end_seconds": 94.1,
+        "visual_anchor": "Updated cost ₹33.23/m and selling price ₹39.09/m visible",
+        "narration": "लाइव कॉस्ट में नई उत्पादन लागत और बिक्री मूल्य देखें।",
+        "speech_end_seconds": 92.043,
+        "speech_duration_seconds": 4.043,
+        "original_speech_duration_seconds": 4.043,
+        "tempo": 1.0,
+        "source_audio_sha256": "d8e78af1a5350d28ce21cd0bbe58742653495450419b2dea4f4bf11e34cb2e1a",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "estimator-09",
+        "start_seconds": 96,
+        "end_seconds": 104.8,
+        "visual_anchor": "Switch to Detailed; yarn calculations",
+        "narration": "डिटेल्ड में धागे की खपत, क्रिम्प और बर्बादी की गणना देखें।",
+        "speech_end_seconds": 100.363,
+        "speech_duration_seconds": 4.363,
+        "original_speech_duration_seconds": 4.363,
+        "tempo": 1.0,
+        "source_audio_sha256": "2a80a0478ea62860b021ca80e6d4955f9dfd9f11c049553875a20466a7cdce89",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "estimator-10",
+        "start_seconds": 106,
+        "end_seconds": 117.5,
+        "visual_anchor": "Detailed production-cost breakdown",
+        "narration": "नीचे उत्पादन लागत का विवरण देखें। क्विक और डिटेल्ड की गणना समान है। डिटेल्ड में अधिक जानकारी मिलती है।",
+        "speech_end_seconds": 113.765,
+        "speech_duration_seconds": 7.765,
+        "original_speech_duration_seconds": 7.765,
+        "tempo": 1.0,
+        "source_audio_sha256": "5b7f8cd00a317bf567888e7e25020cf6bfd6b7da8395b1823ac9a06640e7fbe0",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      }
+    ]
+  },
+  "qualities": {
+    "duration_seconds": 51.958333,
+    "video_frames": 1247,
+    "video_packet_sha256": "ef2cb04bf1482ec88ca2b037f97655c53b8ab6aaa854177462157791d18ca345",
+    "bytes": 1988602,
+    "cues": [
+      {
+        "id": "qualities-01",
+        "start_seconds": 0.5,
+        "end_seconds": 6.2,
+        "visual_anchor": "Save Quality & Create Costing",
+        "narration": "क्वालिटी और उसकी पहली कॉस्टिंग साथ में सहेजें।",
+        "speech_end_seconds": 4.052,
+        "speech_duration_seconds": 3.552,
+        "original_speech_duration_seconds": 3.552,
+        "tempo": 1.0,
+        "source_audio_sha256": "b0328c85263c896d719b03fae98ccb2034685d10f961a01b9e6dc41903db4844",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "qualities-02",
+        "start_seconds": 6.7,
+        "end_seconds": 14.2,
+        "visual_anchor": "Save confirmation and assumptions",
+        "narration": "धारणाएँ जाँचकर कपड़े की बनावट और लागत का स्थिर रिकॉर्ड सहेजें।",
+        "speech_end_seconds": 11.468,
+        "speech_duration_seconds": 4.768,
+        "original_speech_duration_seconds": 4.768,
+        "tempo": 1.0,
+        "source_audio_sha256": "53895a21c35f41ae4e4259948895e1dcf723fcf856461d92d5353693c9a21805",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "qualities-03",
+        "start_seconds": 15.4,
+        "end_seconds": 24.7,
+        "visual_anchor": "Search saved-quality library; open rate editor",
+        "narration": "सेव्ड क्वालिटीज़ में कपड़ा खोजें। मौजूदा धागे के भाव देखने के लिए रेट एडिटर खोलें।",
+        "speech_end_seconds": 21.661,
+        "speech_duration_seconds": 6.261,
+        "original_speech_duration_seconds": 6.261,
+        "tempo": 1.0,
+        "source_audio_sha256": "363af3d984fed42e002a1b43d561d15038aa6bba3b2203302334a025d0d03c4d",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "qualities-04",
+        "start_seconds": 25.2,
+        "end_seconds": 38.9,
+        "visual_anchor": "Warp rate ₹125 → ₹130/kg; Save Rates & Apply",
+        "narration": "ताने का भाव एक सौ तीस रुपये प्रति किलो करें। लागत पर असर देखें, फिर सेव और अप्लाई करें।",
+        "speech_end_seconds": 31.611,
+        "speech_duration_seconds": 6.411,
+        "original_speech_duration_seconds": 6.411,
+        "tempo": 1.0,
+        "source_audio_sha256": "803c217408dd04ef31c2702568fd19b92dca37445802de050decc676f37b0b43",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "qualities-05",
+        "start_seconds": 40.4,
+        "end_seconds": 50.9,
+        "visual_anchor": "Select saved quality and restore inputs",
+        "narration": "सहेजा हुआ कपड़ा चुनें। उसकी बनावट और लागत के इनपुट फिर भर जाएँगे। सब कुछ दोबारा भरने की ज़रूरत नहीं।",
+        "speech_end_seconds": 47.931,
+        "speech_duration_seconds": 7.531,
+        "original_speech_duration_seconds": 7.531,
+        "tempo": 1.0,
+        "source_audio_sha256": "ba3006ed0fe12a59174ef8a87d9051cd75d8c14e5a927669870353a3b03990fb",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      }
+    ]
+  },
+  "rates": {
+    "duration_seconds": 84.208333,
+    "video_frames": 2021,
+    "video_packet_sha256": "7ea3cc51123465c2dd15db6339c968456c48402f787e54583b0911e0d896f56b",
+    "bytes": 2458726,
+    "cues": [
+      {
+        "id": "rates-01",
+        "start_seconds": 0.5,
+        "end_seconds": 10.5,
+        "visual_anchor": "Find demo yarns; inspect linked quality",
+        "narration": "रेट बुक में डेमो धागे खोजें। देखें कि वे किस सहेजी हुई क्वालिटी से जुड़े हैं।",
+        "speech_end_seconds": 6.271,
+        "speech_duration_seconds": 5.771,
+        "original_speech_duration_seconds": 5.771,
+        "tempo": 1.0,
+        "source_audio_sha256": "b7d7f5135b441c5789f8c47de35f961ab25f13f11699e358f50c7529a1266782",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "rates-02",
+        "start_seconds": 11,
+        "end_seconds": 24.4,
+        "visual_anchor": "Edit weft price and source note",
+        "narration": "बाने का भाव एक सौ चालीस रुपये प्रति किलो करें। भाव का स्रोत पहचानने के लिए सप्लायर की टिप्पणी जोड़ें।",
+        "speech_end_seconds": 18.616,
+        "speech_duration_seconds": 7.616,
+        "original_speech_duration_seconds": 7.616,
+        "tempo": 1.0,
+        "source_audio_sha256": "bca7cd1f6750a7d060bda70c9237913cdcfc93a7e6ee9a04dea30b1665bdf324",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "rates-03",
+        "start_seconds": 24.9,
+        "end_seconds": 35.8,
+        "visual_anchor": "Save rate; open Activity history",
+        "narration": "नया भाव सहेजें। फिर एक्टिविटी में बदलाव और उसका इतिहास देखें।",
+        "speech_end_seconds": 29.583,
+        "speech_duration_seconds": 4.683,
+        "original_speech_duration_seconds": 4.683,
+        "tempo": 1.0,
+        "source_audio_sha256": "53cc9d2038503cd61562838a73057261c5a8306320f5359441725097d5e9e5e1",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "start_seconds": 38,
+        "end_seconds": 42.8,
+        "visual_anchor": "Reopen linked quality",
+        "narration": "जुड़ी हुई सेव्ड क्वालिटी फिर खोलें।",
+        "id": "rates-04",
+        "speech_end_seconds": 40.72,
+        "speech_duration_seconds": 2.72,
+        "original_speech_duration_seconds": 2.72,
+        "tempo": 1.0,
+        "source_audio_sha256": "d150ac8034e895469a01f221127a39dd5c3338987945225a594c6b9175c4c184",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "start_seconds": 45,
+        "end_seconds": 49.5,
+        "visual_anchor": "Rate editor shows weft ₹140/kg",
+        "narration": "बाने का भाव अब अपडेट हो गया है।",
+        "id": "rates-05",
+        "speech_end_seconds": 47.261,
+        "speech_duration_seconds": 2.261,
+        "original_speech_duration_seconds": 2.261,
+        "tempo": 1.0,
+        "source_audio_sha256": "5c07345fc7ad603b86efaa925bd198ed2f8a5af3f25f980b62e3ef2f29d8be55",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "rates-06",
+        "start_seconds": 50,
+        "end_seconds": 64.4,
+        "visual_anchor": "Apply quality, inspect inputs, open Live cost",
+        "narration": "क्वालिटी लागू करके धागे के इनपुट जाँचें। नई उत्पादन लागत और बिक्री मूल्य के लिए लाइव कॉस्ट खोलें।",
+        "speech_end_seconds": 57.392,
+        "speech_duration_seconds": 7.392,
+        "original_speech_duration_seconds": 7.392,
+        "tempo": 1.0,
+        "source_audio_sha256": "46621e92335765156cf53d615de27c172382079df29d8404cf7bc67273c6a64b",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "rates-07",
+        "start_seconds": 65.8,
+        "end_seconds": 73,
+        "visual_anchor": "Find and open the earlier saved costing",
+        "narration": "अब पुराने सेव्ड कॉस्टिंग को नए अनुमान से मिलाकर देखें।",
+        "speech_end_seconds": 69.928,
+        "speech_duration_seconds": 4.128,
+        "original_speech_duration_seconds": 4.128,
+        "tempo": 1.0,
+        "source_audio_sha256": "6951f8ed761041e2fdcd3e03e4a49920c2e7af6e7036a3a2309571141eda17cc",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "rates-08",
+        "start_seconds": 73.5,
+        "end_seconds": 83.2,
+        "visual_anchor": "Original snapshot values remain unchanged",
+        "narration": "पुरानी कॉस्टिंग के आँकड़े वैसे ही रहते हैं। रेट बुक बदलने से सहेजे हुए लागत रिकॉर्ड नहीं बदलते।",
+        "speech_end_seconds": 80.711,
+        "speech_duration_seconds": 7.211,
+        "original_speech_duration_seconds": 7.211,
+        "tempo": 1.0,
+        "source_audio_sha256": "9ab8909d893b5b79d4e1885c72128caab025301ad731b8a6c5f9b7090e8e9fcc",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      }
+    ]
+  },
+  "costings": {
+    "duration_seconds": 134.75,
+    "video_frames": 3234,
+    "video_packet_sha256": "531786fccfe4cccb250103612804441f15161a0288e1b5a4de1a4abdc9ff803c",
+    "bytes": 4160475,
+    "cues": [
+      {
+        "id": "costings-01",
+        "start_seconds": 0.5,
+        "end_seconds": 8.7,
+        "visual_anchor": "Search for demo fabric and open its costing",
+        "narration": "कपड़ा खोजकर उसकी सहेजी हुई कॉस्टिंग खोलें। यहाँ मूल आँकड़े देखें।",
+        "speech_end_seconds": 5.524,
+        "speech_duration_seconds": 5.024,
+        "original_speech_duration_seconds": 5.024,
+        "tempo": 1.0,
+        "source_audio_sha256": "73b7185f294c27c7eb3f1fe86faa2c06adddd7caa961d54d84310b3e4dbe8c7f",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "costings-02",
+        "start_seconds": 9.2,
+        "end_seconds": 17.9,
+        "visual_anchor": "Saved breakdown: cost, price, margin, quantity",
+        "narration": "इस रिकॉर्ड में पुराने इनपुट और नतीजे सुरक्षित रहते हैं। ज़रूरत पड़ने पर इन्हें फिर देख सकते हैं।",
+        "speech_end_seconds": 16.496,
+        "speech_duration_seconds": 7.296,
+        "original_speech_duration_seconds": 7.296,
+        "tempo": 1.0,
+        "source_audio_sha256": "c7e0bb7dbe3e0f900f7503473db4c6b2deb3e9e6a31b4d8523ae1f39826ff63a",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "costings-03",
+        "start_seconds": 20,
+        "end_seconds": 33,
+        "visual_anchor": "Use snapshot; change weaving rate to ₹16/m",
+        "narration": "इनपुट वापस लाने के लिए यूज़ चुनें। बुनाई का भाव सोलह रुपये प्रति मीटर करें।",
+        "speech_end_seconds": 25.653,
+        "speech_duration_seconds": 5.653,
+        "original_speech_duration_seconds": 5.653,
+        "tempo": 1.0,
+        "source_audio_sha256": "69e2e2fbe5ae1f9d07c1d0c4439c59fbd2f9a9be21e12652c70600d748a35faf",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "costings-04",
+        "start_seconds": 33.5,
+        "end_seconds": 41.1,
+        "visual_anchor": "Set margin to 20%; open Live cost",
+        "narration": "मार्जिन बीस प्रतिशत करें। फिर लाइव कॉस्ट में नया नतीजा देखें।",
+        "speech_end_seconds": 38.183,
+        "speech_duration_seconds": 4.683,
+        "original_speech_duration_seconds": 4.683,
+        "tempo": 1.0,
+        "source_audio_sha256": "37cdf533c211d833a422394b8efdbf8e45f2adf45d91c96790b38bb130a2dcd9",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "costings-05",
+        "start_seconds": 42.5,
+        "end_seconds": 51.9,
+        "visual_anchor": "Save New Version; v2 confirmation",
+        "narration": "सेव न्यू वर्ज़न चुनें। बदलाव दूसरे वर्ज़न में सहेजेंगे। पहले वर्ज़न के आँकड़े वैसे ही रहेंगे।",
+        "speech_end_seconds": 49.657,
+        "speech_duration_seconds": 7.157,
+        "original_speech_duration_seconds": 7.157,
+        "tempo": 1.0,
+        "source_audio_sha256": "b20ce829e10bb0d9c74f3a69b302f779c55b6715c4f0c955b60bcec5244e2930",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "costings-06",
+        "start_seconds": 53.3,
+        "end_seconds": 61.5,
+        "visual_anchor": "Enable Compare and open version history",
+        "narration": "कम्पेयर चालू करें। अनुमान चुनने के लिए कपड़े की वर्ज़न हिस्ट्री खोलें।",
+        "speech_end_seconds": 58.697,
+        "speech_duration_seconds": 5.397,
+        "original_speech_duration_seconds": 5.397,
+        "tempo": 1.0,
+        "source_audio_sha256": "ad4bbf1fb50b8f55afc503874c6eb9d5e58a5a4bd851a9d5a2de6edba3c4a8a1",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "costings-07",
+        "start_seconds": 62,
+        "end_seconds": 73.9,
+        "visual_anchor": "Select v1 and v2",
+        "narration": "पहला और दूसरा वर्ज़न चुनें। अब एक ही कपड़े की लागत पर बदली हुई धारणाओं का असर देख सकते हैं।",
+        "speech_end_seconds": 68.752,
+        "speech_duration_seconds": 6.752,
+        "original_speech_duration_seconds": 6.752,
+        "tempo": 1.0,
+        "source_audio_sha256": "df7e3982ba49fd2a7590af0193e6e584cdb26885314ab5f54b62d14a25ebd9e6",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "costings-08",
+        "start_seconds": 75.5,
+        "end_seconds": 90.7,
+        "visual_anchor": "Compare Costings: component and price differences",
+        "narration": "कम्पेयर कॉस्टिंग्स खोलें। उत्पादन लागत, बिक्री मूल्य, मार्जिन और मात्रा का अंतर देखकर अपने बदलावों का असर समझें।",
+        "speech_end_seconds": 84.065,
+        "speech_duration_seconds": 8.565,
+        "original_speech_duration_seconds": 8.565,
+        "tempo": 1.0,
+        "source_audio_sha256": "a85c5e8a78563590d343311a48e994a2db1506a45ef16587b1b8a6f203526408",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "start_seconds": 94,
+        "end_seconds": 101,
+        "visual_anchor": "Open internal cost-sheet export preview",
+        "narration": "अंदरूनी लागत पत्रक देखने के लिए एक्सपोर्ट खोलें।",
+        "id": "costings-09",
+        "speech_end_seconds": 97.733,
+        "speech_duration_seconds": 3.733,
+        "original_speech_duration_seconds": 3.733,
+        "tempo": 1.0,
+        "source_audio_sha256": "6c7ff14ed245cfbdce6a4b9ca5fb0d361840f12399e5dee729bfe07ddfbe20f0",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "start_seconds": 103,
+        "end_seconds": 115.8,
+        "visual_anchor": "Business name and notes; download cost sheet",
+        "narration": "व्यवसाय का नाम और टिप्पणी भरें। फिर पूरा लागत पत्रक डाउनलोड करें।",
+        "id": "costings-10",
+        "speech_end_seconds": 107.971,
+        "speech_duration_seconds": 4.971,
+        "original_speech_duration_seconds": 4.971,
+        "tempo": 1.0,
+        "source_audio_sha256": "5401eb5628f87f6a9132c3b0b1f1e4b0fe7fa4f367d0f6aa1b60a3173013f5b2",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "start_seconds": 118,
+        "end_seconds": 126.5,
+        "visual_anchor": "Customer Quotation; buyer and delivery terms",
+        "narration": "कस्टमर कोटेशन चुनें। खरीदार का नाम और डिलीवरी की शर्तें भरें।",
+        "id": "costings-11",
+        "speech_end_seconds": 122.683,
+        "speech_duration_seconds": 4.683,
+        "original_speech_duration_seconds": 4.683,
+        "tempo": 1.0,
+        "source_audio_sha256": "db874bf46618c44d7519e1e2494f29b82aeb451cb83a73f1258c8be11ffbd824",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "start_seconds": 127,
+        "end_seconds": 133.7,
+        "visual_anchor": "Download customer quotation",
+        "narration": "कोटेशन डाउनलोड करें। आपकी अंदरूनी लागत और मार्जिन ग्राहक को नहीं दिखेंगे।",
+        "id": "costings-12",
+        "speech_end_seconds": 132.653,
+        "speech_duration_seconds": 5.653,
+        "original_speech_duration_seconds": 5.653,
+        "tempo": 1.0,
+        "source_audio_sha256": "fec06739ad89e2d498d04206db2f9a944d9d0e1a9b8fd98a41ae24c9403752d7",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      }
+    ]
+  },
+  "production": {
+    "duration_seconds": 225.416667,
+    "video_frames": 5410,
+    "video_packet_sha256": "09e40cbfee4e9e55f13cebe0b2d12e398f2d8858b52aecd63f9c41b08da4496a",
+    "bytes": 5254194,
+    "cues": [
+      {
+        "id": "production-01",
+        "start_seconds": 0.5,
+        "end_seconds": 12.3,
+        "visual_anchor": "Add machine: name and type",
+        "narration": "पहले मशीन जोड़ें। नाम डेमो लूम ज़ीरो वन रखें। मशीन के प्रकार में रेपियर चुनें।",
+        "speech_end_seconds": 6.42,
+        "speech_duration_seconds": 5.92,
+        "original_speech_duration_seconds": 5.92,
+        "tempo": 1.0,
+        "source_audio_sha256": "77d1be7b0af21567c98849b883eb57d9fa53798895aeba05d6892cad5d939ec5",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "production-02",
+        "start_seconds": 20,
+        "end_seconds": 25.1,
+        "visual_anchor": "Save machine",
+        "narration": "मशीन जोड़ें। अब इसे काम सौंप सकते हैं।",
+        "speech_end_seconds": 22.869,
+        "speech_duration_seconds": 2.869,
+        "original_speech_duration_seconds": 2.869,
+        "tempo": 1.0,
+        "source_audio_sha256": "f96982f37cfce7155f919270e2ada1a32fe80557e6a295a2f72a80c0cfc288a9",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "production-03",
+        "start_seconds": 26.8,
+        "end_seconds": 38.8,
+        "visual_anchor": "Add worker: Demo Operator 01, piece rate",
+        "narration": "डेमो ऑपरेटर ज़ीरो वन जोड़ें। भुगतान का प्रकार पीस रेट चुनें।",
+        "speech_end_seconds": 31.397,
+        "speech_duration_seconds": 4.597,
+        "original_speech_duration_seconds": 4.597,
+        "tempo": 1.0,
+        "source_audio_sha256": "56d2a2ebea8394717c290a1d78083366751de1f1bef541a1270e88e3e248ba14",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "production-04",
+        "start_seconds": 39.3,
+        "end_seconds": 54.1,
+        "visual_anchor": "Role, approved operator, day availability, save",
+        "narration": "भूमिका भरें। लूम ऑपरेटर की मंज़ूरी चालू रखें और दिन की उपलब्धता चुनें। फिर कर्मचारी सहेजें।",
+        "speech_end_seconds": 46.287,
+        "speech_duration_seconds": 6.987,
+        "original_speech_duration_seconds": 6.987,
+        "tempo": 1.0,
+        "source_audio_sha256": "e465ecf62eb9ab4ddb4633b107bd19328a62affc30476c0f7ea0aa9f3071eecb",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "production-05",
+        "start_seconds": 56,
+        "end_seconds": 66.5,
+        "visual_anchor": "Activate Quality; choose saved costing v2",
+        "narration": "उत्पादन के लिए क्वालिटी सक्रिय करें। डेमो कपड़े की सहेजी हुई कॉस्टिंग का दूसरा वर्ज़न चुनें।",
+        "speech_end_seconds": 63.072,
+        "speech_duration_seconds": 7.072,
+        "original_speech_duration_seconds": 7.072,
+        "tempo": 1.0,
+        "source_audio_sha256": "8f0887a7db98b886a2c8c039364907733d5a77faafd620eb62ddfbf13560b09b",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "production-06",
+        "start_seconds": 67,
+        "end_seconds": 77.3,
+        "visual_anchor": "Yarn-stock prerequisite",
+        "narration": "उत्पादन से पहले ज़रूरी धागे का स्टॉक जाँचें। इस कपड़े के लिए ताना और बाना दोनों चाहिए।",
+        "speech_end_seconds": 73.496,
+        "speech_duration_seconds": 6.496,
+        "original_speech_duration_seconds": 6.496,
+        "tempo": 1.0,
+        "source_audio_sha256": "35b4aa09d43d9b18dc8dabcc3bf6b92baf7c5069ff91f308302661c1847bd589",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "production-07",
+        "start_seconds": 77.8,
+        "end_seconds": 91.5,
+        "visual_anchor": "Add warp stock: 200 kg and note",
+        "narration": "ताने के धागे का दो सौ किलो स्टॉक और छोटी टिप्पणी जोड़कर सहेजें।",
+        "speech_end_seconds": 82.536,
+        "speech_duration_seconds": 4.736,
+        "original_speech_duration_seconds": 4.736,
+        "tempo": 1.0,
+        "source_audio_sha256": "19c23e233c54c67f447777f1ab225b84e6cbf682faf632c858fbcef45204d3f8",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "production-08",
+        "start_seconds": 92,
+        "end_seconds": 107.2,
+        "visual_anchor": "Add weft stock: 200 kg and note",
+        "narration": "बाने के धागे के लिए भी दो सौ किलो स्टॉक और टिप्पणी जोड़ें। फिर सहेजें।",
+        "speech_end_seconds": 97.227,
+        "speech_duration_seconds": 5.227,
+        "original_speech_duration_seconds": 5.227,
+        "tempo": 1.0,
+        "source_audio_sha256": "daa42ae363e019b5f8c3466799d8ecc974dc2b5d1a3f48c48256412ae3f2b0d7",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "production-09",
+        "start_seconds": 108,
+        "end_seconds": 116.5,
+        "visual_anchor": "Activate quality after stock is available",
+        "narration": "दोनों धागों का स्टॉक तैयार है। अब क्वालिटी को उत्पादन के लिए सक्रिय करें।",
+        "speech_end_seconds": 113.547,
+        "speech_duration_seconds": 5.547,
+        "original_speech_duration_seconds": 5.547,
+        "tempo": 1.0,
+        "source_audio_sha256": "c264e4c5b8d5fbed62558b7587c0b656034611b95b76c5c0051c0cd7f7d0192d",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "production-10",
+        "start_seconds": 118,
+        "end_seconds": 129.4,
+        "visual_anchor": "Assign Looms; select Demo Loom 01",
+        "narration": "सक्रिय क्वालिटी में असाइन लूम्स खोलें। डेमो लूम ज़ीरो वन चुनकर पुष्टि करें।",
+        "speech_end_seconds": 123.771,
+        "speech_duration_seconds": 5.771,
+        "original_speech_duration_seconds": 5.771,
+        "tempo": 1.0,
+        "source_audio_sha256": "5af89829937d30a3b248db27eb380c61ef5cfd2b8e0659b8ee08e1dbf547bd36",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "production-11",
+        "start_seconds": 134,
+        "end_seconds": 141.2,
+        "visual_anchor": "Machine board; search for demo loom",
+        "narration": "मशीन बोर्ड पर कपड़ा और लूम जुड़े हैं। डेमो लूम खोजें।",
+        "speech_end_seconds": 137.989,
+        "speech_duration_seconds": 3.989,
+        "original_speech_duration_seconds": 3.989,
+        "tempo": 1.0,
+        "source_audio_sha256": "044f4d4c31637556fd77b8ea02b57da16736cac9d2b7f8c52a3315d020d19840",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "production-12",
+        "start_seconds": 142.8,
+        "end_seconds": 154.5,
+        "visual_anchor": "Manage Workers; Day Shift",
+        "narration": "डेमो लूम में मैनेज वर्कर्स खोलें। डे शिफ्ट चुनें।",
+        "speech_end_seconds": 146.555,
+        "speech_duration_seconds": 3.755,
+        "original_speech_duration_seconds": 3.755,
+        "tempo": 1.0,
+        "source_audio_sha256": "f0a4cf78a9dba46244e58d967092b6a7a458fdd62017272fecb43ce856857771",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "production-13",
+        "start_seconds": 155,
+        "end_seconds": 168.6,
+        "visual_anchor": "Search and assign Demo Operator 01; Done",
+        "narration": "डेमो ऑपरेटर ज़ीरो वन खोजकर दिन की पाली सौंपें। फिर सेटअप पूरा करें।",
+        "speech_end_seconds": 160.077,
+        "speech_duration_seconds": 5.077,
+        "original_speech_duration_seconds": 5.077,
+        "tempo": 1.0,
+        "source_audio_sha256": "58a928f43344b420ddc3f0eca657b01b44441406a7d09ae5fa091c8d97c3efce",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "production-14",
+        "start_seconds": 170.2,
+        "end_seconds": 180.4,
+        "visual_anchor": "Daily sheet; enter 240 m",
+        "narration": "सही तारीख और पाली की डेली शीट खोलें। डेमो लूम के लिए दो सौ चालीस मीटर भरें।",
+        "speech_end_seconds": 175.747,
+        "speech_duration_seconds": 5.547,
+        "original_speech_duration_seconds": 5.547,
+        "tempo": 1.0,
+        "source_audio_sha256": "25800308b8f631710b9334816237af0f7186dfdc94860950c96262b9c9ea4684",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "production-15",
+        "start_seconds": 180.9,
+        "end_seconds": 189.3,
+        "visual_anchor": "Worker Review; return to sheet",
+        "narration": "वर्कर रिव्यू में उत्पादन और कमाई जाँचें। फिर शीट पर लौटें।",
+        "speech_end_seconds": 185.316,
+        "speech_duration_seconds": 4.416,
+        "original_speech_duration_seconds": 4.416,
+        "tempo": 1.0,
+        "source_audio_sha256": "5b053dfc580fe6bad7440fe5261a13be74ecb55558d762b52a94793947b0c689",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "production-16",
+        "start_seconds": 189.8,
+        "end_seconds": 200.8,
+        "visual_anchor": "Save shift and confirm incomplete shift",
+        "narration": "पाली सहेजें। बाकी मशीनें अभी लंबित हैं। इस उदाहरण में केवल डेमो लूम का उत्पादन दर्ज है।",
+        "speech_end_seconds": 196.381,
+        "speech_duration_seconds": 6.581,
+        "original_speech_duration_seconds": 6.581,
+        "tempo": 1.0,
+        "source_audio_sha256": "c036c7228cb06e77490e4115ac300453d17fad7e385a714699f423fefe002cbe",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "production-17",
+        "start_seconds": 202.3,
+        "end_seconds": 212,
+        "visual_anchor": "Saved production audit receipt",
+        "narration": "सहेजी हुई रसीद खोलें। उत्पादन के रिकॉर्ड में लूम, क्वालिटी, कर्मचारी और मीटर देखें।",
+        "speech_end_seconds": 208.593,
+        "speech_duration_seconds": 6.293,
+        "original_speech_duration_seconds": 6.293,
+        "tempo": 1.0,
+        "source_audio_sha256": "a1522a5ad2e634cf39a978e1381751ea048d33f44443261be7fdd446bc4c98a9",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "production-18",
+        "start_seconds": 219,
+        "end_seconds": 224.8,
+        "visual_anchor": "Worker Review: 240 m × ₹16/m = ₹3,840",
+        "narration": "कर्मचारी की कमाई तीन हज़ार आठ सौ चालीस रुपये है।",
+        "speech_end_seconds": 222.616,
+        "speech_duration_seconds": 3.616,
+        "original_speech_duration_seconds": 3.616,
+        "tempo": 1.0,
+        "source_audio_sha256": "1556b0f97bee517a803506992faf69f3ca5cd15a6774cf5b6edf5a1912de8524",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      }
+    ]
+  },
+  "payroll": {
+    "duration_seconds": 141.708333,
+    "video_frames": 3401,
+    "video_packet_sha256": "c3135fbd81d14faa316ed6fd87ed44b7765555aab879767c90982dd74cb33a67",
+    "bytes": 3132982,
+    "cues": [
+      {
+        "id": "payroll-01",
+        "start_seconds": 0.5,
+        "end_seconds": 9.3,
+        "visual_anchor": "Find Demo Operator 01; production earnings card",
+        "narration": "डेमो ऑपरेटर ज़ीरो वन खोजें। सहेजे हुए उत्पादन से बनी कमाई देखें।",
+        "speech_end_seconds": 5.385,
+        "speech_duration_seconds": 4.885,
+        "original_speech_duration_seconds": 4.885,
+        "tempo": 1.0,
+        "source_audio_sha256": "36554ac746462f87a635281054ddaeee05e81579a576e67d1ecc42344de25b79",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "payroll-02",
+        "start_seconds": 9.8,
+        "end_seconds": 22.3,
+        "visual_anchor": "Add advance: ₹400 and description",
+        "narration": "चार सौ रुपये की अग्रिम राशि और छोटी टिप्पणी जोड़कर सहेजें।",
+        "speech_end_seconds": 14.216,
+        "speech_duration_seconds": 4.416,
+        "original_speech_duration_seconds": 4.416,
+        "tempo": 1.0,
+        "source_audio_sha256": "200e2d53de09f67ee5ca89940d572193e42034e2897c6a398d61a8458585303e",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "payroll-03",
+        "start_seconds": 28,
+        "end_seconds": 32,
+        "visual_anchor": "Recovery ₹400; net pay recalculates",
+        "narration": "अग्रिम की वसूली से शुद्ध वेतन घटता है।",
+        "speech_end_seconds": 30.869,
+        "speech_duration_seconds": 2.869,
+        "original_speech_duration_seconds": 2.869,
+        "tempo": 1.0,
+        "source_audio_sha256": "4741a91678d6f5e16dbc74482bb6fae443f7c9317442822885c1db1522bc7ae4",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "payroll-04",
+        "start_seconds": 33.3,
+        "end_seconds": 46.4,
+        "visual_anchor": "Add deduction; choose Other category",
+        "narration": "कटौती भी दर्ज कर सकते हैं। इस उदाहरण में कारण के लिए अदर चुनें।",
+        "speech_end_seconds": 37.983,
+        "speech_duration_seconds": 4.683,
+        "original_speech_duration_seconds": 4.683,
+        "tempo": 1.0,
+        "source_audio_sha256": "7d19273dbc2088e9b522f464486d216a032b251c2c85a82126f5490ccf378adb",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "payroll-05",
+        "start_seconds": 47,
+        "end_seconds": 52,
+        "visual_anchor": "Deduction amount ₹50",
+        "narration": "पचास रुपये भरें।",
+        "speech_end_seconds": 48.248,
+        "speech_duration_seconds": 1.248,
+        "original_speech_duration_seconds": 1.248,
+        "tempo": 1.0,
+        "source_audio_sha256": "9eea7c2440ea2046744cceab5282fdc52d7ecd099b4457beae883a019b535ee9",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "payroll-06",
+        "start_seconds": 52.5,
+        "end_seconds": 59.3,
+        "visual_anchor": "Deduction note and save",
+        "narration": "छोटी टिप्पणी जोड़कर कटौती दर्ज करें।",
+        "speech_end_seconds": 55.305,
+        "speech_duration_seconds": 2.805,
+        "original_speech_duration_seconds": 2.805,
+        "tempo": 1.0,
+        "source_audio_sha256": "f9a58ed6a470c965b5eb028ce94b0e43f9749d2617d2b4e8857f380954672a75",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "payroll-07",
+        "start_seconds": 65,
+        "end_seconds": 67.9,
+        "visual_anchor": "Recovery ₹450; net pay ₹3,390",
+        "narration": "अब दोनों वसूलियाँ शामिल हैं।",
+        "speech_end_seconds": 67.176,
+        "speech_duration_seconds": 2.176,
+        "original_speech_duration_seconds": 2.176,
+        "tempo": 1.0,
+        "source_audio_sha256": "272b34347008d88bdd7c85193ccb9f8df11a7891b29f5e50bf2dc7ab6b2b8742",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "payroll-08",
+        "start_seconds": 68.9,
+        "end_seconds": 79.4,
+        "visual_anchor": "How pay is calculated",
+        "narration": "हाउ पे इज़ कैलकुलेटेड खोलें। पीस रेट की कमाई, वेतन और अग्रिम की वसूली का विवरण देखें।",
+        "speech_end_seconds": 75.247,
+        "speech_duration_seconds": 6.347,
+        "original_speech_duration_seconds": 6.347,
+        "tempo": 1.0,
+        "source_audio_sha256": "1114ec12049001aaf9221a8abd243327f385e0f1beebf3fafacbe1b789b363ee",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "payroll-09",
+        "start_seconds": 79.9,
+        "end_seconds": 84.9,
+        "visual_anchor": "Mark paid and confirm",
+        "narration": "मार्क पेड चुनकर भुगतान की पुष्टि करें।",
+        "speech_end_seconds": 82.823,
+        "speech_duration_seconds": 2.923,
+        "original_speech_duration_seconds": 2.923,
+        "tempo": 1.0,
+        "source_audio_sha256": "54a3a2d3dd7a271291652abe4c2efda12781d239f2ab86b22bd565d230dae845",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "payroll-10",
+        "start_seconds": 86.4,
+        "end_seconds": 93.2,
+        "visual_anchor": "Paid state; cash payment is a record only",
+        "narration": "तीन हज़ार तीन सौ नब्बे रुपये का भुगतान दर्ज करें। इससे पैसे भेजे नहीं जाते।",
+        "speech_end_seconds": 92.053,
+        "speech_duration_seconds": 5.653,
+        "original_speech_duration_seconds": 5.653,
+        "tempo": 1.0,
+        "source_audio_sha256": "f393afb8da4062ffbaac2ebc791d98b58e853e3f0a541d4b0e9e77ef577de0f5",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "payroll-11",
+        "start_seconds": 94.6,
+        "end_seconds": 103.8,
+        "visual_anchor": "Payroll records; period and worker search",
+        "narration": "पेरोल रिकॉर्ड्स खोलें। वेतन अवधि के लिए डेमो कर्मचारी खोजें।",
+        "speech_end_seconds": 99.251,
+        "speech_duration_seconds": 4.651,
+        "original_speech_duration_seconds": 4.651,
+        "tempo": 1.0,
+        "source_audio_sha256": "a9d7296f8f81eb18fc0a3b130f60d954dc4495a88200a736e0f45dd3e0d69799",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "payroll-12",
+        "start_seconds": 111,
+        "end_seconds": 119,
+        "visual_anchor": "Expand worker payment and loom breakdown",
+        "narration": "भुगतान का विवरण खोलें। कमाई से जुड़ा लूम, कॉस्टिंग, भाव और उत्पादन की मात्रा देखें।",
+        "speech_end_seconds": 117.24,
+        "speech_duration_seconds": 6.24,
+        "original_speech_duration_seconds": 6.24,
+        "tempo": 1.0,
+        "source_audio_sha256": "e1f0c244979aaccd968239ad8ee90292d38af3c1950049081a4d6afe7aa40855",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "payroll-13",
+        "start_seconds": 120,
+        "end_seconds": 128.7,
+        "visual_anchor": "Switch to Machines view",
+        "narration": "मशीन्स दृश्य में हर लूम का उत्पादन और कर्मचारी का खर्च देखें।",
+        "speech_end_seconds": 124.619,
+        "speech_duration_seconds": 4.619,
+        "original_speech_duration_seconds": 4.619,
+        "tempo": 1.0,
+        "source_audio_sha256": "869311e15f8757330ebdd0a83c1a6c3808f42ea4d07a76c9d7bad75e3e645f73",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      },
+      {
+        "id": "payroll-14",
+        "start_seconds": 129.2,
+        "end_seconds": 140.6,
+        "visual_anchor": "Export CSV and PDF",
+        "narration": "स्प्रेडशीट के लिए सी एस वी डाउनलोड करें। साझा करने योग्य वेतन रिपोर्ट के लिए पी डी एफ चुनें।",
+        "speech_end_seconds": 136.101,
+        "speech_duration_seconds": 6.901,
+        "original_speech_duration_seconds": 6.901,
+        "tempo": 1.0,
+        "source_audio_sha256": "c6b02d21e7badf7b81196bf9693a77762e0eaa308aa75f8396644c217515cd5e",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "steps": 32
+        }
+      }
+    ]
+  }
+}
