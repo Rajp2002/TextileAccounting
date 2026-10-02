@@ -27,7 +27,7 @@ Colour's role: **structure first (cotton, indigo), identity second (one saffron 
 
 ## B. Landing-page findings
 
-**Where I looked.** Rendered `/` at 1280×800 and a 1280×5200 full-page capture in the in-app browser; walked every element's computed colour (text, background, border, SVG stroke) with JS and matched the results to `components/landing/landing.module.css`, the `[color:var(--lp-*)]` classes in `components/landing/*.tsx`, and the logo PNG's pixels. Also rendered `/login` and `/signup`. I could not verify hover/focus states in the browser (the pane cannot force pseudo-states); those are read from the CSS. Mobile was not re-rendered here; the landing redesign doc records its own 390×844 check.
+**Where I looked.** Rendered `/` at 1280×800 and a 1280×5200 full-page capture in the in-app browser; walked every element's computed colour (text, background, border, SVG stroke) with JS and matched the results to `components/landing/landing.module.css`, the `text-[color:var(--lp-ink)]` classes in `components/landing/*.tsx`, and the logo PNG's pixels. Also rendered `/login` and `/signup`. I could not verify hover/focus states in the browser (the pane cannot force pseudo-states); those are read from the CSS. Mobile was not re-rendered here; the landing redesign doc records its own 390×844 check.
 
 **Dominant colours (computed from the live DOM, [Observed]).** Ink `#16213E` (95 text nodes, 57 SVG strokes), body `#2B3246` (99), muted `#535A6D` (76), line-strong `#B5AFA1`, line `#D9D5CA` (34 borders), on-loom text `#EEF0F6` (24), saffron-ink `#A8430E` (13 text nodes), saffron `#E8762A` (9 backgrounds), paper `#F4F2EC`, sheet white (7), loom `#101A33` (3 full-width bands), black (navbar only).
 
