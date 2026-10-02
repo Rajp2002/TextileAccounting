@@ -32,19 +32,19 @@ describe('Estimator Left Rail & Guided Tour CTA', () => {
         expect(styles).toMatch(/@media\s*\(min-width:\s*1440px\)\s*\{[\s\S]*?\.estimator-left-rail,[\s\S]*?position:\s*fixed;[\s\S]*?top:\s*var\(--rail-top\);[\s\S]*?left:\s*var\(--rail-left\);[\s\S]*?width:\s*var\(--rail-w\);/)
     })
 
-    it('gives the guided tour button an interactive subtle muted background and clear affordance', () => {
+    it('gives the guided tour card a prominent saffron-tinted surface and clear affordance', () => {
         expect(tutorialComponent).toContain('<TourInvitation')
         const invitation = read('components/tours/TourInvitation.tsx')
         const rail = read('components/ui/rail.ts')
         expect(invitation).toContain('Compass')
-        expect(invitation).toContain('railSurface')
-        expect(rail).toContain('hover:bg-surface-soft')
-        expect(rail).toContain('shadow-xs')
+        expect(invitation).toContain('railGuideSurface')
+        expect(rail).toContain('bg-saffron-soft')
+        expect(rail).toContain('hover:border-saffron')
         // The guide card owns its look; callers only size it.
         const invitationStart = tutorialComponent.indexOf('<TourInvitation')
         expect(tutorialComponent.slice(invitationStart, tutorialComponent.indexOf('/>', invitationStart))).not.toContain('amber')
         expect(invitation).toContain('estimator-touch-target')
-        expect(invitation).toContain('railButton')
+        expect(invitation).toContain('railGuideButton')
         expect(tutorialComponent).not.toContain('fieldGuide')
     })
 })

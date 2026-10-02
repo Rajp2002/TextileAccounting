@@ -47,7 +47,7 @@ describe('Tour invitation lifecycle', () => {
         expect(html).not.toContain('<section')
         expect(html).not.toContain('data-tour-control="dismiss"')
         expect(html).not.toContain(tourInvitationCopy[language].benefits.dispatch)
-        expect(html).toContain('min-h-11')
+        expect(html).toContain('min-h-14')
     })
 
     it('removes attention animation and its coordinator completely', () => {
@@ -72,11 +72,16 @@ describe('Tour invitation lifecycle', () => {
         expect(component).toContain('launcherRef.current?.focus({ preventScroll: true })')
     })
 
-    it('uses the shared quiet rail styling for every launcher presentation', () => {
+    it('gives every guide presentation the prominent rail guide styling, not the neutral rail controls', () => {
         const rail = read('components/ui/rail.ts')
-        expect(component).toContain('railSurface')
-        expect(component).toContain('railButton')
+        expect(component).toContain('railGuideSurface')
+        expect(component).toContain('railGuideButton')
+        expect(component).toContain('railGuideIcon')
+        expect(component).not.toMatch(/\brailSurface\b|\brailButton\b/)
         expect(component).not.toContain('amber')
-        for (const token of ['border-hairline', 'hover:bg-surface-soft', 'shadow-xs']) expect(rail).toContain(token)
+        // A saffron-tinted surface, taller than the 44px neutral controls, with a filled icon tile.
+        for (const token of ['border-saffron/40', 'bg-saffron-soft', 'min-h-14', 'bg-saffron-deep']) expect(rail).toContain(token)
+        // The one decision on the invitation is an ink primary action, never saffron.
+        expect(component).toContain('railPrimaryAction')
     })
 })

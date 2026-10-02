@@ -290,13 +290,13 @@ Rail routes share one composition, defined once in `app/globals.css` ("Workspace
 sidebar | left rail | workspace | right rail
 ```
 
-- **Left rail:** the route's guide (`TourInvitation align="full"`) and help/walkthrough controls.
+- **Left rail:** the route's guide (`TourInvitation align="full"`) and help/walkthrough controls. Every guided route puts its guide here, the Daily Sheet included; its live controls stay in its own right rail.
 - **Right rail:** the route's primary action at the top (same line as the page title), reference material below, and notices such as the archive policy anchored to the bottom.
 - **Tiers:** below `1280px` everything is one column (guide above, actions in the page header, reference inline). From `1280px` the right rail is pinned beside the workspace. From `1440px` both rails are pinned and the workspace is centred between them.
 - **Tokens:** every offset comes from `--rail-w`, `--rail-gap`, `--rail-top`, `--rail-bottom`, `--workspace-w`, `--rail-left`, and `--rail-right`. Never hard-code `left: calc(248px + …)` or a route-specific breakpoint; add the route's shell and rail classes to the grouped selectors instead.
 - **Inline counterparts:** content that must disappear when a rail is pinned uses `rail-inline-actions` (hidden from `1280px`).
-- **Presentation:** use `components/ui/rail.ts` (`railSurface`, `railButton`, `railIcon`, `railPrimaryAction`) so guides, help, and actions read as one family. Rail primary actions are ink, never saffron. Help and reference panels are neutral surfaces, not info/warning fills.
-- **Guide card:** the guide card stacks inside a rail and becomes a single row (container query) when shown inline above a page.
+- **Presentation:** use `components/ui/rail.ts` (`railSurface`, `railButton`, `railIcon`, `railPrimaryAction`) so help and actions read as one family. Rail primary actions are ink, never saffron. Help and reference panels are neutral surfaces, not info/warning fills.
+- **Guide card:** the guide is the one rail item meant to be noticed, so it does not use the neutral surfaces. `railGuideSurface`, `railGuideButton` and `railGuideIcon` give it a saffron-tinted surface, a 56px minimum height, larger type and a filled compass tile; the invitation's single action stays an ink `railPrimaryAction`. The card stacks inside a rail and becomes a single row (container query) when shown inline above a page; once dismissed it collapses to the same styling as one row. Titles wrap rather than truncate so Hindi and Gujarati fit.
 
 ### Dashboard Page Header
 
