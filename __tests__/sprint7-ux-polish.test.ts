@@ -84,12 +84,13 @@ describe('Sprint 7 Base UX polish contracts', () => {
         expect(updateNotice).toContain('UPDATE_TOAST_SHOWN_FLAG')
         expect(updateNotice).toContain('readSessionFlag(UPDATE_TOAST_SHOWN_FLAG)')
         expect(updateNotice).toContain("t('common.pwa_update_description')")
-        expect(updateNotice).toContain("position: 'top-right'")
+        // One shared stack (components/ui/sonner.tsx); a corner of its own
+        // overlapped the top-centre toasts on phones and tablets.
+        expect(updateNotice).not.toContain('position:')
         expect(updateNotice).toContain("descriptionClassName: '!text-ink !opacity-100'")
         expect(updateNotice).toContain("document.addEventListener('visibilitychange'")
         expect(updateNotice).toContain('if (registration.waiting && navigator.serviceWorker.controller)')
         expect(updateNotice).toContain('void registration.update().catch(() => {')
-        expect(updateNotice).not.toContain("position: 'top-center'")
         expect(notifications).toContain('userFacingError')
         expect(notifications).toContain('TECHNICAL_ERROR_PATTERN')
     })

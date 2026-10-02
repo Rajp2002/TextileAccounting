@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, type CSSProperties } from 'react'
+import { useEffect } from 'react'
 import { toast } from '@/lib/app-notifications'
 import { useTranslation } from '@/lib/i18n/context'
 
@@ -75,16 +75,10 @@ export function PwaUpdateNotice() {
             writeSessionFlag(versionKey, '1')
             toast.info(t('common.pwa_update_title'), {
                 description: `${t('common.pwa_update_description')} You can keep working; refresh after the current costing or quotation says Saved.`,
-                // Keep the notice in a predictable corner instead of covering
-                // the page's main content. The explicit colors also keep the
-                // description readable on white public/auth screens.
-                position: 'top-right',
+                // Shares the one top-centre stack with every other toast; a
+                // second corner stack would overlap it on phones and tablets.
+                // The description stays ink because it carries the instruction.
                 descriptionClassName: '!text-ink !opacity-100',
-                style: {
-                    '--normal-bg': 'var(--weavly-surface)',
-                    '--normal-text': 'var(--weavly-ink)',
-                    '--normal-border': 'var(--weavly-hairline)',
-                } as CSSProperties,
                 closeButton: true,
                 duration: 12000,
                 action: {

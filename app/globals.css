@@ -2162,3 +2162,197 @@ button[aria-expanded="true"] .nav-chevron {
 @media (prefers-reduced-motion: reduce) {
   .modal-spring[data-state] { animation-duration: 0.01ms !important; }
 }
+
+/* ── Toasts ──────────────────────────────────────────────────────
+ * Sonner (components/ui/sonner.tsx) appends its own stylesheet after this
+ * one, so every rule here starts with `.toaster` to outrank it, and stays
+ * outside @layer, which would otherwise lose to it outright.
+ * One quiet card: a tinted status chip, the message, then a close control
+ * in line on the right instead of Sonner's floating corner badge.
+ */
+.toaster[data-sonner-toaster] {
+  font-family: inherit;
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast]:not([data-swiping="true"]) {
+  transition:
+    transform 400ms var(--ease-out-soft),
+    opacity 240ms ease,
+    height 400ms var(--ease-out-soft),
+    box-shadow 200ms ease;
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"] {
+  --toast-tone: var(--weavly-muted);
+  --toast-tone-soft: var(--weavly-surface-soft);
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 10px 10px 10px 12px;
+  border: 1px solid var(--weavly-hairline);
+  border-radius: 12px;
+  background: var(--weavly-surface);
+  color: var(--weavly-ink);
+  font-size: 14px;
+  box-shadow: 0 1px 2px rgba(22, 33, 62, 0.06), 0 12px 32px -12px rgba(22, 33, 62, 0.24);
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"]:has([data-description]) {
+  align-items: flex-start;
+}
+
+/* An action (Undo, Refresh) gets its own row under the message, so a long
+   or translated message is never squeezed into a narrow column beside it. */
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"]:has([data-button]) {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) 32px;
+  align-items: start;
+  column-gap: 12px;
+  row-gap: 4px;
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"]:has([data-button]) [data-icon] {
+  grid-area: 1 / 1;
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"]:has([data-button]) [data-content] {
+  grid-area: 1 / 2;
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"]:has([data-button]) [data-close-button] {
+  grid-area: 1 / 3;
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"]:has([data-button]) [data-button] {
+  grid-area: 2 / 2;
+  justify-self: start;
+  margin-bottom: 2px;
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"]:focus-visible {
+  box-shadow:
+    0 1px 2px rgba(22, 33, 62, 0.06),
+    0 12px 32px -12px rgba(22, 33, 62, 0.24),
+    0 0 0 3px color-mix(in srgb, var(--ring) 25%, transparent);
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-type="success"] {
+  --toast-tone: var(--weavly-success);
+  --toast-tone-soft: var(--weavly-success-soft);
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-type="info"] {
+  --toast-tone: var(--weavly-info);
+  --toast-tone-soft: var(--weavly-info-soft);
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-type="warning"] {
+  --toast-tone: var(--weavly-warning);
+  --toast-tone-soft: var(--weavly-warning-soft);
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-type="error"] {
+  --toast-tone: var(--weavly-risk);
+  --toast-tone-soft: var(--weavly-risk-soft);
+  border-color: var(--wv-status-danger-border);
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-icon] {
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  justify-content: center;
+  border-radius: 8px;
+  background: var(--toast-tone-soft);
+  color: var(--toast-tone);
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-icon] svg {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-content] {
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: 2px;
+  padding-block: 6px;
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-title] {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  color: var(--weavly-ink);
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-description] {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--weavly-muted);
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-button] {
+  height: 32px;
+  margin: 0;
+  padding-inline: 12px;
+  border-radius: 8px;
+  background: var(--weavly-ink);
+  color: var(--weavly-surface);
+  font-size: 13px;
+  font-weight: 600;
+  transition: background-color var(--motion-fast) ease, box-shadow var(--motion-fast) ease;
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-button]:hover {
+  background: var(--wv-action-primary-hover);
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-cancel] {
+  background: transparent;
+  color: var(--weavly-ink);
+  box-shadow: inset 0 0 0 1px var(--weavly-hairline-strong);
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-cancel]:hover {
+  background: var(--weavly-surface-soft);
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"] :is([data-button], [data-close-button]):focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 25%, transparent);
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-close-button] {
+  position: relative;
+  inset: auto;
+  order: 1;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--weavly-muted);
+  transform: none;
+  transition: background-color var(--motion-fast) ease, color var(--motion-fast) ease;
+}
+
+/* Keep the visible control small but the touch target at 44px. */
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-close-button]::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-close-button]:hover {
+  border-color: transparent;
+  background: var(--weavly-surface-soft);
+  color: var(--weavly-ink);
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-close-button] svg {
+  width: 16px;
+  height: 16px;
+}
