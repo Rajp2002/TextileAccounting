@@ -555,7 +555,7 @@ export default function BasePayrollSettlementWorkspace({
                         </div>
                         <div className="h-2 w-full rounded-full bg-surface-soft overflow-hidden">
                             <div
-                                className="h-full bg-[var(--wv-moss-600)] transition-all duration-500 ease-out"
+                                className="ui-meter-fill h-full bg-[var(--wv-moss-600)]"
                                 style={{ width: `${summary.progressPercent}%` }}
                             />
                         </div>

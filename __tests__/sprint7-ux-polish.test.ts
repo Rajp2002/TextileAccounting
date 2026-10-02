@@ -85,7 +85,9 @@ describe('Sprint 7 Base UX polish contracts', () => {
         expect(updateNotice).toContain('watchPwaUpdates')
         expect(updateNotice).toContain('onClick: refreshPwaUpdate')
         expect(updateNotice).toContain("t('common.pwa_update_description')")
-        expect(updateNotice).toContain("position: 'top-right'")
+        // One shared stack (components/ui/sonner.tsx); a corner of its own
+        // overlapped the top-centre toasts on phones and tablets.
+        expect(updateNotice).not.toContain('position:')
         expect(updateNotice).toContain("descriptionClassName: '!text-ink !opacity-100'")
         expect(updateManager).toContain("document.addEventListener('visibilitychange'")
         expect(updateManager).toContain('if (registration.waiting && navigator.serviceWorker.controller)')

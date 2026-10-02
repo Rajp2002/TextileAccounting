@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import { useLocalizedPageTitle } from '@/hooks/use-localized-page-title'
+import { useArrivals } from '@/hooks/use-arrivals'
 import { useSearchParams } from 'next/navigation'
 import { useTranslation } from '@/lib/i18n/context'
 import { safeBaseReturnPath } from '@/lib/base-production-navigation'
@@ -43,6 +44,7 @@ export default function WorkersRegister({
   const { tx, t, language } = useTranslation()
   const [tourStep, setTourStep] = useState<WorkersTourStep | null>(null)
   const [tourPath, setTourPath] = useState<WorkersTourPath>('piece')
+  const arrivedIds = useArrivals(workers.map(worker => worker.id))
   const tourLauncher = useRef<HTMLDivElement>(null)
   const tourReturnFocus = useRef<HTMLElement | null>(null)
   const launchScroll = useRef<{ x: number; y: number } | null>(null)
@@ -271,6 +273,7 @@ export default function WorkersRegister({
                   subtitle={tx('Paid based on production')}
                   count={pieceWorkers.length}
                   workers={pieceWorkers}
+                  arrivedIds={arrivedIds}
                   emptyText={tx('No piece-rate workers')}
                   onEdit={edit}
                 />
@@ -282,6 +285,7 @@ export default function WorkersRegister({
                   subtitle={tx('Fixed monthly compensation')}
                   count={fixedWorkers.length}
                   workers={fixedWorkers}
+                  arrivedIds={arrivedIds}
                   emptyText={tx('No fixed-salary workers')}
                   onEdit={edit}
                 />
@@ -305,7 +309,7 @@ export default function WorkersRegister({
                   hidden={Boolean(tourStep)}
                   data-i18n-skip="true"
                   lang={language}
-                  className={cn('group overflow-hidden', railSurface)}
+                  className={cn('ui-details group overflow-hidden', railSurface)}
                 >
                   <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-3.5 py-2.5 text-sm font-semibold leading-snug text-ink hover:bg-surface-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-saffron/50 [&::-webkit-details-marker]:hidden">
                     <span className="flex items-start gap-2.5"><CircleHelp className={cn(railIcon, 'mt-0.5')} aria-hidden="true" />{tourCopy.helpTitle}</span>

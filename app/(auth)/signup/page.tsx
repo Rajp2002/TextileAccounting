@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { Loader2, ArrowRight, Eye, EyeOff, Building2, CheckCircle2 } from 'lucide-react'
 import AuthLayout from '@/components/auth/auth-layout'
+import { AuthTransition } from '@/components/auth/auth-transition'
 import { createOrganizationAndRedirect } from '@/app/(auth)/actions/auth'
 import { cn } from '@/lib/utils'
 import { isValidIndianPhone, normalizeIndianPhone } from '@/lib/phone'
@@ -400,6 +401,7 @@ function SignupForm() {
                     </p>
                 </div>
             </form>
+            <AuthTransition open={loading} mode="sign-up" />
         </AuthLayout>
     )
 }

@@ -433,6 +433,14 @@
   --nav-child-fade-duration: 140ms;
   --nav-disclosure-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --nav-child-offset: 4px;
+
+  /* Product motion tempo: fast for feedback, base for arrivals, slow for size changes. */
+  --motion-fast: 120ms;
+  --motion-base: 180ms;
+  --motion-slow: 280ms;
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Sheets decelerate into place the way native bottom sheets do. */
+  --ease-sheet: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 .dark {
@@ -1521,18 +1529,20 @@
     to { box-shadow: inset 3px 0 0 var(--color-info-blue); }
   }
 
+  /* backwards, not both: a finished entry must not keep opacity or a transform
+     applied, or the element stays a stacking context / containing block. */
   .ui-route-enter {
-    animation: ui-route-enter 180ms ease-out both;
+    animation: ui-route-enter var(--motion-base) ease-out backwards;
   }
 
   .ui-content-swap,
   .ui-disclosure-content,
   .ui-status-enter {
-    animation: ui-content-swap 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: ui-content-swap 240ms var(--ease-out-soft) backwards;
   }
 
   .ui-success-pop {
-    animation: ui-success-pop 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: ui-success-pop 200ms var(--ease-out-soft) backwards;
   }
 
   .ui-surface,
@@ -1564,7 +1574,7 @@
   }
 
   .ui-nav-indicator {
-    animation: ui-success-pop 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: ui-success-pop 220ms var(--ease-out-soft) backwards;
     transform-origin: center;
   }
 
@@ -1593,6 +1603,340 @@
     .ui-segment,
     .ui-progress-fill {
       transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* The shell already fades each page in; a nested opt-in must not fade it twice. */
+  .dashboard-main > * .ui-route-enter {
+    animation: none;
+  }
+}
+
+/* ── Quiet motion system ───────────────────────────────────────────
+ * Page arrivals, disclosures, navigation markers, meters and placeholders share
+ * the --motion-* tempo. It lives in the components layer so a page's own
+ * animation utility still wins over these defaults.
+ */
+@layer components {
+  /* Every owner and Free page (and its loading skeleton) fades in as it commits.
+     Opacity only, so fixed rails and tour measurements are unaffected. */
+  .dashboard-main > * {
+    animation: ui-route-enter var(--motion-base) ease-out backwards;
+  }
+
+  /* <details> panels slide open and closed where ::details-content and
+     interpolate-size exist (Chromium); elsewhere they open instantly, as before. */
+  details.ui-details {
+    interpolate-size: allow-keywords;
+  }
+
+  details.ui-details::details-content {
+    block-size: 0;
+    opacity: 0;
+    overflow: clip;
+    /* Keep focus rings at the panel edge visible. */
+    overflow-clip-margin: 4px;
+    transition:
+      block-size var(--motion-slow) var(--ease-out-soft),
+      opacity var(--motion-base) ease-out,
+      content-visibility var(--motion-slow);
+    transition-behavior: allow-discrete;
+  }
+
+  details.ui-details[open]::details-content {
+    block-size: auto;
+    opacity: 1;
+  }
+
+  /* The saffron marker grows from its centre on the newly active destination. */
+  @keyframes ui-nav-mark {
+    from { opacity: 0; scale: 1 0.3; }
+  }
+
+  .ui-nav-mark::before {
+    animation: ui-nav-mark var(--motion-base) var(--ease-out-soft) backwards;
+  }
+
+  /* Progress and composition bars glide to a new value instead of jumping. */
+  .ui-meter-fill {
+    transition: width 400ms var(--ease-out-soft), background-color var(--motion-base) ease;
+  }
+
+  /* Placeholders: a soft sheen passes over each block, then rests. */
+  @keyframes ui-skeleton-sheen {
+    from { translate: -100% 0; }
+    60%, to { translate: 100% 0; }
+  }
+
+  .ui-skeleton {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .ui-skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    translate: -100% 0;
+    background: linear-gradient(90deg, transparent, var(--ui-skeleton-sheen, rgba(22, 33, 62, 0.05)), transparent);
+    animation: ui-skeleton-sheen 2s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  /* On dark surfaces the sheen is light instead of ink. */
+  .ui-skeleton-inverse {
+    --ui-skeleton-sheen: rgba(255, 255, 255, 0.08);
+  }
+
+  /* A row added while the page is open briefly carries the selected-row tint
+     so the owner can see where it landed. Set on the list item; tints its card. */
+  @keyframes ui-row-arrive {
+    from {
+      background-color: var(--wv-neel-50);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--wv-neel-300) 45%, transparent);
+    }
+  }
+
+  .ui-row-arrive > * {
+    animation: ui-row-arrive 1.6s ease-out;
+  }
+
+  /* Inline errors and warnings fade in where they appear instead of popping. */
+  [role="alert"]:not([data-sonner-toast]) {
+    transition:
+      opacity var(--motion-base) ease-out,
+      translate var(--motion-base) var(--ease-out-soft);
+  }
+
+  @starting-style {
+    [role="alert"]:not([data-sonner-toast]) {
+      opacity: 0;
+      translate: 0 -3px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dashboard-main > *,
+    .ui-nav-mark::before,
+    .ui-row-arrive > * {
+      animation: none !important;
+    }
+
+    [role="alert"]:not([data-sonner-toast]) {
+      transition: none !important;
+    }
+
+    details.ui-details::details-content,
+    .ui-meter-fill {
+      transition: none !important;
+    }
+
+    .ui-skeleton::after {
+      display: none;
+      animation: none !important;
+    }
+  }
+
+  /* ── Auth transition ───────────────────────────────────────────
+   * Full-screen handoff while an account signs in, is created, or signs
+   * out (components/auth/auth-transition.tsx). The loom and spool marks
+   * (components/auth/thread-marks.tsx) loop until the next document
+   * replaces this one. Distances are SVG user units and must match
+   * components/auth/loom-geometry.ts: one pick is 66, one row is 10.
+   */
+  .auth-transition {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 24px max(16px, var(--safe-area-right, 0px)) 24px max(16px, var(--safe-area-left, 0px));
+    text-align: center;
+    background: rgba(244, 242, 236, 0.9);
+    background: color-mix(in srgb, var(--wv-bg-canvas) 90%, transparent);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    animation: auth-transition-enter var(--motion-base) ease-out backwards;
+  }
+
+  .auth-transition[data-state="closed"] {
+    pointer-events: none;
+    animation: auth-transition-leave 180ms ease-in forwards;
+  }
+
+  /* A page left behind the handoff (its session already ended) must not toast
+     over it. Toasts show again as soon as the overlay closes. */
+  body:has(> .auth-transition[data-state="open"]) [data-sonner-toaster] {
+    visibility: hidden;
+  }
+
+  .auth-transition-mark {
+    width: 120px;
+    height: 120px;
+    overflow: hidden;
+    border: 1px solid var(--wv-border-subtle);
+    border-radius: 9999px;
+    background: var(--color-surface);
+    box-shadow: 0 1px 2px rgba(22, 33, 62, 0.06), 0 16px 36px -20px rgba(22, 33, 62, 0.28);
+    transition:
+      border-color var(--motion-slow) ease,
+      box-shadow var(--motion-slow) ease;
+    animation: auth-transition-mark-enter 360ms var(--ease-out-soft) 40ms backwards;
+  }
+
+  /* The server has accepted the sign-in; the workspace is loading. */
+  .auth-transition[data-stage="done"] .auth-transition-mark {
+    border-color: var(--wv-saffron-200);
+    box-shadow:
+      0 0 0 5px var(--wv-saffron-50),
+      0 16px 36px -20px rgba(22, 33, 62, 0.28);
+  }
+
+  .auth-transition-copy {
+    max-width: 280px;
+    min-height: 3rem;
+    animation: auth-transition-copy-enter 320ms var(--ease-out-soft) 100ms backwards;
+  }
+
+  @keyframes auth-transition-enter {
+    from { opacity: 0; }
+  }
+
+  @keyframes auth-transition-leave {
+    to { opacity: 0; }
+  }
+
+  @keyframes auth-transition-mark-enter {
+    from { opacity: 0; transform: translateY(4px) scale(0.92); }
+  }
+
+  @keyframes auth-transition-copy-enter {
+    from { opacity: 0; transform: translateY(4px); }
+  }
+
+  /* One round of either mark. Sign-in and log out stay up for at least one
+     (AUTH_TRANSITION_ROUND_MS in components/auth/auth-transition-timing.ts). */
+  .wv-loom,
+  .wv-spool {
+    --auth-round: 1.6s;
+  }
+
+  /* Loom: indigo warp, saffron weft. Two picks per round, then the cloth
+     has moved down two rows and the round restarts on an identical frame. */
+
+  .wv-loom-warp { stroke: var(--wv-neel-700); }
+  .wv-loom-weft { stroke: var(--wv-saffron-500); }
+  .wv-loom-gap { stroke: var(--color-surface); }
+  .wv-loom-reed { stroke: var(--wv-neel-200); }
+  .wv-loom-shuttle { fill: var(--wv-neel-900); stroke: var(--color-surface); }
+  /* The return pick is unwoven at rest; reduced motion shows one finished pick. */
+  .wv-loom-pass-back { stroke-dashoffset: 66; }
+
+  .wv-loom-cloth { animation: wv-loom-take-up var(--auth-round) infinite; }
+  .wv-loom-pass-there { animation: wv-loom-there var(--auth-round) infinite; }
+  .wv-loom-pass-back { animation: wv-loom-back var(--auth-round) infinite; }
+  .wv-loom-shuttle { animation: wv-loom-shuttle var(--auth-round) infinite; }
+  .wv-loom-reed { animation: wv-loom-beat var(--auth-round) infinite; }
+
+  @keyframes wv-loom-there {
+    0% { stroke-dashoffset: 66; animation-timing-function: cubic-bezier(0.55, 0, 0.3, 1); }
+    30%, 100% { stroke-dashoffset: 0; }
+  }
+
+  @keyframes wv-loom-back {
+    0%, 50% { stroke-dashoffset: 66; animation-timing-function: cubic-bezier(0.55, 0, 0.3, 1); }
+    80%, 100% { stroke-dashoffset: 0; }
+  }
+
+  @keyframes wv-loom-shuttle {
+    0% { transform: translateX(0); animation-timing-function: cubic-bezier(0.55, 0, 0.3, 1); }
+    30%, 50% { transform: translateX(66px); animation-timing-function: cubic-bezier(0.55, 0, 0.3, 1); }
+    80%, 100% { transform: translateX(0); }
+  }
+
+  @keyframes wv-loom-beat {
+    0%, 30% { transform: translateY(0); animation-timing-function: ease-in; }
+    37% { transform: translateY(6px); animation-timing-function: ease-out; }
+    46%, 80% { transform: translateY(0); animation-timing-function: ease-in; }
+    87% { transform: translateY(6px); animation-timing-function: ease-out; }
+    96%, 100% { transform: translateY(0); }
+  }
+
+  @keyframes wv-loom-take-up {
+    0%, 34% { transform: translateY(0); animation-timing-function: ease-in-out; }
+    48%, 84% { transform: translateY(10px); animation-timing-function: ease-in-out; }
+    98%, 100% { transform: translateY(20px); }
+  }
+
+  /* Spool: each wind lays one wrap across the front of the barrel while the
+     spool turns half a revolution (the flange holes orbit), then the wound
+     thread steps down one wrap. Two winds per round; the thread flows in. */
+  .wv-spool-rim { fill: var(--wv-neel-900); }
+  .wv-spool-face { fill: var(--wv-neel-600); }
+  .wv-spool-hole { fill: var(--wv-neel-950); }
+  .wv-spool-core { fill: var(--wv-cotton-200); }
+  .wv-spool-band { stroke: var(--wv-saffron-700); }
+  .wv-spool-wrap { stroke: var(--wv-saffron-500); }
+  .wv-spool-strand { stroke: var(--wv-saffron-500); }
+  .wv-spool-twist { stroke: var(--wv-saffron-700); stroke-opacity: 0.45; }
+
+  .wv-spool-stack { animation: wv-spool-take-up calc(var(--auth-round) / 2) infinite; }
+  .wv-spool-lay { animation: wv-spool-lay calc(var(--auth-round) / 2) infinite; }
+  .wv-spool-spin {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: wv-spool-spin calc(var(--auth-round) / 2) linear infinite;
+  }
+  .wv-spool-twist { animation: wv-spool-reel calc(var(--auth-round) / 8) linear infinite; }
+  .wv-spool-lead {
+    transform-box: view-box;
+    transform-origin: 58px 27px;
+    animation: wv-spool-sway var(--auth-round) ease-in-out infinite;
+  }
+
+  @keyframes wv-spool-lay {
+    0% { stroke-dashoffset: 100; animation-timing-function: cubic-bezier(0.45, 0, 0.35, 1); }
+    50%, 100% { stroke-dashoffset: 0; }
+  }
+
+  @keyframes wv-spool-take-up {
+    0%, 55% { transform: translateY(0); animation-timing-function: ease-in-out; }
+    85%, 100% { transform: translateY(5px); }
+  }
+
+  @keyframes wv-spool-spin {
+    to { transform: rotate(360deg); }
+  }
+
+  @keyframes wv-spool-reel {
+    to { stroke-dashoffset: 3; }
+  }
+
+  @keyframes wv-spool-sway {
+    0%, 100% { transform: rotate(-3deg); }
+    50% { transform: rotate(3deg); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .auth-transition,
+    .auth-transition-mark,
+    .auth-transition-copy,
+    .wv-loom *,
+    .wv-spool * {
+      animation: none !important;
+    }
+
+    .auth-transition[data-state="closed"] {
+      opacity: 0;
+    }
+
+    /* The shuttle rests where its finished pick ends. */
+    .wv-loom-shuttle {
+      transform: translateX(66px);
     }
   }
 }
@@ -1817,4 +2161,198 @@ button[aria-expanded="true"] .nav-chevron {
 }
 @media (prefers-reduced-motion: reduce) {
   .modal-spring[data-state] { animation-duration: 0.01ms !important; }
+}
+
+/* ── Toasts ──────────────────────────────────────────────────────
+ * Sonner (components/ui/sonner.tsx) appends its own stylesheet after this
+ * one, so every rule here starts with `.toaster` to outrank it, and stays
+ * outside @layer, which would otherwise lose to it outright.
+ * One quiet card: a tinted status chip, the message, then a close control
+ * in line on the right instead of Sonner's floating corner badge.
+ */
+.toaster[data-sonner-toaster] {
+  font-family: inherit;
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast]:not([data-swiping="true"]) {
+  transition:
+    transform 400ms var(--ease-out-soft),
+    opacity 240ms ease,
+    height 400ms var(--ease-out-soft),
+    box-shadow 200ms ease;
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"] {
+  --toast-tone: var(--weavly-muted);
+  --toast-tone-soft: var(--weavly-surface-soft);
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 10px 10px 10px 12px;
+  border: 1px solid var(--weavly-hairline);
+  border-radius: 12px;
+  background: var(--weavly-surface);
+  color: var(--weavly-ink);
+  font-size: 14px;
+  box-shadow: 0 1px 2px rgba(22, 33, 62, 0.06), 0 12px 32px -12px rgba(22, 33, 62, 0.24);
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"]:has([data-description]) {
+  align-items: flex-start;
+}
+
+/* An action (Undo, Refresh) gets its own row under the message, so a long
+   or translated message is never squeezed into a narrow column beside it. */
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"]:has([data-button]) {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) 32px;
+  align-items: start;
+  column-gap: 12px;
+  row-gap: 4px;
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"]:has([data-button]) [data-icon] {
+  grid-area: 1 / 1;
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"]:has([data-button]) [data-content] {
+  grid-area: 1 / 2;
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"]:has([data-button]) [data-close-button] {
+  grid-area: 1 / 3;
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"]:has([data-button]) [data-button] {
+  grid-area: 2 / 2;
+  justify-self: start;
+  margin-bottom: 2px;
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"]:focus-visible {
+  box-shadow:
+    0 1px 2px rgba(22, 33, 62, 0.06),
+    0 12px 32px -12px rgba(22, 33, 62, 0.24),
+    0 0 0 3px color-mix(in srgb, var(--ring) 25%, transparent);
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-type="success"] {
+  --toast-tone: var(--weavly-success);
+  --toast-tone-soft: var(--weavly-success-soft);
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-type="info"] {
+  --toast-tone: var(--weavly-info);
+  --toast-tone-soft: var(--weavly-info-soft);
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-type="warning"] {
+  --toast-tone: var(--weavly-warning);
+  --toast-tone-soft: var(--weavly-warning-soft);
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-type="error"] {
+  --toast-tone: var(--weavly-risk);
+  --toast-tone-soft: var(--weavly-risk-soft);
+  border-color: var(--wv-status-danger-border);
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-icon] {
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  justify-content: center;
+  border-radius: 8px;
+  background: var(--toast-tone-soft);
+  color: var(--toast-tone);
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-icon] svg {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-content] {
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: 2px;
+  padding-block: 6px;
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-title] {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  color: var(--weavly-ink);
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-description] {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--weavly-muted);
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-button] {
+  height: 32px;
+  margin: 0;
+  padding-inline: 12px;
+  border-radius: 8px;
+  background: var(--weavly-ink);
+  color: var(--weavly-surface);
+  font-size: 13px;
+  font-weight: 600;
+  transition: background-color var(--motion-fast) ease, box-shadow var(--motion-fast) ease;
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-button]:hover {
+  background: var(--wv-action-primary-hover);
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-cancel] {
+  background: transparent;
+  color: var(--weavly-ink);
+  box-shadow: inset 0 0 0 1px var(--weavly-hairline-strong);
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-cancel]:hover {
+  background: var(--weavly-surface-soft);
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"] :is([data-button], [data-close-button]):focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 25%, transparent);
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-close-button] {
+  position: relative;
+  inset: auto;
+  order: 1;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--weavly-muted);
+  transform: none;
+  transition: background-color var(--motion-fast) ease, color var(--motion-fast) ease;
+}
+
+/* Keep the visible control small but the touch target at 44px. */
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-close-button]::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-close-button]:hover {
+  border-color: transparent;
+  background: var(--weavly-surface-soft);
+  color: var(--weavly-ink);
+}
+
+.toaster[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-close-button] svg {
+  width: 16px;
+  height: 16px;
 }

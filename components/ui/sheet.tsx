@@ -36,7 +36,7 @@ function SheetOverlay({
     <SheetPrimitive.Overlay
       data-slot="sheet-overlay"
       className={cn(
-        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-ink/45",
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=open]:duration-300 data-[state=closed]:duration-200 fixed inset-0 z-50 bg-ink/45",
         className
       )}
       {...props}
@@ -63,7 +63,7 @@ function SheetContent({
         data-slot="sheet-content"
         data-side={side}
         className={cn(
-          "bg-surface text-ink data-[state=open]:animate-in data-[state=closed]:animate-out fixed z-50 flex flex-col gap-4 shadow-[var(--shadow-panel)] transition ease-in-out data-[state=closed]:duration-200 data-[state=open]:duration-200",
+          "bg-surface text-ink data-[state=open]:animate-in data-[state=closed]:animate-out fixed z-50 flex flex-col gap-4 shadow-[var(--shadow-panel)] transition data-[state=open]:duration-300 data-[state=open]:ease-(--ease-sheet) data-[state=closed]:duration-200 data-[state=closed]:ease-in",
           "pt-safe pl-safe pr-safe", // [MOBILE FIX]: Ensure safe area awareness for iPhone notch/status bar
           side === "right" &&
             "data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right inset-y-0 right-0 h-full w-3/4 border-l border-hairline sm:max-w-sm",

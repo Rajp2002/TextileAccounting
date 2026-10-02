@@ -1,13 +1,14 @@
 'use client'
 
 import React, { useState, useId } from 'react'
-import { Calculator, Loader2, AlertCircle } from 'lucide-react'
+import { Calculator, CheckCircle2, Loader2, AlertCircle } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { LiquidSegmented } from '@/components/ui/liquid-segmented'
 import { toast, userFacingError } from '@/lib/app-notifications'
+import { useSavedFlash } from '@/hooks/use-saved-flash'
 import { useTranslation } from '@/lib/i18n/context'
 import { saveCostingDefaults, type CostingDefaultsInput } from '@/app/(dashboard)/owner/settings/actions'
 
@@ -31,7 +32,8 @@ export function CostingDefaultsCard({
     onDefaultsUpdated,
     onDirtyChange,
 }: CostingDefaultsCardProps) {
-    const { tx } = useTranslation()
+    const { t, tx } = useTranslation()
+    const [justSaved, flashSaved] = useSavedFlash()
     const wasteInputId = useId()
     const marginInputId = useId()
 
@@ -129,6 +131,7 @@ export function CostingDefaultsCard({
                 onDefaultsUpdated?.(confirmed)
                 onDirtyChange?.(false)
                 toast.success(tx('Costing defaults saved for new costings'))
+                flashSaved()
             }
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'Failed to save costing defaults'
@@ -326,12 +329,17 @@ export function CostingDefaultsCard({
                         <Button
                             type="submit"
                             disabled={!isDirty || isSubmitting}
-                            className="min-h-11 rounded-xl bg-loom px-5 font-bold text-white shadow-xs hover:bg-loom-elevated transition-colors"
+                            className={`min-h-11 rounded-xl bg-loom px-5 font-bold text-white shadow-xs hover:bg-loom-elevated transition-colors ${justSaved && !isDirty ? 'disabled:opacity-100' : ''}`}
                         >
                             {isSubmitting ? (
                                 <>
                                     <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                                     {tx('Saving…')}
+                                </>
+                            ) : justSaved && !isDirty ? (
+                                <>
+                                    <CheckCircle2 className="ui-success-pop h-4 w-4" aria-hidden="true" />
+                                    {t('base_plan.status.saved')}
                                 </>
                             ) : (
                                 tx('Save costing defaults')

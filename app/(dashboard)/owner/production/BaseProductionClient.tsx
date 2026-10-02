@@ -706,7 +706,7 @@ export default function BaseProductionClient({
                             aria-valuemax={100}
                         >
                             <div
-                                className={`h-full rounded-full transition-all duration-500 ${
+                                className={`ui-meter-fill h-full rounded-full ${
                                     activePeriodSummary.progressPercent === 100 ? 'bg-success' : 'bg-saffron'
                                 }`}
                                 style={{ width: `${activePeriodSummary.progressPercent}%` }}

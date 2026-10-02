@@ -648,6 +648,16 @@ export const en = {
     code_sent: "Verification code sent to owner",
     code_requested_success: "Access code requested. If no message arrives, ask the owner to generate it in Settings.",
     code_manual_fallback: "WhatsApp is unavailable. Ask the owner to generate an access code in Settings and share it directly.",
+    transition: {
+      sign_in_title: "Signing you in",
+      sign_in_detail: "Checking your details",
+      signed_in_title: "Opening your workspace",
+      signed_in_detail: "Almost there",
+      sign_up_title: "Setting up your workspace",
+      sign_up_detail: "This takes a few seconds",
+      sign_out_title: "Logging you out",
+      sign_out_detail: "Clearing this device securely",
+    },
   },
   analytics: {
     greeting: {

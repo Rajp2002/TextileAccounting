@@ -382,7 +382,7 @@ export default function BasePayrollRecords({
                             ]}
                         />
 
-                        {recordsView === 'workers' && <div className="space-y-3">
+                        {recordsView === 'workers' && <div className="ui-content-swap space-y-3">
                             {visibleWorkers.map((worker) => {
                                 const original = initialData.settlements.find(settlement => settlement.id === worker.settlementId)
                                 const hasLaterPayment = initialData.settlements.some(settlement => settlement.worker_id === worker.workerId && settlement.status !== 'reversed' && settlement.period_end > (original?.period_end ?? ''))
@@ -420,7 +420,7 @@ export default function BasePayrollRecords({
                             })}
                         </div>}
 
-                        {recordsView === 'machines' && <div className="space-y-3">
+                        {recordsView === 'machines' && <div className="ui-content-swap space-y-3">
                             {visibleMachines.map((machine) => {
                                 const key = machine.machineId ?? machine.machineLabel
                                 const expanded = expandedMachines.has(key)

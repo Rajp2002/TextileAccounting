@@ -8,6 +8,10 @@ const defaultOptions: NonNullable<ToastOptions> = {
   closeButton: true,
 }
 
+// An error usually asks the owner to do something, so it stays long enough
+// to read twice.
+const errorDuration = 6500
+
 function withDefaults(options?: ToastOptions) {
   return { ...defaultOptions, ...options }
 }
@@ -15,13 +19,14 @@ function withDefaults(options?: ToastOptions) {
 /**
  * Base UX notification wrapper. Keeping the Sonner API behind this module
  * gives every customer-facing message the same duration and close affordance.
+ * Placement and styling live on the shared Toaster (components/ui/sonner.tsx).
  */
 export const toast = {
   success(message: ToastMessage, options?: ToastOptions) {
     return sonnerToast.success(message, withDefaults(options))
   },
   error(message: ToastMessage, options?: ToastOptions) {
-    return sonnerToast.error(message, withDefaults(options))
+    return sonnerToast.error(message, withDefaults({ duration: errorDuration, ...options }))
   },
   info(message: ToastMessage, options?: ToastOptions) {
     return sonnerToast.info(message, withDefaults(options))

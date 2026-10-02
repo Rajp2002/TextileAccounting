@@ -1589,7 +1589,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                     </div>
                                 ))}
                             </div>
-                            <details data-costing-tour="comparison-details" open={tourStep ? tourStep === 'comparisonDetails' : undefined} className="group rounded-xl border border-hairline bg-surface">
+                            <details data-costing-tour="comparison-details" open={tourStep ? tourStep === 'comparisonDetails' : undefined} className="ui-details group rounded-xl border border-hairline bg-surface">
                                 <summary className="mobile-touch-target flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-bold text-body marker:content-none">
                                     <span>View calculation details (optional)</span>
                                     <ChevronDown className="h-4 w-4 text-subtle transition-transform group-open:rotate-180" />

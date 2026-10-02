@@ -374,7 +374,7 @@ export default function BaseMachineBoard({
 
             {/* Machine Cards Grid */}
             {activeMachines.length > 0 && (
-                <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] gap-4">
+                <div key={filterStatus} className="ui-content-swap grid grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] gap-4">
                     {filteredMachines.map((machine) => {
                         const runningJob = currentJobByMachine.get(machine.id)
                         const isRunning = Boolean(runningJob)

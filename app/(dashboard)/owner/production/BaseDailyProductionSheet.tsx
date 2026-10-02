@@ -813,7 +813,7 @@ export default function BaseDailyProductionSheet({
                             <span className="text-xs font-medium text-body">machines accounted for</span>
                         </div>
                         <div role="progressbar" aria-label="Machines accounted for" aria-valuenow={registerSummary.accounted} aria-valuemin={0} aria-valuemax={Math.max(registerSummary.total, 1)} className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-soft min-[1280px]:mt-3">
-                            <div className="h-full rounded-full bg-loom transition-[width]" style={{ width: `${registerSummary.total ? registerSummary.accounted / registerSummary.total * 100 : 0}%` }} />
+                            <div className="ui-meter-fill h-full rounded-full bg-loom" style={{ width: `${registerSummary.total ? registerSummary.accounted / registerSummary.total * 100 : 0}%` }} />
                         </div>
                         <dl className="mt-2 flex flex-wrap justify-between gap-x-3 gap-y-1 text-xs min-[1280px]:mt-4 min-[1280px]:grid min-[1280px]:grid-cols-2 min-[1280px]:gap-0 min-[1280px]:divide-x min-[1280px]:divide-hairline min-[1280px]:border-t min-[1280px]:border-hairline min-[1280px]:pt-4">
                             <div className="flex flex-wrap items-baseline gap-1 min-[1280px]:block min-[1280px]:pr-3"><dt className="text-xs text-muted-foreground">Pending</dt><dd className="font-bold tabular-nums text-ink min-[1280px]:mt-1 min-[1280px]:text-base">{registerSummary.pending}</dd></div>

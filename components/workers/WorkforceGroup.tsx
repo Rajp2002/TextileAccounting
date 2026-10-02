@@ -14,6 +14,8 @@ interface WorkforceGroupProps {
   count?: number
   emptyText: string
   tourPreview?: boolean
+  /** Workers added since the page opened; their cards play the arrival highlight. */
+  arrivedIds?: ReadonlySet<string>
   onEdit: (worker: BaseProductionWorker) => void
 }
 
@@ -25,6 +27,7 @@ export function WorkforceGroup({
   emptyText,
   onEdit,
   tourPreview = false,
+  arrivedIds,
 }: WorkforceGroupProps) {
   const { tx } = useTranslation()
 
@@ -57,7 +60,7 @@ export function WorkforceGroup({
       {workers.length > 0 ? (
         <ul role="list" className="flex flex-col gap-3">
           {workers.map(worker => (
-            <li key={worker.id} role="listitem">
+            <li key={worker.id} role="listitem" className={arrivedIds?.has(worker.id) ? 'ui-row-arrive' : undefined}>
               <WorkerCard worker={worker} onEdit={onEdit} tourPreview={tourPreview} />
             </li>
           ))}

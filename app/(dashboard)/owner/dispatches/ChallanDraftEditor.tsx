@@ -450,7 +450,7 @@ export default function ChallanDraftEditor({
                             </p>
                         )}
                     </section>
-                    <details className="group rounded-2xl border border-hairline bg-surface p-4 sm:p-5 shadow-xs transition-all">
+                    <details className="ui-details group rounded-2xl border border-hairline bg-surface p-4 sm:p-5 shadow-xs transition-all">
                         <summary className="cursor-pointer font-bold text-ink flex items-center justify-between select-none">
                             <span className="text-sm font-extrabold uppercase tracking-wider text-ink">
                                 4 · {tx('optionalDetails')}

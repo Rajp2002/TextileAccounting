@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useEffectEvent, useSyncExternalStore, type CSSProperties } from 'react'
+import { useEffect, useEffectEvent, useSyncExternalStore } from 'react'
 import { usePathname } from 'next/navigation'
 import { toast as sonnerToast } from 'sonner'
 import { toast } from '@/lib/app-notifications'
@@ -13,13 +13,7 @@ export function PwaUpdateNotice() {
     const { status } = useSyncExternalStore(subscribePwaUpdate, getPwaUpdateSnapshot, getPwaUpdateServerSnapshot)
     const showAvailableNotice = useEffectEvent(() => toast.info(t('common.pwa_update_title'), {
         description: t('common.pwa_update_description'),
-        position: 'top-right',
         descriptionClassName: '!text-ink !opacity-100',
-        style: {
-            '--normal-bg': 'var(--weavly-surface)',
-            '--normal-text': 'var(--weavly-ink)',
-            '--normal-border': 'var(--weavly-hairline)',
-        } as CSSProperties,
         closeButton: true,
         duration: 12000,
         action: { label: t('common.pwa_update_refresh'), onClick: refreshPwaUpdate },

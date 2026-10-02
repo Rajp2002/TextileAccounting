@@ -409,6 +409,23 @@ Design must allow Gujarati/Hindi labels to be longer than English:
 - Modal/sheet headings should exist, even if visually hidden.
 - Use `aria-label` for date chips or compressed controls when needed.
 
+## Motion
+
+One quiet tempo everywhere. Tokens live in `app/globals.css` `:root`: `--motion-fast` (120ms, feedback), `--motion-base` (180ms, arrivals), `--motion-slow` (280ms, size changes), `--ease-out-soft`, and `--ease-sheet` for sheets. Every rule below is off under `prefers-reduced-motion`. Reuse these instead of adding new keyframes:
+
+- **Page arrival**: automatic. `.dashboard-main > *` fades each owner and Free page (and its skeleton) in. Do not add `ui-route-enter` to a page root.
+- **Disclosure**: add `ui-details` to a panel-style `<details>` so its content slides open (Chromium; elsewhere it opens instantly). Not for `<details>` used as a positioned menu.
+- **Swapped content**: `ui-content-swap` on a panel that mounts when a tab or segmented control changes (`TabsContent` has it built in). Key the container on the selected value if it does not remount by itself.
+- **Bars**: `ui-meter-fill` on any width-driven progress or composition bar.
+- **Placeholders**: `ui-skeleton` (add `ui-skeleton-inverse` on dark surfaces), never `animate-pulse`.
+- **New rows**: `useArrivals(allIds)` (`hooks/use-arrivals.ts`) and `ui-row-arrive` on the list item wrapping a card. Pass the unfiltered list.
+- **Live figures**: `<LiveValue value={formatted} />` (`components/ui/live-value.tsx`) for costs, prices and margins that update as inputs change.
+- **Save buttons**: `useSavedFlash()` and a `ui-success-pop` check with `t('base_plan.status.saved')` after a successful save.
+- **Inline alerts**: elements with `role="alert"` fade in automatically.
+- **Auth handoff**: `<AuthTransition open mode stage />` (`components/auth/auth-transition.tsx`) covers sign-in, account creation and log out. Open it on submit and leave it up through the navigation. Once the request succeeds, `holdForTransitionRound` keeps the page until the mark has finished one round (1.6s from the click, none under reduced motion); never delay the request itself, so log out still ends the session at once. Sign-in and sign-up weave on a small loom; log out winds the logo's spool. Use it only for crossing the auth boundary, not for in-app loading (skeletons cover that).
+
+The modal spring (`.modal-spring`), the liquid switch and segmented thumb, and the auth loom and spool are deliberate signatures; leave them as they are.
+
 ## Implementation Checklist
 
 When adding or changing UI:

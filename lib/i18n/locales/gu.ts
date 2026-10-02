@@ -648,6 +648,16 @@ export const gu = {
     code_sent: "વેરિફિકેશન કોડ માલિકને મોકલવામાં આવ્યો છે",
     code_requested_success: "ઍક્સેસ કોડની વિનંતી થઈ છે. સંદેશ ન મળે તો માલિકને Settings માં કોડ બનાવવા કહો.",
     code_manual_fallback: "WhatsApp ઉપલબ્ધ નથી. માલિકને Settings માં ઍક્સેસ કોડ બનાવી સીધો શેર કરવા કહો.",
+    transition: {
+      sign_in_title: "સાઇન ઇન થઈ રહ્યું છે",
+      sign_in_detail: "તમારી વિગતો તપાસી રહ્યા છીએ",
+      signed_in_title: "તમારું વર્કસ્પેસ ખુલી રહ્યું છે",
+      signed_in_detail: "બસ એક ક્ષણ",
+      sign_up_title: "તમારું વર્કસ્પેસ તૈયાર થઈ રહ્યું છે",
+      sign_up_detail: "આમાં થોડી સેકન્ડ લાગે છે",
+      sign_out_title: "લોગ આઉટ થઈ રહ્યું છે",
+      sign_out_detail: "આ ડિવાઇસનો ડેટા સુરક્ષિત રીતે સાફ થઈ રહ્યો છે",
+    },
   },
   analytics: {
     greeting: {

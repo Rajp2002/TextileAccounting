@@ -4,7 +4,8 @@ import type { FormEvent } from 'react'
 import { useRef, useState } from 'react'
 import { LogOut, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import LoadingModal from './loading-modal'
+import { AuthTransition } from './auth-transition'
+import { holdForTransitionRound } from './auth-transition-timing'
 import { useTranslation } from '@/lib/i18n/context'
 import { detachActiveQueryNamespace } from '@/lib/query-client-registry'
 import {
@@ -31,10 +32,51 @@ export default function LogoutButton({ variant = 'sidebar', className }: LogoutB
     const readyForServerLogoutRef = useRef(false)
     const { t } = useTranslation()
 
+    // The sign-out POST leaves at once, exactly as the native form post did, so
+    // the session ends while the spool turns. Once the server has cleared the
+    // cookies and the spool has finished a round, a full-page GET opens /login.
+    // This deliberately avoids a deployment-sensitive Server Action transition.
+    const signOutBehindTransition = async (logoutTraceId: string, transitionStartedAt: number) => {
+        const form = formRef.current
+        if (!form) return
+        const roundFinished = holdForTransitionRound(transitionStartedAt)
+
+        let signedOut = false
+        try {
+            // The 303 to /login is not followed here; its Set-Cookie still
+            // clears the session, and the page navigates below.
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form),
+                credentials: 'same-origin',
+                redirect: 'manual',
+                cache: 'no-store',
+            })
+            signedOut = response.type === 'opaqueredirect'
+        } catch {
+            // Offline or blocked: the native form post below reports it.
+        }
+
+        if (signedOut) {
+            await roundFinished
+            markLogoutTraceStage(logoutTraceId, 'signout_navigation_started')
+            window.location.replace('/login')
+            return
+        }
+
+        // Anything but the expected redirect falls back to the native POST,
+        // whose response the browser shows as it always has. The original submit
+        // event was already handled and cancelled; the submit-event helper would
+        // re-enter it and can leave the UI loading without navigating.
+        markLogoutTraceStage(logoutTraceId, 'signout_navigation_started')
+        formRef.current?.submit()
+    }
+
     const handleLogout = (event: FormEvent<HTMLFormElement>) => {
         if (readyForServerLogoutRef.current) return
 
         event.preventDefault()
+        const transitionStartedAt = performance.now()
         const nextTraceId = createLogoutTraceId()
         setTraceId(nextTraceId)
         if (traceInputRef.current) traceInputRef.current.value = nextTraceId
@@ -61,14 +103,8 @@ export default function LogoutButton({ variant = 'sidebar', className }: LogoutB
             onComplete: (result) => recordLogoutCleanupCompleted(nextTraceId, result),
         })
 
-        markLogoutTraceStage(nextTraceId, 'signout_navigation_started')
         readyForServerLogoutRef.current = true
-        // The original submit event is already being handled and cancelled.
-        // Calling the submit-event helper here re-enters that event and can leave the
-        // UI in its loading state without starting the native navigation.
-        formRef.current?.submit()
-        // The native POST response performs a full-page redirect to /login.
-        // This deliberately avoids a deployment-sensitive Server Action transition.
+        void signOutBehindTransition(nextTraceId, transitionStartedAt)
     }
 
     if (variant === 'header') {
@@ -90,7 +126,7 @@ export default function LogoutButton({ variant = 'sidebar', className }: LogoutB
                         {t('common.logout')}
                     </button>
                 </form>
-                <LoadingModal isOpen={isLoggingOut} message={t('common.signing_out')} />
+                <AuthTransition open={isLoggingOut} mode="sign-out" />
             </>
         )
     }
@@ -115,7 +151,7 @@ export default function LogoutButton({ variant = 'sidebar', className }: LogoutB
                     {t('nav.logout')}
                 </button>
             </form>
-            <LoadingModal isOpen={isLoggingOut} message={t('common.signing_out')} />
+            <AuthTransition open={isLoggingOut} mode="sign-out" />
         </>
     )
 }

@@ -97,12 +97,16 @@ Verified:
 - Startup policy VM tests cover first/repeat launch, preferences, explicit skip/completion, unavailable storage, reduced motion, and existing policy exceptions.
 - Production generation embeds the actual Next build ID in the custom worker; no unresolved build-ID identifier remains. The separate real Chromium worker upgrade proof covers consecutive workers at one script URL.
 
-## Final validation and deployment boundary
+## Implementation validation before integration
 
 - Full isolated test suite: 263 files, 2,253 passing tests, one intentional live-service skip.
 - TypeScript and zero-warning ESLint pass. Isolated production compilation, generated pages, and worker generation pass; final build evidence is in `scratch/mobile-pwa-audit/final-build.log`.
 - Final production build: `0DvvTiJZm8NfbsMXk9flV`. The generated worker contains this exact ID, and the emitted CSS includes the final installation-reminder navigation clearance and readable text rules. A pre-existing documentation token produces a non-blocking CSS optimizer warning (`docs/brand/WEAVLY_COLOR_SYSTEM.md:30`).
 - The existing emitted-route-chunk analyzer reports estimator 238,894 B gzip (above its 200,000 B budget), rates 128,803 B, saved costings 168,279 B, and settings 174,051 B (each below its 180,000 B budget). Billing is informational at 76,260 B. These are chunk unions, not browser transfer measurements, and no same-commit pre-change build was measured. The estimator remains a bundle-reduction follow-up; the current pass does not claim that all performance budgets have been met. Artifact: `final-bundle-report.json` in the audit directory.
-- No production data writes, commits, deployment, or live authenticated end-to-end submissions were performed.
+- This implementation validation used no production data writes, deployment, or live authenticated end-to-end submissions.
 - Physical iPhone/Android checks remain necessary before release: installed-app keyboard/focus and safe areas, OS suspend/restore, real native install/share, weak-network saves, and authenticated update/draft recovery. Browser fixtures and policy tests do not establish these device behaviors.
 - Historical datasets needed for accounting are still loaded completely. Authoritative server summaries with paginated provenance are a separate architectural follow-up; this change does not truncate history to obtain a faster result. Real-device and production measurements should determine whether that further work is needed.
+
+## Integration for publication
+
+On 3 October 2026 (Asia/Kolkata), the user authorized committing, pushing, and merging this work. Branch `codex/mobile-pwa-experience` integrates main through `846cc337`. Conflict resolution retains main's optimistic assignment interactions, animation classes, public-page translations, and shared top-centre toast stack alongside the mobile layouts, task-specific loaders, and guarded update manager. The pull request records combined-check results; the build ID and bundle figures above remain the original implementation snapshot.

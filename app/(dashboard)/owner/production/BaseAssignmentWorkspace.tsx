@@ -13,8 +13,9 @@ import { isSampleRecordId } from '@/lib/tours/sample-ids'
 import { tourCommonCopy } from '@/lib/i18n/tour-common'
 import { configurationHelpTopics, configurationTutorialCopy } from '@/lib/i18n/configuration-tutorial'
 import { configurationTourSteps, configurationTourView, configurationTourSpecs, configurationTourControlLabels, configurationHandoffWorker, makeConfigurationTourExample, type ConfigurationTourStep } from '@/lib/configuration-tour'
-import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import { Fragment, memo, useCallback, useEffect, useEffectEvent, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type Ref, type RefObject } from 'react'
 import { useRouter } from 'next/navigation'
+import { flushSync } from 'react-dom'
 import { toast } from 'sonner'
 import { ArrowUpRight, Check, CircleHelp, Link2, Loader2, Moon, Plus, Search, Sun, Unlink, Users, Wrench } from 'lucide-react'
 import { railButton, railIcon } from '@/components/ui/rail'
@@ -28,13 +29,20 @@ import { Input } from '@/components/ui/input'
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
 import { groupMachinesByWorker } from '@/lib/machine-assignment-groups'
+import {
+    applyPendingAssignmentChanges,
+    isAssignmentChangeReflected,
+    isPendingAssignmentId,
+    pendingAssignmentId,
+    type PendingAssignmentChange,
+} from '@/lib/machine-assignment-optimistic'
 import type { BaseProductionMachine, BaseProductionShift, BaseProductionWorker, BaseWorkerMachineAssignment } from '@/lib/base-production-core'
 import {
     removeBaseWorkerMachineAssignment,
     upsertBaseWorkerMachineAssignment,
 } from './actions'
 import type { BaseAssignmentsInitialData } from '../assignments/loaders'
-import { buildWorkerColorMap, DEFAULT_PALETTE } from './worker-colors'
+import { buildWorkerColorMap, DEFAULT_PALETTE, type WorkerPalette } from './worker-colors'
 
 const GuidedTour = dynamic(() => import('@/components/tours/GuidedTour').then(module => module.GuidedTour), { ssr: false }) as typeof GuidedTourComponent
 
@@ -66,12 +74,323 @@ type ConnectorPositions = {
     workers: Record<string, ConnectorPoint>
     machines: Record<string, ConnectorPoint>
 }
+type ConnectorLink = {
+    key: string
+    workerId: string
+    machineId: string
+    palette: WorkerPalette
+    isHighlighted: boolean
+    isDimmed: boolean
+    drawIn: boolean
+}
+type ConnectorLayerHandle = {
+    /** Re-reads every handle position (cheap; only re-renders the lines when something moved). */
+    measure: () => void
+    /** Keeps the lines glued to their handles every frame while cards animate. */
+    follow: (durationMs: number) => void
+}
+type BoardItemLayout = { node: HTMLElement; x: number; y: number }
+/** An optimistic change on the board: shown at once, saved in the background. */
+type BoardChange = PendingAssignmentChange & {
+    key: string
+    source: 'drag' | 'picker'
+    /** The machine has moved into its worker's group (a short beat after the link appears). */
+    placed: boolean
+    /** The server accepted the change; it stays until the refreshed page data shows it. */
+    settled: boolean
+    /** A fallback refresh was requested because the saved change had not shown up yet. */
+    refreshing: boolean
+}
+type DragSession = {
+    workerId: string
+    pointerId: number
+    clientX: number
+    clientY: number
+    scroller: Element
+    targetMachineId: string | null
+    end: ConnectorPoint | null
+    snapFrom: ConnectorPoint | null
+    snapStart: number
+    lastFrame: number
+    /** When the pointer reached the top or bottom edge; scrolling waits for a short dwell. */
+    edgeSince: number | null
+    returnFrom: ConnectorPoint | null
+    returnStart: number
+}
+
+// A drop links at once; a beat later the machine glides in beside its worker.
+const PLACE_DELAY_MS = 180
+const SETTLE_MS = 460
+const SETTLE_EASING = 'cubic-bezier(0.22, 1, 0.36, 1)'
+const SNAP_MS = 140
+const RETURN_MS = 220
+const NEW_LINK_HIGHLIGHT_MS = 1200
+const SAVED_REFRESH_FALLBACK_MS = 2500
+const AUTO_SCROLL_EDGE = 48
+const AUTO_SCROLL_DWELL_MS = 280
+const AUTO_SCROLL_SPEED = 14
 
 function connectorPath(from: ConnectorPoint, to: ConnectorPoint) {
     const distance = Math.max(48, to.x - from.x)
     const bend = Math.max(28, distance * 0.38)
     return `M ${from.x} ${from.y} C ${from.x + bend} ${from.y}, ${to.x - bend} ${to.y}, ${to.x} ${to.y}`
 }
+
+function prefersReducedMotion() {
+    return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
+function easeOutCubic(t: number) {
+    return 1 - (1 - t) ** 3
+}
+
+function mixPoint(from: ConnectorPoint, to: ConnectorPoint, t: number): ConnectorPoint {
+    return { x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t }
+}
+
+function nextPaint() {
+    return new Promise<void>((resolve) => requestAnimationFrame(() => setTimeout(resolve, 0)))
+}
+
+/**
+ * Where the board's content starts in viewport coordinates. Points measured from it
+ * stay put while the page or the board scrolls, which is what the connector SVG
+ * (absolutely positioned inside the board) needs.
+ */
+function boardOrigin(board: HTMLElement): ConnectorPoint {
+    const rect = board.getBoundingClientRect()
+    return { x: rect.left - board.scrollLeft, y: rect.top - board.scrollTop }
+}
+
+function edgePoint(origin: ConnectorPoint, node: Element, side: 'left' | 'right'): ConnectorPoint {
+    const rect = node.getBoundingClientRect()
+    return { x: (side === 'right' ? rect.right : rect.left) - origin.x, y: rect.top + rect.height / 2 - origin.y }
+}
+
+function measureConnectorHandles(board: HTMLElement): ConnectorPositions {
+    const origin = boardOrigin(board)
+    const workers: Record<string, ConnectorPoint> = {}
+    const machines: Record<string, ConnectorPoint> = {}
+    board.querySelectorAll<HTMLElement>('[data-worker-handle]').forEach((node) => {
+        if (node.dataset.workerHandle) workers[node.dataset.workerHandle] = edgePoint(origin, node, 'right')
+    })
+    board.querySelectorAll<HTMLElement>('[data-machine-handle]').forEach((node) => {
+        if (node.dataset.machineHandle) machines[node.dataset.machineHandle] = edgePoint(origin, node, 'left')
+    })
+    return { workers, machines }
+}
+
+function samePoints(left: Record<string, ConnectorPoint>, right: Record<string, ConnectorPoint>) {
+    const keys = Object.keys(left)
+    if (keys.length !== Object.keys(right).length) return false
+    return keys.every((key) => {
+        const next = right[key]
+        return next !== undefined && Math.abs(left[key].x - next.x) < 0.25 && Math.abs(left[key].y - next.y) < 0.25
+    })
+}
+
+function scrollParentOf(node: HTMLElement): Element {
+    for (let current: HTMLElement | null = node; current; current = current.parentElement) {
+        const { overflowY } = getComputedStyle(current)
+        if ((overflowY === 'auto' || overflowY === 'scroll') && current.scrollHeight > current.clientHeight + 1) return current
+    }
+    return document.scrollingElement ?? document.documentElement
+}
+
+/**
+ * Scrolls while a connector is held near the top or bottom edge, faster the closer it
+ * gets. It waits for a short dwell so aiming at a machine near the edge does not scroll it away.
+ */
+function autoScrollNearEdge(session: DragSession, now: number, elapsedMs: number) {
+    const { scroller, clientY } = session
+    const isPage = scroller === document.scrollingElement || scroller === document.documentElement
+    const bounds = isPage ? { top: 0, bottom: window.innerHeight } : scroller.getBoundingClientRect()
+    const overshoot = clientY < bounds.top + AUTO_SCROLL_EDGE
+        ? clientY - (bounds.top + AUTO_SCROLL_EDGE)
+        : clientY > bounds.bottom - AUTO_SCROLL_EDGE
+            ? clientY - (bounds.bottom - AUTO_SCROLL_EDGE)
+            : 0
+    if (overshoot === 0) {
+        session.edgeSince = null
+        return
+    }
+    session.edgeSince ??= now
+    if (now - session.edgeSince < AUTO_SCROLL_DWELL_MS) return
+    const strength = Math.min(1, Math.abs(overshoot) / AUTO_SCROLL_EDGE)
+    scroller.scrollTop += Math.sign(overshoot) * strength * strength * AUTO_SCROLL_SPEED * (elapsedMs / 16.7)
+}
+
+/**
+ * FLIP for the board: compares where each `data-board-item` sits now with where it sat
+ * after the previous commit, and slides anything that moved from its old place. Items
+ * matched by id, so a card that React remounted in another column still glides across.
+ */
+function settleBoardItems(
+    board: HTMLElement,
+    previous: ReadonlyMap<string, BoardItemLayout>,
+    animations: WeakMap<Element, Animation>,
+    animate: boolean,
+) {
+    const origin = boardOrigin(board)
+    const layout = new Map<string, BoardItemLayout>()
+    const moves: Array<{ node: HTMLElement; dx: number; dy: number }> = []
+    board.querySelectorAll<HTMLElement>('[data-board-item]').forEach((node) => {
+        const id = node.dataset.boardItem
+        if (!id) return
+        // A card still gliding from an earlier change: measure its resting place, not where it is mid-flight.
+        const offset = animations.get(node)?.playState === 'running' ? new DOMMatrixReadOnly(getComputedStyle(node).transform) : null
+        const offsetX = offset?.m41 ?? 0
+        const offsetY = offset?.m42 ?? 0
+        const rect = node.getBoundingClientRect()
+        const resting = { node, x: rect.left - origin.x - offsetX, y: rect.top - origin.y - offsetY }
+        layout.set(id, resting)
+        const before = previous.get(id)
+        if (!animate || !before) return
+        const dx = before.x - resting.x
+        const dy = before.y - resting.y
+        if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return
+        const inFlight = before.node === node
+        moves.push({ node, dx: dx + (inFlight ? offsetX : 0), dy: dy + (inFlight ? offsetY : 0) })
+    })
+    // Cards sit in per-row layers, so a card travelling past another row would slide under it.
+    // Lift each moving card's layer while it travels, the farthest-travelling one on top.
+    moves.sort((left, right) => Math.hypot(left.dx, left.dy) - Math.hypot(right.dx, right.dy))
+    const started = moves.map(({ node, dx, dy }, rank) => {
+        animations.get(node)?.cancel()
+        const animation = node.animate(
+            [{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'translate(0, 0)' }],
+            { duration: SETTLE_MS, easing: SETTLE_EASING },
+        )
+        animations.set(node, animation)
+        const layer = node.parentElement
+        if (layer && layer !== board) {
+            layer.style.zIndex = String(Math.max(Number(layer.style.zIndex) || 0, 11 + rank))
+            const lower = () => {
+                const stillMoving = [...layer.querySelectorAll('[data-board-item]')].some((item) => animations.get(item)?.playState === 'running')
+                if (!stillMoving) layer.style.zIndex = ''
+            }
+            animation.finished.then(lower, lower)
+        }
+        return animation
+    })
+    return { layout, started }
+}
+
+function selectCurrentAssignments(
+    assignments: readonly BaseWorkerMachineAssignment[],
+    shift: BaseProductionShift,
+    today: string,
+    currentJobByMachine: ReadonlyMap<string, string>,
+) {
+    return assignments.filter((assignment) => (
+        assignment.shift === shift
+        && assignment.active
+        && isEffectiveOnDate(assignment.effective_from, assignment.effective_to, today)
+        && currentJobByMachine.has(assignment.machine_id)
+    ))
+}
+
+/**
+ * The worker→machine lines. Lives in its own component so lines can follow animating
+ * cards every frame without re-rendering the whole workspace.
+ */
+const AssignmentConnectorLayer = memo(function AssignmentConnectorLayer({
+    layerRef,
+    boardRef,
+    links,
+}: {
+    layerRef: Ref<ConnectorLayerHandle>
+    boardRef: RefObject<HTMLDivElement | null>
+    links: ConnectorLink[]
+}) {
+    const [positions, setPositions] = useState<ConnectorPositions>({ workers: {}, machines: {} })
+    const followUntil = useRef(0)
+    const followFrame = useRef<number | null>(null)
+
+    const measure = useCallback((paintThisFrame = false) => {
+        const board = boardRef.current
+        if (!board) return
+        const next = measureConnectorHandles(board)
+        const update = () => setPositions((current) => (
+            samePoints(current.workers, next.workers) && samePoints(current.machines, next.machines) ? current : next
+        ))
+        if (paintThisFrame) flushSync(update)
+        else update()
+    }, [boardRef])
+
+    const follow = useCallback((durationMs: number) => {
+        followUntil.current = Math.max(followUntil.current, performance.now() + durationMs + 32)
+        if (followFrame.current !== null) return
+        const step = (now: number) => {
+            // Commit inside this animation frame, or the lines paint a frame behind the cards.
+            measure(true)
+            followFrame.current = now < followUntil.current ? requestAnimationFrame(step) : null
+        }
+        followFrame.current = requestAnimationFrame(step)
+    }, [measure])
+
+    useImperativeHandle(layerRef, () => ({ measure, follow }), [measure, follow])
+
+    useEffect(() => {
+        const board = boardRef.current
+        const frame = followFrame
+        if (!board) return
+        const remeasure = () => measure()
+        const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(remeasure)
+        observer?.observe(board)
+        window.addEventListener('resize', remeasure)
+        return () => {
+            observer?.disconnect()
+            window.removeEventListener('resize', remeasure)
+            if (frame.current !== null) cancelAnimationFrame(frame.current)
+        }
+    }, [boardRef, measure])
+
+    // New links from the Assign sheet draw themselves in; removed links fade instead of vanishing.
+    const linkMotion = useCallback((node: SVGPathElement | null) => {
+        if (!node) return
+        if (node.dataset.drawIn === 'true' && !prefersReducedMotion()) {
+            node.animate(
+                [{ strokeDasharray: '1 1', strokeDashoffset: 1 }, { strokeDasharray: '1 1', strokeDashoffset: 0 }],
+                { duration: 380, easing: SETTLE_EASING },
+            )
+        }
+        return () => {
+            const parent = node.parentNode
+            if (!parent || prefersReducedMotion()) return
+            const ghost = node.cloneNode() as SVGPathElement
+            ghost.removeAttribute('data-draw-in')
+            parent.insertBefore(ghost, node)
+            const fade = ghost.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 200, easing: 'ease-out', fill: 'forwards' })
+            fade.finished.then(() => ghost.remove(), () => ghost.remove())
+        }
+    }, [])
+
+    return (
+        <g>
+            {links.map(({ key, workerId, machineId, palette, isHighlighted, isDimmed, drawIn }) => {
+                const from = positions.workers[workerId]
+                const to = positions.machines[machineId]
+                if (!from || !to) return null
+                return (
+                    <path
+                        key={key}
+                        ref={linkMotion}
+                        data-draw-in={drawIn ? 'true' : undefined}
+                        d={connectorPath(from, to)}
+                        pathLength={1}
+                        fill="none"
+                        stroke={isHighlighted ? palette.strokeActive : palette.stroke}
+                        strokeWidth={isHighlighted ? 3.25 : 2.25}
+                        strokeOpacity={isDimmed ? 0.22 : 1}
+                        strokeLinecap="round"
+                        className="transition-[stroke,stroke-width,stroke-opacity] duration-200"
+                    />
+                )
+            })}
+        </g>
+    )
+})
 
 export default function BaseAssignmentWorkspace({
     initialData: liveData,
@@ -125,13 +444,21 @@ export default function BaseAssignmentWorkspace({
     const [machineTypeFilter, setSelectedMachineTypes] = useState<string[]>([])
     const [includeInactive] = useState(false)
     const [draggingWorkerId, setDraggingWorkerId] = useState<string | null>(null)
-    const [dragPoint, setDragPoint] = useState<ConnectorPoint | null>(null)
     const [hoveredWorkerId, setHoveredWorkerId] = useState<string | null>(null)
     const [hoveredMachineId, setHoveredMachineId] = useState<string | null>(null)
-    const [connectorPositions, setConnectorPositions] = useState<ConnectorPositions>({ workers: {}, machines: {} })
     const [selectedPickerWorkerId, setPickerWorkerId] = useState<string | null>(null)
-    const [pendingKey, setPendingKey] = useState<string | null>(null)
+    const [boardChanges, setBoardChanges] = useState<BoardChange[]>([])
+    const [newLinkKey, setNewLinkKey] = useState<string | null>(null)
     const [selectedMobileView, setMobileView] = useState<'workers' | 'machines'>('workers')
+    // Saved changes stay overlaid until the page data shows them; drop them once it does.
+    const [changesCheckedAgainst, setChangesCheckedAgainst] = useState(liveData.assignments)
+    if (changesCheckedAgainst !== liveData.assignments) {
+        setChangesCheckedAgainst(liveData.assignments)
+        setBoardChanges((changes) => {
+            const next = changes.filter((change) => !(change.settled && (change.refreshing || isAssignmentChangeReflected(liveData.assignments, change, liveData.today))))
+            return next.length === changes.length ? changes : next
+        })
+    }
     const shift = tourView?.shift ?? selectedShift
     const workerSearch = tourStep ? '' : search
     const selectedMachineTypes = useMemo(() => tourStep ? [] : machineTypeFilter, [tourStep, machineTypeFilter])
@@ -139,6 +466,21 @@ export default function BaseAssignmentWorkspace({
     const pickerWorkerId = tourStep ? tourView?.pickerWorkerId ?? null : selectedPickerWorkerId
     const mobileView = tourStep === 'ma-handoff' ? 'workers' : tourView?.mobileView ?? selectedMobileView
     const boardRef = useRef<HTMLDivElement>(null)
+    const connectorLayerRef = useRef<ConnectorLayerHandle>(null)
+    const dragPathRef = useRef<SVGPathElement>(null)
+    const dragSession = useRef<DragSession | null>(null)
+    const hoverPausedUntil = useRef(0)
+    const changeSequence = useRef(0)
+    const changeTimers = useRef(new Set<number>())
+    const boardLayout = useRef<ReadonlyMap<string, BoardItemLayout>>(new Map())
+    const boardAnimations = useRef(new WeakMap<Element, Animation>())
+    const boardMotionContextRef = useRef('')
+    const latest = useRef<{
+        undo: typeof handleUndoAssignment
+        changes: BoardChange[]
+        assignments: BaseWorkerMachineAssignment[]
+        today: string
+    } | null>(null)
     const configurationParams = new URLSearchParams({ shift })
     if (focusWorkerId) configurationParams.set('worker', focusWorkerId)
     if (focusMachineId) configurationParams.set('machine', focusMachineId)
@@ -172,14 +514,22 @@ export default function BaseAssignmentWorkspace({
         return result
     }, [activeJobIds, initialData.machineJobContexts, initialData.today])
 
+    // Tour samples never show live pending changes.
+    const shownChanges = useMemo(() => tourStep ? [] : boardChanges, [boardChanges, tourStep])
+    const pendingKey = shownChanges.find((change) => !change.settled)?.key ?? null
+    const savingMachineIds = useMemo(
+        () => new Set(shownChanges.filter((change) => !change.settled).map((change) => change.machineId)),
+        [shownChanges],
+    )
+    // What the board shows: server rows with every pending change applied.
     const currentAssignments = useMemo(
-        () => initialData.assignments.filter((assignment) => (
-            assignment.shift === shift
-            && assignment.active
-            && isEffectiveOnDate(assignment.effective_from, assignment.effective_to, initialData.today)
-            && currentJobByMachine.has(assignment.machine_id)
-        )),
-        [currentJobByMachine, initialData.assignments, initialData.today, shift],
+        () => selectCurrentAssignments(applyPendingAssignmentChanges(initialData.assignments, shownChanges, initialData.today), shift, initialData.today, currentJobByMachine),
+        [currentJobByMachine, initialData.assignments, initialData.today, shift, shownChanges],
+    )
+    // Where machines sit: the same, but a new change only moves its machine once it is placed.
+    const placedAssignments = useMemo(
+        () => selectCurrentAssignments(applyPendingAssignmentChanges(initialData.assignments, shownChanges.filter((change) => change.placed), initialData.today), shift, initialData.today, currentJobByMachine),
+        [currentJobByMachine, initialData.assignments, initialData.today, shift, shownChanges],
     )
     // Context filters narrow the summary; all candidates remain available for explicit reassignment.
     const contextAssignmentCount = currentAssignments.filter(assignment => (tourStep || !focusWorkerId || assignment.worker_id === focusWorkerId) && (tourStep || !focusMachineId || assignment.machine_id === focusMachineId)).length
@@ -215,8 +565,8 @@ export default function BaseAssignmentWorkspace({
     }), [initialData.machines, selectedMachineTypes, showInactive, focusMachineId, tourStep])
     // Machines are laid out per worker so each worker's machines sit together, beside that worker's card.
     const machineGroups = useMemo(
-        () => groupMachinesByWorker(visibleWorkers, visibleMachines, new Map(currentAssignments.map((assignment) => [assignment.machine_id, assignment.worker_id]))),
-        [currentAssignments, visibleMachines, visibleWorkers],
+        () => groupMachinesByWorker(visibleWorkers, visibleMachines, new Map(placedAssignments.map((assignment) => [assignment.machine_id, assignment.worker_id]))),
+        [placedAssignments, visibleMachines, visibleWorkers],
     )
     const groupedMachines = useMemo(
         () => [...machineGroups.rows.flatMap((row) => row.machines), ...machineGroups.ungrouped],
@@ -231,78 +581,275 @@ export default function BaseAssignmentWorkspace({
     const hasHandoffWorker = Boolean(handoffWorker)
     const tourSpecs = useMemo(() => configurationTourSpecs(hasHandoffWorker), [hasHandoffWorker])
 
-    const updateConnectorPositions = useCallback(() => {
+    const connectorLinks = useMemo<ConnectorLink[]>(() => {
+        const sheetPlaceholderIds = new Set(shownChanges.filter((change) => change.kind === 'assign' && change.source === 'picker' && !change.settled).map((change) => pendingAssignmentId(change.id)))
+        const hasAnyHover = Boolean(hoveredWorkerId || (hoveredMachineId && !draggingWorkerId && assignmentByMachine.get(hoveredMachineId)))
+        return visibleWorkers.flatMap((worker) => {
+            const palette = workerColorMap.get(worker.id) ?? DEFAULT_PALETTE
+            return (assignmentByWorker.get(worker.id) ?? []).map((assignment) => {
+                const key = `${worker.id}->${assignment.machine_id}`
+                const isHighlighted = hoveredWorkerId === worker.id || hoveredMachineId === assignment.machine_id || key === newLinkKey
+                return {
+                    key,
+                    workerId: worker.id,
+                    machineId: assignment.machine_id,
+                    palette,
+                    isHighlighted,
+                    isDimmed: hasAnyHover && !isHighlighted,
+                    drawIn: sheetPlaceholderIds.has(assignment.id),
+                }
+            })
+        })
+    }, [assignmentByMachine, assignmentByWorker, draggingWorkerId, hoveredMachineId, hoveredWorkerId, newLinkKey, shownChanges, visibleWorkers, workerColorMap])
+
+    // Anything that changes the board's layout without a user change (shift, filters, search,
+    // tour samples) snaps into place; only assignment changes glide.
+    const boardMotionContext = [shift, workerSearch, selectedMachineTypes.join(','), showInactive, tourStep ?? '', focusWorkerId ?? '', focusMachineId ?? ''].join('|')
+    useLayoutEffect(() => {
         const board = boardRef.current
         if (!board) return
-        const boardRect = board.getBoundingClientRect()
-        const workers: Record<string, ConnectorPoint> = {}
-        const machines: Record<string, ConnectorPoint> = {}
-
-        board.querySelectorAll<HTMLElement>('[data-worker-handle]').forEach((node) => {
-            const id = node.dataset.workerHandle
-            if (!id) return
-            const rect = node.getBoundingClientRect()
-            workers[id] = { x: rect.right - boardRect.left, y: rect.top + rect.height / 2 - boardRect.top }
-        })
-        board.querySelectorAll<HTMLElement>('[data-machine-handle]').forEach((node) => {
-            const id = node.dataset.machineHandle
-            if (!id) return
-            const rect = node.getBoundingClientRect()
-            machines[id] = { x: rect.left - boardRect.left, y: rect.top + rect.height / 2 - boardRect.top }
-        })
-        setConnectorPositions({ workers, machines })
-    }, [])
-
-    useLayoutEffect(() => {
-        updateConnectorPositions()
+        const animate = boardMotionContextRef.current === boardMotionContext && !tourStep && !prefersReducedMotion()
+        boardMotionContextRef.current = boardMotionContext
+        const { layout, started } = settleBoardItems(board, boardLayout.current, boardAnimations.current, animate)
+        boardLayout.current = layout
+        connectorLayerRef.current?.measure()
+        if (started.length === 0) return
+        connectorLayerRef.current?.follow(SETTLE_MS)
+        // If the browser dropped frames, the per-frame follow can end early; settle the lines on the real finish.
+        for (const animation of started) animation.finished.then(() => connectorLayerRef.current?.measure(), () => {})
+    })
+    useEffect(() => {
         const board = boardRef.current
         if (!board || typeof ResizeObserver === 'undefined') return
-        const observer = new ResizeObserver(updateConnectorPositions)
+        // A resize moves cards without a change to animate: just remember where they now rest.
+        const observer = new ResizeObserver(() => {
+            boardLayout.current = settleBoardItems(board, boardLayout.current, boardAnimations.current, false).layout
+        })
         observer.observe(board)
-        window.addEventListener('resize', updateConnectorPositions)
-        return () => {
-            observer.disconnect()
-            window.removeEventListener('resize', updateConnectorPositions)
-        }
-    }, [currentAssignments, machineGroups, updateConnectorPositions])
+        return () => observer.disconnect()
+    }, [])
+    useLayoutEffect(() => {
+        latest.current = { undo: handleUndoAssignment, changes: boardChanges, assignments: liveData.assignments, today: liveData.today }
+    })
+    useEffect(() => {
+        const timers = changeTimers.current
+        return () => timers.forEach((timer) => window.clearTimeout(timer))
+    }, [])
 
-    function boardPoint(clientX: number, clientY: number) {
-        const rect = boardRef.current?.getBoundingClientRect()
-        return rect ? { x: clientX - rect.left, y: clientY - rect.top } : null
+    function schedule(callback: () => void, delayMs: number) {
+        const timer = window.setTimeout(() => {
+            changeTimers.current.delete(timer)
+            callback()
+        }, delayMs)
+        changeTimers.current.add(timer)
     }
 
-    function machineAtPoint(clientX: number, clientY: number) {
+    function nextChangeId() {
+        changeSequence.current += 1
+        return String(changeSequence.current)
+    }
+
+    /** Shows a change at once (link first, then the machine settles beside its worker). */
+    function beginChange(change: BoardChange) {
+        const placeNow = prefersReducedMotion()
+        // A newer change on the same machine and shift replaces anything still overlaid there.
+        setBoardChanges((changes) => [
+            ...changes.filter((existing) => existing.machineId !== change.machineId || existing.shift !== change.shift),
+            { ...change, placed: placeNow },
+        ])
+        if (!placeNow) {
+            schedule(() => setBoardChanges((changes) => changes.map((existing) => existing.id === change.id ? { ...existing, placed: true } : existing)), PLACE_DELAY_MS)
+        }
+        if (change.kind === 'assign') {
+            const linkKey = `${change.workerId}->${change.machineId}`
+            setNewLinkKey(linkKey)
+            schedule(() => setNewLinkKey((current) => current === linkKey ? null : current), NEW_LINK_HIGHLIGHT_MS)
+        }
+    }
+
+    function revertChange(changeId: string) {
+        setBoardChanges((changes) => changes.filter((change) => change.id !== changeId))
+    }
+
+    function settleChange(changeId: string) {
+        const live = latest.current
+        setBoardChanges((changes) => changes.flatMap((change) => {
+            if (change.id !== changeId) return [change]
+            if (live && isAssignmentChangeReflected(live.assignments, change, live.today)) return []
+            return [{ ...change, placed: true, settled: true }]
+        }))
+        // The save action revalidates this page, so its fresh data normally arrives with the
+        // response. If it has not shown up after a while, ask for it once.
+        schedule(() => {
+            if (!latest.current?.changes.some((change) => change.id === changeId)) return
+            setBoardChanges((changes) => changes.map((change) => change.id === changeId ? { ...change, refreshing: true } : change))
+            router.refresh()
+        }, SAVED_REFRESH_FALLBACK_MS)
+    }
+
+    function droppableMachineAt(clientX: number, clientY: number) {
         const target = document.elementFromPoint(clientX, clientY)?.closest<HTMLElement>('[data-machine-node]')
         const machineId = target?.dataset.machineNode ?? null
-        return machineId && machineById.get(machineId)?.is_active && currentJobByMachine.has(machineId) ? machineId : null
+        return machineId && machineById.get(machineId)?.is_active && currentJobByMachine.has(machineId) && !savingMachineIds.has(machineId) ? machineId : null
+    }
+
+    function handleBoardPointerMove(event: ReactPointerEvent<HTMLDivElement>) {
+        // Cards slide under a resting cursor after a drop; wait for a real move before highlighting.
+        if (draggingWorkerId || event.pointerType === 'touch' || event.timeStamp < hoverPausedUntil.current) return
+        const target = event.target instanceof Element ? event.target : null
+        const workerId = target?.closest<HTMLElement>('[data-worker-card]')?.dataset.workerCard ?? null
+        const machineId = target?.closest<HTMLElement>('[data-machine-node]')?.dataset.machineNode ?? null
+        if (workerId !== hoveredWorkerId) setHoveredWorkerId(workerId)
+        if (machineId !== hoveredMachineId) setHoveredMachineId(machineId)
+    }
+
+    function handleBoardPointerLeave() {
+        if (draggingWorkerId) return
+        setHoveredWorkerId(null)
+        setHoveredMachineId(null)
     }
 
     function handleConnectorPointerDown(event: ReactPointerEvent<HTMLElement>, workerId: string) {
-        if (tourStep || isSampleRecordId(workerId) || pendingKey || !workerById.get(workerId)?.is_active) return
+        if (tourStep || isSampleRecordId(workerId) || draggingWorkerId || !workerById.get(workerId)?.is_active) return
+        if (event.pointerType === 'mouse' && event.button !== 0) return
+        const board = boardRef.current
+        if (!board) return
         event.preventDefault()
         event.currentTarget.setPointerCapture(event.pointerId)
-        setDraggingWorkerId(workerId)
-        setDragPoint(boardPoint(event.clientX, event.clientY))
-    }
-
-    function handleConnectorPointerMove(event: ReactPointerEvent<HTMLElement>) {
-        if (!draggingWorkerId) return
-        event.preventDefault()
-        setDragPoint(boardPoint(event.clientX, event.clientY))
-        setHoveredMachineId(machineAtPoint(event.clientX, event.clientY))
-    }
-
-    function finishConnectorDrag(event: ReactPointerEvent<HTMLElement>) {
-        if (!draggingWorkerId) return
-        const workerId = draggingWorkerId
-        const machineId = machineAtPoint(event.clientX, event.clientY)
-        setDraggingWorkerId(null)
-        setDragPoint(null)
+        dragSession.current = {
+            workerId,
+            pointerId: event.pointerId,
+            clientX: event.clientX,
+            clientY: event.clientY,
+            scroller: scrollParentOf(board),
+            targetMachineId: null,
+            end: null,
+            snapFrom: null,
+            snapStart: 0,
+            lastFrame: event.timeStamp,
+            edgeSince: null,
+            returnFrom: null,
+            returnStart: 0,
+        }
+        setHoveredWorkerId(null)
         setHoveredMachineId(null)
-        if (machineId) void handleAssign(workerId, machineId)
+        setDraggingWorkerId(workerId)
     }
 
-    async function handleAssign(workerId: string, machineId: string, replaceExisting = false) {
+    /** Let go somewhere that is not a machine: the line eases back into the worker's handle. */
+    function returnConnector(session: DragSession, now: number) {
+        session.returnFrom = session.end
+        session.returnStart = now
+        session.targetMachineId = null
+        setHoveredMachineId(null)
+        if (!session.returnFrom) {
+            dragSession.current = null
+            setDraggingWorkerId(null)
+        }
+    }
+
+    const onDragPointerMove = useEffectEvent((event: PointerEvent) => {
+        const session = dragSession.current
+        if (!session || session.returnFrom || event.pointerId !== session.pointerId) return
+        session.clientX = event.clientX
+        session.clientY = event.clientY
+    })
+
+    const onDragPointerUp = useEffectEvent((event: PointerEvent) => {
+        const session = dragSession.current
+        if (!session || session.returnFrom || event.pointerId !== session.pointerId) return
+        const machineId = droppableMachineAt(event.clientX, event.clientY)
+        if (!machineId) {
+            returnConnector(session, event.timeStamp)
+            return
+        }
+        // The line is already snapped to this machine's handle, so the saved link appears exactly where it is.
+        dragSession.current = null
+        hoverPausedUntil.current = event.timeStamp + PLACE_DELAY_MS + SETTLE_MS
+        setHoveredMachineId(null)
+        setDraggingWorkerId(null)
+        connectorLayerRef.current?.follow(200)
+        void handleAssign(session.workerId, machineId, 'drag')
+    })
+
+    const onDragCancel = useEffectEvent((event: Event) => {
+        const session = dragSession.current
+        if (!session || session.returnFrom) return
+        if (event instanceof PointerEvent && event.pointerId !== session.pointerId) return
+        if (event instanceof KeyboardEvent && event.key !== 'Escape') return
+        returnConnector(session, event.timeStamp)
+    })
+
+    const onDragFrame = useEffectEvent((now: number) => {
+        const session = dragSession.current
+        const board = boardRef.current
+        if (!session || !board) return
+        const elapsed = Math.min(48, Math.max(0, now - session.lastFrame))
+        session.lastFrame = now
+        const origin = boardOrigin(board)
+        const workerHandle = board.querySelector(`[data-worker-handle="${CSS.escape(session.workerId)}"]`)
+        if (!workerHandle) return
+        const start = edgePoint(origin, workerHandle, 'right')
+        const path = dragPathRef.current
+
+        if (session.returnFrom) {
+            const progress = Math.min(1, (now - session.returnStart) / RETURN_MS)
+            path?.setAttribute('d', connectorPath(start, mixPoint(session.returnFrom, start, easeOutCubic(progress))))
+            path?.setAttribute('stroke-opacity', String(1 - progress))
+            if (progress >= 1) {
+                dragSession.current = null
+                setDraggingWorkerId(null)
+            }
+            return
+        }
+
+        autoScrollNearEdge(session, now, elapsed)
+        const machineId = droppableMachineAt(session.clientX, session.clientY)
+        if (machineId !== session.targetMachineId) {
+            session.snapFrom = session.end
+            session.snapStart = now
+            session.targetMachineId = machineId
+            setHoveredMachineId(machineId)
+        }
+        // Over a machine the line snaps onto its handle; elsewhere it follows the pointer.
+        const machineHandle = machineId ? board.querySelector(`[data-machine-handle="${CSS.escape(machineId)}"]`) : null
+        const target = machineHandle ? edgePoint(origin, machineHandle, 'left') : { x: session.clientX - origin.x, y: session.clientY - origin.y }
+        const snap = session.snapFrom ? easeOutCubic(Math.min(1, (now - session.snapStart) / SNAP_MS)) : 1
+        const end = session.snapFrom && snap < 1 ? mixPoint(session.snapFrom, target, snap) : target
+        if (snap >= 1) session.snapFrom = null
+        session.end = end
+        path?.setAttribute('d', connectorPath(start, end))
+        path?.setAttribute('stroke-dasharray', machineId ? 'none' : '7 5')
+    })
+
+    useLayoutEffect(() => {
+        if (!draggingWorkerId) return
+        const move = (event: PointerEvent) => onDragPointerMove(event)
+        const up = (event: PointerEvent) => onDragPointerUp(event)
+        const cancel = (event: Event) => onDragCancel(event)
+        let frame = requestAnimationFrame(function step(now) {
+            onDragFrame(now)
+            frame = requestAnimationFrame(step)
+        })
+        const previousCursor = document.body.style.cursor
+        document.body.style.cursor = 'grabbing'
+        window.addEventListener('pointermove', move)
+        window.addEventListener('pointerup', up)
+        window.addEventListener('pointercancel', cancel)
+        window.addEventListener('keydown', cancel)
+        window.addEventListener('blur', cancel)
+        return () => {
+            cancelAnimationFrame(frame)
+            document.body.style.cursor = previousCursor
+            window.removeEventListener('pointermove', move)
+            window.removeEventListener('pointerup', up)
+            window.removeEventListener('pointercancel', cancel)
+            window.removeEventListener('keydown', cancel)
+            window.removeEventListener('blur', cancel)
+        }
+    }, [draggingWorkerId])
+
+    async function handleAssign(workerId: string, machineId: string, source: BoardChange['source'] = 'picker') {
         if (tourStep) return
         if (isSampleRecordId(workerId) || isSampleRecordId(machineId)) {
             toast.info(tourCommonCopy[language].sampleBanner)
@@ -312,10 +859,22 @@ export default function BaseAssignmentWorkspace({
             toast.error('This machine has no active production job. Create or select one before assigning a worker.')
             return
         }
-        const key = `assign-${workerId}-${machineId}`
-        if (pendingKey) return
+        if (savingMachineIds.has(machineId)) return
         const previousAssignment = assignmentByMachine.get(machineId)
-        setPendingKey(key)
+        if (previousAssignment?.worker_id === workerId) {
+            setPickerWorkerId(null)
+            return
+        }
+        let replaceExisting = false
+        if (previousAssignment) {
+            await nextPaint()
+            const currentWorker = workerById.get(previousAssignment.worker_id)?.name ?? 'Another worker'
+            if (!window.confirm(`${currentWorker} is already assigned to this machine for the ${shift} shift. Replace that primary assignment?`)) return
+            replaceExisting = true
+        }
+        const changeId = nextChangeId()
+        beginChange({ id: changeId, kind: 'assign', workerId, machineId, shift, key: `assign-${workerId}-${machineId}`, source, placed: false, settled: false, refreshing: false })
+        setPickerWorkerId(null)
         try {
             let result = await upsertBaseWorkerMachineAssignment({
                 workerId,
@@ -326,9 +885,15 @@ export default function BaseAssignmentWorkspace({
             })
             const conflict = result && typeof result === 'object' && 'conflict' in result && (result as { conflict?: boolean }).conflict
             if (conflict && !replaceExisting) {
+                // Someone else took the machine since this page loaded.
                 const currentWorker = (result as { currentWorkerName?: string }).currentWorkerName ?? 'Another worker'
                 const confirmed = window.confirm(`${currentWorker} is already assigned to this machine for the ${shift} shift. Replace that primary assignment?`)
-                if (!confirmed) return
+                if (!confirmed) {
+                    revertChange(changeId)
+                    router.refresh()
+                    return
+                }
+                replaceExisting = true
                 result = await upsertBaseWorkerMachineAssignment({
                     workerId,
                     machineId,
@@ -339,43 +904,49 @@ export default function BaseAssignmentWorkspace({
             }
             const error = getActionError(result)
             if (error) {
+                revertChange(changeId)
                 toast.error(error)
                 return
             }
+            settleChange(changeId)
             const assignmentId = result && typeof result === 'object' && 'assignmentId' in result
                 ? (result as { assignmentId?: string | null }).assignmentId
                 : null
             const changedAssignment = Boolean(assignmentId && (!previousAssignment || previousAssignment.worker_id !== workerId))
-            toast.success(conflict ? 'Primary worker replaced.' : 'Worker assigned.', changedAssignment && assignmentId ? {
+            toast.success(replaceExisting ? 'Primary worker replaced.' : 'Worker assigned.', changedAssignment && assignmentId ? {
                 action: {
                     label: 'Undo',
-                    onClick: () => void handleUndoAssignment(assignmentId, previousAssignment),
+                    onClick: () => void latest.current?.undo(assignmentId, machineId, shift, previousAssignment),
                 },
             } : undefined)
-            setPickerWorkerId(null)
-            router.refresh()
         } catch (error) {
+            revertChange(changeId)
             toast.error(error instanceof Error ? error.message : 'The assignment action could not be completed.')
-        } finally {
-            setPendingKey(null)
-            setDraggingWorkerId(null)
         }
     }
 
     async function handleUndoAssignment(
         assignmentId: string,
+        machineId: string,
+        assignmentShift: BaseProductionShift,
         previousAssignment: BaseWorkerMachineAssignment | undefined,
     ) {
-        if (tourStep || pendingKey) return
+        if (tourStep) return
         if (isSampleRecordId(assignmentId) || isSampleRecordId(previousAssignment?.id) || isSampleRecordId(previousAssignment?.worker_id) || isSampleRecordId(previousAssignment?.machine_id)) {
             toast.info(tourCommonCopy[language].sampleBanner)
             return
         }
-        setPendingKey(`undo-${assignmentId}`)
+        if (savingMachineIds.has(machineId)) return
+        const changeId = nextChangeId()
+        const pending = { id: changeId, machineId, key: `undo-${assignmentId}`, source: 'picker', placed: false, settled: false, refreshing: false } as const
+        beginChange(previousAssignment
+            ? { ...pending, kind: 'assign', workerId: previousAssignment.worker_id, shift: previousAssignment.shift }
+            : { ...pending, kind: 'remove', assignmentId, shift: assignmentShift })
         try {
             const removeResult = await removeBaseWorkerMachineAssignment({ assignmentId })
             const removeError = getActionError(removeResult)
             if (removeError) {
+                revertChange(changeId)
                 toast.error(removeError)
                 return
             }
@@ -390,41 +961,45 @@ export default function BaseAssignmentWorkspace({
                 })
                 const restoreError = getActionError(restoreResult)
                 if (restoreError) {
+                    // The new assignment is already gone; show what the server has now.
+                    revertChange(changeId)
+                    router.refresh()
                     toast.error(restoreError)
                     return
                 }
             }
 
+            settleChange(changeId)
             toast.success(previousAssignment ? 'Previous assignment restored.' : 'Assignment undone.')
-            router.refresh()
         } catch (error) {
+            revertChange(changeId)
+            router.refresh()
             toast.error(error instanceof Error ? error.message : 'The assignment could not be undone.')
-        } finally {
-            setPendingKey(null)
         }
     }
 
-    async function handleRemove(assignmentId: string) {
+    async function handleRemove(assignmentId: string, machineId: string) {
         if (tourStep) return
         if (isSampleRecordId(assignmentId)) {
             toast.info(tourCommonCopy[language].sampleBanner)
             return
         }
-        if (pendingKey) return
-        setPendingKey(`remove-${assignmentId}`)
+        if (isPendingAssignmentId(assignmentId) || savingMachineIds.has(machineId)) return
+        const changeId = nextChangeId()
+        beginChange({ id: changeId, kind: 'remove', assignmentId, machineId, shift, key: `remove-${assignmentId}`, source: 'picker', placed: false, settled: false, refreshing: false })
         try {
             const result = await removeBaseWorkerMachineAssignment({ assignmentId })
             const error = getActionError(result)
             if (error) {
+                revertChange(changeId)
                 toast.error(error)
                 return
             }
+            settleChange(changeId)
             toast.success('Assignment removed.')
-            router.refresh()
         } catch (error) {
+            revertChange(changeId)
             toast.error(error instanceof Error ? error.message : 'The assignment could not be removed.')
-        } finally {
-            setPendingKey(null)
         }
     }
 
@@ -435,9 +1010,9 @@ export default function BaseAssignmentWorkspace({
             <div
                 key={worker.id}
                 data-configuration-tour="worker"
-                onMouseEnter={() => !draggingWorkerId && setHoveredWorkerId(worker.id)}
-                onMouseLeave={() => !draggingWorkerId && setHoveredWorkerId(null)}
-                className={`flex min-h-[76px] items-center justify-between gap-3 rounded-xl border bg-surface px-3.5 py-3 shadow-xs transition-all ${draggingWorkerId === worker.id ? 'border-saffron bg-saffron-soft/40 shadow-sm' : hoveredWorkerId === worker.id ? 'border-hairline-strong shadow-xs' : 'border-hairline'}`}
+                data-worker-card={worker.id}
+                data-board-item={`worker:${worker.id}`}
+                className={`flex min-h-[76px] items-center justify-between gap-3 rounded-xl border bg-surface px-3.5 py-3 shadow-xs transition-[border-color,background-color,box-shadow] duration-200 ${draggingWorkerId === worker.id ? 'border-saffron bg-saffron-soft/40 shadow-sm' : hoveredWorkerId === worker.id ? 'border-hairline-strong shadow-xs' : 'border-hairline'}`}
             >
                 <div className="min-w-0">
                     <p className="truncate font-semibold text-ink">{worker.name}</p>
@@ -445,7 +1020,7 @@ export default function BaseAssignmentWorkspace({
                     <div className="mt-1.5 flex flex-wrap gap-1">
                         {assignments.map((assignment) => (
                             <span
-                                key={assignment.id}
+                                key={assignment.machine_id}
                                 style={{
                                     backgroundColor: palette.bg,
                                     borderColor: palette.border,
@@ -476,9 +1051,6 @@ export default function BaseAssignmentWorkspace({
                         data-configuration-tour="drag"
                         data-worker-handle={worker.id}
                         onPointerDown={(event) => handleConnectorPointerDown(event, worker.id)}
-                        onPointerMove={handleConnectorPointerMove}
-                        onPointerUp={finishConnectorDrag}
-                        onPointerCancel={finishConnectorDrag}
                         style={{
                             borderColor: palette.border,
                             backgroundColor: palette.bg,
@@ -501,15 +1073,15 @@ export default function BaseAssignmentWorkspace({
         const workerPalette = worker ? (workerColorMap.get(worker.id) ?? DEFAULT_PALETTE) : null
         const jobId = currentJobByMachine.get(machine.id) ?? 'none'
         const hasActiveJob = jobId !== 'none'
-        const isDropTargetValid = Boolean(draggingWorkerId && machine.is_active && hasActiveJob)
+        const isSaving = savingMachineIds.has(machine.id)
+        const isDropTargetValid = Boolean(draggingWorkerId && machine.is_active && hasActiveJob && !isSaving)
         return (
             <div
                 key={machine.id}
                 data-configuration-tour="machine"
                 data-machine-node={machine.id}
-                onMouseEnter={() => !draggingWorkerId && setHoveredMachineId(machine.id)}
-                onMouseLeave={() => !draggingWorkerId && setHoveredMachineId(null)}
-                className={`min-h-[76px] rounded-xl border bg-surface px-3.5 py-3 shadow-xs transition-all ${hoveredMachineId === machine.id && draggingWorkerId ? 'scale-[1.01] border-saffron bg-saffron-soft/45 shadow-md ring-2 ring-saffron/20' : isDropTargetValid ? 'border-saffron/55 bg-saffron-soft/20' : hoveredMachineId === machine.id ? 'border-hairline-strong shadow-xs' : 'border-hairline'} ${!hasActiveJob ? 'opacity-90' : ''}`}
+                data-board-item={`machine:${machine.id}`}
+                className={`min-h-[76px] rounded-xl border bg-surface px-3.5 py-3 shadow-xs transition-[border-color,background-color,box-shadow,scale] duration-200 ${hoveredMachineId === machine.id && draggingWorkerId ? 'scale-[1.01] border-saffron bg-saffron-soft/45 shadow-md ring-2 ring-saffron/20' : isDropTargetValid ? 'border-saffron/55 bg-saffron-soft/20' : hoveredMachineId === machine.id ? 'border-hairline-strong shadow-xs' : 'border-hairline'} ${!hasActiveJob ? 'opacity-90' : ''}`}
             >
                 <div className="flex items-start justify-between gap-2">
                     <span
@@ -555,7 +1127,7 @@ export default function BaseAssignmentWorkspace({
                                         }
                                         : undefined
                                 }
-                                className="inline-flex items-center justify-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold leading-[1.35]"
+                                className={cn('inline-flex items-center justify-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold leading-[1.35] transition-opacity duration-300', isPendingAssignmentId(assignment?.id) && 'opacity-70')}
                             >
                                 <Check className="h-3 w-3" /> {worker.name}
                             </span>
@@ -570,8 +1142,8 @@ export default function BaseAssignmentWorkspace({
                                 variant="ghost"
                                 size="icon-sm"
                                 aria-label={`Remove ${worker?.name ?? 'worker'} from ${machineLabel(machine)}`}
-                                onClick={() => void handleRemove(assignment.id)}
-                                disabled={pendingKey !== null}
+                                onClick={() => void handleRemove(assignment.id, machine.id)}
+                                disabled={isPendingAssignmentId(assignment.id) || isSaving}
                                 className="h-8 w-8 rounded-lg text-muted-foreground hover:bg-risk-soft/40 hover:text-risk transition-colors"
                             >
                                 <Unlink className="h-3.5 w-3.5" />
@@ -717,45 +1289,19 @@ export default function BaseAssignmentWorkspace({
                         ref={boardRef}
                         data-configuration-tour-connections
                         data-tour-anchor="assignments.columns"
-                        onScroll={updateConnectorPositions}
+                        onPointerMove={handleBoardPointerMove}
+                        onPointerLeave={handleBoardPointerLeave}
                         className={`relative grid ${tourSampleActive ? 'flex-none' : 'flex-1'} min-h-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] content-start gap-x-12 gap-y-4 lg:gap-x-16 overflow-y-auto overscroll-contain pr-2 ${draggingWorkerId ? 'select-none' : ''}`}
                     >
                         <svg className="pointer-events-none absolute inset-0 z-0 h-full w-full overflow-visible" aria-hidden="true">
-                            {visibleWorkers.flatMap((worker) => {
-                                const palette = workerColorMap.get(worker.id) ?? DEFAULT_PALETTE
-                                const assignments = assignmentByWorker.get(worker.id) ?? []
-                                return assignments.map((assignment) => {
-                                    const from = connectorPositions.workers[worker.id]
-                                    const to = connectorPositions.machines[assignment.machine_id]
-                                    if (!from || !to) return null
-                                    const isAssignedMachineHovered = hoveredMachineId === assignment.machine_id
-                                    const isWorkerHovered = hoveredWorkerId === worker.id
-                                    const isHighlighted = isWorkerHovered || isAssignedMachineHovered
-                                    const hasAnyHover = Boolean(hoveredWorkerId || (hoveredMachineId && !draggingWorkerId && assignmentByMachine.get(hoveredMachineId)))
-                                    const isDimmed = hasAnyHover && !isHighlighted
-
-                                    return (
-                                        <path
-                                            key={assignment.id}
-                                            d={connectorPath(from, to)}
-                                            fill="none"
-                                            stroke={isHighlighted ? palette.strokeActive : palette.stroke}
-                                            strokeWidth={isHighlighted ? 3.25 : 2.25}
-                                            strokeOpacity={isDimmed ? 0.22 : 1}
-                                            strokeLinecap="round"
-                                            className="transition-[stroke,stroke-width,stroke-opacity] duration-150"
-                                        />
-                                    )
-                                })
-                            })}
-                            {draggingWorkerId && dragPoint && connectorPositions.workers[draggingWorkerId] && (
+                            <AssignmentConnectorLayer layerRef={connectorLayerRef} boardRef={boardRef} links={connectorLinks} />
+                            {draggingWorkerId && (
                                 <path
-                                    d={connectorPath(connectorPositions.workers[draggingWorkerId], dragPoint)}
+                                    ref={dragPathRef}
                                     fill="none"
                                     stroke={(workerColorMap.get(draggingWorkerId) ?? DEFAULT_PALETTE).strokeActive}
                                     strokeWidth="3"
                                     strokeLinecap="round"
-                                    strokeDasharray="7 5"
                                 />
                             )}
                         </svg>
@@ -907,8 +1453,8 @@ export default function BaseAssignmentWorkspace({
                                                         variant="ghost"
                                                         size="icon-sm"
                                                         aria-label={`Remove ${worker?.name ?? 'worker'} from ${machineLabel(machine)}`}
-                                                        onClick={() => void handleRemove(assignment.id)}
-                                                        disabled={pendingKey !== null}
+                                                        onClick={() => void handleRemove(assignment.id, machine.id)}
+                                                        disabled={isPendingAssignmentId(assignment.id) || savingMachineIds.has(machine.id)}
                                                         className="h-8 w-8 rounded-lg text-muted-foreground hover:bg-risk-soft/40 hover:text-risk transition-colors"
                                                     >
                                                         <Unlink className="h-3.5 w-3.5" />
