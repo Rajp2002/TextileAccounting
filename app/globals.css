@@ -1124,6 +1124,7 @@
       .dispatch-action-rail,
       .payroll-period-rail,
       .production-activate-rail,
+      .production-daily-sheet-rail,
       .stock-movement-rail-desktop
     )) :is(
       .saved-costings-left-rail,
@@ -1148,7 +1149,6 @@
     /* Routes without a guide keep the wider two-column composition, but their
        right rail sits at the same viewport offset as every other route. The
        workspace stays in the content column and ends one rail gap before it. */
-    .production-daily-sheet-workspace,
     .billing-workspace-shell {
       margin-right: max(0px, calc(var(--rail-right) + var(--rail-span) - var(--main-inset)));
     }
@@ -1160,6 +1160,7 @@
     .machines-workspace-shell,
     .dispatch-workspace-shell,
     .production-overview-workspace,
+    .production-daily-sheet-workspace,
     .configuration-page-frame,
     .saved-costings-workspace,
     .rates-workspace {

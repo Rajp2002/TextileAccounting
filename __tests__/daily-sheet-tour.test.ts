@@ -85,15 +85,18 @@ describe('Daily Sheet tour contract', () => {
         expect(sheet).toContain("window.history.replaceState(null, '', baseDailySheetHref({ ...navigation, date, shift: nextShift, entry: undefined }))")
         expect(sheet).toContain('max={initialData.today}')
     })
-    it('uses the existing mounted-child runtime and a single responsive guide slot', () => {
+    it('uses the existing mounted-child runtime with the guide in the shared left rail', () => {
         const wrapper = readFileSync('components/production/DailySheetGuidedTour.tsx', 'utf8')
         const runtime = readFileSync('components/tours/ReplicaGuidedTour.tsx', 'utf8')
         expect(wrapper).toContain('<ReplicaGuidedTour tourId="daily-sheet"')
         expect(wrapper).toContain('handoffStepId="ds-handoff"')
         expect(wrapper).toContain("dynamic(() => import('./DailySheetSampleWorkspace'), { ssr: false })")
         expect(wrapper).toContain("import('@/lib/i18n/daily-sheet-tutorial')")
-        expect(wrapper).toContain('[&>div:first-child]:min-[1280px]:order-last')
-        expect(wrapper).toContain('production-daily-sheet-rail')
+        // The guide is the standard left rail; the live controls keep their own right rail, mounted first in the children slot.
+        expect(wrapper).toContain('railClassName={`production-left-rail ')
+        expect(wrapper).toContain('<aside className="production-daily-sheet-rail min-w-0"')
+        expect(wrapper).not.toMatch(/order-last|!left-auto|group-has-|walkthrough=/)
+        expect(wrapper.indexOf('<aside className="production-daily-sheet-rail')).toBeLessThan(wrapper.lastIndexOf('{children}'))
         expect(wrapper).not.toContain('<TourInvitation')
         expect(runtime.match(/<TourInvitation\b/g)).toHaveLength(1)
         expect(runtime).toContain('<div hidden={step !== null && step !== handoffStepId}>{children}</div>')

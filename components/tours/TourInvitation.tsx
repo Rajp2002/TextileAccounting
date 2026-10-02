@@ -8,7 +8,7 @@ import { tourInvitationCopy } from '@/lib/i18n/tour-invitations'
 import { tourCommonCopy } from '@/lib/i18n/tour-common'
 import { useTourInvitation } from '@/hooks/use-tour-invitation'
 import { Button } from '@/components/ui/button'
-import { railButton, railIcon, railSurface } from '@/components/ui/rail'
+import { railGuideButton, railGuideIcon, railGuideSurface, railPrimaryAction } from '@/components/ui/rail'
 import { cn } from '@/lib/utils'
 
 export interface TourInvitationProps {
@@ -57,15 +57,15 @@ export function TourInvitation({ tourId, userId, userMetadata, orgId, onLaunch, 
             data-testid={dataTestId ?? `tour-guide-${tourId}`}
             data-tour-id={tourId}
             data-tour-invitation="true"
-            className={cn('@container p-4 text-ink', railSurface, className)}
+            className={cn('@container p-4 text-ink', railGuideSurface, className)}
         >
-            <div className="flex flex-col gap-3 @lg:flex-row @lg:items-center @lg:gap-6">
+            <div className="flex flex-col gap-3.5 @lg:flex-row @lg:items-center @lg:gap-6">
                 <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                        <Compass className={railIcon} aria-hidden="true" />
-                        <h2 className="text-sm font-semibold leading-snug text-ink">{title}</h2>
+                    <div className="flex items-center gap-3">
+                        <span className={railGuideIcon} aria-hidden="true"><Compass className="h-5 w-5" /></span>
+                        <h2 className="min-w-0 text-base font-bold leading-snug text-ink">{title}</h2>
                     </div>
-                    <p id={benefitId} className="mt-1.5 text-[0.8125rem] leading-relaxed text-muted-foreground">{copy.benefits[tourId]}</p>
+                    <p id={benefitId} className="mt-2.5 text-sm leading-relaxed text-body">{copy.benefits[tourId]}</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 @lg:shrink-0">
                     <button
@@ -77,7 +77,7 @@ export function TourInvitation({ tourId, userId, userMetadata, orgId, onLaunch, 
                         aria-label={launcherAria}
                         data-testid="tour-invitation-launch"
                         data-tour-control="take-tour"
-                        className="inline-flex min-h-[44px] min-w-[44px] w-full items-center justify-center gap-2 rounded-lg border border-hairline-strong bg-surface px-4 text-sm font-semibold text-ink transition-colors duration-150 hover:bg-surface-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/50 disabled:opacity-50 @lg:w-auto"
+                        className={cn(railPrimaryAction, 'inline-flex min-h-12 min-w-[44px] w-full items-center justify-center gap-2 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 disabled:opacity-50 @lg:w-auto')}
                     >
                         <span>{isStarting ? copy.loading : common.startGuide}</span>
                         <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -97,12 +97,12 @@ export function TourInvitation({ tourId, userId, userMetadata, orgId, onLaunch, 
         data-testid={dataTestId ?? `tour-launcher-${tourId}`}
         data-tour-control="quiet-tour"
         data-costing-tour={tourId === 'saved-costings' ? 'launcher' : undefined}
-        className={cn('estimator-touch-target', railButton, 'px-3 py-2 text-xs', className)}
+        className={cn('estimator-touch-target', railGuideButton, className)}
     >
-        <span className="flex min-w-0 items-center gap-2">
-            <Compass className={railIcon} aria-hidden="true" />
-            <span className="truncate">{isStarting ? copy.loading : title}</span>
+        <span className="flex min-w-0 items-center gap-3">
+            <span className={railGuideIcon} aria-hidden="true"><Compass className="h-5 w-5" /></span>
+            <span className="min-w-0">{isStarting ? copy.loading : title}</span>
         </span>
-        <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+        <ArrowRight className="h-4 w-4 shrink-0 text-saffron-deep transition-transform duration-150 group-hover:translate-x-0.5 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0" aria-hidden="true" />
     </button>
 }

@@ -141,6 +141,25 @@ describe('Guided Tour Left Rail Placement Across All Sections', () => {
         expect(invitationProps(shell)).not.toContain('amber')
     })
 
+    // 12. Daily Sheet
+    it('verifies the Daily Sheet guide sits in the shared left rail with its controls in the right rail', () => {
+        const dailyTour = read('components/production/DailySheetGuidedTour.tsx')
+        const shell = read('components/tours/ReplicaGuidedTour.tsx')
+        expect(dailyTour).toContain('<ReplicaGuidedTour')
+        expect(dailyTour).toContain('railClassName={`production-left-rail ')
+        expect(dailyTour).toContain('workspaceClassName=""')
+        expect(dailyTour).toContain('tourId="daily-sheet"')
+        expect(dailyTour).not.toContain('<TourInvitation')
+        expect(shell).toContain('className={`${railClassName} guided-tour-left-rail space-y-2`}')
+        // Same composition as Production: the workspace is centred between the rails from 1440px and clears the right rail from 1280px.
+        const tier = styles.slice(styles.indexOf('@media (min-width: 1440px) {'))
+        const centred = tier.slice(tier.indexOf('.estimator-workspace-shell,'), tier.indexOf('width: min(100%, var(--workspace-w));'))
+        expect(centred).toContain('.production-daily-sheet-workspace')
+        expect(tier.slice(0, tier.indexOf('.estimator-workspace-shell,'))).not.toContain('.production-daily-sheet-workspace')
+        const clearance = styles.slice(styles.indexOf('Guides rendered outside their route'))
+        expect(clearance.slice(0, clearance.indexOf(') :is('))).toContain('.production-daily-sheet-rail')
+    })
+
     // CSS verification
     it('defines responsive positioning in globals.css for all left rail classes', () => {
         const rails = [
