@@ -1,0 +1,8 @@
+{"feature":"costings","title":"Saved Costings","poster_seconds":10,"clips":[
+{"file":"scratch/feature-demos/raw/costings-01-open.mp4","title":"Find and inspect a saved costing","description":"Search for the demo fabric and open its saved cost breakdown. Review the original production cost, selling price, margin and quantity."},
+{"file":"scratch/feature-demos/raw/costings-02-version.mp4","title":"Reuse a costing and change assumptions","description":"Choose Use to reopen the saved snapshot. Change the weaving rate to Rs 16/m and target margin to 20%, then inspect the new live result."},
+{"file":"scratch/feature-demos/raw/costings-03-save.mp4","title":"Save a new version","description":"Save New Version creates costing v2 while preserving v1 and its original numbers."},
+{"file":"scratch/feature-demos/raw/costings-04-compare.mp4","title":"Select two versions","description":"Enable Compare, open the fabric's history, and select v1 and v2 for comparison."},
+{"file":"scratch/feature-demos/raw/costings-05-comparison.mp4","title":"Explain the difference","description":"Open Compare Costings to inspect the differences in cost components, selling price, margin and profit."},
+{"file":"scratch/feature-demos/raw/costings-06-export.mp4","title":"Export a cost sheet or customer quotation","description":"Preview and download the internal cost sheet. Switch to Customer Quotation, enter a demo buyer and terms, and download a quotation that hides internal costs and margins. Nothing is sent to a customer."}
+]}

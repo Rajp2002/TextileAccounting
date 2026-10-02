@@ -69,13 +69,14 @@ describe('Standalone Plan Chooser & Upgrade Experience', () => {
       expect(UPGRADE_FEATURE_IMAGES.payroll.src).toBe('/images/plans/payroll.svg')
     })
 
-    it('UI-02: preview modal is accessible with dialog role, modal attribute and close action', () => {
+    it('UI-02: video preview uses the shared accessible dialog and restores launcher focus', () => {
       const modal = read('components/plans/PlanPreviewModal.tsx')
-      expect(modal).toContain('role="dialog"')
-      expect(modal).toContain('aria-modal="true"')
-      expect(modal).toContain('aria-labelledby="preview-modal-title"')
-      expect(modal).toContain("event.key === 'Escape'")
-      expect(modal).toContain('data-modal-close')
+      expect(modal).toContain('@/components/ui/dialog')
+      expect(modal).toContain('<DialogTitle')
+      expect(modal).toContain('<DialogDescription')
+      expect(modal).toContain('onCloseAutoFocus')
+      expect(modal).toContain('previousFocusRef.current?.focus()')
+      expect(modal).toContain("upgradeText(language, 'closePreview')")
     })
 
     it('UI-03: clear incremental feature inheritance headers are present', () => {

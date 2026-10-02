@@ -1,0 +1,23 @@
+Production
+Recorded in Weavly Base with demonstration data. No audio.
+
+00:00:00.000 — Add a loom
+Create Demo Loom 01 and select its machine type, Rapier.
+
+00:00:26.333 — Add a piece-rate operator
+Create Demo Operator 01 as a piece-rate weaver and approved loom operator, available for the day shift.
+
+00:00:55.500 — Activate a costing and prepare yarn stock
+Choose saved costing v2 for the demo fabric. Add 200 kg each of the required warp and weft yarns, then activate the quality for production.
+
+00:01:57.500 — Assign the quality to a loom
+Assign the demo quality to Demo Loom 01, then find the loom on the machine board.
+
+00:02:22.292 — Assign the day-shift operator
+Open Manage Workers, select Day Shift, find Demo Operator 01, and assign the operator to the loom.
+
+00:02:49.750 — Record and save daily production
+Enter 240 metres for the demo loom. Review worker totals and earnings, then save the shift. Other machines remain pending so their readings can be entered later.
+
+00:03:21.833 — Review the saved receipt and earnings
+Open the permanent production audit receipt and worker review. The demo operator produced 240 metres at the saved Rs 16/m rate, earning Rs 3,840.

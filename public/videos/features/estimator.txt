@@ -1,0 +1,11 @@
+Cost Estimator
+Recorded in Weavly Base with demonstration data. No audio.
+
+00:00:00.000 — Build a complete fabric costing
+Enter fabric construction, warp and weft yarns, rates, waste, weaving, overhead, margin and quantity. Review the live production cost of Rs 32.08/m and suggested price of Rs 36.45/m.
+
+00:01:02.208 — Change inputs and recheck live cost
+Review pricing assumptions. Change the weft yarn rate from Rs 112 to Rs 128/kg and the target margin from 12% to 15%. The updated cost is Rs 33.23/m and the selling price is Rs 39.09/m.
+
+00:01:34.750 — Understand the cost breakdown
+Switch to Detailed to inspect the yarn-consumption formulas, waste and crimp adjustments, and production-cost breakdown. Quick and Detailed use the same calculation engine.

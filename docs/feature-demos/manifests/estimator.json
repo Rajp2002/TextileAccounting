@@ -1,0 +1,5 @@
+{"feature":"estimator","title":"Cost Estimator","poster_seconds":60,"clips":[
+{"file":"scratch/feature-demos/raw/estimator-01-clean.mp4","title":"Build a complete fabric costing","description":"Enter fabric construction, warp and weft yarns, rates, waste, weaving, overhead, margin and quantity. Review the live production cost of Rs 32.08/m and suggested price of Rs 36.45/m."},
+{"file":"scratch/feature-demos/raw/estimator-02-clean.mp4","title":"Change inputs and recheck live cost","description":"Review pricing assumptions. Change the weft yarn rate from Rs 112 to Rs 128/kg and the target margin from 12% to 15%. The updated cost is Rs 33.23/m and the selling price is Rs 39.09/m."},
+{"file":"scratch/feature-demos/raw/estimator-03-detail.mp4","title":"Understand the cost breakdown","description":"Switch to Detailed to inspect the yarn-consumption formulas, waste and crimp adjustments, and production-cost breakdown. Quick and Detailed use the same calculation engine."}
+]}

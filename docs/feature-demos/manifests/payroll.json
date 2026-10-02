@@ -1,0 +1,37 @@
+{
+  "feature": "payroll",
+  "title": "Payroll",
+  "poster_seconds": 89,
+  "clips": [
+    {
+      "file": "scratch/feature-demos/raw/payroll-01-advance.mp4",
+      "title": "Review earnings and record an advance",
+      "description": "Find Demo Operator 01. The saved 240 metres at Rs 16/m earned Rs 3,840. Record a Rs 400 advance with a description and review the updated recovery and net pay."
+    },
+    {
+      "file": "scratch/feature-demos/raw/payroll-02-final.mp4",
+      "title": "Record a worker deduction",
+      "description": "Add a Rs 50 deduction in the Other category, with a demo note. Total recovery becomes Rs 450 and net pay becomes Rs 3,390."
+    },
+    {
+      "file": "scratch/feature-demos/raw/payroll-03-final.mp4",
+      "title": "Review and record the payment",
+      "description": "Review how piece-rate earnings, salaries and advance recovery are calculated. Mark only the demo operator as paid by cash, confirm Rs 3,390, and review the paid state. This records a payment; it does not send money.",
+      "segments": [
+        {
+          "start": 0,
+          "end": 13
+        },
+        {
+          "start": 23,
+          "end": 35.625
+        }
+      ]
+    },
+    {
+      "file": "scratch/feature-demos/raw/payroll-04-records.mp4",
+      "title": "Inspect and export saved payroll records",
+      "description": "Open Payroll records, find the demo worker, and expand the saved payment to inspect the loom, costing, rate, metres and earnings. Switch to the Machines view and download the payroll CSV and PDF."
+    }
+  ]
+}

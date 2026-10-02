@@ -1,0 +1,13 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:36.750
+Find the demo yarns, inspect their linked quality, change the weft rate from Rs 128 to Rs 140/kg, add a supplier note, and save. Open Activity to review the recorded change.
+
+2
+00:00:36.750 --> 00:01:05.333
+Reopen the saved quality and inspect its updated weft rate. Apply the recipe, check the yarn inputs, then review the recalculated live cost.
+
+3
+00:01:05.333 --> 00:01:24.208
+Open the earlier saved costing. Its production cost remains Rs 33.23/m and its suggested price remains Rs 39.09/m. Updating Rate Book does not rewrite historical snapshots.
