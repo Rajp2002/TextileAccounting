@@ -1,13 +1,84 @@
 WEBVTT
 
 1
-00:00:00.000 --> 00:01:02.208
-Enter fabric construction, warp and weft yarns, rates, waste, weaving, overhead, margin and quantity. Review the live production cost of Rs 32.08/m and suggested price of Rs 36.45/m.
+00:00:02.000 --> 00:00:03.849
+Start a new fabric costing.
 
 2
-00:01:02.208 --> 00:01:34.750
-Review pricing assumptions. Change the weft yarn rate from Rs 112 to Rs 128/kg and the target margin from 12% to 15%. The updated cost is Rs 33.23/m and the selling price is Rs 39.09/m.
+00:00:04.089 --> 00:00:05.369
+Name the fabric,
 
 3
-00:01:34.750 --> 00:01:58.750
-Switch to Detailed to inspect the yarn-consumption formulas, waste and crimp adjustments, and production-cost breakdown. Quick and Detailed use the same calculation engine.
+00:00:05.489 --> 00:00:07.687
+enter its warp and weft construction,
+
+4
+00:00:07.807 --> 00:00:10.475
+and include the crimp and waste allowances.
+
+5
+00:00:18.000 --> 00:00:22.235
+Add the warp yarn’s denier, beam ends, rate and
+G S T.
+
+6
+00:00:22.475 --> 00:00:25.613
+These inputs determine warp consumption and
+cost.
+
+7
+00:00:31.000 --> 00:00:36.149
+Enter the weft yarn, picks per inch, fabric
+width, denier, rate and G S T.
+
+8
+00:00:46.000 --> 00:00:48.255
+Review the weaving cost and overhead.
+
+9
+00:00:48.495 --> 00:00:51.687
+Then enter your target margin and order
+quantity.
+
+10
+00:00:57.000 --> 00:00:59.363
+Open Live Cost to see your estimate.
+
+11
+00:01:05.000 --> 00:01:06.792
+Review the pricing assumptions,
+
+12
+00:01:06.912 --> 00:01:11.041
+then return to the inputs to explore a different
+costing scenario.
+
+13
+00:01:15.000 --> 00:01:19.318
+Increase the weft rate to one hundred and twenty
+eight rupees per kilogram,
+
+14
+00:01:19.438 --> 00:01:21.725
+and set the margin to fifteen percent.
+
+15
+00:01:28.000 --> 00:01:32.617
+Live Cost now shows the updated production cost
+and selling price.
+
+16
+00:01:36.000 --> 00:01:42.081
+Switch to Detailed to inspect the yarn
+calculations, including consumption, crimp and
+waste.
+
+17
+00:01:46.000 --> 00:01:49.256
+Scroll down to review the production cost
+breakdown.
+
+18
+00:01:49.496 --> 00:01:54.711
+Quick and Detailed use the same calculations,
+with different levels of detail.

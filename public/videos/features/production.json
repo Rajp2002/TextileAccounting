@@ -1,7 +1,7 @@
 {
   "feature": "production",
   "duration": 225.417,
-  "bytes": 3944930,
+  "bytes": 5333320,
   "chapters": [
     {
       "start": 0,
@@ -38,5 +38,15 @@
       "title": "Review the saved receipt and earnings",
       "description": "Open the permanent production audit receipt and worker review. The demo operator produced 240 metres at the saved Rs 16/m rate, earning Rs 3,840."
     }
-  ]
+  ],
+  "narration": {
+    "engine": "Kokoro-82M v1.0 via kokoro-onnx 0.6.1",
+    "voice": "af_heart",
+    "language": "en",
+    "audio_codec": "aac",
+    "sample_rate": 48000,
+    "channels": 1,
+    "cue_count": 18,
+    "caption_count": 31
+  }
 }

@@ -1,7 +1,7 @@
 {
   "feature": "qualities",
   "duration": 51.958,
-  "bytes": 1602538,
+  "bytes": 2006315,
   "chapters": [
     {
       "start": 0,
@@ -18,5 +18,15 @@
       "title": "Reuse the saved construction",
       "description": "Open the quality library and select the saved fabric to restore its yarn recipe and costing assumptions without entering all the inputs again."
     }
-  ]
+  ],
+  "narration": {
+    "engine": "Kokoro-82M v1.0 via kokoro-onnx 0.6.1",
+    "voice": "af_heart",
+    "language": "en",
+    "audio_codec": "aac",
+    "sample_rate": 48000,
+    "channels": 1,
+    "cue_count": 5,
+    "caption_count": 8
+  }
 }

@@ -76,7 +76,7 @@ const phrases = {
   watchDemo: ['Watch demo', 'ડેમો જુઓ', 'डेमो देखें'],
   watchFeatureDemo: ['Watch {feature} demo', '{feature} નો ડેમો જુઓ', '{feature} का डेमो देखें'],
   closePreview: ['Close preview', 'ઝલક બંધ કરો', 'झलक बंद करें'],
-  demoHelp: ['English walkthrough · no audio · captions available', 'અંગ્રેજી ડેમો · અવાજ વગર · કૅપ્શન ઉપલબ્ધ', 'अंग्रेज़ी डेमो · बिना आवाज़ · कैप्शन उपलब्ध'],
+  demoHelp: ['English narration · captions available', 'અંગ્રેજી વર્ણન · કૅપ્શન ઉપલબ્ધ', 'अंग्रेज़ी में वर्णन · कैप्शन उपलब्ध'],
   demoPlanNote: ['Recorded in Weavly Base. Availability is shown in each plan’s feature list.', 'Weavly Base માં રેકોર્ડ કરેલ. ઉપલબ્ધ સુવિધાઓ દરેક પ્લાનની યાદીમાં દર્શાવેલ છે.', 'Weavly Base में रिकॉर्ड किया गया। उपलब्ध सुविधाएँ हर प्लान की सूची में दी गई हैं।'],
   demoTranscript: ['Read walkthrough', 'ડેમોનું વર્ણન વાંચો', 'डेमो का विवरण पढ़ें'],
   demoUnavailable: ['The video could not load. Open the video directly or read the walkthrough.', 'વિડિયો લોડ થઈ શક્યો નથી. વિડિયો સીધો ખોલો અથવા વર્ણન વાંચો.', 'वीडियो लोड नहीं हो सका। वीडियो सीधे खोलें या विवरण पढ़ें।'],

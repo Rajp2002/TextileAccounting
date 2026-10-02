@@ -27,7 +27,6 @@ function FeatureVideo({ feature }: { feature: UpgradeFeature }) {
         controls
         playsInline
         autoPlay
-        muted
         preload="metadata"
         aria-label={upgradeText(language, 'watchFeatureDemo', { feature: upgradeText(language, feature) })}
         onError={() => setFailed(true)}

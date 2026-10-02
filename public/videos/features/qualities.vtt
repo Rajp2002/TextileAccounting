@@ -1,13 +1,38 @@
 WEBVTT
 
 1
-00:00:00.000 --> 00:00:14.958
-From Live cost, choose Save Quality & Create Costing. Review the yarn rates, overhead, margin and quantity, then save the quality and its first costing snapshot together.
+00:00:00.500 --> 00:00:03.830
+Save the quality and create its first costing
+together.
 
 2
-00:00:14.958 --> 00:00:39.958
-Search the saved-quality library for Demo. Open the rate editor, change the warp rate from Rs 125 to Rs 130/kg, review its cost impact, and save and apply the quality. Existing costing snapshots stay unchanged.
+00:00:06.700 --> 00:00:12.353
+Review the assumptions, then save a reusable
+recipe and a fixed costing snapshot.
 
 3
-00:00:39.958 --> 00:00:51.958
-Open the quality library and select the saved fabric to restore its yarn recipe and costing assumptions without entering all the inputs again.
+00:00:15.400 --> 00:00:17.686
+Find the fabric in Saved Qualities.
+
+4
+00:00:17.926 --> 00:00:21.509
+Open its rate editor to review the current yarn
+prices.
+
+5
+00:00:25.200 --> 00:00:29.257
+Change the warp rate to one hundred and thirty
+rupees per kilogram.
+
+6
+00:00:29.497 --> 00:00:32.677
+Review the cost impact, then save and apply.
+
+7
+00:00:40.400 --> 00:00:45.113
+Select the saved fabric again to restore its
+construction and costing inputs,
+
+8
+00:00:45.233 --> 00:00:47.667
+without entering everything from scratch.
