@@ -165,6 +165,7 @@ import { formatSuratDateTime } from '@/lib/time'
 import { restoreSavedQualityCostingAssumptions, type SavedQualityCostingReuse } from '@/lib/saved-costings'
 import { trackPlanEvent } from '@/lib/plan-analytics'
 import { formatEstimatorPlaceholder, type EstimatorPlaceholderKind } from '@/lib/estimator-placeholder'
+import { LiveValue } from '@/components/ui/live-value'
 
 const CostingExportDialog = dynamic(
     () => import('@/components/estimator/CostingExportDialog').then(module => module.CostingExportDialog),
@@ -1563,13 +1564,13 @@ function MobileLiveEstimateShortcut({
                             <div className="min-w-0 rounded-[12px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-3 py-3">
                                 <p className="text-[10px] font-semibold leading-4 text-[var(--color-muted)]">Production cost / m</p>
                                 <p className="mt-1 break-words font-mono text-[1.45rem] font-semibold leading-none tracking-tight tabular-nums text-[var(--color-ink)]">
-                                    {hasValidCostResult ? `₹${productionCostPerM.toFixed(2)}` : '—'}
+                                    <LiveValue value={hasValidCostResult ? `₹${productionCostPerM.toFixed(2)}` : '—'} />
                                 </p>
                             </div>
                             <div className="min-w-0 rounded-[12px] border border-[var(--color-yarn-orange)]/25 bg-[var(--color-warning-amber-soft)]/55 px-3 py-3">
                                 <p className="text-[10px] font-semibold leading-4 text-[var(--color-muted)]">Suggested price / m</p>
                                 <p className="mt-1 break-words font-mono text-[1.45rem] font-semibold leading-none tracking-tight tabular-nums text-[var(--color-yarn-orange)]">
-                                    {hasValidPrice ? `₹${suggestedSellingPricePerM.toFixed(2)}` : '—'}
+                                    <LiveValue value={hasValidPrice ? `₹${suggestedSellingPricePerM.toFixed(2)}` : '—'} />
                                 </p>
                             </div>
                         </div>
@@ -1578,13 +1579,13 @@ function MobileLiveEstimateShortcut({
                             <div className={`min-w-0 rounded-[12px] border px-3 py-3 ${marginSurface}`}>
                                 <p className={`text-[10px] font-semibold leading-4 ${marginTone}`}>Actual margin</p>
                                 <p className={`mt-1 break-words font-mono text-[1.25rem] font-semibold leading-none tracking-tight tabular-nums ${marginTone}`}>
-                                    {actualMarginPct === null ? '—' : `${actualMarginPct >= 0 ? '+' : ''}${actualMarginPct.toFixed(1)}%`}
+                                    <LiveValue value={actualMarginPct === null ? '—' : `${actualMarginPct >= 0 ? '+' : ''}${actualMarginPct.toFixed(1)}%`} />
                                 </p>
                             </div>
                             <div className="min-w-0 rounded-[12px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-3 py-3">
                                 <p className="text-[10px] font-semibold leading-4 text-[var(--color-muted)]">Break-even price / m</p>
                                 <p className="mt-1 break-words font-mono text-[1.25rem] font-semibold leading-none tracking-tight tabular-nums text-[var(--color-ink)]">
-                                    {hasValidCostResult && breakEvenPricePerM != null ? `₹${breakEvenPricePerM.toFixed(2)}` : '—'}
+                                    <LiveValue value={hasValidCostResult && breakEvenPricePerM != null ? `₹${breakEvenPricePerM.toFixed(2)}` : '—'} />
                                 </p>
                             </div>
                         </div>
@@ -1593,7 +1594,7 @@ function MobileLiveEstimateShortcut({
                             <div className="mx-5 mt-2.5 flex items-center justify-between gap-3 rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-3 py-2.5">
                                 <span className="text-[11px] font-semibold text-[var(--color-muted)]">Expected profit</span>
                                 <span className={`font-mono text-[13px] font-semibold tabular-nums ${expectedProfitTotal < 0 ? 'text-[var(--color-risk-red)]' : 'text-[var(--color-factory-green)]'}`}>
-                                    ₹{expectedProfitTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    <LiveValue value={`₹${expectedProfitTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} />
                                 </span>
                             </div>
                         )}
@@ -1784,7 +1785,7 @@ function CostingAssumptionsSummary({
                             </p>
                         )}
 
-                        <details className="border-t border-[var(--color-hairline)]/70 px-3 py-2.5 sm:px-4">
+                        <details className="ui-details border-t border-[var(--color-hairline)]/70 px-3 py-2.5 sm:px-4">
                             <summary tabIndex={expanded ? 0 : -1} className="estimator-touch-target flex cursor-pointer list-none items-center gap-2 text-[11px] font-semibold text-[var(--color-muted)] outline-none focus-visible:text-[var(--color-yarn-orange-dark)] [&::-webkit-details-marker]:hidden">
                                 <Info className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                                 Technical details
@@ -5360,7 +5361,7 @@ export default function EstimatorClient({
                                     <div className="min-w-0">
                                         <p className="mb-1 text-[11px] font-semibold leading-4 text-[var(--color-muted)]" aria-label={t('estimator.price_helpers.production_cost')}>Production cost / m</p>
                                         <p className="max-w-full break-words font-mono text-[clamp(1.45rem,7vw,2.2rem)] font-semibold leading-[1.05] tracking-tight tabular-nums text-[var(--color-ink)]">
-                                            {hasValidCostResult ? `₹${costingResult.productionCostPerM.toFixed(2)}` : '—'}
+                                            <LiveValue value={hasValidCostResult ? `₹${costingResult.productionCostPerM.toFixed(2)}` : '—'} />
                                         </p>
                                         {breakEvenMatchesProductionCost && (
                                             <p className="mt-1 text-[10px] font-medium leading-4 text-[var(--color-muted)]" title={t('estimator.price_helpers.break_even_hint')}>Break-even floor</p>
@@ -5371,7 +5372,7 @@ export default function EstimatorClient({
                                             {t('common.suggested_selling_price_per_m')}
                                         </p>
                                         <p className="max-w-full break-words font-mono text-[clamp(1.45rem,7vw,2.2rem)] font-semibold leading-[1.05] tracking-tight tabular-nums text-[var(--color-yarn-orange)]">
-                                            {hasValidCostResult && costingResult.quoteIsValid ? `₹${costingResult.suggestedSellingPricePerM.toFixed(2)}` : '—'}
+                                            <LiveValue value={hasValidCostResult && costingResult.quoteIsValid ? `₹${costingResult.suggestedSellingPricePerM.toFixed(2)}` : '—'} />
                                         </p>
                                     </div>
                                     <div className={`col-span-2 grid gap-3 border-y border-[var(--color-hairline)]/80 py-3 sm:gap-4 ${breakEvenMatchesProductionCost ? 'grid-cols-1 xl:col-span-1' : 'grid-cols-2 xl:col-span-2'} xl:border-y-0 xl:border-l xl:pl-4 xl:py-0`}>
@@ -5396,7 +5397,7 @@ export default function EstimatorClient({
                                                 : displayMarginPct < 0
                                                     ? 'text-[var(--color-risk-red)]'
                                                     : 'text-[var(--color-warning-amber)]'}`}>
-                                            {displayMarginPct === null ? '—' : `${displayMarginPct >= 0 ? '+' : ''}${displayMarginPct.toFixed(1)}%`}
+                                            <LiveValue value={displayMarginPct === null ? '—' : `${displayMarginPct >= 0 ? '+' : ''}${displayMarginPct.toFixed(1)}%`} />
                                         </p>
                                         <p className="mt-1 text-[10px] font-medium leading-4 text-[var(--color-muted)]">
                                             {displayMarginPct === null ? 'Complete estimate' : displayMarginPct > 0 ? 'Above break-even' : displayMarginPct < 0 ? 'Below break-even' : 'At break-even'}
@@ -5405,9 +5406,9 @@ export default function EstimatorClient({
                                     {!breakEvenMatchesProductionCost && <div className="min-w-0 rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-2.5 py-2 sm:px-3">
                                         <p className="mb-1 text-[11px] font-semibold leading-4 text-[var(--color-muted)]" aria-label={t('estimator.price_helpers.break_even')}>Break-even price / m</p>
                                         <p className="max-w-full break-words font-mono text-[clamp(1.3rem,6vw,1.75rem)] font-semibold leading-[1.05] tracking-tight tabular-nums text-[var(--color-ink)]">
-                                            {hasValidCostResult && (freeMode || breakEvenScenario?.quotePricePerM != null)
+                                            <LiveValue value={hasValidCostResult && (freeMode || breakEvenScenario?.quotePricePerM != null)
                                                 ? `₹${costingResult.breakEvenPricePerM.toFixed(2)}`
-                                                : '—'}
+                                                : '—'} />
                                         </p>
                                         <p className="mt-1 text-[10px] font-medium leading-4 text-[var(--color-muted)]" title={t('estimator.price_helpers.break_even_hint')}>Minimum at 0% margin</p>
                                     </div>}
@@ -5418,9 +5419,9 @@ export default function EstimatorClient({
                                     <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 border-t border-[var(--color-hairline)]/80 pt-3">
                                         <span className="text-[11px] font-semibold text-[var(--color-muted)]">Expected profit</span>
                                         <span className={`font-mono text-[14px] font-semibold tabular-nums ${costingResult.expectedProfitTotal != null && costingResult.expectedProfitTotal < 0 ? 'text-[var(--color-risk-red)]' : 'text-[var(--color-factory-green)]'}`}>
-                                            {hasValidCostResult && costingResult.quoteIsValid && costingResult.expectedProfitTotal != null
+                                            <LiveValue value={hasValidCostResult && costingResult.quoteIsValid && costingResult.expectedProfitTotal != null
                                                 ? `₹${costingResult.expectedProfitTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                                                : '—'}
+                                                : '—'} />
                                         </span>
                                         <span className="text-[10px] font-medium text-[var(--color-muted)]">for {Number(state.orderQuantityM).toLocaleString('en-IN')} m</span>
                                     </div>
@@ -5431,7 +5432,7 @@ export default function EstimatorClient({
                                         {costSegments.length > 0 ? costSegments.map(segment => (
                                             <div
                                                 key={segment.label}
-                                                className={`${segment.color} min-w-[3px] border-r border-white last:border-r-0`}
+                                                className={`ui-meter-fill ${segment.color} min-w-[3px] border-r border-white last:border-r-0`}
                                                 style={{ width: `${Math.max(3, (segment.value / costStackTotal) * 100)}%` }}
                                             />
                                         )) : (
@@ -5612,9 +5613,9 @@ export default function EstimatorClient({
                                     <div className="shrink-0 text-right">
                                         <p className="text-[11px] font-semibold text-[var(--color-muted)]">{t('estimator.hud.net_profit')}</p>
                                         <p className="text-sm font-semibold leading-none text-[var(--color-factory-green)]">
-                                            {hasValidCostResult && costingResult.expectedProfitTotal !== null
+                                            <LiveValue value={hasValidCostResult && costingResult.expectedProfitTotal !== null
                                                 ? `₹${costingResult.expectedProfitTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                                                : '—'}
+                                                : '—'} />
                                         </p>
                                     </div>
                                 </>

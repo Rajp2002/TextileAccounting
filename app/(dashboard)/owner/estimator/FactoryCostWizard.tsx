@@ -282,7 +282,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                         {/* Progress Bar */}
                         <div className="h-1.5 w-full bg-[var(--wv-cotton-300)] flex">
                             <div 
-                                className="h-full bg-[var(--wv-brand-accent)] transition-all duration-500" 
+                                className="ui-meter-fill h-full bg-[var(--wv-brand-accent)]" 
                                 style={{ width: `${
                                     step === 'intro' ? 10 : 
                                     step === 'choice' ? 42 :

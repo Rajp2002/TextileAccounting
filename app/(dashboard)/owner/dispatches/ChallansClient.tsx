@@ -377,7 +377,7 @@ export default function ChallansClient({
                         {t('challan.recordCount', { count: rows.length })}
                     </span>
                 </div>
-                <div className="grid gap-2.5">
+                <div key={history ? 'history' : 'active'} className="ui-content-swap grid gap-2.5">
                     {rows.map((d) => {
                         const isDisputed = ['review', 'disputed'].includes(d.difference_status)
                         const isSelected = selected?.id === d.id
@@ -813,7 +813,7 @@ export default function ChallansClient({
                     </div>
 
                     {/* Document Details Disclosure */}
-                    <details className="group rounded-2xl border border-hairline bg-surface-soft/40 p-4 sm:p-5 transition-all">
+                    <details className="ui-details group rounded-2xl border border-hairline bg-surface-soft/40 p-4 sm:p-5 transition-all">
                         <summary className="cursor-pointer font-bold text-ink flex items-center justify-between select-none">
                             <span className="flex items-center gap-2 text-sm font-extrabold uppercase tracking-wider text-ink">
                                 <FileText className="h-4 w-4 text-loom" />
@@ -869,7 +869,7 @@ export default function ChallansClient({
                     </details>
 
                     {/* Audit Trail Disclosure */}
-                    <details open className="group rounded-2xl border border-hairline bg-surface-soft/40 p-4 sm:p-5 transition-all">
+                    <details open className="ui-details group rounded-2xl border border-hairline bg-surface-soft/40 p-4 sm:p-5 transition-all">
                         <summary className="cursor-pointer font-bold text-ink flex items-center justify-between select-none">
                             <span className="flex items-center gap-2 text-sm font-extrabold uppercase tracking-wider text-ink">
                                 <History className="h-4 w-4 text-loom" />

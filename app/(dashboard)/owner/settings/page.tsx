@@ -130,7 +130,7 @@ export default function SettingsPage() {
             onDefaultsChange={() => queryClient.invalidateQueries({ queryKey: ['factory_cost_profile'] })}
         />
         <div className="mx-auto max-w-[960px] space-y-6 px-4 pb-12 sm:px-6 lg:px-8">
-            <details id="account-data" className="group overflow-hidden rounded-xl border border-hairline bg-surface/80">
+            <details id="account-data" className="ui-details group overflow-hidden rounded-xl border border-hairline bg-surface/80">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-4 sm:px-5">
                     <div>
                         <div className="flex items-center gap-2"><User className="h-4 w-4" /><h2 className="text-base font-bold">Account & data</h2></div>

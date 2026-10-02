@@ -735,7 +735,7 @@ export default function BaseDailyProductionSheet({
                             <span className="text-xs font-medium text-body">machines accounted for</span>
                         </div>
                         <div role="progressbar" aria-label="Machines accounted for" aria-valuenow={registerSummary.accounted} aria-valuemin={0} aria-valuemax={Math.max(registerSummary.total, 1)} className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-soft">
-                            <div className="h-full rounded-full bg-loom transition-[width]" style={{ width: `${registerSummary.total ? registerSummary.accounted / registerSummary.total * 100 : 0}%` }} />
+                            <div className="ui-meter-fill h-full rounded-full bg-loom" style={{ width: `${registerSummary.total ? registerSummary.accounted / registerSummary.total * 100 : 0}%` }} />
                         </div>
                         <dl className="mt-4 grid grid-cols-2 divide-x divide-hairline border-t border-hairline pt-4">
                             <div className="pr-3"><dt className="text-xs text-muted-foreground">Pending</dt><dd className="mt-1 text-base font-bold tabular-nums text-ink">{registerSummary.pending}</dd></div>

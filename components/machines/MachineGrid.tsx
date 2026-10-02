@@ -2,15 +2,18 @@
 
 import React from 'react'
 import type { BaseProductionMachineWithReadiness } from '@/lib/machine-readiness'
+import { cn } from '@/lib/utils'
 import { MachineCard } from './MachineCard'
 
 interface MachineGridProps {
   machines: BaseProductionMachineWithReadiness[]
   tourPreview?: boolean
+  /** Machines added since the page opened; their cards play the arrival highlight. */
+  arrivedIds?: ReadonlySet<string>
   onEdit: (machine: BaseProductionMachineWithReadiness) => void
 }
 
-export function MachineGrid({ machines, onEdit, tourPreview = false }: MachineGridProps) {
+export function MachineGrid({ machines, onEdit, tourPreview = false, arrivedIds }: MachineGridProps) {
   return (
     <ul
       role="list"
@@ -18,7 +21,7 @@ export function MachineGrid({ machines, onEdit, tourPreview = false }: MachineGr
       className="machine-card-grid grid grid-cols-1 gap-4 sm:gap-5"
     >
       {machines.map(machine => (
-        <li key={machine.id} role="listitem" className="min-w-0">
+        <li key={machine.id} role="listitem" className={cn('min-w-0', arrivedIds?.has(machine.id) && 'ui-row-arrive')}>
           <MachineCard machine={machine} onEdit={onEdit} tourPreview={tourPreview} />
         </li>
       ))}

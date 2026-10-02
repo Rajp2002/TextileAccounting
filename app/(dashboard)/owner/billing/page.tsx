@@ -194,8 +194,8 @@ function AccessStateCallout({
 function ReferralLoading() {
     return (
         <Card className="min-h-[220px] border-loom bg-loom p-5 shadow-[var(--shadow-card)]">
-            <div className="h-5 w-32 animate-pulse rounded bg-white/10" />
-            <div className="mt-5 h-20 animate-pulse rounded-xl bg-white/10" />
+            <div className="ui-skeleton ui-skeleton-inverse h-5 w-32 rounded bg-white/10" />
+            <div className="ui-skeleton ui-skeleton-inverse mt-5 h-20 rounded-xl bg-white/10" />
             <p className="mt-4 text-xs font-medium text-surface-muted/80">Loading referral details…</p>
         </Card>
     )
@@ -591,7 +591,7 @@ export default async function BillingPage() {
                 <div className="billing-rail-bottom space-y-3">
                     <BillingDocumentNotice compact />
 
-                    <details className={`${railSurface} group overflow-hidden`}>
+                    <details className={`${railSurface} ui-details group overflow-hidden`}>
                         <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-ink outline-none hover:bg-surface-soft focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-saffron/50 [&::-webkit-details-marker]:hidden">
                             <span className="flex items-center gap-2">
                                 <Sparkles className={railIcon} aria-hidden="true" />
