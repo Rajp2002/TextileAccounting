@@ -1,0 +1,25 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:18.875
+Search for the demo fabric and open its saved cost breakdown. Review the original production cost, selling price, margin and quantity.
+
+2
+00:00:18.875 --> 00:00:42.042
+Choose Use to reopen the saved snapshot. Change the weaving rate to Rs 16/m and target margin to 20%, then inspect the new live result.
+
+3
+00:00:42.042 --> 00:00:52.875
+Save New Version creates costing v2 while preserving v1 and its original numbers.
+
+4
+00:00:52.875 --> 00:01:15.000
+Enable Compare, open the fabric's history, and select v1 and v2 for comparison.
+
+5
+00:01:15.000 --> 00:01:31.708
+Open Compare Costings to inspect the differences in cost components, selling price, margin and profit.
+
+6
+00:01:31.708 --> 00:02:14.750
+Preview and download the internal cost sheet. Switch to Customer Quotation, enter a demo buyer and terms, and download a quotation that hides internal costs and margins. Nothing is sent to a customer.

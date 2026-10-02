@@ -1,0 +1,9 @@
+{"feature":"production","title":"Production","poster_seconds":135,"clips":[
+{"file":"scratch/feature-demos/raw/production-01-machine.mp4","title":"Add a loom","description":"Create Demo Loom 01 and select its machine type, Rapier."},
+{"file":"scratch/feature-demos/raw/production-02-worker.mp4","title":"Add a piece-rate operator","description":"Create Demo Operator 01 as a piece-rate weaver and approved loom operator, available for the day shift."},
+{"file":"scratch/feature-demos/raw/production-03-activate.mp4","title":"Activate a costing and prepare yarn stock","description":"Choose saved costing v2 for the demo fabric. Add 200 kg each of the required warp and weft yarns, then activate the quality for production."},
+{"file":"scratch/feature-demos/raw/production-04-loom.mp4","title":"Assign the quality to a loom","description":"Assign the demo quality to Demo Loom 01, then find the loom on the machine board."},
+{"file":"scratch/feature-demos/raw/production-05-operator.mp4","title":"Assign the day-shift operator","description":"Open Manage Workers, select Day Shift, find Demo Operator 01, and assign the operator to the loom."},
+{"file":"scratch/feature-demos/raw/production-06-daily.mp4","title":"Record and save daily production","description":"Enter 240 metres for the demo loom. Review worker totals and earnings, then save the shift. Other machines remain pending so their readings can be entered later."},
+{"file":"scratch/feature-demos/raw/production-07-receipt.mp4","title":"Review the saved receipt and earnings","description":"Open the permanent production audit receipt and worker review. The demo operator produced 240 metres at the saved Rs 16/m rate, earning Rs 3,840."}
+]}

@@ -1,0 +1,20 @@
+Saved Costings
+Recorded in Weavly Base with demonstration data. No audio.
+
+00:00:00.000 — Find and inspect a saved costing
+Search for the demo fabric and open its saved cost breakdown. Review the original production cost, selling price, margin and quantity.
+
+00:00:18.875 — Reuse a costing and change assumptions
+Choose Use to reopen the saved snapshot. Change the weaving rate to Rs 16/m and target margin to 20%, then inspect the new live result.
+
+00:00:42.042 — Save a new version
+Save New Version creates costing v2 while preserving v1 and its original numbers.
+
+00:00:52.875 — Select two versions
+Enable Compare, open the fabric's history, and select v1 and v2 for comparison.
+
+00:01:15.000 — Explain the difference
+Open Compare Costings to inspect the differences in cost components, selling price, margin and profit.
+
+00:01:31.708 — Export a cost sheet or customer quotation
+Preview and download the internal cost sheet. Switch to Customer Quotation, enter a demo buyer and terms, and download a quotation that hides internal costs and margins. Nothing is sent to a customer.

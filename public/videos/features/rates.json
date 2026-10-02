@@ -1,0 +1,22 @@
+{
+  "feature": "rates",
+  "duration": 84.208,
+  "bytes": 1888014,
+  "chapters": [
+    {
+      "start": 0,
+      "title": "Update a yarn price and inspect its history",
+      "description": "Find the demo yarns, inspect their linked quality, change the weft rate from Rs 128 to Rs 140/kg, add a supplier note, and save. Open Activity to review the recorded change."
+    },
+    {
+      "start": 36.75,
+      "title": "Use the updated linked quality",
+      "description": "Reopen the saved quality and inspect its updated weft rate. Apply the recipe, check the yarn inputs, then review the recalculated live cost."
+    },
+    {
+      "start": 65.333,
+      "title": "Earlier costings keep their original figures",
+      "description": "Open the earlier saved costing. Its production cost remains Rs 33.23/m and its suggested price remains Rs 39.09/m. Updating Rate Book does not rewrite historical snapshots."
+    }
+  ]
+}

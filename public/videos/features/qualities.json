@@ -1,0 +1,22 @@
+{
+  "feature": "qualities",
+  "duration": 51.958,
+  "bytes": 1602538,
+  "chapters": [
+    {
+      "start": 0,
+      "title": "Save a reusable fabric recipe",
+      "description": "From Live cost, choose Save Quality & Create Costing. Review the yarn rates, overhead, margin and quantity, then save the quality and its first costing snapshot together."
+    },
+    {
+      "start": 14.958,
+      "title": "Find a quality and review new rates",
+      "description": "Search the saved-quality library for Demo. Open the rate editor, change the warp rate from Rs 125 to Rs 130/kg, review its cost impact, and save and apply the quality. Existing costing snapshots stay unchanged."
+    },
+    {
+      "start": 39.958,
+      "title": "Reuse the saved construction",
+      "description": "Open the quality library and select the saved fabric to restore its yarn recipe and costing assumptions without entering all the inputs again."
+    }
+  ]
+}
