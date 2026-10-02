@@ -128,7 +128,7 @@ function ConfirmContent() {
     }, [])
 
     return (
-        <div className="relative isolate flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background p-4">
+        <div className="safe-area-page relative isolate flex min-h-svh flex-col items-center justify-center overflow-hidden bg-background [--page-gutter-x:1rem] [--page-gutter-y:1rem]">
             <BrandBackground variant="auth" />
             <div className="relative z-10 w-full max-w-md bg-surface/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/50 p-8 flex flex-col items-center space-y-6 text-center">
                 {error ? (

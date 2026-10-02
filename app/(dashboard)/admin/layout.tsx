@@ -8,7 +8,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     signInTelemetry.log('success', { route: '/admin' })
 
     return (
-        <div className="relative isolate min-h-screen overflow-x-hidden bg-background text-foreground">
+        <div className="safe-area-page relative isolate min-h-svh overflow-x-hidden bg-background text-foreground">
             <BrandBackground />
             <div className="relative z-10 border-b border-wv-border-default bg-surface/85 backdrop-blur">
                 <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-10">

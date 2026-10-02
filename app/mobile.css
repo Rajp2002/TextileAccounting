@@ -1,8 +1,47 @@
 /* Shared phone chrome. Keep dimensions in one place, including translated tabs. */
 :root {
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
   --mobile-nav-height: calc(76px + env(safe-area-inset-bottom, 0px));
   --mobile-viewport-height: 100dvh;
   --mobile-viewport-top: 0px;
+}
+
+/* Apply once to a viewport-level page, never to content inside a protected shell.
+   Keep design gutters separate so responsive padding cannot erase the device inset.
+   Fixed/sticky headers and portalled overlays must protect their own controls. */
+.safe-area-page {
+  padding-top: calc(var(--page-gutter-y, 0px) + var(--safe-area-top));
+  padding-right: calc(var(--page-gutter-x, 0px) + var(--safe-area-right));
+  padding-bottom: calc(var(--page-gutter-y, 0px) + var(--safe-area-bottom));
+  padding-left: calc(var(--page-gutter-x, 0px) + var(--safe-area-left));
+}
+
+.safe-area-header {
+  padding-top: var(--safe-area-top);
+  padding-right: calc(var(--page-gutter-x, 0px) + var(--safe-area-right));
+  padding-left: calc(var(--page-gutter-x, 0px) + var(--safe-area-left));
+}
+
+[data-slot="sheet-content"]:not([data-side="bottom"]) > [data-slot="sheet-close"] {
+  top: calc(var(--safe-area-top) + 0.5rem);
+}
+
+/* Center within the usable screen, rather than halfway behind a tall notch. */
+[data-slot="dialog-content"] {
+  top: calc((100dvh + var(--safe-area-top) - var(--safe-area-bottom)) / 2);
+  max-height: calc(100dvh - var(--safe-area-top) - var(--safe-area-bottom) - 2rem);
+}
+
+@media print {
+  :root {
+    --safe-area-top: 0px;
+    --safe-area-right: 0px;
+    --safe-area-bottom: 0px;
+    --safe-area-left: 0px;
+  }
 }
 
 .mobile-navigation { display: none; }
@@ -136,8 +175,8 @@
 
   /* The visible viewport follows Safari's keyboard and browser toolbar. */
   [data-slot="dialog-content"] {
-    top: calc(var(--mobile-viewport-top) + var(--mobile-viewport-height) / 2);
-    max-height: calc(var(--mobile-viewport-height) - env(safe-area-inset-top, 0px) - 24px);
+    top: calc(var(--mobile-viewport-top) + (var(--mobile-viewport-height) + var(--safe-area-top) - var(--safe-area-bottom)) / 2);
+    max-height: calc(var(--mobile-viewport-height) - var(--safe-area-top) - var(--safe-area-bottom) - 24px);
     overscroll-behavior-y: contain;
     scroll-padding-block: 16px;
   }
@@ -238,7 +277,7 @@
 /* Compact dialogs sit within thumb reach; wide previews keep their desktop form. */
 @media (max-width: 639.98px) {
   [data-slot="dialog-content"][data-mobile-presentation="sheet"] {
-    top: calc(var(--mobile-viewport-top) + var(--mobile-viewport-height) - 8px);
+    top: calc(var(--mobile-viewport-top) + var(--mobile-viewport-height) - var(--safe-area-bottom) - 8px);
     left: 50%;
     width: calc(100% - max(16px, env(safe-area-inset-left, 0px) + env(safe-area-inset-right, 0px)));
     max-width: none;
@@ -250,7 +289,7 @@
     --modal-exit-scale: 0.96;
   }
   [data-slot="dialog-content"][data-mobile-presentation="center"] {
-    top: calc(var(--mobile-viewport-top) + var(--mobile-viewport-height) / 2);
+    top: calc(var(--mobile-viewport-top) + (var(--mobile-viewport-height) + var(--safe-area-top) - var(--safe-area-bottom)) / 2);
   }
   :root[data-mobile-keyboard] [data-slot="dialog-content"][data-mobile-presentation="sheet"],
   :root[data-mobile-keyboard] [data-slot="sheet-content"][data-side="bottom"] { padding-bottom: 16px; }

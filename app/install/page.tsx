@@ -53,7 +53,7 @@ const guides = [
 
 export default function InstallPage() {
     return (
-        <main className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 sm:py-12">
+        <main className="safe-area-page min-h-svh bg-background text-foreground [--page-gutter-x:1rem] [--page-gutter-y:2rem] sm:[--page-gutter-x:1.5rem] sm:[--page-gutter-y:3rem]">
             <div className="mx-auto max-w-4xl">
                 <nav aria-label="Guide navigation" className="mb-10 flex items-center justify-between gap-4 text-sm font-semibold">
                     <Link href="/" className="rounded px-2 py-3 hover:underline">Weavly home</Link>

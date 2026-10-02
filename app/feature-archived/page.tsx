@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 
 export default function FeatureArchivedPage() {
     return (
-        <main className="min-h-screen bg-canvas px-4 py-16">
+        <main className="safe-area-page min-h-svh bg-canvas [--page-gutter-x:1rem] [--page-gutter-y:4rem]">
             <Card className="mx-auto max-w-md border-wv-border-default shadow-sm">
                 <CardContent className="space-y-5 p-6 text-center">
                     <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-surface-soft">

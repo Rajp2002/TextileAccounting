@@ -25,7 +25,7 @@ export type LegalPath = (typeof legalLinks)[number]['href'] | '/privacy-request'
 export function LegalShell({ active, children }: { active: LegalPath; children: ReactNode }) {
     return (
         <div className={cn(s.page, landingFontVariables, 'min-h-screen')}>
-            <header className="sticky top-0 z-40 px-3 xs:px-4 sm:px-6 lg:px-8">
+            <header className="safe-area-header sticky top-0 z-40 bg-[var(--lp-paper)] [--page-gutter-x:0.75rem] xs:[--page-gutter-x:1rem] sm:[--page-gutter-x:1.5rem] lg:[--page-gutter-x:2rem]">
                 <div className={cn(s.legalBar, 'mx-auto flex max-w-7xl items-center justify-between gap-3 rounded-b-xl px-3 py-1.5 xs:px-4 md:px-6 lg:px-8')}>
                     <Link href="/" aria-label="Weavly home" className="relative block h-11 w-28 shrink-0 transition-opacity hover:opacity-80 sm:h-14 sm:w-36">
                         <Image src="/images/WeavlyLogo.png" alt="" fill sizes="9rem" className="object-contain object-left" priority />
