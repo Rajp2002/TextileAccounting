@@ -4,7 +4,7 @@ import type { FormEvent } from 'react'
 import { useRef, useState } from 'react'
 import { LogOut, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import LoadingModal from './loading-modal'
+import { AuthTransition } from './auth-transition'
 import { useTranslation } from '@/lib/i18n/context'
 import { detachActiveQueryNamespace } from '@/lib/query-client-registry'
 import {
@@ -90,7 +90,7 @@ export default function LogoutButton({ variant = 'sidebar', className }: LogoutB
                         {t('common.logout')}
                     </button>
                 </form>
-                <LoadingModal isOpen={isLoggingOut} message={t('common.signing_out')} />
+                <AuthTransition open={isLoggingOut} mode="sign-out" />
             </>
         )
     }
@@ -115,7 +115,7 @@ export default function LogoutButton({ variant = 'sidebar', className }: LogoutB
                     {t('nav.logout')}
                 </button>
             </form>
-            <LoadingModal isOpen={isLoggingOut} message={t('common.signing_out')} />
+            <AuthTransition open={isLoggingOut} mode="sign-out" />
         </>
     )
 }

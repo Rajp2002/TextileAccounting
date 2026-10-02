@@ -1737,6 +1737,180 @@
       animation: none !important;
     }
   }
+
+  /* ── Auth transition ───────────────────────────────────────────
+   * Full-screen handoff while an account signs in, is created, or signs
+   * out (components/auth/auth-transition.tsx). The loom and spool marks
+   * (components/auth/thread-marks.tsx) loop until the next document
+   * replaces this one. Distances are SVG user units and must match
+   * components/auth/loom-geometry.ts: one pick is 66, one row is 10.
+   */
+  .auth-transition {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 24px max(16px, var(--safe-area-right, 0px)) 24px max(16px, var(--safe-area-left, 0px));
+    text-align: center;
+    background: rgba(244, 242, 236, 0.9);
+    background: color-mix(in srgb, var(--wv-bg-canvas) 90%, transparent);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    animation: auth-transition-enter var(--motion-base) ease-out backwards;
+  }
+
+  .auth-transition[data-state="closed"] {
+    pointer-events: none;
+    animation: auth-transition-leave 180ms ease-in forwards;
+  }
+
+  .auth-transition-mark {
+    width: 120px;
+    height: 120px;
+    overflow: hidden;
+    border: 1px solid var(--wv-border-subtle);
+    border-radius: 9999px;
+    background: var(--color-surface);
+    box-shadow: 0 1px 2px rgba(22, 33, 62, 0.06), 0 16px 36px -20px rgba(22, 33, 62, 0.28);
+    transition:
+      border-color var(--motion-slow) ease,
+      box-shadow var(--motion-slow) ease;
+    animation: auth-transition-mark-enter 360ms var(--ease-out-soft) 40ms backwards;
+  }
+
+  /* The server has accepted the sign-in; the workspace is loading. */
+  .auth-transition[data-stage="done"] .auth-transition-mark {
+    border-color: var(--wv-saffron-200);
+    box-shadow:
+      0 0 0 5px var(--wv-saffron-50),
+      0 16px 36px -20px rgba(22, 33, 62, 0.28);
+  }
+
+  .auth-transition-copy {
+    max-width: 280px;
+    min-height: 3rem;
+    animation: auth-transition-copy-enter 320ms var(--ease-out-soft) 100ms backwards;
+  }
+
+  @keyframes auth-transition-enter {
+    from { opacity: 0; }
+  }
+
+  @keyframes auth-transition-leave {
+    to { opacity: 0; }
+  }
+
+  @keyframes auth-transition-mark-enter {
+    from { opacity: 0; transform: translateY(4px) scale(0.92); }
+  }
+
+  @keyframes auth-transition-copy-enter {
+    from { opacity: 0; transform: translateY(4px); }
+  }
+
+  /* Loom: indigo warp, saffron weft. Two picks per loop, then the cloth
+     has moved down two rows and the loop restarts on an identical frame. */
+  .wv-loom {
+    --loom-loop: 1.8s;
+  }
+
+  .wv-loom-warp { stroke: var(--wv-neel-700); }
+  .wv-loom-weft { stroke: var(--wv-saffron-500); }
+  .wv-loom-gap { stroke: var(--color-surface); }
+  .wv-loom-reed { stroke: var(--wv-neel-200); }
+  .wv-loom-shuttle { fill: var(--wv-neel-900); stroke: var(--color-surface); }
+  /* The return pick is unwoven at rest; reduced motion shows one finished pick. */
+  .wv-loom-pass-back { stroke-dashoffset: 66; }
+
+  .wv-loom-cloth { animation: wv-loom-take-up var(--loom-loop) infinite; }
+  .wv-loom-pass-there { animation: wv-loom-there var(--loom-loop) infinite; }
+  .wv-loom-pass-back { animation: wv-loom-back var(--loom-loop) infinite; }
+  .wv-loom-shuttle { animation: wv-loom-shuttle var(--loom-loop) infinite; }
+  .wv-loom-reed { animation: wv-loom-beat var(--loom-loop) infinite; }
+
+  @keyframes wv-loom-there {
+    0% { stroke-dashoffset: 66; animation-timing-function: cubic-bezier(0.55, 0, 0.3, 1); }
+    30%, 100% { stroke-dashoffset: 0; }
+  }
+
+  @keyframes wv-loom-back {
+    0%, 50% { stroke-dashoffset: 66; animation-timing-function: cubic-bezier(0.55, 0, 0.3, 1); }
+    80%, 100% { stroke-dashoffset: 0; }
+  }
+
+  @keyframes wv-loom-shuttle {
+    0% { transform: translateX(0); animation-timing-function: cubic-bezier(0.55, 0, 0.3, 1); }
+    30%, 50% { transform: translateX(66px); animation-timing-function: cubic-bezier(0.55, 0, 0.3, 1); }
+    80%, 100% { transform: translateX(0); }
+  }
+
+  @keyframes wv-loom-beat {
+    0%, 30% { transform: translateY(0); animation-timing-function: ease-in; }
+    37% { transform: translateY(6px); animation-timing-function: ease-out; }
+    46%, 80% { transform: translateY(0); animation-timing-function: ease-in; }
+    87% { transform: translateY(6px); animation-timing-function: ease-out; }
+    96%, 100% { transform: translateY(0); }
+  }
+
+  @keyframes wv-loom-take-up {
+    0%, 34% { transform: translateY(0); animation-timing-function: ease-in-out; }
+    48%, 84% { transform: translateY(10px); animation-timing-function: ease-in-out; }
+    98%, 100% { transform: translateY(20px); }
+  }
+
+  /* Spool: the wraps travel as it turns, the strand's twist flows in, and
+     the strand sways along the barrel like a winder's traverse guide. */
+  .wv-spool-rim { fill: var(--wv-neel-900); }
+  .wv-spool-face { fill: var(--wv-neel-600); }
+  .wv-spool-hole { fill: var(--wv-neel-950); }
+  .wv-spool-thread { fill: var(--wv-saffron-500); }
+  .wv-spool-wrap { stroke: var(--wv-saffron-700); stroke-opacity: 0.55; }
+  .wv-spool-strand { stroke: var(--wv-saffron-500); }
+  .wv-spool-twist { stroke: var(--wv-saffron-700); stroke-opacity: 0.5; }
+
+  .wv-spool-wraps { animation: wv-spool-turn 320ms linear infinite; }
+  .wv-spool-twist { animation: wv-spool-reel 320ms linear infinite; }
+  .wv-spool-lead {
+    transform-box: view-box;
+    transform-origin: 106px 41px;
+    animation: wv-spool-traverse 2.4s ease-in-out infinite alternate;
+  }
+
+  @keyframes wv-spool-turn {
+    to { transform: translateY(-4px); }
+  }
+
+  @keyframes wv-spool-reel {
+    to { stroke-dashoffset: 4; }
+  }
+
+  @keyframes wv-spool-traverse {
+    from { transform: rotate(-6deg); }
+    to { transform: rotate(7deg); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .auth-transition,
+    .auth-transition-mark,
+    .auth-transition-copy,
+    .wv-loom *,
+    .wv-spool * {
+      animation: none !important;
+    }
+
+    .auth-transition[data-state="closed"] {
+      opacity: 0;
+    }
+
+    /* The shuttle rests where its finished pick ends. */
+    .wv-loom-shuttle {
+      transform: translateX(66px);
+    }
+  }
 }
 
 /**
