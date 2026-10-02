@@ -16,6 +16,8 @@ type StoredSignInTrace = {
     actionCompletedAt: number
     authRoundTripMs: number
     cleanupWaitMs: number
+    /** Time the sign-in animation held the page after the action completed. */
+    transitionHoldMs?: number
     routePaintedAt?: number
 }
 
@@ -31,7 +33,8 @@ function readTrace(): StoredSignInTrace | null {
             typeof parsed.clickStartedAt !== 'number' ||
             typeof parsed.actionCompletedAt !== 'number' ||
             typeof parsed.authRoundTripMs !== 'number' ||
-            typeof parsed.cleanupWaitMs !== 'number'
+            typeof parsed.cleanupWaitMs !== 'number' ||
+            (parsed.transitionHoldMs !== undefined && typeof parsed.transitionHoldMs !== 'number')
         ) {
             window.sessionStorage.removeItem(SIGN_IN_TRACE_STORAGE_KEY)
             return null
@@ -60,9 +63,13 @@ function clearTrace() {
 }
 
 function reportStage(trace: StoredSignInTrace, stage: SignInClientStage, observedAt: number) {
+    // Route timings start when the page actually left, after any animation hold,
+    // so they stay comparable with sign-ins that navigated immediately.
+    const transitionHoldMs = trace.transitionHoldMs ?? 0
+    const navigationStartedAt = trace.actionCompletedAt + transitionHoldMs
     const routePaintMs = trace.routePaintedAt
-        ? trace.routePaintedAt - trace.actionCompletedAt
-        : observedAt - trace.actionCompletedAt
+        ? trace.routePaintedAt - navigationStartedAt
+        : observedAt - navigationStartedAt
 
     void fetch('/api/telemetry/sign-in', {
         method: 'POST',
@@ -76,8 +83,9 @@ function reportStage(trace: StoredSignInTrace, stage: SignInClientStage, observe
             totalMs: observedAt - trace.clickStartedAt,
             authRoundTripMs: trace.authRoundTripMs,
             cleanupWaitMs: trace.cleanupWaitMs,
+            transitionHoldMs,
             routePaintMs,
-            dashboardReadyMs: observedAt - trace.actionCompletedAt,
+            dashboardReadyMs: observedAt - navigationStartedAt,
             postRouteDataMs: trace.routePaintedAt ? observedAt - trace.routePaintedAt : 0,
         }),
     }).catch(() => {

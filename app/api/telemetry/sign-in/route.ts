@@ -52,6 +52,7 @@ export async function POST(request: Request) {
         total_ms: sanitizeTimingMs(body.totalMs),
         auth_round_trip_ms: sanitizeTimingMs(body.authRoundTripMs),
         cleanup_wait_ms: sanitizeTimingMs(body.cleanupWaitMs),
+        transition_hold_ms: sanitizeTimingMs(body.transitionHoldMs),
         route_paint_ms: sanitizeTimingMs(body.routePaintMs),
         dashboard_ready_ms: sanitizeTimingMs(body.dashboardReadyMs),
         post_route_data_ms: sanitizeTimingMs(body.postRouteDataMs),

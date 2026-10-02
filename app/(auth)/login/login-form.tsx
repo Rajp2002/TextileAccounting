@@ -10,6 +10,7 @@ import { Loader2, ArrowRight, Eye, EyeOff } from 'lucide-react'
 import AuthLayout from '@/components/auth/auth-layout'
 import { signIn } from '@/app/(auth)/actions/auth'
 import { AuthTransition } from '@/components/auth/auth-transition'
+import { holdForTransitionRound } from '@/components/auth/auth-transition-timing'
 import { SIGN_IN_TRACE_STORAGE_KEY } from '@/lib/sign-in-trace'
 
 function createTraceId() {
@@ -84,6 +85,7 @@ export default function LoginForm({ recoveryDestination }: { recoveryDestination
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
+        const transitionStartedAt = performance.now()
         // Saved-password autofill can submit without focusing a field.
         warmWorkspaceCode()
 
@@ -105,14 +107,19 @@ export default function LoginForm({ recoveryDestination }: { recoveryDestination
             }
 
             setIsRedirecting(true)
+            const actionCompletedAt = Date.now()
+            // The session already exists, so the loom may finish its round
+            // before the workspace opens. A slow sign-in does not wait at all.
+            const transitionHoldMs = await holdForTransitionRound(transitionStartedAt)
             try {
                 window.sessionStorage.setItem(SIGN_IN_TRACE_STORAGE_KEY, JSON.stringify({
                     traceId,
                     destination: result.redirectTo,
                     clickStartedAt,
-                    actionCompletedAt: Date.now(),
+                    actionCompletedAt,
                     authRoundTripMs,
                     cleanupWaitMs: 0,
+                    transitionHoldMs,
                 }))
             } catch {
                 // Telemetry must never delay or block navigation.
