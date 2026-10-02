@@ -1,0 +1,52 @@
+{
+  "feature": "costings",
+  "duration": 134.75,
+  "bytes": 4512721,
+  "chapters": [
+    {
+      "start": 0,
+      "title": "Find and inspect a saved costing",
+      "description": "Search for the demo fabric and open its saved cost breakdown. Review the original production cost, selling price, margin and quantity."
+    },
+    {
+      "start": 18.875,
+      "title": "Reuse a costing and change assumptions",
+      "description": "Choose Use to reopen the saved snapshot. Change the weaving rate to Rs 16/m and target margin to 20%, then inspect the new live result."
+    },
+    {
+      "start": 42.042,
+      "title": "Save a new version",
+      "description": "Save New Version creates costing v2 while preserving v1 and its original numbers."
+    },
+    {
+      "start": 52.875,
+      "title": "Select two versions",
+      "description": "Enable Compare, open the fabric's history, and select v1 and v2 for comparison."
+    },
+    {
+      "start": 75.0,
+      "title": "Explain the difference",
+      "description": "Open Compare Costings to inspect the differences in cost components, selling price, margin and profit."
+    },
+    {
+      "start": 91.708,
+      "title": "Export a cost sheet or customer quotation",
+      "description": "Preview and download the internal cost sheet. Switch to Customer Quotation, enter a demo buyer and terms, and download a quotation that hides internal costs and margins. Nothing is sent to a customer."
+    }
+  ],
+  "narration": {
+    "engine": "AI4Bharat Indic Parler-TTS",
+    "speaker": "Neha",
+    "model_revision": "7b527af5ee8ed1f9a28d80b19703ed9bb8ba10ca",
+    "description": "Neha speaks at a moderate pace in a clear, calm, slightly expressive voice. The recording is very high quality, with very clear audio, no background noise and a close-sounding voice.",
+    "language": "gu",
+    "audio_codec": "aac",
+    "sample_rate": 48000,
+    "channels": 1,
+    "cue_count": 12,
+    "caption_count": 12,
+    "generation": [
+      "Local CPU"
+    ]
+  }
+}

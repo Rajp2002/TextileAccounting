@@ -1,0 +1,11 @@
+# Install CPU torch/torchaudio/torchvision separately, then the pinned Parler
+# library with --no-deps. See the narration README.
+transformers==4.46.1
+sentencepiece==0.2.2
+protobuf==4.25.9
+descript-audio-codec==1.0.0
+descript-audiotools @ git+https://github.com/descriptinc/audiotools@348ebf2034ce24e2a91a553e3171cb00c0c71678
+huggingface-hub==0.36.2
+numpy==2.4.6
+soundfile==0.14.0
+accelerate==1.15.0

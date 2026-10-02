@@ -1,0 +1,2041 @@
+{
+  "qualities": {
+    "duration_seconds": 51.958333,
+    "video_frames": 1247,
+    "video_packet_sha256": "ef2cb04bf1482ec88ca2b037f97655c53b8ab6aaa854177462157791d18ca345",
+    "bytes": 2146441,
+    "cues": [
+      {
+        "id": "qualities-01",
+        "start_seconds": 0.5,
+        "end_seconds": 6.2,
+        "visual_anchor": "Save Quality & Create Costing",
+        "narration": "ક્વાલિટી અને તેની પહેલી કોસ્ટિંગ સાથે સેવ કરો.",
+        "speech_end_seconds": 5.593,
+        "speech_duration_seconds": 5.093,
+        "original_speech_duration_seconds": 5.093,
+        "tempo": 1.0,
+        "source_audio_sha256": "9aa046815fc5812c32d7a0456870e3ea992af62e0f2f32470169c31256076a4f",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "costings-09",
+            "qualities-01",
+            "rates-07",
+            "production-18",
+            "estimator-08",
+            "production-12",
+            "estimator-09",
+            "production-11"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 5.50312925170068,
+          "trim_start_seconds": 0.41,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "qualities-02",
+        "start_seconds": 6.7,
+        "end_seconds": 14.2,
+        "visual_anchor": "Save confirmation and assumptions",
+        "narration": "ધારણાઓ તપાસીને કાપડની રચના અને ખર્ચનો સ્થિર રેકોર્ડ સેવ કરો.",
+        "speech_end_seconds": 14.078,
+        "speech_duration_seconds": 7.378,
+        "original_speech_duration_seconds": 7.593,
+        "tempo": 1.031,
+        "source_audio_sha256": "bee0fb4165f18b06c86fed8d687cf112466f3421a3355eb6dbb04d609ea71e0c",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "production-15",
+            "qualities-02",
+            "production-08",
+            "payroll-01",
+            "payroll-13",
+            "payroll-11",
+            "costings-11",
+            "costings-03"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 7.662585034013605,
+          "trim_start_seconds": 0.07,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "qualities-03",
+        "start_seconds": 15.4,
+        "end_seconds": 24.7,
+        "visual_anchor": "Search saved-quality library; open rate editor",
+        "narration": "સેવ્ડ ક્વાલિટીઝમાં કાપડ શોધો. દોરાના હાલના ભાવ જોવા રેટ એડિટર ખોલો.",
+        "speech_end_seconds": 24.316,
+        "speech_duration_seconds": 8.916,
+        "original_speech_duration_seconds": 8.916,
+        "tempo": 1.0,
+        "source_audio_sha256": "7d29d5dfb64b68a53bd2896fab1c2a66a4c49894f936db03b2c0bba188c0815e",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "production-14",
+            "qualities-03",
+            "costings-10",
+            "production-09",
+            "estimator-07",
+            "estimator-03",
+            "production-16",
+            "estimator-04"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 8.986122448979591,
+          "trim_start_seconds": 0.07,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "qualities-04",
+        "start_seconds": 25.2,
+        "end_seconds": 38.9,
+        "visual_anchor": "Warp rate ₹125 → ₹130/kg; Save Rates & Apply",
+        "narration": "તાણાનો ભાવ કિલો દીઠ એકસો ત્રીસ રૂપિયા કરો. ખર્ચ પર અસર જુઓ, પછી સેવ અને અપ્લાય કરો.",
+        "speech_end_seconds": 36.54,
+        "speech_duration_seconds": 11.34,
+        "original_speech_duration_seconds": 11.34,
+        "tempo": 1.0,
+        "source_audio_sha256": "bc68a81b4e9b515f25bc6cdf185343c2b217a7b19c1be52a548c9943c623d15f",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "costings-05",
+            "payroll-14",
+            "production-10",
+            "production-01",
+            "production-17",
+            "estimator-02",
+            "qualities-04",
+            "rates-02"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 11.981496598639456,
+          "trim_start_seconds": 0.0,
+          "trim_end_seconds": 0.6414965986394557
+        }
+      },
+      {
+        "id": "qualities-05",
+        "start_seconds": 40.4,
+        "end_seconds": 50.9,
+        "visual_anchor": "Select saved quality and restore inputs",
+        "narration": "સેવ કરેલું કાપડ પસંદ કરતાં રચના અને ખર્ચના ઇનપુટ આપમેળે ભરાય છે.",
+        "speech_end_seconds": 48.626,
+        "speech_duration_seconds": 8.226,
+        "original_speech_duration_seconds": 8.226,
+        "tempo": 1.0,
+        "source_audio_sha256": "076846d2f18b995be5ff667d7390a43c2c66601eed2ea0380cc58e2943044575",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "payroll-10",
+            "rates-08",
+            "payroll-12",
+            "costings-12",
+            "qualities-05",
+            "costings-07",
+            "production-13",
+            "rates-01"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 8.335963718820862,
+          "trim_start_seconds": 0.11,
+          "trim_end_seconds": 0.0
+        }
+      }
+    ]
+  },
+  "estimator": {
+    "duration_seconds": 118.75,
+    "video_frames": 2850,
+    "video_packet_sha256": "67e0d52799da34d7a7d100ee3d9f8c75b2dc945964c4b354095eeb12732aea3f",
+    "bytes": 3692679,
+    "cues": [
+      {
+        "id": "estimator-01",
+        "start_seconds": 2,
+        "end_seconds": 16.5,
+        "visual_anchor": "Name, construction, crimp and waste inputs",
+        "narration": "કાપડની નવી કોસ્ટિંગ બનાવો. કાપડનું નામ, તાણા અને વાણાની રચના ભરો. ક્રિમ્પ અને બગાડનું પ્રમાણ પણ ઉમેરો.",
+        "speech_end_seconds": 14.9,
+        "speech_duration_seconds": 12.9,
+        "original_speech_duration_seconds": 12.9,
+        "tempo": 1.0,
+        "source_audio_sha256": "29389a47362836dec180c3eda8a02087475e57ea318ea453bfec305b897f19f3",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "estimator-01"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 13.305034013605443,
+          "trim_start_seconds": 0.0,
+          "trim_end_seconds": 0.40503401360544217
+        }
+      },
+      {
+        "id": "estimator-02",
+        "start_seconds": 18,
+        "end_seconds": 29.5,
+        "visual_anchor": "Warp yarn inputs",
+        "narration": "તાણાનો ડેનિયર, બીમના તાર, ભાવ અને જી એસ ટી ભરો. તેનાથી દોરાની ખપત અને ખર્ચ ગણાય છે.",
+        "speech_end_seconds": 28.697,
+        "speech_duration_seconds": 10.697,
+        "original_speech_duration_seconds": 10.697,
+        "tempo": 1.0,
+        "source_audio_sha256": "70f72ba2352fba8472e86ce0aeba242ea30e0dff06e0105d7ed75a6451943b22",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "costings-05",
+            "payroll-14",
+            "production-10",
+            "production-01",
+            "production-17",
+            "estimator-02",
+            "qualities-04",
+            "rates-02"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 10.936598639455783,
+          "trim_start_seconds": 0.24,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "estimator-03",
+        "start_seconds": 31,
+        "end_seconds": 44.8,
+        "visual_anchor": "Weft yarn inputs",
+        "narration": "વાણાનો દોરો, ઇંચ દીઠ પિક્સ, કાપડની પહોળાઈ, ડેનિયર, ભાવ અને જી એસ ટી ભરો.",
+        "speech_end_seconds": 41.534,
+        "speech_duration_seconds": 10.534,
+        "original_speech_duration_seconds": 10.534,
+        "tempo": 1.0,
+        "source_audio_sha256": "dadb18b81d27195e7e8e49709904faddbf9af7cce964d1f2ece402dbe0da3b72",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "production-14",
+            "qualities-03",
+            "costings-10",
+            "production-09",
+            "estimator-07",
+            "estimator-03",
+            "production-16",
+            "estimator-04"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 10.843718820861678,
+          "trim_start_seconds": 0.31,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "estimator-04",
+        "start_seconds": 46,
+        "end_seconds": 56.5,
+        "visual_anchor": "Weaving, overhead, margin and quantity inputs",
+        "narration": "વણાટનો ખર્ચ અને વધારાના ખર્ચ તપાસો. પછી માર્જિન અને ઓર્ડરનો જથ્થો ભરો.",
+        "speech_end_seconds": 55.23,
+        "speech_duration_seconds": 9.23,
+        "original_speech_duration_seconds": 9.23,
+        "tempo": 1.0,
+        "source_audio_sha256": "1d927adc0d518f24d2ff8f59ab36cc5215a0ebc0d66afc3a334f3c304ca7b958",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "production-14",
+            "qualities-03",
+            "costings-10",
+            "production-09",
+            "estimator-07",
+            "estimator-03",
+            "production-16",
+            "estimator-04"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 9.229931972789116,
+          "trim_start_seconds": 0.0,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "estimator-05",
+        "start_seconds": 57,
+        "end_seconds": 61.7,
+        "visual_anchor": "Open Live Cost; first estimate visible by 60 seconds",
+        "narration": "અંદાજ જોવા લાઇવ કોસ્ટ ખોલો.",
+        "speech_end_seconds": 61.027,
+        "speech_duration_seconds": 4.027,
+        "original_speech_duration_seconds": 4.027,
+        "tempo": 1.0,
+        "source_audio_sha256": "605226744cbebf7b1154a6f257e60cfcefd827ea804f44be19794d402c38de2e",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "payroll-05",
+            "estimator-05",
+            "rates-05",
+            "payroll-06",
+            "rates-04",
+            "production-02",
+            "payroll-03",
+            "payroll-09"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 4.307301587301588,
+          "trim_start_seconds": 0.28,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "estimator-06",
+        "start_seconds": 65,
+        "end_seconds": 73,
+        "visual_anchor": "Expand Pricing assumptions, then close Live Cost",
+        "narration": "કિંમતની ધારણાઓ તપાસો. ફેરફાર કરવા ઇનપુટ પર આવો.",
+        "speech_end_seconds": 71.769,
+        "speech_duration_seconds": 6.769,
+        "original_speech_duration_seconds": 6.769,
+        "tempo": 1.0,
+        "source_audio_sha256": "63f0f16228934dc1bba3ace85cb9ae09833e76e00e53e2e823a6baff92dd9942",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "payroll-07",
+            "rates-05",
+            "payroll-03",
+            "payroll-09",
+            "costings-02",
+            "estimator-08",
+            "estimator-06",
+            "production-06"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 6.768616780045352,
+          "trim_start_seconds": 0.0,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "estimator-07",
+        "start_seconds": 75,
+        "end_seconds": 86.3,
+        "visual_anchor": "Change weft rate to ₹128/kg and margin to 15%",
+        "narration": "વાણાનો ભાવ કિલો દીઠ એકસો અઠ્ઠાવીસ રૂપિયા કરો. માર્જિન પંદર ટકા રાખો.",
+        "speech_end_seconds": 83.832,
+        "speech_duration_seconds": 8.832,
+        "original_speech_duration_seconds": 8.832,
+        "tempo": 1.0,
+        "source_audio_sha256": "6116626e77d7b2146263bbdda32b6a5d3cbf7e622ad981c373ecf8857846181e",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "production-14",
+            "qualities-03",
+            "costings-10",
+            "production-09",
+            "estimator-07",
+            "estimator-03",
+            "production-16",
+            "estimator-04"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 9.102222222222222,
+          "trim_start_seconds": 0.27,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "estimator-08",
+        "start_seconds": 88,
+        "end_seconds": 94.1,
+        "visual_anchor": "Updated cost ₹33.23/m and selling price ₹39.09/m visible",
+        "narration": "લાઇવ કોસ્ટમાં ઉત્પાદન ખર્ચ અને વેચાણ ભાવ જુઓ.",
+        "speech_end_seconds": 93.62,
+        "speech_duration_seconds": 5.62,
+        "original_speech_duration_seconds": 5.62,
+        "tempo": 1.0,
+        "source_audio_sha256": "71bb30416b11f7772fda3fda2122dc0bd058114ac37c099e9fe391414ed09d2b",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "payroll-07",
+            "rates-05",
+            "payroll-03",
+            "payroll-09",
+            "costings-02",
+            "estimator-08",
+            "estimator-06",
+            "production-06"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 6.188117913832199,
+          "trim_start_seconds": 0.39,
+          "trim_end_seconds": 0.17811791383219955
+        }
+      },
+      {
+        "id": "estimator-09",
+        "start_seconds": 96,
+        "end_seconds": 104.8,
+        "visual_anchor": "Switch to Detailed; yarn calculations",
+        "narration": "ડિટેઇલ્ડમાં દોરાની ખપત, ક્રિમ્પ અને બગાડની ગણતરી જુઓ.",
+        "speech_end_seconds": 104.348,
+        "speech_duration_seconds": 8.348,
+        "original_speech_duration_seconds": 8.348,
+        "tempo": 1.0,
+        "source_audio_sha256": "e4502a99dc9bafe1161dfce3fccf6a5c6c711e191efa119631051d11b4e4ef87",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "costings-09",
+            "qualities-01",
+            "rates-07",
+            "production-18",
+            "estimator-08",
+            "production-12",
+            "estimator-09",
+            "production-11"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 8.347573696145124,
+          "trim_start_seconds": 0.0,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "estimator-10",
+        "start_seconds": 106,
+        "end_seconds": 117.5,
+        "visual_anchor": "Detailed production-cost breakdown",
+        "narration": "ઉત્પાદન ખર્ચની વિગત જુઓ. ક્વિક અને ડિટેઇલ્ડની ગણતરી સમાન છે. ડિટેઇલ્ડમાં વધુ વિગત છે.",
+        "speech_end_seconds": 117.027,
+        "speech_duration_seconds": 11.027,
+        "original_speech_duration_seconds": 11.027,
+        "tempo": 1.0,
+        "source_audio_sha256": "0314378ddc3e92f996781de2e0e0a9320f100a0873a181b165c5a8703f88187c",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "payroll-07",
+            "payroll-10",
+            "costings-12",
+            "production-17",
+            "payroll-08",
+            "estimator-10",
+            "production-05",
+            "rates-06"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 11.226848072562358,
+          "trim_start_seconds": 0.2,
+          "trim_end_seconds": 0.0
+        }
+      }
+    ]
+  },
+  "rates": {
+    "duration_seconds": 84.208333,
+    "video_frames": 2021,
+    "video_packet_sha256": "7ea3cc51123465c2dd15db6339c968456c48402f787e54583b0911e0d896f56b",
+    "bytes": 2692387,
+    "cues": [
+      {
+        "id": "rates-01",
+        "start_seconds": 0.5,
+        "end_seconds": 10.5,
+        "visual_anchor": "Find demo yarns; inspect linked quality",
+        "narration": "રેટ બુકમાં ડેમો દોરા શોધો. તેમની સાથે જોડાયેલી સેવ્ડ ક્વાલિટી જુઓ.",
+        "speech_end_seconds": 8.352,
+        "speech_duration_seconds": 7.852,
+        "original_speech_duration_seconds": 7.852,
+        "tempo": 1.0,
+        "source_audio_sha256": "cf3e5e659a4ce498d4e80b187688d1a1ae4c1b812d52a39c72fc3c8ccc333437",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "payroll-10",
+            "rates-08",
+            "payroll-12",
+            "costings-12",
+            "qualities-05",
+            "costings-07",
+            "production-13",
+            "rates-01"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 7.87156462585034,
+          "trim_start_seconds": 0.02,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "rates-02",
+        "start_seconds": 11,
+        "end_seconds": 24.4,
+        "visual_anchor": "Edit weft price and source note",
+        "narration": "વાણાનો ભાવ કિલો દીઠ એકસો ચાલીસ રૂપિયા કરો. ભાવનો સ્રોત ઓળખવા સપ્લાયરની નોંધ ઉમેરો.",
+        "speech_end_seconds": 21.728,
+        "speech_duration_seconds": 10.728,
+        "original_speech_duration_seconds": 10.728,
+        "tempo": 1.0,
+        "source_audio_sha256": "718394a6a4aac8944c5139b9ab572ed2c41486b98728569237ce740499cfeaf1",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "costings-05",
+            "payroll-14",
+            "production-10",
+            "production-01",
+            "production-17",
+            "estimator-02",
+            "qualities-04",
+            "rates-02"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 10.727619047619047,
+          "trim_start_seconds": 0.0,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "rates-03",
+        "start_seconds": 24.9,
+        "end_seconds": 35.8,
+        "visual_anchor": "Save rate; open Activity history",
+        "narration": "નવો ભાવ સેવ કરો. પછી એક્ટિવિટીમાં ફેરફાર અને તેનો ઇતિહાસ જુઓ.",
+        "speech_end_seconds": 32.667,
+        "speech_duration_seconds": 7.767,
+        "original_speech_duration_seconds": 7.767,
+        "tempo": 1.0,
+        "source_audio_sha256": "18e55eb86b382be45b446409ac150aa660ea1aaa459488bb8e801017455c8781",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "costings-04",
+            "payroll-04",
+            "production-03",
+            "payroll-02",
+            "production-07",
+            "costings-06",
+            "rates-03",
+            "costings-01"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 7.767074829931973,
+          "trim_start_seconds": 0.0,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "start_seconds": 38,
+        "end_seconds": 42.8,
+        "visual_anchor": "Reopen linked quality",
+        "narration": "જોડાયેલી સેવ્ડ ક્વાલિટી ફરી ખોલો.",
+        "id": "rates-04",
+        "speech_end_seconds": 42.614,
+        "speech_duration_seconds": 4.614,
+        "original_speech_duration_seconds": 4.614,
+        "tempo": 1.0,
+        "source_audio_sha256": "7dfe79f16433e88822b522b56975f10009d6a6925f87e3254b50217e10e7737f",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "payroll-05",
+            "estimator-05",
+            "rates-05",
+            "payroll-06",
+            "rates-04",
+            "production-02",
+            "payroll-03",
+            "payroll-09"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 4.713650793650793,
+          "trim_start_seconds": 0.1,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "start_seconds": 45,
+        "end_seconds": 49.5,
+        "visual_anchor": "Rate editor shows weft ₹140/kg",
+        "narration": "વાણાનો ભાવ અપડેટ થયો છે.",
+        "id": "rates-05",
+        "speech_end_seconds": 48.324,
+        "speech_duration_seconds": 3.324,
+        "original_speech_duration_seconds": 3.324,
+        "tempo": 1.0,
+        "source_audio_sha256": "2ea1f5351c24efc527f2966ecc9417fabe64d8e9c6ebb8a2cf724476d80bdd3b",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "payroll-07",
+            "rates-05",
+            "payroll-03",
+            "payroll-09",
+            "costings-02",
+            "estimator-08",
+            "estimator-06",
+            "production-06"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 3.633922902494331,
+          "trim_start_seconds": 0.31,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "rates-06",
+        "start_seconds": 50,
+        "end_seconds": 64.4,
+        "visual_anchor": "Apply quality, inspect inputs, open Live cost",
+        "narration": "ક્વાલિટી લાગુ કરીને દોરાના ઇનપુટ તપાસો. નવો ઉત્પાદન ખર્ચ અને વેચાણ ભાવ જોવા લાઇવ કોસ્ટ ખોલો.",
+        "speech_end_seconds": 61.726,
+        "speech_duration_seconds": 11.726,
+        "original_speech_duration_seconds": 11.726,
+        "tempo": 1.0,
+        "source_audio_sha256": "1b1e264cced9f9f4b98cf489fc7af58c79868bdb75bba3cfdbf7c3824c1b2eb9",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "payroll-07",
+            "payroll-10",
+            "costings-12",
+            "production-17",
+            "payroll-08",
+            "estimator-10",
+            "production-05",
+            "rates-06"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 11.72607709750567,
+          "trim_start_seconds": 0.0,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "rates-07",
+        "start_seconds": 65.8,
+        "end_seconds": 73,
+        "visual_anchor": "Find and open the earlier saved costing",
+        "narration": "હવે જૂની સેવ્ડ કોસ્ટિંગને નવા અંદાજ સાથે સરખાવો.",
+        "speech_end_seconds": 72.05,
+        "speech_duration_seconds": 6.25,
+        "original_speech_duration_seconds": 6.25,
+        "tempo": 1.0,
+        "source_audio_sha256": "768d467afa5465d8bec81c9eb14ee1a9a3bb836ba63fecf9b1e1adeafbd526f7",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "costings-09",
+            "qualities-01",
+            "rates-07",
+            "production-18",
+            "estimator-08",
+            "production-12",
+            "estimator-09",
+            "production-11"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 6.791836734693877,
+          "trim_start_seconds": 0.11,
+          "trim_end_seconds": 0.43183673469387757
+        }
+      },
+      {
+        "id": "rates-08",
+        "start_seconds": 73.5,
+        "end_seconds": 83.2,
+        "visual_anchor": "Original snapshot values remain unchanged",
+        "narration": "રેટ બુકના ફેરફારથી જૂની સેવ્ડ કોસ્ટિંગના આંકડા બદલાતા નથી.",
+        "speech_end_seconds": 81.612,
+        "speech_duration_seconds": 8.112,
+        "original_speech_duration_seconds": 8.112,
+        "tempo": 1.0,
+        "source_audio_sha256": "c63f3126036da868464311ce6ab1241dfdfab8f0ede5d1b34abdd7ac0165c999",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "payroll-10",
+            "rates-08",
+            "payroll-12",
+            "costings-12",
+            "qualities-05",
+            "costings-07",
+            "production-13",
+            "rates-01"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 8.161814058956915,
+          "trim_start_seconds": 0.05,
+          "trim_end_seconds": 0.0
+        }
+      }
+    ]
+  },
+  "costings": {
+    "duration_seconds": 134.75,
+    "video_frames": 3234,
+    "video_packet_sha256": "531786fccfe4cccb250103612804441f15161a0288e1b5a4de1a4abdc9ff803c",
+    "bytes": 4512721,
+    "cues": [
+      {
+        "id": "costings-01",
+        "start_seconds": 0.5,
+        "end_seconds": 8.7,
+        "visual_anchor": "Search for demo fabric and open its costing",
+        "narration": "કાપડ શોધીને તેની સેવ કરેલી કોસ્ટિંગ ખોલો. અહીં મૂળ આંકડા જુઓ.",
+        "speech_end_seconds": 7.826,
+        "speech_duration_seconds": 7.326,
+        "original_speech_duration_seconds": 7.326,
+        "tempo": 1.0,
+        "source_audio_sha256": "8537e5e228b38adcc40b65462b427bf69048b324d9fff8f3be0cf81233393eae",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "costings-04",
+            "payroll-04",
+            "production-03",
+            "payroll-02",
+            "production-07",
+            "costings-06",
+            "rates-03",
+            "costings-01"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 7.325895691609977,
+          "trim_start_seconds": 0.0,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "costings-02",
+        "start_seconds": 9.2,
+        "end_seconds": 17.9,
+        "visual_anchor": "Saved breakdown: cost, price, margin, quantity",
+        "narration": "આ રેકોર્ડમાં મૂળ ઇનપુટ અને પરિણામો સચવાય છે.",
+        "speech_end_seconds": 14.796,
+        "speech_duration_seconds": 5.596,
+        "original_speech_duration_seconds": 5.596,
+        "tempo": 1.0,
+        "source_audio_sha256": "52aa27ec86e318bbeaa551b3a87074a9c32e34b5a9d8f5838abda72468606575",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "payroll-07",
+            "rates-05",
+            "payroll-03",
+            "payroll-09",
+            "costings-02",
+            "estimator-08",
+            "estimator-06",
+            "production-06"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 5.88625850340136,
+          "trim_start_seconds": 0.29,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "costings-03",
+        "start_seconds": 20,
+        "end_seconds": 33,
+        "visual_anchor": "Use snapshot; change weaving rate to ₹16/m",
+        "narration": "ઇનપુટ પાછા લાવવા યુઝ પસંદ કરો. વણાટનો ભાવ મીટર દીઠ સોળ રૂપિયા કરો.",
+        "speech_end_seconds": 29.81,
+        "speech_duration_seconds": 9.81,
+        "original_speech_duration_seconds": 9.81,
+        "tempo": 1.0,
+        "source_audio_sha256": "359edc8fb079bdc1e732d1c1505220615f8f9b98babc5e72b84639201de1e42b",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "production-15",
+            "qualities-02",
+            "production-08",
+            "payroll-01",
+            "payroll-13",
+            "payroll-11",
+            "costings-11",
+            "costings-03"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 9.810430839002267,
+          "trim_start_seconds": 0.0,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "costings-04",
+        "start_seconds": 33.5,
+        "end_seconds": 41.1,
+        "visual_anchor": "Set margin to 20%; open Live cost",
+        "narration": "માર્જિન વીસ ટકા કરો. પછી લાઇવ કોસ્ટમાં નવું પરિણામ જુઓ.",
+        "speech_end_seconds": 40.464,
+        "speech_duration_seconds": 6.964,
+        "original_speech_duration_seconds": 6.964,
+        "tempo": 1.0,
+        "source_audio_sha256": "78b0d739aa1dd509dcb9dd759dc4b03f2dd16dbeca1a4f13c792a4cc373c2af4",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "costings-04",
+            "payroll-04",
+            "production-03",
+            "payroll-02",
+            "production-07",
+            "costings-06",
+            "rates-03",
+            "costings-01"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 7.093696145124716,
+          "trim_start_seconds": 0.13,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "costings-05",
+        "start_seconds": 42.5,
+        "end_seconds": 51.9,
+        "visual_anchor": "Save New Version; v2 confirmation",
+        "narration": "સેવ ન્યૂ વર્ઝનથી ફેરફાર બીજા વર્ઝનમાં સાચવો. પહેલું વર્ઝન યથાવત રહેશે.",
+        "speech_end_seconds": 51.771,
+        "speech_duration_seconds": 9.271,
+        "original_speech_duration_seconds": 9.736,
+        "tempo": 1.052,
+        "source_audio_sha256": "ec8829cf7f6d9ceea7329a94ecc45aa8c9873d342fe1a4e25a8c205f62f6dcd1",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "costings-05",
+            "payroll-14",
+            "production-10",
+            "production-01",
+            "production-17",
+            "estimator-02",
+            "qualities-04",
+            "rates-02"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 9.996190476190476,
+          "trim_start_seconds": 0.26,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "costings-06",
+        "start_seconds": 53.3,
+        "end_seconds": 61.5,
+        "visual_anchor": "Enable Compare and open version history",
+        "narration": "કમ્પેર ચાલુ કરો. અંદાજ પસંદ કરવા કાપડની વર્ઝન હિસ્ટ્રી ખોલો.",
+        "speech_end_seconds": 61.375,
+        "speech_duration_seconds": 8.075,
+        "original_speech_duration_seconds": 8.1,
+        "tempo": 1.003,
+        "source_audio_sha256": "8e1b790a35bd6b831734689629f99e3d8028cd7555a1099605fc6be82d807c48",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "costings-04",
+            "payroll-04",
+            "production-03",
+            "payroll-02",
+            "production-07",
+            "costings-06",
+            "rates-03",
+            "costings-01"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 8.544943310657596,
+          "trim_start_seconds": 0.36,
+          "trim_end_seconds": 0.08494331065759637
+        }
+      },
+      {
+        "id": "costings-07",
+        "start_seconds": 62,
+        "end_seconds": 73.9,
+        "visual_anchor": "Select v1 and v2",
+        "narration": "પહેલું અને બીજું વર્ઝન પસંદ કરીને બદલાયેલી ધારણાઓની અસર સરખાવો.",
+        "speech_end_seconds": 70.08,
+        "speech_duration_seconds": 8.08,
+        "original_speech_duration_seconds": 8.08,
+        "tempo": 1.0,
+        "source_audio_sha256": "ce01f7b559e655a13e23ca5f2a987cfb798840e684bdb7a10c34981cb42d00da",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "payroll-10",
+            "rates-08",
+            "payroll-12",
+            "costings-12",
+            "qualities-05",
+            "costings-07",
+            "production-13",
+            "rates-01"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 8.440453514739229,
+          "trim_start_seconds": 0.36,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "costings-08",
+        "start_seconds": 75.5,
+        "end_seconds": 90.7,
+        "visual_anchor": "Compare Costings: component and price differences",
+        "narration": "કમ્પેર કોસ્ટિંગ્સ ખોલો. ઉત્પાદન ખર્ચ, વેચાણ ભાવ, માર્જિન અને જથ્થાનો તફાવત જોઈને તમારા ફેરફારોની અસર સમજો.",
+        "speech_end_seconds": 89.803,
+        "speech_duration_seconds": 14.303,
+        "original_speech_duration_seconds": 14.303,
+        "tempo": 1.0,
+        "source_audio_sha256": "dcdaaece5d24025cec42601ad284220e86780235f2fe373d28edbcf6453171e7",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "production-04",
+            "costings-08"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 14.303492063492063,
+          "trim_start_seconds": 0.0,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "start_seconds": 94,
+        "end_seconds": 101,
+        "visual_anchor": "Open internal cost-sheet export preview",
+        "narration": "આંતરિક ખર્ચનું પત્રક જોવા એક્સપોર્ટ ખોલો.",
+        "id": "costings-09",
+        "speech_end_seconds": 98.972,
+        "speech_duration_seconds": 4.972,
+        "original_speech_duration_seconds": 4.972,
+        "tempo": 1.0,
+        "source_audio_sha256": "b3b4d11479ebaa0a96000bfe2f01cc94c905d6ec066d168c348904c2f96238b7",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "costings-09",
+            "qualities-01",
+            "rates-07",
+            "production-18",
+            "estimator-08",
+            "production-12",
+            "estimator-09",
+            "production-11"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 5.491519274376417,
+          "trim_start_seconds": 0.52,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "start_seconds": 103,
+        "end_seconds": 115.8,
+        "visual_anchor": "Business name and notes; download cost sheet",
+        "narration": "વ્યવસાયનું નામ અને નોંધ ભરો. પછી વિગતવાર ખર્ચનું પત્રક ડાઉનલોડ કરો.",
+        "id": "costings-10",
+        "speech_end_seconds": 111.287,
+        "speech_duration_seconds": 8.287,
+        "original_speech_duration_seconds": 8.287,
+        "tempo": 1.0,
+        "source_audio_sha256": "e72f0e52d0b5194e04bb7dccf08df8cf7b6cd30a0ad87a37c945e7bd5226ab64",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "production-14",
+            "qualities-03",
+            "costings-10",
+            "production-09",
+            "estimator-07",
+            "estimator-03",
+            "production-16",
+            "estimator-04"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 8.417233560090702,
+          "trim_start_seconds": 0.13,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "start_seconds": 118,
+        "end_seconds": 126.5,
+        "visual_anchor": "Customer Quotation; buyer and delivery terms",
+        "narration": "કસ્ટમર કોટેશન પસંદ કરો. ખરીદનારનું નામ અને ડિલિવરીની શરતો ભરો.",
+        "id": "costings-11",
+        "speech_end_seconds": 126.348,
+        "speech_duration_seconds": 8.348,
+        "original_speech_duration_seconds": 8.348,
+        "tempo": 1.0,
+        "source_audio_sha256": "c0a03319e73f2b65c5f5d4a1eb5a59f10bcd00990436c4f8754a1175a651000c",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "production-15",
+            "qualities-02",
+            "production-08",
+            "payroll-01",
+            "payroll-13",
+            "payroll-11",
+            "costings-11",
+            "costings-03"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 8.347573696145124,
+          "trim_start_seconds": 0.0,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "start_seconds": 127,
+        "end_seconds": 133.7,
+        "visual_anchor": "Download customer quotation",
+        "narration": "કોટેશન ડાઉનલોડ કરો. ખર્ચ અને માર્જિન છુપાય છે.",
+        "id": "costings-12",
+        "speech_end_seconds": 133.57,
+        "speech_duration_seconds": 6.57,
+        "original_speech_duration_seconds": 6.78,
+        "tempo": 1.033,
+        "source_audio_sha256": "cec8c834e41a270bef5c83fe239919681864670675b2a2f94a330590c062bf37",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "payroll-07",
+            "payroll-10",
+            "costings-12",
+            "production-17",
+            "payroll-08",
+            "estimator-10",
+            "production-05",
+            "rates-06"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 7.813514739229025,
+          "trim_start_seconds": 0.47,
+          "trim_end_seconds": 0.563514739229025
+        }
+      }
+    ]
+  },
+  "production": {
+    "duration_seconds": 225.416667,
+    "video_frames": 5410,
+    "video_packet_sha256": "09e40cbfee4e9e55f13cebe0b2d12e398f2d8858b52aecd63f9c41b08da4496a",
+    "bytes": 5902347,
+    "cues": [
+      {
+        "id": "production-01",
+        "start_seconds": 0.5,
+        "end_seconds": 12.3,
+        "visual_anchor": "Add machine: name and type",
+        "narration": "પહેલા મશીન ઉમેરો. નામ ડેમો લૂમ ઝીરો વન રાખો. મશીનના પ્રકારમાં રેપિયર પસંદ કરો.",
+        "speech_end_seconds": 10.728,
+        "speech_duration_seconds": 10.228,
+        "original_speech_duration_seconds": 10.228,
+        "tempo": 1.0,
+        "source_audio_sha256": "ab7d6b956f3d149046612bcf0cd7e4459c37dbedf01f99f11cc58e8ccdfde773",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "costings-05",
+            "payroll-14",
+            "production-10",
+            "production-01",
+            "production-17",
+            "estimator-02",
+            "qualities-04",
+            "rates-02"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 10.588299319727891,
+          "trim_start_seconds": 0.36,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "production-02",
+        "start_seconds": 20,
+        "end_seconds": 25.1,
+        "visual_anchor": "Save machine",
+        "narration": "મશીન ઉમેરો. હવે તેને કામ સોંપી શકાય.",
+        "speech_end_seconds": 24.971,
+        "speech_duration_seconds": 4.971,
+        "original_speech_duration_seconds": 5.341,
+        "tempo": 1.077,
+        "source_audio_sha256": "9901719ea429697f0960652e496fa77393816ddae89a1cf79b423ce9bb1a346b",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "payroll-05",
+            "estimator-05",
+            "rates-05",
+            "payroll-06",
+            "rates-04",
+            "production-02",
+            "payroll-03",
+            "payroll-09"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 5.340589569160998,
+          "trim_start_seconds": 0.0,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "production-03",
+        "start_seconds": 26.8,
+        "end_seconds": 38.8,
+        "visual_anchor": "Add worker: Demo Operator 01, piece rate",
+        "narration": "ડેમો ઓપરેટર ઝીરો વન ઉમેરો. પગારનો પ્રકાર પીસ રેટ પસંદ કરો.",
+        "speech_end_seconds": 34.335,
+        "speech_duration_seconds": 7.535,
+        "original_speech_duration_seconds": 7.535,
+        "tempo": 1.0,
+        "source_audio_sha256": "39cebf6933801ca1668779c6733fb7a93a57ee4b7aa37000e3cfcb1047318983",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "costings-04",
+            "payroll-04",
+            "production-03",
+            "payroll-02",
+            "production-07",
+            "costings-06",
+            "rates-03",
+            "costings-01"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 7.534875283446712,
+          "trim_start_seconds": 0.0,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "production-04",
+        "start_seconds": 39.3,
+        "end_seconds": 54.1,
+        "visual_anchor": "Role, approved operator, day availability, save",
+        "narration": "ભૂમિકા ભરો. લૂમ ઓપરેટરની મંજૂરી ચાલુ રાખો અને દિવસની ઉપલબ્ધતા પસંદ કરો. પછી કર્મચારીને સેવ કરો.",
+        "speech_end_seconds": 51.395,
+        "speech_duration_seconds": 12.095,
+        "original_speech_duration_seconds": 12.095,
+        "tempo": 1.0,
+        "source_audio_sha256": "137b7fdf35f8eb0cb9b7fe51b3e14f131ea7bb1146f7ade516260cf6a157551e",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "production-04",
+            "costings-08"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 12.225306122448979,
+          "trim_start_seconds": 0.13,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "production-05",
+        "start_seconds": 56,
+        "end_seconds": 66.5,
+        "visual_anchor": "Activate Quality; choose saved costing v2",
+        "narration": "ઉત્પાદન માટે ક્વાલિટી સક્રિય કરો. ડેમો કાપડની સેવ કરેલી કોસ્ટિંગનું બીજું વર્ઝન પસંદ કરો.",
+        "speech_end_seconds": 66.321,
+        "speech_duration_seconds": 10.321,
+        "original_speech_duration_seconds": 10.321,
+        "tempo": 1.0,
+        "source_audio_sha256": "a8ad18f7368d29daeaec9f867110c3d5a1b5c7c31d57b54ae2b3607debe32f8a",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "payroll-07",
+            "payroll-10",
+            "costings-12",
+            "production-17",
+            "payroll-08",
+            "estimator-10",
+            "production-05",
+            "rates-06"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 10.32126984126984,
+          "trim_start_seconds": 0.0,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "production-06",
+        "start_seconds": 67,
+        "end_seconds": 77.3,
+        "visual_anchor": "Yarn-stock prerequisite",
+        "narration": "ઉત્પાદન પહેલાં તાણા અને વાણાના દોરાનો સ્ટોક તપાસો.",
+        "speech_end_seconds": 73.954,
+        "speech_duration_seconds": 6.954,
+        "original_speech_duration_seconds": 6.954,
+        "tempo": 1.0,
+        "source_audio_sha256": "34fefcd6cd6ba3f15ad201d7d60eab2786b885ae6400b20d88d06286f50aa911",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "payroll-07",
+            "rates-05",
+            "payroll-03",
+            "payroll-09",
+            "costings-02",
+            "estimator-08",
+            "estimator-06",
+            "production-06"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 6.9543764172335605,
+          "trim_start_seconds": 0.0,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "production-07",
+        "start_seconds": 77.8,
+        "end_seconds": 91.5,
+        "visual_anchor": "Add warp stock: 200 kg and note",
+        "narration": "તાણાના દોરાનો બસો કિલો સ્ટોક અને નાની નોંધ ઉમેરીને સેવ કરો.",
+        "speech_end_seconds": 85.742,
+        "speech_duration_seconds": 7.942,
+        "original_speech_duration_seconds": 7.942,
+        "tempo": 1.0,
+        "source_audio_sha256": "6df47c6cb7594966121c84832992439e2deae08f526798bb5a2f12c51038c0c7",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "costings-04",
+            "payroll-04",
+            "production-03",
+            "payroll-02",
+            "production-07",
+            "costings-06",
+            "rates-03",
+            "costings-01"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 8.092154195011338,
+          "trim_start_seconds": 0.15,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "production-08",
+        "start_seconds": 92,
+        "end_seconds": 107.2,
+        "visual_anchor": "Add weft stock: 200 kg and note",
+        "narration": "વાણાના દોરા માટે પણ બસો કિલો સ્ટોક અને નોંધ ઉમેરો. પછી સેવ કરો.",
+        "speech_end_seconds": 100.348,
+        "speech_duration_seconds": 8.348,
+        "original_speech_duration_seconds": 8.348,
+        "tempo": 1.0,
+        "source_audio_sha256": "1a3a357edc9819803b97c4f7bf253edd6f1c6cf13a385be94dbce017dc7b3d99",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "production-15",
+            "qualities-02",
+            "production-08",
+            "payroll-01",
+            "payroll-13",
+            "payroll-11",
+            "costings-11",
+            "costings-03"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 8.347573696145124,
+          "trim_start_seconds": 0.0,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "production-09",
+        "start_seconds": 108,
+        "end_seconds": 116.5,
+        "visual_anchor": "Activate quality after stock is available",
+        "narration": "બંને દોરાનો સ્ટોક તૈયાર છે. હવે ક્વાલિટીને ઉત્પાદન માટે સક્રિય કરો.",
+        "speech_end_seconds": 116.371,
+        "speech_duration_seconds": 8.371,
+        "original_speech_duration_seconds": 8.8,
+        "tempo": 1.053,
+        "source_audio_sha256": "450c8f29d51933ed5207d732ab147442430e38c541e697bd05686ca6681b0df9",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "production-14",
+            "qualities-03",
+            "costings-10",
+            "production-09",
+            "estimator-07",
+            "estimator-03",
+            "production-16",
+            "estimator-04"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 9.450521541950113,
+          "trim_start_seconds": 0.49,
+          "trim_end_seconds": 0.16052154195011337
+        }
+      },
+      {
+        "id": "production-10",
+        "start_seconds": 118,
+        "end_seconds": 129.4,
+        "visual_anchor": "Assign Looms; select Demo Loom 01",
+        "narration": "સક્રિય ક્વાલિટીમાં અસાઇન લૂમ્સ ખોલો. ડેમો લૂમ ઝીરો વન પસંદ કરીને ખાતરી કરો.",
+        "speech_end_seconds": 126.51,
+        "speech_duration_seconds": 8.51,
+        "original_speech_duration_seconds": 8.51,
+        "tempo": 1.0,
+        "source_audio_sha256": "d90f9a78d4a468eff27cbc0257b8c1005c5b53d2e2ad260c5da44cda311219b9",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "costings-05",
+            "payroll-14",
+            "production-10",
+            "production-01",
+            "production-17",
+            "estimator-02",
+            "qualities-04",
+            "rates-02"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 8.510113378684807,
+          "trim_start_seconds": 0.0,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "production-11",
+        "start_seconds": 134,
+        "end_seconds": 141.2,
+        "visual_anchor": "Machine board; search for demo loom",
+        "narration": "મશીન બોર્ડ પર કાપડ અને લૂમ જોડાયેલાં છે. ડેમો લૂમ શોધો.",
+        "speech_end_seconds": 141.074,
+        "speech_duration_seconds": 7.074,
+        "original_speech_duration_seconds": 7.303,
+        "tempo": 1.034,
+        "source_audio_sha256": "63ee65cab7ef7e8dc56f6215e071ffa77b62645885e0109d18888d5bfa0985d8",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "costings-09",
+            "qualities-01",
+            "rates-07",
+            "production-18",
+            "estimator-08",
+            "production-12",
+            "estimator-09",
+            "production-11"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 7.302675736961452,
+          "trim_start_seconds": 0.0,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "production-12",
+        "start_seconds": 142.8,
+        "end_seconds": 154.5,
+        "visual_anchor": "Manage Workers; Day Shift",
+        "narration": "ડેમો લૂમમાં મેનેજ વર્કર્સ ખોલો. ડે શિફ્ટ પસંદ કરો.",
+        "speech_end_seconds": 149.224,
+        "speech_duration_seconds": 6.424,
+        "original_speech_duration_seconds": 6.424,
+        "tempo": 1.0,
+        "source_audio_sha256": "edc78897cdfe074357914459e799f11d6702bcca676bfffa0fe7b9631bc6ca89",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "costings-09",
+            "qualities-01",
+            "rates-07",
+            "production-18",
+            "estimator-08",
+            "production-12",
+            "estimator-09",
+            "production-11"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 6.733786848072563,
+          "trim_start_seconds": 0.31,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "production-13",
+        "start_seconds": 155,
+        "end_seconds": 168.6,
+        "visual_anchor": "Search and assign Demo Operator 01; Done",
+        "narration": "ડેમો ઓપરેટર ઝીરો વન શોધીને દિવસની પાળી સોંપો. પછી સેટઅપ પૂરું કરો.",
+        "speech_end_seconds": 163.429,
+        "speech_duration_seconds": 8.429,
+        "original_speech_duration_seconds": 8.429,
+        "tempo": 1.0,
+        "source_audio_sha256": "415dbeb4afd8aaed20bf51597628deba0d61549c52972e4423ff20336380cf65",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "payroll-10",
+            "rates-08",
+            "payroll-12",
+            "costings-12",
+            "qualities-05",
+            "costings-07",
+            "production-13",
+            "rates-01"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 8.428843537414966,
+          "trim_start_seconds": 0.0,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "production-14",
+        "start_seconds": 170.2,
+        "end_seconds": 180.4,
+        "visual_anchor": "Daily sheet; enter 240 m",
+        "narration": "તારીખ અને પાળી તપાસો. ડેઇલી શીટમાં ડેમો લૂમ માટે બસો ચાલીસ મીટર ભરો.",
+        "speech_end_seconds": 179.274,
+        "speech_duration_seconds": 9.074,
+        "original_speech_duration_seconds": 9.074,
+        "tempo": 1.0,
+        "source_audio_sha256": "438202c67a15c6fcab596e6652262843e053f92b3ccbe98977cf671487ca17e4",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "production-14",
+            "qualities-03",
+            "costings-10",
+            "production-09",
+            "estimator-07",
+            "estimator-03",
+            "production-16",
+            "estimator-04"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 9.113832199546485,
+          "trim_start_seconds": 0.04,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "production-15",
+        "start_seconds": 180.9,
+        "end_seconds": 189.3,
+        "visual_anchor": "Worker Review; return to sheet",
+        "narration": "વર્કર રિવ્યૂમાં ઉત્પાદન અને કમાણી તપાસો. પછી શીટ પર પાછા આવો.",
+        "speech_end_seconds": 188.899,
+        "speech_duration_seconds": 7.999,
+        "original_speech_duration_seconds": 7.999,
+        "tempo": 1.0,
+        "source_audio_sha256": "a5bc78a3fe8fe9865598e7795864d0c526f5b49cae780508dea99a0a3a843d4a",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "production-15",
+            "qualities-02",
+            "production-08",
+            "payroll-01",
+            "payroll-13",
+            "payroll-11",
+            "costings-11",
+            "costings-03"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 7.999274376417233,
+          "trim_start_seconds": 0.0,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "production-16",
+        "start_seconds": 189.8,
+        "end_seconds": 200.8,
+        "visual_anchor": "Save shift and confirm incomplete shift",
+        "narration": "પાળી સેવ કરો. ફક્ત ડેમો લૂમનું ઉત્પાદન નોંધાયું છે. બીજા મશીનો બાકી છે.",
+        "speech_end_seconds": 199.459,
+        "speech_duration_seconds": 9.659,
+        "original_speech_duration_seconds": 9.659,
+        "tempo": 1.0,
+        "source_audio_sha256": "ec13612fe3624684602ef28c72f7e60fa2908030da0a7c95cb50f4b72f6f04b2",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "production-14",
+            "qualities-03",
+            "costings-10",
+            "production-09",
+            "estimator-07",
+            "estimator-03",
+            "production-16",
+            "estimator-04"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 9.659501133786849,
+          "trim_start_seconds": 0.0,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "production-17",
+        "start_seconds": 202.3,
+        "end_seconds": 212,
+        "visual_anchor": "Saved production audit receipt",
+        "narration": "સેવ કરેલી રસીદમાં લૂમ, ક્વાલિટી, કર્મચારી અને મીટર જુઓ.",
+        "speech_end_seconds": 209.09,
+        "speech_duration_seconds": 6.79,
+        "original_speech_duration_seconds": 6.79,
+        "tempo": 1.0,
+        "source_audio_sha256": "daa6a1c6d7a077ee566d27798f91ead5e71a755350979e476440b6c42256608a",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "payroll-07",
+            "payroll-10",
+            "costings-12",
+            "production-17",
+            "payroll-08",
+            "estimator-10",
+            "production-05",
+            "rates-06"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 7.151746031746032,
+          "trim_start_seconds": 0.14,
+          "trim_end_seconds": 0.22174603174603175
+        }
+      },
+      {
+        "id": "production-18",
+        "start_seconds": 219,
+        "end_seconds": 224.8,
+        "visual_anchor": "Worker Review: 240 m × ₹16/m = ₹3,840",
+        "narration": "કર્મચારીની કમાણી ત્રણ હજાર આઠસો ચાલીસ રૂપિયા છે.",
+        "speech_end_seconds": 224.643,
+        "speech_duration_seconds": 5.643,
+        "original_speech_duration_seconds": 5.643,
+        "tempo": 1.0,
+        "source_audio_sha256": "efa188391195b4b4c9ab4814ddd01b021bc0fc994b4745bd8e32a547e29172cb",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "costings-09",
+            "qualities-01",
+            "rates-07",
+            "production-18",
+            "estimator-08",
+            "production-12",
+            "estimator-09",
+            "production-11"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 6.15328798185941,
+          "trim_start_seconds": 0.51,
+          "trim_end_seconds": 0.0
+        }
+      }
+    ]
+  },
+  "payroll": {
+    "duration_seconds": 141.708333,
+    "video_frames": 3401,
+    "video_packet_sha256": "c3135fbd81d14faa316ed6fd87ed44b7765555aab879767c90982dd74cb33a67",
+    "bytes": 3494260,
+    "cues": [
+      {
+        "id": "payroll-01",
+        "start_seconds": 0.5,
+        "end_seconds": 9.3,
+        "visual_anchor": "Find Demo Operator 01; production earnings card",
+        "narration": "ડેમો ઓપરેટર ઝીરો વન શોધો. સેવ કરેલા ઉત્પાદનથી થયેલી કમાણી જુઓ.",
+        "speech_end_seconds": 9.164,
+        "speech_duration_seconds": 8.664,
+        "original_speech_duration_seconds": 8.925,
+        "tempo": 1.031,
+        "source_audio_sha256": "a386e415ff51e792f516103c02b24abf4b11967c6e987e337332aff4fdc545d2",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "production-15",
+            "qualities-02",
+            "production-08",
+            "payroll-01",
+            "payroll-13",
+            "payroll-11",
+            "costings-11",
+            "costings-03"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 10.205170068027211,
+          "trim_start_seconds": 1.28,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "payroll-02",
+        "start_seconds": 9.8,
+        "end_seconds": 22.3,
+        "visual_anchor": "Add advance: ₹400 and description",
+        "narration": "ચારસો રૂપિયાની એડવાન્સ રકમ અને નાની નોંધ ઉમેરીને સેવ કરો.",
+        "speech_end_seconds": 17.331,
+        "speech_duration_seconds": 7.531,
+        "original_speech_duration_seconds": 7.531,
+        "tempo": 1.0,
+        "source_audio_sha256": "80e6e2576a37cd95cc4fef48ba5944f88eba6de32d7aa292adadcbb34c2b5e3c",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "costings-04",
+            "payroll-04",
+            "production-03",
+            "payroll-02",
+            "production-07",
+            "costings-06",
+            "rates-03",
+            "costings-01"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 7.581315192743764,
+          "trim_start_seconds": 0.05,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "payroll-03",
+        "start_seconds": 28,
+        "end_seconds": 32,
+        "visual_anchor": "Recovery ₹400; net pay recalculates",
+        "narration": "વસૂલાતથી ચોખ્ખો પગાર ઘટે છે.",
+        "speech_end_seconds": 31.84,
+        "speech_duration_seconds": 3.84,
+        "original_speech_duration_seconds": 3.84,
+        "tempo": 1.0,
+        "source_audio_sha256": "9e0efacf89087532c8c220fb18d841381fbcb4fdce46d4a95f27b4e1938e5d0e",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "payroll-07",
+            "rates-05",
+            "payroll-03",
+            "payroll-09",
+            "costings-02",
+            "estimator-08",
+            "estimator-06",
+            "production-06"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 4.783310657596372,
+          "trim_start_seconds": 0.57,
+          "trim_end_seconds": 0.3733106575963719
+        }
+      },
+      {
+        "id": "payroll-04",
+        "start_seconds": 33.3,
+        "end_seconds": 46.4,
+        "visual_anchor": "Add deduction; choose Other category",
+        "narration": "કપાત પણ નોંધી શકો છો. આ ઉદાહરણમાં કારણ માટે અધર પસંદ કરો.",
+        "speech_end_seconds": 41.188,
+        "speech_duration_seconds": 7.888,
+        "original_speech_duration_seconds": 7.888,
+        "tempo": 1.0,
+        "source_audio_sha256": "411fe3287443045419aa794eff29b0debaaf28b077229a2b4c61b9ad95e4ba7c",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "costings-04",
+            "payroll-04",
+            "production-03",
+            "payroll-02",
+            "production-07",
+            "costings-06",
+            "rates-03",
+            "costings-01"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 7.918004535147392,
+          "trim_start_seconds": 0.03,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "payroll-05",
+        "start_seconds": 47,
+        "end_seconds": 52,
+        "visual_anchor": "Deduction amount ₹50",
+        "narration": "પચાસ રૂપિયા ભરો.",
+        "speech_end_seconds": 48.985,
+        "speech_duration_seconds": 1.985,
+        "original_speech_duration_seconds": 1.985,
+        "tempo": 1.0,
+        "source_audio_sha256": "d977dda57c88e8dd5b1d4f343f398fde1e2c564ba5729d6276cb75c43ccf25fb",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "payroll-05",
+            "estimator-05",
+            "rates-05",
+            "payroll-06",
+            "rates-04",
+            "production-02",
+            "payroll-03",
+            "payroll-09"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 1.9853061224489796,
+          "trim_start_seconds": 0.0,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "payroll-06",
+        "start_seconds": 52.5,
+        "end_seconds": 59.3,
+        "visual_anchor": "Deduction note and save",
+        "narration": "નાની નોંધ ઉમેરીને કપાત નોંધો.",
+        "speech_end_seconds": 56.44,
+        "speech_duration_seconds": 3.94,
+        "original_speech_duration_seconds": 3.94,
+        "tempo": 1.0,
+        "source_audio_sha256": "097e534e0dba3017ec27252ff8de59ea19ae1b8ac46690b88e066b6aa1787ce2",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "payroll-05",
+            "estimator-05",
+            "rates-05",
+            "payroll-06",
+            "rates-04",
+            "production-02",
+            "payroll-03",
+            "payroll-09"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 4.3769614512471655,
+          "trim_start_seconds": 0.21,
+          "trim_end_seconds": 0.22696145124716555
+        }
+      },
+      {
+        "id": "payroll-07",
+        "start_seconds": 65,
+        "end_seconds": 67.9,
+        "visual_anchor": "Recovery ₹450; net pay ₹3,390",
+        "narration": "વસૂલાત જુઓ.",
+        "speech_end_seconds": 66.863,
+        "speech_duration_seconds": 1.863,
+        "original_speech_duration_seconds": 1.863,
+        "tempo": 1.0,
+        "source_audio_sha256": "17dffcab5fce9a0d9e503bbb303a0cab91fd84da9b5c83eabcded004981f8b8a",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "payroll-07",
+            "payroll-10",
+            "costings-12",
+            "production-17",
+            "payroll-08",
+            "estimator-10",
+            "production-05",
+            "rates-06"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 2.043356009070295,
+          "trim_start_seconds": 0.18,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "payroll-08",
+        "start_seconds": 68.9,
+        "end_seconds": 79.4,
+        "visual_anchor": "How pay is calculated",
+        "narration": "હાઉ પે ઇઝ કેલ્ક્યુલેટેડ ખોલો. પીસ રેટની કમાણી, પગાર અને એડવાન્સની વસૂલાતનો સાર જુઓ.",
+        "speech_end_seconds": 79.271,
+        "speech_duration_seconds": 10.371,
+        "original_speech_duration_seconds": 11.093,
+        "tempo": 1.071,
+        "source_audio_sha256": "e45df5b9f48b593ac863f07826516510007a2bc20feb4d4bfdeb75f0a195a0e7",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "payroll-07",
+            "payroll-10",
+            "costings-12",
+            "production-17",
+            "payroll-08",
+            "estimator-10",
+            "production-05",
+            "rates-06"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 11.27328798185941,
+          "trim_start_seconds": 0.18,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "payroll-09",
+        "start_seconds": 79.9,
+        "end_seconds": 84.9,
+        "visual_anchor": "Mark paid and confirm",
+        "narration": "માર્ક પેડથી ચુકવણીની ખાતરી કરો.",
+        "speech_end_seconds": 83.14,
+        "speech_duration_seconds": 3.24,
+        "original_speech_duration_seconds": 3.24,
+        "tempo": 1.0,
+        "source_audio_sha256": "88b74f6c530af009002a6d9a85d03355d6bbd9ef3919d357708957e30c855bcb",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "payroll-07",
+            "rates-05",
+            "payroll-03",
+            "payroll-09",
+            "costings-02",
+            "estimator-08",
+            "estimator-06",
+            "production-06"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 3.7035827664399092,
+          "trim_start_seconds": 0.22,
+          "trim_end_seconds": 0.2435827664399093
+        }
+      },
+      {
+        "id": "payroll-10",
+        "start_seconds": 86.4,
+        "end_seconds": 93.2,
+        "visual_anchor": "Paid state; cash payment is a record only",
+        "narration": "ચુકવણી નોંધાઈ. પૈસા મોકલાયા નથી.",
+        "speech_end_seconds": 91.214,
+        "speech_duration_seconds": 4.814,
+        "original_speech_duration_seconds": 4.814,
+        "tempo": 1.0,
+        "source_audio_sha256": "7dfa3e6b0de6c10e26ea57db41ed1fcf76d506bc9961dc6a28d8f3f804290d1b",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "payroll-07",
+            "payroll-10",
+            "costings-12",
+            "production-17",
+            "payroll-08",
+            "estimator-10",
+            "production-05",
+            "rates-06"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 5.073560090702948,
+          "trim_start_seconds": 0.26,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "payroll-11",
+        "start_seconds": 94.6,
+        "end_seconds": 103.8,
+        "visual_anchor": "Payroll records; period and worker search",
+        "narration": "પેરોલ રેકોર્ડ્સ ખોલો. પગારના સમયગાળા માટે ડેમો કર્મચારી શોધો.",
+        "speech_end_seconds": 102.698,
+        "speech_duration_seconds": 8.098,
+        "original_speech_duration_seconds": 8.098,
+        "tempo": 1.0,
+        "source_audio_sha256": "c3d60149a68c44cf4094d85daa74cf3bc26b6fb8d6642ffc8477adde7238d34f",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "production-15",
+            "qualities-02",
+            "production-08",
+            "payroll-01",
+            "payroll-13",
+            "payroll-11",
+            "costings-11",
+            "costings-03"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 8.498503401360544,
+          "trim_start_seconds": 0.4,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "payroll-12",
+        "start_seconds": 111,
+        "end_seconds": 119,
+        "visual_anchor": "Expand worker payment and loom breakdown",
+        "narration": "ચુકવણીની વિગતમાં લૂમ, કોસ્ટિંગ, ભાવ અને ઉત્પાદનનો જથ્થો જુઓ.",
+        "speech_end_seconds": 118.875,
+        "speech_duration_seconds": 7.875,
+        "original_speech_duration_seconds": 8.115,
+        "tempo": 1.032,
+        "source_audio_sha256": "fc6c16ac94b609c8bc5a2dc331851ebc50cf4ee55d9826c3167a77b07f79ba30",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "payroll-10",
+            "rates-08",
+            "payroll-12",
+            "costings-12",
+            "qualities-05",
+            "costings-07",
+            "production-13",
+            "rates-01"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 8.115374149659864,
+          "trim_start_seconds": 0.0,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "payroll-13",
+        "start_seconds": 120,
+        "end_seconds": 128.7,
+        "visual_anchor": "Switch to Machines view",
+        "narration": "મશીન્સ દૃશ્યમાં દરેક લૂમનું ઉત્પાદન અને કર્મચારીનો ખર્ચ જુઓ.",
+        "speech_end_seconds": 128.452,
+        "speech_duration_seconds": 8.452,
+        "original_speech_duration_seconds": 8.452,
+        "tempo": 1.0,
+        "source_audio_sha256": "2f831f635c8452eb31b01d1ca62b2cbf8d2c0c7e4382f48502ef4016d6d9261d",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "production-15",
+            "qualities-02",
+            "production-08",
+            "payroll-01",
+            "payroll-13",
+            "payroll-11",
+            "costings-11",
+            "costings-03"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 8.452063492063493,
+          "trim_start_seconds": 0.0,
+          "trim_end_seconds": 0.0
+        }
+      },
+      {
+        "id": "payroll-14",
+        "start_seconds": 129.2,
+        "end_seconds": 140.6,
+        "visual_anchor": "Export CSV and PDF",
+        "narration": "સ્પ્રેડશીટ માટે સી એસ વી, અને પગારનો રિપોર્ટ શેર કરવા પી ડી એફ ડાઉનલોડ કરો.",
+        "speech_end_seconds": 139.18,
+        "speech_duration_seconds": 9.98,
+        "original_speech_duration_seconds": 9.98,
+        "tempo": 1.0,
+        "source_audio_sha256": "330e67fc3b403b670fa7959060d8fba42d4e571025067a67c625904cc8736e76",
+        "generation": {
+          "backend": "Local CPU",
+          "seed": 42,
+          "batch": [
+            "costings-05",
+            "payroll-14",
+            "production-10",
+            "production-01",
+            "production-17",
+            "estimator-02",
+            "qualities-04",
+            "rates-02"
+          ],
+          "precision": "bfloat16",
+          "untrimmed_duration_seconds": 10.158730158730158,
+          "trim_start_seconds": 0.17,
+          "trim_end_seconds": 0.00873015873015873
+        }
+      }
+    ]
+  }
+}

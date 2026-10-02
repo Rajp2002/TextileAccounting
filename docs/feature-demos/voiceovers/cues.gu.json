@@ -1,0 +1,564 @@
+{
+  "source_commit": "2e63015232debea1b217aedaf77490f7b91970f0",
+  "timing_status": "All 67 speech cues fit the reviewed visual-action windows. Caption and speech end times are measured from generated audio. Automated transcription checked wording and key figures; no native-speaker pronunciation review was performed.",
+  "format": "AAC mono at 48 kHz in MP4; local intermediate WAV at 24 kHz",
+  "scripts": [
+    {
+      "feature": "estimator",
+      "title": "Cost Estimator",
+      "duration": 118.75,
+      "chapters": [
+        0,
+        62.208,
+        94.75
+      ],
+      "cues": [
+        {
+          "id": "estimator-01",
+          "start_seconds": 2,
+          "end_seconds": 16.5,
+          "visual_anchor": "Name, construction, crimp and waste inputs",
+          "narration": "કાપડની નવી કોસ્ટિંગ બનાવો. કાપડનું નામ, તાણા અને વાણાની રચના ભરો. ક્રિમ્પ અને બગાડનું પ્રમાણ પણ ઉમેરો."
+        },
+        {
+          "id": "estimator-02",
+          "start_seconds": 18,
+          "end_seconds": 29.5,
+          "visual_anchor": "Warp yarn inputs",
+          "narration": "તાણાનો ડેનિયર, બીમના તાર, ભાવ અને જી એસ ટી ભરો. તેનાથી દોરાની ખપત અને ખર્ચ ગણાય છે."
+        },
+        {
+          "id": "estimator-03",
+          "start_seconds": 31,
+          "end_seconds": 44.8,
+          "visual_anchor": "Weft yarn inputs",
+          "narration": "વાણાનો દોરો, ઇંચ દીઠ પિક્સ, કાપડની પહોળાઈ, ડેનિયર, ભાવ અને જી એસ ટી ભરો."
+        },
+        {
+          "id": "estimator-04",
+          "start_seconds": 46,
+          "end_seconds": 56.5,
+          "visual_anchor": "Weaving, overhead, margin and quantity inputs",
+          "narration": "વણાટનો ખર્ચ અને વધારાના ખર્ચ તપાસો. પછી માર્જિન અને ઓર્ડરનો જથ્થો ભરો."
+        },
+        {
+          "id": "estimator-05",
+          "start_seconds": 57,
+          "end_seconds": 61.7,
+          "visual_anchor": "Open Live Cost; first estimate visible by 60 seconds",
+          "narration": "અંદાજ જોવા લાઇવ કોસ્ટ ખોલો."
+        },
+        {
+          "id": "estimator-06",
+          "start_seconds": 65,
+          "end_seconds": 73,
+          "visual_anchor": "Expand Pricing assumptions, then close Live Cost",
+          "narration": "કિંમતની ધારણાઓ તપાસો. ફેરફાર કરવા ઇનપુટ પર આવો."
+        },
+        {
+          "id": "estimator-07",
+          "start_seconds": 75,
+          "end_seconds": 86.3,
+          "visual_anchor": "Change weft rate to ₹128/kg and margin to 15%",
+          "narration": "વાણાનો ભાવ કિલો દીઠ એકસો અઠ્ઠાવીસ રૂપિયા કરો. માર્જિન પંદર ટકા રાખો."
+        },
+        {
+          "id": "estimator-08",
+          "start_seconds": 88,
+          "end_seconds": 94.1,
+          "visual_anchor": "Updated cost ₹33.23/m and selling price ₹39.09/m visible",
+          "narration": "લાઇવ કોસ્ટમાં ઉત્પાદન ખર્ચ અને વેચાણ ભાવ જુઓ."
+        },
+        {
+          "id": "estimator-09",
+          "start_seconds": 96,
+          "end_seconds": 104.8,
+          "visual_anchor": "Switch to Detailed; yarn calculations",
+          "narration": "ડિટેઇલ્ડમાં દોરાની ખપત, ક્રિમ્પ અને બગાડની ગણતરી જુઓ."
+        },
+        {
+          "id": "estimator-10",
+          "start_seconds": 106,
+          "end_seconds": 117.5,
+          "visual_anchor": "Detailed production-cost breakdown",
+          "narration": "ઉત્પાદન ખર્ચની વિગત જુઓ. ક્વિક અને ડિટેઇલ્ડની ગણતરી સમાન છે. ડિટેઇલ્ડમાં વધુ વિગત છે."
+        }
+      ]
+    },
+    {
+      "feature": "qualities",
+      "title": "Saved Qualities",
+      "duration": 51.958,
+      "chapters": [
+        0,
+        14.958,
+        39.958
+      ],
+      "cues": [
+        {
+          "id": "qualities-01",
+          "start_seconds": 0.5,
+          "end_seconds": 6.2,
+          "visual_anchor": "Save Quality & Create Costing",
+          "narration": "ક્વાલિટી અને તેની પહેલી કોસ્ટિંગ સાથે સેવ કરો."
+        },
+        {
+          "id": "qualities-02",
+          "start_seconds": 6.7,
+          "end_seconds": 14.2,
+          "visual_anchor": "Save confirmation and assumptions",
+          "narration": "ધારણાઓ તપાસીને કાપડની રચના અને ખર્ચનો સ્થિર રેકોર્ડ સેવ કરો."
+        },
+        {
+          "id": "qualities-03",
+          "start_seconds": 15.4,
+          "end_seconds": 24.7,
+          "visual_anchor": "Search saved-quality library; open rate editor",
+          "narration": "સેવ્ડ ક્વાલિટીઝમાં કાપડ શોધો. દોરાના હાલના ભાવ જોવા રેટ એડિટર ખોલો."
+        },
+        {
+          "id": "qualities-04",
+          "start_seconds": 25.2,
+          "end_seconds": 38.9,
+          "visual_anchor": "Warp rate ₹125 → ₹130/kg; Save Rates & Apply",
+          "narration": "તાણાનો ભાવ કિલો દીઠ એકસો ત્રીસ રૂપિયા કરો. ખર્ચ પર અસર જુઓ, પછી સેવ અને અપ્લાય કરો."
+        },
+        {
+          "id": "qualities-05",
+          "start_seconds": 40.4,
+          "end_seconds": 50.9,
+          "visual_anchor": "Select saved quality and restore inputs",
+          "narration": "સેવ કરેલું કાપડ પસંદ કરતાં રચના અને ખર્ચના ઇનપુટ આપમેળે ભરાય છે."
+        }
+      ]
+    },
+    {
+      "feature": "rates",
+      "title": "Rate Book",
+      "duration": 84.208,
+      "chapters": [
+        0,
+        36.75,
+        65.333
+      ],
+      "cues": [
+        {
+          "id": "rates-01",
+          "start_seconds": 0.5,
+          "end_seconds": 10.5,
+          "visual_anchor": "Find demo yarns; inspect linked quality",
+          "narration": "રેટ બુકમાં ડેમો દોરા શોધો. તેમની સાથે જોડાયેલી સેવ્ડ ક્વાલિટી જુઓ."
+        },
+        {
+          "id": "rates-02",
+          "start_seconds": 11,
+          "end_seconds": 24.4,
+          "visual_anchor": "Edit weft price and source note",
+          "narration": "વાણાનો ભાવ કિલો દીઠ એકસો ચાલીસ રૂપિયા કરો. ભાવનો સ્રોત ઓળખવા સપ્લાયરની નોંધ ઉમેરો."
+        },
+        {
+          "id": "rates-03",
+          "start_seconds": 24.9,
+          "end_seconds": 35.8,
+          "visual_anchor": "Save rate; open Activity history",
+          "narration": "નવો ભાવ સેવ કરો. પછી એક્ટિવિટીમાં ફેરફાર અને તેનો ઇતિહાસ જુઓ."
+        },
+        {
+          "start_seconds": 38,
+          "end_seconds": 42.8,
+          "visual_anchor": "Reopen linked quality",
+          "narration": "જોડાયેલી સેવ્ડ ક્વાલિટી ફરી ખોલો.",
+          "id": "rates-04"
+        },
+        {
+          "start_seconds": 45,
+          "end_seconds": 49.5,
+          "visual_anchor": "Rate editor shows weft ₹140/kg",
+          "narration": "વાણાનો ભાવ અપડેટ થયો છે.",
+          "id": "rates-05"
+        },
+        {
+          "id": "rates-06",
+          "start_seconds": 50,
+          "end_seconds": 64.4,
+          "visual_anchor": "Apply quality, inspect inputs, open Live cost",
+          "narration": "ક્વાલિટી લાગુ કરીને દોરાના ઇનપુટ તપાસો. નવો ઉત્પાદન ખર્ચ અને વેચાણ ભાવ જોવા લાઇવ કોસ્ટ ખોલો."
+        },
+        {
+          "id": "rates-07",
+          "start_seconds": 65.8,
+          "end_seconds": 73,
+          "visual_anchor": "Find and open the earlier saved costing",
+          "narration": "હવે જૂની સેવ્ડ કોસ્ટિંગને નવા અંદાજ સાથે સરખાવો."
+        },
+        {
+          "id": "rates-08",
+          "start_seconds": 73.5,
+          "end_seconds": 83.2,
+          "visual_anchor": "Original snapshot values remain unchanged",
+          "narration": "રેટ બુકના ફેરફારથી જૂની સેવ્ડ કોસ્ટિંગના આંકડા બદલાતા નથી."
+        }
+      ]
+    },
+    {
+      "feature": "costings",
+      "title": "Saved Costings",
+      "duration": 134.75,
+      "chapters": [
+        0,
+        18.875,
+        42.042,
+        52.875,
+        75,
+        91.708
+      ],
+      "cues": [
+        {
+          "id": "costings-01",
+          "start_seconds": 0.5,
+          "end_seconds": 8.7,
+          "visual_anchor": "Search for demo fabric and open its costing",
+          "narration": "કાપડ શોધીને તેની સેવ કરેલી કોસ્ટિંગ ખોલો. અહીં મૂળ આંકડા જુઓ."
+        },
+        {
+          "id": "costings-02",
+          "start_seconds": 9.2,
+          "end_seconds": 17.9,
+          "visual_anchor": "Saved breakdown: cost, price, margin, quantity",
+          "narration": "આ રેકોર્ડમાં મૂળ ઇનપુટ અને પરિણામો સચવાય છે."
+        },
+        {
+          "id": "costings-03",
+          "start_seconds": 20,
+          "end_seconds": 33,
+          "visual_anchor": "Use snapshot; change weaving rate to ₹16/m",
+          "narration": "ઇનપુટ પાછા લાવવા યુઝ પસંદ કરો. વણાટનો ભાવ મીટર દીઠ સોળ રૂપિયા કરો."
+        },
+        {
+          "id": "costings-04",
+          "start_seconds": 33.5,
+          "end_seconds": 41.1,
+          "visual_anchor": "Set margin to 20%; open Live cost",
+          "narration": "માર્જિન વીસ ટકા કરો. પછી લાઇવ કોસ્ટમાં નવું પરિણામ જુઓ."
+        },
+        {
+          "id": "costings-05",
+          "start_seconds": 42.5,
+          "end_seconds": 51.9,
+          "visual_anchor": "Save New Version; v2 confirmation",
+          "narration": "સેવ ન્યૂ વર્ઝનથી ફેરફાર બીજા વર્ઝનમાં સાચવો. પહેલું વર્ઝન યથાવત રહેશે."
+        },
+        {
+          "id": "costings-06",
+          "start_seconds": 53.3,
+          "end_seconds": 61.5,
+          "visual_anchor": "Enable Compare and open version history",
+          "narration": "કમ્પેર ચાલુ કરો. અંદાજ પસંદ કરવા કાપડની વર્ઝન હિસ્ટ્રી ખોલો."
+        },
+        {
+          "id": "costings-07",
+          "start_seconds": 62,
+          "end_seconds": 73.9,
+          "visual_anchor": "Select v1 and v2",
+          "narration": "પહેલું અને બીજું વર્ઝન પસંદ કરીને બદલાયેલી ધારણાઓની અસર સરખાવો."
+        },
+        {
+          "id": "costings-08",
+          "start_seconds": 75.5,
+          "end_seconds": 90.7,
+          "visual_anchor": "Compare Costings: component and price differences",
+          "narration": "કમ્પેર કોસ્ટિંગ્સ ખોલો. ઉત્પાદન ખર્ચ, વેચાણ ભાવ, માર્જિન અને જથ્થાનો તફાવત જોઈને તમારા ફેરફારોની અસર સમજો."
+        },
+        {
+          "start_seconds": 94,
+          "end_seconds": 101,
+          "visual_anchor": "Open internal cost-sheet export preview",
+          "narration": "આંતરિક ખર્ચનું પત્રક જોવા એક્સપોર્ટ ખોલો.",
+          "id": "costings-09"
+        },
+        {
+          "start_seconds": 103,
+          "end_seconds": 115.8,
+          "visual_anchor": "Business name and notes; download cost sheet",
+          "narration": "વ્યવસાયનું નામ અને નોંધ ભરો. પછી વિગતવાર ખર્ચનું પત્રક ડાઉનલોડ કરો.",
+          "id": "costings-10"
+        },
+        {
+          "start_seconds": 118,
+          "end_seconds": 126.5,
+          "visual_anchor": "Customer Quotation; buyer and delivery terms",
+          "narration": "કસ્ટમર કોટેશન પસંદ કરો. ખરીદનારનું નામ અને ડિલિવરીની શરતો ભરો.",
+          "id": "costings-11"
+        },
+        {
+          "start_seconds": 127,
+          "end_seconds": 133.7,
+          "visual_anchor": "Download customer quotation",
+          "narration": "કોટેશન ડાઉનલોડ કરો. ખર્ચ અને માર્જિન છુપાય છે.",
+          "id": "costings-12"
+        }
+      ]
+    },
+    {
+      "feature": "production",
+      "title": "Production",
+      "duration": 225.417,
+      "chapters": [
+        0,
+        26.333,
+        55.5,
+        117.5,
+        142.292,
+        169.75,
+        201.833
+      ],
+      "cues": [
+        {
+          "id": "production-01",
+          "start_seconds": 0.5,
+          "end_seconds": 12.3,
+          "visual_anchor": "Add machine: name and type",
+          "narration": "પહેલા મશીન ઉમેરો. નામ ડેમો લૂમ ઝીરો વન રાખો. મશીનના પ્રકારમાં રેપિયર પસંદ કરો."
+        },
+        {
+          "id": "production-02",
+          "start_seconds": 20,
+          "end_seconds": 25.1,
+          "visual_anchor": "Save machine",
+          "narration": "મશીન ઉમેરો. હવે તેને કામ સોંપી શકાય."
+        },
+        {
+          "id": "production-03",
+          "start_seconds": 26.8,
+          "end_seconds": 38.8,
+          "visual_anchor": "Add worker: Demo Operator 01, piece rate",
+          "narration": "ડેમો ઓપરેટર ઝીરો વન ઉમેરો. પગારનો પ્રકાર પીસ રેટ પસંદ કરો."
+        },
+        {
+          "id": "production-04",
+          "start_seconds": 39.3,
+          "end_seconds": 54.1,
+          "visual_anchor": "Role, approved operator, day availability, save",
+          "narration": "ભૂમિકા ભરો. લૂમ ઓપરેટરની મંજૂરી ચાલુ રાખો અને દિવસની ઉપલબ્ધતા પસંદ કરો. પછી કર્મચારીને સેવ કરો."
+        },
+        {
+          "id": "production-05",
+          "start_seconds": 56,
+          "end_seconds": 66.5,
+          "visual_anchor": "Activate Quality; choose saved costing v2",
+          "narration": "ઉત્પાદન માટે ક્વાલિટી સક્રિય કરો. ડેમો કાપડની સેવ કરેલી કોસ્ટિંગનું બીજું વર્ઝન પસંદ કરો."
+        },
+        {
+          "id": "production-06",
+          "start_seconds": 67,
+          "end_seconds": 77.3,
+          "visual_anchor": "Yarn-stock prerequisite",
+          "narration": "ઉત્પાદન પહેલાં તાણા અને વાણાના દોરાનો સ્ટોક તપાસો."
+        },
+        {
+          "id": "production-07",
+          "start_seconds": 77.8,
+          "end_seconds": 91.5,
+          "visual_anchor": "Add warp stock: 200 kg and note",
+          "narration": "તાણાના દોરાનો બસો કિલો સ્ટોક અને નાની નોંધ ઉમેરીને સેવ કરો."
+        },
+        {
+          "id": "production-08",
+          "start_seconds": 92,
+          "end_seconds": 107.2,
+          "visual_anchor": "Add weft stock: 200 kg and note",
+          "narration": "વાણાના દોરા માટે પણ બસો કિલો સ્ટોક અને નોંધ ઉમેરો. પછી સેવ કરો."
+        },
+        {
+          "id": "production-09",
+          "start_seconds": 108,
+          "end_seconds": 116.5,
+          "visual_anchor": "Activate quality after stock is available",
+          "narration": "બંને દોરાનો સ્ટોક તૈયાર છે. હવે ક્વાલિટીને ઉત્પાદન માટે સક્રિય કરો."
+        },
+        {
+          "id": "production-10",
+          "start_seconds": 118,
+          "end_seconds": 129.4,
+          "visual_anchor": "Assign Looms; select Demo Loom 01",
+          "narration": "સક્રિય ક્વાલિટીમાં અસાઇન લૂમ્સ ખોલો. ડેમો લૂમ ઝીરો વન પસંદ કરીને ખાતરી કરો."
+        },
+        {
+          "id": "production-11",
+          "start_seconds": 134,
+          "end_seconds": 141.2,
+          "visual_anchor": "Machine board; search for demo loom",
+          "narration": "મશીન બોર્ડ પર કાપડ અને લૂમ જોડાયેલાં છે. ડેમો લૂમ શોધો."
+        },
+        {
+          "id": "production-12",
+          "start_seconds": 142.8,
+          "end_seconds": 154.5,
+          "visual_anchor": "Manage Workers; Day Shift",
+          "narration": "ડેમો લૂમમાં મેનેજ વર્કર્સ ખોલો. ડે શિફ્ટ પસંદ કરો."
+        },
+        {
+          "id": "production-13",
+          "start_seconds": 155,
+          "end_seconds": 168.6,
+          "visual_anchor": "Search and assign Demo Operator 01; Done",
+          "narration": "ડેમો ઓપરેટર ઝીરો વન શોધીને દિવસની પાળી સોંપો. પછી સેટઅપ પૂરું કરો."
+        },
+        {
+          "id": "production-14",
+          "start_seconds": 170.2,
+          "end_seconds": 180.4,
+          "visual_anchor": "Daily sheet; enter 240 m",
+          "narration": "તારીખ અને પાળી તપાસો. ડેઇલી શીટમાં ડેમો લૂમ માટે બસો ચાલીસ મીટર ભરો."
+        },
+        {
+          "id": "production-15",
+          "start_seconds": 180.9,
+          "end_seconds": 189.3,
+          "visual_anchor": "Worker Review; return to sheet",
+          "narration": "વર્કર રિવ્યૂમાં ઉત્પાદન અને કમાણી તપાસો. પછી શીટ પર પાછા આવો."
+        },
+        {
+          "id": "production-16",
+          "start_seconds": 189.8,
+          "end_seconds": 200.8,
+          "visual_anchor": "Save shift and confirm incomplete shift",
+          "narration": "પાળી સેવ કરો. ફક્ત ડેમો લૂમનું ઉત્પાદન નોંધાયું છે. બીજા મશીનો બાકી છે."
+        },
+        {
+          "id": "production-17",
+          "start_seconds": 202.3,
+          "end_seconds": 212,
+          "visual_anchor": "Saved production audit receipt",
+          "narration": "સેવ કરેલી રસીદમાં લૂમ, ક્વાલિટી, કર્મચારી અને મીટર જુઓ."
+        },
+        {
+          "id": "production-18",
+          "start_seconds": 219,
+          "end_seconds": 224.8,
+          "visual_anchor": "Worker Review: 240 m × ₹16/m = ₹3,840",
+          "narration": "કર્મચારીની કમાણી ત્રણ હજાર આઠસો ચાલીસ રૂપિયા છે."
+        }
+      ]
+    },
+    {
+      "feature": "payroll",
+      "title": "Payroll",
+      "duration": 141.708,
+      "chapters": [
+        0,
+        32.833,
+        68.458,
+        94.083
+      ],
+      "cues": [
+        {
+          "id": "payroll-01",
+          "start_seconds": 0.5,
+          "end_seconds": 9.3,
+          "visual_anchor": "Find Demo Operator 01; production earnings card",
+          "narration": "ડેમો ઓપરેટર ઝીરો વન શોધો. સેવ કરેલા ઉત્પાદનથી થયેલી કમાણી જુઓ."
+        },
+        {
+          "id": "payroll-02",
+          "start_seconds": 9.8,
+          "end_seconds": 22.3,
+          "visual_anchor": "Add advance: ₹400 and description",
+          "narration": "ચારસો રૂપિયાની એડવાન્સ રકમ અને નાની નોંધ ઉમેરીને સેવ કરો."
+        },
+        {
+          "id": "payroll-03",
+          "start_seconds": 28,
+          "end_seconds": 32,
+          "visual_anchor": "Recovery ₹400; net pay recalculates",
+          "narration": "વસૂલાતથી ચોખ્ખો પગાર ઘટે છે."
+        },
+        {
+          "id": "payroll-04",
+          "start_seconds": 33.3,
+          "end_seconds": 46.4,
+          "visual_anchor": "Add deduction; choose Other category",
+          "narration": "કપાત પણ નોંધી શકો છો. આ ઉદાહરણમાં કારણ માટે અધર પસંદ કરો."
+        },
+        {
+          "id": "payroll-05",
+          "start_seconds": 47,
+          "end_seconds": 52,
+          "visual_anchor": "Deduction amount ₹50",
+          "narration": "પચાસ રૂપિયા ભરો."
+        },
+        {
+          "id": "payroll-06",
+          "start_seconds": 52.5,
+          "end_seconds": 59.3,
+          "visual_anchor": "Deduction note and save",
+          "narration": "નાની નોંધ ઉમેરીને કપાત નોંધો."
+        },
+        {
+          "id": "payroll-07",
+          "start_seconds": 65,
+          "end_seconds": 67.9,
+          "visual_anchor": "Recovery ₹450; net pay ₹3,390",
+          "narration": "વસૂલાત જુઓ."
+        },
+        {
+          "id": "payroll-08",
+          "start_seconds": 68.9,
+          "end_seconds": 79.4,
+          "visual_anchor": "How pay is calculated",
+          "narration": "હાઉ પે ઇઝ કેલ્ક્યુલેટેડ ખોલો. પીસ રેટની કમાણી, પગાર અને એડવાન્સની વસૂલાતનો સાર જુઓ."
+        },
+        {
+          "id": "payroll-09",
+          "start_seconds": 79.9,
+          "end_seconds": 84.9,
+          "visual_anchor": "Mark paid and confirm",
+          "narration": "માર્ક પેડથી ચુકવણીની ખાતરી કરો."
+        },
+        {
+          "id": "payroll-10",
+          "start_seconds": 86.4,
+          "end_seconds": 93.2,
+          "visual_anchor": "Paid state; cash payment is a record only",
+          "narration": "ચુકવણી નોંધાઈ. પૈસા મોકલાયા નથી."
+        },
+        {
+          "id": "payroll-11",
+          "start_seconds": 94.6,
+          "end_seconds": 103.8,
+          "visual_anchor": "Payroll records; period and worker search",
+          "narration": "પેરોલ રેકોર્ડ્સ ખોલો. પગારના સમયગાળા માટે ડેમો કર્મચારી શોધો."
+        },
+        {
+          "id": "payroll-12",
+          "start_seconds": 111,
+          "end_seconds": 119,
+          "visual_anchor": "Expand worker payment and loom breakdown",
+          "narration": "ચુકવણીની વિગતમાં લૂમ, કોસ્ટિંગ, ભાવ અને ઉત્પાદનનો જથ્થો જુઓ."
+        },
+        {
+          "id": "payroll-13",
+          "start_seconds": 120,
+          "end_seconds": 128.7,
+          "visual_anchor": "Switch to Machines view",
+          "narration": "મશીન્સ દૃશ્યમાં દરેક લૂમનું ઉત્પાદન અને કર્મચારીનો ખર્ચ જુઓ."
+        },
+        {
+          "id": "payroll-14",
+          "start_seconds": 129.2,
+          "end_seconds": 140.6,
+          "visual_anchor": "Export CSV and PDF",
+          "narration": "સ્પ્રેડશીટ માટે સી એસ વી, અને પગારનો રિપોર્ટ શેર કરવા પી ડી એફ ડાઉનલોડ કરો."
+        }
+      ]
+    }
+  ],
+  "voice": {
+    "engine": "AI4Bharat Indic Parler-TTS",
+    "speaker": "Neha",
+    "model_revision": "7b527af5ee8ed1f9a28d80b19703ed9bb8ba10ca",
+    "description": "Neha speaks at a moderate pace in a clear, calm, slightly expressive voice. The recording is very high quality, with very clear audio, no background noise and a close-sounding voice.",
+    "language": "gu"
+  },
+  "language": "gu"
+}

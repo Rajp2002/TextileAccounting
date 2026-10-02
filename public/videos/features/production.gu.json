@@ -1,0 +1,57 @@
+{
+  "feature": "production",
+  "duration": 225.417,
+  "bytes": 5902347,
+  "chapters": [
+    {
+      "start": 0,
+      "title": "Add a loom",
+      "description": "Create Demo Loom 01 and select its machine type, Rapier."
+    },
+    {
+      "start": 26.333,
+      "title": "Add a piece-rate operator",
+      "description": "Create Demo Operator 01 as a piece-rate weaver and approved loom operator, available for the day shift."
+    },
+    {
+      "start": 55.5,
+      "title": "Activate a costing and prepare yarn stock",
+      "description": "Choose saved costing v2 for the demo fabric. Add 200 kg each of the required warp and weft yarns, then activate the quality for production."
+    },
+    {
+      "start": 117.5,
+      "title": "Assign the quality to a loom",
+      "description": "Assign the demo quality to Demo Loom 01, then find the loom on the machine board."
+    },
+    {
+      "start": 142.292,
+      "title": "Assign the day-shift operator",
+      "description": "Open Manage Workers, select Day Shift, find Demo Operator 01, and assign the operator to the loom."
+    },
+    {
+      "start": 169.75,
+      "title": "Record and save daily production",
+      "description": "Enter 240 metres for the demo loom. Review worker totals and earnings, then save the shift. Other machines remain pending so their readings can be entered later."
+    },
+    {
+      "start": 201.833,
+      "title": "Review the saved receipt and earnings",
+      "description": "Open the permanent production audit receipt and worker review. The demo operator produced 240 metres at the saved Rs 16/m rate, earning Rs 3,840."
+    }
+  ],
+  "narration": {
+    "engine": "AI4Bharat Indic Parler-TTS",
+    "speaker": "Neha",
+    "model_revision": "7b527af5ee8ed1f9a28d80b19703ed9bb8ba10ca",
+    "description": "Neha speaks at a moderate pace in a clear, calm, slightly expressive voice. The recording is very high quality, with very clear audio, no background noise and a close-sounding voice.",
+    "language": "gu",
+    "audio_codec": "aac",
+    "sample_rate": 48000,
+    "channels": 1,
+    "cue_count": 18,
+    "caption_count": 18,
+    "generation": [
+      "Local CPU"
+    ]
+  }
+}
