@@ -111,6 +111,33 @@ describe('Assignment preview rendering', () => {
         expect(render('ma-purpose', 'en', liveData, true)).not.toContain('View all assignments')
     })
 
+    it('groups each worker\'s machines into one block that shares a board row with that worker', () => {
+        const example = makeConfigurationTourExample(liveData.today, 'ma-linked')
+        // Workers list order: Deep (no machines), Ramu, Rami. Machine list order interleaves the owners.
+        const workers = ['Deep', 'Ramu', 'Rami'].map((name) => ({ ...liveData.workers[0], id: `w-${name.toLowerCase()}`, name, shift_availability: 'both' as const }))
+        const machines = ['m-a', 'm-b', 'm-c', 'm-free'].map((id) => ({ ...liveData.machines[0], id, name: id }))
+        const owner: Record<string, string> = { 'm-a': 'w-ramu', 'm-b': 'w-rami', 'm-c': 'w-ramu' }
+        const html = render(null, 'en', {
+            ...liveData,
+            workers,
+            machines,
+            jobs: [{ ...example.jobs[0], id: 'live-job' }],
+            machineJobContexts: machines.map((machine) => ({ ...example.machineJobContexts[0], id: `ctx-${machine.id}`, machine_id: machine.id, job_id: 'live-job' })),
+            assignments: Object.entries(owner).map(([machineId, workerId]) => ({ ...example.assignments[0], id: `link-${machineId}`, worker_id: workerId, machine_id: machineId, shift: 'night' as const })),
+        })
+
+        // Each group container runs from its data-machine-group attribute to the next one (or the end of the board).
+        const groups = new Map(html.split('data-machine-group="').slice(1).map((segment) => [segment.slice(0, segment.indexOf('"')), segment] as const))
+        const nodes = (fragment: string | undefined) => [...(fragment ?? '').matchAll(/data-machine-node="([^"]+)"/g)].map((match) => match[1])
+        expect([...groups.keys()]).toEqual(['w-ramu', 'w-rami', 'none'])
+        expect(nodes(groups.get('w-ramu'))).toEqual(['m-a', 'm-c'])
+        expect(nodes(groups.get('w-rami'))).toEqual(['m-b'])
+        expect(nodes(groups.get('none'))).toEqual(['m-free'])
+        // Workers with machines come first (in workers order), then the idle worker beside the unassigned machines.
+        expect([...html.matchAll(/data-worker-handle="([^"]+)"/g)].map((match) => match[1])).toEqual(['w-ramu', 'w-rami', 'w-deep'])
+        expect([...html.matchAll(/data-machine-node="([^"]+)"/g)].map((match) => match[1])).toEqual(['m-a', 'm-c', 'm-b', 'm-free'])
+    })
+
     it('renders a live night-shift handoff and contextual help when the tour is closed', () => {
         const html = render(null, 'en')
         expect(html).not.toContain('class="configuration-workspace" inert=""')

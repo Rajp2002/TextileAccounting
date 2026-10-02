@@ -13,7 +13,7 @@ import { isSampleRecordId } from '@/lib/tours/sample-ids'
 import { tourCommonCopy } from '@/lib/i18n/tour-common'
 import { configurationHelpTopics, configurationTutorialCopy } from '@/lib/i18n/configuration-tutorial'
 import { configurationTourSteps, configurationTourView, configurationTourSpecs, configurationTourControlLabels, configurationHandoffWorker, makeConfigurationTourExample, type ConfigurationTourStep } from '@/lib/configuration-tour'
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { ArrowUpRight, Check, CircleHelp, Link2, Loader2, Moon, Plus, Search, Sun, Unlink, Users, Wrench } from 'lucide-react'
@@ -27,6 +27,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from '@/components/ui/input'
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
+import { groupMachinesByWorker } from '@/lib/machine-assignment-groups'
 import type { BaseProductionMachine, BaseProductionShift, BaseProductionWorker, BaseWorkerMachineAssignment } from '@/lib/base-production-core'
 import {
     removeBaseWorkerMachineAssignment,
@@ -66,11 +67,10 @@ type ConnectorPositions = {
     machines: Record<string, ConnectorPoint>
 }
 
-function connectorPath(from: ConnectorPoint, to: ConnectorPoint, lane: number) {
+function connectorPath(from: ConnectorPoint, to: ConnectorPoint) {
     const distance = Math.max(48, to.x - from.x)
     const bend = Math.max(28, distance * 0.38)
-    const laneOffset = lane * 7
-    return `M ${from.x} ${from.y} C ${from.x + bend} ${from.y + laneOffset}, ${to.x - bend} ${to.y + laneOffset}, ${to.x} ${to.y}`
+    return `M ${from.x} ${from.y} C ${from.x + bend} ${from.y}, ${to.x - bend} ${to.y}, ${to.x} ${to.y}`
 }
 
 export default function BaseAssignmentWorkspace({
@@ -213,6 +213,15 @@ export default function BaseAssignmentWorkspace({
         if (!showInactive && !machine.is_active) return false
         return selectedMachineTypes.length === 0 || selectedMachineTypes.includes(machine.machine_type)
     }), [initialData.machines, selectedMachineTypes, showInactive, focusMachineId, tourStep])
+    // Machines are laid out per worker so each worker's machines sit together, beside that worker's card.
+    const machineGroups = useMemo(
+        () => groupMachinesByWorker(visibleWorkers, visibleMachines, new Map(currentAssignments.map((assignment) => [assignment.machine_id, assignment.worker_id]))),
+        [currentAssignments, visibleMachines, visibleWorkers],
+    )
+    const groupedMachines = useMemo(
+        () => [...machineGroups.rows.flatMap((row) => row.machines), ...machineGroups.ungrouped],
+        [machineGroups],
+    )
     const selectableMachines = useMemo(
         () => initialData.machines.filter((machine) => machine.is_active && (selectedMachineTypes.length === 0 || selectedMachineTypes.includes(machine.machine_type))),
         [initialData.machines, selectedMachineTypes],
@@ -255,7 +264,7 @@ export default function BaseAssignmentWorkspace({
             observer.disconnect()
             window.removeEventListener('resize', updateConnectorPositions)
         }
-    }, [currentAssignments, updateConnectorPositions, visibleMachines, visibleWorkers])
+    }, [currentAssignments, machineGroups, updateConnectorPositions])
 
     function boardPoint(clientX: number, clientY: number) {
         const rect = boardRef.current?.getBoundingClientRect()
@@ -419,6 +428,172 @@ export default function BaseAssignmentWorkspace({
         }
     }
 
+    const renderWorkerCard = (worker: BaseProductionWorker) => {
+        const assignments = assignmentByWorker.get(worker.id) ?? []
+        const palette = workerColorMap.get(worker.id) ?? DEFAULT_PALETTE
+        return (
+            <div
+                key={worker.id}
+                data-configuration-tour="worker"
+                onMouseEnter={() => !draggingWorkerId && setHoveredWorkerId(worker.id)}
+                onMouseLeave={() => !draggingWorkerId && setHoveredWorkerId(null)}
+                className={`flex min-h-[76px] items-center justify-between gap-3 rounded-xl border bg-surface px-3.5 py-3 shadow-xs transition-all ${draggingWorkerId === worker.id ? 'border-saffron bg-saffron-soft/40 shadow-sm' : hoveredWorkerId === worker.id ? 'border-hairline-strong shadow-xs' : 'border-hairline'}`}
+            >
+                <div className="min-w-0">
+                    <p className="truncate font-semibold text-ink">{worker.name}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">{formatWorkerShift(worker.shift_availability)}{worker.is_active ? '' : ' · inactive'}</p>
+                    <div className="mt-1.5 flex flex-wrap gap-1">
+                        {assignments.map((assignment) => (
+                            <span
+                                key={assignment.id}
+                                style={{
+                                    backgroundColor: palette.bg,
+                                    borderColor: palette.border,
+                                    color: palette.text,
+                                }}
+                                className="inline-flex items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-semibold leading-[1.35] w-fit whitespace-nowrap"
+                            >
+                                {machineLabel(machineById.get(assignment.machine_id) ?? { id: '', name: 'Machine', machine_type: 'other', custom_label: null, is_active: true })}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                    <Button
+                        data-configuration-tour="assign"
+                        data-tour-anchor={!tourSampleActive && worker.id === handoffWorker?.id ? 'assignments.first-assign' : undefined}
+                        size="sm"
+                        variant="outline"
+                        className="h-8 rounded-lg border-hairline px-3 text-xs font-medium text-body shadow-xs hover:border-hairline-strong hover:bg-surface-soft hover:text-ink"
+                        onClick={() => setPickerWorkerId(worker.id)}
+                        disabled={!worker.is_active}
+                    >
+                        <span data-i18n-skip="true">{t('assignments.assign')}</span>
+                    </Button>
+                    <span
+                        role="button"
+                        tabIndex={-1}
+                        data-configuration-tour="drag"
+                        data-worker-handle={worker.id}
+                        onPointerDown={(event) => handleConnectorPointerDown(event, worker.id)}
+                        onPointerMove={handleConnectorPointerMove}
+                        onPointerUp={finishConnectorDrag}
+                        onPointerCancel={finishConnectorDrag}
+                        style={{
+                            borderColor: palette.border,
+                            backgroundColor: palette.bg,
+                            color: palette.text,
+                        }}
+                        className="flex h-9 w-9 touch-none cursor-grab items-center justify-center rounded-full border-2 shadow-xs transition-transform hover:scale-110 active:cursor-grabbing active:scale-95"
+                        title={worker.is_active ? `Drag ${worker.name} to a machine` : 'Inactive workers cannot be assigned'}
+                        aria-label={worker.is_active ? `Drag ${worker.name} to a machine` : `${worker.name} is inactive`}
+                    >
+                        <Link2 className="h-4 w-4" />
+                    </span>
+                </div>
+            </div>
+        )
+    }
+
+    const renderMachineCard = (machine: BaseProductionMachine) => {
+        const assignment = assignmentByMachine.get(machine.id)
+        const worker = assignment ? workerById.get(assignment.worker_id) : null
+        const workerPalette = worker ? (workerColorMap.get(worker.id) ?? DEFAULT_PALETTE) : null
+        const jobId = currentJobByMachine.get(machine.id) ?? 'none'
+        const hasActiveJob = jobId !== 'none'
+        const isDropTargetValid = Boolean(draggingWorkerId && machine.is_active && hasActiveJob)
+        return (
+            <div
+                key={machine.id}
+                data-configuration-tour="machine"
+                data-machine-node={machine.id}
+                onMouseEnter={() => !draggingWorkerId && setHoveredMachineId(machine.id)}
+                onMouseLeave={() => !draggingWorkerId && setHoveredMachineId(null)}
+                className={`min-h-[76px] rounded-xl border bg-surface px-3.5 py-3 shadow-xs transition-all ${hoveredMachineId === machine.id && draggingWorkerId ? 'scale-[1.01] border-saffron bg-saffron-soft/45 shadow-md ring-2 ring-saffron/20' : isDropTargetValid ? 'border-saffron/55 bg-saffron-soft/20' : hoveredMachineId === machine.id ? 'border-hairline-strong shadow-xs' : 'border-hairline'} ${!hasActiveJob ? 'opacity-90' : ''}`}
+            >
+                <div className="flex items-start justify-between gap-2">
+                    <span
+                        data-machine-handle={machine.id}
+                        style={
+                            hoveredMachineId === machine.id && draggingWorkerId
+                                ? undefined
+                                : workerPalette && hasActiveJob
+                                    ? {
+                                        borderColor: workerPalette.border,
+                                        backgroundColor: workerPalette.bg,
+                                        color: workerPalette.text,
+                                    }
+                                    : undefined
+                        }
+                        className={`-ml-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                            hoveredMachineId === machine.id && draggingWorkerId
+                                ? 'border-saffron bg-saffron text-white'
+                                : hasActiveJob
+                                    ? workerPalette
+                                        ? ''
+                                        : 'border-saffron/60 bg-saffron-soft text-saffron-deep'
+                                    : 'border-hairline/80 bg-surface-soft text-muted-foreground/50 cursor-not-allowed'
+                        }`}
+                        title={!machine.is_active ? 'Inactive machines cannot be assigned' : !hasActiveJob ? 'Create a production job before linking a worker' : 'Drop a worker here'}
+                        aria-label={!machine.is_active ? `${machineLabel(machine)} is inactive` : !hasActiveJob ? `${machineLabel(machine)} has no active production job` : `Drop a worker on ${machineLabel(machine)}`}
+                    >
+                        <Link2 className="h-3.5 w-3.5" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                        <p className="truncate font-semibold text-ink">{machineLabel(machine)}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">{formatMachineType(machine.machine_type)}{machine.is_active ? '' : ' · inactive'}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        {worker ? (
+                            <span
+                                style={
+                                    workerPalette
+                                        ? {
+                                            backgroundColor: workerPalette.bg,
+                                            borderColor: workerPalette.border,
+                                            color: workerPalette.text,
+                                        }
+                                        : undefined
+                                }
+                                className="inline-flex items-center justify-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold leading-[1.35]"
+                            >
+                                <Check className="h-3 w-3" /> {worker.name}
+                            </span>
+                        ) : !hasActiveJob ? (
+                            <Badge variant="outline" className="border-dashed text-muted-foreground text-xs"><span data-i18n-skip="true">{t('assignments.noJob')}</span></Badge>
+                        ) : (
+                            <Badge variant="warning" className="text-xs">Unassigned</Badge>
+                        )}
+                        {assignment && (
+                            <Button
+                                data-configuration-tour="remove"
+                                variant="ghost"
+                                size="icon-sm"
+                                aria-label={`Remove ${worker?.name ?? 'worker'} from ${machineLabel(machine)}`}
+                                onClick={() => void handleRemove(assignment.id)}
+                                disabled={pendingKey !== null}
+                                className="h-8 w-8 rounded-lg text-muted-foreground hover:bg-risk-soft/40 hover:text-risk transition-colors"
+                            >
+                                <Unlink className="h-3.5 w-3.5" />
+                            </Button>
+                        )}
+                    </div>
+                </div>
+                {!hasActiveJob && machine.is_active && (
+                    <Link
+                        data-configuration-tour="job"
+                        onClick={event => { if (tourStep) event.preventDefault() }}
+                        prefetch={tourStep ? false : undefined}
+                        href={`/owner/production?${new URLSearchParams({ tab: 'jobs', returnTo: configurationReturnTo })}#machine-jobs`}
+                        className="mt-2.5 inline-flex items-center gap-1 text-xs font-medium text-saffron-deep hover:text-saffron underline underline-offset-2"
+                    >
+                        Set job in Production <ArrowUpRight className="h-3 w-3" />
+                    </Link>
+                )}
+            </div>
+        )
+    }
+
     return (
         <div className="configuration-workspace" inert={tourStep !== null}>
             {!tourStep && (focusWorkerId || focusMachineId) && <div role="status" className="col-span-full rounded border p-3"><p>{(focusWorkerId && !liveData.workers.some(worker => worker.id === focusWorkerId)) || (focusMachineId && !liveData.machines.some(machine => machine.id === focusMachineId)) ? 'This record is unavailable.' : focusWorkerId ? 'Worker filter active' : 'Machine filter active'}</p><Link className="inline-flex min-h-11 items-center underline" href={`/owner/assignments?shift=${shift}`}>View all assignments</Link></div>}
@@ -543,18 +718,16 @@ export default function BaseAssignmentWorkspace({
                         data-configuration-tour-connections
                         data-tour-anchor="assignments.columns"
                         onScroll={updateConnectorPositions}
-                        className={`relative grid ${tourSampleActive ? 'flex-none' : 'flex-1'} min-h-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-12 lg:gap-16 overflow-y-auto overscroll-contain pr-2 ${draggingWorkerId ? 'select-none' : ''}`}
+                        className={`relative grid ${tourSampleActive ? 'flex-none' : 'flex-1'} min-h-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] content-start gap-x-12 gap-y-4 lg:gap-x-16 overflow-y-auto overscroll-contain pr-2 ${draggingWorkerId ? 'select-none' : ''}`}
                     >
                         <svg className="pointer-events-none absolute inset-0 z-0 h-full w-full overflow-visible" aria-hidden="true">
                             {visibleWorkers.flatMap((worker) => {
                                 const palette = workerColorMap.get(worker.id) ?? DEFAULT_PALETTE
                                 const assignments = assignmentByWorker.get(worker.id) ?? []
-                                return assignments.map((assignment, assignmentIndex) => {
+                                return assignments.map((assignment) => {
                                     const from = connectorPositions.workers[worker.id]
                                     const to = connectorPositions.machines[assignment.machine_id]
                                     if (!from || !to) return null
-                                    const lane = ((visibleWorkers.indexOf(worker) + assignmentIndex) % 5) - 2
-
                                     const isAssignedMachineHovered = hoveredMachineId === assignment.machine_id
                                     const isWorkerHovered = hoveredWorkerId === worker.id
                                     const isHighlighted = isWorkerHovered || isAssignedMachineHovered
@@ -564,7 +737,7 @@ export default function BaseAssignmentWorkspace({
                                     return (
                                         <path
                                             key={assignment.id}
-                                            d={connectorPath(from, to, lane)}
+                                            d={connectorPath(from, to)}
                                             fill="none"
                                             stroke={isHighlighted ? palette.strokeActive : palette.stroke}
                                             strokeWidth={isHighlighted ? 3.25 : 2.25}
@@ -577,7 +750,7 @@ export default function BaseAssignmentWorkspace({
                             })}
                             {draggingWorkerId && dragPoint && connectorPositions.workers[draggingWorkerId] && (
                                 <path
-                                    d={connectorPath(connectorPositions.workers[draggingWorkerId], dragPoint, 0)}
+                                    d={connectorPath(connectorPositions.workers[draggingWorkerId], dragPoint)}
                                     fill="none"
                                     stroke={(workerColorMap.get(draggingWorkerId) ?? DEFAULT_PALETTE).strokeActive}
                                     strokeWidth="3"
@@ -586,176 +759,26 @@ export default function BaseAssignmentWorkspace({
                                 />
                             )}
                         </svg>
-                        <div className="relative z-10 space-y-3">
-                            <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wide text-muted-foreground"><span>Workers</span><Users className="h-4 w-4" /></div>
-                            {visibleWorkers.length === 0 ? <EmptyInline label="No workers match this view." /> : visibleWorkers.map((worker) => {
-                                const assignments = assignmentByWorker.get(worker.id) ?? []
-                                const palette = workerColorMap.get(worker.id) ?? DEFAULT_PALETTE
-                                return (
-                                    <div
-                                        key={worker.id}
-                                        data-configuration-tour="worker"
-                                        onMouseEnter={() => !draggingWorkerId && setHoveredWorkerId(worker.id)}
-                                        onMouseLeave={() => !draggingWorkerId && setHoveredWorkerId(null)}
-                                        className={`flex min-h-[76px] items-center justify-between gap-3 rounded-xl border bg-surface px-3.5 py-3 shadow-xs transition-all ${draggingWorkerId === worker.id ? 'border-saffron bg-saffron-soft/40 shadow-sm' : hoveredWorkerId === worker.id ? 'border-hairline-strong shadow-xs' : 'border-hairline'}`}
-                                    >
-                                        <div className="min-w-0">
-                                            <p className="truncate font-semibold text-ink">{worker.name}</p>
-                                            <p className="mt-0.5 text-xs text-muted-foreground">{formatWorkerShift(worker.shift_availability)}{worker.is_active ? '' : ' · inactive'}</p>
-                                            <div className="mt-1.5 flex flex-wrap gap-1">
-                                                {assignments.map((assignment) => (
-                                                    <span
-                                                        key={assignment.id}
-                                                        style={{
-                                                            backgroundColor: palette.bg,
-                                                            borderColor: palette.border,
-                                                            color: palette.text,
-                                                        }}
-                                                        className="inline-flex items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-semibold leading-[1.35] w-fit whitespace-nowrap"
-                                                    >
-                                                        {machineLabel(machineById.get(assignment.machine_id) ?? { id: '', name: 'Machine', machine_type: 'other', custom_label: null, is_active: true })}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        </div>
-                                        <div className="flex shrink-0 items-center gap-2">
-                                            <Button
-                                                data-configuration-tour="assign"
-                                                data-tour-anchor={!tourSampleActive && worker.id === handoffWorker?.id ? 'assignments.first-assign' : undefined}
-                                                size="sm"
-                                                variant="outline"
-                                                className="h-8 rounded-lg border-hairline px-3 text-xs font-medium text-body shadow-xs hover:border-hairline-strong hover:bg-surface-soft hover:text-ink"
-                                                onClick={() => setPickerWorkerId(worker.id)}
-                                                disabled={!worker.is_active}
-                                            >
-                                                <span data-i18n-skip="true">{t('assignments.assign')}</span>
-                                            </Button>
-                                            <span
-                                                role="button"
-                                                tabIndex={-1}
-                                                data-configuration-tour="drag"
-                                                data-worker-handle={worker.id}
-                                                onPointerDown={(event) => handleConnectorPointerDown(event, worker.id)}
-                                                onPointerMove={handleConnectorPointerMove}
-                                                onPointerUp={finishConnectorDrag}
-                                                onPointerCancel={finishConnectorDrag}
-                                                style={{
-                                                    borderColor: palette.border,
-                                                    backgroundColor: palette.bg,
-                                                    color: palette.text,
-                                                }}
-                                                className="flex h-9 w-9 touch-none cursor-grab items-center justify-center rounded-full border-2 shadow-xs transition-transform hover:scale-110 active:cursor-grabbing active:scale-95"
-                                                title={worker.is_active ? `Drag ${worker.name} to a machine` : 'Inactive workers cannot be assigned'}
-                                                aria-label={worker.is_active ? `Drag ${worker.name} to a machine` : `${worker.name} is inactive`}
-                                            >
-                                                <Link2 className="h-4 w-4" />
-                                            </span>
-                                        </div>
-                                    </div>
-                                )
-                            })}
-                        </div>
-                        <div className="relative z-10 space-y-3">
-                            <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wide text-muted-foreground"><span>Machines</span><Wrench className="h-4 w-4" /></div>
-                            {visibleMachines.length === 0 ? <EmptyInline label="No machines match this view." /> : visibleMachines.map((machine) => {
-                                const assignment = assignmentByMachine.get(machine.id)
-                                const worker = assignment ? workerById.get(assignment.worker_id) : null
-                                const workerPalette = worker ? (workerColorMap.get(worker.id) ?? DEFAULT_PALETTE) : null
-                                const jobId = currentJobByMachine.get(machine.id) ?? 'none'
-                                const hasActiveJob = jobId !== 'none'
-                                const isDropTargetValid = Boolean(draggingWorkerId && machine.is_active && hasActiveJob)
-                                return (
-                                    <div
-                                        key={machine.id}
-                                        data-configuration-tour="machine"
-                                        data-machine-node={machine.id}
-                                        onMouseEnter={() => !draggingWorkerId && setHoveredMachineId(machine.id)}
-                                        onMouseLeave={() => !draggingWorkerId && setHoveredMachineId(null)}
-                                        className={`min-h-[76px] rounded-xl border bg-surface px-3.5 py-3 shadow-xs transition-all ${hoveredMachineId === machine.id && draggingWorkerId ? 'scale-[1.01] border-saffron bg-saffron-soft/45 shadow-md ring-2 ring-saffron/20' : isDropTargetValid ? 'border-saffron/55 bg-saffron-soft/20' : hoveredMachineId === machine.id ? 'border-hairline-strong shadow-xs' : 'border-hairline'} ${!hasActiveJob ? 'opacity-90' : ''}`}
-                                    >
-                                        <div className="flex items-start justify-between gap-2">
-                                            <span
-                                                data-machine-handle={machine.id}
-                                                style={
-                                                    hoveredMachineId === machine.id && draggingWorkerId
-                                                        ? undefined
-                                                        : workerPalette && hasActiveJob
-                                                            ? {
-                                                                borderColor: workerPalette.border,
-                                                                backgroundColor: workerPalette.bg,
-                                                                color: workerPalette.text,
-                                                            }
-                                                            : undefined
-                                                }
-                                                className={`-ml-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
-                                                    hoveredMachineId === machine.id && draggingWorkerId
-                                                        ? 'border-saffron bg-saffron text-white'
-                                                        : hasActiveJob
-                                                            ? workerPalette
-                                                                ? ''
-                                                                : 'border-saffron/60 bg-saffron-soft text-saffron-deep'
-                                                            : 'border-hairline/80 bg-surface-soft text-muted-foreground/50 cursor-not-allowed'
-                                                }`}
-                                                title={!machine.is_active ? 'Inactive machines cannot be assigned' : !hasActiveJob ? 'Create a production job before linking a worker' : 'Drop a worker here'}
-                                                aria-label={!machine.is_active ? `${machineLabel(machine)} is inactive` : !hasActiveJob ? `${machineLabel(machine)} has no active production job` : `Drop a worker on ${machineLabel(machine)}`}
-                                            >
-                                                <Link2 className="h-3.5 w-3.5" />
-                                            </span>
-                                            <div className="min-w-0 flex-1">
-                                                <p className="truncate font-semibold text-ink">{machineLabel(machine)}</p>
-                                                <p className="mt-0.5 text-xs text-muted-foreground">{formatMachineType(machine.machine_type)}{machine.is_active ? '' : ' · inactive'}</p>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                {worker ? (
-                                                    <span
-                                                        style={
-                                                            workerPalette
-                                                                ? {
-                                                                    backgroundColor: workerPalette.bg,
-                                                                    borderColor: workerPalette.border,
-                                                                    color: workerPalette.text,
-                                                                }
-                                                                : undefined
-                                                        }
-                                                        className="inline-flex items-center justify-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold leading-[1.35]"
-                                                    >
-                                                        <Check className="h-3 w-3" /> {worker.name}
-                                                    </span>
-                                                ) : !hasActiveJob ? (
-                                                    <Badge variant="outline" className="border-dashed text-muted-foreground text-xs"><span data-i18n-skip="true">{t('assignments.noJob')}</span></Badge>
-                                                ) : (
-                                                    <Badge variant="warning" className="text-xs">Unassigned</Badge>
-                                                )}
-                                                {assignment && (
-                                                    <Button
-                                                        data-configuration-tour="remove"
-                                                        variant="ghost"
-                                                        size="icon-sm"
-                                                        aria-label={`Remove ${worker?.name ?? 'worker'} from ${machineLabel(machine)}`}
-                                                        onClick={() => void handleRemove(assignment.id)}
-                                                        disabled={pendingKey !== null}
-                                                        className="h-8 w-8 rounded-lg text-muted-foreground hover:bg-risk-soft/40 hover:text-risk transition-colors"
-                                                    >
-                                                        <Unlink className="h-3.5 w-3.5" />
-                                                    </Button>
-                                                )}
-                                            </div>
-                                        </div>
-                                        {!hasActiveJob && machine.is_active && (
-                                            <Link
-                                                data-configuration-tour="job"
-                                                onClick={event => { if (tourStep) event.preventDefault() }}
-                                                prefetch={tourStep ? false : undefined}
-                                                href={`/owner/production?${new URLSearchParams({ tab: 'jobs', returnTo: configurationReturnTo })}#machine-jobs`}
-                                                className="mt-2.5 inline-flex items-center gap-1 text-xs font-medium text-saffron-deep hover:text-saffron underline underline-offset-2"
-                                            >
-                                                Set job in Production <ArrowUpRight className="h-3 w-3" />
-                                            </Link>
-                                        )}
-                                    </div>
-                                )
-                            })}
-                        </div>
+                        <div className="relative z-10 flex items-center justify-between text-xs font-bold uppercase tracking-wide text-muted-foreground"><span>Workers</span><Users className="h-4 w-4" /></div>
+                        <div className="relative z-10 flex items-center justify-between text-xs font-bold uppercase tracking-wide text-muted-foreground"><span>Machines</span><Wrench className="h-4 w-4" /></div>
+                        {machineGroups.rows.map((row) => (
+                            <Fragment key={row.worker.id}>
+                                <div className="relative z-10 self-center">{renderWorkerCard(row.worker)}</div>
+                                <div data-machine-group={row.worker.id} className="relative z-10 space-y-2 self-center">
+                                    {row.machines.map((machine) => renderMachineCard(machine))}
+                                </div>
+                            </Fragment>
+                        ))}
+                        {(machineGroups.idleWorkers.length > 0 || machineGroups.ungrouped.length > 0 || visibleWorkers.length === 0 || visibleMachines.length === 0) && (
+                            <>
+                                <div className="relative z-10 space-y-4 self-start">
+                                    {visibleWorkers.length === 0 ? <EmptyInline label="No workers match this view." /> : machineGroups.idleWorkers.map((worker) => renderWorkerCard(worker))}
+                                </div>
+                                <div data-machine-group="none" className="relative z-10 space-y-4 self-start">
+                                    {visibleMachines.length === 0 ? <EmptyInline label="No machines match this view." /> : machineGroups.ungrouped.map((machine) => renderMachineCard(machine))}
+                                </div>
+                            </>
+                        )}
                     </div>
                 </CardContent>
             </Card>
@@ -844,7 +867,7 @@ export default function BaseAssignmentWorkspace({
                             <MachineTypeFilters machineTypes={machineTypes} selected={selectedMachineTypes} onSelect={(machineType) => setSelectedMachineTypes(machineType ? [machineType] : [])} />
                         </div>
                         <div className="space-y-2">
-                            {visibleMachines.length === 0 ? <EmptyInline label="No machines match this view." /> : visibleMachines.map((machine) => {
+                            {visibleMachines.length === 0 ? <EmptyInline label="No machines match this view." /> : groupedMachines.map((machine) => {
                                 const assignment = assignmentByMachine.get(machine.id)
                                 const worker = assignment ? workerById.get(assignment.worker_id) : null
                                 const workerPalette = worker ? (workerColorMap.get(worker.id) ?? DEFAULT_PALETTE) : null
