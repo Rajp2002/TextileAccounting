@@ -1,0 +1,17 @@
+Saved Qualities
+Recorded in Weavly Base with demonstration data. English narration generated locally with Kokoro.
+
+00:00:00.500 – 00:00:03.830
+Save the quality and create its first costing together.
+
+00:00:06.700 – 00:00:12.353
+Review the assumptions, then save a reusable recipe and a fixed costing snapshot.
+
+00:00:15.400 – 00:00:21.509
+Find the fabric in Saved Qualities. Open its rate editor to review the current yarn prices.
+
+00:00:25.200 – 00:00:32.677
+Change the warp rate to one hundred and thirty rupees per kilogram. Review the cost impact, then save and apply.
+
+00:00:40.400 – 00:00:47.667
+Select the saved fabric again to restore its construction and costing inputs, without entering everything from scratch.

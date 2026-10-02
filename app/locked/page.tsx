@@ -34,7 +34,7 @@ export default async function LockedPage() {
     }
 
     return (
-        <div className="min-h-screen bg-canvas flex items-center justify-center p-4">
+        <div className="safe-area-page min-h-svh bg-canvas flex items-center justify-center [--page-gutter-x:1rem] [--page-gutter-y:1rem]">
             <Card className="max-w-md w-full bg-surface border-wv-border-default text-ink shadow-sm overflow-hidden relative">
                 <div className="absolute top-0 left-0 w-full h-1 bg-wv-status-danger-solid" />
                 

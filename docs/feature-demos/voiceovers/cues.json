@@ -1,0 +1,562 @@
+{
+  "source_commit": "2e63015232debea1b217aedaf77490f7b91970f0",
+  "timing_status": "Placement windows reviewed against the final recorded frames; measured speech timings are in render-report.json.",
+  "format": "AAC mono at 48 kHz in MP4; local intermediate WAV at 24 kHz",
+  "scripts": [
+    {
+      "feature": "estimator",
+      "title": "Cost Estimator",
+      "duration": 118.75,
+      "chapters": [
+        0,
+        62.208,
+        94.75
+      ],
+      "cues": [
+        {
+          "id": "estimator-01",
+          "start_seconds": 2,
+          "end_seconds": 16.5,
+          "visual_anchor": "Name, construction, crimp and waste inputs",
+          "narration": "Start a new fabric costing. Name the fabric, enter its warp and weft construction, and include the crimp and waste allowances."
+        },
+        {
+          "id": "estimator-02",
+          "start_seconds": 18,
+          "end_seconds": 29.5,
+          "visual_anchor": "Warp yarn inputs",
+          "narration": "Add the warp yarn’s denier, beam ends, rate and G S T. These inputs determine warp consumption and cost."
+        },
+        {
+          "id": "estimator-03",
+          "start_seconds": 31,
+          "end_seconds": 44.8,
+          "visual_anchor": "Weft yarn inputs",
+          "narration": "Enter the weft yarn, picks per inch, fabric width, denier, rate and G S T."
+        },
+        {
+          "id": "estimator-04",
+          "start_seconds": 46,
+          "end_seconds": 56.5,
+          "visual_anchor": "Weaving, overhead, margin and quantity inputs",
+          "narration": "Review the weaving cost and overhead. Then enter your target margin and order quantity."
+        },
+        {
+          "id": "estimator-05",
+          "start_seconds": 57,
+          "end_seconds": 61.7,
+          "visual_anchor": "Open Live Cost; first estimate visible by 60 seconds",
+          "narration": "Open Live Cost to see your estimate."
+        },
+        {
+          "id": "estimator-06",
+          "start_seconds": 65,
+          "end_seconds": 73,
+          "visual_anchor": "Expand Pricing assumptions, then close Live Cost",
+          "narration": "Review the pricing assumptions, then return to the inputs to explore a different costing scenario."
+        },
+        {
+          "id": "estimator-07",
+          "start_seconds": 75,
+          "end_seconds": 86.3,
+          "visual_anchor": "Change weft rate to ₹128/kg and margin to 15%",
+          "narration": "Increase the weft rate to one hundred and twenty eight rupees per kilogram, and set the margin to fifteen percent."
+        },
+        {
+          "id": "estimator-08",
+          "start_seconds": 88,
+          "end_seconds": 94.1,
+          "visual_anchor": "Updated cost ₹33.23/m and selling price ₹39.09/m visible",
+          "narration": "Live Cost now shows the updated production cost and selling price."
+        },
+        {
+          "id": "estimator-09",
+          "start_seconds": 96,
+          "end_seconds": 104.8,
+          "visual_anchor": "Switch to Detailed; yarn calculations",
+          "narration": "Switch to Detailed to inspect the yarn calculations, including consumption, crimp and waste."
+        },
+        {
+          "id": "estimator-10",
+          "start_seconds": 106,
+          "end_seconds": 117.5,
+          "visual_anchor": "Detailed production-cost breakdown",
+          "narration": "Scroll down to review the production cost breakdown. Quick and Detailed use the same calculations, with different levels of detail."
+        }
+      ]
+    },
+    {
+      "feature": "qualities",
+      "title": "Saved Qualities",
+      "duration": 51.958,
+      "chapters": [
+        0,
+        14.958,
+        39.958
+      ],
+      "cues": [
+        {
+          "id": "qualities-01",
+          "start_seconds": 0.5,
+          "end_seconds": 6.2,
+          "visual_anchor": "Save Quality & Create Costing",
+          "narration": "Save the quality and create its first costing together."
+        },
+        {
+          "id": "qualities-02",
+          "start_seconds": 6.7,
+          "end_seconds": 14.2,
+          "visual_anchor": "Save confirmation and assumptions",
+          "narration": "Review the assumptions, then save a reusable recipe and a fixed costing snapshot."
+        },
+        {
+          "id": "qualities-03",
+          "start_seconds": 15.4,
+          "end_seconds": 24.7,
+          "visual_anchor": "Search saved-quality library; open rate editor",
+          "narration": "Find the fabric in Saved Qualities. Open its rate editor to review the current yarn prices."
+        },
+        {
+          "id": "qualities-04",
+          "start_seconds": 25.2,
+          "end_seconds": 38.9,
+          "visual_anchor": "Warp rate ₹125 → ₹130/kg; Save Rates & Apply",
+          "narration": "Change the warp rate to one hundred and thirty rupees per kilogram. Review the cost impact, then save and apply."
+        },
+        {
+          "id": "qualities-05",
+          "start_seconds": 40.4,
+          "end_seconds": 50.9,
+          "visual_anchor": "Select saved quality and restore inputs",
+          "narration": "Select the saved fabric again to restore its construction and costing inputs, without entering everything from scratch."
+        }
+      ]
+    },
+    {
+      "feature": "rates",
+      "title": "Rate Book",
+      "duration": 84.208,
+      "chapters": [
+        0,
+        36.75,
+        65.333
+      ],
+      "cues": [
+        {
+          "id": "rates-01",
+          "start_seconds": 0.5,
+          "end_seconds": 10.5,
+          "visual_anchor": "Find demo yarns; inspect linked quality",
+          "narration": "Find the demo yarns in Rate Book, and check which saved quality uses them."
+        },
+        {
+          "id": "rates-02",
+          "start_seconds": 11,
+          "end_seconds": 24.4,
+          "visual_anchor": "Edit weft price and source note",
+          "narration": "Update the weft rate to one hundred and forty rupees per kilogram. Add a supplier note so you can identify the source."
+        },
+        {
+          "id": "rates-03",
+          "start_seconds": 24.9,
+          "end_seconds": 35.8,
+          "visual_anchor": "Save rate; open Activity history",
+          "narration": "Save the new rate, then open Activity to review the recorded change and its history."
+        },
+        {
+          "start_seconds": 38,
+          "end_seconds": 42.8,
+          "visual_anchor": "Reopen linked quality",
+          "narration": "Reopen the linked saved quality.",
+          "id": "rates-04"
+        },
+        {
+          "start_seconds": 45,
+          "end_seconds": 49.5,
+          "visual_anchor": "Rate editor shows weft ₹140/kg",
+          "narration": "The weft rate now includes your update.",
+          "id": "rates-05"
+        },
+        {
+          "id": "rates-06",
+          "start_seconds": 50,
+          "end_seconds": 64.4,
+          "visual_anchor": "Apply quality, inspect inputs, open Live cost",
+          "narration": "Apply the quality and check its yarn inputs. Open Live Cost to review the recalculated production cost and selling price."
+        },
+        {
+          "id": "rates-07",
+          "start_seconds": 65.8,
+          "end_seconds": 73,
+          "visual_anchor": "Find and open the earlier saved costing",
+          "narration": "Now open an earlier saved costing to compare it with the updated estimate."
+        },
+        {
+          "id": "rates-08",
+          "start_seconds": 73.5,
+          "end_seconds": 83.2,
+          "visual_anchor": "Original snapshot values remain unchanged",
+          "narration": "The earlier costing keeps its original figures. Changing Rate Book does not rewrite saved costing snapshots."
+        }
+      ]
+    },
+    {
+      "feature": "costings",
+      "title": "Saved Costings",
+      "duration": 134.75,
+      "chapters": [
+        0,
+        18.875,
+        42.042,
+        52.875,
+        75,
+        91.708
+      ],
+      "cues": [
+        {
+          "id": "costings-01",
+          "start_seconds": 0.5,
+          "end_seconds": 8.7,
+          "visual_anchor": "Search for demo fabric and open its costing",
+          "narration": "Search for the fabric and open its saved costing to inspect the original figures."
+        },
+        {
+          "id": "costings-02",
+          "start_seconds": 9.2,
+          "end_seconds": 17.9,
+          "visual_anchor": "Saved breakdown: cost, price, margin, quantity",
+          "narration": "This snapshot preserves the original inputs and results, so you can refer back to them."
+        },
+        {
+          "id": "costings-03",
+          "start_seconds": 20,
+          "end_seconds": 33,
+          "visual_anchor": "Use snapshot; change weaving rate to ₹16/m",
+          "narration": "Choose Use to restore the inputs. Change the weaving rate to sixteen rupees per metre."
+        },
+        {
+          "id": "costings-04",
+          "start_seconds": 33.5,
+          "end_seconds": 41.1,
+          "visual_anchor": "Set margin to 20%; open Live cost",
+          "narration": "Set the target margin to twenty percent, then open Live Cost to review the updated result."
+        },
+        {
+          "id": "costings-05",
+          "start_seconds": 42.5,
+          "end_seconds": 51.9,
+          "visual_anchor": "Save New Version; v2 confirmation",
+          "narration": "Choose Save New Version. Version two preserves your changes while version one keeps its original figures."
+        },
+        {
+          "id": "costings-06",
+          "start_seconds": 53.3,
+          "end_seconds": 61.5,
+          "visual_anchor": "Enable Compare and open version history",
+          "narration": "Enable Compare, then open the fabric's version history to choose the estimates."
+        },
+        {
+          "id": "costings-07",
+          "start_seconds": 62,
+          "end_seconds": 73.9,
+          "visual_anchor": "Select v1 and v2",
+          "narration": "Select versions one and two. You can now compare how the changed assumptions affect the same fabric."
+        },
+        {
+          "id": "costings-08",
+          "start_seconds": 75.5,
+          "end_seconds": 90.7,
+          "visual_anchor": "Compare Costings: component and price differences",
+          "narration": "Open Compare Costings. Review the differences in production cost, selling price, margin and quantity to understand the effect of your changes."
+        },
+        {
+          "start_seconds": 94,
+          "end_seconds": 101,
+          "visual_anchor": "Open internal cost-sheet export preview",
+          "narration": "Open Export to preview an internal cost sheet.",
+          "id": "costings-09"
+        },
+        {
+          "start_seconds": 103,
+          "end_seconds": 115.8,
+          "visual_anchor": "Business name and notes; download cost sheet",
+          "narration": "Enter your business name and notes, then download the detailed cost sheet.",
+          "id": "costings-10"
+        },
+        {
+          "start_seconds": 118,
+          "end_seconds": 126.5,
+          "visual_anchor": "Customer Quotation; buyer and delivery terms",
+          "narration": "Switch to Customer Quotation. Add the buyer’s name and delivery terms.",
+          "id": "costings-11"
+        },
+        {
+          "start_seconds": 127,
+          "end_seconds": 133.7,
+          "visual_anchor": "Download customer quotation",
+          "narration": "Download a quote that keeps your internal costs and margins private.",
+          "id": "costings-12"
+        }
+      ]
+    },
+    {
+      "feature": "production",
+      "title": "Production",
+      "duration": 225.417,
+      "chapters": [
+        0,
+        26.333,
+        55.5,
+        117.5,
+        142.292,
+        169.75,
+        201.833
+      ],
+      "cues": [
+        {
+          "id": "production-01",
+          "start_seconds": 0.5,
+          "end_seconds": 12.3,
+          "visual_anchor": "Add machine: name and type",
+          "narration": "Start by adding a production machine. Name it Demo Loom Zero One, and select Rapier as the machine type."
+        },
+        {
+          "id": "production-02",
+          "start_seconds": 20,
+          "end_seconds": 25.1,
+          "visual_anchor": "Save machine",
+          "narration": "Add the machine, ready for assignment."
+        },
+        {
+          "id": "production-03",
+          "start_seconds": 26.8,
+          "end_seconds": 38.8,
+          "visual_anchor": "Add worker: Demo Operator 01, piece rate",
+          "narration": "Next, add Demo Operator Zero One. Select piece rate for this worker's pay type."
+        },
+        {
+          "id": "production-04",
+          "start_seconds": 39.3,
+          "end_seconds": 54.1,
+          "visual_anchor": "Role, approved operator, day availability, save",
+          "narration": "Set the role, keep the worker approved as a loom operator, and choose day availability. Then save the worker."
+        },
+        {
+          "id": "production-05",
+          "start_seconds": 56,
+          "end_seconds": 66.5,
+          "visual_anchor": "Activate Quality; choose saved costing v2",
+          "narration": "Activate a quality for production, and choose version two of the saved demo fabric."
+        },
+        {
+          "id": "production-06",
+          "start_seconds": 67,
+          "end_seconds": 77.3,
+          "visual_anchor": "Yarn-stock prerequisite",
+          "narration": "Before production can start, check the required yarn stock. This fabric needs both warp and weft."
+        },
+        {
+          "id": "production-07",
+          "start_seconds": 77.8,
+          "end_seconds": 91.5,
+          "visual_anchor": "Add warp stock: 200 kg and note",
+          "narration": "Add two hundred kilograms of warp yarn, with a short stock note, then save."
+        },
+        {
+          "id": "production-08",
+          "start_seconds": 92,
+          "end_seconds": 107.2,
+          "visual_anchor": "Add weft stock: 200 kg and note",
+          "narration": "Repeat for the weft yarn. Add two hundred kilograms and a reference note, then save the stock."
+        },
+        {
+          "id": "production-09",
+          "start_seconds": 108,
+          "end_seconds": 116.5,
+          "visual_anchor": "Activate quality after stock is available",
+          "narration": "With both yarn stocks available, activate the quality for production."
+        },
+        {
+          "id": "production-10",
+          "start_seconds": 118,
+          "end_seconds": 129.4,
+          "visual_anchor": "Assign Looms; select Demo Loom 01",
+          "narration": "Open Assign Looms for the active quality. Select Demo Loom Zero One and confirm the assignment."
+        },
+        {
+          "id": "production-11",
+          "start_seconds": 134,
+          "end_seconds": 141.2,
+          "visual_anchor": "Machine board; search for demo loom",
+          "narration": "The machine board connects your fabric to its loom. Search for the demo loom."
+        },
+        {
+          "id": "production-12",
+          "start_seconds": 142.8,
+          "end_seconds": 154.5,
+          "visual_anchor": "Manage Workers; Day Shift",
+          "narration": "Open Manage Workers on the demo loom, and select Day Shift."
+        },
+        {
+          "id": "production-13",
+          "start_seconds": 155,
+          "end_seconds": 168.6,
+          "visual_anchor": "Search and assign Demo Operator 01; Done",
+          "narration": "Find Demo Operator Zero One and assign the worker to the day shift. Then finish setup."
+        },
+        {
+          "id": "production-14",
+          "start_seconds": 170.2,
+          "end_seconds": 180.4,
+          "visual_anchor": "Daily sheet; enter 240 m",
+          "narration": "Open the daily sheet for the correct date and shift. Enter two hundred and forty metres for the demo loom."
+        },
+        {
+          "id": "production-15",
+          "start_seconds": 180.9,
+          "end_seconds": 189.3,
+          "visual_anchor": "Worker Review; return to sheet",
+          "narration": "Open Worker Review to check output and earnings, then return to the sheet."
+        },
+        {
+          "id": "production-16",
+          "start_seconds": 189.8,
+          "end_seconds": 200.8,
+          "visual_anchor": "Save shift and confirm incomplete shift",
+          "narration": "Save the shift. Other machines remain pending, so only the demo loom has recorded output in this example."
+        },
+        {
+          "id": "production-17",
+          "start_seconds": 202.3,
+          "end_seconds": 212,
+          "visual_anchor": "Saved production audit receipt",
+          "narration": "Open the saved receipt to review the production record, including the loom, quality, operator and metres."
+        },
+        {
+          "id": "production-18",
+          "start_seconds": 219,
+          "end_seconds": 224.8,
+          "visual_anchor": "Worker Review: 240 m × ₹16/m = ₹3,840",
+          "narration": "The worker earned three thousand eight hundred and forty rupees."
+        }
+      ]
+    },
+    {
+      "feature": "payroll",
+      "title": "Payroll",
+      "duration": 141.708,
+      "chapters": [
+        0,
+        32.833,
+        68.458,
+        94.083
+      ],
+      "cues": [
+        {
+          "id": "payroll-01",
+          "start_seconds": 0.5,
+          "end_seconds": 9.3,
+          "visual_anchor": "Find Demo Operator 01; production earnings card",
+          "narration": "Find Demo Operator Zero One to review the earnings generated from saved production."
+        },
+        {
+          "id": "payroll-02",
+          "start_seconds": 9.8,
+          "end_seconds": 22.3,
+          "visual_anchor": "Add advance: ₹400 and description",
+          "narration": "Add an advance of four hundred rupees, with a short description, and save it."
+        },
+        {
+          "id": "payroll-03",
+          "start_seconds": 28,
+          "end_seconds": 32,
+          "visual_anchor": "Recovery ₹400; net pay recalculates",
+          "narration": "Recovery now includes the advance, reducing net pay."
+        },
+        {
+          "id": "payroll-04",
+          "start_seconds": 33.3,
+          "end_seconds": 46.4,
+          "visual_anchor": "Add deduction; choose Other category",
+          "narration": "You can also record a deduction. Select Other as the reason for this demonstration."
+        },
+        {
+          "id": "payroll-05",
+          "start_seconds": 47,
+          "end_seconds": 52,
+          "visual_anchor": "Deduction amount ₹50",
+          "narration": "Enter fifty rupees."
+        },
+        {
+          "id": "payroll-06",
+          "start_seconds": 52.5,
+          "end_seconds": 59.3,
+          "visual_anchor": "Deduction note and save",
+          "narration": "Add a short note, then record the deduction."
+        },
+        {
+          "id": "payroll-07",
+          "start_seconds": 65,
+          "end_seconds": 67.9,
+          "visual_anchor": "Recovery ₹450; net pay ₹3,390",
+          "narration": "Net pay now includes both recoveries."
+        },
+        {
+          "id": "payroll-08",
+          "start_seconds": 68.9,
+          "end_seconds": 79.4,
+          "visual_anchor": "How pay is calculated",
+          "narration": "Open How Pay Is Calculated for a summary of piece rate earnings, salaries and advance recovery."
+        },
+        {
+          "id": "payroll-09",
+          "start_seconds": 79.9,
+          "end_seconds": 84.9,
+          "visual_anchor": "Mark paid and confirm",
+          "narration": "Choose Mark Paid, then confirm the payment."
+        },
+        {
+          "id": "payroll-10",
+          "start_seconds": 86.4,
+          "end_seconds": 93.2,
+          "visual_anchor": "Paid state; cash payment is a record only",
+          "narration": "Record three thousand three hundred and ninety rupees as paid. This does not send money."
+        },
+        {
+          "id": "payroll-11",
+          "start_seconds": 94.6,
+          "end_seconds": 103.8,
+          "visual_anchor": "Payroll records; period and worker search",
+          "narration": "Open Payroll Records and find the demo worker for the pay period."
+        },
+        {
+          "id": "payroll-12",
+          "start_seconds": 111,
+          "end_seconds": 119,
+          "visual_anchor": "Expand worker payment and loom breakdown",
+          "narration": "Expand the payment to see the loom, costing, rate and production quantity behind these earnings."
+        },
+        {
+          "id": "payroll-13",
+          "start_seconds": 120,
+          "end_seconds": 128.7,
+          "visual_anchor": "Switch to Machines view",
+          "narration": "Switch to the Machines view to summarize production and worker cost by loom."
+        },
+        {
+          "id": "payroll-14",
+          "start_seconds": 129.2,
+          "end_seconds": 140.6,
+          "visual_anchor": "Export CSV and PDF",
+          "narration": "Download the C S V for spreadsheet analysis, or the P D F for a shareable payroll report."
+        }
+      ]
+    }
+  ],
+  "voice": {
+    "engine": "Kokoro-82M v1.0 via kokoro-onnx 0.6.1",
+    "name": "af_heart",
+    "language": "en-us",
+    "speed": 0.92
+  }
+}

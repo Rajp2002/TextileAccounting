@@ -2,18 +2,18 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { Check, Eye, Loader2, Sparkles, X } from 'lucide-react'
+import { Check, Play, Loader2, Sparkles, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SubscribeButton } from '@/components/billing/SubscribeButton'
 import { BILLING_PLANS } from '@/lib/billing-constants'
 import {
-  UPGRADE_FEATURE_IMAGES,
   upgradeText,
   type UpgradeFeature,
   type UpgradePlan,
 } from '@/lib/upgrade-wall'
 import { useTranslation } from '@/lib/i18n/context'
 import { cn } from '@/lib/utils'
+import { FEATURE_DEMOS } from '@/lib/feature-demos'
 
 // Explicit feature lists per card with specific starting feature
 export const CARD_FEATURE_PREVIEWS: Record<UpgradePlan, readonly UpgradeFeature[]> = {
@@ -60,7 +60,7 @@ export function PlanCard({
   const isBase = planTier === 'base'
   const isFree = planTier === 'free'
 
-  const activeImage = UPGRADE_FEATURE_IMAGES[activeFeature]
+  const activeDemo = FEATURE_DEMOS[activeFeature]
   const activeFeatureName = upgradeText(language, activeFeature)
 
   return (
@@ -152,8 +152,8 @@ export function PlanCard({
               onClick={() => onOpenPreview(activeFeature, planTier)}
               className="h-6 gap-1 px-1.5 text-[11px] font-semibold text-saffron-deep hover:bg-saffron/10 hover:text-saffron-deep"
             >
-              <Eye className="h-3 w-3" aria-hidden="true" />
-              <span>{upgradeText(language, 'viewPreview')}</span>
+              <Play className="h-3 w-3" aria-hidden="true" />
+              <span>{upgradeText(language, 'watchDemo')}</span>
             </Button>
           </div>
 
@@ -181,34 +181,28 @@ export function PlanCard({
             })}
           </div>
 
-          {/* Preview Image Container */}
-          <div
+          {/* Posters keep all video downloads behind an explicit request. */}
+          <button
+            type="button"
             onClick={() => onOpenPreview(activeFeature, planTier)}
             className="group relative flex aspect-[16/9] w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-hairline bg-surface-soft p-2 transition-colors hover:border-saffron/40"
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault()
-                onOpenPreview(activeFeature, planTier)
-              }
-            }}
-            aria-label={`${activeFeatureName} preview. Click to enlarge.`}
+            aria-label={upgradeText(language, 'watchFeatureDemo', { feature: activeFeatureName })}
           >
             <Image
-              src={activeImage.src}
+              src={activeDemo.poster}
               alt={upgradeText(language, 'picture', { feature: activeFeatureName })}
-              width={activeImage.width}
-              height={activeImage.height}
+              width={1440}
+              height={960}
+              sizes="(min-width: 1024px) 320px, (min-width: 640px) 600px, 90vw"
               className="max-h-full max-w-full object-contain transition-transform duration-300 group-hover:scale-105"
             />
-            <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 backdrop-blur-[1px] transition-opacity group-hover:opacity-100">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-surface/95 px-2.5 py-1 text-xs font-semibold text-ink shadow-md">
-                <Eye className="h-3.5 w-3.5 text-saffron-deep" aria-hidden="true" />
-                <span>{upgradeText(language, 'enlargePreview')}</span>
+            <div className="absolute inset-0 flex items-center justify-center bg-black/15 transition-colors group-hover:bg-black/25">
+              <span className="inline-flex items-center gap-2 rounded-full bg-surface/95 px-3 py-2 text-xs font-semibold text-ink shadow-md">
+                <Play className="h-4 w-4 fill-current text-saffron-deep" aria-hidden="true" />
+                <span>{upgradeText(language, 'watchDemo')}</span>
               </span>
             </div>
-          </div>
+          </button>
         </div>
 
         {/* Feature List & Incremental Inheritance */}

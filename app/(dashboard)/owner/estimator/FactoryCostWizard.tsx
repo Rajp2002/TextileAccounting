@@ -258,7 +258,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
     }
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[var(--wv-neel-950)]/50 backdrop-blur-sm">
+        <div className="safe-area-page fixed inset-0 z-[100] flex items-center justify-center [--page-gutter-x:1rem] [--page-gutter-y:1rem] bg-[var(--wv-neel-950)]/50 backdrop-blur-sm">
             <AnimatePresence mode="wait">
                 <motion.div
                     key={step}
@@ -266,7 +266,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                     initial="hidden"
                     animate="visible"
                     exit="exit"
-                    className="w-full max-w-lg"
+                    className="w-full max-w-lg max-h-[calc(100dvh-var(--safe-area-top)-var(--safe-area-bottom)-2rem)] overflow-y-auto"
                 >
                     <Card className="border border-[var(--wv-border-default)] shadow-[var(--shadow-card)] overflow-hidden bg-[var(--wv-bg-surface)] text-[var(--wv-text-primary)] relative">
                         {onDismiss && (

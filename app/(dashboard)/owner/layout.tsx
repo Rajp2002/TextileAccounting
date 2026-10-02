@@ -55,14 +55,14 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
         <div className="relative isolate min-h-svh overflow-x-hidden bg-background" data-owner-shell>
             {staleFreeWorkspaceHint && <WorkspaceHintSync />}
             <BrandBackground variant={pathname.startsWith('/owner/billing') ? 'billing' : pathname.startsWith('/owner/payroll') ? 'payroll' : pathname.startsWith('/owner/machines') ? 'machines' : pathname === '/owner/dispatches' ? 'dispatches' : pathname === '/owner/workers' ? 'workers' : 'app'} />
-            <a href="#owner-main" className="sr-only fixed left-3 top-3 z-[100] rounded bg-surface p-3 text-ink focus:not-sr-only">Skip to content</a>
+            <a href="#owner-main" className="sr-only fixed left-3 top-[calc(0.75rem+var(--safe-area-top))] z-[100] rounded bg-surface p-3 text-ink focus:not-sr-only">Skip to content</a>
 
             <Suspense fallback={<OwnerSidebarLoading />}>
                 <OwnerSidebarBoundary />
             </Suspense>
 
             <div className="mobile-workspace-content relative z-10 min-w-0 px-safe">
-                <main id="owner-main" tabIndex={-1} className="dashboard-main mx-auto min-h-svh w-full min-w-0 max-w-7xl px-3 pb-5 pt-[calc(1rem+env(safe-area-inset-top,0px))] xs:px-4 md:px-6 md:py-6 lg:px-8">
+                <main id="owner-main" tabIndex={-1} className="dashboard-main mx-auto min-h-svh w-full min-w-0 max-w-7xl px-3 pb-5 pt-[calc(1rem+env(safe-area-inset-top,0px))] xs:px-4 md:px-6 md:pb-6 md:pt-[calc(1.5rem+var(--safe-area-top))] lg:px-8">
                     <Suspense fallback={<OwnerRouteLoading />}>
                         <OwnerRouteBoundary>{children}</OwnerRouteBoundary>
                     </Suspense>

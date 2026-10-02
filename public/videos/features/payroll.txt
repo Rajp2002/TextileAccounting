@@ -1,0 +1,44 @@
+Payroll
+Recorded in Weavly Base with demonstration data. English narration generated locally with Kokoro.
+
+00:00:00.500 – 00:00:06.249
+Find Demo Operator Zero One to review the earnings generated from saved production.
+
+00:00:09.800 – 00:00:14.581
+Add an advance of four hundred rupees, with a short description, and save it.
+
+00:00:28.000 – 00:00:31.553
+Recovery now includes the advance, reducing net pay.
+
+00:00:33.300 – 00:00:38.805
+You can also record a deduction. Select Other as the reason for this demonstration.
+
+00:00:47.000 – 00:00:48.697
+Enter fifty rupees.
+
+00:00:52.500 – 00:00:55.307
+Add a short note, then record the deduction.
+
+00:01:05.000 – 00:01:07.562
+Net pay now includes both recoveries.
+
+00:01:08.900 – 00:01:15.194
+Open How Pay Is Calculated for a summary of piece rate earnings, salaries and advance recovery.
+
+00:01:19.900 – 00:01:22.738
+Choose Mark Paid, then confirm the payment.
+
+00:01:26.400 – 00:01:32.171
+Record three thousand three hundred and ninety rupees as paid. This does not send money.
+
+00:01:34.600 – 00:01:38.879
+Open Payroll Records and find the demo worker for the pay period.
+
+00:01:51.000 – 00:01:57.564
+Expand the payment to see the loom, costing, rate and production quantity behind these earnings.
+
+00:02:00.000 – 00:02:04.809
+Switch to the Machines view to summarize production and worker cost by loom.
+
+00:02:09.200 – 00:02:15.804
+Download the C S V for spreadsheet analysis, or the P D F for a shareable payroll report.

@@ -7,7 +7,7 @@ import { BrandBackground } from '@/components/brand-background'
 
 export default function AuthCodeError() {
     return (
-        <div className="relative isolate flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background px-4 py-12 sm:px-6 lg:px-8">
+        <div className="safe-area-page relative isolate flex min-h-svh flex-col items-center justify-center overflow-hidden bg-background [--page-gutter-x:1rem] [--page-gutter-y:3rem] sm:[--page-gutter-x:1.5rem] lg:[--page-gutter-x:2rem]">
             <BrandBackground variant="auth" />
             <div className="relative z-10 w-full max-w-md text-center space-y-8">
                 <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-wv-status-danger-bg">

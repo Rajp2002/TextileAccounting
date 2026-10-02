@@ -1,0 +1,32 @@
+Cost Estimator
+Recorded in Weavly Base with demonstration data. English narration generated locally with Kokoro.
+
+00:00:02.000 – 00:00:10.475
+Start a new fabric costing. Name the fabric, enter its warp and weft construction, and include the crimp and waste allowances.
+
+00:00:18.000 – 00:00:25.613
+Add the warp yarn’s denier, beam ends, rate and G S T. These inputs determine warp consumption and cost.
+
+00:00:31.000 – 00:00:36.149
+Enter the weft yarn, picks per inch, fabric width, denier, rate and G S T.
+
+00:00:46.000 – 00:00:51.687
+Review the weaving cost and overhead. Then enter your target margin and order quantity.
+
+00:00:57.000 – 00:00:59.363
+Open Live Cost to see your estimate.
+
+00:01:05.000 – 00:01:11.041
+Review the pricing assumptions, then return to the inputs to explore a different costing scenario.
+
+00:01:15.000 – 00:01:21.725
+Increase the weft rate to one hundred and twenty eight rupees per kilogram, and set the margin to fifteen percent.
+
+00:01:28.000 – 00:01:32.617
+Live Cost now shows the updated production cost and selling price.
+
+00:01:36.000 – 00:01:42.081
+Switch to Detailed to inspect the yarn calculations, including consumption, crimp and waste.
+
+00:01:46.000 – 00:01:54.711
+Scroll down to review the production cost breakdown. Quick and Detailed use the same calculations, with different levels of detail.
