@@ -40,7 +40,7 @@ export default function LandingFit() {
 
             <div className="mt-14 grid gap-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-16">
                 <figure className={cn(s.rise, 'min-w-0')}>
-                    <ul className="list-none border-t border-[color:var(--lp-ink)]">
+                    <ul className="list-none border-t border-[color:var(--lp-ink)]" data-i18n-skip="true">
                         {labels.map((label) => (
                             <li key={label.lang} className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 border-b border-[color:var(--lp-line-strong)] py-5">
                                 <span lang={label.lang} className={cn(label.script || s.display, 'text-[28px] font-semibold leading-tight text-[color:var(--lp-ink)] xs:text-[32px] sm:text-[40px]')}>

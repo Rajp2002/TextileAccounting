@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Menu, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { LanguageSwitcher } from '@/components/i18n/language-switcher'
 
 export default function LandingHeader() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -77,13 +78,13 @@ export default function LandingHeader() {
                 <div data-weavly-intro-panel className="rounded-b-xl border border-t-0 border-wv-border-inverse bg-black shadow-[0_8px_30px_rgb(0,0,0,0.3)] transition-all duration-300 ease-out">
                     <div className="flex min-w-0 items-center justify-between px-3 py-2 xs:px-4 xs:py-3 md:px-6 lg:px-8">
                         <Link href="/" className="group flex items-center">
-                            <div data-weavly-intro-target="landing" className="relative h-12 w-32 transition-opacity duration-200 group-hover:opacity-80 xs:h-16 xs:w-40 md:h-20 md:w-56">
+                            <div data-weavly-intro-target="landing" className="relative h-12 w-28 transition-opacity duration-200 group-hover:opacity-80 xs:h-16 xs:w-40 xl:h-20 xl:w-56">
                                 <Image src="/images/WeavlyLogo.png" alt="Weavly Logo" fill sizes="(max-width: 640px) 10rem, 14rem" className="origin-left scale-110 object-contain object-left" priority />
                             </div>
                         </Link>
 
                         {/* Desktop Nav */}
-                        <nav className="hidden items-center gap-6 lg:flex xl:gap-8">
+                        <nav className="hidden items-center gap-5 xl:flex">
                             {navLinks.map((link) => (
                                 <Link
                                     key={link.name}
@@ -96,7 +97,9 @@ export default function LandingHeader() {
                             ))}
                         </nav>
 
-                        <div className="hidden items-center gap-3 lg:flex xl:gap-4">
+                        <LanguageSwitcher placement="bottom" className="min-h-[44px] text-wv-text-inverse-secondary hover:text-wv-text-inverse hover:bg-white/10" />
+
+                        <div className="hidden items-center gap-3 xl:flex">
                             <Link href="/login">
                                 <Button variant="ghost" className="text-wv-text-inverse-secondary hover:text-wv-text-inverse hover:bg-surface/10 font-semibold rounded-full px-6 transition-all">
                                     Log in
@@ -110,7 +113,7 @@ export default function LandingHeader() {
                         </div>
 
                         {/* Mobile Menu Toggle */}
-                        <div className="flex lg:hidden">
+                        <div className="flex xl:hidden">
                             <button
                                 type="button"
                                 className="-m-2.5 inline-flex items-center justify-center rounded-full p-2.5 text-wv-text-inverse hover:bg-surface/10 transition-colors"
@@ -131,7 +134,7 @@ export default function LandingHeader() {
 
                 {/* Mobile Menu */}
                 {mobileMenuOpen && (
-                    <div id="landing-mobile-menu" className="mt-2 lg:hidden">
+                    <div id="landing-mobile-menu" className="mt-2 xl:hidden">
                         <div className="overflow-hidden rounded-xl bg-black/95 shadow-2xl ring-1 ring-wv-border-inverse backdrop-blur-2xl">
                             <div className="p-5 space-y-4">
                                 {navLinks.map((link) => (

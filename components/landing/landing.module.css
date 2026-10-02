@@ -51,6 +51,26 @@
   font-family: var(--font-lp-devanagari), 'Noto Sans Devanagari', 'Kohinoor Devanagari', sans-serif;
 }
 
+/* Keep vowel marks clear and use the matching script face across public copy. */
+.page:lang(hi),
+.page:lang(hi) .display,
+.page:lang(hi) .label {
+  font-family: var(--font-lp-devanagari), var(--font-inter), sans-serif;
+  letter-spacing: normal;
+}
+
+.page:lang(gu),
+.page:lang(gu) .display,
+.page:lang(gu) .label {
+  font-family: var(--font-lp-gujarati), var(--font-inter), sans-serif;
+  letter-spacing: normal;
+}
+
+.page:lang(hi) .display,
+.page:lang(gu) .display {
+  line-height: 1.3;
+}
+
 .figure {
   font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
   font-variant-numeric: tabular-nums;

@@ -7,6 +7,7 @@ import LandingFooter from '@/components/landing/footer'
 import { Beam, Eyebrow } from '@/components/landing/beam'
 import { landingFontVariables } from '@/components/landing/fonts'
 import s from '@/components/landing/landing.module.css'
+import { LanguageSwitcher } from '@/components/i18n/language-switcher'
 
 const legalLinks = [
     { name: 'Terms', href: '/terms' },
@@ -26,11 +27,11 @@ export function LegalShell({ active, children }: { active: LegalPath; children: 
     return (
         <div className={cn(s.page, landingFontVariables, 'min-h-screen')}>
             <header className="safe-area-header sticky top-0 z-40 bg-[var(--lp-paper)] [--page-gutter-x:0.75rem] xs:[--page-gutter-x:1rem] sm:[--page-gutter-x:1.5rem] lg:[--page-gutter-x:2rem]">
-                <div className={cn(s.legalBar, 'mx-auto flex max-w-7xl items-center justify-between gap-3 rounded-b-xl px-3 py-1.5 xs:px-4 md:px-6 lg:px-8')}>
+                <div className={cn(s.legalBar, 'mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-b-xl px-3 py-1.5 xs:px-4 md:px-6 lg:px-8')}>
                     <Link href="/" aria-label="Weavly home" className="relative block h-11 w-28 shrink-0 transition-opacity hover:opacity-80 sm:h-14 sm:w-36">
                         <Image src="/images/WeavlyLogo.png" alt="" fill sizes="9rem" className="object-contain object-left" priority />
                     </Link>
-                    <nav aria-label="Legal pages" className="flex items-center gap-0.5 sm:gap-2">
+                    <nav aria-label="Legal pages" className="order-last flex w-full items-center justify-center gap-0.5 sm:order-none sm:w-auto sm:gap-2">
                         {legalLinks.map((link) => (
                             <Link
                                 key={link.href}
@@ -42,6 +43,7 @@ export function LegalShell({ active, children }: { active: LegalPath; children: 
                             </Link>
                         ))}
                     </nav>
+                    <LanguageSwitcher placement="bottom" className="min-h-[44px] text-white/80 hover:text-white hover:bg-white/10" />
                     {/* Wrapped: the module's display rule would otherwise beat Tailwind's `hidden`. */}
                     <span className="hidden md:block">
                         <Link href="/" className={s.legalLink}>

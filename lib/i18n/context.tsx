@@ -3,6 +3,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, ReactNode } from "react"
 import { en } from "./locales/en"
 import { isBasePlanSurfacePath } from "./base-plan-surface"
+import { isPublicPagePath, loadPublicPageTranslator, type PublicPageTranslator } from "./public-pages"
 
 type TranslationRuntime = typeof import("./runtime")
 
@@ -27,6 +28,7 @@ type TranslationResources = {
   translation: TranslationTree
   legacy: Record<string, string>
   generatedLegacy: Record<string, string>
+  publicPages?: PublicPageTranslator
 }
 
 export type LanguageLoadStatus = "idle" | "loading" | "ready" | "error"
@@ -48,12 +50,13 @@ export const I18nContext = createContext<I18nContextProps | undefined>(undefined
 
 const LANGUAGE_STORAGE_KEY = "weavly_language"
 const SUPPORTED_LANGUAGES: Language[] = ["en", "hi", "gu"]
-const TRANSLATABLE_ATTRIBUTES = ["placeholder", "title", "aria-label", "aria-description", "alt"] as const
+const TRANSLATABLE_ATTRIBUTES = ["placeholder", "title", "aria-label", "aria-description", "aria-valuetext", "alt"] as const
 const SKIP_TEXT_TAGS = new Set(["SCRIPT", "STYLE", "NOSCRIPT", "TEXTAREA", "CODE", "PRE"])
 const SKIP_TRANSLATION_SELECTOR = '[data-i18n-skip="true"]'
 const translationCache = new WeakMap<Map<string, string>, Map<string, string | undefined>>()
 const reverseTranslationCache = new WeakMap<Map<string, string>, Map<string, string>>()
 const resourcePromises = new Map<Exclude<Language, "en">, Promise<TranslationResources>>()
+const publicPageTranslators = new WeakMap<Map<string, string>, PublicPageTranslator>()
 
 function loadLanguageResources(language: Exclude<Language, "en">) {
   const existing = resourcePromises.get(language)
@@ -66,12 +69,13 @@ function loadLanguageResources(language: Exclude<Language, "en">) {
     import("./legacy-generated").then(({ generatedLegacyPhraseTranslations }) => generatedLegacyPhraseTranslations[language]),
     import("./base-plan-phrases"),
     import("./runtime"),
+    loadPublicPageTranslator(language),
   ])
-    .then(([translation, legacy, generatedLegacy, basePlan, runtime]) => {
+    .then(([translation, legacy, generatedLegacy, basePlan, runtime, publicPages]) => {
       BASE_PLAN_PHRASES = basePlan.BASE_PLAN_PHRASES
       applyTranslationGuards = runtime.applyTranslationGuards
       translateStrictBasePlanText = runtime.translateStrictBasePlanText
-      return { translation, legacy, generatedLegacy }
+      return { translation, legacy, generatedLegacy, publicPages }
     })
     .catch((error) => {
       resourcePromises.delete(language)
@@ -112,6 +116,7 @@ function interpolate(template: string, values?: InterpolationValues) {
 
 function collectPhraseMap(language: Language, resources?: TranslationResources) {
   const phraseMap = new Map<string, string>()
+  if (resources?.publicPages) publicPageTranslators.set(phraseMap, resources.publicPages)
 
   function visit(source: TranslationTree, target: TranslationTree) {
     for (const key of Object.keys(source)) {
@@ -179,6 +184,10 @@ function translateKnownFragments(source: string, phraseMap: Map<string, string>)
 
 function translateSourceText(source: string, language: Language, phraseMap: Map<string, string>, strictBasePlan = false) {
   if (language === "en") return source
+
+  if (typeof window !== "undefined" && isPublicPagePath(window.location.pathname)) {
+    return publicPageTranslators.get(phraseMap)?.(source)
+  }
 
   let cache = translationCache.get(phraseMap)
   if (!cache) {
