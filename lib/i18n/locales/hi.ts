@@ -619,6 +619,16 @@ export const hi = {
     code_sent: "सत्यापन कोड मालिक को मोबाइल पर भेज दिया गया है",
     code_requested_success: "एक्सेस कोड का अनुरोध किया गया है। संदेश न मिले तो मालिक से Settings में कोड बनाने को कहें।",
     code_manual_fallback: "WhatsApp उपलब्ध नहीं है। मालिक से Settings में एक्सेस कोड बनाकर सीधे साझा करने को कहें।",
+    transition: {
+      sign_in_title: "साइन इन हो रहा है",
+      sign_in_detail: "आपकी जानकारी जाँची जा रही है",
+      signed_in_title: "आपका वर्कस्पेस खुल रहा है",
+      signed_in_detail: "बस एक पल",
+      sign_up_title: "आपका वर्कस्पेस तैयार हो रहा है",
+      sign_up_detail: "इसमें कुछ सेकंड लगते हैं",
+      sign_out_title: "लॉग आउट हो रहा है",
+      sign_out_detail: "इस डिवाइस का डेटा सुरक्षित रूप से साफ़ हो रहा है",
+    },
   },
   analytics: {
     greeting: {

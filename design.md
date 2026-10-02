@@ -422,8 +422,9 @@ One quiet tempo everywhere. Tokens live in `app/globals.css` `:root`: `--motion-
 - **Live figures**: `<LiveValue value={formatted} />` (`components/ui/live-value.tsx`) for costs, prices and margins that update as inputs change.
 - **Save buttons**: `useSavedFlash()` and a `ui-success-pop` check with `t('base_plan.status.saved')` after a successful save.
 - **Inline alerts**: elements with `role="alert"` fade in automatically.
+- **Auth handoff**: `<AuthTransition open mode stage />` (`components/auth/auth-transition.tsx`) covers sign-in, account creation and log out. Open it on submit and leave it up through the navigation; never delay a redirect for it. Sign-in and sign-up weave on a small loom; log out winds the logo's spool. Use it only for crossing the auth boundary, not for in-app loading (skeletons cover that).
 
-The modal spring (`.modal-spring`) and the liquid switch and segmented thumb are deliberate signatures; leave them as they are.
+The modal spring (`.modal-spring`), the liquid switch and segmented thumb, and the auth loom and spool are deliberate signatures; leave them as they are.
 
 ## Implementation Checklist
 

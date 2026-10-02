@@ -9,7 +9,7 @@ import { toast } from 'sonner'
 import { Loader2, ArrowRight, Eye, EyeOff } from 'lucide-react'
 import AuthLayout from '@/components/auth/auth-layout'
 import { signIn } from '@/app/(auth)/actions/auth'
-import LoadingModal from '@/components/auth/loading-modal'
+import { AuthTransition } from '@/components/auth/auth-transition'
 import { SIGN_IN_TRACE_STORAGE_KEY } from '@/lib/sign-in-trace'
 
 function createTraceId() {
@@ -235,9 +235,10 @@ export default function LoginForm({ recoveryDestination }: { recoveryDestination
                     </p>
                 </div>
             </form>
-            <LoadingModal
-                isOpen={isRedirecting}
-                message="Setting up your dashboard..."
+            <AuthTransition
+                open={loading || isRedirecting}
+                mode="sign-in"
+                stage={isRedirecting ? 'done' : 'working'}
             />
         </AuthLayout>
     )
