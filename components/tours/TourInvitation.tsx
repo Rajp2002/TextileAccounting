@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useId, useLayoutEffect, useRef } from 'react'
-import { ArrowRight, Compass } from 'lucide-react'
+import React, { useId, useLayoutEffect, useRef, useState } from 'react'
+import { ArrowRight, ChevronDown, Compass } from 'lucide-react'
 import type { TourId } from '@/lib/tours/tour-types'
 import { useTranslation } from '@/lib/i18n/context'
 import { tourInvitationCopy } from '@/lib/i18n/tour-invitations'
@@ -29,6 +29,8 @@ export function TourInvitation({ tourId, userId, userMetadata, orgId, onLaunch, 
     const copy = tourInvitationCopy[language]
     const common = tourCommonCopy[language]
     const benefitId = useId()
+    const detailsId = useId()
+    const [detailsExpanded, setDetailsExpanded] = useState(false)
     const launcherRef = useRef<HTMLButtonElement>(null)
     const focusAfterDismiss = useRef(false)
     const { presentation, isStarting, handleDismiss, handleLaunch } = useTourInvitation({ tourId, userId, userMetadata, orgId, onLaunch })
@@ -57,17 +59,29 @@ export function TourInvitation({ tourId, userId, userMetadata, orgId, onLaunch, 
             data-testid={dataTestId ?? `tour-guide-${tourId}`}
             data-tour-id={tourId}
             data-tour-invitation="true"
-            className={cn('@container p-4 text-ink', railGuideSurface, className)}
+            className={cn('mobile-guide-card @container p-4 text-ink', railGuideSurface, className)}
         >
-            <div className="flex flex-col gap-3.5 @lg:flex-row @lg:items-center @lg:gap-6">
-                <div className="min-w-0 flex-1">
+            <div className="mobile-guide-layout grid grid-cols-1 items-center gap-3.5">
+                <div className="mobile-guide-heading order-1 min-w-0">
                     <div className="flex items-center gap-3">
-                        <span className={railGuideIcon} aria-hidden="true"><Compass className="h-5 w-5" /></span>
-                        <h2 className="min-w-0 text-base font-bold leading-snug text-ink">{title}</h2>
+                        <span className={cn(railGuideIcon, 'mobile-guide-icon')} aria-hidden="true"><Compass className="h-5 w-5" /></span>
+                        <h2 className="min-w-0 text-base font-bold leading-snug text-ink">
+                            <button
+                                type="button"
+                                onClick={() => setDetailsExpanded(value => !value)}
+                                aria-expanded={detailsExpanded}
+                                aria-controls={detailsId}
+                                aria-label={`${title} · ${common.moreDetail}`}
+                                className="mobile-guide-title-toggle mobile-touch-target hidden w-full items-center gap-2 rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/60"
+                            >
+                                <span>{title}</span>
+                                <ChevronDown className={cn('h-4 w-4 shrink-0 transition-transform motion-reduce:transition-none', detailsExpanded && 'rotate-180')} aria-hidden="true" />
+                            </button>
+                            <span className="mobile-guide-desktop-title">{title}</span>
+                        </h2>
                     </div>
-                    <p id={benefitId} className="mt-2.5 text-sm leading-relaxed text-body">{copy.benefits[tourId]}</p>
                 </div>
-                <div className="flex flex-wrap items-center gap-2 @lg:shrink-0">
+                <div className="mobile-guide-launch order-3 min-w-0">
                     <button
                         ref={launcherRef}
                         type="button"
@@ -77,12 +91,15 @@ export function TourInvitation({ tourId, userId, userMetadata, orgId, onLaunch, 
                         aria-label={launcherAria}
                         data-testid="tour-invitation-launch"
                         data-tour-control="take-tour"
-                        className={cn(railPrimaryAction, 'inline-flex min-h-12 min-w-[44px] w-full items-center justify-center gap-2 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 disabled:opacity-50 @lg:w-auto')}
+                        className={cn(railPrimaryAction, 'mobile-touch-target inline-flex min-h-12 min-w-[44px] w-full items-center justify-center gap-2 whitespace-normal transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 disabled:opacity-50')}
                     >
                         <span>{isStarting ? copy.loading : common.startGuide}</span>
                         <ArrowRight className="h-4 w-4" aria-hidden="true" />
                     </button>
-                    {dismiss}
+                </div>
+                <div id={detailsId} data-expanded={detailsExpanded} className="mobile-guide-details order-2">
+                    <p id={benefitId} className="text-sm leading-relaxed text-body">{copy.benefits[tourId]}</p>
+                    <div className="mt-1">{dismiss}</div>
                 </div>
             </div>
         </section>

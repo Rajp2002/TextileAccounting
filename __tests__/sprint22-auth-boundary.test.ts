@@ -119,7 +119,8 @@ describe('Sprint 22 auth boundary', () => {
         expect(worker).toContain("'pages-rsc'")
         expect(worker).toContain("'pages-rsc-prefetch'")
         expect(worker).toContain("caches.delete(cacheName)")
-        expect(offline).toContain('protected account pages are not available offline')
+        expect(offline).toContain('<OfflineRecovery />')
+        expect(read('lib/i18n/locales/en.ts')).toContain('protected account pages are not available offline')
     })
 
     it('never signs out a valid session from a standalone PWA storage heuristic', () => {

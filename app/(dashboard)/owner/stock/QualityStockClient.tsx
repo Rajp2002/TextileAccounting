@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { reportPwaWorkflowSuccess } from '@/lib/pwa-workflow-success'
+import { RouteMilestones } from '@/components/performance/route-milestones'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
@@ -99,7 +101,7 @@ export default function QualityStockClient({ initialData }: { initialData: Quali
         try {
             const result = await recordQualityStockAdjustment(input)
             if ('error' in result) { setSaveError(tx(result.errorKey)); return }
-            setForm(null); setRequest(null); setNotice(tx('saved')); await load()
+            setForm(null); setRequest(null); setNotice(tx('saved')); if (!tourSample) reportPwaWorkflowSuccess('stock'); await load()
         } catch { setSaveError(tx('retrySame')) }
         finally { writing.current = false; setSaving(false) }
     }
@@ -136,6 +138,7 @@ export default function QualityStockClient({ initialData }: { initialData: Quali
 
     return (
         <div className="stock-workspace-shell space-y-6" data-i18n-skip="true">
+            <RouteMilestones route="/owner/stock" shellVisible primaryUsable />
             {/* Header */}
             <header className="grid gap-4 border-b border-hairline/80 pb-5 text-center sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center sm:pb-6">
                 <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-ink sm:col-start-2 sm:row-start-1 sm:text-[2rem]">{tx('title')}</h1>
@@ -550,4 +553,3 @@ export default function QualityStockClient({ initialData }: { initialData: Quali
         </div>
     )
 }
-

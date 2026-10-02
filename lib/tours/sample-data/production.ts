@@ -90,7 +90,6 @@ export function productionSampleData(language: Language, variant: ProductionSamp
         settlements: [],
         settlementLines: [],
         payrollPeriods: [],
-        payables: [],
         allocations: [],
     }
 }

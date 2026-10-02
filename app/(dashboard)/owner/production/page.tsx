@@ -23,7 +23,7 @@ export default async function BaseProductionPage({
     }
     const { user, profile } = await requireRole(['owner'])
     const today = getSuratTodayString()
-    const initialData = await loadBaseProductionInitialData(profile.org_id, today)
+    const initialData = await loadBaseProductionInitialData(profile.org_id, today, 'production')
     const initialCostingId = typeof query.costingId === 'string' ? query.costingId : null
 
     return (

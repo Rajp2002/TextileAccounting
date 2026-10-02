@@ -33,6 +33,8 @@ import { formatINR } from '@/lib/finance'
 import {
     buildBasePayrollHistory,
     buildBasePayrollHistoryCsv,
+    type BasePayrollHistoryMachine,
+    type BasePayrollHistoryWorker,
 } from '@/lib/base-payroll-history'
 import type { BasePayrollPaymentMode } from '@/lib/base-production-core'
 
@@ -89,6 +91,94 @@ function SummaryMetric({ label, value, detail }: { label: string; value: string;
     )
 }
 
+type PayrollDetailRow = {
+    key: string
+    values: [string, string, string, string, string]
+}
+
+function PayrollRecordDetails({ columns, rows, total }: {
+    columns: PayrollDetailRow['values']
+    rows: PayrollDetailRow[]
+    total?: { label: string; production: string; earnings: string }
+}) {
+    return <>
+        <div className="mobile-record-details min-w-0 divide-y divide-hairline">
+            {rows.map(row => <dl key={row.key} className="grid min-w-0 grid-cols-2 gap-x-3 gap-y-2 py-3 first:pt-0">
+                {columns.map((label, index) => <div key={index} className={index < 2 || index === 4 ? 'col-span-2 min-w-0' : 'min-w-0'}>
+                    <dt className="text-xs text-muted-foreground">{label}</dt>
+                    <dd className={`min-w-0 break-words [overflow-wrap:anywhere] text-sm ${index === 0 || index === 4 ? 'font-semibold text-ink' : 'text-body'}`}>{row.values[index]}</dd>
+                </div>)}
+            </dl>)}
+            {total && <div className="space-y-2 py-3">
+                <p className="text-sm font-semibold text-ink">{total.label}</p>
+                <dl className="grid min-w-0 grid-cols-2 gap-3">
+                    <div className="min-w-0"><dt className="text-xs text-muted-foreground">{columns[3]}</dt><dd className="break-words [overflow-wrap:anywhere] text-sm font-bold text-ink">{total.production}</dd></div>
+                    <div className="min-w-0"><dt className="text-xs text-muted-foreground">{columns[4]}</dt><dd className="break-words [overflow-wrap:anywhere] text-sm font-bold text-ink">{total.earnings}</dd></div>
+                </dl>
+            </div>}
+        </div>
+        <div className="desktop-record-details min-w-0 overflow-x-auto rounded-lg border border-hairline">
+            <table className={`w-full text-sm ${total ? 'min-w-[720px]' : 'min-w-[640px]'}`}>
+                <thead className="bg-surface-soft text-left text-xs text-muted-foreground"><tr>{columns.map((label, index) => <th key={index} scope="col" className={`px-3 py-2 ${index > 1 ? 'text-right' : ''}`}>{label}</th>)}</tr></thead>
+                <tbody className="divide-y divide-hairline">{rows.map(row => <tr key={row.key}>{row.values.map((value, index) => <td key={index} className={`px-3 py-3 ${index > 1 ? 'text-right' : ''} ${index === 0 || index === 3 ? 'font-semibold text-ink' : index === 4 ? 'font-bold text-ink' : 'text-body'}`}>{value}</td>)}</tr>)}</tbody>
+                {total && <tfoot className="border-t border-hairline bg-surface-soft/70 font-bold text-ink"><tr><td className="px-3 py-3" colSpan={3}>{total.label}</td><td className="px-3 py-3 text-right">{total.production}</td><td className="px-3 py-3 text-right">{total.earnings}</td></tr></tfoot>}
+            </table>
+        </div>
+    </>
+}
+
+export function PayrollWorkerEarnings({ worker }: { worker: BasePayrollHistoryWorker }) {
+    const { t } = useTranslation()
+    const isSalary = worker.earnings.some(earning => earning.payType === 'fixed_monthly')
+    const rows: PayrollDetailRow[] = worker.earnings.map((earning, index) => ({
+        key: `${earning.machineId ?? earning.machineLabel}:${earning.costingLabel}:${earning.rate}:${index}`,
+        values: [
+            earning.machineLabel,
+            earning.costingLabel,
+            earning.kind === 'manual_incentive' ? '—' : `${formatINR(earning.rate)}/${earning.payType === 'fixed_monthly' ? t('payroll.recordDetails.month') : 'm'}`,
+            earning.payType === 'fixed_monthly' || earning.kind === 'manual_incentive' ? '—' : formatMeters(earning.meters),
+            formatINR(earning.grossPay),
+        ],
+    }))
+    return <PayrollRecordDetails
+        columns={[
+            t(isSalary ? 'payroll.recordDetails.payBasis' : 'payroll.recordDetails.machine'),
+            t(isSalary ? 'payroll.recordDetails.salaryPeriod' : 'payroll.recordDetails.costing'),
+            t('payroll.recordDetails.rate'), t('payroll.recordDetails.production'), t('payroll.recordDetails.earnings'),
+        ]}
+        rows={rows}
+        total={{ label: t('payroll.recordDetails.cumulativeWorkerTotal'), production: formatMeters(worker.meters), earnings: formatINR(worker.grossPay) }}
+    />
+}
+
+export function PayrollMachineWorkers({ machine }: { machine: BasePayrollHistoryMachine }) {
+    const { t } = useTranslation()
+    const rows: PayrollDetailRow[] = machine.workers.map((worker, index) => ({
+        key: `${worker.workerId}:${worker.costingLabel}:${worker.rate}:${index}`,
+        values: [worker.workerName, worker.costingLabel, `${formatINR(worker.rate)}/m`, formatMeters(worker.meters), formatINR(worker.grossPay)],
+    }))
+    return <PayrollRecordDetails columns={[
+        t('payroll.recordDetails.worker'), t('payroll.recordDetails.costing'), t('payroll.recordDetails.rate'),
+        t('payroll.recordDetails.production'), t('payroll.recordDetails.workerCost'),
+    ]} rows={rows} />
+}
+
+export function PayrollWorkerReceipt({ worker }: { worker: BasePayrollHistoryWorker }) {
+    const { t, tx } = useTranslation()
+    const fields = [
+        [t('payroll.recordDetails.advanceBefore'), formatINR(worker.advanceBalanceBefore)],
+        [t('payroll.recordDetails.recovered'), formatINR(worker.advanceRecovered)],
+        [t('payroll.recordDetails.balanceCarried'), formatINR(worker.remainingAdvanceBalance)],
+        [t('payroll.recordDetails.payment'), tx(paymentModeLabel(worker.paymentMode))],
+        [t('payroll.recordDetails.cumulativeNetPay'), formatINR(worker.netPayout)],
+    ]
+    return <dl className="grid min-w-0 gap-3 rounded-lg bg-surface-soft/60 p-3 text-sm sm:grid-cols-2 lg:grid-cols-5">
+        {fields.map(([label, value], index) => <div key={label} className="min-w-0">
+            <dt className="text-xs text-muted-foreground">{label}</dt>
+            <dd className={`break-words [overflow-wrap:anywhere] ${index === 4 ? 'font-black text-saffron-deep' : 'font-bold text-ink'}`}>{value}</dd>
+        </div>)}
+    </dl>
+}
 
 
 export default function BasePayrollRecords({
@@ -301,13 +391,13 @@ export default function BasePayrollRecords({
                                 const isSalary = worker.earnings.some(earning => earning.payType === 'fixed_monthly')
                                 const machineCount = new Set(worker.earnings.filter(earning => earning.payType !== 'fixed_monthly' && earning.kind !== 'manual_incentive').map((earning) => earning.machineId ?? earning.machineLabel)).size
                                 return (
-                                    <Card key={worker.settlementId} className="[contain-intrinsic-size:140px] [content-visibility:auto]">
+                                    <Card key={worker.settlementId} className="min-w-0 [contain-intrinsic-size:140px] [content-visibility:auto]">
                                         <button type="button" className="w-full text-left" onClick={() => toggleWorker(worker.settlementId)} aria-expanded={expanded}>
                                             <CardHeader className="transition-colors hover:bg-surface-soft/50">
                                                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                                                     <div className="flex min-w-0 items-start gap-2">
                                                         {expanded ? <ChevronDown className="mt-0.5 h-4 w-4 shrink-0 text-saffron-deep" /> : <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />}
-                                                        <div><CardTitle className="text-base">{worker.workerName}{worker.status === 'reversed' ? ' · Reversed' : ''}</CardTitle><CardDescription>{isSalary ? 'Fixed monthly salary' : formatCount(machineCount, 'machine')} · {worker.status === 'reversed' ? 'original record' : 'paid'} {formatDateOnly(worker.paidAt)}</CardDescription></div>
+                                                        <div className="min-w-0"><CardTitle className="break-words [overflow-wrap:anywhere] text-base">{worker.workerName}{worker.status === 'reversed' ? ' · Reversed' : ''}</CardTitle><CardDescription>{isSalary ? 'Fixed monthly salary' : formatCount(machineCount, 'machine')} · {worker.status === 'reversed' ? 'original record' : 'paid'} {formatDateOnly(worker.paidAt)}</CardDescription></div>
                                                     </div>
                                                     <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-4">
                                                         <div><p className="text-xs text-muted-foreground">{isSalary ? 'Pay basis' : 'Production'}</p><p className="font-bold text-ink">{isSalary ? 'Monthly salary' : formatMeters(worker.meters)}</p></div>
@@ -319,32 +409,10 @@ export default function BasePayrollRecords({
                                             </CardHeader>
                                         </button>
                                         {expanded && (
-                                            <CardContent className="space-y-4 border-t border-hairline pt-4">
+                                            <CardContent className="min-w-0 space-y-4 border-t border-hairline pt-4">
                                                 {worker.status === 'reversed' ? <p className="rounded-lg bg-warning/10 p-3 text-sm">Reversed {formatDateOnly(original?.reversed_at)}: {worker.reversalReason}. The amounts below are the preserved original record.</p> : <div className="space-y-2"><Button variant="outline" size="sm" disabled={!canReverse} onClick={() => { setReversingId(worker.settlementId); setReversalReason(''); setPaymentNotMade(false) }}><span data-i18n-skip="true">{t('payroll.resolveMistaken')}</span></Button>{!canReverse && <p className="text-xs text-body">{hasLaterPayment ? 'A later payment depends on this record. Resolve the latest settlement first.' : 'This older record lacks the per-advance receipt needed for a safe automatic reversal.'}</p>}</div>}
-                                                <div className="overflow-x-auto rounded-lg border border-hairline">
-                                                    <table className="w-full min-w-[720px] text-sm">
-                                                        <thead className="bg-surface-soft text-left text-xs text-muted-foreground"><tr><th className="px-3 py-2">{isSalary ? 'Pay basis' : 'Machine'}</th><th className="px-3 py-2">{isSalary ? 'Salary period' : 'Costing'}</th><th className="px-3 py-2 text-right">Rate</th><th className="px-3 py-2 text-right">Production</th><th className="px-3 py-2 text-right">Earnings</th></tr></thead>
-                                                        <tbody className="divide-y divide-hairline">
-                                                            {worker.earnings.map((earning) => (
-                                                                <tr key={`${earning.machineId ?? earning.machineLabel}:${earning.costingLabel}:${earning.rate}`}>
-                                                                    <td className="px-3 py-3 font-semibold text-ink">{earning.machineLabel}</td>
-                                                                    <td className="px-3 py-3 text-body">{earning.costingLabel}</td>
-                                                                    <td className="px-3 py-3 text-right text-body">{earning.kind === 'manual_incentive' ? '—' : <>{formatINR(earning.rate)}/{earning.payType === 'fixed_monthly' ? 'month' : 'm'}</>}</td>
-                                                                    <td className="px-3 py-3 text-right font-semibold text-ink">{earning.payType === 'fixed_monthly' || earning.kind === 'manual_incentive' ? '—' : formatMeters(earning.meters)}</td>
-                                                                    <td className="px-3 py-3 text-right font-bold text-ink">{formatINR(earning.grossPay)}</td>
-                                                                </tr>
-                                                            ))}
-                                                        </tbody>
-                                                        <tfoot className="border-t border-hairline bg-surface-soft/70 font-bold text-ink"><tr><td className="px-3 py-3" colSpan={3}>Cumulative worker total</td><td className="px-3 py-3 text-right">{formatMeters(worker.meters)}</td><td className="px-3 py-3 text-right">{formatINR(worker.grossPay)}</td></tr></tfoot>
-                                                    </table>
-                                                </div>
-                                                <div className="grid gap-3 rounded-lg bg-surface-soft/60 p-3 text-sm sm:grid-cols-2 lg:grid-cols-5">
-                                                    <div><p className="text-xs text-muted-foreground">Advance before</p><p className="font-bold text-ink">{formatINR(worker.advanceBalanceBefore)}</p></div>
-                                                    <div><p className="text-xs text-muted-foreground">Recovered</p><p className="font-bold text-ink">{formatINR(worker.advanceRecovered)}</p></div>
-                                                    <div><p className="text-xs text-muted-foreground">Balance carried</p><p className="font-bold text-ink">{formatINR(worker.remainingAdvanceBalance)}</p></div>
-                                                    <div><p className="text-xs text-muted-foreground">Payment</p><p className="font-bold text-ink">{paymentModeLabel(worker.paymentMode)}</p></div>
-                                                    <div><p className="text-xs text-muted-foreground">Cumulative net pay</p><p className="font-black text-saffron-deep">{formatINR(worker.netPayout)}</p></div>
-                                                </div>
+                                                <PayrollWorkerEarnings worker={worker} />
+                                                <PayrollWorkerReceipt worker={worker} />
                                             </CardContent>
                                         )}
                                     </Card>
@@ -357,16 +425,16 @@ export default function BasePayrollRecords({
                                 const key = machine.machineId ?? machine.machineLabel
                                 const expanded = expandedMachines.has(key)
                                 return (
-                                    <Card key={key} className="[contain-intrinsic-size:120px] [content-visibility:auto]">
+                                    <Card key={key} className="min-w-0 [contain-intrinsic-size:120px] [content-visibility:auto]">
                                         <button type="button" className="w-full text-left" onClick={() => toggleMachine(key)} aria-expanded={expanded}>
                                             <CardHeader className="transition-colors hover:bg-surface-soft/50">
                                                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                                    <div className="flex items-start gap-2">{expanded ? <ChevronDown className="mt-0.5 h-4 w-4 text-saffron-deep" /> : <ChevronRight className="mt-0.5 h-4 w-4 text-muted-foreground" />}<div><CardTitle className="text-base">{machine.machineLabel}</CardTitle><CardDescription>{formatCount(machine.workerCount, 'worker')} · {formatCount(machine.costingCount, 'costing')}</CardDescription></div></div>
+                                                    <div className="flex items-start gap-2">{expanded ? <ChevronDown className="mt-0.5 h-4 w-4 text-saffron-deep" /> : <ChevronRight className="mt-0.5 h-4 w-4 text-muted-foreground" />}<div className="min-w-0"><CardTitle className="break-words [overflow-wrap:anywhere] text-base">{machine.machineLabel}</CardTitle><CardDescription>{formatCount(machine.workerCount, 'worker')} · {formatCount(machine.costingCount, 'costing')}</CardDescription></div></div>
                                                     <div className="flex gap-6 text-sm"><div><p className="text-xs text-muted-foreground">Period production</p><p className="font-bold text-ink">{formatMeters(machine.meters)}</p></div><div><p className="text-xs text-muted-foreground">Worker cost</p><p className="font-black text-saffron-deep">{formatINR(machine.grossPay)}</p></div></div>
                                                 </div>
                                             </CardHeader>
                                         </button>
-                                        {expanded && <CardContent className="border-t border-hairline pt-4"><div className="overflow-x-auto rounded-lg border border-hairline"><table className="w-full min-w-[640px] text-sm"><thead className="bg-surface-soft text-left text-xs text-muted-foreground"><tr><th className="px-3 py-2">Worker</th><th className="px-3 py-2">Costing</th><th className="px-3 py-2 text-right">Rate</th><th className="px-3 py-2 text-right">Production</th><th className="px-3 py-2 text-right">Worker cost</th></tr></thead><tbody className="divide-y divide-hairline">{machine.workers.map((worker, index) => <tr key={`${worker.workerId}:${worker.costingLabel}:${worker.rate}:${index}`}><td className="px-3 py-3 font-semibold text-ink">{worker.workerName}</td><td className="px-3 py-3 text-body">{worker.costingLabel}</td><td className="px-3 py-3 text-right">{formatINR(worker.rate)}/m</td><td className="px-3 py-3 text-right font-semibold">{formatMeters(worker.meters)}</td><td className="px-3 py-3 text-right font-bold">{formatINR(worker.grossPay)}</td></tr>)}</tbody></table></div></CardContent>}
+                                        {expanded && <CardContent className="min-w-0 border-t border-hairline pt-4"><PayrollMachineWorkers machine={machine} /></CardContent>}
                                     </Card>
                                 )
                             })}

@@ -33,7 +33,7 @@ import {
     removeBaseWorkerMachineAssignment,
     upsertBaseWorkerMachineAssignment,
 } from './actions'
-import type { BaseProductionInitialData } from './loaders'
+import type { BaseAssignmentsInitialData } from '../assignments/loaders'
 import { buildWorkerColorMap, DEFAULT_PALETTE } from './worker-colors'
 
 const GuidedTour = dynamic(() => import('@/components/tours/GuidedTour').then(module => module.GuidedTour), { ssr: false }) as typeof GuidedTourComponent
@@ -80,7 +80,7 @@ export default function BaseAssignmentWorkspace({
     focusMachineId,
     initialShift,
 }: {
-    initialData: BaseProductionInitialData
+    initialData: BaseAssignmentsInitialData
     tourMetadata?: Record<string, unknown>
     focusMachineId?: string
     focusWorkerId?: string

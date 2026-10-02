@@ -62,6 +62,7 @@ describe('Guided tours teach the real page, never a lookalike', () => {
         const sources = [...walk('app'), ...walk('components')].filter(file => !file.includes('/tours/')).map(file => read(file))
         // Attributes set from a variable rather than a literal: the literal values the tour selects are proven here instead.
         const DYNAMIC: { attribute: string; values: string[]; source: string }[] = [
+            { attribute: 'data-daily-tour', values: ['reading', 'pending'], source: "tourTarget={index === 0 ? 'reading' : context.machineId === firstPendingMachineId ? 'pending' : undefined}" },
             { attribute: 'data-dispatch-tour', values: ['confirm', 'receipt', 'payment'], source: 'data-dispatch-tour={operation ?? undefined}' },
             { attribute: 'data-stock-tour', values: ['opening', 'receipt', 'correction'], source: "data-stock-tour={entry?.kind === 'recipe' ? 'link' : entry?.kind}" },
             { attribute: 'data-tour-anchor', values: ['dispatch.new'], source: '<NewDispatchButton tourAnchor="dispatch.new"' },

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useSyncExternalStore } from 'react'
 import { SlidersHorizontal } from 'lucide-react'
 import { useTranslation } from '@/lib/i18n/context'
 import type { SubscriptionTier } from '@/lib/subscription-access'
@@ -12,6 +12,56 @@ import { type PayrollCycleConfig } from '@/lib/payroll-cycle-engine'
 import { SecurityCard } from './security-card'
 import { DeletionReviewCard } from './deletion-review-card'
 import { useUnloadProtection } from './unsaved-changes-dialog'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+    readStartupIntroPreference, saveStartupIntroPreference, STARTUP_INTRO_CHANGE_EVENT,
+    type StartupIntroPreference,
+} from '@/lib/intro/startup-preference'
+
+function subscribeStartupPreference(onChange: () => void) {
+    window.addEventListener('storage', onChange)
+    window.addEventListener(STARTUP_INTRO_CHANGE_EVENT, onChange)
+    return () => {
+        window.removeEventListener('storage', onChange)
+        window.removeEventListener(STARTUP_INTRO_CHANGE_EVENT, onChange)
+    }
+}
+
+function currentStartupPreference() {
+    try { return readStartupIntroPreference(window.localStorage) } catch { return null }
+}
+
+const serverStartupPreference = (): StartupIntroPreference => 'first-launch'
+
+function StartupIntroSetting() {
+    const { t } = useTranslation()
+    const preference = useSyncExternalStore(subscribeStartupPreference, currentStartupPreference, serverStartupPreference)
+    const [saveFailed, setSaveFailed] = useState(false)
+    const changePreference = (value: string) => {
+        if (value !== 'first-launch' && value !== 'always' && value !== 'never') return
+        let saved = false
+        try { saved = saveStartupIntroPreference(window.localStorage, value) } catch { /* Unavailable device storage. */ }
+        setSaveFailed(!saved)
+        if (saved) window.dispatchEvent(new Event(STARTUP_INTRO_CHANGE_EVENT))
+    }
+    return <section aria-labelledby="startup-intro-heading" className="rounded-2xl border border-hairline bg-surface p-6 shadow-xs sm:p-8">
+        <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0 space-y-1">
+                <h2 id="startup-intro-heading" className="text-lg font-bold text-ink">{t('common.startup_intro_title')}</h2>
+                <p id="startup-intro-description" className="text-sm leading-relaxed text-muted-foreground">{t('common.startup_intro_body')}</p>
+            </div>
+            <Select value={preference ?? 'first-launch'} onValueChange={changePreference} disabled={preference === null}>
+                <SelectTrigger aria-labelledby="startup-intro-heading" aria-describedby="startup-intro-description" className="min-h-11 w-full whitespace-normal text-left sm:w-auto sm:min-w-44"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="first-launch">{t('common.startup_intro_first')}</SelectItem>
+                    <SelectItem value="always">{t('common.startup_intro_always')}</SelectItem>
+                    <SelectItem value="never">{t('common.startup_intro_never')}</SelectItem>
+                </SelectContent>
+            </Select>
+        </div>
+        {(saveFailed || preference === null) && <p role="status" className="mt-3 text-sm text-risk">{t('common.startup_intro_error')}</p>}
+    </section>
+}
 
 export interface PlanAwareSettingsViewProps {
     profile: {
@@ -118,6 +168,7 @@ export function PlanAwareSettingsView({
                         onDirtyChange={setPayrollDirty}
                     />}
                     <SecurityCard email={profile.email} />
+                    <StartupIntroSetting />
 
                     {/* Section 6: Account & Factory Deletion (Universal) */}
                     <DeletionReviewCard

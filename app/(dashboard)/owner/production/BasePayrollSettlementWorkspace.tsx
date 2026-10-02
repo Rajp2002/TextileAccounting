@@ -1,5 +1,8 @@
 'use client'
 
+import { usePwaRefreshGuard } from '@/hooks/use-pwa-refresh-guard'
+import { reportPwaWorkflowSuccess } from '@/lib/pwa-workflow-success'
+
 import { useTranslation } from '@/lib/i18n/context'
 import { useTourSample } from '@/lib/tours/sample-context'
 import { tourSurfaceProps } from '@/lib/tours/sample-surface'
@@ -170,6 +173,8 @@ export default function BasePayrollSettlementWorkspace({
     const [isCompleting, setIsCompleting] = useState(false)
     const [completedSuccess, setCompletedSuccess] = useState(externalPeriodRecord?.status === 'settled')
 
+    usePwaRefreshGuard(() => !isPaying && !isReversing && !isCompleting && !payingWorkerId && !reopenConfirmOpen && !completeConfirmOpen)
+
     // Live summary computation
     const summary = useMemo(
         () =>
@@ -275,6 +280,7 @@ export default function BasePayrollSettlementWorkspace({
             toast.success(`Payment of ${formatINR(payingWorker.net_payout)} recorded for ${payingWorker.worker_name}.`)
             setPayingWorkerId(null)
             setPaymentNote('')
+            if (!payrollTourStep) reportPwaWorkflowSuccess('payroll')
             onSuccess?.()
         } catch (error: unknown) {
             console.error('[settle] payment confirmation failed', error)
@@ -412,6 +418,7 @@ export default function BasePayrollSettlementWorkspace({
             })
 
             setCompletedSuccess(true)
+            if (!payrollTourStep) reportPwaWorkflowSuccess('payroll')
             setCompleteConfirmOpen(false)
             toast.success(`${period.label} payroll completely settled and preserved!`)
             onSuccess?.()
@@ -426,7 +433,7 @@ export default function BasePayrollSettlementWorkspace({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange} {...surface.root}>
-            <DialogContent {...surface.content} className="fixed inset-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 w-full sm:w-[92vw] sm:max-w-6xl h-full sm:h-[90vh] sm:max-h-[920px] rounded-none sm:rounded-3xl border border-hairline bg-surface p-0 shadow-2xl flex flex-col overflow-hidden">
+            <DialogContent {...surface.content} showCloseButton={false} className="fixed inset-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 w-full sm:w-[92vw] sm:max-w-6xl h-full sm:h-[90vh] sm:max-h-[920px] rounded-none sm:rounded-3xl border border-hairline bg-surface p-0 shadow-2xl flex flex-col overflow-hidden">
                 {/* 1. Header */}
                 <div className="sticky top-0 z-20 flex items-center justify-between border-b border-hairline bg-surface px-4 py-3 sm:px-6 sm:py-4">
                     <div className="min-w-0 flex items-center gap-3">
@@ -468,7 +475,7 @@ export default function BasePayrollSettlementWorkspace({
                         variant="ghost"
                         size="icon"
                         onClick={() => onOpenChange(false)}
-                        className="h-9 w-9 rounded-xl text-muted-foreground hover:text-ink"
+                        className="mobile-touch-target h-9 w-9 shrink-0 rounded-xl text-muted-foreground hover:text-ink"
                         aria-label="Close settlement workspace"
                     >
                         <X className="h-5 w-5" />
@@ -558,11 +565,12 @@ export default function BasePayrollSettlementWorkspace({
                 {/* 4. Controls: Type Filter, Search, Outstanding Toggle */}
                 <div className="flex flex-col gap-3 border-b border-hairline bg-surface p-3 sm:px-6 sm:py-3 sm:flex-row sm:items-center sm:justify-between">
                     {/* Worker-Type Filter */}
-                    <div className="inline-flex rounded-xl border border-hairline bg-surface-soft p-1">
+                    <div className="inline-flex flex-wrap rounded-xl border border-hairline bg-surface-soft p-1">
                         <button
                             type="button"
                             onClick={() => setTypeFilter('all')}
-                            className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
+                            aria-pressed={typeFilter === 'all'}
+                            className={`mobile-touch-target px-3 py-1 text-xs font-bold rounded-lg transition-all ${
                                 typeFilter === 'all'
                                     ? 'bg-loom text-white shadow-xs'
                                     : 'text-muted-foreground hover:text-ink'
@@ -573,7 +581,8 @@ export default function BasePayrollSettlementWorkspace({
                         <button
                             type="button"
                             onClick={() => setTypeFilter('piece_rate')}
-                            className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
+                            aria-pressed={typeFilter === 'piece_rate'}
+                            className={`mobile-touch-target px-3 py-1 text-xs font-bold rounded-lg transition-all ${
                                 typeFilter === 'piece_rate'
                                     ? 'bg-loom text-white shadow-xs'
                                     : 'text-muted-foreground hover:text-ink'
@@ -584,7 +593,8 @@ export default function BasePayrollSettlementWorkspace({
                         <button
                             type="button"
                             onClick={() => setTypeFilter('fixed_monthly')}
-                            className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
+                            aria-pressed={typeFilter === 'fixed_monthly'}
+                            className={`mobile-touch-target px-3 py-1 text-xs font-bold rounded-lg transition-all ${
                                 typeFilter === 'fixed_monthly'
                                     ? 'bg-loom text-white shadow-xs'
                                     : 'text-muted-foreground hover:text-ink'
@@ -594,7 +604,7 @@ export default function BasePayrollSettlementWorkspace({
                         </button>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
                         {/* Search Input */}
                         <div className="relative flex-1 sm:w-64">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -731,7 +741,7 @@ export default function BasePayrollSettlementWorkspace({
                                                         <button
                                                             type="button"
                                                             onClick={() => setViewingWorkerId(payable.worker_id)}
-                                                            className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--wv-moss-700)] hover:underline"
+                                                            className="mobile-touch-target inline-flex items-center gap-1 text-xs font-semibold text-[var(--wv-moss-700)] hover:underline"
                                                         >
                                                             <Check className="h-4 w-4" />
                                                             <span>Paid · {paymentModeLabel(payable.payment_mode)}</span>
@@ -770,8 +780,10 @@ export default function BasePayrollSettlementWorkspace({
                                                         variant="ghost"
                                                         size="icon-xs"
                                                         onClick={() => toggleExpand(payable.worker_id)}
-                                                        className="h-7 w-7 rounded-lg text-muted-foreground hover:text-ink"
+                                                        className="mobile-touch-target h-7 w-7 shrink-0 rounded-lg text-muted-foreground hover:text-ink"
                                                         aria-label="Toggle calculation breakdown"
+                                                        aria-expanded={isExpanded}
+                                                        aria-controls={`calculation-breakdown-${payable.worker_id}`}
                                                     >
                                                         {isExpanded ? (
                                                             <ChevronDown className="h-4 w-4" />
@@ -785,7 +797,7 @@ export default function BasePayrollSettlementWorkspace({
 
                                         {/* Expanded Provenance Breakdown */}
                                         {isExpanded && (
-                                            <div className="border-t border-hairline bg-surface-soft/50 p-4 text-xs space-y-2">
+                                            <div id={`calculation-breakdown-${payable.worker_id}`} className="border-t border-hairline bg-surface-soft/50 p-4 text-xs space-y-2">
                                                 <p className="font-bold text-ink uppercase tracking-wider text-[10px]">
                                                     Calculation Breakdown
                                                 </p>

@@ -40,7 +40,7 @@ describe('Desktop workspace composition (sidebar | left rail | workspace | right
 
     it('anchors the live cost floating shortcut cleanly without overflowing into center container', () => {
         expect(estimator).toContain('data-testid="mobile-live-estimate-shortcut"')
-        expect(estimator).toMatch(/className="[^"]*fixed bottom-\[calc\(76px\+env\(safe-area-inset-bottom,0px\)\)\] right-4[^"]*lg:right-6 xl:right-8"/)
+        expect(estimator).toMatch(/className="[^"]*fixed mobile-floating-action bottom-6 right-4[^"]*lg:right-6 xl:right-8"/)
     })
 
     it('uses one Rate Book guide rail inline on phones and pinned on wide desktops', () => {

@@ -293,6 +293,7 @@ export function startWeavingIntro({ surface, overlay, skipButton, handle }: Star
 
     const doSkip = () => {
         if (finished || !lastFrame || skip || t >= HANDOFF_END) return
+        handle.markSeen()
         skip = skipFrom(t, lastFrame)
     }
 
@@ -371,7 +372,7 @@ export function startWeavingIntro({ surface, overlay, skipButton, handle }: Star
         if (!paused && frames > 2 && frames <= 8 && realDt > 0.07) slowFrames++
         if (slowFrames >= 4 || (!paused && (now - startedAt) / 1000 > introDuration(surface) + 3)) { degrade(); return }
         const s = frameAt(t)
-        if (!s || s.done) { finish(true); return }
+        if (!s || s.done) { if (s?.done) handle.markSeen(); finish(true); return }
         raf = requestAnimationFrame(tick)
     }
 
@@ -470,7 +471,7 @@ export function startWeavingIntro({ surface, overlay, skipButton, handle }: Star
             const hooks: IntroTestHooks = {
                 renderAt: (time) => { t = time; return frameAt(time) },
                 skipAt: (time) => { t = time; skip = null; frameAt(time); doSkip() },
-                complete: () => finish(true),
+                complete: () => { handle.markSeen(); finish(true) },
                 duration: introDuration(surface),
             }
             ;(window as IntroWindow & { __weavlyIntroTest?: IntroTestHooks }).__weavlyIntroTest = hooks

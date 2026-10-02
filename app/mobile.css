@@ -44,7 +44,10 @@
   }
 }
 
-.mobile-navigation { display: none; }
+.mobile-navigation,
+.mobile-workflow-navigation,
+.mobile-record-details,
+.mobile-comparison-label { display: none; }
 
 @media (min-width: 768px) {
   .mobile-workspace-content { padding-left: 248px; padding-right: 0; }
@@ -59,15 +62,42 @@
   [data-slot="dropdown-menu-item"],
   [data-slot="dropdown-menu-checkbox-item"],
   [data-slot="dropdown-menu-radio-item"],
-  [data-slot="tabs-trigger"] {
+  [data-slot="tabs-trigger"],
+  [data-slot="dialog-close"],
+  [data-slot="sheet-close"],
+  [data-slot="switch-field"],
+  .mobile-touch-target {
     min-height: 44px;
   }
 
-  [data-slot="button"] { min-width: 44px; }
+  [data-slot="button"],
+  [data-slot="dialog-close"],
+  [data-slot="sheet-close"],
+  .mobile-touch-target { min-width: 44px; }
+  .mobile-touch-target { touch-action: manipulation; }
   [data-slot="tabs-list"] { height: auto; min-height: 50px; }
 }
 
 @media (max-width: 767.98px), (pointer: coarse) and (max-height: 500px) and (max-width: 1023.98px) {
+  /* Keep route help one tap away without pushing the task below the fold. */
+  .mobile-guide-card { padding: 0.75rem; }
+  .mobile-guide-layout {
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 0.75rem;
+    row-gap: 0;
+  }
+  .mobile-guide-title-toggle { display: flex; }
+  .mobile-guide-desktop-title,
+  .mobile-guide-icon { display: none; }
+  .mobile-guide-launch { order: 2; }
+  .mobile-guide-details {
+    display: none;
+    order: 3;
+    grid-column: 1 / -1;
+    padding-top: 0.5rem;
+  }
+  .mobile-guide-details[data-expanded="true"] { display: block; }
+
   html {
     scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 16px);
     scroll-padding-bottom: 20px;
@@ -77,6 +107,36 @@
   }
   html:has(.mobile-workspace-header) { scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 76px); }
 
+  .mobile-workflow-navigation, .mobile-record-details { display: block; }
+  .desktop-record-details { display: none; }
+  [data-slot="label"] { font-size: 14px; line-height: 1.4; }
+  [data-slot="button"] { font-size: 14px; }
+  .mobile-workflow-link,
+  .mobile-record-details dd { font-size: 14px; }
+
+  /* Keep each saved metric and its old/new/change values together on phones.
+     The existing table data/formatting is shared with the desktop layout. */
+  .mobile-comparison-scroll { max-height: none; overflow: visible; }
+  .mobile-comparison-table { display: block; min-width: 0; font-size: 14px; }
+  .mobile-comparison-table thead,
+  .mobile-comparison-table tbody { display: block; }
+  .mobile-comparison-table tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mobile-comparison-table th,
+  .mobile-comparison-table td { min-width: 0; overflow-wrap: anywhere; }
+  .mobile-comparison-table [colspan],
+  .mobile-comparison-table .comparison-metric,
+  .mobile-comparison-table .comparison-change { grid-column: 1 / -1; }
+  .mobile-comparison-table .comparison-metric { padding-bottom: 0; }
+  .mobile-comparison-table .comparison-change { padding-top: 0; }
+  .mobile-comparison-table .comparison-column-label {
+    position: absolute; width: 1px; height: 1px; padding: 0;
+    margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap;
+  }
+  .mobile-comparison-label {
+    display: block; margin-bottom: 4px; font-family: var(--font-sans);
+    font-size: 12px; font-weight: 500; color: var(--muted-foreground);
+  }
+
   [data-workspace-sidebar] { display: none; }
   .mobile-workspace-content {
     padding-left: env(safe-area-inset-left, 0px);
@@ -84,6 +144,26 @@
     padding-bottom: calc(var(--mobile-nav-height) + 12px);
   }
   .mobile-workspace-content > .dashboard-main { min-height: calc(100svh - var(--mobile-nav-height)); }
+
+  /* Phone entry uses the page scroll, including a rotated phone. A desktop
+     viewport subtraction can otherwise leave only a fraction of one row. */
+  .production-daily-readings {
+    max-height: none;
+    overflow-y: visible;
+    overscroll-behavior: auto;
+  }
+  .production-daily-register { min-height: 0; }
+
+  /* Navigation measures wrapped labels and already includes the safe area. */
+  .mobile-sticky-action,
+  .mobile-floating-action,
+  [data-mobile-install-nudge] { bottom: calc(var(--mobile-nav-height) + 12px); }
+  [data-mobile-install-nudge] :is(p, button, a) { font-size: 14px; }
+  :root[data-mobile-keyboard] .mobile-sticky-action,
+  :root[data-mobile-keyboard] .mobile-floating-action {
+    visibility: hidden;
+    pointer-events: none;
+  }
 
   .mobile-navigation {
     position: fixed;
@@ -130,7 +210,7 @@
   }
 
   .mobile-navigation-icon svg { width: 20px; height: 20px; stroke-width: 1.8; }
-  .mobile-navigation-label { max-width: 100%; font-size: 11px; line-height: 1.25; font-weight: 600; overflow-wrap: anywhere; }
+  .mobile-navigation-label { max-width: 100%; font-size: 12px; line-height: 1.25; font-weight: 600; overflow-wrap: anywhere; }
   .mobile-navigation-item[data-active="true"] { color: var(--accent-foreground); }
   .mobile-navigation-item[data-active="true"] .mobile-navigation-icon { background: var(--accent); }
   .mobile-navigation-item[data-active="true"] svg { stroke-width: 2.4; }
@@ -181,7 +261,7 @@
     scroll-padding-block: 16px;
   }
 
-  [data-slot="dialog-content"][data-close-button="true"] > [data-slot="dialog-header"] { padding-right: 36px; }
+  [data-slot="dialog-content"][data-close-button="true"] > [data-slot="dialog-header"] { padding-right: 48px; }
 
   [data-slot="sheet-content"] {
     max-height: calc(var(--mobile-viewport-height) - env(safe-area-inset-top, 0px));
@@ -303,7 +383,7 @@
 @media (max-width: 767.98px) and (orientation: landscape), (pointer: coarse) and (max-height: 500px) and (max-width: 1023.98px) {
   .mobile-navigation-item { min-height: 44px; flex-direction: row; justify-content: center; gap: 4px; }
   .mobile-navigation-icon { width: 28px; }
-  .mobile-navigation-label { font-size: 10px; }
+  .mobile-navigation-label { font-size: 11px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

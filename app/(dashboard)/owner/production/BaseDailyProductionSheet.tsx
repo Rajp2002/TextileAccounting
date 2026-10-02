@@ -1,8 +1,12 @@
 'use client'
 
+import { usePwaRefreshGuard } from '@/hooks/use-pwa-refresh-guard'
+import { usePwaInstallBlocker } from '@/hooks/use-pwa-install-blocker'
+import { reportPwaWorkflowSuccess } from '@/lib/pwa-workflow-success'
+
 import { isBaseOperatorAvailable, resolveBasePieceRate } from '@/lib/base-operator'
 
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
+import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import Link from 'next/link'
 import DailySheetGuidedTour from '@/components/production/DailySheetGuidedTour'
 import { useTourSample } from '@/lib/tours/sample-context'
@@ -107,6 +111,69 @@ function isContextValidForDate(
     return effectiveFrom <= productionDate && (!effectiveTo || effectiveTo >= productionDate)
 }
 
+type MachineReadingActions = {
+    change: (context: MachineContext, value: string) => void
+    keyDown: (event: ReactKeyboardEvent<HTMLInputElement>) => void
+    openJobs: () => void
+}
+
+// Unchanged rows keep their input DOM and skip expensive control rerenders.
+const MachineReadingRow = memo(function MachineReadingRow({ context, index, value, state, absent, disabled, paid, firstReading, tourTarget, highlighted, actions }: {
+    context: MachineContext; index: number; value: string
+    state: ReturnType<typeof machineReadingState>; absent: boolean; disabled: boolean; paid: boolean
+    firstReading: boolean; tourTarget: 'reading' | 'pending' | undefined; highlighted: boolean
+    actions: MachineReadingActions
+}) {
+    const { t, tx } = useTranslation()
+    return (
+        <div data-daily-tour={tourTarget} data-base-highlight={highlighted} className="data-[base-highlight=true]:bg-saffron-soft/60 data-[base-highlight=true]:ring-1 data-[base-highlight=true]:ring-inset data-[base-highlight=true]:ring-saffron grid grid-cols-[minmax(0,1fr)_132px] items-center gap-x-3 gap-y-2 px-4 py-3.5 transition-colors focus-within:bg-saffron-soft/30 hover:bg-surface-soft/40 md:grid-cols-[minmax(0,1.1fr)_minmax(0,.8fr)_145px_160px] md:px-5">
+            <div className="flex min-w-0 items-center gap-3">
+                <span className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-soft text-xs font-bold tabular-nums text-muted-foreground sm:flex">{String(index + 1).padStart(2, '0')}</span>
+                <div className="min-w-0">
+                    <p className="truncate font-bold text-ink">{context.machineLabel}</p>
+                    <p className="truncate text-xs text-muted-foreground">{context.jobLabel ?? 'Job not assigned'}</p>
+                    <p className="text-xs text-body md:hidden">{context.workerName}</p>
+                </div>
+            </div>
+            <div className="hidden text-sm text-body md:block">
+                <span className="font-semibold text-ink">{context.workerName}</span>
+                {paid && <p className="text-xs text-muted-foreground">Paid · protected</p>}
+            </div>
+            <div className="col-start-2 row-start-1 md:col-auto md:row-auto">
+                <Input
+                    aria-label={`${context.machineLabel} ${context.workerName} metres`}
+                    aria-invalid={state === 'invalid'}
+                    aria-describedby={state === 'invalid' ? `reading-error-${context.machineId}` : undefined}
+                    type="text"
+                    inputMode="decimal"
+                    enterKeyHint="next"
+                    autoComplete="off"
+                    placeholder={t('dailySheet.metres')}
+                    data-base-machine-meters
+                    data-tour-anchor={firstReading ? 'daily.first-reading' : undefined}
+                    value={value}
+                    disabled={absent || disabled || !context.jobId}
+                    onChange={(event) => actions.change(context, event.target.value)}
+                    onKeyDown={actions.keyDown}
+                    onFocus={(event) => { event.currentTarget.select(); event.currentTarget.scrollIntoView({ block: 'nearest' }) }}
+                    className="h-11 scroll-mb-56 scroll-mt-8 rounded-xl border-hairline bg-surface text-right text-base font-bold tabular-nums text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom md:h-10"
+                />
+                {state === 'invalid' && <p id={`reading-error-${context.machineId}`} className="mt-1 text-xs font-semibold text-destructive">Use 0–100,000, up to 2 decimals.</p>}
+            </div>
+            <div className="col-span-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs md:col-span-1 md:flex-col md:items-start">
+                <span className={`inline-flex rounded-full px-2 py-0.5 font-bold ${state === 'entered' ? 'bg-[var(--wv-moss-50)] text-[var(--wv-moss-700)]' : state === 'pending' || state === 'invalid' ? 'bg-[var(--wv-ochre-50)] text-[var(--wv-ochre-800)]' : 'bg-surface-soft text-body'}`}>{state === 'entered' ? 'Entered' : state === 'not_running' ? t('dailySheet.notRunning') : state === 'absent' ? 'Worker absent' : state === 'invalid' ? 'Check reading' : 'Pending'}</span>
+                {!disabled && !absent && (
+                    <Button type="button" variant="ghost" size="sm" aria-label={`${state === 'not_running' ? 'Clear' : 'Mark not running'} ${context.machineLabel}`} onClick={() => {
+                        if (state === 'entered' && !window.confirm(tx('Replace this machine’s production with zero?'))) return
+                        actions.change(context, state === 'not_running' ? '' : '0')
+                    }} className="h-7 rounded-lg px-2 text-xs text-muted-foreground hover:text-ink">{state === 'not_running' ? 'Undo' : t('dailySheet.notRunning')}</Button>
+                )}
+                {!context.jobId && <Button variant="link" size="sm" onClick={actions.openJobs} className="h-7 px-1 text-xs font-bold text-loom hover:underline">Assign a production job</Button>}
+            </div>
+        </div>
+    )
+})
+
 export default function BaseDailyProductionSheet({
     initialData,
     onAddWorker,
@@ -143,6 +210,8 @@ export default function BaseDailyProductionSheet({
     const [toolbarBounds, setToolbarBounds] = useState<{ left: number; width: number } | null>(null)
     const [draftStatus, setDraftStatus] = useState<'none' | 'local' | 'error' | 'conflict'>('none')
     const [draftReset, setDraftReset] = useState(0)
+    usePwaRefreshGuard(() => sample || (!isSaving && draftStatus !== 'error' && draftStatus !== 'conflict' && !isUnlockDialogOpen && !isReviewOpen))
+    usePwaInstallBlocker(sample || isSaving || draftStatus !== 'none' || isUnlockDialogOpen || isReviewOpen)
     const selectedEntry = initialData.entries.find((entry) => entry.id === navigation.entry)
     const focusedWorker = selectedEntry?.worker_id ?? navigation.worker
     // A tour sample never reads or writes the on-device draft, which belongs to the real sheet.
@@ -529,6 +598,17 @@ export default function BaseDailyProductionSheet({
         nextField.select()
     }
 
+    // Stable event props dispatch through the latest committed editor state.
+    const readingHandlers = useRef<MachineReadingActions | null>(null)
+    useLayoutEffect(() => {
+        readingHandlers.current = { change: handleMachineMetersChange, keyDown: handleMachineMetersKeyDown, openJobs: openMachineJobs }
+    })
+    const readingActions = useMemo<MachineReadingActions>(() => ({
+        change: (context, value) => readingHandlers.current?.change(context, value),
+        keyDown: event => readingHandlers.current?.keyDown(event),
+        openJobs: () => readingHandlers.current?.openJobs(),
+    }), [])
+
     function handleStatusChange(workerId: string, value: BaseDailyProductionStatus) {
         const current = getRow(workerId)
         if (value !== 'entered' && getRowTotal(workerId) > 0 && !window.confirm(tx('Clear all production for this worker? This affects every assigned machine.'))) return
@@ -616,6 +696,7 @@ export default function BaseDailyProductionSheet({
             }
             setDraftStatus('none')
             setRequestId(newClientRequestId())
+            if (!sample) reportPwaWorkflowSuccess('production')
             router.refresh()
         } catch (error) {
             toast.error(error instanceof Error ? error.message : 'The daily production sheet could not be saved.')
@@ -700,14 +781,14 @@ export default function BaseDailyProductionSheet({
                         </Button>
                     </div>
 
-                    <div data-daily-tour="shift" className={cn(railSurface, 'p-4 2xl:p-5')}>
-                        <p className="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">{t('dailySheet.shiftDetails')}</p>
-                        <div className="grid grid-cols-1 gap-3">
-                            <div className="space-y-1.5">
+                    <div data-daily-tour="shift" className={cn(railSurface, 'p-3 min-[1280px]:p-4 2xl:p-5')}>
+                        <p className="sr-only text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground min-[1280px]:not-sr-only min-[1280px]:mb-3">{t('dailySheet.shiftDetails')}</p>
+                        <div className="grid grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] gap-3 min-[1280px]:grid-cols-1">
+                            <div className="min-w-0 space-y-1.5">
                                 <Label htmlFor="base-daily-date" className="text-xs font-bold text-body">Date</Label>
-                                <Input id="base-daily-date" type="date" max={initialData.today} value={productionDate} disabled={isSaving} onChange={(event) => changeSelection(event.target.value, shift)} className="h-10 w-full rounded-xl border-hairline bg-surface text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom" />
+                                <Input id="base-daily-date" type="date" max={initialData.today} value={productionDate} disabled={isSaving} onChange={(event) => changeSelection(event.target.value, shift)} className="h-10 min-w-0 w-full rounded-xl border-hairline bg-surface px-2 text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom" />
                             </div>
-                            <div className="space-y-1.5">
+                            <div className="min-w-0 space-y-1.5">
                                 <Label htmlFor="base-daily-shift" className="text-xs font-bold text-body">Shift</Label>
                                 <Select value={shift} disabled={isSaving} onValueChange={(value) => changeSelection(productionDate, value as 'day' | 'night')}>
                                     <SelectTrigger id="base-daily-shift" className="h-10 w-full rounded-xl border-hairline bg-surface text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom"><SelectValue /></SelectTrigger>
@@ -717,45 +798,46 @@ export default function BaseDailyProductionSheet({
                                     </SelectContent>
                                 </Select>
                             </div>
-                            <Button variant="outline" className="h-10 w-full rounded-xl border-hairline bg-surface font-semibold shadow-xs hover:bg-surface-soft mt-1" onClick={printCollectionSheet} disabled={machineContexts.length === 0}>
-                                <Printer className="h-4 w-4" /> {t('dailySheet.printSheet')}
-                            </Button>
                         </div>
                     </div>
 
-                    <div data-daily-tour="draft" className={cn(railSurface, 'p-4 2xl:p-5')}>
-                        <div className="flex items-center justify-between gap-2">
+                    <div data-daily-tour="draft" className={cn(railSurface, 'p-3 min-[1280px]:p-4 2xl:p-5')}>
+                        <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
                             <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Shift progress</p>
                             <span className="text-[11px] font-medium text-body">
-                                {draftStatus === 'local' ? t('dailySheet.draftOnDevice') : currentBatch ? 'Saved shift' : 'Not submitted'}
+                                {isSaving ? t('common.server_saving') : draftStatus === 'error' ? t('common.draft_error') : draftStatus === 'conflict' ? t('common.draft_conflict') : draftStatus === 'local' ? t('dailySheet.draftOnDevice') : currentBatch ? t('common.server_saved') : 'Not submitted'}
                             </span>
                         </div>
-                        <div className="mt-3 flex items-baseline gap-2">
-                            <span className="text-3xl font-black tracking-tight tabular-nums text-ink">{registerSummary.accounted}<span className="text-lg text-muted-foreground">/{registerSummary.total}</span></span>
+                        <div className="mt-1 flex flex-wrap items-baseline gap-2 min-[1280px]:mt-3">
+                            <span className="text-base font-bold tabular-nums text-ink min-[1280px]:text-3xl min-[1280px]:font-black">{registerSummary.accounted}<span className="text-muted-foreground min-[1280px]:text-lg">/{registerSummary.total}</span></span>
                             <span className="text-xs font-medium text-body">machines accounted for</span>
                         </div>
-                        <div role="progressbar" aria-label="Machines accounted for" aria-valuenow={registerSummary.accounted} aria-valuemin={0} aria-valuemax={Math.max(registerSummary.total, 1)} className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-soft">
+                        <div role="progressbar" aria-label="Machines accounted for" aria-valuenow={registerSummary.accounted} aria-valuemin={0} aria-valuemax={Math.max(registerSummary.total, 1)} className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-soft min-[1280px]:mt-3">
                             <div className="h-full rounded-full bg-loom transition-[width]" style={{ width: `${registerSummary.total ? registerSummary.accounted / registerSummary.total * 100 : 0}%` }} />
                         </div>
-                        <dl className="mt-4 grid grid-cols-2 divide-x divide-hairline border-t border-hairline pt-4">
-                            <div className="pr-3"><dt className="text-xs text-muted-foreground">Pending</dt><dd className="mt-1 text-base font-bold tabular-nums text-ink">{registerSummary.pending}</dd></div>
-                            <div className="pl-3"><dt className="text-xs text-muted-foreground">Production</dt><dd className="mt-1 text-base font-bold tabular-nums text-ink">{formatMeters(summary.total_meters)}</dd></div>
+                        <dl className="mt-2 flex flex-wrap justify-between gap-x-3 gap-y-1 text-xs min-[1280px]:mt-4 min-[1280px]:grid min-[1280px]:grid-cols-2 min-[1280px]:gap-0 min-[1280px]:divide-x min-[1280px]:divide-hairline min-[1280px]:border-t min-[1280px]:border-hairline min-[1280px]:pt-4">
+                            <div className="flex flex-wrap items-baseline gap-1 min-[1280px]:block min-[1280px]:pr-3"><dt className="text-xs text-muted-foreground">Pending</dt><dd className="font-bold tabular-nums text-ink min-[1280px]:mt-1 min-[1280px]:text-base">{registerSummary.pending}</dd></div>
+                            <div className="flex flex-wrap items-baseline gap-1 min-[1280px]:block min-[1280px]:pl-3"><dt className="text-xs text-muted-foreground">Production</dt><dd className="font-bold tabular-nums text-ink min-[1280px]:mt-1 min-[1280px]:text-base">{formatMeters(summary.total_meters)}</dd></div>
                         </dl>
                     </div>
 
+                    <div className="flex flex-wrap gap-2 min-[1280px]:flex-col">
+                        <Button variant="outline" className="min-h-[44px] flex-1 whitespace-normal rounded-xl border-hairline bg-surface font-semibold shadow-xs hover:bg-surface-soft min-[1280px]:w-full min-[1280px]:flex-none" onClick={printCollectionSheet} disabled={machineContexts.length === 0}>
+                            <Printer className="h-4 w-4" /> {t('dailySheet.printSheet')}
+                        </Button>
                     {(assignedWorkers.length > 0 || unassignedWorkers.length > 0) && (
                         <button
                             type="button"
                             aria-expanded={isPayrollExpanded}
                             aria-controls="base-payroll-rollup"
                             onClick={() => setIsPayrollExpanded(true)}
-                            className={cn(railButton, 'h-auto py-2.5')}
+                            className={cn(railButton, 'mobile-touch-target h-auto min-w-0 w-auto flex-1 py-2.5 min-[1280px]:w-full min-[1280px]:flex-none')}
                         >
                             <span className="flex items-start gap-2.5 min-w-0">
                                 <Users className={cn(railIcon, 'mt-0.5')} />
                                 <span className="min-w-0 flex-1">
                                     <span className="block text-sm font-semibold text-ink">{t('dailySheet.workerReview')}</span>
-                                    <span className="block text-xs text-body truncate font-normal">
+                                    <span className="sr-only text-xs text-body font-normal min-[1280px]:not-sr-only min-[1280px]:block">
                                         {assignedWorkers.length} {assignedWorkers.length === 1 ? 'worker' : 'workers'} · Check totals & pay
                                     </span>
                                 </span>
@@ -763,6 +845,7 @@ export default function BaseDailyProductionSheet({
                             <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
                         </button>
                     )}
+                    </div>
                 </div>
 
                 <div className="production-daily-sheet-rail-bottom flex flex-col gap-3">
@@ -836,7 +919,7 @@ export default function BaseDailyProductionSheet({
                 </Card>
             ) : (
                 <>
-                    <Card data-daily-tour="sheet" className="gap-0 overflow-hidden rounded-[22px] border border-hairline border-t-[3px] border-t-saffron-deep bg-surface p-0 shadow-lg shadow-ink/5 flex flex-1 flex-col min-h-[calc(100vh-17.5rem)] 2xl:min-h-[calc(100vh-16rem)]">
+                    <Card data-daily-tour="sheet" className="production-daily-register gap-0 overflow-hidden rounded-[22px] border border-hairline border-t-[3px] border-t-saffron-deep bg-surface p-0 shadow-lg shadow-ink/5 flex flex-1 flex-col min-h-[calc(100vh-17.5rem)] 2xl:min-h-[calc(100vh-16rem)]">
                         <CardHeader className="border-b border-hairline bg-surface px-4 py-4 sm:px-5 sm:py-5">
                             <div className="flex flex-wrap items-center justify-between gap-3">
                                 <div className="flex items-center gap-3">
@@ -858,7 +941,7 @@ export default function BaseDailyProductionSheet({
                             <div className="hidden grid-cols-[minmax(0,1.1fr)_minmax(0,.8fr)_145px_160px] gap-3 border-b border-hairline bg-surface-soft/70 px-5 py-2.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground md:grid">
                                 <span>Machine / job</span><span>Worker</span><span className="text-right">{t('dailySheet.metres')}</span><span>Status / action</span>
                             </div>
-                            <div role="region" aria-label="Machine readings" className="divide-y divide-hairline overflow-y-auto overscroll-contain flex-1 min-h-0 max-h-[calc(100vh-25rem)] 2xl:max-h-[calc(100vh-24rem)]">
+                            <div role="region" aria-label="Machine readings" className="production-daily-readings divide-y divide-hairline overflow-y-auto overscroll-contain flex-1 min-h-0 max-h-[max(20rem,calc(100dvh-25rem))] 2xl:max-h-[max(20rem,calc(100dvh-24rem))]">
                                 {machineContexts.map((context, index) => {
                                     if (showPending && !pendingMachineIds.includes(context.machineId)) return null
                                     if (!context.workerId) return (
@@ -872,51 +955,11 @@ export default function BaseDailyProductionSheet({
                                     const state = machineState(context)
                                     const disabled = areInputsDisabled || settledWorkerIds.has(context.workerId!)
                                     return (
-                                        <div key={context.machineId} data-daily-tour={index === 0 ? 'reading' : context.machineId === firstPendingMachineId ? 'pending' : undefined} data-base-highlight={context.workerId === focusedWorker || context.jobId === navigation.job} className="data-[base-highlight=true]:bg-saffron-soft/60 data-[base-highlight=true]:ring-1 data-[base-highlight=true]:ring-inset data-[base-highlight=true]:ring-saffron grid grid-cols-[minmax(0,1fr)_132px] items-center gap-x-3 gap-y-2 px-4 py-3.5 transition-colors focus-within:bg-saffron-soft/30 hover:bg-surface-soft/40 md:grid-cols-[minmax(0,1.1fr)_minmax(0,.8fr)_145px_160px] md:px-5">
-                                            <div className="flex min-w-0 items-center gap-3">
-                                                <span className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-soft text-xs font-bold tabular-nums text-muted-foreground sm:flex">{String(index + 1).padStart(2, '0')}</span>
-                                                <div className="min-w-0">
-                                                    <p className="truncate font-bold text-ink">{context.machineLabel}</p>
-                                                    <p className="truncate text-xs text-muted-foreground">{context.jobLabel ?? 'Job not assigned'}</p>
-                                                    <p className="text-xs text-body md:hidden">{context.workerName}</p>
-                                                </div>
-                                            </div>
-                                            <div className="hidden text-sm text-body md:block">
-                                                <span className="font-semibold text-ink">{context.workerName}</span>
-                                                {settledWorkerIds.has(context.workerId!) && <p className="text-xs text-muted-foreground">Paid · protected</p>}
-                                            </div>
-                                            <div className="col-start-2 row-start-1 md:col-auto md:row-auto">
-                                                <Input
-                                                    aria-label={`${context.machineLabel} ${context.workerName} metres`}
-                                                    aria-invalid={state === 'invalid'}
-                                                    aria-describedby={state === 'invalid' ? `reading-error-${context.machineId}` : undefined}
-                                                    type="text"
-                                                    inputMode="decimal"
-                                                    enterKeyHint="next"
-                                                    autoComplete="off"
-                                                    placeholder={t('dailySheet.metres')}
-                                                    data-base-machine-meters
-                                                    data-tour-anchor={context.machineId === firstReadingMachineId ? 'daily.first-reading' : undefined}
-                                                    value={value}
-                                                    disabled={row.status === 'absent' || disabled || !context.jobId}
-                                                    onChange={(event) => handleMachineMetersChange(context, event.target.value)}
-                                                    onKeyDown={handleMachineMetersKeyDown}
-                                                    onFocus={(event) => { event.currentTarget.select(); event.currentTarget.scrollIntoView({ block: 'nearest' }) }}
-                                                    className="h-11 scroll-mb-56 scroll-mt-8 rounded-xl border-hairline bg-surface text-right text-base font-bold tabular-nums text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom md:h-10"
-                                                />
-                                                {state === 'invalid' && <p id={`reading-error-${context.machineId}`} className="mt-1 text-xs font-semibold text-destructive">Use 0–100,000, up to 2 decimals.</p>}
-                                            </div>
-                                            <div className="col-span-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs md:col-span-1 md:flex-col md:items-start">
-                                                <span className={`inline-flex rounded-full px-2 py-0.5 font-bold ${state === 'entered' ? 'bg-[var(--wv-moss-50)] text-[var(--wv-moss-700)]' : state === 'pending' || state === 'invalid' ? 'bg-[var(--wv-ochre-50)] text-[var(--wv-ochre-800)]' : 'bg-surface-soft text-body'}`}>{state === 'entered' ? 'Entered' : state === 'not_running' ? t('dailySheet.notRunning') : state === 'absent' ? 'Worker absent' : state === 'invalid' ? 'Check reading' : 'Pending'}</span>
-                                                {!disabled && row.status !== 'absent' && (
-                                                    <Button type="button" variant="ghost" size="sm" aria-label={`${state === 'not_running' ? 'Clear' : 'Mark not running'} ${context.machineLabel}`} onClick={() => {
-                                                        if (state === 'entered' && !window.confirm(tx('Replace this machine’s production with zero?'))) return
-                                                        handleMachineMetersChange(context, state === 'not_running' ? '' : '0')
-                                                    }} className="h-7 rounded-lg px-2 text-xs text-muted-foreground hover:text-ink">{state === 'not_running' ? 'Undo' : t('dailySheet.notRunning')}</Button>
-                                                )}
-                                                {!context.jobId && <Button variant="link" size="sm" onClick={openMachineJobs} className="h-7 px-1 text-xs font-bold text-loom hover:underline">Assign a production job</Button>}
-                                            </div>
-                                        </div>
+                                        <MachineReadingRow key={context.machineId} context={context} index={index} value={value} state={state}
+                                            absent={row.status === 'absent'} disabled={disabled} paid={settledWorkerIds.has(context.workerId!)}
+                                            firstReading={context.machineId === firstReadingMachineId}
+                                            tourTarget={index === 0 ? 'reading' : context.machineId === firstPendingMachineId ? 'pending' : undefined}
+                                            highlighted={context.workerId === focusedWorker || context.jobId === navigation.job} actions={readingActions} />
                                     )
                                 })}
                                 {showPending && pendingMachineIds.length === 0 && <p className="px-4 py-8 text-center text-sm text-body">All machines are accounted for.</p>}
@@ -942,7 +985,7 @@ export default function BaseDailyProductionSheet({
                                     </div>
                                 </DialogHeader>
                                 <div id="base-payroll-rollup" data-daily-tour="review" className={`${isPayrollExpanded || tourStep === 'ds-earnings' ? 'block' : 'hidden'} divide-y divide-hairline overflow-y-auto p-0 flex-1 max-h-[60vh]`}>
-                                    {assignedWorkers.map((worker) => {
+                                    {(isPayrollExpanded || tourStep === 'ds-earnings') && assignedWorkers.map((worker) => {
                                         const row = getRow(worker.id)
                                         const contexts = contextsByWorker.get(worker.id) ?? []
                                         const rowTotal = getRowTotal(worker.id)
@@ -971,7 +1014,7 @@ export default function BaseDailyProductionSheet({
                                             </div>
                                         )
                                     })}
-                                    {unassignedWorkers.map((worker) => {
+                                    {(isPayrollExpanded || tourStep === 'ds-earnings') && unassignedWorkers.map((worker) => {
                                         const row = getRow(worker.id)
                                         return (
                                             <div key={`${worker.id}-unassigned`} className="grid gap-3 bg-[var(--wv-ochre-50)]/30 px-4 py-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_150px_160px] md:items-center">
@@ -1005,13 +1048,13 @@ export default function BaseDailyProductionSheet({
             </div>
 
             {sheetWorkers.length > 0 && (
-                <div data-tour-floating="true" style={toolbarBounds ? { position: 'fixed', left: toolbarBounds.left, width: toolbarBounds.width } : undefined} className="production-daily-sheet-toolbar-mobile sticky bottom-[calc(80px+env(safe-area-inset-bottom,0px))] z-20 flex items-center justify-between gap-3 rounded-2xl border border-hairline bg-surface/95 p-3 sm:p-4 shadow-xl backdrop-blur md:bottom-3 min-[1280px]:hidden">
+                <div data-tour-floating="true" style={toolbarBounds ? { position: 'fixed', left: toolbarBounds.left, width: toolbarBounds.width } : undefined} className="production-daily-sheet-toolbar-mobile mobile-sticky-action sticky bottom-3 z-20 flex items-center justify-between gap-3 rounded-2xl border border-hairline bg-surface/95 p-3 sm:p-4 shadow-xl backdrop-blur min-[1280px]:hidden">
                     <div className="flex items-center gap-3 text-sm">
                         <div className="hidden rounded-xl border border-hairline bg-surface-soft p-2.5 text-ink sm:block"><Save className="h-4 w-4" /></div>
                         <div>
                             <p className="text-sm font-bold text-ink">{registerSummary.accounted}/{registerSummary.total} machines accounted for · {formatMeters(summary.total_meters)}</p>
                             <p role="status" className="min-h-4 text-xs font-medium text-body">
-                                {draftStatus === 'local' ? 'Draft saved on this device' : currentBatch ? 'Saved shift' : 'Not submitted'}
+                                {isSaving ? t('common.server_saving') : draftStatus === 'error' ? t('common.draft_error') : draftStatus === 'conflict' ? t('common.draft_conflict') : draftStatus === 'local' ? t('dailySheet.draftOnDevice') : currentBatch ? t('common.server_saved') : 'Not submitted'}
                                 {registerSummary.pending > 0 ? ` · ${registerSummary.pending} pending` : ''}
                                 {registerSummary.stopped > 0 ? ` · ${registerSummary.stopped} not running` : ''}
                                 {registerSummary.invalid > 0 ? ` · ${registerSummary.invalid} to check` : ''}

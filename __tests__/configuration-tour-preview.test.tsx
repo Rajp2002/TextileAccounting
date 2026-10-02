@@ -39,7 +39,7 @@ import BaseAssignmentWorkspace from '../app/(dashboard)/owner/production/BaseAss
 
 const liveData: BaseProductionInitialData = {
     orgId: 'test-org', actorId: 'test-owner', today: '2026-09-17', payrollPeriod: { start: '2026-09-01', end: '2026-09-30' },
-    costings: [], jobs: [], entries: [], assignments: [], machineJobContexts: [], dailyBatches: [], batchRevisions: [], advances: [], settlements: [], settlementLines: [], payrollPeriods: [], payables: [], allocations: [],
+    costings: [], jobs: [], entries: [], assignments: [], machineJobContexts: [], dailyBatches: [], batchRevisions: [], advances: [], settlements: [], settlementLines: [], payrollPeriods: [], allocations: [],
     workers: [{ id: 'live-worker', name: 'Real worker', pay_type: 'piece_rate', rate_per_meter: 0, shift_availability: 'night', is_active: true }],
     machines: [{ id: 'live-machine', name: 'Real machine', machine_type: 'power_loom', custom_label: null, is_active: true }],
 }

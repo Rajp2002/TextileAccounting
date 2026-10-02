@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
+import { en } from '../lib/i18n/locales/en'
 
 const read = (path: string) => readFileSync(path, 'utf8')
 
@@ -17,7 +18,9 @@ describe('Base costing export status boundary', () => {
     expect(exportDialog).not.toContain('Mark as sent')
     expect(exportDialog).not.toContain('canMarkSent')
     expect(exportDialog).toContain('PDF sharing does not confirm delivery.')
-    expect(exportDialog).toContain('Share PDF')
-    expect(exportDialog).toContain('Download PDF')
+    expect(exportDialog).toContain("t('base_plan.export.share_pdf')")
+    expect(en.base_plan.export.share_pdf).toBe('Share PDF')
+    expect(exportDialog).toContain("t('base_plan.export.download_pdf')")
+    expect(en.base_plan.export.download_pdf).toBe('Download PDF')
   })
 })

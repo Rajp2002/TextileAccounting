@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { createRouteMilestoneTracker, diagnosticRoute } from '@/lib/route-milestones'
 
 type RouteMilestonesProps = {
     route: string
@@ -12,6 +13,8 @@ type RouteMilestonesProps = {
 function mark(name: string) {
     try {
         if (typeof performance !== 'undefined' && typeof performance.mark === 'function') {
+            // Keep long-lived installed sessions bounded without clearing unrelated marks.
+            if (performance.getEntriesByName(name, 'mark').length >= 100) performance.clearMarks(name)
             performance.mark(name)
         }
     } catch {
@@ -25,31 +28,17 @@ export function RouteMilestones({
     primaryUsable,
     secondaryReady = false,
 }: RouteMilestonesProps) {
-    const marked = useRef({ shell: false, primary: false, secondary: false })
+    const record = useRef(createRouteMilestoneTracker(mark))
 
     useEffect(() => {
-        if (shellVisible && !marked.current.shell) {
-            marked.current.shell = true
-            mark('route_shell_visible')
-            mark(`route_shell_visible:${route}`)
-        }
-        if (primaryUsable && !marked.current.primary) {
-            marked.current.primary = true
-            mark('route_primary_usable')
-            mark(`route_primary_usable:${route}`)
-        }
-        if (secondaryReady && !marked.current.secondary) {
-            marked.current.secondary = true
-            mark('route_secondary_ready')
-            mark(`route_secondary_ready:${route}`)
-        }
+        record.current(route, { shell: shellVisible, primary: primaryUsable, secondary: secondaryReady })
     }, [primaryUsable, route, secondaryReady, shellVisible])
 
     return (
         <span
             aria-hidden="true"
             className="sr-only"
-            data-route={route}
+            data-route={diagnosticRoute(route)}
             data-route-shell-visible={shellVisible ? 'true' : 'false'}
             data-route-primary-usable={primaryUsable ? 'true' : 'false'}
             data-route-secondary-ready={secondaryReady ? 'true' : 'false'}

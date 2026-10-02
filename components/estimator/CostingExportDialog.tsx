@@ -43,6 +43,7 @@ import { updateQuotationDocumentMetadata } from '@/app/(dashboard)/owner/estimat
 import { trackPlanEvent } from '@/lib/plan-analytics'
 import { createDocumentGenerationGuard } from '@/lib/document-generation'
 import { useTranslation } from '@/lib/i18n/context'
+import { canSharePreparedFile, sharePreparedDocument } from '@/lib/prepared-document-share'
 
 type ExportStatus = 'idle' | 'saving' | 'generating' | 'generated' | 'download-started' | 'print-opened' | 'share-opened' | 'failed'
 
@@ -100,7 +101,7 @@ export function CostingExportDialog({
   sourceRecordKind?: 'costing' | 'quotation'
   onQuoteUpdated?: (data: { updated_at: string; quotation_reference?: string | null; quotation_valid_until?: string | null; customer_terms?: string | null }) => void
 }) {
-  const { tx } = useTranslation()
+  const { tx, t } = useTranslation()
   const generationGuard = useRef(createDocumentGenerationGuard())
   const [mode, setMode] = useState<CostingExportMode>(defaultMode)
   const [businessName, setBusinessName] = useState(defaultBusinessName)
@@ -116,6 +117,15 @@ export function CostingExportDialog({
   const [generatedDocumentKey, setGeneratedDocumentKey] = useState<string | null>(null)
   const [sharing, setSharing] = useState(false)
   const [latestQuoteUpdatedAt, setLatestQuoteUpdatedAt] = useState(sourceQuoteUpdatedAt)
+  const [mobileActions, setMobileActions] = useState(false)
+
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 767px), (max-height: 500px) and (pointer: coarse)')
+    const update = () => setMobileActions(media.matches)
+    update()
+    media.addEventListener('change', update)
+    return () => media.removeEventListener('change', update)
+  }, [])
 
   const savedQuotation = Boolean(sourceQuoteId && sourceRecordKind === 'quotation')
   const lockedQuotation = savedQuotation && sourceQuoteStatus === 'accepted'
@@ -155,6 +165,13 @@ export function CostingExportDialog({
   const documentKey = model ? JSON.stringify([previewHtml, getCostingExportFilename(model, options)]) : ''
   const generatedFileIsCurrent = Boolean(generatedBlob && generatedDocumentKey === documentKey)
   const documentChanged = Boolean(generatedBlob && !generatedFileIsCurrent)
+  const shareFile = useMemo(() => generatedBlob && generatedFileIsCurrent
+    ? new File([generatedBlob], generatedFilename, { type: 'application/pdf' })
+    : null, [generatedBlob, generatedFileIsCurrent, generatedFilename])
+  const nativeFileSharing = Boolean(shareFile && canSharePreparedFile(shareFile))
+  const primaryIsShare = mobileActions && generatedFileIsCurrent && mode === 'customer' && nativeFileSharing
+  const primaryIsPrepare = mobileActions && !generatedFileIsCurrent
+  const showSecondaryDownload = mobileActions && (primaryIsShare || primaryIsPrepare)
   useLayoutEffect(() => {
     const guard = generationGuard.current
     guard.update(open ? documentKey : null)
@@ -254,7 +271,14 @@ export function CostingExportDialog({
     }
   }
 
-  const handlePdf = async () => {
+  const startDownload = (blob: Blob, filename: string) => {
+    downloadBlob(blob, filename)
+    setStatus('download-started')
+    setErrorMessage(null)
+    toast.success(t('base_plan.export.pdf_ready'), { description: `${tx('Download started')}: ${filename}` })
+  }
+
+  const handlePdf = async (intent: 'prepare' | 'download' = 'download') => {
     if (tutorialPreview) return
     if (!model || validationErrors.length > 0) {
       const message = validationErrors[0] ?? 'Complete the document details before generating the PDF.'
@@ -263,14 +287,24 @@ export function CostingExportDialog({
       return
     }
 
+    // A prepared file belongs to this exact preview. Repeated downloads do not
+    // render a second PDF or persist quotation metadata again.
+    if (generatedFileIsCurrent && generatedBlob) {
+      if (intent === 'download') startDownload(generatedBlob, generatedFilename)
+      else setStatus('generated')
+      return
+    }
+
     const isCurrentGeneration = generationGuard.current.begin(documentKey)
     setStatus('generating')
     setErrorMessage(null)
     try {
       if (!(await persistCustomerMetadata())) return
+      if (!isCurrentGeneration()) return
       setStatus('generating')
 
       const { jsPDF } = await import('jspdf')
+      if (!isCurrentGeneration()) return
       const pdf = new jsPDF({ unit: 'pt', format: 'a4' })
       const host = document.createElement('div')
       host.style.width = '760px'
@@ -295,18 +329,18 @@ export function CostingExportDialog({
 
       const filename = getCostingExportFilename(model, options)
       const blob = pdf.output('blob')
-      if (!isCurrentGeneration()) {
-        setStatus('idle')
-        return
-      }
-      downloadBlob(blob, filename)
+      if (!isCurrentGeneration()) return
       setGeneratedBlob(blob)
       setGeneratedFilename(filename)
       setGeneratedDocumentKey(documentKey)
-      setStatus('download-started')
+      if (intent === 'download') startDownload(blob, filename)
+      else {
+        setStatus('generated')
+        toast.success(t('base_plan.export.pdf_ready'))
+      }
       void trackPlanEvent('export_completed', { mode })
-      toast.success('PDF ready', { description: `Download started: ${filename}` })
     } catch (error) {
+      if (!isCurrentGeneration()) return
       console.error(error)
       setStatus('failed')
       void trackPlanEvent('export_failed', { mode })
@@ -318,49 +352,39 @@ export function CostingExportDialog({
 
   const handleShare = async () => {
     if (tutorialPreview) return
-    if (!generatedBlob || !model || !generatedFileIsCurrent) {
-      const message = 'Generate the PDF before sharing it.'
+    if (!shareFile || !model || !generatedFileIsCurrent) {
+      const message = t('base_plan.export.prepare_first')
       setErrorMessage(message)
       toast.error(message)
       return
     }
 
     setSharing(true)
-    const file = new File([generatedBlob], generatedFilename, { type: 'application/pdf' })
+    setErrorMessage(null)
+    const isCurrentGeneration = generationGuard.current.begin(documentKey)
     const message = buildQuotationShareMessage(model, options)
     try {
-      const canShareFile = typeof navigator.canShare !== 'function' || navigator.canShare({ files: [file] })
-      if (typeof navigator.share === 'function' && canShareFile) {
-        await navigator.share({
-          files: [file],
-          title: `Quotation ${options.documentReference || model.qualityLabel}`,
-          text: message,
-        })
+      const result = await sharePreparedDocument({
+        files: [shareFile],
+        title: `Quotation ${options.documentReference || model.qualityLabel}`,
+        text: message,
+      })
+      if (!isCurrentGeneration()) return
+      if (result === 'shared') {
         setStatus('share-opened')
-        toast.success('Share sheet opened', { description: 'Choose WhatsApp or another app to send the PDF.' })
-      } else {
-        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`
-        const shareWindow = window.open(whatsappUrl, '_blank', 'noopener,noreferrer')
-        if (!shareWindow) {
-          const message = 'WhatsApp could not be opened. Attach the downloaded PDF manually.'
-          setErrorMessage(message)
-          toast.error(message)
-          return
-        }
-        setStatus('share-opened')
-        toast.success('WhatsApp opened', { description: 'Attach the downloaded PDF before sending.' })
+        toast.info(t('base_plan.export.share_handoff'), { description: t('base_plan.export.delivery_unconfirmed') })
+      } else if (result === 'unsupported') {
+        toast.info(t('base_plan.export.share_unavailable'))
       }
     } catch (error) {
-      if (error instanceof DOMException && error.name === 'AbortError') {
-        toast.info('Sharing cancelled')
-      } else {
-        console.error(error)
-        const message = 'Sharing could not be completed. The PDF is still available in Downloads.'
-        setErrorMessage(message)
-        toast.error(message)
-      }
+      if (!isCurrentGeneration()) return
+      console.error(error)
+      const message = t('base_plan.export.share_failed')
+      setStatus('failed')
+      setErrorMessage(message)
+      toast.error(message)
     } finally {
-      setSharing(false)
+      if (isCurrentGeneration()) setSharing(false)
     }
   }
 
@@ -397,7 +421,7 @@ export function CostingExportDialog({
               </div>
               {status !== 'idle' && !documentChanged && (
                 <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${status === 'failed' ? 'bg-[var(--wv-status-danger-bg)] text-[var(--wv-status-danger-fg)] border border-[var(--wv-status-danger-border)]' : status.includes('started') || status.includes('opened') || status === 'generated' ? 'bg-[var(--wv-status-success-bg)] text-[var(--wv-status-success-fg)] border border-[var(--wv-status-success-border)]' : 'bg-[var(--wv-status-info-bg)] text-[var(--wv-status-info-fg)] border border-[var(--wv-status-info-border)]'}`}>
-                  {statusLabel(status)}
+                  {status === 'generated' ? t('base_plan.export.pdf_ready') : status === 'share-opened' ? t('base_plan.export.share_handoff') : tx(statusLabel(status))}
                 </span>
               )}
             </div>
@@ -496,7 +520,9 @@ export function CostingExportDialog({
               </div>
             )}
 
-            {documentChanged && <p role="status" className="rounded-xl border border-[var(--wv-status-warning-border)] bg-[var(--wv-status-warning-bg)] p-3 text-sm text-[var(--wv-status-warning-fg)]">{tx('Document details changed. Download a fresh PDF before sharing.')}</p>}
+            {documentChanged && <p role="status" data-i18n-skip="true" className="rounded-xl border border-[var(--wv-status-warning-border)] bg-[var(--wv-status-warning-bg)] p-3 text-sm text-[var(--wv-status-warning-fg)]">{t('base_plan.export.document_changed')}</p>}
+            {status === 'generated' && generatedFileIsCurrent && <p role="status" data-i18n-skip="true" className="rounded-xl border border-hairline bg-surface-soft p-3 text-sm text-body">{t(mode === 'customer' && nativeFileSharing ? 'base_plan.export.ready_to_share' : 'base_plan.export.ready_to_download')}</p>}
+            {generatedFileIsCurrent && mode === 'customer' && !nativeFileSharing && <p data-i18n-skip="true" className="text-sm leading-relaxed text-body">{t('base_plan.export.share_unavailable')}</p>}
             {status === 'download-started' && generatedFileIsCurrent && (
               <div className="rounded-xl border border-[var(--wv-status-success-border)] bg-[var(--wv-status-success-bg)] p-3 text-sm text-[var(--wv-status-success-fg)]">
                 <div className="flex items-start gap-2">
@@ -526,21 +552,24 @@ export function CostingExportDialog({
           {exportActionHint && <p id="export-action-help" className="text-xs font-medium leading-relaxed text-[var(--wv-status-warning-fg)] sm:max-w-sm">{exportActionHint}</p>}
           <div className="flex flex-wrap gap-2">
             <Button type="button" variant="outline" onClick={() => void handlePrint()} disabled={!model || isBusy || validationErrors.length > 0} aria-describedby={exportActionHint ? 'export-action-help' : undefined}>
-              <Printer className="h-4 w-4" /> Print
+              <Printer className="h-4 w-4" /> <span data-i18n-skip="true">{t('base_plan.export.print')}</span>
             </Button>
-            {generatedFileIsCurrent && mode === 'customer' && (
+            {showSecondaryDownload && <Button type="button" variant="outline" onClick={() => void handlePdf('download')} disabled={!model || !canGenerate || isBusy} aria-describedby={exportActionHint ? 'export-action-help' : undefined}>
+              <Download className="h-4 w-4" /><span data-i18n-skip="true">{t('base_plan.export.download_pdf')}</span>
+            </Button>}
+            {!mobileActions && generatedFileIsCurrent && mode === 'customer' && nativeFileSharing && (
               <Button type="button" variant="outline" onClick={() => void handleShare()} disabled={isBusy}>
                 {sharing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />}
-                Share PDF
+                <span data-i18n-skip="true">{t('base_plan.export.share_pdf')}</span>
               </Button>
             )}
-            {status === 'share-opened' && generatedFileIsCurrent && <span className="flex items-center gap-1 text-xs font-semibold text-[var(--wv-text-secondary)]"><ExternalLink className="h-3.5 w-3.5" /> Delivery is not confirmed</span>}
+            {status === 'share-opened' && generatedFileIsCurrent && <span data-i18n-skip="true" className="flex items-center gap-1 text-xs font-semibold text-[var(--wv-text-secondary)]"><ExternalLink className="h-3.5 w-3.5" /> {t('base_plan.export.delivery_unconfirmed')}</span>}
           </div>
           <div className="flex gap-2">
             {!tutorialPreview && <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Close</Button>}
-            <Button type="button" onClick={() => void handlePdf()} disabled={!model || !canGenerate || isBusy} aria-describedby={exportActionHint ? 'export-action-help' : undefined} className="bg-[var(--wv-action-primary)] text-[var(--wv-text-on-action)] hover:bg-[var(--wv-action-primary-hover)]">
-              {status === 'saving' || status === 'generating' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-              {documentChanged ? tx('Download updated PDF') : status === 'download-started' ? 'Download PDF again' : 'Download PDF'}
+            <Button type="button" onClick={() => primaryIsShare ? void handleShare() : void handlePdf(primaryIsPrepare ? 'prepare' : 'download')} disabled={!model || !canGenerate || isBusy} aria-describedby={exportActionHint ? 'export-action-help' : undefined} className="bg-[var(--wv-action-primary)] text-[var(--wv-text-on-action)] hover:bg-[var(--wv-action-primary-hover)]">
+              {isBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : primaryIsShare ? <Share2 className="h-4 w-4" /> : primaryIsPrepare ? <FileText className="h-4 w-4" /> : <Download className="h-4 w-4" />}
+              <span data-i18n-skip="true">{primaryIsShare ? t('base_plan.export.share_pdf') : primaryIsPrepare ? t(documentChanged ? 'base_plan.export.prepare_updated_pdf' : 'base_plan.export.prepare_pdf') : documentChanged ? tx('Download updated PDF') : t(status === 'download-started' ? 'base_plan.export.download_again' : 'base_plan.export.download_pdf')}</span>
             </Button>
           </div>
         </DialogFooter>

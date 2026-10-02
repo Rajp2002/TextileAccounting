@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import { useMobileKeyboard } from '@/hooks/use-mobile-keyboard'
-import { useReducer, useEffect, useMemo, useCallback, useState, useRef, useId } from 'react'
+import { useReducer, useEffect, useLayoutEffect, useMemo, useCallback, useState, useRef, useId } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { nanoid } from 'nanoid'
 import { Card, CardContent } from '@/components/ui/card'
@@ -102,7 +102,11 @@ import { FreeUsageCard } from '@/components/estimator/FreeUsageCard'
 import { FreeTransactionRecovery } from '@/components/estimator/FreeTransactionRecovery'
 import { useGutterDock } from '@/hooks/use-gutter-dock'
 import { makeFreeEstimate } from '@/lib/free-estimator-defaults'
+import { LocalSaveStatus } from '@/components/local-save-status'
 import { useAutosave } from '@/hooks/useAutosave'
+import { usePwaRefreshGuard } from '@/hooks/use-pwa-refresh-guard'
+import { usePwaInstallBlocker } from '@/hooks/use-pwa-install-blocker'
+import { reportPwaWorkflowSuccess } from '@/lib/pwa-workflow-success'
 import { toast, userFacingError } from '@/lib/app-notifications'
 import {
     handleEnterKeyNavigation,
@@ -1477,7 +1481,7 @@ function MobileLiveEstimateShortcut({
         <>
             {visible && !keyboardVisible && !open && (
                 <div
-                    className="fixed bottom-[calc(76px+env(safe-area-inset-bottom,0px))] right-4 z-40 md:bottom-7 md:right-7 lg:right-6 xl:right-8"
+                    className="fixed mobile-floating-action bottom-6 right-4 z-40 md:bottom-7 md:right-7 lg:right-6 xl:right-8"
                     data-testid="mobile-live-estimate-shortcut"
                     data-tour-floating="true"
                 >
@@ -2651,11 +2655,13 @@ function WeavingRateFields({
                     <Banknote className="h-4 w-4 text-[var(--color-warning-amber)]" />
                     <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[var(--color-warning-amber)]">Weaving rate input</p>
                 </div>
-                <div data-estimator-field="weavingRateMode" className="flex items-center gap-2" role="group" aria-label="Weaving rate input mode">
+                <div data-estimator-field="weavingRateMode" className="flex min-w-0 flex-wrap items-center gap-2" role="group" aria-label="Weaving rate input mode">
                     <span className="text-[10px] font-medium text-[var(--color-muted)]">Enter as</span>
                     <LiquidSegmented
                         size="sm"
                         aria-label="Weaving rate input mode"
+                        className="max-w-full"
+                        optionClassName="whitespace-normal"
                         value={inputMode}
                         onValueChange={handleInputModeChange}
                         options={[{ value: 'perMeter', label: 'Weaving rate (₹/m)' }, { value: 'perPick', label: 'Paisa per pick' }]}
@@ -2954,7 +2960,29 @@ function QuickCostingView({
                     accent="weft"
                     step={3}
                     tutorialSection={4}
-                    badgeContent={<div className="flex items-center gap-2"><div className="flex items-center rounded-lg border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-0.5"><button type="button" onClick={() => onWidthUnitChange('cm')} className={`px-2 py-1 text-[10px] font-semibold uppercase ${widthUnit === 'cm' ? 'rounded bg-white text-[var(--color-factory-green)] shadow-sm' : 'text-[var(--color-muted)]'}`}>cm</button><button type="button" onClick={() => onWidthUnitChange('inch')} className={`px-2 py-1 text-[10px] font-semibold uppercase ${widthUnit === 'inch' ? 'rounded bg-white text-[var(--color-factory-green)] shadow-sm' : 'text-[var(--color-muted)]'}`}>inch</button></div><SectionCostPill value={totals.yarnBaseWeftPerM} valid={hasValidCostResult} /></div>}
+                    badgeContent={
+                        <div className="flex flex-wrap items-center gap-2">
+                            <div className="flex items-center rounded-lg border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-0.5">
+                                <button
+                                    type="button"
+                                    onClick={() => onWidthUnitChange('cm')}
+                                    aria-pressed={widthUnit === 'cm'}
+                                    className={`mobile-touch-target px-2 py-1 text-[10px] font-semibold uppercase ${widthUnit === 'cm' ? 'rounded bg-white text-[var(--color-factory-green)] shadow-sm' : 'text-[var(--color-muted)]'}`}
+                                >
+                                    cm
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => onWidthUnitChange('inch')}
+                                    aria-pressed={widthUnit === 'inch'}
+                                    className={`mobile-touch-target px-2 py-1 text-[10px] font-semibold uppercase ${widthUnit === 'inch' ? 'rounded bg-white text-[var(--color-factory-green)] shadow-sm' : 'text-[var(--color-muted)]'}`}
+                                >
+                                    inch
+                                </button>
+                            </div>
+                            <SectionCostPill value={totals.yarnBaseWeftPerM} valid={hasValidCostResult} />
+                        </div>
+                    }
                 />
                 <CardContent className="space-y-4 p-4 sm:p-5">
                     {state.weftRows.map((row, index) => {
@@ -3610,6 +3638,7 @@ export default function EstimatorClient({
         suppressAutosaveUntilChanged,
         markUserEdit,
         storageStatus,
+        draftSaveStatus,
         draftConflict,
         acknowledgeDraftConflict,
     } = useAutosave<EstimateState>({
@@ -3617,7 +3646,7 @@ export default function EstimatorClient({
         orgId,
         userId,
         debounceMs: 2000,
-        shouldPersist: data => shouldPersistEstimatorDraft(data as EstimatorDraftInput<EstimateState>),
+        shouldPersist: shouldPersistEstimatorDraft,
         validateState: validateEstimatorDraftState,
     })
 
@@ -3734,10 +3763,21 @@ export default function EstimatorClient({
         weftInstruction,
     ])
 
+    usePwaInstallBlocker(Boolean(saving || savingQuote || savingTemplate || savingRates || checkingSave || freeMeter.pending || freeMeter.busy || draftConflict || (freeMode ? freeMeter.stale : hasUnsavedEdits)))
+    usePwaRefreshGuard(() => {
+        if (saving || savingQuote || savingTemplate || savingRates || checkingSave || saveQuoteLockRef.current || freeMeter.pending) return false
+        if (draftConflict) return false
+        if (!hasUnsavedEdits && draftSaveStatus !== 'pending' && draftSaveStatus !== 'error') return true
+        // Free sessions cannot recover a paid-plan draft. Pending restore/conflict
+        // decisions must never be overwritten merely to install an update.
+        if (freeMode || disableAutosave) return false
+        return saveDraftNow(buildCurrentDraft())
+    })
+
     const applyEstimatorDraft = useCallback((checkpoint?: EstimatorDraftInput<EstimateState>) => {
         const restored = checkpoint ?? restoreDraft()
         if (!restored) return
-        suppressAutosaveUntilChanged()
+        suppressAutosaveUntilChanged({ preserveDraftStatus: !checkpoint })
         lastGeneratedWarp.current = null
         lastGeneratedWeft.current = null
 
@@ -3882,8 +3922,9 @@ export default function EstimatorClient({
         }
     }, [freeMode, initialProfile, initialTemplates])
 
-    // Autosave: persist on every state change (debounced)
-    useEffect(() => {
+    // Update the recoverable input at commit, before pagehide/visibility events;
+    // the storage write itself remains debounced by the autosave hook.
+    useLayoutEffect(() => {
         if (!orgId) return
         saveDraft(buildCurrentDraft(
             quoteRequestIdRef.current,
@@ -4036,6 +4077,7 @@ export default function EstimatorClient({
         setSourceState(savedState)
         setSourceFactoryProfileUpdatedAt(submitted?.factoryProfileUpdatedAt ?? sourceFactoryProfileUpdatedAt ?? factoryBaselineUpdatedAt)
         setLastSavedCosting({ id: receipt.id, version: receipt.version_number, savedAt: receipt.created_at, model: savedModel })
+        reportPwaWorkflowSuccess('costing')
     }
 
     const refreshSavedQualityTokens = async () => {
@@ -4962,7 +5004,7 @@ export default function EstimatorClient({
         <div ref={estimatorGutterRef} data-free-costing={freeMode || undefined} data-sentry-block={freeMode || undefined} className="ui-route-enter estimator-mobile-form space-y-5 pb-floating-button md:pb-20 relative">
             <span hidden data-signin-ready="true" />
             <RouteMilestones
-                route="/owner/estimator"
+                route={freeMode ? '/free' : '/owner/estimator'}
                 shellVisible
                 primaryUsable
                 secondaryReady={templatesLoaded}
@@ -4970,6 +5012,12 @@ export default function EstimatorClient({
             <PageHeader
                 title={tx('Cost estimate')}
             />
+            {!freeMode && !disableAutosave && (
+                <LocalSaveStatus
+                    className={pageShellClass}
+                    status={savingQuote ? 'server-saving' : lastSavedCosting && !hasUnsavedEdits && !unconfirmedRequestId ? 'server-saved' : draftSaveStatus}
+                />
+            )}
             {freeMode && (
                 <FreeTransactionRecovery
                     pending={freeMeter.pending}
@@ -6132,12 +6180,13 @@ export default function EstimatorClient({
                         step={3}
                         tutorialSection={4}
                         badgeContent={
-                            <div className="flex items-center gap-3">
+                            <div className="flex flex-wrap items-center gap-3">
                                 <div className="flex items-center rounded-lg border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-0.5 shadow-[0_1px_2px_rgba(30,37,40,0.03)]">
                                     <button
                                         type="button"
                                         onClick={() => setWidthUnit('cm')}
-                                        className={`px-2.5 py-1 text-[11px] font-semibold uppercase rounded-md transition-all ${
+                                        aria-pressed={widthUnit === 'cm'}
+                                        className={`mobile-touch-target px-2.5 py-1 text-[11px] font-semibold uppercase rounded-md transition-all ${
                                             widthUnit === 'cm'
                                                 ? 'bg-white text-[var(--color-factory-green)] shadow-sm border border-[var(--color-hairline)]'
                                                 : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
@@ -6148,7 +6197,8 @@ export default function EstimatorClient({
                                     <button
                                         type="button"
                                         onClick={() => setWidthUnit('inch')}
-                                        className={`px-2.5 py-1 text-[11px] font-semibold uppercase rounded-md transition-all ${
+                                        aria-pressed={widthUnit === 'inch'}
+                                        className={`mobile-touch-target px-2.5 py-1 text-[11px] font-semibold uppercase rounded-md transition-all ${
                                             widthUnit === 'inch'
                                                 ? 'bg-white text-[var(--color-factory-green)] shadow-sm border border-[var(--color-hairline)]'
                                                 : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'

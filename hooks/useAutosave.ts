@@ -23,7 +23,7 @@ interface UseAutosaveOptions<TState = unknown> {
   debounceMs?: number
   maxAgeMs?: number  // max age before draft is considered stale (default 7 days)
   /** Do not create a draft for an untouched/default estimator screen. */
-  shouldPersist?: (data: EstimatorDraftInput<unknown>) => boolean
+  shouldPersist?: (data: EstimatorDraftInput<TState>) => boolean
   /** Reject malformed state before it reaches the estimator reducer. */
   validateState?: (state: unknown) => state is TState
 }
@@ -32,6 +32,8 @@ export type EstimatorDraftConflict<TState = unknown> = {
   kind: 'updated' | 'cleared'
   draft: EstimatorAutosaveData<TState> | null
 }
+
+export type DraftSaveStatus = 'idle' | 'pending' | 'saved' | 'error'
 
 interface UseAutosaveReturn<TState = unknown> {
   /** Whether a recoverable draft was found on mount or from another tab. */
@@ -53,11 +55,13 @@ interface UseAutosaveReturn<TState = unknown> {
   /** Flush the latest meaningful input before a route/page transition. */
   flushDraft: () => boolean
   /** Suppress the current programmatic state until the user edits again. */
-  suppressAutosaveUntilChanged: () => void
+  suppressAutosaveUntilChanged: (options?: { preserveDraftStatus?: boolean }) => void
   /** Mark a user edit after a reset, restore, or successful save. */
   markUserEdit: () => void
   /** Browser storage status, without exposing the underlying exception. */
   storageStatus: 'unknown' | 'available' | 'unavailable'
+  /** Status of the current editor draft, independently of storage availability. */
+  draftSaveStatus: DraftSaveStatus
   storageFailure: EstimatorDraftStorageFailure | null
   /** A newer or cleared shared draft was observed in another tab. */
   draftConflict: EstimatorDraftConflict<TState> | null
@@ -99,6 +103,7 @@ export function useAutosave<TState = unknown>({
   const [hasDraft, setHasDraft] = useState(false)
   const [draft, setDraft] = useState<EstimatorAutosaveData<TState> | null>(null)
   const [storageStatus, setStorageStatus] = useState<'unknown' | 'available' | 'unavailable'>('unknown')
+  const [draftSaveStatus, setDraftSaveStatus] = useState<DraftSaveStatus>('idle')
   const [storageFailure, setStorageFailure] = useState<EstimatorDraftStorageFailure | null>(null)
   const [draftConflict, setDraftConflict] = useState<EstimatorDraftConflict<TState> | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -180,7 +185,7 @@ export function useAutosave<TState = unknown>({
       }
     }
     if (!allowProgrammatic && !userEditedRef.current && shouldPersist) return false
-    return shouldPersist ? shouldPersist(data as EstimatorDraftInput<unknown>) : true
+    return shouldPersist ? shouldPersist(data) : true
   }, [enabled, shouldPersist])
 
   const persistDraft = useCallback((data: EstimatorDraftInput<TState>, allowPendingDecision = false) => {
@@ -205,16 +210,31 @@ export function useAutosave<TState = unknown>({
       markStorageAvailable()
       latestPersistedDraftRef.current = payload
       localWriteSequenceRef.current = payload.writeSequence
+      if (mountedRef.current) setDraftSaveStatus('saved')
       return true
     } catch {
       markStorageFailure('write')
+      if (mountedRef.current) setDraftSaveStatus('error')
       return false
     }
   }, [markStorageAvailable, markStorageFailure, readStoredDraft])
 
   const saveDraft = useCallback((data: EstimatorDraftInput<TState>) => {
-    if (!isMeaningful(data)) return
+    if (!isMeaningful(data)) {
+      if (enabled && userEditedRef.current && !suppressUntilChangeRef.current && !draftDecisionPendingRef.current) {
+        // The user returned to default values. There is no current draft to
+        // save; cancel an older edit's debounce without touching a recoverable
+        // copy or changing the suppression used by restore/reset flows.
+        writeGenerationRef.current += 1
+        if (timerRef.current) clearTimeout(timerRef.current)
+        timerRef.current = null
+        latestInputRef.current = null
+        setDraftSaveStatus('idle')
+      }
+      return
+    }
     latestInputRef.current = data
+    setDraftSaveStatus('pending')
     // Never overwrite a recoverable draft while the restore/discard decision
     // is waiting for the user's explicit choice.
     if (draftDecisionPendingRef.current) return
@@ -225,7 +245,7 @@ export function useAutosave<TState = unknown>({
     timerRef.current = setTimeout(() => {
       if (generation === writeGenerationRef.current) persistDraft(data)
     }, debounceMs)
-  }, [debounceMs, isMeaningful, persistDraft])
+  }, [debounceMs, enabled, isMeaningful, persistDraft])
 
   const saveDraftNow = useCallback((data: EstimatorDraftInput<TState>) => {
     // Explicit save/retry paths must retain a restored source quote and its
@@ -292,6 +312,7 @@ export function useAutosave<TState = unknown>({
     setHasDraft(false)
     setDraft(null)
     setDraftConflict(null)
+    setDraftSaveStatus('idle')
   }, [draft, removeDraftIfCurrent])
 
   const restoreDraft = useCallback((): EstimatorAutosaveData<TState> | null => {
@@ -317,6 +338,9 @@ export function useAutosave<TState = unknown>({
     setHasDraft(false)
     setDraft(null)
     setDraftConflict(null)
+    // An in-memory recovery option may outlive a failed read or a cross-tab
+    // removal. Only a copy confirmed in storage is safe to label as saved.
+    setDraftSaveStatus(stored && selected === stored ? 'saved' : 'pending')
     return selected
   }, [draft, readStoredDraft])
 
@@ -333,6 +357,7 @@ export function useAutosave<TState = unknown>({
     setHasDraft(false)
     setDraft(null)
     setDraftConflict(null)
+    setDraftSaveStatus('idle')
   }, [removeDraftIfCurrent])
 
   const renameDraft = useCallback((qualityLabel: string) => {
@@ -375,19 +400,21 @@ export function useAutosave<TState = unknown>({
     }
   }, [draft, markStorageAvailable, markStorageFailure, readStoredDraft])
 
-  const suppressAutosaveUntilChanged = useCallback(() => {
+  const suppressAutosaveUntilChanged = useCallback((options?: { preserveDraftStatus?: boolean }) => {
     suppressUntilChangeRef.current = true
     userEditedRef.current = false
     latestInputRef.current = null
     writeGenerationRef.current += 1
     if (timerRef.current) clearTimeout(timerRef.current)
     timerRef.current = null
+    if (!options?.preserveDraftStatus) setDraftSaveStatus('idle')
   }, [])
 
   const markUserEdit = useCallback(() => {
     suppressUntilChangeRef.current = false
     userEditedRef.current = true
-  }, [])
+    if (enabled) setDraftSaveStatus('pending')
+  }, [enabled])
 
   const acknowledgeDraftConflict = useCallback(() => {
     setDraftConflict(null)
@@ -418,6 +445,7 @@ export function useAutosave<TState = unknown>({
 
       if (!event.newValue) {
         if (latestPersistedDraftRef.current || draft) {
+          setDraftSaveStatus(current => current === 'saved' ? 'pending' : current)
           setDraftConflict({ kind: 'cleared', draft: null })
           reportEstimatorDraftDiagnostic({
             event: 'external_clear',
@@ -448,6 +476,7 @@ export function useAutosave<TState = unknown>({
       }
 
       latestPersistedDraftRef.current = remote
+      setDraftSaveStatus(current => current === 'saved' ? 'pending' : current)
       localWriteSequenceRef.current = Math.max(localWriteSequenceRef.current, remote.writeSequence)
       reportEstimatorDraftDiagnostic({
         event: 'external_update',
@@ -501,6 +530,7 @@ export function useAutosave<TState = unknown>({
     suppressAutosaveUntilChanged,
     markUserEdit,
     storageStatus,
+    draftSaveStatus,
     storageFailure,
     draftConflict,
     acknowledgeDraftConflict,
