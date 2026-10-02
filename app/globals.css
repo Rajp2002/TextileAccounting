@@ -433,6 +433,14 @@
   --nav-child-fade-duration: 140ms;
   --nav-disclosure-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --nav-child-offset: 4px;
+
+  /* Product motion tempo: fast for feedback, base for arrivals, slow for size changes. */
+  --motion-fast: 120ms;
+  --motion-base: 180ms;
+  --motion-slow: 280ms;
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Sheets decelerate into place the way native bottom sheets do. */
+  --ease-sheet: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 .dark {
@@ -1521,18 +1529,20 @@
     to { box-shadow: inset 3px 0 0 var(--color-info-blue); }
   }
 
+  /* backwards, not both: a finished entry must not keep opacity or a transform
+     applied, or the element stays a stacking context / containing block. */
   .ui-route-enter {
-    animation: ui-route-enter 180ms ease-out both;
+    animation: ui-route-enter var(--motion-base) ease-out backwards;
   }
 
   .ui-content-swap,
   .ui-disclosure-content,
   .ui-status-enter {
-    animation: ui-content-swap 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: ui-content-swap 240ms var(--ease-out-soft) backwards;
   }
 
   .ui-success-pop {
-    animation: ui-success-pop 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: ui-success-pop 200ms var(--ease-out-soft) backwards;
   }
 
   .ui-surface,
@@ -1564,7 +1574,7 @@
   }
 
   .ui-nav-indicator {
-    animation: ui-success-pop 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: ui-success-pop 220ms var(--ease-out-soft) backwards;
     transform-origin: center;
   }
 
@@ -1593,6 +1603,138 @@
     .ui-segment,
     .ui-progress-fill {
       transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* The shell already fades each page in; a nested opt-in must not fade it twice. */
+  .dashboard-main > * .ui-route-enter {
+    animation: none;
+  }
+}
+
+/* ── Quiet motion system ───────────────────────────────────────────
+ * Page arrivals, disclosures, navigation markers, meters and placeholders share
+ * the --motion-* tempo. It lives in the components layer so a page's own
+ * animation utility still wins over these defaults.
+ */
+@layer components {
+  /* Every owner and Free page (and its loading skeleton) fades in as it commits.
+     Opacity only, so fixed rails and tour measurements are unaffected. */
+  .dashboard-main > * {
+    animation: ui-route-enter var(--motion-base) ease-out backwards;
+  }
+
+  /* <details> panels slide open and closed where ::details-content and
+     interpolate-size exist (Chromium); elsewhere they open instantly, as before. */
+  details.ui-details {
+    interpolate-size: allow-keywords;
+  }
+
+  details.ui-details::details-content {
+    block-size: 0;
+    opacity: 0;
+    overflow: clip;
+    /* Keep focus rings at the panel edge visible. */
+    overflow-clip-margin: 4px;
+    transition:
+      block-size var(--motion-slow) var(--ease-out-soft),
+      opacity var(--motion-base) ease-out,
+      content-visibility var(--motion-slow);
+    transition-behavior: allow-discrete;
+  }
+
+  details.ui-details[open]::details-content {
+    block-size: auto;
+    opacity: 1;
+  }
+
+  /* The saffron marker grows from its centre on the newly active destination. */
+  @keyframes ui-nav-mark {
+    from { opacity: 0; scale: 1 0.3; }
+  }
+
+  .ui-nav-mark::before {
+    animation: ui-nav-mark var(--motion-base) var(--ease-out-soft) backwards;
+  }
+
+  /* Progress and composition bars glide to a new value instead of jumping. */
+  .ui-meter-fill {
+    transition: width 400ms var(--ease-out-soft), background-color var(--motion-base) ease;
+  }
+
+  /* Placeholders: a soft sheen passes over each block, then rests. */
+  @keyframes ui-skeleton-sheen {
+    from { translate: -100% 0; }
+    60%, to { translate: 100% 0; }
+  }
+
+  .ui-skeleton {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .ui-skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    translate: -100% 0;
+    background: linear-gradient(90deg, transparent, var(--ui-skeleton-sheen, rgba(22, 33, 62, 0.05)), transparent);
+    animation: ui-skeleton-sheen 2s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  /* On dark surfaces the sheen is light instead of ink. */
+  .ui-skeleton-inverse {
+    --ui-skeleton-sheen: rgba(255, 255, 255, 0.08);
+  }
+
+  /* A row added while the page is open briefly carries the selected-row tint
+     so the owner can see where it landed. Set on the list item; tints its card. */
+  @keyframes ui-row-arrive {
+    from {
+      background-color: var(--wv-neel-50);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--wv-neel-300) 45%, transparent);
+    }
+  }
+
+  .ui-row-arrive > * {
+    animation: ui-row-arrive 1.6s ease-out;
+  }
+
+  /* Inline errors and warnings fade in where they appear instead of popping. */
+  [role="alert"]:not([data-sonner-toast]) {
+    transition:
+      opacity var(--motion-base) ease-out,
+      translate var(--motion-base) var(--ease-out-soft);
+  }
+
+  @starting-style {
+    [role="alert"]:not([data-sonner-toast]) {
+      opacity: 0;
+      translate: 0 -3px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dashboard-main > *,
+    .ui-nav-mark::before,
+    .ui-row-arrive > * {
+      animation: none !important;
+    }
+
+    [role="alert"]:not([data-sonner-toast]) {
+      transition: none !important;
+    }
+
+    details.ui-details::details-content,
+    .ui-meter-fill {
+      transition: none !important;
+    }
+
+    .ui-skeleton::after {
+      display: none;
+      animation: none !important;
     }
   }
 }

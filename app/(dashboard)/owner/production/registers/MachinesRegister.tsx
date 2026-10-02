@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react'
 import { useLocalizedPageTitle } from '@/hooks/use-localized-page-title'
+import { useArrivals } from '@/hooks/use-arrivals'
 import { useSearchParams } from 'next/navigation'
 import { useTranslation } from '@/lib/i18n/context'
 import { safeBaseReturnPath } from '@/lib/base-production-navigation'
@@ -34,6 +35,7 @@ export default function MachinesRegister({
   const params = useSearchParams()
   const { tx, language } = useTranslation()
   const [tourStep, setTourStep] = useState<MachinesTourStep | null>(null)
+  const arrivedIds = useArrivals(machines.map(machine => machine.id))
   const tourLauncher = useRef<HTMLDivElement>(null)
   const tourReturnFocus = useRef<HTMLElement | null>(null)
   const launchScroll = useRef<{ x: number; y: number } | null>(null)
@@ -165,7 +167,7 @@ export default function MachinesRegister({
           {tourSampleActive ? (
             <MachineGrid machines={examples} onEdit={() => {}} tourPreview />
           ) : visible.length > 0 ? (
-            <MachineGrid machines={visible} onEdit={tourStep ? () => {} : edit} />
+            <MachineGrid machines={visible} arrivedIds={arrivedIds} onEdit={tourStep ? () => {} : edit} />
           ) : (
             <MachineEmptyState
               totalCount={machines.length}
@@ -213,7 +215,7 @@ export default function MachinesRegister({
                   </div>
                 </section>
                 <details
-                  className={cn('group overflow-hidden', railSurface)}
+                  className={cn('ui-details group overflow-hidden', railSurface)}
                   data-i18n-skip="true"
                   lang={language}
                 >

@@ -36,7 +36,7 @@ export function UpgradeBenefitsPreview({ onActivated }: { onActivated: () => voi
     </div>
   </>
 
-  return <details open={open} onToggle={event => setOpen(event.currentTarget.open)} className="overflow-hidden rounded-xl border border-saffron/30 bg-saffron-soft/40">
+  return <details open={open} onToggle={event => setOpen(event.currentTarget.open)} className="ui-details overflow-hidden rounded-xl border border-saffron/30 bg-saffron-soft/40">
     <summary ref={summaryRef} className="flex cursor-pointer list-none flex-col gap-3 p-4 outline-none focus-visible:ring-2 focus-visible:ring-saffron sm:flex-row sm:items-center sm:justify-between [&::-webkit-details-marker]:hidden">
       <span><span className="block font-semibold text-ink">{freeText(language, 'liteHeadline')}</span><span className="mt-1 block text-sm text-body">{freeText(language, 'planSummary')}</span></span>
       <span className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-loom px-4 py-2 text-sm font-semibold text-white">{upgradeText(language, 'title')}<ArrowRight className="size-4" aria-hidden="true" /></span>

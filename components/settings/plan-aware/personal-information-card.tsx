@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { toast, userFacingError } from '@/lib/app-notifications'
+import { useSavedFlash } from '@/hooks/use-saved-flash'
 import { useTranslation, type Language } from '@/lib/i18n/context'
 import { updatePersonalInformation } from '@/app/(dashboard)/owner/settings/actions'
 
@@ -35,6 +36,7 @@ export function PersonalInformationCard({
     onDirtyChange,
 }: PersonalInformationCardProps) {
     const { t, tx, language, setLanguage, languageStatus } = useTranslation()
+    const [justSaved, flashSaved] = useSavedFlash()
     const nameInputId = useId()
     const nameErrorId = useId()
 
@@ -84,6 +86,7 @@ export function PersonalInformationCard({
                 onNameUpdated?.(result.fullName ?? trimmed)
                 onDirtyChange?.(false)
                 toast.success(tx('Personal information saved'))
+                flashSaved()
             }
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'Failed to save personal information'
@@ -228,12 +231,17 @@ export function PersonalInformationCard({
                     <Button
                         type="submit"
                         disabled={!isDirty || isSubmitting}
-                        className="min-h-11 rounded-xl bg-loom px-5 font-bold text-white shadow-xs hover:bg-loom-elevated transition-colors"
+                        className={`min-h-11 rounded-xl bg-loom px-5 font-bold text-white shadow-xs hover:bg-loom-elevated transition-colors ${justSaved && !isDirty ? 'disabled:opacity-100' : ''}`}
                     >
                         {isSubmitting ? (
                             <>
                                 <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                                 {tx('Saving…')}
+                            </>
+                        ) : justSaved && !isDirty ? (
+                            <>
+                                <CheckCircle2 className="ui-success-pop h-4 w-4" aria-hidden="true" />
+                                {t('base_plan.status.saved')}
                             </>
                         ) : (
                             tx('Save personal information')

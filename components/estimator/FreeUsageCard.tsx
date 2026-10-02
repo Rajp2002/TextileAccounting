@@ -141,14 +141,14 @@ export function FreeUsageCard({
       {isInitialLoading ? (
         <div className="mt-2 space-y-2" aria-busy="true">
           <div className="flex items-baseline gap-2">
-            <span className="text-xl font-bold tracking-tight text-subtle tabular-nums animate-pulse">
+            <span className="text-xl font-bold tracking-tight text-subtle tabular-nums">
               – / –
             </span>
             <span className="text-xs text-subtle">{t('checkingUsage')}</span>
           </div>
           <div className="flex gap-1.5 h-1.5 w-full">
-            <div className="h-full flex-1 rounded-full bg-wv-cotton-300 animate-pulse" />
-            <div className="h-full flex-1 rounded-full bg-wv-cotton-300 animate-pulse" />
+            <div className="ui-skeleton h-full flex-1 rounded-full bg-wv-cotton-300" />
+            <div className="ui-skeleton h-full flex-1 rounded-full bg-wv-cotton-300" />
           </div>
         </div>
       ) : hasFatalError ? (

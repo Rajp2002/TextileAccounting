@@ -61,7 +61,7 @@ export function OwnerRouteLoading() {
             </div>
             <div className="grid gap-4 md:grid-cols-2">
                 {[0, 1, 2, 3].map(index => (
-                    <div key={index} className="h-28 animate-pulse rounded-xl border border-hairline bg-surface motion-reduce:animate-none" />
+                    <div key={index} className="h-28 ui-skeleton rounded-xl border border-hairline bg-surface" />
                 ))}
             </div>
         </div>

@@ -119,6 +119,8 @@
   }
 
   .mobile-navigation-icon {
+    position: relative;
+    isolation: isolate;
     display: grid;
     width: 48px;
     max-width: 100%;
@@ -126,13 +128,26 @@
     flex-shrink: 0;
     place-items: center;
     border-radius: 10px;
-    transition: background-color 140ms ease, transform 140ms ease;
+    transition: transform 140ms ease;
+  }
+
+  /* The active pill expands sideways from the icon's centre, as native tab bars do. */
+  .mobile-navigation-icon::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: var(--accent);
+    opacity: 0;
+    scale: 0.4 1;
+    transition: scale 260ms var(--ease-out-soft), opacity 140ms ease;
   }
 
   .mobile-navigation-icon svg { width: 20px; height: 20px; stroke-width: 1.8; }
   .mobile-navigation-label { max-width: 100%; font-size: 11px; line-height: 1.25; font-weight: 600; overflow-wrap: anywhere; }
   .mobile-navigation-item[data-active="true"] { color: var(--accent-foreground); }
-  .mobile-navigation-item[data-active="true"] .mobile-navigation-icon { background: var(--accent); }
+  .mobile-navigation-item[data-active="true"] .mobile-navigation-icon::before { opacity: 1; scale: 1; }
   .mobile-navigation-item[data-active="true"] svg { stroke-width: 2.4; }
   .mobile-navigation-item:active { background: var(--muted); }
   .mobile-navigation-item:active .mobile-navigation-icon { transform: scale(0.94); }
@@ -307,7 +322,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .mobile-navigation-item, .mobile-navigation-icon,
+  .mobile-navigation-item, .mobile-navigation-icon, .mobile-navigation-icon::before,
   [data-slot="dialog-content"], [data-slot="dialog-overlay"],
   [data-slot="sheet-content"], [data-slot="sheet-overlay"] {
     animation-duration: 0.01ms !important;
