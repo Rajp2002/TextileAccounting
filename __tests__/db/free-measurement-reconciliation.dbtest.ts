@@ -55,7 +55,7 @@ describe('F15 receipt-backed events reconcile with saved results', () => {
             "SELECT event_id FROM public.free_funnel_events WHERE subject_id = $1 AND event_name = 'calculation_completed' ORDER BY event_id",
             [free.userId],
         )
-        expect(rows.map(row => row.event_id).sort()).toEqual([first, second].sort())
+        expect(rows.map((row: { event_id: string }) => row.event_id).sort()).toEqual([first, second].sort())
     })
 
     it('a replay of a saved request is not a second activation', async () => {

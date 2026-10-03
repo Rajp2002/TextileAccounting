@@ -14,6 +14,9 @@ const migrationFile = readdirSync(MIGRATIONS).find(name => name.endsWith('_free_
 const IST = 330 * 60_000
 /** Independent oracle: India has kept UTC+05:30 without DST since 1945. */
 const istMonthStart = (year: number, month: number) => new Date(Date.UTC(year, month, 1) - IST).toISOString()
+/** Rows from the untyped test client. */
+type Row = Record<string, unknown>
+type UsageRow = Row & { period_start: string; period_end: string }
 /** The test client may return timestamptz as Date or text. */
 const iso = (value: unknown) => new Date(value as string).toISOString()
 
@@ -25,14 +28,14 @@ async function monthEnd(start: string) {
     return iso(rows[0].end_at)
 }
 
-async function usageRows() {
+async function usageRows(): Promise<UsageRow[]> {
     await asSuperuser(db)
     const { rows } = await db.query(
         `SELECT subject_id, period_start, period_end, policy_version, allowance, used
            FROM public.free_monthly_usage WHERE subject_id = $1 ORDER BY period_start`,
         [free.userId],
     )
-    return rows.map(row => ({ ...row, period_start: iso(row.period_start), period_end: iso(row.period_end) }))
+    return rows.map((row: Row) => ({ ...row, period_start: iso(row.period_start), period_end: iso(row.period_end) }))
 }
 
 async function protectedCounts() {

@@ -283,6 +283,24 @@ describe('F04 current balance comes only from the newest status read', () => {
     expect(current.status?.quota.remaining).toBe(1)
   })
 
+  it('a status read started before a save cannot report the pre-save balance as current after it', async () => {
+    const calculation = deferred(), early = deferred()
+    statusReplies.push(status(2), status(2), early.promise, { status: 503, body: { code: 'FREE_TEMPORARY_ERROR' } })
+    calculateReplies.push(calculation.promise)
+    await mount()
+    let submitted!: Promise<void>, focusRead!: Promise<unknown>
+    await act(async () => { submitted = current.submit(false); await Promise.resolve(); await Promise.resolve() })
+    // A focus refresh starts while the calculation is in flight.
+    await act(async () => { focusRead = current.refresh(); await Promise.resolve() })
+    await act(async () => { calculation.resolve(saved(1)); await submitted })
+    expect(current.balanceUnverified).toBe(true)
+
+    // The early read now returns the balance from before the debit.
+    await act(async () => { early.resolve(status(2)); await focusRead })
+    expect(current.balanceUnverified).toBe(true)
+    expect(current.status?.quota.remaining).toBe(2)
+  })
+
   it('a replayed receipt from an earlier month never becomes the current balance', async () => {
     const previousMonth = { periodStart: '2026-08-31T18:30:00.000Z', resetsAt: '2026-09-30T18:30:00.000Z', policyVersion: 2 }
     const replay = { status: 200, body: { ...saved(0).body, quota: { used: 2, limit: 2, remaining: 0, ...previousMonth, replayed: true, requestId: 'request-1' } } }

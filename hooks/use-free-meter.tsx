@@ -42,8 +42,9 @@ export function useFreeMeter(enabled:boolean,state:EstimateState,label:string,on
   const order=++statusOrder.current.issued,owner=generation.current
   const r=await fetch('/api/free/status',{cache:'no-store',signal:AbortSignal.timeout(10000)});const data=await r.json() as FreeStatus&{code?:string}
   if(!r.ok)throw new Error(data.code)
-  // Only the newest read may describe the current balance.
-  if(order<statusOrder.current.applied||owner!==generation.current)return data
+  // Only the newest read may describe the current balance. A save also
+  // retires every read issued before it (see send), as those predate its debit.
+  if(order<=statusOrder.current.applied||owner!==generation.current)return data
   statusOrder.current.applied=order
   if(account.current&&data.account.id!==account.current)forgetOwner()
   account.current=data.account.id
@@ -98,6 +99,7 @@ export function useFreeMeter(enabled:boolean,state:EstimateState,label:string,on
   holdOrActivatePaid()
   const saved=resolved.saved
   if(saved){
+   statusOrder.current.applied=statusOrder.current.issued
    setCompleted({estimate:attempt.estimate,result:saved.result,totals:saved.totals,signature:signatureOf(attempt.estimate),id:saved.savedCostingId,label:attempt.label,quota:saved.quota,confirmedAt:new Date().toISOString(),statusReads:reads.current})
    reportPwaWorkflowSuccess('costing')
    void fetch('/api/free/events',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({eventId:saved.requestId,name:'result_viewed',language,entryPoint:'estimator'})}).catch(()=>{})
