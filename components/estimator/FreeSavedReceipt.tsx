@@ -8,11 +8,11 @@ import type { FreeReceiptQuota } from '@/lib/free-transaction'
 
 /**
  * Server-confirmed save of the current inputs. The confirmation time is this
- * device's receipt time; the response carries no saved-at timestamp. The
+ * server's saved-at time (older responses use this device's receipt time). The
  * receipt's own balance belongs to its accounting period, so the current
  * balance stays with the usage card.
  */
-export function FreeSavedReceipt({ label, confirmedAt, quota }: { label: string; confirmedAt: string; quota: FreeReceiptQuota }) {
+export function FreeSavedReceipt({ label, confirmedAt, quota, costingsUsed = 1 }: { label: string; confirmedAt: string; quota: FreeReceiptQuota; costingsUsed?: number }) {
   const { language } = useTranslation()
   const time = new Intl.DateTimeFormat(`${language}-IN`, { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Kolkata' }).format(new Date(confirmedAt))
   return (
@@ -21,7 +21,7 @@ export function FreeSavedReceipt({ label, confirmedAt, quota }: { label: string;
         <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
         <div className="min-w-0 space-y-1">
           <h2 className="font-semibold break-words">{freeText(language, 'savedReceipt', { label })}</h2>
-          <p className="text-xs">{freeText(language, 'confirmedAt', { time })} · {freeText(language, quota.replayed ? 'replayNoCharge' : 'costingUsed')}</p>
+          <p className="text-xs">{freeText(language, 'confirmedAt', { time })} · {freeText(language, costingsUsed === 0 ? 'recalculatedNoCharge' : quota.replayed ? 'replayNoCharge' : 'costingUsed')}</p>
           <Link href="/free/costings" className="inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-2">
             {freeText(language, 'savedCostings')}
           </Link>

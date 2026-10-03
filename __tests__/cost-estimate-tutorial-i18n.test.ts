@@ -60,6 +60,7 @@ describe('Estimator approved copy and live-label parity', () => {
         expect(hi.tourControls.estimator.saveNewVersion).toBe('नया वर्ज़न सेव करें')
         const page = readFileSync('app/(dashboard)/owner/estimator/EstimatorClient.tsx', 'utf8')
         for (const key of ['tourControls.estimator.saveCosting', 'tourControls.estimator.saveNewVersion', 'estimator.quality.saveQualityAndCosting']) expect(page).toContain(`t('${key}')`)
-        for (const label of ['Live cost', 'Change quality', 'Calculate & save · uses 1 costing', 'Start Production', 'Detailed']) expect(page).toContain(`tx('${label}')`)
+        expect(page).toContain("freeMeter.completed ? 'recalculateSave' : 'calculateSave'")
+        for (const label of ['Live cost', 'Change quality', 'Start Production', 'Detailed']) expect(page).toContain(`tx('${label}')`)
     })
 })

@@ -9,6 +9,8 @@ import { issueFreeRequest, verifyFreeRequest, bindFreeEffectiveInputs, resolveFr
 import { calcFullTotals, buildCostingResult, COSTING_CALCULATION_VERSION } from './estimator'
 import { parseFreeEstimate, canonicalFreeInputs } from './free-estimator-input'
 import { getEstimatorReadiness, validateEstimatorSnapshot, requiresFactoryCapacity } from './estimator-validation'
+import { freeEditWindow } from './free-costing-window'
+import type { SavedFreeCosting } from './free-costing-window'
 import { checkAuthRateLimit } from './rate-limit'
 
 export async function freeContext(options: { allowInactive?: boolean } = {}) {
@@ -59,14 +61,14 @@ export async function freeStatus() {
   const active = context.access.effectiveTier === 'free' && context.grant.state === 'active'
   const token = active && !context.paid && rollout.estimation_enabled ? issueFreeRequest({ subjectId:context.grant.subjectId, engineVersion:COSTING_CALCULATION_VERSION, ...signing(), serverTime, lifetimeMs:rollout.policy.receipt_retention_days*86400000 }) : null
   return {
-    plan: context.access.effectiveTier, accessState:context.paid?'paid':active?'active':context.grant.state==='active'?'paid_expired':context.grant.state, estimationEnabled:active && rollout.estimation_enabled,
+    serverTime: serverTime.toISOString(), plan: context.access.effectiveTier, accessState:context.paid?'paid':active?'active':context.grant.state==='active'?'paid_expired':context.grant.state, estimationEnabled:active && rollout.estimation_enabled,
     tourEnabled:rollout.tour_enabled, tourState:subject?.tour_state ?? 'new', requestToken:token,
     quota: { used, limit, remaining:Math.max(0,limit-used), periodStart:window.start, resetsAt:window.end, policyVersion:usage?.policy_version ?? rollout.policy.version },
     demo: rollout.tour_enabled ? { productionCostPerM:buildCostingResult(makeFreeDemo(),calcFullTotals(makeFreeDemo())).productionCostPerM } : null,
     account: { id:context.user.id, name:context.profile.full_name ?? '', email:context.user.email ?? '', organizationName:context.org.name },
   }
 }
-export async function calculateFreeSubmission(body: { estimate: unknown; requestToken?: string; warningsAcknowledged?: boolean; label?: string }) {
+export async function calculateFreeSubmission(body: { estimate: unknown; requestToken?: string; warningsAcknowledged?: boolean; label?: string; costingId?: string; expectedRevision?: number }) {
   const context = await freeContext()
   const rate = await checkAuthRateLimit(`free-calculate:${context.grant.subjectId}`)
   if (rate !== null) throw new Error('FREE_THROTTLED')
@@ -81,26 +83,49 @@ export async function calculateFreeSubmission(body: { estimate: unknown; request
   const result = buildCostingResult(estimate,totals)
   const readiness = getEstimatorReadiness({ validation,result,totals,warningsAcknowledged:body.warningsAcknowledged })
   if (!readiness.canPersist) throw new Error('FREE_INVALID_INPUT')
+  if (context.paid && body.costingId) throw new Error('FREE_ACCESS_DENIED')
   if (context.paid) return { outcome:'paid_result' as const, result, totals, quota:null, paid:true as const }
   const identity = verifyFreeRequest(body.requestToken ?? '', { subjectId:context.grant.subjectId, engineVersion:COSTING_CALCULATION_VERSION, keys:signing().keys, serverTime:new Date() })
-  const inputBinding = bindFreeEffectiveInputs(identity,canonicalFreeInputs(estimate),signing().keys)
-  const { data: quota, error } = await createAdminClient().rpc('complete_free_saved_costing', {
+  const label = body.label?.trim() || 'Costing'
+  const revising = !!body.costingId
+  if (revising !== (body.expectedRevision !== undefined)) throw new Error('FREE_INVALID_INPUT')
+  const inputs = canonicalFreeInputs(estimate)
+  const inputBinding = bindFreeEffectiveInputs(identity,revising ? { estimate:inputs,label,costingId:body.costingId,expectedRevision:body.expectedRevision } : inputs,signing().keys)
+  const { data, error } = await createAdminClient().rpc(revising ? 'recalculate_free_saved_costing' : 'complete_free_saved_costing', {
     p_user_id:context.user.id,p_org_id:context.profile.org_id,p_request_id:identity.requestId,
     p_input_binding:inputBinding,p_engine_version:identity.engineVersion,p_issued_at:identity.issuedAt,
-    p_label:body.label?.trim() || 'Costing',p_estimate:estimate,p_result:result,p_totals:totals,
+    p_label:label,p_estimate:estimate,p_result:result,p_totals:totals,
+    ...(revising ? {p_costing_id:body.costingId,p_expected_revision:body.expectedRevision} : {}),
   })
   if (error) {
-    const code = ['FREE_QUOTA_EXHAUSTED','FREE_REQUEST_CONFLICT','FREE_REQUEST_EXPIRED','FREE_ACCESS_DENIED','FREE_PAUSED'].find(code => error.message?.includes(code))
+    const code = ['FREE_QUOTA_EXHAUSTED','FREE_REQUEST_CONFLICT','FREE_REQUEST_EXPIRED','FREE_ACCESS_DENIED','FREE_PAUSED','FREE_EDIT_WINDOW_EXPIRED','FREE_COSTING_CONFLICT'].find(code => error.message?.includes(code))
     throw new Error(code ?? 'FREE_RETRY_SAME_REQUEST')
   }
-  if (!quota) throw new Error('FREE_RETRY_SAME_REQUEST')
-  return { outcome:'saved' as const, result,totals,quota,requestId:identity.requestId,savedCostingId:identity.requestId }
+  if (!data) throw new Error('FREE_RETRY_SAME_REQUEST')
+  // Revision replays return their stored result, even if another revision exists now.
+  return { outcome:'saved' as const, result:revising ? data.result : result,totals:revising ? data.totals : totals,
+    quota:revising ? data.quota : data,requestId:identity.requestId,savedCostingId:data.savedCostingId,
+    editWindow:data.editWindow,costingsUsed:data.costingsUsed }
+}
+
+export async function getSavedFreeCosting(id: string): Promise<SavedFreeCosting> {
+  if (!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(id)) throw new Error('FREE_INVALID_INPUT')
+  const { grant, profile, paid } = await freeContext()
+  if (paid) throw new Error('FREE_ACCESS_DENIED')
+  const admin = createAdminClient()
+  const { data, error } = await admin.from('free_saved_costings').select('*').eq('id',id).eq('subject_id',grant.subjectId).eq('org_id',profile.org_id).maybeSingle()
+  if (error) throw new Error('FREE_TEMPORARY_ERROR')
+  if (!data) throw new Error('FREE_ACCESS_DENIED')
+  const { data: serverTime, error: clockError } = await admin.rpc('free_server_time')
+  if (clockError || !serverTime) throw new Error('FREE_TEMPORARY_ERROR')
+  return { ...data, editWindow:freeEditWindow(data,serverTime) }
+
 }
 
 export function freeError(error: unknown) {
   const message = error instanceof Error ? error.message : ''
-  const allowed = ['FREE_AUTH_REQUIRED','FREE_ACCESS_DENIED','FREE_ACCESS_INACTIVE','FREE_PROVISIONING_RETRY','FREE_PROVISIONING_PENDING','FREE_THROTTLED','FREE_PAUSED','FREE_INVALID_INPUT','FREE_QUOTA_EXHAUSTED','FREE_REQUEST_CONFLICT','FREE_REQUEST_EXPIRED','FREE_REQUEST_INVALID_OR_EXPIRED','FREE_RETRY_SAME_REQUEST']
+  const allowed = ['FREE_AUTH_REQUIRED','FREE_ACCESS_DENIED','FREE_ACCESS_INACTIVE','FREE_PROVISIONING_RETRY','FREE_PROVISIONING_PENDING','FREE_THROTTLED','FREE_PAUSED','FREE_INVALID_INPUT','FREE_QUOTA_EXHAUSTED','FREE_REQUEST_CONFLICT','FREE_REQUEST_EXPIRED','FREE_REQUEST_INVALID_OR_EXPIRED','FREE_RETRY_SAME_REQUEST','FREE_EDIT_WINDOW_EXPIRED','FREE_COSTING_CONFLICT']
   const code = allowed.includes(message) ? message : 'FREE_TEMPORARY_ERROR'
-  const status = code === 'FREE_AUTH_REQUIRED' ? 401 : code.startsWith('FREE_ACCESS') ? 403 : code==='FREE_THROTTLED' ? 429 : code==='FREE_QUOTA_EXHAUSTED'||code==='FREE_REQUEST_CONFLICT' ? 409 : code==='FREE_INVALID_INPUT'||code.includes('EXPIRED') ? 400 : 503
+  const status = code === 'FREE_AUTH_REQUIRED' ? 401 : code.startsWith('FREE_ACCESS') ? 403 : code==='FREE_THROTTLED' ? 429 : code==='FREE_QUOTA_EXHAUSTED'||code==='FREE_REQUEST_CONFLICT'||code==='FREE_COSTING_CONFLICT' ? 409 : code==='FREE_INVALID_INPUT'||code.includes('EXPIRED') ? 400 : 503
   return Response.json({code},{status,headers:{'Cache-Control':'private, no-store, max-age=0'}})
 }

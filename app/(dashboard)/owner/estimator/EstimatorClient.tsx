@@ -1,4 +1,6 @@
 'use client'
+import type {SavedFreeCosting} from '@/lib/free-costing-window'
+import {FreeRecalculationWindow} from '@/components/estimator/FreeRecalculationWindow'
 
 import dynamic from 'next/dynamic'
 import { useMobileKeyboard } from '@/hooks/use-mobile-keyboard'
@@ -1402,6 +1404,7 @@ function assumptionSourceLabel(source: string): string {
 
 function MobileLiveEstimateShortcut({
     metered = false,
+    awaitingCalculation = false,
     visible,
     keyboardVisible,
     activeName,
@@ -1429,6 +1432,7 @@ function MobileLiveEstimateShortcut({
     isTutorialActive = false,
 }: {
     metered?: boolean
+    awaitingCalculation?: boolean
     visible: boolean
     keyboardVisible: boolean
     activeName: string
@@ -1455,12 +1459,13 @@ function MobileLiveEstimateShortcut({
     onOpenChange?: (open: boolean) => void
     isTutorialActive?: boolean
 }) {
-    const { tx } = useTranslation()
+    const { tx, language } = useTranslation()
     const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
     const open = controlledOpen !== undefined ? controlledOpen : uncontrolledOpen
     const setOpen = setControlledOpen ?? setUncontrolledOpen
     const hasValidPrice = hasValidCostResult && quoteIsValid
-    const hasReviewState = needsReview || missingIssueCount > 0 || !hasValidCostResult || !quoteIsValid
+    const hasReviewState = needsReview || missingIssueCount > 0 || (!awaitingCalculation && (!hasValidCostResult || !quoteIsValid))
+    const readyToCalculate = awaitingCalculation && !hasReviewState
     const marginTone = actualMarginPct === null
         ? 'text-[var(--color-muted)]'
         : actualMarginPct > 0
@@ -1479,12 +1484,12 @@ function MobileLiveEstimateShortcut({
         ? `Production cost ₹${productionCostPerM.toFixed(2)} per metre`
         : missingIssueCount > 0
             ? `${missingIssueCount} costing input${missingIssueCount === 1 ? '' : 's'} need review`
-            : 'Review the costing inputs'
+            : readyToCalculate ? freeText(language, 'readyToCalculate') : 'Review the costing inputs'
     const shortcutBadge = hasValidCostResult && hasValidPrice
         ? 'Live'
         : missingIssueCount > 0
             ? String(Math.min(missingIssueCount, 9))
-            : '!'
+            : readyToCalculate ? '→' : '!'
 
     return (
         <>
@@ -1507,7 +1512,7 @@ function MobileLiveEstimateShortcut({
                         <span className="min-w-0 max-w-[12rem] sm:max-w-[14.5rem] pr-1">
                             <span className="block text-[11px] sm:text-xs font-bold uppercase tracking-[0.09em] text-[var(--color-yarn-orange-dark)]">{tx('Live cost')}</span>
                             <span className="mt-0.5 block truncate text-[13px] sm:text-[15px] font-bold text-[var(--color-ink)]">
-                                {hasValidCostResult ? 'View costing' : 'Complete inputs'}
+                                {hasValidCostResult ? 'View costing' : readyToCalculate ? freeText(language, 'readyToCalculate') : 'Complete inputs'}
                             </span>
                         </span>
                         <span className="relative flex h-[52px] w-[52px] sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-full bg-[var(--color-warning-amber-soft)] text-[var(--color-yarn-orange-dark)] transition-colors group-hover:bg-[var(--color-yarn-orange)] group-hover:text-white">
@@ -1560,7 +1565,7 @@ function MobileLiveEstimateShortcut({
                         <SheetDescription className="truncate text-[12px] font-semibold text-[var(--color-ink)]">
                             {activeName}{versionLabel ? ` · ${versionLabel}` : ''}
                         </SheetDescription>
-                        <p className="mt-1 text-[10px] font-medium text-[var(--color-muted)]">{metered ? 'Shows your last completed costing. Updating the result uses one monthly costing.' : 'Updates live as you edit the estimate.'}</p>
+                        <p className="mt-1 text-[10px] font-medium text-[var(--color-muted)]">{metered ? hasValidCostResult ? freeText(language, 'savedRevisionHint') : freeText(language, 'resultAfterCalculation') : 'Updates live as you edit the estimate.'}</p>
                     </SheetHeader>
 
                     <div data-estimator-field="liveCostReadiness" className={`mx-5 mt-4 flex items-start gap-2 rounded-[10px] border px-3 py-2.5 text-[11px] leading-4 ${validityClassName}`} role="status" aria-live="polite">
@@ -1631,7 +1636,7 @@ function MobileLiveEstimateShortcut({
                             <ChevronUp className="h-4 w-4 shrink-0" aria-hidden="true" />
                         </button>
                     ) : (
-                        <p className="px-5 pt-4 text-[10px] font-medium leading-4 text-[var(--color-muted)]">{metered ? 'This completed costing is saved. Open Saved Costings to view or export it later.' : 'Use the estimate above while reviewing the form, then save when the costing is ready.'}</p>
+                        <p className="px-5 pt-4 text-[10px] font-medium leading-4 text-[var(--color-muted)]">{metered ? hasValidCostResult ? 'This completed costing is saved. Open Saved Costings to view or export it later.' : freeText(language, 'calculateToSeeResult') : 'Use the estimate above while reviewing the form, then save when the costing is ready.'}</p>
                     )}
 
                     {actions && (
@@ -1919,7 +1924,7 @@ function EstimatorLiveCostActions({
     onNewQuality: () => void
     onDismiss: () => void
 }) {
-    const { t } = useTranslation()
+    const { t, language } = useTranslation()
     const saveCostingDisabled = freeCanCalculate !== undefined ? !freeCanCalculate : savingQuote
         || !canPersistCostResult
         || !hasValidCostResult
@@ -1940,7 +1945,7 @@ function EstimatorLiveCostActions({
             <div className="flex items-center justify-between gap-3">
                 <div>
                     <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--color-yarn-orange-dark)]">Actions</p>
-                    <p className="mt-0.5 text-[10px] font-medium leading-4 text-[var(--color-muted)]">{freeCanCalculate !== undefined ? 'Export the saved result or start another costing.' : 'Save the current result, reuse the recipe, or open a utility.'}</p>
+                    <p className="mt-0.5 text-[10px] font-medium leading-4 text-[var(--color-muted)]">{freeCanCalculate !== undefined ? hasValidCostResult ? 'Export the saved result or start another costing.' : freeText(language, 'resultAfterCalculation') : 'Save the current result, reuse the recipe, or open a utility.'}</p>
                 </div>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -2815,6 +2820,9 @@ function QuickCostingView({
     const overheadReady = state.overheadMode === 'direct'
         ? !directRateMissing
         : state.monthlyOutputM > 0 && totals.overheadTotalMonthly > 0
+    const activeOverheadPerM = state.overheadMode === 'direct'
+        ? state.overheadOverridePerM ?? 0
+        : costingResult.overheadPerM
 
     return (
         <div
@@ -3156,7 +3164,7 @@ function QuickCostingView({
             </EstimatorCard>
 
             <EstimatorCard accent="overhead" data-tour-anchor="estimator.quick-overhead">
-                <SectionHeader title="Factory overhead" icon={Calculator} accent="overhead" step={6} tutorialSection={7} badgeContent={<SectionCostPill value={costingResult.overheadPerM} valid={overheadReady} />} />
+                <SectionHeader title="Factory overhead" icon={Calculator} accent="overhead" step={6} tutorialSection={7} badgeContent={<SectionCostPill value={activeOverheadPerM} valid={overheadReady} />} />
                 <CardContent className="space-y-4 p-4 sm:p-5">
                     <div className="space-y-2">
                         <LiquidSegmented
@@ -3188,10 +3196,10 @@ function QuickCostingView({
                             <p className="text-[11px] font-medium text-[var(--color-muted)]">Used in this costing</p>
                             {overheadReady && <p className="mt-0.5 text-[10px] text-[var(--color-muted)]">Included in the production cost as the active factory-overhead rate.</p>}
                         </div>
-                        <span className={`font-mono text-base font-semibold ${overheadReady ? 'text-[var(--color-factory-green)]' : 'text-[var(--color-warning-amber)]'}`}>{formatCalculatedMoney(costingResult.overheadPerM, overheadReady, '/m')}</span>
+                        <span className={`font-mono text-base font-semibold ${overheadReady ? 'text-[var(--color-factory-green)]' : 'text-[var(--color-warning-amber)]'}`}>{formatCalculatedMoney(activeOverheadPerM, overheadReady, '/m')}</span>
                     </div>
                     <div className="rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-canvas)] px-3 py-2 text-[10px] text-[var(--color-muted)]">
-                        <span className="font-semibold text-[var(--color-body)]">Source:</span> {assumptionSourceLabel(costingResult.overheadSource)}
+                        <span className="font-semibold text-[var(--color-body)]">Source:</span> {assumptionSourceLabel(state.overheadMode === 'direct' ? 'direct_rate' : 'monthly_expenses')}
                         {' · '}
                         <span className="font-semibold text-[var(--color-body)]">Reference:</span> {costingResult.overheadReferencePerM == null ? 'not entered' : `₹${costingResult.overheadReferencePerM.toFixed(2)}/m`}
                         {' · '}
@@ -3296,6 +3304,7 @@ function focusEstimatorIssueTarget(field: string) {
 
 export default function EstimatorClient({
     initialProfile,
+    initialFreeCosting,
     initialTemplates,
     initialWorkers,
     userId,
@@ -3310,6 +3319,7 @@ export default function EstimatorClient({
     onFreeUpgrade,
     disableAutosave = false,
 }: {
+    initialFreeCosting?: SavedFreeCosting
     freeMode?: boolean
     onFreeUpgrade?: (tier: import('@/lib/subscription-access').SubscriptionTier) => void
     disableAutosave?: boolean
@@ -3348,7 +3358,7 @@ export default function EstimatorClient({
 
     // Build the initial state synchronously from server-provided data (no loading flash)
     const initialState = useMemo(() => {
-        if (freeMode) return {...makeFreeEstimate(), isConfigured:true}
+        if (freeMode) return {...(initialFreeCosting?.estimate ?? makeFreeEstimate()), isConfigured:true}
         const effectiveProfile = initialProfile ? {
             ...initialProfile,
             is_configured: Boolean(initialProfile.is_configured || wizardDismissed),
@@ -3372,7 +3382,7 @@ export default function EstimatorClient({
     // The direct ₹/m entry is the default; the per-pick mode remains available
     // for factories that already keep their rate book in paise per pick.
     const [weavingRateInputMode, setWeavingRateInputMode] = useState<WeavingRateInputMode>('perMeter')
-    const [directWeavingRateInput, setDirectWeavingRateInput] = useState<string>('')
+    const [directWeavingRateInput, setDirectWeavingRateInput] = useState<string>(initialFreeCosting ? getDirectWeavingRateInput(initialFreeCosting.estimate.perPickCostPaisa, initialFreeCosting.estimate.weftRows) : '')
 
     const [partyName,       setPartyName]       = useState('')
     const [staleRateNames,  setStaleRateNames]  = useState(staleDefaultRateNames)
@@ -3421,7 +3431,7 @@ export default function EstimatorClient({
         })
     }, [])
 
-    const [qualityLabel,    setQualityLabel]    = useState('')
+    const [qualityLabel,    setQualityLabel]    = useState(initialFreeCosting?.label ?? '')
     const [warpInstruction, setWarpInstruction] = useState('')
     const [weftInstruction, setWeftInstruction] = useState('')
     const lastGeneratedWarp = useRef<string | null>(null)
@@ -3475,13 +3485,13 @@ export default function EstimatorClient({
     const [saveCheckMessage, setSaveCheckMessage] = useState('')
     const pendingSaveRequestRef = useRef<Parameters<typeof saveEstimatorQuoteV3>[0] | null>(null)
     const reportedSaveRequestsRef = useRef(new Set<string>())
-    const freeMeter = useFreeMeter(freeMode, state, qualityLabel, onFreeUpgrade)
+    const freeMeter = useFreeMeter(freeMode, state, qualityLabel, onFreeUpgrade, initialFreeCosting)
     const { isDocked: isFreeUsageDocked, dockStyle: freeUsageDockStyle, containerRef: estimatorGutterRef } = useGutterDock({
         sidebarWidth: 248,
         cardWidth: 248,
         minClearance: 16,
     })
-    const freeCanCalculate = !!freeMeter.status?.estimationEnabled && freeMeter.status.quota.remaining > 0 && !freeMeter.busy && (!freeMeter.completed || freeMeter.stale)
+    const freeCanCalculate = !!freeMeter.status?.estimationEnabled && (freeMeter.completed ? freeMeter.editRemainingMs > 0 : freeMeter.status.quota.remaining > 0) && !freeMeter.busy && (!freeMeter.completed || freeMeter.stale)
     const [lastSavedCosting, setLastSavedCosting] = useState<{ id: string; version: number; savedAt: string; model: ReturnType<typeof createCostingExportModel> } | null>(null)
 
     function openProductionFromCosting(costingId: string) {
@@ -4048,14 +4058,16 @@ export default function EstimatorClient({
         }
     }, [state, freeMode, freeMeter.completed])
     const costingResult = useMemo(() => freeMode ? freeMeter.completed?.result ?? buildCostingResult(makeFreeEstimate(),totals) : buildCostingResult(state, totals), [state, totals, freeMode, freeMeter.completed])
+    const awaitingCalculation = freeMode && (!freeMeter.completed || freeMeter.stale)
     const costingReadiness = useMemo(
         () => getEstimatorReadiness({
             validation: estimatorValidation,
             result: costingResult,
             totals,
             warningsAcknowledged,
+            awaitingCalculation,
         }),
-        [costingResult, estimatorValidation, totals, warningsAcknowledged],
+        [costingResult, estimatorValidation, totals, warningsAcknowledged, awaitingCalculation],
     )
     // Keep the monthly-expense reference available even when the costing is
     // currently using a direct ₹/m rate. This is transparency only; it never
@@ -4194,7 +4206,7 @@ export default function EstimatorClient({
     const hasActiveQualityRecipeChanges = appliedTemplate
         ? hasSavedQualityRecipeChanges(appliedTemplate, state)
         : false
-    const topCostingActionLabel = freeMode ? tx('Calculate & save · uses 1 costing') : sourceQuoteId && sourceRecordKind === 'costing'
+    const topCostingActionLabel = freeMode ? freeText(language, freeMeter.completed ? 'recalculateSave' : 'calculateSave') : sourceQuoteId && sourceRecordKind === 'costing'
         ? t('tourControls.estimator.saveNewVersion')
         : t('tourControls.estimator.saveCosting')
 
@@ -4523,11 +4535,14 @@ export default function EstimatorClient({
 
     const handleNewQualityConfirm = () => {
         if (saveQuoteLockRef.current || unconfirmedRequestId) return
+        if (freeMode && (freeMeter.pending || freeMeter.busy)) return
+        if (freeMode) { freeMeter.reset(); router.replace('/free') }
         startJourney('blank')
         setLastSavedCosting(null)
         setQualityCheckpoint(null)
         setHasUnsavedEdits(false)
-        rawDispatch({
+        if (freeMode) rawDispatch({type:'RESTORE_DRAFT',draftState:{...makeFreeEstimate(),isConfigured:true}})
+        else rawDispatch({
             type: 'RESET',
             data: {
                 profile: currentProfileRef.current ?? initialProfile,
@@ -4962,7 +4977,9 @@ export default function EstimatorClient({
     const costStackTotal = costSegments.reduce((sum, segment) => sum + segment.value, 0)
     const actionReadinessMessage = savingQuote
         ? 'Saving costing…'
-        : !hasValidCostResult
+        : costingReadiness.status === 'calculation_required'
+            ? null
+            : !hasValidCostResult
             ? (firstCostingReadinessMessage ?? 'Complete the highlighted Cost Estimate inputs before saving.')
             : !qualityLabel.trim()
                 ? 'Enter a Fabric Quality name before saving.'
@@ -4976,9 +4993,16 @@ export default function EstimatorClient({
     const freeStaleDescription = [
         freeText(language, 'inputsChangedNotRecalculated'),
         freeChangedFields.length > 0 ? freeText(language, 'changedSince', { fields: freeChangedFields.join(', ') }) : '',
-        freeText(language, 'rerunUsesCosting'),
+        freeText(language, freeMeter.editRemainingMs > 0 ? 'revisionNoCharge' : 'revisionExpired'),
     ].filter(Boolean).join(' ')
-    const validityStatus = freeMode && freeMeter.stale ? { label: freeText(language, 'lastSavedResult'), description: freeStaleDescription, icon: AlertTriangle, className: 'border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] text-[var(--wv-ochre-900)]' } : costingReadiness.status === 'ready'
+    const validityStatus = freeMode && freeMeter.stale ? { label: freeText(language, 'lastSavedResult'), description: freeStaleDescription, icon: AlertTriangle, className: 'border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] text-[var(--wv-ochre-900)]' } : costingReadiness.status === 'calculation_required'
+        ? {
+            label: freeText(language, 'readyToCalculate'),
+            description: freeText(language, 'calculateToSeeResult'),
+            icon: Calculator,
+            className: 'border-[var(--color-hairline)] bg-[var(--color-surface-soft)] text-[var(--color-ink)]',
+        }
+        : costingReadiness.status === 'ready'
         ? {
             label: 'Costing valid',
             description: 'Price and break-even are calculated from the current inputs.',
@@ -4988,7 +5012,7 @@ export default function EstimatorClient({
         : costingReadiness.status === 'warning_ack_required'
             ? {
                 label: 'Review values before saving',
-                description: 'The price is visible, but unusual inputs need acknowledgement.',
+                description: awaitingCalculation ? freeText(language, 'reviewBeforeCalculation') : 'The price is visible, but unusual inputs need acknowledgement.',
                 icon: AlertTriangle,
                 className: 'border-[var(--color-warning-amber-soft)] bg-[var(--color-warning-amber-soft)]/70 text-[var(--color-warning-amber)]',
             }
@@ -5077,6 +5101,7 @@ export default function EstimatorClient({
             )}
             {(freeMode || disableAutosave && freeMeter.unreconciled.length > 0) && (
                 <FreeTransactionRecovery
+                    className="estimator-workspace-shell px-4 sm:px-6 lg:px-0"
                     transaction={freeMeter.transaction}
                     busy={freeMeter.busy}
                     reviewMessages={freeReviewMessages}
@@ -5093,9 +5118,6 @@ export default function EstimatorClient({
                     onDismissUnreconciled={freeMeter.dismissUnreconciled}
                 />
             )}
-            {freeMode && freeMeter.completed && !freeMeter.stale && (
-                <FreeSavedReceipt label={freeMeter.completed.label} confirmedAt={freeMeter.completed.confirmedAt} quota={freeMeter.completed.quota} />
-            )}
             {freeMode && freePlansOpen && (
                 <div id="free-plan-comparison" className="scroll-mt-4">
                     <UpgradeBenefitsPreview open onOpenChange={setFreePlansOpen} onActivated={() => void freeMeter.refresh()} />
@@ -5104,21 +5126,7 @@ export default function EstimatorClient({
             {(freeMode || disableAutosave) && (
                 <FreeLeaveDialog reason={freeLeaveReason} open={freeLeave.pendingHref !== null} onStay={freeLeave.stay} onLeave={freeLeave.leave} />
             )}
-            {freeMode && (
-                <FreeUsageCard
-                    quota={freeMeter.status?.quota}
-                    loading={freeMeter.busy || (!freeMeter.status && !freeMeter.statusError)}
-                    error={freeMeter.statusError}
-                    stale={Boolean(freeMeter.statusError && freeMeter.status)}
-                    unverified={freeMeter.balanceUnverified}
-                    isPending={freeMeter.pending}
-                    onRefresh={freeMeter.refresh}
-                    onViewPlans={openFreePlans}
-                    isDocked={isFreeUsageDocked}
-                    dockStyle={freeUsageDockStyle}
-                    className={!isFreeUsageDocked ? 'mb-4' : undefined}
-                />
-            )}
+
             {unconfirmedRequestId && (
                 <section role="status" className="rounded-xl border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] p-4 text-sm text-[var(--wv-ochre-900)]">
                     <h2 className="font-semibold">{tx('Save not yet confirmed')}</h2>
@@ -5706,7 +5714,7 @@ export default function EstimatorClient({
                                 </p>
                             )}
                             <p className="text-[11px] font-medium leading-relaxed text-[var(--color-muted)]">
-                                {freeMode ? `${tx('Calculate & save uses one monthly costing and stores a fixed snapshot. It does not create a Saved Quality or Rate Book entry.')} ${freeText(language, 'calculatePolicy')}` : sourceQuoteId
+                                {freeMode ? `${freeText(language, 'freeCreationPolicy')} ${freeText(language, 'calculatePolicy')}` : sourceQuoteId
                                     ? tx('Save New Version creates a new immutable costing snapshot. Earlier versions keep their original economics.')
                                     : tx('Save Costing creates the reusable quality and its first immutable costing version.')}
                             </p>
@@ -5753,6 +5761,44 @@ export default function EstimatorClient({
 
                     {/* ── MAIN FORM ────────────────────────────────────────────── */}
                     <div id="estimator-form-panel" className={`${pageShellClass} mt-5 space-y-7`} data-costing-tutorial-root="true">
+            {freeMode && (
+                <FreeUsageCard
+                    quota={freeMeter.status?.quota}
+                    loading={freeMeter.busy || (!freeMeter.status && !freeMeter.statusError)}
+                    error={freeMeter.statusError}
+                    stale={Boolean(freeMeter.statusError && freeMeter.status)}
+                    unverified={freeMeter.balanceUnverified}
+                    isPending={freeMeter.pending}
+                    onRefresh={freeMeter.refresh}
+                    onViewPlans={openFreePlans}
+                    isDocked={isFreeUsageDocked}
+                    dockStyle={freeUsageDockStyle}
+                    className={!isFreeUsageDocked ? 'mb-4' : undefined}
+                />
+            )}
+
+                {freeMode && freeMeter.completed && (
+                    <div className="space-y-3">
+                        <div className="rounded-lg border border-hairline bg-surface p-3">
+                            <FreeRecalculationWindow
+                                remainingMs={freeMeter.editRemainingMs}
+                                onRecalculate={() => void handleSaveQuote()}
+                                disabled={!freeCanCalculate}
+                            />
+                            <p className="mt-2 text-xs text-subtle">
+                                {freeText(language, freeMeter.editRemainingMs > 0 ? 'revisionNoCharge' : 'revisionExpired')}
+                            </p>
+                        </div>
+                        {freeMeter.completed.quota && !freeMeter.stale && (
+                            <FreeSavedReceipt
+                                label={freeMeter.completed.label}
+                                confirmedAt={freeMeter.completed.confirmedAt}
+                                quota={freeMeter.completed.quota}
+                                costingsUsed={freeMeter.completed.costingsUsed}
+                            />
+                        )}
+                    </div>
+                )}
 
                 {/* ── CURRENT QUALITY + MODE ─────────────────────────────── */}
                 <Sheet
@@ -5833,6 +5879,12 @@ export default function EstimatorClient({
                             <span className="font-semibold">{validityStatus.label}</span>
                             <span className="hidden font-medium opacity-85 sm:inline">{validityStatus.description}</span>
                         </div>
+                        {freeMode && awaitingCalculation && estimatorValidation.valid && (
+                            <Button className="mt-3 h-auto min-h-11 w-full whitespace-normal" disabled={!freeCanCalculate} onClick={() => void handleSaveQuote()}>
+                                <Calculator className="mr-2 h-4 w-4 shrink-0" />
+                                {topCostingActionLabel}
+                            </Button>
+                        )}
                     </section>
 
                     <SheetContent
@@ -6293,13 +6345,10 @@ export default function EstimatorClient({
                         {/* Keep the configured default separate from the row value
                             that the costing engine actually applies. */}
                         {(() => {
-                            const appliedWaste = state.weftRows.map((row, index) => (
-                                totals.weftRows[index]?.shortagePctUsed
-                                ?? (row.shortagePct !== null && row.shortagePct !== undefined ? row.shortagePct : state.yarnShortagePct)
-                            ))
+                            const appliedWaste = state.weftRows.map(row => row.shortagePct ?? state.yarnShortagePct)
                             const appliedWasteLabel = appliedWaste.map((value, index) => `Row ${index + 1}: ${Number(value).toFixed(1)}%`).join(' · ')
                             const effectiveWasteLabel = state.weftRows.map((row, index) => {
-                                const auditRow = totals.weftRows[index]
+                                const auditRow = awaitingCalculation ? undefined : totals.weftRows[index]
                                 const applied = auditRow?.wastePct ?? (row.shortagePct ?? state.yarnShortagePct)
                                 const effective = auditRow?.totalAdjustmentPct ?? applied
                                 return `Row ${index + 1}: ${Number(effective).toFixed(1)}%`
@@ -6541,7 +6590,7 @@ export default function EstimatorClient({
                         </div>
 
                         <div className="text-[10px] font-medium text-[var(--wv-cotton-500)] italic">
-                            {t('estimator.warping_sizing.applied_on')} {totals.totalWarpKgPer100m.toFixed(2)} {t('estimator.warping_sizing.warp_consumption')}
+                            {t('estimator.warping_sizing.applied_on')} {hasValidCostResult && !awaitingCalculation ? totals.totalWarpKgPer100m.toFixed(2) : '—'} {t('estimator.warping_sizing.warp_consumption')}
                         </div>
                     </CardContent>
                 </EstimatorCard>
@@ -6863,19 +6912,19 @@ export default function EstimatorClient({
                         icon={ReceiptText}
                         accent="neutral"
                         step={8}
-                        detail={<p className="text-[11px] text-[var(--color-muted)]">{hasValidCostResult ? 'Engine audit used for the final production cost.' : 'Complete the required inputs to calculate the final production cost.'}</p>}
+                        detail={<p className="text-[11px] text-[var(--color-muted)]">{hasValidCostResult ? 'Engine audit used for the final production cost.' : awaitingCalculation && estimatorValidation.valid ? freeText(language, 'resultAfterCalculation') : 'Complete the required inputs to calculate the final production cost.'}</p>}
                         badgeContent={hasValidCostResult
                             ? <SectionCostPill value={totals.audit.productionCostPerMeter} />
-                            : <span className="rounded-full border border-[#EFD7A4] bg-[var(--color-warning-amber-soft)] px-3 py-1 text-[13px] font-semibold text-[var(--color-warning-amber)]">Incomplete</span>}
+                            : <span className="rounded-full border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-3 py-1 text-[13px] font-semibold text-[var(--color-muted)]">{costingReadiness.status === 'calculation_required' ? freeText(language, 'readyToCalculate') : 'Incomplete'}</span>}
                     />
                     <CardContent className="p-5 sm:p-6 space-y-5">
                         {!hasValidCostResult ? (
-                            <div id={validationSummaryId} role={showValidation ? 'alert' : undefined} className={`flex items-start gap-3 rounded-[12px] border p-4 ${showValidation ? 'border-[#EFD7A4] bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)]' : 'border-[var(--color-hairline)] bg-[var(--color-surface-soft)] text-[var(--color-muted)]'}`}>
-                                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                            <div id={validationSummaryId} role={showValidation && costingReadiness.status !== 'calculation_required' ? 'alert' : 'status'} className={`flex items-start gap-3 rounded-[12px] border p-4 ${showValidation && costingReadiness.status !== 'calculation_required' ? 'border-[#EFD7A4] bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)]' : 'border-[var(--color-hairline)] bg-[var(--color-surface-soft)] text-[var(--color-muted)]'}`}>
+                                {costingReadiness.status === 'calculation_required' ? <Calculator className="mt-0.5 h-4 w-4 shrink-0" /> : <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />}
                                 <div>
-                                    <p className="text-sm font-semibold">Costing incomplete</p>
-                                    <p className="mt-1 text-xs font-medium leading-relaxed">{showValidation ? (firstCostingReadinessMessage ?? 'Correct the highlighted inputs to see a reliable cost breakdown.') : 'Enter your fabric quality and yarn numbers to see a reliable cost breakdown.'}</p>
-                                    <p className="mt-1 text-[11px] leading-relaxed">Draft values are not treated as a final result while a required input is blank or zero.</p>
+                                    <p className="text-sm font-semibold">{awaitingCalculation && estimatorValidation.valid ? validityStatus.label : 'Costing incomplete'}</p>
+                                    <p className="mt-1 text-xs font-medium leading-relaxed">{awaitingCalculation && estimatorValidation.valid ? validityStatus.description : showValidation ? (firstCostingReadinessMessage ?? 'Correct the highlighted inputs to see a reliable cost breakdown.') : 'Enter your fabric quality and yarn numbers to see a reliable cost breakdown.'}</p>
+                                    {!(awaitingCalculation && estimatorValidation.valid) && <p className="mt-1 text-[11px] leading-relaxed">Draft values are not treated as a final result while a required input is blank or zero.</p>}
                                 </div>
                             </div>
                         ) : (
@@ -7026,6 +7075,7 @@ export default function EstimatorClient({
 
             <MobileLiveEstimateShortcut
                 metered={freeMode}
+                awaitingCalculation={awaitingCalculation}
                 open={liveEstimateOpen}
                 onOpenChange={setLiveEstimateOpen}
                 isTutorialActive={isTutorialActive}
@@ -7046,18 +7096,18 @@ export default function EstimatorClient({
                 actualMarginPct={displayMarginPct}
                 breakEvenPricePerM={hasValidCostResult && (freeMode || breakEvenScenario?.quotePricePerM != null) ? costingResult.breakEvenPricePerM : null}
                 missingIssueCount={estimatorValidation.issues.length}
-                needsReview={costingReadiness.status !== 'ready'}
+                needsReview={costingReadiness.status === 'blocked' || costingReadiness.status === 'warning_ack_required'}
                 readinessMessage={firstCostingReadinessMessage}
                 onJumpToInput={jumpToFirstEstimatorIssue}
-                hasOrderQty={hasOrderQty}
+                hasOrderQty={costingResult.quantityM !== null && costingResult.quantityM > 0}
                 expectedProfitTotal={costingResult.expectedProfitTotal}
-                assumptions={(
+                assumptions={!freeMode || freeMeter.completed ? (
                     <CostingAssumptionsSummary
                         result={costingResult}
                         expanded={assumptionsExpanded}
                         onToggle={toggleAssumptions}
                     />
-                )}
+                ) : undefined}
                 actions={(onDismiss) => (
                     <EstimatorLiveCostActions
                         freeCanCalculate={freeMode ? freeCanCalculate : undefined}

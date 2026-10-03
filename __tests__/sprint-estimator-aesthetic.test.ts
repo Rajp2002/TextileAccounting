@@ -47,8 +47,8 @@ describe('Estimator aesthetic and responsive refinement', () => {
     expect(client).toContain('shrink-0 items-center whitespace-nowrap rounded-full')
   })
 
-  it('keeps the live-cost shortcut labelled in both readiness states', () => {
-    expect(client).toContain("{hasValidCostResult ? 'View costing' : 'Complete inputs'}")
+  it('labels the live-cost shortcut for a result, a metered calculation, or missing inputs', () => {
+    expect(client).toContain("{hasValidCostResult ? 'View costing' : readyToCalculate ? freeText(language, 'readyToCalculate') : 'Complete inputs'}")
     expect(client).not.toContain('mobileCostingShortcutExpanded')
   })
 

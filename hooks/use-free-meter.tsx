@@ -5,21 +5,21 @@ import type {EstimateState,EstimatorV3Totals,CostingResultSnapshot} from '@/lib/
 import type {freeStatus} from '@/lib/free-service'
 import {canonicalFreeInputs} from '@/lib/free-estimator-canonical'
 import {classifyFreeResponse,confirmFreeReview,correctFreeReview,FREE_EDITING,freeAttemptPayload,freeRequestIdOf,isFreeAttemptUnresolved,reconcileWithSaved,releaseFreeAttempt,resolveFreeSend,retryFreeAttempt,startFreeAttempt,type FreeReceiptQuota,type FreeTransaction,type FreeUnreconciled} from '@/lib/free-transaction'
+import {remainingFreeEditMs,type FreeEditWindow,type SavedFreeCosting} from '@/lib/free-costing-window'
+import {useFreeEditClock} from '@/hooks/use-free-edit-clock'
 import {useTranslation} from '@/lib/i18n/context'
 import type {SubscriptionTier} from '@/lib/subscription-access'
 import type {AuthChangeEvent,Session} from '@supabase/supabase-js'
 
 type FreeStatus=Awaited<ReturnType<typeof freeStatus>>
 /** A server-confirmed saved Free costing. `quota` is that receipt's balance, not the current one. */
-type Completed={estimate:EstimateState;result:CostingResultSnapshot;totals:EstimatorV3Totals;signature:string;id:string;label:string;quota:FreeReceiptQuota;confirmedAt:string;statusReads:number;
- /** The caller's page snapshot when Calculate was pressed: the leave guard's clean baseline. */
- page:string|null}
+type Completed={estimate:EstimateState;result:CostingResultSnapshot;totals:EstimatorV3Totals;signature:string;id:string;label:string;quota:FreeReceiptQuota|null;editWindow?:FreeEditWindow;costingsUsed:number;confirmedAt:string;statusReads:number;page:string|null}
 const codeOf=(error:unknown)=>error instanceof Error&&error.message?error.message:'FREE_TEMPORARY_ERROR'
 const signatureOf=(estimate:EstimateState)=>JSON.stringify(canonicalFreeInputs(estimate))
-export function useFreeMeter(enabled:boolean,state:EstimateState,label:string,onPaidActivated?:(tier:SubscriptionTier)=>void) {
+export function useFreeMeter(enabled:boolean,state:EstimateState,label:string,onPaidActivated?: (tier:SubscriptionTier)=>void,initialSaved?:SavedFreeCosting) {
  const {language}=useTranslation()
  const [status,setStatus]=useState<FreeStatus|null>(null)
- const [completed,setCompleted]=useState<Completed|null>(null)
+ const [completed,setCompleted]=useState<Completed|null>(()=>initialSaved?{estimate:initialSaved.estimate,result:initialSaved.result,totals:initialSaved.totals,signature:signatureOf(initialSaved.estimate),id:initialSaved.id,label:initialSaved.label,quota:null,editWindow:initialSaved.editWindow,costingsUsed:0,confirmedAt:initialSaved.updated_at,statusReads:-1,page:null}:null)
  const [transaction,setTransactionState]=useState<FreeTransaction>(FREE_EDITING)
  const [busy,setBusy]=useState(false),[statusError,setStatusError]=useState('')
  // Applied status reads; a save records the count so a later read can verify its balance.
@@ -85,7 +85,10 @@ export function useFreeMeter(enabled:boolean,state:EstimateState,label:string,on
   return()=>{cancelled=true;window.removeEventListener('focus',subscribe);window.removeEventListener('online',subscribe);unsubscribe?.()}
  },[enabled,status?.account.id,forgetOwner])
  const signature=signatureOf(state)
- const stale=!!completed&&completed.signature!==signature
+ const stale=!!completed&&(completed.signature!==signature||completed.label!==(label.trim()||'Costing'))
+ const latestServerTime=status?.serverTime&&(!completed?.editWindow||Date.parse(status.serverTime)>Date.parse(completed.editWindow.serverTime))?status.serverTime:completed?.editWindow?.serverTime
+ const now=useFreeEditClock(enabled?latestServerTime:undefined)
+ const editRemainingMs=remainingFreeEditMs(completed?.editWindow,now)
  // A review covers the exact values reviewed. Editing them is the correction.
  const reviewSignature=transaction.phase==='review'?signatureOf(transaction.attempt.estimate):null
  useEffect(()=>{if(reviewSignature!==null&&reviewSignature!==signature)setTransaction(correctFreeReview(tx.current))},[reviewSignature,signature,setTransaction])
@@ -105,10 +108,10 @@ export function useFreeMeter(enabled:boolean,state:EstimateState,label:string,on
   const saved=resolved.saved
   if(saved){
    statusOrder.current.applied=statusOrder.current.issued
-   setCompleted({estimate:attempt.estimate,result:saved.result,totals:saved.totals,signature:signatureOf(attempt.estimate),id:saved.savedCostingId,label:attempt.label,quota:saved.quota,confirmedAt:new Date().toISOString(),statusReads:reads.current,page:pressPage.current})
+   setCompleted({estimate:attempt.estimate,result:saved.result,totals:saved.totals,signature:signatureOf(attempt.estimate),id:saved.savedCostingId,label:attempt.label,quota:saved.quota,editWindow:saved.editWindow,costingsUsed:saved.costingsUsed??1,confirmedAt:saved.editWindow?.updatedAt??new Date().toISOString(),statusReads:reads.current,page:pressPage.current})
    reportPwaWorkflowSuccess('costing')
    void fetch('/api/free/events',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({eventId:saved.requestId,name:'result_viewed',language,entryPoint:'estimator'})}).catch(()=>{})
-   if(saved.quota.remaining===0)void fetch('/api/free/events',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({eventId:saved.requestId,name:'quota_reached',language,entryPoint:'quota'})}).catch(()=>{})
+   if(saved.costingsUsed!==0&&saved.quota.remaining===0)void fetch('/api/free/events',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({eventId:saved.requestId,name:'quota_reached',language,entryPoint:'quota'})}).catch(()=>{})
   }
   // The saved result stands on its own; this only refreshes the current balance.
   if(saved||resolved.paidResult)await refresh()
@@ -130,7 +133,8 @@ export function useFreeMeter(enabled:boolean,state:EstimateState,label:string,on
   // A different owner's session never calculates the previous owner's inputs.
   if(fresh.accessState==='paid'||owner&&fresh.account.id!==owner)return
   if(!fresh.requestToken){setTransaction({phase:'rejected',code:fresh.accessState==='active'&&!fresh.estimationEnabled?'FREE_PAUSED':'FREE_ACCESS_DENIED'});return}
-  await send(startFreeAttempt(tx.current,{estimate,label:name,requestToken:fresh.requestToken,accountId:fresh.account.id,acknowledged,possiblyCommitted:false}))
+  if(completed&&remainingFreeEditMs(completed.editWindow,Date.parse(fresh.serverTime))<=0){setTransaction({phase:'rejected',code:'FREE_EDIT_WINDOW_EXPIRED'});return}
+  await send(startFreeAttempt(tx.current,{...(completed?{costingId:completed.id,expectedRevision:completed.editWindow?.revision}:{}),estimate,label:name,requestToken:fresh.requestToken,accountId:fresh.account.id,acknowledged,possiblyCommitted:false}))
  })
  const confirmReview=()=>run(()=>send(confirmFreeReview(tx.current)))
  const retry=()=>run(()=>send(retryFreeAttempt(tx.current)))
@@ -141,9 +145,11 @@ export function useFreeMeter(enabled:boolean,state:EstimateState,label:string,on
   const owner=generation.current
   let ids:Set<string>|null=null
   try{
-   const r=await fetch('/api/free/costings',{cache:'no-store',signal:AbortSignal.timeout(10000)})
-   const data=await r.json() as {costings?:Array<{id?:unknown}>}
-   if(r.ok&&Array.isArray(data.costings))ids=new Set(data.costings.map(costing=>costing.id).filter((id):id is string=>typeof id==='string'))
+   const revisionRequests=tracked.current.filter(entry=>entry.attempt.costingId&&entry.requestId).map(entry=>entry.requestId!).slice(-50)
+   const query=revisionRequests.length?`?recalculationRequests=${encodeURIComponent(revisionRequests.join(','))}`:''
+   const r=await fetch(`/api/free/costings${query}`,{cache:'no-store',signal:AbortSignal.timeout(10000)})
+   const data=await r.json() as {costings?:Array<{id?:unknown}>;recalculationRequestIds?:unknown[]}
+   if(r.ok&&Array.isArray(data.costings))ids=new Set([...data.costings.map(costing=>costing.id),...(data.recalculationRequestIds??[])].filter((id):id is string=>typeof id==='string'))
   }catch{ids=null}
   if(owner!==generation.current)return
   const before=tracked.current.filter(entry=>entry.check==='found').length
@@ -163,7 +169,8 @@ export function useFreeMeter(enabled:boolean,state:EstimateState,label:string,on
  }
  // No status read has succeeded since the save, so the shown balance predates its debit.
  const balanceUnverified=!!completed&&!!statusError&&statusReads<=completed.statusReads
- return {enabled,status,completed,stale,transaction,busy,statusError,balanceUnverified,submit,confirmReview,correctReview,retry,release,refresh,
+ const reset=()=>{if(!lock.current&&!isFreeAttemptUnresolved(tx.current)){setCompleted(null);setTransaction(FREE_EDITING)}}
+ return {enabled,status,completed,stale,editRemainingMs,reset,transaction,busy,statusError,balanceUnverified,submit,confirmReview,correctReview,retry,release,refresh,
   unreconciled,checkUnreconciled,dismissUnreconciled,
   /** Editing is locked only while the original request may still commit. */
   pending:isFreeAttemptUnresolved(transaction),warning:transaction.phase==='review'}

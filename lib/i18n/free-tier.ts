@@ -1,6 +1,17 @@
 import type { Language } from './context'
 /** Draft terminology; native Gujarati/Hindi review is a release gate. */
 const phrases = {
+ recalculate:['Recalculate','ફરી ગણતરી કરો','दोबारा गणना करें'],
+ recalculateSave:['Recalculate & save · no costing used','ફરી ગણતરી કરો અને સાચવો · કોસ્ટિંગ નહીં વપરાય','दोबारा गणना करें और सहेजें · कॉस्टिंग खर्च नहीं होगी'],
+ editTimeLeft:['Free edits remaining','મફત ફેરફાર માટે બાકી સમય','मुफ़्त बदलाव के लिए बचा समय'],
+ editWindowClosed:['30-minute edit window ended','ફેરફાર માટેની 30 મિનિટ પૂરી થઈ','बदलाव की 30 मिनट की अवधि समाप्त हुई'],
+ revisionNoCharge:['Edit and recalculate this saved costing at no extra charge until the timer ends. Recalculating does not restart the 30-minute timer.','ટાઇમર પૂરો થાય ત્યાં સુધી આ સાચવેલી કોસ્ટિંગમાં ફેરફાર અને ફરી ગણતરી માટે વધારાની કોસ્ટિંગ નહીં વપરાય. ફરી ગણતરીથી 30 મિનિટનો ટાઇમર ફરી શરૂ નહીં થાય.','टाइमर समाप्त होने तक इस सहेजी गई कॉस्टिंग में बदलाव और दोबारा गणना पर अतिरिक्त कॉस्टिंग खर्च नहीं होगी। दोबारा गणना से 30 मिनट का टाइमर फिर शुरू नहीं होता।'],
+ revisionExpired:['This saved costing is now final. Start a new costing to calculate new inputs; this uses one monthly costing.','આ સાચવેલી કોસ્ટિંગ હવે અંતિમ છે. નવી માહિતીની ગણતરી માટે નવી કોસ્ટિંગ શરૂ કરો; તેમાં એક માસિક કોસ્ટિંગ વપરાશે.','यह सहेजी गई कॉस्टिंग अब अंतिम है। नई जानकारी की गणना के लिए नई कॉस्टिंग शुरू करें; इसमें एक मासिक कॉस्टिंग खर्च होगी।'],
+ revisionConflict:['This costing was updated in another tab. Reopen it from Saved Costings before editing again. No costing was used.','આ કોસ્ટિંગ બીજા ટૅબમાં અપડેટ થઈ છે. ફરી ફેરફાર કરતા પહેલાં સાચવેલી કોસ્ટિંગમાંથી ખોલો. કોસ્ટિંગ વપરાઈ નથી.','यह कॉस्टिंग दूसरे टैब में अपडेट हुई है। फिर बदलाव करने से पहले इसे सहेजी गई कॉस्टिंग से खोलें। कोई कॉस्टिंग खर्च नहीं हुई।'],
+ recalculatedNoCharge:['Recalculated and saved · no costing used','ફરી ગણતરી કરીને સાચવ્યું · કોસ્ટિંગ વપરાઈ નથી','दोबारा गणना करके सहेजा गया · कोई कॉस्टिंग खर्च नहीं हुई'],
+ savedRevisionHint:['Shows your last saved result. Recalculate to save changes within the 30-minute edit window.','છેલ્લું સાચવેલું પરિણામ દર્શાવે છે. 30 મિનિટની અંદર ફેરફાર સાચવવા ફરી ગણતરી કરો.','अंतिम सहेजा गया परिणाम दिखाता है। 30 मिनट के भीतर बदलाव सहेजने के लिए दोबारा गणना करें।'],
+ freeCreationPolicy:['Calculate & save uses one monthly costing and saves it automatically. You can edit and recalculate that entry for 30 minutes without using another costing.','ગણતરી કરો અને સાચવો એક માસિક કોસ્ટિંગ વાપરે છે અને આપમેળે સાચવે છે. બીજી કોસ્ટિંગ વાપર્યા વિના 30 મિનિટ સુધી તે એન્ટ્રીમાં ફેરફાર અને ફરી ગણતરી કરી શકો છો.','गणना करें और सहेजें एक मासिक कॉस्टिंग खर्च करके अपने आप सहेजता है। दूसरी कॉस्टिंग खर्च किए बिना 30 मिनट तक उस प्रविष्टि में बदलाव और दोबारा गणना कर सकते हैं।'],
+
  planSummary:['Choose Lite for full costing, or Base to add production logging and automatic payroll calculation.','સંપૂર્ણ કોસ્ટિંગ માટે Lite પસંદ કરો, અથવા ઉત્પાદન નોંધ અને આપમેળે પગાર ગણતરી ઉમેરવા Base પસંદ કરો.','पूरी कॉस्टिंग के लिए Lite चुनें, या उत्पादन लॉगिंग और स्वचालित वेतन गणना जोड़ने के लिए Base चुनें।'],
  planExplore:['Explore Lite and Base','Lite અને Base વિશે જાણો','Lite और Base के बारे में जानें'],
  planLiteFit:['For your complete costing workflow.','તમારી સંપૂર્ણ કોસ્ટિંગ પ્રક્રિયા માટે.','आपकी पूरी कॉस्टिंग प्रक्रिया के लिए।'],
@@ -123,9 +134,12 @@ const phrases = {
  costingUsed:['1 costing used.','1 કોસ્ટિંગ વપરાઈ.','1 कॉस्टिंग खर्च हुई।'],
  replayNoCharge:['Already saved. No additional costing was used.','પહેલેથી સાચવેલું છે. વધારાની કોસ્ટિંગ વપરાઈ નથી.','पहले से सहेजा गया है। कोई अतिरिक्त कॉस्टिंग खर्च नहीं हुई।'],
  lastSavedResult:['Last saved result','છેલ્લું સાચવેલું પરિણામ','पिछला सहेजा गया परिणाम'],
+ readyToCalculate:['Ready to calculate','ગણતરી માટે તૈયાર','गणना के लिए तैयार'],
+ calculateToSeeResult:['Your inputs are complete. Choose Calculate & save to see the cost. This uses one monthly costing.','તમારી માહિતી પૂર્ણ છે. ખર્ચ જોવા ગણતરી કરો અને સાચવો પસંદ કરો. આ એક માસિક કોસ્ટિંગ વાપરે છે.','आपकी जानकारी पूरी है। लागत देखने के लिए गणना करें और सहेजें चुनें। इसमें एक मासिक कॉस्टिंग खर्च होगी।'],
+ resultAfterCalculation:['Prices and pricing assumptions appear after Calculate & save. This uses one monthly costing.','ગણતરી કરો અને સાચવો પછી ભાવ અને કિંમતની ધારણાઓ દેખાશે. આ એક માસિક કોસ્ટિંગ વાપરે છે.','गणना करें और सहेजें के बाद कीमतें और मूल्य निर्धारण की मान्यताएँ दिखेंगी। इसमें एक मासिक कॉस्टिंग खर्च होगी।'],
+ reviewBeforeCalculation:['Review unusual inputs, then choose Calculate & save to see the price.','અસામાન્ય માહિતી તપાસો, પછી ભાવ જોવા ગણતરી કરો અને સાચવો પસંદ કરો.','असामान्य जानकारी जाँचें, फिर कीमत देखने के लिए गणना करें और सहेजें चुनें।'],
  inputsChangedNotRecalculated:['Inputs changed; not recalculated.','માહિતી બદલાઈ છે; ફરી ગણતરી થઈ નથી.','जानकारी बदली है; फिर से गणना नहीं हुई।'],
  changedSince:['Changed since it was saved: {fields}.','સાચવ્યા પછી બદલાયું: {fields}.','सहेजने के बाद बदला: {fields}।'],
- rerunUsesCosting:['Calculate & save uses one monthly costing, including a rerun with changed inputs.','ગણતરી કરો અને સાચવો એક માસિક કોસ્ટિંગ વાપરે છે, બદલાયેલી માહિતી સાથે ફરી ગણતરી પણ.','गणना करें और सहेजें एक मासिक कॉस्टिंग खर्च करता है, बदली जानकारी के साथ दोबारा गणना भी।'],
  changeRate:['yarn rate','યાર્ન દર','यार्न दर'], changeWaste:['wastage or count','વેસ્ટેજ અથવા કાઉન્ટ','वेस्टेज या काउंट'], changeWidth:['width','પહોળાઈ','चौड़ाई'], changeMargin:['margin','માર્જિન','मार्जिन'], changeCommission:['commission','કમિશન','कमीशन'], changeTransport:['transport','ટ્રાન્સપોર્ટ','ट्रांसपोर्ट'], changeQuantity:['quantity','જથ્થો','मात्रा'], changeOverhead:['overhead','ઓવરહેડ','ओवरहेड'], changeConstruction:['construction','બાંધણી','बनावट'],
  paidActiveUnknown:['Your paid plan is active, so this page can no longer check the earlier Free calculation.','તમારો પેઇડ પ્લાન સક્રિય છે, તેથી આ પેજ અગાઉની Free ગણતરી હવે તપાસી શકતું નથી.','आपका पेड प्लान सक्रिय है, इसलिए यह पेज पिछली Free गणना अब नहीं जाँच सकता।'],
 } satisfies Record<string, readonly [string,string,string]>
@@ -136,6 +150,8 @@ export function freeText(language:Language,key:FreeText,values:Record<string,str
 export function freeErrorText(code:string):FreeText {
   if(code.startsWith('FREE_PROVISIONING')) return 'accountPending'
   if(code==='FREE_INVALID_INPUT') return 'invalid'
+  if(code==='FREE_EDIT_WINDOW_EXPIRED') return 'revisionExpired'
+  if(code==='FREE_COSTING_CONFLICT') return 'revisionConflict'
   if(code==='FREE_QUOTA_EXHAUSTED') return 'exhausted'
   if(code==='FREE_PAUSED') return 'paused'
   if(code==='FREE_THROTTLED') return 'throttle'

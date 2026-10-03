@@ -37,9 +37,14 @@ import { EmptyState, PageHeader, Toolbar } from '@/components/ui/page-header'
 import { useTranslation } from '@/lib/i18n/context'
 import { tourCommonCopy } from '@/lib/i18n/tour-common'
 import { freeText } from '@/lib/i18n/free-tier'
+import { FreeRecalculationWindow } from '@/components/estimator/FreeRecalculationWindow'
+import { remainingFreeEditMs, type FreeEditWindow } from '@/lib/free-costing-window'
+import { useFreeEditClock } from '@/hooks/use-free-edit-clock'
 import { formatTimestampDate } from '@/lib/format'
 
 type Saved = {
+  revision?: number
+  editWindow?: FreeEditWindow
   id: string
   label: string
   created_at: string
@@ -63,6 +68,8 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
   const [showDeleteNudge, setShowDeleteNudge] = useState(false)
   const tourExport = useMemo(makeSavedCostingTourExport, [])
   const demoCosting = useMemo(() => makeSavedCostingTourExamples()[0] as Saved, [])
+  const [serverTime, setServerTime] = useState<string>()
+  const now = useFreeEditClock(embedded ? undefined : serverTime)
   const [rows, setRows] = useState<Saved[]>([])
   const [selected, setSelected] = useState<Saved | null>(null)
   const [inspectingCosting, setInspectingCosting] = useState<Saved | null>(null)
@@ -92,6 +99,7 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
       })
       .then(data => {
         if (active) {
+          setServerTime(data.serverTime)
           setRows(data.costings)
           setNextPage(data.nextPage)
         }
@@ -134,6 +142,7 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
       const r = await fetch(`/api/free/costings?page=${nextPage}`, { cache: 'no-store' })
       if (!r.ok) throw Error()
       const data = await r.json()
+      setServerTime(data.serverTime)
       setRows(current => [...current, ...data.costings])
       setNextPage(data.nextPage)
     } catch {
@@ -477,12 +486,12 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
               className="cursor-pointer border-hairline bg-surface shadow-[var(--shadow-card)] transition hover:border-saffron/40 hover:shadow-[var(--shadow-panel)]"
             >
               <CardContent className="p-0">
-                <div className="flex flex-col gap-4 p-4 sm:flex-row sm:flex-wrap sm:items-center sm:p-5 lg:flex-nowrap">
+                <div className="flex flex-col gap-4 p-4 sm:flex-row sm:flex-wrap sm:items-center sm:p-5">
                   <button
                     type="button"
                     onClick={() => setInspectingCosting(row)}
                     aria-haspopup="dialog"
-                    className="group flex min-w-0 flex-1 items-start gap-3 rounded-lg text-left outline-none focus-visible:ring-2 focus-visible:ring-saffron/35"
+                    className="group flex w-full min-w-0 basis-full items-start gap-3 rounded-lg text-left outline-none focus-visible:ring-2 focus-visible:ring-saffron/35"
                   >
                     <span className="mt-0.5 rounded-lg bg-saffron-soft p-2 text-saffron-deep">
                       <Layers3 className="h-5 w-5" />
@@ -493,16 +502,16 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
                           {row.label}
                         </span>
                         <Badge variant="outline" className="text-[10px] font-bold">
-                          v1
+                          v{row.revision ?? 1}
                         </Badge>
                       </span>
                       <span className="mt-1 block text-xs text-subtle">
-                        {tx('Saved')} {formatTimestampDate(row.created_at, { day: 'numeric', month: 'short', year: 'numeric' })} · {tx('Fixed snapshot')}
+                        {tx('Saved')} {formatTimestampDate(row.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}
                       </span>
                     </span>
                   </button>
 
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:min-w-[360px]">
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:min-w-[360px] sm:flex-1">
                     <div className="rounded-lg bg-surface-soft px-3 py-2">
                       <p className="text-[10px] font-bold uppercase tracking-wide text-subtle">{tx('Production Cost')}</p>
                       <p className="mt-1 font-mono text-sm font-black text-ink">₹{row.result.productionCostPerM.toFixed(2)}/m</p>
@@ -519,7 +528,9 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-1.5 self-end sm:self-center">
+                  <div className="flex flex-col items-end gap-2 self-end sm:self-center">
+                    {!embedded && row.editWindow && <FreeRecalculationWindow remainingMs={remainingFreeEditMs(row.editWindow,now)} onRecalculate={() => router.push(`/free?costing=${row.id}`)} />}
+                    <div className="flex items-center gap-1.5">
                     <Button
                       variant="outline"
                       size="sm"
@@ -538,6 +549,7 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
                     >
                       <ChevronRight className="h-5 w-5" />
                     </button>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -575,16 +587,17 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
                   </DialogTitle>
                   <div className="flex shrink-0 items-center gap-1.5">
                     <Badge variant="outline" className="border-info/25 bg-info-soft text-[10px] font-bold text-info">
-                      {tx('Fixed snapshot')}
+                      {tx('Saved')}
                     </Badge>
                     <Badge variant="outline" className="text-[10px] font-bold">
-                      v1
+                      v{inspectingCosting.revision ?? 1}
                     </Badge>
                   </div>
                 </div>
                 <DialogDescription>
                   {tx('Saved costing snapshot')} · {formatTimestampDate(inspectingCosting.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}
                 </DialogDescription>
+                {!embedded && inspectingCosting.editWindow && <FreeRecalculationWindow remainingMs={remainingFreeEditMs(inspectingCosting.editWindow,now)} onRecalculate={() => router.push(`/free?costing=${inspectingCosting.id}`)} />}
                 <DialogClose asChild>
                   <button
                     type="button"
@@ -602,7 +615,7 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
                     <div>
                       <p className="text-sm font-black text-ink">{tx('Costing breakdown')}</p>
                       <p className="mt-0.5 text-xs text-subtle">
-                        {tx('Fixed snapshot')} · {formatTimestampDate(inspectingCosting.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}
+                        {tx('Saved costing snapshot')} · {formatTimestampDate(inspectingCosting.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}
                       </p>
                     </div>
                     <div data-costing-tour="reuse" className="flex flex-wrap gap-2">
@@ -647,7 +660,7 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
 
                   <div className="mt-4 rounded-lg bg-surface-soft p-3 text-xs text-subtle">
                     <p>
-                      {tx('This is an immutable costing snapshot. Viewing and exporting do not deduct from your monthly calculation quota.')}
+                      {freeText(language, 'freeSavedPolicy')}
                     </p>
                   </div>
                 </section>
