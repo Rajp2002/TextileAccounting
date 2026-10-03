@@ -348,7 +348,7 @@ describe('Premium Free-Plan Usage Counter & Estimator Integration', () => {
       expect(freeBranch).toContain('freePreflight(estimatorValidation')
       expect(freeBranch).toContain("preflight.action === 'fix'")
       expect(freeBranch).toContain('requireWarningReview(')
-      expect(freeBranch).toContain('freeMeter.submit(preflight.acknowledged)')
+      expect(freeBranch).toContain('freeMeter.submit(preflight.acknowledged, freePage)')
     })
 
     it('IN-02: input staleness never reaches the usage card; only balance freshness does', () => {
@@ -431,6 +431,15 @@ describe('Premium Free-Plan Usage Counter & Estimator Integration', () => {
       'leaveUnresolvedBody',
       'stayOnPage',
       'leaveAnyway',
+      'unreconciledChecking',
+      'unreconciledNotFound',
+      'unreconciledNotFoundBody',
+      'unreconciledCheckFailed',
+      'unreconciledFound',
+      'unreconciledFoundBody',
+      'checkSavedAgain',
+      'stopTracking',
+      'okDismiss',
     ] as const
 
     for (const lang of ['en', 'gu', 'hi'] as const) {

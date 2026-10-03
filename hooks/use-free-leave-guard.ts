@@ -1,10 +1,9 @@
 'use client'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { guardedLinkHref } from '@/lib/free-leave-guard'
+import { guardedLinkHref, type FreeLeaveReason } from '@/lib/free-leave-guard'
 
-/** Why leaving would lose page-memory work, or null when the page is clean. */
-export type FreeLeaveReason = 'unresolved' | 'unsaved' | null
+export type { FreeLeaveReason }
 type AnchorLike = { href: string; target: string; hasAttribute: (name: string) => boolean }
 
 /**

@@ -47,12 +47,16 @@ const saved = (remaining: number, requestId = 'request-1') => ({
   },
 })
 const warning = { status: 200, body: { needsAcknowledgement: true, warningFields: ['ppi'] } }
+/** A token shaped like the server's: base64url JSON payload, then a MAC the browser never checks. */
+const tokenFor = (requestId: string) => `${Buffer.from(JSON.stringify({ version: 1, requestId })).toString('base64url')}.mac`
+const ORIGINAL = '6f9a1c2e-0b7d-4c1a-9e3f-2d5b8a7c4e10'
 
 let root: Root | null
 let current: Meter
 let calls: Call[]
 let statusReplies: Reply[]
 let calculateReplies: Reply[]
+let costingsReplies: Reply[]
 
 function respond(reply: Reply | undefined): Promise<Response> {
   if (!reply || reply === 'network') return Promise.reject(new TypeError('Failed to fetch'))
@@ -95,6 +99,9 @@ function recoveryHtml(meter: Meter) {
       onCorrect={meter.correctReview}
       onRetry={meter.retry}
       onRelease={meter.release}
+      unreconciled={meter.unreconciled}
+      onCheckUnreconciled={meter.checkUnreconciled}
+      onDismissUnreconciled={meter.dismissUnreconciled}
     />,
   )
 }
@@ -104,6 +111,7 @@ beforeEach(() => {
   calls = []
   statusReplies = []
   calculateReplies = []
+  costingsReplies = []
   const documentHost = Object.assign(new EventTarget(), { nodeType: 9, activeElement: null, visibilityState: 'visible' })
   const windowHost = Object.assign(new EventTarget(), {
     document: documentHost, HTMLIFrameElement: class {}, setTimeout, clearTimeout,
@@ -117,6 +125,7 @@ beforeEach(() => {
     calls.push({ url, body })
     if (url === '/api/free/status') return respond(statusReplies.shift() ?? status(2))
     if (url === '/api/free/calculate') return respond(calculateReplies.shift())
+    if (url.startsWith('/api/free/costings')) return respond(costingsReplies.shift() ?? { status: 200, body: { costings: [], nextPage: null } })
     return respond({ status: 200, body: {} })
   }))
   root = createRoot(new HostElement(documentHost) as unknown as HTMLElement)
@@ -190,6 +199,15 @@ describe('F01 editing during review', () => {
   })
 })
 
+describe('leave guard baseline', () => {
+  it('a confirmed save remembers the page as it was when Calculate was pressed', async () => {
+    calculateReplies.push(saved(1))
+    await mount()
+    await act(() => current.submit(false, 'page-at-press'))
+    expect(current.completed?.page).toBe('page-at-press')
+  })
+})
+
 describe('F02 acknowledged commit with a lost response', () => {
   it('resolves by replaying the same payload, token and acknowledgement exactly once', async () => {
     calculateReplies.push(warning, 'network', saved(1))
@@ -238,6 +256,80 @@ describe('F03 late rejection after an uncertain send', () => {
 
     await act(() => current.release())
     expect(current.transaction).toEqual({ phase: 'editing' })
+    // The possibly committed attempt is kept for reconciliation, not discarded.
+    expect(current.unreconciled).toHaveLength(1)
+    expect(current.unreconciled[0].attempt.requestToken).toBe('token-1')
+  })
+})
+
+describe('F03 a released attempt keeps its own reconciliation path', () => {
+  const blocked = { status: 400, body: { code: 'FREE_REQUEST_EXPIRED' } }
+  const releaseOriginal = async () => {
+    statusReplies.push(status(2), status(1, tokenFor(ORIGINAL)))
+    calculateReplies.push('network', blocked)
+    await mount()
+    await act(() => current.submit(false))
+    await act(() => current.retry())
+  }
+
+  it('looks the original request up in saved costings and reports when it is not there yet', async () => {
+    await releaseOriginal()
+    costingsReplies.push({ status: 200, body: { costings: [{ id: 'another-costing' }], nextPage: null } })
+    await act(async () => { current.release(); await Promise.resolve() })
+    await act(async () => { await current.checkUnreconciled() })
+
+    expect(current.transaction).toEqual({ phase: 'editing' })
+    expect(current.unreconciled).toMatchObject([{ requestId: ORIGINAL, check: 'not_found' }])
+    expect(calls.filter(call => call.url === '/api/free/costings').length).toBeGreaterThan(0)
+    const html = recoveryHtml(current)
+    expect(html).toContain('An earlier calculation may still have been saved')
+    expect(html).toContain('data-free-recovery-action="check-saved"')
+    expect(html).toContain('data-free-recovery-action="stop-tracking"')
+  })
+
+  it('confirms the original when saved history has it, and refreshes the balance', async () => {
+    await releaseOriginal()
+    costingsReplies.push({ status: 200, body: { costings: [{ id: ORIGINAL }], nextPage: null } })
+    await act(async () => { current.release(); await Promise.resolve() })
+    await act(async () => { await current.checkUnreconciled() })
+
+    expect(current.unreconciled).toMatchObject([{ requestId: ORIGINAL, check: 'found' }])
+    expect(recoveryHtml(current)).toContain('Your earlier calculation was saved')
+    const statusReads = calls.filter(call => call.url === '/api/free/status').length
+    expect(statusReads).toBeGreaterThan(2)
+  })
+
+  it('keeps tracking when saved history cannot be read, and stops only on the owner\'s choice after a check', async () => {
+    await releaseOriginal()
+    // Releasing looks the request up at once; that first read fails.
+    costingsReplies.push({ status: 503, body: { code: 'FREE_TEMPORARY_ERROR' } })
+    await act(async () => { current.release(); for (let i = 0; i < 5; i++) await new Promise(resolve => setTimeout(resolve, 0)) })
+    expect(current.unreconciled).toMatchObject([{ check: 'check_failed' }])
+    // Not checked successfully yet: stopping is refused.
+    act(() => current.dismissUnreconciled(ORIGINAL))
+    expect(current.unreconciled).toHaveLength(1)
+
+    await act(async () => { await current.checkUnreconciled() })
+    expect(current.unreconciled).toMatchObject([{ check: 'not_found' }])
+    act(() => current.dismissUnreconciled(ORIGINAL))
+    expect(current.unreconciled).toEqual([])
+  })
+
+  it('a fresh calculation can start while the earlier one is still tracked', async () => {
+    await releaseOriginal()
+    await act(async () => { current.release(); await Promise.resolve() })
+    calculateReplies.push(saved(0, 'request-new'))
+    await act(() => current.submit(false))
+    expect(current.completed?.id).toBe('request-new')
+    expect(current.unreconciled).toHaveLength(1)
+  })
+
+  it('forgets a tracked attempt when the page belongs to another owner', async () => {
+    await releaseOriginal()
+    await act(async () => { current.release(); await Promise.resolve() })
+    statusReplies.push(status(2, 'token-9', 'user-b'))
+    await act(async () => { await current.refresh() })
+    expect(current.unreconciled).toEqual([])
   })
 })
 
@@ -457,4 +549,20 @@ it('automatically removes the Recalculate pill when the trusted countdown reache
   await act(async()=>{vi.advanceTimersByTime(3000)})
   expect(current.editRemainingMs).toBe(0)
   expect(renderToStaticMarkup(<FreeRecalculationWindow remainingMs={current.editRemainingMs} onRecalculate={()=>{}} />)).not.toContain('<button')
+})
+
+
+it('reconciles a released revision by its request receipt, not merely the pre-existing costing', async () => {
+  const revisionRequest='33333333-3333-4333-8333-333333333333'
+  statusReplies.push(status(2),status(2),status(1),status(1,tokenFor(revisionRequest)))
+  calculateReplies.push(saved(1),'network',{status:400,body:{code:'FREE_REQUEST_EXPIRED'}})
+  await mount();await act(()=>current.submit());await edit({profitPct:20})
+  await act(()=>current.submit());await act(()=>current.retry())
+  costingsReplies.push({status:200,body:{costings:[{id:'request-1'}],recalculationRequestIds:[]}})
+  await act(async()=>{current.release();await Promise.resolve()})
+  expect(current.unreconciled).toMatchObject([{requestId:revisionRequest,check:'not_found'}])
+  expect(calls.some(call=>call.url.includes('recalculationRequests='+revisionRequest))).toBe(true)
+  costingsReplies.push({status:200,body:{costings:[{id:'request-1'}],recalculationRequestIds:[revisionRequest]}})
+  await act(()=>current.checkUnreconciled())
+  expect(current.unreconciled).toMatchObject([{requestId:revisionRequest,check:'found'}])
 })

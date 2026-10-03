@@ -4,7 +4,7 @@ import {reportPwaWorkflowSuccess} from '@/lib/pwa-workflow-success'
 import type {EstimateState,EstimatorV3Totals,CostingResultSnapshot} from '@/lib/estimator'
 import type {freeStatus} from '@/lib/free-service'
 import {canonicalFreeInputs} from '@/lib/free-estimator-canonical'
-import {classifyFreeResponse,confirmFreeReview,correctFreeReview,FREE_EDITING,freeAttemptPayload,isFreeAttemptUnresolved,releaseFreeAttempt,resolveFreeSend,retryFreeAttempt,startFreeAttempt,type FreeReceiptQuota,type FreeTransaction} from '@/lib/free-transaction'
+import {classifyFreeResponse,confirmFreeReview,correctFreeReview,FREE_EDITING,freeAttemptPayload,freeRequestIdOf,isFreeAttemptUnresolved,reconcileWithSaved,releaseFreeAttempt,resolveFreeSend,retryFreeAttempt,startFreeAttempt,type FreeReceiptQuota,type FreeTransaction,type FreeUnreconciled} from '@/lib/free-transaction'
 import {remainingFreeEditMs,type FreeEditWindow,type SavedFreeCosting} from '@/lib/free-costing-window'
 import {useFreeEditClock} from '@/hooks/use-free-edit-clock'
 import {useTranslation} from '@/lib/i18n/context'
@@ -13,22 +13,25 @@ import type {AuthChangeEvent,Session} from '@supabase/supabase-js'
 
 type FreeStatus=Awaited<ReturnType<typeof freeStatus>>
 /** A server-confirmed saved Free costing. `quota` is that receipt's balance, not the current one. */
-type Completed={estimate:EstimateState;result:CostingResultSnapshot;totals:EstimatorV3Totals;signature:string;id:string;label:string;quota:FreeReceiptQuota|null;editWindow?:FreeEditWindow;costingsUsed:number;confirmedAt:string;statusReads:number}
+type Completed={estimate:EstimateState;result:CostingResultSnapshot;totals:EstimatorV3Totals;signature:string;id:string;label:string;quota:FreeReceiptQuota|null;editWindow?:FreeEditWindow;costingsUsed:number;confirmedAt:string;statusReads:number;page:string|null}
 const codeOf=(error:unknown)=>error instanceof Error&&error.message?error.message:'FREE_TEMPORARY_ERROR'
 const signatureOf=(estimate:EstimateState)=>JSON.stringify(canonicalFreeInputs(estimate))
 export function useFreeMeter(enabled:boolean,state:EstimateState,label:string,onPaidActivated?: (tier:SubscriptionTier)=>void,initialSaved?:SavedFreeCosting) {
  const {language}=useTranslation()
  const [status,setStatus]=useState<FreeStatus|null>(null)
- const [completed,setCompleted]=useState<Completed|null>(()=>initialSaved?{estimate:initialSaved.estimate,result:initialSaved.result,totals:initialSaved.totals,signature:signatureOf(initialSaved.estimate),id:initialSaved.id,label:initialSaved.label,quota:null,editWindow:initialSaved.editWindow,costingsUsed:0,confirmedAt:initialSaved.updated_at,statusReads:-1}:null)
+ const [completed,setCompleted]=useState<Completed|null>(()=>initialSaved?{estimate:initialSaved.estimate,result:initialSaved.result,totals:initialSaved.totals,signature:signatureOf(initialSaved.estimate),id:initialSaved.id,label:initialSaved.label,quota:null,editWindow:initialSaved.editWindow,costingsUsed:0,confirmedAt:initialSaved.updated_at,statusReads:-1,page:null}:null)
  const [transaction,setTransactionState]=useState<FreeTransaction>(FREE_EDITING)
  const [busy,setBusy]=useState(false),[statusError,setStatusError]=useState('')
  // Applied status reads; a save records the count so a later read can verify its balance.
  const [statusReads,setStatusReads]=useState(0),reads=useRef(0)
  // Refs mirror state so overlapping events read the latest transaction synchronously.
- const tx=useRef<FreeTransaction>(FREE_EDITING),lock=useRef(false),account=useRef<string|null>(null)
+ const tx=useRef<FreeTransaction>(FREE_EDITING),lock=useRef(false),account=useRef<string|null>(null),pressPage=useRef<string|null>(null)
  // A send or status read started for an earlier owner is ignored when it returns.
  const generation=useRef(0),statusOrder=useRef({issued:0,applied:0})
  const setTransaction=useCallback((next:FreeTransaction)=>{tx.current=next;setTransactionState(next)},[])
+ // Released attempts that may have committed, kept until saved history answers.
+ const [unreconciled,setUnreconciledState]=useState<FreeUnreconciled[]>([]),tracked=useRef<FreeUnreconciled[]>([])
+ const setUnreconciled=useCallback((next:FreeUnreconciled[])=>{tracked.current=next;setUnreconciledState(next)},[])
  // Verified paid access waits while a Free attempt is unresolved: the paid
  // estimator unmounts this meter, and a paid answer cannot replay the Free receipt.
  const heldPaid=useRef<SubscriptionTier|null>(null)
@@ -39,7 +42,7 @@ export function useFreeMeter(enabled:boolean,state:EstimateState,label:string,on
   if(current.phase==='unknown')setTransaction({...current,code:'FREE_PAID_ACTIVE',retryable:false})
   else if(!isFreeAttemptUnresolved(current))activatePaid(tier)
  },[activatePaid,setTransaction])
- const forgetOwner=useCallback(()=>{generation.current++;setTransaction(FREE_EDITING);setCompleted(null)},[setTransaction])
+ const forgetOwner=useCallback(()=>{generation.current++;setTransaction(FREE_EDITING);setCompleted(null);setUnreconciled([])},[setTransaction,setUnreconciled])
  const readStatus=useCallback(async()=>{
   const order=++statusOrder.current.issued,owner=generation.current
   const r=await fetch('/api/free/status',{cache:'no-store',signal:AbortSignal.timeout(10000)});const data=await r.json() as FreeStatus&{code?:string}
@@ -105,7 +108,7 @@ export function useFreeMeter(enabled:boolean,state:EstimateState,label:string,on
   const saved=resolved.saved
   if(saved){
    statusOrder.current.applied=statusOrder.current.issued
-   setCompleted({estimate:attempt.estimate,result:saved.result,totals:saved.totals,signature:signatureOf(attempt.estimate),id:saved.savedCostingId,label:attempt.label,quota:saved.quota,editWindow:saved.editWindow,costingsUsed:saved.costingsUsed??1,confirmedAt:saved.editWindow?.updatedAt??new Date().toISOString(),statusReads:reads.current})
+   setCompleted({estimate:attempt.estimate,result:saved.result,totals:saved.totals,signature:signatureOf(attempt.estimate),id:saved.savedCostingId,label:attempt.label,quota:saved.quota,editWindow:saved.editWindow,costingsUsed:saved.costingsUsed??1,confirmedAt:saved.editWindow?.updatedAt??new Date().toISOString(),statusReads:reads.current,page:pressPage.current})
    reportPwaWorkflowSuccess('costing')
    void fetch('/api/free/events',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({eventId:saved.requestId,name:'result_viewed',language,entryPoint:'estimator'})}).catch(()=>{})
    if(saved.costingsUsed!==0&&saved.quota.remaining===0)void fetch('/api/free/events',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({eventId:saved.requestId,name:'quota_reached',language,entryPoint:'quota'})}).catch(()=>{})
@@ -119,9 +122,10 @@ export function useFreeMeter(enabled:boolean,state:EstimateState,label:string,on
   try{await task()}finally{lock.current=false;setBusy(false)}
  }
  /** Start a new explicit calculation. Review and unresolved requests have their own actions. */
- const submit=(acknowledged=false)=>run(async()=>{
+ const submit=(acknowledged=false,page:string|null=null)=>run(async()=>{
   const current=tx.current
   if(current.phase!=='editing'&&current.phase!=='rejected'||completed&&!stale)return
+  pressPage.current=page
   // Freeze the inputs at the press, not after the token read.
   const estimate=structuredClone(state),name=label.trim()||'Costing',owner=account.current
   let fresh:FreeStatus
@@ -135,11 +139,39 @@ export function useFreeMeter(enabled:boolean,state:EstimateState,label:string,on
  const confirmReview=()=>run(()=>send(confirmFreeReview(tx.current)))
  const retry=()=>run(()=>send(retryFreeAttempt(tx.current)))
  const correctReview=()=>setTransaction(correctFreeReview(tx.current))
- const release=()=>{setTransaction(releaseFreeAttempt(tx.current));holdOrActivatePaid()}
+ /** Look every tracked attempt up in the owner's saved costings (newest page). */
+ const checkUnreconciled=async()=>{
+  if(tracked.current.length===0)return
+  const owner=generation.current
+  let ids:Set<string>|null=null
+  try{
+   const revisionRequests=tracked.current.filter(entry=>entry.attempt.costingId&&entry.requestId).map(entry=>entry.requestId!).slice(-50)
+   const query=revisionRequests.length?`?recalculationRequests=${encodeURIComponent(revisionRequests.join(','))}`:''
+   const r=await fetch(`/api/free/costings${query}`,{cache:'no-store',signal:AbortSignal.timeout(10000)})
+   const data=await r.json() as {costings?:Array<{id?:unknown}>;recalculationRequestIds?:unknown[]}
+   if(r.ok&&Array.isArray(data.costings))ids=new Set([...data.costings.map(costing=>costing.id),...(data.recalculationRequestIds??[])].filter((id):id is string=>typeof id==='string'))
+  }catch{ids=null}
+  if(owner!==generation.current)return
+  const before=tracked.current.filter(entry=>entry.check==='found').length
+  const next=reconcileWithSaved(tracked.current,ids,new Date().toISOString())
+  setUnreconciled(next)
+  // A newly found save used a costing; show the balance that includes it.
+  if(next.filter(entry=>entry.check==='found').length>before)await refresh()
+ }
+ /** Only after saved history answered, so stopping is an informed choice. */
+ const dismissUnreconciled=(requestId:string|null)=>setUnreconciled(tracked.current.filter(entry=>entry.requestId!==requestId||entry.check!=='found'&&entry.check!=='not_found'))
+ const release=()=>{
+  const current=tx.current,next=releaseFreeAttempt(current)
+  if(current.phase!=='unknown'||next===current)return
+  setUnreconciled([...tracked.current,{attempt:current.attempt,requestId:freeRequestIdOf(current.attempt.requestToken),code:current.code,check:'checking',checkedAt:null}])
+  setTransaction(next);holdOrActivatePaid()
+  void checkUnreconciled()
+ }
  // No status read has succeeded since the save, so the shown balance predates its debit.
  const balanceUnverified=!!completed&&!!statusError&&statusReads<=completed.statusReads
  const reset=()=>{if(!lock.current&&!isFreeAttemptUnresolved(tx.current)){setCompleted(null);setTransaction(FREE_EDITING)}}
  return {enabled,status,completed,stale,editRemainingMs,reset,transaction,busy,statusError,balanceUnverified,submit,confirmReview,correctReview,retry,release,refresh,
+  unreconciled,checkUnreconciled,dismissUnreconciled,
   /** Editing is locked only while the original request may still commit. */
   pending:isFreeAttemptUnresolved(transaction),warning:transaction.phase==='review'}
 }

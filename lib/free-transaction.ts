@@ -148,3 +148,40 @@ export function freePreflight(validation: EstimatorValidationResult, reviewed: b
   if (warned && !reviewed) return { action: 'review' }
   return { action: 'submit', acknowledged: warned }
 }
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+/**
+ * The request id inside a server-signed request token. Read only to look the
+ * request up in the owner's own saved costings; the server verifies tokens.
+ */
+export function freeRequestIdOf(token: string): string | null {
+  const payload = token.split('.')[0] ?? ''
+  if (!/^[A-Za-z0-9_-]+$/.test(payload)) return null
+  try {
+    const identity: unknown = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - payload.length % 4) % 4)))
+    const requestId = isObject(identity) ? identity.requestId : null
+    return typeof requestId === 'string' && UUID.test(requestId) ? requestId : null
+  } catch { return null }
+}
+
+/**
+ * A released attempt that may still have committed. Releasing frees the page
+ * for a new calculation; it does not forget the old identity, which stays
+ * checkable against saved history (a saved costing's id is its request id).
+ */
+export type FreeUnreconciled = {
+  attempt: FreeAttempt
+  requestId: string | null
+  code: string
+  check: 'checking' | 'found' | 'not_found' | 'check_failed'
+  checkedAt: string | null
+}
+
+/** Apply one read of saved history. Null ids mean the read failed. Absence is never proof. */
+export function reconcileWithSaved(entries: FreeUnreconciled[], savedIds: ReadonlySet<string> | null, checkedAt: string): FreeUnreconciled[] {
+  return entries.map(entry => {
+    if (entry.check === 'found') return entry
+    if (!savedIds || !entry.requestId) return { ...entry, check: 'check_failed', checkedAt }
+    return { ...entry, check: savedIds.has(entry.requestId) ? 'found' : 'not_found', checkedAt }
+  })
+}
