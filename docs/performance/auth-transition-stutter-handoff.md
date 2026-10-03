@@ -2,6 +2,15 @@
 
 Written 2026-10-03 for the next session (Claude Opus 5.5). Branch: `claude/signin-signout-redirect-delay-4fb5a6`. Read this whole file first; it is meant to replace the conversation that produced it.
 
+## Outcome (2026-10-03, later the same day)
+
+Fixed by making both marks compositor-driven, with the same look (owner approved the approach after checking a side-by-side probe in desktop Safari):
+
+- **Cause, measured.** Production (desktop Safari, after #176): the workspace is hydrated and painted 826 to 1,145 ms after the click, well inside the 1.6 s round. The stutter is the few hundred ms of script and hydration mid-round. The marks animated `stroke-dashoffset` and SVG-part transforms; Safari runs all of that on the main thread (WebKit's layer-based SVG engine is still off by default), Chromium runs the SVG transforms on the compositor but not the dashes. With the main thread busy for 1.5 s in headless Chromium, the old loom's shuttle kept moving over bare warp and the old spool stopped laying wraps; the rebuilt marks kept going.
+- **Fix.** `components/auth/thread-marks.tsx` draws the marks as SVG on HTML layers and moves only the layers, by `transform` or `opacity`. Picks are laid by a bar sliding into a clip shaped like the finished pick (its end stays under the shuttle); the spool's newest wrap is uncovered by a half-plane riding the thread's end, square to it (`spoolLayFrames()` in `spool-geometry.ts`); the twist steps through eight dash phases. Frame-by-frame against the old marks, at most 0.9% (loom) and 0.33% (spool) of pixels differ, all antialiasing. `__tests__/auth-transition.test.tsx` fails if a mark keyframe animates anything but transform/opacity, if an animated class lands on an SVG element, if the lay keyframes drift from the geometry, or if the twist ever shows no phase.
+- **Measuring note.** `frame-gaps.mjs` counts `requestAnimationFrame` frames, which are main-thread frames: they cannot show whether a compositor animation is smooth and will look the same before and after this fix. To see what reaches the screen, use Chromium's screencast (`Page.startScreencast`) during a busy loop, or a screen recording on Safari.
+- **Not done (not needed on desktop Safari).** The overlay still closes on a main-thread timer at 1.6 s; if a slow phone is still hydrating then, the lift is late (the marks keep moving smoothly meanwhile). Deferring workspace startup work was not pursued.
+
 ## Paste this to start the session
 
 > Continue the work on branch `claude/signin-signout-redirect-delay-4fb5a6` (Weavly, a Next.js PWA). Read `docs/performance/auth-transition-stutter-handoff.md` completely before doing anything else. The one problem to solve: the sign-in animation stutters while the workspace loads and hydrates behind it. Brainstorm first (use the brainstorming skill), start by measuring, and bring me options with a recommendation before changing any design or doing anything large. Do not commit, push or merge until I ask.

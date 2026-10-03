@@ -1835,6 +1835,26 @@
   .wv-loom,
   .wv-spool {
     --auth-round: 1.6s;
+    position: relative;
+  }
+
+  /* Each mark is an SVG drawing on HTML layers, and only the layers move, by
+     transform or opacity. Browsers animate those off the main thread, so the
+     marks keep moving while the next page loads and hydrates behind them;
+     animating stroke dashes or parts of an SVG freezes them then (in Safari,
+     the whole mark). Keep it that way. Distances are calc(100% * units / view)
+     of the moving layer, so the marks scale with their box. */
+  .wv-mark-layer {
+    position: absolute;
+    inset: 0;
+  }
+
+  .wv-mark-layer > svg,
+  .wv-spool-lay-uncut > svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
   }
 
   /* Loom: indigo warp, saffron weft. Two picks per round, then the cloth
@@ -1845,43 +1865,72 @@
   .wv-loom-gap { stroke: var(--color-surface); }
   .wv-loom-reed { stroke: var(--wv-neel-200); }
   .wv-loom-shuttle { fill: var(--wv-neel-900); stroke: var(--color-surface); }
-  /* The return pick is unwoven at rest; reduced motion shows one finished pick. */
-  .wv-loom-pass-back { stroke-dashoffset: 66; }
 
-  .wv-loom-cloth { animation: wv-loom-take-up var(--auth-round) infinite; }
+  /* The drawing fades out above the reed and below the cloth. */
+  .wv-loom-stage {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 26%, #000 74%, transparent);
+    mask-image: linear-gradient(to bottom, transparent, #000 26%, #000 74%, transparent);
+  }
+
+  /* A pick is laid by a bar sliding its own width into a clip shaped like the
+     finished pick, with the shuttle's timing, so its moving end stays under
+     the shuttle. The return pick waits, unwoven, outside its clip; reduced
+     motion shows one finished pick. */
+  .wv-loom-pass {
+    position: absolute;
+    overflow: hidden;
+    border-radius: 9999px;
+  }
+
+  .wv-loom-pass-bar {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+  }
+
+  .wv-loom-pass-gap { background: var(--color-surface); }
+  .wv-loom-pass-weft { background: var(--wv-saffron-500); }
+
   .wv-loom-pass-there { animation: wv-loom-there var(--auth-round) infinite; }
-  .wv-loom-pass-back { animation: wv-loom-back var(--auth-round) infinite; }
-  .wv-loom-shuttle { animation: wv-loom-shuttle var(--auth-round) infinite; }
-  .wv-loom-reed { animation: wv-loom-beat var(--auth-round) infinite; }
+  .wv-loom-pass-back {
+    transform: translateX(100%);
+    animation: wv-loom-back var(--auth-round) infinite;
+  }
+  .wv-loom-cloth { animation: wv-loom-take-up var(--auth-round) infinite; }
+  .wv-loom-run { animation: wv-loom-shuttle var(--auth-round) infinite; }
+  .wv-loom-beat { animation: wv-loom-beat var(--auth-round) infinite; }
 
   @keyframes wv-loom-there {
-    0% { stroke-dashoffset: 66; animation-timing-function: cubic-bezier(0.55, 0, 0.3, 1); }
-    30%, 100% { stroke-dashoffset: 0; }
+    0% { transform: translateX(-100%); animation-timing-function: cubic-bezier(0.55, 0, 0.3, 1); }
+    30%, 100% { transform: translateX(0); }
   }
 
   @keyframes wv-loom-back {
-    0%, 50% { stroke-dashoffset: 66; animation-timing-function: cubic-bezier(0.55, 0, 0.3, 1); }
-    80%, 100% { stroke-dashoffset: 0; }
+    0%, 50% { transform: translateX(100%); animation-timing-function: cubic-bezier(0.55, 0, 0.3, 1); }
+    80%, 100% { transform: translateX(0); }
   }
 
   @keyframes wv-loom-shuttle {
     0% { transform: translateX(0); animation-timing-function: cubic-bezier(0.55, 0, 0.3, 1); }
-    30%, 50% { transform: translateX(66px); animation-timing-function: cubic-bezier(0.55, 0, 0.3, 1); }
+    30%, 50% { transform: translateX(calc(100% * 66 / 96)); animation-timing-function: cubic-bezier(0.55, 0, 0.3, 1); }
     80%, 100% { transform: translateX(0); }
   }
 
   @keyframes wv-loom-beat {
     0%, 30% { transform: translateY(0); animation-timing-function: ease-in; }
-    37% { transform: translateY(6px); animation-timing-function: ease-out; }
+    37% { transform: translateY(calc(100% * 6 / 96)); animation-timing-function: ease-out; }
     46%, 80% { transform: translateY(0); animation-timing-function: ease-in; }
-    87% { transform: translateY(6px); animation-timing-function: ease-out; }
+    87% { transform: translateY(calc(100% * 6 / 96)); animation-timing-function: ease-out; }
     96%, 100% { transform: translateY(0); }
   }
 
   @keyframes wv-loom-take-up {
     0%, 34% { transform: translateY(0); animation-timing-function: ease-in-out; }
-    48%, 84% { transform: translateY(10px); animation-timing-function: ease-in-out; }
-    98%, 100% { transform: translateY(20px); }
+    48%, 84% { transform: translateY(calc(100% * 10 / 96)); animation-timing-function: ease-in-out; }
+    98%, 100% { transform: translateY(calc(100% * 20 / 96)); }
   }
 
   /* Spool: each wind lays one wrap across the front of the barrel while the
@@ -1896,36 +1945,142 @@
   .wv-spool-strand { stroke: var(--wv-saffron-500); }
   .wv-spool-twist { stroke: var(--wv-saffron-700); stroke-opacity: 0.45; }
 
-  .wv-spool-stack { animation: wv-spool-take-up calc(var(--auth-round) / 2) infinite; }
-  .wv-spool-lay { animation: wv-spool-lay calc(var(--auth-round) / 2) infinite; }
-  .wv-spool-spin {
-    transform-box: fill-box;
-    transform-origin: center;
-    animation: wv-spool-spin calc(var(--auth-round) / 2) linear infinite;
-  }
-  .wv-spool-twist { animation: wv-spool-reel calc(var(--auth-round) / 8) linear infinite; }
-  .wv-spool-lead {
-    transform-box: view-box;
-    transform-origin: 58px 27px;
-    animation: wv-spool-sway var(--auth-round) ease-in-out infinite;
+  .wv-spool-barrel,
+  .wv-spool-lay-cut,
+  .wv-spool-lay-uncut,
+  .wv-spool-end,
+  .wv-spool-holes {
+    position: absolute;
   }
 
-  @keyframes wv-spool-lay {
-    0% { stroke-dashoffset: 100; animation-timing-function: cubic-bezier(0.45, 0, 0.35, 1); }
-    50%, 100% { stroke-dashoffset: 0; }
+  .wv-spool-barrel,
+  .wv-spool-lay-cut {
+    overflow: hidden;
   }
+
+  .wv-spool-stack { animation: wv-spool-take-up calc(var(--auth-round) / 2) infinite; }
+
+  /* The newest wrap is uncovered by a half-plane whose edge rides the thread's
+     leading end, square to the thread; what it holds undoes the move, so the
+     wrap itself never moves. Its round ends are dots. The frames come from
+     spoolLayFrames() in components/auth/spool-geometry.ts, with straight lines
+     between them. */
+  .wv-spool-lay-cut {
+    transform-origin: 50% 100%;
+    animation: wv-spool-lay-cut calc(var(--auth-round) / 2) linear infinite;
+  }
+  .wv-spool-lay-uncut { animation: wv-spool-lay-uncut calc(var(--auth-round) / 2) linear infinite; }
+  .wv-spool-end {
+    border-radius: 50%;
+    background: var(--wv-saffron-500);
+  }
+  .wv-spool-lay-end { animation: wv-spool-lay-end calc(var(--auth-round) / 2) linear infinite; }
+
+  .wv-spool-spin { animation: wv-spool-spin calc(var(--auth-round) / 2) linear infinite; }
+  .wv-spool-lead { animation: wv-spool-sway var(--auth-round) ease-in-out infinite; }
+
+  /* The twist: eight copies of its dashes, each a step further along, take
+     turns, each overlapping its neighbours by 1 ms so no frame falls between. */
+  .wv-spool-twist-phase:not(:first-child) { opacity: 0; }
+  .wv-spool-twist-phase { animation: wv-spool-twist calc(var(--auth-round) / 8) linear infinite; }
 
   @keyframes wv-spool-take-up {
     0%, 55% { transform: translateY(0); animation-timing-function: ease-in-out; }
-    85%, 100% { transform: translateY(5px); }
+    85%, 100% { transform: translateY(calc(100% * 5 / 84)); }
+  }
+
+  @keyframes wv-spool-lay-cut {
+    0% { transform: translate(17.5%, 0%) rotate(0deg); }
+    2.0833% { transform: translate(17.496%, 0.232%) rotate(4.21deg); }
+    4.1667% { transform: translate(17.425%, 0.97%) rotate(17.18deg); }
+    6.25% { transform: translate(17.115%, 2.189%) rotate(35.39deg); }
+    8.3333% { transform: translate(16.379%, 3.697%) rotate(51.43deg); }
+    10.4167% { transform: translate(15.116%, 5.291%) rotate(62.78deg); }
+    12.5% { transform: translate(13.27%, 6.845%) rotate(70.76deg); }
+    14.5833% { transform: translate(10.813%, 8.256%) rotate(76.73deg); }
+    16.6667% { transform: translate(7.781%, 9.405%) rotate(81.53deg); }
+    18.75% { transform: translate(4.325%, 10.174%) rotate(85.62deg); }
+    20.8333% { transform: translate(0.714%, 10.491%) rotate(89.3deg); }
+    22.9167% { transform: translate(-2.761%, 10.368%) rotate(92.74deg); }
+    25% { transform: translate(-5.896%, 9.886%) rotate(96.13deg); }
+    27.0833% { transform: translate(-8.6%, 9.145%) rotate(99.61deg); }
+    29.1667% { transform: translate(-10.864%, 8.232%) rotate(103.36deg); }
+    31.25% { transform: translate(-12.719%, 7.212%) rotate(107.61deg); }
+    33.3333% { transform: translate(-14.207%, 6.131%) rotate(112.64deg); }
+    35.4167% { transform: translate(-15.369%, 5.022%) rotate(118.85deg); }
+    37.5% { transform: translate(-16.24%, 3.913%) rotate(126.76deg); }
+    39.5833% { transform: translate(-16.848%, 2.84%) rotate(136.88deg); }
+    41.6667% { transform: translate(-17.224%, 1.857%) rotate(149.07deg); }
+    43.75% { transform: translate(-17.414%, 1.04%) rotate(161.64deg); }
+    45.8333% { transform: translate(-17.484%, 0.451%) rotate(171.84deg); }
+    47.9167% { transform: translate(-17.499%, 0.109%) rotate(178.02deg); }
+    50%, 100% { transform: translate(-17.5%, 0%) rotate(180deg); }
+  }
+
+  @keyframes wv-spool-lay-uncut {
+    0% { transform: rotate(0deg) translate(-16.667%, 0%); }
+    2.0833% { transform: rotate(-4.21deg) translate(-16.663%, -0.11%); }
+    4.1667% { transform: rotate(-17.18deg) translate(-16.595%, -0.462%); }
+    6.25% { transform: rotate(-35.39deg) translate(-16.3%, -1.042%); }
+    8.3333% { transform: rotate(-51.43deg) translate(-15.599%, -1.76%); }
+    10.4167% { transform: rotate(-62.78deg) translate(-14.396%, -2.519%); }
+    12.5% { transform: rotate(-70.76deg) translate(-12.638%, -3.26%); }
+    14.5833% { transform: rotate(-76.73deg) translate(-10.298%, -3.931%); }
+    16.6667% { transform: rotate(-81.53deg) translate(-7.41%, -4.479%); }
+    18.75% { transform: rotate(-85.62deg) translate(-4.119%, -4.845%); }
+    20.8333% { transform: rotate(-89.3deg) translate(-0.68%, -4.996%); }
+    22.9167% { transform: rotate(-92.74deg) translate(2.63%, -4.937%); }
+    25% { transform: rotate(-96.13deg) translate(5.615%, -4.708%); }
+    27.0833% { transform: rotate(-99.61deg) translate(8.19%, -4.355%); }
+    29.1667% { transform: rotate(-103.36deg) translate(10.347%, -3.92%); }
+    31.25% { transform: rotate(-107.61deg) translate(12.113%, -3.434%); }
+    33.3333% { transform: rotate(-112.64deg) translate(13.53%, -2.92%); }
+    35.4167% { transform: rotate(-118.85deg) translate(14.637%, -2.391%); }
+    37.5% { transform: rotate(-126.76deg) translate(15.466%, -1.863%); }
+    39.5833% { transform: rotate(-136.88deg) translate(16.046%, -1.352%); }
+    41.6667% { transform: rotate(-149.07deg) translate(16.404%, -0.885%); }
+    43.75% { transform: rotate(-161.64deg) translate(16.585%, -0.495%); }
+    45.8333% { transform: rotate(-171.84deg) translate(16.651%, -0.215%); }
+    47.9167% { transform: rotate(-178.02deg) translate(16.666%, -0.052%); }
+    50%, 100% { transform: rotate(-180deg) translate(16.667%, 0%); }
+  }
+
+  @keyframes wv-spool-lay-end {
+    0% { transform: translate(0%, 0%); }
+    2.0833% { transform: translate(-0.095%, 2.576%); }
+    4.1667% { transform: translate(-1.662%, 10.775%); }
+    6.25% { transform: translate(-8.545%, 24.322%); }
+    8.3333% { transform: translate(-24.901%, 41.076%); }
+    10.4167% { transform: translate(-52.979%, 58.787%); }
+    12.5% { transform: translate(-93.994%, 76.056%); }
+    14.5833% { transform: translate(-148.591%, 91.729%); }
+    16.6667% { transform: translate(-215.98%, 104.5%); }
+    18.75% { transform: translate(-292.772%, 113.047%); }
+    20.8333% { transform: translate(-373.017%, 116.569%); }
+    22.9167% { transform: translate(-450.255%, 115.205%); }
+    25% { transform: translate(-519.916%, 109.845%); }
+    27.0833% { transform: translate(-579.997%, 101.608%); }
+    29.1667% { transform: translate(-630.309%, 91.464%); }
+    31.25% { transform: translate(-671.53%, 80.134%); }
+    33.3333% { transform: translate(-704.598%, 68.122%); }
+    35.4167% { transform: translate(-730.422%, 55.795%); }
+    37.5% { transform: translate(-749.77%, 43.473%); }
+    39.5833% { transform: translate(-763.286%, 31.552%); }
+    41.6667% { transform: translate(-771.644%, 20.639%); }
+    43.75% { transform: translate(-775.864%, 11.559%); }
+    45.8333% { transform: translate(-777.419%, 5.011%); }
+    47.9167% { transform: translate(-777.757%, 1.211%); }
+    50%, 100% { transform: translate(-777.778%, 0%); }
   }
 
   @keyframes wv-spool-spin {
     to { transform: rotate(360deg); }
   }
 
-  @keyframes wv-spool-reel {
-    to { stroke-dashoffset: 3; }
+  @keyframes wv-spool-twist {
+    0%, 13% { opacity: 1; }
+    13.01%, 99.49% { opacity: 0; }
+    99.5%, 100% { opacity: 1; }
   }
 
   @keyframes wv-spool-sway {
@@ -1947,8 +2102,17 @@
     }
 
     /* The shuttle rests where its finished pick ends. */
-    .wv-loom-shuttle {
-      transform: translateX(66px);
+    .wv-loom-run {
+      transform: translateX(calc(100% * 66 / 96));
+    }
+
+    /* The newest wrap shows whole, its leading end at the far side. */
+    .wv-spool-lay-cut {
+      overflow: visible;
+    }
+
+    .wv-spool-lay-end {
+      transform: translateX(calc(-100% * 28 / 3.6));
     }
   }
 }
