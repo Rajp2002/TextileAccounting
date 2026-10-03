@@ -11,7 +11,7 @@ import type {AuthChangeEvent,Session} from '@supabase/supabase-js'
 
 type FreeStatus=Awaited<ReturnType<typeof freeStatus>>
 /** A server-confirmed saved Free costing. `quota` is that receipt's balance, not the current one. */
-type Completed={estimate:EstimateState;result:CostingResultSnapshot;totals:EstimatorV3Totals;signature:string;id:string;label:string;quota:FreeReceiptQuota;confirmedAt:string}
+type Completed={estimate:EstimateState;result:CostingResultSnapshot;totals:EstimatorV3Totals;signature:string;id:string;label:string;quota:FreeReceiptQuota;confirmedAt:string;statusReads:number}
 const codeOf=(error:unknown)=>error instanceof Error&&error.message?error.message:'FREE_TEMPORARY_ERROR'
 const signatureOf=(estimate:EstimateState)=>JSON.stringify(canonicalFreeInputs(estimate))
 export function useFreeMeter(enabled:boolean,state:EstimateState,label:string,onPaidActivated?:(tier:SubscriptionTier)=>void) {
@@ -20,6 +20,8 @@ export function useFreeMeter(enabled:boolean,state:EstimateState,label:string,on
  const [completed,setCompleted]=useState<Completed|null>(null)
  const [transaction,setTransactionState]=useState<FreeTransaction>(FREE_EDITING)
  const [busy,setBusy]=useState(false),[statusError,setStatusError]=useState('')
+ // Applied status reads; a save records the count so a later read can verify its balance.
+ const [statusReads,setStatusReads]=useState(0),reads=useRef(0)
  // Refs mirror state so overlapping events read the latest transaction synchronously.
  const tx=useRef<FreeTransaction>(FREE_EDITING),lock=useRef(false),account=useRef<string|null>(null)
  // A send or status read started for an earlier owner is ignored when it returns.
@@ -36,7 +38,7 @@ export function useFreeMeter(enabled:boolean,state:EstimateState,label:string,on
   if(account.current&&data.account.id!==account.current)forgetOwner()
   account.current=data.account.id
   if(data.accessState==='paid'){if(onPaidActivated)onPaidActivated(data.plan);else window.location.assign('/owner/estimator')}
-  setStatus(data);setStatusError('');return data
+  setStatus(data);setStatusError('');setStatusReads(++reads.current);return data
  },[onPaidActivated,forgetOwner])
  /** Balance check for buttons and focus; a failure marks only the balance unverified. */
  const refresh=useCallback(async()=>{try{return await readStatus()}catch(error){setStatusError(codeOf(error));return null}},[readStatus])
@@ -84,7 +86,7 @@ export function useFreeMeter(enabled:boolean,state:EstimateState,label:string,on
   setTransaction(resolved.transaction)
   const saved=resolved.saved
   if(saved){
-   setCompleted({estimate:attempt.estimate,result:saved.result,totals:saved.totals,signature:signatureOf(attempt.estimate),id:saved.savedCostingId,label:attempt.label,quota:saved.quota,confirmedAt:new Date().toISOString()})
+   setCompleted({estimate:attempt.estimate,result:saved.result,totals:saved.totals,signature:signatureOf(attempt.estimate),id:saved.savedCostingId,label:attempt.label,quota:saved.quota,confirmedAt:new Date().toISOString(),statusReads:reads.current})
    reportPwaWorkflowSuccess('costing')
    void fetch('/api/free/events',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({eventId:saved.requestId,name:'result_viewed',language,entryPoint:'estimator'})}).catch(()=>{})
    if(saved.quota.remaining===0)void fetch('/api/free/events',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({eventId:saved.requestId,name:'quota_reached',language,entryPoint:'quota'})}).catch(()=>{})
@@ -114,7 +116,9 @@ export function useFreeMeter(enabled:boolean,state:EstimateState,label:string,on
  const retry=()=>run(()=>send(retryFreeAttempt(tx.current)))
  const correctReview=()=>setTransaction(correctFreeReview(tx.current))
  const release=()=>setTransaction(releaseFreeAttempt(tx.current))
- return {enabled,status,completed,stale,transaction,busy,statusError,submit,confirmReview,correctReview,retry,release,refresh,
+ // No status read has succeeded since the save, so the shown balance predates its debit.
+ const balanceUnverified=!!completed&&!!statusError&&statusReads<=completed.statusReads
+ return {enabled,status,completed,stale,transaction,busy,statusError,balanceUnverified,submit,confirmReview,correctReview,retry,release,refresh,
   /** Editing is locked only while the original request may still commit. */
   pending:isFreeAttemptUnresolved(transaction),warning:transaction.phase==='review'}
 }

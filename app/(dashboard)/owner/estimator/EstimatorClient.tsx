@@ -100,6 +100,9 @@ import {
 import { useFreeMeter } from '@/hooks/use-free-meter'
 import { FreeUsageCard } from '@/components/estimator/FreeUsageCard'
 import { FreeTransactionRecovery } from '@/components/estimator/FreeTransactionRecovery'
+import { FreeSavedReceipt } from '@/components/estimator/FreeSavedReceipt'
+import { freePreflight } from '@/lib/free-transaction'
+import { freeText, type FreeText } from '@/lib/i18n/free-tier'
 import { useGutterDock } from '@/hooks/use-gutter-dock'
 import { makeFreeEstimate } from '@/lib/free-estimator-defaults'
 import { LocalSaveStatus } from '@/components/local-save-status'
@@ -3264,6 +3267,11 @@ function findEstimatorIssueTarget(field: string): { element: HTMLElement; inputE
     return label?.parentElement ? { element: label.parentElement, isYarnRow: false } : null
 }
 
+const FREE_CHANGE_LABELS: Record<ReturnType<typeof summarizeCostingInputChanges>[number], FreeText> = {
+    rate: 'changeRate', waste: 'changeWaste', width: 'changeWidth', margin: 'changeMargin', commission: 'changeCommission',
+    transport: 'changeTransport', quantity: 'changeQuantity', overhead: 'changeOverhead', construction: 'changeConstruction',
+}
+
 function focusEstimatorIssueTarget(field: string) {
     const target = findEstimatorIssueTarget(field)
     const fallback = typeof document === 'undefined' ? null : document.getElementById('estimator-save-validation-summary')
@@ -4704,7 +4712,17 @@ export default function EstimatorClient({
         qualityUpdateDecision?: 'version_only' | 'version_and_quality',
         warningAlreadyReviewed = false,
     ) => {
-        if (freeMode) return void freeMeter.submit(warningAlreadyReviewed)
+        if (freeMode) {
+            // Same shared validation as a paid save, on the current inputs and
+            // before any request. The server repeats it and stays authoritative.
+            const preflight = freePreflight(estimatorValidation, warningAlreadyReviewed || warningsAcknowledged)
+            if (preflight.action === 'fix') {
+                jumpToEstimatorIssue(preflight.field)
+                return void toast.error(tx(firstEstimatorValidationMessage ?? 'Complete the highlighted inputs before saving.'))
+            }
+            if (preflight.action === 'review') return void requireWarningReview(() => handleSaveQuote(status, staleRatesAcknowledged, qualityUpdateDecision, true))
+            return void freeMeter.submit(preflight.acknowledged)
+        }
         if (saveQuoteLockRef.current || savingQuote) return
         if (unconfirmedRequestId) return
         setShowValidation(true)
@@ -4925,7 +4943,16 @@ export default function EstimatorClient({
                 : totals.totalProductionCostPerM <= 0
                     ? 'Enter valid yarn and weaving inputs so Production Cost / m is above ₹0.'
                     : null
-    const validityStatus = freeMode && freeMeter.stale ? { label: 'Inputs changed', description: 'Showing your last saved result. Calculate and save to update it using one monthly costing.', icon: AlertTriangle, className: 'border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] text-[var(--wv-ochre-900)]' } : costingReadiness.status === 'ready'
+    // Field names only; no new money is computed before the explicit, metered calculation.
+    const freeChangedFields = freeMode && freeMeter.stale && freeMeter.completed
+        ? summarizeCostingInputChanges(freeMeter.completed.estimate, state).map(change => freeText(language, FREE_CHANGE_LABELS[change]))
+        : []
+    const freeStaleDescription = [
+        freeText(language, 'inputsChangedNotRecalculated'),
+        freeChangedFields.length > 0 ? freeText(language, 'changedSince', { fields: freeChangedFields.join(', ') }) : '',
+        freeText(language, 'rerunUsesCosting'),
+    ].filter(Boolean).join(' ')
+    const validityStatus = freeMode && freeMeter.stale ? { label: freeText(language, 'lastSavedResult'), description: freeStaleDescription, icon: AlertTriangle, className: 'border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] text-[var(--wv-ochre-900)]' } : costingReadiness.status === 'ready'
         ? {
             label: 'Costing valid',
             description: 'Price and break-even are calculated from the current inputs.',
@@ -5036,12 +5063,16 @@ export default function EstimatorClient({
                     onRelease={freeMeter.release}
                 />
             )}
+            {freeMode && freeMeter.completed && !freeMeter.stale && (
+                <FreeSavedReceipt label={freeMeter.completed.label} confirmedAt={freeMeter.completed.confirmedAt} quota={freeMeter.completed.quota} />
+            )}
             {freeMode && (
                 <FreeUsageCard
                     quota={freeMeter.status?.quota}
                     loading={freeMeter.busy || (!freeMeter.status && !freeMeter.statusError)}
                     error={freeMeter.statusError}
-                    stale={freeMeter.stale}
+                    stale={Boolean(freeMeter.statusError && freeMeter.status)}
+                    unverified={freeMeter.balanceUnverified}
                     isPending={freeMeter.pending}
                     onRefresh={freeMeter.refresh}
                     isDocked={isFreeUsageDocked}

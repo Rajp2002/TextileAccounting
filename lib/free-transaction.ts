@@ -1,4 +1,5 @@
 import type { CostingResultSnapshot, EstimateState, EstimatorV3Totals } from './estimator'
+import type { EstimatorValidationResult } from './estimator-validation'
 
 /**
  * One explicit Free calculation, frozen when the owner presses Calculate.
@@ -131,4 +132,15 @@ export function releaseFreeAttempt(transaction: FreeTransaction): FreeTransactio
 
 export function freeAttemptPayload(attempt: FreeAttempt) {
   return { estimate: attempt.estimate, label: attempt.label, requestToken: attempt.requestToken, warningsAcknowledged: attempt.acknowledged }
+}
+
+/**
+ * The shared validator runs on the current inputs before any Free request, as
+ * it does before a paid save. The server repeats it and stays authoritative.
+ */
+export function freePreflight(validation: EstimatorValidationResult, reviewed: boolean): { action: 'fix'; field: string | null } | { action: 'review' } | { action: 'submit'; acknowledged: boolean } {
+  if (!validation.valid) return { action: 'fix', field: validation.issues[0]?.field ?? null }
+  const warned = (validation.warnings?.length ?? 0) > 0
+  if (warned && !reviewed) return { action: 'review' }
+  return { action: 'submit', acknowledged: warned }
 }

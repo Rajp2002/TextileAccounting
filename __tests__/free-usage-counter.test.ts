@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { FreeUsageCard } from '@/components/estimator/FreeUsageCard'
 import { FreeTransactionRecovery } from '@/components/estimator/FreeTransactionRecovery'
+import { FreeSavedReceipt } from '@/components/estimator/FreeSavedReceipt'
 import { freeText } from '@/lib/i18n/free-tier'
 import { I18nContext } from '@/lib/i18n/context'
 
@@ -95,6 +96,14 @@ describe('Premium Free-Plan Usage Counter & Estimator Integration', () => {
       expect(html).toContain('value="0"')
     })
 
+    it('UI-03b: at zero, points to saved costings and PDFs that stay available', () => {
+      const html = renderWithLang(
+        React.createElement(FreeUsageCard, { quota: { limit: 2, remaining: 0, resetsAt: futureDate } })
+      )
+      expect(html).toContain('Saved costings and PDFs stay available.')
+      expect(html).toContain('href="/free/costings"')
+    })
+
     it('UI-04: loading without prior balance shows "Checking usage…" skeleton without flashing false counts', () => {
       const html = renderWithLang(
         React.createElement(FreeUsageCard, {
@@ -135,6 +144,20 @@ describe('Premium Free-Plan Usage Counter & Estimator Integration', () => {
 
       expect(html).toContain('1 / 2')
       expect(html).toContain('Last confirmed')
+    })
+
+    it('UI-06b: after a save whose balance refresh failed, shows no number rather than the pre-save balance', () => {
+      const html = renderWithLang(
+        React.createElement(FreeUsageCard, {
+          quota: { limit: 2, remaining: 2, resetsAt: futureDate },
+          unverified: true,
+          onRefresh: () => {},
+        })
+      )
+
+      expect(html).toContain('Balance could not be refreshed')
+      expect(html).not.toContain('2 / 2')
+      expect(html).toContain('Check again')
     })
 
     it('UI-07: pending submission displays "Confirmation pending"', () => {
@@ -292,6 +315,54 @@ describe('Premium Free-Plan Usage Counter & Estimator Integration', () => {
     })
   })
 
+  describe('INTEGRATION: EstimatorClient keeps result, balance and validation truths apart', () => {
+    const estimator = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
+
+    it('IN-01: the Free save path runs the shared local preflight before any request', () => {
+      const freeBranch = estimator.slice(estimator.indexOf('if (freeMode) {', estimator.indexOf('const handleSaveQuote')), estimator.indexOf('if (saveQuoteLockRef.current || savingQuote) return'))
+      expect(freeBranch).toContain('freePreflight(estimatorValidation')
+      expect(freeBranch).toContain("preflight.action === 'fix'")
+      expect(freeBranch).toContain('requireWarningReview(')
+      expect(freeBranch).toContain('freeMeter.submit(preflight.acknowledged)')
+    })
+
+    it('IN-02: input staleness never reaches the usage card; only balance freshness does', () => {
+      const card = estimator.slice(estimator.indexOf('<FreeUsageCard'), estimator.indexOf('/>', estimator.indexOf('<FreeUsageCard')))
+      expect(card).not.toContain('freeMeter.stale')
+      expect(card).toContain('stale={Boolean(freeMeter.statusError && freeMeter.status)}')
+      expect(card).toContain('unverified={freeMeter.balanceUnverified}')
+    })
+
+    it('IN-03: a confirmed save shows its receipt, and edited inputs label the money as the last saved result', () => {
+      expect(estimator).toContain('<FreeSavedReceipt')
+      expect(estimator).toContain("freeText(language, 'lastSavedResult')")
+      expect(estimator).toContain("freeText(language, 'inputsChangedNotRecalculated')")
+    })
+  })
+
+  describe('RECEIPT: Saved Free costing confirmation', () => {
+    const receipt = {
+      label: 'Quality A', confirmedAt: '2026-10-03T09:15:00.000Z',
+      quota: { used: 1, limit: 2, remaining: 1, periodStart: '2026-09-30T18:30:00.000Z', resetsAt: '2026-10-31T18:30:00.000Z', policyVersion: 2, replayed: false },
+    }
+
+    it('RC-01: names the saved costing, the local confirmation time and the one costing used, with a link to history', () => {
+      const html = renderWithLang(React.createElement(FreeSavedReceipt, receipt))
+      expect(html).toContain('Saved · Quality A')
+      expect(html).toContain('Confirmed at')
+      expect(html).toContain('1 costing used.')
+      expect(html).toContain('href="/free/costings"')
+      // The receipt's balance belongs to its own period; the usage card shows the current one.
+      expect(html).not.toContain('remaining')
+    })
+
+    it('RC-02: a replay of an earlier save says no additional costing was used', () => {
+      const html = renderWithLang(React.createElement(FreeSavedReceipt, { ...receipt, quota: { ...receipt.quota, replayed: true } }))
+      expect(html).toContain('Already saved. No additional costing was used.')
+      expect(html).not.toContain('1 costing used.')
+    })
+  })
+
   describe('I18N: 3-Language Completeness (EN, GU, HI)', () => {
     const requiredKeys = [
       'freeCostings',
@@ -311,6 +382,23 @@ describe('Premium Free-Plan Usage Counter & Estimator Integration', () => {
       'remainingOfLimit',
       'toggleDetails',
       'reset',
+      'balanceUnverified',
+      'savedReceipt',
+      'confirmedAt',
+      'costingUsed',
+      'replayNoCharge',
+      'lastSavedResult',
+      'inputsChangedNotRecalculated',
+      'changedSince',
+      'rerunUsesCosting',
+      'correctInputs',
+      'reviewNoCharge',
+      'openSavedCostings',
+      'unknownBlocked',
+      'unknownBlockedNote',
+      'releaseAttempt',
+      'paidActiveUnknown',
+      'retrying',
     ] as const
 
     for (const lang of ['en', 'gu', 'hi'] as const) {

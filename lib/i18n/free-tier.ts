@@ -95,6 +95,17 @@ const phrases = {
  unknownBlocked:['This calculation can no longer be checked from this page.','આ ગણતરી હવે આ પેજ પરથી તપાસી શકાતી નથી.','यह गणना अब इस पेज से नहीं जाँची जा सकती।'],
  unknownBlockedNote:['If it was saved, it is in Saved costings. Calculating again is a new costing.','જો તે સચવાઈ હશે, તો સાચવેલી કોસ્ટિંગમાં છે. ફરી ગણતરી કરવી એ નવી કોસ્ટિંગ છે.','अगर यह सहेजी गई थी, तो सहेजी गई कॉस्टिंग में है। फिर से गणना करना नई कॉस्टिंग है।'],
  releaseAttempt:['Edit inputs again','માહિતી ફરી બદલો','जानकारी फिर बदलें'],
+ zeroHistory:['Saved costings and PDFs stay available.','સાચવેલી કોસ્ટિંગ અને PDF ઉપલબ્ધ રહે છે.','सहेजी गई कॉस्टिंग और PDF उपलब्ध रहती हैं।'],
+ balanceUnverified:['Balance could not be refreshed','બાકી ભથ્થું તાજું થઈ શક્યું નથી','बची सीमा ताज़ा नहीं हो सकी'],
+ savedReceipt:['Saved · {label}','સાચવ્યું · {label}','सहेजा गया · {label}'],
+ confirmedAt:['Confirmed at {time}','{time} એ પુષ્ટિ થઈ','{time} पर पुष्टि हुई'],
+ costingUsed:['1 costing used.','1 કોસ્ટિંગ વપરાઈ.','1 कॉस्टिंग खर्च हुई।'],
+ replayNoCharge:['Already saved. No additional costing was used.','પહેલેથી સાચવેલું છે. વધારાની કોસ્ટિંગ વપરાઈ નથી.','पहले से सहेजा गया है। कोई अतिरिक्त कॉस्टिंग खर्च नहीं हुई।'],
+ lastSavedResult:['Last saved result','છેલ્લું સાચવેલું પરિણામ','पिछला सहेजा गया परिणाम'],
+ inputsChangedNotRecalculated:['Inputs changed; not recalculated.','માહિતી બદલાઈ છે; ફરી ગણતરી થઈ નથી.','जानकारी बदली है; फिर से गणना नहीं हुई।'],
+ changedSince:['Changed since it was saved: {fields}.','સાચવ્યા પછી બદલાયું: {fields}.','सहेजने के बाद बदला: {fields}।'],
+ rerunUsesCosting:['Calculate & save uses one monthly costing, including a rerun with changed inputs.','ગણતરી કરો અને સાચવો એક માસિક કોસ્ટિંગ વાપરે છે, બદલાયેલી માહિતી સાથે ફરી ગણતરી પણ.','गणना करें और सहेजें एक मासिक कॉस्टिंग खर्च करता है, बदली जानकारी के साथ दोबारा गणना भी।'],
+ changeRate:['yarn rate','યાર્ન દર','यार्न दर'], changeWaste:['wastage or count','વેસ્ટેજ અથવા કાઉન્ટ','वेस्टेज या काउंट'], changeWidth:['width','પહોળાઈ','चौड़ाई'], changeMargin:['margin','માર્જિન','मार्जिन'], changeCommission:['commission','કમિશન','कमीशन'], changeTransport:['transport','ટ્રાન્સપોર્ટ','ट्रांसपोर्ट'], changeQuantity:['quantity','જથ્થો','मात्रा'], changeOverhead:['overhead','ઓવરહેડ','ओवरहेड'], changeConstruction:['construction','બાંધણી','बनावट'],
  paidActiveUnknown:['Your paid plan is active, so this page can no longer check the earlier Free calculation.','તમારો પેઇડ પ્લાન સક્રિય છે, તેથી આ પેજ અગાઉની Free ગણતરી હવે તપાસી શકતું નથી.','आपका पेड प्लान सक्रिय है, इसलिए यह पेज पिछली Free गणना अब नहीं जाँच सकता।'],
 } satisfies Record<string, readonly [string,string,string]>
 export type FreeText = keyof typeof phrases

@@ -249,6 +249,48 @@ describe('F04 save confirmed, then the balance refresh fails', () => {
     expect(current.transaction).toEqual({ phase: 'editing' })
     expect(recoveryHtml(current)).not.toContain('Unable to confirm the outcome')
     expect(current.statusError).toBe('FREE_TEMPORARY_ERROR')
+    // The pre-save status still says 2 left; it must not be shown as current.
+    expect(current.balanceUnverified).toBe(true)
+
+    await act(async () => { await current.refresh() })
+    expect(current.balanceUnverified).toBe(false)
+    expect(current.completed?.id).toBe('request-1')
+  })
+
+  it('an input-only edit makes the result stale without touching balance freshness', async () => {
+    calculateReplies.push(saved(1))
+    await mount()
+    await act(() => current.submit(false))
+    await edit({ profitPct: estimate.profitPct + 5 })
+    expect(current.stale).toBe(true)
+    expect(current.statusError).toBe('')
+    expect(current.balanceUnverified).toBe(false)
+  })
+})
+
+describe('F04 current balance comes only from the newest status read', () => {
+  it('an older status read that returns late cannot restore a larger balance', async () => {
+    const slow = deferred()
+    statusReplies.push(status(2), slow.promise, status(1))
+    await mount()
+    let older!: Promise<unknown>
+    await act(async () => { older = current.refresh(); await Promise.resolve() })
+    await act(async () => { await current.refresh() })
+    expect(current.status?.quota.remaining).toBe(1)
+    await act(async () => { slow.resolve(status(2)); await older })
+    expect(current.status?.quota.remaining).toBe(1)
+  })
+
+  it('a replayed receipt from an earlier month never becomes the current balance', async () => {
+    const previousMonth = { periodStart: '2026-08-31T18:30:00.000Z', resetsAt: '2026-09-30T18:30:00.000Z', policyVersion: 2 }
+    const replay = { status: 200, body: { ...saved(0).body, quota: { used: 2, limit: 2, remaining: 0, ...previousMonth, replayed: true, requestId: 'request-1' } } }
+    calculateReplies.push('network', replay)
+    await mount()
+    await act(() => current.submit(false))
+    await act(() => current.retry())
+
+    expect(current.completed?.quota).toMatchObject({ replayed: true, periodStart: previousMonth.periodStart })
+    expect(current.status?.quota).toMatchObject({ remaining: 2, periodStart: PERIOD.periodStart })
   })
 })
 

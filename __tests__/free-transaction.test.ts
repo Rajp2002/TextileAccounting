@@ -3,6 +3,7 @@ import {
   classifyFreeResponse,
   confirmFreeReview,
   correctFreeReview,
+  freePreflight,
   freeAttemptPayload,
   isFreeAttemptUnresolved,
   releaseFreeAttempt,
@@ -150,5 +151,21 @@ describe('transitions', () => {
   it('sends exactly the frozen request body', () => {
     const a = attempt({ acknowledged: true })
     expect(freeAttemptPayload(a)).toEqual({ estimate: a.estimate, label: 'Quality A', requestToken: 'token-1', warningsAcknowledged: true })
+  })
+})
+
+describe('freePreflight', () => {
+  const valid = { valid: true as const, issues: [] as [] }
+  it('stops before any request when the current inputs are invalid', () => {
+    expect(freePreflight({ valid: false, issues: [{ field: 'ppi', message: 'Enter PPI.' }] }, false)).toEqual({ action: 'fix', field: 'ppi' })
+  })
+  it('asks for review of local warnings before sending, then sends the acknowledgement', () => {
+    const warned = { ...valid, warnings: [{ field: 'ppi', message: 'PPI is unusual.' }] }
+    expect(freePreflight(warned, false)).toEqual({ action: 'review' })
+    expect(freePreflight(warned, true)).toEqual({ action: 'submit', acknowledged: true })
+  })
+  it('sends an unacknowledged request when there is nothing local to review', () => {
+    expect(freePreflight(valid, false)).toEqual({ action: 'submit', acknowledged: false })
+    expect(freePreflight(valid, true)).toEqual({ action: 'submit', acknowledged: false })
   })
 })
