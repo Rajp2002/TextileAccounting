@@ -75,13 +75,13 @@ export async function calculateFreeSubmission(body: { estimate: unknown; request
   const estimate = parseFreeEstimate(body.estimate)
   const validation = validateEstimatorSnapshot(estimate, { requireTapeLength:false, requireCapacity:requiresFactoryCapacity(estimate) })
   if (validation.warnings?.length && !body.warningsAcknowledged) {
-    return { warningFields:validation.warnings.map(w => w.field), needsAcknowledgement:true as const }
+    return { outcome:'review_required' as const, warningFields:validation.warnings.map(w => w.field), needsAcknowledgement:true as const }
   }
   const totals = calcFullTotals(estimate)
   const result = buildCostingResult(estimate,totals)
   const readiness = getEstimatorReadiness({ validation,result,totals,warningsAcknowledged:body.warningsAcknowledged })
   if (!readiness.canPersist) throw new Error('FREE_INVALID_INPUT')
-  if (context.paid) return { result, totals, quota:null, paid:true as const }
+  if (context.paid) return { outcome:'paid_result' as const, result, totals, quota:null, paid:true as const }
   const identity = verifyFreeRequest(body.requestToken ?? '', { subjectId:context.grant.subjectId, engineVersion:COSTING_CALCULATION_VERSION, keys:signing().keys, serverTime:new Date() })
   const inputBinding = bindFreeEffectiveInputs(identity,canonicalFreeInputs(estimate),signing().keys)
   const { data: quota, error } = await createAdminClient().rpc('complete_free_saved_costing', {
@@ -94,7 +94,7 @@ export async function calculateFreeSubmission(body: { estimate: unknown; request
     throw new Error(code ?? 'FREE_RETRY_SAME_REQUEST')
   }
   if (!quota) throw new Error('FREE_RETRY_SAME_REQUEST')
-  return { result,totals,quota,requestId:identity.requestId,savedCostingId:identity.requestId }
+  return { outcome:'saved' as const, result,totals,quota,requestId:identity.requestId,savedCostingId:identity.requestId }
 }
 
 export function freeError(error: unknown) {

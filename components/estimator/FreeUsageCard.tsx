@@ -15,9 +15,14 @@ export interface FreeUsageCardProps {
   } | null
   loading?: boolean
   error?: string | null
+  /** Balance from an earlier read; the latest refresh failed. */
   stale?: boolean
+  /** A costing was saved after the last good read, so that balance is out of date. */
+  unverified?: boolean
   isPending?: boolean
   onRefresh?: () => Promise<unknown> | void
+  /** Opens the plan comparison in place, keeping the mounted estimator; without it, plan actions link to /plans. */
+  onViewPlans?: () => void
   isDocked?: boolean
   dockStyle?: React.CSSProperties
   className?: string
@@ -29,8 +34,10 @@ export function FreeUsageCard({
   loading = false,
   error = null,
   stale = false,
+  unverified = false,
   isPending = false,
   onRefresh,
+  onViewPlans,
   isDocked = false,
   dockStyle,
   className = '',
@@ -66,8 +73,12 @@ export function FreeUsageCard({
   // Honest loading without quota
   const isInitialLoading = loading && remaining === null
 
-  // Error without prior balance
-  const hasFatalError = Boolean(error && remaining === null)
+  const plansAction = (label: string, className: string, testId?: string) => onViewPlans
+    ? <button type="button" data-testid={testId} data-free-plan-action="compare" onClick={onViewPlans} className={className}>{label}</button>
+    : <Link href="/plans?from=estimator" data-testid={testId} className={className}>{label}</Link>
+
+  // Error without prior balance, or a balance that predates the latest save
+  const hasFatalError = Boolean(error && remaining === null) || unverified
 
   const containerClasses = [
     'rounded-xl border border-wv-border-default/90 bg-surface/95 backdrop-blur-xs p-3.5 shadow-sm transition-all duration-200 text-ink',
@@ -155,7 +166,7 @@ export function FreeUsageCard({
         <div className="mt-2 space-y-2">
           <div className="flex items-center gap-1.5 text-xs text-wv-status-danger-fg font-medium">
             <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-            <span>{t('usageUnavailable')}</span>
+            <span>{t(unverified ? 'balanceUnverified' : 'usageUnavailable')}</span>
           </div>
           {onRefresh && (
             <Button
@@ -217,6 +228,13 @@ export function FreeUsageCard({
             aria-label={t('quota', { remaining: remaining ?? 0, limit })}
           />
 
+          {/* Completed work stays useful at zero. */}
+          {isExhausted && (
+            <Link href="/free/costings" className="mt-1 block text-[11px] font-medium text-ink underline underline-offset-2">
+              {t('zeroHistory')}
+            </Link>
+          )}
+
           {/* Confirmed 0/2 Exhausted State: Clean, calm reset date and view plans link */}
           {isExhausted && (
             <div className="mt-1.5 flex items-center justify-between text-[11px] text-body">
@@ -225,13 +243,7 @@ export function FreeUsageCard({
                   {t('reset', { date: formattedResetDate })}
                 </span>
               )}
-              <Link
-                href="/plans?from=estimator"
-                data-testid="free-usage-plans-link"
-                className="font-medium text-ink hover:text-body underline underline-offset-2 shrink-0 ml-2"
-              >
-                {t('viewPlans')}
-              </Link>
+              {plansAction(t('viewPlans'), 'font-medium text-ink hover:text-body underline underline-offset-2 shrink-0 ml-2', 'free-usage-plans-link')}
             </div>
           )}
         </div>
@@ -259,12 +271,7 @@ export function FreeUsageCard({
             {t('costingConsumptionExplanation')}
           </p>
           <div className="pt-1">
-            <Link
-              href="/plans?from=estimator"
-              className="inline-flex items-center text-xs font-semibold text-ink hover:text-body hover:underline"
-            >
-              {t('explorePlansArrow')}
-            </Link>
+            {plansAction(t('explorePlansArrow'), 'inline-flex items-center text-xs font-semibold text-ink hover:text-body hover:underline')}
           </div>
         </div>
       )}

@@ -7,7 +7,7 @@ import {
   Search,
   Layers3,
   ChevronRight,
-  Trash2,
+  EyeOff,
   Sparkles,
   Download,
   Eye,
@@ -105,6 +105,14 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
     return () => {
       active = false
     }
+  }, [])
+
+  // A browser-wide preference, as before; it hides a demonstration, never a saved costing.
+  const handleShowDemo = useCallback(() => {
+    setDemoDeleted(false)
+    try {
+      localStorage.removeItem(DEMO_STORAGE_KEY)
+    } catch {}
   }, [])
 
   const handleDeleteDemo = useCallback(() => {
@@ -241,8 +249,8 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
                 className="border-[var(--wv-ochre-300)] bg-white text-xs font-semibold text-[var(--wv-ochre-900)] hover:bg-[var(--wv-ochre-100)]/70"
                 onClick={handleDeleteDemo}
               >
-                <Trash2 className="mr-1.5 h-3.5 w-3.5 text-[var(--wv-ochre-700)]" aria-hidden="true" />
-                {freeText(language, 'deleteDemoSample')}
+                <EyeOff className="mr-1.5 h-3.5 w-3.5 text-[var(--wv-ochre-700)]" aria-hidden="true" />
+                {freeText(language, 'hideExample')}
               </Button>
               <Button
                 size="sm"
@@ -347,9 +355,14 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
                   {tx('Clear search & filters')}
                 </Button>
               ) : (
-                <Button variant="saffron" onClick={() => router.push('/free')}>
-                  <Plus className="h-4 w-4" /> {tx('Calculate First Costing')}
-                </Button>
+                <div className="flex flex-wrap justify-center gap-2">
+                  <Button variant="saffron" onClick={() => router.push('/free')}>
+                    <Plus className="h-4 w-4" /> {tx('Calculate First Costing')}
+                  </Button>
+                  {demoDeleted && rows.length === 0 && (
+                    <Button variant="outline" onClick={handleShowDemo}>{freeText(language, 'showExample')}</Button>
+                  )}
+                </div>
               )
             }
           />
@@ -385,14 +398,14 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
                           {demoCosting.label}
                         </span>
                         <span className="inline-flex items-center rounded-md bg-[var(--wv-saffron-100)] px-2 py-0.5 text-xs font-semibold text-saffron-deep ring-1 ring-inset ring-[var(--wv-saffron-200)]">
-                          {freeText(language, 'demoSample')}
+                          {freeText(language, 'exampleBadge')}
                         </span>
                         <Badge variant="outline" className="border-[var(--wv-saffron-200)] bg-white text-[10px] font-bold text-saffron-deep">
                           v1
                         </Badge>
                       </span>
                       <span className="mt-1 block text-xs text-subtle">
-                        {tx('Saved')} {formatTimestampDate(demoCosting.created_at, { day: 'numeric', month: 'short', year: 'numeric' })} · {tx('Demo sample')}
+                        {freeText(language, 'exampleNotYours')}
                       </span>
                     </span>
                   </button>
@@ -429,11 +442,11 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
                       variant="ghost"
                       size="icon"
                       onClick={handleDeleteDemo}
-                      className="h-9 w-9 text-subtle hover:bg-risk-soft hover:text-risk"
-                      title={freeText(language, 'deleteDemoSample')}
-                      aria-label={freeText(language, 'deleteDemoSample')}
+                      className="h-9 w-9 text-subtle hover:bg-surface-soft hover:text-ink"
+                      title={freeText(language, 'hideExample')}
+                      aria-label={freeText(language, 'hideExample')}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <EyeOff className="h-4 w-4" />
                     </Button>
                     <button
                       type="button"

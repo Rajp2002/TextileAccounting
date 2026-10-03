@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { FreeUsageCard } from '@/components/estimator/FreeUsageCard'
 import { FreeTransactionRecovery } from '@/components/estimator/FreeTransactionRecovery'
+import { FreeSavedReceipt } from '@/components/estimator/FreeSavedReceipt'
 import { freeText } from '@/lib/i18n/free-tier'
 import { I18nContext } from '@/lib/i18n/context'
 
@@ -95,6 +96,28 @@ describe('Premium Free-Plan Usage Counter & Estimator Integration', () => {
       expect(html).toContain('value="0"')
     })
 
+    it('UI-03c: inside the mounted estimator, plan actions open the comparison in place instead of leaving', () => {
+      const html = renderWithLang(
+        React.createElement(FreeUsageCard, {
+          quota: { limit: 2, remaining: 0, resetsAt: futureDate },
+          initialExpanded: true,
+          onViewPlans: () => {},
+        })
+      )
+
+      expect(html).not.toContain('href="/plans')
+      expect(html.match(/<button[^>]*data-free-plan-action="compare"[^>]*>/g)).toHaveLength(2)
+      expect(html).toContain('View plans →')
+    })
+
+    it('UI-03b: at zero, points to saved costings and PDFs that stay available', () => {
+      const html = renderWithLang(
+        React.createElement(FreeUsageCard, { quota: { limit: 2, remaining: 0, resetsAt: futureDate } })
+      )
+      expect(html).toContain('Saved costings and PDFs stay available.')
+      expect(html).toContain('href="/free/costings"')
+    })
+
     it('UI-04: loading without prior balance shows "Checking usage…" skeleton without flashing false counts', () => {
       const html = renderWithLang(
         React.createElement(FreeUsageCard, {
@@ -135,6 +158,20 @@ describe('Premium Free-Plan Usage Counter & Estimator Integration', () => {
 
       expect(html).toContain('1 / 2')
       expect(html).toContain('Last confirmed')
+    })
+
+    it('UI-06b: after a save whose balance refresh failed, shows no number rather than the pre-save balance', () => {
+      const html = renderWithLang(
+        React.createElement(FreeUsageCard, {
+          quota: { limit: 2, remaining: 2, resetsAt: futureDate },
+          unverified: true,
+          onRefresh: () => {},
+        })
+      )
+
+      expect(html).toContain('Balance could not be refreshed')
+      expect(html).not.toContain('2 / 2')
+      expect(html).toContain('Check again')
     })
 
     it('UI-07: pending submission displays "Confirmation pending"', () => {
@@ -223,44 +260,131 @@ describe('Premium Free-Plan Usage Counter & Estimator Integration', () => {
   })
 
   describe('RECOVERY: Free Transaction Recovery Banner', () => {
-    it('TR-01: pending transaction displays recovery banner with retry and check again actions', () => {
+    const attempt = {
+      estimate: {} as never, label: 'Quality A', requestToken: 'token-1', accountId: 'user-a',
+      acknowledged: false, possiblyCommitted: true,
+    }
+
+    it('TR-01: an uncertain outcome offers the same-request retry and saved history in a new tab, not a balance check', () => {
       const html = renderWithLang(
         React.createElement(FreeTransactionRecovery, {
-          pending: true,
-          onSubmit: () => {},
-          onRefresh: () => {},
+          transaction: { phase: 'unknown', attempt, code: 'FREE_TEMPORARY_ERROR', retryable: true },
+          onRetry: () => {},
         })
       )
 
       expect(html).toContain('data-testid="free-recovery-pending"')
       expect(html).toContain('Unable to confirm the outcome. Retry safely using the same request.')
       expect(html).toContain('Retry the same calculation')
-      expect(html).toContain('Check again')
+      const savedLink = html.match(/<a[^>]*href="\/free\/costings"[^>]*>/)?.[0] ?? ''
+      expect(savedLink).toContain('target="_blank"')
+      expect(html).not.toContain('Check again')
     })
 
-    it('TR-02: warning state displays review confirmation banner with confirm button', () => {
+    it('TR-02: review offers correction and explicit confirmation, and says nothing was used', () => {
       const html = renderWithLang(
         React.createElement(FreeTransactionRecovery, {
-          warning: true,
-          onSubmit: () => {},
+          transaction: { phase: 'review', attempt: { ...attempt, possiblyCommitted: false }, fields: ['ppi'] },
+          reviewMessages: ['PPI is unusual. Confirm the value before saving.'],
         })
       )
 
       expect(html).toContain('data-testid="free-recovery-warning"')
       expect(html).toContain('Some inputs need review. Check your values, then confirm to calculate.')
+      expect(html).toContain('PPI is unusual. Confirm the value before saving.')
+      expect(html).toContain('This calculation has not used a costing yet.')
+      expect(html).toContain('data-free-recovery-action="correct"')
       expect(html).toContain('I reviewed the inputs; calculate')
     })
 
-    it('TR-03: returns null when no pending, warning, or error is active', () => {
+    it('TR-03: returns null while editing or on a first send', () => {
+      expect(renderWithLang(React.createElement(FreeTransactionRecovery, { transaction: { phase: 'editing' } }))).toBe('')
+      expect(renderWithLang(React.createElement(FreeTransactionRecovery, {
+        transaction: { phase: 'submitting', attempt: { ...attempt, possiblyCommitted: false } },
+      }))).toBe('')
+    })
+
+    it('TR-04: a request that can no longer be replayed offers history and an explicit release, never a retry', () => {
       const html = renderWithLang(
         React.createElement(FreeTransactionRecovery, {
-          pending: false,
-          warning: false,
-          error: null,
+          transaction: { phase: 'unknown', attempt, code: 'FREE_REQUEST_EXPIRED', retryable: false },
         })
       )
 
-      expect(html).toBe('')
+      expect(html).toContain('This calculation can no longer be checked from this page.')
+      expect(html).toContain('If it was saved, it is in Saved costings.')
+      expect(html).toContain('data-free-recovery-action="release"')
+      expect(html).not.toContain('Retry the same calculation')
+    })
+
+    it('TR-06: a quota rejection opens the plan comparison in place when the estimator provides it', () => {
+      const html = renderWithLang(
+        React.createElement(FreeTransactionRecovery, {
+          transaction: { phase: 'rejected', code: 'FREE_QUOTA_EXHAUSTED' },
+          onViewPlans: () => {},
+        })
+      )
+      expect(html).not.toContain('href="/plans')
+      expect(html).toContain('data-free-plan-action="compare"')
+    })
+
+    it('TR-05: recovery controls are at least 44 px tall', () => {
+      const html = renderWithLang(
+        React.createElement(FreeTransactionRecovery, {
+          transaction: { phase: 'review', attempt: { ...attempt, possiblyCommitted: false }, fields: [] },
+        })
+      )
+
+      expect(html.match(/data-free-recovery-action="(correct|confirm)"/g)).toHaveLength(2)
+      for (const button of html.match(/<button[^>]*>/g) ?? []) expect(button).toContain('h-11')
+    })
+  })
+
+  describe('INTEGRATION: EstimatorClient keeps result, balance and validation truths apart', () => {
+    const estimator = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
+
+    it('IN-01: the Free save path runs the shared local preflight before any request', () => {
+      const freeBranch = estimator.slice(estimator.indexOf('if (freeMode) {', estimator.indexOf('const handleSaveQuote')), estimator.indexOf('if (saveQuoteLockRef.current || savingQuote) return'))
+      expect(freeBranch).toContain('freePreflight(estimatorValidation')
+      expect(freeBranch).toContain("preflight.action === 'fix'")
+      expect(freeBranch).toContain('requireWarningReview(')
+      expect(freeBranch).toContain('freeMeter.submit(preflight.acknowledged)')
+    })
+
+    it('IN-02: input staleness never reaches the usage card; only balance freshness does', () => {
+      const card = estimator.slice(estimator.indexOf('<FreeUsageCard'), estimator.indexOf('/>', estimator.indexOf('<FreeUsageCard')))
+      expect(card).not.toContain('freeMeter.stale')
+      expect(card).toContain('stale={Boolean(freeMeter.statusError && freeMeter.status)}')
+      expect(card).toContain('unverified={freeMeter.balanceUnverified}')
+    })
+
+    it('IN-03: a confirmed save shows its receipt, and edited inputs label the money as the last saved result', () => {
+      expect(estimator).toContain('<FreeSavedReceipt')
+      expect(estimator).toContain("freeText(language, 'lastSavedResult')")
+      expect(estimator).toContain("freeText(language, 'inputsChangedNotRecalculated')")
+    })
+  })
+
+  describe('RECEIPT: Saved Free costing confirmation', () => {
+    const receipt = {
+      label: 'Quality A', confirmedAt: '2026-10-03T09:15:00.000Z',
+      quota: { used: 1, limit: 2, remaining: 1, periodStart: '2026-09-30T18:30:00.000Z', resetsAt: '2026-10-31T18:30:00.000Z', policyVersion: 2, replayed: false },
+    }
+
+    it('RC-01: names the saved costing, the local confirmation time and the one costing used, with a link to history', () => {
+      const html = renderWithLang(React.createElement(FreeSavedReceipt, receipt))
+      expect(html).toContain('Saved · Quality A')
+      expect(html).toContain('Confirmed at')
+      expect(html).toContain('1 costing used.')
+      expect(html).toContain('href="/free/costings"')
+      // The receipt's balance belongs to its own period; the usage card shows the current one.
+      expect(html).not.toContain('remaining')
+    })
+
+    it('RC-02: a replay of an earlier save says no additional costing was used', () => {
+      const html = renderWithLang(React.createElement(FreeSavedReceipt, { ...receipt, quota: { ...receipt.quota, replayed: true } }))
+      expect(html).toContain('Already saved. No additional costing was used.')
+      expect(html).not.toContain('1 costing used.')
     })
   })
 
@@ -283,6 +407,30 @@ describe('Premium Free-Plan Usage Counter & Estimator Integration', () => {
       'remainingOfLimit',
       'toggleDetails',
       'reset',
+      'balanceUnverified',
+      'savedReceipt',
+      'confirmedAt',
+      'costingUsed',
+      'replayNoCharge',
+      'lastSavedResult',
+      'inputsChangedNotRecalculated',
+      'changedSince',
+      'rerunUsesCosting',
+      'correctInputs',
+      'reviewNoCharge',
+      'openSavedCostings',
+      'unknownBlocked',
+      'unknownBlockedNote',
+      'releaseAttempt',
+      'paidActiveUnknown',
+      'retrying',
+      'zeroHistory',
+      'leaveUnsavedTitle',
+      'leaveUnsavedBody',
+      'leaveUnresolvedTitle',
+      'leaveUnresolvedBody',
+      'stayOnPage',
+      'leaveAnyway',
     ] as const
 
     for (const lang of ['en', 'gu', 'hi'] as const) {

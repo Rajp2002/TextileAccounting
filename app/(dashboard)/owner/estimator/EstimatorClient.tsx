@@ -100,6 +100,12 @@ import {
 import { useFreeMeter } from '@/hooks/use-free-meter'
 import { FreeUsageCard } from '@/components/estimator/FreeUsageCard'
 import { FreeTransactionRecovery } from '@/components/estimator/FreeTransactionRecovery'
+import { FreeSavedReceipt } from '@/components/estimator/FreeSavedReceipt'
+import { FreeLeaveDialog } from '@/components/estimator/FreeLeaveDialog'
+import { UpgradeBenefitsPreview } from '@/components/estimator/UpgradeBenefitsPreview'
+import { useFreeLeaveGuard, type FreeLeaveReason } from '@/hooks/use-free-leave-guard'
+import { freePreflight } from '@/lib/free-transaction'
+import { freeText, type FreeText } from '@/lib/i18n/free-tier'
 import { useGutterDock } from '@/hooks/use-gutter-dock'
 import { makeFreeEstimate } from '@/lib/free-estimator-defaults'
 import { LocalSaveStatus } from '@/components/local-save-status'
@@ -3264,6 +3270,11 @@ function findEstimatorIssueTarget(field: string): { element: HTMLElement; inputE
     return label?.parentElement ? { element: label.parentElement, isYarnRow: false } : null
 }
 
+const FREE_CHANGE_LABELS: Record<ReturnType<typeof summarizeCostingInputChanges>[number], FreeText> = {
+    rate: 'changeRate', waste: 'changeWaste', width: 'changeWidth', margin: 'changeMargin', commission: 'changeCommission',
+    transport: 'changeTransport', quantity: 'changeQuantity', overhead: 'changeOverhead', construction: 'changeConstruction',
+}
+
 function focusEstimatorIssueTarget(field: string) {
     const target = findEstimatorIssueTarget(field)
     const fallback = typeof document === 'undefined' ? null : document.getElementById('estimator-save-validation-summary')
@@ -3774,6 +3785,18 @@ export default function EstimatorClient({
         if (freeMode || disableAutosave) return false
         return saveDraftNow(buildCurrentDraft())
     })
+    // Free, and the paid estimator it becomes in place, keep work only in page
+    // memory: an unconfirmed request, or inputs that differ from the last save.
+    const pageMemoryInputsAtRisk = hasUnsavedEdits && (!freeMeter.completed || freeMeter.stale)
+    const freeLeaveReason: FreeLeaveReason = !(freeMode || disableAutosave) ? null
+        : freeMeter.pending ? 'unresolved'
+            : pageMemoryInputsAtRisk ? 'unsaved' : null
+    const freeLeave = useFreeLeaveGuard(freeLeaveReason)
+    const [freePlansOpen, setFreePlansOpen] = useState(false)
+    const openFreePlans = useCallback(() => {
+        setFreePlansOpen(true)
+        window.requestAnimationFrame(() => document.getElementById('free-plan-comparison')?.scrollIntoView({ block: 'start' }))
+    }, [])
 
     const applyEstimatorDraft = useCallback((checkpoint?: EstimatorDraftInput<EstimateState>) => {
         const restored = checkpoint ?? restoreDraft()
@@ -4704,7 +4727,17 @@ export default function EstimatorClient({
         qualityUpdateDecision?: 'version_only' | 'version_and_quality',
         warningAlreadyReviewed = false,
     ) => {
-        if (freeMode) return void freeMeter.submit(warningAlreadyReviewed)
+        if (freeMode) {
+            // Same shared validation as a paid save, on the current inputs and
+            // before any request. The server repeats it and stays authoritative.
+            const preflight = freePreflight(estimatorValidation, warningAlreadyReviewed || warningsAcknowledged)
+            if (preflight.action === 'fix') {
+                jumpToEstimatorIssue(preflight.field)
+                return void toast.error(tx(firstEstimatorValidationMessage ?? 'Complete the highlighted inputs before saving.'))
+            }
+            if (preflight.action === 'review') return void requireWarningReview(() => handleSaveQuote(status, staleRatesAcknowledged, qualityUpdateDecision, true))
+            return void freeMeter.submit(preflight.acknowledged)
+        }
         if (saveQuoteLockRef.current || savingQuote) return
         if (unconfirmedRequestId) return
         setShowValidation(true)
@@ -4925,7 +4958,16 @@ export default function EstimatorClient({
                 : totals.totalProductionCostPerM <= 0
                     ? 'Enter valid yarn and weaving inputs so Production Cost / m is above ₹0.'
                     : null
-    const validityStatus = freeMode && freeMeter.stale ? { label: 'Inputs changed', description: 'Showing your last saved result. Calculate and save to update it using one monthly costing.', icon: AlertTriangle, className: 'border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] text-[var(--wv-ochre-900)]' } : costingReadiness.status === 'ready'
+    // Field names only; no new money is computed before the explicit, metered calculation.
+    const freeChangedFields = freeMode && freeMeter.stale && freeMeter.completed
+        ? summarizeCostingInputChanges(freeMeter.completed.estimate, state).map(change => freeText(language, FREE_CHANGE_LABELS[change]))
+        : []
+    const freeStaleDescription = [
+        freeText(language, 'inputsChangedNotRecalculated'),
+        freeChangedFields.length > 0 ? freeText(language, 'changedSince', { fields: freeChangedFields.join(', ') }) : '',
+        freeText(language, 'rerunUsesCosting'),
+    ].filter(Boolean).join(' ')
+    const validityStatus = freeMode && freeMeter.stale ? { label: freeText(language, 'lastSavedResult'), description: freeStaleDescription, icon: AlertTriangle, className: 'border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] text-[var(--wv-ochre-900)]' } : costingReadiness.status === 'ready'
         ? {
             label: 'Costing valid',
             description: 'Price and break-even are calculated from the current inputs.',
@@ -4948,8 +4990,7 @@ export default function EstimatorClient({
     const firstEstimatorIssueField = estimatorValidation.issues[0]?.field
         ?? costingReadiness.issues[0]?.field
         ?? null
-    const jumpToFirstEstimatorIssue = () => {
-        const field = firstEstimatorIssueField
+    const jumpToEstimatorIssue = (field: string | null) => {
         const needsDetailedView = field != null && DETAILED_ESTIMATOR_ISSUE_FIELDS.has(field)
         if (needsDetailedView && entryMode !== 'detailed') {
             handleEntryModeChange('detailed')
@@ -4961,6 +5002,10 @@ export default function EstimatorClient({
             focusEstimatorIssueTarget(field ?? 'costingResult')
         }, needsDetailedView ? 240 : 80)
     }
+    const jumpToFirstEstimatorIssue = () => jumpToEstimatorIssue(firstEstimatorIssueField)
+    const freeReviewFields = freeMeter.transaction.phase === 'review' ? freeMeter.transaction.fields : []
+    // The shared validator's own message for each field the server flagged.
+    const freeReviewMessages = estimatorWarnings.filter(warning => freeReviewFields.includes(warning.field)).map(warning => tx(warning.message))
     const auditLayerRows = [
         ...totals.audit.warp.layers.map(layer => ({ ...layer, section: 'Warp' })),
         ...totals.audit.weft.layers.map(layer => ({ ...layer, section: 'Weft' })),
@@ -5021,22 +5066,40 @@ export default function EstimatorClient({
             )}
             {freeMode && (
                 <FreeTransactionRecovery
-                    pending={freeMeter.pending}
-                    warning={freeMeter.warning}
-                    error={freeMeter.error}
+                    transaction={freeMeter.transaction}
                     busy={freeMeter.busy}
-                    onSubmit={freeMeter.submit}
-                    onRefresh={freeMeter.refresh}
+                    reviewMessages={freeReviewMessages}
+                    onConfirm={freeMeter.confirmReview}
+                    onCorrect={() => {
+                        freeMeter.correctReview()
+                        jumpToEstimatorIssue(freeReviewFields[0] ?? null)
+                    }}
+                    onRetry={freeMeter.retry}
+                    onRelease={freeMeter.release}
+                    onViewPlans={openFreePlans}
                 />
+            )}
+            {freeMode && freeMeter.completed && !freeMeter.stale && (
+                <FreeSavedReceipt label={freeMeter.completed.label} confirmedAt={freeMeter.completed.confirmedAt} quota={freeMeter.completed.quota} />
+            )}
+            {freeMode && freePlansOpen && (
+                <div id="free-plan-comparison" className="scroll-mt-4">
+                    <UpgradeBenefitsPreview open onOpenChange={setFreePlansOpen} onActivated={() => void freeMeter.refresh()} />
+                </div>
+            )}
+            {(freeMode || disableAutosave) && (
+                <FreeLeaveDialog reason={freeLeaveReason} open={freeLeave.pendingHref !== null} onStay={freeLeave.stay} onLeave={freeLeave.leave} />
             )}
             {freeMode && (
                 <FreeUsageCard
                     quota={freeMeter.status?.quota}
-                    loading={freeMeter.busy || (!freeMeter.status && !freeMeter.usageError)}
-                    error={freeMeter.usageError}
-                    stale={freeMeter.stale}
+                    loading={freeMeter.busy || (!freeMeter.status && !freeMeter.statusError)}
+                    error={freeMeter.statusError}
+                    stale={Boolean(freeMeter.statusError && freeMeter.status)}
+                    unverified={freeMeter.balanceUnverified}
                     isPending={freeMeter.pending}
                     onRefresh={freeMeter.refresh}
+                    onViewPlans={openFreePlans}
                     isDocked={isFreeUsageDocked}
                     dockStyle={freeUsageDockStyle}
                     className={!isFreeUsageDocked ? 'mb-4' : undefined}
@@ -5629,7 +5692,7 @@ export default function EstimatorClient({
                                 </p>
                             )}
                             <p className="text-[11px] font-medium leading-relaxed text-[var(--color-muted)]">
-                                {freeMode ? tx('Calculate & save uses one monthly costing and stores a fixed snapshot. It does not create a Saved Quality or Rate Book entry.') : sourceQuoteId
+                                {freeMode ? `${tx('Calculate & save uses one monthly costing and stores a fixed snapshot. It does not create a Saved Quality or Rate Book entry.')} ${freeText(language, 'calculatePolicy')}` : sourceQuoteId
                                     ? tx('Save New Version creates a new immutable costing snapshot. Earlier versions keep their original economics.')
                                     : tx('Save Costing creates the reusable quality and its first immutable costing version.')}
                             </p>

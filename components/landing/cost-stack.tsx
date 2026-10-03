@@ -44,6 +44,8 @@ function Total({ label, value, accent }: { label: string; value: string; accent?
 
 export function CostStackLedger() {
     const { inputs, result } = useSampleCosting()
+    // Without money for these controls, show none rather than the starting figures.
+    const money = (pick: (value: NonNullable<typeof result>) => number) => (result ? formatRupees(pick(result)) : '—')
     const q = SAMPLE_QUALITY
     const color = Object.fromEntries(COST_SEGMENTS.map((segment) => [segment.key, segment.color]))
 
@@ -55,21 +57,21 @@ export function CostStackLedger() {
                     title="Warp yarn"
                     swatch={color.warpYarnPerM}
                     working={<>{formatCount(q.warp.ends)} ends × {q.warp.denier}D · +{q.crimpPct}% crimp, +{q.wastePct}% waste · ₹{q.warp.ratePerKg}/kg + {q.gstPct}% GST</>}
-                    value={formatRupees(result.warpYarnPerM)}
+                    value={money((r) => r.warpYarnPerM)}
                 />
                 <Line
                     index="02"
                     title="Weft yarn"
                     swatch={color.weftYarnPerM}
                     working={<>{inputs.picksPerInch} PPI × {q.weft.widthCm} cm × {q.weft.denier}D · +{q.wastePct}% waste · ₹{inputs.weftRatePerKg}/kg + {q.gstPct}% GST</>}
-                    value={formatRupees(result.weftYarnPerM)}
+                    value={money((r) => r.weftYarnPerM)}
                 />
                 <Line
                     index="03"
                     title="Weaving"
                     swatch={color.weavingPerM}
                     working={<>{inputs.picksPerInch} picks × {inputs.paisePerPick} paise</>}
-                    value={formatRupees(result.weavingPerM)}
+                    value={money((r) => r.weavingPerM)}
                 />
                 <Line
                     index="04"
@@ -83,21 +85,21 @@ export function CostStackLedger() {
                     title="Overheads"
                     swatch={color.overheadPerM}
                     working="A direct ₹/m, or monthly expenses ÷ monthly output"
-                    value={formatRupees(result.overheadPerM)}
+                    value={money((r) => r.overheadPerM)}
                 />
             </ol>
             <div className="border-t-2 border-[color:var(--lp-ink)]">
-                <Total label="Production cost / m" value={formatRupees(result.productionCostPerM)} />
+                <Total label="Production cost / m" value={money((r) => r.productionCostPerM)} />
             </div>
             <div className="border-t border-[color:var(--lp-line)] py-1">
                 <p className="pt-3 text-[14px] leading-6 text-[color:var(--lp-muted)]">
                     + ₹{q.transportPerM.toFixed(2)}/m transport, {q.commissionPct}% broker commission
                 </p>
-                <Total label="Break-even price / m" value={formatRupees(result.breakEvenPricePerM)} />
+                <Total label="Break-even price / m" value={money((r) => r.breakEvenPricePerM)} />
             </div>
             <div className="border-t border-[color:var(--lp-line)] py-1">
                 <p className="pt-3 text-[14px] leading-6 text-[color:var(--lp-muted)]">+ {inputs.marginPct}% target margin</p>
-                <Total label="Suggested price / m" value={formatRupees(result.suggestedPricePerM)} accent />
+                <Total label="Suggested price / m" value={money((r) => r.suggestedPricePerM)} accent />
             </div>
         </div>
     )

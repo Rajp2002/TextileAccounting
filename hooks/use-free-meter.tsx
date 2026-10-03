@@ -1,26 +1,60 @@
 'use client'
 import {useCallback,useEffect,useRef,useState} from 'react'
 import {reportPwaWorkflowSuccess} from '@/lib/pwa-workflow-success'
-import Link from 'next/link'
-import {UpgradeBenefitsPreview} from '@/components/estimator/UpgradeBenefitsPreview'
 import type {EstimateState,EstimatorV3Totals,CostingResultSnapshot} from '@/lib/estimator'
 import type {freeStatus} from '@/lib/free-service'
 import {canonicalFreeInputs} from '@/lib/free-estimator-canonical'
-import {freeText,freeErrorText} from '@/lib/i18n/free-tier'
+import {classifyFreeResponse,confirmFreeReview,correctFreeReview,FREE_EDITING,freeAttemptPayload,isFreeAttemptUnresolved,releaseFreeAttempt,resolveFreeSend,retryFreeAttempt,startFreeAttempt,type FreeReceiptQuota,type FreeTransaction} from '@/lib/free-transaction'
 import {useTranslation} from '@/lib/i18n/context'
-import {Button} from '@/components/ui/button'
 import type {SubscriptionTier} from '@/lib/subscription-access'
 import type {AuthChangeEvent,Session} from '@supabase/supabase-js'
 
-type Completed={estimate:EstimateState;result:CostingResultSnapshot;totals:EstimatorV3Totals;signature:string;id:string}
+type FreeStatus=Awaited<ReturnType<typeof freeStatus>>
+/** A server-confirmed saved Free costing. `quota` is that receipt's balance, not the current one. */
+type Completed={estimate:EstimateState;result:CostingResultSnapshot;totals:EstimatorV3Totals;signature:string;id:string;label:string;quota:FreeReceiptQuota;confirmedAt:string;statusReads:number}
+const codeOf=(error:unknown)=>error instanceof Error&&error.message?error.message:'FREE_TEMPORARY_ERROR'
+const signatureOf=(estimate:EstimateState)=>JSON.stringify(canonicalFreeInputs(estimate))
 export function useFreeMeter(enabled:boolean,state:EstimateState,label:string,onPaidActivated?:(tier:SubscriptionTier)=>void) {
  const {language}=useTranslation()
- const [status,setStatus]=useState<Awaited<ReturnType<typeof freeStatus>>|null>(null)
+ const [status,setStatus]=useState<FreeStatus|null>(null)
  const [completed,setCompleted]=useState<Completed|null>(null)
- const [busy,setBusy]=useState(false),[submitError,setSubmitError]=useState(''),[statusError,setStatusError]=useState(''),[warning,setWarning]=useState(false)
- const pending=useRef<{estimate:EstimateState;label:string;requestToken:string}|null>(null),lock=useRef(false)
- const refresh=useCallback(async()=>{const r=await fetch('/api/free/status',{cache:'no-store',signal:AbortSignal.timeout(10000)});const data=await r.json();if(!r.ok)throw new Error(data.code);if(data.accessState==='paid'){if(onPaidActivated)onPaidActivated(data.plan);else window.location.assign('/owner/estimator')}setStatus(data);setStatusError('');return data as Awaited<ReturnType<typeof freeStatus>>},[onPaidActivated])
- useEffect(()=>{if(!enabled)return;const load=()=>{void refresh().catch(()=>setStatusError('FREE_TEMPORARY_ERROR'))};load();window.addEventListener('focus',load);return()=>window.removeEventListener('focus',load)},[enabled,refresh])
+ const [transaction,setTransactionState]=useState<FreeTransaction>(FREE_EDITING)
+ const [busy,setBusy]=useState(false),[statusError,setStatusError]=useState('')
+ // Applied status reads; a save records the count so a later read can verify its balance.
+ const [statusReads,setStatusReads]=useState(0),reads=useRef(0)
+ // Refs mirror state so overlapping events read the latest transaction synchronously.
+ const tx=useRef<FreeTransaction>(FREE_EDITING),lock=useRef(false),account=useRef<string|null>(null)
+ // A send or status read started for an earlier owner is ignored when it returns.
+ const generation=useRef(0),statusOrder=useRef({issued:0,applied:0})
+ const setTransaction=useCallback((next:FreeTransaction)=>{tx.current=next;setTransactionState(next)},[])
+ // Verified paid access waits while a Free attempt is unresolved: the paid
+ // estimator unmounts this meter, and a paid answer cannot replay the Free receipt.
+ const heldPaid=useRef<SubscriptionTier|null>(null)
+ const activatePaid=useCallback((tier:SubscriptionTier)=>{heldPaid.current=null;if(onPaidActivated)onPaidActivated(tier);else window.location.assign('/owner/estimator')},[onPaidActivated])
+ const holdOrActivatePaid=useCallback(()=>{
+  const tier=heldPaid.current,current=tx.current
+  if(!tier)return
+  if(current.phase==='unknown')setTransaction({...current,code:'FREE_PAID_ACTIVE',retryable:false})
+  else if(!isFreeAttemptUnresolved(current))activatePaid(tier)
+ },[activatePaid,setTransaction])
+ const forgetOwner=useCallback(()=>{generation.current++;setTransaction(FREE_EDITING);setCompleted(null)},[setTransaction])
+ const readStatus=useCallback(async()=>{
+  const order=++statusOrder.current.issued,owner=generation.current
+  const r=await fetch('/api/free/status',{cache:'no-store',signal:AbortSignal.timeout(10000)});const data=await r.json() as FreeStatus&{code?:string}
+  if(!r.ok)throw new Error(data.code)
+  // Only the newest read may describe the current balance. A save also
+  // retires every read issued before it (see send), as those predate its debit.
+  if(order<=statusOrder.current.applied||owner!==generation.current)return data
+  statusOrder.current.applied=order
+  if(account.current&&data.account.id!==account.current)forgetOwner()
+  account.current=data.account.id
+  setStatus(data);setStatusError('');setStatusReads(++reads.current)
+  if(data.accessState==='paid'){heldPaid.current=data.plan;holdOrActivatePaid()}
+  return data
+ },[forgetOwner,holdOrActivatePaid])
+ /** Balance check for buttons and focus; a failure marks only the balance unverified. */
+ const refresh=useCallback(async()=>{try{return await readStatus()}catch(error){setStatusError(codeOf(error));return null}},[readStatus])
+ useEffect(()=>{if(!enabled)return;const load=()=>{void refresh()};load();window.addEventListener('focus',load);return()=>window.removeEventListener('focus',load)},[enabled,refresh])
  useEffect(()=>{
   if(!enabled)return
   // Only Free uses the browser Supabase client, so load it here instead of in
@@ -33,7 +67,7 @@ export function useFreeMeter(enabled:boolean,state:EstimateState,label:string,on
     if(cancelled)return
     const {data:{subscription}}=createClient().auth.onAuthStateChange((event:AuthChangeEvent,session:Session|null)=>{
      if(event==='SIGNED_OUT'||event==='SIGNED_IN'&&status?.account.id&&session?.user.id!==status.account.id){
-      pending.current=null;setCompleted(null);setStatus(null);window.location.assign('/login')
+      forgetOwner();setStatus(null);window.location.assign('/login')
      }
     })
     unsubscribe=()=>subscription.unsubscribe()
@@ -44,44 +78,61 @@ export function useFreeMeter(enabled:boolean,state:EstimateState,label:string,on
   // redirect, so retry when the tab regains focus or the network returns.
   window.addEventListener('focus',subscribe);window.addEventListener('online',subscribe)
   return()=>{cancelled=true;window.removeEventListener('focus',subscribe);window.removeEventListener('online',subscribe);unsubscribe?.()}
- },[enabled,status?.account.id])
- const signature=JSON.stringify(canonicalFreeInputs(state))
+ },[enabled,status?.account.id,forgetOwner])
+ const signature=signatureOf(state)
  const stale=!!completed&&completed.signature!==signature
- async function submit(ack=false) {
-  if(!enabled||lock.current||completed&&!stale&&!pending.current)return
-  lock.current=true;setBusy(true);setSubmitError('')
-  try {
-   if(!pending.current){const fresh=await refresh();if(!fresh.requestToken)throw new Error('FREE_ACCESS_DENIED');pending.current={estimate:structuredClone(state),label:label.trim()||'Costing',requestToken:fresh.requestToken}}
-   const payload=pending.current
-   const r=await fetch('/api/free/calculate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,warningsAcknowledged:ack}),cache:'no-store',signal:AbortSignal.timeout(30000)})
-   const data=await r.json()
-   if(!r.ok){if(r.status<500&&r.status!==429)pending.current=null;throw new Error(data.code)}
-   if(data.needsAcknowledgement){setWarning(true);return}
-   setCompleted({estimate:payload.estimate,result:data.result,totals:data.totals,signature:JSON.stringify(canonicalFreeInputs(payload.estimate)),id:data.savedCostingId})
-   pending.current=null;setWarning(false);
+ // A review covers the exact values reviewed. Editing them is the correction.
+ const reviewSignature=transaction.phase==='review'?signatureOf(transaction.attempt.estimate):null
+ useEffect(()=>{if(reviewSignature!==null&&reviewSignature!==signature)setTransaction(correctFreeReview(tx.current))},[reviewSignature,signature,setTransaction])
+ async function send(next:FreeTransaction) {
+  if(next.phase!=='submitting')return
+  setTransaction(next)
+  const {attempt}=next,owner=generation.current
+  let outcome
+  try{
+   const r=await fetch('/api/free/calculate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(freeAttemptPayload(attempt)),cache:'no-store',signal:AbortSignal.timeout(30000)})
+   outcome=classifyFreeResponse(r.status,await r.json().catch(()=>null))
+  }catch{outcome={kind:'uncertain' as const,code:'FREE_TEMPORARY_ERROR'}}
+  if(owner!==generation.current)return
+  const resolved=resolveFreeSend(attempt,outcome)
+  setTransaction(resolved.transaction)
+  holdOrActivatePaid()
+  const saved=resolved.saved
+  if(saved){
+   statusOrder.current.applied=statusOrder.current.issued
+   setCompleted({estimate:attempt.estimate,result:saved.result,totals:saved.totals,signature:signatureOf(attempt.estimate),id:saved.savedCostingId,label:attempt.label,quota:saved.quota,confirmedAt:new Date().toISOString(),statusReads:reads.current})
    reportPwaWorkflowSuccess('costing')
-   void fetch('/api/free/events',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({eventId:data.requestId,name:'result_viewed',language,entryPoint:'estimator'})}).catch(()=>{})
-   if(data.quota?.remaining===0)void fetch('/api/free/events',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({eventId:data.requestId,name:'quota_reached',language,entryPoint:'quota'})}).catch(()=>{})
-   await refresh()
-  }catch(e){setSubmitError(e instanceof Error?e.message:'FREE_TEMPORARY_ERROR')}
-  finally{lock.current=false;setBusy(false)}
+   void fetch('/api/free/events',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({eventId:saved.requestId,name:'result_viewed',language,entryPoint:'estimator'})}).catch(()=>{})
+   if(saved.quota.remaining===0)void fetch('/api/free/events',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({eventId:saved.requestId,name:'quota_reached',language,entryPoint:'quota'})}).catch(()=>{})
+  }
+  // The saved result stands on its own; this only refreshes the current balance.
+  if(saved||resolved.paidResult)await refresh()
  }
- return {enabled,status,completed,stale,busy,error:submitError,statusError,usageError:submitError||statusError,warning,submit,refresh,pending:!!pending.current}
-}
-export function FreeMeterPanel({meter}:{meter:ReturnType<typeof useFreeMeter>}) {
- const {language}=useTranslation()
- const [tourStep,setTour]=useState<number|null|undefined>(undefined)
- const tour=tourStep===undefined ? meter.status?.tourState==='new' ? 0 : null : tourStep
- function finishTour(completed=false){setTour(null);void fetch('/api/free/events',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({eventId:crypto.randomUUID(),name:completed?'tour_completed':'tour_skipped',language,entryPoint:'tour'})}).catch(()=>{});document.getElementById('free-tour-help')?.focus()}
- const t=(key:Parameters<typeof freeText>[1],values:Record<string,string|number>={})=>freeText(language,key,values)
- if(!meter.enabled)return null
- return <section data-i18n-skip="true" className="space-y-3 rounded-xl border border-wv-border-default bg-surface p-4" aria-live="polite">
-  <p>{t('freeSavedPolicy')}</p>
-  {meter.status?.tourEnabled&&<Button id="free-tour-help" variant="outline" onClick={()=>setTour(0)}>{t('help')}</Button>}
-  {tour!==null&&meter.status?.tourEnabled&&<div className="space-y-2 rounded border p-3"><p>{t('sample')} · {tour+1}/5</p><p>{t(`tour${tour+1}` as Parameters<typeof freeText>[1])}</p>{tour===3&&<p>₹{meter.status.demo?.productionCostPerM.toFixed(2)}/m</p>}<Button variant="outline" disabled={tour===0} onClick={()=>setTour(tour-1)}>{t('back')}</Button> <Button onClick={()=>tour===4?finishTour(true):setTour(tour+1)}>{t(tour===4?'done':'next')}</Button> <Button variant="ghost" onClick={()=>finishTour()}>{t('skip')}</Button></div>}
-  {meter.status&&<><p className="font-semibold">{t('quota',{remaining:meter.status.quota.remaining,limit:meter.status.quota.limit})}</p><p>{t('reset',{date:new Intl.DateTimeFormat(`${language}-IN`,{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Kolkata'}).format(new Date(meter.status.quota.resetsAt))})}</p></>}
-  {meter.stale&&<p>{t('stale')}</p>}{meter.error&&<p role="alert">{t(freeErrorText(meter.error))}</p>}{meter.warning&&<p>{t('warning')}</p>}
-  <div className="flex flex-wrap gap-3"><Button disabled={meter.busy||!meter.status||!meter.pending&&(!meter.status.estimationEnabled||meter.status.quota.remaining===0||!!meter.completed&&!meter.stale)} onClick={()=>void meter.submit(meter.warning)}>{meter.busy?t('calculating'):meter.warning?t('confirm'):meter.pending?t('retry'):t('calculateSave')}</Button><Button variant="outline" onClick={()=>void meter.refresh().catch(()=>{})}>{t('refresh')}</Button><Link className="underline" href="/free/costings">{t('savedCostings')}</Link><Link className="underline" href="/free/account">{t('settings')}</Link></div>
- <UpgradeBenefitsPreview onActivated={()=>void meter.refresh().catch(()=>{})}/>
- </section>
+ async function run(task:()=>Promise<void>) {
+  if(!enabled||lock.current)return
+  lock.current=true;setBusy(true)
+  try{await task()}finally{lock.current=false;setBusy(false)}
+ }
+ /** Start a new explicit calculation. Review and unresolved requests have their own actions. */
+ const submit=(acknowledged=false)=>run(async()=>{
+  const current=tx.current
+  if(current.phase!=='editing'&&current.phase!=='rejected'||completed&&!stale)return
+  // Freeze the inputs at the press, not after the token read.
+  const estimate=structuredClone(state),name=label.trim()||'Costing',owner=account.current
+  let fresh:FreeStatus
+  try{fresh=await readStatus()}catch(error){setTransaction({phase:'rejected',code:codeOf(error)});return}
+  // A different owner's session never calculates the previous owner's inputs.
+  if(fresh.accessState==='paid'||owner&&fresh.account.id!==owner)return
+  if(!fresh.requestToken){setTransaction({phase:'rejected',code:fresh.accessState==='active'&&!fresh.estimationEnabled?'FREE_PAUSED':'FREE_ACCESS_DENIED'});return}
+  await send(startFreeAttempt(tx.current,{estimate,label:name,requestToken:fresh.requestToken,accountId:fresh.account.id,acknowledged,possiblyCommitted:false}))
+ })
+ const confirmReview=()=>run(()=>send(confirmFreeReview(tx.current)))
+ const retry=()=>run(()=>send(retryFreeAttempt(tx.current)))
+ const correctReview=()=>setTransaction(correctFreeReview(tx.current))
+ const release=()=>{setTransaction(releaseFreeAttempt(tx.current));holdOrActivatePaid()}
+ // No status read has succeeded since the save, so the shown balance predates its debit.
+ const balanceUnverified=!!completed&&!!statusError&&statusReads<=completed.statusReads
+ return {enabled,status,completed,stale,transaction,busy,statusError,balanceUnverified,submit,confirmReview,correctReview,retry,release,refresh,
+  /** Editing is locked only while the original request may still commit. */
+  pending:isFreeAttemptUnresolved(transaction),warning:transaction.phase==='review'}
 }

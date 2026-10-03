@@ -13,10 +13,16 @@ import { upgradeText } from '@/lib/upgrade-wall'
 
 const SubscribeButton = dynamic(() => import('@/components/billing/SubscribeButton').then(module => module.SubscribeButton))
 
-/** Keep the estimator mounted while exploring plans and completing checkout. */
-export function UpgradeBenefitsPreview({ onActivated }: { onActivated: () => void }) {
+/**
+ * Keep the estimator mounted while exploring plans and completing checkout.
+ * Checkout defers its router refresh; `onActivated` verifies access through
+ * the Free status read, which switches to the paid estimator in place.
+ */
+export function UpgradeBenefitsPreview({ onActivated, open: controlledOpen, onOpenChange }: { onActivated: () => void; open?: boolean; onOpenChange?: (open: boolean) => void }) {
   const { language } = useTranslation()
-  const [open, setOpen] = useState(false)
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
+  const open = controlledOpen ?? uncontrolledOpen
+  const setOpen = (next: boolean) => { setUncontrolledOpen(next); onOpenChange?.(next) }
   const summaryRef = useRef<HTMLElement>(null)
   const upgradeEventId = useRef<Partial<Record<PurchasablePlanTier, string>>>({})
   const format = (paise: number) => new Intl.NumberFormat(`${language}-IN`, { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(paise / 100)
@@ -32,7 +38,7 @@ export function UpgradeBenefitsPreview({ onActivated }: { onActivated: () => voi
         void fetch('/api/free/events', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ eventId: upgradeEventId.current[tier], name: 'upgrade_started', language, entryPoint: 'billing' }) }).catch(() => {})
       }
     }}>
-      <SubscribeButton planTier={tier} buttonLabel={freeText(language, tier === 'lite' ? 'upgradeButton' : 'upgradeBaseButton')} onSuccess={() => { setOpen(false); onActivated() }} />
+      <SubscribeButton planTier={tier} deferRefresh buttonLabel={freeText(language, tier === 'lite' ? 'upgradeButton' : 'upgradeBaseButton')} onSuccess={() => { setOpen(false); onActivated() }} />
     </div>
   </>
 
