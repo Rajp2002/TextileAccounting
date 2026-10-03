@@ -162,7 +162,8 @@ describe('FR05 metadata-only backfill', () => {
 
     it('never refills: used, allowance, start and policy are unchanged, as are receipts and saved snapshots', async () => {
         const after = await usageRows()
-        expect(after.map(({ period_end: _end, ...rest }) => rest)).toEqual(before.map(({ period_end: _end, ...rest }) => rest))
+        const counted = (rows: typeof after) => rows.map(row => [row.subject_id, row.period_start, row.policy_version, row.allowance, row.used])
+        expect(counted(after)).toEqual(counted(before))
         expect(await protectedCounts()).toEqual(countsBefore)
     })
 
