@@ -10,12 +10,17 @@ import { getSuratTodayString } from '../lib/time'
 const root = process.cwd()
 const read = (path: string) => readFileSync(join(root, path), 'utf8')
 
-describe('Rate Book P3: Quick Inline Rate Edit Popover in RatesClient.tsx', () => {
+describe('Rate Book P3: Quick Rate Edit Dialog in RatesClient.tsx', () => {
     const client = read('app/(dashboard)/owner/rates/RatesClient.tsx')
 
-    describe('Component Architecture & Popover Setup', () => {
-        it('defines QuickRateEditPopover component', () => {
-            expect(client).toContain('function QuickRateEditPopover(')
+    describe('Component Architecture & Dialog Setup', () => {
+        it('defines QuickRateEditDialog on the shared Dialog primitive, not a Popover', () => {
+            const component = client.slice(client.indexOf('function QuickRateEditDialog('), client.indexOf('function DueForReviewDialog('))
+            expect(component).toContain('<Dialog open={Boolean(rate)} onOpenChange={onOpenChange}>')
+            expect(component).toContain('<DialogContent')
+            expect(component).toContain('<DialogFooter>')
+            expect(component).not.toContain('PopoverContent')
+            expect(client).not.toContain('QuickRateEditPopover')
         })
 
         it('tracks quick edit state in RatesClient', () => {
@@ -29,11 +34,12 @@ describe('Rate Book P3: Quick Inline Rate Edit Popover in RatesClient.tsx', () =
             expect(client).toContain('reviewRate || archiveRate || deleteRate || showConflicts || quickEditRate')
         })
 
-        it('wires QuickRateEditPopover in desktop table column 5', () => {
-            expect(client).toContain('<QuickRateEditPopover')
-            expect(client).toContain('isOpen={quickEditRate?.id === rate.id}')
+        it('mounts one QuickRateEditDialog for the page so desktop and mobile rows never open two overlays', () => {
+            expect((client.match(/<QuickRateEditDialog/g) || []).length).toBe(1)
+            expect(client).toContain('rate={quickEditRate}')
             expect(client).toContain('onSave={handleQuickSave}')
             expect(client).toContain('onOpenAdvanced={openAdvancedDraft}')
+            expect(client).not.toContain('quickEditIsMobile')
         })
 
         it('renders a stacked two-pill layout with "Confirm current rate" on top and "Edit rate" beneath it', () => {
@@ -43,16 +49,15 @@ describe('Rate Book P3: Quick Inline Rate Edit Popover in RatesClient.tsx', () =
             expect(client).toContain('flex flex-col items-stretch gap-1.5 w-full max-w-[170px]')
         })
 
-        it('wires QuickRateEditPopover in mobile card actions with "Edit rate" label', () => {
-            const mobileMatchCount = (client.match(/<QuickRateEditPopover/g) || []).length
-            expect(mobileMatchCount).toBe(2) // Once in desktop table, once in mobile card
+        it('keeps the "Edit rate" trigger in both the desktop table and the mobile card', () => {
+            expect((client.match(/data-ratebook-field="quickEditAction"/g) || []).length).toBe(2)
             expect(client).toContain("<Pencil className=\"h-4 w-4\" /> <span className=\"truncate\">{tx('Edit rate')}</span>")
         })
 
-        it('wires explicit onClick handler on trigger to open quick rate edit popover directly', () => {
-            expect(client).toContain("setQuickEditIsMobile(false)")
-            expect(client).toContain("setQuickEditIsMobile(true)")
-            expect(client).toContain("isOpen={quickEditRate?.id === rate.id && quickEditIsMobile}")
+        it('opens the quick edit dialog from the row buttons and blocks closing while a save is pending', () => {
+            expect(client).toContain('const openQuickEdit = (rate: CostRateRow) => {')
+            expect((client.match(/openQuickEdit\(rate\)/g) || []).length).toBe(2)
+            expect(client).toContain('if (!open && !quickEditPending) {')
         })
 
         it('provides "Advanced edit" in row overflow dropdown menu', () => {
@@ -60,8 +65,8 @@ describe('Rate Book P3: Quick Inline Rate Edit Popover in RatesClient.tsx', () =
         })
     })
 
-    describe('Popover Content & Ergonomics', () => {
-        it('renders yarn name and category indicator in popover header', () => {
+    describe('Dialog Content & Ergonomics', () => {
+        it('renders yarn name and category indicator in the dialog header', () => {
             expect(client).toContain('{rate.category === \'yarn_warp\' ? \'Warp yarn\' : \'Weft yarn\'}')
             expect(client).toContain('Current: <span className="font-mono font-semibold text-ink">{formatRateValue(rate.current_value, rate.unit)}</span>')
         })
@@ -90,7 +95,7 @@ describe('Rate Book P3: Quick Inline Rate Edit Popover in RatesClient.tsx', () =
             expect(client).toContain('Past snapshots unchanged.')
         })
 
-        it('supports auto-focus and text selection on popover open', () => {
+        it('supports auto-focus and text selection on dialog open', () => {
             expect(client).toContain('onOpenAutoFocus=')
             expect(client).toContain('inputRef.current?.focus()')
             expect(client).toContain('inputRef.current?.select()')
@@ -104,6 +109,31 @@ describe('Rate Book P3: Quick Inline Rate Edit Popover in RatesClient.tsx', () =
         it('provides link to Advanced settings (dates, review interval)', () => {
             expect(client).toContain("{tx('Advanced settings (dates, review interval)...')}")
             expect(client).toContain('onClick={() => onOpenAdvanced(rate)}')
+        })
+    })
+
+    describe('Add / advanced rate form uses the shared modal', () => {
+        const dialogStart = client.indexOf('<Dialog open={Boolean(draft)}')
+        const dialogEnd = client.indexOf('<QuickRateEditDialog\n', dialogStart)
+        const addDialog = client.slice(dialogStart, dialogEnd)
+
+        it('opens the Add Yarn Rate form in a Dialog instead of a side Sheet', () => {
+            expect(dialogStart).toBeGreaterThan(-1)
+            expect(addDialog).toContain('<DialogContent data-ratebook-field="rateDrawerFields"')
+            expect(addDialog).toContain("tx(draft?.id ? `Change ${draft.name}` : 'Add Yarn Rate')")
+            expect(addDialog).toContain('<DialogFooter>')
+            expect(addDialog).not.toContain('SheetContent')
+        })
+
+        it('keeps the save guards: no close while pending and a name hint wired to Save', () => {
+            expect(addDialog).toContain('if (!open && !isPending) { setDraft(null); setSaveError(null) }')
+            expect(addDialog).toContain('id="cost-rate-save-hint"')
+            expect(addDialog).toContain("aria-describedby={!draft?.name.trim() ? 'cost-rate-save-hint' : undefined}")
+        })
+
+        it('keeps the Sheet only for the rate activity history', () => {
+            expect((client.match(/<Sheet open=/g) || []).length).toBe(1)
+            expect(client).toContain('<Sheet open={Boolean(historyRate)}')
         })
     })
 
@@ -181,7 +211,7 @@ describe('Rate Book P3: Quick Inline Rate Edit Popover in RatesClient.tsx', () =
             expect(payload.lastReviewedAt).toBe(today)
         })
 
-        it('bridges quick edit inputs into full Sheet draft without losing typed values', () => {
+        it('bridges quick edit inputs into full Add/Edit dialog draft without losing typed values', () => {
             expect(client).toContain('const openAdvancedDraft = (rate: CostRateRow) => {')
             expect(client).toContain('const nextDraft = rowToDraft(rate)')
             expect(client).toContain('nextDraft.currentValue = parsed')
