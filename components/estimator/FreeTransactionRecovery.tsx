@@ -6,7 +6,7 @@ import { AlertTriangle, AlertCircle, Loader2 } from 'lucide-react'
 import { useTranslation } from '@/lib/i18n/context'
 import { freeText, freeErrorText } from '@/lib/i18n/free-tier'
 import { Button } from '@/components/ui/button'
-import type { FreeTransaction } from '@/lib/free-transaction'
+import type { FreeTransaction, FreeUnreconciled } from '@/lib/free-transaction'
 
 export interface FreeTransactionRecoveryProps {
   transaction: FreeTransaction
@@ -19,6 +19,10 @@ export interface FreeTransactionRecoveryProps {
   onRelease?: () => void
   /** Opens the plan comparison in place; without it, the quota action links to /plans. */
   onViewPlans?: () => void
+  /** Released attempts that may have committed, until saved history answers. */
+  unreconciled?: FreeUnreconciled[]
+  onCheckUnreconciled?: () => Promise<void> | void
+  onDismissUnreconciled?: (requestId: string | null) => void
   className?: string
 }
 
@@ -40,6 +44,9 @@ export function FreeTransactionRecovery({
   onRetry,
   onRelease,
   onViewPlans,
+  unreconciled = [],
+  onCheckUnreconciled,
+  onDismissUnreconciled,
   className = '',
 }: FreeTransactionRecoveryProps) {
   const { language } = useTranslation()
@@ -47,7 +54,11 @@ export function FreeTransactionRecovery({
     freeText(language, key, values)
 
   const replaying = transaction.phase === 'submitting' && transaction.attempt.possiblyCommitted
-  if (transaction.phase === 'editing' || transaction.phase === 'submitting' && !replaying) return null
+  const quietPhase = transaction.phase === 'editing' || transaction.phase === 'submitting' && !replaying
+  if (quietPhase && unreconciled.length === 0) return null
+  const time = (iso: string | null) => iso
+    ? new Intl.DateTimeFormat(`${language}-IN`, { timeStyle: 'short', timeZone: 'Asia/Kolkata' }).format(new Date(iso))
+    : ''
 
   const savedLink = (
     <Link
@@ -63,6 +74,29 @@ export function FreeTransactionRecovery({
 
   return (
     <div data-testid="free-transaction-recovery" className={`space-y-3 ${className}`} aria-live="polite">
+      {unreconciled.map(entry => (
+        <section key={entry.requestId ?? entry.attempt.requestToken} role="status" data-testid="free-recovery-unreconciled" className={entry.check === 'found' ? 'rounded-xl border border-wv-status-success-border bg-wv-status-success-bg p-4 text-sm text-wv-status-success-fg' : warningPanel}>
+          <div className="min-w-0 space-y-2">
+            {entry.check === 'checking' && <h3 className="flex items-center gap-2 font-semibold"><Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />{t('unreconciledChecking')}</h3>}
+            {entry.check === 'found' && <><h3 className="font-semibold break-words">{t('unreconciledFound', { label: entry.attempt.label })}</h3><p className="text-xs leading-relaxed">{t('unreconciledFoundBody')}</p></>}
+            {entry.check === 'not_found' && <><h3 className="font-semibold">{t('unreconciledNotFound')}</h3><p className="text-xs leading-relaxed break-words">{t('unreconciledNotFoundBody', { label: entry.attempt.label, time: time(entry.checkedAt) })}</p></>}
+            {entry.check === 'check_failed' && <h3 className="font-semibold break-words">{t('unreconciledCheckFailed', { label: entry.attempt.label })}</h3>}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-1">
+              {entry.check === 'found' ? (
+                <Button type="button" variant="outline" size="lg" data-free-recovery-action="dismiss-found" onClick={() => onDismissUnreconciled?.(entry.requestId)}>{t('okDismiss')}</Button>
+              ) : (
+                <>
+                  <Button type="button" size="lg" disabled={entry.check === 'checking'} data-free-recovery-action="check-saved" onClick={() => void onCheckUnreconciled?.()}>{t('checkSavedAgain')}</Button>
+                  {savedLink}
+                  {entry.check === 'not_found' && (
+                    <Button type="button" variant="ghost" size="lg" data-free-recovery-action="stop-tracking" onClick={() => onDismissUnreconciled?.(entry.requestId)}>{t('stopTracking')}</Button>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </section>
+      ))}
       {transaction.phase === 'review' && (
         <section role="alert" data-testid="free-recovery-warning" className={warningPanel}>
           <div className="flex items-start gap-2.5">

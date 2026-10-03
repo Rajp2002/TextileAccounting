@@ -29,3 +29,25 @@ export function guardedLinkHref(click: GuardClick, here: Here): string | null {
   if (url.pathname === here.pathname && url.search === here.search) return null
   return `${url.pathname}${url.search}${url.hash}`
 }
+
+/** Why leaving would lose page-memory work, or null when the page is clean. */
+export type FreeLeaveReason = 'unresolved' | 'unsaved' | null
+
+/**
+ * Everything the owner can type on the page, as it stands: inputs including
+ * row names, the costing name and the construction notes. Not only the inputs
+ * that change the money, because Free keeps all of it only in page memory.
+ */
+export function freePageSnapshot(page: { state: unknown; qualityLabel: string; warpInstruction: string; weftInstruction: string }): string {
+  return JSON.stringify([page.state, page.qualityLabel, page.warpInstruction, page.weftInstruction])
+}
+
+/**
+ * A page is clean when the owner has not edited it, or it is exactly the page
+ * of the last confirmed save. An unconfirmed request always counts first.
+ */
+export function freeLeaveReason(input: { guarded: boolean; unresolved: boolean; hasUnsavedEdits: boolean; page: string; savedPage: string | null }): FreeLeaveReason {
+  if (!input.guarded) return null
+  if (input.unresolved) return 'unresolved'
+  return input.hasUnsavedEdits && input.page !== input.savedPage ? 'unsaved' : null
+}
