@@ -353,6 +353,20 @@ describe('auth transition overlay', () => {
         expect(flow.lastIndexOf('formRef.current?.submit()')).toBeGreaterThan(flow.indexOf("window.location.replace('/login')"))
     })
 
+    it('hides the workspace hydrating behind a handed-over sign-in, and leaves log out as it was', () => {
+        const css = read('app/globals.css')
+        const start = css.indexOf('.auth-transition[data-resumed][data-mode="sign-in"] {')
+        expect(start).toBeGreaterThan(-1)
+        const rule = css.slice(start, css.indexOf('}', start))
+        // Solid canvas, no per-frame backdrop blur over a page that keeps changing, and an
+        // opacity fade that does not wait for the main thread.
+        expect(rule).toContain('background: var(--wv-bg-canvas);')
+        expect(rule).toContain('backdrop-filter: none;')
+        expect(rule).toContain('will-change: opacity;')
+        // Log out lands on the light /login page, so it keeps the see-through, blurred look.
+        expect(css).not.toContain('[data-mode="sign-out"] {\n    background: var(--wv-bg-canvas)')
+    })
+
     it('keeps toasts from covering the handoff, on the page it leaves and the one it lands on', () => {
         const css = read('app/globals.css')
         expect(css).toContain('body:has(> .auth-transition[data-state="open"]) [data-sonner-toaster]')

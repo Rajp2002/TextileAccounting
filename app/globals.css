@@ -1763,6 +1763,17 @@
     animation: auth-transition-enter var(--motion-base) ease-out backwards;
   }
 
+  /* The workspace a sign-in lands on hydrates behind the handed-over overlay
+     (components/auth/auth-handoff.ts). Keep that out of sight and out of the
+     way: a solid canvas instead of a see-through one, and no backdrop blur,
+     which is recomputed every frame the page behind it changes. */
+  .auth-transition[data-resumed][data-mode="sign-in"] {
+    background: var(--wv-bg-canvas);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    will-change: opacity;
+  }
+
   .auth-transition[data-state="closed"] {
     pointer-events: none;
     animation: auth-transition-leave 180ms ease-in forwards;
