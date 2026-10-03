@@ -91,6 +91,8 @@ function isPublicRoute(pathname: string): boolean {
         pathname.startsWith('/offline') ||
         pathname.startsWith('/_offline') ||
         pathname.startsWith('/track/') ||
+        // The installed app's intro plays signed out and reports how it ended (rate limited in the route)
+        pathname === '/api/telemetry/intro' ||
         // Webhooks authenticate via HMAC signature inside the route — no cookie auth needed
         pathname.startsWith('/api/webhooks/')
     )
