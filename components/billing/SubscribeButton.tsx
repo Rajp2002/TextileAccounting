@@ -83,9 +83,15 @@ interface SubscribeButtonProps {
     successHref?: string
     successLabel?: string
     className?: string
+    /**
+     * Free-origin checkout from the mounted estimator: skip the refresh after
+     * activation. It re-runs the Free layout, which redirects a paid org and
+     * unmounts the owner's inputs. The caller verifies access itself.
+     */
+    deferRefresh?: boolean
 }
 
-export function SubscribeButton({ planTier = BILLING_SELF_SERVE_DEFAULT_TIER, tierName, displayAmount, buttonLabel, onSuccess, successHref, successLabel, className }: SubscribeButtonProps) {
+export function SubscribeButton({ planTier = BILLING_SELF_SERVE_DEFAULT_TIER, tierName, displayAmount, buttonLabel, onSuccess, successHref, successLabel, className, deferRefresh = false }: SubscribeButtonProps) {
     const [loading, setLoading] = useState(false)
     const [outcome, setOutcome] = useState<PaymentOutcome | null>(null)
     const router = useRouter()
@@ -131,7 +137,7 @@ export function SubscribeButton({ planTier = BILLING_SELF_SERVE_DEFAULT_TIER, ti
                 toast.success(tx(`${planName} is now active. ${t('base_plan.billing.success')}`))
                 trackPlanEvent('upgrade_completed', { plan_tier: planTier, purchase_type: purchaseType })
                 if (data.paymentId ?? paymentId) onSuccess?.((data.paymentId ?? paymentId) as string)
-                router.refresh()
+                if (!deferRefresh) router.refresh()
                 return
             }
             if (state === 'failed' || state === 'cancelled' || state === 'refunded') {

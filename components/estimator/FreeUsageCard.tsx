@@ -21,6 +21,8 @@ export interface FreeUsageCardProps {
   unverified?: boolean
   isPending?: boolean
   onRefresh?: () => Promise<unknown> | void
+  /** Opens the plan comparison in place, keeping the mounted estimator; without it, plan actions link to /plans. */
+  onViewPlans?: () => void
   isDocked?: boolean
   dockStyle?: React.CSSProperties
   className?: string
@@ -35,6 +37,7 @@ export function FreeUsageCard({
   unverified = false,
   isPending = false,
   onRefresh,
+  onViewPlans,
   isDocked = false,
   dockStyle,
   className = '',
@@ -69,6 +72,10 @@ export function FreeUsageCard({
 
   // Honest loading without quota
   const isInitialLoading = loading && remaining === null
+
+  const plansAction = (label: string, className: string, testId?: string) => onViewPlans
+    ? <button type="button" data-testid={testId} data-free-plan-action="compare" onClick={onViewPlans} className={className}>{label}</button>
+    : <Link href="/plans?from=estimator" data-testid={testId} className={className}>{label}</Link>
 
   // Error without prior balance, or a balance that predates the latest save
   const hasFatalError = Boolean(error && remaining === null) || unverified
@@ -236,13 +243,7 @@ export function FreeUsageCard({
                   {t('reset', { date: formattedResetDate })}
                 </span>
               )}
-              <Link
-                href="/plans?from=estimator"
-                data-testid="free-usage-plans-link"
-                className="font-medium text-ink hover:text-body underline underline-offset-2 shrink-0 ml-2"
-              >
-                {t('viewPlans')}
-              </Link>
+              {plansAction(t('viewPlans'), 'font-medium text-ink hover:text-body underline underline-offset-2 shrink-0 ml-2', 'free-usage-plans-link')}
             </div>
           )}
         </div>
@@ -270,12 +271,7 @@ export function FreeUsageCard({
             {t('costingConsumptionExplanation')}
           </p>
           <div className="pt-1">
-            <Link
-              href="/plans?from=estimator"
-              className="inline-flex items-center text-xs font-semibold text-ink hover:text-body hover:underline"
-            >
-              {t('explorePlansArrow')}
-            </Link>
+            {plansAction(t('explorePlansArrow'), 'inline-flex items-center text-xs font-semibold text-ink hover:text-body hover:underline')}
           </div>
         </div>
       )}

@@ -63,8 +63,9 @@ function deferred() {
   return { promise, resolve }
 }
 
+let onPaid: ReturnType<typeof vi.fn<(tier: string) => void>>
 function Probe({ estimate }: { estimate: ReturnType<typeof makeFreeEstimate> }) {
-  const meter = useFreeMeter(true, estimate, 'Quality A')
+  const meter = useFreeMeter(true, estimate, 'Quality A', onPaid)
   useLayoutEffect(() => { current = meter })
   return null
 }
@@ -97,6 +98,7 @@ function recoveryHtml(meter: Meter) {
 }
 
 beforeEach(() => {
+  onPaid = vi.fn()
   calls = []
   statusReplies = []
   calculateReplies = []
@@ -291,6 +293,34 @@ describe('F04 current balance comes only from the newest status read', () => {
 
     expect(current.completed?.quota).toMatchObject({ replayed: true, periodStart: previousMonth.periodStart })
     expect(current.status?.quota).toMatchObject({ remaining: 2, periodStart: PERIOD.periodStart })
+  })
+})
+
+describe('F06 paid access arrives while a Free attempt is unresolved', () => {
+  const paidStatus = { status: 200, body: { ...status(2, null).body, plan: 'lite', accessState: 'paid', estimationEnabled: false } }
+
+  it('holds the switch to the paid estimator until the owner releases the unresolved attempt', async () => {
+    calculateReplies.push('network')
+    await mount()
+    await act(() => current.submit(false))
+    expect(current.transaction.phase).toBe('unknown')
+
+    statusReplies.push(paidStatus)
+    await act(async () => { await current.refresh() })
+    // A paid answer cannot replay the Free receipt, so the request can no longer be checked here.
+    expect(current.transaction).toMatchObject({ phase: 'unknown', code: 'FREE_PAID_ACTIVE', retryable: false, attempt: { requestToken: 'token-1' } })
+    expect(onPaid).not.toHaveBeenCalled()
+    expect(recoveryHtml(current)).toContain('Your paid plan is active')
+
+    await act(() => current.release())
+    expect(onPaid).toHaveBeenCalledWith('lite')
+  })
+
+  it('switches immediately when nothing is unresolved', async () => {
+    statusReplies.push(status(2), paidStatus)
+    await mount()
+    await act(async () => { await current.refresh() })
+    expect(onPaid).toHaveBeenCalledWith('lite')
   })
 })
 

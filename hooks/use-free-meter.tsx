@@ -27,6 +27,16 @@ export function useFreeMeter(enabled:boolean,state:EstimateState,label:string,on
  // A send or status read started for an earlier owner is ignored when it returns.
  const generation=useRef(0),statusOrder=useRef({issued:0,applied:0})
  const setTransaction=useCallback((next:FreeTransaction)=>{tx.current=next;setTransactionState(next)},[])
+ // Verified paid access waits while a Free attempt is unresolved: the paid
+ // estimator unmounts this meter, and a paid answer cannot replay the Free receipt.
+ const heldPaid=useRef<SubscriptionTier|null>(null)
+ const activatePaid=useCallback((tier:SubscriptionTier)=>{heldPaid.current=null;if(onPaidActivated)onPaidActivated(tier);else window.location.assign('/owner/estimator')},[onPaidActivated])
+ const holdOrActivatePaid=useCallback(()=>{
+  const tier=heldPaid.current,current=tx.current
+  if(!tier)return
+  if(current.phase==='unknown')setTransaction({...current,code:'FREE_PAID_ACTIVE',retryable:false})
+  else if(!isFreeAttemptUnresolved(current))activatePaid(tier)
+ },[activatePaid,setTransaction])
  const forgetOwner=useCallback(()=>{generation.current++;setTransaction(FREE_EDITING);setCompleted(null)},[setTransaction])
  const readStatus=useCallback(async()=>{
   const order=++statusOrder.current.issued,owner=generation.current
@@ -37,9 +47,10 @@ export function useFreeMeter(enabled:boolean,state:EstimateState,label:string,on
   statusOrder.current.applied=order
   if(account.current&&data.account.id!==account.current)forgetOwner()
   account.current=data.account.id
-  if(data.accessState==='paid'){if(onPaidActivated)onPaidActivated(data.plan);else window.location.assign('/owner/estimator')}
-  setStatus(data);setStatusError('');setStatusReads(++reads.current);return data
- },[onPaidActivated,forgetOwner])
+  setStatus(data);setStatusError('');setStatusReads(++reads.current)
+  if(data.accessState==='paid'){heldPaid.current=data.plan;holdOrActivatePaid()}
+  return data
+ },[forgetOwner,holdOrActivatePaid])
  /** Balance check for buttons and focus; a failure marks only the balance unverified. */
  const refresh=useCallback(async()=>{try{return await readStatus()}catch(error){setStatusError(codeOf(error));return null}},[readStatus])
  useEffect(()=>{if(!enabled)return;const load=()=>{void refresh()};load();window.addEventListener('focus',load);return()=>window.removeEventListener('focus',load)},[enabled,refresh])
@@ -84,6 +95,7 @@ export function useFreeMeter(enabled:boolean,state:EstimateState,label:string,on
   if(owner!==generation.current)return
   const resolved=resolveFreeSend(attempt,outcome)
   setTransaction(resolved.transaction)
+  holdOrActivatePaid()
   const saved=resolved.saved
   if(saved){
    setCompleted({estimate:attempt.estimate,result:saved.result,totals:saved.totals,signature:signatureOf(attempt.estimate),id:saved.savedCostingId,label:attempt.label,quota:saved.quota,confirmedAt:new Date().toISOString(),statusReads:reads.current})
@@ -115,7 +127,7 @@ export function useFreeMeter(enabled:boolean,state:EstimateState,label:string,on
  const confirmReview=()=>run(()=>send(confirmFreeReview(tx.current)))
  const retry=()=>run(()=>send(retryFreeAttempt(tx.current)))
  const correctReview=()=>setTransaction(correctFreeReview(tx.current))
- const release=()=>setTransaction(releaseFreeAttempt(tx.current))
+ const release=()=>{setTransaction(releaseFreeAttempt(tx.current));holdOrActivatePaid()}
  // No status read has succeeded since the save, so the shown balance predates its debit.
  const balanceUnverified=!!completed&&!!statusError&&statusReads<=completed.statusReads
  return {enabled,status,completed,stale,transaction,busy,statusError,balanceUnverified,submit,confirmReview,correctReview,retry,release,refresh,

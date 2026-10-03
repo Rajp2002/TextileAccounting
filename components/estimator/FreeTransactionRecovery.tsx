@@ -17,6 +17,8 @@ export interface FreeTransactionRecoveryProps {
   onCorrect?: () => void
   onRetry?: () => Promise<void> | void
   onRelease?: () => void
+  /** Opens the plan comparison in place; without it, the quota action links to /plans. */
+  onViewPlans?: () => void
   className?: string
 }
 
@@ -37,6 +39,7 @@ export function FreeTransactionRecovery({
   onCorrect,
   onRetry,
   onRelease,
+  onViewPlans,
   className = '',
 }: FreeTransactionRecoveryProps) {
   const { language } = useTranslation()
@@ -130,11 +133,9 @@ export function FreeTransactionRecovery({
             <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
             <div className="min-w-0 space-y-2">
               <p className="font-medium">{t(freeErrorText(transaction.code))}</p>
-              {transaction.code === 'FREE_QUOTA_EXHAUSTED' && (
-                <Link href="/plans?from=estimator" className="inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-2">
-                  {t('viewPlans')}
-                </Link>
-              )}
+              {transaction.code === 'FREE_QUOTA_EXHAUSTED' && (onViewPlans
+                ? <button type="button" data-free-plan-action="compare" onClick={onViewPlans} className="inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-2">{t('viewPlans')}</button>
+                : <Link href="/plans?from=estimator" className="inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-2">{t('viewPlans')}</Link>)}
             </div>
           </div>
         </section>

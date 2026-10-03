@@ -101,6 +101,9 @@ import { useFreeMeter } from '@/hooks/use-free-meter'
 import { FreeUsageCard } from '@/components/estimator/FreeUsageCard'
 import { FreeTransactionRecovery } from '@/components/estimator/FreeTransactionRecovery'
 import { FreeSavedReceipt } from '@/components/estimator/FreeSavedReceipt'
+import { FreeLeaveDialog } from '@/components/estimator/FreeLeaveDialog'
+import { UpgradeBenefitsPreview } from '@/components/estimator/UpgradeBenefitsPreview'
+import { useFreeLeaveGuard, type FreeLeaveReason } from '@/hooks/use-free-leave-guard'
 import { freePreflight } from '@/lib/free-transaction'
 import { freeText, type FreeText } from '@/lib/i18n/free-tier'
 import { useGutterDock } from '@/hooks/use-gutter-dock'
@@ -3782,6 +3785,18 @@ export default function EstimatorClient({
         if (freeMode || disableAutosave) return false
         return saveDraftNow(buildCurrentDraft())
     })
+    // Free, and the paid estimator it becomes in place, keep work only in page
+    // memory: an unconfirmed request, or inputs that differ from the last save.
+    const pageMemoryInputsAtRisk = hasUnsavedEdits && (!freeMeter.completed || freeMeter.stale)
+    const freeLeaveReason: FreeLeaveReason = !(freeMode || disableAutosave) ? null
+        : freeMeter.pending ? 'unresolved'
+            : pageMemoryInputsAtRisk ? 'unsaved' : null
+    const freeLeave = useFreeLeaveGuard(freeLeaveReason)
+    const [freePlansOpen, setFreePlansOpen] = useState(false)
+    const openFreePlans = useCallback(() => {
+        setFreePlansOpen(true)
+        window.requestAnimationFrame(() => document.getElementById('free-plan-comparison')?.scrollIntoView({ block: 'start' }))
+    }, [])
 
     const applyEstimatorDraft = useCallback((checkpoint?: EstimatorDraftInput<EstimateState>) => {
         const restored = checkpoint ?? restoreDraft()
@@ -5061,10 +5076,19 @@ export default function EstimatorClient({
                     }}
                     onRetry={freeMeter.retry}
                     onRelease={freeMeter.release}
+                    onViewPlans={openFreePlans}
                 />
             )}
             {freeMode && freeMeter.completed && !freeMeter.stale && (
                 <FreeSavedReceipt label={freeMeter.completed.label} confirmedAt={freeMeter.completed.confirmedAt} quota={freeMeter.completed.quota} />
+            )}
+            {freeMode && freePlansOpen && (
+                <div id="free-plan-comparison" className="scroll-mt-4">
+                    <UpgradeBenefitsPreview open onOpenChange={setFreePlansOpen} onActivated={() => void freeMeter.refresh()} />
+                </div>
+            )}
+            {(freeMode || disableAutosave) && (
+                <FreeLeaveDialog reason={freeLeaveReason} open={freeLeave.pendingHref !== null} onStay={freeLeave.stay} onLeave={freeLeave.leave} />
             )}
             {freeMode && (
                 <FreeUsageCard
@@ -5075,6 +5099,7 @@ export default function EstimatorClient({
                     unverified={freeMeter.balanceUnverified}
                     isPending={freeMeter.pending}
                     onRefresh={freeMeter.refresh}
+                    onViewPlans={openFreePlans}
                     isDocked={isFreeUsageDocked}
                     dockStyle={freeUsageDockStyle}
                     className={!isFreeUsageDocked ? 'mb-4' : undefined}

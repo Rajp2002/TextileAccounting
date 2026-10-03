@@ -96,6 +96,20 @@ describe('Premium Free-Plan Usage Counter & Estimator Integration', () => {
       expect(html).toContain('value="0"')
     })
 
+    it('UI-03c: inside the mounted estimator, plan actions open the comparison in place instead of leaving', () => {
+      const html = renderWithLang(
+        React.createElement(FreeUsageCard, {
+          quota: { limit: 2, remaining: 0, resetsAt: futureDate },
+          initialExpanded: true,
+          onViewPlans: () => {},
+        })
+      )
+
+      expect(html).not.toContain('href="/plans')
+      expect(html.match(/<button[^>]*data-free-plan-action="compare"[^>]*>/g)).toHaveLength(2)
+      expect(html).toContain('View plans →')
+    })
+
     it('UI-03b: at zero, points to saved costings and PDFs that stay available', () => {
       const html = renderWithLang(
         React.createElement(FreeUsageCard, { quota: { limit: 2, remaining: 0, resetsAt: futureDate } })
@@ -303,6 +317,17 @@ describe('Premium Free-Plan Usage Counter & Estimator Integration', () => {
       expect(html).not.toContain('Retry the same calculation')
     })
 
+    it('TR-06: a quota rejection opens the plan comparison in place when the estimator provides it', () => {
+      const html = renderWithLang(
+        React.createElement(FreeTransactionRecovery, {
+          transaction: { phase: 'rejected', code: 'FREE_QUOTA_EXHAUSTED' },
+          onViewPlans: () => {},
+        })
+      )
+      expect(html).not.toContain('href="/plans')
+      expect(html).toContain('data-free-plan-action="compare"')
+    })
+
     it('TR-05: recovery controls are at least 44 px tall', () => {
       const html = renderWithLang(
         React.createElement(FreeTransactionRecovery, {
@@ -399,6 +424,13 @@ describe('Premium Free-Plan Usage Counter & Estimator Integration', () => {
       'releaseAttempt',
       'paidActiveUnknown',
       'retrying',
+      'zeroHistory',
+      'leaveUnsavedTitle',
+      'leaveUnsavedBody',
+      'leaveUnresolvedTitle',
+      'leaveUnresolvedBody',
+      'stayOnPage',
+      'leaveAnyway',
     ] as const
 
     for (const lang of ['en', 'gu', 'hi'] as const) {
