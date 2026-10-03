@@ -28,6 +28,9 @@ export const LOOM_WEFT_WIDTH = 5.5
 export const LOOM_HALO = 1.5
 /** The reed rests this far above the fell and beats down to touch the pick. */
 export const LOOM_REED_Y = LOOM_FELL - 10
+/** The shuttle rides the fell, centred on the end of the pick it is laying. */
+export const LOOM_SHUTTLE_WIDTH = 14
+export const LOOM_SHUTTLE_HEIGHT = 6.5
 
 export type LoomParity = 0 | 1
 export type LoomRow = { y: number; parity: LoomParity }
