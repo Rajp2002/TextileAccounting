@@ -324,6 +324,34 @@ describe('F06 paid access arrives while a Free attempt is unresolved', () => {
   })
 })
 
+describe('F15 existing browser events after a save', () => {
+  const events = () => calls.filter(call => call.url === '/api/free/events').map(call => call.body)
+
+  it('reports result_viewed keyed by the request, and quota_reached only when the receipt shows zero', async () => {
+    calculateReplies.push(saved(1, 'request-1'))
+    await mount()
+    await act(() => current.submit(false))
+    expect(events()).toEqual([{ eventId: 'request-1', name: 'result_viewed', language: 'en', entryPoint: 'estimator' }])
+  })
+
+  it('a save that uses the last costing also reports quota_reached for the same request', async () => {
+    calculateReplies.push(saved(0, 'request-2'))
+    await mount()
+    await act(() => current.submit(false))
+    expect(events().map(event => event?.name)).toEqual(['result_viewed', 'quota_reached'])
+    expect(new Set(events().map(event => event?.eventId))).toEqual(new Set(['request-2']))
+  })
+
+  it('a review, an uncertain send or a rejection reports nothing', async () => {
+    calculateReplies.push(warning, 'network', { status: 409, body: { code: 'FREE_QUOTA_EXHAUSTED' } })
+    await mount()
+    await act(() => current.submit(false))
+    await act(() => current.confirmReview())
+    await act(() => current.retry())
+    expect(events()).toEqual([])
+  })
+})
+
 describe('F14 account change during the session', () => {
   it('clears the previous owner\'s result and attempt when the status belongs to another account', async () => {
     statusReplies.push(status(2), status(2), status(1), status(2, 'token-9', 'user-b'))
