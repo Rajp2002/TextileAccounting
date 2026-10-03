@@ -294,7 +294,6 @@ export function startWeavingIntro({ surface, overlay, skipButton, handle }: Star
     const doSkip = () => {
         if (finished || !lastFrame || skip || t >= HANDOFF_END) return
         handle.markSeen()
-        handle.report?.('skip')
         skip = skipFrom(t, lastFrame)
     }
 
@@ -370,22 +369,10 @@ export function startWeavingIntro({ surface, overlay, skipButton, handle }: Star
         if (!paused) t += Math.min(0.05, realDt)
         // Weak GPU: judge the first real frames (after warm-up) and never let the intro crawl.
         frames++
-        if (frames === 1) handle.mark?.('frame1')
         if (!paused && frames > 2 && frames <= 8 && realDt > 0.07) slowFrames++
-        if (slowFrames >= 4 || (!paused && (now - startedAt) / 1000 > introDuration(surface) + 3)) {
-            handle.report?.('degrade', slowFrames >= 4 ? `${slowFrames} slow frames` : 'ran too long')
-            degrade()
-            return
-        }
+        if (slowFrames >= 4 || (!paused && (now - startedAt) / 1000 > introDuration(surface) + 3)) { degrade(); return }
         const s = frameAt(t)
-        if (!s || s.done) {
-            if (s?.done) {
-                handle.markSeen()
-                handle.report?.('complete')
-            }
-            finish(true)
-            return
-        }
+        if (!s || s.done) { if (s?.done) handle.markSeen(); finish(true); return }
         raf = requestAnimationFrame(tick)
     }
 
@@ -416,7 +403,6 @@ export function startWeavingIntro({ surface, overlay, skipButton, handle }: Star
     }
 
     const init = async () => {
-        handle.mark?.('init')
         target = findTarget(surface)
         if (!target) throw new Error('intro target missing')
         // The start watchdog (or an early tap) may have removed the stage while we waited:
@@ -430,7 +416,6 @@ export function startWeavingIntro({ surface, overlay, skipButton, handle }: Star
             clone.img.decode().catch(() => undefined),
         ])
         if (superseded()) { finished = true; return }
-        handle.mark?.('images')
         mask = readMask(logo)
         geo = measure(surface, overlay, target)
         if (!geo) throw new Error('intro geometry unavailable')
@@ -442,11 +427,7 @@ export function startWeavingIntro({ surface, overlay, skipButton, handle }: Star
         Object.assign(canvas.style, { position: 'absolute', inset: '0', width: '100%', height: '100%', display: 'block' })
         sizeCanvas()
         glState = initGL(canvas, mask, logo)
-        handle.mark?.('gl')
-        canvas.addEventListener('webglcontextlost', () => {
-            handle.report?.('context_lost')
-            finish(false)
-        })
+        canvas.addEventListener('webglcontextlost', () => finish(false))
         overlay.append(canvas, cloneBox)
 
         if (surface === 'landing') {
@@ -456,7 +437,6 @@ export function startWeavingIntro({ surface, overlay, skipButton, handle }: Star
 
         handle.state = 'running'
         handle.release()
-        handle.mark?.('started')
 
         listen('keydown', (e) => {
             if (['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) return
@@ -467,10 +447,7 @@ export function startWeavingIntro({ surface, overlay, skipButton, handle }: Star
         listen('touchmove', (e) => { e.preventDefault(); doSkip() }, { passive: false, capture: true })
         listen('pointerdown', () => doSkip(), { capture: true })
         listen('resize', onResize)
-        listen('pagehide', () => {
-            handle.report?.('pagehide')
-            finish(false)
-        })
+        listen('pagehide', () => finish(false))
         const onSkipClick = () => doSkip()
         skipButton.addEventListener('click', onSkipClick)
         cleanups.push(() => skipButton.removeEventListener('click', onSkipClick))
@@ -503,13 +480,9 @@ export function startWeavingIntro({ surface, overlay, skipButton, handle }: Star
         raf = requestAnimationFrame(tick)
     }
 
-    init().catch((error: unknown) => {
-        handle.report?.('error', error instanceof Error ? error.message : String(error))
-        bail()
-    })
+    init().catch(() => bail())
 
     return () => {
-        handle.report?.('unmount')
         if (glState === null && !finished) bail()
         else finish(false)
     }
