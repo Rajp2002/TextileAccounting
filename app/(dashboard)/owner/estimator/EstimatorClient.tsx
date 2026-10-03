@@ -3850,6 +3850,16 @@ export default function EstimatorClient({
         savedPage: freeMeter.completed?.page ?? null,
     })
     const freeLeave = useFreeLeaveGuard(freeLeaveReason)
+    // Restored costings have no receipt; only a save confirmed in this session
+    // should leave the calculator. Keep any newer edits or unresolved work here.
+    const savedFreeCosting = freeMode && freeMeter.completed?.quota ? freeMeter.completed : null
+    const redirectedFreeCosting = useRef<typeof freeMeter.completed>(null)
+    useEffect(() => {
+        if (savedFreeCosting && !freeLeaveReason && redirectedFreeCosting.current !== savedFreeCosting) {
+            redirectedFreeCosting.current = savedFreeCosting
+            router.push(`/free/costings?costing=${encodeURIComponent(savedFreeCosting.id)}`)
+        }
+    }, [savedFreeCosting, freeLeaveReason, router])
     const [freePlansOpen, setFreePlansOpen] = useState(false)
     const openFreePlans = useCallback(() => {
         setFreePlansOpen(true)

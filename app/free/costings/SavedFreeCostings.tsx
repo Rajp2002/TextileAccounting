@@ -58,8 +58,8 @@ type MarginFilter = 'all' | 'negative' | 'under_10' | '10_to_20' | 'over_20'
 
 const DEMO_STORAGE_KEY = 'weavly:free-demo-costing-deleted'
 
-export default function SavedFreeCostings({ userId, orgId, userMetadata, embedded = false }: {
-  userId?: string; orgId?: string; userMetadata?: Record<string, unknown>; embedded?: boolean
+export default function SavedFreeCostings({ userId, orgId, userMetadata, embedded = false, initialCostingId }: {
+  userId?: string; orgId?: string; userMetadata?: Record<string, unknown>; embedded?: boolean; initialCostingId?: string
 }) {
   const router = useRouter()
   const { language, tx } = useTranslation()
@@ -102,6 +102,7 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
           setServerTime(data.serverTime)
           setRows(data.costings)
           setNextPage(data.nextPage)
+          setInspectingCosting(data.costings.find((costing: Saved) => costing.id === initialCostingId) ?? null)
         }
       })
       .catch(() => {
@@ -113,7 +114,7 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
     return () => {
       active = false
     }
-  }, [])
+  }, [initialCostingId])
 
   // A browser-wide preference, as before; it hides a demonstration, never a saved costing.
   const handleShowDemo = useCallback(() => {
@@ -487,29 +488,40 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
             >
               <CardContent className="p-0">
                 <div className="flex flex-col gap-4 p-4 sm:flex-row sm:flex-wrap sm:items-center sm:p-5">
-                  <button
-                    type="button"
-                    onClick={() => setInspectingCosting(row)}
-                    aria-haspopup="dialog"
-                    className="group flex w-full min-w-0 basis-full items-start gap-3 rounded-lg text-left outline-none focus-visible:ring-2 focus-visible:ring-saffron/35"
-                  >
-                    <span className="mt-0.5 rounded-lg bg-saffron-soft p-2 text-saffron-deep">
-                      <Layers3 className="h-5 w-5" />
-                    </span>
-                    <span className="min-w-0">
-                      <span className="flex flex-wrap items-center gap-2">
-                        <span className="truncate text-base font-black text-ink" title={row.label}>
-                          {row.label}
+                  <div className="flex w-full min-w-0 basis-full flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <button
+                      type="button"
+                      onClick={() => setInspectingCosting(row)}
+                      aria-haspopup="dialog"
+                      className="group flex min-w-0 flex-1 items-start gap-3 rounded-lg text-left outline-none focus-visible:ring-2 focus-visible:ring-saffron/35"
+                    >
+                      <span className="mt-0.5 rounded-lg bg-saffron-soft p-2 text-saffron-deep">
+                        <Layers3 className="h-5 w-5" />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="flex flex-wrap items-center gap-2">
+                          <span className="truncate text-base font-black text-ink" title={row.label}>
+                            {row.label}
+                          </span>
+                          <Badge variant="outline" className="text-[10px] font-bold">
+                            v{row.revision ?? 1}
+                          </Badge>
                         </span>
-                        <Badge variant="outline" className="text-[10px] font-bold">
-                          v{row.revision ?? 1}
-                        </Badge>
+                        <span className="mt-1 block text-xs text-subtle">
+                          {tx('Saved')} {formatTimestampDate(row.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </span>
                       </span>
-                      <span className="mt-1 block text-xs text-subtle">
-                        {tx('Saved')} {formatTimestampDate(row.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}
-                      </span>
-                    </span>
-                  </button>
+                    </button>
+                    {!embedded && row.editWindow && (
+                      <div className="self-start sm:max-w-[55%]">
+                        <FreeRecalculationWindow
+                          variant="prominent"
+                          remainingMs={remainingFreeEditMs(row.editWindow, now)}
+                          onRecalculate={() => router.push(`/free?costing=${row.id}`)}
+                        />
+                      </div>
+                    )}
+                  </div>
 
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:min-w-[360px] sm:flex-1">
                     <div className="rounded-lg bg-surface-soft px-3 py-2">
@@ -529,7 +541,6 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
                   </div>
 
                   <div className="flex flex-col items-end gap-2 self-end sm:self-center">
-                    {!embedded && row.editWindow && <FreeRecalculationWindow remainingMs={remainingFreeEditMs(row.editWindow,now)} onRecalculate={() => router.push(`/free?costing=${row.id}`)} />}
                     <div className="flex items-center gap-1.5">
                     <Button
                       variant="outline"
