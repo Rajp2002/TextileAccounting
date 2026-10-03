@@ -31,14 +31,19 @@ export function WeavingIntro({ surface }: { surface: IntroSurface }) {
         const skipButton = skipRef.current
         if (!handle || handle.surface !== surface || handle.state !== 'pending' || !overlay || !skipButton) return
 
+        handle.mark?.('effect')
         let cancelled = false
         let stop: (() => void) | null = null
         ;(pending ?? import('./weaving-intro-runtime'))
             .then(({ startWeavingIntro }) => {
+                handle.mark?.('runtime')
                 if (cancelled || handle.state !== 'pending') return
                 stop = startWeavingIntro({ surface, overlay, skipButton, handle })
             })
-            .catch(() => handle.abort())
+            .catch(() => {
+                handle.report?.('runtime_failed')
+                handle.abort()
+            })
 
         return () => {
             cancelled = true
