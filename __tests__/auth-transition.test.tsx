@@ -1,18 +1,15 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { AuthTransition } from '@/components/auth/auth-transition'
+import { AUTH_TRANSITION_LEAVE_MS, AUTH_TRANSITION_ROUND_MS } from '@/components/auth/auth-transition-timing'
 import {
-    AUTH_TRANSITION_ROUND_MS,
-    DEFAULT_PAGE_LOAD_MS,
-    expectedPageLoadMs,
-    holdForTransitionRound,
-    markAuthNavigation,
-    rememberPageLoadMs,
-    takeAuthNavigationMark,
-    transitionHoldMs,
-} from '@/components/auth/auth-transition-timing'
+    AUTH_HANDOFF_HOST_TAG,
+    AUTH_HANDOFF_STORAGE_KEY,
+    buildAuthHandoffScript,
+    captureAuthHandoff,
+} from '@/components/auth/auth-handoff'
 import { LoomMark, SpoolMark } from '@/components/auth/thread-marks'
 import {
     clothRows,
@@ -33,15 +30,6 @@ import { gu } from '@/lib/i18n/locales/gu'
 import { hi } from '@/lib/i18n/locales/hi'
 
 const read = (path: string) => readFileSync(join(process.cwd(), path), 'utf8')
-
-function fakeStorage(initial: Record<string, string> = {}) {
-    const data = new Map(Object.entries(initial))
-    return {
-        getItem: (key: string) => data.get(key) ?? null,
-        setItem: (key: string, value: string) => void data.set(key, value),
-        removeItem: (key: string) => void data.delete(key),
-    }
-}
 
 describe('auth transition loom', () => {
     it('loops seamlessly: after the two-row take-up each pick lands on cloth of the same parity', () => {
@@ -126,17 +114,6 @@ describe('auth transition spool', () => {
 })
 
 describe('auth transition round', () => {
-    it('holds only for what is left of one round', () => {
-        expect(transitionHoldMs(1000, 1000, false)).toBe(AUTH_TRANSITION_ROUND_MS)
-        expect(transitionHoldMs(1000, 1500, false)).toBe(AUTH_TRANSITION_ROUND_MS - 500)
-        expect(transitionHoldMs(1000, 1000 + AUTH_TRANSITION_ROUND_MS + 900, false)).toBe(0)
-        expect(transitionHoldMs(1000, 1000, true)).toBe(0)
-    })
-
-    it('resolves at once when the request already outlasted a round', async () => {
-        await expect(holdForTransitionRound(performance.now() - AUTH_TRANSITION_ROUND_MS - 1)).resolves.toBe(0)
-    })
-
     it('matches the CSS round, with the spool turns dividing it evenly', () => {
         const css = read('app/globals.css')
         expect(css).toContain(`--auth-round: ${AUTH_TRANSITION_ROUND_MS / 1000}s;`)
@@ -150,73 +127,173 @@ describe('auth transition round', () => {
     })
 })
 
-describe('auth transition landing', () => {
-    it('starts the page change one page load before the round ends', () => {
-        expect(transitionHoldMs(1000, 1000, false, 600)).toBe(AUTH_TRANSITION_ROUND_MS - 600)
-        expect(transitionHoldMs(1000, 1500, false, 600)).toBe(AUTH_TRANSITION_ROUND_MS - 600 - 500)
-        expect(transitionHoldMs(1000, 1000 + AUTH_TRANSITION_ROUND_MS, false, 600)).toBe(0)
-        expect(transitionHoldMs(1000, 1000, false, AUTH_TRANSITION_ROUND_MS + 400)).toBe(0)
-        expect(transitionHoldMs(1000, 1000, true, 600)).toBe(0)
+
+const OVERLAY_HTML = '<div class="auth-transition" data-state="open" data-stage="done" data-mode="sign-in"><div class="auth-transition-mark"></div></div>'
+
+/** Runs the pre-paint script the way a freshly loaded page would, against stand-ins for the browser. */
+function resumeOnNewPage({ stored, now }: { stored: string | null; now: number }) {
+    const data = new Map<string, string>(stored === null ? [] : [[AUTH_HANDOFF_STORAGE_KEY, stored]])
+    const timers: Array<{ run: () => void; ms: number }> = []
+    const infinite = { currentTime: 0, finish: vi.fn(), effect: { getComputedTiming: () => ({ iterations: Infinity }) } }
+    const finite = { currentTime: 0, finish: vi.fn(), effect: { getComputedTiming: () => ({ iterations: 1 }) } }
+    const overlay = {
+        attributes: {} as Record<string, string>,
+        setAttribute(name: string, value: string) { this.attributes[name] = value },
+        getAnimations: vi.fn(() => [infinite, finite]),
+        remove: vi.fn(),
+    }
+    const inserted: unknown[] = []
+    const host = {
+        tag: '',
+        style: {} as Record<string, string>,
+        children: [] as unknown[],
+        appendChild(node: unknown) { this.children.push(node) },
+        remove: vi.fn(),
+    }
+    const template = {
+        content: { firstElementChild: overlay as unknown },
+        set innerHTML(html: string) { this.html = html },
+        html: '',
+    }
+    const fakeDocument = {
+        body: { firstChild: { id: 'first' }, insertBefore: (node: unknown, before: unknown) => inserted.push([node, before]) },
+        createElement: (tag: string) => {
+            if (tag === 'template') return template
+            host.tag = tag
+            return host
+        },
+    }
+    const fakeWindow = {
+        sessionStorage: {
+            getItem: (key: string) => data.get(key) ?? null,
+            removeItem: (key: string) => void data.delete(key),
+        },
+    }
+    new Function('window', 'document', 'Date', 'setTimeout', buildAuthHandoffScript())(
+        fakeWindow,
+        fakeDocument,
+        { now: () => now },
+        (run: () => void, ms: number) => void timers.push({ run, ms }),
+    )
+    return { data, timers, overlay, inserted, infinite, finite, template, host }
+}
+
+describe('auth transition handoff', () => {
+    it('keeps the round going on the next page, from the frame the old page was on', () => {
+        const startedAt = 10_000
+        const stored = JSON.stringify({ html: OVERLAY_HTML, startedAt })
+        const { inserted, overlay, infinite, finite, timers, data, template, host } = resumeOnNewPage({ stored, now: startedAt + 700 })
+
+        expect(template.html).toBe(OVERLAY_HTML)
+        // Inside a tag React does not know, so hydrating the page's own <div>s never claims it.
+        expect(host.tag).toBe(AUTH_HANDOFF_HOST_TAG)
+        expect(host.style.display).toBe('contents')
+        expect(host.children).toEqual([overlay])
+        expect(inserted).toHaveLength(1)
+        expect(inserted[0]).toEqual([host, { id: 'first' }])
+        expect(overlay.attributes['data-resumed']).toBe('')
+        // The loops carry on from where they were; one-time entrances are already over.
+        expect(infinite.currentTime).toBe(700)
+        expect(finite.finish).toHaveBeenCalledTimes(1)
+        expect(infinite.finish).not.toHaveBeenCalled()
+
+        // It closes exactly when the round ends, then leaves the page and the storage clean.
+        expect(timers).toHaveLength(1)
+        expect(timers[0].ms).toBe(AUTH_TRANSITION_ROUND_MS - 700)
+        timers[0].run()
+        expect(overlay.attributes['data-state']).toBe('closed')
+        expect(timers).toHaveLength(2)
+        expect(timers[1].ms).toBe(AUTH_TRANSITION_LEAVE_MS)
+        timers[1].run()
+        expect(host.remove).toHaveBeenCalledTimes(1)
+        expect(data.has(AUTH_HANDOFF_STORAGE_KEY)).toBe(false)
     })
 
-    it('shows the next page the moment the round ends, and never later than the request allows', () => {
-        for (const sessionReadyAt of [150, 600, 1200, 1700, 3000]) {
-            for (const pageLoad of [200, 400, 800, 1200]) {
-                const hold = transitionHoldMs(0, sessionReadyAt, false, pageLoad)
-                const nextPageShownAt = sessionReadyAt + hold + pageLoad
-                // No idle tail after the round: only a slow session or page load pushes it later.
-                expect(nextPageShownAt).toBe(Math.max(sessionReadyAt + pageLoad, AUTH_TRANSITION_ROUND_MS))
-            }
+    it('does nothing on an ordinary page load', () => {
+        const { inserted, timers } = resumeOnNewPage({ stored: null, now: 5_000 })
+        expect(inserted).toHaveLength(0)
+        expect(timers).toHaveLength(0)
+    })
+
+    it('does not show a round that has already ended, or one from the future, and clears it', () => {
+        for (const startedAt of [10_000 - AUTH_TRANSITION_ROUND_MS - 5_000, 10_000 - AUTH_TRANSITION_ROUND_MS + 60, 10_000 + 5_000]) {
+            const { inserted, timers, data } = resumeOnNewPage({
+                stored: JSON.stringify({ html: OVERLAY_HTML, startedAt }),
+                now: 10_000,
+            })
+            expect(inserted, `startedAt ${startedAt}`).toHaveLength(0)
+            expect(timers).toHaveLength(0)
+            expect(data.has(AUTH_HANDOFF_STORAGE_KEY)).toBe(false)
         }
     })
 
-    it('expects a typical page load until this device has measured its own', () => {
-        expect(expectedPageLoadMs('sign-in', fakeStorage())).toBe(DEFAULT_PAGE_LOAD_MS['sign-in'])
-        expect(expectedPageLoadMs('sign-out', fakeStorage())).toBe(DEFAULT_PAGE_LOAD_MS['sign-out'])
-        // Without a browser (server render, tests) it is the typical figure too.
-        expect(expectedPageLoadMs('sign-in')).toBe(DEFAULT_PAGE_LOAD_MS['sign-in'])
-        expect(expectedPageLoadMs('sign-in', fakeStorage({ 'weavly:auth-page-load-ms': 'not json' })))
-            .toBe(DEFAULT_PAGE_LOAD_MS['sign-in'])
+    it('only ever rebuilds the overlay it wrote itself', () => {
+        const bad = [
+            '{not json',
+            'null',
+            JSON.stringify({ html: 42, startedAt: 9_900 }),
+            JSON.stringify({ html: OVERLAY_HTML, startedAt: 'now' }),
+            JSON.stringify({ html: '<div class="other">x</div>', startedAt: 9_900 }),
+            JSON.stringify({ html: OVERLAY_HTML.replace('</div></div>', '<script>alert(1)</script></div></div>'), startedAt: 9_900 }),
+            JSON.stringify({ html: OVERLAY_HTML.replace('<div class="auth-transition-mark">', '<img src=x onerror=alert(1)><div class="auth-transition-mark">'), startedAt: 9_900 }),
+            JSON.stringify({ html: OVERLAY_HTML + 'x'.repeat(50_000), startedAt: 9_900 }),
+        ]
+        for (const stored of bad) {
+            const { inserted, timers } = resumeOnNewPage({ stored, now: 10_000 })
+            expect(inserted, stored.slice(0, 40)).toHaveLength(0)
+            expect(timers).toHaveLength(0)
+        }
     })
 
-    it('learns each destination apart and settles between measurements', () => {
-        const storage = fakeStorage()
-        rememberPageLoadMs('sign-in', 500, storage)
-        expect(expectedPageLoadMs('sign-in', storage)).toBe(500)
-        expect(expectedPageLoadMs('sign-out', storage)).toBe(DEFAULT_PAGE_LOAD_MS['sign-out'])
+    it('captures the overlay the page is showing, with when the round began', () => {
+        const writes = new Map<string, string>()
+        const storage = {
+            getItem: (key: string) => writes.get(key) ?? null,
+            setItem: (key: string, value: string) => void writes.set(key, value),
+            removeItem: (key: string) => void writes.delete(key),
+        }
+        const overlay = { outerHTML: OVERLAY_HTML }
 
-        rememberPageLoadMs('sign-in', 700, storage)
-        expect(expectedPageLoadMs('sign-in', storage)).toBe(600)
+        // Clicked at performance time 1_000, now 1_650 ms later, on the epoch clock at 50_000.
+        expect(captureAuthHandoff(1_000, { overlay: overlay as Element, now: 1_650, epoch: 50_000, reducedMotion: false, storage })).toBe(true)
+        expect(JSON.parse(writes.get(AUTH_HANDOFF_STORAGE_KEY)!)).toEqual({ html: OVERLAY_HTML, startedAt: 50_000 - 650 })
     })
 
-    it('keeps one cold start or a broken reading from shrinking the round', () => {
-        const storage = fakeStorage()
-        rememberPageLoadMs('sign-in', 60_000, storage)
-        expect(expectedPageLoadMs('sign-in', storage)).toBeLessThanOrEqual(AUTH_TRANSITION_ROUND_MS - 100)
+    it('has nothing to carry over when motion is reduced, the round is over, or nothing is showing', () => {
+        const writes = new Map<string, string>([[AUTH_HANDOFF_STORAGE_KEY, 'stale']])
+        const storage = {
+            getItem: (key: string) => writes.get(key) ?? null,
+            setItem: (key: string, value: string) => void writes.set(key, value),
+            removeItem: (key: string) => void writes.delete(key),
+        }
+        const overlay = { outerHTML: OVERLAY_HTML } as Element
+        const base = { overlay, now: 1_100, epoch: 50_000, reducedMotion: false, storage }
 
-        const untouched = fakeStorage()
-        rememberPageLoadMs('sign-out', Number.NaN, untouched)
-        rememberPageLoadMs('sign-out', -5, untouched)
-        expect(expectedPageLoadMs('sign-out', untouched)).toBeGreaterThan(0)
+        expect(captureAuthHandoff(1_000, { ...base, reducedMotion: true })).toBe(false)
+        expect(writes.has(AUTH_HANDOFF_STORAGE_KEY)).toBe(false)
+        expect(captureAuthHandoff(1_000, { ...base, now: 1_000 + AUTH_TRANSITION_ROUND_MS })).toBe(false)
+        expect(captureAuthHandoff(1_000, { ...base, overlay: null })).toBe(false)
+        expect(writes.has(AUTH_HANDOFF_STORAGE_KEY)).toBe(false)
 
-        const blocked = { getItem: () => { throw new Error('blocked') }, setItem: () => { throw new Error('blocked') }, removeItem: () => {} }
-        expect(() => rememberPageLoadMs('sign-in', 400, blocked)).not.toThrow()
-        expect(expectedPageLoadMs('sign-in', blocked)).toBe(DEFAULT_PAGE_LOAD_MS['sign-in'])
+        const blocked = { getItem: () => null, setItem: () => { throw new Error('blocked') }, removeItem: () => {} }
+        expect(() => captureAuthHandoff(1_000, { ...base, storage: blocked })).not.toThrow()
+        expect(() => captureAuthHandoff(1_000, { ...base, storage: null })).not.toThrow()
     })
 
-    it('hands the navigation kind to the page it lands on, once, and only while fresh', () => {
-        const storage = fakeStorage()
-        markAuthNavigation('sign-out', 1_000, storage)
-        expect(takeAuthNavigationMark(2_000, storage)).toBe('sign-out')
-        expect(takeAuthNavigationMark(2_000, storage)).toBeNull()
+    it('leaves with the same fade the overlay uses everywhere', () => {
+        expect(read('app/globals.css')).toContain(`animation: auth-transition-leave ${AUTH_TRANSITION_LEAVE_MS}ms ease-in forwards;`)
+    })
 
-        markAuthNavigation('sign-in', 1_000, storage)
-        expect(takeAuthNavigationMark(1_000 + 60_000, storage)).toBeNull()
-
-        storage.setItem('weavly:auth-navigation', JSON.stringify({ kind: 'sign-up', at: 1_000 }))
-        expect(takeAuthNavigationMark(1_500, storage)).toBeNull()
+    it('runs before anything paints, on every page', () => {
+        const layout = read('app/layout.tsx')
+        expect(layout).toContain('<AuthHandoffScript />')
+        expect(layout.indexOf('<AuthHandoffScript />')).toBeLessThan(layout.indexOf('<Providers>'))
+        const script = read('components/auth/auth-handoff-script.tsx')
+        expect(script).toContain('dangerouslySetInnerHTML')
+        expect(script).not.toContain("'use client'")
     })
 })
+
 
 describe('auth transition overlay', () => {
     it('renders nothing on the server, so it is safe in server HTML', () => {
@@ -248,54 +325,38 @@ describe('auth transition overlay', () => {
         expect(logout).not.toContain('LoadingModal')
     })
 
-    it('lets sign-in finish one loom round only after the session exists', () => {
+    it('opens the workspace the moment the session exists and hands the loom to it', () => {
         const login = read('app/(auth)/login/login-form.tsx')
-        const success = login.slice(login.indexOf('setIsRedirecting(true)'))
-        expect(login.indexOf("if (result && 'error' in result)")).toBeLessThan(login.indexOf('setIsRedirecting(true)'))
-        // The page change starts one measured page load before the round ends.
-        expect(success.indexOf("await holdForTransitionRound(transitionStartedAt, expectedPageLoadMs('sign-in'))"))
+        const success = login.slice(login.indexOf('flushSync(() => setIsRedirecting(true))'))
+        expect(login.indexOf("if (result && 'error' in result)")).toBeLessThan(login.indexOf('flushSync(() => setIsRedirecting(true))'))
+        // The copy has changed to "signed in" before the overlay is captured, and nothing waits for the round.
+        expect(success.indexOf('captureAuthHandoff(transitionStartedAt)'))
             .toBeLessThan(success.indexOf('window.location.replace(result.redirectTo)'))
-        expect(success.indexOf("markAuthNavigation('sign-in')"))
-            .toBeLessThan(success.indexOf('window.location.replace(result.redirectTo)'))
-        expect(success).toContain('transitionHoldMs,')
+        const handler = login.slice(login.indexOf('const handleLogin'), login.indexOf('return (\n        <AuthLayout'))
+        expect(login).not.toContain('holdForTransitionRound')
+        expect(handler).not.toContain('setTimeout')
     })
 
-    it('ends the session at once on log out and only holds the page change', () => {
+    it('ends the session at once on log out and hands the spool to /login', () => {
         const logout = read('components/auth/logout-button.tsx')
         const flow = logout.slice(logout.indexOf('const signOutBehindTransition'), logout.indexOf('const handleLogout'))
-        // The round starts counting before the request, and the request is not delayed by it.
-        expect(flow.indexOf("holdForTransitionRound(transitionStartedAt, expectedPageLoadMs('sign-out'))"))
-            .toBeLessThan(flow.indexOf('await fetch(form.action'))
         expect(flow).toContain("method: 'POST'")
         expect(flow).toContain('body: new FormData(form)')
         expect(flow).toContain("redirect: 'manual'")
         expect(flow).toContain("signedOut = response.type === 'opaqueredirect'")
-        expect(flow.indexOf('await roundFinished')).toBeGreaterThan(flow.indexOf('await fetch(form.action'))
-        expect(flow.indexOf('await roundFinished')).toBeLessThan(flow.indexOf("window.location.replace('/login')"))
-        expect(flow.indexOf("markAuthNavigation('sign-out')")).toBeLessThan(flow.indexOf("window.location.replace('/login')"))
+        // Only once the session has ended, and without waiting for the round.
+        expect(flow.indexOf('captureAuthHandoff(transitionStartedAt)')).toBeGreaterThan(flow.indexOf('await fetch(form.action'))
+        expect(flow.indexOf('captureAuthHandoff(transitionStartedAt)')).toBeLessThan(flow.indexOf("window.location.replace('/login')"))
+        expect(logout).not.toContain('holdForTransitionRound')
+        expect(flow).not.toContain('setTimeout')
         // Anything unexpected falls back to the native form post.
         expect(flow.lastIndexOf('formRef.current?.submit()')).toBeGreaterThan(flow.indexOf("window.location.replace('/login')"))
     })
 
-    it('reports the hold apart from route timing', () => {
-        const reporter = read('components/telemetry/sign-in-timing-reporter.tsx')
-        expect(reporter).toContain('const navigationStartedAt = trace.actionCompletedAt + transitionHoldMs')
-        expect(reporter).toContain('dashboardReadyMs: observedAt - navigationStartedAt')
-        expect(read('app/api/telemetry/sign-in/route.ts')).toContain('transition_hold_ms: sanitizeTimingMs(body.transitionHoldMs)')
-    })
-
-    it('measures how long the page it lands on takes to paint, on every page', () => {
-        const layout = read('app/layout.tsx')
-        expect(layout).toContain('<AuthPageLoadRecorder />')
-        const recorder = read('components/auth/auth-page-load-recorder.tsx')
-        expect(recorder).toContain('first-contentful-paint')
-        expect(recorder).toContain('rememberPageLoadMs(')
-        expect(recorder).toContain('takeAuthNavigationMark(')
-    })
-
-    it('keeps toasts from covering the handoff', () => {
-        expect(read('app/globals.css'))
-            .toContain('body:has(> .auth-transition[data-state="open"]) [data-sonner-toaster]')
+    it('keeps toasts from covering the handoff, on the page it leaves and the one it lands on', () => {
+        const css = read('app/globals.css')
+        expect(css).toContain('body:has(> .auth-transition[data-state="open"]) [data-sonner-toaster]')
+        expect(css).toContain(`body:has(> ${AUTH_HANDOFF_HOST_TAG} > .auth-transition[data-state="open"]) [data-sonner-toaster]`)
     })
 
     it('portals to the body so a transformed sidebar or sheet cannot clip it', () => {

@@ -1770,7 +1770,8 @@
 
   /* A page left behind the handoff (its session already ended) must not toast
      over it. Toasts show again as soon as the overlay closes. */
-  body:has(> .auth-transition[data-state="open"]) [data-sonner-toaster] {
+  body:has(> .auth-transition[data-state="open"]) [data-sonner-toaster],
+  body:has(> weavly-handoff > .auth-transition[data-state="open"]) [data-sonner-toaster] {
     visibility: hidden;
   }
 

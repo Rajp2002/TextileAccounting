@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from '@/lib/i18n/context'
+import { AUTH_TRANSITION_LEAVE_MS } from './auth-transition-timing'
 import { LoomMark, SpoolMark } from './thread-marks'
 
 export type AuthTransitionMode = 'sign-in' | 'sign-up' | 'sign-out'
@@ -24,9 +25,6 @@ const COPY = {
     },
 } as const satisfies Record<AuthTransitionMode, Record<AuthTransitionStage, readonly [string, string]>>
 
-/** Matches the `auth-transition-leave` animation in app/globals.css. */
-const LEAVE_MS = 180
-
 interface AuthTransitionProps {
     open: boolean
     mode: AuthTransitionMode
@@ -36,11 +34,12 @@ interface AuthTransitionProps {
 /**
  * Full-screen handoff shown while an account crosses the sign-in boundary.
  *
- * It opens on submit and stays up through the full-page navigation. Sign-in and
- * log out leave for the next page one page load before the mark finishes its
- * round (`holdForTransitionRound`), so the next page appears as the round ends
- * without a still wait after it. If the request fails it fades out so the form
- * and its error are back in reach.
+ * It opens on submit and stays up through the full-page navigation. Sign-in
+ * and log out navigate as soon as the request succeeds and hand the overlay to
+ * the next page (`captureAuthHandoff`, `AuthHandoffScript`), which carries the
+ * round on and removes it when the round ends, so the next page loads behind
+ * the animation and appears the moment the round is done. If the request fails
+ * it fades out so the form and its error are back in reach.
  */
 export function AuthTransition({ open, mode, stage = 'working' }: AuthTransitionProps) {
     const { t } = useTranslation()
@@ -55,7 +54,7 @@ export function AuthTransition({ open, mode, stage = 'working' }: AuthTransition
 
     useEffect(() => {
         if (!leaving) return
-        const timer = window.setTimeout(() => setLeaving(false), LEAVE_MS)
+        const timer = window.setTimeout(() => setLeaving(false), AUTH_TRANSITION_LEAVE_MS)
         return () => window.clearTimeout(timer)
     }, [leaving])
 

@@ -49,7 +49,7 @@ import Providers from "@/components/providers"
 import { Toaster } from "@/components/ui/sonner"
 import { SignInTimingReporter } from "@/components/telemetry/sign-in-timing-reporter"
 import { LogoutTimingReporter } from "@/components/telemetry/logout-timing-reporter"
-import { AuthPageLoadRecorder } from "@/components/auth/auth-page-load-recorder"
+import { AuthHandoffScript } from "@/components/auth/auth-handoff-script"
 import { AppIntroPrePaintScript } from "@/components/intro/intro-pre-paint-script"
 import { SentryReleaseScript } from "@/components/telemetry/sentry-release-script"
 
@@ -68,6 +68,8 @@ export default function RootLayout({
         className={`${inter.variable} ${geistMono.variable} antialiased font-sans`}
         suppressHydrationWarning
       >
+        {/* Resumes a sign-in or log out animation that is still mid-round; must run before first paint. */}
+        <AuthHandoffScript />
         {/* Static timing mark, recorded before the route content arrives. */}
         <script
           dangerouslySetInnerHTML={{
@@ -79,7 +81,6 @@ export default function RootLayout({
         </Providers>
         <SignInTimingReporter />
         <LogoutTimingReporter />
-        <AuthPageLoadRecorder />
         <Toaster />
       </body>
     </html>

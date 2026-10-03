@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { flushSync } from 'react-dom'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,11 +11,7 @@ import { Loader2, ArrowRight, Eye, EyeOff } from 'lucide-react'
 import AuthLayout from '@/components/auth/auth-layout'
 import { signIn } from '@/app/(auth)/actions/auth'
 import { AuthTransition } from '@/components/auth/auth-transition'
-import {
-    expectedPageLoadMs,
-    holdForTransitionRound,
-    markAuthNavigation,
-} from '@/components/auth/auth-transition-timing'
+import { captureAuthHandoff } from '@/components/auth/auth-handoff'
 import { SIGN_IN_TRACE_STORAGE_KEY } from '@/lib/sign-in-trace'
 
 function createTraceId() {
@@ -110,17 +107,9 @@ export default function LoginForm({ recoveryDestination }: { recoveryDestination
                 return
             }
 
-            setIsRedirecting(true)
+            // The overlay switches to "signed in" before it is handed over.
+            flushSync(() => setIsRedirecting(true))
             const actionCompletedAt = Date.now()
-            // The session already exists, so the loom may finish its round
-            // before the workspace opens. The old page stays up while the
-            // workspace loads, so leave one page load before the round ends
-            // and the workspace appears as it does. A slow sign-in does not
-            // wait at all.
-            const transitionHoldMs = await holdForTransitionRound(
-                transitionStartedAt,
-                expectedPageLoadMs('sign-in'),
-            )
             try {
                 window.sessionStorage.setItem(SIGN_IN_TRACE_STORAGE_KEY, JSON.stringify({
                     traceId,
@@ -129,7 +118,6 @@ export default function LoginForm({ recoveryDestination }: { recoveryDestination
                     actionCompletedAt,
                     authRoundTripMs,
                     cleanupWaitMs: 0,
-                    transitionHoldMs,
                 }))
             } catch {
                 // Telemetry must never delay or block navigation.
@@ -137,7 +125,9 @@ export default function LoginForm({ recoveryDestination }: { recoveryDestination
             // Cross the authentication boundary with a full document request.
             // This guarantees the new session cookies are applied and avoids a
             // Safari/PWA App Router transition stalling on the login screen.
-            markAuthNavigation('sign-in')
+            // The session exists, so the workspace loads behind the loom: the
+            // next page resumes it and removes it when the round ends.
+            captureAuthHandoff(transitionStartedAt)
             window.location.replace(result.redirectTo)
         } catch {
             toast.error('Something went wrong. Please try again.')
