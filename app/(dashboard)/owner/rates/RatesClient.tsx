@@ -290,9 +290,8 @@ function LinkedQualitiesCell({ rate }: { rate: CostRateRow }) {
     )
 }
 
-function QuickRateEditPopover({
+function QuickRateEditDialog({
     rate,
-    isOpen,
     onOpenChange,
     value,
     onChangeValue,
@@ -302,10 +301,8 @@ function QuickRateEditPopover({
     isPending,
     onSave,
     onOpenAdvanced,
-    trigger,
 }: {
-    rate: CostRateRow
-    isOpen: boolean
+    rate: CostRateRow | null
     onOpenChange: (open: boolean) => void
     value: number | string
     onChangeValue: (val: number | string) => void
@@ -315,44 +312,25 @@ function QuickRateEditPopover({
     isPending: boolean
     onSave: (rate: CostRateRow, val: number, src: string) => void
     onOpenAdvanced: (rate: CostRateRow) => void
-    trigger: React.ReactNode
 }) {
     const { tx } = useTranslation()
     const inputRef = useRef<HTMLInputElement>(null)
-    const savedQualityCount = getSavedQualityCount(rate)
-
-    useEffect(() => {
-        if (isOpen) {
-            const timer = setTimeout(() => {
-                try {
-                    inputRef.current?.focus()
-                    inputRef.current?.select()
-                } catch {
-                    inputRef.current?.focus()
-                }
-            }, 10)
-            return () => clearTimeout(timer)
-        }
-    }, [isOpen])
+    const savedQualityCount = rate ? getSavedQualityCount(rate) : 0
 
     const rawVal = Number(value)
     const isValueValid = value !== '' && Number.isFinite(rawVal) && rawVal >= 0 && rawVal <= 10_000_000
-    const previewVal = isValueValid ? rawVal : Number(rate.current_value)
+    const previewVal = isValueValid || !rate ? rawVal : Number(rate.current_value)
 
     const handleSubmit = () => {
-        if (!isValueValid) return
+        if (!rate || !isValueValid) return
         onSave(rate, rawVal, source)
     }
 
     return (
-        <Popover open={isOpen} onOpenChange={onOpenChange}>
-            <PopoverTrigger asChild>
-                {trigger}
-            </PopoverTrigger>
-            <PopoverContent
-                data-ratebook-field="quickEditPopover"
-                align="end"
-                sideOffset={8}
+        <Dialog open={Boolean(rate)} onOpenChange={onOpenChange}>
+            <DialogContent
+                data-ratebook-field="quickEditDialog"
+                className="sm:max-w-md"
                 onOpenAutoFocus={(e) => {
                     e.preventDefault()
                     try {
@@ -362,142 +340,135 @@ function QuickRateEditPopover({
                         inputRef.current?.focus()
                     }
                 }}
-                className="w-[320px] max-w-[calc(100vw-2rem)] rounded-xl border border-hairline bg-surface p-4 shadow-[var(--shadow-panel)] z-50"
             >
-                <div>
-                    <div className="flex items-start justify-between gap-2">
-                        <p className="truncate text-sm font-bold text-ink" title={rate.name}>
-                            {rate.name}
-                        </p>
-                        <span className="shrink-0 rounded-full bg-surface-soft px-2 py-0.5 text-[10px] font-semibold text-subtle">
-                            {rate.category === 'yarn_warp' ? 'Warp yarn' : 'Weft yarn'}
-                        </span>
-                    </div>
-                    <p className="mt-1 text-xs text-subtle">
-                        Current: <span className="font-mono font-semibold text-ink">{formatRateValue(rate.current_value, rate.unit)}</span>
-                    </p>
-                </div>
+                {rate && (
+                    <>
+                        <DialogHeader className="pr-9">
+                            <DialogTitle>{tx('Edit rate')}</DialogTitle>
+                            <DialogDescription>
+                                <span className="flex items-start justify-between gap-2">
+                                    <span className="min-w-0 truncate font-semibold text-ink" title={rate.name}>
+                                        {rate.name}
+                                    </span>
+                                    <span className="shrink-0 rounded-full bg-surface-soft px-2 py-0.5 text-[11px] font-semibold text-subtle">
+                                        {rate.category === 'yarn_warp' ? 'Warp yarn' : 'Weft yarn'}
+                                    </span>
+                                </span>
+                                <span className="mt-1 block text-xs text-subtle">
+                                    Current: <span className="font-mono font-semibold text-ink">{formatRateValue(rate.current_value, rate.unit)}</span>
+                                </span>
+                            </DialogDescription>
+                        </DialogHeader>
 
-                <div className="mt-3.5 space-y-3">
-                    <div>
-                        <Label htmlFor={`quick-rate-${rate.id}`} className="text-xs font-semibold text-ink">
-                            {tx('New Rate')}
-                        </Label>
-                        <div className="relative mt-1">
-                            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 font-mono text-sm font-bold text-subtle">
-                                ₹
-                            </span>
-                            <Input
-                                ref={inputRef}
-                                id={`quick-rate-${rate.id}`}
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                value={value}
-                                onChange={e => onChangeValue(e.target.value)}
-                                onKeyDown={e => {
-                                    if (e.key === 'Enter') {
-                                        e.preventDefault()
-                                        handleSubmit()
-                                    }
-                                }}
-                                className="h-10 pl-7 pr-14 font-mono text-base font-bold text-ink"
+                        <div className="space-y-4">
+                            <div className="space-y-1.5">
+                                <Label htmlFor={`quick-rate-${rate.id}`}>
+                                    {tx('New Rate')}
+                                </Label>
+                                <div className="relative">
+                                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 font-mono text-sm font-bold text-subtle">
+                                        ₹
+                                    </span>
+                                    <Input
+                                        ref={inputRef}
+                                        id={`quick-rate-${rate.id}`}
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        value={value}
+                                        onChange={e => onChangeValue(e.target.value)}
+                                        onKeyDown={e => {
+                                            if (e.key === 'Enter') {
+                                                e.preventDefault()
+                                                handleSubmit()
+                                            }
+                                        }}
+                                        className="pl-7 pr-14 font-mono text-base font-bold"
+                                        disabled={isPending}
+                                        placeholder="0.00"
+                                    />
+                                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 font-mono text-xs text-subtle">
+                                        /kg
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs text-subtle">{tx('Trend preview:')}</span>
+                                    <PriceDeltaBadge
+                                        currentValue={previewVal}
+                                        previousValue={Number(rate.current_value)}
+                                        unit={rate.unit}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <Label htmlFor={`quick-source-${rate.id}`}>
+                                    {tx('Source / Broker note (optional)')}
+                                </Label>
+                                <Input
+                                    id={`quick-source-${rate.id}`}
+                                    type="text"
+                                    value={source}
+                                    onChange={e => onChangeSource(e.target.value)}
+                                    onKeyDown={e => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault()
+                                            handleSubmit()
+                                        }
+                                    }}
+                                    placeholder="Broker note, email..."
+                                    disabled={isPending}
+                                />
+                            </div>
+
+                            <div className="rounded-lg border border-hairline/60 bg-surface-soft/50 p-3 text-xs leading-relaxed text-subtle">
+                                {savedQualityCount > 0 ? (
+                                    <p>
+                                        {tx(`Updates future estimates for ${savedQualityCount} saved ${savedQualityCount === 1 ? 'quality' : 'qualities'}. Past snapshots unchanged.`)}
+                                    </p>
+                                ) : (
+                                    <p>
+                                        {tx('Updates future estimates. Past snapshots unchanged.')}
+                                    </p>
+                                )}
+                            </div>
+
+                            {error && (
+                                <p role="alert" className="text-xs font-semibold text-risk">{error}</p>
+                            )}
+
+                            <button
+                                type="button"
+                                onClick={() => onOpenAdvanced(rate)}
                                 disabled={isPending}
-                                placeholder="0.00"
-                            />
-                            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 font-mono text-xs text-subtle">
-                                /kg
-                            </span>
+                                className="inline-flex min-h-11 items-center text-sm font-medium text-ink underline decoration-hairline-strong underline-offset-4 hover:decoration-ink focus-visible:outline-none focus-visible:decoration-ink disabled:opacity-60 sm:min-h-9"
+                            >
+                                {tx('Advanced settings (dates, review interval)...')}
+                            </button>
                         </div>
-                        <div className="mt-1.5 flex items-center justify-between">
-                            <span className="text-[11px] text-subtle">{tx('Trend preview:')}</span>
-                            <PriceDeltaBadge
-                                currentValue={previewVal}
-                                previousValue={Number(rate.current_value)}
-                                unit={rate.unit}
-                            />
-                        </div>
-                    </div>
 
-                    <div>
-                        <Label htmlFor={`quick-source-${rate.id}`} className="text-xs font-semibold text-ink">
-                            {tx('Source / Broker note (optional)')}
-                        </Label>
-                        <Input
-                            id={`quick-source-${rate.id}`}
-                            type="text"
-                            value={source}
-                            onChange={e => onChangeSource(e.target.value)}
-                            onKeyDown={e => {
-                                if (e.key === 'Enter') {
-                                    e.preventDefault()
-                                    handleSubmit()
-                                }
-                            }}
-                            placeholder="Broker note, email..."
-                            className="mt-1 h-8 text-xs"
-                            disabled={isPending}
-                        />
-                    </div>
-                </div>
-
-                <div className="mt-3 rounded-lg border border-hairline/60 bg-surface-soft/50 p-2 text-[11px] leading-relaxed text-subtle">
-                    {savedQualityCount > 0 ? (
-                        <p>
-                            {tx(`Updates future estimates for ${savedQualityCount} saved ${savedQualityCount === 1 ? 'quality' : 'qualities'}. Past snapshots unchanged.`)}
-                        </p>
-                    ) : (
-                        <p>
-                            {tx('Updates future estimates. Past snapshots unchanged.')}
-                        </p>
-                    )}
-                </div>
-
-                {error && (
-                    <p className="mt-2 text-xs font-semibold text-risk">{error}</p>
+                        <DialogFooter>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => onOpenChange(false)}
+                                disabled={isPending}
+                            >
+                                {tx('Cancel')}
+                            </Button>
+                            <Button
+                                type="button"
+                                onClick={handleSubmit}
+                                disabled={isPending || !isValueValid}
+                            >
+                                {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                                {isPending ? tx('Saving…') : tx('Save Rate')}
+                            </Button>
+                        </DialogFooter>
+                    </>
                 )}
-
-                <div className="mt-3 flex items-center justify-end gap-2 border-t border-hairline pt-3">
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onOpenChange(false)}
-                        disabled={isPending}
-                        className="h-8 rounded-lg px-3 text-xs"
-                    >
-                        {tx('Cancel')}
-                    </Button>
-                    <Button
-                        type="button"
-                        size="sm"
-                        onClick={handleSubmit}
-                        disabled={isPending || !isValueValid}
-                        className="h-8 rounded-lg bg-saffron px-3.5 text-xs font-bold text-white shadow-none hover:bg-saffron-deep"
-                    >
-                        {isPending ? (
-                            <>
-                                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                                {tx('Saving…')}
-                            </>
-                        ) : (
-                            tx('Save Rate')
-                        )}
-                    </Button>
-                </div>
-
-                <div className="mt-2 text-center">
-                    <button
-                        type="button"
-                        onClick={() => onOpenAdvanced(rate)}
-                        disabled={isPending}
-                        className="text-[11px] font-medium text-saffron-deep underline-offset-2 hover:underline focus-visible:outline-none"
-                    >
-                        {tx('Advanced settings (dates, review interval)...')}
-                    </button>
-                </div>
-            </PopoverContent>
-        </Popover>
+            </DialogContent>
+        </Dialog>
     )
 }
 
@@ -938,7 +909,6 @@ export default function RatesClient({
     const [quickEditValue, setQuickEditValue] = useState<number | string>('')
     const [quickEditSource, setQuickEditSource] = useState('')
     const [quickEditError, setQuickEditError] = useState<string | null>(null)
-    const [quickEditIsMobile, setQuickEditIsMobile] = useState(false)
     const [isPending, startTransition] = useTransition()
     const [pendingAction, setPendingAction] = useState<PendingRateAction | null>(null)
 
@@ -1130,9 +1100,17 @@ export default function RatesClient({
         })
     }
 
+    const quickEditPending = Boolean(quickEditRate) && isPending && pendingAction?.id === quickEditRate?.id
+
+    const openQuickEdit = (rate: CostRateRow) => {
+        setQuickEditRate(rate)
+        setQuickEditValue(rate.current_value)
+        setQuickEditSource(rate.source ?? '')
+        setQuickEditError(null)
+    }
+
     const openAdvancedDraft = (rate: CostRateRow) => {
         setQuickEditRate(null)
-        setQuickEditIsMobile(false)
         setSaveError(null)
         const nextDraft = rowToDraft(rate)
         const parsed = Number(quickEditValue)
@@ -1151,7 +1129,6 @@ export default function RatesClient({
                 ? { ...r, current_value: newValue, previous_value: r.current_value, source: newSource.trim() || r.source, updated_at: new Date().toISOString() }
                 : r))
             setQuickEditRate(null)
-            setQuickEditIsMobile(false)
             toast.success(tx('Rate updated.'))
             return
         }
@@ -1196,7 +1173,6 @@ export default function RatesClient({
                 }
                 setQuickEditError(null)
                 setQuickEditRate(null)
-                setQuickEditIsMobile(false)
                 if (result.syncedQualityCount) {
                     toast.success(tx(`Rate saved and updated in ${result.syncedQualityCount} Saved ${result.syncedQualityCount === 1 ? 'Quality' : 'Qualities'}. Existing costing snapshots were not changed.`))
                 } else {
@@ -1863,51 +1839,21 @@ export default function RatesClient({
                                                                 </Button>
                                                             )}
                                                             {!archived && (
-                                                                <QuickRateEditPopover
-                                                                    rate={rate}
-                                                                    isOpen={quickEditRate?.id === rate.id}
-                                                                    onOpenChange={open => {
-                                                                        if (open) {
-                                                                            setQuickEditIsMobile(false)
-                                                                            setQuickEditRate(rate)
-                                                                            setQuickEditValue(rate.current_value)
-                                                                            setQuickEditSource(rate.source ?? '')
-                                                                            setQuickEditError(null)
-                                                                        } else {
-                                                                            setQuickEditRate(null)
-                                                                            setQuickEditIsMobile(false)
-                                                                        }
+                                                                <Button
+                                                                    data-ratebook-field="quickEditAction"
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    disabled={isPending}
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation()
+                                                                        openQuickEdit(rate)
                                                                     }}
-                                                                    value={quickEditRate?.id === rate.id ? quickEditValue : rate.current_value}
-                                                                    onChangeValue={setQuickEditValue}
-                                                                    source={quickEditRate?.id === rate.id ? quickEditSource : (rate.source ?? '')}
-                                                                    onChangeSource={setQuickEditSource}
-                                                                    error={quickEditRate?.id === rate.id ? quickEditError : null}
-                                                                    isPending={isPending && pendingAction?.id === rate.id}
-                                                                    onSave={handleQuickSave}
-                                                                    onOpenAdvanced={openAdvancedDraft}
-                                                                    trigger={
-                                                                        <Button
-                                                                            data-ratebook-field="quickEditAction"
-                                                                            variant="outline"
-                                                                            size="sm"
-                                                                            disabled={isPending}
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation()
-                                                                                setQuickEditIsMobile(false)
-                                                                                setQuickEditRate(rate)
-                                                                                setQuickEditValue(rate.current_value)
-                                                                                setQuickEditSource(rate.source ?? '')
-                                                                                setQuickEditError(null)
-                                                                            }}
-                                                                            aria-label={`Edit rate for ${rate.name}`}
-                                                                            className="h-8 w-full cursor-pointer justify-center rounded-full border-hairline bg-surface px-3 text-xs font-semibold text-ink shadow-none hover:border-hairline-strong hover:bg-surface-soft hover:text-ink"
-                                                                        >
-                                                                            <Pencil className="h-3.5 w-3.5" />
-                                                                            <span>{tx('Edit rate')}</span>
-                                                                        </Button>
-                                                                    }
-                                                                />
+                                                                    aria-label={`Edit rate for ${rate.name}`}
+                                                                    className="h-8 w-full cursor-pointer justify-center rounded-full border-hairline bg-surface px-3 text-xs font-semibold text-ink shadow-none hover:border-hairline-strong hover:bg-surface-soft hover:text-ink"
+                                                                >
+                                                                    <Pencil className="h-3.5 w-3.5" />
+                                                                    <span>{tx('Edit rate')}</span>
+                                                                </Button>
                                                             )}
                                                         </div>
                                                         <DropdownMenu>
@@ -2016,48 +1962,18 @@ export default function RatesClient({
                                                     </Button>
                                                 )}
                                                 {!archived && (
-                                                    <QuickRateEditPopover
-                                                        rate={rate}
-                                                        isOpen={quickEditRate?.id === rate.id && quickEditIsMobile}
-                                                        onOpenChange={open => {
-                                                            if (open) {
-                                                                setQuickEditIsMobile(true)
-                                                                setQuickEditRate(rate)
-                                                                setQuickEditValue(rate.current_value)
-                                                                setQuickEditSource(rate.source ?? '')
-                                                                setQuickEditError(null)
-                                                            } else {
-                                                                setQuickEditRate(null)
-                                                                setQuickEditIsMobile(false)
-                                                            }
+                                                    <Button
+                                                        data-ratebook-field="quickEditAction"
+                                                        variant="outline"
+                                                        disabled={isPending}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            openQuickEdit(rate)
                                                         }}
-                                                        value={quickEditRate?.id === rate.id ? quickEditValue : rate.current_value}
-                                                        onChangeValue={setQuickEditValue}
-                                                        source={quickEditRate?.id === rate.id ? quickEditSource : (rate.source ?? '')}
-                                                        onChangeSource={setQuickEditSource}
-                                                        error={quickEditRate?.id === rate.id ? quickEditError : null}
-                                                        isPending={isPending && pendingAction?.id === rate.id}
-                                                        onSave={handleQuickSave}
-                                                        onOpenAdvanced={openAdvancedDraft}
-                                                        trigger={
-                                                            <Button
-                                                                data-ratebook-field="quickEditAction"
-                                                                variant="outline"
-                                                                disabled={isPending}
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation()
-                                                                    setQuickEditIsMobile(true)
-                                                                    setQuickEditRate(rate)
-                                                                    setQuickEditValue(rate.current_value)
-                                                                    setQuickEditSource(rate.source ?? '')
-                                                                    setQuickEditError(null)
-                                                                }}
-                                                                className="h-10 min-w-0 flex-1 cursor-pointer rounded-xl border-hairline bg-surface px-3 text-sm text-ink shadow-none hover:border-hairline-strong hover:bg-surface-soft hover:text-ink"
-                                                            >
-                                                                <Pencil className="h-4 w-4" /> <span className="truncate">{tx('Edit rate')}</span>
-                                                            </Button>
-                                                        }
-                                                    />
+                                                        className="h-10 min-w-0 flex-1 cursor-pointer rounded-xl border-hairline bg-surface px-3 text-sm text-ink shadow-none hover:border-hairline-strong hover:bg-surface-soft hover:text-ink"
+                                                    >
+                                                        <Pencil className="h-4 w-4" /> <span className="truncate">{tx('Edit rate')}</span>
+                                                    </Button>
                                                 )}
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger asChild>
@@ -2152,13 +2068,13 @@ export default function RatesClient({
                 </DialogContent>
             </Dialog>
 
-            <Sheet open={Boolean(draft)} onOpenChange={open => { if (!open && !isPending) { setDraft(null); setSaveError(null) } }}>
-                    <SheetContent
-                        data-ratebook-field="rateDrawerFields"
-                        className="w-full overflow-y-auto sm:max-w-lg"
-                    >
-                    <SheetHeader className="border-b border-hairline px-6 py-5"><SheetTitle className="text-xl font-black">{tx(draft?.id ? `Change ${draft.name}` : 'Add Yarn Rate')}</SheetTitle><SheetDescription>{tx('Set the current rate used by matching Saved Quality layers.')}</SheetDescription></SheetHeader>
-                    {draft && <div data-ratebook-field="rateDrawerFields" className="space-y-5 px-6 py-2">
+            <Dialog open={Boolean(draft)} onOpenChange={open => { if (!open && !isPending) { setDraft(null); setSaveError(null) } }}>
+                <DialogContent data-ratebook-field="rateDrawerFields" className="sm:max-w-lg">
+                    <DialogHeader className="pr-9">
+                        <DialogTitle>{tx(draft?.id ? `Change ${draft.name}` : 'Add Yarn Rate')}</DialogTitle>
+                        <DialogDescription>{tx('Set the current rate used by matching Saved Quality layers.')}</DialogDescription>
+                    </DialogHeader>
+                    {draft && <div className="space-y-5">
                         <div role="status" aria-live="polite" className="flex gap-3 rounded-lg border border-info/25 bg-info-soft p-4 text-info"><Info className="mt-0.5 h-5 w-5 shrink-0" /><div><p className="text-sm font-bold">{draft.id
                             ? draftSavedQualityCount === 0
                                 ? t('common.rate_update_no_saved_quality_summary')
@@ -2175,10 +2091,31 @@ export default function RatesClient({
                         <div className="space-y-1.5"><Label>Notes</Label><Textarea value={draftHasFabricUsage ? getCostRateDisplayNotes(draftRate ?? { notes: draft.notes ?? null, fabric_names: [] }) ?? draft.notes : draft.notes} onChange={event => updateDraft('notes', event.target.value)} placeholder="Why this rate changed or how it should be used" maxLength={500} disabled={draftHasFabricUsage} />{draftHasFabricUsage ? <p className="text-xs leading-relaxed text-subtle">Automatically lists every saved fabric that currently uses this yarn.</p> : <p className="text-right text-xs text-subtle">{draft.notes?.length ?? 0}/500</p>}</div>
                         <div className="space-y-1.5"><Label>Review every</Label><select value={draft.reviewIntervalDays} onChange={event => updateDraft('reviewIntervalDays', Number(event.target.value))} className="h-10 w-full rounded-md border border-hairline bg-surface px-3 text-sm"><option value="30">30 days</option><option value="60">60 days</option><option value="90">3 months</option><option value="180">6 months</option><option value="365">12 months</option></select></div>
                     </div>}
-                    <SheetFooter className="border-t border-hairline p-6 sm:flex-row"><Button variant="outline" onClick={() => setDraft(null)} className="flex-1" disabled={isPending}>{tx('Cancel')}</Button><Button onClick={handleSave} disabled={isPending || !draft?.name.trim()} aria-describedby={!draft?.name.trim() ? 'cost-rate-save-hint' : undefined} className="flex-1 rounded-xl bg-loom font-medium text-white shadow-xs hover:bg-loom-elevated hover:text-white">{isPending && <Loader2 className="h-4 w-4 animate-spin" />} {isPending ? tx('Saving…') : tx('Save current rate')}</Button></SheetFooter>
-                    {draft && !draft.name.trim() && <p id="cost-rate-save-hint" className="px-6 pb-5 text-xs font-medium text-warning">{tx('Enter a yarn name before saving this rate.')}</p>}
-                </SheetContent>
-            </Sheet>
+                    {draft && !draft.name.trim() && <p id="cost-rate-save-hint" className="text-xs font-medium text-warning">{tx('Enter a yarn name before saving this rate.')}</p>}
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setDraft(null)} disabled={isPending}>{tx('Cancel')}</Button>
+                        <Button onClick={handleSave} disabled={isPending || !draft?.name.trim()} aria-describedby={!draft?.name.trim() ? 'cost-rate-save-hint' : undefined}>{isPending && <Loader2 className="h-4 w-4 animate-spin" />} {isPending ? tx('Saving…') : tx('Save current rate')}</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <QuickRateEditDialog
+                rate={quickEditRate}
+                onOpenChange={open => {
+                    if (!open && !quickEditPending) {
+                        setQuickEditRate(null)
+                        setQuickEditError(null)
+                    }
+                }}
+                value={quickEditValue}
+                onChangeValue={setQuickEditValue}
+                source={quickEditSource}
+                onChangeSource={setQuickEditSource}
+                error={quickEditError}
+                isPending={quickEditPending}
+                onSave={handleQuickSave}
+                onOpenAdvanced={openAdvancedDraft}
+            />
 
             <Dialog open={Boolean(reviewRate)} onOpenChange={open => { if (!open && !isPending) { setReviewRate(null); setReviewError(null) } }}>
                 <DialogContent className="sm:max-w-md">
