@@ -4,7 +4,7 @@ import vm from 'node:vm'
 import { describe, expect, it } from 'vitest'
 import { buildAppIntroPrePaintScript, buildIntroPrePaintScript, INTRO_ATTRIBUTE, INTRO_LEAVING_ATTRIBUTE } from '../lib/intro/intro-policy'
 import { INTRO_TELEMETRY_PATH } from '../lib/intro/intro-telemetry'
-import { readStartupIntroPreference, saveStartupIntroPreference, STARTUP_INTRO_PREFERENCE_KEY, STARTUP_INTRO_SEEN_KEY } from '../lib/intro/startup-preference'
+import { DEFAULT_STARTUP_INTRO_PREFERENCE, readStartupIntroPreference, saveStartupIntroPreference, STARTUP_INTRO_PREFERENCE_KEY, STARTUP_INTRO_SEEN_KEY } from '../lib/intro/startup-preference'
 import { containedImageRect, inkRect, parseObjectPosition } from '../lib/intro/target-geometry'
 import { BINDING, buildWeaveMask, FIGURE, LOGO_INK_BOX, LOGO_SOURCE } from '../lib/intro/weave-mask'
 import {
@@ -364,7 +364,7 @@ describe('woven intro playback policy (pre-paint script)', () => {
         expect(runPolicy('app-login', { search: '?intro=1' }).plays).toBe(true)
     })
 
-    it('plays on the first eligible launch of the installed app, but not in a browser tab or after moving inside the app', () => {
+    it('plays when the installed app opens, but not in a browser tab or after moving inside the app', () => {
         expect(runPolicy('app-login').plays).toBe(false)
         expect(runPolicy('app-login', { media: STANDALONE }).plays).toBe(true)
         expect(runPolicy('app-login', { media: STANDALONE, navType: 'reload' }).plays).toBe(true)
@@ -372,9 +372,20 @@ describe('woven intro playback policy (pre-paint script)', () => {
         expect(runPolicy('app-login', { media: STANDALONE, referrer: 'https://weavly.example/owner/estimator' }).plays).toBe(false)
     })
 
-    it('remembers a completed or explicitly skipped installed intro and goes straight to login next time', () => {
+    it('plays on every launch by default, even after it has been watched or skipped', () => {
         for (const finish of ['complete', 'skip'] as const) {
             const storage = new Map<string, string>()
+            const first = runPolicy('app-login', { media: STANDALONE, storage })
+            if (finish === 'skip') first.handle?.abort(true)
+            else first.handle?.markSeen()
+            expect(storage.get(STARTUP_INTRO_SEEN_KEY)).toBe('1')
+            expect(runPolicy('app-login', { media: STANDALONE, storage, navType: 'reload' }).plays).toBe(true)
+        }
+    })
+
+    it('with first launch only chosen, remembers a completed or explicitly skipped intro and goes straight to login next time', () => {
+        for (const finish of ['complete', 'skip'] as const) {
+            const storage = new Map<string, string>([[STARTUP_INTRO_PREFERENCE_KEY, 'first-launch']])
             const first = runPolicy('app-login', { media: STANDALONE, storage })
             expect(first.plays).toBe(true)
             expect(storage.has(STARTUP_INTRO_SEEN_KEY)).toBe(false)
@@ -522,17 +533,25 @@ describe('woven intro playback policy (pre-paint script)', () => {
 })
 
 describe('device startup preference storage', () => {
-    it('has a first-launch-only default and stores explicit choices without changing completion history', () => {
+    it('has an every-launch default and stores explicit choices without changing completion history', () => {
         const values = new Map<string, string>([[STARTUP_INTRO_SEEN_KEY, '1']])
         const storage = { getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => { values.set(key, value) } }
-        expect(readStartupIntroPreference(storage)).toBe('first-launch')
+        expect(readStartupIntroPreference(storage)).toBe('always')
         for (const value of ['always', 'never', 'first-launch'] as const) {
             expect(saveStartupIntroPreference(storage, value)).toBe(true)
             expect(readStartupIntroPreference(storage)).toBe(value)
             expect(values.get(STARTUP_INTRO_SEEN_KEY)).toBe('1')
         }
         values.set(STARTUP_INTRO_PREFERENCE_KEY, 'invalid')
-        expect(readStartupIntroPreference(storage)).toBe('first-launch')
+        expect(readStartupIntroPreference(storage)).toBe('always')
+    })
+
+    it('shows the same default in Settings as the launch policy uses', () => {
+        expect(DEFAULT_STARTUP_INTRO_PREFERENCE).toBe('always')
+        const settings = read('components/settings/plan-aware/plan-aware-settings-view.tsx')
+        expect(settings).toContain('preference ?? DEFAULT_STARTUP_INTRO_PREFERENCE')
+        expect(settings).toContain('(): StartupIntroPreference => DEFAULT_STARTUP_INTRO_PREFERENCE')
+        expect(settings).not.toContain("?? 'first-launch'")
     })
 
     it('reports storage failures instead of pretending a preference was saved', () => {

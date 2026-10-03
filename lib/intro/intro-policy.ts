@@ -10,9 +10,9 @@ import { STARTUP_INTRO_PREFERENCE_KEY, STARTUP_INTRO_PROBE_KEY, STARTUP_INTRO_SE
  * Can always be skipped:
  * - landing:   every full load of `/` (including reloads), unless it is a
  *              #hash deep link or a navigation from another Weavly page
- * - app-login: the first launch of the installed app on this device. Settings
- *              can opt into every launch or switch it off. Never plays when
- *              arriving from inside the app (e.g. after logout).
+ * - app-login: every launch of the installed app. Settings can limit it to
+ *              the first launch on this device or switch it off. Never plays
+ *              when arriving from inside the app (e.g. after logout).
  * Never plays with reduced motion, Save-Data, no WebGL2, or when returning via
  * back/forward. `?intro=1` forces it (demos/QA); `?intro=0` suppresses it.
  *
@@ -70,7 +70,7 @@ if(surface==="landing"&&location.hash)return;
 if(surface==="app-login"&&!(mq("(display-mode: standalone)")||mq("(display-mode: minimal-ui)")||mq("(display-mode: fullscreen)")||navigator.standalone===true))return;
 if(surface==="app-login"){
 var storage=w.localStorage,pref=storage.getItem(${JSON.stringify(STARTUP_INTRO_PREFERENCE_KEY)}),seen=storage.getItem(${JSON.stringify(STARTUP_INTRO_SEEN_KEY)});
-if(pref==="never"||(pref!=="always"&&seen==="1"))return;
+if(pref==="never"||(pref==="first-launch"&&seen==="1"))return;
 storage.setItem(${JSON.stringify(STARTUP_INTRO_PROBE_KEY)},"1");storage.removeItem(${JSON.stringify(STARTUP_INTRO_PROBE_KEY)});
 }
 }
