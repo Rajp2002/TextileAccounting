@@ -5692,7 +5692,7 @@ export default function EstimatorClient({
                                 </p>
                             )}
                             <p className="text-[11px] font-medium leading-relaxed text-[var(--color-muted)]">
-                                {freeMode ? tx('Calculate & save uses one monthly costing and stores a fixed snapshot. It does not create a Saved Quality or Rate Book entry.') : sourceQuoteId
+                                {freeMode ? `${tx('Calculate & save uses one monthly costing and stores a fixed snapshot. It does not create a Saved Quality or Rate Book entry.')} ${freeText(language, 'calculatePolicy')}` : sourceQuoteId
                                     ? tx('Save New Version creates a new immutable costing snapshot. Earlier versions keep their original economics.')
                                     : tx('Save Costing creates the reusable quality and its first immutable costing version.')}
                             </p>

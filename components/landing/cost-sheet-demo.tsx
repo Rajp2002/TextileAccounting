@@ -3,8 +3,8 @@
 import { useEffect, useState, type CSSProperties } from 'react'
 import { cn } from '@/lib/utils'
 import s from './landing.module.css'
-import { formatCount, formatRupees, formatRupeesWhole, SAMPLE_QUALITY, SAMPLE_START, type SampleInputs } from './sample-format'
-import { useSampleCosting } from './sample-costing-context'
+import { formatCount, formatRupees, formatRupeesWhole, SAMPLE_QUALITY, SAMPLE_START, type SampleInputs, type SampleResult } from './sample-format'
+import { useSampleCosting, type SampleEngineState } from './sample-costing-context'
 
 type Control = {
     key: keyof SampleInputs
@@ -60,22 +60,36 @@ function deltaSentence(costDelta: number, marginChanged: boolean, price: string)
         : `Cost down ${perMetre} a metre. That is ${order} of room across ${quantity}.`
 }
 
+/**
+ * What the sheet may show. Without money for the current controls it shows
+ * the starting money, labelled as the example baseline, never as their result.
+ */
+export function sampleDisplay(result: SampleResult | null, start: SampleResult, engine: SampleEngineState) {
+    if (result) return { shown: result, baseline: false, status: null }
+    return { shown: start, baseline: true, status: engine === 'error' ? 'error' as const : 'loading' as const }
+}
+
 export function CostSheetDemo() {
-    const { inputs, result, start, prepare, setInput, reset } = useSampleCosting()
+    const { inputs, result: current, start, engine, prepare, retry, setInput, reset } = useSampleCosting()
+    const { shown: result, baseline, status } = sampleDisplay(current, start, engine)
     const costDelta = round2(result.productionCostPerM - start.productionCostPerM)
     const marginChanged = inputs.marginPct !== SAMPLE_START.marginPct
     const changed = CONTROLS.some((c) => inputs[c.key] !== SAMPLE_START[c.key])
-    const sentence = deltaSentence(costDelta, marginChanged, formatRupees(result.suggestedPricePerM))
+    const sentence = status === 'error'
+        ? 'The calculation did not load, so the figures above are the starting example, not your changed rates.'
+        : status === 'loading'
+            ? 'Calculating your changed rates…'
+            : deltaSentence(costDelta, marginChanged, formatRupees(result.suggestedPricePerM))
 
     // Announce the outcome once the visitor pauses, not on every slider step.
     const [announcement, setAnnouncement] = useState('')
     useEffect(() => {
-        if (!changed) return
+        if (!changed || baseline) return
         const timer = window.setTimeout(() => {
             setAnnouncement(`Production cost ${formatRupees(result.productionCostPerM)} per metre. ${sentence}`)
         }, 700)
         return () => window.clearTimeout(timer)
-    }, [changed, result.productionCostPerM, sentence])
+    }, [changed, baseline, result.productionCostPerM, sentence])
 
     return (
         <section
@@ -97,7 +111,8 @@ export function CostSheetDemo() {
                 </p>
             </header>
 
-            <div className="px-5 pt-5 sm:px-6">
+            <div className={cn('px-5 pt-5 sm:px-6', baseline && 'opacity-60')} aria-busy={status === 'loading' || undefined}>
+                {baseline && <p className={cn(s.label, 'mb-3 text-[color:var(--lp-muted)]')}>Example baseline · before your change</p>}
                 <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-[1.35fr_1fr_1fr]">
                     <div className="col-span-2 sm:col-span-1">
                         <dt className="text-[13px] font-medium text-[color:var(--lp-muted)]">Production cost / m</dt>
@@ -178,12 +193,21 @@ export function CostSheetDemo() {
             </fieldset>
 
             <div className="border-t border-[color:var(--lp-line)] px-5 py-4 sm:px-6">
-                <p className={cn('text-[14px] leading-6', costDelta > 0.004 ? 'font-semibold text-[color:var(--lp-saffron-ink)]' : 'text-[color:var(--lp-body)]')}>
+                <p role={status === 'error' ? 'alert' : undefined} className={cn('text-[14px] leading-6', costDelta > 0.004 || status === 'error' ? 'font-semibold text-[color:var(--lp-saffron-ink)]' : 'text-[color:var(--lp-body)]')}>
                     {sentence}
                 </p>
+                {status === 'error' && (
+                    <button
+                        type="button"
+                        onClick={retry}
+                        className="mt-2 min-h-[44px] rounded-md text-[14px] font-semibold text-[color:var(--lp-ink)] underline decoration-[color:var(--lp-line-strong)] underline-offset-4"
+                    >
+                        Try the calculation again
+                    </button>
+                )}
                 <p className="mt-2 text-[12px] leading-5 text-[color:var(--lp-muted)]">
-                    Example inputs, not market rates. Calculated with Weavly&rsquo;s own costing engine; profit at this price on {formatCount(SAMPLE_QUALITY.orderQuantityM)} m is{' '}
-                    <span className={s.figure}>{result.orderProfit === null ? '—' : formatRupeesWhole(result.orderProfit)}</span>.
+                    Illustrative example rates, not market prices. This example uses none of your Free costings. Calculated with Weavly&rsquo;s own costing engine; profit at this price on {formatCount(SAMPLE_QUALITY.orderQuantityM)} m is{' '}
+                    <span className={s.figure}>{baseline || result.orderProfit === null ? '—' : formatRupeesWhole(result.orderProfit)}</span>.
                 </p>
                 <p className="sr-only" aria-live="polite">{announcement}</p>
             </div>

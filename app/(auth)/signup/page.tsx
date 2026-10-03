@@ -133,7 +133,8 @@ function SignupForm() {
                 // redirect in progress — don't reset loading state
                 return
             }
-            toast.error('Something went wrong. Your account was not created. Please try again.')
+            // A lost response can follow a created account, so never claim none exists.
+            toast.error(freeText(language, 'signupUncertain'))
             setLoading(false)
         }
     }
@@ -381,12 +382,12 @@ function SignupForm() {
                     {loading ? (
                         <>
                             <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                            Creating factory...
+                            {selectedPlan === 'free' ? freeText(language, 'creatingFreeAccount') : 'Creating factory...'}
                         </>
                     ) : (
                         <span className="flex items-center justify-center gap-2">
                             <Building2 className="h-4 w-4" />
-                            Create factory
+                            {selectedPlan === 'free' ? freeText(language, 'createFreeAccount') : 'Create factory'}
                             <ArrowRight className="h-4 w-4" />
                         </span>
                     )}
