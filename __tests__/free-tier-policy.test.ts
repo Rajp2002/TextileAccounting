@@ -58,8 +58,20 @@ describe('India monthly quota window reference', () => {
     expect(migration).toContain("period_unit, receipt_retention_days")
     expect(migration).toContain("'month', receipt_retention_days")
     expect(migration).toContain("date_trunc('month', v_now AT TIME ZONE v_policy.time_zone)")
+    // Historical text: this UTC month arithmetic stored an early period_end.
     expect(migration).toContain("v_start + interval '1 month'")
     expect(migration).toContain('v_policy.monthly_limit')
     expect(migration).toContain("date_trunc('month',now() AT TIME ZONE 'Asia/Kolkata')")
+  })
+  it('replaces the stored month end with the India-time calendar month; behavior is proven in free-monthly-period-end.dbtest.ts', () => {
+    const fix = readFileSync(join(process.cwd(), 'supabase/migrations/20261004090000_free_monthly_period_end_local_month.sql'), 'utf8')
+    const debit = fix.slice(fix.indexOf('CREATE OR REPLACE FUNCTION public.commit_free_calculation'))
+    expect(debit).toContain('public.free_local_month_end(v_start, v_policy.time_zone)')
+    expect(debit).not.toContain("v_start + interval '1 month'")
+    expect(fix).toContain("(date_trunc('month', p_period_start AT TIME ZONE p_time_zone) + interval '1 month') AT TIME ZONE p_time_zone")
+    expect(fix).toContain("AND policy.period_unit = 'month'")
+    // The fix never touches the counts that would refill an allowance.
+    const backfill = fix.slice(fix.indexOf('UPDATE public.free_monthly_usage AS usage'))
+    expect(backfill.slice(backfill.indexOf('SET '), backfill.indexOf('\nFROM'))).toBe('SET period_end = public.free_local_month_end(usage.period_start, policy.time_zone)')
   })
 })
