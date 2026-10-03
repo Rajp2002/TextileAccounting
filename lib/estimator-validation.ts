@@ -23,7 +23,7 @@ export type EstimatorValidationResult =
   | { valid: true; issues: []; warnings?: EstimatorValidationIssue[] }
   | { valid: false; issues: EstimatorValidationIssue[]; warnings?: EstimatorValidationIssue[] }
 
-export type EstimatorReadinessStatus = 'blocked' | 'warning_ack_required' | 'ready'
+export type EstimatorReadinessStatus = 'blocked' | 'warning_ack_required' | 'calculation_required' | 'ready'
 
 export type EstimatorReadinessResult = {
   status: EstimatorReadinessStatus
@@ -732,17 +732,24 @@ export function getEstimatorReadiness(input: {
   result?: CostingResultSnapshot | null
   totals?: EstimatorV3Totals | null
   warningsAcknowledged?: boolean
+  /** Metered drafts have input validation, but no result to validate yet. */
+  awaitingCalculation?: boolean
 }): EstimatorReadinessResult {
   const inputIssues = input.validation.valid ? [] : [...input.validation.issues]
   const warnings = input.validation.warnings ? [...input.validation.warnings] : []
-  const resultValidation = validateCostingResultBoundary(input.result, input.totals)
+  const resultValidation = input.awaitingCalculation
+    ? { valid: true as const, issues: [] }
+    : validateCostingResultBoundary(input.result, input.totals)
   const issues = [...inputIssues, ...(resultValidation.valid ? [] : resultValidation.issues)]
 
   if (issues.length > 0) {
     return { status: 'blocked', canDisplayMoney: false, canPersist: false, issues, warnings }
   }
   if (warnings.length > 0 && input.warningsAcknowledged === false) {
-    return { status: 'warning_ack_required', canDisplayMoney: true, canPersist: false, issues: [], warnings }
+    return { status: 'warning_ack_required', canDisplayMoney: !input.awaitingCalculation, canPersist: false, issues: [], warnings }
+  }
+  if (input.awaitingCalculation) {
+    return { status: 'calculation_required', canDisplayMoney: false, canPersist: false, issues: [], warnings }
   }
   return { status: 'ready', canDisplayMoney: true, canPersist: true, issues: [], warnings }
 }

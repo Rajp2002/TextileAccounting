@@ -1,8 +1,10 @@
-import {freeContext} from '@/lib/free-service'
+import {freeContext,getSavedFreeCosting} from '@/lib/free-service'
 import FreeClient from './FreeClient'
 export const dynamic='force-dynamic'
 export const metadata={title:'Weavly Free — Costing',robots:{index:false,follow:false}}
-export default async function FreePage(){
+export default async function FreePage({searchParams}:{searchParams:Promise<{costing?:string}>}){
+ const {costing}=await searchParams
+ const initialFreeCosting=costing?await getSavedFreeCosting(costing):undefined
  const {user,profile,org}=await freeContext({allowInactive:true})
- return <FreeClient userMetadata={{ tour_preferences: user.user_metadata?.tour_preferences }} userId={user.id} orgId={profile.org_id} organizationName={org.name} tutorialDismissed={user.user_metadata?.cost_estimate_tutorial_dismissed === true}/>
+ return <FreeClient key={initialFreeCosting?.id ?? "new"} initialFreeCosting={initialFreeCosting} userMetadata={{ tour_preferences: user.user_metadata?.tour_preferences }} userId={user.id} orgId={profile.org_id} organizationName={org.name} tutorialDismissed={user.user_metadata?.cost_estimate_tutorial_dismissed === true}/>
 }

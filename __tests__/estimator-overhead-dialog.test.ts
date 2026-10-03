@@ -44,7 +44,7 @@ describe('monthly overhead expense editor', () => {
         expect(estimator).toContain('const overheadReady =')
         expect(estimator).toContain('totals.overheadTotalMonthly > 0')
         expect(estimator).toContain('valid={overheadReady}')
-        expect(estimator).toContain('formatCalculatedMoney(costingResult.overheadPerM, overheadReady, \'/m\')')
+        expect(estimator).toContain('formatCalculatedMoney(activeOverheadPerM, overheadReady, \'/m\')')
         expect(estimator).toContain('Included in the production cost as the active factory-overhead rate.')
     })
 })

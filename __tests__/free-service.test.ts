@@ -64,3 +64,30 @@ describe('Free service response and authorization boundary',()=>{
   }finally{log.mockRestore();vi.unstubAllEnvs()}
  })
 })
+
+
+describe('Free recalculation service boundary',()=>{
+ it('routes a revision to the no-debit RPC and returns its stored receipt',async()=>{
+  const costingId='33333333-3333-4333-8333-333333333333', editWindow={revision:2}
+  mocks.rpc.mockResolvedValue({data:{result:{productionCostPerM:17},totals:{totalProductionCostPerM:17},quota:{used:2,remaining:0},savedCostingId:costingId,costingsUsed:0,editWindow}})
+  const saved=await calculateFreeSubmission({estimate:valid(),requestToken:token(),costingId,expectedRevision:1,label:'Revised'})
+  expect(mocks.rpc.mock.calls[0][0]).toBe('recalculate_free_saved_costing')
+  expect(mocks.rpc.mock.calls[0][1]).toMatchObject({p_costing_id:costingId,p_expected_revision:1,p_label:'Revised'})
+  expect(saved).toMatchObject({savedCostingId:costingId,costingsUsed:0,result:{productionCostPerM:17},editWindow})
+ })
+ it.each(['FREE_EDIT_WINDOW_EXPIRED','FREE_COSTING_CONFLICT'])('returns %s without falling back to a paid calculation',async code=>{
+  mocks.rpc.mockResolvedValue({error:{message:code}})
+  await expect(calculateFreeSubmission({estimate:valid(),requestToken:token(),costingId:org,expectedRevision:1})).rejects.toThrow(code)
+  expect(mocks.rpc).toHaveBeenCalledOnce()
+  expect((await freeError(new Error(code)).json()).code).toBe(code)
+ })
+ it.each(['lite','base'])('rejects Free revision requests after upgrading to %s',async tier=>{
+  mocks.access.mockResolvedValue({effectiveTier:tier})
+  await expect(calculateFreeSubmission({estimate:valid(),costingId:org,expectedRevision:1})).rejects.toThrow('FREE_ACCESS_DENIED')
+  expect(mocks.rpc).not.toHaveBeenCalled()
+ })
+ it('requires both the costing identity and revision',async()=>{
+  await expect(calculateFreeSubmission({estimate:valid(),requestToken:token(),costingId:org})).rejects.toThrow('FREE_INVALID_INPUT')
+  expect(mocks.rpc).not.toHaveBeenCalled()
+ })
+})

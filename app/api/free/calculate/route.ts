@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { calculateFreeSubmission, freeError } from '@/lib/free-service'
 import { freeJsonBody } from '@/lib/free-http'
-const submission = z.object({estimate:z.unknown(),label:z.string().trim().min(1).max(120).optional(),requestToken:z.string().max(3000).optional(),warningsAcknowledged:z.boolean().optional()}).strict()
+const submission = z.object({estimate:z.unknown(),label:z.string().trim().min(1).max(120).optional(),requestToken:z.string().max(3000).optional(),warningsAcknowledged:z.boolean().optional(),costingId:z.string().uuid().optional(),expectedRevision:z.number().int().positive().optional()}).strict().refine(value => !!value.costingId === (value.expectedRevision !== undefined))
 export async function POST(request: Request) {
   try {
     const parsed = submission.safeParse(await freeJsonBody(request))

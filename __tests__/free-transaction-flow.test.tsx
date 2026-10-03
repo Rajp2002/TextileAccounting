@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useFreeMeter } from '../hooks/use-free-meter'
 import { FreeTransactionRecovery } from '../components/estimator/FreeTransactionRecovery'
+import { FreeRecalculationWindow } from '../components/estimator/FreeRecalculationWindow'
 import { makeFreeEstimate } from '../lib/free-estimator-defaults'
 
 // The meter talks to the browser Supabase client only to watch sign-out.
@@ -30,7 +31,7 @@ const PERIOD = { periodStart: '2026-09-30T18:30:00.000Z', resetsAt: '2026-10-31T
 const status = (remaining: number, token: string | null = 'token-1', accountId = 'user-a') => ({
   status: 200,
   body: {
-    plan: 'free', accessState: 'active', estimationEnabled: true, tourEnabled: false, tourState: 'completed',
+    serverTime: new Date().toISOString(), plan: 'free', accessState: 'active', estimationEnabled: true, tourEnabled: false, tourState: 'completed',
     requestToken: token, demo: null,
     quota: { used: 2 - remaining, limit: 2, remaining, ...PERIOD },
     account: { id: accountId, name: 'Owner', email: 'owner@example.test', organizationName: 'Mill' },
@@ -41,7 +42,8 @@ const saved = (remaining: number, requestId = 'request-1') => ({
   body: {
     result: { productionCostPerM: 12.5 }, totals: { totalProductionCostPerM: 12.5 },
     quota: { used: 2 - remaining, limit: 2, remaining, ...PERIOD, replayed: false, requestId },
-    requestId, savedCostingId: requestId,
+    requestId, savedCostingId: requestId, costingsUsed: 1,
+    editWindow: {createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),serverTime:new Date().toISOString(),editExpiresAt:new Date(Date.now()+30*60_000).toISOString(),revision:1},
   },
 })
 const warning = { status: 200, body: { needsAcknowledgement: true, warningFields: ['ppi'] } }
@@ -123,6 +125,7 @@ beforeEach(() => {
 afterEach(async () => {
   await act(() => root?.unmount())
   root = null
+  vi.useRealTimers()
   vi.unstubAllGlobals()
   vi.restoreAllMocks()
 })
@@ -399,4 +402,59 @@ describe('F14 account change during the session', () => {
     expect(current.completed).toBeNull()
     expect(current.transaction).toEqual({ phase: 'editing' })
   })
+})
+
+
+describe('Free 30-minute revisions', () => {
+  it('recalculates the same saved entry even with no monthly allowance remaining', async () => {
+    const first=saved(0), revised={...saved(0,'request-2'),body:{...saved(0,'request-2').body,savedCostingId:'request-1',costingsUsed:0,editWindow:{...first.body.editWindow,revision:2}}}
+    statusReplies.push(status(1),status(1),status(0),status(0,'token-2'),status(0))
+    calculateReplies.push(first,revised)
+    await mount();await act(()=>current.submit())
+    await edit({profitPct:20});await act(()=>current.submit())
+    expect(calculateCalls()[1].body).toMatchObject({costingId:'request-1',expectedRevision:1,requestToken:'token-2'})
+    expect(current.completed?.id).toBe('request-1')
+    expect(current.completed?.costingsUsed).toBe(0)
+    expect(current.completed?.editWindow?.revision).toBe(2)
+    expect(current.completed?.editWindow?.editExpiresAt).toBe(first.body.editWindow.editExpiresAt)
+  })
+  it('refuses an expired revision without silently starting a metered creation', async () => {
+    const expired=saved(1);expired.body.editWindow.editExpiresAt=new Date(Date.now()-1000).toISOString()
+    calculateReplies.push(expired)
+    await mount();await act(()=>current.submit());await edit({profitPct:20})
+    await act(()=>current.submit())
+    expect(calculateCalls()).toHaveLength(1)
+    expect(current.transaction).toEqual({phase:'rejected',code:'FREE_EDIT_WINDOW_EXPIRED'})
+    expect(current.editRemainingMs).toBe(0)
+    const html=renderToStaticMarkup(<FreeRecalculationWindow remainingMs={current.editRemainingMs} onRecalculate={()=>{}} />)
+    expect(html).toContain('30-minute edit window ended')
+    expect(html).not.toContain('<button')
+  })
+  it('lets an explicit new costing use a fresh metered creation after reset', async () => {
+    calculateReplies.push(saved(1),saved(0,'request-2'))
+    await mount();await act(()=>current.submit());await act(()=>current.reset())
+    await act(()=>current.submit())
+    expect(calculateCalls()[1].body).not.toHaveProperty('costingId')
+    expect(current.completed?.id).toBe('request-2')
+  })
+  it('preserves the revision identity on an uncertain retry', async () => {
+    calculateReplies.push(saved(1),'network',saved(1))
+    await mount();await act(()=>current.submit());await edit({profitPct:20})
+    await act(()=>current.submit());await act(()=>current.retry())
+    expect(calculateCalls()[2].body).toEqual(calculateCalls()[1].body)
+    expect(calculateCalls()[2].body).toMatchObject({costingId:'request-1',expectedRevision:1})
+  })
+})
+
+
+it('automatically removes the Recalculate pill when the trusted countdown reaches zero', async () => {
+  vi.useFakeTimers({toFake:['Date','setInterval','clearInterval']})
+  const response=saved(1)
+  response.body.editWindow.editExpiresAt=new Date(Date.now()+3000).toISOString()
+  calculateReplies.push(response)
+  await mount();await act(()=>current.submit())
+  expect(renderToStaticMarkup(<FreeRecalculationWindow remainingMs={current.editRemainingMs} onRecalculate={()=>{}} />)).toContain('Recalculate')
+  await act(async()=>{vi.advanceTimersByTime(3000)})
+  expect(current.editRemainingMs).toBe(0)
+  expect(renderToStaticMarkup(<FreeRecalculationWindow remainingMs={current.editRemainingMs} onRecalculate={()=>{}} />)).not.toContain('<button')
 })

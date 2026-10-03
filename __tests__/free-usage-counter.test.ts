@@ -415,7 +415,7 @@ describe('Premium Free-Plan Usage Counter & Estimator Integration', () => {
       'lastSavedResult',
       'inputsChangedNotRecalculated',
       'changedSince',
-      'rerunUsesCosting',
+      'recalculate', 'recalculateSave', 'editTimeLeft', 'editWindowClosed', 'revisionNoCharge', 'revisionExpired', 'revisionConflict', 'recalculatedNoCharge', 'savedRevisionHint', 'freeCreationPolicy',
       'correctInputs',
       'reviewNoCharge',
       'openSavedCostings',

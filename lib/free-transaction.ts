@@ -1,4 +1,5 @@
 import type { CostingResultSnapshot, EstimateState, EstimatorV3Totals } from './estimator'
+import type { FreeEditWindow } from './free-costing-window'
 import type { EstimatorValidationResult } from './estimator-validation'
 
 /**
@@ -8,6 +9,8 @@ import type { EstimatorValidationResult } from './estimator-validation'
  */
 export type FreeAttempt = {
   estimate: EstimateState
+  costingId?: string
+  expectedRevision?: number
   label: string
   requestToken: string
   /** Account that owned the page when the attempt began. */
@@ -21,6 +24,7 @@ export type FreeReceiptQuota = {
   periodStart: string; resetsAt: string; policyVersion: number; replayed: boolean
 }
 export type FreeSaved = {
+  editWindow?: FreeEditWindow; costingsUsed?: number
   kind: 'saved'; requestId: string; savedCostingId: string
   result: CostingResultSnapshot; totals: EstimatorV3Totals; quota: FreeReceiptQuota
 }
@@ -50,7 +54,7 @@ export const FREE_EDITING: FreeTransaction = { phase: 'editing' }
 const NOT_DEBITED = new Set([
   'FREE_AUTH_REQUIRED', 'FREE_ACCESS_DENIED', 'FREE_ACCESS_INACTIVE', 'FREE_PROVISIONING_RETRY', 'FREE_PROVISIONING_PENDING',
   'FREE_THROTTLED', 'FREE_PAUSED', 'FREE_INVALID_INPUT', 'FREE_QUOTA_EXHAUSTED', 'FREE_REQUEST_CONFLICT',
-  'FREE_REQUEST_EXPIRED', 'FREE_REQUEST_INVALID_OR_EXPIRED',
+  'FREE_REQUEST_EXPIRED', 'FREE_REQUEST_INVALID_OR_EXPIRED', 'FREE_EDIT_WINDOW_EXPIRED', 'FREE_COSTING_CONFLICT',
 ])
 /** After an uncertain send, these still let a same-request replay answer. */
 const REPLAY_CAN_ANSWER = new Set(['FREE_THROTTLED', 'FREE_PAUSED', 'FREE_QUOTA_EXHAUSTED', 'FREE_PROVISIONING_RETRY'])
@@ -79,7 +83,7 @@ export function classifyFreeResponse(status: number, body: unknown): FreeSendOut
     if (body.paid === true && body.quota === null) return { kind: 'paid_result', result, totals }
     const quota = receiptQuota(body.quota)
     if (!quota || !isText(body.requestId) || !isText(body.savedCostingId)) return UNCERTAIN
-    return { kind: 'saved', requestId: body.requestId, savedCostingId: body.savedCostingId, result, totals, quota }
+    return { kind: 'saved', requestId: body.requestId, savedCostingId: body.savedCostingId, result, totals, quota, editWindow:body.editWindow as FreeEditWindow | undefined, costingsUsed:body.costingsUsed === 0 ? 0 : 1 }
   }
   const code = isObject(body) && isText(body.code) ? body.code : 'FREE_TEMPORARY_ERROR'
   return NOT_DEBITED.has(code) ? { kind: 'rejected', code } : { kind: 'uncertain', code }
@@ -131,7 +135,7 @@ export function releaseFreeAttempt(transaction: FreeTransaction): FreeTransactio
 }
 
 export function freeAttemptPayload(attempt: FreeAttempt) {
-  return { estimate: attempt.estimate, label: attempt.label, requestToken: attempt.requestToken, warningsAcknowledged: attempt.acknowledged }
+  return { estimate: attempt.estimate, label: attempt.label, requestToken: attempt.requestToken, warningsAcknowledged: attempt.acknowledged, ...(attempt.costingId ? {costingId:attempt.costingId,expectedRevision:attempt.expectedRevision} : {}) }
 }
 
 /**
