@@ -3,7 +3,16 @@ import { join } from 'node:path'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { AuthTransition } from '@/components/auth/auth-transition'
-import { AUTH_TRANSITION_ROUND_MS, holdForTransitionRound, transitionHoldMs } from '@/components/auth/auth-transition-timing'
+import {
+    AUTH_TRANSITION_ROUND_MS,
+    DEFAULT_PAGE_LOAD_MS,
+    expectedPageLoadMs,
+    holdForTransitionRound,
+    markAuthNavigation,
+    rememberPageLoadMs,
+    takeAuthNavigationMark,
+    transitionHoldMs,
+} from '@/components/auth/auth-transition-timing'
 import { LoomMark, SpoolMark } from '@/components/auth/thread-marks'
 import {
     clothRows,
@@ -24,6 +33,15 @@ import { gu } from '@/lib/i18n/locales/gu'
 import { hi } from '@/lib/i18n/locales/hi'
 
 const read = (path: string) => readFileSync(join(process.cwd(), path), 'utf8')
+
+function fakeStorage(initial: Record<string, string> = {}) {
+    const data = new Map(Object.entries(initial))
+    return {
+        getItem: (key: string) => data.get(key) ?? null,
+        setItem: (key: string, value: string) => void data.set(key, value),
+        removeItem: (key: string) => void data.delete(key),
+    }
+}
 
 describe('auth transition loom', () => {
     it('loops seamlessly: after the two-row take-up each pick lands on cloth of the same parity', () => {
@@ -132,6 +150,74 @@ describe('auth transition round', () => {
     })
 })
 
+describe('auth transition landing', () => {
+    it('starts the page change one page load before the round ends', () => {
+        expect(transitionHoldMs(1000, 1000, false, 600)).toBe(AUTH_TRANSITION_ROUND_MS - 600)
+        expect(transitionHoldMs(1000, 1500, false, 600)).toBe(AUTH_TRANSITION_ROUND_MS - 600 - 500)
+        expect(transitionHoldMs(1000, 1000 + AUTH_TRANSITION_ROUND_MS, false, 600)).toBe(0)
+        expect(transitionHoldMs(1000, 1000, false, AUTH_TRANSITION_ROUND_MS + 400)).toBe(0)
+        expect(transitionHoldMs(1000, 1000, true, 600)).toBe(0)
+    })
+
+    it('shows the next page the moment the round ends, and never later than the request allows', () => {
+        for (const sessionReadyAt of [150, 600, 1200, 1700, 3000]) {
+            for (const pageLoad of [200, 400, 800, 1200]) {
+                const hold = transitionHoldMs(0, sessionReadyAt, false, pageLoad)
+                const nextPageShownAt = sessionReadyAt + hold + pageLoad
+                // No idle tail after the round: only a slow session or page load pushes it later.
+                expect(nextPageShownAt).toBe(Math.max(sessionReadyAt + pageLoad, AUTH_TRANSITION_ROUND_MS))
+            }
+        }
+    })
+
+    it('expects a typical page load until this device has measured its own', () => {
+        expect(expectedPageLoadMs('sign-in', fakeStorage())).toBe(DEFAULT_PAGE_LOAD_MS['sign-in'])
+        expect(expectedPageLoadMs('sign-out', fakeStorage())).toBe(DEFAULT_PAGE_LOAD_MS['sign-out'])
+        // Without a browser (server render, tests) it is the typical figure too.
+        expect(expectedPageLoadMs('sign-in')).toBe(DEFAULT_PAGE_LOAD_MS['sign-in'])
+        expect(expectedPageLoadMs('sign-in', fakeStorage({ 'weavly:auth-page-load-ms': 'not json' })))
+            .toBe(DEFAULT_PAGE_LOAD_MS['sign-in'])
+    })
+
+    it('learns each destination apart and settles between measurements', () => {
+        const storage = fakeStorage()
+        rememberPageLoadMs('sign-in', 500, storage)
+        expect(expectedPageLoadMs('sign-in', storage)).toBe(500)
+        expect(expectedPageLoadMs('sign-out', storage)).toBe(DEFAULT_PAGE_LOAD_MS['sign-out'])
+
+        rememberPageLoadMs('sign-in', 700, storage)
+        expect(expectedPageLoadMs('sign-in', storage)).toBe(600)
+    })
+
+    it('keeps one cold start or a broken reading from shrinking the round', () => {
+        const storage = fakeStorage()
+        rememberPageLoadMs('sign-in', 60_000, storage)
+        expect(expectedPageLoadMs('sign-in', storage)).toBeLessThanOrEqual(AUTH_TRANSITION_ROUND_MS - 100)
+
+        const untouched = fakeStorage()
+        rememberPageLoadMs('sign-out', Number.NaN, untouched)
+        rememberPageLoadMs('sign-out', -5, untouched)
+        expect(expectedPageLoadMs('sign-out', untouched)).toBeGreaterThan(0)
+
+        const blocked = { getItem: () => { throw new Error('blocked') }, setItem: () => { throw new Error('blocked') }, removeItem: () => {} }
+        expect(() => rememberPageLoadMs('sign-in', 400, blocked)).not.toThrow()
+        expect(expectedPageLoadMs('sign-in', blocked)).toBe(DEFAULT_PAGE_LOAD_MS['sign-in'])
+    })
+
+    it('hands the navigation kind to the page it lands on, once, and only while fresh', () => {
+        const storage = fakeStorage()
+        markAuthNavigation('sign-out', 1_000, storage)
+        expect(takeAuthNavigationMark(2_000, storage)).toBe('sign-out')
+        expect(takeAuthNavigationMark(2_000, storage)).toBeNull()
+
+        markAuthNavigation('sign-in', 1_000, storage)
+        expect(takeAuthNavigationMark(1_000 + 60_000, storage)).toBeNull()
+
+        storage.setItem('weavly:auth-navigation', JSON.stringify({ kind: 'sign-up', at: 1_000 }))
+        expect(takeAuthNavigationMark(1_500, storage)).toBeNull()
+    })
+})
+
 describe('auth transition overlay', () => {
     it('renders nothing on the server, so it is safe in server HTML', () => {
         expect(renderToStaticMarkup(<AuthTransition open mode="sign-in" />)).toBe('')
@@ -166,7 +252,10 @@ describe('auth transition overlay', () => {
         const login = read('app/(auth)/login/login-form.tsx')
         const success = login.slice(login.indexOf('setIsRedirecting(true)'))
         expect(login.indexOf("if (result && 'error' in result)")).toBeLessThan(login.indexOf('setIsRedirecting(true)'))
-        expect(success.indexOf('await holdForTransitionRound(transitionStartedAt)'))
+        // The page change starts one measured page load before the round ends.
+        expect(success.indexOf("await holdForTransitionRound(transitionStartedAt, expectedPageLoadMs('sign-in'))"))
+            .toBeLessThan(success.indexOf('window.location.replace(result.redirectTo)'))
+        expect(success.indexOf("markAuthNavigation('sign-in')"))
             .toBeLessThan(success.indexOf('window.location.replace(result.redirectTo)'))
         expect(success).toContain('transitionHoldMs,')
     })
@@ -175,13 +264,15 @@ describe('auth transition overlay', () => {
         const logout = read('components/auth/logout-button.tsx')
         const flow = logout.slice(logout.indexOf('const signOutBehindTransition'), logout.indexOf('const handleLogout'))
         // The round starts counting before the request, and the request is not delayed by it.
-        expect(flow.indexOf('holdForTransitionRound(transitionStartedAt)')).toBeLessThan(flow.indexOf('await fetch(form.action'))
+        expect(flow.indexOf("holdForTransitionRound(transitionStartedAt, expectedPageLoadMs('sign-out'))"))
+            .toBeLessThan(flow.indexOf('await fetch(form.action'))
         expect(flow).toContain("method: 'POST'")
         expect(flow).toContain('body: new FormData(form)')
         expect(flow).toContain("redirect: 'manual'")
         expect(flow).toContain("signedOut = response.type === 'opaqueredirect'")
         expect(flow.indexOf('await roundFinished')).toBeGreaterThan(flow.indexOf('await fetch(form.action'))
         expect(flow.indexOf('await roundFinished')).toBeLessThan(flow.indexOf("window.location.replace('/login')"))
+        expect(flow.indexOf("markAuthNavigation('sign-out')")).toBeLessThan(flow.indexOf("window.location.replace('/login')"))
         // Anything unexpected falls back to the native form post.
         expect(flow.lastIndexOf('formRef.current?.submit()')).toBeGreaterThan(flow.indexOf("window.location.replace('/login')"))
     })
@@ -191,6 +282,15 @@ describe('auth transition overlay', () => {
         expect(reporter).toContain('const navigationStartedAt = trace.actionCompletedAt + transitionHoldMs')
         expect(reporter).toContain('dashboardReadyMs: observedAt - navigationStartedAt')
         expect(read('app/api/telemetry/sign-in/route.ts')).toContain('transition_hold_ms: sanitizeTimingMs(body.transitionHoldMs)')
+    })
+
+    it('measures how long the page it lands on takes to paint, on every page', () => {
+        const layout = read('app/layout.tsx')
+        expect(layout).toContain('<AuthPageLoadRecorder />')
+        const recorder = read('components/auth/auth-page-load-recorder.tsx')
+        expect(recorder).toContain('first-contentful-paint')
+        expect(recorder).toContain('rememberPageLoadMs(')
+        expect(recorder).toContain('takeAuthNavigationMark(')
     })
 
     it('keeps toasts from covering the handoff', () => {

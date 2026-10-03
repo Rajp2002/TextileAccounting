@@ -36,10 +36,11 @@ interface AuthTransitionProps {
 /**
  * Full-screen handoff shown while an account crosses the sign-in boundary.
  *
- * It only fills time the request already takes: it opens on submit and stays
- * up through the full-page navigation, and it never holds the redirect for the
- * animation. If the request fails it fades out so the form and its error are
- * back in reach.
+ * It opens on submit and stays up through the full-page navigation. Sign-in and
+ * log out leave for the next page one page load before the mark finishes its
+ * round (`holdForTransitionRound`), so the next page appears as the round ends
+ * without a still wait after it. If the request fails it fades out so the form
+ * and its error are back in reach.
  */
 export function AuthTransition({ open, mode, stage = 'working' }: AuthTransitionProps) {
     const { t } = useTranslation()

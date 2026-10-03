@@ -49,6 +49,7 @@ import Providers from "@/components/providers"
 import { Toaster } from "@/components/ui/sonner"
 import { SignInTimingReporter } from "@/components/telemetry/sign-in-timing-reporter"
 import { LogoutTimingReporter } from "@/components/telemetry/logout-timing-reporter"
+import { AuthPageLoadRecorder } from "@/components/auth/auth-page-load-recorder"
 import { AppIntroPrePaintScript } from "@/components/intro/intro-pre-paint-script"
 import { SentryReleaseScript } from "@/components/telemetry/sentry-release-script"
 
@@ -78,6 +79,7 @@ export default function RootLayout({
         </Providers>
         <SignInTimingReporter />
         <LogoutTimingReporter />
+        <AuthPageLoadRecorder />
         <Toaster />
       </body>
     </html>
