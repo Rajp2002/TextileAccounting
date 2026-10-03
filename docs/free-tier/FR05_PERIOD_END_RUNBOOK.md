@@ -2,7 +2,7 @@
 
 Migration: `supabase/migrations/20261004090000_free_monthly_period_end_local_month.sql`. It redefines `commit_free_calculation` so a new monthly row stores the India-time month end, adds `free_local_month_end(timestamptz, text)`, and backfills `period_end` on existing month-policy rows. It changes no `used`, `allowance`, `period_start`, `policy_version`, receipt, saved snapshot, grant, entitlement or retention schedule.
 
-**Not applied anywhere.** Applying it to production, including its backfill, is a separate approved step. Writing this file does not authorize it. Repository CLAUDE.md forbids `supabase db push` from an agent session.
+**Applied to production on 2026-10-04** at the owner's request. See [Production application record](#production-application-record) at the end. Any other target still needs its own approval.
 
 ## What was wrong
 
@@ -92,3 +92,27 @@ WHERE u.subject_id = m.subject_id::uuid AND u.period_start = m.period_start::tim
 ```
 
 Never lower `used`, reset a month or delete receipts or snapshots to reverse metadata. Keep the migration in history and correct forward if needed.
+
+## Production application record
+
+Project `vzhw…` (production), 2026-10-04, owner-requested after PR #181 merged.
+
+**Preflight** (read-only, 2026-10-03 19:21 UTC):
+- **Live function:** `commit_free_calculation` body MD5 `ad27102cf63262c7880d6a88370de63a`, identical to `20260912130854_free_monthly_allowance.sql`. Config `search_path=pg_catalog, public`, `TimeZone=UTC`, `SECURITY INVOKER`. EXECUTE granted to `service_role` and `postgres`.
+- **Policy:** rollout on version 2 (monthly, Asia/Kolkata, limit 2), estimation enabled. `weavly-free-retention` inactive.
+- **Rows to change:** none. The two usage rows were September 2026 (monthly, already correct) and one historical weekly row.
+- **Anomalies:** none.
+- **Rollback mapping:** empty.
+- **Fingerprints:** usage `69c9f9b9675fc930d2ecd4b56e0b947d`, 1 receipt, 1 snapshot, snapshots `2c2b3c58248f3a7e8ac264a61a8f7627`.
+
+**Apply:** the merged file was run in one transaction through the Supabase MCP `execute_sql` tool, with a `supabase_migrations.schema_migrations` row for version `20261004090000` (`free_monthly_period_end_local_month`). The MCP `apply_migration` tool was not used because it records the apply time as the version.
+
+**After:**
+- **Function:** body MD5 `a42770ec1630957f5f12592bb0b6d01f`, matching the merged file. Same config, security mode and grants. `free_local_month_end` has EXECUTE for `service_role` (and `postgres`) only, with `search_path=""`.
+- **Month ends:** `free_local_month_end` gives 31 Oct 18:30 UTC for October and 31 Mar 18:30 UTC for March. The current month ends 31 Oct 18:30 UTC.
+- **Backfill:** zero rows left to change.
+- **Fingerprints, receipts and snapshots:** unchanged.
+- **Retention:** still inactive.
+
+Not done: the post-apply synthetic Free calculation comparing `resetsAt` with `/api/free/status`. No Free costing has run in October yet.
+

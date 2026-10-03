@@ -131,7 +131,7 @@ Limits: the example fixture is not domain-reviewed (D02), so no reference or acc
 
 ## FR05: India-time period_end
 
-**Status:** prepared and proven in a disposable database. **Not applied anywhere.** Production application and backfill is a separate approved step: see `FR05_PERIOD_END_RUNBOOK.md`.
+**Status:** proven in a disposable database and **applied to production on 2026-10-04** at the owner's request. No rows needed backfilling, and the live function now matches the merged file. Evidence is in `FR05_PERIOD_END_RUNBOOK.md`, Production application record.
 
 | Fixture | Test | Result |
 | --- | --- | --- |
@@ -152,14 +152,14 @@ Limits: the example fixture is not domain-reviewed (D02), so no reference or acc
 
 | Required evidence | State |
 | --- | --- |
-| Target reads (FR00): applied function, policy, flags, signing key, retention job, cohort admission | blocked, no authorized access |
+| Target reads (FR00): applied function, policy, flags, signing key, retention job, cohort admission | partly done 2026-10-04: function, policy, estimation flag and retention job read during FR05. Signing key and cohort admission not read |
 | Browser traces: active upgrade, unknown recovery, account switch, sample failure | not run. QA Supabase does not resolve, so signed-in flows need a deployed candidate |
 | Actual internal and customer PDFs at zero allowance, EN/HI/GU | not run |
 | Phone widths, 200% zoom, screen reader, keyboard | not run |
 | F07 concurrent final-credit race on separate connections | not run in this sprint; existing `free-debit.dbtest.ts` covers sequential replay and exhaustion only |
 | `npm run build` (router, lazy import and generated types) | not run |
 | Domain sign-off on supported single-weft cases (D02) | not started |
-| FR05 application to the approved target | not approved |
+| FR05 application to the approved target | applied to production 2026-10-04; synthetic post-apply calculation not run |
 | Native GU/HI review of new strings | not done (the dictionary header calls it a release gate) |
 
 Residual risks to accept or hold: D01 canonical overbinding (unchanged), D02 domain scope (multi-weft untouched), D03 mounted-only continuity (no persistence, Back unguarded, paid autosave off in the wrapper), D06 collection (none added; `upgrade_started` entry point misattributed).
