@@ -8,6 +8,7 @@ import { ChevronDown, Download, User } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { useOwnerPlan } from '@/components/providers/owner-plan-provider'
+import { hasCapability } from '@/lib/subscription-access'
 import { useSettingsBootstrap } from '@/components/providers/settings-bootstrap-provider'
 import { PlanAwareSettingsView } from '@/components/settings/plan-aware/plan-aware-settings-view'
 import { getFactoryCostProfile } from '@/app/(dashboard)/owner/estimator/actions'
@@ -69,7 +70,8 @@ export default function SettingsPage() {
     })
     const { data: payrollCycleData } = useQuery({
         queryKey: ['base_payroll_cycle_config', userProfile?.org_id],
-        enabled: !!userProfile?.org_id,
+        // The action rejects tiers without production, and the card is Base-only.
+        enabled: !!userProfile?.org_id && hasCapability(tier, 'production'),
         queryFn: getBasePayrollCycleConfig,
         staleTime: 1000 * 60 * 5,
     })
