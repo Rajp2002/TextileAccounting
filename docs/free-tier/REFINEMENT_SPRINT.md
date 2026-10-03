@@ -163,3 +163,13 @@ Limits: the example fixture is not domain-reviewed (D02), so no reference or acc
 | Native GU/HI review of new strings | not done (the dictionary header calls it a release gate) |
 
 Residual risks to accept or hold: D01 canonical overbinding (unchanged), D02 domain scope (multi-weft untouched), D03 mounted-only continuity (no persistence, Back unguarded, paid autosave off in the wrapper), D06 collection (none added; `upgrade_started` entry point misattributed).
+
+## Review fixes after PR #181 (2026-10-04)
+
+A fresh review of the merged sprint found three gaps. All are fixed, each with a test that fails without the fix.
+
+- **Released attempts are kept.** "Edit inputs again" frees the page for a new calculation but keeps the possibly committed attempt in a separate list (`FreeUnreconciled` in `lib/free-transaction.ts`). The browser reads the request id from the token it already holds and looks it up through the existing owner-scoped `GET /api/free/costings` (newest page). A saved costing's id is its request id. The card reports checking, found (one costing used; balance refreshed), not found (absence is not proof) or check failed. The owner can stop tracking only after the history read succeeded. Tracking survives an in-place upgrade, counts as unresolved for the leave guard, and is cleared on an owner change. Limits: page memory only; looks only at the newest 50 saved costings. Tests: `free-transaction-flow.test.tsx` "a released attempt keeps its own reconciliation path"; `free-transaction.test.ts` `freeRequestIdOf`.
+- **The leave guard covers everything typed.** It now compares a snapshot of the whole page (inputs including row names, the costing name and the construction notes) with the page at the last confirmed save, instead of only the inputs that change the money. This also holds in the paid estimator after an in-place upgrade, where autosave stays off. Free never saves construction notes, so notes typed before a Free save are still lost on leaving, as before. Tests: `free-leave-guard.test.ts` `freeLeaveReason`.
+- **Warning approval is bound to the reviewed inputs.** The acknowledgement key now includes the effective inputs (`lib/warning-acknowledgement.ts`), so ₹1,001 then ₹2,000 needs a fresh approval, as does any other effective edit. Row-id changes do not. This applies to Free and paid saves. Tests: `warning-acknowledgement.test.ts`.
+
+Checks on the fix branch: `tsc` pass, lint 0 warnings, `vitest` 279 files, 2491 passed, 1 skipped.

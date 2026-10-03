@@ -4,6 +4,7 @@ import {
   confirmFreeReview,
   correctFreeReview,
   freePreflight,
+  freeRequestIdOf,
   freeAttemptPayload,
   isFreeAttemptUnresolved,
   releaseFreeAttempt,
@@ -167,5 +168,18 @@ describe('freePreflight', () => {
   it('sends an unacknowledged request when there is nothing local to review', () => {
     expect(freePreflight(valid, false)).toEqual({ action: 'submit', acknowledged: false })
     expect(freePreflight(valid, true)).toEqual({ action: 'submit', acknowledged: false })
+  })
+})
+
+describe('freeRequestIdOf', () => {
+  it('reads the request id from a server-shaped token without trusting it for anything else', () => {
+    const id = '6f9a1c2e-0b7d-4c1a-9e3f-2d5b8a7c4e10'
+    const token = `${Buffer.from(JSON.stringify({ version: 1, requestId: id })).toString('base64url')}.signature`
+    expect(freeRequestIdOf(token)).toBe(id)
+  })
+  it('returns null for anything else', () => {
+    expect(freeRequestIdOf('token-1')).toBeNull()
+    expect(freeRequestIdOf(`${Buffer.from('{"requestId":"not-a-uuid"}').toString('base64url')}.x`)).toBeNull()
+    expect(freeRequestIdOf('%%%.x')).toBeNull()
   })
 })

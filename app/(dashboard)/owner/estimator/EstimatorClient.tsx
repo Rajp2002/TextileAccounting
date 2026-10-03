@@ -104,7 +104,9 @@ import { FreeSavedReceipt } from '@/components/estimator/FreeSavedReceipt'
 import { FreeLeaveDialog } from '@/components/estimator/FreeLeaveDialog'
 import { UpgradeBenefitsPreview } from '@/components/estimator/UpgradeBenefitsPreview'
 import { useFreeLeaveGuard, type FreeLeaveReason } from '@/hooks/use-free-leave-guard'
+import { freeLeaveReason as decideFreeLeaveReason, freePageSnapshot } from '@/lib/free-leave-guard'
 import { freePreflight } from '@/lib/free-transaction'
+import { warningAcknowledgementKey } from '@/lib/warning-acknowledgement'
 import { freeText, type FreeText } from '@/lib/i18n/free-tier'
 import { useGutterDock } from '@/hooks/use-gutter-dock'
 import { makeFreeEstimate } from '@/lib/free-estimator-defaults'
@@ -3786,11 +3788,19 @@ export default function EstimatorClient({
         return saveDraftNow(buildCurrentDraft())
     })
     // Free, and the paid estimator it becomes in place, keep work only in page
-    // memory: an unconfirmed request, or inputs that differ from the last save.
-    const pageMemoryInputsAtRisk = hasUnsavedEdits && (!freeMeter.completed || freeMeter.stale)
-    const freeLeaveReason: FreeLeaveReason = !(freeMode || disableAutosave) ? null
-        : freeMeter.pending ? 'unresolved'
-            : pageMemoryInputsAtRisk ? 'unsaved' : null
+    // memory: an unconfirmed or still-tracked request, or anything the owner
+    // typed (inputs, names, notes) that differs from the last confirmed save.
+    const freePage = useMemo(
+        () => freePageSnapshot({ state, qualityLabel, warpInstruction, weftInstruction }),
+        [state, qualityLabel, warpInstruction, weftInstruction],
+    )
+    const freeLeaveReason: FreeLeaveReason = decideFreeLeaveReason({
+        guarded: freeMode || disableAutosave,
+        unresolved: freeMeter.pending || freeMeter.unreconciled.some(entry => entry.check !== 'found'),
+        hasUnsavedEdits,
+        page: freePage,
+        savedPage: freeMeter.completed?.page ?? null,
+    })
     const freeLeave = useFreeLeaveGuard(freeLeaveReason)
     const [freePlansOpen, setFreePlansOpen] = useState(false)
     const openFreePlans = useCallback(() => {
@@ -4020,9 +4030,10 @@ export default function EstimatorClient({
         () => estimatorValidation.warnings ?? [],
         [estimatorValidation.warnings],
     )
+    // An approval covers the exact inputs reviewed; any effective edit needs a fresh one.
     const warningKey = useMemo(
-        () => estimatorWarnings.map(warning => `${warning.field}:${warning.message}`).join('|'),
-        [estimatorWarnings],
+        () => warningAcknowledgementKey(estimatorWarnings, state),
+        [estimatorWarnings, state],
     )
     const warningsAcknowledged = !warningKey || acknowledgedWarningKey === warningKey
     const totals: EstimatorV3Totals = useMemo(() => {
@@ -4736,7 +4747,7 @@ export default function EstimatorClient({
                 return void toast.error(tx(firstEstimatorValidationMessage ?? 'Complete the highlighted inputs before saving.'))
             }
             if (preflight.action === 'review') return void requireWarningReview(() => handleSaveQuote(status, staleRatesAcknowledged, qualityUpdateDecision, true))
-            return void freeMeter.submit(preflight.acknowledged)
+            return void freeMeter.submit(preflight.acknowledged, freePage)
         }
         if (saveQuoteLockRef.current || savingQuote) return
         if (unconfirmedRequestId) return
@@ -5064,7 +5075,7 @@ export default function EstimatorClient({
                     status={savingQuote ? 'server-saving' : lastSavedCosting && !hasUnsavedEdits && !unconfirmedRequestId ? 'server-saved' : draftSaveStatus}
                 />
             )}
-            {freeMode && (
+            {(freeMode || disableAutosave && freeMeter.unreconciled.length > 0) && (
                 <FreeTransactionRecovery
                     transaction={freeMeter.transaction}
                     busy={freeMeter.busy}
@@ -5077,6 +5088,9 @@ export default function EstimatorClient({
                     onRetry={freeMeter.retry}
                     onRelease={freeMeter.release}
                     onViewPlans={openFreePlans}
+                    unreconciled={freeMeter.unreconciled}
+                    onCheckUnreconciled={freeMeter.checkUnreconciled}
+                    onDismissUnreconciled={freeMeter.dismissUnreconciled}
                 />
             )}
             {freeMode && freeMeter.completed && !freeMeter.stale && (

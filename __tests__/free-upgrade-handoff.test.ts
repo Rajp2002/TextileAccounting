@@ -39,5 +39,17 @@ describe('FR03 Free-origin checkout keeps the mounted estimator', () => {
     const reason = estimator.slice(estimator.indexOf('const freeLeaveReason'), estimator.indexOf('useFreeLeaveGuard(freeLeaveReason)'))
     expect(reason).toContain('freeMeter.pending')
     expect(reason).toContain('disableAutosave')
+    // A tracked, possibly saved attempt keeps the page guarded.
+    expect(reason).toContain('freeMeter.unreconciled')
+    // Compared with the page at the last confirmed save, not only money-changing inputs.
+    expect(reason).toContain('savedPage: freeMeter.completed?.page')
+    expect(estimator).toContain('freePageSnapshot({ state, qualityLabel, warpInstruction, weftInstruction })')
+    expect(estimator).toContain('freeMeter.submit(preflight.acknowledged, freePage)')
+  })
+
+  it('keeps a released attempt\'s reconciliation card after an in-place upgrade', () => {
+    const recovery = estimator.slice(estimator.indexOf('<FreeTransactionRecovery') - 120, estimator.indexOf('/>', estimator.indexOf('<FreeTransactionRecovery')))
+    expect(recovery).toContain('freeMeter.unreconciled.length > 0')
+    expect(recovery).toContain('unreconciled={freeMeter.unreconciled}')
   })
 })
