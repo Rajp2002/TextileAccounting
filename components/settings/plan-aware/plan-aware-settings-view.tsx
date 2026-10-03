@@ -14,7 +14,7 @@ import { DeletionReviewCard } from './deletion-review-card'
 import { useUnloadProtection } from './unsaved-changes-dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
-    readStartupIntroPreference, saveStartupIntroPreference, STARTUP_INTRO_CHANGE_EVENT,
+    DEFAULT_STARTUP_INTRO_PREFERENCE, readStartupIntroPreference, saveStartupIntroPreference, STARTUP_INTRO_CHANGE_EVENT,
     type StartupIntroPreference,
 } from '@/lib/intro/startup-preference'
 
@@ -31,7 +31,7 @@ function currentStartupPreference() {
     try { return readStartupIntroPreference(window.localStorage) } catch { return null }
 }
 
-const serverStartupPreference = (): StartupIntroPreference => 'first-launch'
+const serverStartupPreference = (): StartupIntroPreference => DEFAULT_STARTUP_INTRO_PREFERENCE
 
 function StartupIntroSetting() {
     const { t } = useTranslation()
@@ -50,7 +50,7 @@ function StartupIntroSetting() {
                 <h2 id="startup-intro-heading" className="text-lg font-bold text-ink">{t('common.startup_intro_title')}</h2>
                 <p id="startup-intro-description" className="text-sm leading-relaxed text-muted-foreground">{t('common.startup_intro_body')}</p>
             </div>
-            <Select value={preference ?? 'first-launch'} onValueChange={changePreference} disabled={preference === null}>
+            <Select value={preference ?? DEFAULT_STARTUP_INTRO_PREFERENCE} onValueChange={changePreference} disabled={preference === null}>
                 <SelectTrigger aria-labelledby="startup-intro-heading" aria-describedby="startup-intro-description" className="min-h-11 w-full whitespace-normal text-left sm:w-auto sm:min-w-44"><SelectValue /></SelectTrigger>
                 <SelectContent>
                     <SelectItem value="first-launch">{t('common.startup_intro_first')}</SelectItem>

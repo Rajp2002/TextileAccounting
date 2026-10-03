@@ -3,8 +3,7 @@ import { join } from 'node:path'
 import vm from 'node:vm'
 import { describe, expect, it } from 'vitest'
 import { buildAppIntroPrePaintScript, buildIntroPrePaintScript, INTRO_ATTRIBUTE, INTRO_LEAVING_ATTRIBUTE } from '../lib/intro/intro-policy'
-import { INTRO_TELEMETRY_PATH } from '../lib/intro/intro-telemetry'
-import { readStartupIntroPreference, saveStartupIntroPreference, STARTUP_INTRO_PREFERENCE_KEY, STARTUP_INTRO_SEEN_KEY } from '../lib/intro/startup-preference'
+import { DEFAULT_STARTUP_INTRO_PREFERENCE, readStartupIntroPreference, saveStartupIntroPreference, STARTUP_INTRO_PREFERENCE_KEY, STARTUP_INTRO_SEEN_KEY } from '../lib/intro/startup-preference'
 import { containedImageRect, inkRect, parseObjectPosition } from '../lib/intro/target-geometry'
 import { BINDING, buildWeaveMask, FIGURE, LOGO_INK_BOX, LOGO_SOURCE } from '../lib/intro/weave-mask'
 import {
@@ -278,8 +277,6 @@ function runPolicy(surface: IntroSurface, env: PolicyEnv = {}) {
     const rootStyle = { backgroundColor: '' }
     const bodyStyle = { backgroundColor: '', transition: '' }
     const preloads: unknown[] = []
-    const beacons: Array<{ url: string; body: string }> = []
-    let clock = 100
     const win: Record<string, unknown> = {
         matchMedia: (query: string) => ({ matches: (env.media ?? []).includes(query) }),
         localStorage: {
@@ -287,7 +284,7 @@ function runPolicy(surface: IntroSurface, env: PolicyEnv = {}) {
             setItem: (k: string, value: string) => { storageTouched.push(k); if (env.storageWriteFails) throw new Error('quota'); stored.set(k, value) },
             removeItem: (k: string) => { storageTouched.push(k); stored.delete(k) },
         },
-        performance: { getEntriesByType: () => (env.navType ? [{ type: env.navType }] : []), now: () => (clock += 250) },
+        performance: { getEntriesByType: () => (env.navType ? [{ type: env.navType }] : []) },
         addEventListener: (type: string) => listeners.add(type),
         removeEventListener: (type: string) => listeners.delete(type),
     }
@@ -309,25 +306,14 @@ function runPolicy(surface: IntroSurface, env: PolicyEnv = {}) {
             head: { appendChild: (link: unknown) => preloads.push(link) },
         },
         location: { pathname: env.pathname ?? '/login', search: env.search ?? '', hash: env.hash ?? '', origin: 'https://weavly.example' },
-        navigator: {
-            connection: env.saveData ? { saveData: true } : undefined,
-            standalone: env.iosStandalone,
-            sendBeacon: (url: string, body: string) => { beacons.push({ url, body }); return true },
-        },
+        navigator: { connection: env.saveData ? { saveData: true } : undefined, standalone: env.iosStandalone },
         setTimeout: (fn: () => void) => { timers.push(fn); return timers.length },
         clearTimeout: () => undefined,
     })
     vm.runInContext(env.bootstrap ? buildAppIntroPrePaintScript() : buildIntroPrePaintScript(surface), context)
-    const handle = win.__weavlyIntro as {
-        state: string
-        release: () => void
-        abort: (remember?: boolean, reason?: string) => void
-        markSeen: () => void
-        mark: (step: string) => void
-        report: (reason: string, detail?: string) => void
-    } | undefined
+    const handle = win.__weavlyIntro as { state: string; release: () => void; abort: (remember?: boolean) => void; markSeen: () => void } | undefined
     const runPageScript = () => vm.runInContext(buildIntroPrePaintScript(surface), context)
-    return { attrs, storageTouched, stored, listeners, timers, handle, documentListeners, rootStyle, bodyStyle, preloads, beacons, runPageScript, plays: attrs.get(INTRO_ATTRIBUTE) === surface }
+    return { attrs, storageTouched, stored, listeners, timers, handle, documentListeners, rootStyle, bodyStyle, preloads, runPageScript, plays: attrs.get(INTRO_ATTRIBUTE) === surface }
 }
 
 describe('woven intro playback policy (pre-paint script)', () => {
@@ -364,7 +350,7 @@ describe('woven intro playback policy (pre-paint script)', () => {
         expect(runPolicy('app-login', { search: '?intro=1' }).plays).toBe(true)
     })
 
-    it('plays on the first eligible launch of the installed app, but not in a browser tab or after moving inside the app', () => {
+    it('plays when the installed app opens, but not in a browser tab or after moving inside the app', () => {
         expect(runPolicy('app-login').plays).toBe(false)
         expect(runPolicy('app-login', { media: STANDALONE }).plays).toBe(true)
         expect(runPolicy('app-login', { media: STANDALONE, navType: 'reload' }).plays).toBe(true)
@@ -372,9 +358,20 @@ describe('woven intro playback policy (pre-paint script)', () => {
         expect(runPolicy('app-login', { media: STANDALONE, referrer: 'https://weavly.example/owner/estimator' }).plays).toBe(false)
     })
 
-    it('remembers a completed or explicitly skipped installed intro and goes straight to login next time', () => {
+    it('plays on every launch by default, even after it has been watched or skipped', () => {
         for (const finish of ['complete', 'skip'] as const) {
             const storage = new Map<string, string>()
+            const first = runPolicy('app-login', { media: STANDALONE, storage })
+            if (finish === 'skip') first.handle?.abort(true)
+            else first.handle?.markSeen()
+            expect(storage.get(STARTUP_INTRO_SEEN_KEY)).toBe('1')
+            expect(runPolicy('app-login', { media: STANDALONE, storage, navType: 'reload' }).plays).toBe(true)
+        }
+    })
+
+    it('with first launch only chosen, remembers a completed or explicitly skipped intro and goes straight to login next time', () => {
+        for (const finish of ['complete', 'skip'] as const) {
+            const storage = new Map<string, string>([[STARTUP_INTRO_PREFERENCE_KEY, 'first-launch']])
             const first = runPolicy('app-login', { media: STANDALONE, storage })
             expect(first.plays).toBe(true)
             expect(storage.has(STARTUP_INTRO_SEEN_KEY)).toBe(false)
@@ -481,34 +478,6 @@ describe('woven intro playback policy (pre-paint script)', () => {
         expect(skipped.timers).toHaveLength(1) // only the exit fade
     })
 
-    it('tells us once why an installed-app intro ended and how far its start-up got', () => {
-        const launch = runPolicy('app-login', { media: STANDALONE })
-        expect(launch.plays).toBe(true)
-        launch.handle!.mark('effect')
-        launch.handle!.mark('effect') // only the first time counts
-        launch.timers[0]() // the start watchdog fires before the animation started
-        expect(launch.beacons).toHaveLength(1)
-        expect(launch.beacons[0].url).toBe(INTRO_TELEMETRY_PATH)
-        const report = JSON.parse(launch.beacons[0].body)
-        expect(report).toMatchObject({ s: 'app-login', reason: 'watchdog', forced: false })
-        expect(report.d).toBeLessThan(report.dcl)
-        expect(report.dcl).toBeLessThan(report.effect)
-        expect(report.effect).toBeLessThan(report.end)
-        launch.handle!.report('error', 'late')
-        expect(launch.beacons).toHaveLength(1)
-
-        const tapped = runPolicy('app-login', { media: STANDALONE })
-        tapped.handle!.abort(true, 'interaction')
-        expect(JSON.parse(tapped.beacons[0].body).reason).toBe('interaction')
-    })
-
-    it('never reports the landing intro, which every visitor sees', () => {
-        const landing = runPolicy('landing')
-        landing.timers[0]()
-        landing.handle!.report('complete')
-        expect(landing.beacons).toHaveLength(0)
-    })
-
     it('removes the stage if the animation has not started in time, or on an early interaction', () => {
         const slow = runPolicy('landing')
         slow.timers[0]() // start watchdog fires while still pending
@@ -522,17 +491,25 @@ describe('woven intro playback policy (pre-paint script)', () => {
 })
 
 describe('device startup preference storage', () => {
-    it('has a first-launch-only default and stores explicit choices without changing completion history', () => {
+    it('has an every-launch default and stores explicit choices without changing completion history', () => {
         const values = new Map<string, string>([[STARTUP_INTRO_SEEN_KEY, '1']])
         const storage = { getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => { values.set(key, value) } }
-        expect(readStartupIntroPreference(storage)).toBe('first-launch')
+        expect(readStartupIntroPreference(storage)).toBe('always')
         for (const value of ['always', 'never', 'first-launch'] as const) {
             expect(saveStartupIntroPreference(storage, value)).toBe(true)
             expect(readStartupIntroPreference(storage)).toBe(value)
             expect(values.get(STARTUP_INTRO_SEEN_KEY)).toBe('1')
         }
         values.set(STARTUP_INTRO_PREFERENCE_KEY, 'invalid')
-        expect(readStartupIntroPreference(storage)).toBe('first-launch')
+        expect(readStartupIntroPreference(storage)).toBe('always')
+    })
+
+    it('shows the same default in Settings as the launch policy uses', () => {
+        expect(DEFAULT_STARTUP_INTRO_PREFERENCE).toBe('always')
+        const settings = read('components/settings/plan-aware/plan-aware-settings-view.tsx')
+        expect(settings).toContain('preference ?? DEFAULT_STARTUP_INTRO_PREFERENCE')
+        expect(settings).toContain('(): StartupIntroPreference => DEFAULT_STARTUP_INTRO_PREFERENCE')
+        expect(settings).not.toContain("?? 'first-launch'")
     })
 
     it('reports storage failures instead of pretending a preference was saved', () => {
@@ -590,20 +567,6 @@ describe('woven intro integration contracts', () => {
         // keyboard users get the fields back in the tab order on their first Tab
         expect(form).toContain("window.addEventListener('keydown', armOnTab, true)")
         expect(form).toContain('field.tabIndex = 0')
-    })
-
-    it('marks each start-up step and reports every way the installed intro can end', () => {
-        const runtime = read('components/intro/weaving-intro-runtime.ts')
-        for (const step of ['init', 'images', 'gl', 'started', 'frame1']) expect(runtime, step).toContain(`handle.mark?.('${step}')`)
-        for (const reason of ['complete', 'skip', 'degrade', 'context_lost', 'pagehide', 'unmount']) {
-            expect(runtime, reason).toContain(`handle.report?.('${reason}'`)
-        }
-        // A failure carries its message, so a broken shader or a missing logo is told apart from slowness.
-        expect(runtime).toContain("handle.report?.('error', error instanceof Error ? error.message : String(error))")
-        const component = read('components/intro/weaving-intro.tsx')
-        expect(component).toContain("handle.mark?.('effect')")
-        expect(component).toContain("handle.mark?.('runtime')")
-        expect(component).toContain("handle.report?.('runtime_failed')")
     })
 
     it('loads the WebGL runtime lazily and always restores the page when it ends', () => {
