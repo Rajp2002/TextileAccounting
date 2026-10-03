@@ -1,38 +1,40 @@
 import { describe, it, expect } from 'vitest'
 import {
-    extractDenierFromName,
+    parseYarnDensityFromName,
     buildSavedYarnOptions,
     filterYarnOptions,
     SavedYarnOption,
 } from '../lib/estimator-yarn-suggestions'
 
 describe('estimator-yarn-suggestions', () => {
-    describe('extractDenierFromName', () => {
+    describe('parseYarnDensityFromName', () => {
         it('extracts filament denier from standard Indian market denier/filament notation', () => {
-            expect(extractDenierFromName('80/72 Micro')).toBe(80)
-            expect(extractDenierFromName('50/48 Bright')).toBe(50)
-            expect(extractDenierFromName('150/48 Textured')).toBe(150)
-            expect(extractDenierFromName('30/24 Semi Dull')).toBe(30)
+            expect(parseYarnDensityFromName('80/72 Micro')).toEqual({ unit: 'denier', value: 80 })
+            expect(parseYarnDensityFromName('50/48 Bright')).toEqual({ unit: 'denier', value: 50 })
+            expect(parseYarnDensityFromName('150/48 Textured')).toEqual({ unit: 'denier', value: 150 })
+            expect(parseYarnDensityFromName('30/24 Semi Dull')).toEqual({ unit: 'denier', value: 30 })
         })
 
         it('extracts denier with explicit D/Den/Denier suffix', () => {
-            expect(extractDenierFromName('75D Roto')).toBe(75)
-            expect(extractDenierFromName('150 Denier Polyester')).toBe(150)
-            expect(extractDenierFromName('30D Monofilament')).toBe(30)
-            expect(extractDenierFromName('Polyester 80 den')).toBe(80)
+            expect(parseYarnDensityFromName('75D Roto')).toEqual({ unit: 'denier', value: 75 })
+            expect(parseYarnDensityFromName('150 Denier Polyester')).toEqual({ unit: 'denier', value: 150 })
+            expect(parseYarnDensityFromName('30D Monofilament')).toEqual({ unit: 'denier', value: 30 })
+            expect(parseYarnDensityFromName('Polyester 80 den')).toEqual({ unit: 'denier', value: 80 })
         })
 
-        it('extracts count/denier from spun count notations', () => {
-            expect(extractDenierFromName('30/1 Cotton')).toBe(30)
-            expect(extractDenierFromName('40s Cotton')).toBe(40)
-            expect(extractDenierFromName('2/40 PV')).toBe(40)
-            expect(extractDenierFromName('1/69 Metallic')).toBe(69)
+        // LT01A (LC08): spun counts used to come back as a bare denier number.
+        // A count is typed as Ne; ply notation is left for the owner to enter.
+        it('types spun counts as Ne and leaves ply notation unresolved', () => {
+            expect(parseYarnDensityFromName('40s Cotton')).toEqual({ unit: 'cotton_count_ne', value: 40 })
+            expect(parseYarnDensityFromName('30/1 Cotton')).toBeNull()
+            expect(parseYarnDensityFromName('2/40 PV')).toBeNull()
+            expect(parseYarnDensityFromName('1/69 Metallic')).toBeNull()
         })
 
         it('returns null when no numeric denier or count pattern is present', () => {
-            expect(extractDenierFromName('')).toBeNull()
-            expect(extractDenierFromName('Pure Silk Fancy')).toBeNull()
-            expect(extractDenierFromName('Special Zari Thread')).toBeNull()
+            expect(parseYarnDensityFromName('')).toBeNull()
+            expect(parseYarnDensityFromName('Pure Silk Fancy')).toBeNull()
+            expect(parseYarnDensityFromName('Special Zari Thread')).toBeNull()
         })
     })
 

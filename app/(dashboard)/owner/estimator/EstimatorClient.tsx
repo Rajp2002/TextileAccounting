@@ -48,6 +48,8 @@ import {
 import { useTranslation } from '@/lib/i18n/context'
 import {
     type SavedYarnOption,
+    type YarnSuggestionSelection,
+    applyYarnSuggestionToRow,
     type RateBookYarnRecord,
     buildSavedYarnOptions,
     filterYarnOptions,
@@ -502,12 +504,12 @@ type Action =
     | { type: 'ADD_WARP_ROW' }
     | { type: 'SET_WARP_COMPONENT_COUNT'; count: number }
     | { type: 'UPDATE_WARP_ROW'; id: string; field: keyof WarpRow; value: WarpRowValue }
-    | { type: 'SELECT_WARP_YARN'; id: string; yarn: { name: string; denier: number; yarnRate: number; linearDensityUnit?: YarnLinearDensityUnit; cottonCountNe?: number | null } }
+    | { type: 'SELECT_WARP_YARN'; id: string; yarn: YarnSuggestionSelection }
     | { type: 'REMOVE_WARP_ROW'; id: string }
     | { type: 'ADD_WEFT_ROW' }
     | { type: 'SET_WEFT_COMPONENT_COUNT'; count: number }
     | { type: 'UPDATE_WEFT_ROW'; id: string; field: keyof WeftRow; value: WeftRowValue }
-    | { type: 'SELECT_WEFT_YARN'; id: string; yarn: { name: string; denier: number; yarnRate: number; linearDensityUnit?: YarnLinearDensityUnit; cottonCountNe?: number | null } }
+    | { type: 'SELECT_WEFT_YARN'; id: string; yarn: YarnSuggestionSelection }
     | { type: 'REMOVE_WEFT_ROW'; id: string }
     | { type: 'ENABLE_SECTION'; section: keyof FactorySections }
     | { type: 'ADD_OVERHEAD_ITEM' }
@@ -663,19 +665,11 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                 ),
             }
         case 'SELECT_WARP_YARN':
+            // The chosen yarn's density arrives with its unit, or not at all;
+            // an unknown density is cleared rather than inherited.
             return {
                 ...state,
-                warpRows: state.warpRows.map(r => {
-                    if (r.id !== action.id) return r
-                    return {
-                        ...r,
-                        label: action.yarn.name,
-                        calcDenier: action.yarn.denier > 0 ? action.yarn.denier : r.calcDenier,
-                        yarnRate: action.yarn.yarnRate > 0 ? action.yarn.yarnRate : r.yarnRate,
-                        linearDensityUnit: action.yarn.linearDensityUnit ?? r.linearDensityUnit,
-                        cottonCountNe: action.yarn.cottonCountNe !== undefined ? action.yarn.cottonCountNe : r.cottonCountNe,
-                    }
-                }),
+                warpRows: state.warpRows.map(r => r.id === action.id ? applyYarnSuggestionToRow(r, action.yarn) : r),
             }
         case 'REMOVE_WARP_ROW':
             if (state.warpRows.length <= 1) return state
@@ -692,19 +686,11 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                 ),
             }
         case 'SELECT_WEFT_YARN':
+            // The chosen yarn's density arrives with its unit, or not at all;
+            // an unknown density is cleared rather than inherited.
             return {
                 ...state,
-                weftRows: state.weftRows.map(r => {
-                    if (r.id !== action.id) return r
-                    return {
-                        ...r,
-                        label: action.yarn.name,
-                        calcDenier: action.yarn.denier > 0 ? action.yarn.denier : r.calcDenier,
-                        yarnRate: action.yarn.yarnRate > 0 ? action.yarn.yarnRate : r.yarnRate,
-                        linearDensityUnit: action.yarn.linearDensityUnit ?? r.linearDensityUnit,
-                        cottonCountNe: action.yarn.cottonCountNe !== undefined ? action.yarn.cottonCountNe : r.cottonCountNe,
-                    }
-                }),
+                weftRows: state.weftRows.map(r => r.id === action.id ? applyYarnSuggestionToRow(r, action.yarn) : r),
             }
         case 'REMOVE_WEFT_ROW':
             if (state.weftRows.length <= 1) return state
@@ -2215,7 +2201,7 @@ function LayerNameField({
                                         <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
                                             {opt.denier > 0 && (
                                                 <span className="font-mono font-bold text-[var(--wv-lagoon-700)] bg-[var(--wv-lagoon-50)] border border-[var(--wv-lagoon-200)] px-1.5 py-0.2 rounded shrink-0">
-                                                    {opt.denier} D
+                                                    {opt.density?.unit === 'cotton_count_ne' ? `${opt.density.value} Ne · ` : ''}{Number(opt.denier.toFixed(2))} D
                                                 </span>
                                             )}
                                             <span className="inline-flex items-center px-1.5 py-0.2 rounded bg-[var(--wv-cotton-200)] text-[var(--wv-neel-700)] font-semibold uppercase tracking-wider text-[9px] shrink-0">
@@ -3694,13 +3680,7 @@ export default function EstimatorClient({
         dispatch({
             type: 'SELECT_WARP_YARN',
             id: rowId,
-            yarn: {
-                name: yarn.name,
-                denier: yarn.denier,
-                yarnRate: yarn.yarnRate,
-                linearDensityUnit: yarn.linearDensityUnit,
-                cottonCountNe: yarn.cottonCountNe,
-            },
+            yarn: { name: yarn.name, density: yarn.density ?? null, yarnRate: yarn.yarnRate },
         })
         setUnverifiedYarnRows(prev => ({
             ...prev,
@@ -3718,13 +3698,7 @@ export default function EstimatorClient({
         dispatch({
             type: 'SELECT_WEFT_YARN',
             id: rowId,
-            yarn: {
-                name: yarn.name,
-                denier: yarn.denier,
-                yarnRate: yarn.yarnRate,
-                linearDensityUnit: yarn.linearDensityUnit,
-                cottonCountNe: yarn.cottonCountNe,
-            },
+            yarn: { name: yarn.name, density: yarn.density ?? null, yarnRate: yarn.yarnRate },
         })
         setUnverifiedYarnRows(prev => ({
             ...prev,
