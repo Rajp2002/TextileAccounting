@@ -9,7 +9,10 @@ export type SavedFreeCosting = {
   estimate: EstimateState; result: CostingResultSnapshot; totals: EstimatorV3Totals
   editWindow?: FreeEditWindow
 }
-export function freeEditWindow(row: Pick<SavedFreeCosting, 'created_at' | 'updated_at' | 'revision'>, serverTime: string): FreeEditWindow {
+export function freeEditWindow(row: Pick<SavedFreeCosting, 'created_at'> & Partial<Pick<SavedFreeCosting, 'updated_at' | 'revision'>>, serverTime: string): FreeEditWindow | undefined {
+  // Deployments can precede the migration. Older rows must not advertise an unavailable RPC.
+  if (row.revision === undefined || !Number.isSafeInteger(row.revision) || row.revision < 1 ||
+    !row.updated_at || !Number.isFinite(Date.parse(row.updated_at)) || !Number.isFinite(Date.parse(row.created_at))) return undefined
   return { createdAt: row.created_at, updatedAt: row.updated_at, revision: row.revision,
     editExpiresAt: new Date(Date.parse(row.created_at) + FREE_COSTING_EDIT_MS).toISOString(), serverTime }
 }
