@@ -4948,8 +4948,7 @@ export default function EstimatorClient({
     const firstEstimatorIssueField = estimatorValidation.issues[0]?.field
         ?? costingReadiness.issues[0]?.field
         ?? null
-    const jumpToFirstEstimatorIssue = () => {
-        const field = firstEstimatorIssueField
+    const jumpToEstimatorIssue = (field: string | null) => {
         const needsDetailedView = field != null && DETAILED_ESTIMATOR_ISSUE_FIELDS.has(field)
         if (needsDetailedView && entryMode !== 'detailed') {
             handleEntryModeChange('detailed')
@@ -4961,6 +4960,10 @@ export default function EstimatorClient({
             focusEstimatorIssueTarget(field ?? 'costingResult')
         }, needsDetailedView ? 240 : 80)
     }
+    const jumpToFirstEstimatorIssue = () => jumpToEstimatorIssue(firstEstimatorIssueField)
+    const freeReviewFields = freeMeter.transaction.phase === 'review' ? freeMeter.transaction.fields : []
+    // The shared validator's own message for each field the server flagged.
+    const freeReviewMessages = estimatorWarnings.filter(warning => freeReviewFields.includes(warning.field)).map(warning => tx(warning.message))
     const auditLayerRows = [
         ...totals.audit.warp.layers.map(layer => ({ ...layer, section: 'Warp' })),
         ...totals.audit.weft.layers.map(layer => ({ ...layer, section: 'Weft' })),
@@ -5021,19 +5024,23 @@ export default function EstimatorClient({
             )}
             {freeMode && (
                 <FreeTransactionRecovery
-                    pending={freeMeter.pending}
-                    warning={freeMeter.warning}
-                    error={freeMeter.error}
+                    transaction={freeMeter.transaction}
                     busy={freeMeter.busy}
-                    onSubmit={freeMeter.submit}
-                    onRefresh={freeMeter.refresh}
+                    reviewMessages={freeReviewMessages}
+                    onConfirm={freeMeter.confirmReview}
+                    onCorrect={() => {
+                        freeMeter.correctReview()
+                        jumpToEstimatorIssue(freeReviewFields[0] ?? null)
+                    }}
+                    onRetry={freeMeter.retry}
+                    onRelease={freeMeter.release}
                 />
             )}
             {freeMode && (
                 <FreeUsageCard
                     quota={freeMeter.status?.quota}
-                    loading={freeMeter.busy || (!freeMeter.status && !freeMeter.usageError)}
-                    error={freeMeter.usageError}
+                    loading={freeMeter.busy || (!freeMeter.status && !freeMeter.statusError)}
+                    error={freeMeter.statusError}
                     stale={freeMeter.stale}
                     isPending={freeMeter.pending}
                     onRefresh={freeMeter.refresh}

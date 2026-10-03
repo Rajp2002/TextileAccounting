@@ -44,12 +44,13 @@ describe('Free service response and authorization boundary',()=>{
  })
  it('does not meter verified paid access even while Free estimation is paused',async()=>{
   mocks.access.mockResolvedValue({effectiveTier:'lite'});mocks.rollout.mockResolvedValue({estimation_enabled:false})
-  expect((await calculateFreeSubmission({estimate:valid()})).paid).toBe(true);expect(mocks.rpc).not.toHaveBeenCalled()
+  const paid=await calculateFreeSubmission({estimate:valid()});expect(paid.paid).toBe(true);expect(paid.outcome).toBe('paid_result');expect(mocks.rpc).not.toHaveBeenCalled()
  })
  it('returns non-content warning fields without charging until explicit acknowledgement',async()=>{
   const estimate=valid();estimate.warpRows[0].yarnRate=1500
-  const result=await calculateFreeSubmission({estimate,requestToken:token()});expect(result.needsAcknowledgement).toBe(true);expect(mocks.rpc).not.toHaveBeenCalled()
-  await calculateFreeSubmission({estimate,requestToken:token(),warningsAcknowledged:true});expect(mocks.rpc).toHaveBeenCalledOnce()
+  const result=await calculateFreeSubmission({estimate,requestToken:token()});expect(result.needsAcknowledgement).toBe(true);expect(result.outcome).toBe('review_required');expect(Object.keys(result).sort()).toEqual(['needsAcknowledgement','outcome','warningFields'])
+  expect(mocks.rpc).not.toHaveBeenCalled()
+  const saved=await calculateFreeSubmission({estimate,requestToken:token(),warningsAcknowledged:true});expect(saved.outcome).toBe('saved');expect(mocks.rpc).toHaveBeenCalledOnce()
  })
  it('INVARIANT CS-3: production without a valid signing key refuses before any debit and logs setting names only',async()=>{
   vi.stubEnv('NODE_ENV','production');delete process.env.WEAVLY_FREE_SIGNING_KEYS

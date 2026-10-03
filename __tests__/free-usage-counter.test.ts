@@ -223,44 +223,72 @@ describe('Premium Free-Plan Usage Counter & Estimator Integration', () => {
   })
 
   describe('RECOVERY: Free Transaction Recovery Banner', () => {
-    it('TR-01: pending transaction displays recovery banner with retry and check again actions', () => {
+    const attempt = {
+      estimate: {} as never, label: 'Quality A', requestToken: 'token-1', accountId: 'user-a',
+      acknowledged: false, possiblyCommitted: true,
+    }
+
+    it('TR-01: an uncertain outcome offers the same-request retry and saved history in a new tab, not a balance check', () => {
       const html = renderWithLang(
         React.createElement(FreeTransactionRecovery, {
-          pending: true,
-          onSubmit: () => {},
-          onRefresh: () => {},
+          transaction: { phase: 'unknown', attempt, code: 'FREE_TEMPORARY_ERROR', retryable: true },
+          onRetry: () => {},
         })
       )
 
       expect(html).toContain('data-testid="free-recovery-pending"')
       expect(html).toContain('Unable to confirm the outcome. Retry safely using the same request.')
       expect(html).toContain('Retry the same calculation')
-      expect(html).toContain('Check again')
+      const savedLink = html.match(/<a[^>]*href="\/free\/costings"[^>]*>/)?.[0] ?? ''
+      expect(savedLink).toContain('target="_blank"')
+      expect(html).not.toContain('Check again')
     })
 
-    it('TR-02: warning state displays review confirmation banner with confirm button', () => {
+    it('TR-02: review offers correction and explicit confirmation, and says nothing was used', () => {
       const html = renderWithLang(
         React.createElement(FreeTransactionRecovery, {
-          warning: true,
-          onSubmit: () => {},
+          transaction: { phase: 'review', attempt: { ...attempt, possiblyCommitted: false }, fields: ['ppi'] },
+          reviewMessages: ['PPI is unusual. Confirm the value before saving.'],
         })
       )
 
       expect(html).toContain('data-testid="free-recovery-warning"')
       expect(html).toContain('Some inputs need review. Check your values, then confirm to calculate.')
+      expect(html).toContain('PPI is unusual. Confirm the value before saving.')
+      expect(html).toContain('This calculation has not used a costing yet.')
+      expect(html).toContain('data-free-recovery-action="correct"')
       expect(html).toContain('I reviewed the inputs; calculate')
     })
 
-    it('TR-03: returns null when no pending, warning, or error is active', () => {
+    it('TR-03: returns null while editing or on a first send', () => {
+      expect(renderWithLang(React.createElement(FreeTransactionRecovery, { transaction: { phase: 'editing' } }))).toBe('')
+      expect(renderWithLang(React.createElement(FreeTransactionRecovery, {
+        transaction: { phase: 'submitting', attempt: { ...attempt, possiblyCommitted: false } },
+      }))).toBe('')
+    })
+
+    it('TR-04: a request that can no longer be replayed offers history and an explicit release, never a retry', () => {
       const html = renderWithLang(
         React.createElement(FreeTransactionRecovery, {
-          pending: false,
-          warning: false,
-          error: null,
+          transaction: { phase: 'unknown', attempt, code: 'FREE_REQUEST_EXPIRED', retryable: false },
         })
       )
 
-      expect(html).toBe('')
+      expect(html).toContain('This calculation can no longer be checked from this page.')
+      expect(html).toContain('If it was saved, it is in Saved costings.')
+      expect(html).toContain('data-free-recovery-action="release"')
+      expect(html).not.toContain('Retry the same calculation')
+    })
+
+    it('TR-05: recovery controls are at least 44 px tall', () => {
+      const html = renderWithLang(
+        React.createElement(FreeTransactionRecovery, {
+          transaction: { phase: 'review', attempt: { ...attempt, possiblyCommitted: false }, fields: [] },
+        })
+      )
+
+      expect(html.match(/data-free-recovery-action="(correct|confirm)"/g)).toHaveLength(2)
+      for (const button of html.match(/<button[^>]*>/g) ?? []) expect(button).toContain('h-11')
     })
   })
 

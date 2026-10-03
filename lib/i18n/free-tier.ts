@@ -88,6 +88,14 @@ const phrases = {
  demoTourCompletedHint:['Explore exports with this sample costing, or delete it whenever you are ready to create your own costings.','આ નમૂના કોસ્ટિંગ સાથે એક્સપોર્ટ ચકાસો, અથવા તમારી પોતાની ગણતરી બનાવવા માટે તેને ડિલીટ કરી શકો છો.','इस नमूना कॉस्टिंग के साथ निर्यात देखें, या अपनी खुद की गणना बनाने के लिए इसे कभी भी डिलीट कर सकते हैं।'],
  deleteDemoSample:['Delete sample costing','નમૂના કોસ્ટિંગ ડિલીટ કરો','नमूना कॉस्टिंग डिलीट करें'],
  dismiss:['Dismiss','બંધ કરો','खारिज करें'],
+ correctInputs:['Change the inputs','માહિતી બદલો','जानकारी बदलें'],
+ reviewNoCharge:['This calculation has not used a costing yet.','આ ગણતરીમાં હજી કોસ્ટિંગ વપરાઈ નથી.','इस गणना में अभी कोई कॉस्टिंग खर्च नहीं हुई है।'],
+ retrying:['Retrying the same calculation…','એ જ ગણતરી ફરી કરી રહ્યા છીએ…','वही गणना फिर से कर रहे हैं…'],
+ openSavedCostings:['Open Saved costings in a new tab','સાચવેલી કોસ્ટિંગ નવા ટૅબમાં ખોલો','सहेजी गई कॉस्टिंग नए टैब में खोलें'],
+ unknownBlocked:['This calculation can no longer be checked from this page.','આ ગણતરી હવે આ પેજ પરથી તપાસી શકાતી નથી.','यह गणना अब इस पेज से नहीं जाँची जा सकती।'],
+ unknownBlockedNote:['If it was saved, it is in Saved costings. Calculating again is a new costing.','જો તે સચવાઈ હશે, તો સાચવેલી કોસ્ટિંગમાં છે. ફરી ગણતરી કરવી એ નવી કોસ્ટિંગ છે.','अगर यह सहेजी गई थी, तो सहेजी गई कॉस्टिंग में है। फिर से गणना करना नई कॉस्टिंग है।'],
+ releaseAttempt:['Edit inputs again','માહિતી ફરી બદલો','जानकारी फिर बदलें'],
+ paidActiveUnknown:['Your paid plan is active, so this page can no longer check the earlier Free calculation.','તમારો પેઇડ પ્લાન સક્રિય છે, તેથી આ પેજ અગાઉની Free ગણતરી હવે તપાસી શકતું નથી.','आपका पेड प्लान सक्रिय है, इसलिए यह पेज पिछली Free गणना अब नहीं जाँच सकता।'],
 } satisfies Record<string, readonly [string,string,string]>
 export type FreeText = keyof typeof phrases
 export function freeText(language:Language,key:FreeText,values:Record<string,string|number>={}) {
