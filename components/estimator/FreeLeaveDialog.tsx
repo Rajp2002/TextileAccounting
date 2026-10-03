@@ -23,7 +23,7 @@ export function FreeLeaveDialog({ reason, open, onStay, onLeave }: { reason: Fre
           </DialogDescription>
         </DialogHero>
         <DialogFooter className="relative z-10 gap-2 sm:gap-2 sm:justify-stretch">
-          <Button type="button" onClick={onStay} className="min-h-11 bg-white font-semibold text-[#7a2418] hover:bg-white/90 sm:flex-1">
+          <Button type="button" onClick={onStay} className="min-h-11 bg-white font-semibold text-[#7a2418] hover:bg-white/90 hover:text-[#7a2418] sm:flex-1">
             {freeText(language, 'stayOnPage')}
           </Button>
           <Button type="button" variant="ghost" onClick={onLeave} className="min-h-11 text-white hover:bg-white/10 hover:text-white sm:flex-1">

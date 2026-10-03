@@ -66,7 +66,7 @@ export function UnsavedChangesDialog({
                     <Button
                         type="button"
                         onClick={onDiscard}
-                        className="min-h-11 bg-white font-semibold text-[#7a2418] hover:bg-white/90 sm:flex-1"
+                        className="min-h-11 bg-white font-semibold text-[#7a2418] hover:bg-white/90 hover:text-[#7a2418] sm:flex-1"
                     >
                         {tx('Discard changes')}
                     </Button>

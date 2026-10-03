@@ -54,7 +54,7 @@ export function ConfirmActionDialog({
                     </Button>
                     <Button
                         onClick={onConfirm}
-                        className="w-full bg-white font-semibold text-[#16213e] hover:bg-white/90 sm:w-auto sm:flex-1"
+                        className="w-full bg-white font-semibold text-[#16213e] hover:bg-white/90 hover:text-[#16213e] sm:w-auto sm:flex-1"
                         disabled={isLoading}
                     >
                         {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}

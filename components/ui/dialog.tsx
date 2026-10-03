@@ -74,10 +74,11 @@ function DialogContent({
         data-close-button={showCloseButton}
         data-tone={tone}
         className={cn(
-          tone && "relative overflow-hidden border-transparent text-white",
-          tone === "brand" && "bg-gradient-to-br from-[#2a3a6b] to-[#16213e]",
-          tone === "danger" && "bg-gradient-to-br from-[#b4432f] to-[#7a2418]",
           "bg-surface text-ink modal-spring fixed top-[50%] left-[50%] z-50 grid w-full max-h-[calc(100dvh-1rem)] max-w-[calc(100vw-1rem)] translate-x-[-50%] translate-y-[-50%] gap-4 overflow-y-auto rounded-xl border border-hairline p-4 shadow-[var(--shadow-modal)] duration-200 outline-none sm:max-h-[calc(100dvh-2rem)] sm:max-w-lg sm:rounded-2xl sm:p-6",
+          // Tone overrides follow the surface defaults; use Tailwind v4 gradient utilities.
+          tone && "overflow-x-hidden border-transparent text-white",
+          tone === "brand" && "bg-[#16213e] bg-linear-to-br from-[#2a3a6b] to-[#16213e]",
+          tone === "danger" && "bg-[#7a2418] bg-linear-to-br from-[#b4432f] to-[#7a2418]",
           className
         )}
         {...props}
