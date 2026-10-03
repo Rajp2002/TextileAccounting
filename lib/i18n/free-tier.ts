@@ -1,6 +1,23 @@
 import type { Language } from './context'
 /** Draft terminology; native Gujarati/Hindi review is a release gate. */
 const phrases = {
+ sectionDetails:['Costing details','કોસ્ટિંગ વિગતો','कॉस्टिंग विवरण'],
+ sectionWarp:['Warp yarn','તાણાનું યાર્ન','ताने का यार्न'],
+ sectionWeft:['Weft yarn','વાણાનું યાર્ન','बाने का यार्न'],
+ sectionWeaving:['Weaving','વણાટ','बुनाई'],
+ sectionPreparation:['Warping & sizing','વાર્પિંગ અને સાઇઝિંગ','वार्पिंग और साइज़िंग'],
+ sectionOverhead:['Factory overhead','ફેક્ટરી ઓવરહેડ','फ़ैक्टरी ओवरहेड'],
+ sectionProcessing:['Post-processing','પોસ્ટ-પ્રોસેસિંગ','पोस्ट-प्रोसेसिंग'],
+ sectionPricing:['Selling price & quantity','વેચાણ ભાવ અને જથ્થો','बिक्री मूल्य और मात्रा'],
+ sectionComplete:['Complete','પૂર્ણ','पूरा'],
+ sectionIncomplete:['Needs input','માહિતી જરૂરી છે','जानकारी चाहिए'],
+ sectionReview:['Review values','માહિતી તપાસો','मान जाँचें'],
+ completeSections:['Complete your inputs','તમારી માહિતી પૂર્ણ કરો','अपनी जानकारी पूरी करें'],
+ reviewSections:['A few values need review','કેટલીક માહિતી તપાસવાની છે','कुछ मान जाँचने हैं'],
+ sectionChecklistHint:['Select a section to review it. Optional fields can stay blank.','તપાસવા માટે વિભાગ પસંદ કરો. વૈકલ્પિક માહિતી ખાલી રાખી શકો છો.','जाँचने के लिए एक अनुभाग चुनें। वैकल्पिक जानकारी खाली रख सकते हैं।'],
+ compactCreationPolicy:['Saves automatically. Includes 30 minutes of free edits and recalculations.','આપમેળે સાચવાય છે. 30 મિનિટ સુધી મફત ફેરફાર અને ફરી ગણતરી કરી શકો છો.','अपने आप सहेजा जाता है। 30 मिनट तक मुफ़्त बदलाव और दोबारा गणना कर सकते हैं।'],
+ exportCosting:['Export costing','કોસ્ટિંગ નિકાસ કરો','कॉस्टिंग निर्यात करें'],
+ startNewCosting:['New costing','નવી કોસ્ટિંગ','नई कॉस्टिंग'],
  recalculate:['Recalculate','ફરી ગણતરી કરો','दोबारा गणना करें'],
  recalculateSave:['Recalculate & save · no costing used','ફરી ગણતરી કરો અને સાચવો · કોસ્ટિંગ નહીં વપરાય','दोबारा गणना करें और सहेजें · कॉस्टिंग खर्च नहीं होगी'],
  editTimeLeft:['Free edits remaining','મફત ફેરફાર માટે બાકી સમય','मुफ़्त बदलाव के लिए बचा समय'],
