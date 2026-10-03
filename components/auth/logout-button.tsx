@@ -5,7 +5,11 @@ import { useRef, useState } from 'react'
 import { LogOut, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { AuthTransition } from './auth-transition'
-import { holdForTransitionRound } from './auth-transition-timing'
+import {
+    expectedPageLoadMs,
+    holdForTransitionRound,
+    markAuthNavigation,
+} from './auth-transition-timing'
 import { useTranslation } from '@/lib/i18n/context'
 import { detachActiveQueryNamespace } from '@/lib/query-client-registry'
 import {
@@ -34,12 +38,14 @@ export default function LogoutButton({ variant = 'sidebar', className }: LogoutB
 
     // The sign-out POST leaves at once, exactly as the native form post did, so
     // the session ends while the spool turns. Once the server has cleared the
-    // cookies and the spool has finished a round, a full-page GET opens /login.
+    // cookies, a full-page GET opens /login one page load before the spool
+    // finishes its round: the old page stays up while /login loads, so /login
+    // appears as the round ends instead of a page load after it.
     // This deliberately avoids a deployment-sensitive Server Action transition.
     const signOutBehindTransition = async (logoutTraceId: string, transitionStartedAt: number) => {
         const form = formRef.current
         if (!form) return
-        const roundFinished = holdForTransitionRound(transitionStartedAt)
+        const roundFinished = holdForTransitionRound(transitionStartedAt, expectedPageLoadMs('sign-out'))
 
         let signedOut = false
         try {
@@ -60,6 +66,7 @@ export default function LogoutButton({ variant = 'sidebar', className }: LogoutB
         if (signedOut) {
             await roundFinished
             markLogoutTraceStage(logoutTraceId, 'signout_navigation_started')
+            markAuthNavigation('sign-out')
             window.location.replace('/login')
             return
         }

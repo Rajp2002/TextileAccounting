@@ -10,7 +10,11 @@ import { Loader2, ArrowRight, Eye, EyeOff } from 'lucide-react'
 import AuthLayout from '@/components/auth/auth-layout'
 import { signIn } from '@/app/(auth)/actions/auth'
 import { AuthTransition } from '@/components/auth/auth-transition'
-import { holdForTransitionRound } from '@/components/auth/auth-transition-timing'
+import {
+    expectedPageLoadMs,
+    holdForTransitionRound,
+    markAuthNavigation,
+} from '@/components/auth/auth-transition-timing'
 import { SIGN_IN_TRACE_STORAGE_KEY } from '@/lib/sign-in-trace'
 
 function createTraceId() {
@@ -109,8 +113,14 @@ export default function LoginForm({ recoveryDestination }: { recoveryDestination
             setIsRedirecting(true)
             const actionCompletedAt = Date.now()
             // The session already exists, so the loom may finish its round
-            // before the workspace opens. A slow sign-in does not wait at all.
-            const transitionHoldMs = await holdForTransitionRound(transitionStartedAt)
+            // before the workspace opens. The old page stays up while the
+            // workspace loads, so leave one page load before the round ends
+            // and the workspace appears as it does. A slow sign-in does not
+            // wait at all.
+            const transitionHoldMs = await holdForTransitionRound(
+                transitionStartedAt,
+                expectedPageLoadMs('sign-in'),
+            )
             try {
                 window.sessionStorage.setItem(SIGN_IN_TRACE_STORAGE_KEY, JSON.stringify({
                     traceId,
@@ -127,6 +137,7 @@ export default function LoginForm({ recoveryDestination }: { recoveryDestination
             // Cross the authentication boundary with a full document request.
             // This guarantees the new session cookies are applied and avoids a
             // Safari/PWA App Router transition stalling on the login screen.
+            markAuthNavigation('sign-in')
             window.location.replace(result.redirectTo)
         } catch {
             toast.error('Something went wrong. Please try again.')
