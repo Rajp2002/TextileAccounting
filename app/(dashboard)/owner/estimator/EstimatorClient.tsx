@@ -111,7 +111,7 @@ import { freeText, type FreeText } from '@/lib/i18n/free-tier'
 import { useGutterDock } from '@/hooks/use-gutter-dock'
 import { makeFreeEstimate } from '@/lib/free-estimator-defaults'
 import { LocalSaveStatus } from '@/components/local-save-status'
-import { useAutosave } from '@/hooks/useAutosave'
+import { isDraftStored, useAutosave } from '@/hooks/useAutosave'
 import { usePwaRefreshGuard } from '@/hooks/use-pwa-refresh-guard'
 import { usePwaInstallBlocker } from '@/hooks/use-pwa-install-blocker'
 import { reportPwaWorkflowSuccess } from '@/lib/pwa-workflow-success'
@@ -3757,7 +3757,7 @@ export default function EstimatorClient({
         // Free sessions cannot recover a paid-plan draft. Pending restore/conflict
         // decisions must never be overwritten merely to install an update.
         if (freeMode || disableAutosave) return false
-        return saveDraftNow(buildCurrentDraft())
+        return isDraftStored(saveDraftNow(buildCurrentDraft()))
     })
     // Free, and the paid estimator it becomes in place, keep work only in page
     // memory: an unconfirmed request, or inputs that differ from the last save.
@@ -4749,11 +4749,17 @@ export default function EstimatorClient({
 
         const browserIsOnline = typeof navigator === 'undefined' || navigator.onLine
         if (!browserIsOnline) {
-            const draftSaved = saveDraftNow(buildCurrentDraft(undefined, 'costing'))
+            // Only a written draft is on this device. With drafts off (the
+            // Free wrapper after activation) the inputs live in this page.
+            const offlineDraft = saveDraftNow(buildCurrentDraft(undefined, 'costing'))
             toast.error(tx('Reconnect before saving'), {
-                description: draftSaved
+                description: isDraftStored(offlineDraft)
                     ? tx('Your Cost Estimate and save identity are stored on this device.')
-                    : tx('Browser storage is unavailable, so keep this page open until you reconnect.'),
+                    : offlineDraft === 'disabled'
+                        ? tx('This Cost Estimate is kept on this page only. Keep the page open until you reconnect, then save.')
+                        : offlineDraft === 'blocked'
+                            ? tx('A recovered draft is waiting for your choice, so this Cost Estimate is not stored on this device yet. Keep the page open until you reconnect.')
+                            : tx('Browser storage is unavailable, so keep this page open until you reconnect.'),
                 duration: Infinity,
             })
             return
@@ -4765,7 +4771,7 @@ export default function EstimatorClient({
         // Flush both the current inputs and request identity before the action.
         // If the response is lost after commit, reopening and retrying reuses the
         // same idempotency key instead of creating a duplicate.
-        const draftSavedBeforeSubmit = saveDraftNow(buildCurrentDraft(clientRequestId, 'costing'))
+        const draftStoredBeforeSubmit = isDraftStored(saveDraftNow(buildCurrentDraft(clientRequestId, 'costing')))
 
         saveQuoteLockRef.current = true
         setSavingQuote(true)
@@ -4878,7 +4884,7 @@ export default function EstimatorClient({
             })
             console.error('Failed to save estimator quote:', error)
             toast.error(tx(userFacingError(error, 'Failed to save the Cost Estimate. Try again.')), {
-                description: draftSavedBeforeSubmit
+                description: draftStoredBeforeSubmit
                     ? tx('Your Cost Estimate and retry identity remain saved on this device.')
                     : undefined,
             })

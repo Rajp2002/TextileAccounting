@@ -115,3 +115,23 @@ Chosen representation (recorded before code): two nullable columns on `estimator
 | existing save, replay, tamper, tenant and immutability invariants | `costing-save.dbtest.ts`, `costing-immutability.dbtest.ts` | pass |
 
 Rollback: stop the writer by reverting the payload change; keep the columns and readers (old rows stay NULL and read as before). Never drop populated columns.
+
+## LT02: truthful draft writes
+
+**Status:** source checks passed, runtime pending. No new storage, no migration.
+
+- `saveDraftNow` and `flushDraft` return a `DraftWriteOutcome` instead of a boolean: `written`, `nothing_to_store`, `disabled`, `unavailable` or `blocked` (a recovered draft is waiting for the restore choice). `isDraftStored` is true only for `written`. Before, a disabled hook returned `true` without writing.
+- Every estimator consumer that used the result now uses it truthfully: the offline save toast, the PWA refresh guard and the save-failure toast. The offline toast now distinguishes stored on this device, kept on this page only (drafts off), waiting for a restore choice, and storage unavailable.
+- The shared Free contracts are reused, not rebuilt (R1, R4): FR03 keeps paid autosave off inside the Free wrapper after activation, so an activated owner who goes offline is told the estimate lives only on this page.
+- Hindi and Gujarati for the five offline messages are in `lib/i18n/lite-refinement-phrases.ts` (not native-reviewed).
+
+| Fixture | Test | Result |
+| --- | --- | --- |
+| disabled hook: `disabled`, no write | `__tests__/lite-draft-truth.test.tsx` | pass; returned `true` on `4f49fb27` |
+| accepted write `written`; storage exception `unavailable`; nothing to recover `nothing_to_store` | same | pass |
+| pending restore choice: `blocked`, earlier draft untouched | same | pass |
+| offline toast, refresh guard and failure toast only claim storage for `written` (source contract) | same | pass |
+| HI/GU present for every offline message (mutation-checked) | same | pass |
+| existing autosave behavior, assertions moved from booleans to outcomes | `__tests__/autosave-status.test.tsx` | pass |
+
+Not run in this sprint: the plan's composed upgrade journeys (real checkout, delayed activation in another tab, layout remount, account switch during activation, Back/Forward). They belong to FR03/FR07 runtime proof, which is still pending.
