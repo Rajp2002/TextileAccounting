@@ -70,6 +70,7 @@ import {
   normalizeSavedWarpRows,
   normalizeSavedWeftRows,
   getSavedCostingMetrics,
+  resolveSavedCostingInputBasis,
   type SavedQualityFactoryProfile,
   type SavedQualityFixedWorker,
   type SavedQualityRecipe,
@@ -160,6 +161,7 @@ type QuoteRow = {
     overhead_items?: QuoteDraftState['overheadItems']
     monthly_output_m?: number | null
     overhead_override_per_m?: number | null
+    overhead_mode?: QuoteDraftState['overheadMode'] | null
     overhead_pct?: number | null
     commission_pct?: number | null
     transport_per_m?: number | null
@@ -217,6 +219,10 @@ function buildDraftStateFromQuote(quote: QuoteRow): QuoteDraftState {
         const parsed = Number(value)
         return value !== null && value !== undefined && value !== '' && Number.isFinite(parsed) ? parsed : fallback
     }
+    const inputBasis = resolveSavedCostingInputBasis(
+        { ...quote, warping_rate_per_kg: snapshot.warpingRatePerKg ?? quote.warping_rate_per_kg },
+        snapshot,
+    )
     return {
         ...base,
         ...snapshot,
@@ -242,8 +248,10 @@ function buildDraftStateFromQuote(quote: QuoteRow): QuoteDraftState {
         warpCrimpPct: numberOr(snapshot.warpCrimpPct ?? quote.warp_crimp_pct, base.warpCrimpPct),
         overheadItems: Array.isArray(snapshot.overheadItems) ? snapshot.overheadItems : Array.isArray(quote.overhead_items) ? quote.overhead_items : base.overheadItems,
         monthlyOutputM: numberOr(snapshot.monthlyOutputM ?? quote.monthly_output_m, base.monthlyOutputM),
-        overheadOverridePerM: snapshot.overheadOverridePerM ?? (quote.overhead_override_per_m != null ? numberOr(quote.overhead_override_per_m, 0) : base.overheadOverridePerM),
-        overheadMode: snapshot.overheadMode ?? (snapshot.overheadOverridePerM != null || quote.overhead_override_per_m != null ? 'direct' : 'monthly_expenses'),
+        // LT01B: stored modes and applied overhead first; older records keep
+        // the earlier inference because their modes were never stored.
+        overheadOverridePerM: inputBasis.overheadOverridePerM ?? base.overheadOverridePerM,
+        overheadMode: inputBasis.overheadMode,
         overheadPct: 0,
         commissionPct: numberOr(snapshot.commissionPct ?? quote.commission_pct, base.commissionPct),
         transportPerM: numberOr(snapshot.transportPerM ?? quote.transport_per_m, base.transportPerM),
@@ -256,7 +264,7 @@ function buildDraftStateFromQuote(quote: QuoteRow): QuoteDraftState {
         loomRpmIsCustomised: snapshot.loomRpmIsCustomised ?? (quote.estimator_rpm != null),
         loomPowerKwIsCustomised: snapshot.loomPowerKwIsCustomised ?? (quote.estimator_power_kw != null),
         hoursPerShift: numberOr(snapshot.hoursPerShift ?? quote.hours_per_shift, base.hoursPerShift ?? 12),
-        warpingMode: snapshot.warpingMode ?? quote.warping_mode ?? (numberOr(snapshot.warpingRatePerKg ?? quote.warping_rate_per_kg, 0) > 0 ? 'outsourced' : base.warpingMode),
+        warpingMode: inputBasis.warpingMode ?? base.warpingMode,
         sizingMode: snapshot.sizingMode ?? quote.sizing_mode ?? base.sizingMode,
         loomCount: numberOr(snapshot.loomCount ?? quote.loom_count, base.loomCount),
         monthlyWorkingDays: numberOr(snapshot.monthlyWorkingDays ?? quote.monthly_working_days, base.monthlyWorkingDays),

@@ -95,7 +95,7 @@ describe('Base P1 pilot remediation', () => {
     expect(boundaryIndex).toBeGreaterThan(-1)
     expect(atomicSaveIndex).toBeGreaterThan(boundaryIndex)
     expect(actions).toContain('p_template_payload: templatePayload')
-    expect(actions).toContain('p_quote_payload: attestation.payload')
+    expect(actions).toMatch(/'create_saved_quality_with_initial_costing_v1',\s*\{\s*p_template_payload: templatePayload,\s*p_quote_payload: trustedQuotePayload,/)
     expect(actions).toContain("admin.rpc('register_estimator_costing_attestation'")
   })
 

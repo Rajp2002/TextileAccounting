@@ -17,7 +17,7 @@ import { buildSavedQualityRecipeState, type SavedQualityCostingReuse } from '@/l
 import { auditHistoricalCosting } from '@/lib/costing-reconciliation'
 import type { FactoryProfileId } from '@/lib/factory-cost-profiles'
 import { buildCostingInputFingerprint } from '@/lib/costing-save-trust'
-import { buildEstimatorQuotePayload } from '@/lib/estimator-quote-payload'
+import { buildEstimatorQuotePayload, toLegacyEstimatorQuotePayload } from '@/lib/estimator-quote-payload'
 import { getRateReviewStatus } from '@/lib/cost-rates'
 import { findCostingSaveReceipt } from '@/lib/costing-save-receipt'
 import {
@@ -46,6 +46,49 @@ async function attestCanonicalCostingPayload<T extends Record<string, unknown>>(
         return { error: 'The server could not verify the canonical costing payload.' }
     }
     return { payload: { ...payload, server_attestation_id: data } }
+}
+
+type SaveRevisionRpcResult = {
+    success?: boolean
+    error?: string
+    quoteId?: string
+    updatedAt?: string
+    createdAt?: string
+    versionNumber?: number
+    qualityUpdated?: boolean
+    outcome?: string
+    noChange?: boolean
+    idempotentReplay?: boolean
+}
+
+type InitialQualityRpcResult = SaveRevisionRpcResult & { templateId?: string }
+
+type CostingRpcOutcome = { data: unknown; error: { message: string; code?: string } | null }
+
+const COSTING_PAYLOAD_UNSUPPORTED_FIELDS = 'The costing payload contains unsupported fields.'
+
+/**
+ * Attests a costing payload and saves it. A database without the LT01B
+ * input-basis migration rejects the new keys before any write (the allowlist
+ * check runs first and the call rolls back); in that case only, the legacy
+ * payload is attested and saved once, so code deployed before the migration
+ * keeps saving costings. No other error is retried.
+ */
+async function saveAttestedCostingPayload(
+    userId: string,
+    orgId: string,
+    payload: Record<string, unknown>,
+    save: (attestedPayload: Record<string, unknown>) => PromiseLike<CostingRpcOutcome>,
+): Promise<CostingRpcOutcome | { attestationError: string }> {
+    const attestation = await attestCanonicalCostingPayload(userId, orgId, payload)
+    if (!attestation.payload) return { attestationError: attestation.error ?? 'The costing payload could not be verified.' }
+    const outcome = await save(attestation.payload)
+    const rejectedInputBasis = outcome.error?.code === '22023' && outcome.error.message === COSTING_PAYLOAD_UNSUPPORTED_FIELDS
+    if (!rejectedInputBasis) return outcome
+
+    const legacyAttestation = await attestCanonicalCostingPayload(userId, orgId, toLegacyEstimatorQuotePayload(payload))
+    if (!legacyAttestation.payload) return { attestationError: legacyAttestation.error ?? 'The costing payload could not be verified.' }
+    return save(legacyAttestation.payload)
 }
 
 function buildQuotationReference(id: string, createdAt = new Date()) {
@@ -639,9 +682,7 @@ export async function getEstimatorTemplates(options?: { includeArchived?: boolea
     if ((effectiveTier !== 'base' && effectiveTier !== 'lite') || templates.length === 0) return { data: templates }
 
     const templateIds = templates.map(template => template.id).filter(Boolean)
-    const { data: costings, error: costingError } = await supabase
-        .from('estimator_quotes')
-        .select(`
+    const reuseColumns = `
             template_id,
             updated_at,
             warping_rate_per_kg,
@@ -659,12 +700,20 @@ export async function getEstimatorTemplates(options?: { includeArchived?: boolea
             enabled_sections,
             loom_count,
             monthly_working_days,
-            avg_output_per_loom_per_day
-        `)
+            avg_output_per_loom_per_day`
+    const readReuse = (columns: string) => supabase
+        .from('estimator_quotes')
+        .select(columns as '*')
         .eq('org_id', profile.org_id)
         .eq('record_kind', 'costing')
         .in('template_id', templateIds)
         .order('updated_at', { ascending: false })
+    // LT01B stores each costing's warping and overhead modes. Until that
+    // migration is applied the columns do not exist; read without them then.
+    let { data: costings, error: costingError } = await readReuse(`${reuseColumns}, warping_mode, overhead_mode`)
+    if (costingError && ['42703', 'PGRST204'].includes(costingError.code ?? '')) {
+        ({ data: costings, error: costingError } = await readReuse(reuseColumns))
+    }
 
     if (costingError) return { error: costingError.message }
 
@@ -880,16 +929,15 @@ export async function saveAsFabricTemplate(data: {
         reconciledAt: new Date().toISOString(),
     })
 
-    const attestation = await attestCanonicalCostingPayload(user.id, profile.org_id, quotePayload)
-    if (!attestation.payload) return { error: attestation.error ?? 'The costing payload could not be verified.' }
-
-    const { data: atomicResult, error: atomicError } = await supabase.rpc(
+    const atomicOutcome = await saveAttestedCostingPayload(user.id, profile.org_id, quotePayload, trustedQuotePayload => supabase.rpc(
         'create_saved_quality_with_initial_costing_v1',
         {
             p_template_payload: templatePayload,
-            p_quote_payload: attestation.payload,
+            p_quote_payload: trustedQuotePayload,
         },
-    )
+    ))
+    if ('attestationError' in atomicOutcome) return { error: atomicOutcome.attestationError }
+    const { data: atomicResult, error: atomicError } = atomicOutcome as { data: InitialQualityRpcResult | null; error: CostingRpcOutcome['error'] }
     if (atomicError) return { error: templateWriteError(atomicError) }
     if (!atomicResult || atomicResult.success !== true) {
         return { error: atomicResult?.error ?? 'The quality was not saved because its costing snapshot could not be created.' }
@@ -1510,33 +1558,30 @@ export async function saveEstimatorQuoteV3(params: {
         reconciledAt: new Date().toISOString(),
     })
 
-    const costingAttestation = await attestCanonicalCostingPayload(user.id, profile.org_id, quotePayload)
-    if (!costingAttestation.payload) {
-        return { error: costingAttestation.error ?? 'The costing payload could not be verified.' }
-    }
-    const trustedQuotePayload = costingAttestation.payload
-
     if (params.updateSavedQuality) {
         if (!params.templateId) {
             return { error: 'Select a Saved Quality before updating its recipe.' }
         }
         const timestampError = validateExpectedTimestamp(params.expectedTemplateUpdatedAt, 'The Saved Quality')
         if (timestampError) return { error: timestampError }
+        const templateId = params.templateId
 
         // The RPC updates both rows in one transaction. A costing version is
         // never used as a substitute for the reusable quality record.
-        const { data: combined, error: combinedError } = await supabase.rpc(
+        const combinedOutcome = await saveAttestedCostingPayload(user.id, profile.org_id, quotePayload, trustedQuotePayload => supabase.rpc(
             'save_estimator_costing_revision_v2',
             {
                 p_quote_payload: trustedQuotePayload,
                 p_source_quote_id: params.sourceQuoteId ?? null,
                 p_expected_source_updated_at: params.expectedSourceUpdatedAt ?? null,
-                p_template_id: params.templateId,
+                p_template_id: templateId,
                 p_expected_template_updated_at: params.expectedTemplateUpdatedAt,
                 p_update_saved_quality: true,
                 p_template_payload: buildSavedQualityUpdatePayload(estimate),
             },
-        )
+        ))
+        if ('attestationError' in combinedOutcome) return { error: combinedOutcome.attestationError }
+        const { data: combined, error: combinedError } = combinedOutcome as { data: SaveRevisionRpcResult | null; error: CostingRpcOutcome['error'] }
 
         if (combinedError) return { error: combinedError.message }
         if (!combined || combined.success !== true) {
@@ -1559,7 +1604,7 @@ export async function saveEstimatorQuoteV3(params: {
     // what makes “Save New Costing Version” predictable when two tabs or a
     // double-click reach the server together. A source record of another kind
     // (for example a legacy quotation) is handled by the same RPC.
-    const { data: costingResult, error: costingError } = await supabase.rpc(
+    const costingOutcome = await saveAttestedCostingPayload(user.id, profile.org_id, quotePayload, trustedQuotePayload => supabase.rpc(
         'save_estimator_costing_revision_v2',
         {
             p_quote_payload: trustedQuotePayload,
@@ -1570,7 +1615,9 @@ export async function saveEstimatorQuoteV3(params: {
             p_update_saved_quality: false,
             p_template_payload: {},
         },
-    )
+    ))
+    if ('attestationError' in costingOutcome) return { error: costingOutcome.attestationError }
+    const { data: costingResult, error: costingError } = costingOutcome as { data: SaveRevisionRpcResult | null; error: CostingRpcOutcome['error'] }
 
     if (costingError) return { error: costingError.message }
     if (!costingResult || costingResult.success !== true) {

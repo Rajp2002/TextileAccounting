@@ -244,7 +244,48 @@ export type SavedQualityCostingReuse = Partial<{
   loom_count: unknown
   monthly_working_days: unknown
   avg_output_per_loom_per_day: unknown
+  warping_mode: 'in_house' | 'outsourced' | null
 }>
+
+type WarpingMode = 'in_house' | 'outsourced'
+
+function storedWarpingMode(value: unknown): WarpingMode | null {
+  return value === 'in_house' || value === 'outsourced' ? value : null
+}
+
+function storedOverheadMode(value: unknown): OverheadMode | null {
+  return value === 'direct' || value === 'monthly_expenses' ? value : null
+}
+
+/**
+ * The warping and overhead basis of a saved costing. Records saved since
+ * LT01B store both modes and the applied overhead; older records keep the
+ * earlier inference (an override means direct, a positive warping rate means
+ * outsourced) because their original modes were never stored.
+ */
+export function resolveSavedCostingInputBasis(
+  row: {
+    warping_mode?: unknown
+    warping_rate_per_kg?: unknown
+    overhead_mode?: unknown
+    overhead_override_per_m?: unknown
+  },
+  snapshot: { warpingMode?: WarpingMode; overheadMode?: OverheadMode; overheadOverridePerM?: number | null } = {},
+): { warpingMode: WarpingMode | undefined; overheadMode: OverheadMode; overheadOverridePerM: number | null } {
+  const storedOverride = row.overhead_override_per_m === null || row.overhead_override_per_m === undefined || row.overhead_override_per_m === ''
+    ? null
+    : Number.isFinite(Number(row.overhead_override_per_m)) ? Number(row.overhead_override_per_m) : null
+  const overheadOverridePerM = snapshot.overheadOverridePerM ?? storedOverride
+  const overheadMode = snapshot.overheadMode
+    ?? storedOverheadMode(row.overhead_mode)
+    ?? (snapshot.overheadOverridePerM != null || storedOverride != null ? 'direct' : 'monthly_expenses')
+  const legacyWarping = Number(row.warping_rate_per_kg) > 0 ? 'outsourced' as const : undefined
+  return {
+    warpingMode: snapshot.warpingMode ?? storedWarpingMode(row.warping_mode) ?? legacyWarping,
+    overheadMode,
+    overheadOverridePerM,
+  }
+}
 
 export type SavedQualityFixedWorker = {
   id: number
@@ -311,6 +352,7 @@ export function restoreSavedQualityCostingAssumptions(
     monthlyOutputM: finiteOrFallback(reuse.monthly_output_m, state.monthlyOutputM),
     overheadOverridePerM: directOverheadValue,
     overheadMode,
+    warpingMode: storedWarpingMode(reuse.warping_mode) ?? state.warpingMode,
     commissionPct: finiteOrFallback(reuse.commission_pct, state.commissionPct),
     transportPerM: finiteOrFallback(reuse.transport_per_m, state.transportPerM),
     profitPct: finiteOrFallback(reuse.profit_margin_pct, state.profitPct),

@@ -70,3 +70,48 @@ Each one is confirmed by reading current source; the ticket sections below add t
 | LC73 retrieval | `quotes/page.tsx` maps query errors to empty lists; `getEstimatorQuotes` has no paging (PostgREST caps rows per request) | failure looks like an empty library; large libraries can be cut silently |
 | LC13 overstated labels | `EstimatorClient` ("Actual margin" twice, "Costing valid"), `QuotesClient` comparison, internal PDF in `lib/estimator-export.ts` | labels present |
 | LC49 archive completeness | `app/(dashboard)/owner/settings/data-export.ts` | each dataset is one unpaged `select('*')`; `free_saved_costings` is not in the catalog; query errors already fail closed |
+
+## LT01A: typed yarn density
+
+**Status:** source checks passed, runtime pending.
+
+- `parseYarnDensityFromName` returns a density only with its unit (R6). Rate Book suggestions carry that typed density or none. A saved quality's row keeps the density it was saved with, in its own unit; a Rate Book entry with the same name never overrides it.
+- Choosing a yarn goes through `applyYarnSuggestionToRow`: a Ne suggestion sets the row to Ne with the exact count (40 Ne = 132.875 D effective); a denier suggestion sets denier and clears any old count; no density clears the row's density, so the empty "Denier — REQUIRED" field asks for it and the previous yarn's value cannot satisfy readiness. Rate, picks, ends, width, waste and GST are untouched.
+- The suggestion chip shows the count for Ne yarns ("40 Ne · 132.88 D").
+- No calculation, wire-format or stored-shape change: suggestions are transient, and the strict Free request schema already accepts both units.
+
+| Fixture | Test | Result |
+| --- | --- | --- |
+| 40 Ne, 40s Cotton, 30's, 60Ne → Ne | `__tests__/lite-yarn-density.test.ts` | pass; the old parser returned bare 40 |
+| 75D, 80 den, 150 Denier, 80/72, 50/48 → denier | same | pass |
+| 2/40, 30/1, 40/2, 1/69, bare number, blank → unresolved | same | pass |
+| into a denier row, into a Ne row, Ne → denier clears count, no density clears density | same | pass |
+| recipe density kept over a same-name Rate Book entry | same | pass |
+| reducer routes both selections through the helper | same (source contract) | pass |
+| old parser contract rewritten (it encoded the defect: 30/1 → 30, 2/40 → 40) | `__tests__/estimator-yarn-ratebook-dropdown.test.ts` | pass |
+
+Not run: the selection in a browser, and the domain reviewer's glossary sign-off for R6.
+
+## LT01B: saved input basis
+
+**Status:** source and disposable-database checks passed. **Migration `20261004120000_estimator_quote_input_basis.sql` is not applied anywhere.**
+
+Chosen representation (recorded before code): two nullable columns on `estimator_quotes`, `warping_mode` and `overhead_mode`, plus `overhead_override_per_m` now stored whenever the engine applied it (in either mode). No versioned input envelope: the payload builder is already the single writer for both save paths, and the snapshot trigger already makes every non-allowlisted column immutable.
+
+- `buildEstimatorQuotePayload` writes the effective modes and the applied override; `saveEstimatorQuoteV3` and `saveAsFabricTemplate` both use it. The migration extends the save RPC's payload allowlist in place, the way `20260825060131` added it. Attestation covers the new keys because it binds the whole payload.
+- Readers: `resolveSavedCostingInputBasis` prefers stored modes, then the earlier inference for older rows (no backfill, nothing guessed). Saved Costings reopen and the saved-quality reuse of the latest costing both use the stored modes. The reuse read retries without the two columns if the database does not have them yet.
+- Deployment order: readers and writer can ship before the migration. The save action retries once with the legacy payload only when the database rejects the new keys before any write (code 22023, "unsupported fields"), so saves keep working, with today's behavior, until the migration is applied.
+- Fingerprint unchanged: it already included `overheadMode` and `warpingMode`, so an unchanged resave of a reopened costing is still `no_change`.
+
+| Fixture | Test | Result |
+| --- | --- | --- |
+| in-house warping with a kept 12 ₹/kg reference rate, monthly mode with an applied 2.5 ₹/m overhead | `__tests__/db/lite-input-basis.dbtest.ts` | stored as `in_house` / `monthly_expenses` / 2.5; failed before the migration |
+| save → SQL → reopen → same production cost; the earlier inference gives a different cost; unchanged resave → `no_change`, same id | same | pass |
+| direct mode | same | pass |
+| first costing of a new saved quality | same | pass |
+| stored basis immutable | same | pass |
+| database without the migration: one legacy retry, saved with today's columns | same | pass |
+| payload, reader precedence, legacy inference, reuse | `__tests__/lite-input-basis.test.ts` | pass |
+| existing save, replay, tamper, tenant and immutability invariants | `costing-save.dbtest.ts`, `costing-immutability.dbtest.ts` | pass |
+
+Rollback: stop the writer by reverting the payload change; keep the columns and readers (old rows stay NULL and read as before). Never drop populated columns.
