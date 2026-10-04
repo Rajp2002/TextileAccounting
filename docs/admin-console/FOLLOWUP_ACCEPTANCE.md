@@ -1,5 +1,7 @@
 # Founder authentication and compatibility follow-up
 
+Historical authentication follow-up evidence follows. The later [data-rights/formal acceptance](DATA_RIGHTS_ACCEPTANCE.md) supersedes its retention/formal owner blockers and provider-cancellation behavior where explicitly stated. Current main `39b5e15a` has been integrated locally; the older runtime/results below remain history, not acceptance for the new slice.
+
 Runtime candidate: **1d951fd9f75b15b24caeeeeb56d16eda3aca7950**, branch `codex/founder-admin`, worktree `/tmp/weavly-founder-admin`. Main remains clean at36e6e4e. Subsequent delivery changes are documentation/evidence only. This is locally verified implementation, not production acceptance.
 
 ## User-approved sign-in contract

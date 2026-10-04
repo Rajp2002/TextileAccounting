@@ -4,8 +4,8 @@ import { z } from 'zod'
 import { requireRole } from '@/lib/auth'
 import { createAdminClient } from '@/lib/supabase/admin'
 
-export const ACCOUNT_DELETION_REVIEW_MESSAGE = 'Account deletion needs a privacy review because retained support or reporting records are linked to this account. No database rows were deleted. Use the privacy request channel to arrange the review.'
-export const ACCOUNT_DELETION_UNAVAILABLE_MESSAGE = 'Account deletion readiness could not be verified. Nothing was deleted and no subscription cancellation was requested. Please try again.'
+export const ACCOUNT_DELETION_REVIEW_MESSAGE = 'Account deletion needs a privacy review because retained records or legacy billing references are linked to this account. No database rows were deleted or provider changes requested. Use the privacy request channel to arrange the review.'
+export const ACCOUNT_DELETION_UNAVAILABLE_MESSAGE = 'Account deletion readiness could not be verified. Nothing was deleted and no provider changes were requested. Please try again.'
 const EXPORT_UNAVAILABLE = 'Your public support export is unavailable or incomplete. No export was generated; please try again.'
 
 const safeEventValues = z.object({
@@ -65,7 +65,7 @@ export async function readOwnSupportExport() {
     throw new Error(EXPORT_UNAVAILABLE)
 }
 
-/** Check before any provider cancellation. The deletion RPC independently rechecks under row locks. */
+/** The deletion RPC independently rechecks retained evidence under row locks. */
 export async function checkOwnAccountDeletion(): Promise<{ allowed: boolean; reason: 'ready' | 'review_required' }> {
     const { user, profile } = await requireRole(['owner'], { allowFreeAccount: true })
     const { data, error } = await createAdminClient().rpc('admin_account_deletion_preflight', {

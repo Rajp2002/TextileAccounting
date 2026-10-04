@@ -19,7 +19,7 @@ export function isDedicatedSupportRoute(pathname: string): boolean {
 
 const destinations = new Set([
     '/admin', '/admin/factories', '/admin/support', '/admin/payments',
-    '/admin/system', '/admin/audit', '/admin/legacy',
+    '/admin/system', '/admin/audit', '/admin/legacy', '/admin/formal', '/admin/formal/new', '/admin/formal/retention',
 ])
 
 /** Return paths are fixed internal destinations; query values are not carried through Auth. */
@@ -27,5 +27,6 @@ export function safeFounderReturnPath(value: unknown): string {
     if (typeof value !== 'string' || value.length > 180 || /[\\\s?#%]/.test(value)) return '/admin'
     if (destinations.has(value)) return value
     if (/^\/admin\/(factories|support)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)) return value
+    if (/^\/admin\/formal\/(privacy|security|review)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)) return value
     return '/admin'
 }

@@ -5,6 +5,8 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireRole } from '@/lib/auth'
 import { requireLegacyFounder } from '@/lib/admin/founder'
 import { revalidatePath } from 'next/cache'
+import { z } from 'zod'
+import { checkAuthRateLimit } from '@/lib/rate-limit'
 
 /**
  * GRIEVANCE ACTIONS
@@ -489,23 +491,15 @@ export async function unlockTenant(orgId: string) {
 }
 
 export async function requestUnlock(orgId: string, reason: string) {
-    const { profile } = await requireRole(['owner'])
+    const { profile, user } = await requireRole(['owner'], { allowFreeAccount: true })
     if (profile.org_id !== orgId) throw new Error('Unauthorized')
-    const supabase = await createClient()
-
-    const { error } = await supabase
-        .from('grievances')
-        .insert({
-            org_id: orgId,
-            subject: 'TENANT UNLOCK REQUEST',
-            description: `Owner requested unlock. Reason given: ${reason}`,
-            target_entity: 'WEAVLY',
-            grievance_type: 'UNLOCK_REQUEST',
-            filed_by_role: 'owner',
-            status: 'pending'
-        })
-
-    if (error) throw new Error(error.message)
+    const parsed = z.object({ orgId: z.uuid(), reason: z.string().trim().min(3).max(1000) }).safeParse({ orgId, reason })
+    if (!parsed.success) throw new Error('Provide a reason of 3 to 1,000 characters.')
+    if (await checkAuthRateLimit(`unlock-request:${user.id}`) !== null) throw new Error('Please wait before requesting another review.')
+    const { error } = await createAdminClient().rpc('admin_owner_unlock_request', {
+        p_actor_id: user.id, p_org_id: profile.org_id, p_reason: parsed.data.reason,
+    })
+    if (error) throw new Error('The unlock request could not be recorded. Please try again.')
     revalidatePath('/locked')
 }
 

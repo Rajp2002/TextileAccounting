@@ -12,7 +12,7 @@ test('anonymous founder login is accessible and has no tenant data', async ({ pa
 })
 
 test('every direct founder and support API denies an anonymous principal', async ({ request }) => {
-    for (const path of ['/api/admin/overview','/api/admin/factories','/api/admin/factories/00000000-0000-4000-8000-000000000001','/api/admin/support','/api/admin/payments','/api/admin/system','/api/admin/audit','/api/admin/session','/api/admin/auth/session','/api/support','/api/support/export','/api/support/session','/api/support/00000000-0000-4000-8000-000000000001']) {
+    for (const path of ['/api/admin/overview','/api/admin/factories','/api/admin/factories/00000000-0000-4000-8000-000000000001','/api/admin/support','/api/admin/payments','/api/admin/system','/api/admin/audit','/api/admin/formal','/api/admin/formal/retention','/api/admin/formal/privacy/00000000-0000-4000-8000-000000000001','/api/admin/formal/retained-records/00000000-0000-4000-8000-000000000001','/api/admin/session','/api/admin/auth/session','/api/support','/api/support/export','/api/support/session','/api/support/00000000-0000-4000-8000-000000000001']) {
         const response = await request.get(path)
         expect(response.status(), path).toBe(401)
         expect(response.headers()['content-type']).toContain('application/json')
@@ -23,7 +23,7 @@ test('every direct founder and support API denies an anonymous principal', async
 })
 
 test('protected deep links return to login without a redirect loop', async ({ page }) => {
-    for (const path of ['/admin','/admin/factories','/admin/support','/admin/payments','/admin/audit','/admin/verify','/admin/legacy']) {
+    for (const path of ['/admin','/admin/factories','/admin/support','/admin/payments','/admin/audit','/admin/verify','/admin/legacy','/admin/formal','/admin/formal/new','/admin/formal/retention','/admin/formal/privacy/00000000-0000-4000-8000-000000000001']) {
         await page.goto(path)
         await expect(page).toHaveURL(/\/(?:admin\/)?login(?:\?|$)/)
         await expect(page.getByLabel(/email/i)).toBeVisible()
@@ -80,4 +80,13 @@ test.skip('approved founder AAL2 and requester lifecycle in real Supabase Auth',
     // Release gate: requires a running isolated Supabase Auth service, approved
     // synthetic identities/factors and MFA recovery evidence. A skipped test
     // is recorded as blocked, never represented as a completed round trip.
+})
+
+test('formal mutations deny forged anonymous identity and expose no source data', async ({ request }) => {
+    for (const path of ['/api/admin/formal', '/api/admin/formal/privacy/00000000-0000-4000-8000-000000000001']) {
+        const response = await request.post(path, { headers: { Origin: 'http://127.0.0.1:3100' }, data: { operation: 'delete', actorId: 'forged', role: 'admin', aal: 'aal2' } })
+        expect(response.status()).toBe(401)
+        expect(response.headers()['cache-control']).toContain('no-store')
+        expect(await response.json()).not.toHaveProperty('id')
+    }
 })

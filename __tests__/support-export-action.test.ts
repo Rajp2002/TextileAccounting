@@ -1,13 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 vi.mock('server-only', () => ({}))
-const f = vi.hoisted(() => ({ guard: vi.fn(), support: vi.fn(), insert: vi.fn(), rpc: vi.fn() }))
+const f = vi.hoisted(() => ({ guard: vi.fn(), support: vi.fn(), insert: vi.fn(), rpc: vi.fn(), or: vi.fn() }))
 vi.mock('@/lib/auth', () => ({ requireRole: f.guard }))
 vi.mock('@/lib/support/data-rights', () => ({ readOwnSupportExport: f.support }))
+vi.mock('@/lib/subscription', () => ({ getCachedOrgPlanAccess: async () => ({ effectiveTier: 'lite', freeAccount: false }) }))
 vi.mock('@/lib/supabase/server', () => ({ createClient: vi.fn() }))
 vi.mock('@/lib/supabase/admin', () => ({ createAdminClient: () => ({ rpc: f.rpc, from: (table: string) => {
     let inserted = false
     const q = {
-        select: () => q, eq: () => q, in: () => q,
+        select: () => q, eq: () => q, in: () => q, gt: () => q, order: () => q, limit: () => q, range: () => q,
+        or: (filter: string) => { f.or(table, filter); return q },
         insert: (value: unknown) => { inserted = true; f.insert(table, value); return q },
         single: async () => ({ data: { id: 'synthetic-run', status: 'generated' }, error: null }),
         then: (resolve: (value: unknown) => unknown) => Promise.resolve({ data: inserted ? null : [], error: null }).then(resolve),
@@ -30,6 +32,8 @@ describe('owner complete export public support integration', () => {
         expect(result.datasets.support_messages).toEqual([{ id: 'own-message', ticketId: 'own-ticket', body: 'Public reply' }])
         expect(result.dataset_catalog).toEqual(expect.arrayContaining(['support_tickets', 'support_messages', 'support_ticket_events']))
         expect(result.support_scope.unit).toBe('requester_public_support')
+        expect(f.or).toHaveBeenCalledWith('grievances', 'target_entity.neq.WEAVLY,grievance_type.neq.DATA_PRIVACY')
+        expect(result.formal_scope.excluded).toContain('Weavly privacy cases')
         expect(f.insert).toHaveBeenCalledWith('organization_export_runs', expect.objectContaining({ status: 'generated', dataset_counts: expect.objectContaining({ support_tickets: 1, support_messages: 1 }) }))
         expect(f.rpc).toHaveBeenCalledWith('log_export_event', expect.objectContaining({ p_actor_id: 'owner', p_org_id: 'org' }))
     })

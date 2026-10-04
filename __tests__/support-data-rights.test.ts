@@ -40,7 +40,7 @@ describe('requester data-rights loaders', () => {
         f.rpc.mockResolvedValueOnce({ data: { allowed: false, reason: 'review_required' }, error: null })
         expect(await checkOwnAccountDeletion()).toEqual({ allowed: false, reason: 'review_required' })
         f.rpc.mockResolvedValueOnce({ data: { allowed: true, reason: 'review_required' }, error: null })
-        await expect(checkOwnAccountDeletion()).rejects.toThrow('no subscription cancellation was requested')
+        await expect(checkOwnAccountDeletion()).rejects.toThrow('no provider changes were requested')
         f.rpc.mockResolvedValueOnce({ data: null, error: { code: 'PGRST202' } })
         await expect(checkOwnAccountDeletion()).rejects.toThrow('could not be verified')
     })

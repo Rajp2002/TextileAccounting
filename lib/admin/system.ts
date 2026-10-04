@@ -30,7 +30,7 @@ export async function getAdminSystem() {
             reason: index === 0 ? `Payment event ${raw.status === 'failed' ? 'failed processing' : 'is awaiting processing'}.`
                 : index === 1 ? `Open ${raw.severity} incident requires review.` : 'An export attempt failed; inspect its protected diagnostic reference.',
             severity: index === 1 && raw.severity === 'critical' ? 'critical' : index === 2 ? 'normal' : 'high',
-            href: index === 1 ? '/admin/legacy#incidents' : index === 2 && typeof raw.org_id === 'string' ? `/admin/factories/${raw.org_id}` : '/admin/payments',
+            href: index === 1 ? `/admin/formal/security/${raw.id}` : index === 2 && typeof raw.org_id === 'string' ? `/admin/factories/${raw.org_id}` : '/admin/payments',
         }))
         return { ...spec, state: 'observed', count: read.value.count ?? items.length, checkedAt: asOf, latestAt: items.map(item => item.observedAt).sort().at(-1) ?? null, items }
     })
