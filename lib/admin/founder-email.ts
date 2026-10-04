@@ -8,3 +8,10 @@ export function founderEmailAllowed(value: unknown): boolean {
     const expected = fixture && /^[^\s@]+@[^\s@]+\.(invalid|test)$/.test(fixture) ? fixture : APPROVED_FOUNDER_EMAIL
     return typeof value === 'string' && value.trim().toLowerCase() === expected
 }
+
+/** A denial boundary for customer access; this never grants founder access. */
+export function founderOnlyIdentity(email: unknown, role?: unknown): boolean {
+    return founderEmailAllowed(email) || role === 'admin'
+}
+
+export const FOUNDER_ONLY_LOGIN_MESSAGE = 'This account is for founder access only. Sign in at /admin/login.'

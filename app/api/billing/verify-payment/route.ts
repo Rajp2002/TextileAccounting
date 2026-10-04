@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { createClient } from '@/lib/supabase/server'
+import { founderOnlyIdentity } from '@/lib/admin/founder-email'
 import { reconcileBillingOrder } from '@/lib/billing-reconciliation'
 import * as Sentry from '@sentry/nextjs'
 
@@ -21,6 +22,9 @@ export async function POST(req: NextRequest) {
 
     if (!user) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    if (founderOnlyIdentity(user.email)) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403, headers: { 'Cache-Control': 'private, no-store' } })
     }
 
     // Get owner profile & org

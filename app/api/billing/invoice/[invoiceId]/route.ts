@@ -1,19 +1,23 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { founderOnlyIdentity } from '@/lib/admin/founder-email'
 import { generateGstInvoicePdf } from '@/lib/generate-gst-invoice'
 import { isGstInvoiceSupported } from '@/lib/billing-document-policy'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(_request: Request, { params }: { params: Promise<{ invoiceId: string }> }) {
-  if (!isGstInvoiceSupported()) {
-    return NextResponse.json({ error: 'GST tax invoices are not supported for the current paid pilot.' }, { status: 404 })
-  }
-
   const { invoiceId } = await params
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (founderOnlyIdentity(user.email)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403, headers: { 'Cache-Control': 'private, no-store' } })
+  }
+
+  if (!isGstInvoiceSupported()) {
+    return NextResponse.json({ error: 'GST tax invoices are not supported for the current paid pilot.' }, { status: 404 })
+  }
 
   const { data: profile } = await supabase.from('profiles').select('org_id, role').eq('id', user.id).single()
   if (!profile?.org_id || profile.role !== 'owner') return NextResponse.json({ error: 'Owner access required' }, { status: 403 })

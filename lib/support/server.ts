@@ -2,6 +2,7 @@ import 'server-only'
 import { getVerifiedIdentity } from '@/lib/auth'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireFounder } from '@/lib/admin/founder'
+import { founderOnlyIdentity } from '@/lib/admin/founder-email'
 import { AdminError, adminErrorResponse } from '@/lib/admin/errors'
 import { checkAuthRateLimit,isUserRevoked } from '@/lib/rate-limit'
 import { z } from 'zod'
@@ -14,7 +15,7 @@ export async function requireSupportOwner(){
  assertSupportEnabled()
  const identity=await getVerifiedIdentity()
  if(!identity||await isUserRevoked(identity.user.id))throw new AdminError('UNAUTHENTICATED',401,'Please sign in again.')
- if(identity.profile.role!=='owner'||!identity.profile.org_id)throw new AdminError('FORBIDDEN',403,'Owner support access is required.')
+ if(founderOnlyIdentity(identity.user.email,identity.profile.role)||identity.profile.role!=='owner'||!identity.profile.org_id)throw new AdminError('FORBIDDEN',403,'Owner support access is required.')
  const {data,error}=await createAdminClient().from('organizations').select('id').eq('id',identity.profile.org_id).maybeSingle()
  if(error)throw new AdminError('UNAVAILABLE',503,'Support access is unavailable.')
  if(!data)throw new AdminError('FORBIDDEN',403,'Support access could not be verified.')

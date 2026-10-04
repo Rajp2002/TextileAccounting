@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { parseJWT } from '@/lib/auth'
+import { founderOnlyIdentity } from '@/lib/admin/founder-email'
 
 /**
  * Validates that a `next` redirect target is a safe internal path.
@@ -56,6 +57,10 @@ export async function GET(request: Request) {
 
             if (isRecoverySession) {
                 return NextResponse.redirect(`${origin}/reset-password`)
+            }
+
+            if (founderOnlyIdentity(data.session.user.email, jwt.user_role)) {
+                return NextResponse.redirect(`${origin}/admin/login`)
             }
 
             // Standard post-auth flow: role-based redirect (jwt already parsed above)

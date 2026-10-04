@@ -339,6 +339,6 @@ describe('Free workspace launch hint', () => {
 
         const response = await reopen('/login')
 
-        expect(response.headers.get('location')).toBe('https://textile-accounting.vercel.app/admin')
+        expect(response.headers.get('location')).toBe('https://textile-accounting.vercel.app/admin/login')
     })
 })

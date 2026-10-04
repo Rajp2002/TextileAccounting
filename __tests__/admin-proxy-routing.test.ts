@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const auth = vi.hoisted(() => ({ getClaims: vi.fn(), signOut: vi.fn() }))
 const revoked = vi.hoisted(() => vi.fn())
@@ -17,6 +17,7 @@ function request(path: string, { loggedIn = true, method = 'GET', idle = false }
 }
 beforeEach(() => {
     vi.resetAllMocks()
+    vi.stubEnv('WEAVLY_FOUNDER_TEST_EMAIL', 'founder@example.test')
     limiter.mockResolvedValue(null)
     revoked.mockResolvedValue(false)
     auth.signOut.mockResolvedValue({ error: null })
@@ -26,6 +27,7 @@ beforeEach(() => {
     profile.maybeSingle.mockResolvedValue({ data: null, error: null })
     auth.getClaims.mockResolvedValue({ data: { claims: { sub: 'synthetic-founder', app_metadata: { role: 'owner', onboarding_complete: false, plan_selection_pending: true } } }, error: null })
 })
+afterEach(() => vi.unstubAllEnvs())
 
 describe('founder and requester Proxy routes', () => {
     it('anonymous exact admin login renders without an Auth lookup', async () => {
@@ -72,14 +74,14 @@ describe('founder and requester Proxy routes', () => {
         const response = await updateSession(request('/owner/settings'))
         expect(response.headers.get('location')).toBe('https://weavly.example/plans?from=onboarding')
     })
-    it('normal customer login still routes an admin hint to the founder server guard', async () => {
+    it('normal customer login routes a platform identity to the separate founder login', async () => {
         auth.getClaims.mockResolvedValueOnce({ data: { claims: { sub: 'synthetic-founder', app_metadata: { role: 'admin' } } }, error: null })
-        expect((await updateSession(request('/login'))).headers.get('location')).toBe('https://weavly.example/admin')
+        expect((await updateSession(request('/login'))).headers.get('location')).toBe('https://weavly.example/admin/login')
     })
     it('normal login corrects a stale owner hint from the current own admin profile without requiring org', async () => {
         profile.maybeSingle.mockResolvedValueOnce({ data: { role: 'admin', access_revoked_at: null }, error: null })
         const response = await updateSession(request('/login'))
-        expect(response.headers.get('location')).toBe('https://weavly.example/admin')
+        expect(response.headers.get('location')).toBe('https://weavly.example/admin/login')
         expect(profile.select).toHaveBeenCalledWith('role, access_revoked_at')
         expect(profile.eq).toHaveBeenCalledWith('id', 'synthetic-founder')
     })
@@ -97,5 +99,25 @@ describe('founder and requester Proxy routes', () => {
         expect((await updateSession(request('/login'))).headers.get('location')).toBe('https://weavly.example/onboarding')
         profile.maybeSingle.mockResolvedValueOnce({ data: null, error: { message: 'unavailable' } })
         expect((await updateSession(request('/login'))).headers.get('location')).toBe('https://weavly.example/onboarding')
+    })
+    it.each(['/login', '/signup', '/free', '/plans', '/onboarding', '/owner/settings', '/owner/estimator', '/support'])('reserved founder email cannot enter customer route %s despite stale owner claims', async path => {
+        auth.getClaims.mockResolvedValueOnce({ data: { claims: { sub: 'synthetic-founder', email: 'FOUNDER@example.test', app_metadata: { role: 'owner', org_id: 'old-org', plan_selection_pending: true } } }, error: null })
+        const response = await updateSession(request(path))
+        expect(response.headers.get('location')).toBe('https://weavly.example/admin/login')
+        expect(response.headers.get('cache-control')).toContain('no-store')
+        expect(auth.signOut).not.toHaveBeenCalled()
+    })
+    it.each(['/api/free/account', '/api/support', '/api/billing/create-order'])('founder customer endpoint %s returns JSON denial without running its handler', async path => {
+        auth.getClaims.mockResolvedValueOnce({ data: { claims: { sub: 'synthetic-founder', email: 'founder@example.test', app_metadata: { role: 'owner' } } }, error: null })
+        const response = await updateSession(request(path))
+        expect(response.status).toBe(403)
+        expect(await response.json()).toMatchObject({ code: 'FORBIDDEN' })
+        expect(response.headers.get('location')).toBeNull()
+        expect(response.headers.get('cache-control')).toContain('no-store')
+    })
+    it.each(['/admin/login', '/admin/verify', '/api/admin/overview', '/forgot-password', '/reset-password', '/auth/callback'])('founder auth/recovery route %s retains its own live guard', async path => {
+        auth.getClaims.mockResolvedValueOnce({ data: { claims: { sub: 'synthetic-founder', email: 'founder@example.test', app_metadata: { role: 'admin' } } }, error: null })
+        expect((await updateSession(request(path, { idle: true }))).status).toBe(200)
+        expect(auth.signOut).not.toHaveBeenCalled()
     })
 })

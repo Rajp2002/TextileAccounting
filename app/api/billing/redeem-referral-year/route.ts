@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import * as Sentry from '@sentry/nextjs'
 import { requireRole } from '@/lib/auth'
+import { founderOnlyIdentity } from '@/lib/admin/founder-email'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 export const dynamic = 'force-dynamic'
@@ -8,7 +9,10 @@ export const dynamic = 'force-dynamic'
 /** Reserve every active referral credit as consecutive free annual Base periods. */
 export async function POST() {
     try {
-        const { profile } = await requireRole(['owner'])
+        const { user, profile } = await requireRole(['owner'])
+        if (founderOnlyIdentity(user.email, profile.role)) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403, headers: { 'Cache-Control': 'private, no-store' } })
+        }
         if (!profile.org_id) {
             return NextResponse.json({ error: 'Organization not found.' }, { status: 400 })
         }

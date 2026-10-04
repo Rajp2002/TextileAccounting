@@ -45,3 +45,22 @@ test('returning founder gets only the authenticator code step with no enrollment
     await expect(page.getByLabel('Authenticator code', { exact: true })).toBeFocused()
     await page.screenshot({ path: `output/playwright/admin-console/auth-fixtures/returning-code-${info.project.name}-synthetic.png`, fullPage: true })
 })
+for (const role of ['admin', 'owner']) {
+    test(`${role} password recovery returns to its own login after signing out`, async ({ page }) => {
+        const operations: string[] = []
+        await page.route('**/fixture/reset-password', route => {
+            operations.push('update')
+            return route.fulfill({ json: { data: { user: { email: `${role}@example.test`, app_metadata: { role } } }, error: null } })
+        })
+        await page.route('**/fixture/reset-signout', route => {
+            operations.push('sign-out')
+            return route.fulfill({ json: { error: null } })
+        })
+        await page.goto('/?mode=reset')
+        await page.getByLabel('New password', { exact: true }).fill('SyntheticFixtureOnly1!')
+        await page.getByLabel('Confirm password', { exact: true }).fill('SyntheticFixtureOnly1!')
+        await page.getByRole('button', { name: /update password/i }).click()
+        await expect(page).toHaveURL(role === 'admin' ? /\/admin\/login\?message=password-updated$/ : /\/login\?message=password-updated$/)
+        expect(operations).toEqual(['update', 'sign-out'])
+    })
+}
