@@ -1556,6 +1556,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     sourceQuoteUpdatedAt={quoteToExport.updated_at}
                     sourceQuoteStatus={quoteToExport.status}
                     sourceRecordKind={quoteToExport.record_kind === 'quotation' ? 'quotation' : 'costing'}
+                    documentSource={{ kind: 'saved', qualityLabel: quoteToExport.quality_label ?? exportModel?.qualityLabel ?? '', version: Number(quoteToExport.version_number ?? 1), savedAt: quoteToExport.created_at }}
                     onQuoteUpdated={data => {
                         setQuotes(current => current.map(item => item.id === quoteToExport.id ? { ...item, ...data } : item))
                         setQuoteToExport(current => current ? { ...current, ...data } : current)

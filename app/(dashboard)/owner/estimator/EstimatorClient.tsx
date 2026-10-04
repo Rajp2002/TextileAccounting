@@ -7162,6 +7162,7 @@ export default function EstimatorClient({
                     sourceQuoteId={exportSavedCosting ? lastSavedCosting?.id : undefined}
                     sourceRecordKind={exportSavedCosting ? 'costing' : undefined}
                     documentReference={exportSavedCosting && lastSavedCosting ? `${lastSavedCosting.model.qualityLabel} · v${lastSavedCosting.version}` : undefined}
+                    documentSource={exportSavedCosting && lastSavedCosting ? { kind: 'saved', qualityLabel: lastSavedCosting.model.qualityLabel, version: lastSavedCosting.version, savedAt: lastSavedCosting.savedAt } : { kind: 'working' }}
                 />
             )}
 

@@ -26,6 +26,10 @@ const PHRASES: Array<[string, string, string]> = [
   ['Estimated margin at this price', 'इस कीमत पर अनुमानित मार्जिन', 'આ ભાવે અંદાજિત માર્જિન'],
   ['Estimated margin', 'अनुमानित मार्जिन', 'અંદાજિત માર્જિન'],
   ['Estimate ready for review', 'अनुमान जाँच के लिए तैयार', 'અંદાજ તપાસ માટે તૈયાર'],
+  ['Customer quotation · based on {quality} costing v{version} · saved {date}', 'ग्राहक कोटेशन · {quality} की कॉस्टिंग v{version} पर आधारित · {date} को सेव', 'ગ્રાહક ક્વોટેશન · {quality} ની કૉસ્ટિંગ v{version} પર આધારિત · {date} ના રોજ સેવ'],
+  ['Internal cost sheet · based on {quality} costing v{version} · saved {date}', 'आंतरिक कॉस्ट शीट · {quality} की कॉस्टिंग v{version} पर आधारित · {date} को सेव', 'આંતરિક કૉસ્ટ શીટ · {quality} ની કૉસ્ટિંગ v{version} પર આધારિત · {date} ના રોજ સેવ'],
+  ['Internal estimate · unsaved working inputs', 'आंतरिक अनुमान · बिना सेव किए मौजूदा इनपुट', 'આંતરિક અંદાજ · સેવ કર્યા વગરના હાલના ઇનપુટ'],
+  ['Customer quotation · unsaved working inputs', 'ग्राहक कोटेशन · बिना सेव किए मौजूदा इनपुट', 'ગ્રાહક ક્વોટેશન · સેવ કર્યા વગરના હાલના ઇનપુટ'],
 ]
 
 export const LITE_REFINEMENT_PHRASES: Record<BasePlanLocalLanguage, Record<string, string>> = {

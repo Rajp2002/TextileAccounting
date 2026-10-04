@@ -207,3 +207,23 @@ Not done: Recent/Favorites ordering (D05, not authorized), the operator scope-pr
 | old-label contracts updated deliberately | `sprint-estimator-aesthetic`, `base-estimator-refinements`, `lite-document-privacy`, `lite-task-validation` | pass |
 
 Not done in this sprint (P1, needs the domain/language reviewer or browser): explaining target margin and commission as shares of selling price, the yarn-tax and weaving-charge scope help, progressive first-use setup (D08 held), and the 360/390 px, 200% zoom, keyboard and screen-reader journeys. The existing dismissible wizard and its direct-overhead rule are unchanged.
+
+## LT06: document source and privacy
+
+**Status:** source checks passed. Actual generated PDFs, phone layout and share sheets: not run.
+
+- The export dialog now opens with one line naming what the numbers come from: "Customer quotation · based on {quality} costing v{n} · saved {date}" (or "Internal cost sheet · …") when the costing was saved, from the server receipt or the saved row, and "Internal estimate · unsaved working inputs" (or "Customer quotation · …") for working inputs. The line follows the selected mode and sits under the dialog title, above the preview and form, so it is visible on phone and desktop layouts. Defaults are unchanged: working inputs default to internal, a saved receipt to customer; nothing reuses the last-used mode. Free's saved-history export is unchanged (Free scope).
+- Privacy is preserved, not rebuilt. New proof on the generated document HTML, which is what the PDF is rendered from: the customer file contains the quoted price but none of production cost, break-even or landed cost (in the document's own "Rs 1,234.56" format), no yarn names and no yarn rates; internal notes reach only the internal file (the dialog maps customer mode to customer terms); share text is exactly the allowlisted lines (quotation, for, quality, price, quantity, valid until, attachment note).
+- History boundary (D10 declined): a saved costing keeps its economics, not the exact earlier PDF or its recipient and terms. Quotation records are retired by the owner's decision, so no document history is added.
+
+| Fixture | Test | Result |
+| --- | --- | --- |
+| saved source in both modes; working inputs in both modes; HI/GU for all four | `__tests__/lite-document-source.test.ts` | pass; failed before the change |
+| dialog line and caller wiring (estimator receipt/working, Saved Costings row) | same (source contract) | pass |
+| customer HTML: no cost values, yarn names or rates; price present | same | pass on current code (preservation) |
+| share text allowlist | same | pass on current code (preservation) |
+| internal notes never mapped to the customer file | same (source contract) | pass |
+
+A first draft of the cost-value check used "₹" while the document prints "Rs", which would have passed vacuously; the test now uses the document's formatter and also asserts the quoted price is present.
+
+Not run: real PDF render and text extraction, EN/HI/GU glyphs and page breaks in the PDF, delayed generation vs edits in a browser, share cancel and download fallback on a phone, and zero-allowance Free exports with ledger proof.
