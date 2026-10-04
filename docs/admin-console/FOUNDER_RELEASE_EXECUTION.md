@@ -1,6 +1,6 @@
 # Approved founder release execution
 
-Current checkpoint: 4 October 2026. Supersedes historical pending-publication and missing-recovery statements in earlier preparation notes. No production readiness is inferred from preview success.
+Current checkpoint: 4 October 2026, 22:56 UTC. The approved production deployment is READY and the live login is enabled. Raj can now perform his private password/QR/code test. PR #188 remains open and unmerged. This record supersedes historical pending-publication, deployment and missing-recovery statements in earlier preparation notes; readiness is based on the actual production deployment and live checks below.
 
 ## Authority and exact target
 
@@ -21,7 +21,7 @@ Current checkpoint: 4 October 2026. Supersedes historical pending-publication an
 | Real built-app browser | 13/13 groups passed against runtime `76e4cc9310737e8a73f0a30989c24a7ff943d552`, desktop/mobile Chromium. Actual QR/OTP/AAL2, denial, offline/cache, four server-confirmed UI logouts, old-cookie replay, protected Back and returning OTP without QR passed. Final synthetic Auth users, CSP violations and outbound requests: zero. |
 | Independent browser review | No P0/P1/material P2; script SHA-256 `3efd2ac4796b83fa75c0a207f2d501e640989bc077ad209d0b77044cea181941`; report SHA-256 `d78f22232515acbc36872cfe51614522326259a93162198eded1cf8e41fd7d6c`. Reviewer independently checked syntax, hashes and all final evidence; execution was by the harness owner. |
 | Local runtime checks | Lint/typecheck passed; unit 322 files/2,958 passed, one existing optional live test skipped; disposable database 32 files/273 passed. No production targets inherited by test subprocesses. |
-| Publication | [PR #188](https://github.com/Rajp2002/TextileAccounting/pull/188), head `76e4cc93`, open and unmerged. CI types/tests/lint, disposable PostgreSQL regressions and Vercel preview passed. |
+| Publication | [PR #188](https://github.com/Rajp2002/TextileAccounting/pull/188), deployed commit `f50af0d168d836e13ed877b90cecc71913d03fea`, open and unmerged. [CI run 37240336661](https://github.com/Rajp2002/TextileAccounting/actions/runs/37240336661) passed types/tests/lint and disposable PostgreSQL; Vercel preview passed. Runtime is unchanged from reviewed `76e4cc93`. |
 
 Private recovery location: `/Users/rajpatel/Library/Application Support/WeavlyRecovery/vzhwahudircrpgtitwzd-20261004/application-recovery.dump`. It is an application recovery backup, not test data. Do not upload, commit or print it. Failed intermediate export files are not recovery evidence; the named verified archive is authoritative.
 
@@ -44,7 +44,7 @@ WHERE n.nspname = 'public' AND c.relkind IN ('r', 'p', 'v')
 ORDER BY c.relname;
 ```
 
-## Production database setup and next gate
+## Completed production database setup
 
 At 22:25 UTC, ordinary `supabase db push --linked` applied exactly the ten hash-verified approved migrations successfully, without reset/seed/history repair. Hosted history now has 326 versions; all ten version/name checks and twelve object checks pass. Sixteen private tables have RLS and no direct anon/authenticated/service-role table access; three support tables have RLS, no client access and service SELECT only. Nineteen public admin RPCs deny anon/authenticated execution and allow only the guarded service path. Hosted catalog also confirms no anon/authenticated private-schema USAGE. The two legacy public registers retain historical authenticated SELECT ACLs, but RLS is enabled with zero policies, owner is postgres and authenticated cannot bypass RLS; no rows are granted by those ACLs.
 
@@ -52,8 +52,25 @@ The bound setup transaction was executed as the verified `postgres` operator. In
 
 Advisor delta was reviewed: sixteen intentionally closed private tables and the two retired direct global-admin registers have no public RLS policies; the only additional authenticated security-definer helper is `support_is_requester(uuid)`, a fixed-path, requester/current-owner/nonrevoked/same-org boolean predicate. Existing unrelated Auth warnings remain unchanged. No broad client grant was introduced.
 
-At 22:29 UTC, Vercel confirmed creation of only the four approved founder/enrollment variables as `true`, Production target only. Preview/development and support/formal/legacy/payment gates are untouched. A fresh deployment is still required for this configuration to take effect. Temporary CLI administrative login creation is the separately approved managed credential operation; no credential value is printed or published. No live checkout/payment, backfill, purge, classification or external customer message is included.
+At 22:29 UTC, Vercel confirmed creation of only the four approved founder/enrollment variables as `true`, Production target only: `WEAVLY_ADMIN_ENABLED`, `WEAVLY_ADMIN_PRODUCTION_APPROVED`, `WEAVLY_ADMIN_MFA_ENROLLMENT_ENABLED`, `WEAVLY_ADMIN_MFA_SETUP_APPROVED`. They are active in the fresh production deployment below. Preview/development and support/formal/legacy/payment gates are untouched. Temporary CLI administrative login creation was the separately approved managed credential operation; no credential value is printed or published. No live checkout/payment, backfill, purge, classification or external customer message is included.
 
-Next: publish the reviewed evidence and deploy the immutable branch while PR remains unmerged. Verify the resulting exact deployment before reporting login operational. Close the two enrollment flags after Raj verifies first enrollment/returning login.
+## Verified production deployment and live checks
 
-Rollback: close server capabilities first; preserve additive application/audit records; revoke compromised founder sessions/grant through the approved operator path; roll back application code without reopening a permissive legacy path. The archive supplies pre-migration application recovery evidence, but no blanket production restore is authorized. Use a reviewed forward fix after application writes.
+Vercel deployment `dpl_Gnn6iz7reooi7ntzSwzHQMTmSQmG` is READY, target `production`, Git SHA `f50af0d168d836e13ed877b90cecc71913d03fea`, from `codex/founder-only-login`. It was created from the immutable Git revision through the authenticated Vercel API, not a local workspace upload. The production build passed and the verified alias is https://textile-accounting.vercel.app. A fresh read at 22:56 UTC confirms this same deployment/commit. GitHub main remains `872debb7d09ec3e1856375e142cc841589c99af6`; PR #188 is not merged. Subsequent release-record commits contain documentation only and do not change this deployed runtime.
+
+Fresh anonymous Chromium checks against the actual production alias passed:
+
+| Live check | Observed result |
+| --- | --- |
+| `/admin/login` | Founder email/password form is enabled and reachable. |
+| Wrong founder email | Displays “Wrong email. Use the approved founder email to continue.” with no protected data. |
+| Normal `/login` with the reserved founder email | Displays “This account is for founder access only. Sign in at /admin/login.”; remains on customer login with no console data. The short-lived toast was observed before dismissal. |
+| `/admin/verify` without authentication | Redirects to `/admin/login`, with no QR or private data. |
+| Overview/factories/payments/system/audit APIs without authentication | Each returns 401 JSON and `private, no-store, max-age=0, must-revalidate`. |
+| Final hosted account check, 22:51:50 UTC | One enabled founder, zero owned factories, zero provider sessions and zero verified factors. The probes did not sign in or enroll the real founder. |
+
+The probes used an unrelated reserved example address or the approved email with dummy text rejected before provider sign-in. No actual password/QR/code, network-body log, screenshot, credential or persisted browser state was collected. The live browser session is closed. Both real local staging scripts cleaned synthetic fixtures; the exact local Supabase project and browser server are stopped, with evidence retained.
+
+The actual founder's positive hosted password/QR/code round trip is **not yet verified** because Raj must enter these privately. No additional SQL, account creation or migration work is needed from him. Open https://textile-accounting.vercel.app/admin/login in a private window, enter `Rajpatel86420@gmail.com` and the password set in Supabase, scan the first QR and enter the authenticator code. Then sign out and sign in again to verify a code challenge without a new QR. Close the two enrollment flags after that verified first/returning login; existing-factor challenges continue under the two console flags.
+
+Rollback: close server capabilities first; preserve additive application/audit records; revoke compromised founder sessions/grant through the approved operator path; roll back application code without reopening a permissive legacy path. The previous READY production deployment is `dpl_4yxj2yF554RhKtzLayG21FAL5Wwq`, main `872debb7d09ec3e1856375e142cc841589c99af6`; it is a recorded rollback candidate, not an instruction to roll back now. The archive supplies pre-migration application recovery evidence, but no blanket production restore is authorized. Use a reviewed forward fix after application writes.
