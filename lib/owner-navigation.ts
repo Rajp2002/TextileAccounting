@@ -1,4 +1,4 @@
-import { Calculator, ClipboardList, CreditCard, DollarSign, FileText, Settings, SlidersHorizontal, Tags, Truck, Users, Warehouse, Wrench, type LucideIcon } from 'lucide-react'
+import { Calculator, ClipboardList, CreditCard, DollarSign, FileText, MessageSquare, Settings, SlidersHorizontal, Tags, Truck, Users, Warehouse, Wrench, type LucideIcon } from 'lucide-react'
 import { resolveStockKind } from './stock-navigation'
 import { hasCapability, type PlanCapability, type SubscriptionTier } from './subscription-access'
 import { type ProductionMode } from './production-mode'
@@ -29,6 +29,7 @@ export const ownerNavigation: OwnerNavigationItem[] = [
  item('payroll', 'Payroll', '/owner/payroll', DollarSign, 'workforce', 1, capability('production')),
  item('settings', 'Settings', '/owner/settings', Settings, 'utilities', 1, capability('account_settings'), '/free/account'),
  item('billing', 'Plan & Billing', '/owner/billing', CreditCard, 'utilities', 2, ({ tier }) => tier !== 'none', '/free/billing'),
+ item('support', 'Support', '/support', MessageSquare, 'utilities', 3, () => true),
 ]
 export function visibleOwnerNavigation(context: Context) {
  return (['costing', 'production_stock', 'workforce', 'utilities'] as const).map(id => ({

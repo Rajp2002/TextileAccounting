@@ -13,7 +13,7 @@ describe('Free plan Setting and Billing sections', () => {
     it('keeps Free account destinations in the consolidated footer', () => {
         expect(groups.map(group => [group.id, group.items.map(item => item.href)])).toEqual([
             ['costing', ['/free', '/free/costings']],
-            ['utilities', ['/free/account', '/free/billing']],
+            ['utilities', ['/free/account', '/free/billing', '/support']],
         ])
     })
 

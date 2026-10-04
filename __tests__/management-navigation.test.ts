@@ -15,14 +15,14 @@ describe('shared owner navigation', () => {
    ['costing', ['estimate', 'costings', 'rates']],
    ['production_stock', ['production', 'assignments', 'stock', 'dispatches', 'machines']],
    ['workforce', ['workers', 'payroll']],
-   ['utilities', ['settings', 'billing']],
+   ['utilities', ['settings', 'billing', 'support']],
   ])
  })
  it.each(['free','lite'] as const)('removes operational sections for %s', tier => {
   expect(groups(tier).map(group => group.id)).toEqual(['costing','utilities'])
   expect(groups(tier)[0].items.map(item => item.id)).toEqual(tier === 'free' ? ['estimate','costings'] : ['estimate','costings','rates'])
  })
- it('does not render any destination until an entitlement resolves', () => expect(groups('none')).toEqual([]))
+ it('keeps only support available without an entitlement', () => expect(groups('none').flatMap(group => group.items.map(item => item.href))).toEqual(['/support']))
  it('keeps Base production routes visible', () => {
   const items = groups('base').flatMap(group => group.items)
   expect(items.find(item => item.id === 'machines')?.href).toBe('/owner/machines')

@@ -133,6 +133,7 @@ export const gu = {
   "export": "એક્સપોર્ટ કરો"
 } },
  navigation: {
+    support: "મદદ",
   "mobile_estimate": "અંદાજ",
   "mobile_costings": "સેવ કરેલ",
   "mobile_rates": "દર",

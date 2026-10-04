@@ -133,6 +133,7 @@ export const hi = {
   "export": "एक्सपोर्ट करें"
 } },
  navigation: {
+    support: "सहायता",
   "mobile_estimate": "अनुमान",
   "mobile_costings": "सेव किए",
   "mobile_rates": "दरें",
