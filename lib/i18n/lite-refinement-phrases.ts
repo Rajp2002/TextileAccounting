@@ -20,6 +20,10 @@ const PHRASES: Array<[string, string, string]> = [
   ['Could not check right now. Try again.', 'अभी जाँच नहीं हो सकी। फिर से कोशिश करें।', 'હમણાં તપાસ થઈ શકી નથી. ફરી પ્રયાસ કરો.'],
   ['This check is kept only while this page is open.', 'यह जाँच केवल तब तक रहती है जब तक यह पेज खुला है।', 'આ તપાસ માત્ર આ પેજ ખુલ્લું હોય ત્યાં સુધી રહે છે.'],
   ['Discard this proposal', 'यह प्रस्ताव हटाएँ', 'આ પ્રસ્તાવ કાઢી નાખો'],
+  ['Not calculated', 'गणना नहीं की गई', 'ગણતરી કરી નથી'],
+  ['Saved costings not loaded', 'सेव की गई कॉस्टिंग लोड नहीं हुई', 'સેવ કરેલી કૉસ્ટિંગ લોડ થઈ નથી'],
+  ['Saved costings could not be loaded. Nothing was deleted. Try again.', 'सेव की गई कॉस्टिंग लोड नहीं हो सकीं। कुछ भी हटाया नहीं गया है। फिर से कोशिश करें।', 'સેવ કરેલી કૉસ્ટિંગ લોડ થઈ શકી નથી. કંઈ કાઢી નાખ્યું નથી. ફરી પ્રયાસ કરો.'],
+  ['Try again', 'फिर से कोशिश करें', 'ફરી પ્રયાસ કરો'],
 ]
 
 export const LITE_REFINEMENT_PHRASES: Record<BasePlanLocalLanguage, Record<string, string>> = {

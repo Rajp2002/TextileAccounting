@@ -445,6 +445,16 @@ export function normalizeSavedWeftRows(
 }
 
 /** Build the same live recipe state shown when a saved quality is applied in Cost Estimate. */
+/**
+ * A recipe's current cost can be shown only from its full rows and the
+ * factory profile. A summary row (id, name, dates) or a missing profile would
+ * be priced from default inputs, which is not this quality's cost.
+ */
+export function canPriceSavedRecipe(recipe: SavedQualityRecipe, profile: SavedQualityFactoryProfile | undefined) {
+  const hasRows = (rows: unknown) => Array.isArray(rows) && rows.length > 0
+  return Boolean(profile) && hasRows(recipe.warp_rows) && hasRows(recipe.weft_rows)
+}
+
 export function buildSavedQualityRecipeState(
   recipe: SavedQualityRecipe,
   profile?: SavedQualityFactoryProfile,

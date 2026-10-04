@@ -18,6 +18,7 @@ import { auditHistoricalCosting } from '@/lib/costing-reconciliation'
 import type { FactoryProfileId } from '@/lib/factory-cost-profiles'
 import { buildCostingInputFingerprint } from '@/lib/costing-save-trust'
 import { buildEstimatorQuotePayload, toLegacyEstimatorQuotePayload } from '@/lib/estimator-quote-payload'
+import { createdAtDescendingAfter, readAllPages } from '@/lib/paged-read'
 import { getRateReviewStatus } from '@/lib/cost-rates'
 import { findCostingSaveReceipt } from '@/lib/costing-save-receipt'
 import {
@@ -28,6 +29,7 @@ import {
 import { detectTemplateYarnRenames } from '@/lib/yarn-rate-reconciliation'
 
 const ESTIMATOR_NAME_MAX_LENGTH = 120
+const ESTIMATOR_QUOTE_PAGE_SIZE = 500
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
 async function attestCanonicalCostingPayload<T extends Record<string, unknown>>(
@@ -1642,21 +1644,27 @@ export async function getEstimatorQuotes(filters?: { status?: string }) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
-    let query = supabase
+    // Summary-first library read. Full recipes, result snapshots, and
+    // linked production records load only on open/compare/export intent.
+    // LT04: read every page in a deterministic order, so a library larger
+    // than the server's row cap is never cut short; any page error fails it.
+    const summaryQuery = () => supabase
         .from('estimator_quotes')
-        // Summary-first library read. Full recipes, result snapshots, and
-        // linked production records load only on open/compare/export intent.
         .select('id, status, party_name, quality_label, quote_price_per_meter, landed_cost_per_meter, intended_margin_percent, created_at, updated_at, sent_at, quotation_reference, quotation_valid_until, customer_terms, meters, source_quote_id, costing_group_id, version_number, is_archived, is_favorite, record_kind, template_id, market_run_id, production_cost_per_meter, overhead_per_meter, commission_cost_per_meter, break_even_price_per_meter, expected_profit_per_meter, expected_profit_total, actual_margin_percent, calculation_version, rounding_policy, factory_profile_updated_at, reconciliation_status, reconciliation_note')
         .eq('org_id', profile.org_id)
-        .order('created_at', { ascending: false })
-
-    if (filters?.status) {
-        query = query.eq('status', filters.status)
-    }
-
-    const { data, error } = await query
-    if (error) return { error: error.message }
-    return { data }
+    type QuoteSummaryRow = NonNullable<Awaited<ReturnType<typeof summaryQuery>>['data']>[number]
+    const result = await readAllPages<QuoteSummaryRow>(after => {
+        let query = summaryQuery()
+        if (filters?.status) query = query.eq('status', filters.status)
+        if (after) query = query.or(createdAtDescendingAfter(after))
+        return query
+            .order('created_at', { ascending: false })
+            .order('id', { ascending: false })
+            .limit(ESTIMATOR_QUOTE_PAGE_SIZE)
+            .then(({ data, error }) => ({ data, error }))
+    })
+    if (result.error) return { error: result.error.message }
+    return { data: result.data }
 }
 
 /** Full immutable costing/detail read used only by explicit user intent. */

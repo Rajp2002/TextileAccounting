@@ -71,6 +71,7 @@ import {
   normalizeSavedWeftRows,
   getSavedCostingMetrics,
   resolveSavedCostingInputBasis,
+  canPriceSavedRecipe,
   type SavedQualityFactoryProfile,
   type SavedQualityFixedWorker,
   type SavedQualityRecipe,
@@ -507,7 +508,7 @@ function SavedQualityLibraryView({
                                             ? formatCostingMoneyPerM(getProductionCostPerM(latest))
                                             : group.currentRecipeCostPerM != null
                                                 ? `₹${group.currentRecipeCostPerM.toFixed(2)}/m`
-                                                : '—'}</p>
+                                                : tx('Not calculated')}</p>
                                     </div>
                                     <div className="rounded-lg bg-surface-soft px-3 py-2">
                                         <p className="text-[10px] font-bold uppercase tracking-wide text-subtle">{tx('History')}</p>
@@ -783,7 +784,7 @@ function SavedQualityLibraryView({
     )
 }
 
-export default function QuotesClient({ initialQuotes, initialTemplates, initialProfile, initialWorkers, initialStatus, orgId, userId, canUseProductionPipeline, organizationName, userMetadata, tourUnavailable = false }: { initialQuotes: QuoteRow[], initialTemplates: SavedQuality[], initialProfile?: SavedQualityFactoryProfile, initialWorkers: SavedQualityFixedWorker[], initialStatus?: string, orgId: string, userId: string, canUseProductionPipeline: boolean, organizationName: string; userMetadata?: Record<string, unknown>; tourUnavailable?: boolean }) {
+export default function QuotesClient({ initialQuotes, initialTemplates, initialProfile, initialWorkers, initialStatus, orgId, userId, canUseProductionPipeline, organizationName, userMetadata, tourUnavailable = false, loadError = false }: { initialQuotes: QuoteRow[], initialTemplates: SavedQuality[], initialProfile?: SavedQualityFactoryProfile, initialWorkers: SavedQualityFixedWorker[], initialStatus?: string, orgId: string, userId: string, canUseProductionPipeline: boolean, organizationName: string; userMetadata?: Record<string, unknown>; tourUnavailable?: boolean; loadError?: boolean }) {
     const { t, tx } = useTranslation()
     const { language } = useTranslation()
     const [tourStep, setTourStep] = useState<SavedCostingStep | null>(null)
@@ -815,7 +816,8 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
 
     const router = useRouter()
     const [quotes, setQuotes] = useState<QuoteRow[]>(initialQuotes)
-    const isDemoCostingActive = (!demoCostingDeleted && quotes.length === 0 && initialTemplates.length === 0) || tourSampleActive
+    // A failed load is not an empty library: never offer the sample over it.
+    const isDemoCostingActive = !loadError && (!demoCostingDeleted && quotes.length === 0 && initialTemplates.length === 0) || tourSampleActive
     const tourExamples = useMemo(() => isDemoCostingActive ? makeSavedCostingTourExamples() : [], [isDemoCostingActive])
     const tourExport = useMemo(() => tourSurface === 'export' ? makeSavedCostingTourExport() : null, [tourSurface])
     const tourGroups = useMemo(() => tourExamples.length ? [{key: 'tour-preview', name: 'Tour sample', template: null, records: tourExamples, updatedAt: tourExamples[0].updated_at, currentRecipeCostPerM: null}] : [], [tourExamples])
@@ -883,7 +885,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             .map(group => ({
                 ...group,
                 records: filterAndSortSavedCostings(group.records, { query: '', sort: 'recent', margin: 'all', favorites: showFavoritesOnly }),
-                currentRecipeCostPerM: group.template && group.records.length === 0
+                currentRecipeCostPerM: group.template && group.records.length === 0 && canPriceSavedRecipe(group.template, initialProfile)
                     ? getCurrentRecipeCostPerM(group.template, initialProfile, initialWorkers)
                     : null,
             }))
@@ -1368,7 +1370,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                         </p>
                     ) : null}
                     <p className="mt-3 text-xs font-medium text-body">
-                        {tourSampleActive ? '1 sample quality' : isDemoCostingActive && quotes.length === 0
+                        {tourSampleActive ? '1 sample quality' : loadError ? tx('Saved costings not loaded') : isDemoCostingActive && quotes.length === 0
                             ? (searchQuery.trim() && !tourExamples[0]?.quality_label?.toLowerCase().includes(searchQuery.trim().toLowerCase()) && !'tour sample'.includes(searchQuery.trim().toLowerCase()) ? '0 qualities' : '1 sample quality')
                             : `${qualityGroups.length} ${showArchived ? 'archived ' : ''}${qualityGroups.length === 1 ? 'quality' : 'qualities'}`}
                     </p>
@@ -1389,6 +1391,14 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                         onAudit={() => {}} onToggleFavorite={() => {}} onToggleArchived={() => {}}
                         factoryInputsCapturedLabel={tx('Factory inputs captured')}
                     />
+                </div>
+            ) : loadError ? (
+                <div data-saved-costings-load-error role="alert" className="rounded-xl border border-hairline bg-surface p-6 text-center">
+                    <AlertTriangle className="mx-auto h-6 w-6 text-warning" aria-hidden="true" />
+                    <p className="mt-3 text-sm font-bold text-ink">{tx('Saved costings could not be loaded. Nothing was deleted. Try again.')}</p>
+                    <Button type="button" variant="outline" className="mt-4 min-h-11" onClick={() => router.refresh()}>
+                        {tx('Try again')}
+                    </Button>
                 </div>
             ) : isDemoCostingActive && quotes.length === 0 ? (
                 (searchQuery.trim() && !tourExamples[0]?.quality_label?.toLowerCase().includes(searchQuery.trim().toLowerCase()) && !'tour sample'.includes(searchQuery.trim().toLowerCase())) || (filterStatus !== 'all' && filterStatus !== 'costings' && filterStatus !== 'draft') || showArchived ? (

@@ -152,3 +152,23 @@ Not run in this sprint: the plan's composed upgrade journeys (real checkout, del
 | HI/GU for all nine panel and toast messages | same | pass |
 
 Deferred (R8): "Review N rates used here" navigation and Rate Book identity on estimator rows. Rows carry no Rate Book id, so focused review would need a new row field across `EstimateState`, the strict Free request schema and saved-row normalizers (D16-adjacent). An id on suggestions alone would have no consumer, so none was added. Not run: double-click, cross-tab conflict and late commit in a browser.
+
+## LT04 (P0): honest Saved Costings summary and complete retrieval
+
+**Status:** source checks passed, runtime pending.
+
+- A quality with no saved costing showed "Current recipe" money computed from the summary row (id, name, dates) and no factory profile, so the engine priced default inputs. `canPriceSavedRecipe` now requires the full recipe rows and the profile; Saved Costings has neither, so the card says "Not calculated" and the detail keeps "No costing saved for this quality yet". Saved snapshot cards are unchanged. Nothing reprices history.
+- A failed library or quality read used to become empty lists, and an empty account shows the demonstration sample. The page now passes `loadError`; the client shows "Saved costings could not be loaded. Nothing was deleted. Try again." with a retry, before any empty, no-match or sample state, and the sample is never offered over a failed load.
+- `getEstimatorQuotes` reads every page through `readAllPages` (keyset after `created_at desc, id desc`, until an empty page), so a library larger than the server's row cap is not cut short, a newer row added mid-read is neither repeated nor skipped, and any page error fails the whole read.
+
+| Fixture | Test | Result |
+| --- | --- | --- |
+| summary row priced through defaults gives a number (characterization) | `__tests__/lite-saved-costings-truth.test.ts` | recorded |
+| summary-only / no profile / empty weft → not priced; full recipe + profile → priced | same | pass |
+| card copy and guard (source contract) | same | pass |
+| load failure passed and shown before empty/sample states (source contract) | same | pass |
+| 2,345 rows, 500-row runs of equal timestamps, server caps 1000 / 400 / 1 → every id once | same | pass |
+| page 2 fails → whole read fails; row inserted ahead mid-read → no miss or repeat; non-advancing page → error | same | pass |
+| library read uses deterministic order and the keyset filter (source contract) | same | pass |
+
+Not run: archived/active boundaries and oldest-row retrieval against a real database above the production row cap (the disposable-database adapter does not implement `or`/`limit`), and the error state in a browser.
