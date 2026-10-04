@@ -119,13 +119,61 @@ BEGIN
   LOOP
     EXECUTE format('LOCK TABLE %I.%I IN SHARE ROW EXCLUSIVE MODE',entry.nspname,entry.relname);
   END LOOP;
+  -- Supabase's flow state and legacy refresh-token owner links may have no
+  -- users FK. Only these known account-owned runtime roots are explicitly
+  -- removed; all unknown provider leftovers still cause complete rollback.
+  CREATE TEMP TABLE reset_auth_runtime(relation_oid oid PRIMARY KEY,scope_column name NOT NULL,
+    delete_order integer NOT NULL) ON COMMIT DROP;
+  FOR entry IN SELECT c.oid,c.relname FROM pg_catalog.pg_class c
+    JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace
+    WHERE n.nspname='auth' AND c.relname IN('flow_state','refresh_tokens')
+  LOOP
+    IF NOT EXISTS(SELECT 1 FROM pg_catalog.pg_class WHERE oid=entry.oid AND relkind='r')
+      OR NOT EXISTS(SELECT 1 FROM pg_catalog.pg_attribute WHERE attrelid=entry.oid AND attname='id'
+        AND attnum>0 AND NOT attisdropped AND atttypid=CASE WHEN entry.relname='flow_state'
+          THEN 'uuid'::regtype ELSE 'bigint'::regtype END)
+      OR NOT EXISTS(SELECT 1 FROM pg_catalog.pg_attribute WHERE attrelid=entry.oid AND attname='user_id'
+        AND attnum>0 AND NOT attisdropped AND ((entry.relname='flow_state' AND atttypid='uuid'::regtype)
+          OR (entry.relname='refresh_tokens' AND atttypid IN('uuid'::regtype,'text'::regtype,'varchar'::regtype))))
+      OR EXISTS(SELECT 1 FROM pg_catalog.pg_attribute WHERE attrelid=entry.oid
+        AND attname IN('linking_target_id','session_id') AND attnum>0 AND NOT attisdropped
+        AND atttypid<>'uuid'::regtype) THEN
+      RAISE EXCEPTION 'Unreviewed account runtime shape in auth.%; reset made no changes.',entry.relname;
+    END IF;
+    EXECUTE format('SELECT count(*) FROM (SELECT 1 FROM auth.%I WHERE user_id::text=$1 LIMIT 1001) matched',entry.relname)
+      INTO found_count USING old_user::text;
+    IF found_count>1000 THEN RAISE EXCEPTION 'Account runtime cleanup exceeds reviewed bound; reset made no changes.'; END IF;
+    INSERT INTO reset_auth_runtime VALUES(entry.oid,'user_id',CASE WHEN entry.relname='flow_state' THEN 1 ELSE 2 END);
+    IF entry.relname='flow_state' THEN
+      EXECUTE 'SELECT EXISTS(SELECT 1 FROM auth.flow_state f WHERE '
+        || '(f.user_id=$1 AND to_jsonb(f.*)->>''linking_target_id'' IS NOT NULL AND to_jsonb(f.*)->>''linking_target_id''<>$1::text) '
+        || 'OR (to_jsonb(f.*)->>''linking_target_id''=$1::text AND f.user_id IS DISTINCT FROM $1))'
+        INTO linked USING old_user;
+      IF linked THEN RAISE EXCEPTION 'Cross-account flow state found; reset made no changes.'; END IF;
+    ELSE
+      EXECUTE 'SELECT EXISTS(SELECT 1 FROM auth.refresh_tokens t JOIN auth.sessions s '
+        || 'ON s.id::text=to_jsonb(t.*)->>''session_id'' WHERE (t.user_id::text=$1 OR s.user_id=$1::uuid) '
+        || 'AND t.user_id::text IS DISTINCT FROM s.user_id::text)'
+        INTO linked USING old_user::text;
+      IF linked THEN RAISE EXCEPTION 'Cross-account refresh-token session found; reset made no changes.'; END IF;
+      EXECUTE 'SELECT EXISTS(SELECT 1 FROM auth.refresh_tokens rt_child JOIN auth.refresh_tokens rt_parent '
+        || 'ON to_jsonb(rt_child.*)->>''parent''=to_jsonb(rt_parent.*)->>''token'' '
+        || 'WHERE (rt_child.user_id::text=$1 OR rt_parent.user_id::text=$1) AND rt_child.user_id::text IS DISTINCT FROM rt_parent.user_id::text)'
+        INTO linked USING old_user::text;
+      IF linked THEN RAISE EXCEPTION 'Cross-account refresh-token family found; reset made no changes.'; END IF;
+    END IF;
+  END LOOP;
   CREATE TEMP TABLE reset_auth_paths ON COMMIT DROP AS
-    WITH RECURSIVE paths AS (
-      SELECT 'auth.users'::regclass::oid AS relation_oid,0 AS depth,
-        ARRAY['auth.users'::regclass::oid] AS visited,
-        'auth.users AS t0'::text COLLATE "C" AS from_sql,'auth'::name AS schema_name,'c'::"char" AS delete_action
+    WITH RECURSIVE roots AS (
+      SELECT 'auth.users'::regclass::oid AS relation_oid,'id'::name AS root_scope
+      UNION ALL SELECT relation_oid,scope_column FROM reset_auth_runtime
+    ), paths AS (
+      SELECT r.relation_oid,r.root_scope,0 AS depth,ARRAY[r.relation_oid] AS visited,
+        format('auth.%I AS t0',c.relname)::text COLLATE "C" AS from_sql,
+        'auth'::name AS schema_name,'c'::"char" AS delete_action
+      FROM roots r JOIN pg_catalog.pg_class c ON c.oid=r.relation_oid
       UNION ALL
-      SELECT f.conrelid,p.depth+1,p.visited||f.conrelid,
+      SELECT f.conrelid,p.root_scope,p.depth+1,p.visited||f.conrelid,
         p.from_sql||format(' JOIN %I.%I AS t%s ON ',n.nspname,c.relname,p.depth+1)||
         (SELECT string_agg(format('t%s.%I=t%s.%I',p.depth+1,ca.attname,p.depth,pa.attname),' AND ' ORDER BY k.ord)
           FROM unnest(f.conkey,f.confkey) WITH ORDINALITY k(child_key,parent_key,ord)
@@ -138,10 +186,24 @@ BEGIN
   IF (SELECT count(*) FROM reset_auth_paths)>500 OR EXISTS(SELECT 1 FROM reset_auth_paths WHERE depth=12) THEN
     RAISE EXCEPTION 'Managed Auth dependency graph exceeds reviewed bound; reset made no changes.';
   END IF;
+  IF EXISTS(SELECT 1 FROM reset_auth_paths p JOIN pg_catalog.pg_constraint f
+    ON f.confrelid=p.relation_oid AND f.contype='f'
+    WHERE p.schema_name='auth' AND f.conrelid=ANY(p.visited)) THEN
+    RAISE EXCEPTION 'Unreviewed managed Auth FK cycle; reset made no changes.';
+  END IF;
   FOR entry IN SELECT * FROM reset_auth_paths WHERE schema_name='auth' AND delete_action IN('n','d')
   LOOP
-    EXECUTE format('SELECT EXISTS(SELECT 1 FROM %s WHERE t0.id=$1)',entry.from_sql) INTO linked USING old_user;
+    EXECUTE format('SELECT EXISTS(SELECT 1 FROM %s WHERE t0.%I::text=$1::text)',entry.from_sql,entry.root_scope)
+      INTO linked USING old_user;
     IF linked THEN RAISE EXCEPTION 'Managed Auth detach/default requires review; reset made no changes.'; END IF;
+  END LOOP;
+  FOR entry IN SELECT * FROM reset_auth_paths WHERE schema_name='auth' AND depth>0
+  LOOP
+    EXECUTE format('SELECT EXISTS(SELECT 1 FROM %s WHERE t0.%I::text=$1::text AND ('
+      || '(to_jsonb(t%s.*)->>''user_id'' IS NOT NULL AND to_jsonb(t%s.*)->>''user_id''<>$1::text) OR '
+      || '(to_jsonb(t%s.*)->>''linking_target_id'' IS NOT NULL AND to_jsonb(t%s.*)->>''linking_target_id''<>$1::text)))',
+      entry.from_sql,entry.root_scope,entry.depth,entry.depth,entry.depth,entry.depth) INTO linked USING old_user;
+    IF linked THEN RAISE EXCEPTION 'Cross-account managed Auth child found; reset made no changes.'; END IF;
   END LOOP;
   IF EXISTS(SELECT 1 FROM pg_catalog.pg_inherits i JOIN reset_auth_paths p ON p.relation_oid=i.inhparent
     WHERE p.schema_name='auth') THEN
@@ -271,8 +333,14 @@ BEGIN
   END LOOP;
   FOR entry IN SELECT * FROM reset_auth_paths WHERE schema_name<>'auth'
   LOOP
-    EXECUTE format('SELECT EXISTS(SELECT 1 FROM %s WHERE t0.id=$1)',entry.from_sql) INTO linked USING old_user;
+    EXECUTE format('SELECT EXISTS(SELECT 1 FROM %s WHERE t0.%I::text=$1::text)',entry.from_sql,entry.root_scope)
+      INTO linked USING old_user;
     IF linked THEN RAISE EXCEPTION 'Remaining external Auth cascade reference; transaction rolled back.'; END IF;
+  END LOOP;
+  FOR entry IN SELECT r.*,c.relname FROM reset_auth_runtime r JOIN pg_catalog.pg_class c ON c.oid=r.relation_oid
+    ORDER BY r.delete_order
+  LOOP
+    EXECUTE format('DELETE FROM auth.%I WHERE %I::text=$1',entry.relname,entry.scope_column) USING old_user::text;
   END LOOP;
   DELETE FROM auth.users WHERE id=old_user AND lower(btrim(email))=old_email;
   GET DIAGNOSTICS found_count=ROW_COUNT;
@@ -280,8 +348,8 @@ BEGIN
      OR EXISTS(SELECT 1 FROM public.organizations WHERE id=old_org) THEN
     RAISE EXCEPTION 'Reset postcondition failed; transaction rolled back.';
   END IF;
-  -- Older provider schemas may have non-FK flow/token owner columns. Refuse
-  -- leftovers instead of claiming a complete runtime reset or editing them.
+  -- Known flow/token owner rows were removed above. Refuse every unknown
+  -- runtime leftover instead of silently broadening provider table deletion.
   FOR entry IN SELECT c.relname,a.attname FROM pg_catalog.pg_class c
     JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace
     JOIN pg_catalog.pg_attribute a ON a.attrelid=c.oid AND a.attnum>0 AND NOT a.attisdropped

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { randomUUID } from 'node:crypto'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 import { freshDatabase, seedOwnerOrg, type Db } from './helpers'
 
 let db: Db
@@ -55,6 +55,13 @@ async function rejected(fixture: Fixture, pattern: RegExp) {
     expect((await db.query('SELECT id FROM public.machines WHERE org_id=$1', [fixture.orgId])).rowCount).toBe(5)
     expect((await db.query('SELECT id FROM public.audit_log WHERE org_id=$1', [fixture.orgId])).rowCount).toBe(auditCount)
 }
+async function seedRuntime(userId: string) {
+    const flowId = randomUUID()
+    const token = `synthetic-noncredential-${randomUUID()}`
+    await db.query('INSERT INTO auth.flow_state(id,user_id) VALUES($1,$2)', [flowId, userId])
+    const tokenId = (await db.query('INSERT INTO auth.refresh_tokens(user_id,token) VALUES($1,$2) RETURNING id', [userId, token])).rows[0].id as string
+    return { flowId, tokenId, token }
+}
 async function restrictedOperator() {
     const role = `synthetic_reset_${randomUUID().replaceAll('-', '')}`
     // Hosted postgres is not a superuser. This role models ordinary table
@@ -68,7 +75,7 @@ async function restrictedOperator() {
             await db.query(`GRANT ALL ON ALL SEQUENCES IN SCHEMA ${nspname} TO ${role}`)
         }
     }
-    await db.query(`GRANT ALL ON auth.users,auth.sessions,auth.mfa_factors TO ${role}`)
+    await db.query(`GRANT ALL ON auth.users,auth.sessions,auth.mfa_factors,auth.flow_state,auth.refresh_tokens TO ${role}`)
     return {
         role,
         run: (target: Fixture) => db.query(sql(target).replace("current_user <> 'postgres'", `current_user <> '${role}'`)),
@@ -84,8 +91,13 @@ beforeAll(async () => {
     // not. Model this explicitly rather than claiming real-provider acceptance.
     await db.query('ALTER TABLE auth.sessions DROP CONSTRAINT sessions_user_id_fkey; ALTER TABLE auth.sessions ADD FOREIGN KEY(user_id) REFERENCES auth.users(id) ON DELETE CASCADE')
     await db.query('ALTER TABLE auth.mfa_factors DROP CONSTRAINT mfa_factors_user_id_fkey; ALTER TABLE auth.mfa_factors ADD FOREIGN KEY(user_id) REFERENCES auth.users(id) ON DELETE CASCADE')
+    // These provider-style owner links have no users FK, which is the hosted
+    // shape the first account DELETE did not clean up. Never seed real tokens.
+    await db.query('CREATE TABLE auth.flow_state(id uuid PRIMARY KEY,user_id uuid,linking_target_id uuid)')
+    await db.query('CREATE TABLE auth.refresh_tokens(id bigserial PRIMARY KEY,user_id varchar,session_id uuid,token text UNIQUE,parent text)')
 })
 afterAll(async () => { await db?.end() })
+afterEach(async () => { await db.query('ROLLBACK; RESET ROLE') })
 
 describe('explicit old founder account reset, synthetic fixtures only', () => {
     it('removes exactly the selected factory data and old identity, including local captured-payment history and managed sessions/factors; preserves another tenant', async () => {
@@ -236,6 +248,111 @@ describe('explicit old founder account reset, synthetic fixtures only', () => {
         await db.query("ALTER TABLE public.audit_log ADD CONSTRAINT synthetic_reset_audit_unavailable CHECK(table_name<>'founder_account_reset') NOT VALID")
         try { await rejected(target, /synthetic_reset_audit_unavailable/) }
         finally { await db.query('ALTER TABLE public.audit_log DROP CONSTRAINT synthetic_reset_audit_unavailable') }
+    })
+    it('cleans known non-FK flow and legacy token rows for exactly the old owner, preserving other accounts and their runtime rows', async () => {
+        const target = await fixture()
+        const other = await seedOwnerOrg(db, { tier: null })
+        const own = await seedRuntime(target.userId)
+        const peer = await seedRuntime(other.userId)
+        await db.query('UPDATE auth.flow_state SET linking_target_id=$1 WHERE id=$2', [target.userId, own.flowId])
+        await db.query('INSERT INTO auth.refresh_tokens(user_id,token,parent) VALUES($1,$2,$3)', [target.userId, `synthetic-noncredential-${randomUUID()}`, own.token])
+        await db.query(sql(target))
+        expect((await db.query('SELECT id FROM auth.flow_state WHERE user_id=$1', [target.userId])).rowCount).toBe(0)
+        expect((await db.query('SELECT id FROM auth.refresh_tokens WHERE user_id=$1', [target.userId])).rowCount).toBe(0)
+        expect((await db.query('SELECT id FROM auth.flow_state WHERE id=$1 AND user_id=$2', [peer.flowId, other.userId])).rowCount).toBe(1)
+        expect((await db.query('SELECT id FROM auth.refresh_tokens WHERE id=$1 AND user_id=$2', [peer.tokenId, other.userId])).rowCount).toBe(1)
+        expect((await db.query('SELECT id FROM auth.users WHERE id=$1', [other.userId])).rowCount).toBe(1)
+    })
+    it('rolls known runtime cleanup back with the entire reset if the required final audit fails', async () => {
+        const target = await fixture()
+        const own = await seedRuntime(target.userId)
+        await db.query("ALTER TABLE public.audit_log ADD CONSTRAINT synthetic_runtime_audit_failure CHECK(table_name<>'founder_account_reset') NOT VALID")
+        try {
+            await rejected(target, /synthetic_runtime_audit_failure/)
+            expect((await db.query('SELECT id FROM auth.flow_state WHERE id=$1', [own.flowId])).rowCount).toBe(1)
+            expect((await db.query('SELECT id FROM auth.refresh_tokens WHERE id=$1', [own.tokenId])).rowCount).toBe(1)
+        } finally { await db.query('ALTER TABLE public.audit_log DROP CONSTRAINT synthetic_runtime_audit_failure') }
+    })
+    it('refuses cross-account flow linking in either direction without deleting either account', async () => {
+        for (const reverse of [false, true]) {
+            const target = await fixture()
+            const other = await seedOwnerOrg(db, { tier: null })
+            const flow = randomUUID()
+            await db.query('INSERT INTO auth.flow_state VALUES($1,$2,$3)', [flow, reverse ? other.userId : target.userId, reverse ? target.userId : other.userId])
+            await rejected(target, /Cross-account flow state found/)
+            expect((await db.query('SELECT id FROM auth.flow_state WHERE id=$1', [flow])).rowCount).toBe(1)
+            expect((await db.query('SELECT id FROM auth.users WHERE id=$1', [other.userId])).rowCount).toBe(1)
+        }
+    })
+    it('refuses cross-account token sessions and token families in both directions, including legacy links without FKs', async () => {
+        for (const kind of ['own_token_other_session', 'other_token_own_session', 'own_child_other_parent', 'other_child_own_parent']) {
+            const target = await fixture()
+            const other = await seedOwnerOrg(db, { tier: null })
+            if (kind.includes('session')) {
+                const session = randomUUID()
+                const reverse = kind === 'other_token_own_session'
+                await db.query("INSERT INTO auth.sessions(id,user_id,aal) VALUES($1,$2,'aal1')", [session, reverse ? target.userId : other.userId])
+                const token = (await db.query('INSERT INTO auth.refresh_tokens(user_id,session_id,token) VALUES($1,$2,$3) RETURNING id', [reverse ? other.userId : target.userId, session, `synthetic-noncredential-${randomUUID()}`])).rows[0].id
+                await rejected(target, /Cross-account refresh-token session found/)
+                expect((await db.query('SELECT id FROM auth.refresh_tokens WHERE id=$1', [token])).rowCount).toBe(1)
+                expect((await db.query('SELECT id FROM auth.sessions WHERE id=$1', [session])).rowCount).toBe(1)
+            } else {
+                const reverse = kind === 'other_child_own_parent'
+                const parent = await seedRuntime(reverse ? target.userId : other.userId)
+                const child = (await db.query('INSERT INTO auth.refresh_tokens(user_id,token,parent) VALUES($1,$2,$3) RETURNING id', [reverse ? other.userId : target.userId, `synthetic-noncredential-${randomUUID()}`, parent.token])).rows[0].id
+                await rejected(target, /Cross-account refresh-token family found/)
+                expect((await db.query('SELECT id FROM auth.refresh_tokens WHERE id=$1', [child])).rowCount).toBe(1)
+            }
+        }
+    })
+    it('refuses external and cross-account managed children of a non-FK runtime root before they can cascade', async () => {
+        await db.query('CREATE SCHEMA synthetic_flow_external; CREATE TABLE synthetic_flow_external.flow_ref(id uuid PRIMARY KEY,flow_id uuid REFERENCES auth.flow_state(id) ON DELETE CASCADE)')
+        await db.query('CREATE TABLE auth.synthetic_flow_child(id uuid PRIMARY KEY,flow_id uuid REFERENCES auth.flow_state(id) ON DELETE CASCADE,user_id uuid)')
+        try {
+            for (const external of [true, false]) {
+                const target = await fixture()
+                const other = await seedOwnerOrg(db, { tier: null })
+                const own = await seedRuntime(target.userId)
+                const child = randomUUID()
+                if (external) await db.query('INSERT INTO synthetic_flow_external.flow_ref VALUES($1,$2)', [child, own.flowId])
+                else await db.query('INSERT INTO auth.synthetic_flow_child VALUES($1,$2,$3)', [child, own.flowId, other.userId])
+                await rejected(target, external ? /Remaining external Auth cascade reference/ : /Cross-account managed Auth child found/)
+                expect((await db.query('SELECT id FROM auth.flow_state WHERE id=$1', [own.flowId])).rowCount).toBe(1)
+                expect((await db.query('SELECT id FROM auth.users WHERE id=$1', [other.userId])).rowCount).toBe(1)
+            }
+        } finally { await db.query('DROP SCHEMA synthetic_flow_external CASCADE; DROP TABLE auth.synthetic_flow_child') }
+    })
+    it('rejects unreviewed delete triggers on known non-FK runtime roots', async () => {
+        const target = await fixture()
+        const own = await seedRuntime(target.userId)
+        await db.query('CREATE FUNCTION auth.synthetic_flow_delete() RETURNS trigger LANGUAGE plpgsql AS $$BEGIN RETURN OLD; END$$')
+        await db.query('CREATE TRIGGER synthetic_flow_delete BEFORE DELETE ON auth.flow_state FOR EACH ROW EXECUTE FUNCTION auth.synthetic_flow_delete()')
+        try {
+            await rejected(target, /Unreviewed managed Auth cascade trigger\/rule/)
+            expect((await db.query('SELECT id FROM auth.flow_state WHERE id=$1', [own.flowId])).rowCount).toBe(1)
+        } finally { await db.query('DROP TRIGGER synthetic_flow_delete ON auth.flow_state; DROP FUNCTION auth.synthetic_flow_delete()') }
+    })
+    it('refuses an unreviewed self-FK cascade on a runtime root that could erase another owner token', async () => {
+        const target = await fixture()
+        const other = await seedOwnerOrg(db, { tier: null })
+        const own = await seedRuntime(target.userId)
+        const peer = await seedRuntime(other.userId)
+        await db.query('ALTER TABLE auth.refresh_tokens ADD COLUMN synthetic_ancestor_id bigint REFERENCES auth.refresh_tokens(id) ON DELETE CASCADE')
+        try {
+            await db.query('UPDATE auth.refresh_tokens SET synthetic_ancestor_id=$1 WHERE id=$2', [own.tokenId, peer.tokenId])
+            await rejected(target, /Unreviewed managed Auth FK cycle/)
+            expect((await db.query('SELECT id FROM auth.refresh_tokens WHERE id=$1', [peer.tokenId])).rowCount).toBe(1)
+            expect((await db.query('SELECT id FROM auth.users WHERE id=$1', [other.userId])).rowCount).toBe(1)
+        } finally { await db.query('ALTER TABLE auth.refresh_tokens DROP COLUMN synthetic_ancestor_id') }
+    })
+    it('bounds runtime cleanup and refuses unsupported owner-column shapes instead of guessing', async () => {
+        const target = await fixture()
+        await db.query('INSERT INTO auth.flow_state(id,user_id) SELECT gen_random_uuid(),$1 FROM generate_series(1,1001)', [target.userId])
+        await rejected(target, /Account runtime cleanup exceeds reviewed bound/)
+        await db.query('DELETE FROM auth.flow_state WHERE user_id=$1', [target.userId])
+        await db.query('ALTER TABLE auth.flow_state ALTER COLUMN user_id TYPE text USING user_id::text')
+        try { await rejected(target, /Unreviewed account runtime shape in auth.flow_state/) }
+        finally { await db.query('ALTER TABLE auth.flow_state ALTER COLUMN user_id TYPE uuid USING user_id::uuid') }
     })
     it('runs with non-superuser privileges while the unrelated provider migration ledger remains inaccessible and unchanged', async () => {
         const target = await fixture()

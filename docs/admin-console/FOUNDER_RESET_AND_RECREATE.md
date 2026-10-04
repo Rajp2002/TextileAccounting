@@ -18,6 +18,8 @@ If it reports an error, the transaction rolls back. Paste the error text so the 
 
 Raj's first hosted attempt stopped at `LOCK TABLE auth.schema_migrations` with permission denied, before any deletion. The corrected file leaves that provider migration ledger alone when catalogue evidence shows no identity fields or foreign-key edges. No permission, ownership or provider migration change is needed. Open the updated file again and replace the entire SQL Editor query before rerunning; the previous copied version still contains the failing lock.
 
+The next attempt found a surviving `auth.flow_state` reference and also rolled back the entire transaction. The current file explicitly removes this exact old user's known `flow_state` and legacy `refresh_tokens` rows in the same transaction. It first verifies column types, record bounds, token/session/linking ownership and every reachable FK/trigger; cross-account or unknown runtime records remain blockers. There is no standalone token-cleanup query to run and no token/secret output to share. Copy the complete current file again rather than reusing either earlier query.
+
 This removes the selected current database account/factory state, not every historical trace: Razorpay records, provider audit JSON, backups, monitoring history and browser caches are outside this SQL. It makes no refund/capture/provider request, alters no price or checkout gate, and installs no functions, schema, credentials or grants. Existing issued JWTs may survive until expiry; app guards still need fresh identity/current membership/session checks. The new UUID never inherits the old identity's privileges.
 
 ## 2. Create the fresh Auth user

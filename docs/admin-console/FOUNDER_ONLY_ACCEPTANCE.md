@@ -68,7 +68,7 @@ After a successful COMMIT, code rollback cannot restore deliberately deleted row
 
 Raj supplied an actual SQL Editor failure: `42501 permission denied for table schema_migrations`, at `LOCK TABLE auth.schema_migrations IN SHARE ROW EXCLUSIVE MODE`. This occurred before the delete loop and aborted the transaction. The earlier superuser-only local stub did not model this provider ledger's permissions; its passing tests did not establish hosted compatibility.
 
-The corrected reset excludes only the unrelated `auth.schema_migrations` ledger. Either identity column name, a UUID or domain-typed column, or any inbound/outbound foreign key prevents the exemption. It does not catch and ignore permission failures on account records or change any hosted grants, ownership or provider schema. The final SQL SHA-256 is `a6acbb9f691e20a7d9b2bf6b2a2315924cb7bf38fe038a397d2a7711db8eff96`.
+That correction excludes only the unrelated `auth.schema_migrations` ledger. Either identity column name, a UUID or domain-typed column, or any inbound/outbound foreign key prevents the exemption. It does not catch and ignore permission failures on account records or change any hosted grants, ownership or provider schema. Its reviewed SQL SHA-256 was `a6acbb9f691e20a7d9b2bf6b2a2315924cb7bf38fe038a397d2a7711db8eff96`, superseded by the runtime correction below.
 
 The suite now includes a non-superuser operator with explicit account/application privileges and no SELECT/LOCK permission on the provider ledger. It verifies successful scoped reset, unchanged migration history and another tenant's survival, plus refusal/rollback for unexpected UUID, bigint identity, UUID-domain and foreign-key ledger shapes. Final lint/typecheck/DB evidence is recorded in `/tmp/weavly-founder-reset-permissions-{lint,typecheck,db-final}.log`. Hosted retry has not been performed by the agent; runtime unit/build/browser suites are not rerun for this manual SQL/test/documentation correction.
 
@@ -79,6 +79,21 @@ The suite now includes a non-superuser operator with explicit account/applicatio
 | Lint / TypeScript | Passed: zero-warning lint and nonincremental typecheck |
 | Independent final review | Independently passed 15 cases at the final SQL hash above; no outstanding P0/P1 or material P2 |
 | Hosted retry / account recreation | Not run by the agent; operator reruns the complete corrected file in the same project |
+
+## Hosted non-FK runtime correction
+
+The next operator screenshot reports `Remaining managed Auth runtime reference in auth.flow_state; transaction rolled back`. It follows the direct user DELETE, and the transaction abort restores all prior factory/payment/Auth changes. No successful hosted reset is claimed.
+
+The current transaction explicitly cleans only two known account-owned runtime roots: `auth.flow_state` (UUID owner) and `auth.refresh_tokens` (UUID or legacy text/varchar owner; integer row identity). It verifies required/optional identifier types, caps matched rows at 1,000 per source, rejects cross-account flow linking, token/session and parent/child token ownership in both directions, and adds both roots to the existing trigger/inheritance/FK dependency graph. External children, cross-account managed children, reachable FK cycles and unknown runtime tables still fail closed. Runtime deletes, user removal and required audit remain one transaction. No hosted permission, ownership, provider schema or credential change is part of this correction.
+
+The reviewed SQL SHA-256 is `d4037d1df14cc8e0ef4bf04bb5229700a727e17472e8ca143d44a012c68511d7`. Final check logs use `/tmp/weavly-founder-reset-runtime-{db-final,lint,typecheck}.log`. The synthetic suite now has 23 cases, including exact-owner runtime removal/peer preservation, runtime restoration on final audit failure, both-direction ownership checks without FKs, external runtime children, unknown triggers, self-FK cascades, bounds and unsupported column types. Real provider tokens and customer records are never fixtures. Runtime application unit/build/browser suites are not rerun for this operator SQL/test/documentation correction; actual hosted success and replacement UUID remain pending.
+
+| Check | Final runtime correction result |
+| --- | --- |
+| Full database regressions | Passed: 32 files, 273 tests on disposable PostgreSQL 17.11 with synthetic fixtures |
+| Lint / TypeScript | Passed: zero-warning lint and nonincremental typecheck |
+| Independent review | Independently passed 23 reset cases at the final hash; no outstanding P0/P1 or material P2 |
+| Hosted reset / new identity | Not performed by the agent; operator replaces the complete old query with the current file and reruns |
 
 ## Rollback and release limits
 
