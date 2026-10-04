@@ -1,8 +1,16 @@
 # Confirmed founder setup target
 
-Prepared from read-only evidence on 4 October 2026. This is reviewable preparation, not approval or execution of a production change.
+Prepared from read-only evidence on 4 October 2026; subsequently approved and executed as recorded in [FOUNDER_RELEASE_EXECUTION.md](FOUNDER_RELEASE_EXECUTION.md).
 
-## Verified by read-only hosted checks
+**Subsequent approval:** Raj answered “Approve the prepared setup” to the exact-project request covering the ten migrations, replacement UUID grant, founder-only login publication/deployment and controlled authenticator window with 15-minute idle/eight-hour absolute sessions. That approval remains conditional on required recovery/staging checks and does not approve payment operations, support/formal/legacy gates or automatic factor enrollment. Do not re-request this same production scope once the named checks pass.
+
+**Reconnection approval:** the originating thread supplied the user's explicit approval of the temporary CLI database login/private backup and confirmed that the earlier no-push restriction is superseded for this approved publication. The same previously rejected push was retried once and succeeded. [PR #188](https://github.com/Rajp2002/TextileAccounting/pull/188) is open, published at `76e4cc93`, with green CI and preview. Raj requested that it remain unmerged until release preparation is complete.
+
+**Execution status, 22:25 UTC:** all ten approved migrations applied through ordinary history (326 versions). Every required-object check passes. The bound founder setup is complete: one exact UUID/email grant, dedicated `admin` profile with no organization, no owned factories and one safe operator provisioning audit. Production gates/deployment are the next stage; no actual founder MFA factor has been enrolled. The private recovery archive at `/Users/rajpatel/Library/Application Support/WeavlyRecovery/vzhwahudircrpgtitwzd-20261004/application-recovery.dump` is0600, 2,869,534 bytes, SHA-256 `cb81a5116ef9b00221f8724b34db26a62587d5fe891934412381f15c865b37d8`. Catalogue/decode and schema-only restoration with all ten migrations passed. No real data was restored as fixtures. This is application recovery evidence, not hosted physical/Auth/Storage recovery or bank reconciliation.
+
+**Staging acceptance:** real local Auth/RPC10/10 and real built-app desktop/mobile browser13/13 groups passed, including rendered QR→OTP→AAL2, denial, logout/replay/back/offline, returning OTP without QR, idle/absolute expiry and recovery/re-enrollment. Synthetic Auth cleanup proved zero users. Independent review found no material issue. Lint/typecheck, 2,958 unit and273 database tests pass; one existing optional live test remains skipped. A read of the single public Vercel Supabase URL confirmed the production project binding. Hosted TOTP enrollment/verification are already enabled; the actual founder password/QR/code round trip remains Raj's private test.
+
+## Initial read-only hosted snapshot before approved execution
 
 - Exact project: `vzhwahudircrpgtitwzd`, confirmed by Raj's dashboard link.
 - Replacement Auth UUID: `0fe24cd4-bd20-4050-aa56-0631bd03d9ce`.
@@ -11,11 +19,11 @@ Prepared from read-only evidence on 4 October 2026. This is reviewable preparati
 - Hosted migration history: 316 versions, ending at `20261004120000` (`estimator_quote_input_basis`). Every hosted version exists in this checkout. The only local versions absent from hosted history are the ten listed below.
 - Founder grant/session/audit tables and both founder session/MFA-setup RPCs are absent. No grant can be provisioned until the required schema is installed.
 - Supabase branch listing exposes only default `main`; no isolated hosted staging branch is evidenced by that result.
-- Latest GitHub main remains `872debb7d09ec3e1856375e142cc841589c99af6`. The founder-only normal-login changes in `26a9cb7f` are local and unpublished.
+- Latest GitHub main remains `872debb7d09ec3e1856375e142cc841589c99af6`. The founder-only normal-login changes in `26a9cb7f` are published in unmerged PR #188; the current production deployment does not include them yet.
 
 These checks select only identity confirmation, profile/access fields, existence and migration/branch metadata. No password, token, OTP, factor secret, customer business record or gateway credential was read. No hosted data/configuration change was performed.
 
-## Exact pending additive migration set
+## Exact additive migration set (now applied)
 
 Apply in the order shown using the approved migration runner, recording ordinary migration history. Do not paste concatenated migrations into SQL Editor or use history repair, reset, seed or a forced include-all operation. Reread history immediately before any approved application and stop if the pending set differs. Existing synthetic migration/DB passes do not establish hosted provider compatibility or a verified recovery point.
 
@@ -32,7 +40,7 @@ Apply in the order shown using the approved migration runner, recording ordinary
 | [20261004180000_admin_formal_case_workflow.sql](../../supabase/migrations/20261004180000_admin_formal_case_workflow.sql) | `d2c77662b7bf8300c31e6ee3b69408123442a5dc2c2a784f27d427d0a9d3af35` |
 | [20261004190000_admin_retention_review.sql](../../supabase/migrations/20261004190000_admin_retention_review.sql) | `0e99155556ea80e26d5225e55ae77e4263ea173a8f9be9c311682e65ac9b234c` |
 
-The release brief requires approved production migration/grant/security/deployment operations, a verified recovery point and isolated staging acceptance. Those remain unresolved. Installing these objects changes cross-factory authorization and retained-record support; it does not approve support/formal writes, retention/purge, financial backfills or live payments.
+The exact production migration/grant/security/deployment scope and private backup/login are approved. Browser acceptance and production database setup are complete; final deployment verification remains pending. Installing these objects does not approve support/formal writes, retention/purge, financial backfills or live payments.
 
 ## Prepared provisioning and login sequence
 
