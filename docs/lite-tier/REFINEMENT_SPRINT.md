@@ -268,3 +268,9 @@ Reading every guard together (proxy, owner layout and its two boundaries, the pa
 | all guards open for retained owners (source contracts) | same; three older guard contracts updated deliberately | pass |
 
 Not run: the cohort journeys in a browser, and a real database above the production row cap.
+
+## LT08: measurement inventory and pilot protocol
+
+**Status:** done as documentation. No collection, retention, cohort, recruitment or outreach change. See `MEASUREMENT_AND_PILOT.md`.
+
+Findings worth a decision (D12): `plan_usage_events` has no storage dedupe, no retention policy, no report reading it, is not in the owner archive, and records the subscription tier rather than the effective tier (retained Lite shows as `none`). The new LT02/LT03/LT06 states (page-only offline save, unresolved rate update, export source) have no events. The pilot protocol is prepared and unstarted; it needs D13 and the LT09 gates first.
