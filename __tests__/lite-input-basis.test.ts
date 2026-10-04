@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { buildCostingResult, calcFullTotals, type EstimateState } from '@/lib/estimator'
 import { buildEstimatorQuotePayload } from '@/lib/estimator-quote-payload'
-import { resolveSavedCostingInputBasis, restoreSavedQualityCostingAssumptions } from '@/lib/saved-costings'
+import { readFileSync } from 'node:fs'
+import { resolveAppliedQualityBasis, resolveSavedCostingInputBasis, restoreSavedQualityCostingAssumptions } from '@/lib/saved-costings'
 import { makeDefaultEstimateState } from '@/lib/estimator'
 import { f1State } from './fixtures/costing-characterization'
 
@@ -85,5 +86,37 @@ describe('reusing the latest costing assumptions on a saved quality', () => {
             overhead_mode: 'monthly_expenses', overhead_override_per_m: 2.5, warping_mode: 'in_house', warping_rate_per_kg: 12,
         })
         expect(restored).toMatchObject({ overheadMode: 'monthly_expenses', overheadOverridePerM: 2.5, warpingMode: 'in_house', warpingRatePerKg: 12 })
+    })
+})
+
+// Final review (Important): applying a saved quality restored the latest
+// costing's overhead, then overwrote it with the editor's current overhead.
+describe('applying a saved quality keeps the reused costing basis', () => {
+    const editor = { ...makeDefaultEstimateState(), overheadMode: 'direct' as const, overheadOverridePerM: 9, warpingMode: 'outsourced' as const }
+
+    it('uses the latest costing overhead and warping mode when the quality has no override of its own', () => {
+        const reuse = { overhead_mode: 'monthly_expenses' as const, overhead_override_per_m: 2.5, warping_mode: 'in_house' as const }
+        const restored = restoreSavedQualityCostingAssumptions(editor, reuse)
+        expect(resolveAppliedQualityBasis({ latest_costing_reuse: reuse }, restored)).toEqual({ overheadMode: 'monthly_expenses', overheadOverridePerM: 2.5, warpingMode: 'in_house' })
+    })
+
+    it("keeps the quality's own direct overhead first", () => {
+        const reuse = { overhead_mode: 'monthly_expenses' as const, overhead_override_per_m: 2.5 }
+        const restored = restoreSavedQualityCostingAssumptions(editor, reuse)
+        expect(resolveAppliedQualityBasis({ overhead_override_per_m: 4, latest_costing_reuse: reuse }, restored)).toMatchObject({ overheadMode: 'direct', overheadOverridePerM: 4 })
+    })
+
+    it('without a reused costing, behaves as before: editor overhead and in-house warping', () => {
+        const restored = restoreSavedQualityCostingAssumptions(editor, null)
+        expect(resolveAppliedQualityBasis({ latest_costing_reuse: null }, restored)).toEqual({ overheadMode: 'direct', overheadOverridePerM: 9, warpingMode: 'in_house' })
+    })
+
+    it('the estimator reducer uses it in both template branches', () => {
+        const source = readFileSync('app/(dashboard)/owner/estimator/EstimatorClient.tsx', 'utf8')
+        const applyTemplate = source.slice(source.indexOf("case 'APPLY_TEMPLATE': {"), source.indexOf("case 'SET':"))
+        expect(applyTemplate).toContain('const appliedBasis = resolveAppliedQualityBasis(tpl, restoredAssumptions)')
+        expect(applyTemplate.match(/\.\.\.appliedBasis/g)).toHaveLength(2)
+        expect(applyTemplate).not.toContain('state.overheadOverridePerM')
+        expect(applyTemplate).not.toContain('state.overheadMode')
     })
 })

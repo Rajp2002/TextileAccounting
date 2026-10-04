@@ -176,7 +176,7 @@ import {
 } from '@/lib/factory-cost-profiles'
 import { formatTimestampDate } from '@/lib/format'
 import { formatSuratDateTime } from '@/lib/time'
-import { restoreSavedQualityCostingAssumptions, type SavedQualityCostingReuse } from '@/lib/saved-costings'
+import { resolveAppliedQualityBasis, restoreSavedQualityCostingAssumptions, type SavedQualityCostingReuse } from '@/lib/saved-costings'
 import { trackPlanEvent } from '@/lib/plan-analytics'
 import { formatEstimatorPlaceholder, type EstimatorPlaceholderKind } from '@/lib/estimator-placeholder'
 import { LiveValue } from '@/components/ui/live-value'
@@ -580,6 +580,9 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
             // the linked costing snapshot restores the saved overhead,
             // commercial, quantity, and enablement context.
             const restoredAssumptions = restoreSavedQualityCostingAssumptions(state, tpl.latest_costing_reuse)
+            // The quality's own direct overhead first, else the reused
+            // costing's basis; never the editor's leftover overhead.
+            const appliedBasis = resolveAppliedQualityBasis(tpl, restoredAssumptions)
             // Explicit null fallbacks for pre-loom-type templates (Gap 4)
             // Ensures undefined template fields never corrupt existing session state.
             const loomFields = {
@@ -588,7 +591,6 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                 loomPowerKw:           tpl.loom_power_kw != null ? Number(tpl.loom_power_kw) : null,
                 loomRpmIsCustomised:   false,
                 loomPowerKwIsCustomised: false,
-                warpingMode:            (tpl.warping_mode ?? 'in_house') as 'in_house' | 'outsourced',
                 sizingMode:            (tpl.sizing_mode ?? 'in_house') as 'in_house' | 'outsourced',
                 hoursPerShift:         tpl.hours_per_shift != null ? Number(tpl.hours_per_shift) : state.hoursPerShift,
             }
@@ -604,8 +606,7 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                     warpCrimpPct:     tpl.warp_crimp_pct != null ? Number(tpl.warp_crimp_pct) : state.warpCrimpPct,
                     perPickCostPaisa: Number(tpl.per_pick_cost_paise ?? state.perPickCostPaisa),
                     yarnShortagePct:  Number(tpl.yarn_shortage_pct ?? state.yarnShortagePct),
-                    overheadOverridePerM: tpl.overhead_override_per_m !== undefined && tpl.overhead_override_per_m !== null ? Number(tpl.overhead_override_per_m) : state.overheadOverridePerM,
-                    overheadMode: tpl.overhead_override_per_m !== undefined && tpl.overhead_override_per_m !== null ? 'direct' : state.overheadMode,
+                    ...appliedBasis,
                 }
             }
             return {
@@ -631,8 +632,7 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                 tapeLengthM:      Number(tpl.tape_length_m ?? state.tapeLengthM),
                 warpCrimpPct:     tpl.warp_crimp_pct != null ? Number(tpl.warp_crimp_pct) : state.warpCrimpPct,
                 perPickCostPaisa: Number(tpl.per_pick_cost_paise ?? state.perPickCostPaisa),
-                overheadOverridePerM: tpl.overhead_override_per_m !== undefined && tpl.overhead_override_per_m !== null ? Number(tpl.overhead_override_per_m) : state.overheadOverridePerM,
-                overheadMode: tpl.overhead_override_per_m !== undefined && tpl.overhead_override_per_m !== null ? 'direct' : state.overheadMode,
+                ...appliedBasis,
             }
         }
         case 'SET':

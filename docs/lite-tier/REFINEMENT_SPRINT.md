@@ -274,3 +274,14 @@ Not run: the cohort journeys in a browser, and a real database above the product
 **Status:** done as documentation. No collection, retention, cohort, recruitment or outreach change. See `MEASUREMENT_AND_PILOT.md`.
 
 Findings worth a decision (D12): `plan_usage_events` has no storage dedupe, no retention policy, no report reading it, is not in the owner archive, and records the subscription tier rather than the effective tier (retained Lite shows as `none`). The new LT02/LT03/LT06 states (page-only offline save, unresolved rate update, export source) have no events. The pilot protocol is prepared and unstarted; it needs D13 and the LT09 gates first.
+
+## Final review fix: applying a saved quality kept the editor's overhead
+
+Found in the whole-branch review (pre-existing since the Sprint 3 reducer, not introduced here). Applying a saved quality restored its latest costing's overhead and commercial context, then overwrote the overhead mode and rate with whatever the editor already held, while the rate dialog says "Uses this quality's saved costing assumptions". Warping mode was always forced to in-house. That defeated LT01B on the quality-reuse path.
+
+`resolveAppliedQualityBasis` now gives the quality's own direct overhead first, then the reused costing's restored overhead basis and stored warping mode, and in-house warping only when neither is known. With no reused costing the result is unchanged (editor overhead, in-house warping).
+
+| Fixture | Test | Result |
+| --- | --- | --- |
+| reused monthly costing with applied overhead and in-house warping; quality direct override first; no reused costing unchanged; reducer wiring | `__tests__/lite-input-basis.test.ts` | pass; failed before |
+| existing reuse contract | `__tests__/saved-quality-commercial-reuse.test.ts` | pass |

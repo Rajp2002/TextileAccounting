@@ -288,6 +288,27 @@ export function resolveSavedCostingInputBasis(
   }
 }
 
+/**
+ * Overhead and warping basis when a saved quality is applied. The quality's
+ * own direct overhead comes first; otherwise the latest costing's restored
+ * basis (`restored`, from restoreSavedQualityCostingAssumptions) is kept
+ * rather than replaced by whatever the editor held. Without a reused costing,
+ * `restored` is the editor state and warping defaults to in-house, as before.
+ */
+export function resolveAppliedQualityBasis(
+  template: { overhead_override_per_m?: unknown; warping_mode?: unknown; latest_costing_reuse?: SavedQualityCostingReuse | null },
+  restored: { overheadMode: OverheadMode; overheadOverridePerM: number | null },
+): { overheadMode: OverheadMode; overheadOverridePerM: number | null; warpingMode: WarpingMode } {
+  const templateOverride = template.overhead_override_per_m === undefined || template.overhead_override_per_m === null
+    ? null
+    : Number(template.overhead_override_per_m)
+  return {
+    overheadOverridePerM: templateOverride ?? restored.overheadOverridePerM,
+    overheadMode: templateOverride !== null ? 'direct' : restored.overheadMode,
+    warpingMode: storedWarpingMode(template.warping_mode) ?? storedWarpingMode(template.latest_costing_reuse?.warping_mode) ?? 'in_house',
+  }
+}
+
 export type SavedQualityFixedWorker = {
   id: number
   name: string
