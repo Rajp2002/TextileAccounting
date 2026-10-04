@@ -287,3 +287,49 @@ Found in the whole-branch review (pre-existing since the Sprint 3 reducer, not i
 | existing reuse contract | `__tests__/saved-quality-commercial-reuse.test.ts` | pass |
 
 Two further review fixes, test-first: reopening the quality rates dialog while an update is unresolved now shows the kept proposal rather than the saved rates (the panel says the proposal is kept on the page), and the archive's consistency note says datasets are read separately (they are read concurrently), not "one after another".
+
+## LT09: integrated proof and release decision
+
+**Candidate:** `d4d7f555` on branch `claude/lite-tier-sprint-plan-d0f61b` (base `9da43984`). Environment: macOS, Node 24.11.1, npm 11.6.2, PostgreSQL 17.11 for `test:db` (CI uses 16). Every command through `scripts/performance/isolated-command.mjs`; the worktree has no `.env*` files, so the build loaded no QA or production settings.
+
+| Gate | Result |
+| --- | --- |
+| `node node_modules/typescript/bin/tsc --noEmit --incremental false` | pass (34 s) |
+| `npm run lint` | pass, 0 warnings |
+| `npx vitest run` | 287 files, 2,563 passed, 1 skipped (the gated live Supabase test); baseline was 278 / 2,472 / 1 |
+| `npm run test:db` | 17 files, 112 passed; baseline 16 / 106 |
+| `npm run build` (prebuild runs the full suite) | pass, compiled in 3.2 min (598 s total under heavy machine load) |
+
+**Release decision: not releasable as a runtime release yet.** Source and disposable-database gates pass. The following are **not run** and remain release gates:
+
+- Migration `20261004120000_estimator_quote_input_basis.sql` applied to the target (needs the owner's approval). Code is safe to deploy first; the basis is only stored once it is applied.
+- Signed-in browser journeys on a deployed candidate (QA Supabase does not resolve): typed yarn selection, save → reopen basis, offline save in the activated Free wrapper, unresolved rate update, Saved Costings load failure, quality search, export source line, archive download for each cohort.
+- Real PDF render and text extraction (EN/HI/GU glyphs, page breaks), phone widths, 200% zoom, keyboard and screen reader.
+- Native Hindi and Gujarati review of `lib/i18n/lite-refinement-phrases.ts` and the changed `save_version_*` strings.
+- Domain sign-off on R6 (yarn name conventions) and on single-weft supported scope (D01 held).
+- Production read of how many saved costings exceed the library row cap (none needed for correctness now; useful for prioritising).
+
+**Deployment order:** code can merge before the migration. After applying the migration, record it in `schema_migrations`, then new saves store the basis. Rollback: revert the payload change; keep the columns and readers.
+
+### Decisions (D01 to D16)
+
+| Decision | Disposition in this sprint |
+| --- | --- |
+| D01 multi-weft semantics | Held: owner's 2026-09-26 meaning recorded, fix awaits the owner's own package |
+| D02 new charge basis, D03 negotiated price, D04 conversion-only | Not started (no authorization) |
+| D05 Recent/Favorites | Not started; construction cue and search shipped instead |
+| D06 richer rate identity, D07 rate receipt schema, D16 durable used-rate provenance | Not started; LT03 containment needs none of them |
+| D08 broader onboarding/tours | Not started; existing wizard unchanged |
+| D09 localized PDF templates | Not started; static PDF labels stay English |
+| D10 quotation-document history | Declined (quotations retired by the owner) |
+| D11 readable archive | Not started; JSON completeness first |
+| D12 new telemetry | Not started; gaps listed in `MEASUREMENT_AND_PILOT.md` |
+| D13 outreach/pricing, D14 broader platform | Not started |
+| D15 Lite-only archive | Not needed: the whole-organization archive is now complete |
+
+### Residual risks
+
+- Keyset paging is proven against an in-memory PostgREST stand-in (capped at 1,000 rows) and unit tests, not against real PostgREST; the library read's quoted `or` filter has not run against a real server.
+- The archive is not a point-in-time snapshot (stated in the file).
+- `plan_usage_events` has no retention, dedupe or report (LT08).
+- Free's saved-history export has no source line (Free scope).
