@@ -4567,11 +4567,13 @@ export default function EstimatorClient({
     const openEditRates = useCallback((tpl: EstimatorTemplate) => {
         const warpRows: WarpRow[] = tpl.warp_rows ?? []
         const weftRows: WeftRow[] = tpl.weft_rows ?? []
+        // An unresolved update keeps its proposal on this page (LT03).
+        const pending = rateUpdateUnknown?.templateId === tpl.id ? rateUpdateUnknown : null
         setEditRatesTpl(tpl)
-        setEditingWarpRates(warpRows.map((r: WarpRow) => ({ id: r.id, yarnRate: r.yarnRate })))
-        setEditingWeftRates(weftRows.map((r: WeftRow) => ({ id: r.id, yarnRate: r.yarnRate })))
+        setEditingWarpRates((pending?.proposedWarp ?? warpRows).map((r: WarpRow) => ({ id: r.id, yarnRate: r.yarnRate })))
+        setEditingWeftRates((pending?.proposedWeft ?? weftRows).map((r: WeftRow) => ({ id: r.id, yarnRate: r.yarnRate })))
         void trackPlanEvent('rate_review_requested')
-    }, [])
+    }, [rateUpdateUnknown])
 
     /** Apply a saved quality's stored rates to the estimator as a new costing. */
     const applySavedQualityRates = (applied: EstimatorTemplate, name: string) => {

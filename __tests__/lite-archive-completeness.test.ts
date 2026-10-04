@@ -197,3 +197,11 @@ describe('retained owner access to the archive', () => {
         expect(proxy).toContain("!pathname.startsWith('/owner/data-export')")
     })
 })
+
+describe('archive consistency note', () => {
+    it('describes concurrent dataset reads accurately', async () => {
+        const payload = await exportOrganizationData() as ExportPayload
+        expect(payload.completeness.consistency).toContain('Datasets are read separately')
+        expect(payload.completeness.consistency).not.toContain('one after another')
+    })
+})

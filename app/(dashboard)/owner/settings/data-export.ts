@@ -438,7 +438,7 @@ export async function exportOrganizationData() {
             status: 'complete',
             page_size: EXPORT_PAGE_SIZE,
             method: 'Every dataset is read in pages ordered by its key until an empty page. Any failed page fails the export and no file is produced.',
-            consistency: 'Datasets are read one after another while the factory may keep working, so a change made during the export may or may not appear. This is not a point-in-time backup.',
+            consistency: 'Datasets are read separately, each in pages, while the factory may keep working, so a change made during the export may or may not appear. This is not a point-in-time backup.',
         },
         terminology: {
             baseline: 'UX-012 product-owner-approved limited-pilot baseline',

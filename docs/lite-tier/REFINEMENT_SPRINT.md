@@ -254,7 +254,7 @@ Reading every guard together (proxy, owner layout and its two boundaries, the pa
 - Every dataset is read in pages of 1,000 ordered by its key until an empty page (`readAllPages`), so a table larger than PostgREST's per-request row cap is no longer cut silently. Keys: `id` everywhere except the one-row-per-org tables (`payroll_configs`, `quality_stock_cutover`, `yarn_stock_settings` by `org_id`), `yarn_stock_recipes` by `quality_id` within the org, and `whatsapp_cooldowns`, which has only a composite key and is read in ordered offset pages (its writers were unscheduled on 2026-10-01). The key list came from probing the disposable migrated database.
 - Machine-assignment and referral lookups by parent ids are batched (200 ids per request) and each batch is paged.
 - `free_saved_costings` (completed Free costings kept after upgrade or expiry; org-scoped) is in the catalog. Request tokens and receipts are not.
-- The file now carries `completeness`: status, page size, method, and the consistency limit ("datasets are read one after another … not a point-in-time backup"). Any failed page still fails the whole export, records a failed run and produces no file. Redaction, payload hash, run record and audit are unchanged.
+- The file now carries `completeness`: status, page size, method, and the consistency limit ("datasets are read separately, each in pages … not a point-in-time backup"). Any failed page still fails the whole export, records a failed run and produces no file. Redaction, payload hash, run record and audit are unchanged.
 
 | Fixture | Test | Result |
 | --- | --- | --- |
@@ -285,3 +285,5 @@ Found in the whole-branch review (pre-existing since the Sprint 3 reducer, not i
 | --- | --- | --- |
 | reused monthly costing with applied overhead and in-house warping; quality direct override first; no reused costing unchanged; reducer wiring | `__tests__/lite-input-basis.test.ts` | pass; failed before |
 | existing reuse contract | `__tests__/saved-quality-commercial-reuse.test.ts` | pass |
+
+Two further review fixes, test-first: reopening the quality rates dialog while an update is unresolved now shows the kept proposal rather than the saved rates (the panel says the proposal is kept on the page), and the archive's consistency note says datasets are read separately (they are read concurrently), not "one after another".

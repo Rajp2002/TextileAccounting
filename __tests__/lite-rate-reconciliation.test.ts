@@ -68,3 +68,13 @@ describe('unresolved rate update copy is translated', () => {
         }
     })
 })
+
+describe('reopening the dialog while an update is unresolved', () => {
+    it('shows the kept proposal, not the saved rates', () => {
+        const source = readFileSync('app/(dashboard)/owner/estimator/EstimatorClient.tsx', 'utf8')
+        const open = source.slice(source.indexOf('const openEditRates = useCallback('), source.indexOf('/** Apply a saved quality'))
+        expect(open).toContain('const pending = rateUpdateUnknown?.templateId === tpl.id ? rateUpdateUnknown : null')
+        expect(open).toContain('(pending?.proposedWarp ?? warpRows).map(')
+        expect(open).toContain('(pending?.proposedWeft ?? weftRows).map(')
+    })
+})
