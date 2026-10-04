@@ -15,9 +15,9 @@ async function insertFact(kind: string, object: string, amount: string, sourceTy
 beforeAll(async () => {
     db = await freshDatabase(); org = await seedOwnerOrg(db, { tier: null })
     await asSuperuser(db); founder = randomUUID(); session = randomUUID()
-    await db.query("INSERT INTO auth.users(id,email) VALUES($1,'synthetic-report-founder@example.test')", [founder])
+    await db.query("INSERT INTO auth.users(id,email,email_confirmed_at) VALUES($1,'synthetic-report-founder@example.test',now())", [founder])
     await db.query("INSERT INTO public.profiles(id,role,org_id,full_name) VALUES($1,'admin',NULL,'Synthetic Founder')", [founder])
-    await db.query("INSERT INTO private.platform_founder_grants(user_id,enabled,grant_reason) VALUES($1,true,'Disposable report fixture')", [founder])
+    await db.query("INSERT INTO private.platform_founder_grants(user_id,enabled,grant_reason,login_email) VALUES($1,true,'Disposable report fixture','synthetic-report-founder@example.test')", [founder])
     await db.query("INSERT INTO auth.sessions(id,user_id,aal) VALUES($1,$2,'aal2')", [session, founder])
     await db.query("INSERT INTO private.admin_org_reporting(org_id,cohort,classification_reason) VALUES($1,'production','Isolated synthetic cohort')", [org.orgId])
     await asServiceRole(db)

@@ -6,6 +6,7 @@ const root = path.resolve('scripts/qa/admin-browser')
 const server = await createServer({
     root, configFile: false, esbuild: { jsx: 'automatic' },
     resolve: { alias: [
+        { find: '@/lib/admin/legacy-read', replacement: path.join(root, 'legacy-fixtures.ts') },
         ...['factories', 'payments', 'overview', 'system', 'audit'].map(name => ({ find: `@/lib/admin/${name}`, replacement: path.join(root, 'fixture-client.ts') })),
         { find: 'next/link', replacement: path.join(root, 'link.tsx') },
         { find: 'next/navigation', replacement: path.join(root, 'navigation.ts') },

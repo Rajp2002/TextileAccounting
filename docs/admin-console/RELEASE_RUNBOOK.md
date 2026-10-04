@@ -10,7 +10,10 @@ This checkout is a local implementation, not a deployed release. All new capabil
 | `WEAVLY_ADMIN_PRODUCTION_APPROVED=true` | Additional production prerequisite. An enabled console without this approval fails closed. |
 | `WEAVLY_SUPPORT_ENABLED=true` | Enables requester support reads/intake/replies and founder support writes. Founder read-only access to retained tickets independently requires the admin boundary. |
 | `WEAVLY_SUPPORT_PRODUCTION_APPROVED=true` | Additional production prerequisite for the support capability. |
-| `WEAVLY_ADMIN_LEGACY_READS_ENABLED=true` | Independently approved legacy inventory/actions. Checked inside the legacy DAL/action guard. |
+| `WEAVLY_ADMIN_MFA_ENROLLMENT_ENABLED=true` | Guarded first-TOTP setup after password, confirmed approved email, current UUID grant and provider-bound AAL1 candidate. Never removes a factor. |
+| `WEAVLY_ADMIN_MFA_SETUP_APPROVED=true` | Additional production prerequisite for enrollment, separate from console approval. Recovery and actual provider tests are required first. |
+| `WEAVLY_ADMIN_LEGACY_READS_ENABLED=true` | Bounded read-only formal registers/details. Checked independently inside every DAL read. |
+| `WEAVLY_ADMIN_LEGACY_REFERENCE_ACTIONS_ENABLED=true` | Separately exposes old unbounded reference actions; keep off. Bounded reads do not enable these actions. |
 | `WEAVLY_ADMIN_LEGACY_OPERATIONS_ENABLED=true` | Separately approved retained writes/exports/controls. Not a release-one UI capability. No interactive legacy operation UI is mounted. |
 
 Flags never grant identity or disable authorization. They are server configuration, not request/query parameters. Keep all production gates off until the exact deployed version and operational prerequisites are approved and verified.
@@ -31,12 +34,12 @@ The sensitive surface starts concealed, verifies the current principal before re
 4. Approve support visibility (requester plus founder), owner intake and in-app delivery. No staffed-hours SLA or external notifications are implied.
 5. Approve retention/deletion/pseudonymization integration for tickets, messages, notes, idempotency records, reporting and audit. Current owner export/deletion is preserved in source, but new populated support/reporting foreign keys can prevent organization deletion; the new records are not automatically included in customer export. This is a release blocker requiring a reviewed integration, not an automatic purge or guessed legal period. Do not enable production support before this is resolved.
 6. Verify classifications, organization-to-factory business mapping and the reporting zone. Missing classification remains unclassified. Approve bounded evidence imports/provider reconciliation separately; projections are not payment authorities.
-7. Select and verify a usable fallback/replacement and operation owner for retained grievance/security/privacy/export/deletion/notice/DPA/lockdown workflows. `/admin/legacy` is only a read inventory. Preserved services alone do not establish an operational fallback.
+7. Confirm formal/security operation owners and requirements. `/admin/legacy` now has bounded read-only grievance/security/DPA/notice lists and details. Resolution, incident commands, notifications, signing, proof exports and lockdown still need validated replacements with atomic outcome audit after scope decisions. Preserved services do not establish their readiness.
 8. Review migration effects/security grants, obtain a verified recovery point, deploy additive schema and dark code only with explicit authorization, then repeat acceptance on the deployed exact commit. Monitoring, backup and restore remain unavailable unless independently connected.
 
 ## Controlled rollout
 
-After staging acceptance and explicit deployment/migration approval, deploy all four additive migrations before opening reads: the factory paid-term projection depends on the billing reporting migration at runtime. Keep gates closed during migration. Enable founder read-only features after negative access and provenance checks; enable support writes after transactional/audit and notification-expectation checks. Check ordinary customer login, Free quota/recalculation, billing gates and effective entitlement fallback unchanged. A financial coverage gap permits a partial subtotal, never complete net or a guessed live total.
+After staging acceptance and explicit deployment/migration approval, deploy the complete seven-migration additive set before opening reads: factory paid-term reads depend on the billing projection. Keep gates closed during migration. Enable founder reads after negative access and provenance checks, support writes after transactional/audit and delivery-expectation checks, and first MFA setup only after its separate approval. Verify customer login, Free quota/recalculation, billing gates and entitlement fallback. Coverage gaps permit partial subtotals, never a complete net or guessed live total.
 
 Record exact application commit, migration history, gates, verified founder UUID/setup evidence (without credentials), operation owners, classification/financial limitations, observation results and recovery evidence. No production launch is authorized by this document.
 

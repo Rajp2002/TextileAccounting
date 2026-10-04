@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { AdminError } from './errors'
 import { safeFounderReturnPath } from './routes'
+import { founderEmailAllowed } from './founder-email'
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 export const FOUNDER_CAPABILITIES = Object.freeze(['factories:read', 'support:read', 'support:write', 'payments:read', 'system:read', 'audit:read'] as const)
@@ -17,6 +18,11 @@ export type FounderCandidate = { userId: string; sessionId: string; aal: 'aal1' 
 export function founderConsoleEnabled() {
     return process.env.WEAVLY_ADMIN_ENABLED === 'true'
         && (process.env.NODE_ENV !== 'production' || process.env.WEAVLY_ADMIN_PRODUCTION_APPROVED === 'true')
+}
+
+export function founderMfaEnrollmentEnabled() {
+    return founderConsoleEnabled() && process.env.WEAVLY_ADMIN_MFA_ENROLLMENT_ENABLED === 'true'
+        && (process.env.NODE_ENV !== 'production' || process.env.WEAVLY_ADMIN_MFA_SETUP_APPROVED === 'true')
 }
 
 function assertEnabled() {
@@ -46,6 +52,9 @@ async function verifiedCandidate(): Promise<FounderCandidate> {
     const identity = await getVerifiedIdentity()
     if (!identity || await isUserRevoked(identity.user.id)) throw new AdminError('UNAUTHENTICATED', 401, 'Please sign in again.')
     if (identity.profile.role !== 'admin') throw new AdminError('FORBIDDEN', 403, 'Founder access is required.')
+    if (!identity.user.email_confirmed_at || !founderEmailAllowed(identity.user.email)) {
+        throw new AdminError('FORBIDDEN', 403, 'Founder access is required.')
+    }
     // Do not cache claims: MFA may replace an AAL1 token within this action.
     const supabase = await createClient()
     const { data, error } = await supabase.auth.getClaims()
@@ -181,10 +190,18 @@ export async function requireLegacyFounder(operation: string, access: 'read' | '
         await adminRecordAudit(principal, `legacy.${operation}`, 'legacy', operation, undefined, { outcome: 'denied', reasonCode: 'legacy_reads_disabled' })
         throw new AdminError('LEGACY_READ_DISABLED', 403, 'This retained read operation requires separate operational approval.')
     }
+    // The bounded formal-register DAL has its own read gate. Enabling it must
+    // not also expose the old unbounded reference actions.
+    if (access === 'read' && process.env.WEAVLY_ADMIN_LEGACY_REFERENCE_ACTIONS_ENABLED !== 'true') {
+        await adminRecordAudit(principal, `legacy.${operation}`, 'legacy', operation, undefined, { outcome: 'denied', reasonCode: 'legacy_reference_actions_disabled' })
+        throw new AdminError('LEGACY_READ_DISABLED', 403, 'Use the retained formal record views for this operation.')
+    }
     if (access !== 'read' && process.env.WEAVLY_ADMIN_LEGACY_OPERATIONS_ENABLED !== 'true') {
         await adminRecordAudit(principal, `legacy.${operation}`, 'legacy', operation, undefined, { outcome: 'denied', reasonCode: 'legacy_operations_disabled' })
         throw new AdminError('LEGACY_OPERATION_DISABLED', 403, 'This retained operation requires separate operational approval.')
     }
-    await adminRecordAudit(principal, `legacy.${operation}`, 'legacy', operation)
+    // This records authorization only. It cannot establish that a later
+    // compatibility action completed or that its outcome was audited atomically.
+    await adminRecordAudit(principal, `legacy.authorize.${operation}`, 'legacy', operation)
     return { ...principal, user: { id: principal.userId } }
 }

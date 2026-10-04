@@ -23,6 +23,11 @@ import { GET as ownSupport, POST as intake } from '@/app/api/support/route'
 import { GET as ownThread } from '@/app/api/support/[id]/route'
 import { POST as ownReply } from '@/app/api/support/[id]/messages/route'
 import { GET as ownSession } from '@/app/api/support/session/route'
+import { GET as candidateSession } from '@/app/api/admin/auth/session/route'
+import { GET as legacyList } from '@/app/api/admin/legacy/route'
+import { GET as legacyDetail } from '@/app/api/admin/legacy/[kind]/[id]/route'
+import { GET as legacyBindings } from '@/app/api/admin/legacy/dpas/[id]/bindings/route'
+import { GET as ownExport } from '@/app/api/support/export/route'
 
 const id = '00000000-0000-4000-8000-000000000001'
 const context = { params: Promise.resolve({ id }) }
@@ -50,6 +55,10 @@ describe('AD11 server capability rollback', () => {
         ['manual capture', () => capture(mutation())], ['support patch', () => patch(mutation(), context)],
         ['public reply', () => reply(mutation(), context)], ['internal note', () => note(mutation(), context)],
         ['session', () => session()], ['interactive touch', () => touch(mutation())],
+        ['candidate session', () => candidateSession()],
+        ['legacy list', () => legacyList(get('/api/admin/legacy'))],
+        ['legacy record', () => legacyDetail(get(), { params: Promise.resolve({ kind: 'grievances', id }) })],
+        ['legacy DPA bindings', () => legacyBindings(get(), { params: Promise.resolve({ id }) })],
     ] as const
     it.each(founder)('disabling founder data denies %s before any privileged read or write', async (_name, call) => {
         const response = await call()
@@ -63,6 +72,7 @@ describe('AD11 server capability rollback', () => {
         ['own list', () => ownSupport(get('/api/support'))], ['own thread', () => ownThread(get('/api/support'), context)],
         ['intake', () => intake(mutation())], ['reply', () => ownReply(mutation(), context)],
         ['session', () => ownSession()],
+        ['own public export', () => ownExport()],
     ] as const
     it.each(customer)('disabling customer support denies %s without changing business access', async (_name, call) => {
         const response = await call()

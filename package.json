@@ -14,7 +14,8 @@
     "test:db": "vitest run --config vitest.db.config.ts",
     "test:admin:browser": "playwright test --config playwright.admin.config.ts",
     "test:browser:support-fixture": "node scripts/performance/isolated-command.mjs node node_modules/@playwright/test/cli.js test --config playwright.support-fixture.config.ts",
-    "test:admin:read-fixtures": "node scripts/performance/isolated-command.mjs npx playwright test --config playwright.factories.config.ts"
+    "test:admin:read-fixtures": "node scripts/performance/isolated-command.mjs npx playwright test --config playwright.factories.config.ts",
+    "test:admin:auth-fixtures": "node scripts/performance/isolated-command.mjs npx playwright test --config playwright.founder-auth-fixture.config.ts"
   },
   "dependencies": {
     "@ducanh2912/next-pwa": "^10.2.9",

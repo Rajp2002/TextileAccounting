@@ -8,6 +8,7 @@ export const founderPasswordInput = z.object({
 export const founderChallengeInput = z.object({
     factorId: z.string().uuid(),
     code: z.string().regex(/^\d{6}$/),
+    enrollmentIntentId: z.string().uuid().optional(),
 })
 
 /** Server Actions also have Next.js' Origin/Host protection. Fail closed here. */

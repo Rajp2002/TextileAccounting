@@ -1,15 +1,19 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useEffect } from 'react'
+import { toast } from 'sonner'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { founderSignIn } from './actions'
+import { founderSignIn } from '@/app/(admin-auth)/admin/login/actions'
 import type { FounderAuthState } from '@/lib/admin/auth-input'
 
 export function FounderLoginForm({ enabled, denied, returnTo }: { enabled: boolean; denied: boolean; returnTo: string }) {
     const [state, action, pending] = useActionState<FounderAuthState, FormData>(founderSignIn, {})
+    useEffect(() => {
+        if (state.code === 'WRONG_EMAIL' && state.message) toast.error(state.message, { id: state.requestId })
+    }, [state.code, state.message, state.requestId])
     return <>
         {!enabled && <p role="status" className="mb-5 rounded-lg border border-hairline bg-surface-soft p-4 text-sm leading-6">Founder access is awaiting approved identity and security setup.</p>}
         {denied && <p role="alert" className="mb-5 rounded-lg border border-risk/20 bg-risk-soft p-4 text-sm leading-6 text-risk">Founder access could not be verified. Sign in with the approved founder account, or sign out to change accounts.</p>}

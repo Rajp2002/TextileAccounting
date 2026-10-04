@@ -8,8 +8,12 @@ factor, founder grant, production setting, or hosted database was changed.
 `getVerifiedIdentity()` validates Supabase `getUser`, the protected current
 profile, and revocation. It permits a platform profile with no organization.
 `getCachedSession()` remains the customer guard and rejects a missing organization.
-The founder guard does not derive privileges from email, JWT role metadata, or
-user metadata. An `admin` profile alone is insufficient.
+The founder guard does not confer privileges from email, JWT role metadata, or
+user metadata. An `admin` profile alone is insufficient. The approved email is
+an additional restriction on the immutable UUID grant: the current confirmed
+Auth email must match the protected canonical `login_email`. An email change
+denies access until an approved protected binding update; recreating the same
+email does not transfer a UUID grant.
 
 Every founder request uses verified `getClaims`, checks subject, project issuer,
 authenticated audience, expiry, immutable provider session UUID, and AAL2, then
@@ -19,7 +23,9 @@ Auth is not exposed as a Data API schema. The public fixed helpers return no
 provider-session or private grant records. The single enabled grant constraint
 prevents two active founders. There is no provisioning endpoint or seed grant.
 
-An AAL1 candidate may only reach the challenge shell. Establishment after MFA
+An AAL1 candidate may only reach the challenge or approved first-TOTP setup
+shell, with no founder business data. The additive follow-up is documented in
+[FOUNDER_MFA_SETUP.md](./FOUNDER_MFA_SETUP.md). Establishment after MFA
 reads claims freshly rather than reusing a request-cached AAL1 result. In SQL,
 establishment inserts once; conflicts never reset expiry or revive a revoked
 session. Database server time enforces 15 minutes of interactive inactivity and
@@ -85,8 +91,8 @@ that their complete historic data-rights/audit behavior has been redesigned.
    Never promote an account based on email or convert a customer owner silently.
 2. In isolated staging, verify an admin profile without tenant organization,
    the one approved UUID grant, provider MFA factor, recovery procedure, and the
-   negative identity/session/RPC tests. No enrollment or identity creation occurs
-   through this console.
+   negative identity/session/RPC tests. The first-TOTP setup code is separately
+   gated and cannot create an identity, grant, or replace a verified factor.
 3. Obtain production approval for identity/security setup and each migration,
    backup/recovery point, support privacy retention/deletion integration and
    retained operational capability before applying changes.

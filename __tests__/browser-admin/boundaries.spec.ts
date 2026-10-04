@@ -12,7 +12,7 @@ test('anonymous founder login is accessible and has no tenant data', async ({ pa
 })
 
 test('every direct founder and support API denies an anonymous principal', async ({ request }) => {
-    for (const path of ['/api/admin/overview','/api/admin/factories','/api/admin/factories/00000000-0000-4000-8000-000000000001','/api/admin/support','/api/admin/payments','/api/admin/system','/api/admin/audit','/api/admin/session','/api/support','/api/support/session','/api/support/00000000-0000-4000-8000-000000000001']) {
+    for (const path of ['/api/admin/overview','/api/admin/factories','/api/admin/factories/00000000-0000-4000-8000-000000000001','/api/admin/support','/api/admin/payments','/api/admin/system','/api/admin/audit','/api/admin/session','/api/admin/auth/session','/api/support','/api/support/export','/api/support/session','/api/support/00000000-0000-4000-8000-000000000001']) {
         const response = await request.get(path)
         expect(response.status(), path).toBe(401)
         expect(response.headers()['content-type']).toContain('application/json')
@@ -23,10 +23,20 @@ test('every direct founder and support API denies an anonymous principal', async
 })
 
 test('protected deep links return to login without a redirect loop', async ({ page }) => {
-    for (const path of ['/admin','/admin/factories','/admin/support','/admin/payments','/admin/audit','/admin/verify']) {
+    for (const path of ['/admin','/admin/factories','/admin/support','/admin/payments','/admin/audit','/admin/verify','/admin/legacy']) {
         await page.goto(path)
         await expect(page).toHaveURL(/\/(?:admin\/)?login(?:\?|$)/)
         await expect(page.getByLabel(/email/i)).toBeVisible()
+    }
+})
+
+test('retained formal record APIs independently deny anonymous access', async ({ request }) => {
+    const id = '00000000-0000-4000-8000-000000000001'
+    for (const path of ['/api/admin/legacy', `/api/admin/legacy/grievances/${id}`, `/api/admin/legacy/dpas/${id}/bindings`]) {
+        const response = await request.get(path)
+        expect(response.status(), path).toBe(401)
+        expect(response.headers()['cache-control']).toContain('no-store')
+        expect(await response.json()).not.toHaveProperty('items')
     }
 })
 

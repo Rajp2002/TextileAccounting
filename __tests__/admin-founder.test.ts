@@ -21,7 +21,7 @@ const userId = '00000000-0000-4000-8000-000000000001'
 const sessionId = '00000000-0000-4000-8000-000000000002'
 const claims = () => ({ sub: userId, session_id: sessionId, iss: 'https://qa-project.supabase.co/auth/v1',
     role: 'authenticated', aud: 'authenticated', aal: 'aal2', exp: Math.floor(Date.now()/1000)+300, iat: Math.floor(Date.now()/1000) })
-const identity = (role = 'admin', org_id: string | null = null) => ({ user: { id: userId }, profile: { role, org_id } })
+const identity = (role = 'admin', org_id: string | null = null) => ({ user: { id: userId, email: 'founder@example.invalid', email_confirmed_at: '2026-01-01T00:00:00Z' }, profile: { role, org_id } })
 
 beforeEach(() => {
     vi.clearAllMocks()
@@ -29,7 +29,9 @@ beforeEach(() => {
     vi.stubEnv('WEAVLY_ADMIN_PRODUCTION_APPROVED', '')
     vi.stubEnv('WEAVLY_ADMIN_LEGACY_READS_ENABLED', '')
     vi.stubEnv('WEAVLY_ADMIN_LEGACY_OPERATIONS_ENABLED', '')
+    vi.stubEnv('WEAVLY_ADMIN_LEGACY_REFERENCE_ACTIONS_ENABLED', '')
     vi.stubEnv('NODE_ENV', 'test')
+    vi.stubEnv('WEAVLY_FOUNDER_TEST_EMAIL', 'founder@example.invalid')
     vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://qa-project.supabase.co')
     mocks.identity.mockResolvedValue(identity())
     mocks.revoked.mockResolvedValue(false)
@@ -39,6 +41,20 @@ beforeEach(() => {
 })
 
 describe('AD01 founder identity and session boundary', () => {
+    it.each([
+        { email: 'peer@example.invalid' }, { email: 'founder+alias@example.invalid' },
+        { email: undefined }, { email_confirmed_at: undefined },
+    ])('denies wrong or unverified email before grant/session reads %j', async patch => {
+        mocks.identity.mockResolvedValue({ ...identity(), user: { ...identity().user, ...patch } })
+        await expect(requireFounderCandidate()).rejects.toMatchObject({ code: 'FORBIDDEN' })
+        expect(mocks.rpc.mock.calls.some(([name]) => name === 'admin_founder_session')).toBe(false)
+    })
+    it('normalizes casing but still requires the UUID grant', async () => {
+        mocks.identity.mockResolvedValue({ ...identity(), user: { ...identity().user, email: 'FOUNDER@example.invalid' } })
+        await requireFounderCandidate()
+        mocks.rpc.mockResolvedValue({ data: { allowed: false, code: 'FORBIDDEN' }, error: null })
+        await expect(requireFounderCandidate()).rejects.toMatchObject({ code: 'FORBIDDEN' })
+    })
     it('fails closed before loading data when disabled or production approval is absent', async () => {
         vi.stubEnv('WEAVLY_ADMIN_ENABLED', '')
         await expect(requireFounder()).rejects.toMatchObject({ code: 'ADMIN_DISABLED', status: 503 })
@@ -174,7 +190,10 @@ describe('AD01 founder identity and session boundary', () => {
         await expect(requireLegacyFounder('getGrievances', 'read')).rejects.toMatchObject({ code: 'LEGACY_READ_DISABLED' })
         vi.stubEnv('WEAVLY_ADMIN_LEGACY_READS_ENABLED', 'true')
         vi.stubEnv('WEAVLY_ADMIN_LEGACY_OPERATIONS_ENABLED', '')
+        await expect(requireLegacyFounder('getGrievances', 'read')).rejects.toMatchObject({ code: 'LEGACY_READ_DISABLED' })
+        vi.stubEnv('WEAVLY_ADMIN_LEGACY_REFERENCE_ACTIONS_ENABLED', 'true')
         expect((await requireLegacyFounder('getGrievances', 'read')).user.id).toBe(userId)
+        expect(mocks.rpc).toHaveBeenLastCalledWith('admin_record_audit', expect.objectContaining({ p_action: 'legacy.authorize.getGrievances' }))
         await expect(requireLegacyFounder('lockdownTenant', 'write')).rejects.toMatchObject({ code: 'LEGACY_OPERATION_DISABLED' })
         expect(mocks.rpc).toHaveBeenLastCalledWith('admin_record_audit', expect.objectContaining({ p_outcome:'denied', p_reason_code:'legacy_operations_disabled' }))
     })

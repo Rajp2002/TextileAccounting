@@ -101,6 +101,7 @@ export async function installSupabaseStubs(client) {
         -- Provider session binding for founder tests. This stand-in is local
         -- only; the production Auth schema is never exposed to the Data API.
         CREATE TABLE auth.sessions(id uuid PRIMARY KEY, user_id uuid REFERENCES auth.users(id), aal text, factor_id uuid, not_after timestamptz, created_at timestamptz DEFAULT now());
+        CREATE TABLE auth.mfa_factors(id uuid PRIMARY KEY, user_id uuid REFERENCES auth.users(id), status text, factor_type text);
         CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$SELECT nullif(current_setting('request.jwt.claim.sub', true), '')::uuid$$;
         CREATE FUNCTION auth.jwt() RETURNS jsonb LANGUAGE sql STABLE AS $$SELECT coalesce(nullif(current_setting('request.jwt.claims', true), ''), '{}')::jsonb$$;
         CREATE FUNCTION auth.role() RETURNS text LANGUAGE sql STABLE AS $$SELECT current_user::text$$;

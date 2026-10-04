@@ -6,6 +6,8 @@ import TodayPage from '../../../app/(admin-console)/admin/page'
 import PaymentsPage from '../../../app/(admin-console)/admin/payments/page'
 import SystemPage from '../../../app/(admin-console)/admin/system/page'
 import AuditPage from '../../../app/(admin-console)/admin/audit/page'
+import { LegacyList, LegacyLimits, LegacyRecordDetail } from '../../../components/admin/legacy-records'
+import { legacyFixtureList, legacyFixtureRecord } from './legacy-fixtures'
 import '../../../app/globals.css'
 
 async function page() {
@@ -17,6 +19,8 @@ async function page() {
     if (path === '/admin/payments') return PaymentsPage({ searchParams })
     if (path === '/admin/system') return SystemPage()
     if (path === '/admin/audit') return AuditPage({ searchParams })
+    if (path === '/admin/legacy') return <><h1 className="mb-5 text-2xl font-semibold">Formal operations</h1><LegacyList report={legacyFixtureList()}/><LegacyLimits/></>
+    if (path.startsWith('/admin/legacy/')) return <><h1 className="mb-5 text-2xl font-semibold">Synthetic privacy request</h1><LegacyRecordDetail record={legacyFixtureRecord()}/><LegacyLimits/></>
     return <p>This route is outside the synthetic read-screen fixture. Support is tested in its separate component harness.</p>
 }
 function Fixture() {

@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { globalQueryClient } from '@/lib/query-client-registry'
 
 /** Memory-only data. Revalidate before showing a restored or switched session. */
-export function useSensitiveSessionBoundary(userId: string, kind: 'founder' | 'customer', surface: RefObject<HTMLDivElement | null>) {
+export function useSensitiveSessionBoundary(userId: string, kind: 'founder' | 'customer' | 'founder_candidate', surface: RefObject<HTMLDivElement | null>, sessionTag?: string) {
     const [message, setMessage] = useState<string | null>('Checking your session…')
     const [invalidated, setInvalidated] = useState(false)
     const [generation, setGeneration] = useState(0)
@@ -16,7 +16,7 @@ export function useSensitiveSessionBoundary(userId: string, kind: 'founder' | 'c
         let lastInteractiveAt = 0
         let sequence = 0
         let stopped = false
-        const endpoint = kind === 'founder' ? '/api/admin/session' : '/api/support/session'
+        const endpoint = kind === 'founder_candidate' ? '/api/admin/auth/session' : kind === 'founder' ? '/api/admin/session' : '/api/support/session'
         const conceal = () => {
             if (surface.current) surface.current.hidden = true
             globalQueryClient?.clear()
@@ -28,7 +28,7 @@ export function useSensitiveSessionBoundary(userId: string, kind: 'founder' | 'c
             // blocked. A new keyed visible subtree must never flash here.
             setInvalidated(true)
             setMessage('Your session changed. Returning to sign-in…')
-            window.location.replace(kind === 'founder' ? '/admin/login' : '/login')
+            window.location.replace(kind === 'customer' ? '/login' : '/admin/login')
         }
         const verify = async (concealFirst = true) => {
             if (stopped) return
@@ -42,8 +42,8 @@ export function useSensitiveSessionBoundary(userId: string, kind: 'founder' | 'c
                 if (current !== sequence || stopped) return
                 if (response.status === 401 || response.status === 403) { invalidate(); return }
                 if (!response.ok) throw new Error('Session unavailable')
-                const principal = await response.json() as { userId?: string }
-                if (principal.userId !== userId) { invalidate(); return }
+                const principal = await response.json() as { userId?: string; sessionTag?: string }
+                if (principal.userId !== userId || (sessionTag && principal.sessionTag !== sessionTag)) { invalidate(); return }
                 setMessage(null)
                 if (surface.current) surface.current.hidden = false
             } catch {
@@ -87,6 +87,7 @@ export function useSensitiveSessionBoundary(userId: string, kind: 'founder' | 'c
         void verify()
         const { data: { subscription } } = createClient().auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
             if (event === 'SIGNED_OUT' || (session && session.user.id !== userId)) invalidate()
+            else if (event === 'SIGNED_IN') void verify()
         })
         window.addEventListener('pagehide', conceal)
         window.addEventListener('pageshow', onPageShow)
@@ -116,18 +117,18 @@ export function useSensitiveSessionBoundary(userId: string, kind: 'founder' | 'c
             window.removeEventListener('keydown', onInteractive)
             document.removeEventListener('visibilitychange', onVisibility)
         }
-    }, [userId, kind, surface])
+    }, [userId, kind, surface, sessionTag])
 
     return { message, invalidated, generation }
 }
 
-export function SensitiveBoundary({ userId, kind, children }: { userId: string; kind: 'founder' | 'customer'; children: React.ReactNode }) {
+export function SensitiveBoundary({ userId, kind, sessionTag, children }: { userId: string; kind: 'founder' | 'customer' | 'founder_candidate'; sessionTag?: string; children: React.ReactNode }) {
     const surface = useRef<HTMLDivElement>(null)
-    const { message, invalidated, generation } = useSensitiveSessionBoundary(userId, kind, surface)
+    const { message, invalidated, generation } = useSensitiveSessionBoundary(userId, kind, surface, sessionTag)
     return <div data-sensitive-surface="true" data-sentry-block="true">
         {message && <div role="status" className="mx-auto max-w-2xl p-8 text-sm text-ink">
             <p>{message}</p>
-            <a className="mt-4 inline-block underline" href={kind === 'founder' ? '/admin' : '/support'}>Reload safely</a>
+            <a className="mt-4 inline-block underline" href={kind === 'founder_candidate' ? '/admin/verify' : kind === 'founder' ? '/admin' : '/support'}>Reload safely</a>
         </div>}
         {!invalidated && <div ref={surface} hidden={Boolean(message)} key={`${userId}:${generation}`}>{children}</div>}
     </div>

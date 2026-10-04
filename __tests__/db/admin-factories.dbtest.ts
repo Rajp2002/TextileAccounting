@@ -17,9 +17,9 @@ beforeAll(async () => {
     owner = await seedOwnerOrg(db, { tier: null, name: 'Synthetic%Factory' })
     founder = randomUUID(); session = randomUUID()
     await asSuperuser(db)
-    await db.query("INSERT INTO auth.users(id,email) VALUES($1,'founder-fixture@example.test')", [founder])
+    await db.query("INSERT INTO auth.users(id,email,email_confirmed_at) VALUES($1,'founder-fixture@example.test',now())", [founder])
     await db.query("INSERT INTO public.profiles(id,role) VALUES($1,'admin')", [founder])
-    await db.query("INSERT INTO private.platform_founder_grants(user_id,enabled,grant_reason) VALUES($1,true,'Synthetic isolated DB fixture')", [founder])
+    await db.query("INSERT INTO private.platform_founder_grants(user_id,enabled,grant_reason,login_email) VALUES($1,true,'Synthetic isolated DB fixture','founder-fixture@example.test')", [founder])
     await db.query("INSERT INTO auth.sessions(id,user_id,aal) VALUES($1,$2,'aal2')", [session, founder])
     const created = await db.query("INSERT INTO public.organizations(name,owner_id,created_at) SELECT 'Synthetic Factory '||g,$1,now()-interval '1 hour' FROM generate_series(1,999) g RETURNING id", [owner.userId])
     secondOrg = created.rows[0].id

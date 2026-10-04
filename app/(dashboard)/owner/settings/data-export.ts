@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireRole } from '@/lib/auth'
 import { UX012_DISTINCTIONS, UX012_EXPORT_LABELS, UX012_PRIORITY_HELPERS, UX012_TERMS } from '@/lib/terminology'
 import crypto from 'crypto'
+import { readOwnSupportExport } from '@/lib/support/data-rights'
 
 const REDACTED = '[REDACTED]'
 const SENSITIVE_EXPORT_FIELD_NAMES = new Set([
@@ -324,9 +325,18 @@ export async function exportOrganizationData() {
         throw new Error(reason)
     }
 
+    let publicSupport: Awaited<ReturnType<typeof readOwnSupportExport>>
+    try {
+        publicSupport = await readOwnSupportExport()
+    } catch {
+        const reason = 'Your public support export is unavailable or incomplete. No export was generated; please try again.'
+        await persistFailedExportRun(supabase, { orgId, actorId: user.id, filename, exportedAt, reason })
+        throw new Error(reason)
+    }
     const datasets = Object.fromEntries(
         queryResults.map(({ key, result }) => [key, (result.data ?? []) as ExportRecord[]])
     ) as Record<string, ExportRecord[]>
+    Object.assign(datasets, publicSupport.datasets)
     // A tenant can appear on either side of a referral. Expose one stable
     // referral_uses dataset while retaining both scoped query sources for
     // auditability and completeness.
@@ -356,7 +366,8 @@ export async function exportOrganizationData() {
         schema_version: 'base-legal-v1',
         export_scope: 'current_owner_org',
         dataset_counts: datasetCounts,
-        dataset_catalog: datasetDefinitions.map(({ key }) => key),
+        dataset_catalog: [...datasetDefinitions.map(({ key }) => key), ...Object.keys(publicSupport.datasets)],
+        support_scope: { unit: publicSupport.scope, as_of: publicSupport.asOf, excluded: ['other requesters', 'unbound manual tickets', 'internal notes', 'private references', 'idempotency records', 'founder audit'] },
         terminology: {
             baseline: 'UX-012 product-owner-approved limited-pilot baseline',
             display_terms: UX012_TERMS,

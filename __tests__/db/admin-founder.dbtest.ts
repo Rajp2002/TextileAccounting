@@ -10,9 +10,9 @@ let customer: { userId: string; orgId: string }
 async function seedFounder() {
     await asSuperuser(db)
     founder = randomUUID(); session = randomUUID()
-    await db.query("INSERT INTO auth.users(id,email) VALUES($1,'founder@example.test')", [founder])
+    await db.query("INSERT INTO auth.users(id,email,email_confirmed_at) VALUES($1,'founder@example.test',now())", [founder])
     await db.query("INSERT INTO public.profiles(id,role,org_id,full_name) VALUES($1,'admin',NULL,'Synthetic Founder')", [founder])
-    await db.query("INSERT INTO private.platform_founder_grants(user_id,enabled,grant_reason) VALUES($1,true,'Isolated automated fixture')", [founder])
+    await db.query("INSERT INTO private.platform_founder_grants(user_id,enabled,grant_reason,login_email) VALUES($1,true,'Isolated automated fixture','founder@example.test')", [founder])
     await db.query("INSERT INTO auth.sessions(id,user_id,aal) VALUES($1,$2,'aal2')", [session,founder])
     await asServiceRole(db)
 }
@@ -24,6 +24,7 @@ async function resetLiveSession() {
     await asSuperuser(db)
     await db.query("UPDATE private.platform_founder_grants SET enabled=true,revoked_at=NULL WHERE user_id=$1", [founder])
     await db.query("UPDATE public.profiles SET access_revoked_at=NULL WHERE id=$1", [founder])
+    await db.query("UPDATE auth.users SET email='founder@example.test',email_confirmed_at=now() WHERE id=$1",[founder])
     await db.query("INSERT INTO auth.sessions(id,user_id,aal) VALUES($1,$2,'aal2') ON CONFLICT(id) DO UPDATE SET aal='aal2',not_after=NULL", [session,founder])
     await db.query('DELETE FROM private.platform_admin_sessions WHERE session_id=$1', [session])
     await asServiceRole(db)
@@ -41,7 +42,7 @@ describe('AD01 real database founder boundary', () => {
     it('contains no grant seeds and allows only one enabled founder', async () => {
         await asSuperuser(db)
         expect((await db.query('SELECT count(*)::integer AS count FROM private.platform_founder_grants')).rows[0].count).toBe(1)
-        await expect(db.query("INSERT INTO private.platform_founder_grants(user_id,enabled,grant_reason) VALUES($1,true,'Invalid second founder fixture')", [customer.userId])).rejects.toMatchObject({ code: '23505' })
+        await expect(db.query("INSERT INTO private.platform_founder_grants(user_id,enabled,grant_reason,login_email) VALUES($1,true,'Invalid second founder fixture','founder@example.test')", [customer.userId])).rejects.toMatchObject({ code: '23505' })
         await asServiceRole(db)
     })
 
@@ -64,15 +65,15 @@ describe('AD01 real database founder boundary', () => {
         expect(await operation('check')).toMatchObject({ allowed: false, code: 'FORBIDDEN' })
     })
 
-    it('email changes retain the UUID grant; another UUID with the same email receives nothing', async () => {
+    it('email changes retain the UUID grant but deny access until the protected binding is approved; another UUID receives nothing', async () => {
         await resetLiveSession()
         await asSuperuser(db)
         await db.query("UPDATE auth.users SET email='changed@example.test' WHERE id=$1", [founder])
         const recreated = randomUUID()
-        await db.query("INSERT INTO auth.users(id,email) VALUES($1,'founder@example.test')", [recreated])
+        await db.query("INSERT INTO auth.users(id,email,email_confirmed_at) VALUES($1,'founder@example.test',now())", [recreated])
         await db.query("INSERT INTO public.profiles(id,role,org_id) VALUES($1,'admin',NULL)", [recreated])
         await asServiceRole(db)
-        expect(await operation('check')).toEqual({ allowed: true })
+        expect(await operation('check')).toEqual({ allowed: false,code:'FORBIDDEN' })
         expect(await operation('candidate',recreated)).toMatchObject({ allowed: false, code: 'FORBIDDEN' })
     })
 

@@ -8,6 +8,7 @@ import { requireRole } from '@/lib/auth'
 import { checkRateLimit, getDestructiveLimiter, getRateLimitRetrySeconds } from '@/lib/rate-limit'
 import { getRazorpay } from '@/lib/razorpay'
 import { ACCOUNT_DELETION_CONFIRMATION_PHRASE } from '@/lib/account-deletion'
+import { checkOwnAccountDeletion, ACCOUNT_DELETION_REVIEW_MESSAGE, ACCOUNT_DELETION_UNAVAILABLE_MESSAGE } from '@/lib/support/data-rights'
 
 const DeleteAccountInputSchema = z.object({
     organizationName: z.string().trim().min(1).max(200),
@@ -68,6 +69,12 @@ export async function deleteAccountPermanently(input: DeleteAccountInput): Promi
         return { error: 'The organization name does not match. Nothing was deleted.' }
     }
 
+    try {
+        if (!(await checkOwnAccountDeletion()).allowed) return { error: ACCOUNT_DELETION_REVIEW_MESSAGE }
+    } catch {
+        return { error: ACCOUNT_DELETION_UNAVAILABLE_MESSAGE }
+    }
+
     const { data: subscriptions, error: subscriptionError } = await admin
         .from('org_subscriptions')
         .select('razorpay_subscription_id, status, current_end')
@@ -95,10 +102,10 @@ export async function deleteAccountPermanently(input: DeleteAccountInput): Promi
             for (const subscriptionId of subscriptionIds) {
                 await razorpay.subscriptions.cancel(subscriptionId, false)
             }
-        } catch (error) {
+        } catch {
             console.error('Permanent account deletion subscription cancellation failed', {
                 subscriptionCount: subscriptionIds.length,
-                message: error instanceof Error ? error.message : 'unknown provider error',
+                outcome: 'provider_cancellation_failed',
             })
             return {
                 error: 'The active subscription could not be cancelled, so no account data was deleted.',
@@ -115,10 +122,10 @@ export async function deleteAccountPermanently(input: DeleteAccountInput): Promi
     if (deletionError) {
         console.error('Permanent account deletion transaction failed', {
             code: deletionError.code,
-            message: deletionError.message,
         })
         return {
-            error: 'Account deletion could not be completed. No database rows were deleted; please try again.',
+            error: deletionError.code === '55000' && deletionError.message === 'ACCOUNT_DELETION_REVIEW_REQUIRED' ? ACCOUNT_DELETION_REVIEW_MESSAGE
+                : 'Account deletion could not be completed. No database rows were deleted; please try again.',
         }
     }
 

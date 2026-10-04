@@ -25,6 +25,12 @@ function Probe() {
     useLayoutEffect(() => { current = result })
     return null
 }
+function CandidateProbe() {
+    const surface = useRef<HTMLDivElement>(null)
+    const result = useSensitiveSessionBoundary('synthetic-founder', 'founder_candidate', surface, 'synthetic-session-tag')
+    useLayoutEffect(() => { current = result })
+    return null
+}
 beforeEach(async () => {
     auth.unsubscribe.mockClear()
     replace = vi.fn() // Intentionally never navigates: old content must still unmount.
@@ -42,6 +48,16 @@ beforeEach(async () => {
 afterEach(async () => { await act(() => root?.unmount()); root = null; vi.unstubAllGlobals() })
 
 describe('private surfaces after auth changes', () => {
+    it('conceals a same-user sign-in and checks the live provider session tag before revealing enrollment', async () => {
+        fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ userId: 'synthetic-founder', sessionTag: 'synthetic-session-tag' })))
+        await act(() => root!.render(<CandidateProbe />))
+        fetchMock.mockClear()
+        fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ userId: 'synthetic-founder', sessionTag: 'different-provider-session' })))
+        await act(async () => { auth.callback!('SIGNED_IN', { user: { id: 'synthetic-founder' } }); await Promise.resolve() })
+        expect(current.invalidated).toBe(true)
+        expect(replace).toHaveBeenCalledWith('/admin/login')
+        expect(fetchMock).toHaveBeenCalledWith('/api/admin/auth/session', expect.objectContaining({ cache: 'no-store' }))
+    })
     it.each(['SIGNED_OUT','SIGNED_IN'])('unmounts old children even when %s navigation stalls', async event => {
         await act(() => auth.callback!(event, event === 'SIGNED_OUT' ? null : { user: { id: 'another-principal' } }))
         expect(current.invalidated).toBe(true)
