@@ -23,7 +23,6 @@ const PHRASES: Array<[string, string, string]> = [
   ['Not calculated', 'गणना नहीं की गई', 'ગણતરી કરી નથી'],
   ['Saved costings not loaded', 'सेव की गई कॉस्टिंग लोड नहीं हुई', 'સેવ કરેલી કૉસ્ટિંગ લોડ થઈ નથી'],
   ['Saved costings could not be loaded. Nothing was deleted. Try again.', 'सेव की गई कॉस्टिंग लोड नहीं हो सकीं। कुछ भी हटाया नहीं गया है। फिर से कोशिश करें।', 'સેવ કરેલી કૉસ્ટિંગ લોડ થઈ શકી નથી. કંઈ કાઢી નાખ્યું નથી. ફરી પ્રયાસ કરો.'],
-  ['Try again', 'फिर से कोशिश करें', 'ફરી પ્રયાસ કરો'],
 ]
 
 export const LITE_REFINEMENT_PHRASES: Record<BasePlanLocalLanguage, Record<string, string>> = {
