@@ -1,3 +1,5 @@
+import { redactUrlQuery } from './sensitive-routes'
+
 type SentryBreadcrumb = {
     message?: string
     data?: Record<string, unknown>
@@ -47,7 +49,7 @@ export function redactSentryEvent<T>(event: T): T {
     if (redactionTarget.request) {
         // Request bodies may contain commercially sensitive form values.
         delete redactionTarget.request.data
-        if (redactionTarget.request.url) redactionTarget.request.url = redactSensitiveText(redactionTarget.request.url)
+        if (redactionTarget.request.url) redactionTarget.request.url = redactSensitiveText(redactUrlQuery(redactionTarget.request.url))
         if (redactionTarget.request.query_string) redactionTarget.request.query_string = "[redacted]"
         if (redactionTarget.request.cookies) redactionTarget.request.cookies = "[redacted]"
         if (redactionTarget.request.headers) {
@@ -64,7 +66,7 @@ export function redactSentryEvent<T>(event: T): T {
     redactionTarget.breadcrumbs?.forEach((breadcrumb) => {
         if (breadcrumb.message) breadcrumb.message = redactSensitiveText(breadcrumb.message)
         if (typeof breadcrumb.data?.url === "string") {
-            breadcrumb.data.url = redactSensitiveText(breadcrumb.data.url)
+            breadcrumb.data.url = redactSensitiveText(redactUrlQuery(breadcrumb.data.url))
         }
     })
 

@@ -7,6 +7,7 @@ import { BillingAttemptStatus } from '@/components/billing/BillingAttemptStatus'
 import type { BillingAttemptRow } from '@/lib/billing-attempts'
 import { PlanChooserClient } from '@/components/plans/PlanChooserClient'
 import type { UpgradePlan } from '@/lib/upgrade-wall'
+import Link from 'next/link'
 
 export const metadata = {
   title: 'Choose your plan · Weavly',
@@ -55,6 +56,7 @@ export default async function PlansPage(props: PlansPageProps) {
   const billingReadiness = getBillingReadiness()
 
   return (
+    <>
     <PlanChooserClient
       currentPlan={currentPlan}
       isOnboarding={isOnboarding}
@@ -67,5 +69,7 @@ export default async function PlansPage(props: PlansPageProps) {
         ) : undefined
       }
     />
+    <div className="mx-auto max-w-5xl px-4 pb-8 text-center text-sm"><Link href="/support" className="inline-flex min-h-11 items-center font-medium underline underline-offset-4">Need help with payment or access? Open your private support tickets.</Link></div>
+    </>
   )
 }

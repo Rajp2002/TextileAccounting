@@ -6,8 +6,8 @@ import { createClient as createServerClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireRole } from '@/lib/auth'
 import { checkRateLimit, getDestructiveLimiter, getRateLimitRetrySeconds } from '@/lib/rate-limit'
-import { getRazorpay } from '@/lib/razorpay'
 import { ACCOUNT_DELETION_CONFIRMATION_PHRASE } from '@/lib/account-deletion'
+import { checkOwnAccountDeletion, ACCOUNT_DELETION_REVIEW_MESSAGE, ACCOUNT_DELETION_UNAVAILABLE_MESSAGE } from '@/lib/support/data-rights'
 
 const DeleteAccountInputSchema = z.object({
     organizationName: z.string().trim().min(1).max(200),
@@ -17,22 +17,10 @@ const DeleteAccountInputSchema = z.object({
 export type DeleteAccountInput = z.infer<typeof DeleteAccountInputSchema>
 export type DeleteAccountResult = { success: true } | { error: string }
 
-const cancellableSubscriptionStatuses = ['created', 'pending', 'authenticated', 'active', 'paused'] as const
-
-function hasOpenBillingWindow(currentEnd: string | null | undefined, nowMs = Date.now()) {
-    if (!currentEnd) return true
-
-    const endMs = Date.parse(currentEnd)
-    // An invalid non-null timestamp is treated as open so a malformed billing
-    // row cannot accidentally bypass provider cancellation.
-    return !Number.isFinite(endMs) || endMs > nowMs
-}
-
 /**
- * Permanently removes the authenticated owner's organization and every
- * associated account. The database RPC owns the destructive transaction; this
- * action only performs the required provider-side subscription cancellation
- * immediately before it.
+ * The database RPC owns the owner-bound deletion transaction and rechecks
+ * retained evidence under locks. Legacy provider references require review;
+ * account deletion never changes payments or provider subscriptions.
  */
 export async function deleteAccountPermanently(input: DeleteAccountInput): Promise<DeleteAccountResult> {
     const { profile, user } = await requireRole(['owner'], { allowFreeAccount: true })
@@ -68,12 +56,18 @@ export async function deleteAccountPermanently(input: DeleteAccountInput): Promi
         return { error: 'The organization name does not match. Nothing was deleted.' }
     }
 
+    try {
+        if (!(await checkOwnAccountDeletion()).allowed) return { error: ACCOUNT_DELETION_REVIEW_MESSAGE }
+    } catch {
+        return { error: ACCOUNT_DELETION_UNAVAILABLE_MESSAGE }
+    }
+
     const { data: subscriptions, error: subscriptionError } = await admin
         .from('org_subscriptions')
-        .select('razorpay_subscription_id, status, current_end')
+        .select('id')
         .eq('org_id', organization.id)
-        .in('status', [...cancellableSubscriptionStatuses])
         .not('razorpay_subscription_id', 'is', null)
+        .limit(1)
 
     if (subscriptionError) {
         console.error('Permanent account deletion subscription lookup failed', {
@@ -82,29 +76,7 @@ export async function deleteAccountPermanently(input: DeleteAccountInput): Promi
         return { error: 'Account billing could not be verified. Nothing was deleted.' }
     }
 
-    const subscriptionIds = [...new Set(
-        (subscriptions ?? [])
-            .filter(subscription => hasOpenBillingWindow(subscription.current_end))
-            .map(subscription => subscription.razorpay_subscription_id)
-            .filter((id): id is string => typeof id === 'string' && id.length > 0)
-    )]
-
-    if (subscriptionIds.length > 0) {
-        try {
-            const razorpay = getRazorpay()
-            for (const subscriptionId of subscriptionIds) {
-                await razorpay.subscriptions.cancel(subscriptionId, false)
-            }
-        } catch (error) {
-            console.error('Permanent account deletion subscription cancellation failed', {
-                subscriptionCount: subscriptionIds.length,
-                message: error instanceof Error ? error.message : 'unknown provider error',
-            })
-            return {
-                error: 'The active subscription could not be cancelled, so no account data was deleted.',
-            }
-        }
-    }
+    if ((subscriptions ?? []).length > 0) return { error: ACCOUNT_DELETION_REVIEW_MESSAGE }
 
     const supabase = await createServerClient()
     const { error: deletionError } = await supabase.rpc('delete_account_permanently', {
@@ -115,10 +87,10 @@ export async function deleteAccountPermanently(input: DeleteAccountInput): Promi
     if (deletionError) {
         console.error('Permanent account deletion transaction failed', {
             code: deletionError.code,
-            message: deletionError.message,
         })
         return {
-            error: 'Account deletion could not be completed. No database rows were deleted; please try again.',
+            error: deletionError.code === '55000' && deletionError.message === 'ACCOUNT_DELETION_REVIEW_REQUIRED' ? ACCOUNT_DELETION_REVIEW_MESSAGE
+                : 'Account deletion could not be completed. No database rows were deleted; please try again.',
         }
     }
 

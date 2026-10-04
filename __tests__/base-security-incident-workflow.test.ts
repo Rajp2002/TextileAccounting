@@ -10,7 +10,8 @@ const footer = read('components/landing/footer.tsx')
 const settings = read('app/(dashboard)/owner/settings/page.tsx')
 const constants = read('lib/security-incident.ts')
 const actions = read('lib/actions/compliance.ts')
-const adminPage = read('app/(dashboard)/admin/page.tsx')
+const adminPage = read('app/(admin-console)/admin/legacy/page.tsx')
+const adminReads = read('lib/admin/legacy-read.ts')
 const migration = read('supabase/migrations/20260824040000_base_security_incident_workflow.sql')
 const runbook = read('docs/legal/base-security-incident-runbook.md')
 
@@ -43,7 +44,10 @@ describe('Base Plan security incident workflow', () => {
         expect(migration).toContain('REVOKE ALL ON TABLE public.security_incidents FROM PUBLIC, anon, authenticated')
         expect(migration).toContain('TO service_role')
         expect(actions).toContain("const supabase = createAdminClient()")
-        expect(adminPage).toContain('getSecurityIncidents()')
+        expect(adminPage).toContain('listLegacyRecords(query)')
+        expect(adminReads).toContain("table: 'security_incidents'")
+        expect(adminReads).toContain('await authorizeLegacyRead()')
+        expect(adminReads).not.toContain("select('*')")
     })
 
     it('distinguishes the current CERT-In assessment clock from phased DPDP readiness', () => {

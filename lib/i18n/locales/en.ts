@@ -133,6 +133,7 @@ export const en = {
   "export": "Export"
 } },
  navigation: {
+    support: "Support",
   "mobile_estimate": "Estimate",
   "mobile_costings": "Saved",
   "mobile_rates": "Rates",

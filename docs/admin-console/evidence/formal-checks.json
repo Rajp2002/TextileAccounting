@@ -1,0 +1,137 @@
+{
+  "runtimeCommit": "2f0215e4054958513a79a6636285d37ee2b03194",
+  "branch": "codex/founder-admin",
+  "integratedMain": "39b5e15a78af02824453444ef04de1f0d24334b0",
+  "environment": "isolated local worktree, loopback placeholders and disposable synthetic PostgreSQL",
+  "node": "24.11.1",
+  "postgres": "17.11",
+  "productionVerified": false,
+  "policyApproval": {
+    "at": "2026-10-04T12:34:42Z",
+    "response": "Yes",
+    "scope": [
+      "Raj sole privacy/security case owner",
+      "case-by-case retained-record review",
+      "policy review with automatic purge disabled until approved numeric periods"
+    ]
+  },
+  "checks": {
+    "unit": {
+      "status": "passed",
+      "files": 320,
+      "passed": 2901,
+      "skipped": 1,
+      "log": "/tmp/weavly-formal-unit-commit.log"
+    },
+    "database": {
+      "status": "passed",
+      "files": 28,
+      "passed": 237,
+      "log": "/tmp/weavly-formal-db-commit.log",
+      "postgres16": "not_run"
+    },
+    "typecheck": {
+      "status": "passed",
+      "log": "/tmp/weavly-formal-types-complete.log"
+    },
+    "lint": {
+      "status": "passed",
+      "log": "/tmp/weavly-formal-lint-commit.log"
+    },
+    "build": {
+      "status": "passed",
+      "log": "/tmp/weavly-formal-build-final.log",
+      "prebuildPassed": 2901,
+      "prebuildSkipped": 1
+    },
+    "darkBrowser": {
+      "status": "passed",
+      "passed": 18,
+      "skipped": 2,
+      "log": "/tmp/weavly-formal-dark-browser.log",
+      "limitation": "Real Supabase AAL2/requester cases intentionally skipped."
+    },
+    "formalBrowser": {
+      "status": "passed",
+      "passed": 24,
+      "results": "output/playwright/admin-console/formal-fixtures/results.json",
+      "limitation": "Synthetic component/transport fixtures."
+    },
+    "readBrowser": {
+      "status": "passed",
+      "passed": 22,
+      "log": "/tmp/weavly-formal-read-browser.log"
+    },
+    "authBrowser": {
+      "status": "passed",
+      "passed": 6,
+      "log": "/tmp/weavly-formal-auth-browser.log",
+      "limitation": "Synthetic first QR and returning code; no actual enrollment."
+    },
+    "supportBrowser": {
+      "status": "passed",
+      "passed": 12,
+      "log": "/tmp/weavly-formal-support-browser.log"
+    },
+    "bundleScan": {
+      "scope": ".next/static JavaScript and source maps",
+      "assets": 300,
+      "findings": [],
+      "limitations": "Bounded patterns; not proof of every possible secret. Isolated build used no real service credentials."
+    },
+    "independentReview": {
+      "status": "passed_for_reviewed_local_slice",
+      "runtimeCommit": "2f0215e4054958513a79a6636285d37ee2b03194",
+      "openP0P1": 0,
+      "blockingP2": 0,
+      "unitFiles": 12,
+      "unitPassed": 91,
+      "databaseFiles": 3,
+      "databasePassed": 51,
+      "formalBrowserPassed": 24,
+      "formalBrowserSkipped": 0,
+      "environment": "separate archived immutable checkout, synthetic loopback fixtures",
+      "checkout": "/tmp/weavly-independent-2f0215e4-ap41ik21",
+      "browserEvidence": "/tmp/weavly-independent-2f0215e4-ap41ik21/output/playwright/admin-console/formal-fixtures/results.json",
+      "productionVerified": false
+    }
+  },
+  "localPerformance": {
+    "fixtures": {
+      "organizations": 1000,
+      "tickets": 5000
+    },
+    "samples": 10,
+    "factoryAggregateP95Ms": 119,
+    "factoryProposedBudgetMs": 2000,
+    "supportListP95Ms": 43.5,
+    "supportProposedBudgetMs": 1000,
+    "productionGuarantee": false
+  },
+  "migrations": [
+    {
+      "file": "supabase/migrations/20261004170000_admin_retained_record_review.sql",
+      "sha256": "3cbb19c7eb455630d92ec5de6b9320d3f362c2984c10b69054e4dc9a31284139",
+      "appliedToProduction": false
+    },
+    {
+      "file": "supabase/migrations/20261004180000_admin_formal_case_workflow.sql",
+      "sha256": "d2c77662b7bf8300c31e6ee3b69408123442a5dc2c2a784f27d427d0a9d3af35",
+      "appliedToProduction": false
+    },
+    {
+      "file": "supabase/migrations/20261004190000_admin_retention_review.sql",
+      "sha256": "0e99155556ea80e26d5225e55ae77e4263ea173a8f9be9c311682e65ac9b234c",
+      "appliedToProduction": false
+    }
+  ],
+  "blocked": [
+    "actual approved Supabase Auth/MFA/session/staging evidence",
+    "PostgreSQL16 replay",
+    "approved numeric retention periods and concrete disposal/disclosure plan",
+    "production migration/deployment/recovery approvals"
+  ],
+  "automaticPurgeEnabled": false,
+  "providerActionsPerformed": false,
+  "productionOperationsPerformed": false
+}

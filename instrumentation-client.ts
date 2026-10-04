@@ -1,10 +1,14 @@
 import * as Sentry from "@sentry/nextjs"
 import { isFreeTelemetryEvent } from '@/lib/free-telemetry'
+import { isSensitiveRoute, isSensitiveTelemetryEvent } from '@/lib/sensitive-routes'
 import { redactSentryEvent } from "@/lib/sentry-redaction"
 import { readRuntimeSentryRelease, withRuntimeRelease } from "@/lib/sentry-release"
 
 const freePage = () => typeof window !== 'undefined' && /^\/free(?:\/|$)/.test(window.location.pathname)
-const replaysOnErrorSampleRate = freePage() ? 0 : 0.1
+const sensitivePage = () => typeof window !== 'undefined' && isSensitiveRoute(window.location.pathname)
+// Release-one privacy gate: replay stays disabled globally so an owner SPA
+// transition cannot carry an already-recording replay into a support thread.
+const replaysOnErrorSampleRate = 0
 
 Sentry.init({
     dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
@@ -17,11 +21,11 @@ Sentry.init({
     debug: false,
     // Session Replay is added by loadReplayWhenIdle() below.
     integrations: [],
-    beforeSendTransaction(event) { return freePage() || isFreeTelemetryEvent(event) ? null : withRuntimeRelease(event) },
-    beforeSendLog(log) { return freePage() ? null : log },
-    beforeBreadcrumb(breadcrumb) { return freePage() ? null : breadcrumb },
+    beforeSendTransaction(event) { return freePage() || sensitivePage() || isFreeTelemetryEvent(event) || isSensitiveTelemetryEvent(event) ? null : withRuntimeRelease(event) },
+    beforeSendLog(log) { return freePage() || sensitivePage() ? null : log },
+    beforeBreadcrumb(breadcrumb) { return freePage() || sensitivePage() ? null : breadcrumb },
     beforeSend(event) {
-        if (freePage() || isFreeTelemetryEvent(event)) return null
+        if (freePage() || sensitivePage() || isFreeTelemetryEvent(event) || isSensitiveTelemetryEvent(event)) return null
         withRuntimeRelease(event)
         return redactSentryEvent(event)
     },
@@ -64,5 +68,6 @@ export function onRouterTransitionStart(...args: Parameters<typeof Sentry.captur
     } catch {
         // Performance marks are diagnostic only.
     }
+    if (sensitivePage() || args.some(arg => isSensitiveRoute(arg))) return
     return Sentry.captureRouterTransitionStart(...args)
 }

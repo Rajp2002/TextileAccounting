@@ -59,3 +59,7 @@ supabase/.temp/
 scratch/
 .playwright-cli/
 tmp/
+
+# Retain selected admin screenshots and summaries, not ephemeral traces.
+/output/playwright/admin-console/results/
+/output/playwright/admin-console/**/results/

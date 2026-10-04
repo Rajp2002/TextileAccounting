@@ -9,6 +9,7 @@ import { getCachedOrgPlanAccess } from '@/lib/subscription'
 import { hasOwnerArchiveAccess } from '@/lib/subscription-access'
 import { UX012_DISTINCTIONS, UX012_EXPORT_LABELS, UX012_PRIORITY_HELPERS, UX012_TERMS } from '@/lib/terminology'
 import crypto from 'crypto'
+import { readOwnSupportExport } from '@/lib/support/data-rights'
 
 const REDACTED = '[REDACTED]'
 const SENSITIVE_EXPORT_FIELD_NAMES = new Set([
@@ -187,6 +188,7 @@ type ExportQueryResult = { data: ExportRecord[] | null; error: { message: string
 type ExportTableQuery = PromiseLike<{ data: unknown[] | null; error: { message: string; code?: string } | null }> & {
     eq(column: string, value: unknown): ExportTableQuery
     in(column: string, values: readonly unknown[]): ExportTableQuery
+    or(filters: string): ExportTableQuery
     gt(column: string, value: unknown): ExportTableQuery
     order(column: string, options: { ascending: boolean }): ExportTableQuery
     limit(count: number): ExportTableQuery
@@ -361,7 +363,9 @@ export async function exportOrganizationData() {
         { key: 'worker_consent_artifacts', query: scoped('worker_consent_artifacts') },
         { key: 'legal_document_acceptances', query: scoped('legal_document_acceptances') },
         { key: 'language_requests', query: scoped('language_requests') },
-        { key: 'grievances', query: scoped('grievances') },
+        // Operator privacy communications may concern a different requester in
+        // the same factory. They require case review, rather than an org export.
+        { key: 'grievances', query: () => readByKey('grievances', query => query.eq('org_id', profile.org_id).or('target_entity.neq.WEAVLY,grievance_type.neq.DATA_PRIVACY')) },
         { key: 'organization_dpas', query: scoped('organization_dpas') },
         { key: 'breach_reports', query: scoped('breach_reports') },
         { key: 'whatsapp_delivery_log', query: scoped('whatsapp_delivery_log') },
@@ -401,9 +405,18 @@ export async function exportOrganizationData() {
         throw new Error(reason)
     }
 
+    let publicSupport: Awaited<ReturnType<typeof readOwnSupportExport>>
+    try {
+        publicSupport = await readOwnSupportExport()
+    } catch {
+        const reason = 'Your public support export is unavailable or incomplete. No export was generated; please try again.'
+        await persistFailedExportRun(supabase, { orgId, actorId: user.id, filename, exportedAt, reason })
+        throw new Error(reason)
+    }
     const datasets = Object.fromEntries(
         queryResults.map(({ key, result }) => [key, (result.data ?? []) as ExportRecord[]])
     ) as Record<string, ExportRecord[]>
+    Object.assign(datasets, publicSupport.datasets)
     // A tenant can appear on either side of a referral. Expose one stable
     // referral_uses dataset while retaining both scoped query sources for
     // auditability and completeness.
@@ -433,7 +446,9 @@ export async function exportOrganizationData() {
         schema_version: 'base-legal-v1',
         export_scope: 'current_owner_org',
         dataset_counts: datasetCounts,
-        dataset_catalog: datasetDefinitions.map(({ key }) => key),
+        dataset_catalog: [...datasetDefinitions.map(({ key }) => key), ...Object.keys(publicSupport.datasets)],
+        support_scope: { unit: publicSupport.scope, as_of: publicSupport.asOf, excluded: ['other requesters', 'unbound manual tickets', 'internal notes', 'private references', 'idempotency records', 'founder audit'] },
+        formal_scope: { excluded: ['Weavly privacy cases', 'security incidents', 'operator notes and audit'], access: 'Case-by-case identity and authority review through the published privacy contact.' },
         completeness: {
             status: 'complete',
             page_size: EXPORT_PAGE_SIZE,

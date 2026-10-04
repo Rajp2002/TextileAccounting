@@ -17,7 +17,7 @@ describe('Estimator-only product presentation', () => {
 
     it('keeps Lite navigation complete and adds a Base production entry point', () => {
         const lite = visibleOwnerNavigation({ tier: 'lite', productionMode: 'market_run' }).flatMap(group => group.items)
-        expect(lite.map(item => item.href)).toEqual(['/owner/estimator', '/owner/quotes', '/owner/rates', '/owner/settings', '/owner/billing'])
+        expect(lite.map(item => item.href)).toEqual(['/owner/estimator', '/owner/quotes', '/owner/rates', '/owner/settings', '/owner/billing', '/support'])
         const base = visibleOwnerNavigation({ tier: 'base', productionMode: 'market_run' }).flatMap(group => group.items)
         expect(base.map(item => item.href)).toEqual(expect.arrayContaining(['/owner/production', '/owner/assignments', '/owner/workers', '/owner/machines', '/owner/payroll']))
     })

@@ -97,7 +97,16 @@ const protectedSameOriginGetCaching: RuntimeCaching = {
   options: { fetchOptions: { cache: 'no-store' } },
 }
 
+const sensitiveRouteCaching: RuntimeCaching = {
+  urlPattern: ({ sameOrigin, url: { pathname } }) => (
+    sameOrigin && /^\/(?:api\/)?(?:admin|support)(?:\/|$)/.test(pathname)
+  ),
+  handler: 'NetworkOnly',
+  options: { fetchOptions: { cache: 'no-store' } },
+}
+
 const authBoundaryRuntimeCaching: RuntimeCaching[] = [
+  sensitiveRouteCaching,
   staticAssetCaching,
   protectedRscCaching,
   protectedApiCaching,
@@ -150,6 +159,10 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       { source: '/(.*)', headers: securityHeaders },
+      { source: '/admin/:path*', headers: protectedDocumentHeaders },
+      { source: '/api/admin/:path*', headers: protectedDocumentHeaders },
+      { source: '/support/:path*', headers: protectedDocumentHeaders },
+      { source: '/api/support/:path*', headers: protectedDocumentHeaders },
       { source: '/free/:path*', headers: protectedDocumentHeaders },
       { source: '/api/free/:path*', headers: protectedDocumentHeaders },
       { source: '/owner', headers: protectedDocumentHeaders },

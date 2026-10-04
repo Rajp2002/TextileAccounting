@@ -33,6 +33,7 @@ class FakeQuery implements PromiseLike<{ data: Row[] | null; error: { message: s
     eq(column: string, value: unknown) { this.described.push(`eq:${column}`); this.filters.push(row => row[column] === value); return this }
     gt(column: string, value: unknown) { this.filters.push(row => String(row[column]) > String(value)); return this }
     in(column: string, values: unknown[]) { this.described.push(`in:${column}`); this.filters.push(row => values.includes(row[column])); return this }
+    or(expression: string) { this.described.push(`or:${expression}`); if (expression !== 'target_entity.neq.WEAVLY,grievance_type.neq.DATA_PRIVACY') throw new Error('Unexpected export filter'); this.filters.push(row => row.target_entity !== 'WEAVLY' || row.grievance_type !== 'DATA_PRIVACY'); return this }
     order(column: string, options: { ascending?: boolean } = {}) { this.orders.push({ column, ascending: options.ascending !== false }); return this }
     limit(count: number) { this.max = count; return this }
     range(from: number, to: number) { this.offset = [from, to]; return this }
@@ -83,6 +84,7 @@ vi.mock('@/lib/auth', () => ({
 vi.mock('@/lib/supabase/admin', () => ({ createAdminClient: () => fakeClient() }))
 vi.mock('@/lib/supabase/server', () => ({ createClient: async () => fakeClient() }))
 vi.mock('@/lib/subscription', () => ({ getCachedOrgPlanAccess: async () => ctx.access }))
+vi.mock('@/lib/support/data-rights', () => ({ readOwnSupportExport: async () => ({ scope: 'requester_public_support', asOf: '2026-10-04T00:00:00Z', datasets: { support_tickets: [], support_messages: [], support_ticket_events: [] } }) }))
 
 const { exportOrganizationData } = await import('@/app/(dashboard)/owner/settings/data-export')
 
@@ -95,6 +97,7 @@ beforeEach(() => {
     ctx.access = { effectiveTier: 'lite', freeAccount: false }
     ctx.tables = {
         organizations: [{ id: ORG, name: 'Lite Weaver' }, { id: OTHER, name: 'Other' }],
+        grievances: [{ id: uuid(90000), org_id: ORG, target_entity: 'WEAVLY', grievance_type: 'DATA_PRIVACY', description: 'PRIVATE OPERATOR CASE' }, { id: uuid(90001), org_id: ORG, target_entity: 'WEAVLY', grievance_type: 'UNLOCK_REQUEST', description: 'Owner unlock intake' }],
         // Above the server cap, with long runs of equal timestamps.
         audit_log: [
             ...Array.from({ length: 2345 }, (_, index) => ({ id: uuid(index), org_id: ORG, changed_at: `2026-09-${String(1 + Math.floor(index / 700)).padStart(2, '0')}` })),
@@ -122,6 +125,12 @@ type ExportPayload = Awaited<ReturnType<typeof exportOrganizationData>> & {
 }
 
 describe('owner archive completeness', () => {
+    it('keeps operator privacy cases out of the organization download while retaining owner operational intake', async () => {
+        const payload = await exportOrganizationData() as ExportPayload
+        expect(payload.datasets.grievances.map(row => row.description)).toEqual(['Owner unlock intake'])
+        expect(JSON.stringify(payload)).not.toContain('PRIVATE OPERATOR CASE')
+        expect(ctx.requests.find(request => request.table === 'grievances')?.filters).toContain('or:target_entity.neq.WEAVLY,grievance_type.neq.DATA_PRIVACY')
+    })
     it('exports every row of a dataset larger than the server row cap, once', async () => {
         const payload = await exportOrganizationData() as ExportPayload
         const ids = payload.datasets.audit_log.map(row => row.id)

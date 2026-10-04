@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { ShieldAlert, MessageSquare, LogOut } from 'lucide-react'
 import { LEGAL_OPERATOR } from '@/lib/legal-operator'
+import Link from 'next/link'
 
 export default async function LockedPage() {
     const supabase = await createClient()
@@ -65,6 +66,8 @@ export default async function LockedPage() {
                         </p>
                     </div>
 
+                    <Link href="/support" className="inline-flex min-h-11 items-center text-sm font-medium underline underline-offset-4">Open your private support tickets</Link>
+
                     <form action={handleRequestUnlock} className="space-y-3">
                         <textarea
                             name="reason"
@@ -80,7 +83,7 @@ export default async function LockedPage() {
                 </CardContent>
 
                 <CardFooter className="bg-surface-soft border-t border-wv-border-default pt-6">
-                    <form action="/auth/sign-out" method="post" className="w-full">
+                    <form action="/auth/signout" method="post" className="w-full">
                         <Button variant="ghost" className="w-full text-subtle hover:text-body hover:bg-transparent">
                             <LogOut className="w-4 h-4 mr-2" />
                             Sign Out

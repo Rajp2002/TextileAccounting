@@ -42,16 +42,17 @@ describe('permanent account deletion guardrails', () => {
         expect(migration).toContain('Account-owned Storage files must be removed')
     })
 
-    it('cancels active provider subscriptions before calling the database erasure RPC', () => {
+    it('requires review for legacy provider references without changing financial records', () => {
         expect(action).toContain("const { profile, user } = await requireRole(['owner'], { allowFreeAccount: true })")
-        expect(action).toContain('getRazorpay()')
-        expect(action).toContain('subscriptions.cancel(subscriptionId, false)')
-        expect(action).toContain("select('razorpay_subscription_id, status, current_end')")
-        expect(action).toContain('hasOpenBillingWindow(subscription.current_end)')
+        expect(action).not.toContain('getRazorpay')
+        expect(action).not.toContain('subscriptions.cancel')
+        expect(action).toContain("not('razorpay_subscription_id', 'is', null)")
+        expect(action).toContain('ACCOUNT_DELETION_REVIEW_MESSAGE')
+        expect(action).not.toContain('cancellableSubscriptionStatuses')
         expect(action).toContain("supabase.rpc('delete_account_permanently'")
         expect(action).toContain('No database rows were deleted')
         expect(action).toContain('getDestructiveLimiter')
-        expect(action.indexOf('subscriptions.cancel(subscriptionId, false)'))
+        expect(action.indexOf("not('razorpay_subscription_id', 'is', null)"))
             .toBeLessThan(action.indexOf("supabase.rpc('delete_account_permanently'"))
     })
 
