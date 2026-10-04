@@ -155,6 +155,7 @@ import type { EstimatorDraftInput, EstimatorQuoteStatus } from '@/lib/estimator-
 import { summarizeCostingInputChanges } from '@/lib/costing-input-changes'
 import { createClientRequestUuid } from '@/lib/client-request-id'
 import { runMutationWithTimeout } from '@/lib/mutation-outcome'
+import { reconcileTemplateRateUpdate } from '@/lib/template-rate-reconciliation'
 import { getEstimatorFieldTarget } from '@/lib/estimator-field-target'
 import { BasePlanFactoryGlossary } from '@/components/estimator/BasePlanFactoryGlossary'
 import { ArchivePolicyNotice } from '@/components/records/ArchivePolicyNotice'
@@ -3503,6 +3504,16 @@ export default function EstimatorClient({
     const [editingWeftRates, setEditingWeftRates] = useState<{ id: string; yarnRate: number }[]>([])
     const [savingRates,      setSavingRates]      = useState(false)
     const savingRatesRef = useRef(false)
+    // LT03: a rate update whose answer was lost stays unresolved until it is
+    // reconciled against the saved quality. Page memory only.
+    const [rateUpdateUnknown, setRateUpdateUnknown] = useState<{
+        templateId: string
+        templateName: string
+        expectedUpdatedAt: string
+        proposedWarp: WarpRow[]
+        proposedWeft: WeftRow[]
+    } | null>(null)
+    const [rateUpdateCheck, setRateUpdateCheck] = useState<null | 'checking' | 'check_failed' | 'conflict' | 'missing'>(null)
     const rateImpact = useMemo(() => editRatesTpl ? calculateRateImpact(
         estimateReducer(state, { type: 'APPLY_TEMPLATE', template: editRatesTpl }),
         editingWarpRates.map(row => row.yarnRate),
@@ -4561,10 +4572,35 @@ export default function EstimatorClient({
         void trackPlanEvent('rate_review_requested')
     }, [])
 
+    /** Apply a saved quality's stored rates to the estimator as a new costing. */
+    const applySavedQualityRates = (applied: EstimatorTemplate, name: string) => {
+        setDirectWeavingRateInput(getTemplateDirectWeavingRateInput(applied, state))
+        dispatch({
+            type: 'APPLY_TEMPLATE',
+            template: applied,
+        })
+        setAppliedTemplate(applied)
+        setQualityLabel(name)
+        setSourceQuoteId(null)
+        setSourceQuoteUpdatedAt(null)
+        setSourceQuoteVersionNumber(null)
+        setSourceQuoteCreatedAt(null)
+        setSourceQuoteStatus(null)
+        setSourceState(null)
+        setSourceFactoryProfileUpdatedAt(null)
+        setSourceRecordKind(null)
+        quoteRequestIdRef.current = null
+        setEditRatesTpl(null)
+        setShowQualityLibrary(false)
+        void trackPlanEvent('current_rate_applied', { rate_source: 'proposed_recipe_rates' })
+        setHasUnsavedEdits(false)
+    }
+
     /** Persist updated rates to template row AND apply to the estimator. */
     const handleSaveRatesAndApply = async (confirmed = false) => {
         if (!editRatesTpl || savingRatesRef.current) return
         if (saveQuoteLockRef.current || unconfirmedRequestId) return
+        if (rateUpdateUnknown) return
         if (!confirmed && hasUnsavedEdits && shouldPersistEstimatorDraft(buildCurrentDraft())) {
             setPendingQualityChange({ name: editRatesTpl.name, apply: () => void handleSaveRatesAndApply(true) })
             return
@@ -4573,26 +4609,40 @@ export default function EstimatorClient({
         setQualityCheckpoint({ draft: buildCurrentDraft(), template: appliedTemplate })
         savingRatesRef.current = true
         setSavingRates(true)
+        const expectedUpdatedAt = editRatesTpl.updated_at
+
+        // Update rates only. The quality name is an identity and is not edited
+        // from this dialog; save a separate quality for a new construction.
+        const updatedWarp: WarpRow[] = (editRatesTpl.warp_rows ?? []).map((r: WarpRow) => ({
+            ...r,
+            yarnRate: editingWarpRates.find(x => x.id === r.id)?.yarnRate ?? r.yarnRate,
+        }))
+        const updatedWeft: WeftRow[] = (editRatesTpl.weft_rows ?? []).map((r: WeftRow) => ({
+            ...r,
+            yarnRate: editingWeftRates.find(x => x.id === r.id)?.yarnRate ?? r.yarnRate,
+        }))
+        const keepUnresolved = () => {
+            setRateUpdateCheck(null)
+            setRateUpdateUnknown({
+                templateId: editRatesTpl.id,
+                templateName: editRatesTpl.name,
+                expectedUpdatedAt,
+                proposedWarp: updatedWarp,
+                proposedWeft: updatedWeft,
+            })
+        }
         try {
-            const expectedUpdatedAt = editRatesTpl.updated_at
-
-            // Update rates only. The quality name is an identity and is not edited
-            // from this dialog; save a separate quality for a new construction.
-            const updatedWarp: WarpRow[] = (editRatesTpl.warp_rows ?? []).map((r: WarpRow) => ({
-                ...r,
-                yarnRate: editingWarpRates.find(x => x.id === r.id)?.yarnRate ?? r.yarnRate,
-            }))
-            const updatedWeft: WeftRow[] = (editRatesTpl.weft_rows ?? []).map((r: WeftRow) => ({
-                ...r,
-                yarnRate: editingWeftRates.find(x => x.id === r.id)?.yarnRate ?? r.yarnRate,
-            }))
-
-            const res = await updateTemplateRates({
+            const rateOutcome = await runMutationWithTimeout(() => updateTemplateRates({
                 id: editRatesTpl.id,
                 expectedUpdatedAt,
                 warpRows: updatedWarp,
                 weftRows: updatedWeft,
-            })
+            }))
+            if (rateOutcome.status === 'unknown') {
+                keepUnresolved()
+                return
+            }
+            const res = rateOutcome.value
             if (res.error) { toast.error(tx(userFacingError(res.error, 'Saved Quality could not be updated. Try again.'))); return }
 
             // Success: refresh and apply
@@ -4601,41 +4651,70 @@ export default function EstimatorClient({
             if (tRes.data) setTemplates(tRes.data)
 
             const applied = refreshed ?? { ...editRatesTpl, warp_rows: updatedWarp, weft_rows: updatedWeft, updated_at: res.updatedAt ?? expectedUpdatedAt }
-            setDirectWeavingRateInput(getTemplateDirectWeavingRateInput(applied, state))
-            dispatch({
-                type: 'APPLY_TEMPLATE',
-                template: applied,
-            })
-            setAppliedTemplate(applied)
-            setQualityLabel(editRatesTpl.name)
-            setSourceQuoteId(null)
-            setSourceQuoteUpdatedAt(null)
-            setSourceQuoteVersionNumber(null)
-            setSourceQuoteCreatedAt(null)
-            setSourceQuoteStatus(null)
-            setSourceState(null)
-            setSourceFactoryProfileUpdatedAt(null)
-            setSourceRecordKind(null)
-            quoteRequestIdRef.current = null
-            setEditRatesTpl(null)
-            setShowQualityLibrary(false)
-            void trackPlanEvent('current_rate_applied', { rate_source: 'proposed_recipe_rates' })
-            setHasUnsavedEdits(false)
+            applySavedQualityRates(applied, editRatesTpl.name)
             toast.success('noChange' in res && res.noChange
                 ? t('estimator.sprint1.quality_no_change')
                 : t('estimator.sprint1.rates_updated_no_snapshot'))
         } catch {
-            toast.error(tx('Rate update could not be confirmed. Reopen the quality to check its saved rates before trying again.'))
+            // The request may have reached the server before the connection
+            // failed. Keep the proposal unresolved; never resend it blindly.
+            keepUnresolved()
         } finally {
             savingRatesRef.current = false
             setSavingRates(false)
         }
     }
 
+    /**
+     * Reconcile an unresolved rate update against the saved quality. Only an
+     * unchanged version proves it did not commit; a matching quality is shown
+     * as the quality's current rates, not as this request's success.
+     */
+    const checkUnresolvedRateUpdate = async () => {
+        const pending = rateUpdateUnknown
+        if (!pending || rateUpdateCheck === 'checking') return
+        setRateUpdateCheck('checking')
+        try {
+            const tRes = await getEstimatorTemplates()
+            if (!tRes.data) { setRateUpdateCheck('check_failed'); return }
+            setTemplates(tRes.data)
+            const current = tRes.data.find(template => template.id === pending.templateId) ?? null
+            const reconciliation = reconcileTemplateRateUpdate({
+                expectedUpdatedAt: pending.expectedUpdatedAt,
+                proposedWarp: pending.proposedWarp,
+                proposedWeft: pending.proposedWeft,
+                current,
+            })
+            if (reconciliation === 'not_applied') {
+                setRateUpdateUnknown(null)
+                setRateUpdateCheck(null)
+                toast.info(tx('The rates were not saved. You can save them again.'))
+                return
+            }
+            if (reconciliation === 'matches_proposal' && current) {
+                setRateUpdateUnknown(null)
+                setRateUpdateCheck(null)
+                applySavedQualityRates(current, current.name)
+                toast.success(tx('The saved quality now has these rates.'))
+                return
+            }
+            setRateUpdateCheck(reconciliation === 'missing' ? 'missing' : 'conflict')
+        } catch {
+            setRateUpdateCheck('check_failed')
+        }
+    }
+
+    const discardUnresolvedRateUpdate = () => {
+        setRateUpdateUnknown(null)
+        setRateUpdateCheck(null)
+        setEditRatesTpl(null)
+    }
+
     /** Apply template directly (without editing rates). */
     const handleApplyCurrentRates = (confirmed = false) => {
         if (!editRatesTpl || savingRatesRef.current) return
         if (saveQuoteLockRef.current || unconfirmedRequestId) return
+        if (rateUpdateUnknown) return
         if (!confirmed && hasUnsavedEdits && shouldPersistEstimatorDraft(buildCurrentDraft())) {
             setPendingQualityChange({ name: editRatesTpl.name, apply: () => handleApplyCurrentRates(true) })
             return
@@ -7484,12 +7563,38 @@ export default function EstimatorClient({
 
                         {rateImpact && <RateImpactSummary impact={rateImpact} hasSavedAssumptions={Boolean(editRatesTpl?.latest_costing_reuse)} tx={tx} />}
                     </fieldset>
+                    {rateUpdateUnknown && (
+                        <div data-lite-rate-unknown role="status" className="space-y-3 rounded-xl border border-hairline bg-surface-soft p-3 text-sm text-body">
+                            <p className="font-semibold">
+                                {rateUpdateCheck === 'conflict'
+                                    ? tx('This saved quality changed elsewhere and does not have these rates. Close this and reopen the quality to review its current rates.')
+                                    : rateUpdateCheck === 'missing'
+                                        ? tx('This saved quality is no longer available.')
+                                        : tx('We could not confirm whether the rate update for {name} was saved. Your proposed rates are kept on this page. Check the saved quality before saving again.', { name: rateUpdateUnknown.templateName })}
+                            </p>
+                            {rateUpdateCheck === 'check_failed' && <p>{tx('Could not check right now. Try again.')}</p>}
+                            <p className="text-xs text-[var(--color-muted)]">{tx('This check is kept only while this page is open.')}</p>
+                            <div className="flex flex-wrap gap-2">
+                                {rateUpdateCheck !== 'conflict' && rateUpdateCheck !== 'missing' && (
+                                    <Button type="button" size="sm" onClick={() => void checkUnresolvedRateUpdate()} disabled={rateUpdateCheck === 'checking'} aria-busy={rateUpdateCheck === 'checking'} className="min-h-11">
+                                        {rateUpdateCheck === 'checking' ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                                        {tx('Check saved rates')}
+                                    </Button>
+                                )}
+                                {(rateUpdateCheck === 'conflict' || rateUpdateCheck === 'missing') && (
+                                    <Button type="button" size="sm" variant="outline" onClick={discardUnresolvedRateUpdate} className="min-h-11">
+                                        {tx('Discard this proposal')}
+                                    </Button>
+                                )}
+                            </div>
+                        </div>
+                    )}
                     <DialogFooter className="flex flex-col sm:flex-row gap-3 mt-2">
                         <Button
                             variant="ghost" 
                             size="sm" 
                             onClick={() => handleApplyCurrentRates()}
-                            disabled={savingRates}
+                            disabled={savingRates || Boolean(rateUpdateUnknown)}
                             className="rounded-xl font-bold text-[var(--color-muted)] hover:bg-[var(--color-surface-soft)]"
                         >
                             {tx('Use saved rates')}
@@ -7497,7 +7602,7 @@ export default function EstimatorClient({
                         <Button 
                             className="bg-brand-accent text-white font-semibold rounded-xl h-12 sm:h-11 shadow-lg shadow-brand-accent/20 hover:shadow-xl hover:shadow-brand-accent/30 transition-all flex items-center justify-center gap-2 flex-1 sm:flex-none sm:min-w-[180px]" 
                             onClick={() => void handleSaveRatesAndApply()}
-                            disabled={savingRates}
+                            disabled={savingRates || Boolean(rateUpdateUnknown)}
                             aria-busy={savingRates}
                         >
                             {savingRates ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}

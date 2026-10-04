@@ -135,3 +135,20 @@ Rollback: stop the writer by reverting the payload change; keep the columns and 
 | existing autosave behavior, assertions moved from booleans to outcomes | `__tests__/autosave-status.test.tsx` | pass |
 
 Not run in this sprint: the plan's composed upgrade journeys (real checkout, delayed activation in another tab, layout remount, account switch during activation, Back/Forward). They belong to FR03/FR07 runtime proof, which is still pending.
+
+## LT03: rate-update outcome containment
+
+**Status:** source checks passed, runtime pending. No new schema or receipt table (D07 default).
+
+- The saved-quality rate update ("Save and apply" in the quality rates dialog) now waits through `runMutationWithTimeout`. A timeout or a lost connection no longer shows a generic toast and releases the lock: the proposal (quality, expected version, proposed rows) is kept, Save and "Use saved rates" are blocked, and the dialog explains that the outcome is unknown.
+- "Check saved rates" reloads the qualities and reconciles with `reconcileTemplateRateUpdate`: same version means it did not commit (saving again is safe because the server re-checks the version); a quality that now has exactly the proposed rows is applied and described as "the saved quality now has these rates", not as this request's success; anything else is a conflict or a missing quality, and the owner discards the proposal and reopens the quality. Nothing is resent automatically.
+- The secondary effects of the server action (`syncTemplateYarnRenames`, revalidation) do not run for a rate-only update in a way the owner can observe: this dialog never changes yarn names, so rename sync has nothing to do. The reconciler deliberately does not claim they completed.
+- The unresolved state is page memory; the panel says so ("kept only while this page is open").
+
+| Fixture | Test | Result |
+| --- | --- | --- |
+| same version → not applied; rows equal → matches (no attribution); rows differ → conflict; gone/archived → missing; key order and row ids ignored | `__tests__/lite-rate-reconciliation.test.ts` | pass |
+| handler uses the timeout, keeps an unknown outcome, blocks resend; dialog panel and disabled buttons (source contract) | same | pass |
+| HI/GU for all nine panel and toast messages | same | pass |
+
+Deferred (R8): "Review N rates used here" navigation and Rate Book identity on estimator rows. Rows carry no Rate Book id, so focused review would need a new row field across `EstimateState`, the strict Free request schema and saved-row normalizers (D16-adjacent). An id on suggestions alone would have no consumer, so none was added. Not run: double-click, cross-tab conflict and late commit in a browser.
