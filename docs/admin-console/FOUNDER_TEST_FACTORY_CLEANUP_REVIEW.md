@@ -24,6 +24,8 @@ Auth removal is last. All external direct/deep FK references must be gone. The m
 
 Mandatory minimal global audit is atomic with deletion: unexpected INSERT behavior is refused; audit count/contents are verified. Audit failure rolls back factory, payment and Auth removal together. One operation tombstone remains with no customer payload. A recreated same-email account gets no inherited privileges: provision only its new UUID.
 
+Hosted permission correction: the first operator attempt was denied while locking `auth.schema_migrations`, before deletes. The script now excludes only this provider ledger when it has no identity fields or foreign-key edges; unexpected related shapes still require the lock and fail closed. A non-superuser synthetic operator proves successful removal without SELECT/LOCK access to that ledger, unchanged provider metadata and preservation of another tenant. No permission grants or provider schema changes are proposed for the hosted project.
+
 The transaction does not erase Razorpay records, provider audit JSON, backups, monitoring or browser state, and cannot retroactively revoke an issued stateless JWT. Sign out/close old tabs, use a fresh browser session and preserve current-identity/session checks. Recreation does not install missing founder migrations or enable production gates. Production schema/security/deployment operations remain separately gated.
 
 ## Verification and rollback

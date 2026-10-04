@@ -58,11 +58,27 @@ The final reset SQL deletes only the fixed old identity/factory and reviewed loc
 | Lint | Passed, zero warnings | `/tmp/weavly-founder-account-reset-lint-final.log` |
 | Full database regressions | 32 files, 263 passed | `/tmp/weavly-founder-account-reset-db-final.log`; disposable loopback PostgreSQL 17.11, synthetic fixtures |
 | Reset-specific database suite | 13 passed | `__tests__/db/admin-founder-account-reset.dbtest.ts`: scoped purge, rollback rehearsal, identity/membership/count drift, other-tenant preservation, Storage, typed/compound/nested Auth references, trigger drift, runtime leftovers and required audit failure |
-| Independent review | No outstanding P0/P1 or material P2; all 13 reset tests independently passed | Frozen SQL SHA-256 `0fb2dde86f3ae0d51f1f2d051b748415af94a5843fb330d54797bdf7faf1d530`; actual hosted provider schema remains unverified |
+| Independent review | No outstanding P0/P1 or material P2; all 13 reset tests independently passed | Initial SQL SHA-256 `0fb2dde86f3ae0d51f1f2d051b748415af94a5843fb330d54797bdf7faf1d530`; superseded by the hosted-permission correction below |
 | Unit/build/browser | Not rerun for this operator-SQL/test/documentation slice | Runtime is unchanged from reviewed `26a9cb7f`; prior runtime acceptance remains applicable, without implying hosted reset/MFA acceptance |
 | Hosted reset, account creation, migrations, grants/MFA and deployment | Not run | Operator action/new UUID and separate approved environment/security setup remain pending |
 
 After a successful COMMIT, code rollback cannot restore deliberately deleted rows. Before COMMIT, every tested refusal or required-audit failure leaves the old records intact. The minimal reset audit survives completion; Razorpay and historical backup/log records are not erased. User recreation never inherits the deleted UUID's privilege or factor enrollment.
+
+## Hosted permission correction
+
+Raj supplied an actual SQL Editor failure: `42501 permission denied for table schema_migrations`, at `LOCK TABLE auth.schema_migrations IN SHARE ROW EXCLUSIVE MODE`. This occurred before the delete loop and aborted the transaction. The earlier superuser-only local stub did not model this provider ledger's permissions; its passing tests did not establish hosted compatibility.
+
+The corrected reset excludes only the unrelated `auth.schema_migrations` ledger. Either identity column name, a UUID or domain-typed column, or any inbound/outbound foreign key prevents the exemption. It does not catch and ignore permission failures on account records or change any hosted grants, ownership or provider schema. The final SQL SHA-256 is `a6acbb9f691e20a7d9b2bf6b2a2315924cb7bf38fe038a397d2a7711db8eff96`.
+
+The suite now includes a non-superuser operator with explicit account/application privileges and no SELECT/LOCK permission on the provider ledger. It verifies successful scoped reset, unchanged migration history and another tenant's survival, plus refusal/rollback for unexpected UUID, bigint identity, UUID-domain and foreign-key ledger shapes. Final lint/typecheck/DB evidence is recorded in `/tmp/weavly-founder-reset-permissions-{lint,typecheck,db-final}.log`. Hosted retry has not been performed by the agent; runtime unit/build/browser suites are not rerun for this manual SQL/test/documentation correction.
+
+| Check | Final correction result |
+| --- | --- |
+| Full database regressions | Passed: 32 files, 265 tests, disposable PostgreSQL 17.11 and synthetic fixtures |
+| Reset suite | Passed: 15 cases, including restricted operator and protected-ledger shape refusals |
+| Lint / TypeScript | Passed: zero-warning lint and nonincremental typecheck |
+| Independent final review | Independently passed 15 cases at the final SQL hash above; no outstanding P0/P1 or material P2 |
+| Hosted retry / account recreation | Not run by the agent; operator reruns the complete corrected file in the same project |
 
 ## Rollback and release limits
 

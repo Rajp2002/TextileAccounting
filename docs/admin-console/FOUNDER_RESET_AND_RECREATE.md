@@ -16,6 +16,8 @@ The final result must read:
 
 If it reports an error, the transaction rolls back. Paste the error text so the exact difference can be handled; do not remove checks or run only part of the file. The script refuses changed counts, membership, unexpected foreign-key children or Auth references, new Storage ownership, changed trigger definitions, unaudited writes and unsupported provider runtime shapes. It is tested locally, not verified against the hosted Auth schema. Run during a quiet schema/deployment window; it uses short lock and statement timeouts.
 
+Raj's first hosted attempt stopped at `LOCK TABLE auth.schema_migrations` with permission denied, before any deletion. The corrected file leaves that provider migration ledger alone when catalogue evidence shows no identity fields or foreign-key edges. No permission, ownership or provider migration change is needed. Open the updated file again and replace the entire SQL Editor query before rerunning; the previous copied version still contains the failing lock.
+
 This removes the selected current database account/factory state, not every historical trace: Razorpay records, provider audit JSON, backups, monitoring history and browser caches are outside this SQL. It makes no refund/capture/provider request, alters no price or checkout gate, and installs no functions, schema, credentials or grants. Existing issued JWTs may survive until expiry; app guards still need fresh identity/current membership/session checks. The new UUID never inherits the old identity's privileges.
 
 ## 2. Create the fresh Auth user

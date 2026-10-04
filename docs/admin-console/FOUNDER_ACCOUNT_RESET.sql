@@ -103,11 +103,19 @@ BEGIN
     OR EXISTS(SELECT 1 FROM pg_catalog.pg_rewrite WHERE ev_class='public.audit_log'::regclass AND ev_type='3') THEN
     RAISE EXCEPTION 'Unreviewed operator audit INSERT behavior; reset made no changes.';
   END IF;
-  -- Lock all provider-managed Auth relations first, so new child FK DDL cannot
-  -- race this catalogue review. No Auth schema/table/grant is changed.
+  -- Serialize provider-managed account relations without locking the protected
+  -- provider migration ledger. It is unrelated only if it has neither identity
+  -- columns, unknown domain types nor FK edges; unexpected shapes fail closed. No Auth grants,
+  -- ownership, schema or provider migration records are changed.
   FOR entry IN SELECT n.nspname,c.relname FROM pg_catalog.pg_class c
     JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='auth'
-      AND c.relkind IN('r','p') ORDER BY c.relname
+      AND c.relkind IN('r','p') AND NOT (c.relname='schema_migrations'
+        AND NOT EXISTS(SELECT 1 FROM pg_catalog.pg_attribute a WHERE a.attrelid=c.oid
+          AND a.attnum>0 AND NOT a.attisdropped AND (a.atttypid='uuid'::regtype
+            OR a.attname IN('user_id','linking_target_id')
+            OR EXISTS(SELECT 1 FROM pg_catalog.pg_type t WHERE t.oid=a.atttypid AND t.typtype='d')))
+        AND NOT EXISTS(SELECT 1 FROM pg_catalog.pg_constraint f WHERE f.contype='f'
+          AND (f.conrelid=c.oid OR f.confrelid=c.oid))) ORDER BY c.relname
   LOOP
     EXECUTE format('LOCK TABLE %I.%I IN SHARE ROW EXCLUSIVE MODE',entry.nspname,entry.relname);
   END LOOP;

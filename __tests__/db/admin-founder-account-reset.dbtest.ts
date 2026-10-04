@@ -55,6 +55,29 @@ async function rejected(fixture: Fixture, pattern: RegExp) {
     expect((await db.query('SELECT id FROM public.machines WHERE org_id=$1', [fixture.orgId])).rowCount).toBe(5)
     expect((await db.query('SELECT id FROM public.audit_log WHERE org_id=$1', [fixture.orgId])).rowCount).toBe(auditCount)
 }
+async function restrictedOperator() {
+    const role = `synthetic_reset_${randomUUID().replaceAll('-', '')}`
+    // Hosted postgres is not a superuser. This role models ordinary table
+    // privileges and RLS bypass without access to the provider migration ledger.
+    await db.query(`CREATE ROLE ${role} NOSUPERUSER BYPASSRLS`)
+    const schemas = (await db.query("SELECT nspname FROM pg_namespace WHERE nspname IN('public','private','weavly_private','auth','storage')")).rows
+    for (const { nspname } of schemas) {
+        await db.query(`GRANT USAGE ON SCHEMA ${nspname} TO ${role}`)
+        if (nspname !== 'auth') {
+            await db.query(`GRANT ALL ON ALL TABLES IN SCHEMA ${nspname} TO ${role}`)
+            await db.query(`GRANT ALL ON ALL SEQUENCES IN SCHEMA ${nspname} TO ${role}`)
+        }
+    }
+    await db.query(`GRANT ALL ON auth.users,auth.sessions,auth.mfa_factors TO ${role}`)
+    return {
+        role,
+        run: (target: Fixture) => db.query(sql(target).replace("current_user <> 'postgres'", `current_user <> '${role}'`)),
+        cleanup: async () => {
+            await db.query('ROLLBACK; RESET ROLE')
+            await db.query(`DROP OWNED BY ${role}; DROP ROLE ${role}`)
+        },
+    }
+}
 beforeAll(async () => {
     db = await freshDatabase()
     // Hosted Auth has managed session/factor cascades; local generic stubs do
@@ -213,5 +236,51 @@ describe('explicit old founder account reset, synthetic fixtures only', () => {
         await db.query("ALTER TABLE public.audit_log ADD CONSTRAINT synthetic_reset_audit_unavailable CHECK(table_name<>'founder_account_reset') NOT VALID")
         try { await rejected(target, /synthetic_reset_audit_unavailable/) }
         finally { await db.query('ALTER TABLE public.audit_log DROP CONSTRAINT synthetic_reset_audit_unavailable') }
+    })
+    it('runs with non-superuser privileges while the unrelated provider migration ledger remains inaccessible and unchanged', async () => {
+        const target = await fixture()
+        const other = await seedOwnerOrg(db, { tier: null })
+        await db.query("CREATE TABLE auth.schema_migrations(version varchar PRIMARY KEY); INSERT INTO auth.schema_migrations VALUES('synthetic_provider_version'); ALTER TABLE auth.schema_migrations OWNER TO supabase_auth_admin")
+        const operator = await restrictedOperator()
+        try {
+            await db.query(`SET ROLE ${operator.role}`)
+            expect((await db.query('SELECT rolsuper FROM pg_roles WHERE rolname=current_user')).rows[0].rolsuper).toBe(false)
+            await expect(db.query('SELECT 1 FROM auth.schema_migrations')).rejects.toThrow(/permission denied/)
+            await db.query('BEGIN')
+            await expect(db.query('LOCK TABLE auth.schema_migrations IN SHARE ROW EXCLUSIVE MODE')).rejects.toThrow(/permission denied/)
+            await db.query('ROLLBACK')
+            await operator.run(target)
+            await db.query('RESET ROLE')
+            expect((await db.query('SELECT id FROM auth.users WHERE id=$1', [target.userId])).rowCount).toBe(0)
+            expect((await db.query('SELECT id FROM public.organizations WHERE id=$1', [target.orgId])).rowCount).toBe(0)
+            expect((await db.query('SELECT id FROM auth.users WHERE id=$1', [other.userId])).rowCount).toBe(1)
+            expect((await db.query('SELECT version FROM auth.schema_migrations')).rows).toEqual([{ version: 'synthetic_provider_version' }])
+        } finally {
+            await operator.cleanup()
+            await db.query('DROP TABLE auth.schema_migrations')
+        }
+    })
+    it('never skips a protected migration ledger if it has unexpected identity columns or foreign-key edges', async () => {
+        for (const shape of ['identity_column', 'foreign_key', 'unknown_identity_type', 'uuid_domain']) {
+            const target = await fixture()
+            if (shape === 'uuid_domain') await db.query('CREATE DOMAIN auth.synthetic_reset_identity AS uuid')
+            const extra = shape === 'identity_column' ? ',user_id uuid'
+                : shape === 'foreign_key' ? ',session_id uuid REFERENCES auth.sessions(id)'
+                    : shape === 'unknown_identity_type' ? ',user_id bigint' : ',subject_id auth.synthetic_reset_identity'
+            await db.query(`CREATE TABLE auth.schema_migrations(version varchar PRIMARY KEY${extra}); ALTER TABLE auth.schema_migrations OWNER TO supabase_auth_admin`)
+            const operator = await restrictedOperator()
+            try {
+                await db.query(`SET ROLE ${operator.role}`)
+                await expect(operator.run(target)).rejects.toThrow(/permission denied for table schema_migrations/)
+                await db.query('ROLLBACK; RESET ROLE')
+                expect((await db.query('SELECT id FROM auth.users WHERE id=$1', [target.userId])).rowCount).toBe(1)
+                expect((await db.query('SELECT id FROM public.subscription_payments WHERE id=$1', [target.paymentId])).rowCount).toBe(1)
+                expect((await db.query('SELECT id FROM public.machines WHERE org_id=$1', [target.orgId])).rowCount).toBe(5)
+            } finally {
+                await operator.cleanup()
+                await db.query('DROP TABLE auth.schema_migrations')
+                if (shape === 'uuid_domain') await db.query('DROP DOMAIN auth.synthetic_reset_identity')
+            }
+        }
     })
 })
