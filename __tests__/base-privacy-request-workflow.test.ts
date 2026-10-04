@@ -15,7 +15,7 @@ describe('Base Plan privacy-request workflow', () => {
     const privacy = source('app/privacy/page.tsx')
     const footer = source('components/landing/footer.tsx')
     const ownerSettings = source('app/(dashboard)/owner/settings/page.tsx')
-    const admin = source('app/(dashboard)/admin/admin-ui.tsx')
+    const admin = source('app/(admin-console)/admin/legacy/admin-ui.tsx')
     const migration = source('supabase/migrations/20260824030000_base_privacy_request_workflow.sql')
 
     it('offers categorized requests through the monitored contact channel', () => {

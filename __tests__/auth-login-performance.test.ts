@@ -58,7 +58,10 @@ describe('sign-in critical-path performance', () => {
         expect(proxy).toContain('return recoverTerminalAuthSession(terminalClaimsCode)')
         expect(proxy).toContain('request.cookies.delete(name)')
         expect(proxy).toContain("event: 'terminal_auth_session_recovered'")
-        expect(proxy).toContain("NextResponse.redirect(new URL('/login', request.url))")
+        // Founder routes now have a distinct login target; customer terminal
+        // recovery remains /login and is exercised by the runtime proxy suite.
+        expect(proxy).toContain("const loginPath = founderRoute ? '/admin/login' : '/login'")
+        expect(proxy).toContain('NextResponse.redirect(founderRoute ? founderLoginUrl() : new URL(loginPath, request.url))')
     })
 
     it('keeps browser cleanup outside the authentication critical path', () => {

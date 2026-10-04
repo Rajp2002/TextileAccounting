@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireRole } from '@/lib/auth'
+import { requireLegacyFounder } from '@/lib/admin/founder'
 import { revalidatePath } from 'next/cache'
 
 /**
@@ -10,7 +11,7 @@ import { revalidatePath } from 'next/cache'
  */
 
 export async function getGrievances() {
-    await requireRole(['admin'])
+    await requireLegacyFounder('getGrievances', 'read')
     const supabase = createAdminClient()
     const { data, error } = await supabase
         .from('grievances')
@@ -31,7 +32,7 @@ export async function logOfflineGrievance(formData: {
     grievance_type?: 'DATA_PRIVACY' | 'OPERATIONAL' | 'UNLOCK_REQUEST' | 'OTHER'
     filed_by_role?: 'worker' | 'supervisor' | 'owner' | 'admin'
 }) {
-    await requireRole(['admin'])
+    await requireLegacyFounder('logOfflineGrievance', 'write')
     const supabase = createAdminClient()
     const { error } = await supabase
         .from('grievances')
@@ -46,7 +47,7 @@ export async function logOfflineGrievance(formData: {
 }
 
 export async function updateGrievanceStatus(id: string, status: string, proofUrl?: string, responseSummary?: string) {
-    await requireRole(['admin'])
+    await requireLegacyFounder('updateGrievanceStatus', 'write')
     const supabase = createAdminClient()
     const updateData: {
         status: string
@@ -80,7 +81,7 @@ export async function updateGrievanceStatus(id: string, status: string, proofUrl
  */
 
 export async function generateWorkerReport(workerId: number) {
-    const { user } = await requireRole(['admin'])
+    const { user } = await requireLegacyFounder('generateWorkerReport', 'export')
     const supabase = createAdminClient()
     
     // Fetch profile (sanitized for right to access - only necessary PII).
@@ -153,7 +154,7 @@ export async function generateWorkerReport(workerId: number) {
  */
 
 export async function getNoticeRegistry() {
-    await requireRole(['admin'])
+    await requireLegacyFounder('getNoticeRegistry', 'read')
     const supabase = createAdminClient()
     const { data, error } = await supabase
         .from('notice_registry')
@@ -172,7 +173,7 @@ export async function uploadNotice(data: {
     content_audio_url?: string
     content_hash: string
 }) {
-    await requireRole(['admin'])
+    await requireLegacyFounder('uploadNotice', 'write')
     const supabase = createAdminClient()
     const { error } = await supabase
         .from('notice_registry')
@@ -190,7 +191,7 @@ export async function uploadNotice(data: {
 }
 
 export async function toggleNoticeStatus(id: string, isActive: boolean) {
-    await requireRole(['admin'])
+    await requireLegacyFounder('toggleNoticeStatus', 'write')
     const supabase = createAdminClient()
     
     if (isActive) {
@@ -215,7 +216,7 @@ export async function toggleNoticeStatus(id: string, isActive: boolean) {
  */
 
 export async function exportAttendanceLogs(startDate: string, endDate: string) {
-    const { user } = await requireRole(['admin'])
+    const { user } = await requireLegacyFounder('exportAttendanceLogs', 'export')
     const supabase = createAdminClient()
     const { data, error } = await supabase
         .from('attendance')
@@ -249,7 +250,7 @@ export async function exportAttendanceLogs(startDate: string, endDate: string) {
  */
 
 export async function getExportLogs() {
-    await requireRole(['admin'])
+    await requireLegacyFounder('getExportLogs', 'read')
     const supabase = createAdminClient()
     const { data, error } = await supabase
         .from('audit_log')
@@ -266,7 +267,7 @@ export async function getExportLogs() {
  */
 
 export async function getComplianceSettings() {
-    await requireRole(['admin'])
+    await requireLegacyFounder('getComplianceSettings', 'read')
     const supabase = createAdminClient()
     const { data, error } = await supabase
         .from('compliance_settings')
@@ -282,7 +283,7 @@ export async function updateGRODetails(data: {
     gro_email: string
     gro_phone?: string
 }) {
-    const { user } = await requireRole(['admin'])
+    const { user } = await requireLegacyFounder('updateGRODetails', 'write')
     const supabase = createAdminClient()
     try {
         await supabase.rpc('set_actor_for_audit', { p_actor_id: user.id })
@@ -309,7 +310,7 @@ export async function updateGRODetails(data: {
  */
 
 export async function getDpaTemplates() {
-    await requireRole(['admin'])
+    await requireLegacyFounder('getDpaTemplates', 'read')
     const supabase = createAdminClient()
     const { data, error } = await supabase
         .from('dpas')
@@ -321,7 +322,7 @@ export async function getDpaTemplates() {
 }
 
 export async function getFactoryDpaStatus() {
-    await requireRole(['admin'])
+    await requireLegacyFounder('getFactoryDpaStatus', 'read')
     const supabase = createAdminClient()
     
     // Fetch all organizations with their latest DPA status and lockdown status
@@ -351,7 +352,7 @@ export async function getFactoryDpaStatus() {
 }
 
 export async function updateDpaTemplate(id: string, data: { content_text: string, is_active: boolean }) {
-    await requireRole(['admin'])
+    await requireLegacyFounder('updateDpaTemplate', 'write')
     const supabase = createAdminClient()
     
     if (data.is_active) {
@@ -372,7 +373,7 @@ export async function updateDpaTemplate(id: string, data: { content_text: string
 }
 
 export async function createDpaTemplate(data: { version_string: string, content_text: string, is_active: boolean }) {
-    await requireRole(['admin'])
+    await requireLegacyFounder('createDpaTemplate', 'write')
     const supabase = createAdminClient()
     
     if (data.is_active) {
@@ -388,7 +389,7 @@ export async function createDpaTemplate(data: { version_string: string, content_
 }
 
 export async function recordDpaSignature(orgId: string, dpaId: string, proofUrl?: string) {
-    const { user } = await requireRole(['admin'])
+    const { user } = await requireLegacyFounder('recordDpaSignature', 'write')
     const supabase = createAdminClient()
 
     const { error } = await supabase
@@ -437,13 +438,14 @@ export async function signDpa(dpaId: string) {
  */
 
 export async function lockdownTenant(orgId: string, reason: string, severity: string) {
-    const { user } = await requireRole(['admin'])
+    const { user, sessionId } = await requireLegacyFounder('lockdownTenant', 'write')
     const supabase = createAdminClient()
-    const { data, error } = await supabase.rpc('lockdown_tenant', {
+    const { data, error } = await supabase.rpc('admin_legacy_lockdown_tenant', {
         p_org_id: orgId,
         p_reason: reason,
         p_severity: severity,
         p_actor_id: user.id,
+        p_session_id: sessionId,
     })
 
     if (error) throw new Error(error.message)
@@ -455,7 +457,7 @@ export async function lockdownTenant(orgId: string, reason: string, severity: st
             throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY')
         }
 
-        await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/send-lockdown-alert`, {
+        if (process.env.WEAVLY_ADMIN_LEGACY_DELIVERY_ENABLED === 'true') await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/send-lockdown-alert`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -472,11 +474,12 @@ export async function lockdownTenant(orgId: string, reason: string, severity: st
 }
 
 export async function unlockTenant(orgId: string) {
-    const { user } = await requireRole(['admin'])
+    const { user, sessionId } = await requireLegacyFounder('unlockTenant', 'write')
     const supabase = createAdminClient()
-    const { data, error } = await supabase.rpc('unlock_tenant', {
+    const { data, error } = await supabase.rpc('admin_legacy_unlock_tenant', {
         p_org_id: orgId,
         p_actor_id: user.id,
+        p_session_id: sessionId,
     })
 
     if (error) throw new Error(error.message)
@@ -507,7 +510,7 @@ export async function requestUnlock(orgId: string, reason: string) {
 }
 
 export async function getBreachReports(orgId?: string) {
-    await requireRole(['admin'])
+    await requireLegacyFounder('getBreachReports', 'read')
     const supabase = createAdminClient()
     let query = supabase
         .from('breach_reports')
@@ -531,7 +534,7 @@ export type SecurityIncidentCertInAssessment = 'pending' | 'not_reportable' | 'r
 export type SecurityIncidentDataCategory = 'account_authentication' | 'costings_business_contacts' | 'billing_subscription_references' | 'support_privacy_communications' | 'technical_diagnostic_security_logs'
 
 export async function getSecurityIncidents() {
-    await requireRole(['admin'])
+    await requireLegacyFounder('getSecurityIncidents', 'read')
     const supabase = createAdminClient()
     const { data, error } = await supabase
         .from('security_incidents')
@@ -550,7 +553,7 @@ export async function createSecurityIncident(input: {
     summary: string
     affected_data_categories: SecurityIncidentDataCategory[]
 }) {
-    const { user } = await requireRole(['admin'])
+    const { user } = await requireLegacyFounder('createSecurityIncident', 'write')
     const title = input.title.trim()
     const summary = input.summary.trim()
     const awareAt = new Date(input.aware_at)
@@ -586,7 +589,7 @@ export async function createSecurityIncident(input: {
 }
 
 export async function updateSecurityIncidentStatus(id: string, status: SecurityIncidentStatus) {
-    const { user } = await requireRole(['admin'])
+    const { user } = await requireLegacyFounder('updateSecurityIncidentStatus', 'write')
     const allowedStatuses: SecurityIncidentStatus[] = ['reported', 'triaging', 'contained', 'investigating', 'monitoring', 'closed']
     if (!allowedStatuses.includes(status)) throw new Error('Invalid incident status.')
 
@@ -610,7 +613,7 @@ export async function updateSecurityIncidentCertInAssessment(
     rationale: string,
     reference?: string,
 ) {
-    const { user } = await requireRole(['admin'])
+    const { user } = await requireLegacyFounder('updateSecurityIncidentCertInAssessment', 'write')
     const allowed: SecurityIncidentCertInAssessment[] = ['pending', 'not_reportable', 'reportable', 'reported']
     if (!allowed.includes(assessment)) throw new Error('Invalid CERT-In assessment.')
     if (assessment !== 'pending' && rationale.trim().length < 10) throw new Error('Record a brief decision rationale.')
@@ -633,7 +636,7 @@ export async function updateSecurityIncidentCertInAssessment(
 }
 
 export async function generateBreachReportTemplate(reportId: string) {
-    await requireRole(['admin'])
+    await requireLegacyFounder('generateBreachReportTemplate', 'export')
     const supabase = createAdminClient()
     
     // Fetch report data

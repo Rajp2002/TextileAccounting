@@ -17,6 +17,7 @@ import {
     hasFreeWorkspaceHint,
     WORKSPACE_HINT_COOKIE,
 } from '@/lib/workspace-hint'
+import { isDedicatedSupportRoute, isFounderAuthRoute, isFounderLoginRoute, isFounderRoute, safeFounderReturnPath } from '@/lib/admin/routes'
 
 function getRoleHomePath(role?: string, freeWorkspaceHint = false): string {
     if (role === 'owner') return freeWorkspaceHint ? FREE_WORKSPACE_PATH : '/owner/estimator'
@@ -59,6 +60,7 @@ function normalizeOptimisticClaims(value: unknown): Record<string, unknown> {
 /** Auth routes to rate-limit */
 function isAuthRoute(pathname: string): boolean {
     return (
+        isFounderAuthRoute(pathname) ||
         pathname.startsWith('/login') ||
         pathname.startsWith('/signup') ||
         pathname.startsWith('/forgot-password') ||
@@ -77,6 +79,7 @@ function isPasswordRecoveryRoute(pathname: string): boolean {
 /** Public routes — no session required */
 function isPublicRoute(pathname: string): boolean {
     return (
+        isFounderLoginRoute(pathname) ||
         pathname === '/' ||
         pathname === '/install' ||
         pathname.startsWith('/login') ||
@@ -119,6 +122,7 @@ export async function updateSession(request: NextRequest) {
     // These internal request markers are written only by Proxy. Never trust
     // values supplied by the browser.
     forwardedHeaders.delete('x-weavly-revocation-checked')
+    forwardedHeaders.delete('x-pathname')
     forwardedHeaders.delete(PWA_LOGIN_RECOVERY_HEADER)
     const applySessionCookies: Array<(target: NextResponse) => void> = []
     let response = NextResponse.next({
@@ -126,6 +130,17 @@ export async function updateSession(request: NextRequest) {
     })
 
     const { pathname } = request.nextUrl
+    const founderRoute = isFounderRoute(pathname)
+    const dedicatedIdentityRoute = founderRoute || isDedicatedSupportRoute(pathname)
+    const loginPath = founderRoute ? '/admin/login' : '/login'
+    const founderLoginUrl = () => {
+        const url = new URL('/admin/login', request.url)
+        if (!isFounderAuthRoute(pathname)) url.searchParams.set('returnTo', safeFounderReturnPath(pathname))
+        return url
+    }
+    const unauthenticatedApi = () => dedicatedIdentityRoute
+        ? NextResponse.json({ code: 'UNAUTHENTICATED', message: 'Please sign in.', requestId: crypto.randomUUID() }, { status: 401 })
+        : NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     const authSessionCookieNames = request.cookies
         .getAll()
         .filter(({ name }) => isSupabaseAuthSessionCookie(name))
@@ -158,7 +173,7 @@ export async function updateSession(request: NextRequest) {
 
     // Auth mutations manage their own cookie lifecycle. Let them run directly
     // instead of validating or redirecting the session before their handlers run.
-    const isLoginActionRequest = request.method === 'POST' && pathname === '/login'
+    const isLoginActionRequest = request.method === 'POST' && (pathname === '/login' || isFounderAuthRoute(pathname))
     if (isLoginActionRequest || isSignOutRequest) {
         return response
     }
@@ -170,11 +185,11 @@ export async function updateSession(request: NextRequest) {
     if (!hasAuthSessionCookie) {
         if (!isPublicRoute(pathname)) {
             if (pathname.startsWith('/api/')) {
-                return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+                return unauthenticatedApi()
             }
             const url = request.nextUrl.clone()
-            url.pathname = '/login'
-            return NextResponse.redirect(url)
+            url.pathname = loginPath
+            return NextResponse.redirect(founderRoute ? founderLoginUrl() : url)
         }
 
         return response
@@ -220,10 +235,12 @@ export async function updateSession(request: NextRequest) {
         forwardedHeaders.set('cookie', request.cookies.toString())
 
         const target = pathname.startsWith('/api/') && !isPublicRoute(pathname)
-            ? NextResponse.json({ error: 'Session expired. Please sign in again.' }, { status: 401 })
+            ? dedicatedIdentityRoute
+                ? unauthenticatedApi()
+                : NextResponse.json({ error: 'Session expired. Please sign in again.' }, { status: 401 })
             : isPublicRoute(pathname)
                 ? NextResponse.next({ request: { headers: forwardedHeaders } })
-                : NextResponse.redirect(new URL('/login', request.url))
+                : NextResponse.redirect(founderRoute ? founderLoginUrl() : new URL(loginPath, request.url))
 
         const expireCookie = (name: string) => target.cookies.set(name, '', {
             path: '/',
@@ -279,14 +296,16 @@ export async function updateSession(request: NextRequest) {
     // API routes must return JSON, never an HTML login redirect. Keep this check
     // immediately after the single validated user lookup.
     if (pathname.startsWith('/api/') && !isPublicRoute(pathname) && !user) {
-        return NextResponse.json({ error: 'Unauthorized. Please sign in.' }, { status: 401 })
+        return dedicatedIdentityRoute ? unauthenticatedApi() : NextResponse.json({ error: 'Unauthorized. Please sign in.' }, { status: 401 })
     }
 
     // ── Inactivity Timeout (1 hour) ───────────────────────────────────────
     const lastActivity = request.cookies.get('last_activity')?.value
     const now = Date.now()
 
-    if (userId && lastActivity) {
+    // Founder inactivity is authoritative server state (15 minutes), not this
+    // customer routing cookie. Polling cannot renew that server state.
+    if (userId && lastActivity && !founderRoute) {
         const lastActivityAt = Number(lastActivity)
         const timeSinceLastActivity = now - lastActivityAt
 
@@ -316,7 +335,10 @@ export async function updateSession(request: NextRequest) {
         logProxyPhase('revocation', pathname, revocationStartedAt)
         if (userIsRevoked) {
             await supabase.auth.signOut()
-            response = NextResponse.redirect(new URL('/login', request.url))
+            response = pathname.startsWith('/api/') && dedicatedIdentityRoute
+                ? unauthenticatedApi()
+                : NextResponse.redirect(new URL(loginPath, request.url))
+            if (founderRoute) return clearAuthSessionResponse()
             response.cookies.delete('last_activity')
             return response
         }
@@ -344,7 +366,30 @@ export async function updateSession(request: NextRequest) {
 
     // ── Route Guards ───────────────────────────────────────────────────────
 
-    const role = typeof optimisticClaims.user_role === 'string' ? optimisticClaims.user_role : undefined
+    // These routes have independent live identity, founder/MFA or requester
+    // guards. A stale role/onboarding JWT hint must not run tenant routing here.
+    // This is coarse routing only and confers no privilege.
+    if (dedicatedIdentityRoute && (user || isFounderLoginRoute(pathname))) return response
+
+    let role = typeof optimisticClaims.user_role === 'string' ? optimisticClaims.user_role : undefined
+    if (userId && pathname === '/login') {
+        // A profile can become the approved platform identity while this
+        // browser still has old tenant routing claims. Read only the caller's
+        // own current routing fields via RLS; an admin may have no tenant org.
+        // This changes a destination, never authorizes founder data.
+        try {
+            const { data: routingProfile, error: routingError } = await supabase
+                .from('profiles')
+                .select('role, access_revoked_at')
+                .eq('id', userId)
+                .maybeSingle()
+            if (!routingError && routingProfile && !routingProfile.access_revoked_at
+                && ['owner', 'supervisor', 'admin'].includes(routingProfile.role)) role = routingProfile.role
+        } catch {
+            // Keep the existing optimistic customer route on source failure.
+            // Every destination still requires its independent live guard.
+        }
+    }
     const onboardingComplete = optimisticClaims.onboarding_complete === true
     // Optimistic only: a Free owner's launch skips the /owner/estimator hop.
     // The Free and owner layouts re-resolve the plan and correct a stale hint,
@@ -423,8 +468,8 @@ export async function updateSession(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
         const url = request.nextUrl.clone()
-        url.pathname = '/login'
-        return NextResponse.redirect(url)
+        url.pathname = loginPath
+        return NextResponse.redirect(founderRoute ? founderLoginUrl() : url)
     }
 
     // 3. Authenticated user on protected routes — enforce guards
@@ -464,14 +509,6 @@ export async function updateSession(request: NextRequest) {
 
         if (role === 'owner' && onboardingComplete && pathname === '/onboarding') {
             return NextResponse.redirect(new URL('/owner/estimator', request.url))
-        }
-
-        if (pathname.startsWith('/admin')) {
-            if (role !== 'admin') {
-                // The Admin layout performs the authoritative profile-role
-                // check. Proxy only provides an optimistic redirect hint.
-                return NextResponse.redirect(new URL(getRoleHomePath(role), request.url))
-            }
         }
 
         // 2. Owner restricted routes (Admins can access for support/audit)

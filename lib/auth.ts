@@ -104,11 +104,11 @@ export function getUserClaims(user: User): AuthClaims {
  * Returns null if the user is unauthenticated or their profile row is missing.
  * Callers that require authentication MUST handle the null case.
  */
-export const getCachedSession = cache(async (): Promise<{
+export const getVerifiedIdentity = cache(async (): Promise<{
     user: User
     profile: {
         role: string
-        org_id: string
+        org_id: string | null
         full_name: string | undefined
         phone: string | null
         whatsapp_number: string | null
@@ -138,7 +138,7 @@ export const getCachedSession = cache(async (): Promise<{
     // JWT app_metadata is useful for routing, but server actions/data loaders must
      // not trust user_metadata or stale client-controlled claims for org scoping.
      const admin = createAdminClient()
-     const { data: dbProfile } = await admin
+     const { data: dbProfile, error: profileError } = await admin
          .from('profiles')
          // The original authorization projection remains the baseline; the
          // Settings contact fields are added to this same round trip below.
@@ -147,19 +147,28 @@ export const getCachedSession = cache(async (): Promise<{
         .eq('id', user.id)
         .maybeSingle()
 
+    if (profileError) return null
     if (dbProfile?.access_revoked_at) return null
 
     const role = dbProfile?.role ?? undefined
-    const org_id = dbProfile?.org_id ?? undefined
+    const org_id = dbProfile?.org_id ?? null
     const full_name = dbProfile?.full_name ?? undefined
     const phone = dbProfile?.phone ?? null
     const whatsapp_number = dbProfile?.whatsapp_number ?? null
     const whatsapp_opted_in = dbProfile?.whatsapp_opted_in ?? false
 
     // Account exists in auth but profile is missing/broken — treat as unauthenticated
-    if (!role || !org_id) return null
+    if (!role) return null
 
     return { user, profile: { role, org_id, full_name, phone, whatsapp_number, whatsapp_opted_in } }
+})
+
+/** Tenant sessions still require a real organization. Platform identity alone
+ * never confers customer access; only the separate founder guard accepts it. */
+export const getCachedSession = cache(async () => {
+    const identity = await getVerifiedIdentity()
+    if (!identity?.profile.org_id) return null
+    return { ...identity, profile: { ...identity.profile, org_id: identity.profile.org_id } }
 })
 
 /**

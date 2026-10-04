@@ -10,7 +10,7 @@ const footer = read('components/landing/footer.tsx')
 const settings = read('app/(dashboard)/owner/settings/page.tsx')
 const constants = read('lib/security-incident.ts')
 const actions = read('lib/actions/compliance.ts')
-const adminPage = read('app/(dashboard)/admin/page.tsx')
+const adminPage = read('app/(admin-console)/admin/legacy/page.tsx')
 const migration = read('supabase/migrations/20260824040000_base_security_incident_workflow.sql')
 const runbook = read('docs/legal/base-security-incident-runbook.md')
 
