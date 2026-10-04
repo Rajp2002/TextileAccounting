@@ -1,0 +1,46 @@
+{
+  "recordedDate": "2026-10-04",
+  "implementationCommit": "142fe7c54da9795362b3b4167b8398a4fac16a96",
+  "finalRuntimeCommit": "2e3d49749a77d2b14bd4f5b4136efed94df8da6f",
+  "finalRuntimeDelta": "one support description string; database, authorization, billing and transport source unchanged",
+  "branch": "codex/founder-admin",
+  "environment": {
+    "node": "24.11.1",
+    "postgresql": "17.11",
+    "database": "disposable loopback cluster with synthetic Auth stubs and fixtures",
+    "remoteServices": "not configured for checks",
+    "productionOperations": "none"
+  },
+  "checks": {
+    "unit": { "status": "passed", "files": 301, "passed": 2709, "skipped": 1, "skipReason": "existing optional live Supabase finance integration disabled" },
+    "typecheck": { "status": "passed", "incremental": false },
+    "lint": { "status": "passed", "maximumWarnings": 0 },
+    "database": { "status": "assertions passed with runner warning", "exitCode": 0, "files": 21, "passed": 155, "postgres16": "not run", "warning": "Vitest timeout terminating forks worker persists; diagnostic four-worker replay also passes all tests and exits0 with warning" },
+    "productionBuild": { "status": "passed", "next": "16.2.12", "prebuildUnitPassed": 2709, "prebuildUnitSkipped": 1 },
+    "builtAppBrowser": { "status": "passed with explicit skipped gates", "passed": 14, "skipped": 2, "unexpected": 0, "flaky": 0, "skipReason": "approved real Supabase founder AAL2/requester lifecycle fixtures unavailable" },
+    "supportComponentBrowser": { "status": "passed", "passed": 12, "unexpected": 0, "flaky": 0, "synthetic": true, "runtimeCommit": "2e3d49749a77d2b14bd4f5b4136efed94df8da6f" },
+    "readComponentBrowser": { "status": "passed", "passed": 18, "unexpected": 0, "flaky": 0, "synthetic": true, "runtimeCommit": "142fe7c54da9795362b3b4167b8398a4fac16a96", "finalRuntimeDelta": "support description only; read fixture components and their dependencies unchanged" },
+    "publicBundlePatternScan": { "status": "passed", "assets": 281, "findings": 0, "limitation": "pattern scan is not proof of all possible secrets" },
+    "independentReview": { "status": "completed", "openBlockingFindings": 0, "unitPassed": 186, "unitFiles": 18, "databasePassed": 37, "databaseFiles": 4 }
+  },
+  "localPerformance": {
+    "samplesPerOperation": 10,
+    "organizations": 1000,
+    "supportTickets": 5000,
+    "factoryAggregateP95Milliseconds": 210,
+    "factoryAggregateBudgetMilliseconds": 2000,
+    "supportListP95Milliseconds": 69.9,
+    "supportListBudgetMilliseconds": 1000,
+    "limitation": "local synthetic fixture budgets; not production or agreed staging guarantees"
+  },
+  "notRunOrBlocked": [
+    "PostgreSQL16 CI database replay and clean worker teardown confirmation",
+    "real Supabase Auth/MFA/provider-session authenticated browser and replay/storage traces",
+    "approved founder UUID/grant/MFA/recovery setup and session policy confirmation",
+    "approved retention/export/deletion/pseudonymization integration",
+    "verified legacy formal/security operation owner and usable fallback/replacement",
+    "production classifications and historical financial provenance/coverage imports",
+    "production migration/deployment and recovery point approval",
+    "full Auth staging recovery/rollback rehearsal and exact deployed-commit acceptance"
+  ]
+}
