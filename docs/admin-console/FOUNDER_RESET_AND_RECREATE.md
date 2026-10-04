@@ -2,7 +2,7 @@
 
 Raj explicitly authorized this change on 4 October 2026: delete the old Weavly account and its factory information, including local payment/subscription history, and create a fresh founder-only identity. This replaces the previous preserve-UUID approach. No further Razorpay Test/Live lookup is required for the approved local removal. Nothing has been run against the hosted project by the agent.
 
-**Current operator result:** Raj supplied a successful SQL Editor screenshot with `old_auth_exists=false` and `old_factory_exists=false` after the final transaction. The reset step is complete on that operator-supplied evidence. Do not rerun it; continue at step 2 to create the new Auth identity. This verifies the two reported postconditions, not a separate agent audit of the hosted project or its historical backups/provider records.
+**Current status:** the old reset and new account creation are complete. Raj supplied the successful SQL Editor result (`old_auth_exists=false`, `old_factory_exists=false`), created replacement UUID `0fe24cd4-bd20-4050-aa56-0631bd03d9ce` and confirmed project `vzhwahudircrpgtitwzd`. A subsequent direct read-only query verifies its confirmed founder email and no profile/factory ownership. Skip steps 1 and 2; do not rerun the reset or recreate this user. Continue with [FOUNDER_SETUP_TARGET.md](FOUNDER_SETUP_TARGET.md) for the ten missing console migrations and prepared UUID-bound grant. The reset postconditions are operator evidence, not a separate audit of historical backups/provider records.
 
 ## 1. Run one targeted reset
 
@@ -38,10 +38,10 @@ Copy the new **User UID / UUID** and send only that UUID to the agent. Do not re
 
 The supplied database results show that the new founder/support tables are missing. Account recreation alone cannot install them. Their reviewed migrations and the founder-only follow-up deployment remain separate setup/release operations; see [PRODUCTION_FOUNDER_SETUP.md](PRODUCTION_FOUNDER_SETUP.md).
 
-Once required migrations are verified, use [FOUNDER_SELF_SETUP.sql](FOUNDER_SELF_SETUP.sql) with the **new** UUID. It establishes `role=admin`, `org_id=NULL`, the approved email-bound UUID grant and safe audit. It creates no credentials or fake factory. Keep gates closed until real provider/security acceptance and the approved enrollment window are ready.
+Once required migrations and the exact grant operation are approved and verified, use [FOUNDER_CONFIRMED_SETUP.sql](FOUNDER_CONFIRMED_SETUP.sql), already bound to the verified **new** UUID with no placeholders. It establishes `role=admin`, `org_id=NULL`, the approved email-bound UUID grant and safe audit. It creates no credentials or fake factory. Keep gates closed until real provider/security acceptance and the approved enrollment window are ready.
 
 Then `/admin/login` uses email/password, first-time private authenticator QR enrollment plus code, and code-only MFA challenge after password on later logins. Normal customer login/signup and tenant APIs reject the reserved founder identity once the reviewed follow-up is deployed. Missing profile/grant, AAL1 or disabled gates must not be bypassed just to make login work.
 
-No extra payment provenance work is needed for this reset. Remaining inputs are the reset result/new UUID and the exact environment/migration/security release setup. Factor recovery and production rollout still require their own verified approval.
+No extra payment provenance work is needed. The reset result, new UUID, target and current migration inventory are established. Verified recovery/staging and the exact migration/grant/security/deployment operations remain release gates; see the prepared target document. Password and authenticator entry stay with Raj.
 
 Sources: [Supabase user deletion/management](https://supabase.com/docs/guides/auth/managing-user-data), [existing reviewed setup guide](PRODUCTION_FOUNDER_SETUP.md), [reset acceptance evidence](FOUNDER_ONLY_ACCEPTANCE.md).

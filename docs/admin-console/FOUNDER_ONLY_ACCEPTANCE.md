@@ -94,9 +94,26 @@ The reviewed SQL SHA-256 is `d4037d1df14cc8e0ef4bf04bb5229700a727e17472e8ca143d4
 | Lint / TypeScript | Passed: zero-warning lint and nonincremental typecheck |
 | Independent review | Independently passed 23 reset cases at the final hash; no outstanding P0/P1 or material P2 |
 | Hosted reset | Operator-executed: Raj supplied SQL Editor screenshot with `old_auth_exists=false`, `old_factory_exists=false`; no separate agent hosted audit |
-| New identity / founder access | Pending: create the replacement Auth user privately, supply its new UUID, then complete required schema/grant/security/deployment setup |
+| New identity / founder access | Replacement UUID now supplied and verified by read-only hosted query; required schema/grant/security/deployment setup remains pending, as recorded below |
 
 The successful operator result supersedes the earlier pending-reset entries above. Do not rerun the reset or reuse the deleted UUID. The two displayed postconditions establish current old-user/factory absence; they do not certify provider-record erasure, backups, real MFA, migration readiness or the unpublished normal-login restriction.
+
+## Confirmed replacement identity and migration target
+
+On 4 October 2026 Raj supplied replacement Auth UUID `0fe24cd4-bd20-4050-aa56-0631bd03d9ce` and confirmed dashboard project `vzhwahudircrpgtitwzd`. The agent's exact-target read-only query verified current email `rajpatel86420@gmail.com`, confirmed email, missing profile and no owned factory. Founder grant/session/audit tables and both session/MFA-setup RPCs are absent. Hosted migration history contains 316 baseline versions, ending at `20261004120000`; all match local versions, and exactly ten local console migrations are missing. Branch metadata exposes only default `main`. Latest GitHub main remains `872debb7d09ec3e1856375e142cc841589c99af6`.
+
+[FOUNDER_CONFIRMED_SETUP.sql](FOUNDER_CONFIRMED_SETUP.sql) is an identity-bound copy of the existing reviewed generic transaction, followed by a minimal provisioning result. [FOUNDER_SETUP_TARGET.md](FOUNDER_SETUP_TARGET.md) records the exact target, pending migration hashes and operations still gated. No real user is inserted into test fixtures; no hosted SQL mutation, migration/grant, credential, factor/security or environment/deployment change was performed. The initial connector project-list omission did not prevent the subsequent exact-project read-only queries.
+
+These facts supersede earlier pending-account/unknown-target entries. Account creation is complete; required migrations, approved grant/security window, verified recovery/staging and unpublished follow-up deployment remain the actual blockers. Runtime lint/typecheck/unit/build/browser checks are not rerun for this documentation/template-binding slice; prior runtime evidence remains applicable without establishing live Auth/MFA readiness.
+
+| Current preparation check | Result |
+| --- | --- |
+| Bound SQL identity and transaction | Passed: transaction matches the reviewed generic template exactly after UUID/comment substitution; final query is read-only. SHA-256 `7accbb832cce0ead424eb0cb40d84438abe8e0bf7e21549e89edf23190cc0a42` |
+| Pending migration manifest | Passed: all ten file SHA-256 values match this checkout |
+| Manual setup smoke suite | Passed: nine synthetic scenarios plus complete/missing-history assertions, disposable `127.0.0.1` PostgreSQL; `/tmp/weavly-founder-confirmed-setup-sql.log` |
+| Independent preparation review | Passed: no P0/P1 or material P2; independently verified exact transaction equivalence, SQL hash, all ten migration hashes/order and the four-flag enrollment/returning-login sequence |
+| Diff whitespace | Passed |
+| Hosted migrations/grant/MFA, push and deployment | Not run; remain separately gated |
 
 ## Rollback and release limits
 
