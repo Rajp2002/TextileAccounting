@@ -35,3 +35,9 @@ Confirmed **`2e3d49749a77d2b14bd4f5b4136efed94df8da6f`** differs from the review
 The prior independent review stands. No new findings; authentication, database, financial, privacy, and support behavior are unchanged. The **186 unit / 37 database test** results remain applicable to those unchanged paths; the reviewer did not rerun them for this copy-only change.
 
 Production and real-provider acceptance gates remain unchanged. No source edits made.
+
+## Follow-up review boundary (1d951fd9)
+
+The earlier immutable console review remains historical evidence. A separate follow-up reviewer inspected email/QR setup, requester exports/deletion compatibility and bounded formal reads; incremental7-file90-unit and2-file21-DB checks passed. The reviewer found concrete restart and factor/verification concurrency issues. Root corrected restart intent lookup, current-intent fencing, verification generation and expired foreign-session recovery, then removed all automatic factor-unenrollment code to address a delayed-success removal race. Final root suites passed as recorded in FOLLOWUP_ACCEPTANCE.
+
+The reviewer hit account usage limits before confirming the last correction and immutable follow-up commit. **Final follow-up independent review is incomplete**; no ready-for-production declaration is made. Prior review is not represented as review of the new code.

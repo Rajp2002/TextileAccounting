@@ -109,12 +109,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 6369,
+                  "duration": 731,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-04T10:34:20.853Z",
+                  "startTime": "2026-10-04T11:31:03.587Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -143,12 +143,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1609,
+                  "duration": 158,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-04T10:34:30.476Z",
+                  "startTime": "2026-10-04T11:31:04.604Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -177,12 +177,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 15413,
+                  "duration": 1509,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-04T10:34:32.365Z",
+                  "startTime": "2026-10-04T11:31:04.778Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -193,6 +193,40 @@
           "id": "a0a85330a59013ae9a19-a39bf3935b728872b90c",
           "file": "boundaries.spec.ts",
           "line": 25,
+          "column": 5
+        },
+        {
+          "title": "retained formal record APIs independently deny anonymous access",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 38,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-04T11:31:06.307Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a0a85330a59013ae9a19-c3f873f8eb81fca1966e",
+          "file": "boundaries.spec.ts",
+          "line": 33,
           "column": 5
         },
         {
@@ -211,12 +245,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 278,
+                  "duration": 15,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-04T10:34:48.099Z",
+                  "startTime": "2026-10-04T11:31:06.358Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -226,7 +260,7 @@
           ],
           "id": "a0a85330a59013ae9a19-33d1c7ddd6622b1a8ab2",
           "file": "boundaries.spec.ts",
-          "line": 33,
+          "line": 43,
           "column": 5
         },
         {
@@ -245,12 +279,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3739,
+                  "duration": 513,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-04T10:34:48.598Z",
+                  "startTime": "2026-10-04T11:31:06.386Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -260,7 +294,7 @@
           ],
           "id": "a0a85330a59013ae9a19-9bc47fdb8fe445861600",
           "file": "boundaries.spec.ts",
-          "line": 42,
+          "line": 52,
           "column": 5
         },
         {
@@ -279,12 +313,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 517,
+                  "duration": 50,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-04T10:34:52.506Z",
+                  "startTime": "2026-10-04T11:31:06.916Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -294,7 +328,7 @@
           ],
           "id": "a0a85330a59013ae9a19-4628dcb153c0486e8699",
           "file": "boundaries.spec.ts",
-          "line": 50,
+          "line": 60,
           "column": 5
         },
         {
@@ -313,12 +347,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 4294,
+                  "duration": 644,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-04T10:34:53.175Z",
+                  "startTime": "2026-10-04T11:31:06.979Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -328,7 +362,7 @@
           ],
           "id": "a0a85330a59013ae9a19-48eaa194780c6b870673",
           "file": "boundaries.spec.ts",
-          "line": 57,
+          "line": 67,
           "column": 5
         },
         {
@@ -343,7 +377,7 @@
                   "type": "skip",
                   "location": {
                     "file": "/private/tmp/weavly-founder-admin/__tests__/browser-admin/boundaries.spec.ts",
-                    "line": 69,
+                    "line": 79,
                     "column": 6
                   }
                 }
@@ -361,13 +395,13 @@
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-04T10:34:57.609Z",
+                  "startTime": "2026-10-04T11:31:07.637Z",
                   "annotations": [
                     {
                       "type": "skip",
                       "location": {
                         "file": "/private/tmp/weavly-founder-admin/__tests__/browser-admin/boundaries.spec.ts",
-                        "line": 69,
+                        "line": 79,
                         "column": 6
                       }
                     }
@@ -380,7 +414,7 @@
           ],
           "id": "a0a85330a59013ae9a19-c90d5a80475a724f2705",
           "file": "boundaries.spec.ts",
-          "line": 69,
+          "line": 79,
           "column": 6
         },
         {
@@ -399,12 +433,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 6045,
+                  "duration": 929,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-04T10:35:02.858Z",
+                  "startTime": "2026-10-04T11:31:08.325Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -433,12 +467,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 807,
+                  "duration": 140,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-04T10:35:10.674Z",
+                  "startTime": "2026-10-04T11:31:09.516Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -467,12 +501,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 8130,
+                  "duration": 1651,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-04T10:35:11.586Z",
+                  "startTime": "2026-10-04T11:31:09.672Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -483,6 +517,40 @@
           "id": "a0a85330a59013ae9a19-d3f4947f2646e620d1f7",
           "file": "boundaries.spec.ts",
           "line": 25,
+          "column": 5
+        },
+        {
+          "title": "retained formal record APIs independently deny anonymous access",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "mobile",
+              "projectName": "mobile",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 28,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-04T11:31:11.337Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a0a85330a59013ae9a19-688471a7b3889e3df73b",
+          "file": "boundaries.spec.ts",
+          "line": 33,
           "column": 5
         },
         {
@@ -501,12 +569,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 77,
+                  "duration": 14,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-04T10:35:19.842Z",
+                  "startTime": "2026-10-04T11:31:11.377Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -516,7 +584,7 @@
           ],
           "id": "a0a85330a59013ae9a19-a2efea8a10434410f489",
           "file": "boundaries.spec.ts",
-          "line": 33,
+          "line": 43,
           "column": 5
         },
         {
@@ -535,12 +603,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3170,
+                  "duration": 612,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-04T10:35:20.000Z",
+                  "startTime": "2026-10-04T11:31:11.405Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -550,7 +618,7 @@
           ],
           "id": "a0a85330a59013ae9a19-cef1855c3660ef9dbc94",
           "file": "boundaries.spec.ts",
-          "line": 42,
+          "line": 52,
           "column": 5
         },
         {
@@ -569,12 +637,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 186,
+                  "duration": 28,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-04T10:35:23.309Z",
+                  "startTime": "2026-10-04T11:31:12.031Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -584,7 +652,7 @@
           ],
           "id": "a0a85330a59013ae9a19-b4fc9982c51fdba544a7",
           "file": "boundaries.spec.ts",
-          "line": 50,
+          "line": 60,
           "column": 5
         },
         {
@@ -603,12 +671,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3287,
+                  "duration": 807,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-04T10:35:23.627Z",
+                  "startTime": "2026-10-04T11:31:12.071Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -618,7 +686,7 @@
           ],
           "id": "a0a85330a59013ae9a19-85f3e7a19e316a95e394",
           "file": "boundaries.spec.ts",
-          "line": 57,
+          "line": 67,
           "column": 5
         },
         {
@@ -633,7 +701,7 @@
                   "type": "skip",
                   "location": {
                     "file": "/private/tmp/weavly-founder-admin/__tests__/browser-admin/boundaries.spec.ts",
-                    "line": 69,
+                    "line": 79,
                     "column": 6
                   }
                 }
@@ -651,13 +719,13 @@
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-04T10:35:27.006Z",
+                  "startTime": "2026-10-04T11:31:12.891Z",
                   "annotations": [
                     {
                       "type": "skip",
                       "location": {
                         "file": "/private/tmp/weavly-founder-admin/__tests__/browser-admin/boundaries.spec.ts",
-                        "line": 69,
+                        "line": 79,
                         "column": 6
                       }
                     }
@@ -670,7 +738,7 @@
           ],
           "id": "a0a85330a59013ae9a19-d7095e6a693dec746b8a",
           "file": "boundaries.spec.ts",
-          "line": 69,
+          "line": 79,
           "column": 6
         }
       ]
@@ -678,9 +746,9 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-10-04T10:33:32.246Z",
-    "duration": 115308.57699999999,
-    "expected": 14,
+    "startTime": "2026-10-04T11:30:58.060Z",
+    "duration": 14937.092,
+    "expected": 16,
     "skipped": 2,
     "unexpected": 0,
     "flaky": 0

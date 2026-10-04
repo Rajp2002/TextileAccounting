@@ -1,0 +1,41 @@
+Runtime candidate1d951fd9f75b15b24caeeeeb56d16eda3aca7950
+All test services isolated/loopback; no real Auth or provider changes.
+This is a summary of captured logs, not production acceptance.
+
+Full unit/prebuild + production build | exit=0 | /tmp/weavly-admin-followup-build-final.log
+✓ __tests__/finance.test.ts (43 tests | 1 skipped) 52ms
+Test Files  306 passed (306)
+Tests  2777 passed | 1 skipped (2778)
+
+Nonincremental typecheck | exit=0 | /tmp/weavly-admin-followup-types-frozen.log
+Completed with exit0 (see original log).
+
+ESLint max-warnings=0 | exit=0 | /tmp/weavly-admin-followup-lint-frozen.log
+Completed with exit0 (see original log).
+
+Disposable PostgreSQL17.11 complete suite | exit=0 | /tmp/weavly-admin-followup-db-final.log
+AD10 synthetic support scale:1000organizations/5000tickets;10samples;p95=36.9ms;budget=1000ms;local disposable PostgreSQL
+{"fixture":"1000 synthetic organizations","operation":"admin_factory_snapshot aggregate","samples":10,"p95Ms":88,"budgetMs":2000,"environment":"disposable loopback PostgreSQL; no production performance claim"}
+Test Files  24 passed (24)
+Tests  180 passed (180)
+
+Built-app anonymous/disabled browser | exit=0 | /tmp/weavly-admin-followup-boundary-browser.log
+2 skipped
+16 passed (14.9s)
+
+Synthetic auth components | exit=0 | /tmp/weavly-admin-followup-auth-browser-final.log
+6 passed (11.1s)
+
+Synthetic support components | exit=0 | /tmp/weavly-admin-followup-support-browser-final.log
+12 passed (29.6s)
+
+Synthetic factory/report/formal components | exit=0 | /tmp/weavly-admin-followup-read-browser.log
+22 passed (38.8s)
+
+Public bundle pattern scan | exit=0 | /tmp/weavly-admin-followup-bundle.log
+"assets": 288,
+"findings": []
+
+Historical corrected attempts: unused catch binding lint; synthetic legacy DTO/DB test typings; initial build fixture typing. These failed attempts are not passes.
+Independent final follow-up review incomplete after reviewer usage limit; known final factor-removal concern addressed by removing all unenroll calls.
+PostgreSQL16 and real authenticated Supabase/MFA/browser/replay/rollback acceptance not run.

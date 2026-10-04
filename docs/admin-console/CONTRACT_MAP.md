@@ -62,3 +62,15 @@ Replacing UI is insufficient. Source migration history contains generic-admin pr
 Source gate is complete for implementation: route ownership, platform identity fix, relevant legacy callers, data source gaps and retained fallback are explicit. Runtime/database applied-history/performance claims are not made here. No source comparison drift exists. No credentials, accounts, grants, production data or schema were changed by this inventory.
 
 AD00 deliverables: this map and [PROVENANCE.md](PROVENANCE.md). Tests for this ticket are source/route inventory only; runtime checks belong to subsequent tickets. Documentation rollback is removal/revision of these additive documents. Production rollout remains blocked on verified founder UUID/MFA/recovery/grants; deployment/migrations; legacy operation owner; support/audit/reporting retention/deletion; production classification evidence; financial feed coverage; full integrated database/browser evidence. These blockers do not prevent safe local implementation.
+
+## Integrated follow-up dispositions
+
+The pinned inventory above is source history. Runtime1d951fd9 adds these replacements without deleting legacy records:
+
+| Contract | Current disposition | Independent guard/evidence | Remaining work |
+| --- | --- | --- | --- |
+| Founder login/candidate/session | Confirmed approved email plus password, UUID grant and live provider session; first-TOTP QR then code, existing-factor code-only | TS email guard and private grant.login_email;154000 admin_founder_mfa_setup six-argument service RPC; no factor removal; intent/lease/audit DB regressions | Actual approved UUID/MFA/recovery setup and real provider acceptance |
+| Customer support export |153000 admin_requester_support_export fixed DTO cursor reader; full owner export includes only caller's public support; /api/support/export accessible through support-only owner path | Current org/requester checked each page; peer/private/unbound/reference exclusions;413-row fixture pagination and direct denial tests | Approved retained/private-data access/pseudonymization policy |
+| Account deletion |153000 preflight before provider cancellation and independently locked authoritative RPC recheck | New support/reporting/MFA restrictive records refuse deletion; original empty account deletion and DB race preservation tested | Retain/delete/pseudonymize policy implementation; no cross-provider transactional deletion fence |
+| Formal grievances/security/DPA/notices | /admin/legacy and narrow GET APIs rebuild bounded searchable lists/details, DPA bindings and actual read-outcome audit | Every DAL method requires founder and read gate;155000 tuple indexes; fixed fields/escaping/keyset/direct DB tests | Real owners/current requirements; validated mutation/export/notification controls and atomic outcome audit |
+| Old unbounded reference actions | Kept off behind additional WEAVLY_ADMIN_LEGACY_REFERENCE_ACTIONS_ENABLED; bounded read flag does not expose them | Allowed audit names legacy.authorize.OP represent authorization only, not completed work | Retire or replace only after owner decision; old controls are not release-ready |
