@@ -72,6 +72,7 @@ import {
   getSavedCostingMetrics,
   resolveSavedCostingInputBasis,
   canPriceSavedRecipe,
+  formatRevisionLead,
   type SavedQualityFactoryProfile,
   type SavedQualityFixedWorker,
   type SavedQualityRecipe,
@@ -1584,6 +1585,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     </DialogHeader>
                     {comparisonCostings.length === 2 && comparison && (
                         <div className="space-y-3">
+                            <p data-revision-lead className="text-sm font-bold text-ink">{formatRevisionLead(comparisonCostings[0], comparisonCostings[1], comparison.price.sellingPricePerM)}</p>
                             <div className={`rounded-xl border px-4 py-3 text-xs ${comparison.comparable ? 'border-success/25 bg-success-soft text-success' : 'border-warning/25 bg-warning-soft text-warning'}`}>
                                 <p className="font-bold">{comparison.comparable ? 'Canonical comparison ready' : 'Canonical comparison needs review'}</p>
                                 <p className="mt-1 leading-relaxed">{comparison.canonical.message || `Formula ${comparison.canonical.leftCalculationVersion || 'unknown'} · rounding ${comparison.canonical.leftSnapshotSchemaVersion ? `snapshot v${comparison.canonical.leftSnapshotSchemaVersion}` : 'legacy'} · detail source ${comparison.canonical.source.replace('_', ' ')}.`}</p>

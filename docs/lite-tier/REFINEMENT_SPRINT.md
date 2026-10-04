@@ -172,3 +172,22 @@ Deferred (R8): "Review N rates used here" navigation and Rate Book identity on e
 | library read uses deterministic order and the keyset filter (source contract) | same | pass |
 
 Not run: archived/active boundaries and oldest-row retrieval against a real database above the production row cap (the disposable-database adapter does not implement `or`/`limit`), and the error state in a browser.
+
+## LT04 (P1): recall, save scope and revision wording
+
+**Status:** source checks passed, runtime pending.
+
+- Each saved-quality card in the estimator shows a construction cue built only from the recipe: warp × weft yarns, total picks and costing width ("80/72 Micro × 75D Roto · 68 PPI · 160 cm"). Weft picks are summed because each row holds that yarn's own picks (owner decision, E15). Missing parts are left out; nothing is inferred. Long names wrap to two lines and keep the full name as a tooltip instead of truncating.
+- The quality search matches every word against the name, the cue and the yarn labels, so "40s" or "poplin 64 ppi 160 cm" finds qualities whose names do not say it. Loading, empty, no-match and load-failure states are unchanged.
+- The save-scope dialog's buttons now say "Save this version only" and "Save version and update {quality} for future costings" (EN/HI/GU). The scopes and their server behavior are unchanged.
+- The Saved Costings comparison starts with "v1 (3 Oct 2026) → v2 (4 Oct 2026): suggested price ₹0.42/m higher", or "not available" when a value is missing. It reads only the two snapshots.
+
+| Fixture | Test | Result |
+| --- | --- | --- |
+| cue: single weft, two weft rows (34 + 34 = 68), density fallback, nothing known → null | `__tests__/lite-quality-recall.test.ts` | pass |
+| 24 near-duplicate qualities (four yarns, three pick values, two widths, Gujarati names): yarn search, all-words search, Gujarati, empty query | same | pass |
+| revision lead: higher, lower, unchanged, unavailable | same | pass |
+| picker, card, dialog and comparison wiring (source contracts) | same | pass |
+| save-scope copy contract updated deliberately | `__tests__/sprint1-costing-save-trust.test.ts` | pass |
+
+Not done: Recent/Favorites ordering (D05, not authorized), the operator scope-prediction and time-to-correct-quality study (needs real users), and phone-width checks of the longer card. The comparison dialog's copy is English-only, as it was.

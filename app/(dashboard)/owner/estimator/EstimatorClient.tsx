@@ -156,6 +156,7 @@ import { summarizeCostingInputChanges } from '@/lib/costing-input-changes'
 import { createClientRequestUuid } from '@/lib/client-request-id'
 import { runMutationWithTimeout } from '@/lib/mutation-outcome'
 import { reconcileTemplateRateUpdate } from '@/lib/template-rate-reconciliation'
+import { buildQualityConstructionCue, matchesQualitySearch } from '@/lib/quality-recall'
 import { getEstimatorFieldTarget } from '@/lib/estimator-field-target'
 import { BasePlanFactoryGlossary } from '@/components/estimator/BasePlanFactoryGlossary'
 import { ArchivePolicyNotice } from '@/components/records/ArchivePolicyNotice'
@@ -4162,7 +4163,7 @@ export default function EstimatorClient({
     }, [dispatch])
     const filteredTemplates = useMemo(() =>
         templateSearch.trim()
-            ? templates.filter(t => t.name.toLowerCase().includes(templateSearch.toLowerCase()))
+            ? templates.filter(template => matchesQualitySearch(template, templateSearch))
             : templates,
     [templates, templateSearch])
     const hasActiveQualityRecipeChanges = appliedTemplate
@@ -6021,7 +6022,11 @@ export default function EstimatorClient({
                                                         {isActive ? <CheckCircle2 className="h-4 w-4" aria-hidden="true" /> : <BookmarkPlus className="h-4 w-4" aria-hidden="true" />}
                                                     </span>
                                                     <span className="min-w-0 flex-1">
-                                                        <span className={`block truncate text-[13px] font-bold leading-5 ${isActive ? 'text-[var(--color-yarn-orange-dark)]' : 'text-[var(--color-ink)]'}`}>{tpl.name}</span>
+                                                        <span title={tpl.name} className={`block line-clamp-2 break-words text-[13px] font-bold leading-5 ${isActive ? 'text-[var(--color-yarn-orange-dark)]' : 'text-[var(--color-ink)]'}`}>{tpl.name}</span>
+                                                        {(() => {
+                                                            const cue = buildQualityConstructionCue(tpl)
+                                                            return cue ? <span data-quality-cue className="mt-0.5 block break-words font-mono text-[10px] font-semibold leading-4 text-[var(--color-body)]">{cue}</span> : null
+                                                        })()}
                                                         <span className="mt-0.5 block text-[10px] font-medium leading-4 text-[var(--color-muted)]">{isActive ? t('estimator.quality.selectedLabel') : t('estimator.quality.applyHint')}</span>
                                                     </span>
                                                 </button>
@@ -7243,7 +7248,7 @@ export default function EstimatorClient({
                                 if (pending) void handleSaveQuote(pending.status, true, 'version_and_quality', true)
                             }}
                         >
-                            {t('estimator.sprint1.save_version_update_quality')}
+                            {t('estimator.sprint1.save_version_update_quality', { name: appliedTemplate?.name })}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

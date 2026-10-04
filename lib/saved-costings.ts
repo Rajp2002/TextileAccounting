@@ -1,3 +1,4 @@
+import { formatTimestampDate } from './format'
 import {
   ensureOverheadIntegrity,
   makeDefaultEstimateState,
@@ -654,6 +655,26 @@ export type SavedCostingDelta = {
   left: number | null
   right: number | null
   delta: number | null
+}
+
+/**
+ * The first line of a comparison: which versions, when they were saved, and
+ * the new-minus-old suggested price per metre. Missing data is unavailable,
+ * never zero.
+ */
+export function formatRevisionLead(
+  oldCosting: { version_number?: number | null; created_at: string },
+  newCosting: { version_number?: number | null; created_at: string },
+  price: SavedCostingDelta,
+) {
+  const label = (costing: { version_number?: number | null; created_at: string }) =>
+    `v${Math.max(1, Number(costing.version_number ?? 1) || 1)} (${formatTimestampDate(costing.created_at, { day: 'numeric', month: 'short', year: 'numeric' })})`
+  const change = price.delta == null
+    ? 'suggested price difference not available'
+    : Math.abs(price.delta) <= 0.0001
+      ? 'suggested price unchanged'
+      : `suggested price ₹${Math.abs(price.delta).toFixed(2)}/m ${price.delta > 0 ? 'higher' : 'lower'}`
+  return `${label(oldCosting)} → ${label(newCosting)}: ${change}`
 }
 
 export type SavedCostingOverheadApplicability = {
