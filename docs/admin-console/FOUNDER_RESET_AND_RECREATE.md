@@ -2,6 +2,8 @@
 
 Raj explicitly authorized this change on 4 October 2026: delete the old Weavly account and its factory information, including local payment/subscription history, and create a fresh founder-only identity. This replaces the previous preserve-UUID approach. No further Razorpay Test/Live lookup is required for the approved local removal. Nothing has been run against the hosted project by the agent.
 
+**Current operator result:** Raj supplied a successful SQL Editor screenshot with `old_auth_exists=false` and `old_factory_exists=false` after the final transaction. The reset step is complete on that operator-supplied evidence. Do not rerun it; continue at step 2 to create the new Auth identity. This verifies the two reported postconditions, not a separate agent audit of the hosted project or its historical backups/provider records.
+
 ## 1. Run one targeted reset
 
 Sign out of Weavly and close its other tabs. In the same Supabase project used for the supplied identity/factory queries, open **SQL Editor → New query**, use the **postgres** role, and paste the complete [FOUNDER_ACCOUNT_RESET.sql](FOUNDER_ACCOUNT_RESET.sql). There are no placeholders to replace. Run the whole file once.

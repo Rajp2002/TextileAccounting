@@ -2,7 +2,7 @@
 
 On 4 October 2026 Raj changed the instruction from preserving the existing Auth identity to deleting the abandoned account and its selected local factory data, including payment/subscription history, then recreating a dedicated founder identity. This supersedes the earlier preserve-UUID/payment-provenance decision. The operator flow is [FOUNDER_RESET_AND_RECREATE.md](FOUNDER_RESET_AND_RECREATE.md); the complete destructive transaction is [FOUNDER_ACCOUNT_RESET.sql](FOUNDER_ACCOUNT_RESET.sql).
 
-User-supplied results confirm old Auth UUID `d0e56517-29f9-474f-b368-9e63e84da25a`, confirmed email `rajpatel86420@gmail.com`, no profile, and one owned organization: `2420a5a8-d231-4ed2-b9ce-9db986e38879`, name `test`, with zero member profiles. No agent hosted query or mutation was performed.
+Pre-reset user-supplied results identified old Auth UUID `d0e56517-29f9-474f-b368-9e63e84da25a`, confirmed email `rajpatel86420@gmail.com`, no profile, and one owned organization: `2420a5a8-d231-4ed2-b9ce-9db986e38879`, name `test`, with zero member profiles. No agent hosted query or mutation was performed.
 
 | Reviewed local source | Count |
 | --- | ---: |
@@ -35,3 +35,5 @@ The transaction does not erase Razorpay records, provider audit JSON, backups, m
 Named disposable suite: `__tests__/db/admin-founder-account-reset.dbtest.ts`. Fixtures substitute synthetic UUID/email/provider references/amounts and invented worker data. Cases cover success/another tenant, rollback rehearsal, identity/membership/count drift, NULL/cross-org children, compound/text/external Auth edges, deeper sessions/trigger drift, legacy runtime leftovers, managed detach refusal, Storage and suppressed/missing operator audit. See [FOUNDER_ONLY_ACCEPTANCE.md](FOUNDER_ONLY_ACCEPTANCE.md) for final results and independent review.
 
 Before COMMIT, any exception rolls all changes back. After a successful live COMMIT, this is intentional hard deletion: reverting code does not restore records. No automatic restoration or provider reversal is included. Raj explicitly abandoned the old data; next create the fresh Auth identity privately, then apply founder setup to its new UUID. Nothing was deleted by the agent.
+
+**Operator completion:** Raj subsequently supplied the successful SQL Editor result showing `old_auth_exists=false` and `old_factory_exists=false`. The exact old user/factory reset is therefore recorded as operator-executed with reported postconditions satisfied. No further reset query is needed. New Auth user creation/UUID, required founder migrations, grant/security setup and follow-up deployment remain pending; no new account or MFA readiness is inferred from the reset result.

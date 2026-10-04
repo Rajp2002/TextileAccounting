@@ -93,7 +93,10 @@ The reviewed SQL SHA-256 is `d4037d1df14cc8e0ef4bf04bb5229700a727e17472e8ca143d4
 | Full database regressions | Passed: 32 files, 273 tests on disposable PostgreSQL 17.11 with synthetic fixtures |
 | Lint / TypeScript | Passed: zero-warning lint and nonincremental typecheck |
 | Independent review | Independently passed 23 reset cases at the final hash; no outstanding P0/P1 or material P2 |
-| Hosted reset / new identity | Not performed by the agent; operator replaces the complete old query with the current file and reruns |
+| Hosted reset | Operator-executed: Raj supplied SQL Editor screenshot with `old_auth_exists=false`, `old_factory_exists=false`; no separate agent hosted audit |
+| New identity / founder access | Pending: create the replacement Auth user privately, supply its new UUID, then complete required schema/grant/security/deployment setup |
+
+The successful operator result supersedes the earlier pending-reset entries above. Do not rerun the reset or reuse the deleted UUID. The two displayed postconditions establish current old-user/factory absence; they do not certify provider-record erasure, backups, real MFA, migration readiness or the unpublished normal-login restriction.
 
 ## Rollback and release limits
 
