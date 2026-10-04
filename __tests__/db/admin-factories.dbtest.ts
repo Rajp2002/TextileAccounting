@@ -128,6 +128,54 @@ describe('AD03/04 real DB guarded read models and synthetic scale', () => {
         await expect(db.query('SELECT public.admin_factory_snapshot($1,$2,now())', [founder, randomUUID()])).rejects.toMatchObject({ code: '42501' })
         await expect(db.query('UPDATE private.admin_org_reporting SET cohort=$1', ['test'])).rejects.toMatchObject({ code: '42501' })
     })
+    it('dates zero-to-positive corrections from immutable successful receipts, preserving milestones through retry and later zero', async () => {
+        await asSuperuser(db)
+        const ids = { costing: randomUUID(), job: randomUUID(), machine: randomUUID(), worker: randomUUID(), zeroRequest: randomUUID(), positiveRequest: randomUUID() }
+        const { rows: [dates] } = await db.query("SELECT ((now() AT TIME ZONE 'Asia/Kolkata')::date-10)::text AS production_date, ((now() AT TIME ZONE 'Asia/Kolkata')::date-20)::text AS setup_date")
+        await db.query("INSERT INTO public.org_subscriptions(org_id,plan_tier,status,current_start,current_end) VALUES($1,'base','active',now()-interval '20 days',now()+interval '30 days')", [owner.orgId])
+        await db.query(`INSERT INTO public.estimator_quotes(id,org_id,record_kind,quality_label,yarn_denier,meters,yarn_rate_per_kg,landed_cost_per_meter,quote_price_per_meter,intended_margin_percent,worker_rate_per_m,created_at)
+            VALUES($1,$2,'costing','Synthetic receipt setup',100,1000,100,20,40,50,1,now()-interval '20 days')`, [ids.costing,owner.orgId])
+        await db.query("INSERT INTO public.base_production_jobs(id,org_id,costing_id,quality_label,target_meters,start_date,status,worker_rate_per_meter) VALUES($1,$2,$3,'Synthetic receipt setup',10000,$4,'active',1)", [ids.job,owner.orgId,ids.costing,dates.setup_date])
+        await db.query("INSERT INTO public.base_production_machines(id,org_id,name,machine_type) VALUES($1,$2,'Synthetic receipt machine','air_jet')", [ids.machine,owner.orgId])
+        await db.query('INSERT INTO public.base_machine_job_contexts(org_id,machine_id,job_id,effective_from) VALUES($1,$2,$3,$4)', [owner.orgId,ids.machine,ids.job,dates.setup_date])
+        await db.query("INSERT INTO public.base_production_workers(id,org_id,name,rate_per_meter,shift_availability) VALUES($1,$2,'Synthetic receipt worker',1,'day')", [ids.worker,owner.orgId])
+        await asUser(db,owner.userId,owner.orgId)
+        await db.query("SELECT public.upsert_base_worker_machine_assignment($1,$2,'day',$3,false)", [ids.worker,ids.machine,dates.setup_date])
+        const zero = JSON.stringify([{worker_id:ids.worker,entry_status:'zero',meters:0,allocations:[]}])
+        const positive = JSON.stringify([{worker_id:ids.worker,entry_status:'entered',meters:100,allocations:[{machine_id:ids.machine,job_id:ids.job,meters:100}]}])
+        const saved = (await db.query("SELECT public.save_base_daily_production_reviewed($1,'day',$2,$3,NULL,NULL) value", [dates.production_date,ids.zeroRequest,zero])).rows[0].value
+        expect(saved).toMatchObject({success:true,total_meters:0,idempotent:false})
+        await asSuperuser(db)
+        // Only fixture metadata moves the first successful zero sheet into the
+        // past; the real owner writer performs both saves and creates receipts.
+        await db.query("UPDATE public.base_production_batches SET created_at=now()-interval '10 days' WHERE id=$1", [saved.batch_id])
+        await db.query("UPDATE public.base_production_save_receipts SET created_at=now()-interval '10 days' WHERE org_id=$1 AND client_request_id=$2", [owner.orgId,ids.zeroRequest])
+        const expected = (await db.query('SELECT updated_at FROM public.base_production_batches WHERE id=$1',[saved.batch_id])).rows[0].updated_at
+        await asServiceRole(db)
+        expect((await read(owner.orgId)).rows[0].production_at).toBeNull()
+        await asUser(db,owner.userId,owner.orgId)
+        const correction = (await db.query("SELECT public.save_base_daily_production_reviewed($1,'day',$2,$3,'Synthetic zero-to-positive correction',$4) value", [dates.production_date,ids.positiveRequest,positive,expected])).rows[0].value
+        expect(correction).toMatchObject({success:true,total_meters:100,idempotent:false})
+        await asSuperuser(db)
+        const positiveAt = (await db.query('SELECT created_at FROM public.base_production_save_receipts WHERE org_id=$1 AND client_request_id=$2',[owner.orgId,ids.positiveRequest])).rows[0].created_at
+        await asServiceRole(db)
+        let observed = (await read(owner.orgId)).rows[0]
+        expect(Date.parse(observed.production_at!)).toBe(Date.parse(positiveAt))
+        expect(Date.parse(observed.last_outcome_at!)).toBe(Date.parse(positiveAt))
+        // The same successful receipt is returned despite the stale original
+        // revision, with no new write timestamp or activity from the retry.
+        await asUser(db,owner.userId,owner.orgId)
+        expect((await db.query("SELECT public.save_base_daily_production_reviewed($1,'day',$2,$3,'Synthetic zero-to-positive correction',$4) value", [dates.production_date,ids.positiveRequest,positive,expected])).rows[0].value).toMatchObject({idempotent:true})
+        await asSuperuser(db)
+        expect((await db.query('SELECT count(*)::int AS count FROM public.base_production_save_receipts WHERE org_id=$1',[owner.orgId])).rows[0].count).toBe(2)
+        const nextExpected = (await db.query('SELECT updated_at FROM public.base_production_batches WHERE id=$1',[saved.batch_id])).rows[0].updated_at
+        await asUser(db,owner.userId,owner.orgId)
+        await db.query("SELECT public.save_base_daily_production_reviewed($1,'day',$2,$3,'Synthetic later zero correction',$4)", [dates.production_date,randomUUID(),zero,nextExpected])
+        await asServiceRole(db)
+        observed = (await read(owner.orgId)).rows[0]
+        expect(Date.parse(observed.production_at!)).toBe(Date.parse(positiveAt))
+        expect(Date.parse(observed.last_outcome_at!)).toBe(Date.parse(positiveAt))
+    })
     it('records staging p95 for 1,000 organization reads under a 2-second aggregate budget', async () => {
         const durations: number[] = []
         for (let attempt = 0; attempt < 10; attempt++) {

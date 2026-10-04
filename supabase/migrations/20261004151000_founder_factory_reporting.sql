@@ -17,6 +17,7 @@ CREATE INDEX admin_organizations_snapshot_idx ON public.organizations(created_at
 CREATE INDEX admin_costing_milestone_idx ON public.estimator_quotes(org_id,created_at,version_number)
   WHERE record_kind='costing' AND template_id IS NULL;
 CREATE INDEX admin_free_costing_milestone_idx ON public.free_saved_costings(org_id,created_at);
+CREATE INDEX admin_production_receipt_milestone_idx ON public.base_production_save_receipts(org_id,created_at);
 COMMENT ON TABLE private.admin_org_reporting IS 'Founder-reviewed evidence classification. Missing rows mean unclassified. No customer access, self-classification, heuristic production backfill or entitlement effect.';
 
 CREATE FUNCTION public.admin_factory_snapshot(
@@ -95,11 +96,21 @@ BEGIN
       greatest(max(f.created_at),max(f.updated_at) FILTER (WHERE f.revision>1 AND f.updated_at<p_as_of)) AS last_at
     FROM public.free_saved_costings f JOIN population o ON o.id=f.org_id WHERE f.created_at<p_as_of GROUP BY f.org_id
   ), production AS (
-    SELECT b.org_id,min(b.created_at) AS first_at,max(b.created_at) AS last_at
-    FROM public.base_production_batches b JOIN population o ON o.id=b.org_id
-    WHERE b.status IN ('saved','finalized') AND b.created_at<p_as_of
-      AND EXISTS(SELECT 1 FROM public.base_daily_production_entries e WHERE e.org_id=b.org_id AND e.batch_id=b.id AND e.entry_status='entered' AND e.meters>0)
-    GROUP BY b.org_id
+    -- The reviewed writer commits a retained receipt after each successful
+    -- save. Batch creation is not an outcome timestamp: a saved zero/blank
+    -- sheet may be corrected to positive production much later. Read only
+    -- allowlisted aggregate response fields, never the request/worker payload.
+    -- Legacy batches without a successful receipt remain unobserved.
+    SELECT r.org_id,min(r.created_at) AS first_at,max(r.created_at) AS last_at
+    FROM public.base_production_save_receipts r JOIN population o ON o.id=r.org_id
+    WHERE r.created_at<p_as_of
+      AND r.response->'success'='true'::jsonb AND r.response->'idempotent'='false'::jsonb
+      AND r.response->>'batch_id'=r.batch_id::text
+      AND CASE WHEN jsonb_typeof(r.response->'total_meters')='number'
+        THEN (r.response->>'total_meters')::numeric>0 ELSE false END
+      AND CASE WHEN jsonb_typeof(r.response->'entered_count')='number'
+        THEN (r.response->>'entered_count')::numeric>0 ELSE false END
+    GROUP BY r.org_id
   ), support AS (
     SELECT t.org_id,count(*) FILTER(WHERE t.status<>'resolved') AS unresolved
     FROM public.support_tickets t JOIN population o ON o.id=t.org_id WHERE t.created_at<=p_as_of GROUP BY t.org_id

@@ -53,7 +53,7 @@ describe('sign-in timing telemetry', () => {
     it('places readiness markers after landing data is available', () => {
         expect(read('app/(dashboard)/owner/estimator/EstimatorClient.tsx'))
             .toContain('data-signin-ready="true"')
-        expect(read('app/(dashboard)/admin/page.tsx'))
+        expect(read('app/(admin-console)/admin/legacy/page.tsx'))
             .toContain('data-signin-ready="true"')
     })
 })

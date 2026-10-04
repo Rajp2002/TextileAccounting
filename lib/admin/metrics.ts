@@ -107,7 +107,7 @@ export type FactorySummary = {
 }
 export const FACTORY_COVERAGE: SourceCoverage[] = [
     { source: 'organization population and reporting classification', state: 'complete', detail: 'Missing classification remains unclassified and is excluded from production totals.' },
-    { source: 'persisted costing saves/revisions and valid positive production records', state: 'partial', detail: 'Observed retained records only. Activation uses original creation; same-entry revisions only contribute activity. Deletion, review, export and other workflows are not a complete historical event feed. No historical zero-fill or lapse score.' },
+    { source: 'persisted costing saves/revisions and positive production save receipts', state: 'partial', detail: 'Observed retained records only. Costing activation uses original creation; same-entry revisions only contribute activity. Production uses successful positive save-receipt time, never batch creation; earlier production without receipts is unobserved. Deletion, review, export and other workflows are not a complete historical event feed. No historical zero-fill or lapse score.' },
     { source: 'activation and retention cohorts', state: 'unavailable', detail: 'Full cohort observation windows and historical outcome coverage are not yet established.' },
     { source: 'current paid term counts', state: 'partial', detail: 'Verified live capture facts linked to source payment, factory, amount and plan only. Test and unknown payment history may grant effective access but do not count as verified paid terms. Complete historical provenance has not been established.' },
 ]

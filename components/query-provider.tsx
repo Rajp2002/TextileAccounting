@@ -1,6 +1,7 @@
 'use client'
 
-import { QueryClient } from '@tanstack/react-query'
+import { mayPersistQuery } from '@/lib/sensitive-routes'
+import { defaultShouldDehydrateQuery, QueryClient } from '@tanstack/react-query'
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
 import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister'
 import { QueryClientProvider } from '@tanstack/react-query'
@@ -113,7 +114,7 @@ function ScopedQueryProvider({ children, scope }: { children: React.ReactNode; s
     return (
         <PersistQueryClientProvider
             client={queryClient}
-            persistOptions={{ persister, buster: AUTH_CACHE_VERSION }}
+            persistOptions={{ persister, buster: AUTH_CACHE_VERSION, dehydrateOptions: { shouldDehydrateQuery: query => mayPersistQuery(query) && defaultShouldDehydrateQuery(query), shouldDehydrateMutation: () => false } }}
         >
             <QueryClientRegistration queryClient={queryClient} scope={scope} />
             {children}
