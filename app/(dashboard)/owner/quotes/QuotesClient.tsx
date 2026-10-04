@@ -1003,7 +1003,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             changed: comparison.margin.changed,
             rows: [
                 { label: 'Target margin', value: comparison.margin.targetPct, unit: 'percent' as const, changed: deltaChangedForUi(comparison.margin.targetPct) },
-                { label: 'Actual margin', value: comparison.margin.actualPct, unit: 'percent' as const, changed: deltaChangedForUi(comparison.margin.actualPct) },
+                { label: 'Estimated margin', value: comparison.margin.actualPct, unit: 'percent' as const, changed: deltaChangedForUi(comparison.margin.actualPct) },
             ],
         },
         {

@@ -386,7 +386,7 @@ export function buildCostingPrintHtml(model: CostingExportModel, rawOptions: Cos
         metric('Production cost', `${money(model.productionCostPerM)}/m`),
         metric('Suggested selling price', `${money(model.suggestedSellingPricePerM)}/m`, 'accent'),
         metric('Break-even price', `${money(model.breakEvenPricePerM)}/m`),
-        metric('Actual margin', `${decimal(model.marginPct, 1)}%`, model.marginPct < 0 ? 'negative' : 'positive'),
+        metric('Estimated margin at this price', `${decimal(model.marginPct, 1)}%`, model.marginPct < 0 ? 'negative' : 'positive'),
         metric('Order quantity', quantity),
         model.expectedProfit != null
           ? metric(model.expectedProfit < 0 ? 'Expected loss' : 'Expected profit', money(Math.abs(model.expectedProfit), 0), model.expectedProfit < 0 ? 'negative' : 'positive')

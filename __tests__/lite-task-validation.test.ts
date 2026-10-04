@@ -180,7 +180,7 @@ describe('LST-17: Release-Candidate Domain Task Validation Harness', () => {
       'Cost breakdown',
       'Base yarn calculation',
       'Break-even price',
-      'Actual margin',
+      'Estimated margin',
       'Expected profit',
       'Broker commission',
       'Factory expenses',

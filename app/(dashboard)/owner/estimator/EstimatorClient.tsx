@@ -1575,7 +1575,7 @@ function MobileLiveEstimateShortcut({
 
                         <div className="grid grid-cols-2 gap-2.5 px-5 pt-2.5">
                             <div className={`min-w-0 rounded-[12px] border px-3 py-3 ${marginSurface}`}>
-                                <p className={`text-[10px] font-semibold leading-4 ${marginTone}`}>Actual margin</p>
+                                <p className={`text-[10px] font-semibold leading-4 ${marginTone}`}>Estimated margin at this price</p>
                                 <p className={`mt-1 break-words font-mono text-[1.25rem] font-semibold leading-none tracking-tight tabular-nums ${marginTone}`}>
                                     <LiveValue value={actualMarginPct === null ? '—' : `${actualMarginPct >= 0 ? '+' : ''}${actualMarginPct.toFixed(1)}%`} />
                                 </p>
@@ -5029,7 +5029,7 @@ export default function EstimatorClient({
     ].filter(Boolean).join(' ')
     const validityStatus = freeMode && freeMeter.stale ? { label: freeText(language, 'lastSavedResult'), description: freeStaleDescription, icon: AlertTriangle, className: 'border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] text-[var(--wv-ochre-900)]' } : costingReadiness.status === 'ready'
         ? {
-            label: 'Costing valid',
+            label: 'Estimate ready for review',
             description: 'Price and break-even are calculated from the current inputs.',
             icon: CheckCircle2,
             className: 'border-[var(--wv-moss-200)] bg-[var(--wv-moss-50)] text-[var(--wv-moss-700)]',
@@ -5560,7 +5560,7 @@ export default function EstimatorClient({
                                                 ? 'text-[var(--color-factory-green)]'
                                                 : displayMarginPct < 0
                                                     ? 'text-[var(--color-risk-red)]'
-                                                    : 'text-[var(--color-warning-amber)]'}`}>Actual margin</p>
+                                                    : 'text-[var(--color-warning-amber)]'}`}>Estimated margin at this price</p>
                                         <p className={`max-w-full break-words font-mono text-[clamp(1.3rem,6vw,1.75rem)] font-semibold leading-[1.05] tracking-tight tabular-nums ${displayMarginPct === null
                                             ? 'text-[var(--color-muted)]'
                                             : displayMarginPct > 0

@@ -23,6 +23,9 @@ const PHRASES: Array<[string, string, string]> = [
   ['Not calculated', 'गणना नहीं की गई', 'ગણતરી કરી નથી'],
   ['Saved costings not loaded', 'सेव की गई कॉस्टिंग लोड नहीं हुई', 'સેવ કરેલી કૉસ્ટિંગ લોડ થઈ નથી'],
   ['Saved costings could not be loaded. Nothing was deleted. Try again.', 'सेव की गई कॉस्टिंग लोड नहीं हो सकीं। कुछ भी हटाया नहीं गया है। फिर से कोशिश करें।', 'સેવ કરેલી કૉસ્ટિંગ લોડ થઈ શકી નથી. કંઈ કાઢી નાખ્યું નથી. ફરી પ્રયાસ કરો.'],
+  ['Estimated margin at this price', 'इस कीमत पर अनुमानित मार्जिन', 'આ ભાવે અંદાજિત માર્જિન'],
+  ['Estimated margin', 'अनुमानित मार्जिन', 'અંદાજિત માર્જિન'],
+  ['Estimate ready for review', 'अनुमान जाँच के लिए तैयार', 'અંદાજ તપાસ માટે તૈયાર'],
 ]
 
 export const LITE_REFINEMENT_PHRASES: Record<BasePlanLocalLanguage, Record<string, string>> = {

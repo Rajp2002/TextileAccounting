@@ -191,3 +191,19 @@ Not run: archived/active boundaries and oldest-row retrieval against a real data
 | save-scope copy contract updated deliberately | `__tests__/sprint1-costing-save-trust.test.ts` | pass |
 
 Not done: Recent/Favorites ordering (D05, not authorized), the operator scope-prediction and time-to-correct-quality study (needs real users), and phone-width checks of the longer card. The comparison dialog's copy is English-only, as it was.
+
+## LT05: estimated-economics language
+
+**Status:** source checks passed, runtime pending.
+
+- "Actual margin" is now "Estimated margin at this price" on the live result (Quick and Detailed share the tile; the hidden legacy cockpit was changed too so the two cannot drift) and on the internal cost sheet; the Saved Costings comparison row is "Estimated margin". The customer quotation still shows no margin.
+- "Costing valid" is now "Estimate ready for review"; its description ("Price and break-even are calculated from the current inputs.") already described input completeness, not a confirmed save.
+- HI/GU: new phrases in `lib/i18n/lite-refinement-phrases.ts`; the old "Actual margin" phrase entries ("वास्तविक margin", "વાસ્તવિક margin") were removed.
+
+| Fixture | Test | Result |
+| --- | --- | --- |
+| estimator, comparison and internal PDF labels; customer PDF has no margin label | `__tests__/lite-estimated-language.test.ts` | pass; failed before the change |
+| HI/GU for the new labels; old phrase gone | same | pass |
+| old-label contracts updated deliberately | `sprint-estimator-aesthetic`, `base-estimator-refinements`, `lite-document-privacy`, `lite-task-validation` | pass |
+
+Not done in this sprint (P1, needs the domain/language reviewer or browser): explaining target margin and commission as shares of selling price, the yarn-tax and weaving-charge scope help, progressive first-use setup (D08 held), and the 360/390 px, 200% zoom, keyboard and screen-reader journeys. The existing dismissible wizard and its direct-overhead rule are unchanged.

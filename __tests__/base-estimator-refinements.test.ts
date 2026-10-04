@@ -94,7 +94,7 @@ describe('Base costing exports', () => {
     })
 
     expect(internal).toContain('Production cost')
-    expect(internal).toContain('Actual margin')
+    expect(internal).toContain('Estimated margin at this price')
     expect(customer).toContain('Customer Quotation')
     expect(customer).toContain('Quoted price')
     expect(customer).not.toContain('Production cost')
