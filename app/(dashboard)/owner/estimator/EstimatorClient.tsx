@@ -50,6 +50,8 @@ import {
 import { useTranslation } from '@/lib/i18n/context'
 import {
     type SavedYarnOption,
+    type YarnSuggestionSelection,
+    applyYarnSuggestionToRow,
     type RateBookYarnRecord,
     buildSavedYarnOptions,
     filterYarnOptions,
@@ -115,7 +117,7 @@ import { FreeCostingChecklist } from '@/components/estimator/FreeCostingChecklis
 import { useGutterDock } from '@/hooks/use-gutter-dock'
 import { makeFreeEstimate } from '@/lib/free-estimator-defaults'
 import { LocalSaveStatus } from '@/components/local-save-status'
-import { useAutosave } from '@/hooks/useAutosave'
+import { isDraftStored, useAutosave } from '@/hooks/useAutosave'
 import { usePwaRefreshGuard } from '@/hooks/use-pwa-refresh-guard'
 import { usePwaInstallBlocker } from '@/hooks/use-pwa-install-blocker'
 import { reportPwaWorkflowSuccess } from '@/lib/pwa-workflow-success'
@@ -159,6 +161,8 @@ import type { EstimatorDraftInput, EstimatorQuoteStatus } from '@/lib/estimator-
 import { summarizeCostingInputChanges } from '@/lib/costing-input-changes'
 import { createClientRequestUuid } from '@/lib/client-request-id'
 import { runMutationWithTimeout } from '@/lib/mutation-outcome'
+import { reconcileTemplateRateUpdate } from '@/lib/template-rate-reconciliation'
+import { buildQualityConstructionCue, matchesQualitySearch } from '@/lib/quality-recall'
 import { getEstimatorFieldTarget } from '@/lib/estimator-field-target'
 import { BasePlanFactoryGlossary } from '@/components/estimator/BasePlanFactoryGlossary'
 import { ArchivePolicyNotice } from '@/components/records/ArchivePolicyNotice'
@@ -178,7 +182,7 @@ import {
 } from '@/lib/factory-cost-profiles'
 import { formatTimestampDate } from '@/lib/format'
 import { formatSuratDateTime } from '@/lib/time'
-import { restoreSavedQualityCostingAssumptions, type SavedQualityCostingReuse } from '@/lib/saved-costings'
+import { resolveAppliedQualityBasis, restoreSavedQualityCostingAssumptions, type SavedQualityCostingReuse } from '@/lib/saved-costings'
 import { trackPlanEvent } from '@/lib/plan-analytics'
 import { formatEstimatorPlaceholder, type EstimatorPlaceholderKind } from '@/lib/estimator-placeholder'
 import { LiveValue } from '@/components/ui/live-value'
@@ -508,12 +512,12 @@ type Action =
     | { type: 'ADD_WARP_ROW' }
     | { type: 'SET_WARP_COMPONENT_COUNT'; count: number }
     | { type: 'UPDATE_WARP_ROW'; id: string; field: keyof WarpRow; value: WarpRowValue }
-    | { type: 'SELECT_WARP_YARN'; id: string; yarn: { name: string; denier: number; yarnRate: number; linearDensityUnit?: YarnLinearDensityUnit; cottonCountNe?: number | null } }
+    | { type: 'SELECT_WARP_YARN'; id: string; yarn: YarnSuggestionSelection }
     | { type: 'REMOVE_WARP_ROW'; id: string }
     | { type: 'ADD_WEFT_ROW' }
     | { type: 'SET_WEFT_COMPONENT_COUNT'; count: number }
     | { type: 'UPDATE_WEFT_ROW'; id: string; field: keyof WeftRow; value: WeftRowValue }
-    | { type: 'SELECT_WEFT_YARN'; id: string; yarn: { name: string; denier: number; yarnRate: number; linearDensityUnit?: YarnLinearDensityUnit; cottonCountNe?: number | null } }
+    | { type: 'SELECT_WEFT_YARN'; id: string; yarn: YarnSuggestionSelection }
     | { type: 'REMOVE_WEFT_ROW'; id: string }
     | { type: 'ENABLE_SECTION'; section: keyof FactorySections }
     | { type: 'ADD_OVERHEAD_ITEM' }
@@ -582,6 +586,9 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
             // the linked costing snapshot restores the saved overhead,
             // commercial, quantity, and enablement context.
             const restoredAssumptions = restoreSavedQualityCostingAssumptions(state, tpl.latest_costing_reuse)
+            // The quality's own direct overhead first, else the reused
+            // costing's basis; never the editor's leftover overhead.
+            const appliedBasis = resolveAppliedQualityBasis(tpl, restoredAssumptions)
             // Explicit null fallbacks for pre-loom-type templates (Gap 4)
             // Ensures undefined template fields never corrupt existing session state.
             const loomFields = {
@@ -590,7 +597,6 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                 loomPowerKw:           tpl.loom_power_kw != null ? Number(tpl.loom_power_kw) : null,
                 loomRpmIsCustomised:   false,
                 loomPowerKwIsCustomised: false,
-                warpingMode:            (tpl.warping_mode ?? 'in_house') as 'in_house' | 'outsourced',
                 sizingMode:            (tpl.sizing_mode ?? 'in_house') as 'in_house' | 'outsourced',
                 hoursPerShift:         tpl.hours_per_shift != null ? Number(tpl.hours_per_shift) : state.hoursPerShift,
             }
@@ -606,8 +612,7 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                     warpCrimpPct:     tpl.warp_crimp_pct != null ? Number(tpl.warp_crimp_pct) : state.warpCrimpPct,
                     perPickCostPaisa: Number(tpl.per_pick_cost_paise ?? state.perPickCostPaisa),
                     yarnShortagePct:  Number(tpl.yarn_shortage_pct ?? state.yarnShortagePct),
-                    overheadOverridePerM: tpl.overhead_override_per_m !== undefined && tpl.overhead_override_per_m !== null ? Number(tpl.overhead_override_per_m) : state.overheadOverridePerM,
-                    overheadMode: tpl.overhead_override_per_m !== undefined && tpl.overhead_override_per_m !== null ? 'direct' : state.overheadMode,
+                    ...appliedBasis,
                 }
             }
             return {
@@ -633,8 +638,7 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                 tapeLengthM:      Number(tpl.tape_length_m ?? state.tapeLengthM),
                 warpCrimpPct:     tpl.warp_crimp_pct != null ? Number(tpl.warp_crimp_pct) : state.warpCrimpPct,
                 perPickCostPaisa: Number(tpl.per_pick_cost_paise ?? state.perPickCostPaisa),
-                overheadOverridePerM: tpl.overhead_override_per_m !== undefined && tpl.overhead_override_per_m !== null ? Number(tpl.overhead_override_per_m) : state.overheadOverridePerM,
-                overheadMode: tpl.overhead_override_per_m !== undefined && tpl.overhead_override_per_m !== null ? 'direct' : state.overheadMode,
+                ...appliedBasis,
             }
         }
         case 'SET':
@@ -669,19 +673,11 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                 ),
             }
         case 'SELECT_WARP_YARN':
+            // The chosen yarn's density arrives with its unit, or not at all;
+            // an unknown density is cleared rather than inherited.
             return {
                 ...state,
-                warpRows: state.warpRows.map(r => {
-                    if (r.id !== action.id) return r
-                    return {
-                        ...r,
-                        label: action.yarn.name,
-                        calcDenier: action.yarn.denier > 0 ? action.yarn.denier : r.calcDenier,
-                        yarnRate: action.yarn.yarnRate > 0 ? action.yarn.yarnRate : r.yarnRate,
-                        linearDensityUnit: action.yarn.linearDensityUnit ?? r.linearDensityUnit,
-                        cottonCountNe: action.yarn.cottonCountNe !== undefined ? action.yarn.cottonCountNe : r.cottonCountNe,
-                    }
-                }),
+                warpRows: state.warpRows.map(r => r.id === action.id ? applyYarnSuggestionToRow(r, action.yarn) : r),
             }
         case 'REMOVE_WARP_ROW':
             if (state.warpRows.length <= 1) return state
@@ -698,19 +694,11 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                 ),
             }
         case 'SELECT_WEFT_YARN':
+            // The chosen yarn's density arrives with its unit, or not at all;
+            // an unknown density is cleared rather than inherited.
             return {
                 ...state,
-                weftRows: state.weftRows.map(r => {
-                    if (r.id !== action.id) return r
-                    return {
-                        ...r,
-                        label: action.yarn.name,
-                        calcDenier: action.yarn.denier > 0 ? action.yarn.denier : r.calcDenier,
-                        yarnRate: action.yarn.yarnRate > 0 ? action.yarn.yarnRate : r.yarnRate,
-                        linearDensityUnit: action.yarn.linearDensityUnit ?? r.linearDensityUnit,
-                        cottonCountNe: action.yarn.cottonCountNe !== undefined ? action.yarn.cottonCountNe : r.cottonCountNe,
-                    }
-                }),
+                weftRows: state.weftRows.map(r => r.id === action.id ? applyYarnSuggestionToRow(r, action.yarn) : r),
             }
         case 'REMOVE_WEFT_ROW':
             if (state.weftRows.length <= 1) return state
@@ -1609,7 +1597,7 @@ function MobileLiveEstimateShortcut({
 
                         <div className="grid grid-cols-2 gap-2.5 px-5 pt-2.5">
                             <div className={`min-w-0 rounded-[12px] border px-3 py-3 ${marginSurface}`}>
-                                <p className={`text-[10px] font-semibold leading-4 ${marginTone}`}>Actual margin</p>
+                                <p className={`text-[10px] font-semibold leading-4 ${marginTone}`}>Estimated margin at this price</p>
                                 <p className={`mt-1 break-words font-mono text-[1.25rem] font-semibold leading-none tracking-tight tabular-nums ${marginTone}`}>
                                     <LiveValue value={actualMarginPct === null ? '—' : `${actualMarginPct >= 0 ? '+' : ''}${actualMarginPct.toFixed(1)}%`} />
                                 </p>
@@ -2260,7 +2248,7 @@ function LayerNameField({
                                         <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
                                             {opt.denier > 0 && (
                                                 <span className="font-mono font-bold text-[var(--wv-lagoon-700)] bg-[var(--wv-lagoon-50)] border border-[var(--wv-lagoon-200)] px-1.5 py-0.2 rounded shrink-0">
-                                                    {opt.denier} D
+                                                    {opt.density?.unit === 'cotton_count_ne' ? `${opt.density.value} Ne · ` : ''}{Number(opt.denier.toFixed(2))} D
                                                 </span>
                                             )}
                                             <span className="inline-flex items-center px-1.5 py-0.2 rounded bg-[var(--wv-cotton-200)] text-[var(--wv-neel-700)] font-semibold uppercase tracking-wider text-[9px] shrink-0">
@@ -3567,6 +3555,16 @@ export default function EstimatorClient({
     const [editingWeftRates, setEditingWeftRates] = useState<{ id: string; yarnRate: number }[]>([])
     const [savingRates,      setSavingRates]      = useState(false)
     const savingRatesRef = useRef(false)
+    // LT03: a rate update whose answer was lost stays unresolved until it is
+    // reconciled against the saved quality. Page memory only.
+    const [rateUpdateUnknown, setRateUpdateUnknown] = useState<{
+        templateId: string
+        templateName: string
+        expectedUpdatedAt: string
+        proposedWarp: WarpRow[]
+        proposedWeft: WeftRow[]
+    } | null>(null)
+    const [rateUpdateCheck, setRateUpdateCheck] = useState<null | 'checking' | 'check_failed' | 'conflict' | 'missing'>(null)
     const rateImpact = useMemo(() => editRatesTpl ? calculateRateImpact(
         estimateReducer(state, { type: 'APPLY_TEMPLATE', template: editRatesTpl }),
         editingWarpRates.map(row => row.yarnRate),
@@ -3744,13 +3742,7 @@ export default function EstimatorClient({
         dispatch({
             type: 'SELECT_WARP_YARN',
             id: rowId,
-            yarn: {
-                name: yarn.name,
-                denier: yarn.denier,
-                yarnRate: yarn.yarnRate,
-                linearDensityUnit: yarn.linearDensityUnit,
-                cottonCountNe: yarn.cottonCountNe,
-            },
+            yarn: { name: yarn.name, density: yarn.density ?? null, yarnRate: yarn.yarnRate },
         })
         setUnverifiedYarnRows(prev => ({
             ...prev,
@@ -3768,13 +3760,7 @@ export default function EstimatorClient({
         dispatch({
             type: 'SELECT_WEFT_YARN',
             id: rowId,
-            yarn: {
-                name: yarn.name,
-                denier: yarn.denier,
-                yarnRate: yarn.yarnRate,
-                linearDensityUnit: yarn.linearDensityUnit,
-                cottonCountNe: yarn.cottonCountNe,
-            },
+            yarn: { name: yarn.name, density: yarn.density ?? null, yarnRate: yarn.yarnRate },
         })
         setUnverifiedYarnRows(prev => ({
             ...prev,
@@ -3833,7 +3819,7 @@ export default function EstimatorClient({
         // Free sessions cannot recover a paid-plan draft. Pending restore/conflict
         // decisions must never be overwritten merely to install an update.
         if (freeMode || disableAutosave) return false
-        return saveDraftNow(buildCurrentDraft())
+        return isDraftStored(saveDraftNow(buildCurrentDraft()))
     })
     // Free, and the paid estimator it becomes in place, keep work only in page
     // memory: an unconfirmed or still-tracked request, or anything the owner
@@ -4248,7 +4234,7 @@ export default function EstimatorClient({
     }, [dispatch])
     const filteredTemplates = useMemo(() =>
         templateSearch.trim()
-            ? templates.filter(t => t.name.toLowerCase().includes(templateSearch.toLowerCase()))
+            ? templates.filter(template => matchesQualitySearch(template, templateSearch))
             : templates,
     [templates, templateSearch])
     const hasActiveQualityRecipeChanges = appliedTemplate
@@ -4655,16 +4641,43 @@ export default function EstimatorClient({
     const openEditRates = useCallback((tpl: EstimatorTemplate) => {
         const warpRows: WarpRow[] = tpl.warp_rows ?? []
         const weftRows: WeftRow[] = tpl.weft_rows ?? []
+        // An unresolved update keeps its proposal on this page (LT03).
+        const pending = rateUpdateUnknown?.templateId === tpl.id ? rateUpdateUnknown : null
         setEditRatesTpl(tpl)
-        setEditingWarpRates(warpRows.map((r: WarpRow) => ({ id: r.id, yarnRate: r.yarnRate })))
-        setEditingWeftRates(weftRows.map((r: WeftRow) => ({ id: r.id, yarnRate: r.yarnRate })))
+        setEditingWarpRates((pending?.proposedWarp ?? warpRows).map((r: WarpRow) => ({ id: r.id, yarnRate: r.yarnRate })))
+        setEditingWeftRates((pending?.proposedWeft ?? weftRows).map((r: WeftRow) => ({ id: r.id, yarnRate: r.yarnRate })))
         void trackPlanEvent('rate_review_requested')
-    }, [])
+    }, [rateUpdateUnknown])
+
+    /** Apply a saved quality's stored rates to the estimator as a new costing. */
+    const applySavedQualityRates = (applied: EstimatorTemplate, name: string) => {
+        setDirectWeavingRateInput(getTemplateDirectWeavingRateInput(applied, state))
+        dispatch({
+            type: 'APPLY_TEMPLATE',
+            template: applied,
+        })
+        setAppliedTemplate(applied)
+        setQualityLabel(name)
+        setSourceQuoteId(null)
+        setSourceQuoteUpdatedAt(null)
+        setSourceQuoteVersionNumber(null)
+        setSourceQuoteCreatedAt(null)
+        setSourceQuoteStatus(null)
+        setSourceState(null)
+        setSourceFactoryProfileUpdatedAt(null)
+        setSourceRecordKind(null)
+        quoteRequestIdRef.current = null
+        setEditRatesTpl(null)
+        setShowQualityLibrary(false)
+        void trackPlanEvent('current_rate_applied', { rate_source: 'proposed_recipe_rates' })
+        setHasUnsavedEdits(false)
+    }
 
     /** Persist updated rates to template row AND apply to the estimator. */
     const handleSaveRatesAndApply = async (confirmed = false) => {
         if (!editRatesTpl || savingRatesRef.current) return
         if (saveQuoteLockRef.current || unconfirmedRequestId) return
+        if (rateUpdateUnknown) return
         if (!confirmed && hasUnsavedEdits && shouldPersistEstimatorDraft(buildCurrentDraft())) {
             setPendingQualityChange({ name: editRatesTpl.name, apply: () => void handleSaveRatesAndApply(true) })
             return
@@ -4673,26 +4686,40 @@ export default function EstimatorClient({
         setQualityCheckpoint({ draft: buildCurrentDraft(), template: appliedTemplate })
         savingRatesRef.current = true
         setSavingRates(true)
+        const expectedUpdatedAt = editRatesTpl.updated_at
+
+        // Update rates only. The quality name is an identity and is not edited
+        // from this dialog; save a separate quality for a new construction.
+        const updatedWarp: WarpRow[] = (editRatesTpl.warp_rows ?? []).map((r: WarpRow) => ({
+            ...r,
+            yarnRate: editingWarpRates.find(x => x.id === r.id)?.yarnRate ?? r.yarnRate,
+        }))
+        const updatedWeft: WeftRow[] = (editRatesTpl.weft_rows ?? []).map((r: WeftRow) => ({
+            ...r,
+            yarnRate: editingWeftRates.find(x => x.id === r.id)?.yarnRate ?? r.yarnRate,
+        }))
+        const keepUnresolved = () => {
+            setRateUpdateCheck(null)
+            setRateUpdateUnknown({
+                templateId: editRatesTpl.id,
+                templateName: editRatesTpl.name,
+                expectedUpdatedAt,
+                proposedWarp: updatedWarp,
+                proposedWeft: updatedWeft,
+            })
+        }
         try {
-            const expectedUpdatedAt = editRatesTpl.updated_at
-
-            // Update rates only. The quality name is an identity and is not edited
-            // from this dialog; save a separate quality for a new construction.
-            const updatedWarp: WarpRow[] = (editRatesTpl.warp_rows ?? []).map((r: WarpRow) => ({
-                ...r,
-                yarnRate: editingWarpRates.find(x => x.id === r.id)?.yarnRate ?? r.yarnRate,
-            }))
-            const updatedWeft: WeftRow[] = (editRatesTpl.weft_rows ?? []).map((r: WeftRow) => ({
-                ...r,
-                yarnRate: editingWeftRates.find(x => x.id === r.id)?.yarnRate ?? r.yarnRate,
-            }))
-
-            const res = await updateTemplateRates({
+            const rateOutcome = await runMutationWithTimeout(() => updateTemplateRates({
                 id: editRatesTpl.id,
                 expectedUpdatedAt,
                 warpRows: updatedWarp,
                 weftRows: updatedWeft,
-            })
+            }))
+            if (rateOutcome.status === 'unknown') {
+                keepUnresolved()
+                return
+            }
+            const res = rateOutcome.value
             if (res.error) { toast.error(tx(userFacingError(res.error, 'Saved Quality could not be updated. Try again.'))); return }
 
             // Success: refresh and apply
@@ -4701,41 +4728,70 @@ export default function EstimatorClient({
             if (tRes.data) setTemplates(tRes.data)
 
             const applied = refreshed ?? { ...editRatesTpl, warp_rows: updatedWarp, weft_rows: updatedWeft, updated_at: res.updatedAt ?? expectedUpdatedAt }
-            setDirectWeavingRateInput(getTemplateDirectWeavingRateInput(applied, state))
-            dispatch({
-                type: 'APPLY_TEMPLATE',
-                template: applied,
-            })
-            setAppliedTemplate(applied)
-            setQualityLabel(editRatesTpl.name)
-            setSourceQuoteId(null)
-            setSourceQuoteUpdatedAt(null)
-            setSourceQuoteVersionNumber(null)
-            setSourceQuoteCreatedAt(null)
-            setSourceQuoteStatus(null)
-            setSourceState(null)
-            setSourceFactoryProfileUpdatedAt(null)
-            setSourceRecordKind(null)
-            quoteRequestIdRef.current = null
-            setEditRatesTpl(null)
-            setShowQualityLibrary(false)
-            void trackPlanEvent('current_rate_applied', { rate_source: 'proposed_recipe_rates' })
-            setHasUnsavedEdits(false)
+            applySavedQualityRates(applied, editRatesTpl.name)
             toast.success('noChange' in res && res.noChange
                 ? t('estimator.sprint1.quality_no_change')
                 : t('estimator.sprint1.rates_updated_no_snapshot'))
         } catch {
-            toast.error(tx('Rate update could not be confirmed. Reopen the quality to check its saved rates before trying again.'))
+            // The request may have reached the server before the connection
+            // failed. Keep the proposal unresolved; never resend it blindly.
+            keepUnresolved()
         } finally {
             savingRatesRef.current = false
             setSavingRates(false)
         }
     }
 
+    /**
+     * Reconcile an unresolved rate update against the saved quality. Only an
+     * unchanged version proves it did not commit; a matching quality is shown
+     * as the quality's current rates, not as this request's success.
+     */
+    const checkUnresolvedRateUpdate = async () => {
+        const pending = rateUpdateUnknown
+        if (!pending || rateUpdateCheck === 'checking') return
+        setRateUpdateCheck('checking')
+        try {
+            const tRes = await getEstimatorTemplates()
+            if (!tRes.data) { setRateUpdateCheck('check_failed'); return }
+            setTemplates(tRes.data)
+            const current = tRes.data.find(template => template.id === pending.templateId) ?? null
+            const reconciliation = reconcileTemplateRateUpdate({
+                expectedUpdatedAt: pending.expectedUpdatedAt,
+                proposedWarp: pending.proposedWarp,
+                proposedWeft: pending.proposedWeft,
+                current,
+            })
+            if (reconciliation === 'not_applied') {
+                setRateUpdateUnknown(null)
+                setRateUpdateCheck(null)
+                toast.info(tx('The rates were not saved. You can save them again.'))
+                return
+            }
+            if (reconciliation === 'matches_proposal' && current) {
+                setRateUpdateUnknown(null)
+                setRateUpdateCheck(null)
+                applySavedQualityRates(current, current.name)
+                toast.success(tx('The saved quality now has these rates.'))
+                return
+            }
+            setRateUpdateCheck(reconciliation === 'missing' ? 'missing' : 'conflict')
+        } catch {
+            setRateUpdateCheck('check_failed')
+        }
+    }
+
+    const discardUnresolvedRateUpdate = () => {
+        setRateUpdateUnknown(null)
+        setRateUpdateCheck(null)
+        setEditRatesTpl(null)
+    }
+
     /** Apply template directly (without editing rates). */
     const handleApplyCurrentRates = (confirmed = false) => {
         if (!editRatesTpl || savingRatesRef.current) return
         if (saveQuoteLockRef.current || unconfirmedRequestId) return
+        if (rateUpdateUnknown) return
         if (!confirmed && hasUnsavedEdits && shouldPersistEstimatorDraft(buildCurrentDraft())) {
             setPendingQualityChange({ name: editRatesTpl.name, apply: () => handleApplyCurrentRates(true) })
             return
@@ -4849,11 +4905,17 @@ export default function EstimatorClient({
 
         const browserIsOnline = typeof navigator === 'undefined' || navigator.onLine
         if (!browserIsOnline) {
-            const draftSaved = saveDraftNow(buildCurrentDraft(undefined, 'costing'))
+            // Only a written draft is on this device. With drafts off (the
+            // Free wrapper after activation) the inputs live in this page.
+            const offlineDraft = saveDraftNow(buildCurrentDraft(undefined, 'costing'))
             toast.error(tx('Reconnect before saving'), {
-                description: draftSaved
+                description: isDraftStored(offlineDraft)
                     ? tx('Your Cost Estimate and save identity are stored on this device.')
-                    : tx('Browser storage is unavailable, so keep this page open until you reconnect.'),
+                    : offlineDraft === 'disabled'
+                        ? tx('This Cost Estimate is kept on this page only. Keep the page open until you reconnect, then save.')
+                        : offlineDraft === 'blocked'
+                            ? tx('A recovered draft is waiting for your choice, so this Cost Estimate is not stored on this device yet. Keep the page open until you reconnect.')
+                            : tx('Browser storage is unavailable, so keep this page open until you reconnect.'),
                 duration: Infinity,
             })
             return
@@ -4865,7 +4927,7 @@ export default function EstimatorClient({
         // Flush both the current inputs and request identity before the action.
         // If the response is lost after commit, reopening and retrying reuses the
         // same idempotency key instead of creating a duplicate.
-        const draftSavedBeforeSubmit = saveDraftNow(buildCurrentDraft(clientRequestId, 'costing'))
+        const draftStoredBeforeSubmit = isDraftStored(saveDraftNow(buildCurrentDraft(clientRequestId, 'costing')))
 
         saveQuoteLockRef.current = true
         setSavingQuote(true)
@@ -4978,7 +5040,7 @@ export default function EstimatorClient({
             })
             console.error('Failed to save estimator quote:', error)
             toast.error(tx(userFacingError(error, 'Failed to save the Cost Estimate. Try again.')), {
-                description: draftSavedBeforeSubmit
+                description: draftStoredBeforeSubmit
                     ? tx('Your Cost Estimate and retry identity remain saved on this device.')
                     : undefined,
             })
@@ -5052,7 +5114,7 @@ export default function EstimatorClient({
         }
         : costingReadiness.status === 'ready'
         ? {
-            label: 'Costing valid',
+            label: 'Estimate ready for review',
             description: 'Price and break-even are calculated from the current inputs.',
             icon: CheckCircle2,
             className: 'border-[var(--wv-moss-200)] bg-[var(--wv-moss-50)] text-[var(--wv-moss-700)]',
@@ -5570,7 +5632,7 @@ export default function EstimatorClient({
                                                 ? 'text-[var(--color-factory-green)]'
                                                 : displayMarginPct < 0
                                                     ? 'text-[var(--color-risk-red)]'
-                                                    : 'text-[var(--color-warning-amber)]'}`}>Actual margin</p>
+                                                    : 'text-[var(--color-warning-amber)]'}`}>Estimated margin at this price</p>
                                         <p className={`max-w-full break-words font-mono text-[clamp(1.3rem,6vw,1.75rem)] font-semibold leading-[1.05] tracking-tight tabular-nums ${displayMarginPct === null
                                             ? 'text-[var(--color-muted)]'
                                             : displayMarginPct > 0
@@ -6076,7 +6138,11 @@ export default function EstimatorClient({
                                                         {isActive ? <CheckCircle2 className="h-4 w-4" aria-hidden="true" /> : <BookmarkPlus className="h-4 w-4" aria-hidden="true" />}
                                                     </span>
                                                     <span className="min-w-0 flex-1">
-                                                        <span className={`block truncate text-[13px] font-bold leading-5 ${isActive ? 'text-[var(--color-yarn-orange-dark)]' : 'text-[var(--color-ink)]'}`}>{tpl.name}</span>
+                                                        <span title={tpl.name} className={`block line-clamp-2 break-words text-[13px] font-bold leading-5 ${isActive ? 'text-[var(--color-yarn-orange-dark)]' : 'text-[var(--color-ink)]'}`}>{tpl.name}</span>
+                                                        {(() => {
+                                                            const cue = buildQualityConstructionCue(tpl)
+                                                            return cue ? <span data-quality-cue className="mt-0.5 block break-words font-mono text-[10px] font-semibold leading-4 text-[var(--color-body)]">{cue}</span> : null
+                                                        })()}
                                                         <span className="mt-0.5 block text-[10px] font-medium leading-4 text-[var(--color-muted)]">{isActive ? t('estimator.quality.selectedLabel') : t('estimator.quality.applyHint')}</span>
                                                     </span>
                                                 </button>
@@ -7221,6 +7287,7 @@ export default function EstimatorClient({
                     sourceQuoteId={exportSavedCosting ? lastSavedCosting?.id : undefined}
                     sourceRecordKind={exportSavedCosting ? 'costing' : undefined}
                     documentReference={exportSavedCosting && lastSavedCosting ? `${lastSavedCosting.model.qualityLabel} · v${lastSavedCosting.version}` : undefined}
+                    documentSource={exportSavedCosting && lastSavedCosting ? { kind: 'saved', qualityLabel: lastSavedCosting.model.qualityLabel, version: lastSavedCosting.version, savedAt: lastSavedCosting.savedAt } : { kind: 'working' }}
                 />
             )}
 
@@ -7307,7 +7374,7 @@ export default function EstimatorClient({
                                 if (pending) void handleSaveQuote(pending.status, true, 'version_and_quality', true)
                             }}
                         >
-                            {t('estimator.sprint1.save_version_update_quality')}
+                            {t('estimator.sprint1.save_version_update_quality', { name: appliedTemplate?.name })}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -7627,12 +7694,38 @@ export default function EstimatorClient({
 
                         {rateImpact && <RateImpactSummary impact={rateImpact} hasSavedAssumptions={Boolean(editRatesTpl?.latest_costing_reuse)} tx={tx} />}
                     </fieldset>
+                    {rateUpdateUnknown && (
+                        <div data-lite-rate-unknown role="status" className="space-y-3 rounded-xl border border-hairline bg-surface-soft p-3 text-sm text-body">
+                            <p className="font-semibold">
+                                {rateUpdateCheck === 'conflict'
+                                    ? tx('This saved quality changed elsewhere and does not have these rates. Close this and reopen the quality to review its current rates.')
+                                    : rateUpdateCheck === 'missing'
+                                        ? tx('This saved quality is no longer available.')
+                                        : tx('We could not confirm whether the rate update for {name} was saved. Your proposed rates are kept on this page. Check the saved quality before saving again.', { name: rateUpdateUnknown.templateName })}
+                            </p>
+                            {rateUpdateCheck === 'check_failed' && <p>{tx('Could not check right now. Try again.')}</p>}
+                            <p className="text-xs text-[var(--color-muted)]">{tx('This check is kept only while this page is open.')}</p>
+                            <div className="flex flex-wrap gap-2">
+                                {rateUpdateCheck !== 'conflict' && rateUpdateCheck !== 'missing' && (
+                                    <Button type="button" size="sm" onClick={() => void checkUnresolvedRateUpdate()} disabled={rateUpdateCheck === 'checking'} aria-busy={rateUpdateCheck === 'checking'} className="min-h-11">
+                                        {rateUpdateCheck === 'checking' ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                                        {tx('Check saved rates')}
+                                    </Button>
+                                )}
+                                {(rateUpdateCheck === 'conflict' || rateUpdateCheck === 'missing') && (
+                                    <Button type="button" size="sm" variant="outline" onClick={discardUnresolvedRateUpdate} className="min-h-11">
+                                        {tx('Discard this proposal')}
+                                    </Button>
+                                )}
+                            </div>
+                        </div>
+                    )}
                     <DialogFooter className="flex flex-col sm:flex-row gap-3 mt-2">
                         <Button
                             variant="ghost" 
                             size="sm" 
                             onClick={() => handleApplyCurrentRates()}
-                            disabled={savingRates}
+                            disabled={savingRates || Boolean(rateUpdateUnknown)}
                             className="rounded-xl font-bold text-[var(--color-muted)] hover:bg-[var(--color-surface-soft)]"
                         >
                             {tx('Use saved rates')}
@@ -7640,7 +7733,7 @@ export default function EstimatorClient({
                         <Button 
                             className="bg-brand-accent text-white font-semibold rounded-xl h-12 sm:h-11 shadow-lg shadow-brand-accent/20 hover:shadow-xl hover:shadow-brand-accent/30 transition-all flex items-center justify-center gap-2 flex-1 sm:flex-none sm:min-w-[180px]" 
                             onClick={() => void handleSaveRatesAndApply()}
-                            disabled={savingRates}
+                            disabled={savingRates || Boolean(rateUpdateUnknown)}
                             aria-busy={savingRates}
                         >
                             {savingRates ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}

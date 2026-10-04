@@ -35,6 +35,20 @@ export type EstimatorDraftConflict<TState = unknown> = {
 
 export type DraftSaveStatus = 'idle' | 'pending' | 'saved' | 'error'
 
+/**
+ * What an immediate draft write did. Only `written` means browser storage
+ * holds these inputs; callers must not describe any other outcome as stored.
+ * - `nothing_to_store`: the inputs have nothing to recover
+ * - `disabled`: drafts are off for this editor (for example the Free wrapper)
+ * - `unavailable`: browser storage refused the write
+ * - `blocked`: a recovered draft is waiting for the owner's restore choice
+ */
+export type DraftWriteOutcome = 'written' | 'nothing_to_store' | 'disabled' | 'unavailable' | 'blocked'
+
+export function isDraftStored(outcome: DraftWriteOutcome) {
+  return outcome === 'written'
+}
+
 interface UseAutosaveReturn<TState = unknown> {
   /** Whether a recoverable draft was found on mount or from another tab. */
   hasDraft: boolean
@@ -50,10 +64,10 @@ interface UseAutosaveReturn<TState = unknown> {
   clearDraft: () => void
   /** Save current state (called automatically via debounce, but exposed for manual use) */
   saveDraft: (data: EstimatorDraftInput<TState>) => void
-  /** Persist immediately, returning whether browser storage accepted the draft */
-  saveDraftNow: (data: EstimatorDraftInput<TState>) => boolean
+  /** Persist immediately and report what happened; see DraftWriteOutcome. */
+  saveDraftNow: (data: EstimatorDraftInput<TState>) => DraftWriteOutcome
   /** Flush the latest meaningful input before a route/page transition. */
-  flushDraft: () => boolean
+  flushDraft: () => DraftWriteOutcome
   /** Suppress the current programmatic state until the user edits again. */
   suppressAutosaveUntilChanged: (options?: { preserveDraftStatus?: boolean }) => void
   /** Mark a user edit after a reset, restore, or successful save. */
@@ -115,7 +129,7 @@ export function useAutosave<TState = unknown>({
   const latestInputRef = useRef<EstimatorDraftInput<TState> | null>(null)
   const latestPersistedDraftRef = useRef<EstimatorAutosaveData<TState> | null>(null)
   const localWriteSequenceRef = useRef(0)
-  const flushRef = useRef<() => boolean>(() => true)
+  const flushRef = useRef<() => DraftWriteOutcome>(() => 'nothing_to_store')
   const mountedRef = useRef(false)
   const userEditedRef = useRef(false)
 
@@ -188,8 +202,8 @@ export function useAutosave<TState = unknown>({
     return shouldPersist ? shouldPersist(data) : true
   }, [enabled, shouldPersist])
 
-  const persistDraft = useCallback((data: EstimatorDraftInput<TState>, allowPendingDecision = false) => {
-    if (draftDecisionPendingRef.current && !allowPendingDecision) return false
+  const persistDraft = useCallback((data: EstimatorDraftInput<TState>, allowPendingDecision = false): DraftWriteOutcome => {
+    if (draftDecisionPendingRef.current && !allowPendingDecision) return 'blocked'
 
     try {
       const existing = readStoredDraft()
@@ -211,11 +225,11 @@ export function useAutosave<TState = unknown>({
       latestPersistedDraftRef.current = payload
       localWriteSequenceRef.current = payload.writeSequence
       if (mountedRef.current) setDraftSaveStatus('saved')
-      return true
+      return 'written'
     } catch {
       markStorageFailure('write')
       if (mountedRef.current) setDraftSaveStatus('error')
-      return false
+      return 'unavailable'
     }
   }, [markStorageAvailable, markStorageFailure, readStoredDraft])
 
@@ -247,27 +261,30 @@ export function useAutosave<TState = unknown>({
     }, debounceMs)
   }, [debounceMs, enabled, isMeaningful, persistDraft])
 
-  const saveDraftNow = useCallback((data: EstimatorDraftInput<TState>) => {
+  const saveDraftNow = useCallback((data: EstimatorDraftInput<TState>): DraftWriteOutcome => {
+    if (!enabled) return 'disabled'
     // Explicit save/retry paths must retain a restored source quote and its
     // idempotency key even when the user has not changed a field after restore.
-    if (!isMeaningful(data, true)) return true
+    if (!isMeaningful(data, true)) return 'nothing_to_store'
     latestInputRef.current = data
     if (timerRef.current) {
       clearTimeout(timerRef.current)
       timerRef.current = null
     }
     return persistDraft(data)
-  }, [isMeaningful, persistDraft])
+  }, [enabled, isMeaningful, persistDraft])
 
-  const flushDraft = useCallback(() => {
+  const flushDraft = useCallback((): DraftWriteOutcome => {
+    if (!enabled) return 'disabled'
     const latest = latestInputRef.current
-    if (!latest || draftDecisionPendingRef.current) return true
+    if (draftDecisionPendingRef.current) return 'blocked'
+    if (!latest) return 'nothing_to_store'
     if (timerRef.current) {
       clearTimeout(timerRef.current)
       timerRef.current = null
     }
     return persistDraft(latest)
-  }, [persistDraft])
+  }, [enabled, persistDraft])
 
   useEffect(() => {
     flushRef.current = flushDraft

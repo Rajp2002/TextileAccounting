@@ -20,8 +20,9 @@ describe('Sprint 1 costing save trust', () => {
         expect(estimator).toContain("estimator.sprint1.quality_updated_no_snapshot")
         expect(estimator).toContain("estimator.sprint1.save_version_only")
         expect(estimator).toContain("estimator.sprint1.save_version_update_quality")
-        expect(english).toContain('save_version_only: "Save Version Only"')
-        expect(english).toContain('save_version_update_quality: "Save Version & Update Quality"')
+        // LT04 (LC27) restated the two scopes; the keys and their meaning are unchanged.
+        expect(english).toContain('save_version_only: "Save this version only"')
+        expect(english).toContain('save_version_update_quality: "Save version and update {name} for future costings"')
         expect(actions).toContain('updateSavedQuality?: boolean')
     })
 

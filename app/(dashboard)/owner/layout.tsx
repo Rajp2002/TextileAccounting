@@ -10,6 +10,7 @@ import { BrandBackground } from '@/components/brand-background'
 import { normalizeProductionMode } from '@/lib/production-mode'
 import { createPerfTimer } from '@/lib/perf'
 import { getCachedOrgPlanAccess } from '@/lib/subscription'
+import { hasOwnerArchiveAccess } from '@/lib/subscription-access'
 import { OwnerPlanProvider } from '@/components/providers/owner-plan-provider'
 import { createSignInServerTimerFromCookie } from '@/lib/sign-in-telemetry.server'
 import { getRateReviewStatus } from '@/lib/cost-rates'
@@ -30,7 +31,10 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
     const access = await getCachedOrgPlanAccess(profile.org_id)
     const requestHeaders = await headers()
     const pathname = requestHeaders.get('x-pathname') || ''
-    if (access.effectiveTier === 'free' || access.freeAccount) {
+    // The owner archive stays reachable after paid access ends, including for
+    // a former Free account whose paid plan expired (LT07). Read-only.
+    const retainedArchive = pathname.startsWith('/owner/data-export') && hasOwnerArchiveAccess(access)
+    if (!retainedArchive && (access.effectiveTier === 'free' || access.freeAccount)) {
         if (pathname.startsWith('/owner/billing')) {
             redirect('/free/billing')
         }
@@ -78,7 +82,7 @@ async function OwnerRouteBoundary({ children }: { children: React.ReactNode }) {
     const signInTelemetry = await createSignInServerTimerFromCookie('sign_in_dashboard_layout')
     const { profile, user } = await signInTelemetry.measure(
         'auth_profile',
-        () => perf.measure('authSession', () => requireRole(['owner']), 2),
+        () => perf.measure('authSession', () => requireRole(['owner'], { allowFreeAccount: true }), 2),
     )
     const cacheScope = createPrincipalCacheScope({
         userId: user.id,
@@ -135,7 +139,7 @@ async function OwnerSidebarBoundary() {
     const signInTelemetry = await createSignInServerTimerFromCookie('sign_in_dashboard_sidebar')
     const { profile, user } = await signInTelemetry.measure(
         'auth_profile',
-        () => perf.measure('authSession', () => requireRole(['owner']), 2),
+        () => perf.measure('authSession', () => requireRole(['owner'], { allowFreeAccount: true }), 2),
     )
     const userOrgId = profile.org_id
 

@@ -30,9 +30,11 @@ import {
 import {
   buildCostingPrintHtml,
   buildQuotationShareMessage,
+  describeDocumentSource,
   extractStyledCostingBody,
   getCostingExportFilename,
   validateCostingExportInput,
+  type CostingDocumentSource,
   type CostingExportMode,
   type CostingExportModel,
 } from '@/lib/estimator-export'
@@ -83,6 +85,7 @@ export function CostingExportDialog({
   sourceRecordKind,
   onQuoteUpdated,
   tutorialPreview = false,
+  documentSource,
 }: {
   open: boolean
   tutorialPreview?: boolean
@@ -100,6 +103,8 @@ export function CostingExportDialog({
   sourceQuoteStatus?: QuoteStatus
   sourceRecordKind?: 'costing' | 'quotation'
   onQuoteUpdated?: (data: { updated_at: string; quotation_reference?: string | null; quotation_valid_until?: string | null; customer_terms?: string | null }) => void
+  /** What the numbers come from; shown above the form when given. */
+  documentSource?: CostingDocumentSource
 }) {
   const { tx, t } = useTranslation()
   const generationGuard = useRef(createDocumentGenerationGuard())
@@ -400,6 +405,11 @@ export function CostingExportDialog({
             Confirm exactly what will be shared before generating the document.
           </DialogDescription>
         </DialogHeader>
+
+        {documentSource && (() => {
+          const source = describeDocumentSource(documentSource, mode)
+          return <p data-document-source className="break-words rounded-lg border border-[var(--wv-border-subtle)] bg-[var(--wv-bg-subtle)] px-3 py-2 text-sm font-semibold text-[var(--wv-text-primary)]">{tx(source.text, source.values)}</p>
+        })()}
 
         {savedQuotation && displayedQuoteStatus && (
           <div className="flex flex-col gap-2 rounded-xl border border-[var(--wv-border-subtle)] bg-[var(--wv-bg-subtle)] px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between" role="status">

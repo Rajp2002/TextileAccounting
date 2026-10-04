@@ -2,7 +2,8 @@ import { requireRole } from '@/lib/auth'
 import { OrganizationDataExportButton } from '@/components/settings/organization-data-export-button'
 
 export default async function OwnerDataExportPage() {
-    await requireRole(['owner'])
+    // Reachable after paid access ends; the layout keeps pure Free accounts out.
+    await requireRole(['owner'], { allowFreeAccount: true })
     return (
         <main className="mx-auto w-full max-w-2xl px-4 py-6 sm:px-6 sm:py-10">
             <div className="rounded-2xl border border-wv-border-default bg-surface p-6 shadow-sm sm:p-8">

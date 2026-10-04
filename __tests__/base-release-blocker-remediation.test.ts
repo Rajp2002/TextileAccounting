@@ -27,7 +27,9 @@ describe('Base release blocker remediation', () => {
     expect(migration).toContain('REVOKE ALL ON FUNCTION public.save_estimator_costing_revision_with_quality')
     expect(actions).toContain('attestCanonicalCostingPayload')
     expect(actions).toContain("p_quote_payload: trustedQuotePayload")
-    expect(actions).toContain("p_quote_payload: attestation.payload")
+    // LT01B: every costing save path attests through one helper (initial
+    // quality, version, version + quality).
+    expect(actions.match(/saveAttestedCostingPayload\(user\.id, profile\.org_id, quotePayload,/g)).toHaveLength(3)
   })
 
   it('routes current owners through the estimator', () => {

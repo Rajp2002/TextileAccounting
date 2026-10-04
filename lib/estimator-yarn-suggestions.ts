@@ -1,16 +1,27 @@
 import { normalizeYarnName } from './yarn-rate-reconciliation'
-import { getEffectiveYarnDenier } from './estimator'
+import { cottonCountNeToDenier, type WarpRow, type WeftRow } from './estimator'
+
+/**
+ * A density suggestion always carries its unit. `value` is denier for
+ * `denier` and the English cotton count for `cotton_count_ne`.
+ */
+export type YarnDensitySuggestion =
+    | { unit: 'denier'; value: number }
+    | { unit: 'cotton_count_ne'; value: number }
 
 export interface SavedYarnOption {
     name: string
     category: 'yarn_warp' | 'yarn_weft' | 'both'
+    /** Effective denier for display and search; 0 when the density is unknown. */
     denier: number
+    /** Typed density; null or missing means the owner must enter it. */
+    density?: YarnDensitySuggestion | null
     yarnRate: number
-    linearDensityUnit?: 'denier' | 'cotton_count_ne'
-    cottonCountNe?: number | null
     source: 'rate_book' | 'saved_quality'
     qualityNames?: string[]
 }
+
+export type YarnSuggestionSelection = Pick<SavedYarnOption, 'name' | 'density' | 'yarnRate'>
 
 export interface RateBookYarnRecord {
     id: string
@@ -35,53 +46,77 @@ export type TemplateWithRows = {
     weft_rows?: TemplateRowLike[] | null
 }
 
+function plausibleDensity(value: number) {
+    return Number.isFinite(value) && value > 0 && value <= 5000
+}
+
 /**
- * Parses denier from a yarn label/name commonly used in Indian/Surat textile markets.
- * Examples:
- * - "80/72 Micro" -> 80
- * - "50/48 Bright" -> 50
- * - "75D Roto" or "75 D" -> 75
- * - "150D Spun" -> 150
- * - "30/1 Cotton" -> 30
+ * Reads a density from a yarn name only when the name states its unit.
+ * - "75D", "80 den", "150 Denier" -> denier
+ * - "40 Ne", "60Ne", "40s", "30's" -> English cotton count (Ne)
+ * - "80/72", "50/48" (denier/filaments, both parts at least 10) -> denier
+ * Ply and count/ply notation ("2/40", "30/1", "40/2") and bare numbers are
+ * ambiguous: they return null and the owner enters the density.
  */
-export function extractDenierFromName(name: string): number | null {
+export function parseYarnDensityFromName(name: string): YarnDensitySuggestion | null {
     if (!name || typeof name !== 'string') return null
     const trimmed = name.trim()
 
-    // 1. Explicit denier with "D" / "den" / "denier" suffix: e.g. "75D", "75 D", "150D Bright", "30 denier"
-    const explicitMatch = trimmed.match(/\b(\d+(?:\.\d+)?)\s*(?:d\b|den\b|denier\b)/i)
-    if (explicitMatch) {
-        const val = parseFloat(explicitMatch[1])
-        if (Number.isFinite(val) && val > 0 && val <= 5000) return val
+    const fraction = trimmed.match(/\b(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)/)
+    const fractionParts = fraction ? [parseFloat(fraction[1]), parseFloat(fraction[2])] : null
+    if (fractionParts && fractionParts.some(part => !(part >= 10))) return null
+
+    const explicitDenier = trimmed.match(/\b(\d+(?:\.\d+)?)\s*(?:d|den|denier)\b/i)
+    if (explicitDenier) {
+        const value = parseFloat(explicitDenier[1])
+        if (plausibleDensity(value)) return { unit: 'denier', value }
     }
 
-    // 2. Count with 's' or 'Ne': e.g. "40s Cotton", "30's PC", "60 Ne"
-    const countMatch = trimmed.match(/\b(\d+(?:\.\d+)?)\s*(?:s\b|'s\b|ne\b)/i)
-    if (countMatch) {
-        const val = parseFloat(countMatch[1])
-        if (Number.isFinite(val) && val > 0 && val <= 5000) return val
+    const explicitCount = trimmed.match(/\b(\d+(?:\.\d+)?)\s*(?:ne\b|'?s\b)/i)
+    if (explicitCount) {
+        // A count beside a fraction ("40/40s") has no single reading.
+        if (fractionParts) return null
+        const value = parseFloat(explicitCount[1])
+        if (plausibleDensity(value)) return { unit: 'cotton_count_ne', value }
     }
 
-    // 3. Fraction format: "80/72", "50/48", "30/1", "2/40", "1/69"
-    // - If it's 2/40 or 1/69 (ply/count where first <= 4 and second >= 10), count is the second number
-    // - If it's 80/72 or 50/48 or 30/1 (denier/filaments or count/ply where first >= 10), denier/count is the first number
-    const fractionMatch = trimmed.match(/\b(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)/)
-    if (fractionMatch) {
-        const num1 = parseFloat(fractionMatch[1])
-        const num2 = parseFloat(fractionMatch[2])
-        if (Number.isFinite(num1) && Number.isFinite(num2)) {
-            // If num1 is 1-4 and num2 >= 10, it's ply/count (e.g. 2/40, 1/69)
-            if (num1 >= 1 && num1 <= 4 && num2 >= 10) {
-                return num2
-            }
-            // Otherwise first number is denier/count (e.g. 80/72, 30/1, 50/48)
-            if (num1 > 0 && num1 <= 5000) {
-                return num1
-            }
-        }
-    }
-
+    if (fractionParts && plausibleDensity(fractionParts[0])) return { unit: 'denier', value: fractionParts[0] }
     return null
+}
+
+function effectiveDenierOf(density: YarnDensitySuggestion | null | undefined) {
+    if (!density) return 0
+    return density.unit === 'cotton_count_ne' ? cottonCountNeToDenier(density.value) : density.value
+}
+
+/** The density a saved recipe row already holds, in that row's own unit. */
+function recipeRowDensity(row: TemplateRowLike): YarnDensitySuggestion | null {
+    if (row.linearDensityUnit === 'cotton_count_ne') {
+        const count = Number(row.cottonCountNe)
+        return plausibleDensity(count) ? { unit: 'cotton_count_ne', value: count } : null
+    }
+    const denier = Number(row.calcDenier)
+    return plausibleDensity(denier) ? { unit: 'denier', value: denier } : null
+}
+
+/**
+ * Applies a chosen yarn to one row. The row takes the suggestion's density in
+ * the suggestion's unit; with no density the row's density is cleared, so the
+ * previous yarn's value cannot satisfy readiness. Construction and allowance
+ * fields are left as they were.
+ */
+export function applyYarnSuggestionToRow<T extends WarpRow | WeftRow>(row: T, suggestion: YarnSuggestionSelection): T {
+    const base = {
+        ...row,
+        label: suggestion.name,
+        yarnRate: suggestion.yarnRate > 0 ? suggestion.yarnRate : row.yarnRate,
+    }
+    const density = suggestion.density ?? null
+    if (!density) return { ...base, linearDensityUnit: 'denier', calcDenier: 0, cottonCountNe: null }
+    if (density.unit === 'cotton_count_ne') {
+        return { ...base, linearDensityUnit: 'cotton_count_ne', cottonCountNe: density.value, calcDenier: cottonCountNeToDenier(density.value) }
+    }
+    return { ...base, linearDensityUnit: 'denier', cottonCountNe: null, calcDenier: density.value }
 }
 
 /**
@@ -94,16 +129,15 @@ export function buildSavedYarnOptions(
 ): SavedYarnOption[] {
     const map = new Map<string, {
         name: string
-        denier: number
+        density: YarnDensitySuggestion | null
         yarnRate: number
-        linearDensityUnit?: 'denier' | 'cotton_count_ne'
-        cottonCountNe?: number | null
         categories: Set<'yarn_warp' | 'yarn_weft'>
         source: 'rate_book' | 'saved_quality'
         qualityNames: Set<string>
     }>()
 
-    // 1. Index yarns from Saved Qualities
+    // 1. Index yarns from Saved Qualities. A recipe's own density is the
+    // owner's entered value and keeps its unit.
     for (const tpl of templates) {
         const tplName = tpl.name?.trim() ?? ''
         const layers: Array<{ cat: 'yarn_warp' | 'yarn_weft'; rows: TemplateRowLike[] }> = [
@@ -118,28 +152,19 @@ export function buildSavedYarnOptions(
                 const norm = normalizeYarnName(label)
                 if (!norm) continue
 
-                const rowDenier = row.calcDenier ?? 0
-                const effectiveDenier = (rowDenier > 0
-                    ? getEffectiveYarnDenier({ calcDenier: rowDenier, linearDensityUnit: row.linearDensityUnit, cottonCountNe: row.cottonCountNe })
-                    : 0) || extractDenierFromName(label) || 0
+                const density = recipeRowDensity(row) ?? parseYarnDensityFromName(label)
                 const rate = Number(row.yarnRate) || 0
 
                 const existing = map.get(norm)
                 if (existing) {
                     existing.categories.add(cat)
                     if (tplName) existing.qualityNames.add(tplName)
-                    if (!existing.denier && effectiveDenier > 0) {
-                        existing.denier = effectiveDenier
-                    }
-                    if (row.linearDensityUnit) existing.linearDensityUnit = row.linearDensityUnit
-                    if (row.cottonCountNe) existing.cottonCountNe = row.cottonCountNe
+                    if (!existing.density && density) existing.density = density
                 } else {
                     map.set(norm, {
                         name: label.replace(/\s+/g, ' '),
-                        denier: effectiveDenier,
+                        density,
                         yarnRate: rate,
-                        linearDensityUnit: row.linearDensityUnit,
-                        cottonCountNe: row.cottonCountNe,
                         categories: new Set([cat]),
                         source: 'saved_quality',
                         qualityNames: new Set(tplName ? [tplName] : []),
@@ -158,20 +183,18 @@ export function buildSavedYarnOptions(
 
         const cat = r.category === 'yarn_weft' ? 'yarn_weft' : 'yarn_warp'
         const rate = Number(r.currentValue) || 0
-        const parsedDenier = extractDenierFromName(name) || 0
+        const parsedDensity = parseYarnDensityFromName(name)
 
         const existing = map.get(norm)
         if (existing) {
             existing.yarnRate = rate // Rate Book current rate takes precedence!
             existing.source = 'rate_book'
             existing.categories.add(cat)
-            if (!existing.denier && parsedDenier > 0) {
-                existing.denier = parsedDenier
-            }
+            if (!existing.density && parsedDensity) existing.density = parsedDensity
         } else {
             map.set(norm, {
                 name: name.replace(/\s+/g, ' '),
-                denier: parsedDenier,
+                density: parsedDensity,
                 yarnRate: rate,
                 categories: new Set([cat]),
                 source: 'rate_book',
@@ -191,10 +214,9 @@ export function buildSavedYarnOptions(
         result.push({
             name: entry.name,
             category,
-            denier: entry.denier,
+            denier: effectiveDenierOf(entry.density),
+            density: entry.density,
             yarnRate: entry.yarnRate,
-            linearDensityUnit: entry.linearDensityUnit,
-            cottonCountNe: entry.cottonCountNe,
             source: entry.source,
             qualityNames: Array.from(entry.qualityNames),
         })

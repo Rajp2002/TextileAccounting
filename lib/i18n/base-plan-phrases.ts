@@ -1,4 +1,5 @@
 import { BASE_CONTINUITY_PHRASES } from './base-continuity-phrases'
+import { LITE_REFINEMENT_PHRASES } from './lite-refinement-phrases'
 
 export type BasePlanLocalLanguage = 'hi' | 'gu'
 
@@ -12,6 +13,7 @@ export type BasePlanLocalLanguage = 'hi' | 'gu'
 export const BASE_PLAN_PHRASES: Record<BasePlanLocalLanguage, Record<string, string>> = {
   hi: {
     ...BASE_CONTINUITY_PHRASES.hi,
+    ...LITE_REFINEMENT_PHRASES.hi,
     "Rate change impact": "दर बदलने का असर",
     "Uses this quality’s saved costing assumptions. Only yarn rates change in this comparison.": "इस क्वालिटी की सेव की गई लागत धारणाओं का उपयोग होता है। इस तुलना में केवल यार्न की दरें बदलती हैं।",
     "Uses this recipe with your working costing assumptions. Only yarn rates change in this comparison.": "इस रेसिपी के साथ आपकी मौजूदा लागत धारणाओं का उपयोग होता है। इस तुलना में केवल यार्न की दरें बदलती हैं।",
@@ -68,7 +70,6 @@ export const BASE_PLAN_PHRASES: Record<BasePlanLocalLanguage, Record<string, str
     'New cost estimate': 'नया कॉस्ट एस्टिमेट',
     'New costing snapshot': 'नया कॉस्टिंग स्नैपशॉट',
     'New quality': 'नई क्वालिटी',
-    'Actual margin': 'वास्तविक margin',
     'Break-even price / m': 'ब्रेक-ईवन कीमत / मीटर',
     'Minimum at 0% margin': '0% margin पर न्यूनतम',
     'Production cost / m': 'उत्पादन लागत / मीटर',
@@ -661,6 +662,7 @@ export const BASE_PLAN_PHRASES: Record<BasePlanLocalLanguage, Record<string, str
   },
   gu: {
     ...BASE_CONTINUITY_PHRASES.gu,
+    ...LITE_REFINEMENT_PHRASES.gu,
     "Rate change impact": "દર બદલવાની અસર",
     "Uses this quality’s saved costing assumptions. Only yarn rates change in this comparison.": "આ ક્વોલિટીની સાચવેલી ખર્ચ ધારણાઓ વપરાય છે. આ સરખામણીમાં માત્ર યાર્નના દર બદલાય છે.",
     "Uses this recipe with your working costing assumptions. Only yarn rates change in this comparison.": "આ રેસિપી સાથે તમારી હાલની ખર્ચ ધારણાઓ વપરાય છે. આ સરખામણીમાં માત્ર યાર્નના દર બદલાય છે.",
@@ -717,7 +719,6 @@ export const BASE_PLAN_PHRASES: Record<BasePlanLocalLanguage, Record<string, str
     'New cost estimate': 'નવો કોસ્ટ એસ્ટિમેટ',
     'New costing snapshot': 'નવો કોસ્ટિંગ સ્નૅપશૉટ',
     'New quality': 'નવી ક્વોલિટી',
-    'Actual margin': 'વાસ્તવિક margin',
     'Break-even price / m': 'બ્રેક-ઈવન કિંમત / મી',
     'Minimum at 0% margin': '0% margin પર ન્યૂનતમ',
     'Production cost / m': 'ઉત્પાદન ખર્ચ / મી',

@@ -39,6 +39,7 @@ export default async function QuotesPage(props: { searchParams: Promise<{ status
         <QuotesClient 
             initialQuotes={quotes ?? []}
             tourUnavailable={Boolean(quotesError || templatesError)}
+            loadError={Boolean(quotesError || templatesError)}
             initialTemplates={templates ?? []}
             initialProfile={undefined}
             initialWorkers={[]}

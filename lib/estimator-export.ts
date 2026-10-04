@@ -1,3 +1,4 @@
+import { formatTimestampDate } from './format'
 import {
   buildCostingResult,
   calculateBreakEvenPricePerM,
@@ -19,6 +20,35 @@ export type CostingExportOptions = {
   showGstNote: boolean
   documentReference?: string
   allowMissingValidUntil?: boolean
+}
+
+/** Where an export's numbers come from; only server-confirmed saved identity is `saved`. */
+export type CostingDocumentSource =
+  | { kind: 'saved'; qualityLabel: string; version: number; savedAt: string }
+  | { kind: 'working' }
+
+/**
+ * The one-line source shown above an export, as a translatable template and
+ * its values: a saved costing by quality, version and save date, or unsaved
+ * working inputs. The mode decides the document name.
+ */
+export function describeDocumentSource(source: CostingDocumentSource, mode: CostingExportMode): { text: string; values: Record<string, string | number> } {
+  if (source.kind === 'working') {
+    return {
+      text: mode === 'customer' ? 'Customer quotation · unsaved working inputs' : 'Internal estimate · unsaved working inputs',
+      values: {},
+    }
+  }
+  return {
+    text: mode === 'customer'
+      ? 'Customer quotation · based on {quality} costing v{version} · saved {date}'
+      : 'Internal cost sheet · based on {quality} costing v{version} · saved {date}',
+    values: {
+      quality: source.qualityLabel,
+      version: Math.max(1, Math.trunc(Number(source.version) || 1)),
+      date: formatTimestampDate(source.savedAt, { day: 'numeric', month: 'short', year: 'numeric' }),
+    },
+  }
 }
 
 /** A customer quotation is a document artifact, not a tax invoice. */
@@ -386,7 +416,7 @@ export function buildCostingPrintHtml(model: CostingExportModel, rawOptions: Cos
         metric('Production cost', `${money(model.productionCostPerM)}/m`),
         metric('Suggested selling price', `${money(model.suggestedSellingPricePerM)}/m`, 'accent'),
         metric('Break-even price', `${money(model.breakEvenPricePerM)}/m`),
-        metric('Actual margin', `${decimal(model.marginPct, 1)}%`, model.marginPct < 0 ? 'negative' : 'positive'),
+        metric('Estimated margin at this price', `${decimal(model.marginPct, 1)}%`, model.marginPct < 0 ? 'negative' : 'positive'),
         metric('Order quantity', quantity),
         model.expectedProfit != null
           ? metric(model.expectedProfit < 0 ? 'Expected loss' : 'Expected profit', money(Math.abs(model.expectedProfit), 0), model.expectedProfit < 0 ? 'negative' : 'positive')

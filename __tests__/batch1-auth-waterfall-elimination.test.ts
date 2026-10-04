@@ -136,7 +136,7 @@ describe('Batch 1 — owner layout uses requireRole (backed by cache)', () => {
     const layout = read('app/(dashboard)/owner/layout.tsx')
 
     it('calls requireRole (which uses getCachedSession internally)', () => {
-        expect(layout).toContain("requireRole(['owner'])")
+        expect(layout).toContain("requireRole(['owner'], { allowFreeAccount: true })")
     })
 
     it('no longer has redundant supabase.auth.getUser() call', () => {

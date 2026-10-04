@@ -25,7 +25,7 @@ describe('Estimator aesthetic and responsive refinement', () => {
   it('keeps the result hierarchy and responsive layout width-driven', () => {
     expect(client).toContain('Production cost / m')
     expect(client).toContain("t('common.suggested_selling_price_per_m')")
-    expect(client).toContain('Actual margin')
+    expect(client).toContain('Estimated margin at this price')
     expect(client).toContain('Break-even price / m')
     expect(client).toContain('breakEvenMatchesProductionCost')
     expect(client).toContain('Break-even floor')
