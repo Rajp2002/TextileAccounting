@@ -70,6 +70,9 @@ import {
   normalizeSavedWarpRows,
   normalizeSavedWeftRows,
   getSavedCostingMetrics,
+  resolveSavedCostingInputBasis,
+  canPriceSavedRecipe,
+  formatRevisionLead,
   type SavedQualityFactoryProfile,
   type SavedQualityFixedWorker,
   type SavedQualityRecipe,
@@ -160,6 +163,7 @@ type QuoteRow = {
     overhead_items?: QuoteDraftState['overheadItems']
     monthly_output_m?: number | null
     overhead_override_per_m?: number | null
+    overhead_mode?: QuoteDraftState['overheadMode'] | null
     overhead_pct?: number | null
     commission_pct?: number | null
     transport_per_m?: number | null
@@ -217,6 +221,10 @@ function buildDraftStateFromQuote(quote: QuoteRow): QuoteDraftState {
         const parsed = Number(value)
         return value !== null && value !== undefined && value !== '' && Number.isFinite(parsed) ? parsed : fallback
     }
+    const inputBasis = resolveSavedCostingInputBasis(
+        { ...quote, warping_rate_per_kg: snapshot.warpingRatePerKg ?? quote.warping_rate_per_kg },
+        snapshot,
+    )
     return {
         ...base,
         ...snapshot,
@@ -242,8 +250,10 @@ function buildDraftStateFromQuote(quote: QuoteRow): QuoteDraftState {
         warpCrimpPct: numberOr(snapshot.warpCrimpPct ?? quote.warp_crimp_pct, base.warpCrimpPct),
         overheadItems: Array.isArray(snapshot.overheadItems) ? snapshot.overheadItems : Array.isArray(quote.overhead_items) ? quote.overhead_items : base.overheadItems,
         monthlyOutputM: numberOr(snapshot.monthlyOutputM ?? quote.monthly_output_m, base.monthlyOutputM),
-        overheadOverridePerM: snapshot.overheadOverridePerM ?? (quote.overhead_override_per_m != null ? numberOr(quote.overhead_override_per_m, 0) : base.overheadOverridePerM),
-        overheadMode: snapshot.overheadMode ?? (snapshot.overheadOverridePerM != null || quote.overhead_override_per_m != null ? 'direct' : 'monthly_expenses'),
+        // LT01B: stored modes and applied overhead first; older records keep
+        // the earlier inference because their modes were never stored.
+        overheadOverridePerM: inputBasis.overheadOverridePerM ?? base.overheadOverridePerM,
+        overheadMode: inputBasis.overheadMode,
         overheadPct: 0,
         commissionPct: numberOr(snapshot.commissionPct ?? quote.commission_pct, base.commissionPct),
         transportPerM: numberOr(snapshot.transportPerM ?? quote.transport_per_m, base.transportPerM),
@@ -256,7 +266,7 @@ function buildDraftStateFromQuote(quote: QuoteRow): QuoteDraftState {
         loomRpmIsCustomised: snapshot.loomRpmIsCustomised ?? (quote.estimator_rpm != null),
         loomPowerKwIsCustomised: snapshot.loomPowerKwIsCustomised ?? (quote.estimator_power_kw != null),
         hoursPerShift: numberOr(snapshot.hoursPerShift ?? quote.hours_per_shift, base.hoursPerShift ?? 12),
-        warpingMode: snapshot.warpingMode ?? quote.warping_mode ?? (numberOr(snapshot.warpingRatePerKg ?? quote.warping_rate_per_kg, 0) > 0 ? 'outsourced' : base.warpingMode),
+        warpingMode: inputBasis.warpingMode ?? base.warpingMode,
         sizingMode: snapshot.sizingMode ?? quote.sizing_mode ?? base.sizingMode,
         loomCount: numberOr(snapshot.loomCount ?? quote.loom_count, base.loomCount),
         monthlyWorkingDays: numberOr(snapshot.monthlyWorkingDays ?? quote.monthly_working_days, base.monthlyWorkingDays),
@@ -499,7 +509,7 @@ function SavedQualityLibraryView({
                                             ? formatCostingMoneyPerM(getProductionCostPerM(latest))
                                             : group.currentRecipeCostPerM != null
                                                 ? `₹${group.currentRecipeCostPerM.toFixed(2)}/m`
-                                                : '—'}</p>
+                                                : tx('Not calculated')}</p>
                                     </div>
                                     <div className="rounded-lg bg-surface-soft px-3 py-2">
                                         <p className="text-[10px] font-bold uppercase tracking-wide text-subtle">{tx('History')}</p>
@@ -775,7 +785,7 @@ function SavedQualityLibraryView({
     )
 }
 
-export default function QuotesClient({ initialQuotes, initialTemplates, initialProfile, initialWorkers, initialStatus, orgId, userId, canUseProductionPipeline, organizationName, userMetadata, tourUnavailable = false }: { initialQuotes: QuoteRow[], initialTemplates: SavedQuality[], initialProfile?: SavedQualityFactoryProfile, initialWorkers: SavedQualityFixedWorker[], initialStatus?: string, orgId: string, userId: string, canUseProductionPipeline: boolean, organizationName: string; userMetadata?: Record<string, unknown>; tourUnavailable?: boolean }) {
+export default function QuotesClient({ initialQuotes, initialTemplates, initialProfile, initialWorkers, initialStatus, orgId, userId, canUseProductionPipeline, organizationName, userMetadata, tourUnavailable = false, loadError = false }: { initialQuotes: QuoteRow[], initialTemplates: SavedQuality[], initialProfile?: SavedQualityFactoryProfile, initialWorkers: SavedQualityFixedWorker[], initialStatus?: string, orgId: string, userId: string, canUseProductionPipeline: boolean, organizationName: string; userMetadata?: Record<string, unknown>; tourUnavailable?: boolean; loadError?: boolean }) {
     const { t, tx } = useTranslation()
     const { language } = useTranslation()
     const [tourStep, setTourStep] = useState<SavedCostingStep | null>(null)
@@ -807,7 +817,8 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
 
     const router = useRouter()
     const [quotes, setQuotes] = useState<QuoteRow[]>(initialQuotes)
-    const isDemoCostingActive = (!demoCostingDeleted && quotes.length === 0 && initialTemplates.length === 0) || tourSampleActive
+    // A failed load is not an empty library: never offer the sample over it.
+    const isDemoCostingActive = !loadError && (!demoCostingDeleted && quotes.length === 0 && initialTemplates.length === 0) || tourSampleActive
     const tourExamples = useMemo(() => isDemoCostingActive ? makeSavedCostingTourExamples() : [], [isDemoCostingActive])
     const tourExport = useMemo(() => tourSurface === 'export' ? makeSavedCostingTourExport() : null, [tourSurface])
     const tourGroups = useMemo(() => tourExamples.length ? [{key: 'tour-preview', name: 'Tour sample', template: null, records: tourExamples, updatedAt: tourExamples[0].updated_at, currentRecipeCostPerM: null}] : [], [tourExamples])
@@ -875,7 +886,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             .map(group => ({
                 ...group,
                 records: filterAndSortSavedCostings(group.records, { query: '', sort: 'recent', margin: 'all', favorites: showFavoritesOnly }),
-                currentRecipeCostPerM: group.template && group.records.length === 0
+                currentRecipeCostPerM: group.template && group.records.length === 0 && canPriceSavedRecipe(group.template, initialProfile)
                     ? getCurrentRecipeCostPerM(group.template, initialProfile, initialWorkers)
                     : null,
             }))
@@ -992,7 +1003,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             changed: comparison.margin.changed,
             rows: [
                 { label: 'Target margin', value: comparison.margin.targetPct, unit: 'percent' as const, changed: deltaChangedForUi(comparison.margin.targetPct) },
-                { label: 'Actual margin', value: comparison.margin.actualPct, unit: 'percent' as const, changed: deltaChangedForUi(comparison.margin.actualPct) },
+                { label: 'Estimated margin', value: comparison.margin.actualPct, unit: 'percent' as const, changed: deltaChangedForUi(comparison.margin.actualPct) },
             ],
         },
         {
@@ -1360,7 +1371,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                         </p>
                     ) : null}
                     <p className="mt-3 text-xs font-medium text-body">
-                        {tourSampleActive ? '1 sample quality' : isDemoCostingActive && quotes.length === 0
+                        {tourSampleActive ? '1 sample quality' : loadError ? tx('Saved costings not loaded') : isDemoCostingActive && quotes.length === 0
                             ? (searchQuery.trim() && !tourExamples[0]?.quality_label?.toLowerCase().includes(searchQuery.trim().toLowerCase()) && !'tour sample'.includes(searchQuery.trim().toLowerCase()) ? '0 qualities' : '1 sample quality')
                             : `${qualityGroups.length} ${showArchived ? 'archived ' : ''}${qualityGroups.length === 1 ? 'quality' : 'qualities'}`}
                     </p>
@@ -1381,6 +1392,14 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                         onAudit={() => {}} onToggleFavorite={() => {}} onToggleArchived={() => {}}
                         factoryInputsCapturedLabel={tx('Factory inputs captured')}
                     />
+                </div>
+            ) : loadError ? (
+                <div data-saved-costings-load-error role="alert" className="rounded-xl border border-hairline bg-surface p-6 text-center">
+                    <AlertTriangle className="mx-auto h-6 w-6 text-warning" aria-hidden="true" />
+                    <p className="mt-3 text-sm font-bold text-ink">{tx('Saved costings could not be loaded. Nothing was deleted. Try again.')}</p>
+                    <Button type="button" variant="outline" className="mt-4 min-h-11" onClick={() => router.refresh()}>
+                        {tx('Try again')}
+                    </Button>
                 </div>
             ) : isDemoCostingActive && quotes.length === 0 ? (
                 (searchQuery.trim() && !tourExamples[0]?.quality_label?.toLowerCase().includes(searchQuery.trim().toLowerCase()) && !'tour sample'.includes(searchQuery.trim().toLowerCase())) || (filterStatus !== 'all' && filterStatus !== 'costings' && filterStatus !== 'draft') || showArchived ? (
@@ -1537,6 +1556,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     sourceQuoteUpdatedAt={quoteToExport.updated_at}
                     sourceQuoteStatus={quoteToExport.status}
                     sourceRecordKind={quoteToExport.record_kind === 'quotation' ? 'quotation' : 'costing'}
+                    documentSource={{ kind: 'saved', qualityLabel: quoteToExport.quality_label ?? exportModel?.qualityLabel ?? '', version: Number(quoteToExport.version_number ?? 1), savedAt: quoteToExport.created_at }}
                     onQuoteUpdated={data => {
                         setQuotes(current => current.map(item => item.id === quoteToExport.id ? { ...item, ...data } : item))
                         setQuoteToExport(current => current ? { ...current, ...data } : current)
@@ -1566,6 +1586,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     </DialogHeader>
                     {comparisonCostings.length === 2 && comparison && (
                         <div className="space-y-3">
+                            <p data-revision-lead className="text-sm font-bold text-ink">{formatRevisionLead(comparisonCostings[0], comparisonCostings[1], comparison.price.sellingPricePerM)}</p>
                             <div className={`rounded-xl border px-4 py-3 text-xs ${comparison.comparable ? 'border-success/25 bg-success-soft text-success' : 'border-warning/25 bg-warning-soft text-warning'}`}>
                                 <p className="font-bold">{comparison.comparable ? 'Canonical comparison ready' : 'Canonical comparison needs review'}</p>
                                 <p className="mt-1 leading-relaxed">{comparison.canonical.message || `Formula ${comparison.canonical.leftCalculationVersion || 'unknown'} · rounding ${comparison.canonical.leftSnapshotSchemaVersion ? `snapshot v${comparison.canonical.leftSnapshotSchemaVersion}` : 'legacy'} · detail source ${comparison.canonical.source.replace('_', ' ')}.`}</p>

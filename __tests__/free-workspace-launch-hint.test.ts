@@ -58,7 +58,8 @@ describe('workspace hint helpers', () => {
 
         const ownerLayout = read('app/(dashboard)/owner/layout.tsx')
         const auth = read('lib/auth.ts')
-        expect(ownerLayout).toContain("if (access.effectiveTier === 'free' || access.freeAccount) {")
+        // LT07: the one exception is the read-only owner archive for accounts that had paid access.
+        expect(ownerLayout).toContain("if (!retainedArchive && (access.effectiveTier === 'free' || access.freeAccount)) {")
         expect(auth).toContain("if (access.effectiveTier === 'free' || access.freeAccount) redirect('/free')")
     })
 })

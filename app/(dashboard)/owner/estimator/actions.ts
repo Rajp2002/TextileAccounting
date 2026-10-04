@@ -17,7 +17,8 @@ import { buildSavedQualityRecipeState, type SavedQualityCostingReuse } from '@/l
 import { auditHistoricalCosting } from '@/lib/costing-reconciliation'
 import type { FactoryProfileId } from '@/lib/factory-cost-profiles'
 import { buildCostingInputFingerprint } from '@/lib/costing-save-trust'
-import { buildEstimatorQuotePayload } from '@/lib/estimator-quote-payload'
+import { buildEstimatorQuotePayload, toLegacyEstimatorQuotePayload } from '@/lib/estimator-quote-payload'
+import { createdAtDescendingAfter, readAllPages } from '@/lib/paged-read'
 import { getRateReviewStatus } from '@/lib/cost-rates'
 import { findCostingSaveReceipt } from '@/lib/costing-save-receipt'
 import {
@@ -28,6 +29,7 @@ import {
 import { detectTemplateYarnRenames } from '@/lib/yarn-rate-reconciliation'
 
 const ESTIMATOR_NAME_MAX_LENGTH = 120
+const ESTIMATOR_QUOTE_PAGE_SIZE = 500
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
 async function attestCanonicalCostingPayload<T extends Record<string, unknown>>(
@@ -46,6 +48,49 @@ async function attestCanonicalCostingPayload<T extends Record<string, unknown>>(
         return { error: 'The server could not verify the canonical costing payload.' }
     }
     return { payload: { ...payload, server_attestation_id: data } }
+}
+
+type SaveRevisionRpcResult = {
+    success?: boolean
+    error?: string
+    quoteId?: string
+    updatedAt?: string
+    createdAt?: string
+    versionNumber?: number
+    qualityUpdated?: boolean
+    outcome?: string
+    noChange?: boolean
+    idempotentReplay?: boolean
+}
+
+type InitialQualityRpcResult = SaveRevisionRpcResult & { templateId?: string }
+
+type CostingRpcOutcome = { data: unknown; error: { message: string; code?: string } | null }
+
+const COSTING_PAYLOAD_UNSUPPORTED_FIELDS = 'The costing payload contains unsupported fields.'
+
+/**
+ * Attests a costing payload and saves it. A database without the LT01B
+ * input-basis migration rejects the new keys before any write (the allowlist
+ * check runs first and the call rolls back); in that case only, the legacy
+ * payload is attested and saved once, so code deployed before the migration
+ * keeps saving costings. No other error is retried.
+ */
+async function saveAttestedCostingPayload(
+    userId: string,
+    orgId: string,
+    payload: Record<string, unknown>,
+    save: (attestedPayload: Record<string, unknown>) => PromiseLike<CostingRpcOutcome>,
+): Promise<CostingRpcOutcome | { attestationError: string }> {
+    const attestation = await attestCanonicalCostingPayload(userId, orgId, payload)
+    if (!attestation.payload) return { attestationError: attestation.error ?? 'The costing payload could not be verified.' }
+    const outcome = await save(attestation.payload)
+    const rejectedInputBasis = outcome.error?.code === '22023' && outcome.error.message === COSTING_PAYLOAD_UNSUPPORTED_FIELDS
+    if (!rejectedInputBasis) return outcome
+
+    const legacyAttestation = await attestCanonicalCostingPayload(userId, orgId, toLegacyEstimatorQuotePayload(payload))
+    if (!legacyAttestation.payload) return { attestationError: legacyAttestation.error ?? 'The costing payload could not be verified.' }
+    return save(legacyAttestation.payload)
 }
 
 function buildQuotationReference(id: string, createdAt = new Date()) {
@@ -639,9 +684,7 @@ export async function getEstimatorTemplates(options?: { includeArchived?: boolea
     if ((effectiveTier !== 'base' && effectiveTier !== 'lite') || templates.length === 0) return { data: templates }
 
     const templateIds = templates.map(template => template.id).filter(Boolean)
-    const { data: costings, error: costingError } = await supabase
-        .from('estimator_quotes')
-        .select(`
+    const reuseColumns = `
             template_id,
             updated_at,
             warping_rate_per_kg,
@@ -659,12 +702,20 @@ export async function getEstimatorTemplates(options?: { includeArchived?: boolea
             enabled_sections,
             loom_count,
             monthly_working_days,
-            avg_output_per_loom_per_day
-        `)
+            avg_output_per_loom_per_day`
+    const readReuse = (columns: string) => supabase
+        .from('estimator_quotes')
+        .select(columns as '*')
         .eq('org_id', profile.org_id)
         .eq('record_kind', 'costing')
         .in('template_id', templateIds)
         .order('updated_at', { ascending: false })
+    // LT01B stores each costing's warping and overhead modes. Until that
+    // migration is applied the columns do not exist; read without them then.
+    let { data: costings, error: costingError } = await readReuse(`${reuseColumns}, warping_mode, overhead_mode`)
+    if (costingError && ['42703', 'PGRST204'].includes(costingError.code ?? '')) {
+        ({ data: costings, error: costingError } = await readReuse(reuseColumns))
+    }
 
     if (costingError) return { error: costingError.message }
 
@@ -880,16 +931,15 @@ export async function saveAsFabricTemplate(data: {
         reconciledAt: new Date().toISOString(),
     })
 
-    const attestation = await attestCanonicalCostingPayload(user.id, profile.org_id, quotePayload)
-    if (!attestation.payload) return { error: attestation.error ?? 'The costing payload could not be verified.' }
-
-    const { data: atomicResult, error: atomicError } = await supabase.rpc(
+    const atomicOutcome = await saveAttestedCostingPayload(user.id, profile.org_id, quotePayload, trustedQuotePayload => supabase.rpc(
         'create_saved_quality_with_initial_costing_v1',
         {
             p_template_payload: templatePayload,
-            p_quote_payload: attestation.payload,
+            p_quote_payload: trustedQuotePayload,
         },
-    )
+    ))
+    if ('attestationError' in atomicOutcome) return { error: atomicOutcome.attestationError }
+    const { data: atomicResult, error: atomicError } = atomicOutcome as { data: InitialQualityRpcResult | null; error: CostingRpcOutcome['error'] }
     if (atomicError) return { error: templateWriteError(atomicError) }
     if (!atomicResult || atomicResult.success !== true) {
         return { error: atomicResult?.error ?? 'The quality was not saved because its costing snapshot could not be created.' }
@@ -1510,33 +1560,30 @@ export async function saveEstimatorQuoteV3(params: {
         reconciledAt: new Date().toISOString(),
     })
 
-    const costingAttestation = await attestCanonicalCostingPayload(user.id, profile.org_id, quotePayload)
-    if (!costingAttestation.payload) {
-        return { error: costingAttestation.error ?? 'The costing payload could not be verified.' }
-    }
-    const trustedQuotePayload = costingAttestation.payload
-
     if (params.updateSavedQuality) {
         if (!params.templateId) {
             return { error: 'Select a Saved Quality before updating its recipe.' }
         }
         const timestampError = validateExpectedTimestamp(params.expectedTemplateUpdatedAt, 'The Saved Quality')
         if (timestampError) return { error: timestampError }
+        const templateId = params.templateId
 
         // The RPC updates both rows in one transaction. A costing version is
         // never used as a substitute for the reusable quality record.
-        const { data: combined, error: combinedError } = await supabase.rpc(
+        const combinedOutcome = await saveAttestedCostingPayload(user.id, profile.org_id, quotePayload, trustedQuotePayload => supabase.rpc(
             'save_estimator_costing_revision_v2',
             {
                 p_quote_payload: trustedQuotePayload,
                 p_source_quote_id: params.sourceQuoteId ?? null,
                 p_expected_source_updated_at: params.expectedSourceUpdatedAt ?? null,
-                p_template_id: params.templateId,
+                p_template_id: templateId,
                 p_expected_template_updated_at: params.expectedTemplateUpdatedAt,
                 p_update_saved_quality: true,
                 p_template_payload: buildSavedQualityUpdatePayload(estimate),
             },
-        )
+        ))
+        if ('attestationError' in combinedOutcome) return { error: combinedOutcome.attestationError }
+        const { data: combined, error: combinedError } = combinedOutcome as { data: SaveRevisionRpcResult | null; error: CostingRpcOutcome['error'] }
 
         if (combinedError) return { error: combinedError.message }
         if (!combined || combined.success !== true) {
@@ -1559,7 +1606,7 @@ export async function saveEstimatorQuoteV3(params: {
     // what makes “Save New Costing Version” predictable when two tabs or a
     // double-click reach the server together. A source record of another kind
     // (for example a legacy quotation) is handled by the same RPC.
-    const { data: costingResult, error: costingError } = await supabase.rpc(
+    const costingOutcome = await saveAttestedCostingPayload(user.id, profile.org_id, quotePayload, trustedQuotePayload => supabase.rpc(
         'save_estimator_costing_revision_v2',
         {
             p_quote_payload: trustedQuotePayload,
@@ -1570,7 +1617,9 @@ export async function saveEstimatorQuoteV3(params: {
             p_update_saved_quality: false,
             p_template_payload: {},
         },
-    )
+    ))
+    if ('attestationError' in costingOutcome) return { error: costingOutcome.attestationError }
+    const { data: costingResult, error: costingError } = costingOutcome as { data: SaveRevisionRpcResult | null; error: CostingRpcOutcome['error'] }
 
     if (costingError) return { error: costingError.message }
     if (!costingResult || costingResult.success !== true) {
@@ -1595,21 +1644,27 @@ export async function getEstimatorQuotes(filters?: { status?: string }) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
-    let query = supabase
+    // Summary-first library read. Full recipes, result snapshots, and
+    // linked production records load only on open/compare/export intent.
+    // LT04: read every page in a deterministic order, so a library larger
+    // than the server's row cap is never cut short; any page error fails it.
+    const summaryQuery = () => supabase
         .from('estimator_quotes')
-        // Summary-first library read. Full recipes, result snapshots, and
-        // linked production records load only on open/compare/export intent.
         .select('id, status, party_name, quality_label, quote_price_per_meter, landed_cost_per_meter, intended_margin_percent, created_at, updated_at, sent_at, quotation_reference, quotation_valid_until, customer_terms, meters, source_quote_id, costing_group_id, version_number, is_archived, is_favorite, record_kind, template_id, market_run_id, production_cost_per_meter, overhead_per_meter, commission_cost_per_meter, break_even_price_per_meter, expected_profit_per_meter, expected_profit_total, actual_margin_percent, calculation_version, rounding_policy, factory_profile_updated_at, reconciliation_status, reconciliation_note')
         .eq('org_id', profile.org_id)
-        .order('created_at', { ascending: false })
-
-    if (filters?.status) {
-        query = query.eq('status', filters.status)
-    }
-
-    const { data, error } = await query
-    if (error) return { error: error.message }
-    return { data }
+    type QuoteSummaryRow = NonNullable<Awaited<ReturnType<typeof summaryQuery>>['data']>[number]
+    const result = await readAllPages<QuoteSummaryRow>(after => {
+        let query = summaryQuery()
+        if (filters?.status) query = query.eq('status', filters.status)
+        if (after) query = query.or(createdAtDescendingAfter(after))
+        return query
+            .order('created_at', { ascending: false })
+            .order('id', { ascending: false })
+            .limit(ESTIMATOR_QUOTE_PAGE_SIZE)
+            .then(({ data, error }) => ({ data, error }))
+    })
+    if (result.error) return { error: result.error.message }
+    return { data: result.data }
 }
 
 /** Full immutable costing/detail read used only by explicit user intent. */

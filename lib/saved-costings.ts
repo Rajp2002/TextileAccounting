@@ -1,3 +1,4 @@
+import { formatTimestampDate } from './format'
 import {
   ensureOverheadIntegrity,
   makeDefaultEstimateState,
@@ -244,7 +245,69 @@ export type SavedQualityCostingReuse = Partial<{
   loom_count: unknown
   monthly_working_days: unknown
   avg_output_per_loom_per_day: unknown
+  warping_mode: 'in_house' | 'outsourced' | null
 }>
+
+type WarpingMode = 'in_house' | 'outsourced'
+
+function storedWarpingMode(value: unknown): WarpingMode | null {
+  return value === 'in_house' || value === 'outsourced' ? value : null
+}
+
+function storedOverheadMode(value: unknown): OverheadMode | null {
+  return value === 'direct' || value === 'monthly_expenses' ? value : null
+}
+
+/**
+ * The warping and overhead basis of a saved costing. Records saved since
+ * LT01B store both modes and the applied overhead; older records keep the
+ * earlier inference (an override means direct, a positive warping rate means
+ * outsourced) because their original modes were never stored.
+ */
+export function resolveSavedCostingInputBasis(
+  row: {
+    warping_mode?: unknown
+    warping_rate_per_kg?: unknown
+    overhead_mode?: unknown
+    overhead_override_per_m?: unknown
+  },
+  snapshot: { warpingMode?: WarpingMode; overheadMode?: OverheadMode; overheadOverridePerM?: number | null } = {},
+): { warpingMode: WarpingMode | undefined; overheadMode: OverheadMode; overheadOverridePerM: number | null } {
+  const storedOverride = row.overhead_override_per_m === null || row.overhead_override_per_m === undefined || row.overhead_override_per_m === ''
+    ? null
+    : Number.isFinite(Number(row.overhead_override_per_m)) ? Number(row.overhead_override_per_m) : null
+  const overheadOverridePerM = snapshot.overheadOverridePerM ?? storedOverride
+  const overheadMode = snapshot.overheadMode
+    ?? storedOverheadMode(row.overhead_mode)
+    ?? (snapshot.overheadOverridePerM != null || storedOverride != null ? 'direct' : 'monthly_expenses')
+  const legacyWarping = Number(row.warping_rate_per_kg) > 0 ? 'outsourced' as const : undefined
+  return {
+    warpingMode: snapshot.warpingMode ?? storedWarpingMode(row.warping_mode) ?? legacyWarping,
+    overheadMode,
+    overheadOverridePerM,
+  }
+}
+
+/**
+ * Overhead and warping basis when a saved quality is applied. The quality's
+ * own direct overhead comes first; otherwise the latest costing's restored
+ * basis (`restored`, from restoreSavedQualityCostingAssumptions) is kept
+ * rather than replaced by whatever the editor held. Without a reused costing,
+ * `restored` is the editor state and warping defaults to in-house, as before.
+ */
+export function resolveAppliedQualityBasis(
+  template: { overhead_override_per_m?: unknown; warping_mode?: unknown; latest_costing_reuse?: SavedQualityCostingReuse | null },
+  restored: { overheadMode: OverheadMode; overheadOverridePerM: number | null },
+): { overheadMode: OverheadMode; overheadOverridePerM: number | null; warpingMode: WarpingMode } {
+  const templateOverride = template.overhead_override_per_m === undefined || template.overhead_override_per_m === null
+    ? null
+    : Number(template.overhead_override_per_m)
+  return {
+    overheadOverridePerM: templateOverride ?? restored.overheadOverridePerM,
+    overheadMode: templateOverride !== null ? 'direct' : restored.overheadMode,
+    warpingMode: storedWarpingMode(template.warping_mode) ?? storedWarpingMode(template.latest_costing_reuse?.warping_mode) ?? 'in_house',
+  }
+}
 
 export type SavedQualityFixedWorker = {
   id: number
@@ -311,6 +374,7 @@ export function restoreSavedQualityCostingAssumptions(
     monthlyOutputM: finiteOrFallback(reuse.monthly_output_m, state.monthlyOutputM),
     overheadOverridePerM: directOverheadValue,
     overheadMode,
+    warpingMode: storedWarpingMode(reuse.warping_mode) ?? state.warpingMode,
     commissionPct: finiteOrFallback(reuse.commission_pct, state.commissionPct),
     transportPerM: finiteOrFallback(reuse.transport_per_m, state.transportPerM),
     profitPct: finiteOrFallback(reuse.profit_margin_pct, state.profitPct),
@@ -403,6 +467,16 @@ export function normalizeSavedWeftRows(
 }
 
 /** Build the same live recipe state shown when a saved quality is applied in Cost Estimate. */
+/**
+ * A recipe's current cost can be shown only from its full rows and the
+ * factory profile. A summary row (id, name, dates) or a missing profile would
+ * be priced from default inputs, which is not this quality's cost.
+ */
+export function canPriceSavedRecipe(recipe: SavedQualityRecipe, profile: SavedQualityFactoryProfile | undefined) {
+  const hasRows = (rows: unknown) => Array.isArray(rows) && rows.length > 0
+  return Boolean(profile) && hasRows(recipe.warp_rows) && hasRows(recipe.weft_rows)
+}
+
 export function buildSavedQualityRecipeState(
   recipe: SavedQualityRecipe,
   profile?: SavedQualityFactoryProfile,
@@ -602,6 +676,26 @@ export type SavedCostingDelta = {
   left: number | null
   right: number | null
   delta: number | null
+}
+
+/**
+ * The first line of a comparison: which versions, when they were saved, and
+ * the new-minus-old suggested price per metre. Missing data is unavailable,
+ * never zero.
+ */
+export function formatRevisionLead(
+  oldCosting: { version_number?: number | null; created_at: string },
+  newCosting: { version_number?: number | null; created_at: string },
+  price: SavedCostingDelta,
+) {
+  const label = (costing: { version_number?: number | null; created_at: string }) =>
+    `v${Math.max(1, Number(costing.version_number ?? 1) || 1)} (${formatTimestampDate(costing.created_at, { day: 'numeric', month: 'short', year: 'numeric' })})`
+  const change = price.delta == null
+    ? 'suggested price difference not available'
+    : Math.abs(price.delta) <= 0.0001
+      ? 'suggested price unchanged'
+      : `suggested price ₹${Math.abs(price.delta).toFixed(2)}/m ${price.delta > 0 ? 'higher' : 'lower'}`
+  return `${label(oldCosting)} → ${label(newCosting)}: ${change}`
 }
 
 export type SavedCostingOverheadApplicability = {

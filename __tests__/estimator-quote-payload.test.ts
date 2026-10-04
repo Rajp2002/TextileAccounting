@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { buildCostingResult, calcFullTotals } from '@/lib/estimator'
-import { buildEstimatorQuotePayload, type EstimatorQuotePayloadInput } from '@/lib/estimator-quote-payload'
+import { buildEstimatorQuotePayload, type EstimatorQuotePayloadInput, toLegacyEstimatorQuotePayload } from '@/lib/estimator-quote-payload'
 import { f1State } from './fixtures/costing-characterization'
 
 // Package 2C: the estimator_quotes row for both live costing saves
@@ -55,11 +55,18 @@ describe('estimator quote payload builder', () => {
         expect(noQuantity).toMatchObject({ order_quantity_m: null, meters: 0 })
     })
 
-    it('INVARIANT: the overhead override is stored only in direct mode; the legacy percentage is always 0', () => {
+    // LT01B (CS-2) deliberately replaced "override only in direct mode": the
+    // engine applies a non-null override in monthly mode too, so the applied
+    // value is stored with an explicit mode. The legacy payload keeps the old rule.
+    it('INVARIANT: the applied overhead override is stored with its mode; the legacy percentage is always 0', () => {
         const monthly = buildEstimatorQuotePayload(input({ estimate: f1State({ overheadMode: 'monthly_expenses', overheadOverridePerM: 4 }) }))
         const direct = buildEstimatorQuotePayload(input({ estimate: f1State({ overheadMode: 'direct', overheadOverridePerM: 4 }) }))
-        expect(monthly).toMatchObject({ overhead_override_per_m: null, overhead_pct: 0 })
-        expect(direct).toMatchObject({ overhead_override_per_m: 4, overhead_pct: 0 })
+        expect(monthly).toMatchObject({ overhead_override_per_m: 4, overhead_mode: 'monthly_expenses', overhead_pct: 0 })
+        expect(direct).toMatchObject({ overhead_override_per_m: 4, overhead_mode: 'direct', overhead_pct: 0 })
+        expect(toLegacyEstimatorQuotePayload(monthly)).toMatchObject({ overhead_override_per_m: null, overhead_pct: 0 })
+        expect(toLegacyEstimatorQuotePayload(direct)).toMatchObject({ overhead_override_per_m: 4 })
+        expect(toLegacyEstimatorQuotePayload(monthly)).not.toHaveProperty('overhead_mode')
+        expect(toLegacyEstimatorQuotePayload(monthly)).not.toHaveProperty('warping_mode')
     })
 
     it('INVARIANT: record-kind columns are added without replacing the costing columns', () => {

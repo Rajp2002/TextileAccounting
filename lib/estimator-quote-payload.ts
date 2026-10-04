@@ -1,4 +1,4 @@
-import { getEffectiveYarnDenier, type CostingResultSnapshot, type EstimateState } from '@/lib/estimator'
+import { getEffectiveOverheadMode, getEffectiveYarnDenier, type CostingResultSnapshot, type EstimateState } from '@/lib/estimator'
 
 /**
  * Commercial scalars persisted beside the costing snapshot. A paid costing
@@ -36,6 +36,29 @@ export interface EstimatorQuotePayloadInput {
     extra?: Record<string, unknown>
 }
 
+/** The warping and overhead modes the engine applied to `estimate`. */
+export function buildEstimatorQuoteInputBasis(estimate: EstimateState) {
+    return {
+        warping_mode: estimate.warpingMode ?? (estimate.warpingRatePerKg > 0 ? 'outsourced' : 'in_house'),
+        overhead_mode: getEffectiveOverheadMode(estimate),
+    }
+}
+
+/** Payload keys added by `20261004120000_estimator_quote_input_basis.sql`. */
+export const ESTIMATOR_QUOTE_INPUT_BASIS_KEYS = ['warping_mode', 'overhead_mode'] as const
+
+/**
+ * The payload a database without the input-basis migration accepts: the new
+ * keys removed and the override kept only in direct mode, as before.
+ */
+export function toLegacyEstimatorQuotePayload<T extends Record<string, unknown>>(payload: T): Omit<T, typeof ESTIMATOR_QUOTE_INPUT_BASIS_KEYS[number]> {
+    const legacy: Record<string, unknown> = { ...payload }
+    const directMode = legacy.overhead_mode === 'direct'
+    for (const key of ESTIMATOR_QUOTE_INPUT_BASIS_KEYS) delete legacy[key]
+    if (!directMode) legacy.overhead_override_per_m = null
+    return legacy as Omit<T, typeof ESTIMATOR_QUOTE_INPUT_BASIS_KEYS[number]>
+}
+
 /**
  * Builds the `estimator_quotes` row for a saved costing: the full recipe
  * snapshot plus the result columns, from one estimate and its result.
@@ -65,7 +88,10 @@ export function buildEstimatorQuotePayload(input: EstimatorQuotePayloadInput) {
         // Overhead V2: store the selected method inputs; no percentage metric is persisted.
         overhead_items: estimate.overheadItems,
         monthly_output_m: estimate.monthlyOutputM,
-        overhead_override_per_m: estimate.overheadMode === 'direct' ? estimate.overheadOverridePerM ?? null : null,
+        // The engine applies a non-null override in either mode, so it is
+        // stored whenever it was applied; the explicit modes keep reopening
+        // from guessing the basis from what remains.
+        overhead_override_per_m: estimate.overheadOverridePerM ?? null,
         overhead_pct: 0,
         commission_pct: commercial.commissionPct,
         transport_per_m: commercial.transportPerM,
@@ -78,6 +104,7 @@ export function buildEstimatorQuotePayload(input: EstimatorQuotePayloadInput) {
         estimator_power_kw: estimate.loomPowerKw ?? null,
         hours_per_shift: estimate.hoursPerShift,
         sizing_mode: estimate.sizingMode,
+        ...buildEstimatorQuoteInputBasis(estimate),
         loom_count: estimate.loomCount,
         monthly_working_days: estimate.monthlyWorkingDays,
         avg_output_per_loom_per_day: estimate.avgOutputPerLoomPerDay,

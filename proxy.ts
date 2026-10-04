@@ -502,7 +502,8 @@ export async function updateSession(request: NextRequest) {
             !pathname.startsWith('/owner/payroll') &&
             !pathname.startsWith('/owner/machines') &&
             !pathname.startsWith('/owner/workers') &&
-            !pathname.startsWith('/owner/settings')
+            !pathname.startsWith('/owner/settings') &&
+            !pathname.startsWith('/owner/data-export')
         ) {
             return NextResponse.redirect(new URL('/onboarding', request.url))
         }

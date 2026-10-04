@@ -93,6 +93,17 @@ export function hasCapability(actual: SubscriptionTier, capability: PlanCapabili
   return (PLAN_CAPABILITIES[actual] as readonly PlanCapability[]).includes(capability)
 }
 
+/**
+ * The owner JSON archive (/owner/data-export) "remains available when plan
+ * access ends". That covers every organization that has had paid access,
+ * including a former Free account whose paid plan expired (effective tier
+ * none). A pure Free account (effective tier free) keeps its Free workspace
+ * and history instead. Read-only: this grants no paid operational access.
+ */
+export function hasOwnerArchiveAccess(access: Pick<OrgPlanAccess, 'effectiveTier' | 'freeAccount'>) {
+  return access.effectiveTier !== 'free'
+}
+
 export function resolveOrgPlanAccess(
   subscriptionTier: SubscriptionTier,
   retainLiteAfterBaseExpiry = false,
