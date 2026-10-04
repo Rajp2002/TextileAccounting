@@ -227,3 +227,44 @@ Not done in this sprint (P1, needs the domain/language reviewer or browser): exp
 A first draft of the cost-value check used "₹" while the document prints "Rs", which would have passed vacuously; the test now uses the document's formatter and also asserts the quoted price is present.
 
 Not run: real PDF render and text extraction, EN/HI/GU glyphs and page breaks in the PDF, delayed generation vs edits in a browser, share cancel and download fallback on a phone, and zero-allowance Free exports with ledger proof.
+
+## LT07: owner archive completeness and retained access
+
+**Status:** source checks passed. Runtime access per cohort against a deployed candidate: not run.
+
+### Access
+
+Reading every guard together (proxy, owner layout and its two boundaries, the page, the server action and the history read) found a confirmed source gap (LC48): a former Free account whose paid Lite expired resolves to `effectiveTier: 'none', freeAccount: true`. The owner layout, `requireRole` and the action all sent it to `/free`, so `/owner/data-export`, which promises the archive "remains available when plan access ends", was unreachable for that cohort.
+
+- `hasOwnerArchiveAccess(access)` is true for every organization that has had paid access (active Lite/Base, never-Free expired Lite, former-Free expired Lite, retained Lite after paid Base) and false for a pure Free account, which keeps its Free workspace as before.
+- Only `/owner/data-export` is exempt in the owner layout. Its two boundaries now pass `allowFreeAccount` because the layout already redirects every other Free-account path before they render. The page, the export action and the export history read allow retained owners and still send pure Free accounts to `/free`. The proxy's onboarding allow-list includes `/owner/data-export`.
+- Nothing else is granted: no paid route, write or entitlement changes. Wrong role, unauthenticated and foreign-tenant behavior is unchanged (`requireRole` role check and redirect; the org always comes from the verified profile).
+- PR #180's Settings gate is untouched.
+
+| Cohort | Archive access |
+| --- | --- |
+| pure Free | no (unchanged; Free workspace and history) |
+| active Lite, active Base | yes (unchanged) |
+| never-Free, Lite expired | yes (unchanged) |
+| former Free, paid Lite expired | **yes (was redirected to /free)** |
+| paid-Base history, retained Lite | yes (unchanged) |
+
+### Completeness (LC49)
+
+- Every dataset is read in pages of 1,000 ordered by its key until an empty page (`readAllPages`), so a table larger than PostgREST's per-request row cap is no longer cut silently. Keys: `id` everywhere except the one-row-per-org tables (`payroll_configs`, `quality_stock_cutover`, `yarn_stock_settings` by `org_id`), `yarn_stock_recipes` by `quality_id` within the org, and `whatsapp_cooldowns`, which has only a composite key and is read in ordered offset pages (its writers were unscheduled on 2026-10-01). The key list came from probing the disposable migrated database.
+- Machine-assignment and referral lookups by parent ids are batched (200 ids per request) and each batch is paged.
+- `free_saved_costings` (completed Free costings kept after upgrade or expiry; org-scoped) is in the catalog. Request tokens and receipts are not.
+- The file now carries `completeness`: status, page size, method, and the consistency limit ("datasets are read one after another … not a point-in-time backup"). Any failed page still fails the whole export, records a failed run and produces no file. Redaction, payload hash, run record and audit are unchanged.
+
+| Fixture | Test | Result |
+| --- | --- | --- |
+| 2,345 rows with long runs of equal timestamps, fake PostgREST capped at 1,000 per response | `__tests__/lite-archive-completeness.test.ts` | all 2,345 once; returned 1,000 before |
+| 450 machines, 1,200 assignments across batches | same | all 1,200; failed before |
+| Free costings: ours present, another org's absent | same | pass; failed before |
+| one-row and composite-key tables | same | pass |
+| every read carries a tenant filter | same | pass |
+| page 2 fails → export throws, one failed run, no generated run | same | pass |
+| cohort matrix (helper) and the former-Free expired owner exports while pure Free is redirected | same | pass; failed before |
+| all guards open for retained owners (source contracts) | same; three older guard contracts updated deliberately | pass |
+
+Not run: the cohort journeys in a browser, and a real database above the production row cap.

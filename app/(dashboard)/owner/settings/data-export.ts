@@ -2,7 +2,11 @@
 
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { redirect } from 'next/navigation'
 import { requireRole } from '@/lib/auth'
+import { readAllPages } from '@/lib/paged-read'
+import { getCachedOrgPlanAccess } from '@/lib/subscription'
+import { hasOwnerArchiveAccess } from '@/lib/subscription-access'
 import { UX012_DISTINCTIONS, UX012_EXPORT_LABELS, UX012_PRIORITY_HELPERS, UX012_TERMS } from '@/lib/terminology'
 import crypto from 'crypto'
 
@@ -164,11 +168,37 @@ function exportSchemaReadinessError(datasetKey: string, error: unknown): string 
 }
 
 /**
+ * The archive stays available after paid access ends, including for a former
+ * Free account whose paid plan expired. A pure Free account is sent to its
+ * Free workspace, as before. This is read-only and grants nothing else.
+ */
+async function requireRetainedArchiveOwner() {
+    const session = await requireRole(['owner'], { allowFreeAccount: true })
+    if (!hasOwnerArchiveAccess(await getCachedOrgPlanAccess(session.profile.org_id))) redirect('/free')
+    return session
+}
+
+const EXPORT_PAGE_SIZE = 1000
+const EXPORT_LOOKUP_BATCH = 200
+
+type ExportQueryResult = { data: ExportRecord[] | null; error: { message: string; code?: string } | null }
+
+/** The PostgREST filter methods the paged export reads use, for any table. */
+type ExportTableQuery = PromiseLike<{ data: unknown[] | null; error: { message: string; code?: string } | null }> & {
+    eq(column: string, value: unknown): ExportTableQuery
+    in(column: string, values: readonly unknown[]): ExportTableQuery
+    gt(column: string, value: unknown): ExportTableQuery
+    order(column: string, options: { ascending: boolean }): ExportTableQuery
+    limit(count: number): ExportTableQuery
+    range(from: number, to: number): ExportTableQuery
+}
+
+/**
  * Export all organization data as a structured JSON object.
  * DPDP Act 2023 — Right to Access (Section 11)
  */
 export async function exportOrganizationData() {
-    const { user, profile } = await requireRole(['owner'])
+    const { user, profile } = await requireRetainedArchiveOwner()
     const supabase = createAdminClient()
     const orgId = profile.org_id
     const exportedAt = new Date().toISOString()
@@ -188,30 +218,75 @@ export async function exportOrganizationData() {
     // deliberately explicit so a new table cannot silently disappear from the
     // export, and every query remains tenant-scoped even though the admin
     // client bypasses RLS.
-    const scoped = (table: string, column = 'org_id') => () =>
-        supabase.from(table).select('*').eq(column, orgId)
+    // LT07: every dataset is read in pages ordered by its key until an empty
+    // page, so a table larger than the server's row cap is never cut short.
+    // Each read stays tenant-scoped even though the admin client bypasses RLS.
+    // Table names are catalog strings here, so the typed client cannot help;
+    // ExportTableQuery names the few filter methods these reads use.
+    const tableQuery = (table: string) => supabase.from(table).select('*') as unknown as ExportTableQuery
+    const readByKey = (
+        table: string,
+        scope: (query: ExportTableQuery) => ExportTableQuery,
+        keyColumn = 'id',
+    ): Promise<ExportQueryResult> => readAllPages<ExportRecord>(after => {
+        let query = scope(tableQuery(table))
+        if (after) query = query.gt(keyColumn, after[keyColumn] as string)
+        return query
+            .order(keyColumn, { ascending: true })
+            .limit(EXPORT_PAGE_SIZE)
+            .then(({ data, error }) => ({ data: data as ExportRecord[] | null, error }))
+    })
+    const scoped = (table: string, column = 'org_id', keyColumn = 'id') => () =>
+        readByKey(table, query => query.eq(column, orgId), keyColumn)
+
+    // whatsapp_cooldowns has only a composite key (org_id, alert_type,
+    // ref_id), so it is read in ordered offset pages. Its writers were
+    // unscheduled on 2026-10-01, so the table does not change during a read.
+    const readOrderedPages = async (table: string, orderColumns: string[]): Promise<ExportQueryResult> => {
+        const rows: ExportRecord[] = []
+        for (;;) {
+            let query = tableQuery(table).eq('org_id', orgId)
+            for (const column of orderColumns) query = query.order(column, { ascending: true })
+            const { data, error } = await query.range(rows.length, rows.length + EXPORT_PAGE_SIZE - 1)
+            if (error) return { data: null, error }
+            const page = (data ?? []) as ExportRecord[]
+            if (page.length === 0) return { data: rows, error: null }
+            rows.push(...page)
+        }
+    }
+
+    // Lookups by a parent's ids are batched so a long id list never makes
+    // one oversized request.
+    const readByParentIds = async (table: string, column: string, ids: string[]): Promise<ExportQueryResult> => {
+        const rows: ExportRecord[] = []
+        for (let start = 0; start < ids.length; start += EXPORT_LOOKUP_BATCH) {
+            const batch = ids.slice(start, start + EXPORT_LOOKUP_BATCH)
+            const result = await readByKey(table, query => query.in(column, batch))
+            if (result.error) return result
+            rows.push(...(result.data ?? []))
+        }
+        return { data: rows, error: null }
+    }
 
     // machine_assignments was introduced before org_id was denormalized. Use
     // the organization's machine IDs as a second boundary so legacy rows with
     // a null org_id are still exported without reading another tenant.
-    const queryMachineAssignments = async () => {
+    const queryMachineAssignments = async (): Promise<ExportQueryResult> => {
         const { data: machines, error: machineQueryError } = await scoped('machines')()
-        if (machineQueryError) return Object.assign({ data: null, error: machineQueryError })
+        if (machineQueryError) return { data: null, error: machineQueryError }
         const machineIds = (machines ?? [])
             .map(machine => (machine as { id?: unknown }).id)
             .filter((id): id is string => typeof id === 'string')
-        if (machineIds.length === 0) return Object.assign({ data: [], error: null })
-        return supabase.from('machine_assignments').select('*').in('machine_id', machineIds)
+        return readByParentIds('machine_assignments', 'machine_id', machineIds)
     }
 
-    const queryReferralUsesAsReferrer = async () => {
+    const queryReferralUsesAsReferrer = async (): Promise<ExportQueryResult> => {
         const { data: referralCodes, error: referralCodeError } = await scoped('referral_codes')()
-        if (referralCodeError) return Object.assign({ data: null, error: referralCodeError })
+        if (referralCodeError) return { data: null, error: referralCodeError }
         const referralCodeIds = (referralCodes ?? [])
             .map(code => (code as { id?: unknown }).id)
             .filter((id): id is string => typeof id === 'string')
-        if (referralCodeIds.length === 0) return Object.assign({ data: [], error: null })
-        return supabase.from('referral_uses').select('*').in('referral_code_id', referralCodeIds)
+        return readByParentIds('referral_uses', 'referral_code_id', referralCodeIds)
     }
 
     const datasetDefinitions = [
@@ -230,7 +305,7 @@ export async function exportOrganizationData() {
         { key: 'attendance', query: scoped('attendance') },
         { key: 'payroll_payments', query: scoped('payroll_payments') },
         { key: 'payroll_settlements', query: scoped('payroll_settlements') },
-        { key: 'payroll_configs', query: scoped('payroll_configs') },
+        { key: 'payroll_configs', query: scoped('payroll_configs', 'org_id', 'org_id') },
         { key: 'payroll_adjustment_categories', query: scoped('payroll_adjustment_categories') },
         { key: 'payroll_adjustments', query: scoped('payroll_adjustments') },
         { key: 'worker_advances', query: scoped('worker_advances') },
@@ -249,6 +324,8 @@ export async function exportOrganizationData() {
         { key: 'order_yarn_requirements', query: scoped('order_yarn_requirements') },
         { key: 'estimator_templates', query: scoped('estimator_templates') },
         { key: 'estimator_quotes', query: scoped('estimator_quotes') },
+        // Completed Free costings kept after an upgrade or expiry.
+        { key: 'free_saved_costings', query: scoped('free_saved_costings') },
         { key: 'factory_cost_profile', query: scoped('factory_cost_profile', 'factory_id') },
         { key: 'cost_rate_book', query: scoped('cost_rate_book') },
         { key: 'cost_rate_history', query: scoped('cost_rate_history') },
@@ -269,11 +346,11 @@ export async function exportOrganizationData() {
         { key: 'supplier_ledger_entries', query: scoped('supplier_ledger_entries') },
         { key: 'quality_stock', query: scoped('quality_stock') },
         { key: 'quality_stock_movements', query: scoped('quality_stock_movements') },
-        { key: 'quality_stock_cutover', query: scoped('quality_stock_cutover') },
-        { key: 'yarn_stock_settings', query: scoped('yarn_stock_settings') },
+        { key: 'quality_stock_cutover', query: scoped('quality_stock_cutover', 'org_id', 'org_id') },
+        { key: 'yarn_stock_settings', query: scoped('yarn_stock_settings', 'org_id', 'org_id') },
         { key: 'yarn_stock', query: scoped('yarn_stock') },
         { key: 'yarn_stock_movements', query: scoped('yarn_stock_movements') },
-        { key: 'yarn_stock_recipes', query: scoped('yarn_stock_recipes') },
+        { key: 'yarn_stock_recipes', query: scoped('yarn_stock_recipes', 'org_id', 'quality_id') },
         { key: 'yarn_stock_requests', query: scoped('yarn_stock_requests') },
         { key: 'fabric_stock_lots', query: scoped('fabric_stock_lots') },
         { key: 'fabric_stock_sales', query: scoped('fabric_stock_sales') },
@@ -288,7 +365,7 @@ export async function exportOrganizationData() {
         { key: 'organization_dpas', query: scoped('organization_dpas') },
         { key: 'breach_reports', query: scoped('breach_reports') },
         { key: 'whatsapp_delivery_log', query: scoped('whatsapp_delivery_log') },
-        { key: 'whatsapp_cooldowns', query: scoped('whatsapp_cooldowns') },
+        { key: 'whatsapp_cooldowns', query: () => readOrderedPages('whatsapp_cooldowns', ['alert_type', 'ref_id']) },
         { key: 'referral_codes', query: scoped('referral_codes') },
         { key: 'referral_uses_as_referee', query: scoped('referral_uses', 'referee_org_id') },
         { key: 'referral_uses_as_referrer', query: queryReferralUsesAsReferrer },
@@ -357,6 +434,12 @@ export async function exportOrganizationData() {
         export_scope: 'current_owner_org',
         dataset_counts: datasetCounts,
         dataset_catalog: datasetDefinitions.map(({ key }) => key),
+        completeness: {
+            status: 'complete',
+            page_size: EXPORT_PAGE_SIZE,
+            method: 'Every dataset is read in pages ordered by its key until an empty page. Any failed page fails the export and no file is produced.',
+            consistency: 'Datasets are read one after another while the factory may keep working, so a change made during the export may or may not appear. This is not a point-in-time backup.',
+        },
         terminology: {
             baseline: 'UX-012 product-owner-approved limited-pilot baseline',
             display_terms: UX012_TERMS,
@@ -439,7 +522,7 @@ export async function exportOrganizationData() {
 }
 
 export async function getOrganizationExportHistory(limit = 10) {
-    const { profile } = await requireRole(['owner'])
+    const { profile } = await requireRetainedArchiveOwner()
     const supabase = await createServerClient()
     const boundedLimit = Math.min(Math.max(limit, 1), 50)
     const { data: runs, error: runsError } = await supabase

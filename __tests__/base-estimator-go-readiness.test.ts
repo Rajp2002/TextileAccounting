@@ -151,7 +151,9 @@ describe('Base Estimator Go-readiness hardening', () => {
     expect(source('lib/estimator-quote-payload.ts')).toContain('factory_profile_updated_at: input.factoryProfileUpdatedAt')
     const migration = source('supabase/migrations/20260721183000_base_estimator_go_readiness.sql')
     expect(migration).toContain('assign_standalone_costing_revision')
-    expect(source('app/(dashboard)/owner/data-export/page.tsx')).toContain("await requireRole(['owner'])")
+    // LT07: still owner-only; Free-account redirects are left to the owner layout,
+    // which keeps pure Free accounts out and lets retained owners in.
+    expect(source('app/(dashboard)/owner/data-export/page.tsx')).toContain("await requireRole(['owner'], { allowFreeAccount: true })")
     expect(source('app/(dashboard)/owner/settings/data-export.ts')).toContain('The organization export is incomplete')
   })
 })
