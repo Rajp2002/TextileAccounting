@@ -244,6 +244,7 @@ function SignupForm() {
                             aria-describedby={errors.phone ? 'phone-error' : undefined}
                             className={cn(
                                 'h-12 bg-surface border-input focus:bg-surface transition-all pl-11',
+                                selectedPlan === 'free' && 'max-sm:pl-[calc(1.75em+0.75rem)]',
                                 errors.phone && 'border-[var(--wv-status-danger-fg)] focus:border-[var(--wv-status-danger-fg)]'
                             )}
                             disabled={loading}
@@ -400,7 +401,7 @@ function SignupForm() {
                             {selectedPlan === 'free' ? freeText(language, 'creatingFreeAccount') : 'Creating factory...'}
                         </>
                     ) : (
-                        <span className="flex items-center justify-center gap-2">
+                        <span className={cn("flex items-center justify-center gap-2", selectedPlan === 'free' && "max-sm:min-w-0 max-sm:whitespace-normal")}>
                             <Building2 className="h-4 w-4" />
                             {selectedPlan === 'free' ? freeText(language, 'createFreeAccount') : 'Create factory'}
                             <ArrowRight className="h-4 w-4" />

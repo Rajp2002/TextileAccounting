@@ -14,4 +14,6 @@
   .compare > div > div:first-child { display: none; }
   .compare p { overflow-wrap: anywhere; }
   .compare a { min-height: 44px; height: auto; white-space: normal; }
+  .root > section[aria-labelledby="billing-history-heading"] button :global(.truncate) { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
+  .history a[href^="/api/billing/receipt/"] { min-height: 44px; min-width: 44px; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
 }

@@ -17,7 +17,9 @@
   .closed { display: none; }
   .group > div > section { border: 0; border-top: 1px solid var(--color-hairline); border-radius: 0 0 .75rem .75rem; padding: 1rem; box-shadow: none; }
   .group > div > section p { overflow-wrap: anywhere; }
-  .group > div > section button { min-height: 44px; white-space: normal; height: auto; }
+  .group > div > section button { min-height: 44px; min-width: 0; max-width: 100%; flex-shrink: 1; white-space: normal; overflow-wrap: anywhere; height: auto; }
+  .group > div > section [data-slot="badge"] { min-width: 0; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+  .group > div > section [data-slot="input"] { height: auto; min-height: 44px; }
   .root > div > main > section:not(.group) { padding: 1rem; }
   .root > div > main > section button { min-height: 44px; white-space: normal; height: auto; }
 }

@@ -173,6 +173,31 @@
   [data-free-history] .free-history-metrics > div { padding: 8px; }
   [data-free-history] .free-history-metrics p:first-child { font-size: 12px; text-transform: none; letter-spacing: normal; }
   [data-free-costing] [data-testid="free-recalculation-window"] button { min-height: 44px; min-width: 44px; }
+  /* Input labels and actions must grow with translated or enlarged text. */
+  [data-free-costing].estimator-mobile-form [data-slot="label"].h-8,
+  [data-free-costing].estimator-mobile-form .h-8:has(> [data-slot="label"]) { height: auto; min-height: 2rem; }
+  [data-free-costing].estimator-mobile-form .h-8:has(> [data-slot="label"]) { flex-wrap: wrap; }
+  [data-free-costing].estimator-mobile-form [data-slot="input"] { height: auto; min-height: 44px; }
+  [data-free-costing].estimator-mobile-form [data-slot="button"],
+  [data-free-costing].estimator-mobile-form [data-slot="liquid-segmented"] > button {
+    height: auto;
+    min-height: 44px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  [data-free-costing].estimator-mobile-form [data-estimator-unit-field] > input {
+    padding-inline: calc(.875rem + var(--estimator-unit-length, 1) * .4em);
+  }
+  /* Long rate/consumption units flow below their fields so the full numbers
+     remain readable when enlarged text consumes the inline gutter. */
+  [data-free-costing].estimator-mobile-form :is([data-estimator-unit-field="paise/pick"], [data-estimator-unit-field="kg/100m"]) > input { padding-inline: .75rem; }
+  [data-free-costing].estimator-mobile-form :is([data-estimator-unit-field="paise/pick"], [data-estimator-unit-field="kg/100m"]) > span.pointer-events-none {
+    position: static;
+    display: block;
+    margin-top: .25em;
+    text-align: right;
+    transform: none;
+  }
   /* Keep route help one tap away without pushing the task below the fold. */
   .mobile-guide-card { padding: 0.75rem; }
   .mobile-guide-layout {

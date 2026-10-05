@@ -8,9 +8,10 @@
   .root header { gap: .75rem; }
   .root header > div { min-width: 0; }
   .root p, .root h1, .root h2 { overflow-wrap: anywhere; }
-  .root button, .root a { min-height: 44px; white-space: normal; }
+  .root button, .root a { min-height: 44px; min-width: 44px; white-space: normal; }
   .root button:focus-visible, .root a:focus-visible { outline: 2px solid var(--color-saffron); outline-offset: 2px; }
   .root input, .root textarea, .root [role="combobox"] { font-size: 16px; }
+  .root input, .root [role="combobox"] { height: auto; min-height: 44px; }
   .intro { display: none; }
   .mobileHelp { display: block; }
   .mobileHelp summary { display: flex; align-items: center; min-height: 44px; font-size: .875rem; text-decoration: underline; }

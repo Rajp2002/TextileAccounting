@@ -179,7 +179,7 @@ export default function LoginForm({ recoveryDestination }: { recoveryDestination
 
                 {/* Password */}
                 <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between max-sm:flex-wrap max-sm:gap-x-3 max-sm:gap-y-1">
                         <Label htmlFor="password" className="font-medium text-body">
                             Password
                         </Label>

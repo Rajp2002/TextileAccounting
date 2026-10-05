@@ -1132,7 +1132,7 @@ function NumField({
     return (
         <div className="space-y-1.5 min-w-0" data-estimator-field={fieldKey}>
             <Label htmlFor={inputId} className="flex items-end h-8 text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] leading-tight">{label}</Label>
-            <div className="relative group">
+            <div className="relative group" data-estimator-unit-field={unit || undefined} style={unit ? { '--estimator-unit-length': Math.max(2, unit.length) } as React.CSSProperties : undefined}>
                 <Input
                     id={inputId}
                     inputMode="decimal"
@@ -1298,7 +1298,7 @@ function WidthField({
             <Label className={`flex items-end h-8 text-[11px] uppercase tracking-[0.05em] font-semibold leading-tight ${isEmpty ? 'text-[var(--color-warning-amber)]' : 'text-[var(--color-muted)]'}`}>
                 {label}
             </Label>
-            <div className="relative group">
+            <div className="relative group" data-estimator-unit-field={unit} style={{ '--estimator-unit-length': Math.max(4, unit.length) } as React.CSSProperties}>
                 <Input
                     aria-label={label}
                     type="number"
@@ -2737,7 +2737,7 @@ function WeavingRateFields({
                     <Label htmlFor={rateInputId} className="flex h-8 items-end text-[10px] font-medium uppercase tracking-wider text-[var(--color-warning-amber)]">
                         {inputMode === 'perMeter' ? 'Weaving rate — REQUIRED' : 'Paisa per pick — REQUIRED'}
                     </Label>
-                    <div className="relative">
+                    <div className="relative" data-estimator-unit-field={inputMode === 'perMeter' ? '₹/m' : 'paise/pick'} style={{ '--estimator-unit-length': inputMode === 'perMeter' ? 3 : 10 } as React.CSSProperties}>
                         <Input
                             id={rateInputId}
                             data-estimator-field="perPickCostPaisa"

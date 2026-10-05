@@ -143,7 +143,7 @@ function BillingHistoryRow({ entry }: { entry: BillingHistoryEntry }) {
     )
 }
 
-export function PaymentHistoryDialog({ entries }: { entries: BillingHistoryEntry[] }) {
+export function PaymentHistoryDialog({ entries, mobileContentClassName }: { entries: BillingHistoryEntry[]; mobileContentClassName?: string }) {
     const latestPaid = entries.find((entry) => entry.receiptPaymentId)
         ?? entries.find((entry) => entry.status === 'captured')
         ?? null
@@ -175,7 +175,7 @@ export function PaymentHistoryDialog({ entries }: { entries: BillingHistoryEntry
                 </button>
             </DialogTrigger>
 
-            <DialogContent className="max-h-[calc(100dvh-1rem)] gap-0 overflow-hidden p-0 sm:max-w-2xl">
+            <DialogContent className={`max-h-[calc(100dvh-1rem)] gap-0 overflow-hidden p-0 sm:max-w-2xl${mobileContentClassName ? ` ${mobileContentClassName}` : ''}`}>
                 <DialogHeader className="border-b border-hairline bg-surface-soft/45 px-5 py-5 pr-14 sm:px-6">
                     <div className="flex items-start gap-3">
                         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-saffron/25 bg-saffron-soft/60 text-saffron-deep">

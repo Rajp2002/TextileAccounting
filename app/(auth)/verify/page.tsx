@@ -102,7 +102,7 @@ function VerifyContent() {
 
                     {resendMessage && <p role={resendFailed ? 'alert' : 'status'} aria-live="polite" className="text-sm leading-relaxed text-body">{resendMessage}</p>}
 
-                    <Button asChild variant={email ? "ghost" : "default"} className="w-full h-11">
+                    <Button asChild variant={email ? "ghost" : "default"} className="w-full h-11 max-sm:min-h-[44px]">
                         <Link href="/login">
                             <ArrowLeft className="mr-2 h-4 w-4" />
                             Back to Login

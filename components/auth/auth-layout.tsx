@@ -49,7 +49,7 @@ export default function AuthLayout({ children, title, subtitle, compactMobile = 
                         </p>
                     </div>
 
-                    <div className={cn("px-5 pb-6 xs:px-6 xs:pb-8 sm:px-8 sm:pb-10", compactMobile && "max-sm:px-4 max-sm:pb-5 max-sm:[&_input:not([type=checkbox])]:min-h-[44px] max-sm:[&_button]:min-h-[44px]")}>
+                    <div className={cn("px-5 pb-6 xs:px-6 xs:pb-8 sm:px-8 sm:pb-10", compactMobile && "max-sm:px-4 max-sm:pb-5 max-sm:[&_input:not([type=checkbox])]:min-h-[44px] max-sm:[&_input:not([type=checkbox])]:h-auto max-sm:[&_button]:min-h-[44px] max-sm:[&_[data-slot=button]]:min-h-[44px] max-sm:[&_[data-slot=button]]:h-auto max-sm:[&_[data-slot=button]]:whitespace-normal")}>
                         {children}
                         <Link href="/install" className="mt-3 flex min-h-[44px] sm:min-h-0 sm:block items-center justify-center rounded py-2 sm:mt-5 text-center text-sm font-medium text-muted-foreground underline underline-offset-4 hover:text-foreground">
                             {freeMobileEntryText(language, 'installApp')}

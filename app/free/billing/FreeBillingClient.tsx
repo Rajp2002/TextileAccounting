@@ -126,7 +126,7 @@ export default function FreeBillingClient({
         <h3 id="billing-history-heading" className="text-sm font-semibold text-ink">
           {text('receipts')}
         </h3>
-        <PaymentHistoryDialog entries={billingHistory} />
+        <PaymentHistoryDialog entries={billingHistory} mobileContentClassName={styles.history} />
       </section>
 
     </div>
