@@ -32,6 +32,7 @@ export default async function EstimatorPage() {
         userId={user.id}
         orgId={profile.org_id}
         canUseProductionPipeline={canUseProductionPipeline}
+        mobileTier={subscriptionTier}
         staleDefaultRateNames={[]}
         organizationName={organizationRes.data?.name ?? ''}
     />

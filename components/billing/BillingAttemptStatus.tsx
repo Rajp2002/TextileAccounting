@@ -1,19 +1,23 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { RefreshCw, AlertTriangle, CheckCircle2, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { getBillingAttemptPresentation, type BillingAttemptRow } from '@/lib/billing-attempts'
 
-export function BillingAttemptStatus({ attempt }: { attempt: BillingAttemptRow }) {
+export type BillingAttemptRecovery = Pick<BillingAttemptRow, 'status' | 'provider_order_id' | 'provider_payment_id'>
+
+export function BillingAttemptStatus({ attempt, singleFlight = false }: { attempt: BillingAttemptRecovery; singleFlight?: boolean }) {
   const [checking, setChecking] = useState(false)
+  const checkingRef = useRef(false)
   const [message, setMessage] = useState<string | null>(null)
   const presentation = getBillingAttemptPresentation(attempt.status)
   const Icon = presentation.tone === 'success' ? CheckCircle2 : presentation.tone === 'danger' ? AlertTriangle : Clock
   const border = presentation.tone === 'success' ? 'border-[var(--wv-moss-200)] bg-[var(--wv-moss-50)] text-[var(--wv-moss-700)]' : presentation.tone === 'danger' ? 'border-[var(--wv-madder-200)] bg-[var(--wv-madder-50)] text-[var(--wv-madder-600)]' : presentation.tone === 'warning' ? 'border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] text-[var(--wv-ochre-800)]' : 'border-[var(--wv-lagoon-200)] bg-[var(--wv-lagoon-50)] text-[var(--wv-lagoon-700)]'
 
   async function checkStatus() {
-    if (!attempt.provider_order_id) return
+    if (!attempt.provider_order_id || (singleFlight && checkingRef.current)) return
+    checkingRef.current = true
     setChecking(true)
     setMessage(null)
     try {
@@ -28,6 +32,7 @@ export function BillingAttemptStatus({ attempt }: { attempt: BillingAttemptRow }
     } catch {
       setMessage('Status could not be refreshed right now. Please try again shortly.')
     } finally {
+      checkingRef.current = false
       setChecking(false)
     }
   }

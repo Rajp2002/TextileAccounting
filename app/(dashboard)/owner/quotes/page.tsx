@@ -6,6 +6,7 @@ import { getAuthenticatedUser } from '@/lib/auth'
 import { getCachedOrgPlanAccess } from '@/lib/subscription'
 import { hasCapability } from '@/lib/subscription-access'
 import { getCachedOwnerOrganization } from '@/lib/owner-organization'
+import { LitePriorFreeHistory } from '@/components/estimator/LitePriorFreeHistory'
 
 export default async function QuotesPage(props: { searchParams: Promise<{ status?: string }> }) {
     const searchParamsPromise = props.searchParams
@@ -35,7 +36,9 @@ export default async function QuotesPage(props: { searchParams: Promise<{ status
 
     const previousFreeGrant = await getFreeGrant(profile.org_id)
     return (<>
-        {previousFreeGrant && <SavedFreeCostings embedded />}
+        {previousFreeGrant && (planAccess.effectiveTier === 'lite'
+            ? <LitePriorFreeHistory><SavedFreeCostings embedded idPrefix="lite-prior-" /></LitePriorFreeHistory>
+            : <SavedFreeCostings embedded />)}
         <QuotesClient 
             initialQuotes={quotes ?? []}
             tourUnavailable={Boolean(quotesError || templatesError)}

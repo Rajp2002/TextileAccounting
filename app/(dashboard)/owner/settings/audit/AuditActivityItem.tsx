@@ -17,6 +17,7 @@ import {
 import { type AuditLogEntry } from '@/lib/audit-summaries'
 import { getAuditSummary } from '@/lib/audit-summaries'
 import AuditDiff from '@/components/ui/audit-diff'
+import styles from './lite-audit.module.css'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
@@ -26,6 +27,7 @@ interface AuditActivityItemProps {
     profiles?: { full_name: string; role: string };
   }
   isLast?: boolean
+  liteMobile?: boolean
 }
 
 const CATEGORY_CONFIG = {
@@ -36,7 +38,7 @@ const CATEGORY_CONFIG = {
   estimator: { icon: Calculator, color: 'text-[var(--wv-status-success-fg)]', bg: 'bg-[var(--wv-status-success-bg)]', border: 'border-[var(--wv-status-success-border)]', glow: 'shadow-[0_2px_8px_rgba(47,107,67,0.08)]' },
 }
 
-export default function AuditActivityItem({ log, isLast }: AuditActivityItemProps) {
+export default function AuditActivityItem({ log, isLast, liteMobile = false }: AuditActivityItemProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   
   // Resolve category from table name (simplified mapping)
@@ -64,7 +66,7 @@ export default function AuditActivityItem({ log, isLast }: AuditActivityItemProp
   const statusValue = typeof log.new_data?.status === 'string' ? log.new_data.status : null
 
   return (
-    <div className="flex gap-4">
+    <div className={`flex gap-4 ${liteMobile ? styles.item : ''}`}>
       {/* ── Timeline Rail ── */}
       <div className="flex flex-col items-center">
         <div className={cn(
@@ -123,7 +125,7 @@ export default function AuditActivityItem({ log, isLast }: AuditActivityItemProp
               </div>
 
               <div className="flex items-center gap-2">
-                 <div className="text-right hidden sm:block">
+                 <div className={`text-right hidden sm:block ${liteMobile ? styles.identity : ''}`}>
                     <div className="text-[10px] font-bold text-[var(--wv-text-secondary)] uppercase tracking-wider">Entity ID</div>
                     <div className="text-xs font-mono font-bold text-[var(--wv-text-body)]">#{log.record_id}</div>
                  </div>

@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
-import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { SavedCostingsTutorial } from '@/components/estimator/SavedCostingsTutorial'
 import { savedCostingTourEnding, isSavedCostingHandoff, costingTourSurface, makeSavedCostingTourExamples, makeSavedCostingTourExport, type SavedCostingStep } from '@/lib/saved-costings-tour'
 import { tourCommonCopy } from '@/lib/i18n/tour-common'
@@ -88,6 +88,10 @@ import { useTranslation } from '@/lib/i18n/context'
 import { trackPlanEvent } from '@/lib/plan-analytics'
 import { RouteMilestones } from '@/components/performance/route-milestones'
 import { EmptyState, PageHeader, StatusBadge, Toolbar } from '@/components/ui/page-header'
+import { useOwnerPlan } from '@/components/providers/owner-plan-provider'
+import { liteRecordsCopy } from '@/lib/i18n/lite-records'
+import { MOBILE_WORKSPACE_QUERY } from '@/lib/mobile-workflow-navigation'
+import mobileStyles from '@/components/estimator/lite-records.module.css'
 
 const CostingExportDialog = dynamic(
     () => import('@/components/estimator/CostingExportDialog').then(module => module.CostingExportDialog),
@@ -429,7 +433,9 @@ function SavedQualityLibraryView({
     onSelectRecord: (groupKey: string, recordId: string) => void
     tourStep?: SavedCostingStep | null
 }) {
-    const { t, tx } = useTranslation()
+    const { t, tx, language } = useTranslation()
+    const isLite = useOwnerPlan() === 'lite'
+    const mobileCopy = liteRecordsCopy[language]
 
     return (
         <div className="space-y-3">
@@ -476,7 +482,7 @@ function SavedQualityLibraryView({
                         className={`ui-disclosure-card cursor-pointer ${isOpen ? 'border-saffron/30 bg-surface shadow-[var(--shadow-panel)]' : 'border-hairline bg-surface shadow-[var(--shadow-card)]'}`}
                     >
                         <CardContent className="p-0">
-                            <div className={cn("flex flex-col gap-4 p-4 sm:flex-row sm:flex-wrap sm:items-center sm:p-5 lg:flex-nowrap", tourStep && "xl:flex-wrap")}>
+                            <div className={cn("flex flex-col gap-4 p-4 sm:flex-row sm:flex-wrap sm:items-center sm:p-5 lg:flex-nowrap", tourStep && "xl:flex-wrap", isLite && mobileStyles.cardSummary)}>
                                 <button
                                     type="button"
                                     onClick={openGroupDetails}
@@ -502,7 +508,7 @@ function SavedQualityLibraryView({
                                     </span>
                                 </button>
 
-                                <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 sm:min-w-[300px]">
+                                <div className={cn("grid gap-2 grid-cols-1 sm:grid-cols-2 sm:min-w-[300px]", isLite && mobileStyles.cardMetrics)}>
                                     <div className="rounded-lg bg-surface-soft px-3 py-2">
                                         <p className="text-[10px] font-bold uppercase tracking-wide text-subtle">{tx(latest ? 'Latest cost' : 'Current recipe')}</p>
                                         <p className="mt-1 font-mono text-sm font-black text-ink">{latest
@@ -511,10 +517,14 @@ function SavedQualityLibraryView({
                                                 ? `₹${group.currentRecipeCostPerM.toFixed(2)}/m`
                                                 : tx('Not calculated')}</p>
                                     </div>
-                                    <div className="rounded-lg bg-surface-soft px-3 py-2">
+                                    <div className={cn("rounded-lg bg-surface-soft px-3 py-2", isLite && mobileStyles.desktopOnly)}>
                                         <p className="text-[10px] font-bold uppercase tracking-wide text-subtle">{tx('History')}</p>
                                         <p className="mt-1 text-sm font-black text-ink">{tx(`${group.records.length} ${group.records.length === 1 ? 'snapshot' : 'snapshots'}`)}</p>
                                     </div>
+                                    {isLite && <div data-i18n-skip="true" lang={language} className={cn("rounded-lg bg-surface-soft px-3 py-2", mobileStyles.mobileOnly)}>
+                                        <p className="text-[10px] font-bold uppercase tracking-wide text-subtle">{mobileCopy.sellingPrice}</p>
+                                        <p className="mt-1 font-mono text-sm font-black text-ink">{latest ? formatCostingMoneyPerM(getSuggestedSellingPricePerM(latest)) : tx('Not calculated')}</p>
+                                    </div>}
                                 </div>
 
                                 <button
@@ -788,6 +798,14 @@ function SavedQualityLibraryView({
 export default function QuotesClient({ initialQuotes, initialTemplates, initialProfile, initialWorkers, initialStatus, orgId, userId, canUseProductionPipeline, organizationName, userMetadata, tourUnavailable = false, loadError = false }: { initialQuotes: QuoteRow[], initialTemplates: SavedQuality[], initialProfile?: SavedQualityFactoryProfile, initialWorkers: SavedQualityFixedWorker[], initialStatus?: string, orgId: string, userId: string, canUseProductionPipeline: boolean, organizationName: string; userMetadata?: Record<string, unknown>; tourUnavailable?: boolean; loadError?: boolean }) {
     const { t, tx } = useTranslation()
     const { language } = useTranslation()
+    const isLite = useOwnerPlan() === 'lite'
+    const mobileCopy = liteRecordsCopy[language]
+    const [helpOpen, setHelpOpen] = useState(false)
+    useEffect(() => {
+        if (!isLite || !helpOpen || !window.matchMedia(MOBILE_WORKSPACE_QUERY).matches) return
+        const frame = requestAnimationFrame(() => document.getElementById('lite-costings-help')?.querySelector<HTMLButtonElement>('button')?.focus())
+        return () => cancelAnimationFrame(frame)
+    }, [helpOpen, isLite])
     const [tourStep, setTourStep] = useState<SavedCostingStep | null>(null)
     const [selectedRecordIdByGroup, setSelectedRecordIdByGroup] = useState<Record<string, string>>({})
     const selectRecord = (groupKey: string, recordId: string) => setSelectedRecordIdByGroup(prev => ({ ...prev, [groupKey]: recordId }))
@@ -823,6 +841,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
     const tourExport = useMemo(() => tourSurface === 'export' ? makeSavedCostingTourExport() : null, [tourSurface])
     const tourGroups = useMemo(() => tourExamples.length ? [{key: 'tour-preview', name: 'Tour sample', template: null, records: tourExamples, updatedAt: tourExamples[0].updated_at, currentRecipeCostPerM: null}] : [], [tourExamples])
     const [updatingId, setUpdatingId] = useState<string | null>(null)
+    const liteLibraryInFlight = useRef(false)
     const [filterStatus, setFilterStatus] = useState<string>(initialStatus || 'all')
     const [quoteToRestore, setQuoteToRestore] = useState<QuoteRow | null>(null)
     const [restoreMode, setRestoreMode] = useState<'edit' | 'duplicate'>('edit')
@@ -1180,6 +1199,10 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
     }
 
     const handleLibraryState = async (quote: QuoteRow, changes: { isArchived?: boolean; isFavorite?: boolean }) => {
+        if (isLite && window.matchMedia(MOBILE_WORKSPACE_QUERY).matches) {
+            if (liteLibraryInFlight.current) return
+            liteLibraryInFlight.current = true
+        }
         setUpdatingId(quote.id)
         try {
             const result = await updateSavedCostingLibraryState({
@@ -1206,6 +1229,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             console.error(error)
         } finally {
             setUpdatingId(null)
+            liteLibraryInFlight.current = false
         }
     }
 
@@ -1246,15 +1270,16 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
 
     return (
         <>
-            <aside className="saved-costings-left-rail space-y-3" aria-label={tx('Saved Costings guides and tools')}>
+            <aside id={isLite ? 'lite-costings-help' : undefined} data-expanded={helpOpen || tourStep !== null} className={cn("saved-costings-left-rail space-y-3", isLite && mobileStyles.help)} aria-label={tx('Saved Costings guides and tools')}>
                 <SavedCostingsTutorial step={tourStep} onStepChange={setTourStep} onComplete={() => setShowCostingDeleteNudge(true)} production={canUseProductionPipeline} ending={savedCostingTourEnding(quotes.filter(quote => isStandaloneCosting(quote.record_kind)).length, tourUnavailable)} userId={userId} orgId={orgId} userMetadata={userMetadata} />
             </aside>
-            <div className="saved-costings-workspace ui-route-enter max-w-6xl mx-auto space-y-4 sm:space-y-6">
+            <div className={cn("saved-costings-workspace ui-route-enter max-w-6xl mx-auto space-y-4 sm:space-y-6", isLite && mobileStyles.workspace)} data-lite-costings={isLite || undefined}>
             <RouteMilestones route="/owner/quotes" shellVisible primaryUsable secondaryReady />
             {detailLoadingId && <p role="status" aria-live="polite" className="ui-status-enter rounded-lg border border-info/25 bg-info-soft px-3 py-2 text-xs font-semibold text-info">{tx('Selection saved. Loading the complete snapshot for comparison…')}</p>}
             <PageHeader
                 title={t('common.saved_costings_title')}
-                actions={(
+                actions={<>
+                    {isLite && <Button type="button" variant="outline" className={mobileStyles.mobileOnly} aria-controls="lite-costings-help" aria-expanded={helpOpen || tourStep !== null} onClick={() => setHelpOpen(open => !open)} data-i18n-skip="true" lang={language}>{mobileCopy.help}</Button>}
                     <Button
                         data-tour-anchor="costings.new" onClick={() => router.push('/owner/estimator')}
                         className="rail-inline-actions h-10 w-full sm:w-auto rounded-xl bg-loom px-4 font-medium text-white shadow-xs hover:bg-loom-elevated hover:text-white focus-visible:ring-saffron"
@@ -1262,7 +1287,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                         <Plus className="h-4 w-4" aria-hidden="true" />
                         <span>{t('common.new_costing')}</span>
                     </Button>
-                )}
+                </>}
             />
             {showCostingDeleteNudge && !tourStep && !demoCostingDeleted && quotes.length === 0 && initialTemplates.length === 0 && !searchQuery.trim() && !showArchived && ['all', 'costings', 'draft'].includes(filterStatus) && (
                 <div
@@ -1313,10 +1338,10 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                         </div>
                         <details className="group relative z-20 min-w-0 flex-[1_1_auto]">
                             <summary className="mobile-touch-target flex min-h-11 cursor-pointer list-none items-center justify-center gap-2 rounded-xl border border-hairline bg-surface px-3 text-sm font-semibold text-ink hover:bg-surface-soft [&::-webkit-details-marker]:hidden">
-                                Filters{marginFilter !== 'all' ? ' · 1' : ''}
+                                {isLite ? <span data-i18n-skip="true" lang={language}>{mobileCopy.filters}{[marginFilter !== 'all', showFavoritesOnly, showArchived, costingSort !== 'recent'].filter(Boolean).length > 0 ? ` · ${[marginFilter !== 'all', showFavoritesOnly, showArchived, costingSort !== 'recent'].filter(Boolean).length}` : ''}</span> : <>Filters{marginFilter !== 'all' ? ' · 1' : ''}</>}
                                 <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180 text-subtle/70" />
                             </summary>
-                            <div className="absolute left-0 sm:left-auto sm:right-0 mt-2 grid w-64 max-w-[calc(100vw-3rem)] gap-3 rounded-xl border border-hairline bg-surface p-3 shadow-xs">
+                            <div className={cn("absolute left-0 sm:left-auto sm:right-0 mt-2 grid w-64 max-w-[calc(100vw-3rem)] gap-3 rounded-xl border border-hairline bg-surface p-3 shadow-xs", isLite && mobileStyles.filterMenu)}>
                                 <Label htmlFor="saved-costings-sort" className="text-xs font-semibold text-body">Sort by</Label>
                                 <select id="saved-costings-sort" value={costingSort} onChange={event => setCostingSort(event.target.value as SavedCostingSort)} className="h-10 rounded-xl border border-hairline bg-surface px-3 text-sm font-medium text-ink">
                                     <option value="recent">Recently updated</option><option value="oldest">Oldest updated</option><option value="margin_desc">Highest margin</option><option value="cost_asc">Lowest production cost</option>
@@ -1325,28 +1350,33 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                 <select id="saved-costings-margin" value={marginFilter} onChange={event => setMarginFilter(event.target.value as SavedCostingMarginFilter)} className="h-10 rounded-xl border border-hairline bg-surface px-3 text-sm font-medium text-ink">
                                     <option value="all">All margins</option><option value="negative">Negative margin</option><option value="under_10">Under 10%</option><option value="10_to_20">10–20%</option><option value="over_20">Over 20%</option>
                                 </select>
+                                {isLite && <div className={cn(mobileStyles.mobileOnly, mobileStyles.filterExtras)} data-i18n-skip="true" lang={language}>
+                                    <SwitchField variant="pill" checked={showFavoritesOnly} onCheckedChange={() => { setOpenQualityKey(null); setShowFavoritesOnly(current => !current); setSelectedCostingIds([]) }}>{mobileCopy.favourites}</SwitchField>
+                                    <Button type="button" variant={showArchived ? 'secondary' : 'outline'} onClick={() => { setOpenQualityKey(null); setShowArchived(current => !current); setSelectedCostingIds([]) }}>{showArchived ? mobileCopy.active : mobileCopy.archived}</Button>
+                                </div>}
                             </div>
                         </details>
                         <SwitchField
                             data-tour-anchor="costings.compare"
                             variant="pill"
-                            className="min-w-0 flex-[1_1_auto] gap-2 px-2.5 sm:gap-2.5 sm:px-3 [&>span:last-child]:min-w-0 [&>span:last-child]:break-words"
+                            className={cn("min-w-0 flex-[1_1_auto] gap-2 px-2.5 sm:gap-2.5 sm:px-3 [&>span:last-child]:min-w-0 [&>span:last-child]:break-words", isLite && mobileStyles.desktopOnly)}
                             icon={<GitCompareArrows className="hidden h-4 w-4 sm:block" />}
                             checked={comparisonMode}
                             onCheckedChange={() => { setComparisonMode(current => !current); setSelectedCostingIds([]) }}
                         >
                             {tx('Compare')}
                         </SwitchField>
+                        {isLite && <Button type="button" variant={comparisonMode ? 'secondary' : 'outline'} aria-pressed={comparisonMode} className={mobileStyles.mobileOnly} onClick={() => { setComparisonMode(current => !current); setSelectedCostingIds([]) }} data-i18n-skip="true" lang={language}><GitCompareArrows className="h-4 w-4" aria-hidden="true" />{comparisonMode ? mobileCopy.exitCompare : mobileCopy.compare}</Button>}
                         <SwitchField
                             variant="pill"
-                            className="min-w-0 flex-[1_1_auto] gap-2 px-2.5 sm:gap-2.5 sm:px-3 [&>span:last-child]:min-w-0 [&>span:last-child]:break-words"
+                            className={cn("min-w-0 flex-[1_1_auto] gap-2 px-2.5 sm:gap-2.5 sm:px-3 [&>span:last-child]:min-w-0 [&>span:last-child]:break-words", isLite && mobileStyles.desktopOnly)}
                             icon={<Star className={`hidden h-4 w-4 sm:block ${showFavoritesOnly ? 'fill-current' : ''}`} />}
                             checked={showFavoritesOnly}
                             onCheckedChange={() => { setOpenQualityKey(null); setShowFavoritesOnly(current => !current); setSelectedCostingIds([]) }}
                         >
                             Favourites
                         </SwitchField>
-                        <Button variant={showArchived ? 'secondary' : 'outline'} onClick={() => { setOpenQualityKey(null); setShowArchived(current => !current); setSelectedCostingIds([]) }} className="min-h-11 min-w-0 flex-[1_1_auto] whitespace-normal rounded-xl">
+                        <Button variant={showArchived ? 'secondary' : 'outline'} onClick={() => { setOpenQualityKey(null); setShowArchived(current => !current); setSelectedCostingIds([]) }} className={cn("min-h-11 min-w-0 flex-[1_1_auto] whitespace-normal rounded-xl", isLite && mobileStyles.desktopOnly)}>
                             {showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />} {showArchived ? t('common.active') : t('tourControls.savedCostings.archived')}
                         </Button>
                     </div>

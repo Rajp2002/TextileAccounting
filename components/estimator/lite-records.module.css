@@ -1,0 +1,59 @@
+/* Every composition rule is opt-in for verified Lite and mobile only. */
+.mobileOnly { display: none; }
+.rateFilterControls { display: contents; }
+
+@media (max-width: 767.98px), (pointer: coarse) and (max-height: 500px) and (max-width: 1023.98px) {
+  .mobileOnly { display: inline-flex; }
+  .desktopOnly { display: none !important; }
+  .help:not([data-expanded='true']) { display: none; }
+  .help { margin-bottom: 1rem; }
+  .workspace { margin-top: 0; }
+  .workspace > :global(header), .header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem; padding-bottom: .75rem; text-align: left; }
+  .workspace > :global(header) > :first-child, .header > :first-child { width: auto; flex: 1 1 8rem; justify-content: flex-start; }
+  .workspace > :global(header h1), .header :global(h1) { font-size: 1.25rem; }
+  .workspace > :global(header) > :last-child, .header > :last-child { min-width: 0; justify-content: flex-start; }
+  .header > :last-child > div { flex-direction: row; flex-wrap: wrap; }
+  .workspace > :global(header button), .header :global(button) { width: auto; }
+  .workspace :global(button), .workspace :global(summary), .workspace :global(a), .help :global(button), .help :global(summary), .reviewDue { min-height: 44px; min-width: 44px; max-width: 100%; height: auto; white-space: normal; overflow-wrap: anywhere; }
+  .workspace :global(button), .header :global(button) { flex-shrink: 1; }
+  .workspace :global(input:not([type='checkbox'])), .workspace :global(select) { height: auto; min-height: 44px; min-width: 0; max-width: 100%; }
+  .workspace :global(.truncate) { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
+  .workspace :global([data-slot='badge']) { max-width: 100%; white-space: normal; height: auto; overflow-wrap: anywhere; }
+  .workspace :global([data-slot='toolbar']) { padding: .75rem; }
+  .filterExtras { display: grid; gap: .5rem; border-top: 1px solid var(--color-hairline); padding-top: .5rem; }
+  .filterMenu { position: static !important; width: 100% !important; max-width: 100% !important; box-shadow: none !important; }
+  .cardSummary { padding: .75rem !important; gap: .75rem !important; }
+  .cardMetrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cardMetrics > div { min-width: 0; }
+  .cardMetrics p { overflow-wrap: anywhere; }
+  .cardMetrics .mobileOnly { display: block; }
+  .reviewDue { display: flex; align-items: center; justify-content: space-between; gap: .75rem; width: 100%; padding: .625rem .75rem; border: 1px solid var(--color-hairline); border-radius: .75rem; background: var(--color-surface); color: var(--color-ink); font-weight: 600; text-align: left; }
+  .reviewDue > span { display: flex; align-items: center; gap: .5rem; min-width: 0; overflow-wrap: anywhere; }
+  .reviewDue strong { flex-shrink: 0; padding: .125rem .5rem; border-radius: 999px; background: var(--color-warning-soft); color: var(--color-warning); }
+  .floating { display: none !important; }
+  .registerHeader { padding: .625rem .75rem !important; gap: .25rem !important; }
+  .registerHeader { flex-direction: row; align-items: center; flex-wrap: wrap; }
+  .registerMeta > :not(:first-child) { display: none; }
+  .registerMeta h2 { font-size: .75rem; }
+  .workspace :global([data-ratebook-field='yarnRow']) > div { padding: .75rem; }
+  .workspace :global([data-ratebook-field='yarnRow']) :global([role='group']) { flex-wrap: wrap; }
+  .workspace :global([data-ratebook-field='yarnRow']) :global([data-ratebook-field='quickReviewAction']) { flex-basis: 100%; }
+  .rateFilterToggle { flex: 1 1 100%; justify-content: space-between; }
+  .rateFilterControls { display: flex; flex: 1 1 100%; flex-wrap: wrap; gap: .75rem; min-width: 0; }
+  .rateFilterControls:not([data-expanded='true']) { display: none; }
+  .workspace :global([data-ratebook-field='yarnNameCell']) { flex: 1 1 8rem; }
+  .workspace :global([data-ratebook-field='yarnNameCell']) + div { min-width: 0; max-width: 100%; }
+  .workspace :global([data-ratebook-field='yarnRow']) > div > :first-child { flex-wrap: wrap; }
+  .workspace :global([data-ratebook-field='yarnRow']) :global([data-ratebook-field='rateAndTrend']) { min-width: 0; }
+  .workspace :global([data-ratebook-field='yarnRow']) :global([data-ratebook-field='rateAndTrend']) > span { overflow-wrap: anywhere; }
+  /* Dialogs use portals; the opt-in route class remains the authority. */
+  :global(body):has(.workspace) :global([data-slot='dialog-content']), :global(body):has(.workspace) :global([data-slot='sheet-content']), :global(body):has(.workspace) :global([data-slot='dropdown-menu-content']) { overflow-wrap: anywhere; }
+  :global(body):has(.workspace) :global([data-slot='dialog-content'] .truncate), :global(body):has(.workspace) :global([data-slot='sheet-content'] .truncate) { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
+  :global(body):has(.workspace) :global([data-slot='dialog-content'] button), :global(body):has(.workspace) :global([data-slot='sheet-content'] button), :global(body):has(.workspace) :global([data-slot='dropdown-menu-content'] [role='menuitem']) { min-height: 44px; min-width: 44px; height: auto; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+  :global(body):has(.workspace) :global([data-slot='dialog-content'] [data-slot='dialog-footer'] > div) { min-width: 0; flex-wrap: wrap; }
+  :global(body):has(.workspace) :global([data-slot='dialog-content'] button) { flex-shrink: 1; }
+  :global(body):has(.workspace) :global([data-slot='dialog-content'] button > span) { min-width: 0; overflow-wrap: anywhere; }
+  :global(body):has(.workspace) :global([data-slot='dialog-content'] input:not([type='checkbox'])), :global(body):has(.workspace) :global([data-slot='sheet-content'] input:not([type='checkbox'])), :global(body):has(.workspace) :global([data-slot='dialog-content'] select), :global(body):has(.workspace) :global([data-slot='sheet-content'] select) { min-height: 44px; height: auto; max-width: 100%; }
+  :global(body):has(.workspace) :global([data-slot='dialog-content'] input[id^='quick-rate-']) { padding-left: max(1.75rem, 1.15em); }
+  :global(body):has(.workspace) :global([data-slot='dialog-content'] input[type='checkbox']) { width: 44px; height: 44px; }
+}

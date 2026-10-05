@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import React, { useState, useTransition, useId, useRef } from 'react'
 import { Trash2, AlertTriangle, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -24,9 +25,11 @@ interface DeletionReviewCardProps {
     organizationName: string
     accountEmail: string
     restoreMobileFocus?: boolean
+    mobileExportHref?: string
+    mobileContentClassName?: string
 }
 
-export function DeletionReviewCard({ organizationName, accountEmail, restoreMobileFocus = false }: DeletionReviewCardProps) {
+export function DeletionReviewCard({ organizationName, accountEmail, restoreMobileFocus = false, mobileExportHref, mobileContentClassName }: DeletionReviewCardProps) {
     const { tx } = useTranslation()
     const [reviewOpen, setReviewOpen] = useState(false)
     const [enteredOrgName, setEnteredOrgName] = useState('')
@@ -119,7 +122,7 @@ export function DeletionReviewCard({ organizationName, accountEmail, restoreMobi
 
             {/* Deletion Review Accessible Dialog */}
             <Dialog open={reviewOpen} onOpenChange={handleOpenChange}>
-                <DialogContent className="max-w-lg" onCloseAutoFocus={restoreMobileFocus ? event => {
+                <DialogContent className={`max-w-lg${mobileContentClassName ? ` ${mobileContentClassName}` : ''}`} onCloseAutoFocus={restoreMobileFocus ? event => {
                     if (!window.matchMedia('(max-width: 767.98px)').matches) return
                     event.preventDefault()
                     reviewTrigger.current?.focus()
@@ -142,11 +145,12 @@ export function DeletionReviewCard({ organizationName, accountEmail, restoreMobi
                         </DialogDescription>
                     </DialogHeader>
 
+                    {mobileExportHref && <p className="text-sm sm:hidden"><Link href={mobileExportHref} className="inline-flex min-h-[44px] items-center font-semibold underline">{tx('Download organization data (complete export)')}</Link></p>}
                     <div className="space-y-4 py-2">
                         <div className="space-y-1.5">
                             <Label htmlFor={nameInputId} className="text-xs font-semibold text-ink">
                                 {tx('Type the factory name to confirm:')}{' '}
-                                <span className="font-bold text-ink">{organizationName}</span>
+                                <span className="font-bold text-ink" data-i18n-skip="true">{organizationName}</span>
                             </Label>
                             <Input
                                 id={nameInputId}
@@ -162,7 +166,7 @@ export function DeletionReviewCard({ organizationName, accountEmail, restoreMobi
                         <div className="space-y-1.5">
                             <Label htmlFor={phraseInputId} className="text-xs font-semibold text-ink">
                                 {tx('Type confirmation phrase:')}{' '}
-                                <span className="font-mono font-bold text-risk">{ACCOUNT_DELETION_CONFIRMATION_PHRASE}</span>
+                                <span className="font-mono font-bold text-risk" data-i18n-skip="true">{ACCOUNT_DELETION_CONFIRMATION_PHRASE}</span>
                             </Label>
                             <Input
                                 id={phraseInputId}

@@ -1,6 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useId } from 'react'
+import { useOwnerPlan } from '@/components/providers/owner-plan-provider'
+import { useTranslation } from '@/lib/i18n/context'
+import { liteSupportingText } from '@/lib/i18n/lite-supporting'
+import styles from './lite-audit.module.css'
 import { createClient } from '@/lib/supabase/client'
 import { useQuery } from '@tanstack/react-query'
 import { useUserProfile } from '@/hooks/use-user-profile'
@@ -80,6 +84,11 @@ const CATEGORIES: Record<CategoryKey, CategoryConfig> = {
 
 export default function AuditTable() {
     const supabase = createClient()
+    const lite = useOwnerPlan() === 'lite'
+    const { language } = useTranslation()
+    const [filtersOpen, setFiltersOpen] = useState(false)
+    const filtersId = useId()
+    const searchId = useId()
     const { data: userProfile } = useUserProfile()
 
     const [page, setPage] = useState(0)
@@ -175,25 +184,30 @@ export default function AuditTable() {
         setPage(0)
     }
 
+    const advancedFilterCount = [categoryFilter !== 'all', actionFilter !== 'all', actorId !== 'all', Boolean(startDate), Boolean(endDate)].filter(Boolean).length
     const hasActiveFilters = categoryFilter !== 'all' || actionFilter !== 'all' || actorId !== 'all' || searchTerm !== '' || startDate !== '' || endDate !== ''
 
     return (
-        <div className="space-y-4">
+        <div className={`space-y-4 ${lite ? styles.root : ''}`} data-lite-filters-open={lite ? filtersOpen : undefined}>
             {/* ── Filters ── */}
             <div className="flex flex-col gap-4 p-5 bg-[var(--wv-bg-surface)] rounded-2xl border border-[var(--wv-border-default)] shadow-[var(--shadow-card)] mb-8 top-4 z-20 sticky">
-                <div className="flex flex-wrap items-center gap-6">
+                <div className="flex flex-wrap items-center gap-6" id={filtersId}>
                     {/* ── Search Input ── */}
                     <div className="flex-1 min-w-[300px] relative group">
+                        {lite && <label htmlFor={searchId} className={styles.mobileSearchLabel}>{liteSupportingText(language,'search')}</label>}
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--wv-text-secondary)] group-focus-within:text-[var(--wv-action-primary)] transition-all" />
                         <input
                             type="text"
+                            id={searchId}
                             placeholder="Search by ID, Name, or Action..."
+                            aria-label={lite ? liteSupportingText(language, 'search') : undefined}
                             value={searchTerm}
                             onChange={(e) => { setSearchTerm(e.target.value); setPage(0) }}
                             className="w-full h-11 pl-11 pr-4 rounded-xl border border-[var(--wv-border-control)] bg-[var(--wv-bg-surface)] text-sm text-[var(--wv-text-primary)] placeholder:text-[var(--wv-text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--wv-border-focus)] focus:border-[var(--wv-border-focus)] transition-all font-medium"
                         />
                         {searchTerm && (
                             <button
+                                aria-label={lite ? liteSupportingText(language, 'clearSearch') : undefined}
                                 onClick={() => { setSearchTerm(''); setPage(0) }}
                                 className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--wv-text-secondary)] hover:text-[var(--wv-status-danger-fg)] transition-colors"
                             >
@@ -202,8 +216,9 @@ export default function AuditTable() {
                         )}
                     </div>
 
+                    {lite && <Button type="button" variant="outline" className={styles.mobileToggle} aria-expanded={filtersOpen} aria-controls={filtersId} onClick={()=>setFiltersOpen(value=>!value)}><Filter aria-hidden="true" className="h-4 w-4"/>{liteSupportingText(language,filtersOpen?'closeFilters':'filters')}{advancedFilterCount > 0 ? ` (${advancedFilterCount})` : ''}</Button>}
                     {/* ── Actor Filter ── */}
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3" data-lite-advanced={lite || undefined}>
                         <span className="text-[10px] font-bold text-[var(--wv-text-secondary)] uppercase tracking-[0.2em] flex items-center gap-1.5 px-1">
                             <Users className="h-3 w-3" /> Actor
                         </span>
@@ -244,7 +259,7 @@ export default function AuditTable() {
 
                 <div className="flex flex-wrap items-center gap-8 pt-4 border-t border-[var(--wv-border-subtle)]">
                     {/* ── Category Filter ── */}
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3" data-lite-advanced={lite || undefined}>
                         <span className="text-[10px] font-bold text-[var(--wv-text-secondary)] uppercase tracking-[0.2em] flex items-center gap-1.5 px-1">
                             <Filter className="h-3 w-3" /> Type
                         </span>
@@ -272,7 +287,7 @@ export default function AuditTable() {
                     </div>
 
                     {/* ── Action Filter ── */}
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3" data-lite-advanced={lite || undefined}>
                         <span className="text-[10px] font-bold text-[var(--wv-text-secondary)] uppercase tracking-[0.2em] flex items-center gap-1.5 px-1">
                             <Tags className="h-3 w-3" /> Action
                         </span>
@@ -291,7 +306,7 @@ export default function AuditTable() {
                     </div>
 
                     {/* ── Date Range ── */}
-                    <div className="flex items-center gap-4 ml-auto">
+                    <div className="flex items-center gap-4 ml-auto" data-lite-advanced={lite || undefined}>
                         <span className="text-[10px] font-bold text-[var(--wv-text-secondary)] uppercase tracking-[0.2em] flex items-center gap-1.5 px-1">
                             <CalendarDays className="h-3 w-3" /> Time Range
                         </span>
@@ -302,7 +317,7 @@ export default function AuditTable() {
                                 onChange={(e) => handleDateChange(e, 'start')}
                                 max={endDate || new Date().toISOString().split('T')[0]}
                                 className="h-8 bg-transparent text-xs font-semibold text-[var(--wv-text-primary)] focus:outline-none px-2 cursor-pointer"
-                                title="Start Date"
+                                title="Start Date" aria-label={lite ? "Start Date" : undefined}
                             />
                             <ArrowRight className="h-3 w-3 text-[var(--wv-text-secondary)]" />
                             <input
@@ -312,13 +327,14 @@ export default function AuditTable() {
                                 min={startDate}
                                 max={new Date().toISOString().split('T')[0]}
                                 className="h-8 bg-transparent text-xs font-semibold text-[var(--wv-text-primary)] focus:outline-none px-2 cursor-pointer"
-                                title="End Date"
+                                title="End Date" aria-label={lite ? "End Date" : undefined}
                             />
                         </div>
                     </div>
                 </div>
             </div>
 
+            {lite && hasActiveFilters && <p className={styles.activeFilters} role="status">{[searchTerm, categoryFilter !== 'all' ? CATEGORIES[categoryFilter as CategoryKey]?.label : '', actionFilter !== 'all' ? actionFilter : '', actorId !== 'all' ? actors?.find((actor: {id:string})=>actor.id===actorId)?.full_name : '', startDate, endDate].filter(Boolean).join(' · ')}</p>}
             {/* ── Activity Feed ── */}
             <div className="relative">
                 {isLoading ? (
@@ -366,7 +382,8 @@ export default function AuditTable() {
                                 changed_at: string
                                 profiles?: { full_name: string; role: string }
                            }, idx: number) => (
-                                <AuditActivityItem 
+                                <AuditActivityItem
+                                  liteMobile={lite}
                                   key={log.id} 
                                   log={log} 
                                   isLast={idx === data.items.length - 1} 

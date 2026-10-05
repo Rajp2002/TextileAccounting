@@ -15,6 +15,8 @@ import { useUnloadProtection } from './unsaved-changes-dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { freeSupportingText } from '@/lib/i18n/free-supporting'
 import styles from './free-settings.module.css'
+import liteStyles from './lite-settings.module.css'
+import { liteSupportingText } from '@/lib/i18n/lite-supporting'
 import {
     DEFAULT_STARTUP_INTRO_PREFERENCE, readStartupIntroPreference, saveStartupIntroPreference, STARTUP_INTRO_CHANGE_EVENT,
     type StartupIntroPreference,
@@ -126,6 +128,8 @@ export function PlanAwareSettingsView({
 }: PlanAwareSettingsViewProps) {
     const { t, language } = useTranslation()
 
+    const [confirmedName, setConfirmedName] = useState(profile.fullName)
+    const [confirmedDefaults, setConfirmedDefaults] = useState<CostingDefaultsData | null>(null)
     const [personalDirty, setPersonalDirty] = useState(false)
     const [factoryDirty, setFactoryDirty] = useState(false)
     const [defaultsDirty, setDefaultsDirty] = useState(false)
@@ -135,7 +139,7 @@ export function PlanAwareSettingsView({
     useUnloadProtection(isAnyDirty)
 
     // Fallback defaults object when entitled but no database row exists yet
-    const resolvedDefaults: CostingDefaultsData = initialDefaults ?? {
+    const resolvedDefaults: CostingDefaultsData = (tier === 'lite' ? confirmedDefaults : null) ?? initialDefaults ?? {
         yarnShortagePct: 0,
         defaultMarginPct: 10,
         overheadMode: 'monthly_expenses',
@@ -145,7 +149,7 @@ export function PlanAwareSettingsView({
     }
 
     return (
-        <div className={`min-h-screen py-6 sm:py-10 ${tier === 'free' ? styles.root : ''}`}>
+        <div className={`min-h-screen py-6 sm:py-10 ${(tier === 'free' || tier === 'lite') ? styles.root : ''}`}>
             <div className="mx-auto w-full max-w-[960px] space-y-8 px-4 sm:px-6 lg:px-8">
                 {/* Page Header */}
                 <header className="space-y-2 border-b border-hairline/80 pb-6 text-center">
@@ -162,17 +166,17 @@ export function PlanAwareSettingsView({
                 {/* Ordered Sections Stack */}
                 <main className="space-y-6 sm:space-y-8">
                     {/* Section 1: Personal Information (Universal) */}
-                    <FreeSettingsGroup compact={tier === 'free'} title={freeSupportingText(language, 'personal')} summary={profile.fullName} dirty={personalDirty}><PersonalInformationCard
+                    <FreeSettingsGroup compact={tier === 'free' || tier === 'lite'} title={freeSupportingText(language, 'personal')} summary={tier === 'lite' ? confirmedName : profile.fullName} dirty={personalDirty}><PersonalInformationCard
                         initialName={profile.fullName}
                         email={profile.email}
                         emailVerified={profile.emailVerified}
                         phone={profile.phone}
-                        onNameUpdated={onProfileNameChange}
+                        onNameUpdated={tier === 'lite' ? name => { setConfirmedName(name); onProfileNameChange?.(name) } : onProfileNameChange}
                         onDirtyChange={setPersonalDirty}
                     /></FreeSettingsGroup>
 
                     {/* Section 2: Factory Details (Where factory exists) */}
-                    <FreeSettingsGroup compact={tier === 'free'} title={freeSupportingText(language, 'factory')} summary={factory.name} dirty={factoryDirty}><FactoryDetailsCard
+                    <FreeSettingsGroup compact={tier === 'free' || tier === 'lite'} title={freeSupportingText(language, 'factory')} summary={factory.name} dirty={factoryDirty}><FactoryDetailsCard
                         initialFactoryName={factory.name}
                         isAuthorizedEditor={factory.isAuthorizedEditor ?? true}
                         onFactoryNameUpdated={onFactoryNameChange}
@@ -181,11 +185,12 @@ export function PlanAwareSettingsView({
 
                     {/* Section 3: Costing Defaults (Lite/Base Entitled; Omitted for Free) */}
                     {canEditDefaults && (
-                        <CostingDefaultsCard
+                        <FreeSettingsGroup compact={tier === 'lite'} title={liteSupportingText(language, 'defaults')} summary={`${resolvedDefaults.yarnShortagePct}% ${liteSupportingText(language, 'wastage')} · ${resolvedDefaults.defaultMarginPct}% ${liteSupportingText(language, 'margin')}`} dirty={defaultsDirty}><CostingDefaultsCard
                             initialDefaults={resolvedDefaults}
-                            onDefaultsUpdated={onDefaultsChange}
+                            mobileFeedback={tier === 'lite'}
+                            onDefaultsUpdated={tier === 'lite' ? defaults => { setConfirmedDefaults(defaults); onDefaultsChange?.(defaults) } : onDefaultsChange}
                             onDirtyChange={setDefaultsDirty}
-                        />
+                        /></FreeSettingsGroup>
                     )}
 
                     {/* Section 4: Production & Payroll */}
@@ -194,14 +199,16 @@ export function PlanAwareSettingsView({
                         isAuthorizedEditor={factory.isAuthorizedEditor ?? true}
                         onDirtyChange={setPayrollDirty}
                     />}
-                    <FreeSettingsGroup compact={tier === 'free'} title={freeSupportingText(language, 'security')} summary={profile.emailVerified ? profile.email : `${profile.email} · ${freeSupportingText(language, 'emailUnverified')}`}><SecurityCard email={profile.email} /></FreeSettingsGroup>
-                    <FreeSettingsGroup compact={tier === 'free'} title={freeSupportingText(language, 'display')} summary={freeSupportingText(language, 'device')}><StartupIntroSetting /></FreeSettingsGroup>
+                    <FreeSettingsGroup compact={tier === 'free' || tier === 'lite'} title={freeSupportingText(language, 'security')} summary={profile.emailVerified ? profile.email : `${profile.email} · ${freeSupportingText(language, 'emailUnverified')}`}><SecurityCard email={profile.email} /></FreeSettingsGroup>
+                    <FreeSettingsGroup compact={tier === 'free' || tier === 'lite'} title={freeSupportingText(language, 'display')} summary={freeSupportingText(language, 'device')}><StartupIntroSetting /></FreeSettingsGroup>
 
                     {/* Section 6: Account & Factory Deletion (Universal) */}
                     <DeletionReviewCard
                         organizationName={factory.name}
                         accountEmail={profile.email}
-                        restoreMobileFocus={tier === 'free'}
+                        restoreMobileFocus={tier === 'free' || tier === 'lite'}
+                        mobileExportHref={tier === 'lite' ? '/owner/data-export' : undefined}
+                        mobileContentClassName={tier === 'lite' ? liteStyles.dialog : undefined}
                     />
                 </main>
             </div>

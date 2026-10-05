@@ -1,0 +1,10 @@
+.mobileSummary{display:none}
+@media(max-width:767.98px){
+ .root .mobileSummary{display:block}
+ .root .desktopSummary{display:none}
+ .root .duplicateDeletion{display:none}
+ .root :global(#account-data){margin-top:1rem}
+ .root :global(#account-data) summary{min-height:44px}
+ .root :global(#account-data) section{padding:1rem}
+ .root :global(#account-data) a,.root :global(#account-data) button{min-height:44px;height:auto;white-space:normal;overflow-wrap:anywhere}
+}

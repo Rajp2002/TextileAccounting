@@ -21,7 +21,7 @@ export function PlanChooserHeader({ effectiveTier = 'unassigned', isUnassigned =
   const from = searchParams.get('from')
 
   const isFree = effectiveTier === 'free'
-  const mobileCompact = isFree || isUnassigned || effectiveTier === 'unassigned'
+  const mobileCompact = isFree || effectiveTier === 'lite' || isUnassigned || effectiveTier === 'unassigned'
 
   let backHref: string | null = null
   let backLabel = upgradeText(language, 'backToWorkspace')

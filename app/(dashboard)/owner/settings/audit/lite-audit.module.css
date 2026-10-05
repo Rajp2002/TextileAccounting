@@ -1,0 +1,31 @@
+.mobileToggle,.activeFilters,.mobileSearchLabel{display:none}
+@media(max-width:767.98px){
+ .page>div:first-child{text-align:left;padding-bottom:.75rem}.page h1{font-size:1.375rem}
+ .page [data-slot="card-header"]{padding:1rem}.page [data-slot="card-content"]{padding:1rem}
+ .root>div:first-child{padding:.75rem;position:static;margin-bottom:1rem}
+ .root>div:first-child>div{gap:.75rem}
+ .root>div:first-child>div>div:first-child{min-width:0;width:100%;flex-basis:100%}
+ .mobileToggle{display:inline-flex}
+ .mobileSearchLabel{display:block;margin-bottom:.5rem;font-size:.875rem;font-weight:600}
+ .root input[type="text"]::placeholder{color:transparent}
+ .root>div:first-child>div>div:first-child>svg,.root>div:first-child>div>div:first-child>button{top:auto;bottom:0;transform:none;height:44px}
+ .activeFilters{display:block;font-size:.875rem;overflow-wrap:anywhere}
+ .root[data-lite-filters-open="false"]>div:first-child>div:last-child{display:none}
+ .root[data-lite-filters-open="false"] [data-lite-advanced]{display:none}
+ .root [data-lite-advanced]{flex-wrap:wrap;width:100%;gap:.5rem;min-width:0}
+ .root [data-lite-advanced]>[data-slot="select-trigger"]{width:100%;height:auto;min-height:44px}
+ .root [data-lite-advanced]>div{flex-wrap:wrap;max-width:100%;width:100%}
+ .root [data-lite-advanced] input{max-width:100%;width:100%;min-width:0}
+ .root input,.root [data-slot="button"]{min-height:44px;height:auto;font-size:16px;white-space:normal;overflow-wrap:anywhere}
+ .root button{min-height:44px;min-width:44px}
+ .root p,.root h2,.root span{overflow-wrap:anywhere}
+ .root>div:last-child>div>div:first-child{flex-wrap:wrap;gap:.5rem}
+ .item{gap:.5rem;min-width:0}
+ .item>div:first-child{display:none}
+ .item>div:last-child{min-width:0}
+ .item button>div:first-child{flex-wrap:wrap;gap:.5rem}
+ .item button>div:first-child>div:first-child{min-width:0}
+ .item button>div:first-child>div:first-child>div{flex-wrap:wrap;gap:.5rem}
+ .identity{display:block;text-align:left;overflow-wrap:anywhere}
+ .item :global(.grid-cols-2){grid-template-columns:minmax(0,1fr)}
+}

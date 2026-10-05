@@ -62,6 +62,7 @@ function SignupForm() {
     // Free is the default for every new account; only an explicit Lite or Base choice skips it.
     const requestedPlan = searchParams?.get('plan')
     const selectedPlan = requestedPlan === 'lite' ? 'lite' as const : requestedPlan === 'base' ? 'base' as const : 'free' as const
+    const compactMobile = selectedPlan === 'free' || selectedPlan === 'lite'
     
     const [loading, setLoading] = useState(false)
     const [ownerName, setOwnerName]     = useState('')
@@ -143,11 +144,11 @@ function SignupForm() {
 
     return (
         <AuthLayout
-            compactMobile={selectedPlan === 'free'}
+            compactMobile={compactMobile}
             title={selectedPlan === 'free' ? freeText(language,'signupTitle') : "Create your factory"}
             subtitle={selectedPlan === 'free' ? freeText(language,'signupSubtitle') : 'Get started as a factory owner'}
         >
-            <form onSubmit={handleSubmit} className={cn("space-y-5", selectedPlan === 'free' && "max-sm:space-y-4")} noValidate>
+            <form onSubmit={handleSubmit} className={cn("space-y-5", compactMobile && "max-sm:space-y-4")} noValidate>
                 {/* Factory Name */}
                 {selectedPlan !== 'free' && <div className="space-y-1.5">
                     <Label htmlFor="factoryName" className="text-ink font-medium">
@@ -244,7 +245,7 @@ function SignupForm() {
                             aria-describedby={errors.phone ? 'phone-error' : undefined}
                             className={cn(
                                 'h-12 bg-surface border-input focus:bg-surface transition-all pl-11',
-                                selectedPlan === 'free' && 'max-sm:pl-[calc(1.75em+0.75rem)]',
+                                compactMobile && 'max-sm:pl-[calc(1.75em+0.75rem)]',
                                 errors.phone && 'border-[var(--wv-status-danger-fg)] focus:border-[var(--wv-status-danger-fg)]'
                             )}
                             disabled={loading}
@@ -287,7 +288,7 @@ function SignupForm() {
                     </div>
 
                     {/* Strength bar */}
-                    <div className={cn("space-y-2 pt-1", !password.length && (selectedPlan === 'free' ? "sm:hidden" : "hidden"))}>
+                    <div className={cn("space-y-2 pt-1", !password.length && (compactMobile ? "sm:hidden" : "hidden"))}>
                             <div className="flex gap-1">
                                 {[1, 2, 3, 4].map((i) => (
                                     <div
@@ -299,7 +300,7 @@ function SignupForm() {
                                     />
                                 ))}
                             </div>
-                            <div id="password-rules" className={cn("flex items-center justify-between", selectedPlan === 'free' && "max-sm:flex-col max-sm:items-start max-sm:gap-2")}>
+                            <div id="password-rules" className={cn("flex items-center justify-between", compactMobile && "max-sm:flex-col max-sm:items-start max-sm:gap-2")}>
                                 <p className={cn(
                                     'text-xs font-medium transition-colors',
                                     strength.score === 4 ? 'text-[var(--wv-status-success-fg)]' :
@@ -312,11 +313,11 @@ function SignupForm() {
                                     {strength.checks.map((check) => (
                                         <div key={check.label} className={cn(
                                             'flex items-center gap-1 text-[10px]',
-                                            selectedPlan === 'free' && 'max-sm:text-xs',
-                                            check.met ? 'text-[var(--wv-status-success-fg)]' : cn('text-muted-foreground/60', selectedPlan === 'free' && 'max-sm:text-body')
+                                            compactMobile && 'max-sm:text-xs',
+                                            check.met ? 'text-[var(--wv-status-success-fg)]' : cn('text-muted-foreground/60', compactMobile && 'max-sm:text-body')
                                         )}>
                                             <CheckCircle2 className={cn('h-3 w-3', check.met ? 'opacity-100' : 'opacity-40')} />
-                                            <span className={selectedPlan === 'free' ? undefined : 'hidden sm:inline'}>{check.label}</span>
+                                            <span className={compactMobile ? undefined : 'hidden sm:inline'}>{check.label}</span>
                                         </div>
                                     ))}
                                 </div>
@@ -353,9 +354,9 @@ function SignupForm() {
                 </div>
 
                 {/* Referral Code (Optional) */}
-                <div className={cn(selectedPlan === 'free' && "rounded-lg border border-hairline sm:border-0")}>
-                    <button type="button" aria-expanded={referralOpen} aria-controls="signup-referral" onClick={() => setReferralOpen(open => !open)} className={cn("flex min-h-[44px] w-full items-center px-3 text-sm font-medium text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:hidden", selectedPlan !== 'free' && "hidden")}>Referral Code (Optional)</button>
-                    <div id="signup-referral" className={cn("space-y-1.5", selectedPlan === 'free' && "max-sm:px-3 max-sm:pb-3", selectedPlan === 'free' && !referralOpen && "max-sm:hidden")}>
+                <div className={cn(compactMobile && "rounded-lg border border-hairline sm:border-0")}>
+                    <button type="button" aria-expanded={referralOpen} aria-controls="signup-referral" onClick={() => setReferralOpen(open => !open)} className={cn("flex min-h-[44px] w-full items-center px-3 text-sm font-medium text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:hidden", !compactMobile && "hidden")}>Referral Code (Optional)</button>
+                    <div id="signup-referral" className={cn("space-y-1.5", compactMobile && "max-sm:px-3 max-sm:pb-3", compactMobile && !referralOpen && "max-sm:hidden")}>
                     <Label htmlFor="referralCode" className="text-ink font-medium">
                         Referral Code (Optional)
                     </Label>
@@ -401,7 +402,7 @@ function SignupForm() {
                             {selectedPlan === 'free' ? freeText(language, 'creatingFreeAccount') : 'Creating factory...'}
                         </>
                     ) : (
-                        <span className={cn("flex items-center justify-center gap-2", selectedPlan === 'free' && "max-sm:min-w-0 max-sm:whitespace-normal")}>
+                        <span className={cn("flex items-center justify-center gap-2", compactMobile && "max-sm:min-w-0 max-sm:whitespace-normal")}>
                             <Building2 className="h-4 w-4" />
                             {selectedPlan === 'free' ? freeText(language, 'createFreeAccount') : 'Create factory'}
                             <ArrowRight className="h-4 w-4" />
