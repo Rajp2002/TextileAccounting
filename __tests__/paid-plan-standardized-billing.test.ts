@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { freeSupportingText } from '../lib/i18n/free-supporting'
 
 const root = process.cwd()
 const read = (path: string) => readFileSync(join(root, path), 'utf8')
@@ -41,7 +42,7 @@ describe('Paid plan subscription and billing pages', () => {
         expect(ownerBilling).toContain("'Explore plans'")
 
         expect(freeBilling).toContain('<Link href="/plans?from=billing"')
-        expect(freeBilling).toContain('Compare plan options')
+        expect(freeSupportingText('en', 'compare')).toBe('Compare plan options')
         expect(freeBilling).toContain('compareAllPlans')
     })
 

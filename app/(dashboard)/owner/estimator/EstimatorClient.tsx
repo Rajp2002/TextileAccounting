@@ -112,6 +112,7 @@ import { freeLeaveReason as decideFreeLeaveReason, freePageSnapshot } from '@/li
 import { freePreflight } from '@/lib/free-transaction'
 import { warningAcknowledgementKey } from '@/lib/warning-acknowledgement'
 import { freeText, type FreeText } from '@/lib/i18n/free-tier'
+import { freeMobileText } from '@/lib/i18n/free-mobile'
 import { getFreeCostingSections, type FreeCostingSection } from '@/lib/free-costing-sections'
 import { FreeCostingChecklist } from '@/components/estimator/FreeCostingChecklist'
 import { useGutterDock } from '@/hooks/use-gutter-dock'
@@ -1400,6 +1401,7 @@ function MobileLiveEstimateShortcut({
     visible,
     keyboardVisible,
     activeName,
+    freeSnapshot,
     versionLabel,
     validityLabel,
     validityDescription,
@@ -1430,6 +1432,7 @@ function MobileLiveEstimateShortcut({
     visible: boolean
     keyboardVisible: boolean
     activeName: string
+    freeSnapshot?: { label: string; revision: number }
     versionLabel?: string
     validityLabel: string
     validityDescription: string
@@ -1457,6 +1460,24 @@ function MobileLiveEstimateShortcut({
     const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
     const open = controlledOpen !== undefined ? controlledOpen : uncontrolledOpen
     const setOpen = setControlledOpen ?? setUncontrolledOpen
+    const shortcutRef = useRef<HTMLDivElement>(null)
+    // Reserve the actual action height, including translated/enlarged labels.
+    // Keep that clearance while the keyboard or result sheet hides the dock.
+    useEffect(() => {
+        const node = shortcutRef.current
+        if (!metered || !node) return
+        const measure = () => {
+            const height = node.getBoundingClientRect().height
+            if (height > 0) document.documentElement.style.setProperty('--free-mobile-action-height', `${Math.ceil(height)}px`)
+        }
+        measure()
+        const observer = new ResizeObserver(measure)
+        observer.observe(node)
+        return () => observer.disconnect()
+    }, [metered, visible, keyboardVisible, open])
+    useEffect(() => () => {
+        if (metered) document.documentElement.style.removeProperty('--free-mobile-action-height')
+    }, [metered])
     const compactFreePreview = metered && !hasValidCostResult && !isTutorialActive
     const adaptiveFreeModal = metered && !isTutorialActive
     const hasValidPrice = hasValidCostResult && quoteIsValid
@@ -1491,6 +1512,8 @@ function MobileLiveEstimateShortcut({
         <>
             {visible && !keyboardVisible && !open && (
                 <div
+                    ref={shortcutRef}
+                    data-free-mobile-action={metered || undefined}
                     className="fixed mobile-floating-action bottom-6 right-4 z-40 md:bottom-7 md:right-7 lg:right-6 xl:right-8"
                     data-testid="mobile-live-estimate-shortcut"
                     data-tour-floating="true"
@@ -1499,19 +1522,19 @@ function MobileLiveEstimateShortcut({
                         type="button"
                         data-tutorial-section={9}
                         data-estimator-field="liveCostShortcut"
-                        aria-label={`View live cost estimate. ${shortcutLabel}`}
+                        aria-label={metered ? freeMobileText(language, hasValidCostResult ? 'saved' : 'review') : `View live cost estimate. ${shortcutLabel}`}
                         aria-expanded={open}
                         aria-controls="mobile-live-estimate-panel"
                         onClick={() => setOpen(true)}
                         className="group flex items-center justify-end gap-3 sm:gap-3.5 rounded-full border-2 border-[var(--color-yarn-orange)]/25 bg-[var(--color-canvas-white)]/95 p-2 pl-4 sm:p-2.5 sm:pl-5 text-left shadow-[0_12px_32px_rgba(30,37,40,0.18),0_2px_8px_rgba(30,37,40,0.06)] backdrop-blur-xl transition-all duration-200 motion-reduce:transition-none hover:border-[var(--color-yarn-orange)]/45 hover:shadow-[0_16px_38px_rgba(30,37,40,0.22),0_4px_12px_rgba(30,37,40,0.08)] hover:-translate-y-0.5 active:translate-y-0 active:shadow-[0_8px_20px_rgba(30,37,40,0.16)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] focus-visible:ring-offset-2"
                     >
-                        <span className="min-w-0 max-w-[12rem] sm:max-w-[14.5rem] pr-1">
-                            <span className="block text-[11px] sm:text-xs font-bold uppercase tracking-[0.09em] text-[var(--color-yarn-orange-dark)]">{tx('Live cost')}</span>
+                        <span className="free-mobile-action-label min-w-0 max-w-[12rem] sm:max-w-[14.5rem] pr-1">
+                            <span className="free-mobile-action-eyebrow block text-[11px] sm:text-xs font-bold uppercase tracking-[0.09em] text-[var(--color-yarn-orange-dark)]">{metered ? <><span className="free-mobile-only">{freeMobileText(language, hasValidCostResult ? 'saved' : 'review')}</span><span className="free-desktop-only">{tx('Live cost')}</span></> : tx('Live cost')}</span>
                             <span className="mt-0.5 block truncate text-[13px] sm:text-[15px] font-bold text-[var(--color-ink)]">
-                                {hasValidCostResult ? 'View costing' : readyToCalculate ? freeText(language, 'readyToCalculate') : 'Complete inputs'}
+                                {metered ? <><span className="free-mobile-only">{hasValidCostResult ? validityLabel : readyToCalculate ? freeText(language, 'readyToCalculate') : freeMobileText(language, 'complete')}</span><span className="free-desktop-only">{hasValidCostResult ? 'View costing' : readyToCalculate ? freeText(language, 'readyToCalculate') : 'Complete inputs'}</span></> : hasValidCostResult ? 'View costing' : readyToCalculate ? freeText(language, 'readyToCalculate') : 'Complete inputs'}
                             </span>
                         </span>
-                        <span className="relative flex h-[52px] w-[52px] sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-full bg-[var(--color-warning-amber-soft)] text-[var(--color-yarn-orange-dark)] transition-colors group-hover:bg-[var(--color-yarn-orange)] group-hover:text-white">
+                        <span className="free-mobile-action-icon relative flex h-[52px] w-[52px] sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-full bg-[var(--color-warning-amber-soft)] text-[var(--color-yarn-orange-dark)] transition-colors group-hover:bg-[var(--color-yarn-orange)] group-hover:text-white">
                             <Calculator className="h-6 w-6" aria-hidden="true" />
                             <span
                                 aria-hidden="true"
@@ -1558,9 +1581,9 @@ function MobileLiveEstimateShortcut({
                     className={`max-h-[min(84dvh,44rem)] overflow-y-auto rounded-t-[22px] border-x-0 border-b-0 px-0 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] pt-0 md:inset-x-0 md:mx-auto md:h-auto md:overflow-y-auto md:rounded-b-[22px] md:border md:border-[var(--color-hairline)] ${adaptiveFreeModal ? `gap-0 [&>*]:shrink-0 md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:max-h-[calc(100dvh-3rem)] ${compactFreePreview ? "md:w-[min(calc(100vw-3rem),32rem)]" : "md:w-[min(calc(100vw-3rem),38rem)]"}` : "md:bottom-6 md:top-6 md:max-h-none md:w-[min(calc(100vw-3rem),38rem)]"} ${isTutorialActive ? '!animate-none !transition-none data-[state=open]:!animate-none data-[state=open]:!transition-none' : ''}`}
                 >
                     <SheetHeader className="border-b border-[var(--color-hairline)] bg-[var(--color-warning-amber-soft)]/70 px-5 pb-4 pt-5 pr-16 text-left">
-                        <SheetTitle className="text-[17px]">{tx('Live cost')}</SheetTitle>
-                        <SheetDescription className="truncate text-[12px] font-semibold text-[var(--color-ink)]">
-                            {activeName}{versionLabel ? ` · ${versionLabel}` : ''}
+                        <SheetTitle className="text-[17px]">{metered ? <><span className="free-mobile-only">{freeMobileText(language, hasValidCostResult ? 'saved' : 'review')}</span><span className="free-desktop-only">{tx('Live cost')}</span></> : tx('Live cost')}</SheetTitle>
+                        <SheetDescription data-free-result-identity={metered || undefined} className="truncate text-[12px] font-semibold text-[var(--color-ink)]">
+                            {metered ? <><span className="free-mobile-only" data-i18n-skip="true" lang={language}>{freeSnapshot ? freeMobileText(language, 'savedIdentity', freeSnapshot) : activeName}</span><span className="free-desktop-only">{activeName}{versionLabel ? ` · ${versionLabel}` : ''}</span></> : <>{activeName}{versionLabel ? ` · ${versionLabel}` : ''}</>}
                         </SheetDescription>
                         {!compactFreePreview && <p className="mt-1 text-[10px] font-medium text-[var(--color-muted)]">{metered ? hasValidCostResult ? freeText(language, 'savedRevisionHint') : freeText(language, 'resultAfterCalculation') : 'Updates live as you edit the estimate.'}</p>}
                     </SheetHeader>
@@ -3847,6 +3870,12 @@ export default function EstimatorClient({
         }
     }, [savedFreeCosting, freeLeaveReason, router])
     const [freePlansOpen, setFreePlansOpen] = useState(false)
+    const [freeHelpOpen, setFreeHelpOpen] = useState(false)
+    useEffect(() => {
+        if (!freeHelpOpen || !window.matchMedia('(max-width: 767.98px), (pointer: coarse) and (max-height: 500px) and (max-width: 1023.98px)').matches) return
+        const frame = requestAnimationFrame(() => document.getElementById('free-estimator-help-close')?.focus())
+        return () => cancelAnimationFrame(frame)
+    }, [freeHelpOpen])
     const openFreePlans = useCallback(() => {
         setFreePlansOpen(true)
         window.requestAnimationFrame(() => document.getElementById('free-plan-comparison')?.scrollIntoView({ block: 'start' }))
@@ -5132,6 +5161,7 @@ export default function EstimatorClient({
             icon: AlertCircle,
             className: 'border-[var(--wv-madder-200)] bg-[var(--wv-madder-50)] text-[var(--wv-madder-600)]',
         }
+    const freeIncompleteBeforeSubmit = freeMode && !showValidation && !estimatorValidation.valid
     const firstEstimatorIssueField = estimatorValidation.issues[0]?.field
         ?? costingReadiness.issues[0]?.field
         ?? null
@@ -5202,6 +5232,8 @@ export default function EstimatorClient({
             />
             <PageHeader
                 title={tx('Cost estimate')}
+                className={freeMode ? 'free-mobile-page-header' : undefined}
+                actions={freeMode ? <Button id="free-estimator-help-trigger" type="button" variant="ghost" className="free-mobile-help-trigger" aria-expanded={freeHelpOpen || isTutorialActive} aria-controls="free-estimator-help" disabled={isTutorialActive} onClick={() => setFreeHelpOpen(open => !open)}><BookOpen className="h-4 w-4" aria-hidden="true" />{freeMobileText(language, 'help')}</Button> : undefined}
             />
             {!freeMode && !disableAutosave && (
                 <LocalSaveStatus
@@ -5519,8 +5551,12 @@ export default function EstimatorClient({
             <div className="estimator-workspace-shell">
                 <aside
                     className="estimator-left-rail space-y-3"
+                    id={freeMode ? 'free-estimator-help' : undefined}
+                    data-free-help-expanded={freeMode ? freeHelpOpen || isTutorialActive : undefined}
                     aria-label="Estimator guides and tools"
                 >
+                    {freeMode && <Button id="free-estimator-help-close" variant="ghost" className="free-mobile-help-trigger" disabled={isTutorialActive} onClick={() => { setFreeHelpOpen(false); document.getElementById('free-estimator-help-trigger')?.focus() }}><X className="h-4 w-4" />{tx('Close')}</Button>}
+                    {freeMode && <p className="free-mobile-only text-sm leading-relaxed text-body">{tx('Quick and Detailed use the same calculation. Detailed shows additional assumptions.')}</p>}
                     <CostEstimateTutorial
                         accountDismissed={tutorialDismissed}
                         userMetadata={userMetadata}
@@ -5924,15 +5960,16 @@ export default function EstimatorClient({
                     <section
                         id="active-quality"
                         data-slot="card"
+                        data-free-record-loaded={freeMode ? Boolean(freeMeter.completed) : undefined}
                         aria-labelledby="active-quality-title"
                         className="ui-focus-surface rounded-[14px] border border-[var(--color-hairline)] bg-white/95 px-4 py-3 shadow-[var(--shadow-card)] sm:px-5"
                     >
                         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                            <div className="min-w-0">
+                            <div className="free-mobile-quality-identity min-w-0">
                                 <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--color-yarn-orange-dark)]">Current quality</p>
                                 <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1">
                                     <h2 id="active-quality-title" className="max-w-full break-words text-[15px] font-bold leading-5 text-[var(--color-ink)]">
-                                        {appliedTemplate?.name ?? (qualityLabel.trim() || 'New quality')}
+                                        {freeMode && freeMeter.completed ? <><span className="free-mobile-only">{freeMobileText(language, 'savedIdentity', {label: freeMeter.completed.label, revision: freeMeter.completed.editWindow?.revision ?? 1})}</span><span className="free-desktop-only">{appliedTemplate?.name ?? (qualityLabel.trim() || 'New quality')}</span></> : appliedTemplate?.name ?? (qualityLabel.trim() || 'New quality')}
                                     </h2>
                                     {sourceQuoteId && sourceRecordKind === 'costing' && (
                                         <span className="text-[10px] font-medium text-[var(--color-muted)]">Costing v{sourceQuoteVersionNumber ?? 1}</span>
@@ -5946,13 +5983,13 @@ export default function EstimatorClient({
                             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                                 <LiquidSegmented
                                     role="tablist"
-                                    aria-label={entryMode === 'quick' ? tx('Quick Costing · same calculation engine') : tx('Full technical inputs & factory assumptions · same calculation engine')}
+                                    aria-label={freeMode ? freeMobileText(language, 'mode') : entryMode === 'quick' ? tx('Quick Costing · same calculation engine') : tx('Full technical inputs & factory assumptions · same calculation engine')}
                                     data-tutorial-section={1}
                                     data-estimator-field="entryMode"
                                     value={entryMode}
                                     onValueChange={handleEntryModeChange}
                                     options={[
-                                        { value: 'quick', label: 'Quick', controls: 'estimator-form-panel', title: tx('Quick Costing · same calculation engine') },
+                                        { value: 'quick', label: freeMode ? freeText(language, 'quick') : 'Quick', controls: 'estimator-form-panel', title: tx('Quick Costing · same calculation engine') },
                                         { value: 'detailed', label: tx('Detailed'), controls: 'estimator-form-panel', title: tx('Full technical inputs & factory assumptions · same calculation engine') },
                                     ]}
                                 />
@@ -5984,9 +6021,9 @@ export default function EstimatorClient({
                                 <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
                             </span>
                         </button>
-                        <div data-testid="costing-validity" className={`mt-3 flex min-h-10 items-center gap-2 rounded-[10px] border px-3 py-2 text-[11px] leading-4 ${validityStatus.className}`} role="status" aria-live="polite">
+                        <div data-testid="costing-validity" data-free-incomplete={freeIncompleteBeforeSubmit || undefined} className={`mt-3 flex min-h-10 items-center gap-2 rounded-[10px] border px-3 py-2 text-[11px] leading-4 ${validityStatus.className}`} role="status" aria-live="polite">
                             <validityStatus.icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-                            <span className="font-semibold">{validityStatus.label}</span>
+                            <span className="font-semibold">{freeIncompleteBeforeSubmit ? <><span className="free-mobile-only">{freeMobileText(language, 'complete')}</span><span className="free-desktop-only">{validityStatus.label}</span></> : validityStatus.label}</span>
                             <span className="hidden font-medium opacity-85 sm:inline">{validityStatus.description}</span>
                         </div>
                         {freeMode && awaitingCalculation && estimatorValidation.valid && (
@@ -7206,8 +7243,9 @@ export default function EstimatorClient({
                 isTutorialActive={isTutorialActive}
                 visible={mobileCostingShortcutVisible}
                 keyboardVisible={mobileKeyboardVisible}
-                activeName={appliedTemplate?.name ?? (qualityLabel.trim() || 'New quality')}
-                versionLabel={sourceQuoteId && sourceRecordKind === 'costing'
+                activeName={freeMode && freeMeter.completed ? freeMeter.completed.label : appliedTemplate?.name ?? (qualityLabel.trim() || 'New quality')}
+                freeSnapshot={freeMode && freeMeter.completed ? { label: freeMeter.completed.label, revision: freeMeter.completed.editWindow?.revision ?? 1 } : undefined}
+                versionLabel={freeMode && freeMeter.completed ? `v${freeMeter.completed.editWindow?.revision ?? 1}` : sourceQuoteId && sourceRecordKind === 'costing'
                     ? `Costing v${sourceQuoteVersionNumber ?? 1}`
                     : undefined}
                 validityLabel={validityStatus.label}

@@ -182,7 +182,7 @@ export default function ResetPasswordForm() {
                     <Button asChild className="h-12 w-full text-base font-semibold">
                         <Link href="/forgot-password">Request new link</Link>
                     </Button>
-                    <Link href="/login" className="inline-flex items-center gap-1 text-sm font-medium text-saffron-deep hover:underline">
+                    <Link href="/login" className="inline-flex min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 sm:inline items-center gap-1 text-sm font-medium text-saffron-deep hover:underline">
                         <ArrowLeft className="h-3.5 w-3.5" />
                         Back to login
                     </Link>
@@ -196,7 +196,7 @@ export default function ResetPasswordForm() {
             title="Choose a new password"
             subtitle="Use 8+ characters with an uppercase letter, number, and special character"
         >
-            <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5" noValidate>
                 <div className="space-y-1.5">
                     <Label htmlFor="password" className="font-medium text-body">
                         New password
@@ -213,7 +213,7 @@ export default function ResetPasswordForm() {
                             }}
                             autoComplete="new-password"
                             className={cn(
-                                'h-12 pr-10 transition-all focus:bg-surface',
+                                'h-12 pr-12 sm:pr-10 transition-all focus:bg-surface',
                                 errors.password && 'border-wv-status-danger-fg focus-visible:border-wv-status-danger-fg'
                             )}
                             disabled={saving}
@@ -223,7 +223,7 @@ export default function ResetPasswordForm() {
                         <button
                             type="button"
                             onClick={() => setShowPassword((current) => !current)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-ink"
+                            className="absolute right-0.5 sm:right-3 top-1/2 flex h-[44px] w-[44px] sm:h-auto sm:w-auto -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             aria-label={showPassword ? 'Hide new password' : 'Show new password'}
                         >
                             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -252,7 +252,7 @@ export default function ResetPasswordForm() {
                             }}
                             autoComplete="new-password"
                             className={cn(
-                                'h-12 pr-10 transition-all focus:bg-surface',
+                                'h-12 pr-12 sm:pr-10 transition-all focus:bg-surface',
                                 errors.confirmPassword && 'border-wv-status-danger-fg focus-visible:border-wv-status-danger-fg'
                             )}
                             disabled={saving}
@@ -262,7 +262,7 @@ export default function ResetPasswordForm() {
                         <button
                             type="button"
                             onClick={() => setShowConfirmPassword((current) => !current)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-ink"
+                            className="absolute right-0.5 sm:right-3 top-1/2 flex h-[44px] w-[44px] sm:h-auto sm:w-auto -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
                         >
                             {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -294,7 +294,7 @@ export default function ResetPasswordForm() {
                 </Button>
 
                 <div className="pt-1 text-center text-sm text-muted-foreground">
-                    <Link href="/forgot-password" className="font-medium text-saffron-deep hover:underline">
+                    <Link href="/forgot-password" className="inline-flex min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 sm:inline items-center font-medium text-saffron-deep hover:underline">
                         Request a new reset link
                     </Link>
                 </div>

@@ -7,6 +7,7 @@ import { ArrowLeft } from 'lucide-react'
 import { LanguageSwitcher } from '@/components/i18n/language-switcher'
 import LogoutButton from '@/components/auth/logout-button'
 import { useTranslation } from '@/lib/i18n/context'
+import { cn } from '@/lib/utils'
 import { upgradeText } from '@/lib/upgrade-wall'
 
 interface PlanChooserHeaderProps {
@@ -20,6 +21,7 @@ export function PlanChooserHeader({ effectiveTier = 'unassigned', isUnassigned =
   const from = searchParams.get('from')
 
   const isFree = effectiveTier === 'free'
+  const mobileCompact = isFree || isUnassigned || effectiveTier === 'unassigned'
 
   let backHref: string | null = null
   let backLabel = upgradeText(language, 'backToWorkspace')
@@ -28,7 +30,7 @@ export function PlanChooserHeader({ effectiveTier = 'unassigned', isUnassigned =
     backHref = isFree ? '/free/billing' : '/owner/billing'
     backLabel = upgradeText(language, 'backToBilling')
   } else if (from === 'estimator') {
-    backHref = isFree ? '/free/estimator' : '/owner/estimator'
+    backHref = isFree ? '/free' : '/owner/estimator'
     backLabel = upgradeText(language, 'backToEstimator')
   } else if (from === 'workspace') {
     backHref = isFree ? '/free' : '/owner/estimator'
@@ -45,8 +47,8 @@ export function PlanChooserHeader({ effectiveTier = 'unassigned', isUnassigned =
   }
 
   return (
-    <header className="flex flex-wrap items-center justify-between gap-3 py-4 border-b border-hairline/60">
-      <div className="flex items-center gap-4">
+    <header className={cn("flex flex-wrap items-center justify-between gap-3 py-4 border-b border-hairline/60", mobileCompact && "max-sm:gap-2 max-sm:py-2")}>
+      <div className={cn("flex items-center gap-4", mobileCompact && "max-sm:hidden")}>
         <Link href={backHref ?? '/'} className="flex min-h-[44px] items-center gap-2 group focus:outline-none focus-visible:ring-2 focus-visible:ring-saffron rounded-lg">
           <Image
             src="/images/WeavlyLogo.png"
@@ -69,10 +71,10 @@ export function PlanChooserHeader({ effectiveTier = 'unassigned', isUnassigned =
             <span>{backLabel}</span>
           </Link>
         ) : (
-          <LogoutButton variant="header" className="h-8 px-2.5 text-xs text-subtle hover:text-ink" />
+          <LogoutButton variant="header" className="min-h-[44px] sm:h-8 px-2.5 text-xs text-subtle hover:text-ink" />
         )}
 
-        <LanguageSwitcher placement="bottom" className="bg-surface/90 border-hairline text-xs" />
+        <LanguageSwitcher align={mobileCompact ? "mobile-right" : "left"} placement="bottom" className="min-h-[44px] sm:min-h-0 bg-surface/90 border-hairline text-xs" />
       </div>
     </header>
   )

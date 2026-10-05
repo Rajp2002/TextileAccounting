@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ChevronDown, ChevronUp, RefreshCw, Loader2, AlertCircle } from 'lucide-react'
 import { useTranslation } from '@/lib/i18n/context'
 import { freeText } from '@/lib/i18n/free-tier'
+import { freeMobileText } from '@/lib/i18n/free-mobile'
 import { Button } from '@/components/ui/button'
 
 export interface FreeUsageCardProps {
@@ -93,12 +94,13 @@ export function FreeUsageCard({
       data-testid="free-usage-card"
       data-free-usage-card="true"
       data-docked={isDocked ? 'true' : 'false'}
+      data-usage-state={isInitialLoading ? 'loading' : hasFatalError ? 'unavailable' : isPending ? 'pending' : stale ? 'stale' : isExhausted ? 'exhausted' : 'available'}
       className={containerClasses}
       style={isDocked && dockStyle ? dockStyle : undefined}
       aria-label={t('freeCostings')}
     >
       {/* Header Row: Label & Disclosure Toggle */}
-      <div className="flex items-center justify-between gap-2">
+      <div className="free-usage-header flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <span className="text-xs font-semibold text-ink tracking-wide uppercase">
             {t('freeCostings')}
@@ -129,7 +131,7 @@ export function FreeUsageCard({
               onClick={() => void onRefresh()}
               aria-label={t('refresh')}
               disabled={loading || isPending}
-              className="inline-flex h-6 w-6 items-center justify-center rounded text-subtle hover:text-body hover:bg-surface-soft focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-wv-border-focus transition-colors"
+              className="free-usage-control inline-flex h-6 w-6 items-center justify-center rounded text-subtle hover:text-body hover:bg-surface-soft focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-wv-border-focus transition-colors"
             >
               <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
             </button>
@@ -141,7 +143,7 @@ export function FreeUsageCard({
             aria-expanded={expanded}
             aria-controls={detailsId}
             aria-label={t('toggleDetails')}
-            className="inline-flex h-6 w-6 items-center justify-center rounded text-subtle hover:text-ink hover:bg-surface-soft focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-wv-border-focus transition-colors"
+            className="free-usage-control inline-flex h-6 w-6 items-center justify-center rounded text-subtle hover:text-ink hover:bg-surface-soft focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-wv-border-focus transition-colors"
           >
             {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
           </button>
@@ -182,13 +184,16 @@ export function FreeUsageCard({
           )}
         </div>
       ) : (
-        <div className="mt-2">
+        <div className="free-usage-summary mt-2">
           <div className="flex items-baseline justify-between gap-1">
             <div className="flex items-baseline gap-1.5" data-testid="free-usage-counter">
-              <span className="text-xl font-bold tracking-tight text-ink tabular-nums">
+              <span className="free-mobile-only font-medium text-body">
+                {freeMobileText(language, 'allowance', { remaining: remaining ?? 0, limit })}
+              </span>
+              <span className="free-desktop-only text-xl font-bold tracking-tight text-ink tabular-nums">
                 {remaining} / {limit}
               </span>
-              <span className="text-xs font-medium text-body">
+              <span className="free-desktop-only text-xs font-medium text-body">
                 {t('leftThisMonth')}
               </span>
             </div>
@@ -203,7 +208,7 @@ export function FreeUsageCard({
           {/* Two-Segment Meter: Filled segments represent REMAINING costings */}
           <div
             data-testid="free-usage-meter"
-            className="flex gap-1.5 h-1.5 w-full my-2"
+            className="free-usage-meter flex gap-1.5 h-1.5 w-full my-2"
             role="presentation"
           >
             {Array.from({ length: limit }).map((_, index) => {

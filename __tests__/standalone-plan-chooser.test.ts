@@ -6,6 +6,8 @@ import {
   UPGRADE_FEATURE_IMAGES,
   upgradeText,
 } from '@/lib/upgrade-wall'
+import { BILLING_DOCUMENT_POLICY } from '@/lib/billing-document-policy'
+import { freeMobileEntryText } from '@/lib/i18n/free-mobile-entry'
 import { CARD_FEATURE_PREVIEWS } from '@/components/plans/PlanCard'
 
 const root = process.cwd()
@@ -48,7 +50,8 @@ describe('Standalone Plan Chooser & Upgrade Experience', () => {
       expect(header).toContain('/owner/billing')
       expect(header).toContain('/free/billing')
       expect(header).toContain('/owner/estimator')
-      expect(header).toContain('/free/estimator')
+      expect(header).toContain("backHref = isFree ? '/free' : '/owner/estimator'")
+      expect(header).not.toContain('/free/estimator')
       expect(header).toContain('LogoutButton')
     })
   })
@@ -147,10 +150,18 @@ describe('Standalone Plan Chooser & Upgrade Experience', () => {
 
     it('PAY-02: client layout provides full commercial disclosure section', () => {
       const client = read('components/plans/PlanChooserClient.tsx')
-      expect(client).toContain('18% GST Included')
-      expect(client).toContain('Manual Renewal')
-      expect(client).toContain('Instant Activation')
-      expect(client).toContain('Secure Checkout')
+      expect(BILLING_DOCUMENT_POLICY.state).toBe('not_supported')
+      expect(client).toContain('data-billing-document-state={BILLING_DOCUMENT_POLICY.state}')
+      expect(client).toContain("t('base_plan.billing.receipt_only')")
+      expect(client).not.toContain('Full tax invoices with GSTIN compliance')
+      expect(read('components/plans/PlanCard.tsx')).toContain('GST (18%)')
+      expect(freeMobileEntryText('en', 'receiptDocument')).toBe(BILLING_DOCUMENT_POLICY.customerDocument)
+      for (const language of ['en', 'hi', 'gu'] as const) {
+        for (const key of ['receiptDocument', 'manualRenewal', 'verifiedActivation', 'secureCheckout'] as const) {
+          expect(freeMobileEntryText(language, key)).toBeTruthy()
+          expect(client).toContain(`freeMobileEntryText(language, '${key}')`)
+        }
+      }
     })
   })
 

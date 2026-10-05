@@ -23,7 +23,7 @@ export default async function FreeBillingPage() {
     if (!session) redirect('/login')
 
     const supabase = await createClient()
-    const [access, grant, paymentsResult] = await Promise.all([
+    const [access, grant, paymentsResult, organizationResult] = await Promise.all([
         getOrgPlanAccess(session.profile.org_id),
         getFreeGrant(session.profile.org_id),
         supabase
@@ -32,6 +32,7 @@ export default async function FreeBillingPage() {
             .eq('org_id', session.profile.org_id)
             .order('created_at', { ascending: false })
             .limit(10),
+        supabase.from('organizations').select('name').eq('id', session.profile.org_id).maybeSingle(),
     ])
 
     const billingHistory: BillingHistoryEntry[] = (paymentsResult.data ?? []).map((p) => ({
@@ -50,9 +51,9 @@ export default async function FreeBillingPage() {
 
     return (
         <FreeBillingClient
-            organizationName={session.profile.full_name ?? 'Weavly Free'}
+            organizationName={organizationResult.data?.name ?? ''}
             initialTier={access.effectiveTier}
-            grantState={grant?.state ?? 'active'}
+            grantState={grant?.state}
             billingHistory={billingHistory}
         />
     )

@@ -15,9 +15,10 @@ const LANGUAGES: { code: Language; label: string; short: string }[] = [
 interface LanguageSwitcherProps {
   className?: string
   placement?: "top" | "bottom"
+  align?: "left" | "right" | "mobile-right"
 }
 
-export function LanguageSwitcher({ className, placement = "top" }: LanguageSwitcherProps) {
+export function LanguageSwitcher({ className, placement = "top", align = "left" }: LanguageSwitcherProps) {
   const { language, setLanguage, languageStatus, pendingLanguage, languageError, tx, t } = useTranslation()
   const [open, setOpen] = useState(false)
 
@@ -77,7 +78,8 @@ export function LanguageSwitcher({ className, placement = "top" }: LanguageSwitc
           {/* Backdrop to close on outside click */}
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           <div className={cn(
-            "absolute left-0 z-50 min-w-[130px] overflow-hidden rounded-xl border border-border bg-background py-1 shadow-lg",
+            "absolute z-50 min-w-[130px] overflow-hidden rounded-xl border border-border bg-background py-1 shadow-lg",
+            align === "mobile-right" ? "right-0 md:left-0 md:right-auto" : align === "right" ? "right-0" : "left-0",
             placement === "top" ? "bottom-full mb-2" : "top-full mt-2"
           )}>
             {LANGUAGES.map(lang => (
@@ -89,6 +91,7 @@ export function LanguageSwitcher({ className, placement = "top" }: LanguageSwitc
                 aria-current={language === lang.code ? "true" : undefined}
                 className={cn(
                   "w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-medium transition-colors text-left",
+                  align !== "left" && "max-md:min-h-[44px]",
                   language === lang.code
                     ? "bg-primary/10 text-primary"
                     : "text-foreground hover:bg-muted"

@@ -20,6 +20,8 @@ export const UPGRADE_PLAN_FEATURES: Record<UpgradePlan, readonly UpgradeFeature[
 
 // English, Gujarati, Hindi. Keep limits and sample labels explicit in every language.
 const phrases = {
+  planDetails: ['Features and demo', 'સુવિધાઓ અને ડેમો', 'सुविधाएँ और डेमो'],
+  hidePlanDetails: ['Hide details', 'વિગતો છુપાવો', 'विवरण छिपाएँ'],
   title: ['Choose your plan', 'તમારો પ્લાન પસંદ કરો', 'अपना प्लान चुनें'],
   intro: ['Explore each feature to see what your plan includes.', 'તમારા પ્લાનમાં શું મળે છે તે જાણવા દરેક સુવિધા જુઓ.', 'हर सुविधा देखकर जानें कि आपके प्लान में क्या शामिल है।'],
   freeFit: ['For occasional costings', 'ક્યારેક કોસ્ટિંગ કરવા માટે', 'कभी-कभी कॉस्टिंग करने के लिए'],
