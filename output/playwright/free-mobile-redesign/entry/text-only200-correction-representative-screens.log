@@ -1,0 +1,26 @@
+### Result
+[{"kind":"plans","size":"small","geometry":{"viewport":320,"scrollWidth":320,"height":1738}},{"kind":"signup","size":"small","geometry":{"viewport":320,"scrollWidth":320,"height":1039}},{"kind":"login","size":"small","geometry":{"viewport":320,"scrollWidth":320,"height":740}},{"kind":"plans","size":"large","geometry":{"viewport":430,"scrollWidth":430,"height":1701}},{"kind":"signup","size":"large","geometry":{"viewport":430,"scrollWidth":430,"height":999}},{"kind":"login","size":"large","geometry":{"viewport":430,"scrollWidth":430,"height":932}},{"kind":"plans","size":"desktop","geometry":{"viewport":1440,"scrollWidth":1440,"height":1139}},{"kind":"signup","size":"desktop","geometry":{"viewport":1440,"scrollWidth":1440,"height":1000}},{"kind":"login","size":"desktop","geometry":{"viewport":1440,"scrollWidth":1440,"height":1000}}]
+### Ran Playwright code
+```js
+await (async page => {
+  const report = []
+  await page.evaluate(() => localStorage.setItem('weavly_language', 'en'))
+  for (const [size, width, height] of [['small',320,740],['large',430,932],['desktop',1440,1000]]) {
+    await page.setViewportSize({width,height})
+    for (const kind of ['plans','signup','login']) {
+      await page.goto(`http://127.0.0.1:4188/fixture?kind=${kind}&from=estimator`)
+      await page.getByRole('heading',{level:1}).waitFor()
+      await page.waitForFunction(() => document.documentElement.lang === 'en')
+      await page.screenshot({path:`output/playwright/free-mobile-redesign/entry/${kind}-after-${size}.png`,fullPage:true})
+      report.push({kind,size,geometry:await page.evaluate(() => ({viewport:innerWidth,scrollWidth:document.documentElement.scrollWidth,height:document.documentElement.scrollHeight}))})
+    }
+  }
+  return report
+}
+)(page);
+```
+### Page
+- Page URL: http://127.0.0.1:4188/fixture?kind=login&from=estimator
+- Page Title: Synthetic Weavly Free entry components
+### Events
+- New console entries: .playwright-cli/console-2026-10-05T18-52-15-647Z.log#L64-L72

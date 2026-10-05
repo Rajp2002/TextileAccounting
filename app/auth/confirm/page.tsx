@@ -136,15 +136,15 @@ function ConfirmContent() {
                         <div className="h-14 w-14 rounded-full bg-wv-status-danger-bg flex items-center justify-center">
                             <AlertCircle className="h-7 w-7 text-wv-status-danger-fg" />
                         </div>
-                        <div className="space-y-2">
+                        <div className="space-y-2" role="alert">
                             <h3 className="font-semibold text-lg text-ink">Verification Failed</h3>
                             <p className="text-sm text-subtle">{error}</p>
                         </div>
                         <div className="space-y-2 w-full">
-                            <Button asChild className="w-full">
+                            <Button asChild className="min-h-[44px] w-full sm:min-h-0">
                                 <Link href="/login">Go to Login</Link>
                             </Button>
-                            <Button asChild variant="outline" className="w-full">
+                            <Button asChild variant="outline" className="min-h-[44px] w-full sm:min-h-0">
                                 <Link href="/signup">Create New Account</Link>
                             </Button>
                         </div>
@@ -153,7 +153,7 @@ function ConfirmContent() {
                     <>
                         <Loader2 className="h-10 w-10 animate-spin text-wv-neel-600" />
                         <div className="space-y-1">
-                            <p className="font-medium text-ink">{status}</p>
+                            <p className="font-medium text-ink" role="status" aria-live="polite">{status}</p>
                             <p className="text-xs text-subtle">Please wait...</p>
                         </div>
                     </>

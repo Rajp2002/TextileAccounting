@@ -1,0 +1,78 @@
+{
+  "kind": "Synthetic CSS/default-prop regression, bounded existing settings/receipt controls; no paid persistence/auth/device evidence",
+  "checks": [
+    {
+      "tier": "lite",
+      "width": 320,
+      "view": "paid-account",
+      "whiteSpace": "nowrap",
+      "flexShrink": "0",
+      "maxWidth": "none",
+      "freeDisclosures": 0,
+      "pass": true
+    },
+    {
+      "tier": "base",
+      "width": 320,
+      "view": "paid-account",
+      "whiteSpace": "nowrap",
+      "flexShrink": "0",
+      "maxWidth": "none",
+      "freeDisclosures": 0,
+      "pass": true
+    },
+    {
+      "tier": "lite",
+      "width": 1440,
+      "view": "paid-account",
+      "whiteSpace": "nowrap",
+      "flexShrink": "0",
+      "maxWidth": "none",
+      "freeDisclosures": 0,
+      "pass": true
+    },
+    {
+      "tier": "base",
+      "width": 1440,
+      "view": "paid-account",
+      "whiteSpace": "nowrap",
+      "flexShrink": "0",
+      "maxWidth": "none",
+      "freeDisclosures": 0,
+      "pass": true
+    },
+    {
+      "view": "Free account desktop",
+      "whiteSpace": "nowrap",
+      "flexShrink": "0",
+      "maxWidth": "none",
+      "pass": true
+    },
+    {
+      "view": "Free account desktop input",
+      "height": 38.5,
+      "pass": false
+    },
+    {
+      "view": "Default payment dialog",
+      "width": 320,
+      "minHeight": "auto",
+      "FreePortalClass": false,
+      "pass": false
+    },
+    {
+      "view": "Default payment dialog",
+      "width": 1440,
+      "minHeight": "0px",
+      "FreePortalClass": false,
+      "pass": true
+    },
+    {
+      "view": "Free payment dialog desktop",
+      "minHeight": "0px",
+      "pass": true
+    }
+  ],
+  "passed": 7,
+  "failed": 2
+}

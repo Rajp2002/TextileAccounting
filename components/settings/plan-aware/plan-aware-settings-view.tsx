@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useState, useSyncExternalStore } from 'react'
-import { SlidersHorizontal } from 'lucide-react'
+import React, { useEffect, useId, useRef, useState, useSyncExternalStore } from 'react'
+import { ChevronDown, ChevronUp, SlidersHorizontal } from 'lucide-react'
 import { useTranslation } from '@/lib/i18n/context'
 import type { SubscriptionTier } from '@/lib/subscription-access'
 import { PersonalInformationCard } from './personal-information-card'
@@ -13,6 +13,8 @@ import { SecurityCard } from './security-card'
 import { DeletionReviewCard } from './deletion-review-card'
 import { useUnloadProtection } from './unsaved-changes-dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { freeSupportingText } from '@/lib/i18n/free-supporting'
+import styles from './free-settings.module.css'
 import {
     DEFAULT_STARTUP_INTRO_PREFERENCE, readStartupIntroPreference, saveStartupIntroPreference, STARTUP_INTRO_CHANGE_EVENT,
     type StartupIntroPreference,
@@ -32,6 +34,31 @@ function currentStartupPreference() {
 }
 
 const serverStartupPreference = (): StartupIntroPreference => DEFAULT_STARTUP_INTRO_PREFERENCE
+
+/** The same editors remain mounted; only optional mobile presentation folds. */
+function FreeSettingsGroup({ compact, title, summary, dirty = false, children }: { compact: boolean; title: string; summary: string; dirty?: boolean; children: React.ReactNode }) {
+    const [open, setOpen] = useState(false)
+    const contentId = useId()
+    const content = useRef<HTMLDivElement>(null)
+    const { language } = useTranslation()
+    useEffect(() => {
+        if (!compact || !content.current) return
+        // An async save can finish after a disclosure closes. Keep its error visible.
+        const node = content.current
+        const revealErrors = () => { if (node.querySelector('[role="alert"], [aria-invalid="true"]')) setOpen(true) }
+        const observer = new MutationObserver(revealErrors)
+        observer.observe(node, { subtree: true, childList: true, attributes: true, attributeFilter: ['aria-invalid', 'role'] })
+        return () => observer.disconnect()
+    }, [compact])
+    if (!compact) return children
+    return <section className={styles.group}>
+        <button type="button" className={styles.toggle} aria-expanded={open} aria-controls={contentId} onClick={() => setOpen(value => value && content.current?.querySelector('[role="alert"], [aria-invalid="true"]') ? true : !value)}>
+            <span className="min-w-0"><span className="text-sm font-semibold text-ink">{title}</span><span className={styles.summary}>{summary}</span>{dirty && <span className={styles.dirty}>{freeSupportingText(language, 'unsaved')}</span>}</span>
+            {open ? <ChevronUp aria-hidden="true" /> : <ChevronDown aria-hidden="true" />}
+        </button>
+        <div ref={content} id={contentId} className={open ? undefined : styles.closed}>{children}</div>
+    </section>
+}
 
 function StartupIntroSetting() {
     const { t } = useTranslation()
@@ -97,7 +124,7 @@ export function PlanAwareSettingsView({
     onFactoryNameChange,
     onDefaultsChange,
 }: PlanAwareSettingsViewProps) {
-    const { t } = useTranslation()
+    const { t, language } = useTranslation()
 
     const [personalDirty, setPersonalDirty] = useState(false)
     const [factoryDirty, setFactoryDirty] = useState(false)
@@ -118,7 +145,7 @@ export function PlanAwareSettingsView({
     }
 
     return (
-        <div className="min-h-screen py-6 sm:py-10">
+        <div className={`min-h-screen py-6 sm:py-10 ${tier === 'free' ? styles.root : ''}`}>
             <div className="mx-auto w-full max-w-[960px] space-y-8 px-4 sm:px-6 lg:px-8">
                 {/* Page Header */}
                 <header className="space-y-2 border-b border-hairline/80 pb-6 text-center">
@@ -135,22 +162,22 @@ export function PlanAwareSettingsView({
                 {/* Ordered Sections Stack */}
                 <main className="space-y-6 sm:space-y-8">
                     {/* Section 1: Personal Information (Universal) */}
-                    <PersonalInformationCard
+                    <FreeSettingsGroup compact={tier === 'free'} title={freeSupportingText(language, 'personal')} summary={profile.fullName} dirty={personalDirty}><PersonalInformationCard
                         initialName={profile.fullName}
                         email={profile.email}
                         emailVerified={profile.emailVerified}
                         phone={profile.phone}
                         onNameUpdated={onProfileNameChange}
                         onDirtyChange={setPersonalDirty}
-                    />
+                    /></FreeSettingsGroup>
 
                     {/* Section 2: Factory Details (Where factory exists) */}
-                    <FactoryDetailsCard
+                    <FreeSettingsGroup compact={tier === 'free'} title={freeSupportingText(language, 'factory')} summary={factory.name} dirty={factoryDirty}><FactoryDetailsCard
                         initialFactoryName={factory.name}
                         isAuthorizedEditor={factory.isAuthorizedEditor ?? true}
                         onFactoryNameUpdated={onFactoryNameChange}
                         onDirtyChange={setFactoryDirty}
-                    />
+                    /></FreeSettingsGroup>
 
                     {/* Section 3: Costing Defaults (Lite/Base Entitled; Omitted for Free) */}
                     {canEditDefaults && (
@@ -167,13 +194,14 @@ export function PlanAwareSettingsView({
                         isAuthorizedEditor={factory.isAuthorizedEditor ?? true}
                         onDirtyChange={setPayrollDirty}
                     />}
-                    <SecurityCard email={profile.email} />
-                    <StartupIntroSetting />
+                    <FreeSettingsGroup compact={tier === 'free'} title={freeSupportingText(language, 'security')} summary={profile.emailVerified ? profile.email : `${profile.email} · ${freeSupportingText(language, 'emailUnverified')}`}><SecurityCard email={profile.email} /></FreeSettingsGroup>
+                    <FreeSettingsGroup compact={tier === 'free'} title={freeSupportingText(language, 'display')} summary={freeSupportingText(language, 'device')}><StartupIntroSetting /></FreeSettingsGroup>
 
                     {/* Section 6: Account & Factory Deletion (Universal) */}
                     <DeletionReviewCard
                         organizationName={factory.name}
                         accountEmail={profile.email}
+                        restoreMobileFocus={tier === 'free'}
                     />
                 </main>
             </div>

@@ -1,0 +1,24 @@
+### Result
+[{"size":"small","width":320,"scrollWidth":320},{"size":"large","width":430,"scrollWidth":430},{"size":"desktop","width":1440,"scrollWidth":1440}]
+### Ran Playwright code
+```js
+await (async page => {
+ await page.evaluate(()=>localStorage.setItem('weavly_language','en'));
+ const report=[];
+ for(const [size,width,height] of [['small',320,740],['large',430,932],['desktop',1440,1000]]) {
+  await page.setViewportSize({width,height});
+  await page.goto('http://127.0.0.1:4188/fixture?kind=signup');
+  await page.getByRole('heading',{level:1}).waitFor();
+  await page.waitForFunction(()=>document.documentElement.lang==='en');
+  await page.screenshot({path:`output/playwright/free-mobile-redesign/entry/signup-after-${size}.png`,fullPage:true});
+  report.push({size,width,scrollWidth:await page.evaluate(()=>document.documentElement.scrollWidth)});
+ }
+ return report;
+}
+)(page);
+```
+### Page
+- Page URL: http://127.0.0.1:4188/fixture?kind=signup
+- Page Title: Synthetic Weavly Free entry components
+### Events
+- New console entries: .playwright-cli/console-2026-10-05T18-28-19-258Z.log#L22-L24

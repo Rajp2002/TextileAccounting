@@ -1,0 +1,89 @@
+> textile-saas@0.1.0 test:db
+> vitest run --config vitest.db.config.ts
+
+
+ RUN  v4.1.8 /private/tmp/weavly-free-final-verification
+
+ ✓ __tests__/db/free-monthly-period-end.dbtest.ts (9 tests) 2975ms
+ ✓ __tests__/db/admin-founder.dbtest.ts (10 tests) 3383ms
+ ✓ __tests__/db/admin-founder-mfa.dbtest.ts (13 tests) 3538ms
+ ✓ __tests__/db/admin-retention.dbtest.ts (10 tests) 3460ms
+ ✓ __tests__/db/admin-formal.dbtest.ts (12 tests) 4003ms
+ ✓ __tests__/db/inventory-audit.dbtest.ts (9 tests) 3771ms
+ ✓ __tests__/db/base-manual-incentives.dbtest.ts (10 tests) 4115ms
+ ✓ __tests__/db/admin-data-rights.dbtest.ts (9 tests) 4744ms
+     ✓ exports the entire own public history, including bound manual intake; peers, foreign/unbound tickets and private values stay excluded  353ms
+     ✓ keeps the established empty-account deletion path working and the foreign tenant intact  1052ms
+ ✓ __tests__/db/base-fixed-operator.dbtest.ts (8 tests) 4537ms
+     ✓ records two fixed machines and one piece machine without changing the shared job rate; retries once  693ms
+     ✓ settles one salary across multiple machines, with monthly receipt units and retry protection  343ms
+ ✓ __tests__/db/inventory-audit-date-and-adjustment.dbtest.ts (13 tests) 4702ms
+     ✓ INVARIANT: an audit id decides the date, so a stale id with another date cannot mix two audits  338ms
+stdout | __tests__/db/admin-support.dbtest.ts > AD05 support transactional requester boundary > profiles priority list against1,000synthetic organizations and5,000tickets within local1second p95budget
+AD10 synthetic support scale:1000organizations/5000tickets;10samples;p95=67.2ms;budget=1000ms;local disposable PostgreSQL
+
+ ✓ __tests__/db/admin-support.dbtest.ts (13 tests) 7237ms
+     ✓ profiles priority list against1,000synthetic organizations and5,000tickets within local1second p95budget  3439ms
+stdout | __tests__/db/admin-factories.dbtest.ts > AD03/04 real DB guarded read models and synthetic scale > records staging p95 for 1,000 organization reads under a 2-second aggregate budget
+{"fixture":"1000 synthetic organizations","operation":"admin_factory_snapshot aggregate","samples":10,"p95Ms":188,"budgetMs":2000,"environment":"disposable loopback PostgreSQL; no production performance claim"}
+
+ ✓ __tests__/db/admin-factories.dbtest.ts (8 tests) 7194ms
+     ✓ counts organization keys once; missing classification is unclassified  374ms
+     ✓ never fans a Free subject funnel event into two factory milestones; original persisted attribution is one factory  391ms
+     ✓ dates zero-to-positive corrections from immutable successful receipts, preserving milestones through retry and later zero  565ms
+     ✓ records staging p95 for 1,000 organization reads under a 2-second aggregate budget  1425ms
+ ✓ __tests__/db/production-parity.dbtest.ts (6 tests) 2904ms
+ ✓ __tests__/db/admin-payments.dbtest.ts (6 tests) 3437ms
+ ✓ __tests__/db/admin-test-factory-billing-storage.dbtest.ts (5 tests) 2998ms
+ ✓ __tests__/db/free-measurement-reconciliation.dbtest.ts (6 tests) 2800ms
+ ✓ __tests__/db/free-recalculation.dbtest.ts (12 tests) 3067ms
+stdout | __tests__/db/admin-test-factory-dependencies.dbtest.ts > SQL Editor founder test factory result-row dependency report > returns bounded actual counts and preserves Auth, factory and retained source rows
+Synthetic dependency report: 257 result rows; query 971ms; Catalogue paths/columns plus eight fixed-reference slots: 254; maximum 500. Each count query reads at most 101 matching rows.
+
+ ✓ __tests__/db/free-debit.dbtest.ts (6 tests) 2885ms
+ ✓ __tests__/db/admin-retained-records.dbtest.ts (29 tests) 9087ms
+     ✓ bare Lite/Base entitlement rows and failed evidence-free local intents remain deletable  1252ms
+     ✓ later formal/retention tables may be absent without weakening mandatory evidence checks  2814ms
+ ✓ __tests__/db/payroll-settlement.dbtest.ts (5 tests) 3905ms
+     ✓ INVARIANT O-INV-14: gross pay is metres × the snapshot rate, settled once  540ms
+ ✓ __tests__/db/delivery-challans.dbtest.ts (5 tests) 3177ms
+ ✓ __tests__/db/admin-test-factory-dependencies.dbtest.ts (5 tests) 5178ms
+     ✓ returns bounded actual counts and preserves Auth, factory and retained source rows  1119ms
+     ✓ quotes catalogue table identifiers and keeps shared Free owner scope separate  462ms
+ ✓ __tests__/db/tenant-and-lock.dbtest.ts (6 tests) 2438ms
+ ✓ __tests__/db/costing-immutability.dbtest.ts (5 tests) 2382ms
+ ✓ __tests__/db/costing-save.dbtest.ts (9 tests) 3200ms
+ ✓ __tests__/db/harness.dbtest.ts (4 tests) 1845ms
+ ✓ __tests__/db/admin-legacy-read.dbtest.ts (3 tests) 1991ms
+ ✓ __tests__/db/admin-test-factory-inspector.dbtest.ts (3 tests) 2593ms
+     ✓ reads bounded dependency counts with a missing profile while preserving every Auth and factory row  517ms
+ ✓ __tests__/db/lite-input-basis.dbtest.ts (6 tests) 1921ms
+stderr | __tests__/db/payroll-cycle-settings.dbtest.ts > payroll cycle settings (OS-13 fixed) > INVARIANT OS-13: an effective date before the current cycle is refused and nothing changes
+[base-production] New payroll cycle effective date (2026-11-06) must be on or after current cycle effective date (2026-11-11)
+
+ ✓ __tests__/db/payroll-cycle-settings.dbtest.ts (3 tests) 1372ms
+stderr | __tests__/db/onboarding-payroll.dbtest.ts > Base onboarding payroll step (AS-01 fixed) > INVARIANT: a Lite owner is refused and nothing is written, with no service-role retry
+update_base_payroll_cycle failed during onboarding: Base Production Core access is required
+
+ ✓ __tests__/db/onboarding-payroll.dbtest.ts (2 tests) 1482ms
+ ✓ __tests__/db/admin-founder-account-reset.dbtest.ts (23 tests) 17572ms
+     ✓ removes exactly the selected factory data and old identity, including local captured-payment history and managed sessions/factors; preserves another tenant  2248ms
+     ✓ supports rollback rehearsal with every old row preserved  1037ms
+     ✓ rejects unexpected target rows and child references even when child org_id is NULL or belongs to another tenant  1392ms
+     ✓ rejects external-schema Auth cascades/detaches, including text and compound FKs, and rolls prior deletes back  3334ms
+     ✓ rejects an external reference through a managed Auth session, preserving every row  566ms
+     ✓ rolls back if a provider schema leaves non-FK UUID or legacy text runtime owner records  1181ms
+     ✓ rolls factory/payment/Auth deletion back if the required operator audit fails  446ms
+     ✓ cleans known non-FK flow and legacy token rows for exactly the old owner, preserving other accounts and their runtime rows  465ms
+     ✓ rolls known runtime cleanup back with the entire reset if the required final audit fails  446ms
+     ✓ refuses cross-account token sessions and token families in both directions, including legacy links without FKs  462ms
+     ✓ refuses external and cross-account managed children of a non-FK runtime root before they can cascade  535ms
+     ✓ runs with non-superuser privileges while the unrelated provider migration ledger remains inaccessible and unchanged  511ms
+     ✓ never skips a protected migration ledger if it has unexpected identity columns or foreign-key edges  585ms
+
+ Test Files  32 passed (32)
+      Tests  273 passed (273)
+   Start at  01:16:20
+   Duration  26.28s (transform 8.34s, setup 0ms, import 39.36s, tests 129.89s, environment 59ms)
+
+[vitest-pool]: Timeout terminating forks worker for test files /private/tmp/weavly-free-final-verification/__tests__/db/admin-founder-account-reset.dbtest.ts.

@@ -14,6 +14,8 @@ import {
   FileText,
   X,
   Loader2,
+  BookOpen,
+  SlidersHorizontal,
 } from 'lucide-react'
 import type { EstimateState, EstimatorV3Totals, CostingResultSnapshot } from '@/lib/estimator'
 import { createCostingExportModel } from '@/lib/estimator-export'
@@ -37,6 +39,7 @@ import { EmptyState, PageHeader, Toolbar } from '@/components/ui/page-header'
 import { useTranslation } from '@/lib/i18n/context'
 import { tourCommonCopy } from '@/lib/i18n/tour-common'
 import { freeText } from '@/lib/i18n/free-tier'
+import { freeMobileText } from '@/lib/i18n/free-mobile'
 import { FreeRecalculationWindow } from '@/components/estimator/FreeRecalculationWindow'
 import { remainingFreeEditMs, type FreeEditWindow } from '@/lib/free-costing-window'
 import { useFreeEditClock } from '@/hooks/use-free-edit-clock'
@@ -64,6 +67,13 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
   const router = useRouter()
   const { language, tx } = useTranslation()
   const [tourStep, setTourStep] = useState<SavedCostingStep | null>(null)
+  const [helpOpen, setHelpOpen] = useState(false)
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  useEffect(() => {
+    if (!helpOpen || !window.matchMedia('(max-width: 767.98px), (pointer: coarse) and (max-height: 500px) and (max-width: 1023.98px)').matches) return
+    const frame = requestAnimationFrame(() => document.getElementById('free-history-help')?.querySelector<HTMLButtonElement>('button')?.focus())
+    return () => cancelAnimationFrame(frame)
+  }, [helpOpen])
   const [demoDeleted, setDemoDeleted] = useState(false)
   const [showDeleteNudge, setShowDeleteNudge] = useState(false)
   const tourExport = useMemo(makeSavedCostingTourExport, [])
@@ -226,17 +236,26 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
 
   return (
     <>
-      {!embedded && <aside className="saved-costings-left-rail" aria-label={tx('Saved Costings guides and tools')}>
+      {!embedded && <aside className="saved-costings-left-rail" id="free-history-help" data-free-history-help data-expanded={helpOpen || tourStep !== null} aria-label={tx('Saved Costings guides and tools')}>
+        <Button variant="ghost" className="free-mobile-help-trigger" disabled={tourStep !== null} onClick={() => { setHelpOpen(false); document.getElementById('free-history-help-trigger')?.focus() }}>
+          <X className="h-4 w-4" /> {tx('Close')}
+        </Button>
         <SavedCostingsTutorial free userId={userId} orgId={orgId} userMetadata={userMetadata} ending={savedCostingTourEnding(rows.length, loading || error)} step={tourStep} onStepChange={setTourStep} onComplete={() => setShowDeleteNudge(true)} />
       </aside>}
 
-      <div className="saved-costings-workspace ui-route-enter max-w-6xl mx-auto space-y-6" data-free-costing data-sentry-block>
+      <div className="saved-costings-workspace ui-route-enter max-w-6xl mx-auto space-y-6" data-free-costing data-free-history={!embedded || undefined} data-sentry-block>
         <PageHeader
+          className={!embedded ? 'free-mobile-page-header' : undefined}
           title={freeText(language, 'savedCostings')}
           actions={(
+            <>
+            {!embedded && <Button id="free-history-help-trigger" variant="ghost" className="free-mobile-help-trigger" aria-expanded={helpOpen || tourStep !== null} aria-controls="free-history-help" disabled={tourStep !== null} onClick={() => setHelpOpen(open => !open)}>
+              <BookOpen className="h-4 w-4" /> {freeMobileText(language, 'help')}
+            </Button>}
             <Button data-tour-anchor="free-costings.new" variant="saffron" onClick={() => router.push('/free')}>
               <Plus className="h-4 w-4" /> {tx('New Costing')}
             </Button>
+            </>
           )}
         />
 
@@ -290,7 +309,10 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
                 className="h-10 w-full min-w-0 pl-9"
               />
             </div>
-            <div data-costing-tour="free-filters" className="flex flex-wrap items-center gap-2">
+            {!embedded && <Button variant="outline" className="free-mobile-help-trigger free-history-filter-toggle" aria-expanded={filtersOpen || tourStep !== null} aria-controls="free-history-filters" onClick={() => setFiltersOpen(open => !open)}>
+              <SlidersHorizontal className="h-4 w-4" /> {freeMobileText(language, 'filters')}
+            </Button>}
+            <div id="free-history-filters" data-expanded={filtersOpen || tourStep !== null} data-costing-tour="free-filters" className="flex flex-wrap items-center gap-2">
               <div className="flex items-center gap-2">
                 <Label htmlFor="saved-costings-sort" className="sr-only">
                   {tx('Sort by')}
@@ -326,6 +348,11 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
               </div>
             </div>
           </div>
+          {!embedded && (costingSort !== 'recent' || marginFilter !== 'all') && <p className="free-mobile-only mt-2 text-sm text-body" role="status">
+            {costingSort !== 'recent' && tx(costingSort === 'oldest' ? 'Oldest saved' : costingSort === 'cost_asc' ? 'Lowest production cost' : 'Highest margin')}
+            {costingSort !== 'recent' && marginFilter !== 'all' && ' · '}
+            {marginFilter !== 'all' && tx(marginFilter === 'negative' ? 'Negative margin' : marginFilter === 'under_10' ? 'Under 10%' : marginFilter === '10_to_20' ? '10–20%' : 'Over 20%')}
+          </p>}
           <p className="mt-3 text-xs font-medium text-body">
             {totalVisibleCount} {totalVisibleCount === 1 ? tx('saved costing') : tx('saved costings')}
           </p>
@@ -397,7 +424,7 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
                     type="button"
                     onClick={() => setInspectingCosting(demoCosting)}
                     aria-haspopup="dialog"
-                    className="group flex min-w-0 flex-1 items-start gap-3 rounded-lg text-left outline-none focus-visible:ring-2 focus-visible:ring-saffron/35"
+                    className="free-history-record-title group flex min-w-0 flex-1 items-start gap-3 rounded-lg text-left outline-none focus-visible:ring-2 focus-visible:ring-saffron/35"
                   >
                     <span className="mt-0.5 rounded-lg bg-[var(--wv-saffron-100)] p-2 text-saffron-deep">
                       <Layers3 className="h-5 w-5" />
@@ -420,7 +447,7 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
                     </span>
                   </button>
 
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:min-w-[360px]">
+                  <div className="free-history-metrics grid grid-cols-2 gap-2 sm:grid-cols-3 sm:min-w-[360px]">
                     <div className="rounded-lg border border-[var(--wv-saffron-200)]/60 bg-white/80 px-3 py-2">
                       <p className="text-[10px] font-bold uppercase tracking-wide text-subtle">{tx('Production Cost')}</p>
                       <p className="mt-1 font-mono text-sm font-black text-ink">₹{demoCosting.result.productionCostPerM.toFixed(2)}/m</p>
@@ -493,7 +520,7 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
                       type="button"
                       onClick={() => setInspectingCosting(row)}
                       aria-haspopup="dialog"
-                      className="group flex min-w-0 flex-1 items-start gap-3 rounded-lg text-left outline-none focus-visible:ring-2 focus-visible:ring-saffron/35"
+                      className="free-history-record-title group flex min-w-0 flex-1 items-start gap-3 rounded-lg text-left outline-none focus-visible:ring-2 focus-visible:ring-saffron/35"
                     >
                       <span className="mt-0.5 rounded-lg bg-saffron-soft p-2 text-saffron-deep">
                         <Layers3 className="h-5 w-5" />
@@ -523,7 +550,7 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
                     )}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:min-w-[360px] sm:flex-1">
+                  <div className="free-history-metrics grid grid-cols-2 gap-2 sm:grid-cols-3 sm:min-w-[360px] sm:flex-1">
                     <div className="rounded-lg bg-surface-soft px-3 py-2">
                       <p className="text-[10px] font-bold uppercase tracking-wide text-subtle">{tx('Production Cost')}</p>
                       <p className="mt-1 font-mono text-sm font-black text-ink">₹{row.result.productionCostPerM.toFixed(2)}/m</p>
@@ -593,7 +620,7 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
             <div className="max-h-[calc(100dvh-2rem)] min-w-0 overflow-x-hidden overflow-y-auto">
               <DialogHeader className="sticky top-0 z-20 border-b border-hairline bg-surface px-5 py-4 pr-16 sm:pl-6 sm:pr-16">
                 <div className="flex min-w-0 items-center gap-2 pr-2">
-                  <DialogTitle className="min-w-0 flex-1 truncate text-xl font-black" title={inspectingCosting.label}>
+                  <DialogTitle className={`${!embedded ? 'free-history-dialog-title ' : ''}min-w-0 flex-1 truncate text-xl font-black`} title={inspectingCosting.label}>
                     {inspectingCosting.label}
                   </DialogTitle>
                   <div className="flex shrink-0 items-center gap-1.5">

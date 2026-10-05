@@ -1,4 +1,5 @@
 import { visibleOwnerNavigation } from '../lib/owner-navigation'
+import { freeSupportingText } from '../lib/i18n/free-supporting'
 import { describe, expect, it } from 'vitest'
 import { readFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
@@ -31,7 +32,7 @@ describe('Free plan Setting and Billing sections', () => {
         expect(billingClient).toContain('PaymentHistoryDialog')
         expect(billingClient).toContain('/plans?from=billing')
         expect(billingClient).toContain('useFreeWorkspace')
-        expect(billingClient).toContain('Weavly Free workspace')
+        expect(freeSupportingText('en', 'freeWorkspace')).toBe('Weavly Free workspace')
     })
 
     it('provides /free/settings redirecting to /free/account', () => {

@@ -156,7 +156,7 @@ export default function LoginForm({ recoveryDestination }: { recoveryDestination
                     </Button>
                 </div>
             )}
-            <form onSubmit={handleLogin} className="space-y-5" noValidate>
+            <form onSubmit={handleLogin} className="space-y-4 sm:space-y-5" noValidate>
                 {/* Email */}
                 <div className="space-y-1.5">
                     <Label htmlFor="email" className="font-medium text-body">
@@ -179,11 +179,11 @@ export default function LoginForm({ recoveryDestination }: { recoveryDestination
 
                 {/* Password */}
                 <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between max-sm:flex-wrap max-sm:gap-x-3 max-sm:gap-y-1">
                         <Label htmlFor="password" className="font-medium text-body">
                             Password
                         </Label>
-                        <Link href="/forgot-password" className="text-xs font-semibold text-ink underline decoration-[var(--wv-cotton-400)] hover:decoration-[var(--wv-brand-accent)] underline-offset-4">
+                        <Link href="/forgot-password" className="inline-flex min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 sm:inline items-center text-xs font-semibold text-ink underline decoration-[var(--wv-cotton-400)] hover:decoration-[var(--wv-brand-accent)] underline-offset-4">
                             Forgot password?
                         </Link>
                     </div>
@@ -198,13 +198,13 @@ export default function LoginForm({ recoveryDestination }: { recoveryDestination
                             autoComplete="current-password"
                             tabIndex={credentialsArmed ? undefined : -1}
                             onFocus={armCredentials}
-                            className="h-12 pr-10 transition-all focus:bg-surface"
+                            className="h-12 pr-12 sm:pr-10 transition-all focus:bg-surface"
                             disabled={loading}
                         />
                         <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-surface-soft hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wv-border-focus)]/25"
+                            className="absolute right-0.5 sm:right-2 top-1/2 flex h-[44px] w-[44px] sm:h-8 sm:w-8 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-surface-soft hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wv-border-focus)]/25"
                             aria-label={showPassword ? 'Hide password' : 'Show password'}
                             aria-pressed={showPassword}
                         >
@@ -237,7 +237,7 @@ export default function LoginForm({ recoveryDestination }: { recoveryDestination
                 <div className="space-y-2 pt-1 text-center text-sm text-muted-foreground">
                     <p>
                         Don&apos;t have an account?{' '}
-                        <Link href="/signup" className="font-semibold text-ink underline decoration-[var(--wv-cotton-400)] hover:decoration-[var(--wv-brand-accent)] underline-offset-4">
+                        <Link href="/signup" className="inline-flex min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 sm:inline items-center font-semibold text-ink underline decoration-[var(--wv-cotton-400)] hover:decoration-[var(--wv-brand-accent)] underline-offset-4">
                             Sign up
                         </Link>
                     </p>

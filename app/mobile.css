@@ -49,6 +49,11 @@
 .mobile-record-details,
 .mobile-comparison-label { display: none; }
 
+/* Free-only presentation: paid workspaces and every desktop composition retain
+   their existing controls, rails and density. */
+.free-mobile-only,
+.free-mobile-help-trigger { display: none; }
+
 @media (min-width: 768px) {
   .mobile-workspace-content { padding-left: 248px; padding-right: 0; }
 }
@@ -79,6 +84,129 @@
 }
 
 @media (max-width: 767.98px), (pointer: coarse) and (max-height: 500px) and (max-width: 1023.98px) {
+  .free-mobile-only { display: inline; }
+  .free-desktop-only { display: none; }
+  .free-mobile-help-trigger { display: inline-flex; min-height: 44px; }
+  .free-mobile-page-header {
+    flex-wrap: wrap;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    border: 0;
+    padding-bottom: 0;
+    text-align: left;
+  }
+  .free-mobile-page-header > div { width: auto; justify-content: flex-start; min-width: 0; }
+  .free-mobile-page-header h1 { font-size: 1.375rem; line-height: 1.25; }
+  [data-free-costing].estimator-mobile-form { padding-bottom: calc(var(--free-mobile-action-height, 72px) + 24px); }
+  [data-free-costing] .estimator-left-rail[data-free-help-expanded="false"] { display: none; }
+  [data-free-costing] #estimator-form-panel { margin-top: 0; padding-inline: 0; }
+  [data-free-costing] #active-quality {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  [data-free-costing] #active-quality > div:first-child { gap: 8px; }
+  [data-free-costing] #active-quality .free-mobile-quality-identity { order: 2; }
+  [data-free-costing] #active-quality[data-free-record-loaded="false"] .free-mobile-quality-identity { display: none; }
+  [data-free-costing] .free-mobile-quality-identity > p { display: none; }
+  [data-free-costing] .free-mobile-quality-identity h2 { font-size: 14px; line-height: 1.5; }
+  [data-free-costing] #active-quality [data-slot="liquid-segmented"] { width: 100%; }
+  [data-free-costing] [data-testid="costing-validity"] { min-height: 32px; padding: 4px 8px; font-size: 14px; }
+  [data-free-costing] [data-free-incomplete="true"] {
+    border-color: var(--border);
+    background: var(--muted);
+    color: var(--muted-foreground);
+  }
+  [data-free-costing] [data-free-usage-card] { max-width: none; padding: 4px 12px; border-radius: 12px; box-shadow: none; }
+  [data-free-costing] [data-free-usage-card][data-usage-state="available"] { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 8px; }
+  [data-free-costing] [data-usage-state="available"] .free-usage-header { display: contents; }
+  [data-free-costing] [data-usage-state="available"] .free-usage-header > div:first-child { display: none; }
+  [data-free-costing] [data-usage-state="available"] .free-usage-header > div:last-child { grid-column: 2; grid-row: 1; }
+  [data-free-costing] [data-usage-state="available"] .free-usage-summary { grid-column: 1; grid-row: 1; margin-top: 0; align-self: center; }
+  [data-free-costing] [data-testid="free-usage-counter"] { flex-wrap: wrap; }
+  [data-free-costing] [data-testid="free-usage-counter"] > span { font-size: 14px; }
+  [data-free-costing] .free-usage-meter { display: none; }
+  [data-free-costing] .free-usage-control { width: 44px; height: 44px; flex-shrink: 0; }
+  [data-free-costing] [data-testid="free-usage-details"] { grid-column: 1 / -1; margin-top: 4px; padding-block: 8px; font-size: 14px; }
+  [data-free-costing] [data-free-usage-card] a,
+  [data-free-costing] [data-free-usage-card] [data-free-plan-action] { display: inline-flex; align-items: center; min-height: 44px; font-size: 14px; white-space: normal; }
+  [data-free-costing] [data-free-usage-card] .truncate { white-space: normal; overflow: visible; }
+  [data-free-mobile-action] {
+    left: calc(12px + var(--safe-area-left));
+    right: calc(12px + var(--safe-area-right));
+    bottom: calc(var(--mobile-nav-height) + 8px);
+  }
+  [data-free-mobile-action] > button {
+    width: 100%;
+    min-height: 56px;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-width: 1px;
+    border-color: var(--border);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgb(30 37 40 / 6%);
+    transform: none;
+  }
+  [data-free-mobile-action] .free-mobile-action-label { max-width: none; }
+  [data-free-mobile-action] .free-mobile-action-label > span { white-space: normal; overflow: visible; }
+  [data-free-mobile-action] .free-mobile-action-eyebrow { font-size: 12px; text-transform: none; letter-spacing: 0; }
+  [data-free-mobile-action] .free-mobile-action-icon { height: 40px; width: 40px; border-radius: 8px; }
+  :root:has([data-free-mobile-action]) { scroll-padding-bottom: calc(var(--mobile-nav-height) + var(--free-mobile-action-height, 72px) + 20px); }
+  [data-free-history-help][data-expanded="false"] { display: none; }
+  [data-free-history-help] { display: flex; flex-direction: column; }
+  [data-free-history] { row-gap: 12px; }
+  [data-free-history] .free-mobile-page-header > div:last-child { max-width: 100%; }
+  [data-free-history] [data-slot="input"] { height: auto; min-height: 44px; }
+  [data-free-history] [data-slot="button"] {
+    height: auto;
+    min-height: 44px;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  [data-free-history] > [data-slot="toolbar"] { padding: 12px; }
+  [data-free-history] .free-history-filter-toggle { justify-content: flex-start; }
+  [data-free-history] #free-history-filters[data-expanded="false"] { display: none; }
+  [data-free-history] #free-history-filters > div,
+  [data-free-history] #free-history-filters select { width: 100%; min-width: 0; }
+  [data-free-history] #free-history-filters select { min-height: 44px; }
+  [data-free-history] .free-history-record-title { min-height: 44px; }
+  [data-free-history] .free-history-record-title .truncate { white-space: normal; overflow: visible; overflow-wrap: anywhere; }
+  .free-history-dialog-title { white-space: normal; overflow: visible; overflow-wrap: anywhere; }
+  [data-free-result-identity] { white-space: normal; overflow: visible; overflow-wrap: anywhere; }
+  [data-free-history] .free-history-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  [data-free-history] .free-history-metrics > div { padding: 8px; }
+  [data-free-history] .free-history-metrics p:first-child { font-size: 12px; text-transform: none; letter-spacing: normal; }
+  [data-free-costing] [data-testid="free-recalculation-window"] button { min-height: 44px; min-width: 44px; }
+  /* Input labels and actions must grow with translated or enlarged text. */
+  [data-free-costing].estimator-mobile-form [data-slot="label"].h-8,
+  [data-free-costing].estimator-mobile-form .h-8:has(> [data-slot="label"]) { height: auto; min-height: 2rem; }
+  [data-free-costing].estimator-mobile-form .h-8:has(> [data-slot="label"]) { flex-wrap: wrap; }
+  [data-free-costing].estimator-mobile-form [data-slot="input"] { height: auto; min-height: 44px; }
+  [data-free-costing].estimator-mobile-form [data-slot="button"],
+  [data-free-costing].estimator-mobile-form [data-slot="liquid-segmented"] > button {
+    height: auto;
+    min-height: 44px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  [data-free-costing].estimator-mobile-form [data-estimator-unit-field] > input {
+    padding-inline: calc(.875rem + var(--estimator-unit-length, 1) * .4em);
+  }
+  /* Long rate/consumption units flow below their fields so the full numbers
+     remain readable when enlarged text consumes the inline gutter. */
+  [data-free-costing].estimator-mobile-form :is([data-estimator-unit-field="paise/pick"], [data-estimator-unit-field="kg/100m"]) > input { padding-inline: .75rem; }
+  [data-free-costing].estimator-mobile-form :is([data-estimator-unit-field="paise/pick"], [data-estimator-unit-field="kg/100m"]) > span.pointer-events-none {
+    position: static;
+    display: block;
+    margin-top: .25em;
+    text-align: right;
+    transform: none;
+  }
   /* Keep route help one tap away without pushing the task below the fold. */
   .mobile-guide-card { padding: 0.75rem; }
   .mobile-guide-layout {
@@ -97,6 +225,12 @@
     padding-top: 0.5rem;
   }
   .mobile-guide-details[data-expanded="true"] { display: block; }
+  [data-free-history-help] .mobile-guide-layout,
+  [data-free-costing] #free-estimator-help .mobile-guide-layout { grid-template-columns: minmax(0, 1fr); row-gap: .5rem; }
+  [data-free-history-help] .mobile-guide-title-toggle,
+  [data-free-history-help] .mobile-guide-launch button,
+  [data-free-costing] #free-estimator-help .mobile-guide-title-toggle,
+  [data-free-costing] #free-estimator-help .mobile-guide-launch button { height: auto; min-height: 44px; overflow-wrap: anywhere; }
 
   html {
     scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 16px);

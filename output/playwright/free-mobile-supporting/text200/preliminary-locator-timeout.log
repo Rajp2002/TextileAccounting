@@ -1,0 +1,4 @@
+### Error
+TimeoutError: locator.click: Timeout 6000ms exceeded.
+Call log:
+  - waiting for locator('button').filter({ hasText: /View billing history|बिलिंग इतिहास|બિલિંગ ઇતિહાસ/ }).first()

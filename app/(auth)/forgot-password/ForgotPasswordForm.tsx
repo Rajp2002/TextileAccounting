@@ -61,7 +61,7 @@ export default function ForgotPasswordForm() {
             title="Reset your password"
             subtitle="Enter your account email"
         >
-            <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5" noValidate>
                 <div className="space-y-1.5">
                     <Label htmlFor="email" className="font-medium text-body">
                         Email
@@ -120,7 +120,7 @@ export default function ForgotPasswordForm() {
                 </Button>
 
                 <div className="pt-1 text-center text-sm text-muted-foreground">
-                    <Link href="/login" className="inline-flex items-center gap-1 font-medium text-saffron-deep hover:underline">
+                    <Link href="/login" className="inline-flex min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 sm:inline items-center gap-1 font-medium text-saffron-deep hover:underline">
                         <ArrowLeft className="h-3.5 w-3.5" />
                         Back to login
                     </Link>

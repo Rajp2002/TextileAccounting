@@ -1,0 +1,13 @@
+{
+  "baselineCommit": "c40c92ebf19bb63f749181eba74ad7d73ab9e8bb",
+  "pendingApplicationFiles": {
+    "components/settings/plan-aware/free-settings.module.css": "5dccea8dbbd3afb17a23f11faabc57976a854351c5b33936daf751187ae1cfc2",
+    "components/support/free-support.module.css": "a686e4c555656207c09abc646de0913bf93c25d4e8699003b99a50063aa247d6",
+    "app/free/billing/free-billing.module.css": "d96d3b9b43110e740ad73c76f1d4891980b0340eb2fc55d4fd264ecd3d5a0c68",
+    "app/free/billing/FreeBillingClient.tsx": "c9b9919e879361c4b8c6970fdc82001b2152fc2796369ca6be568ddfa0f812f4",
+    "components/billing/PaymentHistoryDialog.tsx": "1350af00acbcf245a73045829afa1e94e52f7998449a24e0f47d4ed6b421b014"
+  },
+  "fixture": "frozen snapshot, HMR/watch disabled; app-like paths; synthetic records=1 and paid-account options now in owned fixture",
+  "fontMethod": "all original computed font/line x2 using inline important; expected values asserted after transition settles; fresh page before scaling portaled dialog to avoid double inherited scale; html root/rem spacing unchanged",
+  "browser": "Chromium context hasTouch:true isMobile:true; normal controls measured before scale"
+}

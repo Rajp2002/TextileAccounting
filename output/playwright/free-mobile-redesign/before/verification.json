@@ -1,0 +1,13 @@
+{
+  "evidenceType": "Automated Chromium browser emulation; synthetic localhost transport and records only. No installed iOS/Android PWA, authentication, real server outcomes or payment-provider verification.",
+  "base": "http://127.0.0.1:4187",
+  "stage": "before",
+  "createdAt": "2026-10-05T18:09:28.174Z",
+  "externalRequestsBlocked": [],
+  "results": [
+    {
+      "name": "mobile-and-desktop-captures",
+      "status": "passed"
+    }
+  ]
+}

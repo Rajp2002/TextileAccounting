@@ -1,0 +1,150 @@
+{
+  "evidenceType": "Automated Chromium browser emulation; synthetic localhost transport and records only. No installed iOS/Android PWA, authentication, real server outcomes or payment-provider verification.",
+  "mockBoundaries": [
+    "Next navigation/dynamic/image adapters",
+    "Server actions replaced by synthetic empty answers",
+    "Inert Supabase auth subscription",
+    "Local in-memory Free/billing APIs, original costing engine",
+    "Synthetic Razorpay callback for dismissal/activation",
+    "Successful-save navigation held only for hook state checks; normal saved-history handoff tested separately",
+    "Software keyboard represented by a shrunken visualViewport, not an installed device"
+  ],
+  "base": "http://127.0.0.1:4190",
+  "stage": "after",
+  "createdAt": "2026-10-05T19:50:12.819Z",
+  "externalRequestsBlocked": [],
+  "results": [
+    {
+      "name": "mobile-and-desktop-captures",
+      "status": "passed"
+    },
+    {
+      "name": "repeated-taps-and-repeated-save",
+      "status": "passed"
+    },
+    {
+      "name": "saved-result-long-identity-unsaved-rename-and-correction",
+      "status": "passed"
+    },
+    {
+      "name": "saved-history-route-handoff",
+      "status": "passed"
+    },
+    {
+      "name": "invalid-input-feedback-no-request",
+      "status": "passed"
+    },
+    {
+      "name": "warning-cancel-confirm",
+      "status": "passed"
+    },
+    {
+      "name": "server-warning-correct-confirm",
+      "status": "passed"
+    },
+    {
+      "name": "uncertain-outcome-safe-exact-retry",
+      "status": "passed"
+    },
+    {
+      "name": "saved-result-balance-refresh-failure",
+      "status": "passed"
+    },
+    {
+      "name": "zero-allowance-and-eligible-correction",
+      "status": "passed"
+    },
+    {
+      "name": "leave-cancel-and-browser-back-forward",
+      "status": "passed"
+    },
+    {
+      "name": "upgrade-dismiss-retained-inputs",
+      "status": "passed"
+    },
+    {
+      "name": "verified-upgrade-in-place-retained-inputs",
+      "status": "passed"
+    },
+    {
+      "name": "keyboard-viewport-simulation",
+      "status": "passed"
+    },
+    {
+      "name": "320-reflow-enlarged-text-language-mode-focus",
+      "status": "passed"
+    },
+    {
+      "name": "help-close-focus-and-history-filter-summary",
+      "status": "passed"
+    },
+    {
+      "name": "active-guide-help-and-restored-inputs",
+      "status": "passed"
+    },
+    {
+      "name": "paid-live-calculation-distinction",
+      "status": "passed"
+    },
+    {
+      "name": "accessible-labels-and-touch-regions",
+      "status": "passed"
+    }
+  ],
+  "applicationSourceCommit": "3d3831c6a08bfafac104b48cbb29b813f8bf7ba2",
+  "harnessSourceSha256": {
+    "main.tsx": "441dcdbd5e5bdb52939b87a1b27a1dcc8c5af608a6adbaa956c6333e4db84e2a",
+    "verify.mjs": "04a86d21da183e3df96e78db646582b30aecdb2abf829995a97af80aaaaac27c",
+    "server.mjs": "0de606475f50a113455d15d9b718f9958135adb7ca8ce07f9abd5743506b0633"
+  },
+  "validationSummary": {
+    "passedGroups": 19,
+    "failedGroups": 0,
+    "externalRequests": 0,
+    "desktopPaidPixelComparisons": [
+      {
+        "name": "estimator-1440x900-synthetic.png",
+        "differentPixels": 0,
+        "boundingBox": null
+      },
+      {
+        "name": "history-1440x900-synthetic.png",
+        "differentPixels": 0,
+        "boundingBox": null
+      },
+      {
+        "name": "lite-estimator-1440x900-synthetic.png",
+        "differentPixels": 0,
+        "boundingBox": null
+      },
+      {
+        "name": "base-estimator-1440x900-synthetic.png",
+        "differentPixels": 0,
+        "boundingBox": null
+      },
+      {
+        "name": "lite-estimator-390x844-synthetic.png",
+        "differentPixels": 0,
+        "boundingBox": null
+      },
+      {
+        "name": "base-estimator-390x844-synthetic.png",
+        "differentPixels": 0,
+        "boundingBox": null
+      }
+    ],
+    "text-control-bounds.json": {
+      "cases": 24,
+      "issues": 0
+    },
+    "history-text-control-bounds.json": {
+      "cases": 12,
+      "issues": 0
+    }
+  },
+  "unrun": [
+    "Installed iOS/Android PWA, real software keyboard/safe areas, device assistive technology",
+    "Remote authentication/security and hosted API transaction/idempotency guarantees",
+    "Real Razorpay callbacks and paid persistence/production workflows"
+  ]
+}

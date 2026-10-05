@@ -1,0 +1,52 @@
+{
+  "applicationSourceCommit": "3d3831c6a08bfafac104b48cbb29b813f8bf7ba2",
+  "baselineCommit": "cf00bf4616cfb8c2e128815eeb266d00b67d7ca1",
+  "branch": "codex/free-mobile-redesign",
+  "completedLocalDate": "2026-10-06",
+  "node": "24.11.1",
+  "npm": "11.6.2",
+  "verificationWorkspace": "/tmp/weavly-free-final-verification",
+  "environment": "Clean source snapshot, installed node_modules symlink, credential-isolated existing runner. No production provider/database access.",
+  "commands": [
+    {
+      "command": "node node_modules/typescript/bin/tsc --noEmit --incremental false",
+      "exitCode": 0,
+      "status": "passed",
+      "evidence": "typescript.log"
+    },
+    {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "status": "passed",
+      "warnings": 0,
+      "evidence": "lint.log"
+    },
+    {
+      "command": "npm run build",
+      "exitCode": 0,
+      "status": "passed",
+      "prebuildUnitFiles": 324,
+      "testsPassed": 2968,
+      "testsSkipped": 1,
+      "staticPages": 52,
+      "evidence": "build.log"
+    },
+    {
+      "command": "npm run test:db",
+      "exitCode": 0,
+      "status": "passed with runner warning",
+      "filesPassed": 32,
+      "testsPassed": 273,
+      "warning": "Vitest forks worker teardown timeout after passing all assertions; admin-founder-account-reset file. Disposable local Postgres. Final standard command exit0; prior c40/34 standard and bounded-worker runs also passed with cleanup warnings.",
+      "evidence": "database.log"
+    }
+  ],
+  "cleanup": "All task-owned fixture/build server ports4187,4188,4190,4192,4193 have no listeners; no task-owned disposable Postgres process remains. Browsers closed. Unrelated processes preserved.",
+  "unrun": [
+    "Installed iOS/Android PWA/device keyboard/safe-area and assistive technology",
+    "Remote authenticated full-app flow and real provider callbacks",
+    "Native-speaker translation review"
+  ],
+  "commandRunner": "Each command is prefixed with node scripts/performance/isolated-command.mjs",
+  "snapshot": "All application source frozen at3d3831c6, without ignored scratch or environment files. Final frozen QA helper refreshed into snapshot and aggregate lint rerun after its animation-state correction."
+}

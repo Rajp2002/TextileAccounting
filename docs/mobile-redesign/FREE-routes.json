@@ -1,0 +1,409 @@
+{
+  "applicationSourceCommit": "3d3831c6a08bfafac104b48cbb29b813f8bf7ba2",
+  "entrypointCount": 67,
+  "note": "All UI page.tsx entrypoints. API/callback routes retain existing contracts. Query-specific Free costing corrections/details are documented in FREE.md. Disposition is scope, not a claim of end-to-end authenticated browser coverage.",
+  "routes": [
+    {
+      "route": "/admin/login",
+      "source": "app/(admin-auth)/admin/login/page.tsx",
+      "disposition": "Excluded",
+      "detail": "Marketing landing page or privileged founder console; no redesign."
+    },
+    {
+      "route": "/admin/verify",
+      "source": "app/(admin-auth)/admin/verify/page.tsx",
+      "disposition": "Excluded",
+      "detail": "Marketing landing page or privileged founder console; no redesign."
+    },
+    {
+      "route": "/admin/audit",
+      "source": "app/(admin-console)/admin/audit/page.tsx",
+      "disposition": "Excluded",
+      "detail": "Marketing landing page or privileged founder console; no redesign."
+    },
+    {
+      "route": "/admin/factories/[orgId]",
+      "source": "app/(admin-console)/admin/factories/[orgId]/page.tsx",
+      "disposition": "Excluded",
+      "detail": "Marketing landing page or privileged founder console; no redesign."
+    },
+    {
+      "route": "/admin/factories",
+      "source": "app/(admin-console)/admin/factories/page.tsx",
+      "disposition": "Excluded",
+      "detail": "Marketing landing page or privileged founder console; no redesign."
+    },
+    {
+      "route": "/admin/formal/[kind]/[id]",
+      "source": "app/(admin-console)/admin/formal/[kind]/[id]/page.tsx",
+      "disposition": "Excluded",
+      "detail": "Marketing landing page or privileged founder console; no redesign."
+    },
+    {
+      "route": "/admin/formal/new",
+      "source": "app/(admin-console)/admin/formal/new/page.tsx",
+      "disposition": "Excluded",
+      "detail": "Marketing landing page or privileged founder console; no redesign."
+    },
+    {
+      "route": "/admin/formal",
+      "source": "app/(admin-console)/admin/formal/page.tsx",
+      "disposition": "Excluded",
+      "detail": "Marketing landing page or privileged founder console; no redesign."
+    },
+    {
+      "route": "/admin/formal/retention",
+      "source": "app/(admin-console)/admin/formal/retention/page.tsx",
+      "disposition": "Excluded",
+      "detail": "Marketing landing page or privileged founder console; no redesign."
+    },
+    {
+      "route": "/admin/formal/review/[orgId]",
+      "source": "app/(admin-console)/admin/formal/review/[orgId]/page.tsx",
+      "disposition": "Excluded",
+      "detail": "Marketing landing page or privileged founder console; no redesign."
+    },
+    {
+      "route": "/admin/legacy/[kind]/[id]",
+      "source": "app/(admin-console)/admin/legacy/[kind]/[id]/page.tsx",
+      "disposition": "Excluded",
+      "detail": "Marketing landing page or privileged founder console; no redesign."
+    },
+    {
+      "route": "/admin/legacy",
+      "source": "app/(admin-console)/admin/legacy/page.tsx",
+      "disposition": "Excluded",
+      "detail": "Marketing landing page or privileged founder console; no redesign."
+    },
+    {
+      "route": "/admin",
+      "source": "app/(admin-console)/admin/page.tsx",
+      "disposition": "Excluded",
+      "detail": "Marketing landing page or privileged founder console; no redesign."
+    },
+    {
+      "route": "/admin/payments",
+      "source": "app/(admin-console)/admin/payments/page.tsx",
+      "disposition": "Excluded",
+      "detail": "Marketing landing page or privileged founder console; no redesign."
+    },
+    {
+      "route": "/admin/support/[id]",
+      "source": "app/(admin-console)/admin/support/[id]/page.tsx",
+      "disposition": "Excluded",
+      "detail": "Marketing landing page or privileged founder console; no redesign."
+    },
+    {
+      "route": "/admin/support",
+      "source": "app/(admin-console)/admin/support/page.tsx",
+      "disposition": "Excluded",
+      "detail": "Marketing landing page or privileged founder console; no redesign."
+    },
+    {
+      "route": "/admin/system",
+      "source": "app/(admin-console)/admin/system/page.tsx",
+      "disposition": "Excluded",
+      "detail": "Marketing landing page or privileged founder console; no redesign."
+    },
+    {
+      "route": "/forgot-password",
+      "source": "app/(auth)/forgot-password/page.tsx",
+      "disposition": "Free presentation implemented",
+      "detail": "Common mobile entry/recovery"
+    },
+    {
+      "route": "/login",
+      "source": "app/(auth)/login/page.tsx",
+      "disposition": "Free presentation implemented",
+      "detail": "Common mobile entry/recovery"
+    },
+    {
+      "route": "/onboarding/base",
+      "source": "app/(auth)/onboarding/base/page.tsx",
+      "disposition": "Base redesign deferred",
+      "detail": "Operational/setup entitlement behavior retained; no operational UI implementation."
+    },
+    {
+      "route": "/onboarding",
+      "source": "app/(auth)/onboarding/page.tsx",
+      "disposition": "Existing redirect retained",
+      "detail": "Source/contract review; paid operational compatibility is deferred."
+    },
+    {
+      "route": "/onboarding/plans",
+      "source": "app/(auth)/onboarding/plans/page.tsx",
+      "disposition": "Existing redirect retained",
+      "detail": "Source/contract review; paid operational compatibility is deferred."
+    },
+    {
+      "route": "/reset-password",
+      "source": "app/(auth)/reset-password/page.tsx",
+      "disposition": "Free presentation implemented",
+      "detail": "Common mobile entry/recovery"
+    },
+    {
+      "route": "/signup",
+      "source": "app/(auth)/signup/page.tsx",
+      "disposition": "Free presentation implemented",
+      "detail": "Free/default origin only; existing paid/default behavior retained where applicable."
+    },
+    {
+      "route": "/verify",
+      "source": "app/(auth)/verify/page.tsx",
+      "disposition": "Free presentation implemented",
+      "detail": "Common mobile entry/recovery"
+    },
+    {
+      "route": "/owner/assignments",
+      "source": "app/(dashboard)/owner/assignments/page.tsx",
+      "disposition": "Base redesign deferred",
+      "detail": "Operational/setup entitlement behavior retained; no operational UI implementation."
+    },
+    {
+      "route": "/owner/billing",
+      "source": "app/(dashboard)/owner/billing/page.tsx",
+      "disposition": "Paid redesign deferred to Lite",
+      "detail": "Free redirects/access and desktop/paid regressions checked where affected; no paid-specific implementation."
+    },
+    {
+      "route": "/owner/data-export",
+      "source": "app/(dashboard)/owner/data-export/page.tsx",
+      "disposition": "Paid redesign deferred to Lite",
+      "detail": "Free redirects/access and desktop/paid regressions checked where affected; no paid-specific implementation."
+    },
+    {
+      "route": "/owner/dispatches/[id]/print",
+      "source": "app/(dashboard)/owner/dispatches/[id]/print/page.tsx",
+      "disposition": "Base redesign deferred",
+      "detail": "Operational/setup entitlement behavior retained; no operational UI implementation."
+    },
+    {
+      "route": "/owner/dispatches",
+      "source": "app/(dashboard)/owner/dispatches/page.tsx",
+      "disposition": "Base redesign deferred",
+      "detail": "Operational/setup entitlement behavior retained; no operational UI implementation."
+    },
+    {
+      "route": "/owner/estimator",
+      "source": "app/(dashboard)/owner/estimator/page.tsx",
+      "disposition": "Paid redesign deferred to Lite",
+      "detail": "Free redirects/access and desktop/paid regressions checked where affected; no paid-specific implementation."
+    },
+    {
+      "route": "/owner/machines",
+      "source": "app/(dashboard)/owner/machines/page.tsx",
+      "disposition": "Base redesign deferred",
+      "detail": "Operational/setup entitlement behavior retained; no operational UI implementation."
+    },
+    {
+      "route": "/owner/operations",
+      "source": "app/(dashboard)/owner/operations/page.tsx",
+      "disposition": "Existing redirect retained",
+      "detail": "Source/contract review; paid operational compatibility is deferred."
+    },
+    {
+      "route": "/owner/payroll",
+      "source": "app/(dashboard)/owner/payroll/page.tsx",
+      "disposition": "Base redesign deferred",
+      "detail": "Operational/setup entitlement behavior retained; no operational UI implementation."
+    },
+    {
+      "route": "/owner/production/daily-sheet",
+      "source": "app/(dashboard)/owner/production/daily-sheet/page.tsx",
+      "disposition": "Base redesign deferred",
+      "detail": "Operational/setup entitlement behavior retained; no operational UI implementation."
+    },
+    {
+      "route": "/owner/production",
+      "source": "app/(dashboard)/owner/production/page.tsx",
+      "disposition": "Base redesign deferred",
+      "detail": "Operational/setup entitlement behavior retained; no operational UI implementation."
+    },
+    {
+      "route": "/owner/quotes",
+      "source": "app/(dashboard)/owner/quotes/page.tsx",
+      "disposition": "Paid redesign deferred to Lite",
+      "detail": "Free redirects/access and desktop/paid regressions checked where affected; no paid-specific implementation."
+    },
+    {
+      "route": "/owner/rates",
+      "source": "app/(dashboard)/owner/rates/page.tsx",
+      "disposition": "Paid redesign deferred to Lite",
+      "detail": "Free redirects/access and desktop/paid regressions checked where affected; no paid-specific implementation."
+    },
+    {
+      "route": "/owner/settings/audit",
+      "source": "app/(dashboard)/owner/settings/audit/page.tsx",
+      "disposition": "Paid redesign deferred to Lite",
+      "detail": "Free redirects/access and desktop/paid regressions checked where affected; no paid-specific implementation."
+    },
+    {
+      "route": "/owner/settings",
+      "source": "app/(dashboard)/owner/settings/page.tsx",
+      "disposition": "Paid redesign deferred to Lite",
+      "detail": "Free redirects/access and desktop/paid regressions checked where affected; no paid-specific implementation."
+    },
+    {
+      "route": "/owner/setup",
+      "source": "app/(dashboard)/owner/setup/page.tsx",
+      "disposition": "Existing redirect retained",
+      "detail": "Source/contract review; paid operational compatibility is deferred."
+    },
+    {
+      "route": "/owner/stock/audit",
+      "source": "app/(dashboard)/owner/stock/audit/page.tsx",
+      "disposition": "Base redesign deferred",
+      "detail": "Operational/setup entitlement behavior retained; no operational UI implementation."
+    },
+    {
+      "route": "/owner/stock",
+      "source": "app/(dashboard)/owner/stock/page.tsx",
+      "disposition": "Base redesign deferred",
+      "detail": "Operational/setup entitlement behavior retained; no operational UI implementation."
+    },
+    {
+      "route": "/owner/stock/yarn",
+      "source": "app/(dashboard)/owner/stock/yarn/page.tsx",
+      "disposition": "Base redesign deferred",
+      "detail": "Operational/setup entitlement behavior retained; no operational UI implementation."
+    },
+    {
+      "route": "/owner/workers",
+      "source": "app/(dashboard)/owner/workers/page.tsx",
+      "disposition": "Base redesign deferred",
+      "detail": "Operational/setup entitlement behavior retained; no operational UI implementation."
+    },
+    {
+      "route": "/plans",
+      "source": "app/(plan-selection)/plans/page.tsx",
+      "disposition": "Free presentation implemented",
+      "detail": "Free/default origin only; existing paid/default behavior retained where applicable."
+    },
+    {
+      "route": "/track/[token]",
+      "source": "app/(public)/track/[token]/page.tsx",
+      "disposition": "Intentionally unavailable",
+      "detail": "No capability restoration."
+    },
+    {
+      "route": "/support/[id]",
+      "source": "app/(support)/support/[id]/page.tsx",
+      "disposition": "Free presentation implemented",
+      "detail": "Free/default origin only; existing paid/default behavior retained where applicable."
+    },
+    {
+      "route": "/support",
+      "source": "app/(support)/support/page.tsx",
+      "disposition": "Free presentation implemented",
+      "detail": "Free/default origin only; existing paid/default behavior retained where applicable."
+    },
+    {
+      "route": "/auth/auth-code-error",
+      "source": "app/auth/auth-code-error/page.tsx",
+      "disposition": "Free presentation implemented",
+      "detail": "Common mobile entry/recovery"
+    },
+    {
+      "route": "/auth/confirm",
+      "source": "app/auth/confirm/page.tsx",
+      "disposition": "Free presentation implemented",
+      "detail": "Common mobile entry/recovery"
+    },
+    {
+      "route": "/feature-archived",
+      "source": "app/feature-archived/page.tsx",
+      "disposition": "Existing access/fallback retained",
+      "detail": "Source and relevant contract checks; full authenticated browser route unrun."
+    },
+    {
+      "route": "/free/account",
+      "source": "app/free/account/page.tsx",
+      "disposition": "Free presentation implemented",
+      "detail": "Free/default origin only; existing paid/default behavior retained where applicable."
+    },
+    {
+      "route": "/free/billing",
+      "source": "app/free/billing/page.tsx",
+      "disposition": "Free presentation implemented",
+      "detail": "Free/default origin only; existing paid/default behavior retained where applicable."
+    },
+    {
+      "route": "/free/costings",
+      "source": "app/free/costings/page.tsx",
+      "disposition": "Free presentation implemented",
+      "detail": "Free/default origin only; existing paid/default behavior retained where applicable."
+    },
+    {
+      "route": "/free",
+      "source": "app/free/page.tsx",
+      "disposition": "Free presentation implemented",
+      "detail": "Free/default origin only; existing paid/default behavior retained where applicable."
+    },
+    {
+      "route": "/free/settings",
+      "source": "app/free/settings/page.tsx",
+      "disposition": "Existing redirect retained",
+      "detail": "Source/contract review; paid operational compatibility is deferred."
+    },
+    {
+      "route": "/install",
+      "source": "app/install/page.tsx",
+      "disposition": "Unchanged, local production-build smoke passed",
+      "detail": "Read-only HTTP/reflow/text-size check; full original policy/offline behavior retained."
+    },
+    {
+      "route": "/locked",
+      "source": "app/locked/page.tsx",
+      "disposition": "Existing access/fallback retained",
+      "detail": "Source and relevant contract checks; full authenticated browser route unrun."
+    },
+    {
+      "route": "/offline",
+      "source": "app/offline/page.tsx",
+      "disposition": "Unchanged, local production-build smoke passed",
+      "detail": "Read-only HTTP/reflow/text-size check; full original policy/offline behavior retained."
+    },
+    {
+      "route": "/owner/settings/dpa",
+      "source": "app/owner/settings/dpa/page.tsx",
+      "disposition": "Paid redesign deferred to Lite",
+      "detail": "Free redirects/access and desktop/paid regressions checked where affected; no paid-specific implementation."
+    },
+    {
+      "route": "/",
+      "source": "app/page.tsx",
+      "disposition": "Excluded",
+      "detail": "Marketing landing page or privileged founder console; no redesign."
+    },
+    {
+      "route": "/privacy",
+      "source": "app/privacy/page.tsx",
+      "disposition": "Unchanged, local production-build smoke passed",
+      "detail": "Read-only HTTP/reflow/text-size check; full original policy/offline behavior retained."
+    },
+    {
+      "route": "/privacy-request",
+      "source": "app/privacy-request/page.tsx",
+      "disposition": "Unchanged, local production-build smoke passed",
+      "detail": "Read-only HTTP/reflow/text-size check; full original policy/offline behavior retained."
+    },
+    {
+      "route": "/refund-policy",
+      "source": "app/refund-policy/page.tsx",
+      "disposition": "Unchanged, local production-build smoke passed",
+      "detail": "Read-only HTTP/reflow/text-size check; full original policy/offline behavior retained."
+    },
+    {
+      "route": "/security-incident",
+      "source": "app/security-incident/page.tsx",
+      "disposition": "Unchanged, local production-build smoke passed",
+      "detail": "Read-only HTTP/reflow/text-size check; full original policy/offline behavior retained."
+    },
+    {
+      "route": "/terms",
+      "source": "app/terms/page.tsx",
+      "disposition": "Unchanged, local production-build smoke passed",
+      "detail": "Read-only HTTP/reflow/text-size check; full original policy/offline behavior retained."
+    }
+  ]
+}

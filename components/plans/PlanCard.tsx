@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import Image from 'next/image'
 import { Check, Play, Loader2, Sparkles, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -8,10 +8,12 @@ import { SubscribeButton } from '@/components/billing/SubscribeButton'
 import { BILLING_PLANS } from '@/lib/billing-constants'
 import {
   upgradeText,
+  type UpgradeText,
   type UpgradeFeature,
   type UpgradePlan,
 } from '@/lib/upgrade-wall'
 import { useTranslation } from '@/lib/i18n/context'
+import { freeMobileEntryText } from '@/lib/i18n/free-mobile-entry'
 import { cn } from '@/lib/utils'
 import { FEATURE_DEMOS } from '@/lib/feature-demos'
 
@@ -28,6 +30,7 @@ interface PlanCardProps {
   isOnboarding: boolean
   freeAvailable: boolean
   billingReady: boolean
+  mobileCompact?: boolean
   busy: boolean
   onSelectFree: () => void
   onOpenPreview: (feature: UpgradeFeature, tier: UpgradePlan) => void
@@ -40,9 +43,12 @@ export function PlanCard({
   freeAvailable,
   billingReady,
   busy,
+  mobileCompact = false,
   onSelectFree,
   onOpenPreview,
 }: PlanCardProps) {
+  const [detailsOpen, setDetailsOpen] = useState(false)
+  const detailsId = useId()
   const { language, tx } = useTranslation()
   const availableFeatures = CARD_FEATURE_PREVIEWS[planTier]
   // Start on the first feature in the card's array (Free: estimator, Lite: qualities, Base: production)
@@ -60,6 +66,12 @@ export function PlanCard({
   const isBase = planTier === 'base'
   const isFree = planTier === 'free'
 
+  const summaryFeatures: readonly UpgradeText[] = isFree
+    ? ['viewExport', 'noQuality']
+    : isLite
+      ? ['unlimited', 'savedQualitiesLibrary', 'rateBookYarnLinking']
+      : ['everythingInLite', 'productionLoomTracking', 'payrollPieceRate']
+
   const activeDemo = FEATURE_DEMOS[activeFeature]
   const activeFeatureName = upgradeText(language, activeFeature)
 
@@ -67,6 +79,7 @@ export function PlanCard({
     <div
       className={cn(
         'relative flex flex-col justify-between rounded-2xl border bg-surface p-6 shadow-sm transition-all duration-200',
+        mobileCompact && 'max-md:p-[16px]',
         isLite
           ? 'border-saffron/40 shadow-md ring-1 ring-saffron/30 hover:border-saffron/60'
           : 'border-hairline hover:border-hairline-strong hover:shadow-md'
@@ -77,7 +90,7 @@ export function PlanCard({
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
           <span className="inline-flex items-center gap-1 rounded-full bg-saffron-deep px-3 py-0.5 text-[11px] font-bold tracking-wide text-white shadow-sm">
             <Sparkles className="h-3 w-3" aria-hidden="true" />
-            <span>{tx('RECOMMENDED')}</span>
+            <span>{freeMobileEntryText(language, 'recommended')}</span>
           </span>
         </div>
       )}
@@ -104,8 +117,8 @@ export function PlanCard({
         <div className="border-y border-hairline/60 py-3.5 space-y-1">
           {isFree ? (
             <>
-              <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-bold tracking-tight text-ink">₹0</span>
+              <div className={cn("flex items-baseline gap-1", mobileCompact && "max-md:flex-wrap")}>
+                <span className={cn("text-3xl font-bold tracking-tight text-ink", mobileCompact && "max-md:text-2xl")}>₹0</span>
                 <span className="text-xs font-medium text-subtle">
                   / {upgradeText(language, 'freeForever')}
                 </span>
@@ -117,8 +130,8 @@ export function PlanCard({
             </>
           ) : (
             <>
-              <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-bold tracking-tight text-ink">
+              <div className={cn("flex items-baseline gap-1", mobileCompact && "max-md:flex-wrap")}>
+                <span className={cn("text-3xl font-bold tracking-tight text-ink", mobileCompact && "max-md:text-2xl")}>
                   {formatPaise(BILLING_PLANS[planTier].firstYearTotalPaise)}
                 </span>
                 <span className="text-xs font-medium text-subtle">
@@ -139,18 +152,37 @@ export function PlanCard({
           )}
         </div>
 
+        {mobileCompact && (
+          <>
+            <ul className="space-y-1.5 text-xs leading-relaxed text-body md:hidden">
+              {summaryFeatures.map(key => <li key={key}>{upgradeText(language, key)}</li>)}
+            </ul>
+            <button
+              type="button"
+              aria-expanded={detailsOpen}
+              aria-controls={detailsId}
+              onClick={() => setDetailsOpen(open => !open)}
+              className="flex min-h-[44px] w-full items-center justify-between gap-2 rounded-lg border border-hairline px-3 py-2 text-sm font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron md:hidden"
+            >
+              <span>{upgradeText(language, detailsOpen ? 'hidePlanDetails' : 'planDetails')}</span>
+              <span aria-hidden="true">{detailsOpen ? '−' : '+'}</span>
+            </button>
+          </>
+        )}
+
+        <div id={detailsId} className={cn('space-y-4', mobileCompact && !detailsOpen && 'max-md:hidden')}>
         {/* Interactive Feature Preview Carousel */}
         <div className="space-y-2.5">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold uppercase tracking-wider text-subtle">
-              {tx('Feature Preview')}
+              {freeMobileEntryText(language, 'featurePreview')}
             </span>
             <Button
               type="button"
               variant="ghost"
               size="sm"
               onClick={() => onOpenPreview(activeFeature, planTier)}
-              className="h-6 gap-1 px-1.5 text-[11px] font-semibold text-saffron-deep hover:bg-saffron/10 hover:text-saffron-deep"
+              className={cn("h-6 gap-1 px-1.5 text-[11px] font-semibold text-saffron-deep hover:bg-saffron/10 hover:text-saffron-deep", mobileCompact && "max-md:min-h-[44px]")}
             >
               <Play className="h-3 w-3" aria-hidden="true" />
               <span>{upgradeText(language, 'watchDemo')}</span>
@@ -158,7 +190,7 @@ export function PlanCard({
           </div>
 
           {/* Feature Selector Tabs */}
-          <div className="flex flex-wrap gap-1" role="tablist" aria-label={tx('Plan preview features')}>
+          <div className="flex flex-wrap gap-1" role="tablist" aria-label={freeMobileEntryText(language, 'previewFeatures')}>
             {availableFeatures.map((feat) => {
               const active = activeFeature === feat
               return (
@@ -170,6 +202,7 @@ export function PlanCard({
                   onClick={() => setActiveFeature(feat)}
                   className={cn(
                     'rounded-md px-2 py-0.5 text-[11px] font-medium transition-colors',
+                    mobileCompact && 'max-md:min-h-[44px]',
                     active
                       ? 'bg-loom text-white font-semibold'
                       : 'bg-surface-soft text-body hover:bg-surface-soft/80 hover:text-ink'
@@ -287,10 +320,11 @@ export function PlanCard({
             )}
           </ul>
         </div>
+        </div>
       </div>
 
       {/* Action CTA Button */}
-      <div className="mt-6 pt-4 border-t border-hairline/60">
+      <div className={cn("mt-6 pt-4 border-t border-hairline/60", mobileCompact && "max-md:mt-3 max-md:[&_button]:min-h-[44px] max-md:[&_button]:h-auto max-md:[&_button]:whitespace-normal max-md:[&_button]:py-3")}>
         {isFree && (
           <>
             {isCurrent ? (
@@ -349,7 +383,7 @@ export function PlanCard({
               />
             ) : (
               <Button type="button" disabled className="w-full">
-                {tx('Payments unavailable')}
+                {freeMobileEntryText(language, 'paymentsUnavailable')}
               </Button>
             )}
           </>
@@ -377,7 +411,7 @@ export function PlanCard({
               />
             ) : (
               <Button type="button" disabled className="w-full">
-                {tx('Payments unavailable')}
+                {freeMobileEntryText(language, 'paymentsUnavailable')}
               </Button>
             )}
           </>

@@ -77,7 +77,7 @@ function FeatureVideo({ feature }: { feature: UpgradeFeature }) {
         </label>
         <select
           id={selectorId}
-          className="min-h-11 rounded-lg border border-hairline bg-surface px-3 py-2 text-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron-deep"
+          className="min-h-[44px] rounded-lg border border-hairline bg-surface px-3 py-2 text-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron-deep"
           value={narrationLanguage}
           onChange={event => changeNarration(event.target.value)}
           data-i18n-skip="true"
@@ -117,14 +117,14 @@ function FeatureVideo({ feature }: { feature: UpgradeFeature }) {
       {failed && (
         <p role="alert" className="text-sm text-body">
           {upgradeText(language, 'demoUnavailable')}{' '}
-          <a className="font-semibold text-saffron-deep underline" href={demo.src}>
+          <a className="inline-flex min-h-[44px] items-center font-semibold text-saffron-deep underline sm:min-h-0 sm:inline" href={demo.src}>
             {upgradeText(language, 'openVideo')}
           </a>
         </p>
       )}
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-subtle">
         <span>{upgradeText(language, 'demoHelp', { language: NARRATION_LANGUAGE_LABELS[narrationLanguage] })}</span>
-        <a href={demo.transcript} target="_blank" rel="noopener noreferrer" className="font-semibold text-saffron-deep underline underline-offset-2">
+        <a href={demo.transcript} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-[44px] items-center font-semibold text-saffron-deep underline underline-offset-2 sm:min-h-0 sm:inline">
           {upgradeText(language, 'demoTranscript')}
         </a>
       </div>
@@ -159,7 +159,7 @@ export function PlanPreviewModal({ feature, planTier, onClose }: PlanPreviewModa
                 <DialogTitle className="text-xl font-bold text-ink">{upgradeText(language, feature)}</DialogTitle>
                 <DialogDescription className="text-xs">{upgradeText(language, 'demoPlanNote')}</DialogDescription>
               </div>
-              <Button type="button" variant="ghost" size="icon" onClick={onClose} aria-label={upgradeText(language, 'closePreview')}>
+              <Button type="button" variant="ghost" size="icon" className="max-sm:size-[44px]" onClick={onClose} aria-label={upgradeText(language, 'closePreview')}>
                 <X className="h-5 w-5" aria-hidden="true" />
               </Button>
             </div>

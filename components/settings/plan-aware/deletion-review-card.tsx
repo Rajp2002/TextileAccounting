@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useTransition, useId } from 'react'
+import React, { useState, useTransition, useId, useRef } from 'react'
 import { Trash2, AlertTriangle, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -23,14 +23,16 @@ import { ACCOUNT_DELETION_CONFIRMATION_PHRASE } from '@/lib/account-deletion'
 interface DeletionReviewCardProps {
     organizationName: string
     accountEmail: string
+    restoreMobileFocus?: boolean
 }
 
-export function DeletionReviewCard({ organizationName, accountEmail }: DeletionReviewCardProps) {
+export function DeletionReviewCard({ organizationName, accountEmail, restoreMobileFocus = false }: DeletionReviewCardProps) {
     const { tx } = useTranslation()
     const [reviewOpen, setReviewOpen] = useState(false)
     const [enteredOrgName, setEnteredOrgName] = useState('')
     const [enteredPhrase, setEnteredPhrase] = useState('')
     const [pending, startTransition] = useTransition()
+    const reviewTrigger = useRef<HTMLButtonElement>(null)
 
     const nameInputId = useId()
     const phraseInputId = useId()
@@ -104,6 +106,7 @@ export function DeletionReviewCard({ organizationName, accountEmail }: DeletionR
                     </div>
 
                     <Button
+                        ref={reviewTrigger}
                         type="button"
                         variant="outline"
                         onClick={() => setReviewOpen(true)}
@@ -116,7 +119,11 @@ export function DeletionReviewCard({ organizationName, accountEmail }: DeletionR
 
             {/* Deletion Review Accessible Dialog */}
             <Dialog open={reviewOpen} onOpenChange={handleOpenChange}>
-                <DialogContent className="max-w-lg">
+                <DialogContent className="max-w-lg" onCloseAutoFocus={restoreMobileFocus ? event => {
+                    if (!window.matchMedia('(max-width: 767.98px)').matches) return
+                    event.preventDefault()
+                    reviewTrigger.current?.focus()
+                } : undefined}>
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2 text-risk">
                             <AlertTriangle className="h-5 w-5 text-risk" aria-hidden="true" />

@@ -1,0 +1,9 @@
+RUN  v4.1.8 /Users/rajpatel/Projects/textile Saas
+
+ ✓ __tests__/free-default-signup.test.ts (3 tests) 11ms
+ ✓ __tests__/signup-legal-acceptance.test.ts (5 tests) 17ms
+
+ Test Files  2 passed (2)
+      Tests  8 passed (8)
+   Start at  23:54:56
+   Duration  2.19s (transform 131ms, setup 0ms, import 1.95s, tests 28ms, environment 0ms)

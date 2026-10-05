@@ -1,0 +1,10 @@
+RUN  v4.1.8 /Users/rajpatel/Projects/textile Saas
+
+ ✓ __tests__/free-billing-presentation.test.ts (5 tests) 12ms
+ ✓ __tests__/admin-support-page-access.test.tsx (6 tests) 34ms
+ ✓ __tests__/free-billing-workspace.test.tsx (3 tests) 66ms
+
+ Test Files  3 passed (3)
+      Tests  14 passed (14)
+   Start at  00:42:57
+   Duration  847ms (transform 499ms, setup 0ms, import 1.06s, tests 112ms, environment 1ms)

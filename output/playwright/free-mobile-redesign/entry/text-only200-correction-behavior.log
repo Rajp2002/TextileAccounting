@@ -1,0 +1,118 @@
+### Result
+[{"check":"Free language dropdown targets and bounds 320","result":"passed"},{"check":"Free plans 320 disclosure open/close","result":"passed","width":320,"scrollWidth":320},{"check":"Paid-origin plans preserve preview composition","result":"passed"},{"check":"Signup inputs and password visibility touch targets 320","result":"passed"},{"check":"Signup validation and uncertain result 320","result":"passed","width":320,"scrollWidth":320},{"check":"Verification recovery 320","result":"passed","width":320,"scrollWidth":320},{"check":"Neutral reset confirmation 320","result":"passed","width":320,"scrollWidth":320},{"check":"plans en 320","result":"passed","width":320,"scrollWidth":320},{"check":"plans en 320 enlarged text","result":"passed","width":320,"scrollWidth":320},{"check":"signup en 320","result":"passed","width":320,"scrollWidth":320},{"check":"signup en 320 enlarged text","result":"passed","width":320,"scrollWidth":320},{"check":"login en 320","result":"passed","width":320,"scrollWidth":320},{"check":"login en 320 enlarged text","result":"passed","width":320,"scrollWidth":320},{"check":"verify en 320","result":"passed","width":320,"scrollWidth":320},{"check":"verify en 320 enlarged text","result":"passed","width":320,"scrollWidth":320},{"check":"plans hi 320","result":"passed","width":320,"scrollWidth":320},{"check":"plans hi 320 enlarged text","result":"passed","width":320,"scrollWidth":320},{"check":"signup hi 320","result":"passed","width":320,"scrollWidth":320},{"check":"signup hi 320 enlarged text","result":"passed","width":320,"scrollWidth":320},{"check":"login hi 320","result":"passed","width":320,"scrollWidth":320},{"check":"login hi 320 enlarged text","result":"passed","width":320,"scrollWidth":320},{"check":"verify hi 320","result":"passed","width":320,"scrollWidth":320},{"check":"verify hi 320 enlarged text","result":"passed","width":320,"scrollWidth":320},{"check":"plans gu 320","result":"passed","width":320,"scrollWidth":320},{"check":"plans gu 320 enlarged text","result":"passed","width":320,"scrollWidth":320},{"check":"signup gu 320","result":"passed","width":320,"scrollWidth":320},{"check":"signup gu 320 enlarged text","result":"passed","width":320,"scrollWidth":320},{"check":"login gu 320","result":"passed","width":320,"scrollWidth":320},{"check":"login gu 320 enlarged text","result":"passed","width":320,"scrollWidth":320},{"check":"verify gu 320","result":"passed","width":320,"scrollWidth":320},{"check":"verify gu 320 enlarged text","result":"passed","width":320,"scrollWidth":320}]
+### Ran Playwright code
+```js
+await (async page => {
+  const report = []
+  const base = 'http://127.0.0.1:4188/'
+  await page.evaluate(() => localStorage.setItem('weavly_language', 'en'))
+  const require = (condition, message) => { if (!condition) throw new Error(message) }
+  const ready = async () => { await page.getByRole('heading', { level: 1 }).waitFor() }
+  const reflow = async label => {
+    const geometry = await page.evaluate(() => ({ width: innerWidth, scrollWidth: document.documentElement.scrollWidth }))
+    require(geometry.scrollWidth <= geometry.width, `${label}: horizontal overflow ${JSON.stringify(geometry)}`)
+    report.push({ check: label, result: 'passed', ...geometry })
+  }
+  await page.setViewportSize({ width: 320, height: 740 })
+  await page.goto(base + 'fixture?kind=plans&from=estimator', {waitUntil: 'domcontentloaded'})
+  await ready()
+  await page.waitForFunction(() => document.documentElement.lang === 'en')
+  require(await page.getByRole('link', { name: 'Back to Estimator' }).getAttribute('href') === '/free', 'Free estimator Back destination')
+  require(await page.getByRole('heading', { name: 'Weavly Base', exact: true }).count() === 1, 'All three plan options present')
+  await page.getByRole('button', { name: 'Switch language', exact: true }).click()
+  const languageOptions = await page.locator('button[aria-current]').locator('..').locator('button').evaluateAll(nodes => nodes.map(node => {
+    const rect = node.getBoundingClientRect()
+    return { height: rect.height, left: rect.left, right: rect.right }
+  }))
+  require(languageOptions.every(rect => rect.height >= 44 && rect.left >= 0 && rect.right <= 320), 'Language options have 44 px targets and fit viewport')
+  await page.locator('button[aria-current="true"]').click()
+  report.push({ check: 'Free language dropdown targets and bounds 320', result: 'passed' })
+  require(await page.getByRole('button', { name: 'Watch demo', exact: true }).count() === 0, 'Mobile demos optional by default')
+  const detail = page.getByRole('button', { name: 'Features and demo', exact: true }).first()
+  await detail.click()
+  require(await page.getByRole('button', { name: 'Hide details', exact: true }).getAttribute('aria-expanded') === 'true', 'Disclosure expansion')
+  await page.getByRole('button', { name: 'Watch demo', exact: true }).click()
+  await page.getByRole('dialog').waitFor()
+  await page.keyboard.press('Escape')
+  await page.getByRole('dialog').waitFor({ state: 'hidden' })
+  require(await page.getByRole('button', { name: 'Watch demo', exact: true }).evaluate(el => el === document.activeElement), 'Demo focus returns after dismissal')
+  await page.getByRole('button', { name: 'Hide details', exact: true }).click()
+  await reflow('Free plans 320 disclosure open/close')
+  await page.goto(base + 'fixture?kind=plans&current=lite')
+  await ready()
+  require(await page.getByRole('button', { name: 'Features and demo', exact: true }).count() === 0, 'Paid-origin plans do not use Free mobile composition')
+  require(await page.getByRole('button', { name: 'Watch demo', exact: true }).count() === 3, 'Paid-origin preview still present')
+  report.push({ check: 'Paid-origin plans preserve preview composition', result: 'passed' })
+  await page.goto(base + 'fixture?kind=signup&ref=WEAVLY-TEST')
+  await ready()
+  require(await page.getByLabel('Referral Code (Optional)', { exact: true }).inputValue() === 'WEAVLY-TEST', 'Query referral retained')
+  await page.getByRole('button', { name: 'Referral Code (Optional)', exact: true }).click()
+  require(await page.getByLabel('Referral Code (Optional)', { exact: true }).isHidden(), 'Referral can be collapsed')
+  await page.getByRole('button', { name: 'Referral Code (Optional)', exact: true }).click()
+  require(await page.getByLabel('Referral Code (Optional)', { exact: true }).inputValue() === 'WEAVLY-TEST', 'Referral retained after dismissal')
+  await page.getByLabel('Your name', { exact: true }).fill('R')
+  await page.getByLabel('Email', { exact: true }).focus()
+  require(await page.getByLabel('Your name', { exact: true }).getAttribute('aria-invalid') === 'true', 'Name validation wired')
+  require(await page.getByLabel('Your name', { exact: true }).getAttribute('aria-describedby') === 'ownerName-error', 'Name error described')
+  await page.getByLabel('Your name', { exact: true }).fill('Synthetic Owner')
+  await page.getByLabel('Email', { exact: true }).fill('owner@example.test')
+  await page.getByLabel('Phone Number', { exact: true }).fill('9876543210')
+  await page.getByLabel('Password', { exact: true }).fill('Synthetic!2Pass')
+  await page.getByLabel('Confirm password', { exact: true }).fill('Synthetic!2Pass')
+  for (const label of ['Your name', 'Email', 'Phone Number', 'Password', 'Confirm password']) {
+    require((await page.getByLabel(label, { exact: true }).boundingBox()).height >= 44, `${label} mobile input target`)
+  }
+  const passwordToggle = await page.getByRole('button', { name: 'Show password', exact: true }).boundingBox()
+  require(passwordToggle.height >= 44 && passwordToggle.width >= 44, 'Password visibility target 44 px')
+  report.push({ check: 'Signup inputs and password visibility touch targets 320', result: 'passed' })
+  await page.getByRole('button', { name: 'Show password', exact: true }).click()
+  require(await page.getByLabel('Password', { exact: true }).getAttribute('type') === 'text', 'Password toggle touch/key accessible')
+  await page.getByRole('checkbox').check()
+  await page.getByRole('button', { name: 'Create Free account', exact: true }).click()
+  await page.getByText('We could not confirm your signup. Your account may already exist: try to log in, or reset your password, before signing up again.', { exact: true }).waitFor({ timeout: 5000 })
+  require(await page.getByLabel('Email', { exact: true }).inputValue() === 'owner@example.test', 'Signup uncertain result retains inputs')
+  await reflow('Signup validation and uncertain result 320')
+  await page.goto(base + 'fixture?kind=verify&email=owner@example.test')
+  await ready()
+  await page.getByRole('button', { name: 'Resend verification email', exact: true }).click()
+  await page.getByRole('status').filter({ hasText: 'Verification email resent! Check your inbox.' }).waitFor()
+  await page.goto(base + 'fixture?kind=verify&email=owner@example.test&rate-limit=1')
+  await ready()
+  await page.getByRole('button', { name: 'Resend verification email', exact: true }).click()
+  await page.getByRole('alert').filter({ hasText: 'Too many requests. Please wait a minute before trying again.' }).waitFor()
+  await page.goto(base + 'fixture?kind=verify')
+  await ready()
+  require(await page.getByRole('button', { name: 'Resend verification email', exact: true }).isDisabled(), 'Missing email has actionable recovery, no empty resend')
+  await reflow('Verification recovery 320')
+  await page.goto(base + 'fixture?kind=forgot')
+  await ready()
+  await page.getByLabel('Email', { exact: true }).fill('invalid')
+  await page.getByRole('button', { name: 'Send instructions', exact: true }).click()
+  require(await page.getByLabel('Email', { exact: true }).getAttribute('aria-invalid') === 'true', 'Reset email invalid state preserved')
+  await page.getByLabel('Email', { exact: true }).fill('owner@example.test')
+  await page.getByRole('button', { name: 'Send instructions', exact: true }).click()
+  await page.getByText('If an account exists for that email, we’ve sent password reset instructions.', { exact: true }).first().waitFor()
+  await reflow('Neutral reset confirmation 320')
+  for (const language of ['en', 'hi', 'gu']) {
+    await page.evaluate(language => localStorage.setItem('weavly_language', language), language)
+    for (const kind of ['plans', 'signup', 'login', 'verify']) {
+      await page.goto(base + `fixture?kind=${kind}&from=estimator`)
+      await ready()
+      await page.waitForFunction(language => document.documentElement.lang === language, language)
+      await reflow(`${kind} ${language} 320`)
+      await page.screenshot({ path: `output/playwright/free-mobile-redesign/entry/${kind}-after-320-${language}.png`, fullPage: true })
+      await page.evaluate(() => document.documentElement.style.fontSize = '200%')
+      await reflow(`${kind} ${language} 320 enlarged text`)
+      await page.screenshot({ path: `output/playwright/free-mobile-redesign/entry/${kind}-after-320-${language}-text200.png`, fullPage: true })
+    }
+  }
+  await page.evaluate(() => localStorage.setItem('weavly_language', 'en'))
+  return report
+}
+)(page);
+```
+### Page
+- Page URL: http://127.0.0.1:4188/fixture?kind=verify&from=estimator
+- Page Title: Synthetic Weavly Free entry components
+### Events
+- New console entries: .playwright-cli/console-2026-10-05T18-52-15-647Z.log#L41-L59

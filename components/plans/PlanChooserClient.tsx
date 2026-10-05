@@ -7,6 +7,9 @@ import { PlanPreviewModal } from './PlanPreviewModal'
 import { Button } from '@/components/ui/button'
 import { completePlanSelection } from '@/app/(auth)/onboarding/plans/actions'
 import { upgradeText, type UpgradeFeature, type UpgradePlan } from '@/lib/upgrade-wall'
+import { BILLING_DOCUMENT_POLICY } from '@/lib/billing-document-policy'
+import { freeMobileEntryText } from '@/lib/i18n/free-mobile-entry'
+import { cn } from '@/lib/utils'
 import { useTranslation } from '@/lib/i18n/context'
 
 interface PlanChooserClientProps {
@@ -36,7 +39,9 @@ export function PlanChooserClient({
     planTier: 'free',
   })
 
-  const { language, tx } = useTranslation()
+  const { language, tx, t } = useTranslation()
+
+  const mobileCompact = currentPlan === 'free' || currentPlan === 'unassigned'
 
   const finish = useCallback(async (plan: 'free' | 'paid') => {
     setBusy(true)
@@ -73,14 +78,14 @@ export function PlanChooserClient({
   }
 
   return (
-    <div className="space-y-10 pb-16 pt-4">
+    <div className={cn("space-y-10 pb-16 pt-4", mobileCompact && "max-md:space-y-5 max-md:pb-6 max-md:pt-3")}>
       {/* Title & Subheading */}
-      <div className="mx-auto max-w-2xl text-center space-y-3">
-        <div className="inline-flex items-center gap-1.5 rounded-full border border-saffron/30 bg-saffron/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-saffron-deep">
+      <div className={cn("mx-auto max-w-2xl text-center space-y-3", mobileCompact && "max-md:space-y-2 max-md:text-left")}>
+        <div className={cn("inline-flex items-center gap-1.5 rounded-full border border-saffron/30 bg-saffron/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-saffron-deep", mobileCompact && "max-md:hidden")}>
           <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
           <span>{tx('TRANSPARENT PRICING · NO HIDDEN FEES')}</span>
         </div>
-        <h1 className="text-3xl font-extrabold tracking-tight text-ink sm:text-4xl md:text-5xl">
+        <h1 className={cn("text-3xl font-extrabold tracking-tight text-ink sm:text-4xl md:text-5xl", mobileCompact && "max-md:text-2xl")}>
           {upgradeText(language, 'title')}
         </h1>
         <p className="text-sm leading-relaxed text-body sm:text-base">
@@ -115,7 +120,7 @@ export function PlanChooserClient({
       )}
 
       {/* 3-Column Pricing Grid */}
-      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className={cn("mx-auto grid max-w-6xl grid-cols-1 gap-6 lg:grid-cols-3", mobileCompact && "max-md:gap-4")}>
         <PlanCard
           planTier="free"
           currentPlan={currentPlan}
@@ -123,6 +128,7 @@ export function PlanChooserClient({
           freeAvailable={freeAvailable}
           billingReady={billingReady}
           busy={busy}
+          mobileCompact={mobileCompact}
           onSelectFree={() => void finish('free')}
           onOpenPreview={handleOpenPreview}
         />
@@ -134,6 +140,7 @@ export function PlanChooserClient({
           freeAvailable={freeAvailable}
           billingReady={billingReady}
           busy={busy}
+          mobileCompact={mobileCompact}
           onSelectFree={() => void finish('free')}
           onOpenPreview={handleOpenPreview}
         />
@@ -145,6 +152,7 @@ export function PlanChooserClient({
           freeAvailable={freeAvailable}
           billingReady={billingReady}
           busy={busy}
+          mobileCompact={mobileCompact}
           onSelectFree={() => void finish('free')}
           onOpenPreview={handleOpenPreview}
         />
@@ -152,16 +160,17 @@ export function PlanChooserClient({
 
       {/* Commercial Terms & Purchase Disclosure Panel */}
       <section
-        aria-label={tx('Billing terms and trust')}
-        className="mx-auto max-w-4xl rounded-2xl border border-hairline bg-surface-soft/60 p-6 shadow-sm"
+        aria-label={freeMobileEntryText(language, 'billingTerms')}
+        className={cn("mx-auto max-w-4xl rounded-2xl border border-hairline bg-surface-soft/60 p-6 shadow-sm", mobileCompact && "max-md:p-4")}
+        data-billing-document-state={BILLING_DOCUMENT_POLICY.state}
       >
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-4">
           <div className="flex items-start gap-3">
             <Receipt className="h-5 w-5 shrink-0 text-saffron-deep mt-0.5" aria-hidden="true" />
             <div>
-              <h4 className="text-xs font-bold text-ink">{tx('18% GST Included')}</h4>
-              <p className="mt-1 text-[11px] leading-relaxed text-subtle">
-                {tx('Full tax invoices with GSTIN compliance provided immediately upon payment.')}
+              <h4 className="text-xs font-bold text-ink">{freeMobileEntryText(language, 'receiptDocument')}</h4>
+              <p className={cn("mt-1 text-[11px] leading-relaxed text-subtle", mobileCompact && "max-md:text-xs")}>
+                {t('base_plan.billing.receipt_only')}
               </p>
             </div>
           </div>
@@ -169,9 +178,9 @@ export function PlanChooserClient({
           <div className="flex items-start gap-3">
             <Calendar className="h-5 w-5 shrink-0 text-saffron-deep mt-0.5" aria-hidden="true" />
             <div>
-              <h4 className="text-xs font-bold text-ink">{tx('Manual Renewal')}</h4>
-              <p className="mt-1 text-[11px] leading-relaxed text-subtle">
-                {tx('Annual access with no automatic surprise debits. Renew when you are ready.')}
+              <h4 className="text-xs font-bold text-ink">{freeMobileEntryText(language, 'manualRenewal')}</h4>
+              <p className={cn("mt-1 text-[11px] leading-relaxed text-subtle", mobileCompact && "max-md:text-xs")}>
+                {freeMobileEntryText(language, 'manualRenewalDescription')}
               </p>
             </div>
           </div>
@@ -179,9 +188,9 @@ export function PlanChooserClient({
           <div className="flex items-start gap-3">
             <CheckCircle2 className="h-5 w-5 shrink-0 text-saffron-deep mt-0.5" aria-hidden="true" />
             <div>
-              <h4 className="text-xs font-bold text-ink">{tx('Instant Activation')}</h4>
-              <p className="mt-1 text-[11px] leading-relaxed text-subtle">
-                {tx('Features unlock automatically right after payment verification.')}
+              <h4 className="text-xs font-bold text-ink">{freeMobileEntryText(language, 'verifiedActivation')}</h4>
+              <p className={cn("mt-1 text-[11px] leading-relaxed text-subtle", mobileCompact && "max-md:text-xs")}>
+                {freeMobileEntryText(language, 'verifiedActivationDescription')}
               </p>
             </div>
           </div>
@@ -189,9 +198,9 @@ export function PlanChooserClient({
           <div className="flex items-start gap-3">
             <ShieldCheck className="h-5 w-5 shrink-0 text-saffron-deep mt-0.5" aria-hidden="true" />
             <div>
-              <h4 className="text-xs font-bold text-ink">{tx('Secure Checkout')}</h4>
-              <p className="mt-1 text-[11px] leading-relaxed text-subtle">
-                {tx('Payments processed securely via Razorpay with bank-grade encryption.')}
+              <h4 className="text-xs font-bold text-ink">{freeMobileEntryText(language, 'secureCheckout')}</h4>
+              <p className={cn("mt-1 text-[11px] leading-relaxed text-subtle", mobileCompact && "max-md:text-xs")}>
+                {freeMobileEntryText(language, 'secureCheckoutDescription')}
               </p>
             </div>
           </div>

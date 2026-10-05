@@ -1,0 +1,908 @@
+{
+  "kind": "synthetic Chromium hasTouch/coarse; frozen c40c92eb plus scoped Free supporting CSS corrections, app-like paths;  each original computed font size/line height 200%, html root/layout spacing unchanged; no keyboard/device/provider evidence",
+  "results": [
+    {
+      "lang": "en",
+      "view": "account",
+      "source": "c40c92eb plus scoped Free supporting CSS corrections",
+      "checks": [
+        "personal/factory/security/device editors opened"
+      ],
+      "openedEditors": 4,
+      "scale": {
+        "elements": 117,
+        "rootFont": "14px",
+        "coarse": true,
+        "mismatches": []
+      },
+      "layout": {
+        "viewport": 320,
+        "scrollWidth": 320,
+        "horizontal": [],
+        "clips": [],
+        "heightClips": [],
+        "textOverflow": []
+      },
+      "focus": [
+        {
+          "tag": "INPUT",
+          "focused": true,
+          "css": {
+            "font": "32px",
+            "line": "45.7142px",
+            "height": 54.71875,
+            "paddingTop": "3.5px",
+            "paddingBottom": "3.5px",
+            "contentHeight": 46
+          },
+          "lineFits": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 254.390625,
+          "bottom": 309.109375,
+          "inViewport": true
+        },
+        {
+          "tag": "INPUT",
+          "focused": true,
+          "css": {
+            "font": "32px",
+            "line": "45.7142px",
+            "height": 54.71875,
+            "paddingTop": "3.5px",
+            "paddingBottom": "3.5px",
+            "contentHeight": 46
+          },
+          "lineFits": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 254.4375,
+          "bottom": 309.15625,
+          "inViewport": true
+        },
+        {
+          "tag": "BUTTON",
+          "focused": true,
+          "css": {
+            "font": "24.5px",
+            "line": "35px",
+            "height": 51,
+            "paddingTop": "7px",
+            "paddingBottom": "7px",
+            "contentHeight": 35
+          },
+          "lineFits": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 256.875,
+          "bottom": 307.875,
+          "inViewport": true
+        }
+      ],
+      "pass": true
+    },
+    {
+      "lang": "en",
+      "view": "billing",
+      "source": "c40c92eb plus scoped Free supporting CSS corrections",
+      "checks": [
+        "payment history opened/scaled and Escape closed"
+      ],
+      "scale": {
+        "elements": 58,
+        "rootFont": "14px",
+        "coarse": true,
+        "mismatches": [
+          {
+            "tag": "BUTTON",
+            "text": "View payment history0 recordsSuccessful payments and receipts will appear here",
+            "expectedSize": 28,
+            "actualSize": "14px",
+            "expectedLine": 42,
+            "actualLine": "42px"
+          }
+        ]
+      },
+      "layout": {
+        "viewport": 320,
+        "scrollWidth": 320,
+        "horizontal": [],
+        "clips": [],
+        "heightClips": [],
+        "textOverflow": []
+      },
+      "focus": [],
+      "dialogLayout": {
+        "viewport": 320,
+        "scrollWidth": 320,
+        "horizontal": [],
+        "clips": [],
+        "heightClips": [],
+        "textOverflow": []
+      },
+      "pass": false
+    },
+    {
+      "lang": "en",
+      "view": "support",
+      "source": "c40c92eb plus scoped Free supporting CSS corrections",
+      "checks": [
+        "Help and intake opened; subject/category/description reachable"
+      ],
+      "scale": {
+        "elements": 38,
+        "rootFont": "14px",
+        "coarse": true,
+        "mismatches": []
+      },
+      "layout": {
+        "viewport": 320,
+        "scrollWidth": 320,
+        "horizontal": [],
+        "clips": [],
+        "heightClips": [],
+        "textOverflow": []
+      },
+      "focus": [
+        {
+          "tag": "INPUT",
+          "focused": true,
+          "css": {
+            "font": "32px",
+            "line": "45.7142px",
+            "height": 54.71875,
+            "paddingTop": "3.5px",
+            "paddingBottom": "3.5px",
+            "contentHeight": 46
+          },
+          "lineFits": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 254.71875,
+          "bottom": 309.4375,
+          "inViewport": true
+        },
+        {
+          "tag": "BUTTON",
+          "focused": true,
+          "css": {
+            "font": "32px",
+            "line": "45.7142px",
+            "height": 61.71875,
+            "paddingTop": "7px",
+            "paddingBottom": "7px",
+            "contentHeight": 46
+          },
+          "lineFits": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 365.4375,
+          "bottom": 427.15625,
+          "inViewport": true
+        },
+        {
+          "tag": "TEXTAREA",
+          "focused": true,
+          "css": {
+            "font": "32px",
+            "line": "45.7142px",
+            "height": 84,
+            "paddingTop": "7px",
+            "paddingBottom": "7px",
+            "contentHeight": 68
+          },
+          "lineFits": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 441.15625,
+          "bottom": 525.15625,
+          "inViewport": true
+        }
+      ],
+      "pass": true
+    },
+    {
+      "lang": "en",
+      "view": "thread",
+      "source": "c40c92eb plus scoped Free supporting CSS corrections",
+      "checks": [
+        "older messages and status history opened; reply composer reachable"
+      ],
+      "scale": {
+        "elements": 43,
+        "rootFont": "14px",
+        "coarse": true,
+        "mismatches": []
+      },
+      "layout": {
+        "viewport": 320,
+        "scrollWidth": 320,
+        "horizontal": [],
+        "clips": [],
+        "heightClips": [],
+        "textOverflow": []
+      },
+      "focus": [
+        {
+          "tag": "TEXTAREA",
+          "focused": true,
+          "css": {
+            "font": "32px",
+            "line": "45.7142px",
+            "height": 112,
+            "paddingTop": "7px",
+            "paddingBottom": "7px",
+            "contentHeight": 96
+          },
+          "lineFits": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 225.53125,
+          "bottom": 337.53125,
+          "inViewport": true
+        }
+      ],
+      "pass": true
+    },
+    {
+      "lang": "hi",
+      "view": "account",
+      "source": "c40c92eb plus scoped Free supporting CSS corrections",
+      "checks": [
+        "personal/factory/security/device editors opened"
+      ],
+      "openedEditors": 4,
+      "scale": {
+        "elements": 117,
+        "rootFont": "14px",
+        "coarse": true,
+        "mismatches": []
+      },
+      "layout": {
+        "viewport": 320,
+        "scrollWidth": 320,
+        "horizontal": [],
+        "clips": [],
+        "heightClips": [],
+        "textOverflow": []
+      },
+      "focus": [
+        {
+          "tag": "INPUT",
+          "focused": true,
+          "css": {
+            "font": "32px",
+            "line": "45.7142px",
+            "height": 54.71875,
+            "paddingTop": "3.5px",
+            "paddingBottom": "3.5px",
+            "contentHeight": 46
+          },
+          "lineFits": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 254.390625,
+          "bottom": 309.109375,
+          "inViewport": true
+        },
+        {
+          "tag": "INPUT",
+          "focused": true,
+          "css": {
+            "font": "32px",
+            "line": "45.7142px",
+            "height": 54.71875,
+            "paddingTop": "3.5px",
+            "paddingBottom": "3.5px",
+            "contentHeight": 46
+          },
+          "lineFits": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 254.296875,
+          "bottom": 309.015625,
+          "inViewport": true
+        },
+        {
+          "tag": "BUTTON",
+          "focused": true,
+          "css": {
+            "font": "24.5px",
+            "line": "35px",
+            "height": 51,
+            "paddingTop": "7px",
+            "paddingBottom": "7px",
+            "contentHeight": 35
+          },
+          "lineFits": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 256.390625,
+          "bottom": 307.390625,
+          "inViewport": true
+        }
+      ],
+      "pass": true
+    },
+    {
+      "lang": "hi",
+      "view": "billing",
+      "source": "c40c92eb plus scoped Free supporting CSS corrections",
+      "checks": [
+        "payment history opened/scaled and Escape closed"
+      ],
+      "scale": {
+        "elements": 58,
+        "rootFont": "14px",
+        "coarse": true,
+        "mismatches": [
+          {
+            "tag": "BUTTON",
+            "text": "\u092d\u0941\u0917\u0924\u093e\u0928 \u0907\u0924\u093f\u0939\u093e\u0938 \u0926\u0947\u0916\u0947\u09020 recordsSuccessful \u092d\u0941\u0917\u0924\u093e\u0928 \u0914\u0930 \u0930\u0938\u0940\u0926 will appear here",
+            "expectedSize": 28,
+            "actualSize": "14px",
+            "expectedLine": 42,
+            "actualLine": "42px"
+          }
+        ]
+      },
+      "layout": {
+        "viewport": 320,
+        "scrollWidth": 320,
+        "horizontal": [],
+        "clips": [],
+        "heightClips": [],
+        "textOverflow": []
+      },
+      "focus": [],
+      "dialogLayout": {
+        "viewport": 320,
+        "scrollWidth": 320,
+        "horizontal": [],
+        "clips": [],
+        "heightClips": [],
+        "textOverflow": []
+      },
+      "pass": false
+    },
+    {
+      "lang": "hi",
+      "view": "support",
+      "source": "c40c92eb plus scoped Free supporting CSS corrections",
+      "checks": [
+        "Help and intake opened; subject/category/description reachable"
+      ],
+      "scale": {
+        "elements": 38,
+        "rootFont": "14px",
+        "coarse": true,
+        "mismatches": []
+      },
+      "layout": {
+        "viewport": 320,
+        "scrollWidth": 320,
+        "horizontal": [],
+        "clips": [],
+        "heightClips": [],
+        "textOverflow": []
+      },
+      "focus": [
+        {
+          "tag": "INPUT",
+          "focused": true,
+          "css": {
+            "font": "32px",
+            "line": "45.7142px",
+            "height": 54.71875,
+            "paddingTop": "3.5px",
+            "paddingBottom": "3.5px",
+            "contentHeight": 46
+          },
+          "lineFits": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 254.96875,
+          "bottom": 309.6875,
+          "inViewport": true
+        },
+        {
+          "tag": "BUTTON",
+          "focused": true,
+          "css": {
+            "font": "32px",
+            "line": "45.7142px",
+            "height": 61.71875,
+            "paddingTop": "7px",
+            "paddingBottom": "7px",
+            "contentHeight": 46
+          },
+          "lineFits": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 365.6875,
+          "bottom": 427.40625,
+          "inViewport": true
+        },
+        {
+          "tag": "TEXTAREA",
+          "focused": true,
+          "css": {
+            "font": "32px",
+            "line": "45.7142px",
+            "height": 84,
+            "paddingTop": "7px",
+            "paddingBottom": "7px",
+            "contentHeight": 68
+          },
+          "lineFits": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 441.40625,
+          "bottom": 525.40625,
+          "inViewport": true
+        }
+      ],
+      "pass": true
+    },
+    {
+      "lang": "hi",
+      "view": "thread",
+      "source": "c40c92eb plus scoped Free supporting CSS corrections",
+      "checks": [
+        "older messages and status history opened; reply composer reachable"
+      ],
+      "scale": {
+        "elements": 43,
+        "rootFont": "14px",
+        "coarse": true,
+        "mismatches": []
+      },
+      "layout": {
+        "viewport": 320,
+        "scrollWidth": 320,
+        "horizontal": [],
+        "clips": [],
+        "heightClips": [],
+        "textOverflow": []
+      },
+      "focus": [
+        {
+          "tag": "TEXTAREA",
+          "focused": true,
+          "css": {
+            "font": "32px",
+            "line": "45.7142px",
+            "height": 112,
+            "paddingTop": "7px",
+            "paddingBottom": "7px",
+            "contentHeight": 96
+          },
+          "lineFits": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 225.53125,
+          "bottom": 337.53125,
+          "inViewport": true
+        }
+      ],
+      "pass": true
+    },
+    {
+      "lang": "gu",
+      "view": "account",
+      "source": "c40c92eb plus scoped Free supporting CSS corrections",
+      "checks": [
+        "personal/factory/security/device editors opened"
+      ],
+      "openedEditors": 4,
+      "scale": {
+        "elements": 117,
+        "rootFont": "14px",
+        "coarse": true,
+        "mismatches": []
+      },
+      "layout": {
+        "viewport": 320,
+        "scrollWidth": 320,
+        "horizontal": [],
+        "clips": [],
+        "heightClips": [],
+        "textOverflow": []
+      },
+      "focus": [
+        {
+          "tag": "INPUT",
+          "focused": true,
+          "css": {
+            "font": "32px",
+            "line": "45.7142px",
+            "height": 54.71875,
+            "paddingTop": "3.5px",
+            "paddingBottom": "3.5px",
+            "contentHeight": 46
+          },
+          "lineFits": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 254.390625,
+          "bottom": 309.109375,
+          "inViewport": true
+        },
+        {
+          "tag": "INPUT",
+          "focused": true,
+          "css": {
+            "font": "32px",
+            "line": "45.7142px",
+            "height": 54.71875,
+            "paddingTop": "3.5px",
+            "paddingBottom": "3.5px",
+            "contentHeight": 46
+          },
+          "lineFits": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 254.3125,
+          "bottom": 309.03125,
+          "inViewport": true
+        },
+        {
+          "tag": "BUTTON",
+          "focused": true,
+          "css": {
+            "font": "24.5px",
+            "line": "35px",
+            "height": 51,
+            "paddingTop": "7px",
+            "paddingBottom": "7px",
+            "contentHeight": 35
+          },
+          "lineFits": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 256.46875,
+          "bottom": 307.46875,
+          "inViewport": true
+        }
+      ],
+      "pass": true
+    },
+    {
+      "lang": "gu",
+      "view": "billing",
+      "source": "c40c92eb plus scoped Free supporting CSS corrections",
+      "checks": [
+        "payment history opened/scaled and Escape closed"
+      ],
+      "scale": {
+        "elements": 58,
+        "rootFont": "14px",
+        "coarse": true,
+        "mismatches": [
+          {
+            "tag": "BUTTON",
+            "text": "\u0a9a\u0ac1\u0a95\u0ab5\u0aa3\u0ac0 \u0a87\u0aa4\u0abf\u0ab9\u0abe\u0ab8 \u0a9c\u0ac1\u0a930 recordsSuccessful \u0a9a\u0ac2\u0a95\u0ab5\u0aa3\u0ac0 \u0a85\u0aa8\u0ac7 \u0ab0\u0ab8\u0ac0\u0aa6 will appear here",
+            "expectedSize": 28,
+            "actualSize": "14px",
+            "expectedLine": 42,
+            "actualLine": "42px"
+          }
+        ]
+      },
+      "layout": {
+        "viewport": 320,
+        "scrollWidth": 320,
+        "horizontal": [],
+        "clips": [],
+        "heightClips": [],
+        "textOverflow": []
+      },
+      "focus": [],
+      "dialogLayout": {
+        "viewport": 320,
+        "scrollWidth": 320,
+        "horizontal": [],
+        "clips": [],
+        "heightClips": [],
+        "textOverflow": []
+      },
+      "pass": false
+    },
+    {
+      "lang": "gu",
+      "view": "support",
+      "source": "c40c92eb plus scoped Free supporting CSS corrections",
+      "checks": [
+        "Help and intake opened; subject/category/description reachable"
+      ],
+      "scale": {
+        "elements": 38,
+        "rootFont": "14px",
+        "coarse": true,
+        "mismatches": []
+      },
+      "layout": {
+        "viewport": 320,
+        "scrollWidth": 320,
+        "horizontal": [],
+        "clips": [],
+        "heightClips": [],
+        "textOverflow": []
+      },
+      "focus": [
+        {
+          "tag": "INPUT",
+          "focused": true,
+          "css": {
+            "font": "32px",
+            "line": "45.7142px",
+            "height": 54.71875,
+            "paddingTop": "3.5px",
+            "paddingBottom": "3.5px",
+            "contentHeight": 46
+          },
+          "lineFits": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 254.640625,
+          "bottom": 309.359375,
+          "inViewport": true
+        },
+        {
+          "tag": "BUTTON",
+          "focused": true,
+          "css": {
+            "font": "32px",
+            "line": "45.7142px",
+            "height": 61.71875,
+            "paddingTop": "7px",
+            "paddingBottom": "7px",
+            "contentHeight": 46
+          },
+          "lineFits": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 365.359375,
+          "bottom": 427.078125,
+          "inViewport": true
+        },
+        {
+          "tag": "TEXTAREA",
+          "focused": true,
+          "css": {
+            "font": "32px",
+            "line": "45.7142px",
+            "height": 84,
+            "paddingTop": "7px",
+            "paddingBottom": "7px",
+            "contentHeight": 68
+          },
+          "lineFits": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 441.078125,
+          "bottom": 525.078125,
+          "inViewport": true
+        }
+      ],
+      "pass": true
+    },
+    {
+      "lang": "gu",
+      "view": "thread",
+      "source": "c40c92eb plus scoped Free supporting CSS corrections",
+      "checks": [
+        "older messages and status history opened; reply composer reachable"
+      ],
+      "scale": {
+        "elements": 43,
+        "rootFont": "14px",
+        "coarse": true,
+        "mismatches": []
+      },
+      "layout": {
+        "viewport": 320,
+        "scrollWidth": 320,
+        "horizontal": [],
+        "clips": [],
+        "heightClips": [],
+        "textOverflow": []
+      },
+      "focus": [
+        {
+          "tag": "TEXTAREA",
+          "focused": true,
+          "css": {
+            "font": "32px",
+            "line": "45.7142px",
+            "height": 112,
+            "paddingTop": "7px",
+            "paddingBottom": "7px",
+            "contentHeight": 96
+          },
+          "lineFits": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 225.53125,
+          "bottom": 337.53125,
+          "inViewport": true
+        }
+      ],
+      "pass": true
+    },
+    {
+      "lang": "en",
+      "view": "billing-records",
+      "source": "c40c92eb plus scoped Free supporting CSS corrections",
+      "checks": [
+        "synthetic prior-paid captured receipt: latest date/amount summary and full history row/reference/receipt control"
+      ],
+      "scale": {
+        "elements": 58,
+        "rootFont": "14px",
+        "coarse": true,
+        "mismatches": [
+          {
+            "tag": "BUTTON",
+            "text": "View payment history1 recordLatest payment 1 Oct 2026 IST \u00b7 \u20b91,250",
+            "expectedSize": 28,
+            "actualSize": "14px",
+            "expectedLine": 42,
+            "actualLine": "42px"
+          }
+        ]
+      },
+      "layout": {
+        "viewport": 320,
+        "scrollWidth": 320,
+        "horizontal": [],
+        "clips": [],
+        "heightClips": [],
+        "textOverflow": []
+      },
+      "dialogScale": {
+        "elements": 37,
+        "rootFont": "14px",
+        "coarse": true,
+        "mismatches": [
+          {
+            "tag": "DIV",
+            "text": "Payment historyReview payment status, references, and downloadable receipts for ",
+            "expectedSize": 56,
+            "actualSize": "28px",
+            "expectedLine": 84,
+            "actualLine": "42px"
+          }
+        ]
+      },
+      "dialogLayout": {
+        "viewport": 320,
+        "scrollWidth": 320,
+        "horizontal": [],
+        "clips": [],
+        "heightClips": [],
+        "textOverflow": []
+      },
+      "amount": true,
+      "receipt": true,
+      "pass": false
+    },
+    {
+      "lang": "hi",
+      "view": "billing-records",
+      "source": "c40c92eb plus scoped Free supporting CSS corrections",
+      "checks": [
+        "synthetic prior-paid captured receipt: latest date/amount summary and full history row/reference/receipt control"
+      ],
+      "scale": {
+        "elements": 58,
+        "rootFont": "14px",
+        "coarse": true,
+        "mismatches": [
+          {
+            "tag": "BUTTON",
+            "text": "\u092d\u0941\u0917\u0924\u093e\u0928 \u0907\u0924\u093f\u0939\u093e\u0938 \u0926\u0947\u0916\u0947\u09021 \u0926\u0930\u094d\u091c \u0915\u0930\u0947\u0902\u0928\u0935\u0940\u0928\u0924\u092e \u092d\u0941\u0917\u0924\u093e\u0928 1 Oct 2026 IST \u00b7 \u20b91,250",
+            "expectedSize": 28,
+            "actualSize": "14px",
+            "expectedLine": 42,
+            "actualLine": "42px"
+          }
+        ]
+      },
+      "layout": {
+        "viewport": 320,
+        "scrollWidth": 320,
+        "horizontal": [],
+        "clips": [],
+        "heightClips": [],
+        "textOverflow": []
+      },
+      "dialogScale": {
+        "elements": 37,
+        "rootFont": "14px",
+        "coarse": true,
+        "mismatches": [
+          {
+            "tag": "DIV",
+            "text": "\u092d\u0941\u0917\u0924\u093e\u0928 \u0907\u0924\u093f\u0939\u093e\u0938\u0938\u092e\u0940\u0915\u094d\u0937\u093e \u092d\u0941\u0917\u0924\u093e\u0928 \u0938\u094d\u0925\u093f\u0924\u093f, references, \u0914\u0930 downloadable \u0930\u0938\u0940\u0926 \u0915\u0947 \u0932\u093f\u090f \u092f\u0939 w",
+            "expectedSize": 56,
+            "actualSize": "28px",
+            "expectedLine": 84,
+            "actualLine": "42px"
+          }
+        ]
+      },
+      "dialogLayout": {
+        "viewport": 320,
+        "scrollWidth": 320,
+        "horizontal": [],
+        "clips": [],
+        "heightClips": [],
+        "textOverflow": []
+      },
+      "amount": true,
+      "receipt": true,
+      "pass": false
+    },
+    {
+      "lang": "gu",
+      "view": "billing-records",
+      "source": "c40c92eb plus scoped Free supporting CSS corrections",
+      "checks": [
+        "synthetic prior-paid captured receipt: latest date/amount summary and full history row/reference/receipt control"
+      ],
+      "scale": {
+        "elements": 58,
+        "rootFont": "14px",
+        "coarse": true,
+        "mismatches": [
+          {
+            "tag": "BUTTON",
+            "text": "\u0a9a\u0ac1\u0a95\u0ab5\u0aa3\u0ac0 \u0a87\u0aa4\u0abf\u0ab9\u0abe\u0ab8 \u0a9c\u0ac1\u0a931 \u0aa8\u0acb\u0a82\u0aa7\u0acb\u0aa8\u0ab5\u0ac0\u0aa8\u0aa4\u0aae \u0a9a\u0ac2\u0a95\u0ab5\u0aa3\u0ac0 1 Oct 2026 IST \u00b7 \u20b91,250",
+            "expectedSize": 28,
+            "actualSize": "14px",
+            "expectedLine": 42,
+            "actualLine": "42px"
+          }
+        ]
+      },
+      "layout": {
+        "viewport": 320,
+        "scrollWidth": 320,
+        "horizontal": [],
+        "clips": [],
+        "heightClips": [],
+        "textOverflow": []
+      },
+      "dialogScale": {
+        "elements": 37,
+        "rootFont": "14px",
+        "coarse": true,
+        "mismatches": [
+          {
+            "tag": "DIV",
+            "text": "\u0a9a\u0ac1\u0a95\u0ab5\u0aa3\u0ac0 \u0a87\u0aa4\u0abf\u0ab9\u0abe\u0ab8\u0ab8\u0aae\u0ac0\u0a95\u0acd\u0ab7\u0abe \u0a9a\u0ac2\u0a95\u0ab5\u0aa3\u0ac0 \u0ab8\u0acd\u0aa5\u0abf\u0aa4\u0abf, references, \u0a85\u0aa8\u0ac7 downloadable \u0ab0\u0ab8\u0ac0\u0aa6 \u0aae\u0abe\u0a9f\u0ac7 \u0a86 wor",
+            "expectedSize": 56,
+            "actualSize": "28px",
+            "expectedLine": 84,
+            "actualLine": "42px"
+          }
+        ]
+      },
+      "dialogLayout": {
+        "viewport": 320,
+        "scrollWidth": 320,
+        "horizontal": [],
+        "clips": [],
+        "heightClips": [],
+        "textOverflow": []
+      },
+      "amount": true,
+      "receipt": true,
+      "pass": false
+    }
+  ],
+  "mutations": [],
+  "passed": 9,
+  "failed": 6
+}

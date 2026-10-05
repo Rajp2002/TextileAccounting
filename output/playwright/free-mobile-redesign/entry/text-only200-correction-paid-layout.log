@@ -1,0 +1,32 @@
+### Result
+[{"check":"lite signup 320: original paid strength/referral presentation","result":"passed","geometry":{"direction":"row","align":"center","justify":"space-between","labels":["none","none","none","none"],"checkFont":"10px","referralPadding":["0px","0px","0px","0px"],"scrollWidth":320,"width":320}},{"check":"lite signup 430: original paid strength/referral presentation","result":"passed","geometry":{"direction":"row","align":"center","justify":"space-between","labels":["none","none","none","none"],"checkFont":"10px","referralPadding":["0px","0px","0px","0px"],"scrollWidth":430,"width":430}},{"check":"base signup 320: original paid strength/referral presentation","result":"passed","geometry":{"direction":"row","align":"center","justify":"space-between","labels":["none","none","none","none"],"checkFont":"10px","referralPadding":["0px","0px","0px","0px"],"scrollWidth":320,"width":320}},{"check":"base signup 430: original paid strength/referral presentation","result":"passed","geometry":{"direction":"row","align":"center","justify":"space-between","labels":["none","none","none","none"],"checkFont":"10px","referralPadding":["0px","0px","0px","0px"],"scrollWidth":430,"width":430}}]
+### Ran Playwright code
+```js
+await (async page => {
+ const report=[];
+ await page.evaluate(()=>localStorage.setItem('weavly_language','en'));
+ for(const plan of ['lite','base']) for(const width of [320,430]) {
+  await page.setViewportSize({width,height:932});
+  await page.goto(`http://127.0.0.1:4188/fixture?kind=signup&plan=${plan}`);
+  await page.getByRole('heading',{level:1}).waitFor();
+  if(!(await page.getByLabel('Referral Code (Optional)',{exact:true}).isVisible()))throw new Error('Paid referral must remain visible');
+  if(await page.getByRole('button',{name:'Referral Code (Optional)',exact:true}).count())throw new Error('Paid referral disclosure introduced');
+  await page.getByLabel('Password',{exact:true}).fill('Synthetic!2Pass');
+  const geometry=await page.evaluate(()=>{
+   const rules=document.getElementById('password-rules'),referral=document.getElementById('signup-referral');
+   const rulesStyle=getComputedStyle(rules),referralStyle=getComputedStyle(referral);
+   return {direction:rulesStyle.flexDirection,align:rulesStyle.alignItems,justify:rulesStyle.justifyContent,labels:[...rules.querySelectorAll('span')].map(n=>getComputedStyle(n).display),checkFont:getComputedStyle(rules.querySelector('span').parentElement).fontSize,referralPadding:[referralStyle.paddingTop,referralStyle.paddingRight,referralStyle.paddingBottom,referralStyle.paddingLeft],scrollWidth:document.documentElement.scrollWidth,width:innerWidth};
+  });
+  if(geometry.direction!=='row'||geometry.align!=='center'||geometry.justify!=='space-between'||geometry.labels.some(x=>x!=='none')||geometry.checkFont!=='10px'||geometry.referralPadding.some(x=>x!=='0px')||geometry.scrollWidth>geometry.width)throw new Error(JSON.stringify(geometry));
+  await page.screenshot({path:`output/playwright/free-mobile-redesign/entry/signup-${plan}-after-${width}.png`,fullPage:true});
+  report.push({check:`${plan} signup ${width}: original paid strength/referral presentation`,result:'passed',geometry});
+ }
+ return report;
+}
+)(page);
+```
+### Page
+- Page URL: http://127.0.0.1:4188/fixture?kind=signup&plan=base
+- Page Title: Synthetic Weavly Free entry components
+### Events
+- New console entries: .playwright-cli/console-2026-10-05T18-52-15-647Z.log#L60-L63

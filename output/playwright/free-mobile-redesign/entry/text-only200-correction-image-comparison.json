@@ -1,0 +1,115 @@
+[
+  {
+    "kind": "signup",
+    "before": "signup-before-desktop.png",
+    "after": "signup-after-desktop.png",
+    "differingPixels": 0,
+    "bounds": null,
+    "result": "identical"
+  },
+  {
+    "kind": "login",
+    "before": "login-before-desktop.png",
+    "after": "login-after-desktop.png",
+    "differingPixels": 0,
+    "bounds": null,
+    "result": "identical"
+  },
+  {
+    "kind": "plans",
+    "before": "plans-before-desktop.png",
+    "after": "plans-after-desktop.png",
+    "differingPixels": 3604,
+    "bounds": [
+      378,
+      974,
+      518,
+      1059
+    ],
+    "result": "receipt-policy-text-only"
+  },
+  {
+    "kind": "paid-signup-lite-320",
+    "before": "signup-lite-before-text-fix-320.png",
+    "after": "signup-lite-after-320.png",
+    "differingPixels": 2452,
+    "bounds": [
+      26,
+      546,
+      293,
+      593
+    ],
+    "result": "identical-outside-password-focus-paint",
+    "passwordFocusBounds": {
+      "x": 29,
+      "y": 548.71875,
+      "width": 262,
+      "height": 42
+    },
+    "differingPixelsOutsideFocusBounds": 0,
+    "note": "Both captures are normal-size paid signup before/after the text-size correction. Visual inspection and measured comparison confine differences to focus painting around the active password input; paid layout dimensions and conditional styles are unchanged."
+  },
+  {
+    "kind": "paid-signup-lite-430",
+    "before": "signup-lite-before-text-fix-430.png",
+    "after": "signup-lite-after-430.png",
+    "differingPixels": 3228,
+    "bounds": [
+      33,
+      553,
+      396,
+      600
+    ],
+    "result": "identical-outside-password-focus-paint",
+    "passwordFocusBounds": {
+      "x": 36,
+      "y": 555.71875,
+      "width": 358,
+      "height": 42
+    },
+    "differingPixelsOutsideFocusBounds": 0,
+    "note": "Both captures are normal-size paid signup before/after the text-size correction. Visual inspection and measured comparison confine differences to focus painting around the active password input; paid layout dimensions and conditional styles are unchanged."
+  },
+  {
+    "kind": "paid-signup-base-320",
+    "before": "signup-base-before-text-fix-320.png",
+    "after": "signup-base-after-320.png",
+    "differingPixels": 2452,
+    "bounds": [
+      26,
+      546,
+      293,
+      593
+    ],
+    "result": "identical-outside-password-focus-paint",
+    "passwordFocusBounds": {
+      "x": 29,
+      "y": 548.71875,
+      "width": 262,
+      "height": 42
+    },
+    "differingPixelsOutsideFocusBounds": 0,
+    "note": "Both captures are normal-size paid signup before/after the text-size correction. Visual inspection and measured comparison confine differences to focus painting around the active password input; paid layout dimensions and conditional styles are unchanged."
+  },
+  {
+    "kind": "paid-signup-base-430",
+    "before": "signup-base-before-text-fix-430.png",
+    "after": "signup-base-after-430.png",
+    "differingPixels": 3228,
+    "bounds": [
+      33,
+      553,
+      396,
+      600
+    ],
+    "result": "identical-outside-password-focus-paint",
+    "passwordFocusBounds": {
+      "x": 36,
+      "y": 555.71875,
+      "width": 358,
+      "height": 42
+    },
+    "differingPixelsOutsideFocusBounds": 0,
+    "note": "Both captures are normal-size paid signup before/after the text-size correction. Visual inspection and measured comparison confine differences to focus painting around the active password input; paid layout dimensions and conditional styles are unchanged."
+  }
+]

@@ -1,0 +1,70 @@
+[
+  {
+    "view": "account",
+    "width": 1440,
+    "reference": "existing staged c40 after evidence",
+    "sizes": [
+      [
+        1440,
+        1534
+      ],
+      [
+        1440,
+        1534
+      ]
+    ],
+    "identical": true,
+    "differenceBounds": null
+  },
+  {
+    "view": "billing",
+    "width": 1440,
+    "reference": "existing staged c40 after evidence",
+    "sizes": [
+      [
+        1440,
+        900
+      ],
+      [
+        1440,
+        900
+      ]
+    ],
+    "identical": true,
+    "differenceBounds": null
+  },
+  {
+    "view": "support",
+    "width": 1440,
+    "reference": "existing staged c40 after evidence",
+    "sizes": [
+      [
+        1440,
+        900
+      ],
+      [
+        1440,
+        900
+      ]
+    ],
+    "identical": true,
+    "differenceBounds": null
+  },
+  {
+    "view": "thread",
+    "width": 1440,
+    "reference": "existing staged c40 after evidence",
+    "sizes": [
+      [
+        1440,
+        956
+      ],
+      [
+        1440,
+        956
+      ]
+    ],
+    "identical": true,
+    "differenceBounds": null
+  }
+]

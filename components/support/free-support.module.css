@@ -1,0 +1,34 @@
+.mobileHelp, .replyShortcut, .earlierToggle, .historyToggle, .mobilePromise, .closeComposer { display: none; }
+
+@media (max-width: 767.98px) {
+  .root { display: flex; flex-direction: column; gap: 1rem; }
+  .root > * { margin-top: 0; min-width: 0; }
+  .root h1 { font-size: 1.375rem; }
+  .root h2 { font-size: 1rem; }
+  .root header { gap: .75rem; }
+  .root header > div { min-width: 0; }
+  .root p, .root h1, .root h2 { overflow-wrap: anywhere; }
+  .root button, .root a { min-height: 44px; min-width: 44px; white-space: normal; }
+  .root button:focus-visible, .root a:focus-visible { outline: 2px solid var(--color-saffron); outline-offset: 2px; }
+  .root input, .root textarea, .root [role="combobox"] { font-size: 16px; }
+  .root input, .root [role="combobox"] { height: auto; min-height: 44px; }
+  .intro { display: none; }
+  .mobileHelp { display: block; }
+  .mobileHelp summary { display: flex; align-items: center; min-height: 44px; font-size: .875rem; text-decoration: underline; }
+  .mobileHelp p { margin-top: .25rem; font-size: .875rem; color: var(--color-muted-foreground); }
+  .root section > div, .root section > article, .root > section { padding: 1rem; }
+  .root section > div, .root section > article { padding: .875rem 1rem; }
+  .root .conversation { padding: 0; }
+  .back { display: inline-flex; align-items: center; }
+  .replyShortcut { display: inline-flex; align-items: center; margin-top: .5rem; text-decoration: underline; }
+  .mobilePromise { display: block; margin-top: .5rem; font-size: .875rem; }
+  .closeComposer { display: inline-flex; align-items: center; margin-left: .5rem; }
+  .earlierToggle, .historyToggle { display: flex; align-items: center; justify-content: space-between; gap: .75rem; width: 100%; text-align: left; font-size: .875rem; font-weight: 600; }
+  .earlierToggle { padding: .5rem 1rem; }
+  .closed { display: none; }
+  .earlier > article { padding: .875rem 1rem; border-bottom: 1px solid var(--color-hairline); }
+  .historyHeading { display: none; }
+  .replySection { scroll-margin-top: 1rem; }
+  .replySection textarea { min-height: 8rem; }
+  .replySection > button { width: 100%; }
+}

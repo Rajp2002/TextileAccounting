@@ -1,6 +1,7 @@
 'use client'
 
 import { useTranslation } from '@/lib/i18n/context'
+import { freeMobileEntryText } from '@/lib/i18n/free-mobile-entry'
 import { freeText } from '@/lib/i18n/free-tier'
 import { Suspense, useState } from 'react'
 import Link from 'next/link'
@@ -53,9 +54,10 @@ function getPasswordStrength(password: string): {
 }
 
 function SignupForm() {
-    const { language } = useTranslation()
+    const { language, tx } = useTranslation()
     const searchParams = useSearchParams()
     
+    const [referralOpen, setReferralOpen] = useState(Boolean(searchParams?.get('ref')))
     const [referralCode, setReferralCode] = useState(searchParams?.get('ref') || '')
     // Free is the default for every new account; only an explicit Lite or Base choice skips it.
     const requestedPlan = searchParams?.get('plan')
@@ -79,24 +81,24 @@ function SignupForm() {
         if (selectedPlan !== 'free' && (!factoryName.trim() || factoryName.trim().length < 2))
             newErrors.factoryName = 'Factory name must be at least 2 characters'
         if (!ownerName.trim() || ownerName.trim().length < 2)
-            newErrors.ownerName = 'Name must be at least 2 characters'
+            newErrors.ownerName = freeMobileEntryText(language, 'nameTooShort')
         if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-            newErrors.email = 'Invalid email address'
+            newErrors.email = freeMobileEntryText(language, 'invalidEmail')
         if (!isValidIndianPhone(phone))
-            newErrors.phone = 'Enter a valid 10-digit Indian mobile number, for example 9876543210.'
+            newErrors.phone = freeMobileEntryText(language, 'invalidPhone')
         const passwordErrors = strength.checks
             .filter(check => !check.met)
-            .map(check => check.label)
+            .map(check => tx(check.label))
         if (passwordErrors.length > 0)
-            newErrors.password = `Password needs: ${passwordErrors.join(', ')}`
+            newErrors.password = freeMobileEntryText(language, 'passwordNeeds', { rules: passwordErrors.join(', ') })
         const passwordResult = PasswordSchema.safeParse(password)
         if (!passwordResult.success && !newErrors.password) {
             newErrors.password = passwordResult.error.issues[0]?.message ?? 'Password does not meet the requirements'
         }
         if (!confirmPassword) {
-            newErrors.confirmPassword = 'Confirm your password'
+            newErrors.confirmPassword = freeMobileEntryText(language, 'confirmPassword')
         } else if (confirmPassword !== password) {
-            newErrors.confirmPassword = 'Passwords do not match'
+            newErrors.confirmPassword = freeMobileEntryText(language, 'passwordMismatch')
         }
         setErrors(newErrors)
         return Object.keys(newErrors).length === 0
@@ -141,10 +143,11 @@ function SignupForm() {
 
     return (
         <AuthLayout
+            compactMobile={selectedPlan === 'free'}
             title={selectedPlan === 'free' ? freeText(language,'signupTitle') : "Create your factory"}
             subtitle={selectedPlan === 'free' ? freeText(language,'signupSubtitle') : 'Get started as a factory owner'}
         >
-            <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+            <form onSubmit={handleSubmit} className={cn("space-y-5", selectedPlan === 'free' && "max-sm:space-y-4")} noValidate>
                 {/* Factory Name */}
                 {selectedPlan !== 'free' && <div className="space-y-1.5">
                     <Label htmlFor="factoryName" className="text-ink font-medium">
@@ -157,13 +160,15 @@ function SignupForm() {
                         value={factoryName}
                         onChange={(e) => { setFactoryName(e.target.value); setErrors(prev => ({ ...prev, factoryName: '' })) }}
                         onBlur={validate}
+                        aria-invalid={Boolean(errors.factoryName)}
+                        aria-describedby={errors.factoryName ? 'factoryName-error' : undefined}
                         className={cn(
                             'h-12 bg-surface border-input focus:bg-surface transition-all',
                             errors.factoryName && 'border-[var(--wv-status-danger-fg)] focus:border-[var(--wv-status-danger-fg)]'
                         )}
                         disabled={loading}
                     />
-                    {errors.factoryName && <p className="text-xs text-[var(--wv-status-danger-fg)] mt-1">{errors.factoryName}</p>}
+                    {errors.factoryName && <p id="factoryName-error" role="alert" className="text-xs text-[var(--wv-status-danger-fg)] mt-1">{errors.factoryName}</p>}
                 </div>}
 
                 {/* Owner Name */}
@@ -173,18 +178,21 @@ function SignupForm() {
                     </Label>
                     <Input
                         id="ownerName"
+                        autoComplete="name"
                         type="text"
                         placeholder="e.g. Rajesh Kumar"
                         value={ownerName}
                         onChange={(e) => { setOwnerName(e.target.value); setErrors(prev => ({ ...prev, ownerName: '' })) }}
                         onBlur={validate}
+                        aria-invalid={Boolean(errors.ownerName)}
+                        aria-describedby={errors.ownerName ? 'ownerName-error' : undefined}
                         className={cn(
                             'h-12 bg-surface border-input focus:bg-surface transition-all',
                             errors.ownerName && 'border-[var(--wv-status-danger-fg)] focus:border-[var(--wv-status-danger-fg)]'
                         )}
                         disabled={loading}
                     />
-                    {errors.ownerName && <p className="text-xs text-[var(--wv-status-danger-fg)] mt-1">{errors.ownerName}</p>}
+                    {errors.ownerName && <p id="ownerName-error" role="alert" className="text-xs text-[var(--wv-status-danger-fg)] mt-1">{errors.ownerName}</p>}
                 </div>
 
                 {/* Email */}
@@ -194,18 +202,21 @@ function SignupForm() {
                     </Label>
                     <Input
                         id="email"
+                        autoComplete="email"
                         type="email"
                         placeholder="name@factory.com"
                         value={email}
                         onChange={(e) => { setEmail(e.target.value); setErrors(prev => ({ ...prev, email: '' })) }}
                         onBlur={validate}
+                        aria-invalid={Boolean(errors.email)}
+                        aria-describedby={errors.email ? 'email-error' : undefined}
                         className={cn(
                             'h-12 bg-surface border-input focus:bg-surface transition-all',
                             errors.email && 'border-[var(--wv-status-danger-fg)] focus:border-[var(--wv-status-danger-fg)]'
                         )}
                         disabled={loading}
                     />
-                    {errors.email && <p className="text-xs text-[var(--wv-status-danger-fg)] mt-1">{errors.email}</p>}
+                    {errors.email && <p id="email-error" role="alert" className="text-xs text-[var(--wv-status-danger-fg)] mt-1">{errors.email}</p>}
                 </div>
 
                 {/* Phone */}
@@ -233,6 +244,7 @@ function SignupForm() {
                             aria-describedby={errors.phone ? 'phone-error' : undefined}
                             className={cn(
                                 'h-12 bg-surface border-input focus:bg-surface transition-all pl-11',
+                                selectedPlan === 'free' && 'max-sm:pl-[calc(1.75em+0.75rem)]',
                                 errors.phone && 'border-[var(--wv-status-danger-fg)] focus:border-[var(--wv-status-danger-fg)]'
                             )}
                             disabled={loading}
@@ -249,6 +261,7 @@ function SignupForm() {
                     <div className="relative">
                         <Input
                             id="password"
+                            autoComplete="new-password"
                             type={showPassword ? 'text' : 'password'}
                             placeholder="Min. 8 characters"
                             value={password}
@@ -257,7 +270,7 @@ function SignupForm() {
                             aria-invalid={Boolean(errors.password)}
                             aria-describedby={errors.password ? 'password-error password-rules' : 'password-rules'}
                             className={cn(
-                                'h-12 bg-surface border-input focus:bg-surface transition-all pr-10',
+                                'h-12 bg-surface border-input focus:bg-surface transition-all pr-12 sm:pr-10',
                                 errors.password && 'border-[var(--wv-status-danger-fg)] focus:border-[var(--wv-status-danger-fg)]'
                             )}
                             disabled={loading}
@@ -265,16 +278,16 @@ function SignupForm() {
                         <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-ink transition-colors"
-                            tabIndex={-1}
+                            className="absolute right-0.5 sm:right-3 top-1/2 flex h-[44px] w-[44px] sm:h-auto sm:w-auto -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground hover:text-ink transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            aria-label={freeMobileEntryText(language, showPassword ? 'hidePassword' : 'showPassword')}
+                            aria-pressed={showPassword}
                         >
                             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
                     </div>
 
                     {/* Strength bar */}
-                    {password.length > 0 && (
-                        <div className="space-y-2 pt-1">
+                    <div className={cn("space-y-2 pt-1", !password.length && (selectedPlan === 'free' ? "sm:hidden" : "hidden"))}>
                             <div className="flex gap-1">
                                 {[1, 2, 3, 4].map((i) => (
                                     <div
@@ -286,7 +299,7 @@ function SignupForm() {
                                     />
                                 ))}
                             </div>
-                            <div id="password-rules" className="flex items-center justify-between">
+                            <div id="password-rules" className={cn("flex items-center justify-between", selectedPlan === 'free' && "max-sm:flex-col max-sm:items-start max-sm:gap-2")}>
                                 <p className={cn(
                                     'text-xs font-medium transition-colors',
                                     strength.score === 4 ? 'text-[var(--wv-status-success-fg)]' :
@@ -299,28 +312,28 @@ function SignupForm() {
                                     {strength.checks.map((check) => (
                                         <div key={check.label} className={cn(
                                             'flex items-center gap-1 text-[10px]',
-                                            check.met ? 'text-[var(--wv-status-success-fg)]' : 'text-muted-foreground/60'
+                                            selectedPlan === 'free' && 'max-sm:text-xs',
+                                            check.met ? 'text-[var(--wv-status-success-fg)]' : cn('text-muted-foreground/60', selectedPlan === 'free' && 'max-sm:text-body')
                                         )}>
                                             <CheckCircle2 className={cn('h-3 w-3', check.met ? 'opacity-100' : 'opacity-40')} />
-                                            <span className="hidden sm:inline">{check.label}</span>
+                                            <span className={selectedPlan === 'free' ? undefined : 'hidden sm:inline'}>{check.label}</span>
                                         </div>
                                     ))}
                                 </div>
                             </div>
                         </div>
-                    )}
                     {errors.password && <p id="password-error" role="alert" className="text-xs text-[var(--wv-status-danger-fg)]">{errors.password}</p>}
                 </div>
 
                 {/* Confirm Password */}
                 <div className="space-y-1.5">
                     <Label htmlFor="confirmPassword" className="text-ink font-medium">
-                        Confirm password
+                        {freeMobileEntryText(language, 'confirmPassword')}
                     </Label>
                     <Input
                         id="confirmPassword"
                         type="password"
-                        placeholder="Enter your password again"
+                        placeholder={freeMobileEntryText(language, 'enterPasswordAgain')}
                         value={confirmPassword}
                         onChange={(e) => {
                             setConfirmPassword(e.target.value)
@@ -340,7 +353,9 @@ function SignupForm() {
                 </div>
 
                 {/* Referral Code (Optional) */}
-                <div className="space-y-1.5">
+                <div className={cn(selectedPlan === 'free' && "rounded-lg border border-hairline sm:border-0")}>
+                    <button type="button" aria-expanded={referralOpen} aria-controls="signup-referral" onClick={() => setReferralOpen(open => !open)} className={cn("flex min-h-[44px] w-full items-center px-3 text-sm font-medium text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:hidden", selectedPlan !== 'free' && "hidden")}>Referral Code (Optional)</button>
+                    <div id="signup-referral" className={cn("space-y-1.5", selectedPlan === 'free' && "max-sm:px-3 max-sm:pb-3", selectedPlan === 'free' && !referralOpen && "max-sm:hidden")}>
                     <Label htmlFor="referralCode" className="text-ink font-medium">
                         Referral Code (Optional)
                     </Label>
@@ -353,6 +368,7 @@ function SignupForm() {
                         className="h-12 bg-surface border-input focus:bg-surface transition-all uppercase"
                         disabled={loading}
                     />
+                    </div>
                 </div>
 
                 {/* Versioned legal acceptance */}
@@ -366,9 +382,9 @@ function SignupForm() {
                     />
                     <label htmlFor="consent" className="text-sm text-muted-foreground leading-snug cursor-pointer">
                         I agree to the{' '}
-                        <a href="/terms" target="_blank" className="text-ink font-semibold underline decoration-[var(--wv-cotton-400)] hover:decoration-[var(--wv-brand-accent)] underline-offset-4">Terms of Service</a>
+                        <a href="/terms" target="_blank" className="inline-flex min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 sm:inline items-center text-ink font-semibold underline decoration-[var(--wv-cotton-400)] hover:decoration-[var(--wv-brand-accent)] underline-offset-4">Terms of Service</a>
                         {' '}and{' '}
-                        <a href="/privacy" target="_blank" className="text-ink font-semibold underline decoration-[var(--wv-cotton-400)] hover:decoration-[var(--wv-brand-accent)] underline-offset-4">Privacy Policy</a>
+                        <a href="/privacy" target="_blank" className="inline-flex min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 sm:inline items-center text-ink font-semibold underline decoration-[var(--wv-cotton-400)] hover:decoration-[var(--wv-brand-accent)] underline-offset-4">Privacy Policy</a>
                     </label>
                 </div>
 
@@ -385,7 +401,7 @@ function SignupForm() {
                             {selectedPlan === 'free' ? freeText(language, 'creatingFreeAccount') : 'Creating factory...'}
                         </>
                     ) : (
-                        <span className="flex items-center justify-center gap-2">
+                        <span className={cn("flex items-center justify-center gap-2", selectedPlan === 'free' && "max-sm:min-w-0 max-sm:whitespace-normal")}>
                             <Building2 className="h-4 w-4" />
                             {selectedPlan === 'free' ? freeText(language, 'createFreeAccount') : 'Create factory'}
                             <ArrowRight className="h-4 w-4" />
@@ -396,7 +412,7 @@ function SignupForm() {
                 <div className="space-y-3 pt-1">
                     <p className="text-center text-sm text-muted-foreground">
                         Already have an account?{' '}
-                        <Link href="/login" className="text-ink font-semibold underline decoration-[var(--wv-cotton-400)] hover:decoration-[var(--wv-brand-accent)] underline-offset-4">
+                        <Link href="/login" className="inline-flex min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 sm:inline items-center text-ink font-semibold underline decoration-[var(--wv-cotton-400)] hover:decoration-[var(--wv-brand-accent)] underline-offset-4">
                             Log in
                         </Link>
                     </p>

@@ -1,0 +1,19 @@
+@media (max-width: 767.98px) {
+  .root { padding-bottom: 1rem; }
+  .root > header { text-align: left; padding-bottom: 1rem; }
+  .root > header > div { justify-content: flex-start; }
+  .root > header h1 { font-size: 1.375rem; }
+  .root > section { margin-top: 1rem; }
+  .workspace > div:first-child { padding: 1rem; gap: .75rem; }
+  .workspace > div:first-child > div:first-child > div > span { display: none; }
+  .workspace p, .workspace h2 { overflow-wrap: anywhere; }
+  .facts { grid-template-columns: 1fr; }
+  .facts > div { padding: .875rem 1rem; }
+  .facts > div > span { display: none; }
+  .compare { gap: .75rem; padding: 1rem; }
+  .compare > div > div:first-child { display: none; }
+  .compare p { overflow-wrap: anywhere; }
+  .compare a { min-height: 44px; height: auto; white-space: normal; }
+  .root > section[aria-labelledby="billing-history-heading"] button :global(.truncate) { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
+  .history a[href^="/api/billing/receipt/"] { min-height: 44px; min-width: 44px; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+}

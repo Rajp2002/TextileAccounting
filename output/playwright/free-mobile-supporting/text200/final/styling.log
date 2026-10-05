@@ -1,0 +1,37 @@
+### Result
+{"kind":"Synthetic CSS/default-prop regression, bounded existing settings/receipt controls; no paid persistence/auth/device evidence","checks":[{"tier":"lite","width":320,"view":"paid-account","whiteSpace":"nowrap","flexShrink":"0","maxWidth":"none","freeDisclosures":0,"pass":true},{"tier":"base","width":320,"view":"paid-account","whiteSpace":"nowrap","flexShrink":"0","maxWidth":"none","freeDisclosures":0,"pass":true},{"tier":"lite","width":1440,"view":"paid-account","whiteSpace":"nowrap","flexShrink":"0","maxWidth":"none","freeDisclosures":0,"pass":true},{"tier":"base","width":1440,"view":"paid-account","whiteSpace":"nowrap","flexShrink":"0","maxWidth":"none","freeDisclosures":0,"pass":true},{"view":"Free account desktop","whiteSpace":"nowrap","flexShrink":"0","maxWidth":"none","pass":true},{"view":"Free account desktop input","height":38.5,"rootFont":"14px","pass":true},{"view":"Default payment dialog","width":320,"minHeight":"auto","FreePortalClass":false,"pass":true},{"view":"Default payment dialog","width":1440,"minHeight":"0px","FreePortalClass":false,"pass":true},{"view":"Free payment dialog desktop","minHeight":"0px","pass":true}],"passed":9,"failed":0}
+### Ran Playwright code
+```js
+await (async(page)=>{
+  const checks=[];
+  for(const width of [320,1440])for(const tier of ['lite','base']){
+    await page.setViewportSize({width,height:900});
+    await page.goto('http://127.0.0.1:4192/owner/settings?view=paid-account&tier='+tier+'&lang=en');
+    const save=page.getByRole('button',{name:'Save personal information',exact:true});await save.waitFor();
+    checks.push(await save.evaluate((node,options)=>{const s=getComputedStyle(node);return {...options,whiteSpace:s.whiteSpace,flexShrink:s.flexShrink,maxWidth:s.maxWidth,freeDisclosures:document.querySelectorAll('button[aria-expanded][aria-controls]:not([role=combobox])').length,pass:s.whiteSpace==='nowrap'&&s.flexShrink==='0'&&s.maxWidth==='none'}},{tier,width,view:'paid-account'}));
+  }
+  await page.setViewportSize({width:1440,height:900});
+  await page.goto('http://127.0.0.1:4192/free/account?view=account&lang=en');
+  const freeSave=page.getByRole('button',{name:'Save personal information',exact:true});await freeSave.waitFor();
+  checks.push(await freeSave.evaluate(node=>{const s=getComputedStyle(node);return {view:'Free account desktop',whiteSpace:s.whiteSpace,flexShrink:s.flexShrink,maxWidth:s.maxWidth,pass:s.whiteSpace==='nowrap'&&s.flexShrink==='0'&&s.maxWidth==='none'}}));
+  const freeInput=page.getByRole('textbox',{name:/^Your name/});
+  checks.push(await freeInput.evaluate(node=>({view:'Free account desktop input',height:node.getBoundingClientRect().height,rootFont:getComputedStyle(document.documentElement).fontSize,pass:node.getBoundingClientRect().height===2.75*parseFloat(getComputedStyle(document.documentElement).fontSize)})));
+  for(const width of [320,1440]){
+    await page.setViewportSize({width,height:900});
+    await page.goto('http://127.0.0.1:4192/owner/billing?view=default-history&lang=en');
+    await page.getByRole('button',{name:'View payment history',exact:true}).click();
+    await page.getByRole('dialog').waitFor();await page.waitForTimeout(450);
+    const receipt=page.getByRole('dialog').locator('a[href="/api/billing/receipt/payment-1"]');
+    checks.push(await receipt.evaluate((node,width)=>({view:'Default payment dialog',width,minHeight:getComputedStyle(node).minHeight,FreePortalClass:node.closest('[role=dialog]').className.includes('_history_'),pass:['0px','auto'].includes(getComputedStyle(node).minHeight)&&!node.closest('[role=dialog]').className.includes('_history_')}),width));
+    await page.keyboard.press('Escape');
+  }
+  await page.setViewportSize({width:1440,height:900});
+  await page.goto('http://127.0.0.1:4192/free/billing?view=billing&records=1&lang=en');
+  await page.locator('section[aria-labelledby="billing-history-heading"] button').click();
+  await page.getByRole('dialog').waitFor();await page.waitForTimeout(450);
+  checks.push(await page.getByRole('dialog').locator('a[href="/api/billing/receipt/payment-1"]').evaluate(node=>({view:'Free payment dialog desktop',minHeight:getComputedStyle(node).minHeight,pass:getComputedStyle(node).minHeight==='0px'})));
+  return {kind:'Synthetic CSS/default-prop regression, bounded existing settings/receipt controls; no paid persistence/auth/device evidence',checks,passed:checks.filter(c=>c.pass).length,failed:checks.filter(c=>!c.pass).length};
+})(page);
+```
+### Events
+- New console entries: .playwright-cli/console-2026-10-05T18-53-04-119Z.log#L59-L66

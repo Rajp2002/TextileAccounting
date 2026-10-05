@@ -1,0 +1,14 @@
+{
+  "applicationSourceCommit": "3d3831c6a08bfafac104b48cbb29b813f8bf7ba2",
+  "portsChecked": [
+    4187,
+    4188,
+    4190,
+    4192,
+    4193
+  ],
+  "listeners": [],
+  "taskDatabaseProcesses": [],
+  "method": "lsof TCP LISTEN and ps task-specific disposable database path inspection; no unrelated process terminated.",
+  "browserCleanup": "All owned verifier browsers closed by their finally blocks; agents recorded fixture/CLI shutdown."
+}

@@ -1,0 +1,11 @@
+{
+  "applicationSourceCommit": "3d3831c6a08bfafac104b48cbb29b813f8bf7ba2",
+  "createdAt": "2026-10-05T19:51:16.585Z",
+  "ownedFixturePorts": {
+    "4187": "stopped; no listener",
+    "4190": "stopped; no listener"
+  },
+  "finalVerifier": "completed19/19; chromium closed through browser.close()",
+  "namedCliSessions": "free-mobile-before and free-mobile-after closed previously",
+  "unrelatedProcesses": "preserved"
+}
