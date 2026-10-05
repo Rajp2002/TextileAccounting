@@ -195,6 +195,7 @@ export default function AuditTable() {
                     {/* ── Search Input ── */}
                     <div className="flex-1 min-w-[300px] relative group">
                         {lite && <label htmlFor={searchId} className={styles.mobileSearchLabel}>{liteSupportingText(language,'search')}</label>}
+                        <div className={lite ? styles.searchControl : 'contents'}>
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--wv-text-secondary)] group-focus-within:text-[var(--wv-action-primary)] transition-all" />
                         <input
                             type="text"
@@ -214,6 +215,7 @@ export default function AuditTable() {
                                 <X className="h-4 w-4" />
                             </button>
                         )}
+                        </div>
                     </div>
 
                     {lite && <Button type="button" variant="outline" className={styles.mobileToggle} aria-expanded={filtersOpen} aria-controls={filtersId} onClick={()=>setFiltersOpen(value=>!value)}><Filter aria-hidden="true" className="h-4 w-4"/>{liteSupportingText(language,filtersOpen?'closeFilters':'filters')}{advancedFilterCount > 0 ? ` (${advancedFilterCount})` : ''}</Button>}

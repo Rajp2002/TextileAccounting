@@ -158,6 +158,8 @@
   body:has([data-lite-costing]) [data-estimator-proposed-rate] { width: 100%; max-width: 100%; }
   body:has([data-lite-costing]) div:has(> [data-estimator-proposed-rate]) { flex-wrap: wrap; }
   body:has([data-lite-costing]) [data-estimator-proposed-rate] > input { padding-left: 1.75em; padding-right: 2.75em; }
+  /* Optional success notices yield to an open review. Errors/warnings stay above it. */
+  body:has([data-lite-costing]):has([data-slot="dialog-content"][data-state="open"], [data-slot="sheet-content"][data-state="open"]) [data-sonner-toaster]:has([data-type="success"]):not(:has([data-type="error"], [data-type="warning"])) { z-index: 40; }
 }
 
 @media (min-width: 768px) {
