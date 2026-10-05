@@ -1,0 +1,45 @@
+{
+  "evidence": "Local Next production build; unauthenticated read-only Chromium emulation, no installed device/auth/provider verification",
+  "results": [
+    {
+      "path": "/install",
+      "status": "passed",
+      "checks": "HTTP, 320/430/1440 reflow, 320 computed text 200%"
+    },
+    {
+      "path": "/offline",
+      "status": "passed",
+      "checks": "HTTP, 320/430/1440 reflow, 320 computed text 200%"
+    },
+    {
+      "path": "/privacy",
+      "status": "passed",
+      "checks": "HTTP, 320/430/1440 reflow, 320 computed text 200%"
+    },
+    {
+      "path": "/terms",
+      "status": "passed",
+      "checks": "HTTP, 320/430/1440 reflow, 320 computed text 200%"
+    },
+    {
+      "path": "/refund-policy",
+      "status": "passed",
+      "checks": "HTTP, 320/430/1440 reflow, 320 computed text 200%"
+    },
+    {
+      "path": "/privacy-request",
+      "status": "passed",
+      "checks": "HTTP, 320/430/1440 reflow, 320 computed text 200%"
+    },
+    {
+      "path": "/security-incident",
+      "status": "passed",
+      "checks": "HTTP, 320/430/1440 reflow, 320 computed text 200%"
+    }
+  ],
+  "blocked": [],
+  "applicationSourceCommit": "3d3831c6a08bfafac104b48cbb29b813f8bf7ba2",
+  "command": "node scripts/qa/free-public-browser.mjs",
+  "exitCode": 0,
+  "source": "Actual local Next production build from clean secret-free source snapshot; after-only public route checks."
+}

@@ -1,0 +1,140 @@
+[
+  {
+    "language": "en",
+    "percent": 150,
+    "issues": []
+  },
+  {
+    "language": "en",
+    "percent": 200,
+    "issues": []
+  },
+  {
+    "language": "en",
+    "percent": 200,
+    "state": "help-replay",
+    "issues": []
+  },
+  {
+    "language": "en",
+    "percent": 200,
+    "mode": "cm",
+    "issues": []
+  },
+  {
+    "language": "en",
+    "percent": 200,
+    "mode": "paise-per-pick",
+    "issues": []
+  },
+  {
+    "language": "en",
+    "percent": 200,
+    "mode": "manual-kg-per-100m",
+    "issues": []
+  },
+  {
+    "language": "en",
+    "percent": 200,
+    "state": "help-invitation",
+    "issues": []
+  },
+  {
+    "language": "en",
+    "percent": 200,
+    "state": "help-invitation-details",
+    "issues": []
+  },
+  {
+    "language": "hi",
+    "percent": 150,
+    "issues": []
+  },
+  {
+    "language": "hi",
+    "percent": 200,
+    "issues": []
+  },
+  {
+    "language": "hi",
+    "percent": 200,
+    "state": "help-replay",
+    "issues": []
+  },
+  {
+    "language": "hi",
+    "percent": 200,
+    "mode": "cm",
+    "issues": []
+  },
+  {
+    "language": "hi",
+    "percent": 200,
+    "mode": "paise-per-pick",
+    "issues": []
+  },
+  {
+    "language": "hi",
+    "percent": 200,
+    "mode": "manual-kg-per-100m",
+    "issues": []
+  },
+  {
+    "language": "hi",
+    "percent": 200,
+    "state": "help-invitation",
+    "issues": []
+  },
+  {
+    "language": "hi",
+    "percent": 200,
+    "state": "help-invitation-details",
+    "issues": []
+  },
+  {
+    "language": "gu",
+    "percent": 150,
+    "issues": []
+  },
+  {
+    "language": "gu",
+    "percent": 200,
+    "issues": []
+  },
+  {
+    "language": "gu",
+    "percent": 200,
+    "state": "help-replay",
+    "issues": []
+  },
+  {
+    "language": "gu",
+    "percent": 200,
+    "mode": "cm",
+    "issues": []
+  },
+  {
+    "language": "gu",
+    "percent": 200,
+    "mode": "paise-per-pick",
+    "issues": []
+  },
+  {
+    "language": "gu",
+    "percent": 200,
+    "mode": "manual-kg-per-100m",
+    "issues": []
+  },
+  {
+    "language": "gu",
+    "percent": 200,
+    "state": "help-invitation",
+    "issues": []
+  },
+  {
+    "language": "gu",
+    "percent": 200,
+    "state": "help-invitation-details",
+    "issues": []
+  }
+]

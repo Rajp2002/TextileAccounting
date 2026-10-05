@@ -1,0 +1,37 @@
+{
+  "comparisonType": "Matching synthetic Chromium fixture screenshots; animations disabled; local system font fallback",
+  "beforeSourceCommit": "cf00bf4616cfb8c2e128815eeb266d00b67d7ca1",
+  "afterSourceCommit": "3d3831c6a08bfafac104b48cbb29b813f8bf7ba2",
+  "results": [
+    {
+      "name": "estimator-1440x900-synthetic.png",
+      "differentPixels": 0,
+      "boundingBox": null
+    },
+    {
+      "name": "history-1440x900-synthetic.png",
+      "differentPixels": 0,
+      "boundingBox": null
+    },
+    {
+      "name": "lite-estimator-1440x900-synthetic.png",
+      "differentPixels": 0,
+      "boundingBox": null
+    },
+    {
+      "name": "base-estimator-1440x900-synthetic.png",
+      "differentPixels": 0,
+      "boundingBox": null
+    },
+    {
+      "name": "lite-estimator-390x844-synthetic.png",
+      "differentPixels": 0,
+      "boundingBox": null
+    },
+    {
+      "name": "base-estimator-390x844-synthetic.png",
+      "differentPixels": 0,
+      "boundingBox": null
+    }
+  ]
+}

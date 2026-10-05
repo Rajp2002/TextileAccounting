@@ -1,0 +1,7 @@
+{
+  "baselineCommit": "c40c92ebf19bb63f749181eba74ad7d73ab9e8bb",
+  "pendingApplicationPatch": "components/settings/plan-aware/free-settings.module.css",
+  "patchFileSHA256": "1c416a496942ea8ebca4b4ade7ba08092a72224c0d5875cabe7d4c1de7d9d86d",
+  "fixture": "frozen snapshot, HMR/watch disabled; actual app-like paths for public/legacy i18n map selection",
+  "noLayoutScale": "body descendants computed font size/line height x2; html root font unchanged"
+}

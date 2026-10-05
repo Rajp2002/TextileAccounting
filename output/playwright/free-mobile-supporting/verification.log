@@ -1,0 +1,151 @@
+### Result
+{"passed":["Account editor remains mounted, dirty state visible, visible invalid/async errors, unverified email, safe deletion Cancel/focus","Billing truthful pending/suspended/expired states, factory identity and history Escape","Support intake Close/reopen memory-only draft and exact uncertain retry","Thread history/earlier disclosure, focus, Enter, repeated taps and immutable refresh/retry","EN/HI/GU 320px reflow with normal and 200% root text"],"kind":"synthetic Chromium component emulation; no installed device/auth/database evidence"}
+### Ran Playwright code
+```js
+await (async (page) => {
+  const check = (value, message) => { if (!value) throw new Error(message); };
+  const waitFor = async (predicate, message) => {
+    for (let i = 0; i < 100; i++) { if (await predicate()) return; await page.waitForTimeout(30); }
+    throw new Error(message);
+  };
+  const results = [];
+  page.setDefaultTimeout(7000);
+  await page.unroute('**/api/support**');
+  await page.route('**/*', route => new URL(route.request().url()).hostname === '127.0.0.1' ? route.continue() : route.abort('blockedbyclient'));
+  await page.setViewportSize({width:320,height:568});
+  await page.goto('http://127.0.0.1:4192/?view=account');
+  const group = page.getByRole('button',{name:/Personal information Synthetic Owner/});
+  await group.click();
+  const name = page.getByRole('textbox',{name:/^Your name/});
+  await name.fill('Synthetic unsaved owner');
+  const element = await name.elementHandle();
+  await group.click();
+  check(await group.getAttribute('aria-expanded') === 'false','Account group did not close');
+  check((await group.innerText()).includes('Unsaved changes'),'Collapsed account hides dirty state');
+  await group.click();
+  check(await name.inputValue() === 'Synthetic unsaved owner','Collapsing account lost draft');
+  check(await name.evaluate((node,original) => node === original,element),'Account editor remounted');
+  await page.getByRole('button',{name:'Discard changes',exact:true}).click();
+  check(await name.inputValue() === 'Synthetic Owner','Discard failed to restore saved identity');
+  await name.fill('x');
+  await page.getByRole('button',{name:'Save personal information',exact:true}).click();
+  await page.getByText('Name must be at least 2 characters long',{exact:true}).waitFor();
+  await group.click();
+  check(await group.getAttribute('aria-expanded')==='true','Closing group hid invalid input');
+  check(await page.getByText('Name must be at least 2 characters long',{exact:true}).isVisible(),'Invalid feedback folded away');
+  await page.getByRole('button',{name:'Discard changes',exact:true}).click();
+  await name.fill('Synthetic rejected owner');
+  await page.getByRole('button',{name:'Save personal information',exact:true}).click();
+  await group.click();
+  await page.getByText('Synthetic save could not be confirmed',{exact:true}).waitFor();
+  check(await group.getAttribute('aria-expanded')==='true','Late server error did not reopen editor');
+  await page.getByRole('button',{name:'Discard changes',exact:true}).click();
+  await page.getByRole('button',{name:'Review deletion…',exact:true}).click();
+  await page.getByRole('dialog').waitFor();
+  check(await page.getByRole('button',{name:'Delete everything permanently',exact:true}).isDisabled(),'Deletion safeguard bypassed');
+  await page.getByRole('button',{name:'Cancel',exact:true}).click();
+  await waitFor(()=>page.getByRole('dialog').count().then(count=>count===0),'Deletion Cancel did not close');
+  await waitFor(()=>page.getByRole('button',{name:'Review deletion…',exact:true}).evaluate(node=>node===document.activeElement),'Deletion Cancel did not restore focus');
+  check(await page.evaluate(()=>Reflect.get(window,'__supportingDeletionRequests')??0)===0,'Cancel invoked deletion');
+  check(await page.getByText('Costing defaults',{exact:true}).count() === 0,'Paid costing defaults exposed to Free');
+  await page.goto('http://127.0.0.1:4192/?view=account&verified=false');
+  await page.getByRole('button',{name:/Security synthetic@example.test · Email not verified/}).waitFor();
+  results.push('Account editor remains mounted, dirty state visible, visible invalid/async errors, unverified email, safe deletion Cancel/focus');
+
+  for (const [grant,label] of [['pending','Verification pending'],['suspended','Access suspended']]) {
+    await page.goto('http://127.0.0.1:4192/?view=billing&grant='+grant);
+    await page.getByText(label,{exact:true}).waitFor();
+    check(await page.getByText('Active',{exact:true}).count() === 0,'Inactive grant called active');
+  }
+  await page.goto('http://127.0.0.1:4192/?view=billing&tier=none&grant=active');
+  await page.getByText('Paid access ended',{exact:true}).waitFor();
+  await page.goto('http://127.0.0.1:4192/?view=billing');
+  await page.getByText('Organization: Synthetic Weaving Factory',{exact:true}).waitFor();
+  await page.getByRole('button',{name:/View.*history|View billing history/i}).click();
+  await page.getByRole('dialog').waitFor();
+  await page.keyboard.press('Escape');
+  await waitFor(()=>page.getByRole('dialog').count().then(count=>count===0),'Payment history Escape did not close');
+  results.push('Billing truthful pending/suspended/expired states, factory identity and history Escape');
+
+  const id='33333333-3333-4333-8333-333333333333';
+  const ticket={id,orgId:'22222222-2222-4222-8222-222222222222',subject:'Synthetic costing question',category:'costing',priority:'normal',status:'in_progress',source:'in_app',requesterBound:true,createdAt:'2026-10-01T10:00:00Z',updatedAt:'2026-10-04T10:00:00Z',version:4,nextAction:'',followUpDueAt:null,nextUpdateDueAt:'2026-10-06T10:00:00Z',needsFounderReply:true,resolvedAt:null,resolutionCode:null,resolutionSummary:null,firstPublicFounderReplyAt:null,reopenedCount:0};
+  const dto={ticket,messages:Array.from({length:4},(_,i)=>({id:'message-'+i,authorKind:i%2?'founder':'customer',messageKind:i?'public_reply':'initial_intake',body:'Synthetic message '+i,createdAt:'2026-10-04T10:00:00Z',messageSeq:i+1})),events:[{id:'event-1',eventType:'create',before:{},after:{status:'new'},createdAt:'2026-10-01T10:00:00Z'}],asOf:'2026-10-04T10:00:00Z',nextMessageBefore:null,nextEventBefore:null};
+  const posts=[];
+  let mode='uncertain';
+  await page.route('**/api/support**', async route=>{
+    const request=route.request(),url=new URL(request.url());
+    if(request.method()==='GET')return route.fulfill({json:url.pathname==='/api/support'?{items:[ticket],nextCursor:null,totalMatching:1,asOf:dto.asOf}:dto});
+    posts.push(request.postDataJSON());
+    if(mode==='uncertain')return route.abort('failed');
+    await page.waitForTimeout(200);
+    return route.fulfill({json:{id,version:5,status:'in_progress'}});
+  });
+  await page.goto('http://127.0.0.1:4192/?view=support');
+  await page.getByRole('button',{name:'New ticket',exact:true}).click();
+  await page.getByRole('textbox',{name:'Subject',exact:true}).fill('Synthetic retained question');
+  await page.getByRole('textbox',{name:'Description',exact:true}).fill('Memory-only draft');
+  await page.getByRole('button',{name:'Close',exact:true}).click();
+  await page.getByText('Draft on this page · not saved',{exact:true}).waitFor();
+  await page.getByRole('button',{name:'New ticket',exact:true}).click();
+  check(await page.getByRole('textbox',{name:'Description',exact:true}).inputValue()==='Memory-only draft','Support close discarded draft');
+  await page.getByRole('button',{name:'Submit ticket',exact:true}).evaluate(node=>{node.click();node.click();});
+  await page.getByRole('button',{name:'Retry original submission',exact:true}).waitFor();
+  check(await page.getByRole('textbox',{name:'Subject',exact:true}).isDisabled(),'Uncertain intake remained editable');
+  await page.getByRole('button',{name:'Close',exact:true}).click();
+  await page.getByRole('button',{name:'New ticket',exact:true}).click();
+  await page.getByRole('button',{name:'Retry original submission',exact:true}).click();
+  await waitFor(()=>posts.length===2,'Missing intake retry');
+  check(JSON.stringify(posts[0])===JSON.stringify(posts[1]),'Intake retry changed payload or key');
+  check(!(await page.evaluate(()=>JSON.stringify({...localStorage,...sessionStorage}))).includes('Memory-only draft'),'Support draft persisted');
+  results.push('Support intake Close/reopen memory-only draft and exact uncertain retry');
+
+  mode='success';
+  await page.getByRole('button',{name:'Retry original submission',exact:true}).click();
+  await page.getByRole('heading',{name:'Synthetic costing question'}).waitFor();
+  check(posts.length===3,'Intake success did not resolve original attempt');
+  check(JSON.stringify(posts[0])===JSON.stringify(posts[2]),'Successful intake retry changed key');
+  mode='uncertain';
+  await page.getByRole('heading',{name:'Synthetic costing question'}).waitFor();
+  check(!(await page.getByText('Synthetic message 0',{exact:true}).isVisible()),'Earlier messages not folded');
+  await page.getByRole('button',{name:'Earlier messages (2)',exact:true}).click();
+  check(await page.getByText('Synthetic message 0',{exact:true}).isVisible(),'Earlier messages cannot reopen');
+  await page.getByRole('button',{name:'Earlier messages (2)',exact:true}).click();
+  await page.getByRole('button',{name:'Status history',exact:true}).click();
+  await page.getByText(/create · New/i).waitFor();
+  await page.getByRole('button',{name:'Reply',exact:true}).click();
+  const reply=page.getByRole('textbox',{name:'Message',exact:true});
+  check(await reply.evaluate(node=>node===document.activeElement),'Reply shortcut did not focus composer');
+  await reply.fill('Synthetic immutable reply');
+  await reply.press('Enter');
+  check(posts.length===3,'Enter sent support message');
+  await page.getByRole('button',{name:'Send reply',exact:true}).click();
+  await page.getByRole('button',{name:'Retry original reply',exact:true}).waitFor();
+  check(await reply.isDisabled(),'Uncertain reply remained editable');
+  await page.getByRole('button',{name:'Refresh ticket',exact:true}).click();
+  await page.getByRole('button',{name:'Retry original reply',exact:true}).waitFor();
+  mode='success';
+  await page.getByRole('button',{name:'Retry original reply',exact:true}).evaluate(node=>{node.click();node.click();});
+  await page.getByText('Reply sent in-app.',{exact:true}).waitFor();
+  check(posts.length===5,'Repeated retry sent duplicate requests');
+  check(JSON.stringify(posts[3])===JSON.stringify(posts[4]),'Reply retry changed payload or key');
+  check(await reply.inputValue()==='','Confirmed reply draft did not clear');
+  results.push('Thread history/earlier disclosure, focus, Enter, repeated taps and immutable refresh/retry');
+
+  for (const lang of ['en','hi','gu']) {
+    for(const view of ['account','billing','support','thread']) {
+      await page.goto('http://127.0.0.1:4192/?view='+view+'&lang='+lang);
+      await page.getByRole('heading',{level:1}).waitFor();
+      await waitFor(()=>page.evaluate(expected=>document.documentElement.lang===expected,lang),'Language did not activate '+lang);
+      check(!(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth)),view+' '+lang+' overflows at 320');
+      await page.evaluate(()=>document.documentElement.style.fontSize='32px');
+      check(!(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth)),view+' '+lang+' overflows enlarged text at 320');
+    }
+  }
+  results.push('EN/HI/GU 320px reflow with normal and 200% root text');
+  return {passed:results,kind:'synthetic Chromium component emulation; no installed device/auth/database evidence'};
+})(page);
+```
+### Page
+- Page URL: http://127.0.0.1:4192/?view=thread&lang=gu
+### Events
+- New console entries: .playwright-cli/console-2026-10-05T18-16-07-992Z.log#L60-L82

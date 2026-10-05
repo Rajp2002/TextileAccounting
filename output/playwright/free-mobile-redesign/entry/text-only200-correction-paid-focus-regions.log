@@ -1,0 +1,20 @@
+### Result
+[{"plan":"lite","width":320,"focusBounds":{"x":29,"y":548.71875,"width":262,"height":42}},{"plan":"lite","width":430,"focusBounds":{"x":36,"y":555.71875,"width":358,"height":42}},{"plan":"base","width":320,"focusBounds":{"x":29,"y":548.71875,"width":262,"height":42}},{"plan":"base","width":430,"focusBounds":{"x":36,"y":555.71875,"width":358,"height":42}}]
+### Ran Playwright code
+```js
+await (async page => {
+ await page.evaluate(()=>localStorage.setItem('weavly_language','en'));
+ const report=[];
+ for(const plan of ['lite','base'])for(const width of [320,430]){
+  await page.setViewportSize({width,height:932});await page.goto(`http://127.0.0.1:4188/fixture?kind=signup&plan=${plan}`);await page.getByRole('heading',{level:1}).waitFor();await page.waitForFunction(()=>document.documentElement.lang==='en');await page.getByLabel('Password',{exact:true}).fill('Synthetic!2Pass');
+  report.push({plan,width,focusBounds:await page.getByLabel('Password',{exact:true}).boundingBox()});
+ }
+ return report;
+}
+)(page);
+```
+### Page
+- Page URL: http://127.0.0.1:4188/fixture?kind=signup&plan=base
+- Page Title: Synthetic Weavly Free entry components
+### Events
+- New console entries: .playwright-cli/console-2026-10-05T18-52-15-647Z.log#L73-L76

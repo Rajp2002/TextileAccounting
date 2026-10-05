@@ -1,0 +1,11 @@
+{
+  "baselineCommit": "c40c92ebf19bb63f749181eba74ad7d73ab9e8bb",
+  "pendingApplicationFiles": {
+    "components/settings/plan-aware/free-settings.module.css": "5dccea8dbbd3afb17a23f11faabc57976a854351c5b33936daf751187ae1cfc2",
+    "components/support/free-support.module.css": "a686e4c555656207c09abc646de0913bf93c25d4e8699003b99a50063aa247d6",
+    "app/free/billing/free-billing.module.css": "a65ca363af290ddf9e635c1ef7af4e8bf6d8c98389df5c47871c7794280b7790"
+  },
+  "fixture": "frozen snapshot, HMR/watch disabled; app-like paths for translation selection",
+  "fontMethod": "all original computed font/line x2, inline important to override fixed mobile input rule; each expected value checked; html root/rem spacing unchanged",
+  "browser": "Chromium context hasTouch:true isMobile:true"
+}

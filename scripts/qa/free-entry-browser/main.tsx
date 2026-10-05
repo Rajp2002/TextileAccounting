@@ -1,0 +1,16 @@
+import React, { Suspense } from 'react'
+import { createRoot } from 'react-dom/client'
+import { Toaster } from 'sonner'
+import { I18nProvider } from '../../../lib/i18n/context'
+import { PlanChooserClient } from '../../../components/plans/PlanChooserClient'
+import { PlanChooserHeader } from '../../../components/plans/PlanChooserHeader'
+import LoginForm from '../../../app/(auth)/login/login-form'
+import SignupPage from '../../../app/(auth)/signup/page'
+import ForgotPasswordForm from '../../../app/(auth)/forgot-password/ForgotPasswordForm'
+import ResetPasswordForm from '../../../app/(auth)/reset-password/ResetPasswordForm'
+import VerifyPage from '../../../app/(auth)/verify/page'
+import '../../../app/globals.css'
+const params = new URL(location.href).searchParams
+const kind = params.get('kind') ?? 'plans'
+const currentPlan = params.get('current') === 'lite' ? 'lite' : 'free'
+createRoot(document.getElementById('root')!).render(<I18nProvider><Suspense><div style={{ fontFamily: 'system-ui, sans-serif' }}>{kind === 'plans' ? <main className="safe-area-page mx-auto max-w-7xl [--page-gutter-x:1rem]"><PlanChooserHeader effectiveTier={currentPlan} /><PlanChooserClient currentPlan={currentPlan} isOnboarding={false} freeAvailable billingReady={params.has('payments')} paid={false} paymentRecovery={params.has('recovery') ? <div role="status" className="rounded-xl border border-hairline bg-surface p-4">Payment status is unconfirmed. Do not pay again.</div> : null} /></main> : kind === 'signup' ? <SignupPage /> : kind === 'forgot' ? <ForgotPasswordForm /> : kind === 'verify' ? <VerifyPage /> : kind === 'reset' ? <ResetPasswordForm /> : <LoginForm />}</div><Toaster /></Suspense></I18nProvider>)

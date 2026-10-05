@@ -1,0 +1,12 @@
+RUN  v4.1.8 /Users/rajpatel/Projects/textile Saas
+
+ ✓ __tests__/free-default-signup.test.ts (3 tests) 7ms
+ ✓ __tests__/auth-login-performance.test.ts (8 tests) 10ms
+ ✓ __tests__/p1-auth-login-route.test.ts (1 test) 5ms
+ ✓ __tests__/standalone-plan-chooser.test.ts (15 tests) 15ms
+ ✓ __tests__/signup-legal-acceptance.test.ts (5 tests) 13ms
+
+ Test Files  5 passed (5)
+      Tests  32 passed (32)
+   Start at  00:29:00
+   Duration  2.18s (transform 542ms, setup 0ms, import 2.66s, tests 49ms, environment 1ms)

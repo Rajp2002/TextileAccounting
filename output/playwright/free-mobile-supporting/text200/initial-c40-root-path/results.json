@@ -1,0 +1,506 @@
+{
+  "kind": "synthetic Chromium; frozen committed app; each original computed font size/line height 200%, html root/layout spacing unchanged; no keyboard/device/provider evidence",
+  "results": [
+    {
+      "lang": "en",
+      "view": "account",
+      "source": "c40c92eb",
+      "checks": [
+        "personal/factory/security/device editors opened"
+      ],
+      "openedEditors": 4,
+      "scale": {
+        "elements": 117,
+        "rootFont": "14px"
+      },
+      "layout": {
+        "viewport": 320,
+        "scrollWidth": 320,
+        "horizontal": [
+          {
+            "tag": "BUTTON",
+            "role": null,
+            "text": "Save personal information",
+            "left": -81.34375,
+            "right": 294.5
+          }
+        ],
+        "clips": [],
+        "heightClips": []
+      },
+      "focus": [
+        {
+          "tag": "INPUT",
+          "focused": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 263,
+          "bottom": 301.5,
+          "inViewport": true
+        },
+        {
+          "tag": "INPUT",
+          "focused": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 263.03125,
+          "bottom": 301.53125,
+          "inViewport": true
+        },
+        {
+          "tag": "BUTTON",
+          "focused": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 256.84375,
+          "bottom": 307.84375,
+          "inViewport": true
+        }
+      ],
+      "pass": false
+    },
+    {
+      "lang": "en",
+      "view": "billing",
+      "source": "c40c92eb",
+      "checks": [
+        "payment history opened/scaled and Escape closed"
+      ],
+      "scale": {
+        "elements": 58,
+        "rootFont": "14px"
+      },
+      "layout": {
+        "viewport": 320,
+        "scrollWidth": 320,
+        "horizontal": [],
+        "clips": [],
+        "heightClips": []
+      },
+      "focus": [],
+      "dialogLayout": {
+        "viewport": 320,
+        "scrollWidth": 320,
+        "horizontal": [],
+        "clips": [],
+        "heightClips": []
+      },
+      "pass": true
+    },
+    {
+      "lang": "en",
+      "view": "support",
+      "source": "c40c92eb",
+      "checks": [
+        "Help and intake opened; subject/category/description reachable"
+      ],
+      "scale": {
+        "elements": 38,
+        "rootFont": "14px"
+      },
+      "layout": {
+        "viewport": 320,
+        "scrollWidth": 320,
+        "horizontal": [],
+        "clips": [],
+        "heightClips": []
+      },
+      "focus": [
+        {
+          "tag": "INPUT",
+          "focused": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 264.71875,
+          "bottom": 299.71875,
+          "inViewport": true
+        },
+        {
+          "tag": "BUTTON",
+          "focused": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 355.71875,
+          "bottom": 399.71875,
+          "inViewport": true
+        },
+        {
+          "tag": "TEXTAREA",
+          "focused": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 440.71875,
+          "bottom": 524.71875,
+          "inViewport": true
+        }
+      ],
+      "pass": true
+    },
+    {
+      "lang": "en",
+      "view": "thread",
+      "source": "c40c92eb",
+      "checks": [
+        "older messages and status history opened; reply composer reachable"
+      ],
+      "scale": {
+        "elements": 43,
+        "rootFont": "14px"
+      },
+      "layout": {
+        "viewport": 320,
+        "scrollWidth": 320,
+        "horizontal": [],
+        "clips": [],
+        "heightClips": []
+      },
+      "focus": [
+        {
+          "tag": "TEXTAREA",
+          "focused": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 225.53125,
+          "bottom": 337.53125,
+          "inViewport": true
+        }
+      ],
+      "pass": true
+    },
+    {
+      "lang": "hi",
+      "view": "account",
+      "source": "c40c92eb",
+      "checks": [
+        "personal/factory/security/device editors opened"
+      ],
+      "openedEditors": 4,
+      "scale": {
+        "elements": 117,
+        "rootFont": "14px"
+      },
+      "layout": {
+        "viewport": 320,
+        "scrollWidth": 320,
+        "horizontal": [
+          {
+            "tag": "BUTTON",
+            "role": null,
+            "text": "Save personal information",
+            "left": -81.34375,
+            "right": 294.5
+          }
+        ],
+        "clips": [],
+        "heightClips": []
+      },
+      "focus": [
+        {
+          "tag": "INPUT",
+          "focused": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 263,
+          "bottom": 301.5,
+          "inViewport": true
+        },
+        {
+          "tag": "INPUT",
+          "focused": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 263.03125,
+          "bottom": 301.53125,
+          "inViewport": true
+        },
+        {
+          "tag": "BUTTON",
+          "focused": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 256.90625,
+          "bottom": 307.90625,
+          "inViewport": true
+        }
+      ],
+      "pass": false
+    },
+    {
+      "lang": "hi",
+      "view": "billing",
+      "source": "c40c92eb",
+      "checks": [
+        "payment history opened/scaled and Escape closed"
+      ],
+      "scale": {
+        "elements": 58,
+        "rootFont": "14px"
+      },
+      "layout": {
+        "viewport": 320,
+        "scrollWidth": 320,
+        "horizontal": [],
+        "clips": [],
+        "heightClips": []
+      },
+      "focus": [],
+      "dialogLayout": {
+        "viewport": 320,
+        "scrollWidth": 320,
+        "horizontal": [],
+        "clips": [],
+        "heightClips": []
+      },
+      "pass": true
+    },
+    {
+      "lang": "hi",
+      "view": "support",
+      "source": "c40c92eb",
+      "checks": [
+        "Help and intake opened; subject/category/description reachable"
+      ],
+      "scale": {
+        "elements": 38,
+        "rootFont": "14px"
+      },
+      "layout": {
+        "viewport": 320,
+        "scrollWidth": 320,
+        "horizontal": [],
+        "clips": [],
+        "heightClips": []
+      },
+      "focus": [
+        {
+          "tag": "INPUT",
+          "focused": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 264.96875,
+          "bottom": 299.96875,
+          "inViewport": true
+        },
+        {
+          "tag": "BUTTON",
+          "focused": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 355.96875,
+          "bottom": 399.96875,
+          "inViewport": true
+        },
+        {
+          "tag": "TEXTAREA",
+          "focused": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 440.96875,
+          "bottom": 524.96875,
+          "inViewport": true
+        }
+      ],
+      "pass": true
+    },
+    {
+      "lang": "hi",
+      "view": "thread",
+      "source": "c40c92eb",
+      "checks": [
+        "older messages and status history opened; reply composer reachable"
+      ],
+      "scale": {
+        "elements": 43,
+        "rootFont": "14px"
+      },
+      "layout": {
+        "viewport": 320,
+        "scrollWidth": 320,
+        "horizontal": [],
+        "clips": [],
+        "heightClips": []
+      },
+      "focus": [
+        {
+          "tag": "TEXTAREA",
+          "focused": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 225.53125,
+          "bottom": 337.53125,
+          "inViewport": true
+        }
+      ],
+      "pass": true
+    },
+    {
+      "lang": "gu",
+      "view": "account",
+      "source": "c40c92eb",
+      "checks": [
+        "personal/factory/security/device editors opened"
+      ],
+      "openedEditors": 4,
+      "scale": {
+        "elements": 117,
+        "rootFont": "14px"
+      },
+      "layout": {
+        "viewport": 320,
+        "scrollWidth": 320,
+        "horizontal": [
+          {
+            "tag": "BUTTON",
+            "role": null,
+            "text": "Save personal information",
+            "left": -81.34375,
+            "right": 294.5
+          }
+        ],
+        "clips": [],
+        "heightClips": []
+      },
+      "focus": [
+        {
+          "tag": "INPUT",
+          "focused": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 263,
+          "bottom": 301.5,
+          "inViewport": true
+        },
+        {
+          "tag": "INPUT",
+          "focused": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 263.03125,
+          "bottom": 301.53125,
+          "inViewport": true
+        },
+        {
+          "tag": "BUTTON",
+          "focused": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 256.03125,
+          "bottom": 307.03125,
+          "inViewport": true
+        }
+      ],
+      "pass": false
+    },
+    {
+      "lang": "gu",
+      "view": "billing",
+      "source": "c40c92eb",
+      "checks": [
+        "payment history opened/scaled and Escape closed"
+      ],
+      "scale": {
+        "elements": 58,
+        "rootFont": "14px"
+      },
+      "layout": {
+        "viewport": 320,
+        "scrollWidth": 320,
+        "horizontal": [],
+        "clips": [],
+        "heightClips": []
+      },
+      "focus": [],
+      "dialogLayout": {
+        "viewport": 320,
+        "scrollWidth": 320,
+        "horizontal": [],
+        "clips": [],
+        "heightClips": []
+      },
+      "pass": true
+    },
+    {
+      "lang": "gu",
+      "view": "support",
+      "source": "c40c92eb",
+      "checks": [
+        "Help and intake opened; subject/category/description reachable"
+      ],
+      "scale": {
+        "elements": 38,
+        "rootFont": "14px"
+      },
+      "layout": {
+        "viewport": 320,
+        "scrollWidth": 320,
+        "horizontal": [],
+        "clips": [],
+        "heightClips": []
+      },
+      "focus": [
+        {
+          "tag": "INPUT",
+          "focused": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 264.640625,
+          "bottom": 299.640625,
+          "inViewport": true
+        },
+        {
+          "tag": "BUTTON",
+          "focused": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 355.640625,
+          "bottom": 399.640625,
+          "inViewport": true
+        },
+        {
+          "tag": "TEXTAREA",
+          "focused": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 440.640625,
+          "bottom": 524.640625,
+          "inViewport": true
+        }
+      ],
+      "pass": true
+    },
+    {
+      "lang": "gu",
+      "view": "thread",
+      "source": "c40c92eb",
+      "checks": [
+        "older messages and status history opened; reply composer reachable"
+      ],
+      "scale": {
+        "elements": 43,
+        "rootFont": "14px"
+      },
+      "layout": {
+        "viewport": 320,
+        "scrollWidth": 320,
+        "horizontal": [],
+        "clips": [],
+        "heightClips": []
+      },
+      "focus": [
+        {
+          "tag": "TEXTAREA",
+          "focused": true,
+          "left": 25.5,
+          "right": 294.5,
+          "top": 225.53125,
+          "bottom": 337.53125,
+          "inViewport": true
+        }
+      ],
+      "pass": true
+    }
+  ],
+  "mutations": [],
+  "passed": 9,
+  "failed": 3
+}
