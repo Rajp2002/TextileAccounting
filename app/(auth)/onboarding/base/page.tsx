@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getUserClaims } from '@/lib/auth'
 import { getOrgTier } from '@/lib/subscription'
 import { getBaseOnboardingInitialState } from './actions'
+import { founderOnlyIdentity } from '@/lib/admin/founder-email'
 import { BaseOnboardingWizard } from '@/components/onboarding/base/BaseOnboardingWizard'
 
 export const dynamic = 'force-dynamic'
@@ -15,6 +16,7 @@ export default async function BaseOnboardingPage() {
     } = await supabase.auth.getUser()
 
     if (!user) redirect('/login')
+    if (founderOnlyIdentity(user.email, getUserClaims(user).user_role)) redirect('/admin/login')
 
     const userClaims = getUserClaims(user)
     let role = userClaims.user_role

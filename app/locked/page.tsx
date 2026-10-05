@@ -6,12 +6,14 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { ShieldAlert, MessageSquare, LogOut } from 'lucide-react'
 import { LEGAL_OPERATOR } from '@/lib/legal-operator'
 import Link from 'next/link'
+import { founderOnlyIdentity } from '@/lib/admin/founder-email'
 
 export default async function LockedPage() {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) redirect('/login')
+    if (founderOnlyIdentity(user.email, user.app_metadata?.role)) redirect('/admin/login')
 
     const { data: profile } = await supabase
         .from('profiles')

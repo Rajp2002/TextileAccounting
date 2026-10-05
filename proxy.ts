@@ -18,6 +18,7 @@ import {
     WORKSPACE_HINT_COOKIE,
 } from '@/lib/workspace-hint'
 import { isDedicatedSupportRoute, isFounderAuthRoute, isFounderLoginRoute, isFounderRoute, safeFounderReturnPath } from '@/lib/admin/routes'
+import { founderOnlyIdentity, FOUNDER_ONLY_LOGIN_MESSAGE } from '@/lib/admin/founder-email'
 
 function getRoleHomePath(role?: string, freeWorkspaceHint = false): string {
     if (role === 'owner') return freeWorkspaceHint ? FREE_WORKSPACE_PATH : '/owner/estimator'
@@ -305,7 +306,7 @@ export async function updateSession(request: NextRequest) {
 
     // Founder inactivity is authoritative server state (15 minutes), not this
     // customer routing cookie. Polling cannot renew that server state.
-    if (userId && lastActivity && !founderRoute) {
+    if (userId && lastActivity && !founderRoute && !founderOnlyIdentity(optimisticClaims.email, optimisticClaims.user_role)) {
         const lastActivityAt = Number(lastActivity)
         const timeSinceLastActivity = now - lastActivityAt
 
@@ -369,7 +370,7 @@ export async function updateSession(request: NextRequest) {
     // These routes have independent live identity, founder/MFA or requester
     // guards. A stale role/onboarding JWT hint must not run tenant routing here.
     // This is coarse routing only and confers no privilege.
-    if (dedicatedIdentityRoute && (user || isFounderLoginRoute(pathname))) return response
+    if (founderRoute && (user || isFounderLoginRoute(pathname))) return response
 
     let role = typeof optimisticClaims.user_role === 'string' ? optimisticClaims.user_role : undefined
     if (userId && pathname === '/login') {
@@ -409,6 +410,27 @@ export async function updateSession(request: NextRequest) {
             httpOnly: true,
         })
     }
+
+    // Reserved founder email and platform profiles have no customer workspace.
+    // This is a denial/routing hint; the founder DAL still verifies the live
+    // UUID grant, profile, MFA and authoritative server session independently.
+    if (user && founderOnlyIdentity(optimisticClaims.email, role)) {
+        if (isPasswordRecoveryRoute(pathname) || pathname === '/auth/callback' || pathname === '/auth/signout') return response
+        if (pathname.startsWith('/api/') && !isPublicRoute(pathname)) {
+            const denied = NextResponse.json({ code: 'FORBIDDEN', message: FOUNDER_ONLY_LOGIN_MESSAGE, requestId: crypto.randomUUID() }, { status: 403, headers: { 'Cache-Control': 'private, no-store', 'Vary': 'Cookie' } })
+            applySessionCookies.forEach(applyCookie => applyCookie(denied))
+            return denied
+        }
+        if (pathname === '/login' || pathname.startsWith('/signup') || !isPublicRoute(pathname)) {
+            const founderRedirect = NextResponse.redirect(new URL('/admin/login', request.url))
+            applySessionCookies.forEach(applyCookie => applyCookie(founderRedirect))
+            founderRedirect.headers.set('Cache-Control', 'private, no-store')
+            return founderRedirect
+        }
+        return response
+    }
+
+    if (isDedicatedSupportRoute(pathname) && user) return response
 
     // A stale installed PWA can repeatedly request /login from an obsolete
     // client-side auth guard while the current server redirects it home. On

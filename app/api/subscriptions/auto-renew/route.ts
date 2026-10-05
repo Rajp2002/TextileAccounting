@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getRazorpay } from '@/lib/razorpay'
 import { createClient } from '@/lib/supabase/server'
+import { founderOnlyIdentity } from '@/lib/admin/founder-email'
 import { createAdminClient } from '@/lib/supabase/admin'
 import * as Sentry from '@sentry/nextjs'
 
@@ -29,6 +30,9 @@ export async function POST() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    if (founderOnlyIdentity(user.email)) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403, headers: { 'Cache-Control': 'private, no-store' } })
     }
 
     // ── Get owner profile ─────────────────────────────────────────────────────

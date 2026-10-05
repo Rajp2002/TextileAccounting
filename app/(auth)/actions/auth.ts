@@ -23,6 +23,7 @@ import { isValidIndianPhone, normalizeIndianPhone } from '@/lib/phone'
 import { LEGAL_DOCUMENTS } from '@/lib/legal-documents'
 import { LEGAL_OPERATOR } from '@/lib/legal-operator'
 import { freeWorkspaceHintValue, WORKSPACE_HINT_COOKIE, WORKSPACE_HINT_COOKIE_OPTIONS } from '@/lib/workspace-hint'
+import { founderEmailAllowed, FOUNDER_ONLY_LOGIN_MESSAGE } from '@/lib/admin/founder-email'
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -130,6 +131,7 @@ export async function createOrganization(input: CreateOrganizationInput) {
     if ('error' in parsed) return { error: parsed.error }
 
     const freeSignup = input.selectedPlan === 'free'
+    if (founderEmailAllowed(parsed.data.email)) return { error: FOUNDER_ONLY_LOGIN_MESSAGE }
     if (freeSignup && !await canEnrollFree(parsed.data.email)) return { error: 'Free enrollment is not available for this account yet.' }
     const requestHeaders = await headers()
     const userAgent = requestHeaders.get('user-agent')?.trim().slice(0, 512) || null
@@ -323,6 +325,7 @@ export async function signIn(input: { email: string; password: string; traceId?:
 
     const parsed = safeParse(SignInSchema, input)
     if ('error' in parsed) return fail(parsed.error, 'invalid_input')
+    if (founderEmailAllowed(parsed.data.email)) return fail(FOUNDER_ONLY_LOGIN_MESSAGE, 'founder_only_identity')
 
     const supabase = await telemetry.measure('create_client', () => createClient())
     const { data, error } = await telemetry.measure(
@@ -340,6 +343,10 @@ export async function signIn(input: { email: string; password: string; traceId?:
 
     if (!data.session) {
         return fail('Session error. Please try again.', 'missing_session')
+    }
+    if (founderEmailAllowed(data.session.user.email)) {
+        await supabase.auth.signOut({ scope: 'local' })
+        return fail(FOUNDER_ONLY_LOGIN_MESSAGE, 'founder_only_identity')
     }
 
     // Read the freshly minted access token first. Unlike the user object's raw
@@ -408,7 +415,8 @@ export async function signIn(input: { email: string; password: string; traceId?:
     } else if (userRole === 'supervisor') {
         return succeed('/feature-archived')
     } else if (userRole === 'admin') {
-        return succeed('/admin')
+        await supabase.auth.signOut({ scope: 'local' })
+        return fail(FOUNDER_ONLY_LOGIN_MESSAGE, 'founder_only_identity')
     } else {
         // Role still absent after DB fallback — profile genuinely missing
         return fail(`Account setup incomplete. Contact ${LEGAL_OPERATOR.contactEmail}.`, 'missing_role')

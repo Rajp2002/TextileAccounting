@@ -7,6 +7,9 @@ const root = path.resolve('scripts/qa/founder-auth-browser')
 const server = await createServer({ root, configFile: false, esbuild: { jsx: 'automatic' }, resolve: { alias: [
     { find: '@/app/(admin-auth)/admin/login/actions', replacement: path.join(root, 'actions.ts') },
     { find: '@/app/(admin-auth)/admin/verify/actions', replacement: path.join(root, 'actions.ts') },
+    { find: '@/lib/supabase/client', replacement: path.join(root, 'reset-client.ts') },
+    { find: '@/components/auth/auth-layout', replacement: path.join(root, 'reset-layout.tsx') },
+    { find: 'next/navigation', replacement: path.resolve('scripts/qa/admin-browser/navigation.ts') },
     { find: 'next/link', replacement: path.resolve('scripts/qa/support-browser/link.tsx') },
     { find: '@', replacement: process.cwd() },
 ] }, server: { host: '127.0.0.1', port: 4188, strictPort: true, fs: { allow: [process.cwd()] } } })

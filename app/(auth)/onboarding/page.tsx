@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getUserClaims } from '@/lib/auth'
 import { getOrgTier } from '@/lib/subscription'
+import { founderOnlyIdentity } from '@/lib/admin/founder-email'
 
 /** Redirect owners to their selected plan's current workspace. */
 export default async function OnboardingPage() {
@@ -10,6 +11,7 @@ export default async function OnboardingPage() {
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) redirect('/login')
+    if (founderOnlyIdentity(user.email, getUserClaims(user).user_role)) redirect('/admin/login')
     if (user.app_metadata?.plan_selection_pending === true) redirect('/plans?from=onboarding')
 
     const userClaims = getUserClaims(user)

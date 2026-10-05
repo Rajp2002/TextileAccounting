@@ -11,6 +11,20 @@ test('anonymous founder login is accessible and has no tenant data', async ({ pa
     await page.screenshot({ path: `output/playwright/admin-console/login-${test.info().project.name}.png`, fullPage: true })
 })
 
+test('normal customer login rejects the reserved founder email in its visible form', async ({ page }) => {
+    const providerRequests: string[] = []
+    page.on('request', request => {
+        if (/\/auth\/v1\/token/.test(request.url())) providerRequests.push(request.url())
+    })
+    await page.goto('/login')
+    await page.getByLabel(/email/i).fill('Rajpatel86420@gmail.com')
+    await page.getByLabel('Password', { exact: true }).fill('SyntheticFixtureOnly1!')
+    await page.getByRole('button', { name: /^sign in$/i }).click()
+    await expect(page.getByText('This account is for founder access only. Sign in at /admin/login.', { exact: true }).first()).toBeVisible()
+    await expect(page).toHaveURL(/\/login(?:\?|$)/)
+    expect(providerRequests).toEqual([])
+})
+
 test('every direct founder and support API denies an anonymous principal', async ({ request }) => {
     for (const path of ['/api/admin/overview','/api/admin/factories','/api/admin/factories/00000000-0000-4000-8000-000000000001','/api/admin/support','/api/admin/payments','/api/admin/system','/api/admin/audit','/api/admin/formal','/api/admin/formal/retention','/api/admin/formal/privacy/00000000-0000-4000-8000-000000000001','/api/admin/formal/retained-records/00000000-0000-4000-8000-000000000001','/api/admin/session','/api/admin/auth/session','/api/support','/api/support/export','/api/support/session','/api/support/00000000-0000-4000-8000-000000000001']) {
         const response = await request.get(path)

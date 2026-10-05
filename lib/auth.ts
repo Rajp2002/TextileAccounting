@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { isUserRevoked } from '@/lib/rate-limit'
 import type { User } from '@supabase/supabase-js'
+import { founderOnlyIdentity } from '@/lib/admin/founder-email'
 
 type JsonRecord = Record<string, unknown>
 type AuthClaims = {
@@ -167,7 +168,7 @@ export const getVerifiedIdentity = cache(async (): Promise<{
  * never confers customer access; only the separate founder guard accepts it. */
 export const getCachedSession = cache(async () => {
     const identity = await getVerifiedIdentity()
-    if (!identity?.profile.org_id) return null
+    if (!identity?.profile.org_id || founderOnlyIdentity(identity.user.email, identity.profile.role)) return null
     return { ...identity, profile: { ...identity.profile, org_id: identity.profile.org_id } }
 })
 

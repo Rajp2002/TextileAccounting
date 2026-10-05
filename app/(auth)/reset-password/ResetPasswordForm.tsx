@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label'
 import { PasswordSchema } from '@/lib/schemas'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
+import { founderOnlyIdentity } from '@/lib/admin/founder-email'
 
 const INVALID_LINK_MESSAGE = 'This reset link is invalid or expired. Please request a new password reset link.'
 const SESSION_CHECK_TIMEOUT_MS = 2500
@@ -125,7 +126,7 @@ export default function ResetPasswordForm() {
         setSaving(true)
 
         try {
-            const { error } = await supabase.auth.updateUser({ password })
+            const { data, error } = await supabase.auth.updateUser({ password })
 
             if (error) {
                 if (isSessionError(error.message)) {
@@ -137,7 +138,13 @@ export default function ResetPasswordForm() {
             }
 
             await supabase.auth.signOut()
-            router.replace('/login?message=password-updated')
+            // The provider's successful update returns the current identity.
+            // This chooses a login screen only; MFA/grant checks still apply.
+            if (founderOnlyIdentity(data.user?.email, data.user?.app_metadata?.role)) {
+                router.replace('/admin/login?message=password-updated')
+            } else {
+                router.replace('/login?message=password-updated')
+            }
         } catch {
             toast.error('Could not update password. Please try again.')
         } finally {

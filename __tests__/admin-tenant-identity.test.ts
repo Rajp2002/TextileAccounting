@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks=vi.hoisted(() => ({ getUser:vi.fn(), profile:vi.fn(), from:vi.fn(), revoked:vi.fn(), plan:vi.fn() }))
 vi.mock('server-only',()=>({}))
@@ -14,14 +14,28 @@ import { getCachedSession, getVerifiedIdentity, requireRole } from '@/lib/auth'
 const currentProfile=(role='owner',org_id:string|null='org-a')=>({role,org_id,full_name:'Synthetic User',access_revoked_at:null})
 beforeEach(()=>{
     vi.clearAllMocks()
+    vi.stubEnv('WEAVLY_FOUNDER_TEST_EMAIL','founder@example.test')
     mocks.getUser.mockResolvedValue({data:{user:{id:'verified-user',app_metadata:{role:'admin',org_id:'attacker-org'},user_metadata:{role:'admin'}}}})
     mocks.revoked.mockResolvedValue(false)
     mocks.profile.mockResolvedValue({data:currentProfile(),error:null})
     mocks.from.mockReturnValue({select:()=>({eq:()=>({maybeSingle:mocks.profile})})})
     mocks.plan.mockResolvedValue({effectiveTier:'base',freeAccount:null})
 })
+afterEach(()=>vi.unstubAllEnvs())
 
 describe('AD01 verified identity and tenant authorization separation',()=>{
+    it('reserved founder email never gets customer access even with a surviving owner profile',async()=>{
+        mocks.getUser.mockResolvedValue({data:{user:{id:'verified-user',email:'FOUNDER@example.test',app_metadata:{role:'owner'}}}})
+        expect((await getVerifiedIdentity())?.profile.role).toBe('owner')
+        expect(await getCachedSession()).toBeNull()
+        await expect(requireRole(['owner'],{allowFreeAccount:true})).rejects.toThrow('REDIRECT:/login')
+        expect(mocks.plan).not.toHaveBeenCalled()
+    })
+    it('platform admin profile is never a tenant even with a legacy organization ID',async()=>{
+        mocks.profile.mockResolvedValue({data:currentProfile('admin','legacy-org'),error:null})
+        expect(await getCachedSession()).toBeNull()
+        expect(mocks.plan).not.toHaveBeenCalled()
+    })
     it('organization-less platform profile is verified identity but never a tenant session',async()=>{
         mocks.profile.mockResolvedValue({data:currentProfile('admin',null),error:null})
         expect((await getVerifiedIdentity())?.profile.org_id).toBeNull()
