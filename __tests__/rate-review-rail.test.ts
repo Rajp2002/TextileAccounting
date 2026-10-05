@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 vi.mock('@/components/tours/TourInvitation', () => ({ TourInvitation: () => null }))
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import ts from 'typescript'
 
 const root = process.cwd()
 const read = (path: string) => readFileSync(join(root, path), 'utf8')
@@ -21,10 +22,23 @@ describe('Rate Review Right Rail layout & interaction', () => {
     })
 
     it('keeps viewport-positioned review controls outside the transformed route wrapper', () => {
-        const routeWrapperStart = rates.indexOf('<div className="rates-workspace ui-route-enter')
+        const source = ts.createSourceFile('RatesClient.tsx', rates, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
+        const routeWrappers: ts.JsxElement[] = []
+        const visit = (node: ts.Node) => {
+            if (ts.isJsxElement(node) && node.openingElement.tagName.getText(source) === 'div'
+                && node.openingElement.attributes.properties.some(attribute => ts.isJsxAttribute(attribute)
+                    && attribute.name.getText(source) === 'className'
+                    && attribute.initializer?.getText(source).includes('rates-workspace ui-route-enter'))) routeWrappers.push(node)
+            ts.forEachChild(node, visit)
+        }
+        visit(source)
+        expect(routeWrappers).toHaveLength(1)
+        const routeWrapper = routeWrappers[0]
+        const routeWrapperStart = routeWrapper.getStart(source)
+        const routeWrapperEnd = routeWrapper.end
         const viewportControlsStart = rates.indexOf('<aside className="rates-review-rail-desktop')
         const floatingControlStart = rates.indexOf('<RateReviewFloatingButton')
-        const routeWrapperEnd = rates.indexOf('\n            </div>\n\n            {/* Keep viewport-positioned review controls')
+        expect(routeWrapper.openingElement.getText(source)).toContain('isLite && mobileStyles.workspace')
 
         expect(routeWrapperStart).toBeGreaterThanOrEqual(0)
         expect(routeWrapperEnd).toBeGreaterThan(routeWrapperStart)

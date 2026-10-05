@@ -35,7 +35,12 @@ describe('Desktop workspace composition (sidebar | left rail | workspace | right
     it('reserves the workspace width from the tokens so the centre never collides with a rail', () => {
         expect(styles).toMatch(/@media\s*\(min-width:\s*1440px\)\s*\{[\s\S]*?\.estimator-workspace-shell[\s\S]*?width:\s*min\(100%,\s*var\(--workspace-w\)\)/)
         expect(styles).toMatch(/margin-right:\s*var\(--rail-span\)/)
-        expect(rates).toContain('<div className="rates-workspace ui-route-enter')
+        expect(rates).toMatch(/<div\b[^>]*className=\{cn\("rates-workspace ui-route-enter\b[^"\n]*",\s*isLite && mobileStyles\.workspace\)\}/)
+        expect(rates).toContain("useOwnerPlan() === 'lite'")
+        const mobileStyles = read('components/estimator/lite-records.module.css')
+        // The default composition class remains unconditional; only mobile rules add Lite layout.
+        expect(mobileStyles.slice(0, mobileStyles.indexOf('@media'))).not.toMatch(/\.workspace[^{}]*\{/)
+        expect(mobileStyles).toMatch(/@media[^{}]*max-width: 767\.98px[^{}]*\{[\s\S]*?\.workspace \{ margin-top: 0;/)
     })
 
     it('anchors the live cost floating shortcut cleanly without overflowing into center container', () => {

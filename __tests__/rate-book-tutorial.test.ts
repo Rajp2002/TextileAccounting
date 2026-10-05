@@ -7,6 +7,7 @@ import { tourCommonCopy } from '../lib/i18n/tour-common'
 import { filterCostRates } from '../lib/cost-rates'
 import { getTourPresentation } from '../lib/tours/tour-preferences'
 import { tourRegistry } from '../lib/tours/tour-registry'
+import { MOBILE_WORKSPACE_QUERY } from '../lib/mobile-workflow-navigation'
 
 vi.mock('@/app/actions/tour-preferences', () => ({ recordTourEventAction: vi.fn() }))
 
@@ -96,7 +97,9 @@ describe('Rate Book shared-runtime integration', () => {
         expect(css).toMatch(/\.rates-left-rail-desktop \{\s*display: block;\s*width: 100%;\s*margin-bottom: 1.25rem;/)
         expect(css).not.toMatch(/\.rates-left-rail-desktop \{\s*display: none/)
         expect(css).toMatch(/@media\s*\(min-width:\s*1440px\)[\s\S]*?\.rates-left-rail-desktop,[\s\S]*?position: fixed/)
-        expect(rates.indexOf('<aside className="rates-left-rail-desktop')).toBeLessThan(rates.indexOf('data-ratebook-tutorial-root'))
+        const rail = rates.match(/<aside\b[^>]*className=\{cn\("rates-left-rail-desktop space-y-3",\s*isLite && mobileStyles\.help\)\}/)
+        expect(rail).not.toBeNull()
+        expect(rail!.index).toBeLessThan(rates.indexOf('data-ratebook-tutorial-root'))
     })
 })
 
@@ -126,9 +129,11 @@ describe('Sample rate guards run before any business action or UI mutation', () 
             const rate = { id, is_active: true, updated_at: '2026-09-01' }
             const business = vi.fn(() => new Promise(() => {}))
             const mutate = vi.fn()
+            const pending = vi.fn()
+            const beginLiteMutation = vi.fn(() => true)
             const toast = { info: vi.fn() }
             const scope = { draft: rate, archiveRate: rate, isSampleRecordId, toast, tourCommonCopy, language: 'gu',
-                setPendingAction: mutate, setArchiveError: mutate, setHistoryRate: mutate, setHistoryRows: mutate,
+                setPendingAction: pending, setArchiveError: mutate, beginLiteMutation, setHistoryRate: mutate, setHistoryRows: mutate,
                 setHistoryError: mutate, setHistoryLoading: mutate,
                 startTransition: (fn: () => void) => fn(), saveCostRate: business, getCostRateHistory: business, archiveCostRate: business,
             }
@@ -139,11 +144,63 @@ describe('Sample rate guards run before any business action or UI mutation', () 
                 expect(toast.info).toHaveBeenCalledExactlyOnceWith(tourCommonCopy.gu.sampleBanner)
                 expect(business).not.toHaveBeenCalled()
                 expect(mutate).not.toHaveBeenCalled()
+                expect(pending).not.toHaveBeenCalled()
+                expect(beginLiteMutation).not.toHaveBeenCalled()
             } else {
                 expect(toast.info).not.toHaveBeenCalled()
                 expect(business).toHaveBeenCalledTimes(1)
-                expect(mutate).toHaveBeenCalled()
+                if (name === 'openHistory') {
+                    expect(mutate).toHaveBeenCalled()
+                    expect(beginLiteMutation).not.toHaveBeenCalled()
+                } else {
+                    expect(beginLiteMutation).toHaveBeenCalledTimes(1)
+                    expect(pending).toHaveBeenCalledTimes(1)
+                    expect(beginLiteMutation.mock.invocationCallOrder[0]).toBeLessThan(pending.mock.invocationCallOrder[0])
+                    expect(pending.mock.invocationCallOrder[0]).toBeLessThan(business.mock.invocationCallOrder[0])
+                }
             }
         }
+    })
+})
+
+
+describe('Lite mobile single flight preserves sample guards and retry identity', () => {
+    it.each([[true, true], [true, false], [false, true], [false, false]])('locks only Lite=%s mobile=%s before pending state', (isLite, mobile) => {
+        const liteMutationInFlight = { current: false }
+        const matchMedia = vi.fn(() => ({ matches: mobile }))
+        const begin = evaluate('beginLiteMutation', { isLite, window: { matchMedia }, MOBILE_WORKSPACE_QUERY, liteMutationInFlight })
+        expect(begin()).toBe(true)
+        expect(begin()).toBe(!(isLite && mobile))
+        expect(liteMutationInFlight.current).toBe(isLite && mobile)
+        if (isLite) expect(matchMedia).toHaveBeenCalledWith(MOBILE_WORKSPACE_QUERY)
+        else expect(matchMedia).not.toHaveBeenCalled()
+    })
+
+    it.each(['handleSave', 'handleArchive'])('%s releases a failed single flight and retries the unchanged proposal', async name => {
+        const target = Object.freeze({ id: 'real-rate', is_active: true, updated_at: '2026-09-01', expectedUpdatedAt: '2026-09-01' })
+        const liteMutationInFlight = { current: false }
+        const beginLiteMutation = evaluate('beginLiteMutation', { isLite: true, window: { matchMedia: () => ({ matches: true }) }, MOBILE_WORKSPACE_QUERY, liteMutationInFlight })
+        const business = vi.fn(async () => ({ error: 'Synthetic rejected proposal' }))
+        const pending = vi.fn()
+        const transitions: Promise<void>[] = []
+        const handler = evaluate(name, {
+            draft: target, archiveRate: target, isSampleRecordId, beginLiteMutation, liteMutationInFlight,
+            toast: { info: vi.fn(), error: vi.fn() }, tourCommonCopy, language: 'en', tx: (text: string) => text,
+            userFacingError: (error: string) => error, setPendingAction: pending, setArchiveError: vi.fn(), setSaveError: vi.fn(),
+            startTransition: (fn: () => Promise<void>) => transitions.push(fn()), saveCostRate: business, archiveCostRate: business,
+        })
+        handler()
+        handler()
+        expect(business).toHaveBeenCalledTimes(1)
+        await Promise.all(transitions)
+        expect(liteMutationInFlight.current).toBe(false)
+        expect(pending).toHaveBeenLastCalledWith(null)
+        handler()
+        await Promise.all(transitions)
+        expect(business).toHaveBeenCalledTimes(2)
+        expect(business.mock.calls[0]).toEqual(business.mock.calls[1])
+        if (name === 'handleSave') expect(business).toHaveBeenCalledWith(target)
+        else expect(business).toHaveBeenCalledWith(target.id, target.updated_at)
+        expect(liteMutationInFlight.current).toBe(false)
     })
 })
