@@ -1,0 +1,20 @@
+[
+  {
+    "label": "Cancel",
+    "inside": true,
+    "top": 492.109375,
+    "bottom": 542.515625
+  },
+  {
+    "label": "Save Quality & Create Costing",
+    "inside": true,
+    "top": 398.296875,
+    "bottom": 485.109375
+  },
+  {
+    "label": "Close",
+    "inside": true,
+    "top": 24,
+    "bottom": 68
+  }
+]

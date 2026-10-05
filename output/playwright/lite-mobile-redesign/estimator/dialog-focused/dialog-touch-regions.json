@@ -1,0 +1,377 @@
+[
+  {
+    "language": "en",
+    "state": "version",
+    "small": [
+      {
+        "label": "Close toast",
+        "width": 20,
+        "height": 20
+      },
+      {
+        "label": "Cancel",
+        "width": 1622.125,
+        "height": 35
+      },
+      {
+        "label": "Save this version only",
+        "width": 1622.125,
+        "height": 35
+      },
+      {
+        "label": "Save version and update Synthetic Quality A — Surat plain weave with a long identifiable fabric recipe name for future costings",
+        "width": 1622.125,
+        "height": 35
+      },
+      {
+        "label": "Close",
+        "width": 38.5,
+        "height": 38.5
+      }
+    ]
+  },
+  {
+    "language": "en",
+    "state": "save-quality",
+    "small": [
+      {
+        "label": "",
+        "width": 431.53125,
+        "height": 35
+      },
+      {
+        "label": "Cancel",
+        "width": 431.53125,
+        "height": 35
+      },
+      {
+        "label": "Save Quality & Create Costing",
+        "width": 431.53125,
+        "height": 35
+      },
+      {
+        "label": "Close",
+        "width": 38.5,
+        "height": 38.5
+      }
+    ]
+  },
+  {
+    "language": "en",
+    "state": "new-quality",
+    "small": [
+      {
+        "label": "Cancel",
+        "width": 260,
+        "height": 35
+      },
+      {
+        "label": "Reset & Start",
+        "width": 260,
+        "height": 35
+      },
+      {
+        "label": "Close",
+        "width": 38.5,
+        "height": 38.5
+      }
+    ]
+  },
+  {
+    "language": "en",
+    "state": "rename-quality",
+    "small": [
+      {
+        "label": "",
+        "width": 274,
+        "height": 35
+      },
+      {
+        "label": "Cancel",
+        "width": 274,
+        "height": 35
+      },
+      {
+        "label": "Save correction",
+        "width": 274,
+        "height": 35
+      },
+      {
+        "label": "Close",
+        "width": 38.5,
+        "height": 38.5
+      }
+    ]
+  },
+  {
+    "language": "en",
+    "state": "discard-draft",
+    "small": [
+      {
+        "label": "Keep for later",
+        "width": 274,
+        "height": 35
+      },
+      {
+        "label": "Discard draft",
+        "width": 274,
+        "height": 35
+      },
+      {
+        "label": "Close",
+        "width": 38.5,
+        "height": 38.5
+      }
+    ]
+  },
+  {
+    "language": "hi",
+    "state": "version",
+    "small": [
+      {
+        "label": "बंद करें toast",
+        "width": 20,
+        "height": 20
+      },
+      {
+        "label": "रद्द करें",
+        "width": 1535.515625,
+        "height": 35
+      },
+      {
+        "label": "सिर्फ यह वर्जन सहेजें",
+        "width": 1535.515625,
+        "height": 35
+      },
+      {
+        "label": "वर्जन सहेजें और आगे की कॉस्टिंग के लिए Synthetic क्वालिटी एक — Surat plain बुनाई साथ एक long identifiable फैब्रिक रेसिपी नाम अपडेट करें",
+        "width": 1535.515625,
+        "height": 35
+      },
+      {
+        "label": "बंद करना",
+        "width": 38.5,
+        "height": 38.5
+      }
+    ]
+  },
+  {
+    "language": "hi",
+    "state": "save-quality",
+    "small": [
+      {
+        "label": "",
+        "width": 407.5,
+        "height": 35
+      },
+      {
+        "label": "रद्द करें",
+        "width": 407.5,
+        "height": 35
+      },
+      {
+        "label": "क्वालिटी सेव करें और कॉस्टिंग बनाएं",
+        "width": 407.5,
+        "height": 35
+      },
+      {
+        "label": "बंद करना",
+        "width": 38.5,
+        "height": 38.5
+      }
+    ]
+  },
+  {
+    "language": "hi",
+    "state": "new-quality",
+    "small": [
+      {
+        "label": "रद्द करें",
+        "width": 260,
+        "height": 35
+      },
+      {
+        "label": "Reset & शुरू करें",
+        "width": 260,
+        "height": 35
+      },
+      {
+        "label": "बंद करना",
+        "width": 38.5,
+        "height": 38.5
+      }
+    ]
+  },
+  {
+    "language": "hi",
+    "state": "rename-quality",
+    "small": [
+      {
+        "label": "",
+        "width": 274,
+        "height": 35
+      },
+      {
+        "label": "रद्द करें",
+        "width": 274,
+        "height": 35
+      },
+      {
+        "label": "सुधार सेव करें",
+        "width": 274,
+        "height": 35
+      },
+      {
+        "label": "बंद करना",
+        "width": 38.5,
+        "height": 38.5
+      }
+    ]
+  },
+  {
+    "language": "hi",
+    "state": "discard-draft",
+    "small": [
+      {
+        "label": "रखें के लिए बाद में",
+        "width": 274,
+        "height": 35
+      },
+      {
+        "label": "ड्राफ्ट हटाएं",
+        "width": 274,
+        "height": 35
+      },
+      {
+        "label": "बंद करना",
+        "width": 38.5,
+        "height": 38.5
+      }
+    ]
+  },
+  {
+    "language": "gu",
+    "state": "version",
+    "small": [
+      {
+        "label": "બંધ કરો toast",
+        "width": 20,
+        "height": 20
+      },
+      {
+        "label": "રદ કરો",
+        "width": 1616.34375,
+        "height": 35
+      },
+      {
+        "label": "ફક્ત આ વર્ઝન સેવ કરો",
+        "width": 1616.34375,
+        "height": 35
+      },
+      {
+        "label": "વર્ઝન સેવ કરો અને આગળની કૉસ્ટિંગ માટે Synthetic ક્વોલિટી એક — Surat plain વણાટ સાથે એક long identifiable ફેબ્રિક રેસિપી નામ અપડેટ કરો",
+        "width": 1616.34375,
+        "height": 35
+      },
+      {
+        "label": "બંધ કરો",
+        "width": 38.5,
+        "height": 38.5
+      }
+    ]
+  },
+  {
+    "language": "gu",
+    "state": "save-quality",
+    "small": [
+      {
+        "label": "",
+        "width": 435.5,
+        "height": 35
+      },
+      {
+        "label": "રદ કરો",
+        "width": 435.5,
+        "height": 35
+      },
+      {
+        "label": "ક્વોલિટી સાચવો અને કોસ્ટિંગ બનાવો",
+        "width": 435.5,
+        "height": 35
+      },
+      {
+        "label": "બંધ કરો",
+        "width": 38.5,
+        "height": 38.5
+      }
+    ]
+  },
+  {
+    "language": "gu",
+    "state": "new-quality",
+    "small": [
+      {
+        "label": "રદ કરો",
+        "width": 260,
+        "height": 35
+      },
+      {
+        "label": "Reset & શરૂ કરો",
+        "width": 260,
+        "height": 35
+      },
+      {
+        "label": "બંધ કરો",
+        "width": 38.5,
+        "height": 38.5
+      }
+    ]
+  },
+  {
+    "language": "gu",
+    "state": "rename-quality",
+    "small": [
+      {
+        "label": "",
+        "width": 274,
+        "height": 35
+      },
+      {
+        "label": "રદ કરો",
+        "width": 274,
+        "height": 35
+      },
+      {
+        "label": "સુધારો સેવ કરો",
+        "width": 274,
+        "height": 35
+      },
+      {
+        "label": "બંધ કરો",
+        "width": 38.5,
+        "height": 38.5
+      }
+    ]
+  },
+  {
+    "language": "gu",
+    "state": "discard-draft",
+    "small": [
+      {
+        "label": "જાળવો માટે પછી",
+        "width": 274,
+        "height": 35
+      },
+      {
+        "label": "ડ્રાફ્ટ કાઢી નાખો",
+        "width": 274,
+        "height": 35
+      },
+      {
+        "label": "બંધ કરો",
+        "width": 38.5,
+        "height": 38.5
+      }
+    ]
+  }
+]

@@ -5,7 +5,7 @@ import { mkdir, writeFile } from 'node:fs/promises'
 
 const base = new URL(process.argv[2] ?? 'http://127.0.0.1:4193')
 assert(['127.0.0.1', 'localhost', '[::1]'].includes(base.hostname), 'Local build only')
-const output = 'output/playwright/free-mobile-redesign/public-build'
+const output = process.argv.find(arg => arg.startsWith('--output='))?.slice(9) ?? 'output/playwright/free-mobile-redesign/public-build'
 await mkdir(output, { recursive: true })
 const browser = await chromium.launch({ headless: true })
 const context = await browser.newContext({ viewport: { width: 320, height: 740 } })

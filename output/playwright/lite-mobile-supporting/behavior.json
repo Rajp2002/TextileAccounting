@@ -1,0 +1,118 @@
+[
+  {
+    "check": "dirty settings preserve unload protection",
+    "passed": true
+  },
+  {
+    "check": "defaults may close without discarding dirty input",
+    "passed": true
+  },
+  {
+    "check": "closed defaults retain visible unsaved state",
+    "passed": true
+  },
+  {
+    "check": "reopened defaults retain value",
+    "passed": true
+  },
+  {
+    "check": "invalid wastage retains native range feedback",
+    "passed": true
+  },
+  {
+    "check": "repeated defaults submission makes one synthetic request",
+    "passed": true
+  },
+  {
+    "check": "late stale response reopens mounted editor",
+    "passed": true
+  },
+  {
+    "check": "stale conflict remains visible",
+    "passed": true
+  },
+  {
+    "check": "stale response preserves edited values",
+    "passed": true
+  },
+  {
+    "check": "Discard restores last confirmed defaults",
+    "passed": true
+  },
+  {
+    "check": "deletion remains gated before exact confirmations",
+    "passed": true
+  },
+  {
+    "check": "deletion review retains export-before-delete route",
+    "passed": true
+  },
+  {
+    "check": "deletion Cancel restores trigger focus",
+    "passed": true
+  },
+  {
+    "check": "dismissal sends no deletion request",
+    "passed": true
+  },
+  {
+    "check": "generic late save failure remains visible in editor",
+    "passed": true
+  },
+  {
+    "check": "summary reflects confirmed defaults after save",
+    "passed": true
+  },
+  {
+    "check": "unknown payment recovery retains uncertain bank guidance",
+    "passed": true
+  },
+  {
+    "check": "one payment reconciliation action remains reachable",
+    "passed": true
+  },
+  {
+    "check": "history distinguishes unconfirmed attempt",
+    "passed": true
+  },
+  {
+    "check": "unknown attempt does not claim noncapture",
+    "passed": true
+  },
+  {
+    "check": "captured receipt retains exact payment route",
+    "passed": true
+  },
+  {
+    "check": "payment history Escape restores focus",
+    "passed": true
+  },
+  {
+    "check": "browser failure stays distinct from generated export",
+    "passed": true
+  },
+  {
+    "check": "export retains truthful device-save limitation",
+    "passed": true
+  },
+  {
+    "check": "generation failure never claims successful download",
+    "passed": true
+  },
+  {
+    "check": "collapsed filters retain active count",
+    "passed": true
+  },
+  {
+    "check": "closed/reopened audit actor retains selection",
+    "passed": true
+  },
+  {
+    "check": "mobile audit shows record identity",
+    "passed": true
+  },
+  {
+    "check": "audit clear-search remains explicit",
+    "passed": true
+  }
+]

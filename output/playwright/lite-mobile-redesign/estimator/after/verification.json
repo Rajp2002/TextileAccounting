@@ -1,0 +1,106 @@
+{
+  "evidenceType": "Automated Chromium emulation; actual Lite estimator/navigation/paid autosave over synthetic localhost actions. No installed PWA or remote data/provider verification.",
+  "base": "http://127.0.0.1:4197",
+  "stage": "after",
+  "applicationSourceCommit": "edc8571e05522588e680620add984d755aaa5fda",
+  "createdAt": "2026-10-05T20:59:08.958Z",
+  "externalRequestsBlocked": [],
+  "results": [
+    {
+      "name": "baseline-and-regression-captures",
+      "status": "passed"
+    },
+    {
+      "name": "lite-layout-help-focus",
+      "status": "passed"
+    },
+    {
+      "name": "live-paid-cost-and-duplicate-save",
+      "status": "passed"
+    },
+    {
+      "name": "paid-draft-recovery-and-scope",
+      "status": "passed"
+    },
+    {
+      "name": "fast-navigation-back-forward-draft",
+      "status": "passed"
+    },
+    {
+      "name": "quality-search-dirty-cancel-switch-undo",
+      "status": "passed"
+    },
+    {
+      "name": "quality-version-save-and-new-reset",
+      "status": "passed"
+    },
+    {
+      "name": "warnings-invalid-and-confirmation",
+      "status": "passed"
+    },
+    {
+      "name": "definite-failure-retains-working-inputs",
+      "status": "passed"
+    },
+    {
+      "name": "unknown-save-exact-retry-after-reload",
+      "status": "passed"
+    },
+    {
+      "name": "lost-save-response-receipt-reconciliation",
+      "status": "passed"
+    },
+    {
+      "name": "saved-export-source-and-unsaved-values",
+      "status": "passed"
+    },
+    {
+      "name": "quality-rate-unknown-reconciliation",
+      "status": "passed"
+    },
+    {
+      "name": "keyboard-and-measured-action-clearance",
+      "status": "passed"
+    },
+    {
+      "name": "strong-text-reflow-modes-and-help",
+      "status": "passed"
+    },
+    {
+      "name": "detailed-modes-manual-zero-and-units",
+      "status": "passed"
+    },
+    {
+      "name": "offline-paid-draft-without-server-save",
+      "status": "passed"
+    },
+    {
+      "name": "cross-tab-draft-conflict-preserves-current-work",
+      "status": "passed"
+    },
+    {
+      "name": "expired-draft-and-unavailable-storage",
+      "status": "passed"
+    },
+    {
+      "name": "quality-loading-empty-failed-retry",
+      "status": "passed"
+    },
+    {
+      "name": "base-live-and-free-metering-regression",
+      "status": "passed"
+    },
+    {
+      "name": "strong-text-additional-panels-and-touch",
+      "status": "passed"
+    },
+    {
+      "name": "strong-text-paid-dialogs",
+      "status": "passed"
+    },
+    {
+      "name": "immutable-version-source-and-no-change-save",
+      "status": "passed"
+    }
+  ]
+}

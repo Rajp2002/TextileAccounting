@@ -1,0 +1,3329 @@
+[
+  {
+    "language": "en",
+    "percent": 200,
+    "state": "version",
+    "issues": [
+      {
+        "kind": "control-viewport",
+        "label": "Cancel",
+        "left": 23,
+        "right": 1645.125
+      },
+      {
+        "kind": "control-viewport",
+        "label": "Save this version only",
+        "left": 23,
+        "right": 1645.125
+      },
+      {
+        "kind": "control-viewport",
+        "label": "Save version and update Synthetic Quality A — Surat plain weave with a",
+        "left": 23,
+        "right": 1645.125
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Save New Costing Version",
+        "left": 47.5,
+        "right": 422.21875
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Save New Costing Version",
+        "ancestor": "Save New Costing VersionYou changed the recipe for Saved Quality Synth"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Save New Costing Version",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Save New Costing Version",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "You changed the recipe for Saved Quality Synthetic Quality A — Surat plain weave with a lo",
+        "left": 23,
+        "right": 1322.65625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "You changed the recipe for Saved Quality Synthetic Quality A — Surat plain weave with a lo",
+        "ancestor": "Save New Costing VersionYou changed the recipe for Saved Quality Synth"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "You changed the recipe for Saved Quality Synthetic Quality A — Surat plain weave with a lo",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "You changed the recipe for Saved Quality Synthetic Quality A — Surat plain weave with a lo",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Saving the costing creates a new snapshot and does not change the Saved Quality unless you",
+        "left": 1328.09375,
+        "right": 1522.59375
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Saving the costing creates a new snapshot and does not change the Saved Quality unless you",
+        "ancestor": "Save New Costing VersionYou changed the recipe for Saved Quality Synth"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Saving the costing creates a new snapshot and does not change the Saved Quality unless you",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Saving the costing creates a new snapshot and does not change the Saved Quality unless you",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Saving the costing creates a new snapshot and does not change the Saved Quality unless you",
+        "left": 23,
+        "right": 979.375
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Saving the costing creates a new snapshot and does not change the Saved Quality unless you",
+        "ancestor": "Save New Costing VersionYou changed the recipe for Saved Quality Synth"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Saving the costing creates a new snapshot and does not change the Saved Quality unless you",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Saving the costing creates a new snapshot and does not change the Saved Quality unless you",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "This will create the next costing version",
+        "left": 38,
+        "right": 473.421875
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "This will create the next costing version",
+        "ancestor": "Save New Costing VersionYou changed the recipe for Saved Quality Synth"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "This will create the next costing version",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "This will create the next costing version",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Saved Quality changes affect future estimates that use this quality. Earlier costing snaps",
+        "left": 38,
+        "right": 1133.765625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Saved Quality changes affect future estimates that use this quality. Earlier costing snaps",
+        "ancestor": "Save New Costing VersionYou changed the recipe for Saved Quality Synth"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Saved Quality changes affect future estimates that use this quality. Earlier costing snaps",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Saved Quality changes affect future estimates that use this quality. Earlier costing snaps",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Included in this costing snapshot:",
+        "left": 34.5,
+        "right": 359.921875
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Included in this costing snapshot:",
+        "ancestor": "Save New Costing VersionYou changed the recipe for Saved Quality Synth"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Included in this costing snapshot:",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Included in this costing snapshot:",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Warp Warp 75D ₹177.00/kg · Weft Weft 75D ₹112.00/kg",
+        "left": 192.46875,
+        "right": 720.6875
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Warp Warp 75D ₹177.00/kg · Weft Weft 75D ₹112.00/kg",
+        "ancestor": "Save New Costing VersionYou changed the recipe for Saved Quality Synth"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Warp Warp 75D ₹177.00/kg · Weft Weft 75D ₹112.00/kg",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Warp Warp 75D ₹177.00/kg · Weft Weft 75D ₹112.00/kg",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "₹3.00",
+        "ancestor": "Save New Costing VersionYou changed the recipe for Saved Quality Synth"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "/m",
+        "left": 315,
+        "right": 339.28125
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/m",
+        "ancestor": "Save New Costing VersionYou changed the recipe for Saved Quality Synth"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/m",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/m",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "0% · no price impact",
+        "left": 169.625,
+        "right": 363.6875
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "0% · no price impact",
+        "ancestor": "Save New Costing VersionYou changed the recipe for Saved Quality Synth"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "0% · no price impact",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "0% · no price impact",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "₹0.00/m · no price impact",
+        "left": 142.765625,
+        "right": 386.609375
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "₹0.00/m · no price impact",
+        "ancestor": "Save New Costing VersionYou changed the recipe for Saved Quality Synth"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "₹0.00/m · no price impact",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "₹0.00/m · no price impact",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Not set · per-metre costing only",
+        "left": 131.6875,
+        "right": 431.4375
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Not set · per-metre costing only",
+        "ancestor": "Save New Costing VersionYou changed the recipe for Saved Quality Synth"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Not set · per-metre costing only",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Not set · per-metre costing only",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Core costing only",
+        "left": 162.828125,
+        "right": 328.359375
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Core costing only",
+        "ancestor": "Save New Costing VersionYou changed the recipe for Saved Quality Synth"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Core costing only",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Core costing only",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "· off: Winding, Processing, Finishing, Commission, Transport",
+        "left": 328.359375,
+        "right": 897.234375
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "· off: Winding, Processing, Finishing, Commission, Transport",
+        "ancestor": "Save New Costing VersionYou changed the recipe for Saved Quality Synth"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "· off: Winding, Processing, Finishing, Commission, Transport",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "· off: Winding, Processing, Finishing, Commission, Transport",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Cancel",
+        "left": 789.59375,
+        "right": 878.53125
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Cancel",
+        "ancestor": "Save New Costing VersionYou changed the recipe for Saved Quality Synth"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Cancel",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Cancel",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Save this version only",
+        "left": 696.65625,
+        "right": 971.453125
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Save this version only",
+        "ancestor": "Save New Costing VersionYou changed the recipe for Saved Quality Synth"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Save this version only",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Save this version only",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Save version and update Synthetic Quality A — Surat plain weave with a long identifiable f",
+        "left": 37,
+        "right": 1631.125
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Save version and update Synthetic Quality A — Surat plain weave with a long identifiable f",
+        "ancestor": "Save New Costing VersionYou changed the recipe for Saved Quality Synth"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Save version and update Synthetic Quality A — Surat plain weave with a long identifiable f",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Save version and update Synthetic Quality A — Surat plain weave with a long identifiable f",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "Applied quality: Synthetic Quality A — Surat plain weave with a long identifiable fabric r",
+          "Save review"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "Applied quality: Synthetic Quality A — Surat plain weave with a long identifiable fabric r",
+          "Included in this costing snapshot:"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "Applied quality: Synthetic Quality A — Surat plain weave with a long identifiable fabric r",
+          "Yarn rate basis:"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "Applied quality: Synthetic Quality A — Surat plain weave with a long identifiable fabric r",
+          "Warp Warp 75D ₹177.00/kg · Weft Weft 75D ₹112.00/kg"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "Applied quality: Synthetic Quality A — Surat plain weave with a long identifiable fabric r",
+          "Overhead:"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "Applied quality: Synthetic Quality A — Surat plain weave with a long identifiable fabric r",
+          "Direct rate"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "Applied quality: Synthetic Quality A — Surat plain weave with a long identifiable fabric r",
+          "·"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "Applied quality: Synthetic Quality A — Surat plain weave with a long identifiable fabric r",
+          "₹3.00"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "Applied quality: Synthetic Quality A — Surat plain weave with a long identifiable fabric r",
+          "Commission:"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "Applied quality: Synthetic Quality A — Surat plain weave with a long identifiable fabric r",
+          "0% · no price impact"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "Applied quality: Synthetic Quality A — Surat plain weave with a long identifiable fabric r",
+          "Transport:"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "Applied quality: Synthetic Quality A — Surat plain weave with a long identifiable fabric r",
+          "₹0.00/m · no price impact"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "Applied quality: Synthetic Quality A — Surat plain weave with a long identifiable fabric r",
+          "Target margin:"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "Applied quality: Synthetic Quality A — Surat plain weave with a long identifiable fabric r",
+          "15%"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "Estimate ready for review",
+          "Saving the costing creates a new snapshot and does not change the Saved Quality unless you"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "Estimate ready for review",
+          "Saving the costing creates a new snapshot and does not change the Saved Quality unless you"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "Price and break-even are calculated from the current inputs.",
+          "Saving the costing creates a new snapshot and does not change the Saved Quality unless you"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "Price and break-even are calculated from the current inputs.",
+          "This will create the next costing version"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "Price and break-even are calculated from the current inputs.",
+          "This will create the next costing version"
+        ]
+      }
+    ]
+  },
+  {
+    "language": "en",
+    "percent": 200,
+    "state": "save-quality",
+    "issues": [
+      {
+        "kind": "control-viewport",
+        "label": "INPUT",
+        "left": 23,
+        "right": 454.53125
+      },
+      {
+        "kind": "control-viewport",
+        "label": "Cancel",
+        "left": 23,
+        "right": 454.53125
+      },
+      {
+        "kind": "control-viewport",
+        "label": "Save Quality & Create Costing",
+        "left": 23,
+        "right": 454.53125
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Save quality + create costing",
+        "ancestor": "Save quality + create costingSave the reusable fabric recipe and its f"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Save the reusable fabric recipe and its first costing snapshot together. You will not need",
+        "left": 23,
+        "right": 390.109375
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Save the reusable fabric recipe and its first costing snapshot together. You will not need",
+        "ancestor": "Save quality + create costingSave the reusable fabric recipe and its f"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Save the reusable fabric recipe and its first costing snapshot together. You will not need",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Save the reusable fabric recipe and its first costing snapshot together. You will not need",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Save the reusable fabric recipe and its first costing snapshot together. You will not need",
+        "left": 23,
+        "right": 378.15625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Save the reusable fabric recipe and its first costing snapshot together. You will not need",
+        "ancestor": "Save quality + create costingSave the reusable fabric recipe and its f"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Save the reusable fabric recipe and its first costing snapshot together. You will not need",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Save the reusable fabric recipe and its first costing snapshot together. You will not need",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Save the reusable fabric recipe and its first costing snapshot together. You will not need",
+        "left": 23,
+        "right": 360.53125
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Save the reusable fabric recipe and its first costing snapshot together. You will not need",
+        "ancestor": "Save quality + create costingSave the reusable fabric recipe and its f"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Save the reusable fabric recipe and its first costing snapshot together. You will not need",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Save the reusable fabric recipe and its first costing snapshot together. You will not need",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "weft blend layers including current yarn rates.",
+        "left": 195.09375,
+        "right": 354.1875
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "weft blend layers including current yarn rates.",
+        "ancestor": "Save quality + create costingSave the reusable fabric recipe and its f"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "weft blend layers including current yarn rates.",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "weft blend layers including current yarn rates.",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Saves this fabric recipe including yarn layers, rates, picks, width, and costing assumptio",
+        "left": 36.25,
+        "right": 388.75
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Saves this fabric recipe including yarn layers, rates, picks, width, and costing assumptio",
+        "ancestor": "Save quality + create costingSave the reusable fabric recipe and its f"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Saves this fabric recipe including yarn layers, rates, picks, width, and costing assumptio",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Saves this fabric recipe including yarn layers, rates, picks, width, and costing assumptio",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Saves this fabric recipe including yarn layers, rates, picks, width, and costing assumptio",
+        "left": 36.25,
+        "right": 389.234375
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Saves this fabric recipe including yarn layers, rates, picks, width, and costing assumptio",
+        "ancestor": "Save quality + create costingSave the reusable fabric recipe and its f"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Saves this fabric recipe including yarn layers, rates, picks, width, and costing assumptio",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Saves this fabric recipe including yarn layers, rates, picks, width, and costing assumptio",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Saves this fabric recipe including yarn layers, rates, picks, width, and costing assumptio",
+        "left": 36.25,
+        "right": 436.796875
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Saves this fabric recipe including yarn layers, rates, picks, width, and costing assumptio",
+        "ancestor": "Save quality + create costingSave the reusable fabric recipe and its f"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Saves this fabric recipe including yarn layers, rates, picks, width, and costing assumptio",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Saves this fabric recipe including yarn layers, rates, picks, width, and costing assumptio",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Saves this fabric recipe including yarn layers, rates, picks, width, and costing assumptio",
+        "left": 36.25,
+        "right": 340.703125
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Saves this fabric recipe including yarn layers, rates, picks, width, and costing assumptio",
+        "ancestor": "Save quality + create costingSave the reusable fabric recipe and its f"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Saves this fabric recipe including yarn layers, rates, picks, width, and costing assumptio",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Saves this fabric recipe including yarn layers, rates, picks, width, and costing assumptio",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "This saves the reusable quality and costing v1 together. Use Save Costing later only when ",
+        "left": 345.53125,
+        "right": 385.40625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "This saves the reusable quality and costing v1 together. Use Save Costing later only when ",
+        "ancestor": "Save quality + create costingSave the reusable fabric recipe and its f"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "This saves the reusable quality and costing v1 together. Use Save Costing later only when ",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "This saves the reusable quality and costing v1 together. Use Save Costing later only when ",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "This saves the reusable quality and costing v1 together. Use Save Costing later only when ",
+        "left": 36.25,
+        "right": 417.390625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "This saves the reusable quality and costing v1 together. Use Save Costing later only when ",
+        "ancestor": "Save quality + create costingSave the reusable fabric recipe and its f"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "This saves the reusable quality and costing v1 together. Use Save Costing later only when ",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "This saves the reusable quality and costing v1 together. Use Save Costing later only when ",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "This saves the reusable quality and costing v1 together. Use Save Costing later only when ",
+        "left": 36.25,
+        "right": 436.421875
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "This saves the reusable quality and costing v1 together. Use Save Costing later only when ",
+        "ancestor": "Save quality + create costingSave the reusable fabric recipe and its f"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "This saves the reusable quality and costing v1 together. Use Save Costing later only when ",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "This saves the reusable quality and costing v1 together. Use Save Costing later only when ",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "This saves the reusable quality and costing v1 together. Use Save Costing later only when ",
+        "left": 36.25,
+        "right": 391
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "This saves the reusable quality and costing v1 together. Use Save Costing later only when ",
+        "ancestor": "Save quality + create costingSave the reusable fabric recipe and its f"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "This saves the reusable quality and costing v1 together. Use Save Costing later only when ",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "This saves the reusable quality and costing v1 together. Use Save Costing later only when ",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Included in this costing snapshot:",
+        "left": 38,
+        "right": 363.421875
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Included in this costing snapshot:",
+        "ancestor": "Save quality + create costingSave the reusable fabric recipe and its f"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Included in this costing snapshot:",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Included in this costing snapshot:",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Warp Warp 1 ₹120.00/kg · Weft Weft 1 ₹112.00/kg",
+        "left": 195.96875,
+        "right": 430.515625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Warp Warp 1 ₹120.00/kg · Weft Weft 1 ₹112.00/kg",
+        "ancestor": "Save quality + create costingSave the reusable fabric recipe and its f"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Warp Warp 1 ₹120.00/kg · Weft Weft 1 ₹112.00/kg",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Warp Warp 1 ₹120.00/kg · Weft Weft 1 ₹112.00/kg",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "₹3.00",
+        "ancestor": "Save quality + create costingSave the reusable fabric recipe and its f"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "/m",
+        "left": 318.5,
+        "right": 342.78125
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/m",
+        "ancestor": "Save quality + create costingSave the reusable fabric recipe and its f"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/m",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/m",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "0% · no price impact",
+        "left": 173.125,
+        "right": 367.1875
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "0% · no price impact",
+        "ancestor": "Save quality + create costingSave the reusable fabric recipe and its f"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "0% · no price impact",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "0% · no price impact",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "₹0.00/m · no price impact",
+        "left": 146.265625,
+        "right": 390.109375
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "₹0.00/m · no price impact",
+        "ancestor": "Save quality + create costingSave the reusable fabric recipe and its f"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "₹0.00/m · no price impact",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "₹0.00/m · no price impact",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Not set · per-metre costing only",
+        "left": 135.1875,
+        "right": 434.9375
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Not set · per-metre costing only",
+        "ancestor": "Save quality + create costingSave the reusable fabric recipe and its f"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Not set · per-metre costing only",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Not set · per-metre costing only",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Core costing only",
+        "left": 166.328125,
+        "right": 331.859375
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Core costing only",
+        "ancestor": "Save quality + create costingSave the reusable fabric recipe and its f"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Core costing only",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Core costing only",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "· off: Winding, Processing, Finishing, Commission, Transport",
+        "left": 331.859375,
+        "right": 378.6875
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "· off: Winding, Processing, Finishing, Commission, Transport",
+        "ancestor": "Save quality + create costingSave the reusable fabric recipe and its f"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "· off: Winding, Processing, Finishing, Commission, Transport",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "· off: Winding, Processing, Finishing, Commission, Transport",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "· off: Winding, Processing, Finishing, Commission, Transport",
+        "left": 38,
+        "right": 331.15625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "· off: Winding, Processing, Finishing, Commission, Transport",
+        "ancestor": "Save quality + create costingSave the reusable fabric recipe and its f"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "· off: Winding, Processing, Finishing, Commission, Transport",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "· off: Winding, Processing, Finishing, Commission, Transport",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Full costing reuse: reopening this Saved Quality restores the recipe, these current yarn r",
+        "left": 47.75,
+        "right": 368.015625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Full costing reuse: reopening this Saved Quality restores the recipe, these current yarn r",
+        "ancestor": "Save quality + create costingSave the reusable fabric recipe and its f"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Full costing reuse: reopening this Saved Quality restores the recipe, these current yarn r",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Full costing reuse: reopening this Saved Quality restores the recipe, these current yarn r",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Full costing reuse: reopening this Saved Quality restores the recipe, these current yarn r",
+        "left": 47.75,
+        "right": 374.53125
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Full costing reuse: reopening this Saved Quality restores the recipe, these current yarn r",
+        "ancestor": "Save quality + create costingSave the reusable fabric recipe and its f"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Full costing reuse: reopening this Saved Quality restores the recipe, these current yarn r",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Full costing reuse: reopening this Saved Quality restores the recipe, these current yarn r",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Full costing reuse: reopening this Saved Quality restores the recipe, these current yarn r",
+        "left": 47.75,
+        "right": 380.546875
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Full costing reuse: reopening this Saved Quality restores the recipe, these current yarn r",
+        "ancestor": "Save quality + create costingSave the reusable fabric recipe and its f"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Full costing reuse: reopening this Saved Quality restores the recipe, these current yarn r",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Full costing reuse: reopening this Saved Quality restores the recipe, these current yarn r",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Full costing reuse: reopening this Saved Quality restores the recipe, these current yarn r",
+        "left": 47.75,
+        "right": 425.21875
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Full costing reuse: reopening this Saved Quality restores the recipe, these current yarn r",
+        "ancestor": "Save quality + create costingSave the reusable fabric recipe and its f"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Full costing reuse: reopening this Saved Quality restores the recipe, these current yarn r",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Full costing reuse: reopening this Saved Quality restores the recipe, these current yarn r",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Full costing reuse: reopening this Saved Quality restores the recipe, these current yarn r",
+        "left": 47.75,
+        "right": 410.8125
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Full costing reuse: reopening this Saved Quality restores the recipe, these current yarn r",
+        "ancestor": "Save quality + create costingSave the reusable fabric recipe and its f"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Full costing reuse: reopening this Saved Quality restores the recipe, these current yarn r",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Full costing reuse: reopening this Saved Quality restores the recipe, these current yarn r",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Full costing reuse: reopening this Saved Quality restores the recipe, these current yarn r",
+        "ancestor": "Save quality + create costingSave the reusable fabric recipe and its f"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Save Quality & Create Costing",
+        "left": 61.5,
+        "right": 444.03125
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Save Quality & Create Costing",
+        "ancestor": "Save quality + create costingSave the reusable fabric recipe and its f"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Save Quality & Create Costing",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Save Quality & Create Costing",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "Estimate ready for review",
+          "Save quality + create costing"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "Estimate ready for review",
+          "Save quality + create costing"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "Estimate ready for review",
+          "Save quality + create costing"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "Price and break-even are calculated from the current inputs.",
+          "Save quality + create costing"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "Price and break-even are calculated from the current inputs.",
+          "Save quality + create costing"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "Price and break-even are calculated from the current inputs.",
+          "Save quality + create costing"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "Price and break-even are calculated from the current inputs.",
+          "Save the reusable fabric recipe and its first costing snapshot together. You will not need"
+        ]
+      },
+      {
+        "kind": "input-vertical-clip",
+        "field": "INPUT",
+        "required": 45.7142,
+        "available": 26
+      }
+    ]
+  },
+  {
+    "language": "en",
+    "percent": 200,
+    "state": "new-quality",
+    "issues": []
+  },
+  {
+    "language": "en",
+    "percent": 200,
+    "state": "rename-quality",
+    "issues": [
+      {
+        "kind": "input-vertical-clip",
+        "field": "INPUT",
+        "required": 45.7142,
+        "available": 26
+      }
+    ]
+  },
+  {
+    "language": "en",
+    "percent": 200,
+    "state": "discard-draft",
+    "issues": []
+  },
+  {
+    "language": "hi",
+    "percent": 200,
+    "state": "version",
+    "issues": [
+      {
+        "kind": "control-viewport",
+        "label": "रद्द करें",
+        "left": 23,
+        "right": 1558.515625
+      },
+      {
+        "kind": "control-viewport",
+        "label": "सिर्फ यह वर्जन सहेजें",
+        "left": 23,
+        "right": 1558.515625
+      },
+      {
+        "kind": "control-viewport",
+        "label": "वर्जन सहेजें और आगे की कॉस्टिंग के लिए Synthetic क्वालिटी एक — Surat p",
+        "left": 23,
+        "right": 1558.515625
+      },
+      {
+        "kind": "text-viewport",
+        "label": "आपने सेव हुआ क्वालिटी Synthetic क्वालिटी एक — Surat plain बुनाई साथ एक long identifiable फ",
+        "left": 23,
+        "right": 1242.578125
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "आपने सेव हुआ क्वालिटी Synthetic क्वालिटी एक — Surat plain बुनाई साथ एक long identifiable फ",
+        "ancestor": "नई कॉस्टिंग वर्जन सहेजेंआपने सेव हुआ क्वालिटी Synthetic क्वालिटी एक — "
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "आपने सेव हुआ क्वालिटी Synthetic क्वालिटी एक — Surat plain बुनाई साथ एक long identifiable फ",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "आपने सेव हुआ क्वालिटी Synthetic क्वालिटी एक — Surat plain बुनाई साथ एक long identifiable फ",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "कॉस्टिंग सहेजने पर नया स्नैपशॉट बनेगा। नीचे चुनने तक सेव हुआ क्वालिटी नहीं बदलेगी।",
+        "left": 1248.015625,
+        "right": 1449.59375
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "कॉस्टिंग सहेजने पर नया स्नैपशॉट बनेगा। नीचे चुनने तक सेव हुआ क्वालिटी नहीं बदलेगी।",
+        "ancestor": "नई कॉस्टिंग वर्जन सहेजेंआपने सेव हुआ क्वालिटी Synthetic क्वालिटी एक — "
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "कॉस्टिंग सहेजने पर नया स्नैपशॉट बनेगा। नीचे चुनने तक सेव हुआ क्वालिटी नहीं बदलेगी।",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "कॉस्टिंग सहेजने पर नया स्नैपशॉट बनेगा। नीचे चुनने तक सेव हुआ क्वालिटी नहीं बदलेगी।",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "कॉस्टिंग सहेजने पर नया स्नैपशॉट बनेगा। नीचे चुनने तक सेव हुआ क्वालिटी नहीं बदलेगी।",
+        "left": 23,
+        "right": 560.578125
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "कॉस्टिंग सहेजने पर नया स्नैपशॉट बनेगा। नीचे चुनने तक सेव हुआ क्वालिटी नहीं बदलेगी।",
+        "ancestor": "नई कॉस्टिंग वर्जन सहेजेंआपने सेव हुआ क्वालिटी Synthetic क्वालिटी एक — "
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "कॉस्टिंग सहेजने पर नया स्नैपशॉट बनेगा। नीचे चुनने तक सेव हुआ क्वालिटी नहीं बदलेगी।",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "कॉस्टिंग सहेजने पर नया स्नैपशॉट बनेगा। नीचे चुनने तक सेव हुआ क्वालिटी नहीं बदलेगी।",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "इससे अगला कॉस्टिंग वर्जन बनेगा",
+        "left": 38,
+        "right": 326.921875
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "इससे अगला कॉस्टिंग वर्जन बनेगा",
+        "ancestor": "नई कॉस्टिंग वर्जन सहेजेंआपने सेव हुआ क्वालिटी Synthetic क्वालिटी एक — "
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "इससे अगला कॉस्टिंग वर्जन बनेगा",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "इससे अगला कॉस्टिंग वर्जन बनेगा",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "सेव हुआ क्वालिटी में बदलाव से इस क्वालिटी का उपयोग करने वाले भविष्य के एस्टीमेट बदलेंगे। प",
+        "left": 38,
+        "right": 1056.65625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "सेव हुआ क्वालिटी में बदलाव से इस क्वालिटी का उपयोग करने वाले भविष्य के एस्टीमेट बदलेंगे। प",
+        "ancestor": "नई कॉस्टिंग वर्जन सहेजेंआपने सेव हुआ क्वालिटी Synthetic क्वालिटी एक — "
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "सेव हुआ क्वालिटी में बदलाव से इस क्वालिटी का उपयोग करने वाले भविष्य के एस्टीमेट बदलेंगे। प",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "सेव हुआ क्वालिटी में बदलाव से इस क्वालिटी का उपयोग करने वाले भविष्य के एस्टीमेट बदलेंगे। प",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Warp Warp 75D ₹177.00/kg · Weft Weft 75D ₹112.00/kg",
+        "left": 161.5625,
+        "right": 689.78125
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Warp Warp 75D ₹177.00/kg · Weft Weft 75D ₹112.00/kg",
+        "ancestor": "नई कॉस्टिंग वर्जन सहेजेंआपने सेव हुआ क्वालिटी Synthetic क्वालिटी एक — "
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Warp Warp 75D ₹177.00/kg · Weft Weft 75D ₹112.00/kg",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Warp Warp 75D ₹177.00/kg · Weft Weft 75D ₹112.00/kg",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "0% · कोई नहीं कीमत impact",
+        "left": 111.9375,
+        "right": 353.5625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "0% · कोई नहीं कीमत impact",
+        "ancestor": "नई कॉस्टिंग वर्जन सहेजेंआपने सेव हुआ क्वालिटी Synthetic क्वालिटी एक — "
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "0% · कोई नहीं कीमत impact",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "0% · कोई नहीं कीमत impact",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "₹0.00/m · कोई नहीं कीमत impact",
+        "left": 111,
+        "right": 402.40625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "₹0.00/m · कोई नहीं कीमत impact",
+        "ancestor": "नई कॉस्टिंग वर्जन सहेजेंआपने सेव हुआ क्वालिटी Synthetic क्वालिटी एक — "
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "₹0.00/m · कोई नहीं कीमत impact",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "₹0.00/m · कोई नहीं कीमत impact",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "नहीं सेट करें · per-मीटर costing केवल",
+        "left": 83,
+        "right": 397.15625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "नहीं सेट करें · per-मीटर costing केवल",
+        "ancestor": "नई कॉस्टिंग वर्जन सहेजेंआपने सेव हुआ क्वालिटी Synthetic क्वालिटी एक — "
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "नहीं सेट करें · per-मीटर costing केवल",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "नहीं सेट करें · per-मीटर costing केवल",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "· off: Winding, प्रोसेसिंग, फिनिशिंग, कमीशन, परिवहन",
+        "left": 274.359375,
+        "right": 711.609375
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "· off: Winding, प्रोसेसिंग, फिनिशिंग, कमीशन, परिवहन",
+        "ancestor": "नई कॉस्टिंग वर्जन सहेजेंआपने सेव हुआ क्वालिटी Synthetic क्वालिटी एक — "
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "· off: Winding, प्रोसेसिंग, फिनिशिंग, कमीशन, परिवहन",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "· off: Winding, प्रोसेसिंग, फिनिशिंग, कमीशन, परिवहन",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "रद्द करें",
+        "left": 758.171875,
+        "right": 823.328125
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "रद्द करें",
+        "ancestor": "नई कॉस्टिंग वर्जन सहेजेंआपने सेव हुआ क्वालिटी Synthetic क्वालिटी एक — "
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "रद्द करें",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "रद्द करें",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "सिर्फ यह वर्जन सहेजें",
+        "left": 688.796875,
+        "right": 892.71875
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "सिर्फ यह वर्जन सहेजें",
+        "ancestor": "नई कॉस्टिंग वर्जन सहेजेंआपने सेव हुआ क्वालिटी Synthetic क्वालिटी एक — "
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "सिर्फ यह वर्जन सहेजें",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "सिर्फ यह वर्जन सहेजें",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "वर्जन सहेजें और आगे की कॉस्टिंग के लिए Synthetic क्वालिटी एक — Surat plain बुनाई साथ एक lo",
+        "left": 37,
+        "right": 1544.515625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "वर्जन सहेजें और आगे की कॉस्टिंग के लिए Synthetic क्वालिटी एक — Surat plain बुनाई साथ एक lo",
+        "ancestor": "नई कॉस्टिंग वर्जन सहेजेंआपने सेव हुआ क्वालिटी Synthetic क्वालिटी एक — "
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "वर्जन सहेजें और आगे की कॉस्टिंग के लिए Synthetic क्वालिटी एक — Surat plain बुनाई साथ एक lo",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "वर्जन सहेजें और आगे की कॉस्टिंग के लिए Synthetic क्वालिटी एक — Surat plain बुनाई साथ एक lo",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "क्वालिटी लागू: Synthetic क्वालिटी एक — Surat plain बुनाई साथ एक long identifiable फैब्रिक ",
+          "सेव करें समीक्षा"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "क्वालिटी लागू: Synthetic क्वालिटी एक — Surat plain बुनाई साथ एक long identifiable फैब्रिक ",
+          "शामिल में यह costing स्नैपशॉट:"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "क्वालिटी लागू: Synthetic क्वालिटी एक — Surat plain बुनाई साथ एक long identifiable फैब्रिक ",
+          "यार्न रेट basis:"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "क्वालिटी लागू: Synthetic क्वालिटी एक — Surat plain बुनाई साथ एक long identifiable फैब्रिक ",
+          "Warp Warp 75D ₹177.00/kg · Weft Weft 75D ₹112.00/kg"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "क्वालिटी लागू: Synthetic क्वालिटी एक — Surat plain बुनाई साथ एक long identifiable फैब्रिक ",
+          "ओवरहेड:"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "क्वालिटी लागू: Synthetic क्वालिटी एक — Surat plain बुनाई साथ एक long identifiable फैब्रिक ",
+          "सीधा रेट"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "क्वालिटी लागू: Synthetic क्वालिटी एक — Surat plain बुनाई साथ एक long identifiable फैब्रिक ",
+          "·"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "क्वालिटी लागू: Synthetic क्वालिटी एक — Surat plain बुनाई साथ एक long identifiable फैब्रिक ",
+          "₹3.00"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "क्वालिटी लागू: Synthetic क्वालिटी एक — Surat plain बुनाई साथ एक long identifiable फैब्रिक ",
+          "कमीशन:"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "क्वालिटी लागू: Synthetic क्वालिटी एक — Surat plain बुनाई साथ एक long identifiable फैब्रिक ",
+          "0% · कोई नहीं कीमत impact"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "क्वालिटी लागू: Synthetic क्वालिटी एक — Surat plain बुनाई साथ एक long identifiable फैब्रिक ",
+          "परिवहन:"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "क्वालिटी लागू: Synthetic क्वालिटी एक — Surat plain बुनाई साथ एक long identifiable फैब्रिक ",
+          "₹0.00/m · कोई नहीं कीमत impact"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "क्वालिटी लागू: Synthetic क्वालिटी एक — Surat plain बुनाई साथ एक long identifiable फैब्रिक ",
+          "लक्ष्य margin:"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "अनुमान जाँच के लिए तैयार",
+          "इससे अगला कॉस्टिंग वर्जन बनेगा"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "अनुमान जाँच के लिए तैयार",
+          "इससे अगला कॉस्टिंग वर्जन बनेगा"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "कीमत और break-even हैं गणना किया गया से का मौजूदा इनपुट.",
+          "इससे अगला कॉस्टिंग वर्जन बनेगा"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "कीमत और break-even हैं गणना किया गया से का मौजूदा इनपुट.",
+          "सेव हुआ क्वालिटी में बदलाव से इस क्वालिटी का उपयोग करने वाले भविष्य के एस्टीमेट बदलेंगे। प"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "कीमत और break-even हैं गणना किया गया से का मौजूदा इनपुट.",
+          "सेव हुआ क्वालिटी में बदलाव से इस क्वालिटी का उपयोग करने वाले भविष्य के एस्टीमेट बदलेंगे। प"
+        ]
+      }
+    ]
+  },
+  {
+    "language": "hi",
+    "percent": 200,
+    "state": "save-quality",
+    "issues": [
+      {
+        "kind": "control-viewport",
+        "label": "INPUT",
+        "left": 23,
+        "right": 430.5
+      },
+      {
+        "kind": "control-viewport",
+        "label": "रद्द करें",
+        "left": 23,
+        "right": 430.5
+      },
+      {
+        "kind": "control-viewport",
+        "label": "क्वालिटी सेव करें और कॉस्टिंग बनाएं",
+        "left": 23,
+        "right": 430.5
+      },
+      {
+        "kind": "text-viewport",
+        "label": "क्वालिटी सेव करें + कॉस्टिंग बनाएं",
+        "left": 23,
+        "right": 332.734375
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "क्वालिटी सेव करें + कॉस्टिंग बनाएं",
+        "ancestor": "क्वालिटी सेव करें + कॉस्टिंग बनाएंदोबारा उपयोग होने वाली फैब्रिक रेसिप"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "क्वालिटी सेव करें + कॉस्टिंग बनाएं",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "क्वालिटी सेव करें + कॉस्टिंग बनाएं",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "दोबारा उपयोग होने वाली फैब्रिक रेसिपी और उसका पहला कॉस्टिंग स्नैपशॉट साथ में सेव करें। सेव",
+        "left": 23,
+        "right": 351.75
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "दोबारा उपयोग होने वाली फैब्रिक रेसिपी और उसका पहला कॉस्टिंग स्नैपशॉट साथ में सेव करें। सेव",
+        "ancestor": "क्वालिटी सेव करें + कॉस्टिंग बनाएंदोबारा उपयोग होने वाली फैब्रिक रेसिप"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "दोबारा उपयोग होने वाली फैब्रिक रेसिपी और उसका पहला कॉस्टिंग स्नैपशॉट साथ में सेव करें। सेव",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "दोबारा उपयोग होने वाली फैब्रिक रेसिपी और उसका पहला कॉस्टिंग स्नैपशॉट साथ में सेव करें। सेव",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "दोबारा उपयोग होने वाली फैब्रिक रेसिपी और उसका पहला कॉस्टिंग स्नैपशॉट साथ में सेव करें। सेव",
+        "left": 23,
+        "right": 367.03125
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "दोबारा उपयोग होने वाली फैब्रिक रेसिपी और उसका पहला कॉस्टिंग स्नैपशॉट साथ में सेव करें। सेव",
+        "ancestor": "क्वालिटी सेव करें + कॉस्टिंग बनाएंदोबारा उपयोग होने वाली फैब्रिक रेसिप"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "दोबारा उपयोग होने वाली फैब्रिक रेसिपी और उसका पहला कॉस्टिंग स्नैपशॉट साथ में सेव करें। सेव",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "दोबारा उपयोग होने वाली फैब्रिक रेसिपी और उसका पहला कॉस्टिंग स्नैपशॉट साथ में सेव करें। सेव",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "दोबारा उपयोग होने वाली फैब्रिक रेसिपी और उसका पहला कॉस्टिंग स्नैपशॉट साथ में सेव करें। सेव",
+        "left": 23,
+        "right": 350.515625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "दोबारा उपयोग होने वाली फैब्रिक रेसिपी और उसका पहला कॉस्टिंग स्नैपशॉट साथ में सेव करें। सेव",
+        "ancestor": "क्वालिटी सेव करें + कॉस्टिंग बनाएंदोबारा उपयोग होने वाली फैब्रिक रेसिप"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "दोबारा उपयोग होने वाली फैब्रिक रेसिपी और उसका पहला कॉस्टिंग स्नैपशॉट साथ में सेव करें। सेव",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "दोबारा उपयोग होने वाली फैब्रिक रेसिपी और उसका पहला कॉस्टिंग स्नैपशॉट साथ में सेव करें। सेव",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "बाना ब्लेंड लेयर्स सहित वर्तमान सूत रेट्स।",
+        "left": 202.03125,
+        "right": 372.21875
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "बाना ब्लेंड लेयर्स सहित वर्तमान सूत रेट्स।",
+        "ancestor": "क्वालिटी सेव करें + कॉस्टिंग बनाएंदोबारा उपयोग होने वाली फैब्रिक रेसिप"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "बाना ब्लेंड लेयर्स सहित वर्तमान सूत रेट्स।",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "बाना ब्लेंड लेयर्स सहित वर्तमान सूत रेट्स।",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "इस फ़ैब्रिक रेसिपी को सूत लेयर्स, रेट्स, पिक्स, चौड़ाई और लागत मान्यताओं सहित सहेजता है। आ",
+        "left": 36.25,
+        "right": 382.984375
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "इस फ़ैब्रिक रेसिपी को सूत लेयर्स, रेट्स, पिक्स, चौड़ाई और लागत मान्यताओं सहित सहेजता है। आ",
+        "ancestor": "क्वालिटी सेव करें + कॉस्टिंग बनाएंदोबारा उपयोग होने वाली फैब्रिक रेसिप"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "इस फ़ैब्रिक रेसिपी को सूत लेयर्स, रेट्स, पिक्स, चौड़ाई और लागत मान्यताओं सहित सहेजता है। आ",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "इस फ़ैब्रिक रेसिपी को सूत लेयर्स, रेट्स, पिक्स, चौड़ाई और लागत मान्यताओं सहित सहेजता है। आ",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "इस फ़ैब्रिक रेसिपी को सूत लेयर्स, रेट्स, पिक्स, चौड़ाई और लागत मान्यताओं सहित सहेजता है। आ",
+        "left": 36.25,
+        "right": 386.484375
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "इस फ़ैब्रिक रेसिपी को सूत लेयर्स, रेट्स, पिक्स, चौड़ाई और लागत मान्यताओं सहित सहेजता है। आ",
+        "ancestor": "क्वालिटी सेव करें + कॉस्टिंग बनाएंदोबारा उपयोग होने वाली फैब्रिक रेसिप"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "इस फ़ैब्रिक रेसिपी को सूत लेयर्स, रेट्स, पिक्स, चौड़ाई और लागत मान्यताओं सहित सहेजता है। आ",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "इस फ़ैब्रिक रेसिपी को सूत लेयर्स, रेट्स, पिक्स, चौड़ाई और लागत मान्यताओं सहित सहेजता है। आ",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "इस फ़ैब्रिक रेसिपी को सूत लेयर्स, रेट्स, पिक्स, चौड़ाई और लागत मान्यताओं सहित सहेजता है। आ",
+        "left": 36.25,
+        "right": 375.125
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "इस फ़ैब्रिक रेसिपी को सूत लेयर्स, रेट्स, पिक्स, चौड़ाई और लागत मान्यताओं सहित सहेजता है। आ",
+        "ancestor": "क्वालिटी सेव करें + कॉस्टिंग बनाएंदोबारा उपयोग होने वाली फैब्रिक रेसिप"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "इस फ़ैब्रिक रेसिपी को सूत लेयर्स, रेट्स, पिक्स, चौड़ाई और लागत मान्यताओं सहित सहेजता है। आ",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "इस फ़ैब्रिक रेसिपी को सूत लेयर्स, रेट्स, पिक्स, चौड़ाई और लागत मान्यताओं सहित सहेजता है। आ",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "दोबारा उपयोग होने वाली क्वालिटी और कॉस्टिंग v1 साथ में सेव होती है। बाद के कॉस्टिंग वर्जन ",
+        "left": 310.78125,
+        "right": 359.15625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "दोबारा उपयोग होने वाली क्वालिटी और कॉस्टिंग v1 साथ में सेव होती है। बाद के कॉस्टिंग वर्जन ",
+        "ancestor": "क्वालिटी सेव करें + कॉस्टिंग बनाएंदोबारा उपयोग होने वाली फैब्रिक रेसिप"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "दोबारा उपयोग होने वाली क्वालिटी और कॉस्टिंग v1 साथ में सेव होती है। बाद के कॉस्टिंग वर्जन ",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "दोबारा उपयोग होने वाली क्वालिटी और कॉस्टिंग v1 साथ में सेव होती है। बाद के कॉस्टिंग वर्जन ",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "दोबारा उपयोग होने वाली क्वालिटी और कॉस्टिंग v1 साथ में सेव होती है। बाद के कॉस्टिंग वर्जन ",
+        "left": 36.25,
+        "right": 403.03125
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "दोबारा उपयोग होने वाली क्वालिटी और कॉस्टिंग v1 साथ में सेव होती है। बाद के कॉस्टिंग वर्जन ",
+        "ancestor": "क्वालिटी सेव करें + कॉस्टिंग बनाएंदोबारा उपयोग होने वाली फैब्रिक रेसिप"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "दोबारा उपयोग होने वाली क्वालिटी और कॉस्टिंग v1 साथ में सेव होती है। बाद के कॉस्टिंग वर्जन ",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "दोबारा उपयोग होने वाली क्वालिटी और कॉस्टिंग v1 साथ में सेव होती है। बाद के कॉस्टिंग वर्जन ",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "दोबारा उपयोग होने वाली क्वालिटी और कॉस्टिंग v1 साथ में सेव होती है। बाद के कॉस्टिंग वर्जन ",
+        "left": 36.25,
+        "right": 393.734375
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "दोबारा उपयोग होने वाली क्वालिटी और कॉस्टिंग v1 साथ में सेव होती है। बाद के कॉस्टिंग वर्जन ",
+        "ancestor": "क्वालिटी सेव करें + कॉस्टिंग बनाएंदोबारा उपयोग होने वाली फैब्रिक रेसिप"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "दोबारा उपयोग होने वाली क्वालिटी और कॉस्टिंग v1 साथ में सेव होती है। बाद के कॉस्टिंग वर्जन ",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "दोबारा उपयोग होने वाली क्वालिटी और कॉस्टिंग v1 साथ में सेव होती है। बाद के कॉस्टिंग वर्जन ",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Warp Warp 1 ₹120.00/kg · Weft Weft 1 ₹112.00/kg",
+        "left": 165.0625,
+        "right": 409.984375
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Warp Warp 1 ₹120.00/kg · Weft Weft 1 ₹112.00/kg",
+        "ancestor": "क्वालिटी सेव करें + कॉस्टिंग बनाएंदोबारा उपयोग होने वाली फैब्रिक रेसिप"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Warp Warp 1 ₹120.00/kg · Weft Weft 1 ₹112.00/kg",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Warp Warp 1 ₹120.00/kg · Weft Weft 1 ₹112.00/kg",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "0% · कोई नहीं कीमत impact",
+        "left": 115.4375,
+        "right": 357.0625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "0% · कोई नहीं कीमत impact",
+        "ancestor": "क्वालिटी सेव करें + कॉस्टिंग बनाएंदोबारा उपयोग होने वाली फैब्रिक रेसिप"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "0% · कोई नहीं कीमत impact",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "0% · कोई नहीं कीमत impact",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "₹0.00/m · कोई नहीं कीमत impact",
+        "left": 114.5,
+        "right": 405.90625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "₹0.00/m · कोई नहीं कीमत impact",
+        "ancestor": "क्वालिटी सेव करें + कॉस्टिंग बनाएंदोबारा उपयोग होने वाली फैब्रिक रेसिप"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "₹0.00/m · कोई नहीं कीमत impact",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "₹0.00/m · कोई नहीं कीमत impact",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "नहीं सेट करें · per-मीटर costing केवल",
+        "left": 86.5,
+        "right": 400.65625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "नहीं सेट करें · per-मीटर costing केवल",
+        "ancestor": "क्वालिटी सेव करें + कॉस्टिंग बनाएंदोबारा उपयोग होने वाली फैब्रिक रेसिप"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "नहीं सेट करें · per-मीटर costing केवल",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "नहीं सेट करें · per-मीटर costing केवल",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "· off: Winding, प्रोसेसिंग, फिनिशिंग, कमीशन, परिवहन",
+        "left": 277.859375,
+        "right": 413.28125
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "· off: Winding, प्रोसेसिंग, फिनिशिंग, कमीशन, परिवहन",
+        "ancestor": "क्वालिटी सेव करें + कॉस्टिंग बनाएंदोबारा उपयोग होने वाली फैब्रिक रेसिप"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "· off: Winding, प्रोसेसिंग, फिनिशिंग, कमीशन, परिवहन",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "· off: Winding, प्रोसेसिंग, फिनिशिंग, कमीशन, परिवहन",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "· off: Winding, प्रोसेसिंग, फिनिशिंग, कमीशन, परिवहन",
+        "left": 38,
+        "right": 334.78125
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "· off: Winding, प्रोसेसिंग, फिनिशिंग, कमीशन, परिवहन",
+        "ancestor": "क्वालिटी सेव करें + कॉस्टिंग बनाएंदोबारा उपयोग होने वाली फैब्रिक रेसिप"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "· off: Winding, प्रोसेसिंग, फिनिशिंग, कमीशन, परिवहन",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "· off: Winding, प्रोसेसिंग, फिनिशिंग, कमीशन, परिवहन",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "पूरा costing reuse: reopening यह सेव हुआ क्वालिटी restores का रेसिपी, these मौजूदा यार्न र",
+        "left": 47.75,
+        "right": 384.375
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "पूरा costing reuse: reopening यह सेव हुआ क्वालिटी restores का रेसिपी, these मौजूदा यार्न र",
+        "ancestor": "क्वालिटी सेव करें + कॉस्टिंग बनाएंदोबारा उपयोग होने वाली फैब्रिक रेसिप"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "पूरा costing reuse: reopening यह सेव हुआ क्वालिटी restores का रेसिपी, these मौजूदा यार्न र",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "पूरा costing reuse: reopening यह सेव हुआ क्वालिटी restores का रेसिपी, these मौजूदा यार्न र",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "पूरा costing reuse: reopening यह सेव हुआ क्वालिटी restores का रेसिपी, these मौजूदा यार्न र",
+        "left": 47.75,
+        "right": 387.90625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "पूरा costing reuse: reopening यह सेव हुआ क्वालिटी restores का रेसिपी, these मौजूदा यार्न र",
+        "ancestor": "क्वालिटी सेव करें + कॉस्टिंग बनाएंदोबारा उपयोग होने वाली फैब्रिक रेसिप"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "पूरा costing reuse: reopening यह सेव हुआ क्वालिटी restores का रेसिपी, these मौजूदा यार्न र",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "पूरा costing reuse: reopening यह सेव हुआ क्वालिटी restores का रेसिपी, these मौजूदा यार्न र",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "पूरा costing reuse: reopening यह सेव हुआ क्वालिटी restores का रेसिपी, these मौजूदा यार्न र",
+        "left": 47.75,
+        "right": 399.96875
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "पूरा costing reuse: reopening यह सेव हुआ क्वालिटी restores का रेसिपी, these मौजूदा यार्न र",
+        "ancestor": "क्वालिटी सेव करें + कॉस्टिंग बनाएंदोबारा उपयोग होने वाली फैब्रिक रेसिप"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "पूरा costing reuse: reopening यह सेव हुआ क्वालिटी restores का रेसिपी, these मौजूदा यार्न र",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "पूरा costing reuse: reopening यह सेव हुआ क्वालिटी restores का रेसिपी, these मौजूदा यार्न र",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "पूरा costing reuse: reopening यह सेव हुआ क्वालिटी restores का रेसिपी, these मौजूदा यार्न र",
+        "left": 47.75,
+        "right": 332.5
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "पूरा costing reuse: reopening यह सेव हुआ क्वालिटी restores का रेसिपी, these मौजूदा यार्न र",
+        "ancestor": "क्वालिटी सेव करें + कॉस्टिंग बनाएंदोबारा उपयोग होने वाली फैब्रिक रेसिप"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "पूरा costing reuse: reopening यह सेव हुआ क्वालिटी restores का रेसिपी, these मौजूदा यार्न र",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "पूरा costing reuse: reopening यह सेव हुआ क्वालिटी restores का रेसिपी, these मौजूदा यार्न र",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "पूरा costing reuse: reopening यह सेव हुआ क्वालिटी restores का रेसिपी, these मौजूदा यार्न र",
+        "ancestor": "क्वालिटी सेव करें + कॉस्टिंग बनाएंदोबारा उपयोग होने वाली फैब्रिक रेसिप"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "क्वालिटी सेव करें और कॉस्टिंग बनाएं",
+        "left": 61.5,
+        "right": 420
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "क्वालिटी सेव करें और कॉस्टिंग बनाएं",
+        "ancestor": "क्वालिटी सेव करें + कॉस्टिंग बनाएंदोबारा उपयोग होने वाली फैब्रिक रेसिप"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "क्वालिटी सेव करें और कॉस्टिंग बनाएं",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "क्वालिटी सेव करें और कॉस्टिंग बनाएं",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "अनुमान जाँच के लिए तैयार",
+          "दोबारा उपयोग होने वाली फैब्रिक रेसिपी और उसका पहला कॉस्टिंग स्नैपशॉट साथ में सेव करें। सेव"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "अनुमान जाँच के लिए तैयार",
+          "दोबारा उपयोग होने वाली फैब्रिक रेसिपी और उसका पहला कॉस्टिंग स्नैपशॉट साथ में सेव करें। सेव"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "कीमत और break-even हैं गणना किया गया से का मौजूदा इनपुट.",
+          "दोबारा उपयोग होने वाली फैब्रिक रेसिपी और उसका पहला कॉस्टिंग स्नैपशॉट साथ में सेव करें। सेव"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "कीमत और break-even हैं गणना किया गया से का मौजूदा इनपुट.",
+          "दोबारा उपयोग होने वाली फैब्रिक रेसिपी और उसका पहला कॉस्टिंग स्नैपशॉट साथ में सेव करें। सेव"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "कीमत और break-even हैं गणना किया गया से का मौजूदा इनपुट.",
+          "दोबारा उपयोग होने वाली फैब्रिक रेसिपी और उसका पहला कॉस्टिंग स्नैपशॉट साथ में सेव करें। सेव"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "कीमत और break-even हैं गणना किया गया से का मौजूदा इनपुट.",
+          "दोबारा उपयोग होने वाली फैब्रिक रेसिपी और उसका पहला कॉस्टिंग स्नैपशॉट साथ में सेव करें। सेव"
+        ]
+      },
+      {
+        "kind": "input-vertical-clip",
+        "field": "INPUT",
+        "required": 45.7142,
+        "available": 26
+      }
+    ]
+  },
+  {
+    "language": "hi",
+    "percent": 200,
+    "state": "new-quality",
+    "issues": []
+  },
+  {
+    "language": "hi",
+    "percent": 200,
+    "state": "rename-quality",
+    "issues": [
+      {
+        "kind": "input-vertical-clip",
+        "field": "INPUT",
+        "required": 45.7142,
+        "available": 26
+      }
+    ]
+  },
+  {
+    "language": "hi",
+    "percent": 200,
+    "state": "discard-draft",
+    "issues": []
+  },
+  {
+    "language": "gu",
+    "percent": 200,
+    "state": "version",
+    "issues": [
+      {
+        "kind": "control-viewport",
+        "label": "રદ કરો",
+        "left": 23,
+        "right": 1639.34375
+      },
+      {
+        "kind": "control-viewport",
+        "label": "ફક્ત આ વર્ઝન સેવ કરો",
+        "left": 23,
+        "right": 1639.34375
+      },
+      {
+        "kind": "control-viewport",
+        "label": "વર્ઝન સેવ કરો અને આગળની કૉસ્ટિંગ માટે Synthetic ક્વોલિટી એક — Surat pl",
+        "left": 23,
+        "right": 1639.34375
+      },
+      {
+        "kind": "text-viewport",
+        "label": "નવું કોસ્ટિંગ વર્ઝન સેવ કરો",
+        "left": 47.5,
+        "right": 361.6875
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "નવું કોસ્ટિંગ વર્ઝન સેવ કરો",
+        "ancestor": "નવું કોસ્ટિંગ વર્ઝન સેવ કરોતમે સેવ થયું ક્વોલિટી Synthetic ક્વોલિટી એક"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "નવું કોસ્ટિંગ વર્ઝન સેવ કરો",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "નવું કોસ્ટિંગ વર્ઝન સેવ કરો",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "તમે સેવ થયું ક્વોલિટી Synthetic ક્વોલિટી એક — Surat plain વણાટ સાથે એક long identifiable ફ",
+        "left": 23,
+        "right": 1258.75
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "તમે સેવ થયું ક્વોલિટી Synthetic ક્વોલિટી એક — Surat plain વણાટ સાથે એક long identifiable ફ",
+        "ancestor": "નવું કોસ્ટિંગ વર્ઝન સેવ કરોતમે સેવ થયું ક્વોલિટી Synthetic ક્વોલિટી એક"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "તમે સેવ થયું ક્વોલિટી Synthetic ક્વોલિટી એક — Surat plain વણાટ સાથે એક long identifiable ફ",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "તમે સેવ થયું ક્વોલિટી Synthetic ક્વોલિટી એક — Surat plain વણાટ સાથે એક long identifiable ફ",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "કોસ્ટિંગ સેવ કરવાથી નવો સ્નેપશોટ બનશે. નીચે પસંદ ન કરો ત્યાં સુધી સેવ થયું ક્વોલિટી બદલાશે",
+        "left": 1264.1875,
+        "right": 1584.1875
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "કોસ્ટિંગ સેવ કરવાથી નવો સ્નેપશોટ બનશે. નીચે પસંદ ન કરો ત્યાં સુધી સેવ થયું ક્વોલિટી બદલાશે",
+        "ancestor": "નવું કોસ્ટિંગ વર્ઝન સેવ કરોતમે સેવ થયું ક્વોલિટી Synthetic ક્વોલિટી એક"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "કોસ્ટિંગ સેવ કરવાથી નવો સ્નેપશોટ બનશે. નીચે પસંદ ન કરો ત્યાં સુધી સેવ થયું ક્વોલિટી બદલાશે",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "કોસ્ટિંગ સેવ કરવાથી નવો સ્નેપશોટ બનશે. નીચે પસંદ ન કરો ત્યાં સુધી સેવ થયું ક્વોલિટી બદલાશે",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "કોસ્ટિંગ સેવ કરવાથી નવો સ્નેપશોટ બનશે. નીચે પસંદ ન કરો ત્યાં સુધી સેવ થયું ક્વોલિટી બદલાશે",
+        "left": 23,
+        "right": 608.34375
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "કોસ્ટિંગ સેવ કરવાથી નવો સ્નેપશોટ બનશે. નીચે પસંદ ન કરો ત્યાં સુધી સેવ થયું ક્વોલિટી બદલાશે",
+        "ancestor": "નવું કોસ્ટિંગ વર્ઝન સેવ કરોતમે સેવ થયું ક્વોલિટી Synthetic ક્વોલિટી એક"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "કોસ્ટિંગ સેવ કરવાથી નવો સ્નેપશોટ બનશે. નીચે પસંદ ન કરો ત્યાં સુધી સેવ થયું ક્વોલિટી બદલાશે",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "કોસ્ટિંગ સેવ કરવાથી નવો સ્નેપશોટ બનશે. નીચે પસંદ ન કરો ત્યાં સુધી સેવ થયું ક્વોલિટી બદલાશે",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "આથી આગલું કોસ્ટિંગ વર્ઝન બનશે",
+        "left": 38,
+        "right": 358.78125
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "આથી આગલું કોસ્ટિંગ વર્ઝન બનશે",
+        "ancestor": "નવું કોસ્ટિંગ વર્ઝન સેવ કરોતમે સેવ થયું ક્વોલિટી Synthetic ક્વોલિટી એક"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "આથી આગલું કોસ્ટિંગ વર્ઝન બનશે",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "આથી આગલું કોસ્ટિંગ વર્ઝન બનશે",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "સેવ થયું ક્વોલિટી માં ફેરફારથી આ ક્વોલિટી વાપરતા ભવિષ્યના અંદાજ બદલાશે. જૂના કોસ્ટિંગ સ્ને",
+        "left": 38,
+        "right": 1033.390625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "સેવ થયું ક્વોલિટી માં ફેરફારથી આ ક્વોલિટી વાપરતા ભવિષ્યના અંદાજ બદલાશે. જૂના કોસ્ટિંગ સ્ને",
+        "ancestor": "નવું કોસ્ટિંગ વર્ઝન સેવ કરોતમે સેવ થયું ક્વોલિટી Synthetic ક્વોલિટી એક"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "સેવ થયું ક્વોલિટી માં ફેરફારથી આ ક્વોલિટી વાપરતા ભવિષ્યના અંદાજ બદલાશે. જૂના કોસ્ટિંગ સ્ને",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "સેવ થયું ક્વોલિટી માં ફેરફારથી આ ક્વોલિટી વાપરતા ભવિષ્યના અંદાજ બદલાશે. જૂના કોસ્ટિંગ સ્ને",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Warp Warp 75D ₹177.00/kg · Weft Weft 75D ₹112.00/kg",
+        "left": 182.109375,
+        "right": 710.328125
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Warp Warp 75D ₹177.00/kg · Weft Weft 75D ₹112.00/kg",
+        "ancestor": "નવું કોસ્ટિંગ વર્ઝન સેવ કરોતમે સેવ થયું ક્વોલિટી Synthetic ક્વોલિટી એક"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Warp Warp 75D ₹177.00/kg · Weft Weft 75D ₹112.00/kg",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Warp Warp 75D ₹177.00/kg · Weft Weft 75D ₹112.00/kg",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "/મીટર",
+        "left": 281.171875,
+        "right": 332.140625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/મીટર",
+        "ancestor": "નવું કોસ્ટિંગ વર્ઝન સેવ કરોતમે સેવ થયું ક્વોલિટી Synthetic ક્વોલિટી એક"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/મીટર",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/મીટર",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "0% · કોઈ નહીં કિંમત impact",
+        "left": 113.015625,
+        "right": 355.328125
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "0% · કોઈ નહીં કિંમત impact",
+        "ancestor": "નવું કોસ્ટિંગ વર્ઝન સેવ કરોતમે સેવ થયું ક્વોલિટી Synthetic ક્વોલિટી એક"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "0% · કોઈ નહીં કિંમત impact",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "0% · કોઈ નહીં કિંમત impact",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "₹0.00/m · કોઈ નહીં કિંમત impact",
+        "left": 121.484375,
+        "right": 413.578125
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "₹0.00/m · કોઈ નહીં કિંમત impact",
+        "ancestor": "નવું કોસ્ટિંગ વર્ઝન સેવ કરોતમે સેવ થયું ક્વોલિટી Synthetic ક્વોલિટી એક"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "₹0.00/m · કોઈ નહીં કિંમત impact",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "₹0.00/m · કોઈ નહીં કિંમત impact",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "નહીં સેટ કરો · per-મીટર costing ફક્ત",
+        "left": 92.5625,
+        "right": 419.015625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "નહીં સેટ કરો · per-મીટર costing ફક્ત",
+        "ancestor": "નવું કોસ્ટિંગ વર્ઝન સેવ કરોતમે સેવ થયું ક્વોલિટી Synthetic ક્વોલિટી એક"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "નહીં સેટ કરો · per-મીટર costing ફક્ત",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "નહીં સેટ કરો · per-મીટર costing ફક્ત",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "· off: Winding, પ્રોસેસિંગ, ફિનિશિંગ, કમિશન, પરિવહન",
+        "left": 308.453125,
+        "right": 771.5625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "· off: Winding, પ્રોસેસિંગ, ફિનિશિંગ, કમિશન, પરિવહન",
+        "ancestor": "નવું કોસ્ટિંગ વર્ઝન સેવ કરોતમે સેવ થયું ક્વોલિટી Synthetic ક્વોલિટી એક"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "· off: Winding, પ્રોસેસિંગ, ફિનિશિંગ, કમિશન, પરિવહન",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "· off: Winding, પ્રોસેસિંગ, ફિનિશિંગ, કમિશન, પરિવહન",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "રદ કરો",
+        "left": 794.0625,
+        "right": 868.265625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "રદ કરો",
+        "ancestor": "નવું કોસ્ટિંગ વર્ઝન સેવ કરોતમે સેવ થયું ક્વોલિટી Synthetic ક્વોલિટી એક"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "રદ કરો",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "રદ કરો",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "ફક્ત આ વર્ઝન સેવ કરો",
+        "left": 708.765625,
+        "right": 953.5625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "ફક્ત આ વર્ઝન સેવ કરો",
+        "ancestor": "નવું કોસ્ટિંગ વર્ઝન સેવ કરોતમે સેવ થયું ક્વોલિટી Synthetic ક્વોલિટી એક"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "ફક્ત આ વર્ઝન સેવ કરો",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "ફક્ત આ વર્ઝન સેવ કરો",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "વર્ઝન સેવ કરો અને આગળની કૉસ્ટિંગ માટે Synthetic ક્વોલિટી એક — Surat plain વણાટ સાથે એક lon",
+        "left": 37,
+        "right": 1625.34375
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "વર્ઝન સેવ કરો અને આગળની કૉસ્ટિંગ માટે Synthetic ક્વોલિટી એક — Surat plain વણાટ સાથે એક lon",
+        "ancestor": "નવું કોસ્ટિંગ વર્ઝન સેવ કરોતમે સેવ થયું ક્વોલિટી Synthetic ક્વોલિટી એક"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "વર્ઝન સેવ કરો અને આગળની કૉસ્ટિંગ માટે Synthetic ક્વોલિટી એક — Surat plain વણાટ સાથે એક lon",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "વર્ઝન સેવ કરો અને આગળની કૉસ્ટિંગ માટે Synthetic ક્વોલિટી એક — Surat plain વણાટ સાથે એક lon",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "ક્વોલિટી લાગુ: Synthetic ક્વોલિટી એક — Surat plain વણાટ સાથે એક long identifiable ફેબ્રિક ",
+          "સેવ કરો સમીક્ષા"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "ક્વોલિટી લાગુ: Synthetic ક્વોલિટી એક — Surat plain વણાટ સાથે એક long identifiable ફેબ્રિક ",
+          "સામેલ માં આ costing સ્નૅપશૉટ:"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "ક્વોલિટી લાગુ: Synthetic ક્વોલિટી એક — Surat plain વણાટ સાથે એક long identifiable ફેબ્રિક ",
+          "યાર્ન ભાવ basis:"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "ક્વોલિટી લાગુ: Synthetic ક્વોલિટી એક — Surat plain વણાટ સાથે એક long identifiable ફેબ્રિક ",
+          "Warp Warp 75D ₹177.00/kg · Weft Weft 75D ₹112.00/kg"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "ક્વોલિટી લાગુ: Synthetic ક્વોલિટી એક — Surat plain વણાટ સાથે એક long identifiable ફેબ્રિક ",
+          "ઓવરહેડ:"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "ક્વોલિટી લાગુ: Synthetic ક્વોલિટી એક — Surat plain વણાટ સાથે એક long identifiable ફેબ્રિક ",
+          "સીધો ભાવ"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "ક્વોલિટી લાગુ: Synthetic ક્વોલિટી એક — Surat plain વણાટ સાથે એક long identifiable ફેબ્રિક ",
+          "·"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "ક્વોલિટી લાગુ: Synthetic ક્વોલિટી એક — Surat plain વણાટ સાથે એક long identifiable ફેબ્રિક ",
+          "₹3.00"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "ક્વોલિટી લાગુ: Synthetic ક્વોલિટી એક — Surat plain વણાટ સાથે એક long identifiable ફેબ્રિક ",
+          "કમિશન:"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "ક્વોલિટી લાગુ: Synthetic ક્વોલિટી એક — Surat plain વણાટ સાથે એક long identifiable ફેબ્રિક ",
+          "0% · કોઈ નહીં કિંમત impact"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "ક્વોલિટી લાગુ: Synthetic ક્વોલિટી એક — Surat plain વણાટ સાથે એક long identifiable ફેબ્રિક ",
+          "પરિવહન:"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "ક્વોલિટી લાગુ: Synthetic ક્વોલિટી એક — Surat plain વણાટ સાથે એક long identifiable ફેબ્રિક ",
+          "₹0.00/m · કોઈ નહીં કિંમત impact"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "ક્વોલિટી લાગુ: Synthetic ક્વોલિટી એક — Surat plain વણાટ સાથે એક long identifiable ફેબ્રિક ",
+          "લક્ષ્ય margin:"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "ક્વોલિટી લાગુ: Synthetic ક્વોલિટી એક — Surat plain વણાટ સાથે એક long identifiable ફેબ્રિક ",
+          "15%"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "અંદાજ તપાસ માટે તૈયાર",
+          "આથી આગલું કોસ્ટિંગ વર્ઝન બનશે"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "અંદાજ તપાસ માટે તૈયાર",
+          "સેવ થયું ક્વોલિટી માં ફેરફારથી આ ક્વોલિટી વાપરતા ભવિષ્યના અંદાજ બદલાશે. જૂના કોસ્ટિંગ સ્ને"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "કિંમત અને break-even છે ગણતરી કરેલ થી આ હાલનું ઇનપુટ.",
+          "સેવ થયું ક્વોલિટી માં ફેરફારથી આ ક્વોલિટી વાપરતા ભવિષ્યના અંદાજ બદલાશે. જૂના કોસ્ટિંગ સ્ને"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "કિંમત અને break-even છે ગણતરી કરેલ થી આ હાલનું ઇનપુટ.",
+          "સેવ કરો સમીક્ષા"
+        ]
+      }
+    ]
+  },
+  {
+    "language": "gu",
+    "percent": 200,
+    "state": "save-quality",
+    "issues": [
+      {
+        "kind": "control-viewport",
+        "label": "INPUT",
+        "left": 23,
+        "right": 458.5
+      },
+      {
+        "kind": "control-viewport",
+        "label": "રદ કરો",
+        "left": 23,
+        "right": 458.5
+      },
+      {
+        "kind": "control-viewport",
+        "label": "ક્વોલિટી સાચવો અને કોસ્ટિંગ બનાવો",
+        "left": 23,
+        "right": 458.5
+      },
+      {
+        "kind": "text-viewport",
+        "label": "ક્વોલિટી સાચવો + કોસ્ટિંગ બનાવો",
+        "left": 23,
+        "right": 338.203125
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "ક્વોલિટી સાચવો + કોસ્ટિંગ બનાવો",
+        "ancestor": "ક્વોલિટી સાચવો + કોસ્ટિંગ બનાવોફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "ક્વોલિટી સાચવો + કોસ્ટિંગ બનાવો",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "ક્વોલિટી સાચવો + કોસ્ટિંગ બનાવો",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "ફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપી અને તેનો પહેલો કોસ્ટિંગ સ્નૅપશૉટ સાથે સાચવો. સેવ ",
+        "left": 23,
+        "right": 356.875
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "ફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપી અને તેનો પહેલો કોસ્ટિંગ સ્નૅપશૉટ સાથે સાચવો. સેવ ",
+        "ancestor": "ક્વોલિટી સાચવો + કોસ્ટિંગ બનાવોફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "ફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપી અને તેનો પહેલો કોસ્ટિંગ સ્નૅપશૉટ સાથે સાચવો. સેવ ",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "ફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપી અને તેનો પહેલો કોસ્ટિંગ સ્નૅપશૉટ સાથે સાચવો. સેવ ",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "ફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપી અને તેનો પહેલો કોસ્ટિંગ સ્નૅપશૉટ સાથે સાચવો. સેવ ",
+        "left": 23,
+        "right": 391.765625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "ફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપી અને તેનો પહેલો કોસ્ટિંગ સ્નૅપશૉટ સાથે સાચવો. સેવ ",
+        "ancestor": "ક્વોલિટી સાચવો + કોસ્ટિંગ બનાવોફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "ફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપી અને તેનો પહેલો કોસ્ટિંગ સ્નૅપશૉટ સાથે સાચવો. સેવ ",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "ફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપી અને તેનો પહેલો કોસ્ટિંગ સ્નૅપશૉટ સાથે સાચવો. સેવ ",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "ફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપી અને તેનો પહેલો કોસ્ટિંગ સ્નૅપશૉટ સાથે સાચવો. સેવ ",
+        "left": 23,
+        "right": 375.46875
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "ફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપી અને તેનો પહેલો કોસ્ટિંગ સ્નૅપશૉટ સાથે સાચવો. સેવ ",
+        "ancestor": "ક્વોલિટી સાચવો + કોસ્ટિંગ બનાવોફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "ફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપી અને તેનો પહેલો કોસ્ટિંગ સ્નૅપશૉટ સાથે સાચવો. સેવ ",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "ફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપી અને તેનો પહેલો કોસ્ટિંગ સ્નૅપશૉટ સાથે સાચવો. સેવ ",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "ફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપી અને તેનો પહેલો કોસ્ટિંગ સ્નૅપશૉટ સાથે સાચવો. સેવ ",
+        "left": 23,
+        "right": 409.6875
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "ફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપી અને તેનો પહેલો કોસ્ટિંગ સ્નૅપશૉટ સાથે સાચવો. સેવ ",
+        "ancestor": "ક્વોલિટી સાચવો + કોસ્ટિંગ બનાવોફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "ફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપી અને તેનો પહેલો કોસ્ટિંગ સ્નૅપશૉટ સાથે સાચવો. સેવ ",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "ફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપી અને તેનો પહેલો કોસ્ટિંગ સ્નૅપશૉટ સાથે સાચવો. સેવ ",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "ભરણ બ્લેન્ડ લેયર્સ સહિત વર્તમાન સૂત રેટ્સ.",
+        "left": 205.765625,
+        "right": 409.265625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "ભરણ બ્લેન્ડ લેયર્સ સહિત વર્તમાન સૂત રેટ્સ.",
+        "ancestor": "ક્વોલિટી સાચવો + કોસ્ટિંગ બનાવોફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "ભરણ બ્લેન્ડ લેયર્સ સહિત વર્તમાન સૂત રેટ્સ.",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "ભરણ બ્લેન્ડ લેયર્સ સહિત વર્તમાન સૂત રેટ્સ.",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "આ ફેબ્રિક રેસિપીને યાર્ન લેયર, રેટ્સ, પિક્સ, પહોળાઈ અને ગણતરીની ધારણાઓ સાથે સેવ કરે છે. તમ",
+        "left": 36.25,
+        "right": 383.8125
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "આ ફેબ્રિક રેસિપીને યાર્ન લેયર, રેટ્સ, પિક્સ, પહોળાઈ અને ગણતરીની ધારણાઓ સાથે સેવ કરે છે. તમ",
+        "ancestor": "ક્વોલિટી સાચવો + કોસ્ટિંગ બનાવોફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "આ ફેબ્રિક રેસિપીને યાર્ન લેયર, રેટ્સ, પિક્સ, પહોળાઈ અને ગણતરીની ધારણાઓ સાથે સેવ કરે છે. તમ",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "આ ફેબ્રિક રેસિપીને યાર્ન લેયર, રેટ્સ, પિક્સ, પહોળાઈ અને ગણતરીની ધારણાઓ સાથે સેવ કરે છે. તમ",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "આ ફેબ્રિક રેસિપીને યાર્ન લેયર, રેટ્સ, પિક્સ, પહોળાઈ અને ગણતરીની ધારણાઓ સાથે સેવ કરે છે. તમ",
+        "left": 36.25,
+        "right": 420.203125
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "આ ફેબ્રિક રેસિપીને યાર્ન લેયર, રેટ્સ, પિક્સ, પહોળાઈ અને ગણતરીની ધારણાઓ સાથે સેવ કરે છે. તમ",
+        "ancestor": "ક્વોલિટી સાચવો + કોસ્ટિંગ બનાવોફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "આ ફેબ્રિક રેસિપીને યાર્ન લેયર, રેટ્સ, પિક્સ, પહોળાઈ અને ગણતરીની ધારણાઓ સાથે સેવ કરે છે. તમ",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "આ ફેબ્રિક રેસિપીને યાર્ન લેયર, રેટ્સ, પિક્સ, પહોળાઈ અને ગણતરીની ધારણાઓ સાથે સેવ કરે છે. તમ",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "આ ફેબ્રિક રેસિપીને યાર્ન લેયર, રેટ્સ, પિક્સ, પહોળાઈ અને ગણતરીની ધારણાઓ સાથે સેવ કરે છે. તમ",
+        "left": 36.25,
+        "right": 391.578125
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "આ ફેબ્રિક રેસિપીને યાર્ન લેયર, રેટ્સ, પિક્સ, પહોળાઈ અને ગણતરીની ધારણાઓ સાથે સેવ કરે છે. તમ",
+        "ancestor": "ક્વોલિટી સાચવો + કોસ્ટિંગ બનાવોફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "આ ફેબ્રિક રેસિપીને યાર્ન લેયર, રેટ્સ, પિક્સ, પહોળાઈ અને ગણતરીની ધારણાઓ સાથે સેવ કરે છે. તમ",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "આ ફેબ્રિક રેસિપીને યાર્ન લેયર, રેટ્સ, પિક્સ, પહોળાઈ અને ગણતરીની ધારણાઓ સાથે સેવ કરે છે. તમ",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "આ ફેબ્રિક રેસિપીને યાર્ન લેયર, રેટ્સ, પિક્સ, પહોળાઈ અને ગણતરીની ધારણાઓ સાથે સેવ કરે છે. તમ",
+        "left": 36.25,
+        "right": 384.34375
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "આ ફેબ્રિક રેસિપીને યાર્ન લેયર, રેટ્સ, પિક્સ, પહોળાઈ અને ગણતરીની ધારણાઓ સાથે સેવ કરે છે. તમ",
+        "ancestor": "ક્વોલિટી સાચવો + કોસ્ટિંગ બનાવોફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "આ ફેબ્રિક રેસિપીને યાર્ન લેયર, રેટ્સ, પિક્સ, પહોળાઈ અને ગણતરીની ધારણાઓ સાથે સેવ કરે છે. તમ",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "આ ફેબ્રિક રેસિપીને યાર્ન લેયર, રેટ્સ, પિક્સ, પહોળાઈ અને ગણતરીની ધારણાઓ સાથે સેવ કરે છે. તમ",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "ફરીથી ઉપયોગ કરી શકાય તેવી ક્વોલિટી અને કોસ્ટિંગ v1 સાથે સાચવાય છે. પછીનું કોસ્ટિંગ વર્ઝન બ",
+        "left": 389.171875,
+        "right": 439.203125
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "ફરીથી ઉપયોગ કરી શકાય તેવી ક્વોલિટી અને કોસ્ટિંગ v1 સાથે સાચવાય છે. પછીનું કોસ્ટિંગ વર્ઝન બ",
+        "ancestor": "ક્વોલિટી સાચવો + કોસ્ટિંગ બનાવોફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "ફરીથી ઉપયોગ કરી શકાય તેવી ક્વોલિટી અને કોસ્ટિંગ v1 સાથે સાચવાય છે. પછીનું કોસ્ટિંગ વર્ઝન બ",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "ફરીથી ઉપયોગ કરી શકાય તેવી ક્વોલિટી અને કોસ્ટિંગ v1 સાથે સાચવાય છે. પછીનું કોસ્ટિંગ વર્ઝન બ",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "ફરીથી ઉપયોગ કરી શકાય તેવી ક્વોલિટી અને કોસ્ટિંગ v1 સાથે સાચવાય છે. પછીનું કોસ્ટિંગ વર્ઝન બ",
+        "left": 36.25,
+        "right": 430.921875
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "ફરીથી ઉપયોગ કરી શકાય તેવી ક્વોલિટી અને કોસ્ટિંગ v1 સાથે સાચવાય છે. પછીનું કોસ્ટિંગ વર્ઝન બ",
+        "ancestor": "ક્વોલિટી સાચવો + કોસ્ટિંગ બનાવોફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "ફરીથી ઉપયોગ કરી શકાય તેવી ક્વોલિટી અને કોસ્ટિંગ v1 સાથે સાચવાય છે. પછીનું કોસ્ટિંગ વર્ઝન બ",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "ફરીથી ઉપયોગ કરી શકાય તેવી ક્વોલિટી અને કોસ્ટિંગ v1 સાથે સાચવાય છે. પછીનું કોસ્ટિંગ વર્ઝન બ",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "ફરીથી ઉપયોગ કરી શકાય તેવી ક્વોલિટી અને કોસ્ટિંગ v1 સાથે સાચવાય છે. પછીનું કોસ્ટિંગ વર્ઝન બ",
+        "left": 36.25,
+        "right": 416.953125
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "ફરીથી ઉપયોગ કરી શકાય તેવી ક્વોલિટી અને કોસ્ટિંગ v1 સાથે સાચવાય છે. પછીનું કોસ્ટિંગ વર્ઝન બ",
+        "ancestor": "ક્વોલિટી સાચવો + કોસ્ટિંગ બનાવોફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "ફરીથી ઉપયોગ કરી શકાય તેવી ક્વોલિટી અને કોસ્ટિંગ v1 સાથે સાચવાય છે. પછીનું કોસ્ટિંગ વર્ઝન બ",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "ફરીથી ઉપયોગ કરી શકાય તેવી ક્વોલિટી અને કોસ્ટિંગ v1 સાથે સાચવાય છે. પછીનું કોસ્ટિંગ વર્ઝન બ",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "ફરીથી ઉપયોગ કરી શકાય તેવી ક્વોલિટી અને કોસ્ટિંગ v1 સાથે સાચવાય છે. પછીનું કોસ્ટિંગ વર્ઝન બ",
+        "left": 36.25,
+        "right": 339.9375
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "ફરીથી ઉપયોગ કરી શકાય તેવી ક્વોલિટી અને કોસ્ટિંગ v1 સાથે સાચવાય છે. પછીનું કોસ્ટિંગ વર્ઝન બ",
+        "ancestor": "ક્વોલિટી સાચવો + કોસ્ટિંગ બનાવોફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "ફરીથી ઉપયોગ કરી શકાય તેવી ક્વોલિટી અને કોસ્ટિંગ v1 સાથે સાચવાય છે. પછીનું કોસ્ટિંગ વર્ઝન બ",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "ફરીથી ઉપયોગ કરી શકાય તેવી ક્વોલિટી અને કોસ્ટિંગ v1 સાથે સાચવાય છે. પછીનું કોસ્ટિંગ વર્ઝન બ",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Warp Warp 1 ₹120.00/kg · Weft Weft 1 ₹112.00/kg",
+        "left": 185.609375,
+        "right": 430.53125
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Warp Warp 1 ₹120.00/kg · Weft Weft 1 ₹112.00/kg",
+        "ancestor": "ક્વોલિટી સાચવો + કોસ્ટિંગ બનાવોફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Warp Warp 1 ₹120.00/kg · Weft Weft 1 ₹112.00/kg",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Warp Warp 1 ₹120.00/kg · Weft Weft 1 ₹112.00/kg",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "/મીટર",
+        "left": 284.671875,
+        "right": 335.640625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/મીટર",
+        "ancestor": "ક્વોલિટી સાચવો + કોસ્ટિંગ બનાવોફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/મીટર",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/મીટર",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "0% · કોઈ નહીં કિંમત impact",
+        "left": 116.515625,
+        "right": 358.828125
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "0% · કોઈ નહીં કિંમત impact",
+        "ancestor": "ક્વોલિટી સાચવો + કોસ્ટિંગ બનાવોફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "0% · કોઈ નહીં કિંમત impact",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "0% · કોઈ નહીં કિંમત impact",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "₹0.00/m · કોઈ નહીં કિંમત impact",
+        "left": 124.984375,
+        "right": 417.078125
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "₹0.00/m · કોઈ નહીં કિંમત impact",
+        "ancestor": "ક્વોલિટી સાચવો + કોસ્ટિંગ બનાવોફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "₹0.00/m · કોઈ નહીં કિંમત impact",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "₹0.00/m · કોઈ નહીં કિંમત impact",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "નહીં સેટ કરો · per-મીટર costing ફક્ત",
+        "left": 96.0625,
+        "right": 422.515625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "નહીં સેટ કરો · per-મીટર costing ફક્ત",
+        "ancestor": "ક્વોલિટી સાચવો + કોસ્ટિંગ બનાવોફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "નહીં સેટ કરો · per-મીટર costing ફક્ત",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "નહીં સેટ કરો · per-મીટર costing ફક્ત",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "· off: Winding, પ્રોસેસિંગ, ફિનિશિંગ, કમિશન, પરિવહન",
+        "left": 311.953125,
+        "right": 358.78125
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "· off: Winding, પ્રોસેસિંગ, ફિનિશિંગ, કમિશન, પરિવહન",
+        "ancestor": "ક્વોલિટી સાચવો + કોસ્ટિંગ બનાવોફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "· off: Winding, પ્રોસેસિંગ, ફિનિશિંગ, કમિશન, પરિવહન",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "· off: Winding, પ્રોસેસિંગ, ફિનિશિંગ, કમિશન, પરિવહન",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "· off: Winding, પ્રોસેસિંગ, ફિનિશિંગ, કમિશન, પરિવહન",
+        "left": 38,
+        "right": 370
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "· off: Winding, પ્રોસેસિંગ, ફિનિશિંગ, કમિશન, પરિવહન",
+        "ancestor": "ક્વોલિટી સાચવો + કોસ્ટિંગ બનાવોફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "· off: Winding, પ્રોસેસિંગ, ફિનિશિંગ, કમિશન, પરિવહન",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "· off: Winding, પ્રોસેસિંગ, ફિનિશિંગ, કમિશન, પરિવહન",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "પૂર્ણ costing reuse: reopening આ સેવ થયું ક્વોલિટી restores આ રેસિપી, these હાલનું યાર્ન ભ",
+        "left": 47.75,
+        "right": 428.296875
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "પૂર્ણ costing reuse: reopening આ સેવ થયું ક્વોલિટી restores આ રેસિપી, these હાલનું યાર્ન ભ",
+        "ancestor": "ક્વોલિટી સાચવો + કોસ્ટિંગ બનાવોફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "પૂર્ણ costing reuse: reopening આ સેવ થયું ક્વોલિટી restores આ રેસિપી, these હાલનું યાર્ન ભ",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "પૂર્ણ costing reuse: reopening આ સેવ થયું ક્વોલિટી restores આ રેસિપી, these હાલનું યાર્ન ભ",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "પૂર્ણ costing reuse: reopening આ સેવ થયું ક્વોલિટી restores આ રેસિપી, these હાલનું યાર્ન ભ",
+        "left": 47.75,
+        "right": 414.46875
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "પૂર્ણ costing reuse: reopening આ સેવ થયું ક્વોલિટી restores આ રેસિપી, these હાલનું યાર્ન ભ",
+        "ancestor": "ક્વોલિટી સાચવો + કોસ્ટિંગ બનાવોફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "પૂર્ણ costing reuse: reopening આ સેવ થયું ક્વોલિટી restores આ રેસિપી, these હાલનું યાર્ન ભ",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "પૂર્ણ costing reuse: reopening આ સેવ થયું ક્વોલિટી restores આ રેસિપી, these હાલનું યાર્ન ભ",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "પૂર્ણ costing reuse: reopening આ સેવ થયું ક્વોલિટી restores આ રેસિપી, these હાલનું યાર્ન ભ",
+        "left": 47.75,
+        "right": 380.203125
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "પૂર્ણ costing reuse: reopening આ સેવ થયું ક્વોલિટી restores આ રેસિપી, these હાલનું યાર્ન ભ",
+        "ancestor": "ક્વોલિટી સાચવો + કોસ્ટિંગ બનાવોફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "પૂર્ણ costing reuse: reopening આ સેવ થયું ક્વોલિટી restores આ રેસિપી, these હાલનું યાર્ન ભ",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "પૂર્ણ costing reuse: reopening આ સેવ થયું ક્વોલિટી restores આ રેસિપી, these હાલનું યાર્ન ભ",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "પૂર્ણ costing reuse: reopening આ સેવ થયું ક્વોલિટી restores આ રેસિપી, these હાલનું યાર્ન ભ",
+        "left": 47.75,
+        "right": 394.84375
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "પૂર્ણ costing reuse: reopening આ સેવ થયું ક્વોલિટી restores આ રેસિપી, these હાલનું યાર્ન ભ",
+        "ancestor": "ક્વોલિટી સાચવો + કોસ્ટિંગ બનાવોફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "પૂર્ણ costing reuse: reopening આ સેવ થયું ક્વોલિટી restores આ રેસિપી, these હાલનું યાર્ન ભ",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "પૂર્ણ costing reuse: reopening આ સેવ થયું ક્વોલિટી restores આ રેસિપી, these હાલનું યાર્ન ભ",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "પૂર્ણ costing reuse: reopening આ સેવ થયું ક્વોલિટી restores આ રેસિપી, these હાલનું યાર્ન ભ",
+        "left": 47.75,
+        "right": 328.96875
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "પૂર્ણ costing reuse: reopening આ સેવ થયું ક્વોલિટી restores આ રેસિપી, these હાલનું યાર્ન ભ",
+        "ancestor": "ક્વોલિટી સાચવો + કોસ્ટિંગ બનાવોફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "પૂર્ણ costing reuse: reopening આ સેવ થયું ક્વોલિટી restores આ રેસિપી, these હાલનું યાર્ન ભ",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "પૂર્ણ costing reuse: reopening આ સેવ થયું ક્વોલિટી restores આ રેસિપી, these હાલનું યાર્ન ભ",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "ક્વોલિટી સાચવો અને કોસ્ટિંગ બનાવો",
+        "left": 61.5,
+        "right": 448
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "ક્વોલિટી સાચવો અને કોસ્ટિંગ બનાવો",
+        "ancestor": "ક્વોલિટી સાચવો + કોસ્ટિંગ બનાવોફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "ક્વોલિટી સાચવો અને કોસ્ટિંગ બનાવો",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "ક્વોલિટી સાચવો અને કોસ્ટિંગ બનાવો",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "અંદાજ તપાસ માટે તૈયાર",
+          "ક્વોલિટી સાચવો + કોસ્ટિંગ બનાવો"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "અંદાજ તપાસ માટે તૈયાર",
+          "ક્વોલિટી સાચવો + કોસ્ટિંગ બનાવો"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "અંદાજ તપાસ માટે તૈયાર",
+          "ક્વોલિટી સાચવો + કોસ્ટિંગ બનાવો"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "કિંમત અને break-even છે ગણતરી કરેલ થી આ હાલનું ઇનપુટ.",
+          "ફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપી અને તેનો પહેલો કોસ્ટિંગ સ્નૅપશૉટ સાથે સાચવો. સેવ "
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "કિંમત અને break-even છે ગણતરી કરેલ થી આ હાલનું ઇનપુટ.",
+          "ફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપી અને તેનો પહેલો કોસ્ટિંગ સ્નૅપશૉટ સાથે સાચવો. સેવ "
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "કિંમત અને break-even છે ગણતરી કરેલ થી આ હાલનું ઇનપુટ.",
+          "ફરીથી ઉપયોગ કરી શકાય તેવી ફેબ્રિક રેસિપી અને તેનો પહેલો કોસ્ટિંગ સ્નૅપશૉટ સાથે સાચવો. સેવ "
+        ]
+      },
+      {
+        "kind": "input-vertical-clip",
+        "field": "INPUT",
+        "required": 45.7142,
+        "available": 26
+      }
+    ]
+  },
+  {
+    "language": "gu",
+    "percent": 200,
+    "state": "new-quality",
+    "issues": []
+  },
+  {
+    "language": "gu",
+    "percent": 200,
+    "state": "rename-quality",
+    "issues": [
+      {
+        "kind": "input-vertical-clip",
+        "field": "INPUT",
+        "required": 45.7142,
+        "available": 26
+      }
+    ]
+  },
+  {
+    "language": "gu",
+    "percent": 200,
+    "state": "discard-draft",
+    "issues": []
+  }
+]

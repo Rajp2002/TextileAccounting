@@ -1,0 +1,38 @@
+[
+  {
+    "view": "quotes",
+    "tier": "lite",
+    "width": 320,
+    "height": 568,
+    "file": "/Users/rajpatel/Projects/textile Saas/output/playwright/lite-mobile-records/before-prior/quotes-lite-320.png",
+    "heading": "Saved Costings",
+    "scrollWidth": 320
+  },
+  {
+    "view": "quotes",
+    "tier": "lite",
+    "width": 430,
+    "height": 932,
+    "file": "/Users/rajpatel/Projects/textile Saas/output/playwright/lite-mobile-records/before-prior/quotes-lite-430.png",
+    "heading": "Saved Costings",
+    "scrollWidth": 430
+  },
+  {
+    "view": "quotes",
+    "tier": "lite",
+    "width": 1440,
+    "height": 900,
+    "file": "/Users/rajpatel/Projects/textile Saas/output/playwright/lite-mobile-records/before-prior/quotes-lite-1440.png",
+    "heading": "Saved Costings",
+    "scrollWidth": 1440
+  },
+  {
+    "view": "quotes",
+    "tier": "base",
+    "width": 320,
+    "height": 568,
+    "file": "/Users/rajpatel/Projects/textile Saas/output/playwright/lite-mobile-records/before-prior/quotes-base-320.png",
+    "heading": "Saved Costings",
+    "scrollWidth": 320
+  }
+]

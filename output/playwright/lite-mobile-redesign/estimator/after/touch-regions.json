@@ -1,0 +1,62 @@
+[
+  {
+    "language": "en",
+    "state": "detailed-manual-paise",
+    "small": []
+  },
+  {
+    "language": "en",
+    "state": "result",
+    "small": []
+  },
+  {
+    "language": "en",
+    "state": "quality-picker",
+    "small": []
+  },
+  {
+    "language": "en",
+    "state": "quality-rates",
+    "small": []
+  },
+  {
+    "language": "hi",
+    "state": "detailed-manual-paise",
+    "small": []
+  },
+  {
+    "language": "hi",
+    "state": "result",
+    "small": []
+  },
+  {
+    "language": "hi",
+    "state": "quality-picker",
+    "small": []
+  },
+  {
+    "language": "hi",
+    "state": "quality-rates",
+    "small": []
+  },
+  {
+    "language": "gu",
+    "state": "detailed-manual-paise",
+    "small": []
+  },
+  {
+    "language": "gu",
+    "state": "result",
+    "small": []
+  },
+  {
+    "language": "gu",
+    "state": "quality-picker",
+    "small": []
+  },
+  {
+    "language": "gu",
+    "state": "quality-rates",
+    "small": []
+  }
+]

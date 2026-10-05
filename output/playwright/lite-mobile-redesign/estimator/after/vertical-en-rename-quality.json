@@ -1,0 +1,20 @@
+[
+  {
+    "label": "Cancel",
+    "inside": true,
+    "top": 492.265625,
+    "bottom": 542.671875
+  },
+  {
+    "label": " Save correction",
+    "inside": true,
+    "top": 434.859375,
+    "bottom": 485.265625
+  },
+  {
+    "label": "Close",
+    "inside": true,
+    "top": 24,
+    "bottom": 68
+  }
+]

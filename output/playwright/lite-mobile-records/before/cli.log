@@ -1,0 +1,20 @@
+### Result
+[{"view":"quotes","tier":"lite","width":320,"height":568,"file":"/Users/rajpatel/Projects/textile Saas/output/playwright/lite-mobile-records/before/quotes-lite-320.png","heading":"Saved Costings","scrollWidth":320},{"view":"quotes","tier":"lite","width":430,"height":932,"file":"/Users/rajpatel/Projects/textile Saas/output/playwright/lite-mobile-records/before/quotes-lite-430.png","heading":"Saved Costings","scrollWidth":430},{"view":"quotes","tier":"lite","width":1440,"height":900,"file":"/Users/rajpatel/Projects/textile Saas/output/playwright/lite-mobile-records/before/quotes-lite-1440.png","heading":"Saved Costings","scrollWidth":1440},{"view":"quotes","tier":"base","width":320,"height":568,"file":"/Users/rajpatel/Projects/textile Saas/output/playwright/lite-mobile-records/before/quotes-base-320.png","heading":"Saved Costings","scrollWidth":320},{"view":"quotes","tier":"none","width":320,"height":568,"file":"/Users/rajpatel/Projects/textile Saas/output/playwright/lite-mobile-records/before/quotes-none-320.png","heading":"Saved Costings","scrollWidth":320},{"view":"quotes","tier":"free","width":320,"height":568,"file":"/Users/rajpatel/Projects/textile Saas/output/playwright/lite-mobile-records/before/quotes-free-320.png","heading":"Saved Costings","scrollWidth":320},{"view":"rates","tier":"lite","width":320,"height":568,"file":"/Users/rajpatel/Projects/textile Saas/output/playwright/lite-mobile-records/before/rates-lite-320.png","heading":"Yarn Rate Book","scrollWidth":320},{"view":"rates","tier":"lite","width":430,"height":932,"file":"/Users/rajpatel/Projects/textile Saas/output/playwright/lite-mobile-records/before/rates-lite-430.png","heading":"Yarn Rate Book","scrollWidth":430},{"view":"rates","tier":"lite","width":1440,"height":900,"file":"/Users/rajpatel/Projects/textile Saas/output/playwright/lite-mobile-records/before/rates-lite-1440.png","heading":"Yarn Rate Book","scrollWidth":1440},{"view":"rates","tier":"base","width":320,"height":568,"file":"/Users/rajpatel/Projects/textile Saas/output/playwright/lite-mobile-records/before/rates-base-320.png","heading":"Yarn Rate Book","scrollWidth":320},{"view":"rates","tier":"none","width":320,"height":568,"file":"/Users/rajpatel/Projects/textile Saas/output/playwright/lite-mobile-records/before/rates-none-320.png","heading":"Yarn Rate Book","scrollWidth":320},{"view":"rates","tier":"free","width":320,"height":568,"file":"/Users/rajpatel/Projects/textile Saas/output/playwright/lite-mobile-records/before/rates-free-320.png","heading":"Yarn Rate Book","scrollWidth":320}]
+### Ran Playwright code
+```js
+await (async (page) => {
+const cases = [["quotes", "lite", 320, 568], ["quotes", "lite", 430, 932], ["quotes", "lite", 1440, 900], ["quotes", "base", 320, 568], ["quotes", "none", 320, 568], ["quotes", "free", 320, 568], ["rates", "lite", 320, 568], ["rates", "lite", 430, 932], ["rates", "lite", 1440, 900], ["rates", "base", 320, 568], ["rates", "none", 320, 568], ["rates", "free", 320, 568]]; const results = [];
+for (const [view,tier,width,height] of cases) {
+  const context=await page.context().browser().newContext({viewport:{width,height},hasTouch:width<768,isMobile:width<768});
+  try {
+    const p=await context.newPage();
+    await p.goto(`http://127.0.0.1:4195/owner/${view}?tier=${tier}`);
+    await p.locator('h1').waitFor(); await p.waitForTimeout(650);
+    const file=`/Users/rajpatel/Projects/textile Saas/output/playwright/lite-mobile-records/before/${view}-${tier}-${width}.png`;
+    await p.screenshot({path:file,fullPage:true});
+    results.push({view,tier,width,height,file,heading:await p.locator('h1').innerText(),scrollWidth:await p.evaluate(()=>document.documentElement.scrollWidth)});
+  } finally { await context.close(); }
+}
+return results;
+})(page);
+```

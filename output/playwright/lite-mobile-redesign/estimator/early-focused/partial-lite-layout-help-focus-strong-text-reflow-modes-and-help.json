@@ -1,0 +1,20 @@
+{
+  "evidenceType": "Automated Chromium emulation; actual Lite estimator/navigation/paid autosave over synthetic localhost actions. No installed PWA or remote data/provider verification.",
+  "base": "http://127.0.0.1:4197",
+  "stage": "early-focused",
+  "applicationSourceCommit": "working-tree-lite",
+  "createdAt": "2026-10-05T20:24:07.090Z",
+  "externalRequestsBlocked": [],
+  "results": [
+    {
+      "name": "lite-layout-help-focus",
+      "status": "failed",
+      "error": "Quality Close must return focus to its launcher",
+      "pageErrors": []
+    },
+    {
+      "name": "strong-text-reflow-modes-and-help",
+      "status": "passed"
+    }
+  ]
+}

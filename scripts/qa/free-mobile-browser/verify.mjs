@@ -6,7 +6,7 @@ import { chromium } from '@playwright/test'
 const base = process.argv.find(arg => arg.startsWith('--url='))?.slice(6) ?? 'http://127.0.0.1:4190'
 const stage = process.argv.find(arg => arg.startsWith('--stage='))?.slice(8) ?? 'after'
 const only = process.argv.find(arg => arg.startsWith('--only='))?.slice(7).split(',')
-const output = `output/playwright/free-mobile-redesign/${stage}`
+const output = process.argv.find(arg => arg.startsWith('--output='))?.slice(9) ?? `output/playwright/free-mobile-redesign/${stage}`
 await mkdir(output, { recursive: true })
 const browser = await chromium.launch({ headless: true })
 const results = []

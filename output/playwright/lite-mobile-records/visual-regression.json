@@ -1,0 +1,134 @@
+[
+  {
+    "case": "quotes-lite-1440.png",
+    "baselineSize": [
+      1440,
+      900
+    ],
+    "finalSize": [
+      1440,
+      900
+    ],
+    "identical": true,
+    "differenceBounds": null
+  },
+  {
+    "case": "quotes-base-320.png",
+    "baselineSize": [
+      320,
+      1198
+    ],
+    "finalSize": [
+      320,
+      1198
+    ],
+    "identical": true,
+    "differenceBounds": null
+  },
+  {
+    "case": "quotes-none-320.png",
+    "baselineSize": [
+      320,
+      1198
+    ],
+    "finalSize": [
+      320,
+      1198
+    ],
+    "identical": true,
+    "differenceBounds": null
+  },
+  {
+    "case": "quotes-free-320.png",
+    "baselineSize": [
+      320,
+      1198
+    ],
+    "finalSize": [
+      320,
+      1198
+    ],
+    "identical": true,
+    "differenceBounds": null
+  },
+  {
+    "case": "rates-lite-1440.png",
+    "baselineSize": [
+      1440,
+      900
+    ],
+    "finalSize": [
+      1440,
+      900
+    ],
+    "identical": true,
+    "differenceBounds": null
+  },
+  {
+    "case": "rates-base-320.png",
+    "baselineSize": [
+      320,
+      1386
+    ],
+    "finalSize": [
+      320,
+      1386
+    ],
+    "identical": true,
+    "differenceBounds": null
+  },
+  {
+    "case": "rates-none-320.png",
+    "baselineSize": [
+      320,
+      1386
+    ],
+    "finalSize": [
+      320,
+      1386
+    ],
+    "identical": true,
+    "differenceBounds": null
+  },
+  {
+    "case": "rates-free-320.png",
+    "baselineSize": [
+      320,
+      1386
+    ],
+    "finalSize": [
+      320,
+      1386
+    ],
+    "identical": true,
+    "differenceBounds": null
+  },
+  {
+    "case": "prior-quotes-lite-1440.png",
+    "baselineSize": [
+      1440,
+      961
+    ],
+    "finalSize": [
+      1440,
+      961
+    ],
+    "identical": true,
+    "differenceBounds": null,
+    "finalFile": "prior-desktop-reduced/desktop-prior-reduced.png",
+    "finalMotion": "prefers-reduced-motion:reduce; screenshot finite animations disabled"
+  },
+  {
+    "case": "prior-quotes-base-320.png",
+    "baselineSize": [
+      320,
+      1815
+    ],
+    "finalSize": [
+      320,
+      1815
+    ],
+    "identical": true,
+    "differenceBounds": null
+  }
+]

@@ -1,0 +1,12 @@
+### Result
+[{"view":"plans","tier":"lite","width":320,"overflow":false},{"view":"signup","tier":"lite","width":320,"overflow":false},{"view":"signup","tier":"base","width":320,"overflow":false},{"view":"plans","tier":"lite","width":430,"overflow":false},{"view":"signup","tier":"lite","width":430,"overflow":false},{"view":"signup","tier":"base","width":430,"overflow":false},{"view":"plans","tier":"lite","width":1440,"overflow":false},{"view":"signup","tier":"lite","width":1440,"overflow":false},{"view":"signup","tier":"base","width":1440,"overflow":false}]
+### Ran Playwright code
+```js
+await (async(page)=>{await page.addInitScript(()=>localStorage.setItem('weavly_language','en'));const results=[];for(const size of [{width:320,height:740},{width:430,height:932},{width:1440,height:1000}]){await page.setViewportSize(size);for(const view of ['plans','signup'])for(const tier of view==='plans'?['lite']:['lite','base']){await page.goto(`http://127.0.0.1:4188/${view}?kind=${view}&current=${tier}&plan=${tier}`);await page.getByRole('heading',{level:1}).waitFor();await page.waitForTimeout(250);await page.screenshot({path:`output/playwright/lite-mobile-supporting/entry-after/${view}-${tier}-${size.width}.png`,fullPage:true});results.push({view,tier,width:size.width,overflow:await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth)})}}return results}
+)(page);
+```
+### Page
+- Page URL: http://127.0.0.1:4188/signup?kind=signup&current=base&plan=base
+- Page Title: Synthetic Weavly Free entry components
+### Events
+- New console entries: .playwright-cli/console-2026-10-05T20-12-58-717Z.log#L30-L38

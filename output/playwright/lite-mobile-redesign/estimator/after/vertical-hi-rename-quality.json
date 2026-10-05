@@ -1,0 +1,20 @@
+[
+  {
+    "label": "रद्द करें",
+    "inside": true,
+    "top": 492.203125,
+    "bottom": 542.609375
+  },
+  {
+    "label": " सुधार सेव करें",
+    "inside": true,
+    "top": 434.796875,
+    "bottom": 485.203125
+  },
+  {
+    "label": "बंद करना",
+    "inside": true,
+    "top": 24,
+    "bottom": 68
+  }
+]

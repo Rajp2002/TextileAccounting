@@ -1,0 +1,158 @@
+[
+  {
+    "file": "plans-lite-1440.png",
+    "beforeSize": [
+      1440,
+      1139
+    ],
+    "afterSize": [
+      1440,
+      1139
+    ],
+    "changedPixels": 0,
+    "diffBounds": null,
+    "channelMaxDelta": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "file": "plans-lite-320.png",
+    "beforeSize": [
+      320,
+      2748
+    ],
+    "afterSize": [
+      320,
+      1738
+    ],
+    "changedPixels": null,
+    "diffBounds": null,
+    "channelMaxDelta": null
+  },
+  {
+    "file": "plans-lite-430.png",
+    "beforeSize": [
+      430,
+      2752
+    ],
+    "afterSize": [
+      430,
+      1701
+    ],
+    "changedPixels": null,
+    "diffBounds": null,
+    "channelMaxDelta": null
+  },
+  {
+    "file": "signup-base-1440.png",
+    "beforeSize": [
+      1440,
+      1010
+    ],
+    "afterSize": [
+      1440,
+      1010
+    ],
+    "changedPixels": 0,
+    "diffBounds": null,
+    "channelMaxDelta": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "file": "signup-base-320.png",
+    "beforeSize": [
+      320,
+      1136
+    ],
+    "afterSize": [
+      320,
+      1136
+    ],
+    "changedPixels": 13,
+    "diffBounds": [
+      263,
+      573,
+      272,
+      575
+    ],
+    "channelMaxDelta": [
+      41,
+      39,
+      35
+    ]
+  },
+  {
+    "file": "signup-base-430.png",
+    "beforeSize": [
+      430,
+      1106
+    ],
+    "afterSize": [
+      430,
+      1106
+    ],
+    "changedPixels": 10,
+    "diffBounds": [
+      366,
+      571,
+      375,
+      573
+    ],
+    "channelMaxDelta": [
+      19,
+      18,
+      16
+    ]
+  },
+  {
+    "file": "signup-lite-1440.png",
+    "beforeSize": [
+      1440,
+      1010
+    ],
+    "afterSize": [
+      1440,
+      1010
+    ],
+    "changedPixels": 0,
+    "diffBounds": null,
+    "channelMaxDelta": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "file": "signup-lite-320.png",
+    "beforeSize": [
+      320,
+      1136
+    ],
+    "afterSize": [
+      320,
+      1105
+    ],
+    "changedPixels": null,
+    "diffBounds": null,
+    "channelMaxDelta": null
+  },
+  {
+    "file": "signup-lite-430.png",
+    "beforeSize": [
+      430,
+      1106
+    ],
+    "afterSize": [
+      430,
+      1082
+    ],
+    "changedPixels": null,
+    "diffBounds": null,
+    "channelMaxDelta": null
+  }
+]

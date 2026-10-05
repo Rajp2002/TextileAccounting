@@ -1,0 +1,26 @@
+[
+  {
+    "label": "Cancel",
+    "inside": true,
+    "top": 262.390625,
+    "bottom": 312.796875
+  },
+  {
+    "label": "Save this version only",
+    "inside": true,
+    "top": 319.796875,
+    "bottom": 408.609375
+  },
+  {
+    "label": "Save version and update Synthetic Quality A — Surat plain weave with a long identifiable fabric recipe name for future costings",
+    "inside": true,
+    "top": 274.609375,
+    "bottom": 543.453125
+  },
+  {
+    "label": "Close",
+    "inside": true,
+    "top": 24,
+    "bottom": 68
+  }
+]

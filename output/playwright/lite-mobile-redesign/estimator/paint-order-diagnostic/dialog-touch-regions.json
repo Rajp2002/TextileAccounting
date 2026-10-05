@@ -1,0 +1,13 @@
+[
+  {
+    "language": "en",
+    "state": "version",
+    "small": [
+      {
+        "label": "Close toast",
+        "width": 32,
+        "height": 32
+      }
+    ]
+  }
+]

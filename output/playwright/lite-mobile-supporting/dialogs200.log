@@ -1,0 +1,28 @@
+### Result
+[{"view":"history","lang":"en","issues":[]},{"view":"deletion","lang":"en","issues":[]},{"view":"history","lang":"hi","issues":[]},{"view":"deletion","lang":"hi","issues":[]},{"view":"history","lang":"gu","issues":[]},{"view":"deletion","lang":"gu","issues":[]}]
+### Ran Playwright code
+```js
+await (async(page)=>{
+ const results=[];await page.setViewportSize({width:320,height:740});
+ for(const lang of ['en','hi','gu'])for(const view of ['history','deletion']){
+  await page.goto('http://127.0.0.1:4194/owner/'+(view==='history'?'billing?attention&historical&view=billing':'settings?view=settings')+'&lang='+lang);await page.getByRole('heading',{level:1}).waitFor();await page.waitForTimeout(200);
+  if(view==='deletion')await page.locator('section[aria-labelledby=account-deletion-heading] button').click();
+  if(view==='history')await page.locator('section[aria-labelledby=billing-history-heading] button').click();
+  await page.evaluate(()=>{const css=document.createElement('style');css.textContent='*{transition:none!important;animation:none!important}';document.head.append(css);const elements=[...document.body.querySelectorAll('*')].filter(el=>el instanceof HTMLElement);const original=elements.map(el=>({el,font:parseFloat(getComputedStyle(el).fontSize),line:getComputedStyle(el).lineHeight}));for(const {el,font,line} of original){el.style.fontSize=font*2+'px';if(line!=='normal')el.style.lineHeight=parseFloat(line)*2+'px';}document.documentElement.dataset.textOnly200='true';});
+  const issues=await page.evaluate(()=>{
+   const issues=[];const shown=el=>!!el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden';const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
+   while(walker.nextNode()){const node=walker.currentNode,parent=node.parentElement;if(!node.textContent.trim()||!parent||!shown(parent)||parent.closest('script,style,.sr-only,[aria-hidden="true"]'))continue;const range=document.createRange();range.selectNodeContents(node);for(const rect of range.getClientRects()){if(rect.right>innerWidth+.5||rect.left<-.5)issues.push({kind:'textBounds',text:node.textContent.trim().slice(0,70),left:rect.left,right:rect.right});const clip=parent.closest('button,[data-slot="badge"]');if(clip&&getComputedStyle(clip).overflowX==='hidden'){const b=clip.getBoundingClientRect();if(rect.right>b.right+.5||rect.left<b.left-.5||rect.bottom>b.bottom+.5)issues.push({kind:'textClipped',text:node.textContent.trim().slice(0,70)});}}}
+   for(const el of document.querySelectorAll('input:not([type=checkbox]):not([type=radio])'))if(shown(el)){const s=getComputedStyle(el),b=el.getBoundingClientRect(),h=b.height-parseFloat(s.paddingTop)-parseFloat(s.paddingBottom)-parseFloat(s.borderTopWidth)-parseFloat(s.borderBottomWidth);if(s.lineHeight!=='normal'&&h+1<parseFloat(s.lineHeight))issues.push({kind:'inputLinebox',label:el.getAttribute('aria-label')||el.id,h,line:s.lineHeight});if(el.type==='number'&&el.value){const c=document.createElement('canvas').getContext('2d');c.font=`${s.fontWeight} ${s.fontSize} ${s.fontFamily}`;const available=b.width-parseFloat(s.paddingLeft)-parseFloat(s.paddingRight)-2;if(c.measureText(el.value).width>available+.5)issues.push({kind:'numberFit',value:el.value,available});}}
+   for(const el of document.querySelectorAll('button,a,[role="combobox"],summary'))if(shown(el)){const b=el.getBoundingClientRect();if(b.height<43.5||b.width<43.5)issues.push({kind:'touch',text:(el.textContent||el.getAttribute('aria-label')||'').trim().slice(0,70),width:b.width,height:b.height});}
+   return issues;
+  });
+  await page.screenshot({path:`output/playwright/lite-mobile-supporting/after/${view}-text200-${lang}-320.png`,fullPage:true});results.push({view,lang,issues});
+ }
+ return results;
+}
+)(page);
+```
+### Page
+- Page URL: http://127.0.0.1:4194/owner/settings?view=settings&lang=gu
+### Events
+- New console entries: .playwright-cli/console-2026-10-05T20-22-14-741Z.log#L138-L143

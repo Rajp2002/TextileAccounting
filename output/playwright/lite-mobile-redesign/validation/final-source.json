@@ -1,0 +1,462 @@
+{
+  "branch": "codex/lite-mobile-redesign",
+  "baselineCommit": "34f37ce223ecd321c1c046901384175ca118b04a",
+  "applicationCommit": "edc8571e05522588e680620add984d755aaa5fda",
+  "testCommit": "4201e9be8612530505402f1236d62df631c56f48",
+  "environment": {
+    "node": "v24.11.1",
+    "npm": "11.6.2",
+    "aggregate": "clean final source, fresh npm ci from lockfile, no .env, ignored worktrees/scratch/stale Next output excluded",
+    "credentialPolicy": "repository isolated-command wrapper; hosted credentials absent, Supabase closed localhost9",
+    "database": "disposable local PostgreSQL; cluster cleanup owned by test harness",
+    "browser": "headless Chromium synthetic component fixtures; built Next public smoke; no real installed PWA/device"
+  },
+  "checks": [
+    {
+      "name": "type",
+      "command": "node scripts/performance/isolated-command.mjs npx tsc --noEmit",
+      "status": "passed",
+      "exitCode": 0
+    },
+    {
+      "name": "lint",
+      "command": "node scripts/performance/isolated-command.mjs npm run lint",
+      "status": "passed",
+      "exitCode": 0,
+      "warnings": 0
+    },
+    {
+      "name": "build including complete unit gate",
+      "command": "node scripts/performance/isolated-command.mjs npm run build",
+      "status": "passed",
+      "exitCode": 0,
+      "testFiles": 325,
+      "passedTests": 2988,
+      "skippedTests": 1,
+      "skipReason": "live Supabase integration intentionally disabled",
+      "staticPagesGenerated": 52
+    },
+    {
+      "name": "database",
+      "command": "node scripts/performance/isolated-command.mjs npm run test:db",
+      "status": "passed",
+      "exitCode": 0,
+      "testFiles": 32,
+      "passedTests": 273
+    },
+    {
+      "name": "public production smoke",
+      "command": "node scripts/performance/isolated-command.mjs node scripts/qa/free-public-browser.mjs http://127.0.0.1:4193 --output=output/playwright/lite-mobile-redesign/public-build",
+      "status": "passed",
+      "exitCode": 0,
+      "routes": 7
+    },
+    {
+      "name": "Lite estimator",
+      "status": "passed",
+      "groups": 24,
+      "textScenes": 36,
+      "touchScenes": 27,
+      "noticePaintProbes": 3,
+      "report": "../estimator/after/verification.json",
+      "supplementalDialogFooters": 15
+    },
+    {
+      "name": "Lite records",
+      "status": "passed",
+      "groups": 13,
+      "textScenes": 27,
+      "report": "../../lite-mobile-records/summary.json"
+    },
+    {
+      "name": "Lite supporting",
+      "status": "passed",
+      "assertions": 99,
+      "textScenes": 30,
+      "report": "../../../../docs/mobile-redesign/LITE-supporting.md"
+    },
+    {
+      "name": "Free final regression",
+      "status": "passed",
+      "groups": 19,
+      "report": "../free-regression-final/verification.json"
+    },
+    {
+      "name": "fresh reviews",
+      "status": "passed",
+      "unresolvedActionableFindings": 0
+    },
+    {
+      "name": "installed iOS/Android PWA, physical keyboard/safe areas/gestures/lifecycle, live provider/auth, device download, native-speaker review",
+      "status": "unrun"
+    }
+  ],
+  "earlierResolvedFailures": [
+    "Seven stale source contracts updated while preserving desktop/access/sample protections; complete unit rerun passed.",
+    "Nine QA callback-expression lint warnings addressed with documented per-file callback evaluation directives; full zero-warning lint passed.",
+    "Duplicate requests, translated reflow and success-notice stacking corrected; final browser reruns passed."
+  ],
+  "remaining": [
+    "Existing audit device-local-midnight filters vs Asia/Kolkata displayed timestamps; query unchanged.",
+    "Device/hosted integration QA remains unrun."
+  ],
+  "publication": {
+    "Free": "PR189 merged; merged-main CI success",
+    "Lite": "local only",
+    "Base": "not authorized"
+  },
+  "files": [
+    {
+      "path": "__tests__/admin-support-page-access.test.tsx",
+      "sha256": "4229229d60706db62daac996492ff6c70ae36a8861ae5b5b2e8b5e0969339d02"
+    },
+    {
+      "path": "__tests__/desktop-dimensions-responsive.test.ts",
+      "sha256": "0abd5305a2e8c5b8b865d74cb06790af705bc8c2c448c36ab82803cf0f00a544"
+    },
+    {
+      "path": "__tests__/guided-tour-left-rails.test.ts",
+      "sha256": "3d10ead787ac4bf5915da45aa9ee82e096e6c45d72f02ab3fac37d60382e1393"
+    },
+    {
+      "path": "__tests__/lite-prior-history.test.tsx",
+      "sha256": "287abe071657ddc1902c0df2117ca9f7d25eba4cf49b233b32e63ac8c4771005"
+    },
+    {
+      "path": "__tests__/rate-book-tutorial.test.ts",
+      "sha256": "d4164bc8fc10b0f4b82a88be023152afd6182bd7a94ce49c57cf6a7da7b37315"
+    },
+    {
+      "path": "__tests__/rate-review-rail.test.ts",
+      "sha256": "924d71f45af853a41d8888a8d4e18e5c5386767545564f2b902e8b3e075bb2a4"
+    },
+    {
+      "path": "__tests__/saved-costings-tour.test.ts",
+      "sha256": "227bd7e519ef70e955e6336b2cb48d80b9409fb15530e6f1724145cd6312a4fd"
+    },
+    {
+      "path": "app/(auth)/signup/page.tsx",
+      "sha256": "6bbb4df08f78f203ec66ede17cbfcc47129833b428c6257d0623e5d8adee1049"
+    },
+    {
+      "path": "app/(dashboard)/owner/billing/lite-billing.module.css",
+      "sha256": "3b4974f0beaf9eebc57b004a97966d6db94081a9be495f9cc78d3a01223b2281"
+    },
+    {
+      "path": "app/(dashboard)/owner/billing/page.tsx",
+      "sha256": "78365c0ac16af3f584764767c129c4d0da2b6372ee84b36efde40f54330c67e3"
+    },
+    {
+      "path": "app/(dashboard)/owner/data-export/lite-export.module.css",
+      "sha256": "95c5123477e3b6a4a97fe8a59d4dac749b3de48f9b2da4b46a9473797d4f9157"
+    },
+    {
+      "path": "app/(dashboard)/owner/data-export/page.tsx",
+      "sha256": "213b17b969f3ee7d4d9e98e75ba838de2b6530bbad950251b5e1826b4ae6a1f5"
+    },
+    {
+      "path": "app/(dashboard)/owner/estimator/EstimatorClient.tsx",
+      "sha256": "6e93e3862c4987500b03f8a5512f780dbd81537b29e93a7338e6de3290c35c81"
+    },
+    {
+      "path": "app/(dashboard)/owner/estimator/page.tsx",
+      "sha256": "0a3a0ec666e331a3026969d13b6d69632436715e0e2f59dec84c8f830cb7977e"
+    },
+    {
+      "path": "app/(dashboard)/owner/quotes/QuotesClient.tsx",
+      "sha256": "1a208d62137d388df107040287646b0531ac3c6509a4b43671f4b2f891d75c12"
+    },
+    {
+      "path": "app/(dashboard)/owner/quotes/page.tsx",
+      "sha256": "4d9d1b088a586370e9ee6cb3e5964cc28948ed50d33e049b525866651936dc57"
+    },
+    {
+      "path": "app/(dashboard)/owner/rates/RatesClient.tsx",
+      "sha256": "343517647c4187f16cc5b70abae7098402de4589e5bda2398150717dcb9aeee7"
+    },
+    {
+      "path": "app/(dashboard)/owner/settings/audit/AuditActivityItem.tsx",
+      "sha256": "d4a1226caee64d11220f7cf5cc585cf63764110449f9aadd5466ebdddec351af"
+    },
+    {
+      "path": "app/(dashboard)/owner/settings/audit/AuditTable.tsx",
+      "sha256": "8fa1ea733b58d7be0ee8ff128c7a0c7ca72c1e6586a916d03cd43f74aa82e4e4"
+    },
+    {
+      "path": "app/(dashboard)/owner/settings/audit/lite-audit.module.css",
+      "sha256": "3377e4a25592528b50189af6b8bdcecba682fb89357349cf88b078c3b09c380b"
+    },
+    {
+      "path": "app/(dashboard)/owner/settings/audit/page.tsx",
+      "sha256": "2dcfbe1430a8d9b520b6fc980a74b54778b01b41409c439196eb6946ed3eaf6b"
+    },
+    {
+      "path": "app/(dashboard)/owner/settings/lite-settings.module.css",
+      "sha256": "a84a0c4abc5e62439d85b70779df3d12be8d8e7601cade1c9b2b397868dc7de8"
+    },
+    {
+      "path": "app/(dashboard)/owner/settings/page.tsx",
+      "sha256": "2639e67b08baa6938f774bc6957919bda786e9bc348d277f14701fc751670097"
+    },
+    {
+      "path": "app/(support)/support/[id]/page.tsx",
+      "sha256": "263de96aa7464e214f62c2600c00c73129be72f666e0a74ec11579b11c919654"
+    },
+    {
+      "path": "app/(support)/support/page.tsx",
+      "sha256": "5ff15b7378d234d58a67f43446ec2a5572a3ae99aa8004e5ec4395785313e03d"
+    },
+    {
+      "path": "app/free/FreeClient.tsx",
+      "sha256": "3c30dd0fd60721c9d6d5276493cde3729d735307ec064a8e82bf08e82e815d41"
+    },
+    {
+      "path": "app/free/costings/SavedFreeCostings.tsx",
+      "sha256": "c600a2e6d23ea7b84cd6d5b21f4cae840b1918636ba862a9c442c382d8c00642"
+    },
+    {
+      "path": "app/mobile.css",
+      "sha256": "f51e7caf9e135dbc15a9cd7f57a8e12eb198d7c75965d7c974f8895b0d96dccb"
+    },
+    {
+      "path": "components/billing/BillingAttemptStatus.tsx",
+      "sha256": "ea25363fb69546abaad966deb96b2f2fd53bfc38d86fbd5a0dbefe34aaa788e2"
+    },
+    {
+      "path": "components/billing/PaymentHistoryDialog.tsx",
+      "sha256": "8e11d07b2b2878a33c26bbcdfafe00cb3a41f844548835335b4cc26684a3a407"
+    },
+    {
+      "path": "components/estimator/LitePriorFreeHistory.tsx",
+      "sha256": "dbe1e8d0ae5fd90b6c5225deffe24e96e97afbc3b32a0cdd48ffd01448295495"
+    },
+    {
+      "path": "components/estimator/lite-prior-history.module.css",
+      "sha256": "df84ec4b04ca9d2b2fe3328dc82807fde6efd9d2b386b5be9f2d656d26f18cd3"
+    },
+    {
+      "path": "components/estimator/lite-records.module.css",
+      "sha256": "30d998f15d9d281c307150a8f8faa6248245eb04bf27fdebfcd456c093f4c6a0"
+    },
+    {
+      "path": "components/mobile/lite-disclosure.module.css",
+      "sha256": "a4790bd8ecd484e202f88c32035ce1d5f6b4b87ce7bf05db34a5d1a31d01b3f1"
+    },
+    {
+      "path": "components/mobile/lite-disclosure.tsx",
+      "sha256": "4019c621bb312a84894565a2631452ee51ebde59c49de5a8af702a18ff2deb7c"
+    },
+    {
+      "path": "components/plans/PlanChooserClient.tsx",
+      "sha256": "1aeb59e942c0ea310cc688d9f00857fa3da0296ca9cf8cc5a9a4c2d39377aecd"
+    },
+    {
+      "path": "components/plans/PlanChooserHeader.tsx",
+      "sha256": "3af3d8d06d9e29a628075e12c0e409b21127b76fc7cef0eb149ce9cd876bf3ef"
+    },
+    {
+      "path": "components/settings/plan-aware/costing-defaults-card.tsx",
+      "sha256": "b9e19c4f952776a38c2ae759f0009f833dccf1714661fb6b5582971c936c6f62"
+    },
+    {
+      "path": "components/settings/plan-aware/deletion-review-card.tsx",
+      "sha256": "e43846a4c32b47bd1ec8aae18fb1cdf9438d257c414e125b20c166adbca5010a"
+    },
+    {
+      "path": "components/settings/plan-aware/lite-settings.module.css",
+      "sha256": "3454130d5da3fb8c4779c54b45d50071d644a5ac936fcb33341ddb2d46e6f8e8"
+    },
+    {
+      "path": "components/settings/plan-aware/plan-aware-settings-view.tsx",
+      "sha256": "4ff4fa3853da132419299d1b5ad9d91214d3889eb1ebeac6896a261735ba660e"
+    },
+    {
+      "path": "lib/i18n/lite-estimator.ts",
+      "sha256": "1a4948fb7e41c5f8a89720d82fc6287553b44671dd1308d1d0b44bf2cf9f946e"
+    },
+    {
+      "path": "lib/i18n/lite-records.ts",
+      "sha256": "825c3f1bc96cce40abcfd1c6a9bc1052fca4b9cc4e951feee6e99c66cc9f2bd6"
+    },
+    {
+      "path": "lib/i18n/lite-supporting.ts",
+      "sha256": "88e5c571707aac3ea9db488a90d75f0e9de0f0be8991007cde2f39c1330da212"
+    },
+    {
+      "path": "scripts/qa/free-mobile-browser/main.tsx",
+      "sha256": "326c545895662c5f4dcb9da6ced624fc2bd80b95d370729a65edfa1bf04cf2ee"
+    },
+    {
+      "path": "scripts/qa/free-mobile-browser/verify.mjs",
+      "sha256": "beadd4e53062b7ce1e9c86e224566645f41903524edf4a6a696aebe5a90c0386"
+    },
+    {
+      "path": "scripts/qa/free-public-browser.mjs",
+      "sha256": "8a524722532f6cb8fcaf18aa5d1f50bdb038ec5c421b9b171745533a86983049"
+    },
+    {
+      "path": "scripts/qa/lite-estimator-browser/README.md",
+      "sha256": "a994de8fd3c9492b6e14a4a1e7c25882ed6513b1020c499762a7fb558201ea91"
+    },
+    {
+      "path": "scripts/qa/lite-estimator-browser/compare.py",
+      "sha256": "4a9ddc5b0ff677180e02d5a7985509f1c07e9cfc94d032e5c5d336f7d1ac2d19"
+    },
+    {
+      "path": "scripts/qa/lite-estimator-browser/dynamic.tsx",
+      "sha256": "1c4d1fa7464f95710e8117b1b814c6528632ee09b7c05f037f7cd3a1d3b8392e"
+    },
+    {
+      "path": "scripts/qa/lite-estimator-browser/image.tsx",
+      "sha256": "d8eb9da6f8dae0ff39af5703ab0f03bd10cdbaba3bf62ab8a3fc217bd2ed02b5"
+    },
+    {
+      "path": "scripts/qa/lite-estimator-browser/index.html",
+      "sha256": "d8481f6dc815f3cfb4f1b733c2a9f61ee8e5fe21a42936d4a62ae42acc70e084"
+    },
+    {
+      "path": "scripts/qa/lite-estimator-browser/link.tsx",
+      "sha256": "ea8d23e13f445d80e4797b57a49c238ffc5ca67f0e666d5c39e8b228f6a86280"
+    },
+    {
+      "path": "scripts/qa/lite-estimator-browser/main.tsx",
+      "sha256": "99f9da5ca0a44f40d0f524d09e52946b4d0fec20531287fb66d7b15f6f5e6658"
+    },
+    {
+      "path": "scripts/qa/lite-estimator-browser/navigation.ts",
+      "sha256": "dec13a8bb477b8541d56375aa01be995c1c57d7c920785aad56e84ba4839c2f4"
+    },
+    {
+      "path": "scripts/qa/lite-estimator-browser/server.mjs",
+      "sha256": "8d25d75cba85d73f488fb021f70231548dc9ab2810cab639f84d9568276ae4e5"
+    },
+    {
+      "path": "scripts/qa/lite-estimator-browser/supabase.ts",
+      "sha256": "690bed11e35f8e463d4d8e8a6d20396e7f23abe2c96472a98bdf1ce84c1ae404"
+    },
+    {
+      "path": "scripts/qa/lite-estimator-browser/verify.mjs",
+      "sha256": "473033023337037a5a5daa09c5a902fe8f284516092ad300bb3e325565dafb32"
+    },
+    {
+      "path": "scripts/qa/lite-records-browser/README.md",
+      "sha256": "db68c508e2035aa247f68268a031f503c3ccbbed9a319f74fb374e3ff706b07d"
+    },
+    {
+      "path": "scripts/qa/lite-records-browser/behavior.js",
+      "sha256": "1deed07bfb70aa801adb8dad74c7337853f6b4eedf88ac63d6dec8fecdaefdec"
+    },
+    {
+      "path": "scripts/qa/lite-records-browser/capture.py",
+      "sha256": "c6958b4abfe2e8a2659428c8f7c6bf46a3b9897b222227519d10218671ba78a3"
+    },
+    {
+      "path": "scripts/qa/lite-records-browser/duplicates.js",
+      "sha256": "a115085540199c35c4855c6217f873a42a169f3066bc0668db417dc9732d5468"
+    },
+    {
+      "path": "scripts/qa/lite-records-browser/dynamic.tsx",
+      "sha256": "b96d70c897ef92b05bee9d04c367428dc2abef9dd25b90cbed939462f290fc78"
+    },
+    {
+      "path": "scripts/qa/lite-records-browser/index.html",
+      "sha256": "999bc54615c75d81139dac4bafa3b90b3bf76bdd82e2cd97088020c94139ee66"
+    },
+    {
+      "path": "scripts/qa/lite-records-browser/main.tsx",
+      "sha256": "91030c827ee863989878407b3f6d13560ed677752c2d45561157c65e2d71fb52"
+    },
+    {
+      "path": "scripts/qa/lite-records-browser/run.py",
+      "sha256": "a4088e8eb88fca50af6b13860d17cd9c3a550a93f265f94a3b16e37cf70de51e"
+    },
+    {
+      "path": "scripts/qa/lite-records-browser/server.mjs",
+      "sha256": "5929362c283bd3eea9379817834495272faf0bf371f8a916f23e665d61bec9f2"
+    },
+    {
+      "path": "scripts/qa/lite-records-browser/stubs.tsx",
+      "sha256": "678418d56e9df70f1557e5ef749d54a5c18f0bdde9e8038db87b5148942ca24e"
+    },
+    {
+      "path": "scripts/qa/lite-records-browser/text200.js",
+      "sha256": "307a54c12bf72750d42eb6043dfecc21d568096af0f0c5d70786eeff6941ab16"
+    },
+    {
+      "path": "scripts/qa/lite-records-browser/units200.js",
+      "sha256": "2173f7f0fd7cac5a657ac3078856a83146f4842b3dcd5556ad335052c0b808fc"
+    },
+    {
+      "path": "scripts/qa/lite-supporting-browser/README.md",
+      "sha256": "aade8fe2cecb26fbffad749621f2b4c8f8c7c0523fb2022e2585bde7e6c07a1c"
+    },
+    {
+      "path": "scripts/qa/lite-supporting-browser/behavior.js",
+      "sha256": "1cbfd666cf46732b03ec147cc07c050eef7ff772fc50e5a65a43baa92ec9a520"
+    },
+    {
+      "path": "scripts/qa/lite-supporting-browser/capture.py",
+      "sha256": "9c03b6977ad085648c57f344675aca7a283e3f8f2da4a4cb1ef8bb6f5e73575b"
+    },
+    {
+      "path": "scripts/qa/lite-supporting-browser/compare.py",
+      "sha256": "3419db50a7d7fe9b3ebe6587c472d1c595f8b1d7a3fabd4580284e89cab515da"
+    },
+    {
+      "path": "scripts/qa/lite-supporting-browser/dialogs200.js",
+      "sha256": "f898339ff8d059cc67d078302da19a0cee37ac8ce320a2087885fa79865d0107"
+    },
+    {
+      "path": "scripts/qa/lite-supporting-browser/entry200.js",
+      "sha256": "43ea6a90e25cd4bae6d3e509e6a67e9f2900db53cba2cf08059fdde4f007e7ce"
+    },
+    {
+      "path": "scripts/qa/lite-supporting-browser/entrybehavior.js",
+      "sha256": "417ad6923260c648d25e8da8f823a33011ba21af9d3185bcc05f60286543289d"
+    },
+    {
+      "path": "scripts/qa/lite-supporting-browser/entrycapture.js",
+      "sha256": "68ca3119380fde38c093e2920ff0655d21d2c34cd7de89978dc405059381dae6"
+    },
+    {
+      "path": "scripts/qa/lite-supporting-browser/index.html",
+      "sha256": "999bc54615c75d81139dac4bafa3b90b3bf76bdd82e2cd97088020c94139ee66"
+    },
+    {
+      "path": "scripts/qa/lite-supporting-browser/main.tsx",
+      "sha256": "70365c9a6ee9810477496c10a520c0f287201672bf649c5065cdf680c939ef8e"
+    },
+    {
+      "path": "scripts/qa/lite-supporting-browser/recovery.js",
+      "sha256": "1bb81931e86d610651bc24603c22a60bc38c937a6b1ea536992964599110970c"
+    },
+    {
+      "path": "scripts/qa/lite-supporting-browser/run.py",
+      "sha256": "a3320a0732583cbe7ffed69669c62d39f1f82c8d7a154e335e30ddfd7328879f"
+    },
+    {
+      "path": "scripts/qa/lite-supporting-browser/server.mjs",
+      "sha256": "21606f1d08043c431c05afdb357b4449e055d5619ccfdf4d09cff2050e894893"
+    },
+    {
+      "path": "scripts/qa/lite-supporting-browser/stubs.tsx",
+      "sha256": "dbdd7274571414c9abed0f6c30c9263955704ebf76592e658b01e6a43668f199"
+    },
+    {
+      "path": "scripts/qa/lite-supporting-browser/support.js",
+      "sha256": "881f081c79b8446031c5398f398b5901f032aa398cd650604534b793bdc50334"
+    },
+    {
+      "path": "scripts/qa/lite-supporting-browser/support200.js",
+      "sha256": "f4606abc19edfe9f390c63840a6828045924e86dc8ca618a41a402e8843ec252"
+    },
+    {
+      "path": "scripts/qa/lite-supporting-browser/text200.js",
+      "sha256": "eac42fec478074c90daa2af1c7f0538696156f7d6f97a8ad2f11b1d23d207bf2"
+    },
+    {
+      "path": "scripts/qa/lite-supporting-browser/vitest.config.mjs",
+      "sha256": "5de2947dae0e4df1c6a2babe0d82f0619734a9d440735467cf6db8e8e1741ada"
+    }
+  ]
+}

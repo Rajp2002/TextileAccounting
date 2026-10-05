@@ -1,0 +1,580 @@
+[
+  {
+    "file": "audit-1440.png",
+    "beforeSize": [
+      1440,
+      1000
+    ],
+    "afterSize": [
+      1440,
+      1000
+    ],
+    "changedPixels": 0,
+    "diffBounds": null,
+    "channelMaxDelta": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "file": "audit-320.png",
+    "beforeSize": [
+      320,
+      1110
+    ],
+    "afterSize": [
+      320,
+      924
+    ],
+    "changedPixels": null,
+    "diffBounds": null,
+    "channelMaxDelta": null
+  },
+  {
+    "file": "audit-430.png",
+    "beforeSize": [
+      430,
+      983
+    ],
+    "afterSize": [
+      430,
+      932
+    ],
+    "changedPixels": null,
+    "diffBounds": null,
+    "channelMaxDelta": null
+  },
+  {
+    "file": "audit-base-1440.png",
+    "beforeSize": [
+      1440,
+      1000
+    ],
+    "afterSize": [
+      1440,
+      1000
+    ],
+    "changedPixels": 0,
+    "diffBounds": null,
+    "channelMaxDelta": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "file": "audit-base-320.png",
+    "beforeSize": [
+      320,
+      1110
+    ],
+    "afterSize": [
+      320,
+      1110
+    ],
+    "changedPixels": 0,
+    "diffBounds": null,
+    "channelMaxDelta": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "file": "audit-base-430.png",
+    "beforeSize": [
+      430,
+      1000
+    ],
+    "afterSize": [
+      430,
+      1000
+    ],
+    "changedPixels": 0,
+    "diffBounds": null,
+    "channelMaxDelta": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "file": "billing-1440.png",
+    "beforeSize": [
+      1440,
+      1000
+    ],
+    "afterSize": [
+      1440,
+      1000
+    ],
+    "changedPixels": 255,
+    "diffBounds": [
+      170,
+      255,
+      189,
+      763
+    ],
+    "channelMaxDelta": [
+      3,
+      3,
+      5
+    ]
+  },
+  {
+    "file": "billing-320.png",
+    "beforeSize": [
+      320,
+      2000
+    ],
+    "afterSize": [
+      320,
+      935
+    ],
+    "changedPixels": null,
+    "diffBounds": null,
+    "channelMaxDelta": null
+  },
+  {
+    "file": "billing-430.png",
+    "beforeSize": [
+      430,
+      1809
+    ],
+    "afterSize": [
+      430,
+      932
+    ],
+    "changedPixels": null,
+    "diffBounds": null,
+    "channelMaxDelta": null
+  },
+  {
+    "file": "billing-base-1440.png",
+    "beforeSize": [
+      1440,
+      1000
+    ],
+    "afterSize": [
+      1440,
+      1000
+    ],
+    "changedPixels": 0,
+    "diffBounds": null,
+    "channelMaxDelta": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "file": "billing-base-320.png",
+    "beforeSize": [
+      320,
+      2000
+    ],
+    "afterSize": [
+      320,
+      2000
+    ],
+    "changedPixels": 0,
+    "diffBounds": null,
+    "channelMaxDelta": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "file": "billing-base-430.png",
+    "beforeSize": [
+      430,
+      1809
+    ],
+    "afterSize": [
+      430,
+      1809
+    ],
+    "changedPixels": 0,
+    "diffBounds": null,
+    "channelMaxDelta": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "file": "export-1440.png",
+    "beforeSize": [
+      1440,
+      1000
+    ],
+    "afterSize": [
+      1440,
+      1000
+    ],
+    "changedPixels": 0,
+    "diffBounds": null,
+    "channelMaxDelta": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "file": "export-320.png",
+    "beforeSize": [
+      320,
+      796
+    ],
+    "afterSize": [
+      320,
+      740
+    ],
+    "changedPixels": null,
+    "diffBounds": null,
+    "channelMaxDelta": null
+  },
+  {
+    "file": "export-430.png",
+    "beforeSize": [
+      430,
+      932
+    ],
+    "afterSize": [
+      430,
+      932
+    ],
+    "changedPixels": 135493,
+    "diffBounds": [
+      10,
+      52,
+      420,
+      574
+    ],
+    "channelMaxDelta": [
+      233,
+      222,
+      193
+    ]
+  },
+  {
+    "file": "export-base-1440.png",
+    "beforeSize": [
+      1440,
+      1000
+    ],
+    "afterSize": [
+      1440,
+      1000
+    ],
+    "changedPixels": 0,
+    "diffBounds": null,
+    "channelMaxDelta": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "file": "export-base-320.png",
+    "beforeSize": [
+      320,
+      1000
+    ],
+    "afterSize": [
+      320,
+      1000
+    ],
+    "changedPixels": 0,
+    "diffBounds": null,
+    "channelMaxDelta": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "file": "export-base-430.png",
+    "beforeSize": [
+      430,
+      1000
+    ],
+    "afterSize": [
+      430,
+      1000
+    ],
+    "changedPixels": 0,
+    "diffBounds": null,
+    "channelMaxDelta": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "file": "free-account-1440.png",
+    "beforeSize": [
+      1440,
+      1534
+    ],
+    "afterSize": [
+      1440,
+      1534
+    ],
+    "changedPixels": 0,
+    "diffBounds": null,
+    "channelMaxDelta": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "file": "free-account-320.png",
+    "beforeSize": [
+      320,
+      1000
+    ],
+    "afterSize": [
+      320,
+      1000
+    ],
+    "changedPixels": 0,
+    "diffBounds": null,
+    "channelMaxDelta": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "file": "free-account-430.png",
+    "beforeSize": [
+      430,
+      1000
+    ],
+    "afterSize": [
+      430,
+      1000
+    ],
+    "changedPixels": 0,
+    "diffBounds": null,
+    "channelMaxDelta": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "file": "settings-1440.png",
+    "beforeSize": [
+      1440,
+      2346
+    ],
+    "afterSize": [
+      1440,
+      2346
+    ],
+    "changedPixels": 0,
+    "diffBounds": null,
+    "channelMaxDelta": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "file": "settings-320.png",
+    "beforeSize": [
+      465,
+      3218
+    ],
+    "afterSize": [
+      320,
+      900
+    ],
+    "changedPixels": null,
+    "diffBounds": null,
+    "channelMaxDelta": null
+  },
+  {
+    "file": "settings-430.png",
+    "beforeSize": [
+      465,
+      3110
+    ],
+    "afterSize": [
+      430,
+      932
+    ],
+    "changedPixels": null,
+    "diffBounds": null,
+    "channelMaxDelta": null
+  },
+  {
+    "file": "settings-base-1440.png",
+    "beforeSize": [
+      1440,
+      2840
+    ],
+    "afterSize": [
+      1440,
+      2840
+    ],
+    "changedPixels": 0,
+    "diffBounds": null,
+    "channelMaxDelta": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "file": "settings-base-320.png",
+    "beforeSize": [
+      465,
+      3996
+    ],
+    "afterSize": [
+      465,
+      3996
+    ],
+    "changedPixels": 0,
+    "diffBounds": null,
+    "channelMaxDelta": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "file": "settings-base-430.png",
+    "beforeSize": [
+      465,
+      3793
+    ],
+    "afterSize": [
+      465,
+      3793
+    ],
+    "changedPixels": 0,
+    "diffBounds": null,
+    "channelMaxDelta": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "file": "support-1440.png",
+    "beforeSize": [
+      1440,
+      1000
+    ],
+    "afterSize": [
+      1440,
+      1000
+    ],
+    "changedPixels": 0,
+    "diffBounds": null,
+    "channelMaxDelta": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "file": "support-320.png",
+    "beforeSize": [
+      320,
+      740
+    ],
+    "afterSize": [
+      320,
+      740
+    ],
+    "changedPixels": 38739,
+    "diffBounds": [
+      10,
+      52,
+      310,
+      477
+    ],
+    "channelMaxDelta": [
+      233,
+      222,
+      193
+    ]
+  },
+  {
+    "file": "support-430.png",
+    "beforeSize": [
+      430,
+      932
+    ],
+    "afterSize": [
+      430,
+      932
+    ],
+    "changedPixels": 44816,
+    "diffBounds": [
+      10,
+      38,
+      420,
+      428
+    ],
+    "channelMaxDelta": [
+      233,
+      222,
+      193
+    ]
+  },
+  {
+    "file": "thread-1440.png",
+    "beforeSize": [
+      1440,
+      1000
+    ],
+    "afterSize": [
+      1440,
+      1000
+    ],
+    "changedPixels": 0,
+    "diffBounds": null,
+    "channelMaxDelta": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "file": "thread-320.png",
+    "beforeSize": [
+      320,
+      1086
+    ],
+    "afterSize": [
+      320,
+      1041
+    ],
+    "changedPixels": null,
+    "diffBounds": null,
+    "channelMaxDelta": null
+  },
+  {
+    "file": "thread-430.png",
+    "beforeSize": [
+      430,
+      974
+    ],
+    "afterSize": [
+      430,
+      978
+    ],
+    "changedPixels": null,
+    "diffBounds": null,
+    "channelMaxDelta": null
+  }
+]

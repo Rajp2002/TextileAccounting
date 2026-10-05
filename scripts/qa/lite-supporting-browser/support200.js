@@ -1,0 +1,24 @@
+/* eslint-disable @typescript-eslint/no-unused-expressions -- Playwright CLI evaluates this standalone callback expression. */
+async(page)=>{
+ const id = '33333333-3333-4333-8333-333333333333';
+  const ticket = {id, orgId:'22222222-2222-4222-8222-222222222222',subject:'Synthetic costing question',category:'costing',priority:'normal',status:'in_progress',source:'in_app',requesterBound:true,createdAt:'2026-10-01T10:00:00Z',updatedAt:'2026-10-04T10:00:00Z',version:4,nextAction:'',followUpDueAt:null,nextUpdateDueAt:'2026-10-06T10:00:00Z',needsFounderReply:true,resolvedAt:null,resolutionCode:null,resolutionSummary:null,firstPublicFounderReplyAt:null,reopenedCount:0};
+  const messages = Array.from({length:4},(_,i)=>({id:'message-'+i,authorKind:i%2?'founder':'customer',messageKind:i===0?'initial_intake':'public_reply',body:i%2?'Synthetic answer: check the saved costing and its revision.':'Synthetic question: can I correct my saved result?',createdAt:'2026-10-04T10:00:00Z',messageSeq:i+1}));
+  const dto = {ticket,messages,events:[{id:'event-1',eventType:'create',before:{},after:{status:'new'},createdAt:'2026-10-01T10:00:00Z'}],asOf:'2026-10-04T10:00:00Z',nextMessageBefore:null,nextEventBefore:null};
+  await page.route('**/api/support**',route=>route.fulfill({json:new URL(route.request().url()).pathname==='/api/support'?{items:[ticket],nextCursor:null,totalMatching:1,asOf:dto.asOf}:dto}));
+ const results=[];await page.setViewportSize({width:320,height:740});
+ for(const lang of ['en','hi','gu'])for(const view of ['support','thread']){
+  await page.goto('http://127.0.0.1:4194/'+(view==='support'?'support':'support/33333333-3333-4333-8333-333333333333')+'?view='+view+'&lang='+lang);await page.getByRole('heading',{level:1}).waitFor();await page.waitForTimeout(200);
+  if(view==='support')await page.locator('header button').click();
+  if(view==='thread'){await page.locator('button[aria-controls]').nth(0).click();await page.locator('button[aria-controls]').nth(1).click();}
+  await page.evaluate(()=>{const css=document.createElement('style');css.textContent='*{transition:none!important;animation:none!important}';document.head.append(css);const elements=[...document.body.querySelectorAll('*')].filter(el=>el instanceof HTMLElement);const original=elements.map(el=>({el,font:parseFloat(getComputedStyle(el).fontSize),line:getComputedStyle(el).lineHeight}));for(const {el,font,line} of original){el.style.fontSize=font*2+'px';if(line!=='normal')el.style.lineHeight=parseFloat(line)*2+'px';}document.documentElement.dataset.textOnly200='true';});
+  const issues=await page.evaluate(()=>{
+   const issues=[];const shown=el=>!!el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden';const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
+   while(walker.nextNode()){const node=walker.currentNode,parent=node.parentElement;if(!node.textContent.trim()||!parent||!shown(parent)||parent.closest('script,style,.sr-only,[aria-hidden="true"]'))continue;const range=document.createRange();range.selectNodeContents(node);for(const rect of range.getClientRects()){if(rect.right>innerWidth+.5||rect.left<-.5)issues.push({kind:'textBounds',text:node.textContent.trim().slice(0,70),left:rect.left,right:rect.right});const clip=parent.closest('button,[data-slot="badge"]');if(clip&&getComputedStyle(clip).overflowX==='hidden'){const b=clip.getBoundingClientRect();if(rect.right>b.right+.5||rect.left<b.left-.5||rect.bottom>b.bottom+.5)issues.push({kind:'textClipped',text:node.textContent.trim().slice(0,70)});}}}
+   for(const el of document.querySelectorAll('input:not([type=checkbox]):not([type=radio])'))if(shown(el)){const s=getComputedStyle(el),b=el.getBoundingClientRect(),h=b.height-parseFloat(s.paddingTop)-parseFloat(s.paddingBottom)-parseFloat(s.borderTopWidth)-parseFloat(s.borderBottomWidth);if(s.lineHeight!=='normal'&&h+1<parseFloat(s.lineHeight))issues.push({kind:'inputLinebox',label:el.getAttribute('aria-label')||el.id,h,line:s.lineHeight});if(el.type==='number'&&el.value){const c=document.createElement('canvas').getContext('2d');c.font=`${s.fontWeight} ${s.fontSize} ${s.fontFamily}`;const available=b.width-parseFloat(s.paddingLeft)-parseFloat(s.paddingRight)-2;if(c.measureText(el.value).width>available+.5)issues.push({kind:'numberFit',value:el.value,available});}}
+   for(const el of document.querySelectorAll('button,a,[role="combobox"],summary'))if(shown(el)){const b=el.getBoundingClientRect();if(b.height<43.5||b.width<43.5)issues.push({kind:'touch',text:(el.textContent||el.getAttribute('aria-label')||'').trim().slice(0,70),width:b.width,height:b.height});}
+   return issues;
+  });
+  await page.screenshot({path:`output/playwright/lite-mobile-supporting/after/${view}-text200-${lang}-320.png`,fullPage:true});results.push({view,lang,issues});
+ }
+ return results;
+}

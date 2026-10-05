@@ -1,0 +1,95 @@
+[
+  {
+    "language": "en",
+    "state": "version",
+    "small": [
+      {
+        "label": "Close toast",
+        "width": 20,
+        "height": 20
+      }
+    ]
+  },
+  {
+    "language": "en",
+    "state": "save-quality",
+    "small": []
+  },
+  {
+    "language": "en",
+    "state": "new-quality",
+    "small": []
+  },
+  {
+    "language": "en",
+    "state": "rename-quality",
+    "small": []
+  },
+  {
+    "language": "en",
+    "state": "discard-draft",
+    "small": []
+  },
+  {
+    "language": "hi",
+    "state": "version",
+    "small": [
+      {
+        "label": "बंद करें toast",
+        "width": 20,
+        "height": 20
+      }
+    ]
+  },
+  {
+    "language": "hi",
+    "state": "save-quality",
+    "small": []
+  },
+  {
+    "language": "hi",
+    "state": "new-quality",
+    "small": []
+  },
+  {
+    "language": "hi",
+    "state": "rename-quality",
+    "small": []
+  },
+  {
+    "language": "hi",
+    "state": "discard-draft",
+    "small": []
+  },
+  {
+    "language": "gu",
+    "state": "version",
+    "small": [
+      {
+        "label": "બંધ કરો toast",
+        "width": 20,
+        "height": 20
+      }
+    ]
+  },
+  {
+    "language": "gu",
+    "state": "save-quality",
+    "small": []
+  },
+  {
+    "language": "gu",
+    "state": "new-quality",
+    "small": []
+  },
+  {
+    "language": "gu",
+    "state": "rename-quality",
+    "small": []
+  },
+  {
+    "language": "gu",
+    "state": "discard-draft",
+    "small": []
+  }
+]

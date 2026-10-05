@@ -1,0 +1,7 @@
+{
+  "baseline": "34f37ce223ecd321c1c046901384175ca118b04a",
+  "files": {
+    "app/(dashboard)/owner/quotes/QuotesClient.tsx": "b72a669e8c86428ab14289f4ffb4176a2bd6c06268ae79ca0040e492cb5a516a",
+    "app/(dashboard)/owner/rates/RatesClient.tsx": "f36ffb4b340ff358614e6fd4f30f37ef8024f19d60522f47b8e3de708508bea1"
+  }
+}

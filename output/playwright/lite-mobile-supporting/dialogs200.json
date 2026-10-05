@@ -1,0 +1,32 @@
+[
+  {
+    "view": "history",
+    "lang": "en",
+    "issues": []
+  },
+  {
+    "view": "deletion",
+    "lang": "en",
+    "issues": []
+  },
+  {
+    "view": "history",
+    "lang": "hi",
+    "issues": []
+  },
+  {
+    "view": "deletion",
+    "lang": "hi",
+    "issues": []
+  },
+  {
+    "view": "history",
+    "lang": "gu",
+    "issues": []
+  },
+  {
+    "view": "deletion",
+    "lang": "gu",
+    "issues": []
+  }
+]

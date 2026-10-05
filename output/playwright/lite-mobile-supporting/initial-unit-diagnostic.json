@@ -1,0 +1,7 @@
+{
+  "status": "superseded diagnostic, excluded from final pass claims",
+  "reason": "Initial raw workspace Vitest selection included ignored scratch/worktree copies. Exact current-tree rerun and final clean aggregate passed.",
+  "file": "unit.log.gz",
+  "uncompressedSha256": "c7d09e1743139380f8269582f9386f33047bfda9f5e605b41c3ae616fa58f21c",
+  "uncompressedBytes": 997624
+}

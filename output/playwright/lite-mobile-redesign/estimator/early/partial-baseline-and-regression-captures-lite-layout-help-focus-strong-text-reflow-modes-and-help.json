@@ -1,0 +1,26 @@
+{
+  "evidenceType": "Automated Chromium emulation; actual Lite estimator/navigation/paid autosave over synthetic localhost actions. No installed PWA or remote data/provider verification.",
+  "base": "http://127.0.0.1:4197",
+  "stage": "early",
+  "applicationSourceCommit": "working-tree-lite",
+  "createdAt": "2026-10-05T20:23:24.975Z",
+  "externalRequestsBlocked": [],
+  "results": [
+    {
+      "name": "baseline-and-regression-captures",
+      "status": "passed"
+    },
+    {
+      "name": "lite-layout-help-focus",
+      "status": "failed",
+      "error": "Expected values to be strictly equal:\n\nfalse !== true\n",
+      "pageErrors": []
+    },
+    {
+      "name": "strong-text-reflow-modes-and-help",
+      "status": "failed",
+      "error": "locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator('#lite-estimator-help-close')\n    - locator resolved to <button data-slot=\"button\" data-size=\"default\" data-variant=\"ghost\" id=\"lite-estimator-help-close\" class=\"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-semibold leading-[1.3] transition-[color,background-color,border-color,box-shadow,transform] duration-150 motion-reduce:transition-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ri…>…</button>\n  - attempting click action\n    2 × waiting for element to be visible, enabled and stable\n      - element is visible, enabled and stable\n      - scrolling into view if needed\n      - done scrolling\n      - <span data-i18n-skip=\"true\" class=\"lite-mobile-only\">Live estimate</span> from <div data-tour-floating=\"true\" data-lite-mobile-action=\"true\" data-testid=\"mobile-live-estimate-shortcut\" class=\"fixed mobile-floating-action bottom-6 right-4 z-40 md:bottom-7 md:right-7 lg:right-6 xl:right-8\">…</div> subtree intercepts pointer events\n    - retrying click action\n    - waiting 20ms\n    2 × waiting for element to be visible, enabled and stable\n      - element is visible, enabled and stable\n      - scrolling into view if needed\n      - done scrolling\n      - <span data-i18n-skip=\"true\" class=\"lite-mobile-only\">Live estimate</span> from <div data-tour-floating=\"true\" data-lite-mobile-action=\"true\" data-testid=\"mobile-live-estimate-shortcut\" class=\"fixed mobile-floating-action bottom-6 right-4 z-40 md:bottom-7 md:right-7 lg:right-6 xl:right-8\">…</div> subtree intercepts pointer events\n    - retrying click action\n      - waiting 100ms\n    58 × waiting for element to be visible, enabled and stable\n       - element is visible, enabled and stable\n       - scrolling into view if needed\n       - done scrolling\n       - <span data-i18n-skip=\"true\" class=\"lite-mobile-only\">Live estimate</span> from <div data-tour-floating=\"true\" data-lite-mobile-action=\"true\" data-testid=\"mobile-live-estimate-shortcut\" class=\"fixed mobile-floating-action bottom-6 right-4 z-40 md:bottom-7 md:right-7 lg:right-6 xl:right-8\">…</div> subtree intercepts pointer events\n     - retrying click action\n       - waiting 500ms\n",
+      "pageErrors": []
+    }
+  ]
+}

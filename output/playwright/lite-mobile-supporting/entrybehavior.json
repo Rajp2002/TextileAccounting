@@ -1,0 +1,42 @@
+[
+  {
+    "check": "Lite-origin Back retains paid estimator route",
+    "passed": true
+  },
+  {
+    "check": "payment uncertainty remains ahead of compact plans",
+    "passed": true
+  },
+  {
+    "check": "Lite-origin demos are optional by default",
+    "passed": true
+  },
+  {
+    "check": "Lite demo dismissal restores action focus",
+    "passed": true
+  },
+  {
+    "check": "closing optional details hides demo without navigation",
+    "passed": true
+  },
+  {
+    "check": "Lite query referral remains mounted and retained",
+    "passed": true
+  },
+  {
+    "check": "Lite referral closes/reopens without losing input",
+    "passed": true
+  },
+  {
+    "check": "Lite invalid email feedback remains visible",
+    "passed": true
+  },
+  {
+    "check": "uncertain Lite signup retains factory identity",
+    "passed": true
+  },
+  {
+    "check": "uncertain Lite signup retains email input",
+    "passed": true
+  }
+]

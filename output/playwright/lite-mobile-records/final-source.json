@@ -1,0 +1,19 @@
+{
+  "commit": "edc8571e05522588e680620add984d755aaa5fda",
+  "baseline": "34f37ce223ecd321c1c046901384175ca118b04a",
+  "files": {
+    "app/(dashboard)/owner/quotes/QuotesClient.tsx": "1a208d62137d388df107040287646b0531ac3c6509a4b43671f4b2f891d75c12",
+    "app/(dashboard)/owner/quotes/page.tsx": "4d9d1b088a586370e9ee6cb3e5964cc28948ed50d33e049b525866651936dc57",
+    "app/(dashboard)/owner/rates/RatesClient.tsx": "343517647c4187f16cc5b70abae7098402de4589e5bda2398150717dcb9aeee7",
+    "app/free/costings/SavedFreeCostings.tsx": "c600a2e6d23ea7b84cd6d5b21f4cae840b1918636ba862a9c442c382d8c00642",
+    "components/estimator/LitePriorFreeHistory.tsx": "dbe1e8d0ae5fd90b6c5225deffe24e96e97afbc3b32a0cdd48ffd01448295495",
+    "components/estimator/lite-records.module.css": "30d998f15d9d281c307150a8f8faa6248245eb04bf27fdebfcd456c093f4c6a0",
+    "components/estimator/lite-prior-history.module.css": "df84ec4b04ca9d2b2fe3328dc82807fde6efd9d2b386b5be9f2d656d26f18cd3",
+    "lib/i18n/lite-records.ts": "825c3f1bc96cce40abcfd1c6a9bc1052fca4b9cc4e951feee6e99c66cc9f2bd6"
+  },
+  "boundaries": [
+    "Actual React route clients with synthetic plan/server-action/transport answers",
+    "No live authentication/database/payment/deployment",
+    "No installed PWA or native keyboard testing"
+  ]
+}

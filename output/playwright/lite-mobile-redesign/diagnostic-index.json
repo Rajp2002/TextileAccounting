@@ -1,0 +1,1572 @@
+{
+  "status": "superseded diagnostics; excluded from final pass evidence",
+  "archive": "session-local /tmp/weavly-lite-diagnostics",
+  "reason": "Canonical immutable before, final after, comparison and Free-regression-final PNGs are retained. Duplicate preliminary PNGs were moved; corresponding JSON/logs remain. Some early fixture assumptions were invalidated; genuine clipping and success-notice overlap findings were corrected and rechecked. No final failure evidence was removed.",
+  "files": [
+    {
+      "path": "estimator/early/free-estimator-320x568-synthetic.png",
+      "bytes": 40474,
+      "sha256": "7c206bb9345cba35048fe543d5cc152a7b6937d76cb9341239cca215d4df89c4"
+    },
+    {
+      "path": "estimator/early/lite-working-1440x900-synthetic.png",
+      "bytes": 140482,
+      "sha256": "fdfb18d444ad6b0aaba5601ffd58d87858cad25fa2e39e094801e378e9022810"
+    },
+    {
+      "path": "estimator/early/help-open-430-synthetic.png",
+      "bytes": 63613,
+      "sha256": "b2a4a2a919853ed9269c223824c1fefce266a1304205d5f3ad96bf6c82a5c63a"
+    },
+    {
+      "path": "estimator/early/base-estimator-390x844-synthetic.png",
+      "bytes": 77668,
+      "sha256": "cf5c0a0f825778c966a39676b67a3503ab140ec538ae465dcda8dd26da9e122d"
+    },
+    {
+      "path": "estimator/early/base-estimator-430x932-synthetic.png",
+      "bytes": 85106,
+      "sha256": "2484ebde62557557b61afc33e45f8f5d6d96bad62c233bb99aa5ddf593564006"
+    },
+    {
+      "path": "estimator/early/lite-estimator-390x844-synthetic.png",
+      "bytes": 59465,
+      "sha256": "01dd64ede5e23c2a0142f391b8d7d2b53c2e2f260dae6484868ff8eb9888633c"
+    },
+    {
+      "path": "estimator/early/lite-estimator-430x932-synthetic.png",
+      "bytes": 65828,
+      "sha256": "f44cc06272d39588d9071f742ed33eb559b4011e26595eb182f98cb29357c254"
+    },
+    {
+      "path": "estimator/early/base-estimator-1440x900-synthetic.png",
+      "bytes": 147396,
+      "sha256": "c430aa4f965cf721e1d51e1f070aa762500719f85533bb208563cce17717329b"
+    },
+    {
+      "path": "estimator/early/lite-estimator-320x568-synthetic.png",
+      "bytes": 40501,
+      "sha256": "7dd3d609a1061aac9e4b5c74a31324a5569073195aeab96b9b9b515637ad79c3"
+    },
+    {
+      "path": "estimator/early/failure-strong-text-reflow-modes-and-help.png",
+      "bytes": 1418749,
+      "sha256": "6e996606e25b4a904b0bd761b95d4283bfcff5e76228c5c7bc82dfe2b389f0fc"
+    },
+    {
+      "path": "estimator/early/base-estimator-320x568-synthetic.png",
+      "bytes": 51172,
+      "sha256": "e08d1649b9f35d5435c9d0fc185d775c6ff225615b51db01b2520aaf45d66080"
+    },
+    {
+      "path": "estimator/early/en-text200-quick-320-synthetic.png",
+      "bytes": 696438,
+      "sha256": "b5b69ae31b6d20a97f427585e8af569c3fb2d000d028817519a6e42f47cfbe6b"
+    },
+    {
+      "path": "estimator/early/free-estimator-390x844-synthetic.png",
+      "bytes": 59251,
+      "sha256": "cfc54f969179f7fe059992efa92d7dcca409a8c1c0f030b99cd589453dd1a6d5"
+    },
+    {
+      "path": "estimator/early/free-estimator-430x932-synthetic.png",
+      "bytes": 63668,
+      "sha256": "904a0ddc6687f17655f1cdb00a8ff93af576a1870cc4c3d3a09764fc90c52f59"
+    },
+    {
+      "path": "estimator/early/lite-quality-picker-390x844-synthetic.png",
+      "bytes": 60663,
+      "sha256": "828efb9333f85535827e223aaa7a9a5833805a0fd3c3ba59dfeca4c385536c1e"
+    },
+    {
+      "path": "estimator/early/en-text150-quick-320-synthetic.png",
+      "bytes": 532918,
+      "sha256": "b9a793cb69ee765a2166b3f0b488c3aa64857efe08f5d5e562ec88fbb6112668"
+    },
+    {
+      "path": "estimator/early/failure-lite-layout-help-focus.png",
+      "bytes": 242732,
+      "sha256": "39ce43e28d37caefe33b31ba5acd5bf765625e3e0e7542c69215b55fb8553048"
+    },
+    {
+      "path": "estimator/early/failure-baseline-and-regression-captures.png",
+      "bytes": 2740,
+      "sha256": "fb32313e11bc8ffbd5310a1660e630b64cedb4622f8462a5eae2d5464ac8279e"
+    },
+    {
+      "path": "estimator/early/lite-estimator-1440x900-synthetic.png",
+      "bytes": 140410,
+      "sha256": "9ee766b66f463300b512c25799ce2ee6ba66458c9af74b30e9aade18edcd6ff0"
+    },
+    {
+      "path": "estimator/early/lite-working-390x844-synthetic.png",
+      "bytes": 61075,
+      "sha256": "a3b29cfede23934ed17f262d4eec251866d955e8665c252dd3f761bc378178d5"
+    },
+    {
+      "path": "estimator/early/free-estimator-1440x900-synthetic.png",
+      "bytes": 131155,
+      "sha256": "64daa16077b8bd5262b76c2329b3d128b05ddf65315a45b747ee15a461e1f8a2"
+    },
+    {
+      "path": "estimator/early/en-text200-help-320-synthetic.png",
+      "bytes": 1421424,
+      "sha256": "97abdfc080bcadec0c5dc6b33ebd9253525eff8bc8fe76d216d6df8a04c36eaa"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/free-estimator-320x568-synthetic.png",
+      "bytes": 40474,
+      "sha256": "7c206bb9345cba35048fe543d5cc152a7b6937d76cb9341239cca215d4df89c4"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/en-text200-detailed-manual-paise-320-synthetic.png",
+      "bytes": 1028814,
+      "sha256": "1103b84bc6ef7c4440681d438d1f47cb696b36174ce9254065066e35f6f343a8"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/lite-working-1440x900-synthetic.png",
+      "bytes": 140482,
+      "sha256": "fdfb18d444ad6b0aaba5601ffd58d87858cad25fa2e39e094801e378e9022810"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/hi-text200-dialog-save-quality-320-synthetic.png",
+      "bytes": 648741,
+      "sha256": "afde3a6968c3dcf359cec32c3d4611cc700f5e49976b7bbb07f882320fd0c253"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/hi-text200-detailed-manual-paise-320-synthetic.png",
+      "bytes": 976850,
+      "sha256": "252f140bb79b13cf3dcecd79482c85fad9fa9f9495c0fe9e02c9d53ebf3df521"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/base-estimator-390x844-synthetic.png",
+      "bytes": 77668,
+      "sha256": "cf5c0a0f825778c966a39676b67a3503ab140ec538ae465dcda8dd26da9e122d"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/base-estimator-430x932-synthetic.png",
+      "bytes": 85106,
+      "sha256": "2484ebde62557557b61afc33e45f8f5d6d96bad62c233bb99aa5ddf593564006"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/gu-text200-detailed-manual-paise-320-synthetic.png",
+      "bytes": 1071743,
+      "sha256": "221e252e0f64b51ac0222d25d0d5636bff17f7cd926b8f6de03ab124fe6c15b7"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/hi-text200-result-320-synthetic.png",
+      "bytes": 641733,
+      "sha256": "9740f525579dc3cf72e2cbaf139613752361f268917d5c11304ecafcb984c178"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/hi-text200-quality-rates-320-synthetic.png",
+      "bytes": 426649,
+      "sha256": "0c2531e6ca649b077ac0f5594481729ef081d9ca75b6b4596307f1057f89a822"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/gu-text200-dialog-new-quality-320-synthetic.png",
+      "bytes": 711314,
+      "sha256": "29c8a5c8b66db7e4e791346e55433106d40a1e9754bea655e0f2ee08da3f9275"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/lite-estimator-390x844-synthetic.png",
+      "bytes": 59465,
+      "sha256": "01dd64ede5e23c2a0142f391b8d7d2b53c2e2f260dae6484868ff8eb9888633c"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/lite-estimator-430x932-synthetic.png",
+      "bytes": 65828,
+      "sha256": "f44cc06272d39588d9071f742ed33eb559b4011e26595eb182f98cb29357c254"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/hi-text200-dialog-discard-draft-320-synthetic.png",
+      "bytes": 447646,
+      "sha256": "f17bc315b9c0916cd7f05dfea54204c132aeca971939d882152882369be65f37"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/base-estimator-1440x900-synthetic.png",
+      "bytes": 147396,
+      "sha256": "c430aa4f965cf721e1d51e1f070aa762500719f85533bb208563cce17717329b"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/saved-new-version-v2-synthetic.png",
+      "bytes": 59350,
+      "sha256": "16af2c39c4dee1204ef0d4a7c4ccbf0702177edcd902ecfba52c5e474b8a5463"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/hi-text200-dialog-rename-quality-320-synthetic.png",
+      "bytes": 429480,
+      "sha256": "5ff8c9c4cb0aa963152f1fb5aeb3d5737addf35ae201d3c072e6b5f36c480199"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/en-text200-result-320-synthetic.png",
+      "bytes": 686362,
+      "sha256": "86c7444a2e14a0e48eb1a438ce8acaf2341083bbd26111bd752f1a616024f4e4"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/lite-estimator-320x568-synthetic.png",
+      "bytes": 40501,
+      "sha256": "7dd3d609a1061aac9e4b5c74a31324a5569073195aeab96b9b9b515637ad79c3"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/gu-text200-dialog-rename-quality-320-synthetic.png",
+      "bytes": 469754,
+      "sha256": "37db255f5520878b7f1183b5a635088012adb23b88c613104623fcf8088b5d90"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/gu-text200-dialog-discard-draft-320-synthetic.png",
+      "bytes": 487788,
+      "sha256": "23b221ef1882289b91cddcefffdba2b096250357d20158133dbd13dc8ef5aa02"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/base-estimator-320x568-synthetic.png",
+      "bytes": 51172,
+      "sha256": "e08d1649b9f35d5435c9d0fc185d775c6ff225615b51db01b2520aaf45d66080"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/gu-text200-result-320-synthetic.png",
+      "bytes": 702919,
+      "sha256": "f829ff23951a4cef8ef1ddab946e395374f5f51e90800038089876f916522d8d"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/gu-text200-quality-picker-320-synthetic.png",
+      "bytes": 449668,
+      "sha256": "042f15d75c5672f2ccf8cedddec7343bc075a6f070090e5c6eeaf149ef49970f"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/en-text200-dialog-rename-quality-320-synthetic.png",
+      "bytes": 463952,
+      "sha256": "8b96c567243170a87b1cc95508a1d1fe7d33ea0f8e60eb8f6cab84b8cf072e39"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/hi-text200-dialog-version-320-synthetic.png",
+      "bytes": 685415,
+      "sha256": "5934ba7dcec821299a9ee0ccbd12389e96264803797f1ebd26fdf4e2514fc6c7"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/gu-text200-quality-rates-320-synthetic.png",
+      "bytes": 470629,
+      "sha256": "57443d9e4c7b4b9972e5cbe7717f060342babdd9a8abb1a5b033a11f15b7a2ce"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/en-text200-quality-picker-320-synthetic.png",
+      "bytes": 440592,
+      "sha256": "ed2541a1fa4cf377ac8456fc4a00e7eb36ad97f75d5852227ba02df962eea7f6"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/free-estimator-390x844-synthetic.png",
+      "bytes": 59251,
+      "sha256": "cfc54f969179f7fe059992efa92d7dcca409a8c1c0f030b99cd589453dd1a6d5"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/free-estimator-430x932-synthetic.png",
+      "bytes": 63668,
+      "sha256": "904a0ddc6687f17655f1cdb00a8ff93af576a1870cc4c3d3a09764fc90c52f59"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/lite-quality-picker-390x844-synthetic.png",
+      "bytes": 60663,
+      "sha256": "828efb9333f85535827e223aaa7a9a5833805a0fd3c3ba59dfeca4c385536c1e"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/en-text200-dialog-new-quality-320-synthetic.png",
+      "bytes": 681524,
+      "sha256": "1468fce66a62f4d918ce054bc061bb2eec100d22a4847fde9b33a1a04aea2549"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/quality-version-choice-synthetic.png",
+      "bytes": 96521,
+      "sha256": "9f1f57d420edf38fd8f75b7a9dc4be66420d372a06c28da3e6be02602d96fe1d"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/failure-strong-text-paid-dialogs.png",
+      "bytes": 487788,
+      "sha256": "23b221ef1882289b91cddcefffdba2b096250357d20158133dbd13dc8ef5aa02"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/hi-text200-quality-picker-320-synthetic.png",
+      "bytes": 408212,
+      "sha256": "4e1d15a13e25f990ebb7429fcffa35130a5c476dcf7d120173ffdbbed2fc63df"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/en-text200-dialog-version-320-synthetic.png",
+      "bytes": 729836,
+      "sha256": "8555fc024b2c99c30233c4643ea764dfcdb733fbed43152bab62f25ce78e0073"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/gu-text200-dialog-version-320-synthetic.png",
+      "bytes": 751226,
+      "sha256": "641f2b9c6c9d35f5929cb87443ea0e7c377ed4b6b6b4bde6931cf2efb53c4807"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/lite-estimator-1440x900-synthetic.png",
+      "bytes": 140410,
+      "sha256": "9ee766b66f463300b512c25799ce2ee6ba66458c9af74b30e9aade18edcd6ff0"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/lite-working-390x844-synthetic.png",
+      "bytes": 61075,
+      "sha256": "a3b29cfede23934ed17f262d4eec251866d955e8665c252dd3f761bc378178d5"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/hi-text200-dialog-new-quality-320-synthetic.png",
+      "bytes": 641946,
+      "sha256": "7c3390acd8545020f08844215efe8eb6386f33dd559ad2f76928948b35527df2"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/en-text200-dialog-save-quality-320-synthetic.png",
+      "bytes": 694090,
+      "sha256": "9f073081502193e1cc0861712f85ead0fe2a5c3fbcf16586a05ac34f36a5f41e"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/free-estimator-1440x900-synthetic.png",
+      "bytes": 131155,
+      "sha256": "64daa16077b8bd5262b76c2329b3d128b05ddf65315a45b747ee15a461e1f8a2"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/en-text200-dialog-discard-draft-320-synthetic.png",
+      "bytes": 483124,
+      "sha256": "0d7888870f562abe1739eaacf01459c3cf4407e8f5d68846379690a4fe058f9e"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/gu-text200-dialog-save-quality-320-synthetic.png",
+      "bytes": 712989,
+      "sha256": "c87632f9aac5adb965113a67378e92094339516695c0470525f0aae23eaa9ca2"
+    },
+    {
+      "path": "estimator/corrected-actual-toast/en-text200-quality-rates-320-synthetic.png",
+      "bytes": 453832,
+      "sha256": "8d4c8be4166a223bf5e4cba6eb29f5def4fc110735111e4223cf7751421f5031"
+    },
+    {
+      "path": "estimator/final-focused/hi-text200-dialog-discard-draft-320-viewport-synthetic.png",
+      "bytes": 54760,
+      "sha256": "02b37a674ad84f88147f10af80d8d34be0a47a1c24f9870f262ad9438375ee8f"
+    },
+    {
+      "path": "estimator/final-focused/en-text200-dialog-version-320-viewport-synthetic.png",
+      "bytes": 55884,
+      "sha256": "7245116a530de1d7e06087d938a4a42bf9364630bf2a53fc194c8737c9b8390d"
+    },
+    {
+      "path": "estimator/final-focused/hi-text200-dialog-save-quality-320-synthetic.png",
+      "bytes": 648741,
+      "sha256": "afde3a6968c3dcf359cec32c3d4611cc700f5e49976b7bbb07f882320fd0c253"
+    },
+    {
+      "path": "estimator/final-focused/en-text200-dialog-rename-quality-320-viewport-synthetic.png",
+      "bytes": 55517,
+      "sha256": "bce2c7a6dce7cfc3dd5c6e5ac834bdb5f6b135244bf6706ea6747bc2d67a0aea"
+    },
+    {
+      "path": "estimator/final-focused/gu-text200-dialog-rename-quality-320-viewport-synthetic.png",
+      "bytes": 53421,
+      "sha256": "410c06ea8ad2d9815140bd7e3e094494c660984639ddfbd301ced1a7c8ec96b7"
+    },
+    {
+      "path": "estimator/final-focused/gu-text200-dialog-new-quality-320-synthetic.png",
+      "bytes": 709127,
+      "sha256": "c65ed85d3a872b5eacd382857621c49ba8d27adfce29ce461924d194ec188da5"
+    },
+    {
+      "path": "estimator/final-focused/hi-text200-dialog-discard-draft-320-synthetic.png",
+      "bytes": 447646,
+      "sha256": "f17bc315b9c0916cd7f05dfea54204c132aeca971939d882152882369be65f37"
+    },
+    {
+      "path": "estimator/final-focused/en-text200-dialog-new-quality-320-viewport-synthetic.png",
+      "bytes": 44412,
+      "sha256": "d64ba48ac10fd59d2bf4f0129a3b6e8c830beb30bb945d44a8ab8176f1e6f027"
+    },
+    {
+      "path": "estimator/final-focused/hi-text200-dialog-rename-quality-320-synthetic.png",
+      "bytes": 426107,
+      "sha256": "d1385c00b3fd4c01d3dd589dfc095f4bc55b339ee9aea8f12f072862c1932ec3"
+    },
+    {
+      "path": "estimator/final-focused/gu-text200-dialog-rename-quality-320-synthetic.png",
+      "bytes": 466340,
+      "sha256": "ec85b5cd2628b0db1804eb759cf37b7d27b563dccdac3b7a661ce12ef96015e1"
+    },
+    {
+      "path": "estimator/final-focused/gu-text200-dialog-discard-draft-320-synthetic.png",
+      "bytes": 487788,
+      "sha256": "23b221ef1882289b91cddcefffdba2b096250357d20158133dbd13dc8ef5aa02"
+    },
+    {
+      "path": "estimator/final-focused/gu-text200-dialog-discard-draft-320-viewport-synthetic.png",
+      "bytes": 57192,
+      "sha256": "9c30fdbfd4f992e3f45b0be6f5e40ba31e4ff6f453368e847eb382ddefe911d2"
+    },
+    {
+      "path": "estimator/final-focused/hi-text200-dialog-save-quality-320-viewport-synthetic.png",
+      "bytes": 55220,
+      "sha256": "4fb9968d38e3771295db69d135bb672027d01e08ddd3ac63c2469f8edd976f7f"
+    },
+    {
+      "path": "estimator/final-focused/gu-text200-dialog-new-quality-320-viewport-synthetic.png",
+      "bytes": 45246,
+      "sha256": "d691fa9da7bd0c0cdf5ea497ac2012aff0a2257044189edf4c678c017820d174"
+    },
+    {
+      "path": "estimator/final-focused/hi-text200-dialog-rename-quality-320-viewport-synthetic.png",
+      "bytes": 51638,
+      "sha256": "aff1025862b7a01190f7924515a17bee7fd056e7f778f6e4342d757b1a37c57e"
+    },
+    {
+      "path": "estimator/final-focused/en-text200-dialog-rename-quality-320-synthetic.png",
+      "bytes": 463316,
+      "sha256": "8acf52ab9a65771adea47e48e32740f206ce9a1430a4cba626652c454eb795d1"
+    },
+    {
+      "path": "estimator/final-focused/hi-text200-dialog-version-320-synthetic.png",
+      "bytes": 694506,
+      "sha256": "b0d9de3158d5b644ad57b53e24047c7cb2317affa2c1a2b4e142f02d43764732"
+    },
+    {
+      "path": "estimator/final-focused/notice-success-dialog-paint-order-320-synthetic.png",
+      "bytes": 56106,
+      "sha256": "897455319dd68396ccf8a1fe02add809fac473673dd1066631b5d33f1e2c333e"
+    },
+    {
+      "path": "estimator/final-focused/en-text200-dialog-new-quality-320-synthetic.png",
+      "bytes": 682846,
+      "sha256": "3a7df931b17a07d755e9e9c07c16a5367604f6c4a9a17d663eaa430f6acce01c"
+    },
+    {
+      "path": "estimator/final-focused/hi-text200-dialog-version-320-viewport-synthetic.png",
+      "bytes": 59930,
+      "sha256": "9a33c1ce3198d494a3c2a63ecbda1c8e289d09c2fe447880c2c1515f53985405"
+    },
+    {
+      "path": "estimator/final-focused/notice-error-dialog-paint-order-320-synthetic.png",
+      "bytes": 54603,
+      "sha256": "c8cfcaa1e4290b9de6bf230399eafe53e814bcaf9509c56921d7532750fcab49"
+    },
+    {
+      "path": "estimator/final-focused/gu-text200-dialog-save-quality-320-viewport-synthetic.png",
+      "bytes": 59631,
+      "sha256": "35b6801093b4b018cb942eda35acd0a44b61385b466a333278bd0509b4e8d4c3"
+    },
+    {
+      "path": "estimator/final-focused/failure-strong-text-paid-dialogs.png",
+      "bytes": 487788,
+      "sha256": "23b221ef1882289b91cddcefffdba2b096250357d20158133dbd13dc8ef5aa02"
+    },
+    {
+      "path": "estimator/final-focused/en-text200-dialog-version-320-synthetic.png",
+      "bytes": 738661,
+      "sha256": "faf473b543d37aa00a6568a9256076850889ce1304ea4078cf86dde04edb6faf"
+    },
+    {
+      "path": "estimator/final-focused/en-text200-dialog-save-quality-320-viewport-synthetic.png",
+      "bytes": 52617,
+      "sha256": "b8fcc0459003bed2323420967ffb08c9f9463e722309010fddc13c84a1fb433c"
+    },
+    {
+      "path": "estimator/final-focused/gu-text200-dialog-version-320-viewport-synthetic.png",
+      "bytes": 62753,
+      "sha256": "252ed8db68f9fcdfc08c85bdbc6d24bc29450489dd570691f1ac698abc6e87c4"
+    },
+    {
+      "path": "estimator/final-focused/gu-text200-dialog-version-320-synthetic.png",
+      "bytes": 762961,
+      "sha256": "6e8cc8e5ce70a873c906e71e562f10336cf53ff64d6b5438049edf365378bcfa"
+    },
+    {
+      "path": "estimator/final-focused/hi-text200-dialog-new-quality-320-synthetic.png",
+      "bytes": 644875,
+      "sha256": "952011a566a1e67162630d04cbde4d98d0db23477276c47601903a19a6b157aa"
+    },
+    {
+      "path": "estimator/final-focused/en-text200-dialog-discard-draft-320-viewport-synthetic.png",
+      "bytes": 55465,
+      "sha256": "f67dad1f89efa9f607ef871985f5990c9e047049881d6aed535295eecd56ef2f"
+    },
+    {
+      "path": "estimator/final-focused/en-text200-dialog-save-quality-320-synthetic.png",
+      "bytes": 694090,
+      "sha256": "9f073081502193e1cc0861712f85ead0fe2a5c3fbcf16586a05ac34f36a5f41e"
+    },
+    {
+      "path": "estimator/final-focused/hi-text200-dialog-new-quality-320-viewport-synthetic.png",
+      "bytes": 42396,
+      "sha256": "a213e340e809c7ab307ca85e573998e640f116034c4866bf657a3e3924928424"
+    },
+    {
+      "path": "estimator/final-focused/notice-warning-dialog-paint-order-320-synthetic.png",
+      "bytes": 54580,
+      "sha256": "285b25d4feb0bff0621cf843d19aba81358850d81af3037a85dd5662514b9130"
+    },
+    {
+      "path": "estimator/final-focused/en-text200-dialog-discard-draft-320-synthetic.png",
+      "bytes": 483124,
+      "sha256": "0d7888870f562abe1739eaacf01459c3cf4407e8f5d68846379690a4fe058f9e"
+    },
+    {
+      "path": "estimator/final-focused/gu-text200-dialog-save-quality-320-synthetic.png",
+      "bytes": 716245,
+      "sha256": "ecbc2a7d68951df38f20b3b758354156ab8d5baa5bf889d3fabbea5040216fab"
+    },
+    {
+      "path": "estimator/dialog-focused/hi-text200-dialog-save-quality-320-synthetic.png",
+      "bytes": 673134,
+      "sha256": "0aea3cdc1d90ff2bf5ea3a024bed2cab865a6ad1ecd9697bf5ee1e0a527bb43d"
+    },
+    {
+      "path": "estimator/dialog-focused/gu-text200-dialog-new-quality-320-synthetic.png",
+      "bytes": 724217,
+      "sha256": "d924928e55934336c5f17cacfc2a4ff23d75362ec6a849c6a83f185cc311b98c"
+    },
+    {
+      "path": "estimator/dialog-focused/hi-text200-dialog-discard-draft-320-synthetic.png",
+      "bytes": 448929,
+      "sha256": "d29f6a5904476c5851b164d2074531eabf5a3866425d005808dfa25d1f27aecc"
+    },
+    {
+      "path": "estimator/dialog-focused/hi-text200-dialog-rename-quality-320-synthetic.png",
+      "bytes": 426269,
+      "sha256": "61c1d9c88c938a74b9bbb0915022332c4ae565e2370b66fd057fb1ae992123b5"
+    },
+    {
+      "path": "estimator/dialog-focused/gu-text200-dialog-rename-quality-320-synthetic.png",
+      "bytes": 466797,
+      "sha256": "66bb09483da995d3e98f2d2f3ecec82fd60c5d90c594c4b40adb12fed936a890"
+    },
+    {
+      "path": "estimator/dialog-focused/gu-text200-dialog-discard-draft-320-synthetic.png",
+      "bytes": 488433,
+      "sha256": "945a2e9ca1d1d55a5bf6c8652ee4507e7802bcb06223bd7e848261f9919d9f79"
+    },
+    {
+      "path": "estimator/dialog-focused/saved-export-source-v1-synthetic.png",
+      "bytes": 77557,
+      "sha256": "2ce5d1571d4a7ea2ed321494e48699399e68f9b6036cf1a3493ff4964c278efc"
+    },
+    {
+      "path": "estimator/dialog-focused/failure-saved-export-source-and-unsaved-values.png",
+      "bytes": 401753,
+      "sha256": "62e10925c9d96ee548c18cadd08acf8204e77b4cab961e22f907546edb55ba09"
+    },
+    {
+      "path": "estimator/dialog-focused/en-text200-dialog-rename-quality-320-synthetic.png",
+      "bytes": 465327,
+      "sha256": "d1e9636f91268291bf7805464e9d9cbd288876e567996dd442b2d9ceca64b817"
+    },
+    {
+      "path": "estimator/dialog-focused/failure-detailed-modes-manual-zero-and-units.png",
+      "bytes": 354510,
+      "sha256": "cae0ae42214cfa56b3970c80195fb25d3273f8ed194c4f074334883910374735"
+    },
+    {
+      "path": "estimator/dialog-focused/hi-text200-dialog-version-320-synthetic.png",
+      "bytes": 730654,
+      "sha256": "3501b135cf8e3a68a4771b1df077e6839aa46d0f1d2a46154e1a9f466078c75f"
+    },
+    {
+      "path": "estimator/dialog-focused/en-text200-dialog-new-quality-320-synthetic.png",
+      "bytes": 698165,
+      "sha256": "dcb041b3f61f793a7a3d540f1ccef9fc9719983d6fce1e8598493902ba639b19"
+    },
+    {
+      "path": "estimator/dialog-focused/failure-strong-text-paid-dialogs.png",
+      "bytes": 488433,
+      "sha256": "945a2e9ca1d1d55a5bf6c8652ee4507e7802bcb06223bd7e848261f9919d9f79"
+    },
+    {
+      "path": "estimator/dialog-focused/en-text200-dialog-version-320-synthetic.png",
+      "bytes": 772803,
+      "sha256": "9267f1b1f514fd69996fd1e2117a30d2fefeb46cbb013a1c33c8866e7c10d05f"
+    },
+    {
+      "path": "estimator/dialog-focused/gu-text200-dialog-version-320-synthetic.png",
+      "bytes": 802483,
+      "sha256": "c6a746a43bbdeb070b51031dbd27328d47ae57d6bcd7996e049fe18327679099"
+    },
+    {
+      "path": "estimator/dialog-focused/hi-text200-dialog-new-quality-320-synthetic.png",
+      "bytes": 660208,
+      "sha256": "f3b907b179b7240593c002a5dd561a463b89a8a351863b01089cb9fd92df211c"
+    },
+    {
+      "path": "estimator/dialog-focused/en-text200-dialog-save-quality-320-synthetic.png",
+      "bytes": 711695,
+      "sha256": "29be3124bc2ec41e0fc1b94b8535ea22dbd2c7320bae425a017be93604b2f585"
+    },
+    {
+      "path": "estimator/dialog-focused/en-text200-dialog-discard-draft-320-synthetic.png",
+      "bytes": 485788,
+      "sha256": "f78cd930295183b44000af1040b9cb119af46d43443f0b063c719c0dc70c72d2"
+    },
+    {
+      "path": "estimator/dialog-focused/gu-text200-dialog-save-quality-320-synthetic.png",
+      "bytes": 741265,
+      "sha256": "052d1e07669b2a6f07427f311c244b921637bc45c6a630be04e1a950358fb14b"
+    },
+    {
+      "path": "estimator/final-clearance/simulated-keyboard-closed-synthetic.png",
+      "bytes": 71251,
+      "sha256": "d2a26e1dd810e9c4f325d8b889a4d3483d48a192218f1e1f929d5793daf63405"
+    },
+    {
+      "path": "estimator/final-clearance/simulated-keyboard-open-synthetic.png",
+      "bytes": 61529,
+      "sha256": "0a0a2220ce5ddd5a6a2a73b4e7cf9ec3acccd6d675bb1e5305065001c1690563"
+    },
+    {
+      "path": "estimator/correction-focused/failure-immutable-version-source-and-no-change-save.png",
+      "bytes": 393696,
+      "sha256": "b3113d128997a348b5ab0d6ddda5e04c37381e24c79f97ff68cd76d09b995a62"
+    },
+    {
+      "path": "estimator/correction-focused/en-text200-detailed-manual-paise-320-synthetic.png",
+      "bytes": 1027578,
+      "sha256": "6e8f59daed7d07bcf532e128d5f79544b23e1c487f0b0dedf5a862d32b399d4b"
+    },
+    {
+      "path": "estimator/correction-focused/hi-text200-dialog-save-quality-320-synthetic.png",
+      "bytes": 648741,
+      "sha256": "afde3a6968c3dcf359cec32c3d4611cc700f5e49976b7bbb07f882320fd0c253"
+    },
+    {
+      "path": "estimator/correction-focused/hi-text200-detailed-manual-paise-320-synthetic.png",
+      "bytes": 975289,
+      "sha256": "3a58122e99a25ce34e9d7ab266ab162a5020b0fed2d3c711301d9ebd7bc7acf6"
+    },
+    {
+      "path": "estimator/correction-focused/gu-text200-detailed-manual-paise-320-synthetic.png",
+      "bytes": 1070362,
+      "sha256": "494d5b98a4d8c333624046a01a638bdb1017e8d2f592a768836a058689d2d8e8"
+    },
+    {
+      "path": "estimator/correction-focused/hi-text200-result-320-synthetic.png",
+      "bytes": 641733,
+      "sha256": "9740f525579dc3cf72e2cbaf139613752361f268917d5c11304ecafcb984c178"
+    },
+    {
+      "path": "estimator/correction-focused/hi-text200-quality-rates-320-synthetic.png",
+      "bytes": 426649,
+      "sha256": "0c2531e6ca649b077ac0f5594481729ef081d9ca75b6b4596307f1057f89a822"
+    },
+    {
+      "path": "estimator/correction-focused/gu-text200-dialog-new-quality-320-synthetic.png",
+      "bytes": 708178,
+      "sha256": "24ad56ea8c7d2cc36eb87e30dbebc093a5c18aed55c8bddd329ad2689570f62c"
+    },
+    {
+      "path": "estimator/correction-focused/hi-text200-dialog-discard-draft-320-synthetic.png",
+      "bytes": 447646,
+      "sha256": "f17bc315b9c0916cd7f05dfea54204c132aeca971939d882152882369be65f37"
+    },
+    {
+      "path": "estimator/correction-focused/hi-text200-dialog-rename-quality-320-synthetic.png",
+      "bytes": 426102,
+      "sha256": "5f3de0c7f40bd1b84be932e548d2878211572ece3c1352059caf0ec59418b774"
+    },
+    {
+      "path": "estimator/correction-focused/en-text200-result-320-synthetic.png",
+      "bytes": 686362,
+      "sha256": "86c7444a2e14a0e48eb1a438ce8acaf2341083bbd26111bd752f1a616024f4e4"
+    },
+    {
+      "path": "estimator/correction-focused/gu-text200-dialog-rename-quality-320-synthetic.png",
+      "bytes": 466336,
+      "sha256": "82607b5471b00bad3912813b31e00f7399cdea6e18849acb0d6c3bb6c9f2d08d"
+    },
+    {
+      "path": "estimator/correction-focused/gu-text200-dialog-discard-draft-320-synthetic.png",
+      "bytes": 487788,
+      "sha256": "23b221ef1882289b91cddcefffdba2b096250357d20158133dbd13dc8ef5aa02"
+    },
+    {
+      "path": "estimator/correction-focused/saved-export-source-v1-synthetic.png",
+      "bytes": 77493,
+      "sha256": "2addb1372d7b3dca330f65e668fb8f612a5672ffb294938b4d1652b8a0d70015"
+    },
+    {
+      "path": "estimator/correction-focused/failure-strong-text-additional-panels-and-touch.png",
+      "bytes": 470629,
+      "sha256": "57443d9e4c7b4b9972e5cbe7717f060342babdd9a8abb1a5b033a11f15b7a2ce"
+    },
+    {
+      "path": "estimator/correction-focused/gu-text200-result-320-synthetic.png",
+      "bytes": 709362,
+      "sha256": "582baf98ec371298adc8f01a7aad8c472e2ec234bf4dc4f58cc8bfd9a81b981a"
+    },
+    {
+      "path": "estimator/correction-focused/gu-text200-quality-picker-320-synthetic.png",
+      "bytes": 449668,
+      "sha256": "042f15d75c5672f2ccf8cedddec7343bc075a6f070090e5c6eeaf149ef49970f"
+    },
+    {
+      "path": "estimator/correction-focused/en-text200-dialog-rename-quality-320-synthetic.png",
+      "bytes": 463952,
+      "sha256": "8b96c567243170a87b1cc95508a1d1fe7d33ea0f8e60eb8f6cab84b8cf072e39"
+    },
+    {
+      "path": "estimator/correction-focused/hi-text200-dialog-version-320-synthetic.png",
+      "bytes": 687601,
+      "sha256": "680bbed0228d206c1fe8c621f46e98db428339307c3726a01d467f37f8a9fc4b"
+    },
+    {
+      "path": "estimator/correction-focused/gu-text200-quality-rates-320-synthetic.png",
+      "bytes": 470629,
+      "sha256": "57443d9e4c7b4b9972e5cbe7717f060342babdd9a8abb1a5b033a11f15b7a2ce"
+    },
+    {
+      "path": "estimator/correction-focused/en-text200-quality-picker-320-synthetic.png",
+      "bytes": 440592,
+      "sha256": "ed2541a1fa4cf377ac8456fc4a00e7eb36ad97f75d5852227ba02df962eea7f6"
+    },
+    {
+      "path": "estimator/correction-focused/en-text200-dialog-new-quality-320-synthetic.png",
+      "bytes": 681524,
+      "sha256": "1468fce66a62f4d918ce054bc061bb2eec100d22a4847fde9b33a1a04aea2549"
+    },
+    {
+      "path": "estimator/correction-focused/failure-strong-text-paid-dialogs.png",
+      "bytes": 487788,
+      "sha256": "23b221ef1882289b91cddcefffdba2b096250357d20158133dbd13dc8ef5aa02"
+    },
+    {
+      "path": "estimator/correction-focused/hi-text200-quality-picker-320-synthetic.png",
+      "bytes": 408212,
+      "sha256": "4e1d15a13e25f990ebb7429fcffa35130a5c476dcf7d120173ffdbbed2fc63df"
+    },
+    {
+      "path": "estimator/correction-focused/en-text200-dialog-version-320-synthetic.png",
+      "bytes": 731492,
+      "sha256": "f8182bfe69eb747e6dac0070652c85e76d90fa9cb4a9887aedf6249da3fccf3b"
+    },
+    {
+      "path": "estimator/correction-focused/failure-baseline-and-regression-captures.png",
+      "bytes": 2743,
+      "sha256": "4174e3aced3b5061e884f1e3df163a8a07407be61b772edf15df589c72b7dc9a"
+    },
+    {
+      "path": "estimator/correction-focused/gu-text200-dialog-version-320-synthetic.png",
+      "bytes": 755011,
+      "sha256": "c352d50814a402c1e9dfd79b8f7c9a75f5ec19693f9e5df5cab85edc69defce0"
+    },
+    {
+      "path": "estimator/correction-focused/hi-text200-dialog-new-quality-320-synthetic.png",
+      "bytes": 641946,
+      "sha256": "7c3390acd8545020f08844215efe8eb6386f33dd559ad2f76928948b35527df2"
+    },
+    {
+      "path": "estimator/correction-focused/en-text200-dialog-save-quality-320-synthetic.png",
+      "bytes": 694090,
+      "sha256": "9f073081502193e1cc0861712f85ead0fe2a5c3fbcf16586a05ac34f36a5f41e"
+    },
+    {
+      "path": "estimator/correction-focused/en-text200-dialog-discard-draft-320-synthetic.png",
+      "bytes": 483124,
+      "sha256": "0d7888870f562abe1739eaacf01459c3cf4407e8f5d68846379690a4fe058f9e"
+    },
+    {
+      "path": "estimator/correction-focused/gu-text200-dialog-save-quality-320-synthetic.png",
+      "bytes": 716245,
+      "sha256": "ecbc2a7d68951df38f20b3b758354156ab8d5baa5bf889d3fabbea5040216fab"
+    },
+    {
+      "path": "estimator/correction-focused/en-text200-quality-rates-320-synthetic.png",
+      "bytes": 453832,
+      "sha256": "8d4c8be4166a223bf5e4cba6eb29f5def4fc110735111e4223cf7751421f5031"
+    },
+    {
+      "path": "estimator/early-focused/gu-text200-help-320-synthetic.png",
+      "bytes": 746166,
+      "sha256": "841675437b7531ae466fde903413f8835acacb066a749d59189c504a9bab9baf"
+    },
+    {
+      "path": "estimator/early-focused/help-open-430-synthetic.png",
+      "bytes": 63613,
+      "sha256": "b2a4a2a919853ed9269c223824c1fefce266a1304205d5f3ad96bf6c82a5c63a"
+    },
+    {
+      "path": "estimator/early-focused/hi-text200-quick-320-synthetic.png",
+      "bytes": 651322,
+      "sha256": "4931dd34e7b0f655bd4cd4bc6a1da43ee91d19fc34e0abaa3b53df44d67f65c0"
+    },
+    {
+      "path": "estimator/early-focused/gu-text150-quick-320-synthetic.png",
+      "bytes": 553148,
+      "sha256": "16664cdb0e9b2fb4f87c768f2dc5a9c7729a57636ef904587b99e671ea98aa48"
+    },
+    {
+      "path": "estimator/early-focused/en-text200-quick-320-synthetic.png",
+      "bytes": 696438,
+      "sha256": "b5b69ae31b6d20a97f427585e8af569c3fb2d000d028817519a6e42f47cfbe6b"
+    },
+    {
+      "path": "estimator/early-focused/hi-text200-help-320-synthetic.png",
+      "bytes": 674920,
+      "sha256": "b4fa840edba3d8415d706e3743730411c93bcc46219692ad79894b481a860878"
+    },
+    {
+      "path": "estimator/early-focused/hi-text150-quick-320-synthetic.png",
+      "bytes": 515537,
+      "sha256": "b1c5e2c0109546ac13b52d0106327ecbf5b0ce95fb8336913c03cb6b08dd546e"
+    },
+    {
+      "path": "estimator/early-focused/en-text150-quick-320-synthetic.png",
+      "bytes": 532918,
+      "sha256": "b9a793cb69ee765a2166b3f0b488c3aa64857efe08f5d5e562ec88fbb6112668"
+    },
+    {
+      "path": "estimator/early-focused/failure-lite-layout-help-focus.png",
+      "bytes": 242732,
+      "sha256": "39ce43e28d37caefe33b31ba5acd5bf765625e3e0e7542c69215b55fb8553048"
+    },
+    {
+      "path": "estimator/early-focused/gu-text200-quick-320-synthetic.png",
+      "bytes": 724345,
+      "sha256": "a50e70605f98b7164ad145f4351cd1890fa4baf0463c920916bc803c13254647"
+    },
+    {
+      "path": "estimator/early-focused/en-text200-help-320-synthetic.png",
+      "bytes": 719232,
+      "sha256": "1098e3a02ccb15f8ea47f4ad891d938269cff2224cffa4e4bb02073f667d5d77"
+    },
+    {
+      "path": "estimator/behavior-focused/dirty-quality-switch-confirmation-synthetic.png",
+      "bytes": 68001,
+      "sha256": "9a93eea3fd8e628c2d113eea85b432be96bc560a1903fd5e6a1797cec4a3941b"
+    },
+    {
+      "path": "estimator/behavior-focused/help-open-430-synthetic.png",
+      "bytes": 63613,
+      "sha256": "b2a4a2a919853ed9269c223824c1fefce266a1304205d5f3ad96bf6c82a5c63a"
+    },
+    {
+      "path": "estimator/behavior-focused/failure-warnings-invalid-and-confirmation.png",
+      "bytes": 380975,
+      "sha256": "7814c5e94d8590a00082b7d606863ee483117ca0fc026230f8e19974a662b9d8"
+    },
+    {
+      "path": "estimator/behavior-focused/discard-draft-confirmation-synthetic.png",
+      "bytes": 85201,
+      "sha256": "caa04c8ec984e6009520b88f3c0ca82d900586fa436030d0ea3ef0837691f46a"
+    },
+    {
+      "path": "estimator/behavior-focused/definite-save-rejection-synthetic.png",
+      "bytes": 69671,
+      "sha256": "35d01c1b691df34305e8e930b7c2a227b5c7cad75fb4f4a7241257321d3a6f39"
+    },
+    {
+      "path": "estimator/behavior-focused/simulated-keyboard-closed-synthetic.png",
+      "bytes": 71275,
+      "sha256": "556dd7be2efe99f5b693208ca347a9509580b7790dc6b6df02fe6601c1acf655"
+    },
+    {
+      "path": "estimator/behavior-focused/failure-saved-export-source-and-unsaved-values.png",
+      "bytes": 372854,
+      "sha256": "841a1d0498ed8e3419d59ca01493e06a795b5c54152f9889f4cc50b67320ef59"
+    },
+    {
+      "path": "estimator/behavior-focused/simulated-keyboard-open-synthetic.png",
+      "bytes": 61568,
+      "sha256": "5c0b5293af4874d2b621506247ecb0246fd28eb07fa95f53e1336966abc65e0e"
+    },
+    {
+      "path": "estimator/behavior-focused/paid-draft-recovery-synthetic.png",
+      "bytes": 67709,
+      "sha256": "f83d1e0a9e2dd0e32d357049776e9e592aec3cfeb7c57a320ad0bc7afeaaf657"
+    },
+    {
+      "path": "estimator/behavior-focused/failure-quality-version-save-and-new-reset.png",
+      "bytes": 404697,
+      "sha256": "6080583f6e43d87b6efae086dcb0f74ee5477a986da28377868ed08dc85c536e"
+    },
+    {
+      "path": "estimator/behavior-focused/failure-quality-rate-unknown-reconciliation.png",
+      "bytes": 289936,
+      "sha256": "849c49d3ae6c5a03e9c8e2617842177db00881a5388b664bf1ef99d6e96af3e5"
+    },
+    {
+      "path": "estimator/behavior-focused/loaded-quality-identity-synthetic.png",
+      "bytes": 71949,
+      "sha256": "468eb676134a20995ba466319cf7d18e130563962a7710bce58414df6d5cc694"
+    },
+    {
+      "path": "estimator/behavior-focused/unknown-save-frozen-synthetic.png",
+      "bytes": 70157,
+      "sha256": "ad4a33ef1b19181c7cf33350556b802c79b697b80218e23b96befca01a883d5b"
+    },
+    {
+      "path": "estimator/behavior-focused/saved-version-1-synthetic.png",
+      "bytes": 51772,
+      "sha256": "6b733b8ef1e02c0317dc6134aa8960a136f12e11215d19bf17a4d92e64cde3a1"
+    },
+    {
+      "path": "estimator/behavior-focused/failure-paid-draft-recovery-and-scope.png",
+      "bytes": 276470,
+      "sha256": "bc0cdb2a79a593c27e5c3ccbd5b3a2808f8c964734ae6dd7e41512dc2da4fb42"
+    },
+    {
+      "path": "estimator/behavior-focused/failure-quality-search-dirty-cancel-switch-undo.png",
+      "bytes": 265746,
+      "sha256": "914bf36daadcae1ee79bdbac3c387c5c8b8fd855ca8d4675bd9f89a9cbec46a5"
+    },
+    {
+      "path": "estimator/behavior-focused/unknown-retry-confirmed-synthetic.png",
+      "bytes": 62859,
+      "sha256": "4d78fa8c53bd809744170d1482cff3267028e9dc0d42048f87af3ae3bde05fff"
+    },
+    {
+      "path": "estimator/dialog-viewport-diagnostic/hi-text200-dialog-discard-draft-320-viewport-synthetic.png",
+      "bytes": 54760,
+      "sha256": "02b37a674ad84f88147f10af80d8d34be0a47a1c24f9870f262ad9438375ee8f"
+    },
+    {
+      "path": "estimator/dialog-viewport-diagnostic/en-text200-dialog-version-320-viewport-synthetic.png",
+      "bytes": 46011,
+      "sha256": "d53eaa594b27d65e38ca2c9b3337df10e74a05d8d5ef697c24e9d4b6ad2873cf"
+    },
+    {
+      "path": "estimator/dialog-viewport-diagnostic/hi-text200-dialog-save-quality-320-synthetic.png",
+      "bytes": 641827,
+      "sha256": "4a6a1e756926aadf64db505e784424da1d1bd7dcd998f748807817aed6fe683d"
+    },
+    {
+      "path": "estimator/dialog-viewport-diagnostic/en-text200-dialog-rename-quality-320-viewport-synthetic.png",
+      "bytes": 55314,
+      "sha256": "50e3fc357117add17398922eea506eb46c09ad956b47b85edfe41b50213265e3"
+    },
+    {
+      "path": "estimator/dialog-viewport-diagnostic/gu-text200-dialog-rename-quality-320-viewport-synthetic.png",
+      "bytes": 53418,
+      "sha256": "7eff9ddf73cc30d9842b3ec95b7e720e41deeaf606fcb5f9905262cc5a01ea7e"
+    },
+    {
+      "path": "estimator/dialog-viewport-diagnostic/gu-text200-dialog-new-quality-320-synthetic.png",
+      "bytes": 709127,
+      "sha256": "c65ed85d3a872b5eacd382857621c49ba8d27adfce29ce461924d194ec188da5"
+    },
+    {
+      "path": "estimator/dialog-viewport-diagnostic/hi-text200-dialog-discard-draft-320-synthetic.png",
+      "bytes": 447646,
+      "sha256": "f17bc315b9c0916cd7f05dfea54204c132aeca971939d882152882369be65f37"
+    },
+    {
+      "path": "estimator/dialog-viewport-diagnostic/en-text200-dialog-new-quality-320-viewport-synthetic.png",
+      "bytes": 39822,
+      "sha256": "b5812996a962de99a64a1eb26a3d47754d2f1dd55282e407c71f04b478143534"
+    },
+    {
+      "path": "estimator/dialog-viewport-diagnostic/hi-text200-dialog-rename-quality-320-synthetic.png",
+      "bytes": 429803,
+      "sha256": "668e8f9c2ad7401edcc554252f96d3382d4ffe6e9b0f72eb14e583878c52b128"
+    },
+    {
+      "path": "estimator/dialog-viewport-diagnostic/gu-text200-dialog-rename-quality-320-synthetic.png",
+      "bytes": 466336,
+      "sha256": "82607b5471b00bad3912813b31e00f7399cdea6e18849acb0d6c3bb6c9f2d08d"
+    },
+    {
+      "path": "estimator/dialog-viewport-diagnostic/gu-text200-dialog-discard-draft-320-synthetic.png",
+      "bytes": 487788,
+      "sha256": "23b221ef1882289b91cddcefffdba2b096250357d20158133dbd13dc8ef5aa02"
+    },
+    {
+      "path": "estimator/dialog-viewport-diagnostic/gu-text200-dialog-discard-draft-320-viewport-synthetic.png",
+      "bytes": 57192,
+      "sha256": "9c30fdbfd4f992e3f45b0be6f5e40ba31e4ff6f453368e847eb382ddefe911d2"
+    },
+    {
+      "path": "estimator/dialog-viewport-diagnostic/hi-text200-dialog-save-quality-320-viewport-synthetic.png",
+      "bytes": 56336,
+      "sha256": "a75e7c5470a4f689521681fbbcccd2541d624b35b82674daf9decdd0629ac1bd"
+    },
+    {
+      "path": "estimator/dialog-viewport-diagnostic/gu-text200-dialog-new-quality-320-viewport-synthetic.png",
+      "bytes": 45246,
+      "sha256": "d691fa9da7bd0c0cdf5ea497ac2012aff0a2257044189edf4c678c017820d174"
+    },
+    {
+      "path": "estimator/dialog-viewport-diagnostic/hi-text200-dialog-rename-quality-320-viewport-synthetic.png",
+      "bytes": 51736,
+      "sha256": "b150b1c06b3e66edcbb1f2d603262497fdbd241d143713939c1591aa45421326"
+    },
+    {
+      "path": "estimator/dialog-viewport-diagnostic/en-text200-dialog-rename-quality-320-synthetic.png",
+      "bytes": 463952,
+      "sha256": "8b96c567243170a87b1cc95508a1d1fe7d33ea0f8e60eb8f6cab84b8cf072e39"
+    },
+    {
+      "path": "estimator/dialog-viewport-diagnostic/hi-text200-dialog-version-320-synthetic.png",
+      "bytes": 685415,
+      "sha256": "5934ba7dcec821299a9ee0ccbd12389e96264803797f1ebd26fdf4e2514fc6c7"
+    },
+    {
+      "path": "estimator/dialog-viewport-diagnostic/en-text200-dialog-new-quality-320-synthetic.png",
+      "bytes": 681524,
+      "sha256": "1468fce66a62f4d918ce054bc061bb2eec100d22a4847fde9b33a1a04aea2549"
+    },
+    {
+      "path": "estimator/dialog-viewport-diagnostic/hi-text200-dialog-version-320-viewport-synthetic.png",
+      "bytes": 50886,
+      "sha256": "a61b3630aa80eb64c522b9ac7e2f066987a0acfa38c4b3061df8f26953efe581"
+    },
+    {
+      "path": "estimator/dialog-viewport-diagnostic/gu-text200-dialog-save-quality-320-viewport-synthetic.png",
+      "bytes": 59631,
+      "sha256": "35b6801093b4b018cb942eda35acd0a44b61385b466a333278bd0509b4e8d4c3"
+    },
+    {
+      "path": "estimator/dialog-viewport-diagnostic/failure-strong-text-paid-dialogs.png",
+      "bytes": 487788,
+      "sha256": "23b221ef1882289b91cddcefffdba2b096250357d20158133dbd13dc8ef5aa02"
+    },
+    {
+      "path": "estimator/dialog-viewport-diagnostic/en-text200-dialog-version-320-synthetic.png",
+      "bytes": 728289,
+      "sha256": "857552b90fd727b656d56f04d19434ef4511610f4ac6914625b6a702d9c8b783"
+    },
+    {
+      "path": "estimator/dialog-viewport-diagnostic/en-text200-dialog-save-quality-320-viewport-synthetic.png",
+      "bytes": 52617,
+      "sha256": "b8fcc0459003bed2323420967ffb08c9f9463e722309010fddc13c84a1fb433c"
+    },
+    {
+      "path": "estimator/dialog-viewport-diagnostic/gu-text200-dialog-version-320-viewport-synthetic.png",
+      "bytes": 51223,
+      "sha256": "1fd88e298333c9fbfea2444032adae27f87efb3c33cc2564314324712644b392"
+    },
+    {
+      "path": "estimator/dialog-viewport-diagnostic/gu-text200-dialog-version-320-synthetic.png",
+      "bytes": 751226,
+      "sha256": "641f2b9c6c9d35f5929cb87443ea0e7c377ed4b6b6b4bde6931cf2efb53c4807"
+    },
+    {
+      "path": "estimator/dialog-viewport-diagnostic/hi-text200-dialog-new-quality-320-synthetic.png",
+      "bytes": 644875,
+      "sha256": "952011a566a1e67162630d04cbde4d98d0db23477276c47601903a19a6b157aa"
+    },
+    {
+      "path": "estimator/dialog-viewport-diagnostic/en-text200-dialog-discard-draft-320-viewport-synthetic.png",
+      "bytes": 55465,
+      "sha256": "f67dad1f89efa9f607ef871985f5990c9e047049881d6aed535295eecd56ef2f"
+    },
+    {
+      "path": "estimator/dialog-viewport-diagnostic/en-text200-dialog-save-quality-320-synthetic.png",
+      "bytes": 694090,
+      "sha256": "9f073081502193e1cc0861712f85ead0fe2a5c3fbcf16586a05ac34f36a5f41e"
+    },
+    {
+      "path": "estimator/dialog-viewport-diagnostic/hi-text200-dialog-new-quality-320-viewport-synthetic.png",
+      "bytes": 42396,
+      "sha256": "a213e340e809c7ab307ca85e573998e640f116034c4866bf657a3e3924928424"
+    },
+    {
+      "path": "estimator/dialog-viewport-diagnostic/en-text200-dialog-discard-draft-320-synthetic.png",
+      "bytes": 483124,
+      "sha256": "0d7888870f562abe1739eaacf01459c3cf4407e8f5d68846379690a4fe058f9e"
+    },
+    {
+      "path": "estimator/dialog-viewport-diagnostic/gu-text200-dialog-save-quality-320-synthetic.png",
+      "bytes": 716245,
+      "sha256": "ecbc2a7d68951df38f20b3b758354156ab8d5baa5bf889d3fabbea5040216fab"
+    },
+    {
+      "path": "estimator/paint-order-diagnostic/en-text200-dialog-version-320-viewport-synthetic.png",
+      "bytes": 56758,
+      "sha256": "de095d8be53211513d7ceb15239f790e2645b1bfd04f975f6acff5100e02fb48"
+    },
+    {
+      "path": "estimator/paint-order-diagnostic/notice-success-dialog-paint-order-320-synthetic.png",
+      "bytes": 56970,
+      "sha256": "24dd9d8a2ab09c117315527a88b2accd22318cba84ddd169797f807689a8acf6"
+    },
+    {
+      "path": "estimator/paint-order-diagnostic/failure-strong-text-paid-dialogs.png",
+      "bytes": 739640,
+      "sha256": "9608291c7d8b2e0423bf622ab33aa201fc9b9c1c8ba0027d812e3a19e0c2fe71"
+    },
+    {
+      "path": "estimator/paint-order-diagnostic/en-text200-dialog-version-320-synthetic.png",
+      "bytes": 738958,
+      "sha256": "d95b25469dde015ebc21400334a17e2276c702bbe3689c15dcf9e8f3947b2971"
+    },
+    {
+      "path": "estimator/paint-order-diagnostic/notice-warning-dialog-paint-order-320-synthetic.png",
+      "bytes": 55327,
+      "sha256": "f037d621c57e0451519f0a648cdf9ed8e69c20513d7b1c2ffc795f864ccbde31"
+    },
+    {
+      "path": "estimator/focused-expanded/dirty-quality-switch-confirmation-synthetic.png",
+      "bytes": 68001,
+      "sha256": "9a93eea3fd8e628c2d113eea85b432be96bc560a1903fd5e6a1797cec4a3941b"
+    },
+    {
+      "path": "estimator/focused-expanded/en-text200-detailed-manual-paise-320-synthetic.png",
+      "bytes": 1031303,
+      "sha256": "19a732b4dd6a1e6df1aca657e7d9c0bf6b31839b41d7e8e9adc02d02c1797195"
+    },
+    {
+      "path": "estimator/focused-expanded/qualities-loading-synthetic.png",
+      "bytes": 51602,
+      "sha256": "5cd6fdbe9b5d89439bcc7cf42265d19f32c884e970a4af71276e914b23284f5c"
+    },
+    {
+      "path": "estimator/focused-expanded/discard-draft-confirmation-synthetic.png",
+      "bytes": 85196,
+      "sha256": "7e50a96fa18752cbf66eb9a6cdfeb2aaa41723129e04f043caf9a5a0941b0fb8"
+    },
+    {
+      "path": "estimator/focused-expanded/hi-text200-detailed-manual-paise-320-synthetic.png",
+      "bytes": 975953,
+      "sha256": "c00cce3980e33f6b1134c7fd671f79ed9b9019aa01e1863efe4866cd4751ee6d"
+    },
+    {
+      "path": "estimator/focused-expanded/gu-text200-detailed-manual-paise-320-synthetic.png",
+      "bytes": 1074091,
+      "sha256": "a0f28b45bf0b8f4f280bb974838aa1f0b31e33b4617ef1dd71c66c61672324f4"
+    },
+    {
+      "path": "estimator/focused-expanded/hi-text200-result-320-synthetic.png",
+      "bytes": 654251,
+      "sha256": "024b5f504fad98b3af92fe5f8d0d774429a61d965b1d4f3a2c62c2bf4d0e10ec"
+    },
+    {
+      "path": "estimator/focused-expanded/qualities-failed-synthetic.png",
+      "bytes": 57112,
+      "sha256": "7f839a2807cfdbdfa2f82ed9e83b5c62f14540fd4b90ea1a8021cd07c989f1df"
+    },
+    {
+      "path": "estimator/focused-expanded/hi-text200-quality-rates-320-synthetic.png",
+      "bytes": 430913,
+      "sha256": "cd76008f6cf73ccad41d981a326a1e24fd201fb3f4b62bb79f6c2f353241b85e"
+    },
+    {
+      "path": "estimator/focused-expanded/draft-storage-unavailable-synthetic.png",
+      "bytes": 64241,
+      "sha256": "218e94d989ccec388e6c6df4acfbcfedf99a209e50a1fc34b6cf721a253a2473"
+    },
+    {
+      "path": "estimator/focused-expanded/en-text200-result-320-synthetic.png",
+      "bytes": 700682,
+      "sha256": "40058c448808b28a603d8e1bf2dc467edf5281a8560b0b086142b872c1966a4b"
+    },
+    {
+      "path": "estimator/focused-expanded/failure-strong-text-additional-panels-and-touch.png",
+      "bytes": 475012,
+      "sha256": "f1c55ced4298027c48af0a99afdc7a5d2e853e562abfcd71bf8f5c2cf88440bf"
+    },
+    {
+      "path": "estimator/focused-expanded/gu-text200-result-320-synthetic.png",
+      "bytes": 722290,
+      "sha256": "809fb3cfe206ecee44b79ef717d6d3fa8a39328b2e85c89e1f256a698c85f615"
+    },
+    {
+      "path": "estimator/focused-expanded/failure-saved-export-source-and-unsaved-values.png",
+      "bytes": 2743,
+      "sha256": "4174e3aced3b5061e884f1e3df163a8a07407be61b772edf15df589c72b7dc9a"
+    },
+    {
+      "path": "estimator/focused-expanded/gu-text200-quality-picker-320-synthetic.png",
+      "bytes": 449088,
+      "sha256": "c7bd35c5e7f9315a80ab6136180a43d6019e6299754b0f3de2eb333e37b1a35d"
+    },
+    {
+      "path": "estimator/focused-expanded/failure-detailed-modes-manual-zero-and-units.png",
+      "bytes": 351321,
+      "sha256": "8a657c2dc313771acd4b5f6225563adb64b4c32ff591b1695e14f6d0ab3f16c4"
+    },
+    {
+      "path": "estimator/focused-expanded/gu-text200-quality-rates-320-synthetic.png",
+      "bytes": 475012,
+      "sha256": "f1c55ced4298027c48af0a99afdc7a5d2e853e562abfcd71bf8f5c2cf88440bf"
+    },
+    {
+      "path": "estimator/focused-expanded/en-text200-quality-picker-320-synthetic.png",
+      "bytes": 441562,
+      "sha256": "30ba4eab845d01ee9e6b870f8081bc0535e8bb3ed004ffc64400449f751d5d09"
+    },
+    {
+      "path": "estimator/focused-expanded/cross-tab-draft-conflict-synthetic.png",
+      "bytes": 72589,
+      "sha256": "70ae0bcdbb75fe05ab86acee0f293eff18c3114acbe66f1deab69018b8da59d9"
+    },
+    {
+      "path": "estimator/focused-expanded/paid-draft-recovery-synthetic.png",
+      "bytes": 67709,
+      "sha256": "f83d1e0a9e2dd0e32d357049776e9e592aec3cfeb7c57a320ad0bc7afeaaf657"
+    },
+    {
+      "path": "estimator/focused-expanded/loaded-quality-identity-synthetic.png",
+      "bytes": 71949,
+      "sha256": "468eb676134a20995ba466319cf7d18e130563962a7710bce58414df6d5cc694"
+    },
+    {
+      "path": "estimator/focused-expanded/quality-version-choice-synthetic.png",
+      "bytes": 82908,
+      "sha256": "6ea7ac6f96adba675499e024a9bbb7027209de06e0211b0c90b5ea899b847142"
+    },
+    {
+      "path": "estimator/focused-expanded/qualities-empty-synthetic.png",
+      "bytes": 55360,
+      "sha256": "1b925356627651bbb5c1b25ed833eaf17dcf7dc1de95bf85a27f4d7f05533c88"
+    },
+    {
+      "path": "estimator/focused-expanded/hi-text200-quality-picker-320-synthetic.png",
+      "bytes": 407835,
+      "sha256": "8d84cce9021f0ee13aab08cfaf0be6f09c1f0d57eb58ccc72e4936e7c104b2fa"
+    },
+    {
+      "path": "estimator/focused-expanded/warning-before-confirmation-synthetic.png",
+      "bytes": 87691,
+      "sha256": "6678d85e7c9a5e21cf20132b407708071e851aa3ac0ae09c567e96fe67446cb0"
+    },
+    {
+      "path": "estimator/focused-expanded/offline-local-draft-only-synthetic.png",
+      "bytes": 71073,
+      "sha256": "3bcb30c8ec3c16f71834c97454cc23f67980106ccea14f722582cd1756761e4a"
+    },
+    {
+      "path": "estimator/focused-expanded/quality-rate-unknown-synthetic.png",
+      "bytes": 95671,
+      "sha256": "66ae0985ab1f9314065a58176869503722a684dc7083b24393726238db6c2276"
+    },
+    {
+      "path": "estimator/focused-expanded/en-text200-quality-rates-320-synthetic.png",
+      "bytes": 454866,
+      "sha256": "8f2715a30e77da93155dd8bc28a1efc36ca4d4287bccc834f654ca93d7764ed0"
+    },
+    {
+      "path": "estimator/behavior-preliminary/dirty-quality-switch-confirmation-synthetic.png",
+      "bytes": 68001,
+      "sha256": "9a93eea3fd8e628c2d113eea85b432be96bc560a1903fd5e6a1797cec4a3941b"
+    },
+    {
+      "path": "estimator/behavior-preliminary/paid-draft-recovery-synthetic.png",
+      "bytes": 67709,
+      "sha256": "f83d1e0a9e2dd0e32d357049776e9e592aec3cfeb7c57a320ad0bc7afeaaf657"
+    },
+    {
+      "path": "estimator/behavior-preliminary/loaded-quality-identity-synthetic.png",
+      "bytes": 71949,
+      "sha256": "468eb676134a20995ba466319cf7d18e130563962a7710bce58414df6d5cc694"
+    },
+    {
+      "path": "estimator/behavior-preliminary/saved-version-1-synthetic.png",
+      "bytes": 51884,
+      "sha256": "6672889cae2cc4f3c5478fa0ee1e7712ce02c3ad7c515749e08146e2d873f699"
+    },
+    {
+      "path": "estimator/behavior-preliminary/failure-paid-draft-recovery-and-scope.png",
+      "bytes": 265633,
+      "sha256": "b4b5fa07facbec711133b53051390d91fa4d511a0d2b97037edabd04a3e62c71"
+    },
+    {
+      "path": "estimator/behavior-preliminary/failure-fast-navigation-back-forward-draft.png",
+      "bytes": 265392,
+      "sha256": "c5d6651b785d1bf26af43ccb15d22ca6c8c83d91345a670739ae50405165d514"
+    },
+    {
+      "path": "free-regression/zero-allowance-correction-synthetic.png",
+      "bytes": 68591,
+      "sha256": "db9f955f160799b17896617e7dd5ca93007f9458ded39d8ab45118cfc7d90282"
+    },
+    {
+      "path": "free-regression/enlarged-hi-200percent-help-invitation-synthetic.png",
+      "bytes": 44401,
+      "sha256": "7247b6e237204bead67b0992d58b90ccbd26f2510dfed0376bcbd1917cbe7f01"
+    },
+    {
+      "path": "free-regression/enlarged-hi-200percent-paise-per-pick-synthetic.png",
+      "bytes": 40499,
+      "sha256": "13f673cdd63089d6d71590baebaa1c0f8914c8e9fe6f57e38a571c45548aebf8"
+    },
+    {
+      "path": "free-regression/enlarged-hi-200percent-cm-synthetic.png",
+      "bytes": 46816,
+      "sha256": "29e1519a67e9451bb868915fe9ae7df27a502d59b9ebdf761f7c4117bff79d34"
+    },
+    {
+      "path": "free-regression/enlarged-hi-200percent-320x568-synthetic.png",
+      "bytes": 51740,
+      "sha256": "fc92f8929cd4f2743a1c3513646f53ec05577ca5aac226bd3334bcbc94fd3f96"
+    },
+    {
+      "path": "free-regression/upgrade-activation-synthetic.png",
+      "bytes": 49304,
+      "sha256": "a72fe5e5de233902f34acba276fd6343e0fff27eaecf4bc73e6449bc906cf528"
+    },
+    {
+      "path": "free-regression/enlarged-en-200percent-last-field-synthetic.png",
+      "bytes": 44534,
+      "sha256": "1d479427ccc9fd4a1551a6343ba2796fcb6a8574606b587a3896d8cd3d79870b"
+    },
+    {
+      "path": "free-regression/base-estimator-390x844-synthetic.png",
+      "bytes": 77321,
+      "sha256": "1bdcb8813e589285e8ac3b71a8ce7fddb55b4638bafb77a33dcdddd3f8cac11a"
+    },
+    {
+      "path": "free-regression/enlarged-gu-150percent-320x568-synthetic.png",
+      "bytes": 52819,
+      "sha256": "be8e36c1a946f6da28f6059f534750fd1371176aae5509fccdf433871b467232"
+    },
+    {
+      "path": "free-regression/saved-long-identity-corrected-v2-synthetic.png",
+      "bytes": 54099,
+      "sha256": "3ed9bff0823c1b45fa96b342e47ae0790a146b40cb1a5c8f0b1d3f6460a62d03"
+    },
+    {
+      "path": "free-regression/lite-estimator-390x844-synthetic.png",
+      "bytes": 75887,
+      "sha256": "19c332837969c9cb3aa25a41d45bfdf3544f4ac8664553874a4d9759ab72fb9d"
+    },
+    {
+      "path": "free-regression/base-estimator-1440x900-synthetic.png",
+      "bytes": 142080,
+      "sha256": "7bdf35b2027ac62c46122a72f8b0746632b14b5b38c4e023217024b927e63c2e"
+    },
+    {
+      "path": "free-regression/history-enlarged-gu-200percent-help-filters-synthetic.png",
+      "bytes": 47281,
+      "sha256": "c4c4c8241754d914daf651b9c08d28a3e9c256e7957a3e9c08cb1b0e53bd0825"
+    },
+    {
+      "path": "free-regression/enlarged-en-150percent-320x568-synthetic.png",
+      "bytes": 47066,
+      "sha256": "4b2afac6d7b9f3654da0dc97b5af272856cdb5ca1612cdfbf55b110a55acfda6"
+    },
+    {
+      "path": "free-regression/enlarged-gu-200percent-paise-per-pick-synthetic.png",
+      "bytes": 43824,
+      "sha256": "260bbef180bae3b539db2ab0ee5844d9b007a64767817f1fff992e2abdb74391"
+    },
+    {
+      "path": "free-regression/enlarged-hi-200percent-help-replay-synthetic.png",
+      "bytes": 44732,
+      "sha256": "674620898eec1e97ca7eb83601ff7363b2dc4c8f04b5ec96dc0f1178230feb58"
+    },
+    {
+      "path": "free-regression/server-warning-confirm-synthetic.png",
+      "bytes": 59787,
+      "sha256": "7e9e6829da69319e4652f145b6a91f9236bebcd46cb70780afd588737b27e0b6"
+    },
+    {
+      "path": "free-regression/history-enlarged-hi-200percent-help-filters-synthetic.png",
+      "bytes": 42894,
+      "sha256": "00b42a46400326abc48e245fd92314beceef80afa002d79b851ff2e6b678158e"
+    },
+    {
+      "path": "free-regression/base-live-result-synthetic.png",
+      "bytes": 69758,
+      "sha256": "df2837d4a4f18a3719e5b7ec55eb0e5ffe5686e81bf803ca1978b1e1341efe02"
+    },
+    {
+      "path": "free-regression/history-enlarged-en-200percent-synthetic.png",
+      "bytes": 40554,
+      "sha256": "9e97f2a3185913e67d57ea2fd453c15309847bd40b2300fbfd9a3689f67ba9bb"
+    },
+    {
+      "path": "free-regression/enlarged-hi-150percent-320x568-synthetic.png",
+      "bytes": 53271,
+      "sha256": "0cb8a20ad7e84ed46c4dd9b4411c0e84447a3bf0cd4b548413e96b1f4246a628"
+    },
+    {
+      "path": "free-regression/saved-balance-unverified-synthetic.png",
+      "bytes": 70872,
+      "sha256": "22f0b2cf34d0d7a5dda89c66f8d3905df9049c09d72e3e771a6085d701df9dfa"
+    },
+    {
+      "path": "free-regression/server-warning-review-synthetic.png",
+      "bytes": 70740,
+      "sha256": "9dd9c4090e70f8aaffb6bf0d44425f9b90fed12c9f82b80d9df8c0a62bdea8d2"
+    },
+    {
+      "path": "free-regression/invalid-inputs-synthetic.png",
+      "bytes": 57483,
+      "sha256": "621ba6f262233776702a379c9c7bc5cd09f9bef14e8cd03a32cc3dcb30af9eed"
+    },
+    {
+      "path": "free-regression/enlarged-en-200percent-manual-kg-synthetic.png",
+      "bytes": 37316,
+      "sha256": "6c1e669502623bfb8a3e75a1e6b7321b12245119193ae6648e3661d88524fb3c"
+    },
+    {
+      "path": "free-regression/keyboard-simulation-synthetic.png",
+      "bytes": 56464,
+      "sha256": "f04519e9fffee59ee57d481901dc0b4a97dcf5406a1d7ec86941d4ca652fe873"
+    },
+    {
+      "path": "free-regression/enlarged-gu-200percent-320x568-synthetic.png",
+      "bytes": 57507,
+      "sha256": "3acd30b08073edfad6c6bf75d50d6c5af10e096888332fb656478bd5be529545"
+    },
+    {
+      "path": "free-regression/saved-history-handoff-synthetic.png",
+      "bytes": 77165,
+      "sha256": "3eda6285d19a596ab8cb58fc033316d539309123e8617969d364fb0707a6c6fb"
+    },
+    {
+      "path": "free-regression/enlarged-en-200percent-320x568-synthetic.png",
+      "bytes": 48020,
+      "sha256": "dce6080006f8ddfe025a25e540a062ec46a54c92dcfea81e53a38a8ef529e83a"
+    },
+    {
+      "path": "free-regression/enlarged-gu-200percent-cm-synthetic.png",
+      "bytes": 49615,
+      "sha256": "d87d16b8cc903dd61511df6a76b73a9bff2a456fab852609f8cbcc341b039823"
+    },
+    {
+      "path": "free-regression/enlarged-en-200percent-cm-synthetic.png",
+      "bytes": 42804,
+      "sha256": "cc9193ec02d2524bdd6ab56ede307d467841503a45d04efe3d535163f983b782"
+    },
+    {
+      "path": "free-regression/saved-long-identity-unsaved-rename-desktop-synthetic.png",
+      "bytes": 153352,
+      "sha256": "6626c71b61b5829ce811402665d4ac81e743e58b8478b7c08909f49611c9827b"
+    },
+    {
+      "path": "free-regression/history-430x932-synthetic.png",
+      "bytes": 56620,
+      "sha256": "ff04543fc2388b47425c7b7ca6202f439ee865777cbf8bbdba109bc50aaddfea"
+    },
+    {
+      "path": "free-regression/estimator-390x844-synthetic.png",
+      "bytes": 59251,
+      "sha256": "cfc54f969179f7fe059992efa92d7dcca409a8c1c0f030b99cd589453dd1a6d5"
+    },
+    {
+      "path": "free-regression/enlarged-gu-200percent-last-field-synthetic.png",
+      "bytes": 51452,
+      "sha256": "7a30aeb76776802b9afe0491f750faab2a20b276f5d1e50d7d9b6246b2dab459"
+    },
+    {
+      "path": "free-regression/history-enlarged-hi-200percent-synthetic.png",
+      "bytes": 43916,
+      "sha256": "7af9eafd5855ec6e1293d7aeedfc58f11e26e8b7059d31b29507046655cd55f7"
+    },
+    {
+      "path": "free-regression/enlarged-hi-200percent-last-field-synthetic.png",
+      "bytes": 47837,
+      "sha256": "622125a27150f2f1d3a665d017790cf60ad71cc69000f8cff00c8a3433019ed2"
+    },
+    {
+      "path": "free-regression/history-enlarged-gu-200percent-synthetic.png",
+      "bytes": 46994,
+      "sha256": "735c5166887d011725c8c94f3a449f2391af35c69c6e936953a2f0d0c4ecaa11"
+    },
+    {
+      "path": "free-regression/history-390x844-synthetic.png",
+      "bytes": 53338,
+      "sha256": "d6f58a8fa642d2cc4551b3bc1c768d8f2b958e681803bc3dfae046a48f97b064"
+    },
+    {
+      "path": "free-regression/estimator-430x932-synthetic.png",
+      "bytes": 63668,
+      "sha256": "904a0ddc6687f17655f1cdb00a8ff93af576a1870cc4c3d3a09764fc90c52f59"
+    },
+    {
+      "path": "free-regression/history-1440x900-synthetic.png",
+      "bytes": 104193,
+      "sha256": "093a1b742e941c4c88bd76c6aa943b331abf222bcef3591cc7087766b6bb42e5"
+    },
+    {
+      "path": "free-regression/saved-long-identity-unsaved-rename-synthetic.png",
+      "bytes": 56027,
+      "sha256": "641b04f8f20fba6f0dbc442edce11530faf0ab18f340285f39bd3044c94dfcc4"
+    },
+    {
+      "path": "free-regression/enlarged-hi-200percent-manual-kg-synthetic.png",
+      "bytes": 35967,
+      "sha256": "fab6c342485951e0bdf76f4c09e5363566c44bfd3937c95ed023378b651bd8f2"
+    },
+    {
+      "path": "free-regression/history-filters-help-synthetic.png",
+      "bytes": 52354,
+      "sha256": "2e31e3350ea01fe5a52ecfae1b702414475920a68312fa3a7eadfe26a22e13f9"
+    },
+    {
+      "path": "free-regression/enlarged-gu-200percent-help-invitation-synthetic.png",
+      "bytes": 50031,
+      "sha256": "422d747c4b9e930f9e7a53eafd8139fbf877376b919daaca235ba4d4ed4e8605"
+    },
+    {
+      "path": "free-regression/enlarged-en-200percent-help-invitation-synthetic.png",
+      "bytes": 48106,
+      "sha256": "19d061104c4936cd2b4010914b943c74e2318b505c309984325506ee65997a89"
+    },
+    {
+      "path": "free-regression/enlarged-gu-200percent-help-replay-synthetic.png",
+      "bytes": 49456,
+      "sha256": "301ac5ed0f47363dd03c7f5dac5646318459b059eea1a3c20dbed7d9da2fbb2b"
+    },
+    {
+      "path": "free-regression/zero-allowance-new-costing-synthetic.png",
+      "bytes": 63243,
+      "sha256": "cfc3f026fa857c996e3fc1baf2f3ec8670533a9c356c4e92050605729cba6fd1"
+    },
+    {
+      "path": "free-regression/client-warning-review-synthetic.png",
+      "bytes": 84656,
+      "sha256": "3f399d1b931c3fe68b2e0019d542cdd0890919086e66f02c382b53d1acb8912a"
+    },
+    {
+      "path": "free-regression/enlarged-en-200percent-paise-per-pick-synthetic.png",
+      "bytes": 45165,
+      "sha256": "879c7f5646154e7a6c3e4aa8787387eb69b5714a7c146687323884605f56ee04"
+    },
+    {
+      "path": "free-regression/history-enlarged-en-200percent-help-filters-synthetic.png",
+      "bytes": 40138,
+      "sha256": "ab588b1c111bbf5087faf4c4df092d063c363c2d1c68bfb0d6a7a172ab3c5dd8"
+    },
+    {
+      "path": "free-regression/enlarged-en-200percent-help-replay-synthetic.png",
+      "bytes": 44753,
+      "sha256": "d7bde4b0b0971b296b1423262b012dc33d12e50257551a09faaed7411a8a67e2"
+    },
+    {
+      "path": "free-regression/saved-result-synthetic.png",
+      "bytes": 71620,
+      "sha256": "9cd856ae1c37ceeb74eba3ee51fee3d7060bd322aa2159156b3839c09ce43bb4"
+    },
+    {
+      "path": "free-regression/lite-estimator-1440x900-synthetic.png",
+      "bytes": 135104,
+      "sha256": "b7c768c01b7efae2d7f25408c215dadd7ba671f7c75942935cf323d9f991e208"
+    },
+    {
+      "path": "free-regression/estimator-1440x900-synthetic.png",
+      "bytes": 131155,
+      "sha256": "64daa16077b8bd5262b76c2329b3d128b05ddf65315a45b747ee15a461e1f8a2"
+    },
+    {
+      "path": "free-regression/lite-live-result-synthetic.png",
+      "bytes": 69758,
+      "sha256": "df2837d4a4f18a3719e5b7ec55eb0e5ffe5686e81bf803ca1978b1e1341efe02"
+    },
+    {
+      "path": "free-regression/history-320x568-synthetic.png",
+      "bytes": 35300,
+      "sha256": "146be8fdb86fa029b754fd620842bde3ed1a4b0b27b7c42a15c0060f3224004d"
+    },
+    {
+      "path": "free-regression/uncertain-outcome-synthetic.png",
+      "bytes": 70124,
+      "sha256": "a3007d2dd8aa50b35d7af3a79fc16832effb01a573d6f20630f4c5416e9900bf"
+    },
+    {
+      "path": "free-regression/upgrade-dismiss-synthetic.png",
+      "bytes": 75869,
+      "sha256": "30186c7382bf496ffedc06a0f45841e6a34bcecb6b63bff2517bbb3f383fe369"
+    },
+    {
+      "path": "free-regression/estimator-320x568-synthetic.png",
+      "bytes": 40474,
+      "sha256": "7c206bb9345cba35048fe543d5cc152a7b6937d76cb9341239cca215d4df89c4"
+    },
+    {
+      "path": "free-regression/enlarged-gu-200percent-manual-kg-synthetic.png",
+      "bytes": 40839,
+      "sha256": "a3f23307b4610f7c7dd49ca07afde0124fadb33cf1f35e56786c5e63fb80bbf2"
+    }
+  ]
+}

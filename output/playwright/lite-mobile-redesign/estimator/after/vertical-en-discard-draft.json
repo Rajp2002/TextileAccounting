@@ -1,0 +1,20 @@
+[
+  {
+    "label": "Keep for later",
+    "inside": true,
+    "top": 490.59375,
+    "bottom": 543
+  },
+  {
+    "label": "Discard draft",
+    "inside": true,
+    "top": 433.1875,
+    "bottom": 483.59375
+  },
+  {
+    "label": "Close",
+    "inside": true,
+    "top": 74.5625,
+    "bottom": 118.5625
+  }
+]

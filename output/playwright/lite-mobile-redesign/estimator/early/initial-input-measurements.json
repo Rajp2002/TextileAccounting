@@ -1,0 +1,46 @@
+[
+  {
+    "width": 320,
+    "height": 568,
+    "state": "initial",
+    "firstInput": {
+      "x": 25.5,
+      "y": 373.34375,
+      "width": 269,
+      "height": 44
+    }
+  },
+  {
+    "width": 390,
+    "height": 844,
+    "state": "initial",
+    "firstInput": {
+      "x": 29,
+      "y": 373.34375,
+      "width": 332,
+      "height": 44
+    }
+  },
+  {
+    "width": 430,
+    "height": 932,
+    "state": "initial",
+    "firstInput": {
+      "x": 29,
+      "y": 373.34375,
+      "width": 372,
+      "height": 44
+    }
+  },
+  {
+    "width": 1440,
+    "height": 900,
+    "state": "initial",
+    "firstInput": {
+      "x": 501,
+      "y": 455,
+      "width": 686,
+      "height": 38.5
+    }
+  }
+]

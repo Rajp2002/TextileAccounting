@@ -1,0 +1,14 @@
+{
+  "evidenceType": "Automated Chromium emulation; actual Lite estimator/navigation/paid autosave over synthetic localhost actions. No installed PWA or remote data/provider verification.",
+  "base": "http://127.0.0.1:4196",
+  "stage": "before",
+  "applicationSourceCommit": "34f37ce223ecd321c1c046901384175ca118b04a",
+  "createdAt": "2026-10-05T20:21:48.312Z",
+  "externalRequestsBlocked": [],
+  "results": [
+    {
+      "name": "baseline-and-regression-captures",
+      "status": "passed"
+    }
+  ]
+}

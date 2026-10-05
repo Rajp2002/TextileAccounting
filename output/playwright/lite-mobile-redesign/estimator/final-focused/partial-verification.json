@@ -1,0 +1,16 @@
+{
+  "evidenceType": "Automated Chromium emulation; actual Lite estimator/navigation/paid autosave over synthetic localhost actions. No installed PWA or remote data/provider verification.",
+  "base": "http://127.0.0.1:4197",
+  "stage": "final-focused",
+  "applicationSourceCommit": "edc8571e05522588e680620add984d755aaa5fda",
+  "createdAt": "2026-10-05T20:53:13.023Z",
+  "externalRequestsBlocked": [],
+  "results": [
+    {
+      "name": "strong-text-paid-dialogs",
+      "status": "failed",
+      "error": "Paid dialog controls below44px: see dialog-touch-regions.json\n\n3 !== 0\n",
+      "pageErrors": []
+    }
+  ]
+}

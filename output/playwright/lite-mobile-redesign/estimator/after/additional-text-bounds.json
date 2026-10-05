@@ -1,0 +1,74 @@
+[
+  {
+    "language": "en",
+    "percent": 200,
+    "state": "detailed-manual-paise",
+    "issues": []
+  },
+  {
+    "language": "en",
+    "percent": 200,
+    "state": "result",
+    "issues": []
+  },
+  {
+    "language": "en",
+    "percent": 200,
+    "state": "quality-picker",
+    "issues": []
+  },
+  {
+    "language": "en",
+    "percent": 200,
+    "state": "quality-rates",
+    "issues": []
+  },
+  {
+    "language": "hi",
+    "percent": 200,
+    "state": "detailed-manual-paise",
+    "issues": []
+  },
+  {
+    "language": "hi",
+    "percent": 200,
+    "state": "result",
+    "issues": []
+  },
+  {
+    "language": "hi",
+    "percent": 200,
+    "state": "quality-picker",
+    "issues": []
+  },
+  {
+    "language": "hi",
+    "percent": 200,
+    "state": "quality-rates",
+    "issues": []
+  },
+  {
+    "language": "gu",
+    "percent": 200,
+    "state": "detailed-manual-paise",
+    "issues": []
+  },
+  {
+    "language": "gu",
+    "percent": 200,
+    "state": "result",
+    "issues": []
+  },
+  {
+    "language": "gu",
+    "percent": 200,
+    "state": "quality-picker",
+    "issues": []
+  },
+  {
+    "language": "gu",
+    "percent": 200,
+    "state": "quality-rates",
+    "issues": []
+  }
+]

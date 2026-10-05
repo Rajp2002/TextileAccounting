@@ -1,0 +1,6 @@
+### Result
+{"animations":[],"headings":["Saved Costings","Saved Costings"]}
+### Ran Playwright code
+```js
+await (async(page)=>{const c=await page.context().browser().newContext({viewport:{width:1440,height:900},reducedMotion:'reduce'});const p=await c.newPage();try{await p.goto('http://127.0.0.1:4195/owner/quotes?prior=1');await p.locator('h1').last().waitFor();await p.waitForTimeout(900);const a=await p.evaluate(()=>document.getAnimations().map(a=>({name:a.animationName,currentTime:a.currentTime,playState:a.playState})));await p.screenshot({path:'/Users/rajpatel/Projects/textile Saas/output/playwright/lite-mobile-records/prior-desktop-reduced/desktop-prior-reduced.png',animations:'disabled',fullPage:true});return {animations:a,headings:await p.locator('h1').allTextContents()}}finally{await c.close()}})(page);
+```

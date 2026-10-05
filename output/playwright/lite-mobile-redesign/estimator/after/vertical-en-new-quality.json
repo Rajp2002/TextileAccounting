@@ -1,0 +1,20 @@
+[
+  {
+    "label": "Cancel",
+    "inside": true,
+    "top": 490.78125,
+    "bottom": 543.1875
+  },
+  {
+    "label": "Reset & Start",
+    "inside": true,
+    "top": 433.375,
+    "bottom": 483.78125
+  },
+  {
+    "label": "Close",
+    "inside": true,
+    "top": 24,
+    "bottom": 68
+  }
+]

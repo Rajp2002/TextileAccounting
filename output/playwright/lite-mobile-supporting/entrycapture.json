@@ -1,0 +1,56 @@
+[
+  {
+    "view": "plans",
+    "tier": "lite",
+    "width": 320,
+    "overflow": false
+  },
+  {
+    "view": "signup",
+    "tier": "lite",
+    "width": 320,
+    "overflow": false
+  },
+  {
+    "view": "signup",
+    "tier": "base",
+    "width": 320,
+    "overflow": false
+  },
+  {
+    "view": "plans",
+    "tier": "lite",
+    "width": 430,
+    "overflow": false
+  },
+  {
+    "view": "signup",
+    "tier": "lite",
+    "width": 430,
+    "overflow": false
+  },
+  {
+    "view": "signup",
+    "tier": "base",
+    "width": 430,
+    "overflow": false
+  },
+  {
+    "view": "plans",
+    "tier": "lite",
+    "width": 1440,
+    "overflow": false
+  },
+  {
+    "view": "signup",
+    "tier": "lite",
+    "width": 1440,
+    "overflow": false
+  },
+  {
+    "view": "signup",
+    "tier": "base",
+    "width": 1440,
+    "overflow": false
+  }
+]
