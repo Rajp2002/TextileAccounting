@@ -159,6 +159,15 @@
   [data-free-history-help][data-expanded="false"] { display: none; }
   [data-free-history-help] { display: flex; flex-direction: column; }
   [data-free-history] { row-gap: 12px; }
+  [data-free-history] .free-mobile-page-header > div:last-child { max-width: 100%; }
+  [data-free-history] [data-slot="input"] { height: auto; min-height: 44px; }
+  [data-free-history] [data-slot="button"] {
+    height: auto;
+    min-height: 44px;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
   [data-free-history] > [data-slot="toolbar"] { padding: 12px; }
   [data-free-history] .free-history-filter-toggle { justify-content: flex-start; }
   [data-free-history] #free-history-filters[data-expanded="false"] { display: none; }
@@ -216,6 +225,12 @@
     padding-top: 0.5rem;
   }
   .mobile-guide-details[data-expanded="true"] { display: block; }
+  [data-free-history-help] .mobile-guide-layout,
+  [data-free-costing] #free-estimator-help .mobile-guide-layout { grid-template-columns: minmax(0, 1fr); row-gap: .5rem; }
+  [data-free-history-help] .mobile-guide-title-toggle,
+  [data-free-history-help] .mobile-guide-launch button,
+  [data-free-costing] #free-estimator-help .mobile-guide-title-toggle,
+  [data-free-costing] #free-estimator-help .mobile-guide-launch button { height: auto; min-height: 44px; overflow-wrap: anywhere; }
 
   html {
     scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 16px);
