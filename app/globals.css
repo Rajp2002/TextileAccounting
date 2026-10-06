@@ -922,6 +922,7 @@
   .rates-archive-policy-rail-desktop,
   .saved-costings-action-rail-desktop,
   .saved-costings-archive-rail-desktop,
+  .saved-costings-help-rail-desktop,
   .stock-movement-rail-desktop,
   .production-daily-sheet-history-desktop {
     display: none;
@@ -1013,6 +1014,7 @@
     /* Bottom-anchored right rail notices. */
     .rates-archive-policy-rail-desktop,
     .saved-costings-archive-rail-desktop,
+    .saved-costings-help-rail-desktop,
     .stock-movement-rail-desktop,
     .payroll-records-action {
       position: fixed;
@@ -1097,6 +1099,7 @@
       .rates-archive-policy-rail-desktop,
       .saved-costings-action-rail-desktop,
       .saved-costings-archive-rail-desktop,
+      .saved-costings-help-rail-desktop,
       .dispatch-action-rail,
       .payroll-period-rail,
       .payroll-records-action,

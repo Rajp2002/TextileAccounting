@@ -20,9 +20,10 @@ import {
 import type { EstimateState, EstimatorV3Totals, CostingResultSnapshot } from '@/lib/estimator'
 import { createCostingExportModel, shortDocumentReference } from '@/lib/estimator-export'
 import { CostingExportDialog } from '@/components/estimator/CostingExportDialog'
-import { SavedCostingsTutorial } from '@/components/estimator/SavedCostingsTutorial'
+import { SavedCostingsHelp, SavedCostingsTutorial } from '@/components/estimator/SavedCostingsTutorial'
 import { savedCostingTourEnding, isSavedCostingHandoff, costingTourSurface, makeSavedCostingTourExport, makeSavedCostingTourExamples, type SavedCostingStep } from '@/lib/saved-costings-tour'
 import { Button } from '@/components/ui/button'
+import { railPrimaryAction } from '@/components/ui/rail'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -44,6 +45,7 @@ import { FreeRecalculationWindow } from '@/components/estimator/FreeRecalculatio
 import { remainingFreeEditMs, type FreeEditWindow } from '@/lib/free-costing-window'
 import { useFreeEditClock } from '@/hooks/use-free-edit-clock'
 import { formatTimestampDate } from '@/lib/format'
+import { cn } from '@/lib/utils'
 
 type Saved = {
   revision?: number
@@ -267,7 +269,7 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
             {!embedded && <Button id="free-history-help-trigger" variant="ghost" className="free-mobile-help-trigger" aria-expanded={helpOpen || tourStep !== null} aria-controls="free-history-help" disabled={tourStep !== null} onClick={() => setHelpOpen(open => !open)}>
               <BookOpen className="h-4 w-4" /> {freeMobileText(language, 'help')}
             </Button>}
-            <Button data-tour-anchor="free-costings.new" variant="saffron" onClick={() => router.push('/free')}>
+            <Button data-tour-anchor="free-costings.new" variant="saffron" className={!embedded ? 'rail-inline-actions' : undefined} onClick={() => router.push('/free')}>
               <Plus className="h-4 w-4" /> {tx('New Costing')}
             </Button>
             </>
@@ -722,6 +724,20 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Right rail from 1280px: the primary action on top, help anchored to the bottom. */}
+      {!embedded && (
+        <>
+          <aside className="saved-costings-action-rail-desktop" aria-label={tx('New Costing')}>
+            <Button data-tour-anchor="free-costings.new" onClick={() => router.push('/free')} className={cn(railPrimaryAction, 'w-full')}>
+              <Plus className="h-4 w-4" aria-hidden="true" /> {tx('New Costing')}
+            </Button>
+          </aside>
+          <div className="saved-costings-help-rail-desktop">
+            <SavedCostingsHelp free />
+          </div>
+        </>
+      )}
 
       {/* Tour preview export dialog */}
       {costingTourSurface(tourStep) === 'export' && (
