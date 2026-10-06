@@ -47,7 +47,9 @@ import { createDocumentGenerationGuard } from '@/lib/document-generation'
 import { useTranslation } from '@/lib/i18n/context'
 import { canSharePreparedFile, sharePreparedDocument } from '@/lib/prepared-document-share'
 
-type ExportStatus = 'idle' | 'saving' | 'generating' | 'generated' | 'download-started' | 'print-opened' | 'share-opened' | 'failed'
+const PDF_LAYOUT_WIDTH_PX = 700
+
+type ExportStatus ='idle' | 'saving' | 'generating' | 'generated' | 'download-started' | 'print-opened' | 'share-opened' | 'failed'
 
 type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected'
 
@@ -136,8 +138,13 @@ export function CostingExportDialog({
   const lockedQuotation = savedQuotation && sourceQuoteStatus === 'accepted'
   const displayedQuoteStatus: QuoteStatus | undefined = sourceQuoteStatus
 
+  // Reset when the dialog opens for a document, never because a parent handed
+  // us a new `model` object: parents that re-render (Free's clock ticks every
+  // second) must not undo the owner's choice of document or typed details.
+  const hasModel = Boolean(model)
+
   useEffect(() => {
-    if (!open || !model) return
+    if (!open || !hasModel) return
     setMode(defaultMode)
     setBusinessName(defaultBusinessName)
     setCustomerName(defaultCustomerName)
@@ -153,7 +160,7 @@ export function CostingExportDialog({
     setSharing(false)
     setLatestQuoteUpdatedAt(sourceQuoteUpdatedAt)
     if (!tutorialPreview) void trackPlanEvent('export_preview_opened', { mode: defaultMode })
-  }, [defaultBusinessName, defaultCustomerName, defaultCustomerTerms, defaultInternalNotes, defaultMode, defaultValidUntil, model, open, sourceQuoteStatus, sourceQuoteUpdatedAt, sourceRecordKind, tutorialPreview])
+  }, [defaultBusinessName, defaultCustomerName, defaultCustomerTerms, defaultInternalNotes, defaultMode, defaultValidUntil, hasModel, open, sourceQuoteStatus, sourceQuoteUpdatedAt, sourceRecordKind, tutorialPreview])
 
   const options = useMemo(() => ({
     mode,
@@ -312,7 +319,9 @@ export function CostingExportDialog({
       if (!isCurrentGeneration()) return
       const pdf = new jsPDF({ unit: 'pt', format: 'a4' })
       const host = document.createElement('div')
-      host.style.width = '760px'
+      // The document is laid out 700px wide and scaled onto the 523pt A4 text
+      // block (x0.747), so its 12px body text prints at about 9pt.
+      host.style.width = `${PDF_LAYOUT_WIDTH_PX}px`
       host.style.position = 'fixed'
       host.style.left = '0'
       host.style.top = '0'
@@ -326,7 +335,7 @@ export function CostingExportDialog({
           margin: [36, 36, 36, 36],
           autoPaging: 'text',
           width: 523,
-          windowWidth: 760,
+          windowWidth: PDF_LAYOUT_WIDTH_PX,
         })
       } finally {
         host.remove()

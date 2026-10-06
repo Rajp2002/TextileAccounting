@@ -1,4 +1,5 @@
-import { formatTimestampDate } from './format'
+import { formatDateOnly, formatTimestampDate } from './format'
+import { WEAVLY_LOGO_DATA_URI, WEAVLY_LOGO_HEIGHT, WEAVLY_LOGO_WIDTH } from './estimator-export-logo'
 import {
   buildCostingResult,
   calculateBreakEvenPricePerM,
@@ -49,6 +50,16 @@ export function describeDocumentSource(source: CostingDocumentSource, mode: Cost
       date: formatTimestampDate(source.savedAt, { day: 'numeric', month: 'short', year: 'numeric' }),
     },
   }
+}
+
+/**
+ * A short reference people can read out over the phone, for records that only
+ * have a UUID (Free costings). The full id stays out of the document and the
+ * filename: `ec4e031d-69a8-…` becomes `WV-EC4E031D`.
+ */
+export function shortDocumentReference(id: string | null | undefined, prefix = 'WV') {
+  const compact = (id ?? '').replace(/[^a-zA-Z0-9]/g, '').slice(0, 8).toUpperCase()
+  return compact ? `${prefix}-${compact}` : ''
 }
 
 /** A customer quotation is a document artifact, not a tax invoice. */
@@ -300,32 +311,52 @@ function decimal(value: number, digits: number) {
   return finiteOrZero(value).toFixed(digits)
 }
 
-function metric(label: string, value: string, tone: 'default' | 'accent' | 'positive' | 'negative' = 'default') {
-  return `<div class="metric metric-${tone}"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`
+/** "3 Oct 2026": unambiguous for both d/m and m/d readers, unlike 3/10/2026. */
+const DOCUMENT_DATE_FORMAT: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' }
+
+/** Markup that its builder has already escaped; every other table cell is escaped on the way in. */
+type RawHtml = { html: string }
+const raw = (html: string): RawHtml => ({ html })
+type Cell = string | RawHtml
+
+/** Columns from `numericFrom` on are numbers: right-aligned in the header and in every row. */
+function tableHead(labels: string[], numericFrom = labels.length) {
+  return `<tr>${labels.map((label, index) => `<th${index >= numericFrom ? ' class="num"' : ''}>${escapeHtml(label)}</th>`).join('')}</tr>`
 }
 
-function tableRow(cells: string[], className = '') {
-  return `<tr${className ? ` class="${className}"` : ''}>${cells.map(cell => `<td>${escapeHtml(cell)}</td>`).join('')}</tr>`
+function tableRow(cells: Cell[], numericFrom = cells.length, className = '') {
+  const body = cells.map((cell, index) => `<td${index >= numericFrom ? ' class="num"' : ''}>${typeof cell === 'string' ? escapeHtml(cell) : cell.html}</td>`).join('')
+  return `<tr${className ? ` class="${className}"` : ''}>${body}</tr>`
 }
 
+function figure(label: string, value: string, tone: 'default' | 'accent' | 'positive' | 'negative' = 'default') {
+  return `<div class="figure figure-${tone}"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`
+}
+
+/** Weavly navy and saffron on warm neutrals, matching the app (see design.md). */
 const PRINT_STYLES = `
-  @page{size:A4;margin:13mm 14mm 14mm}
+  @page{size:A4;margin:12mm 13mm 14mm}
   *{box-sizing:border-box}
   html,body{margin:0;padding:0;background:#fff}
-  body,.costing-pdf-root{font-family:Arial,Helvetica,sans-serif;color:#172033;font-size:10px;line-height:1.42;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body,.costing-pdf-root{font-family:Arial,Helvetica,sans-serif;color:#2C3331;font-size:12px;line-height:1.45;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .document{width:100%;max-width:100%;margin:0 auto}
-  .brandbar{height:6px;background:linear-gradient(90deg,#1d4ed8 0 78%,#f97316 78% 100%);margin-bottom:18px}
-  .masthead{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;padding-bottom:16px;border-bottom:1px solid #dbe3ef}
-  .brand{display:flex;align-items:center;gap:10px}.brandmark{display:flex;width:34px;height:34px;align-items:center;justify-content:center;border-radius:8px;background:#1d4ed8;color:#fff;font-size:17px;font-weight:800}.brandname{font-size:17px;font-weight:800;letter-spacing:-.02em;color:#0f172a}.doctype{margin-top:2px;color:#64748b;font-size:9px;text-transform:uppercase;letter-spacing:.13em;font-weight:700}
-  .docmeta{text-align:right;color:#64748b}.docmeta strong{display:block;color:#0f172a;font-size:11px;margin-bottom:3px}.docmeta span{display:block}
-  .titleblock{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding:17px 0 14px}.eyebrow{margin-bottom:4px;color:#1d4ed8;font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.14em}.titleblock h1{margin:0;color:#0f172a;font-size:23px;line-height:1.15;letter-spacing:-.035em}.titleaside{text-align:right;color:#64748b;white-space:nowrap}.titleaside b{color:#334155}
-  .summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:17px}.metric{min-height:58px;padding:10px 11px;border:1px solid #dbe3ef;border-radius:8px;background:#f8fafc}.metric span{display:block;color:#64748b;font-size:7.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}.metric strong{display:block;margin-top:5px;color:#0f172a;font-size:15px;line-height:1.15;letter-spacing:-.02em;white-space:nowrap}.metric-accent{border-color:#fed7aa;background:#fff7ed}.metric-accent strong{color:#c2410c}.metric-positive{border-color:#bbf7d0;background:#f0fdf4}.metric-positive strong{color:#15803d}.metric-negative{border-color:#fecaca;background:#fef2f2}.metric-negative strong{color:#b91c1c}
-  .section{margin-top:15px;break-inside:avoid;page-break-inside:avoid}.sectionhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}.sectionhead h2{margin:0;color:#0f172a;font-size:10px;text-transform:uppercase;letter-spacing:.1em}.sectionhead span{color:#94a3b8;font-size:8px}
-  table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid #dbe3ef;border-radius:7px;overflow:hidden}th{padding:6px 8px;background:#eef3f9;color:#475569;font-size:7.5px;text-align:left;text-transform:uppercase;letter-spacing:.06em}th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}td{padding:6px 8px;border-top:1px solid #e7edf5;color:#334155}tbody tr:first-child td{border-top:0}tbody tr:nth-child(even):not(.total) td{background:#fbfdff}.total td{border-top:1.5px solid #94a3b8;background:#eff6ff;color:#0f172a;font-weight:800}.label-main{font-weight:700;color:#172033}
-  .commercial{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #dbe3ef;border-radius:7px;overflow:hidden}.commercial div{padding:8px 10px;border-left:1px solid #e7edf5}.commercial div:first-child{border-left:0}.commercial span{display:block;color:#64748b;font-size:7.5px;text-transform:uppercase;letter-spacing:.06em}.commercial strong{display:block;margin-top:3px;color:#172033;font-size:11px}
-  .note{margin-top:15px;padding:10px 12px;border-left:3px solid #f97316;background:#fff7ed;color:#475569;white-space:pre-wrap}.note strong{display:block;margin-bottom:3px;color:#9a3412;font-size:8px;text-transform:uppercase;letter-spacing:.08em}
-  .quote-details{display:grid;grid-template-columns:repeat(3,1fr);margin:2px 0 17px;border:1px solid #dbe3ef;border-radius:8px;overflow:hidden}.quote-details div{padding:11px 12px}.quote-details div+div{border-left:1px solid #e7edf5}.quote-details span{display:block;color:#64748b;font-size:7.5px;text-transform:uppercase;letter-spacing:.07em}.quote-details strong{display:block;margin-top:3px;color:#172033;font-size:11px}
-  .footer{display:flex;justify-content:space-between;gap:24px;margin-top:18px;padding-top:9px;border-top:1px solid #dbe3ef;color:#94a3b8;font-size:7.5px}.footer strong{color:#64748b}.gst{margin:14px 0 0;color:#64748b;font-size:8.5px}
+  .brandbar{display:flex;height:6px;margin-bottom:20px}.brandbar i{display:block;height:6px}.brandbar .navy{width:88%;background:#18252E}.brandbar .saffron{width:12%;background:#E27025}
+  .masthead{display:flex;align-items:center;justify-content:space-between;gap:24px;padding-bottom:16px;border-bottom:1px solid #DED2BD}
+  .brand{display:flex;align-items:center;min-width:0}.logo{display:block;flex:none}.issuer{min-width:0;margin-left:16px;padding-left:16px;border-left:1px solid #DED2BD}.issuername{color:#18252E;font-size:17px;font-weight:700;line-height:1.2;letter-spacing:-.01em;overflow-wrap:anywhere}.doctype{margin-top:3px;color:#A94713;font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
+  .docmeta{flex:none;text-align:right}.docmeta strong{display:block;margin-bottom:4px;color:#18252E;font-size:13px}.docmeta p{margin:0;color:#4B5350;font-size:11px}.mrow{display:flex;justify-content:flex-end;gap:8px;font-size:11px;line-height:1.55}.mrow .ml{color:#4B5350}.mrow .mv{color:#1E2528;font-weight:700}
+  .titleblock{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding:20px 0 16px}.eyebrow{margin-bottom:4px;color:#A94713;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.14em}.titleblock h1{margin:0;color:#18252E;font-size:26px;line-height:1.15;letter-spacing:-.025em;overflow-wrap:anywhere}.titleaside{flex:none;color:#4B5350;font-size:11px;text-align:right}.titleaside b{display:block;margin-top:2px;color:#1E2528;font-size:13px}.tag{display:inline-block;padding:4px 10px;border:1px solid #DED2BD;border-radius:999px;background:#FAF1E2;color:#A94713;font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+  .summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));overflow:hidden;border:1px solid #DED2BD;border-radius:8px;background:#FAF1E2}.figure{padding:12px 14px}.figure:nth-child(n+4){border-top:1px solid #DED2BD}.figure:not(:nth-child(3n+1)){border-left:1px solid #DED2BD}.figure span{display:block;color:#4B5350;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}.figure strong{display:block;margin-top:5px;color:#18252E;font-size:20px;line-height:1.1;letter-spacing:-.02em;white-space:nowrap}.figure-accent strong{color:#A94713}.figure-positive strong{color:#2F6B43}.figure-negative strong{color:#A6402D}
+  .section{margin-top:18px;break-inside:avoid;page-break-inside:avoid}.sectionhead{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:7px}.sectionhead h2{margin:0;color:#18252E;font-size:11px;text-transform:uppercase;letter-spacing:.12em}.sectionhead span{color:#4B5350;font-size:10px}
+  table{width:100%;border-collapse:separate;border-spacing:0;overflow:hidden;border:1px solid #DED2BD;border-radius:8px}thead,thead tr{background:#18252E}th{padding:8px 10px;background:#18252E;color:#fff;font-size:9.5px;text-align:left;text-transform:uppercase;letter-spacing:.08em}th.num,td.num{text-align:right;white-space:nowrap}td{padding:8px 10px;border-top:1px solid #EADFCB;color:#2C3331}tbody tr:first-child td{border-top:0}tbody tr:nth-child(even):not(.total),tbody tr:nth-child(even):not(.total) td{background:#FDFAF3}.total,.total td{background:#FAF1E2}.total td{border-top:1.5px solid #18252E;color:#18252E;font-weight:700}
+  .share{display:flex;align-items:center;justify-content:flex-end;gap:8px}.bar{display:block;width:64px;height:6px;overflow:hidden;border-radius:3px;background:#EADFCB}.bar b{display:block;height:6px;background:#E27025}
+  .commercial{display:grid;grid-template-columns:1fr 1fr 1.45fr 1fr;overflow:hidden;border:1px solid #DED2BD;border-radius:8px;background:#FAF1E2}.commercial div{padding:10px 12px;border-left:1px solid #DED2BD}.commercial div:first-child{border-left:0}.commercial span{display:block;color:#4B5350;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}.commercial strong{display:block;margin-top:4px;color:#1E2528;font-size:13px}
+  .parties{display:flex;margin-bottom:18px;overflow:hidden;border:1px solid #DED2BD;border-radius:8px}.parties div{flex:1;min-width:0;padding:12px 14px}.parties div+div{border-left:1px solid #DED2BD}.parties span{display:block;color:#4B5350;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}.parties strong{display:block;margin-top:4px;color:#18252E;font-size:14px;line-height:1.3;overflow-wrap:anywhere}
+  .desc strong{display:block;color:#18252E;font-size:13px;overflow-wrap:anywhere}.desc small{display:block;margin-top:2px;color:#4B5350;font-size:10px}
+  .quotevalue{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:10px;padding:14px 16px;border-radius:8px;background:#18252E;color:#fff}.quotevalue span{color:#F9DFC8;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}.quotevalue strong{font-size:22px;letter-spacing:-.02em;white-space:nowrap}
+  .note{margin-top:18px;padding:12px 14px;border-left:3px solid #E27025;border-radius:0 8px 8px 0;background:#FAF1E2;color:#2C3331}.note strong{display:block;margin-bottom:5px;color:#A94713;font-size:9.5px;text-transform:uppercase;letter-spacing:.1em}.noteline{white-space:pre-wrap}.term{display:flex;gap:8px;margin-top:3px}.term:first-of-type{margin-top:0}.term .n{flex:none;width:16px;color:#A94713;font-weight:700}.term p{margin:0;min-width:0;overflow-wrap:anywhere}
+  .signoff{display:flex;gap:32px;margin-top:36px;break-inside:avoid;page-break-inside:avoid}.signoff div{flex:1;padding-top:8px;border-top:1px solid #18252E;color:#4B5350;font-size:10px}.signoff strong{display:block;color:#1E2528;font-size:11px}
+  .gst{margin:16px 0 0;color:#4B5350;font-size:10px;line-height:1.5}
+  .footer{display:flex;justify-content:space-between;gap:24px;margin-top:22px;padding-top:10px;border-top:1px solid #DED2BD;color:#4B5350;font-size:10px}.footer strong{color:#18252E}
 `
 
 /**
@@ -339,33 +370,55 @@ export function extractStyledCostingBody(html: string) {
   return `<style>${styles}</style><div class="costing-pdf-root">${body}</div>`
 }
 
+const LOGO_DISPLAY_WIDTH = 100
+
+/**
+ * Solid segments, not a hard-stop gradient: html2canvas paints the gradient
+ * black in the PDF, so only the on-screen preview would ever show the colours.
+ */
+const TOP_BAR = '<div class="brandbar"><i class="navy"></i><i class="saffron"></i></div>'
+
+function masthead(input: { businessName: string; docType: string; metaTitle: string; meta?: Array<[string, string]>; metaNote?: string }) {
+  const logo = `<img class="logo" src="${WEAVLY_LOGO_DATA_URI}" width="${LOGO_DISPLAY_WIDTH}" height="${Math.round(LOGO_DISPLAY_WIDTH * WEAVLY_LOGO_HEIGHT / WEAVLY_LOGO_WIDTH)}" alt="Weavly">`
+  const issuer = `<div class="issuer">${input.businessName ? `<div class="issuername">${escapeHtml(input.businessName)}</div>` : ''}<div class="doctype">${escapeHtml(input.docType)}</div></div>`
+  const meta = (input.meta ?? []).map(([label, value]) => `<div class="mrow"><span class="ml">${escapeHtml(label)}</span><span class="mv">${escapeHtml(value)}</span></div>`).join('')
+  return `<header class="masthead"><div class="brand">${logo}${issuer}</div><div class="docmeta"><strong>${escapeHtml(input.metaTitle)}</strong>${meta}${input.metaNote ? `<p>${escapeHtml(input.metaNote)}</p>` : ''}</div></header>`
+}
+
+function titleBlock(quality: string, aside: string) {
+  return `<section class="titleblock"><div><div class="eyebrow">Fabric quality</div><h1>${escapeHtml(quality)}</h1></div>${aside ? `<div class="titleaside">${aside}</div>` : ''}</section>`
+}
+
+function footer(left: string, right: string) {
+  return `<footer class="footer"><span>${left}</span><span>${escapeHtml(right)}</span></footer>`
+}
+
+const GENERATED_BY = 'Generated by <strong>Weavly Cost Estimate</strong>'
+
 export function buildCostingPrintHtml(model: CostingExportModel, rawOptions: CostingExportOptions) {
   const options = normalizeCostingExportOptions(rawOptions)
   const isInternal = options.mode === 'internal'
+  const docType = isInternal ? 'Internal Cost Sheet' : 'Customer Quotation'
+  const businessName = options.businessName.trim()
+  const customer = options.customerName.trim()
+  const head = (title: string) => `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(title)}</title><style>${PRINT_STYLES}</style></head><body>`
   if (model.reconciliationStatus === 'unreconstructable') {
-    const businessName = options.businessName.trim() || 'Weavly Cost Estimate'
-    const customer = options.customerName.trim()
-    return `<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(model.qualityLabel)} — review required</title><style>${PRINT_STYLES}</style></head><body>
+    return `${head(`${model.qualityLabel} — review required`)}
 <main class="document">
-  <div class="brandbar"></div>
-  <header class="masthead"><div class="brand"><div class="brandmark">W</div><div><div class="brandname">${escapeHtml(businessName)}</div><div class="doctype">${isInternal ? 'Internal Cost Sheet' : 'Customer Quotation'}</div></div></div><div class="docmeta"><strong>Review required</strong><span>Prepared from an incomplete historical snapshot</span></div></header>
-  <section class="titleblock"><div><div class="eyebrow">Fabric quality</div><h1>${escapeHtml(model.qualityLabel)}</h1></div><div class="titleaside">${customer ? `Prepared for<br><b>${escapeHtml(customer)}</b>` : 'Historical record'}</div></section>
+  ${TOP_BAR}
+  ${masthead({ businessName, docType, metaTitle: 'Review required', metaNote: 'Prepared from an incomplete historical snapshot' })}
+  ${titleBlock(model.qualityLabel, customer ? `Prepared for<b>${escapeHtml(customer)}</b>` : 'Historical record')}
   <section class="note"><strong>Financial values not shown</strong>This historical costing is missing one or more saved assumptions. Re-enter or confirm the costing in Cost Estimate and save a new snapshot before using it as a customer quotation.</section>
-  <footer class="footer"><span>Generated by <strong>Weavly Cost Estimate</strong></span><span>Customer export is blocked until the costing is reconciled.</span></footer>
+  ${footer(GENERATED_BY, 'Customer export is blocked until the costing is reconciled.')}
 </main></body></html>`
   }
   const state = model.state
   const totals = model.totals
   const parsedCreatedAt = new Date(model.createdAt)
-  const date = Number.isFinite(parsedCreatedAt.getTime()) ? parsedCreatedAt.toLocaleDateString('en-IN') : 'Not specified'
-  const parsedValidUntil = options.validUntil ? new Date(`${options.validUntil}T00:00:00`) : null
-  const validUntil = parsedValidUntil && Number.isFinite(parsedValidUntil.getTime())
-    ? parsedValidUntil.toLocaleDateString('en-IN')
-    : 'Not specified'
-  const customer = options.customerName.trim()
+  const date = Number.isFinite(parsedCreatedAt.getTime()) ? formatTimestampDate(parsedCreatedAt, DOCUMENT_DATE_FORMAT) : 'Not specified'
+  const validUntil = options.validUntil ? formatDateOnly(options.validUntil, DOCUMENT_DATE_FORMAT) : 'Not specified'
   const notes = options.notes.trim()
-  const businessName = options.businessName.trim() || 'Weavly Cost Estimate'
   const quantity = model.quantityM > 0 ? `${model.quantityM.toLocaleString('en-IN')} m` : 'Not specified'
   const reference = options.documentReference?.trim() || ''
   const customerDisclaimer = options.showGstNote
@@ -394,62 +447,88 @@ export function buildCostingPrintHtml(model: CostingExportModel, rawOptions: Cos
     ['Factory expenses', model.result.breakdown.overheadPerM],
   ] as [string, number][]
 
-  const costRows = costItems.map(([label, value]) => tableRow([
-    label,
-    model.productionCostPerM > 0 ? `${decimal(finiteOrZero(value) / model.productionCostPerM * 100, 1)}%` : '0.0%',
-    `${money(value)}/m`,
-  ])).join('') + tableRow(['Production cost', '100.0%', `${money(model.productionCostPerM)}/m`], 'total')
+  const costRows = costItems.map(([label, value]) => {
+    const sharePct = model.productionCostPerM > 0 ? finiteOrZero(value) / model.productionCostPerM * 100 : 0
+    const barWidth = Math.min(100, Math.max(0, sharePct))
+    return tableRow([
+      label,
+      raw(`<div class="share"><i class="bar"><b style="width:${decimal(barWidth, 1)}%"></b></i><span>${decimal(sharePct, 1)}%</span></div>`),
+      `${money(value)}/m`,
+    ], 1)
+  }).join('') + tableRow(['Production cost', '100.0%', `${money(model.productionCostPerM)}/m`], 1, 'total')
 
   const layerRows = hasMatchingLayerDetails
     ? [
         ...totals.warpRows.map((row, index) => tableRow([
           'Warp', row.label || `Layer ${index + 1}`, `${decimal(row.baseKgPer100mUsed, 3)} kg`, `${money(row.ratePerKg, 0)}/kg`, `${money(row.baseCostPerMeter)}/m`,
-        ])),
+        ], 2)),
         ...totals.weftRows.map((row, index) => tableRow([
           'Weft', row.label || `Layer ${index + 1}`, `${decimal(row.baseKgPer100mUsed, 3)} kg`, `${money(row.ratePerKg, 0)}/kg`, `${money(row.baseCostPerMeter)}/m`,
-        ])),
+        ], 2)),
       ].join('')
-    : tableRow(['Historical yarn details', 'Unavailable', 'Re-enter and save this costing', '—', '—'])
+    : tableRow(['Historical yarn details', 'Unavailable', 'Re-enter and save this costing', '—', '—'], 2)
 
-  const summary = isInternal
-    ? [
-        metric('Production cost', `${money(model.productionCostPerM)}/m`),
-        metric('Suggested selling price', `${money(model.suggestedSellingPricePerM)}/m`, 'accent'),
-        metric('Break-even price', `${money(model.breakEvenPricePerM)}/m`),
-        metric('Estimated margin at this price', `${decimal(model.marginPct, 1)}%`, model.marginPct < 0 ? 'negative' : 'positive'),
-        metric('Order quantity', quantity),
-        model.expectedProfit != null
-          ? metric(model.expectedProfit < 0 ? 'Expected loss' : 'Expected profit', money(Math.abs(model.expectedProfit), 0), model.expectedProfit < 0 ? 'negative' : 'positive')
-          : metric(model.expectedProfitPerM < 0 ? 'Loss / m' : 'Profit / m', `${money(Math.abs(model.expectedProfitPerM))}/m`, model.expectedProfitPerM < 0 ? 'negative' : 'positive'),
-      ].join('')
-    : [
-        metric('Quoted price', `${money(model.suggestedSellingPricePerM)}/m`, 'accent'),
-        metric('Order quantity', quantity),
-        metric('Quotation value', model.result.totalOrderValue != null ? money(model.result.totalOrderValue, 2) : 'On confirmation'),
-      ].join('')
+  const internalFigures = [
+    figure('Production cost', `${money(model.productionCostPerM)}/m`),
+    figure('Suggested selling price', `${money(model.suggestedSellingPricePerM)}/m`, 'accent'),
+    figure('Break-even price', `${money(model.breakEvenPricePerM)}/m`),
+    figure('Estimated margin at this price', `${decimal(model.marginPct, 1)}%`, model.marginPct < 0 ? 'negative' : 'positive'),
+    figure('Order quantity', quantity),
+    model.expectedProfit != null
+      ? figure(model.expectedProfit < 0 ? 'Expected loss' : 'Expected profit', money(Math.abs(model.expectedProfit), 0), model.expectedProfit < 0 ? 'negative' : 'positive')
+      : figure(model.expectedProfitPerM < 0 ? 'Loss / m' : 'Profit / m', `${money(Math.abs(model.expectedProfitPerM))}/m`, model.expectedProfitPerM < 0 ? 'negative' : 'positive'),
+  ].join('')
 
-  const internalSections = `
-    <section class="section"><div class="sectionhead"><h2>Cost breakdown</h2><span>Per metre of finished fabric</span></div>
-      <table><thead><tr><th>Cost component</th><th class="num">Share</th><th class="num">Cost / m</th></tr></thead><tbody>${costRows}</tbody></table>
-    </section>
-    <section class="section"><div class="sectionhead"><h2>Base yarn calculation</h2><span>${hasMatchingLayerDetails ? 'Wastage is shown separately in the cost breakdown above' : 'Detailed historical values unavailable'}</span></div>
-      <table><thead><tr><th>Use</th><th>Yarn / layer</th><th class="num">Base kg / 100m</th><th class="num">Rate</th><th class="num">Base cost / m</th></tr></thead><tbody>${layerRows}</tbody></table>
-    </section>
-    <section class="section"><div class="sectionhead"><h2>Commercial assumptions</h2></div>
-      <div class="commercial"><div><span>Broker commission</span><strong>${decimal(model.result.commissionPct, 1)}%</strong></div><div><span>Transport charge</span><strong>${money(model.result.transportPerM)}/m</strong></div><div><span>Standard monthly production</span><strong>${finiteOrZero(state.monthlyOutputM).toLocaleString('en-IN')} m</strong></div><div><span>Target margin</span><strong>${decimal(model.result.targetMarginPct, 1)}%</strong></div></div>
-    </section>`
+  const internalBody = `
+  <section class="summary">${internalFigures}</section>
+  <section class="section"><div class="sectionhead"><h2>Cost breakdown</h2><span>Per metre of finished fabric</span></div>
+    <table><thead>${tableHead(['Cost component', 'Share', 'Cost / m'], 1)}</thead><tbody>${costRows}</tbody></table>
+  </section>
+  <section class="section"><div class="sectionhead"><h2>Base yarn calculation</h2><span>${hasMatchingLayerDetails ? 'Wastage is shown separately in the cost breakdown above' : 'Detailed historical values unavailable'}</span></div>
+    <table><thead>${tableHead(['Use', 'Yarn / layer', 'Base kg / 100m', 'Rate', 'Base cost / m'], 2)}</thead><tbody>${layerRows}</tbody></table>
+  </section>
+  <section class="section"><div class="sectionhead"><h2>Commercial assumptions</h2></div>
+    <div class="commercial"><div><span>Broker commission</span><strong>${decimal(model.result.commissionPct, 1)}%</strong></div><div><span>Transport charge</span><strong>${money(model.result.transportPerM)}/m</strong></div><div><span>Standard monthly production</span><strong>${finiteOrZero(state.monthlyOutputM).toLocaleString('en-IN')} m</strong></div><div><span>Target margin</span><strong>${decimal(model.result.targetMarginPct, 1)}%</strong></div></div>
+  </section>
+  ${notes ? `<section class="note"><strong>Internal notes</strong><div class="noteline">${escapeHtml(notes)}</div></section>` : ''}`
 
-  return `<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(model.qualityLabel)}</title><style>${PRINT_STYLES}</style></head><body>
+  const quotationValue = model.result.totalOrderValue != null ? money(model.result.totalOrderValue, 2) : 'On confirmation'
+  const termLines = notes.split(/\r?\n/).map(line => line.trim()).filter(Boolean)
+  const parties = [
+    businessName ? ['Issued by', businessName] : null,
+    ['Prepared for', customer || 'To be confirmed'],
+    ['Valid until', validUntil],
+  ].filter((party): party is string[] => party !== null)
+
+  const customerBody = `
+  <section class="parties">${parties.map(([label, value]) => `<div><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join('')}</section>
+  <section class="section">
+    <table><thead>${tableHead(['Description', 'Order quantity', 'Quoted price', 'Amount'], 1)}</thead><tbody>${tableRow([
+      raw(`<div class="desc"><strong>${escapeHtml(model.qualityLabel)}</strong><small>Priced per metre of finished fabric</small></div>`),
+      quantity,
+      `${money(model.suggestedSellingPricePerM)}/m`,
+      quotationValue,
+    ], 1)}</tbody></table>
+    <div class="quotevalue"><span>Quotation value</span><strong>${escapeHtml(quotationValue)}</strong></div>
+  </section>
+  ${termLines.length ? `<section class="note"><strong>Notes &amp; terms</strong>${termLines.map((line, index) => `<div class="term"><span class="n">${index + 1}.</span><p>${escapeHtml(line)}</p></div>`).join('')}</section>` : ''}
+  <p class="gst">${escapeHtml(customerDisclaimer)}</p>
+  <section class="signoff"><div><strong>Authorised signatory</strong>${businessName ? `For ${escapeHtml(businessName)}` : 'Name and signature'}</div><div><strong>Customer acceptance</strong>Name, signature and date</div></section>`
+
+  const metaRows: Array<[string, string]> = [
+    ...(reference ? [['Reference', reference] as [string, string]] : []),
+    ['Prepared', date],
+  ]
+  const titleAside = isInternal
+    ? (customer ? `Prepared for<b>${escapeHtml(customer)}</b>` : '<span class="tag">Confidential - internal use only</span>')
+    : ''
+
+  return `${head(model.qualityLabel)}
 <main class="document">
-  <div class="brandbar"></div>
-  <header class="masthead"><div class="brand"><div class="brandmark">W</div><div><div class="brandname">${escapeHtml(businessName)}</div><div class="doctype">${isInternal ? 'Internal Cost Sheet' : 'Customer Quotation'}</div></div></div><div class="docmeta"><strong>${isInternal ? 'Costing snapshot' : 'Quotation'}</strong>${reference ? `<span>Reference ${escapeHtml(reference)}</span>` : ''}<span>Prepared ${escapeHtml(date)}</span>${!isInternal ? `<span>Valid until ${escapeHtml(validUntil)}</span>` : ''}</div></header>
-  <section class="titleblock"><div><div class="eyebrow">Fabric quality</div><h1>${escapeHtml(model.qualityLabel)}</h1></div><div class="titleaside">${customer ? `Prepared for<br><b>${escapeHtml(customer)}</b>` : isInternal ? 'Confidential - internal use only' : 'Prepared for your review'}</div></section>
-  ${!isInternal ? `<section class="quote-details"><div><span>Customer</span><strong>${escapeHtml(customer || 'To be confirmed')}</strong></div><div><span>Reference</span><strong>${escapeHtml(reference || 'Document only')}</strong></div><div><span>Validity</span><strong>Until ${escapeHtml(validUntil)}</strong></div></section>` : ''}
-  <section class="summary">${summary}</section>
-  ${isInternal ? internalSections : ''}
-  ${notes ? `<section class="note"><strong>${isInternal ? 'Internal notes' : 'Notes & terms'}</strong>${escapeHtml(notes)}</section>` : ''}
-  ${!isInternal ? `<p class="gst">${escapeHtml(customerDisclaimer)}</p>` : ''}
-  <footer class="footer"><span>Generated by <strong>Weavly Cost Estimate</strong></span><span>${isInternal ? 'Historical costings retain their saved assumptions.' : 'Thank you for the opportunity to quote.'}</span></footer>
+  ${TOP_BAR}
+  ${masthead({ businessName, docType, metaTitle: isInternal ? 'Costing snapshot' : 'Quotation', meta: metaRows })}
+  ${titleBlock(model.qualityLabel, titleAside)}
+  ${isInternal ? internalBody : customerBody}
+  ${footer(GENERATED_BY, isInternal ? 'Historical costings retain their saved assumptions.' : 'Thank you for the opportunity to quote.')}
 </main></body></html>`
 }
