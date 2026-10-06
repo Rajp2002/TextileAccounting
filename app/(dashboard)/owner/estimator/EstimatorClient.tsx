@@ -68,6 +68,7 @@ import {
     DEFAULT_FACTORY_SECTIONS,
     DEFAULT_WARP_CRIMP_PCT,
     ensureOverheadIntegrity,
+    calcOverheadCostPerMeter,
     resolveOverheadItemAmount,
     getEffectiveYarnDenier,
     getEffectiveCostingWidthCm,
@@ -4153,11 +4154,19 @@ export default function EstimatorClient({
         }),
         [costingResult, estimatorValidation, totals, warningsAcknowledged, awaitingCalculation],
     )
+    // The monthly-expense editor shows what the owner has typed, so it reads
+    // live state. `totals` cannot serve it: Free mode freezes `totals` to the
+    // last completed calculation (or an empty default), which left rows added
+    // with "New Item" invisible and the expense total stuck at zero.
+    const overheadEditor = useMemo(
+        () => calcOverheadCostPerMeter(state.overheadItems, state.monthlyOutputM, state.loomCount),
+        [state.overheadItems, state.monthlyOutputM, state.loomCount],
+    )
     // Keep the monthly-expense reference available even when the costing is
     // currently using a direct ₹/m rate. This is transparency only; it never
     // overrides the selected calculation method.
     const monthlyOverheadReference = state.monthlyOutputM > 0
-        ? totals.overheadTotalMonthly / state.monthlyOutputM
+        ? overheadEditor.totalMonthly / state.monthlyOutputM
         : 0
     const hasValidCostResult = freeMode ? !!freeMeter.completed : costingReadiness.canDisplayMoney
     const canPersistCostResult = freeMode ? !!freeMeter.completed && !freeMeter.stale : costingReadiness.canPersist
@@ -5111,8 +5120,7 @@ export default function EstimatorClient({
     const hasOrderQty    = !!(state.orderQuantityM && state.orderQuantityM > 0)
     const actionReadinessId = 'estimator-action-readiness'
     // Validation: Pilot Safety Rails
-    const isZeroConfig = state.overheadMode === 'monthly_expenses'
-        && state.overheadItems.filter(i => i.isPreset).every(i => (i.monthlyAmount || 0) === 0)
+    const isZeroConfig = state.overheadMode === 'monthly_expenses' && overheadEditor.totalMonthly <= 0
     const pageShellClass = "w-full px-4 sm:px-6 lg:px-0"
     const hudShellClass = "w-full rounded-xl border border-[var(--color-hairline)] bg-[var(--color-surface)] px-3 py-3 shadow-[var(--shadow-card)] sm:px-5 sm:py-4"
     const postProcessingCostPerM = totals.windingPerM + totals.processingPerM + totals.finishingPerM
@@ -6894,9 +6902,9 @@ export default function EstimatorClient({
                                                     <span>Monthly expenses</span>
                                                 </span>
                                                 <div className="flex items-center gap-2">
-                                                    {totals.overheadTotalMonthly > 0 && (
+                                                    {overheadEditor.totalMonthly > 0 && (
                                                         <span className="text-[10px] font-mono text-[var(--color-muted)] font-normal mr-2">
-                                                             Total: ₹{totals.overheadTotalMonthly.toLocaleString('en-IN')}/mo
+                                                             Total: ₹{overheadEditor.totalMonthly.toLocaleString('en-IN')}/mo
                                                         </span>
                                                     )}
                                                     <ChevronRight className="h-4 w-4 text-[var(--wv-cotton-500)]" />
@@ -6963,7 +6971,7 @@ export default function EstimatorClient({
                                                     </div>
 
                                                     <div className="divide-y divide-[var(--color-hairline)]">
-                                                        {totals.resolvedItems.map(item => {
+                                                        {overheadEditor.resolvedItems.map(item => {
                                                             const isPreset = item.isPreset
 
                                                             return (
@@ -7030,8 +7038,8 @@ export default function EstimatorClient({
                                                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                                         <div className="rounded-[9px] bg-[var(--color-surface-soft)] px-3 py-2.5">
                                                             <p className="text-[10px] text-[var(--color-muted)]">Total monthly expenses</p>
-                                                            <p className={`text-base font-semibold ${totals.overheadTotalMonthly <= 0 ? 'text-[var(--color-risk-red)]' : 'text-[var(--color-ink)]'}`}>
-                                                                ₹{totals.overheadTotalMonthly.toLocaleString('en-IN')}
+                                                            <p className={`text-base font-semibold ${overheadEditor.totalMonthly <= 0 ? 'text-[var(--color-risk-red)]' : 'text-[var(--color-ink)]'}`}>
+                                                                ₹{overheadEditor.totalMonthly.toLocaleString('en-IN')}
                                                             </p>
                                                         </div>
                                                         <div className="rounded-[9px] bg-[var(--color-surface-soft)] px-3 py-2.5">
