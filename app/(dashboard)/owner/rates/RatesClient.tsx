@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { RateBookTutorial, RateBookHelp, rateBookHelpCopy } from '@/components/rates/RateBookTutorial'
+import { RateTrendDialog } from '@/components/rates/RateTrendDialog'
 import type { RateBookStep } from '@/lib/rate-book-tour'
 import { isSampleRecordId } from '@/lib/tours/sample-ids'
 import { tourCommonCopy } from '@/lib/i18n/tour-common'
@@ -12,6 +13,7 @@ import {
     ArchiveRestore,
     BookOpen,
     CalendarClock,
+    ChartLine,
     CheckCircle2,
     ChevronDown,
     ChevronRight,
@@ -32,7 +34,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SwitchField } from '@/components/ui/switch-field'
-import { railPrimaryAction } from '@/components/ui/rail'
+import { railIcon, railPrimaryAction, railSurface } from '@/components/ui/rail'
 import { cn } from '@/lib/utils'
 import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -787,23 +789,25 @@ function RateReviewRailWidget({
 function RateBookReferenceCard() {
     const { tx, language } = useTranslation()
     const copy = rateBookHelpCopy[language]
+    // Collapsed by default (no `open`): it sits in the bottom stack of the right rail beside the help and archive pills.
     return (
-        <Card className="border-hairline bg-surface/90 shadow-sm backdrop-blur-xs">
-            <CardContent className="p-4 space-y-3">
-                <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-subtle">
-                    <BookOpen className="h-4 w-4 text-saffron" aria-hidden="true" />
-                    <span>{tx('Rate Book Principles')}</span>
-                </div>
-                <ul data-i18n-skip="true" lang={language} className="space-y-2 text-xs text-body leading-relaxed">
-                    {copy.principles.map(principle => (
-                        <li key={principle} className="flex items-start gap-2">
-                            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-saffron" aria-hidden="true" />
-                            <span>{principle}</span>
-                        </li>
-                    ))}
-                </ul>
-            </CardContent>
-        </Card>
+        <details className={cn(railSurface, 'ui-details group text-xs')}>
+            <summary className="flex min-h-11 cursor-pointer select-none list-none items-center justify-between gap-2.5 px-3.5 py-2.5 text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden">
+                <span className="flex min-w-0 items-center gap-2.5">
+                    <BookOpen className={railIcon} aria-hidden="true" />
+                    <span className="min-w-0">{tx('Rate Book Principles')}</span>
+                </span>
+                <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" />
+            </summary>
+            <ul data-i18n-skip="true" lang={language} className="max-h-[40dvh] space-y-2 overflow-y-auto border-t border-hairline px-3.5 py-3 text-xs leading-relaxed text-body">
+                {copy.principles.map(principle => (
+                    <li key={principle} className="flex items-start gap-2">
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-saffron" aria-hidden="true" />
+                        <span>{principle}</span>
+                    </li>
+                ))}
+            </ul>
+        </details>
     )
 }
 
@@ -906,6 +910,7 @@ export default function RatesClient({
     const [draft, setDraft] = useState<CostRateInput | null>(null)
     const [showDueReviews, setShowDueReviews] = useState(false)
     const [historyRate, setHistoryRate] = useState<CostRateRow | null>(null)
+    const [historyMode, setHistoryMode] = useState<'activity' | 'trend'>('activity')
     const [historyRows, setHistoryRows] = useState<RateHistoryRow[]>([])
     const [historyLoading, setHistoryLoading] = useState(false)
     const [historyError, setHistoryError] = useState<string | null>(null)
@@ -1350,12 +1355,13 @@ export default function RatesClient({
         setShowConflicts(false)
     }
 
-    const openHistory = async (rate: CostRateRow) => {
+    const openHistory = async (rate: CostRateRow, mode: 'activity' | 'trend' = 'activity') => {
         if (isSampleRecordId(rate.id)) {
             toast.info(tourCommonCopy[language].sampleBanner)
             return
         }
         setHistoryRate(rate)
+        setHistoryMode(mode)
         setHistoryRows([])
         setHistoryError(null)
         setHistoryLoading(true)
@@ -1524,7 +1530,8 @@ export default function RatesClient({
                         }
                     }}
                 />
-                <div className="left-rail-bottom mt-auto pt-3">
+                {/* From 1280px the help pill lives in the right rail instead (`rail-inline-actions` hides this copy). */}
+                <div className="left-rail-bottom rail-inline-actions mt-auto pt-3">
                     <RateBookHelp />
                 </div>
             </aside>
@@ -1852,10 +1859,21 @@ export default function RatesClient({
                                                     {rate.apply_as_default && <p className="mt-1 text-[10px] font-semibold text-success">Default for new costings</p>}
                                                 </td>
                                                 <td data-ratebook-field="rateAndTrend" tabIndex={-1} className="px-3 py-3 align-top">
-                                                    <p className="font-mono text-sm font-bold text-ink">{formatRateValue(rate.current_value, rate.unit)}</p>
-                                                    <div className="mt-1.5">
-                                                        <PriceDeltaBadge currentValue={rate.current_value} previousValue={rate.previous_value} unit={rate.unit} />
-                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => openHistory(rate, 'trend')}
+                                                        title={tx('View price history')}
+                                                        className="group/trend -mx-2 -my-1.5 block rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/50"
+                                                    >
+                                                        <span className="flex items-center gap-1.5 font-mono text-sm font-bold text-ink">
+                                                            {formatRateValue(rate.current_value, rate.unit)}
+                                                            <ChartLine className="h-3.5 w-3.5 text-subtle/60 transition-colors group-hover/trend:text-saffron-deep" aria-hidden="true" />
+                                                        </span>
+                                                        <span className="mt-1.5 block">
+                                                            <PriceDeltaBadge currentValue={rate.current_value} previousValue={rate.previous_value} unit={rate.unit} />
+                                                        </span>
+                                                        <span className="sr-only">{`${tx('View price history')}: ${rate.name}`}</span>
+                                                    </button>
                                                 </td>
                                                 <td data-ratebook-field="reviewStatusBadge" className="px-3 py-3 align-top">
                                                     <ReviewBadge rate={rate} />
@@ -1971,11 +1989,20 @@ export default function RatesClient({
                                             </div>
 
                                             <div className="mt-3.5 flex items-baseline justify-between gap-3 border-y border-hairline/70 py-2.5">
-                                                <div data-ratebook-field="rateAndTrend" tabIndex={-1} className="flex flex-wrap items-baseline gap-2">
-                                                    <span className="font-mono text-xl font-black tracking-tight text-ink">
-                                                        {formatRateValue(rate.current_value, rate.unit)}
-                                                    </span>
-                                                    <PriceDeltaBadge currentValue={rate.current_value} previousValue={rate.previous_value} unit={rate.unit} />
+                                                <div data-ratebook-field="rateAndTrend" tabIndex={-1} className="min-w-0">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => openHistory(rate, 'trend')}
+                                                        title={tx('View price history')}
+                                                        className="group/trend -mx-2 flex min-h-11 flex-wrap items-center gap-x-2 gap-y-1 rounded-lg px-2 text-left transition-colors hover:bg-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/50"
+                                                    >
+                                                        <span className="font-mono text-xl font-black tracking-tight text-ink">
+                                                            {formatRateValue(rate.current_value, rate.unit)}
+                                                        </span>
+                                                        <PriceDeltaBadge currentValue={rate.current_value} previousValue={rate.previous_value} unit={rate.unit} />
+                                                        <ChartLine className="h-4 w-4 text-subtle/60 transition-colors group-hover/trend:text-saffron-deep" aria-hidden="true" />
+                                                        <span className="sr-only">{`${tx('View price history')}: ${rate.name}`}</span>
+                                                    </button>
                                                 </div>
                                                 {rate.apply_as_default && (
                                                     <span className="text-[10px] font-semibold text-success">Default</span>
@@ -2181,7 +2208,16 @@ export default function RatesClient({
                 </DialogContent>
             </Dialog>
 
-            <Sheet open={Boolean(historyRate)} onOpenChange={open => { if (!open) { setHistoryRate(null); setHistoryError(null) } }}>
+            <RateTrendDialog
+                rate={historyMode === 'trend' ? historyRate : null}
+                rows={historyRows}
+                loading={historyLoading}
+                error={historyError}
+                onClose={() => { setHistoryRate(null); setHistoryError(null) }}
+                onOpenActivity={() => setHistoryMode('activity')}
+            />
+
+            <Sheet open={Boolean(historyRate) && historyMode === 'activity'} onOpenChange={open => { if (!open) { setHistoryRate(null); setHistoryError(null) } }}>
                 <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
                     <SheetHeader className="border-b border-hairline px-6 py-5">
                         <SheetTitle className="flex items-center gap-2"><History className="h-5 w-5 text-info" /> {historyRate?.name} activity</SheetTitle>
@@ -2239,7 +2275,7 @@ export default function RatesClient({
             </div>
 
             {/* Keep viewport-positioned review controls outside the animated route wrapper. */}
-            <aside className="rates-review-rail-desktop space-y-4" aria-label={tx('Rate review and reference')}>
+            <aside className="rates-review-rail-desktop" aria-label={tx('Rate review and reference')}>
                 <div>
                     <Button data-ratebook-field="addRateAction" onClick={() => { setSaveError(null); setDraft(defaultDraft(defaultReviewIntervalDays)) }} className={cn(railPrimaryAction, 'w-full')}>
                         <Plus className="h-4 w-4" aria-hidden="true" />
@@ -2254,14 +2290,14 @@ export default function RatesClient({
                         onOpenModal={() => { if (dueReviewRates.length > 0) setShowDueReviews(true) }}
                     />
                 </div>
-                <div data-ratebook-field="immutabilityNotice">
-                    <RateBookReferenceCard />
+                {/* Guidance pinned to the bottom edge of the rail: principles, help, then archive and restore. */}
+                <div className="rates-review-rail-bottom">
+                    <div data-ratebook-field="immutabilityNotice">
+                        <RateBookReferenceCard />
+                    </div>
+                    <RateBookHelp />
+                    <ArchivePolicyNotice />
                 </div>
-            </aside>
-
-            {/* Pin the archive policy to the bottom edge of the desktop rail. */}
-            <aside className="rates-archive-policy-rail-desktop" aria-label={tx('Rate Book archive policy')}>
-                <ArchivePolicyNotice />
             </aside>
 
             {/* Floating Review Action on Narrower Screens (< 1540px) */}
