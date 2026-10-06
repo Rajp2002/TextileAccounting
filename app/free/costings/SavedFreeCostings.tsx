@@ -213,6 +213,18 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
 
   const totalVisibleCount = (tourSampleActive ? 0 : filteredRows.length) + (demoMatchesFilters ? 1 : 0)
 
+  // One model per selected costing. Rebuilding it inline gave the export dialog a
+  // new object on every render, and this page re-renders every second (edit clock).
+  const exportModel = useMemo(() => selected
+    ? createCostingExportModel({
+        qualityLabel: selected.label,
+        createdAt: selected.created_at,
+        state: selected.estimate,
+        totals: selected.totals,
+        result: selected.result,
+      })
+    : null, [selected])
+
   // Derive detailed cost lines for inspection dialog
   const activeDetailCostLines: Array<[string, number]> = useMemo(() => {
     if (!inspectingCosting?.result) return []
@@ -732,16 +744,7 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
         onOpenChange={open => {
           if (!open) setSelected(null)
         }}
-        model={
-          selected
-            ? createCostingExportModel({
-                qualityLabel: selected.label,
-                state: selected.estimate,
-                totals: selected.totals,
-                result: selected.result,
-              })
-            : null
-        }
+        model={exportModel}
         sourceRecordKind="costing"
         documentReference={selected?.id}
       />
