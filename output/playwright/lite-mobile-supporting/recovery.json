@@ -1,0 +1,202 @@
+[
+  {
+    "check": "latest unresolved attempt returns to its single existing recovery control",
+    "passed": true
+  },
+  {
+    "check": "only genuinely unresolved older attempt adds a status check",
+    "passed": true
+  },
+  {
+    "check": "historical order identity and raw status remain visible",
+    "passed": true
+  },
+  {
+    "check": "historical 503 repeated taps make one status request",
+    "passed": true
+  },
+  {
+    "check": "historical 503 check uses original provider identities",
+    "passed": true
+  },
+  {
+    "check": "failed status refresh does not claim payment failure or invite another payment",
+    "passed": true
+  },
+  {
+    "check": "503 check may be retried safely",
+    "passed": true
+  },
+  {
+    "check": "historical 403 repeated taps make one status request",
+    "passed": true
+  },
+  {
+    "check": "historical 403 check uses original provider identities",
+    "passed": true
+  },
+  {
+    "check": "failed status refresh does not claim payment failure or invite another payment",
+    "passed": true
+  },
+  {
+    "check": "403 check may be retried safely",
+    "passed": true
+  },
+  {
+    "check": "historical 500 repeated taps make one status request",
+    "passed": true
+  },
+  {
+    "check": "historical 500 check uses original provider identities",
+    "passed": true
+  },
+  {
+    "check": "failed status refresh does not claim payment failure or invite another payment",
+    "passed": true
+  },
+  {
+    "check": "500 check may be retried safely",
+    "passed": true
+  },
+  {
+    "check": "return action closes dialog and focuses existing recovery",
+    "passed": true
+  },
+  {
+    "check": "Close/reopen preserves historical attempt identity",
+    "passed": true
+  },
+  {
+    "check": "missing provider order has no nonexistent recovery return",
+    "passed": true
+  },
+  {
+    "check": "missing provider order has no status check",
+    "passed": true
+  },
+  {
+    "check": "missing order retains uncertainty without another payment invitation",
+    "passed": true
+  },
+  {
+    "check": "free hi deletion exact phrase remains literal",
+    "passed": true
+  },
+  {
+    "check": "free hi deletion factory identity remains literal",
+    "passed": true
+  },
+  {
+    "check": "free hi deletion rejects incomplete phrase",
+    "passed": true
+  },
+  {
+    "check": "free hi deletion enables only exact original phrase/factory",
+    "passed": true
+  },
+  {
+    "check": "free hi deletion dismissal clears confirmations",
+    "passed": true
+  },
+  {
+    "check": "free gu deletion exact phrase remains literal",
+    "passed": true
+  },
+  {
+    "check": "free gu deletion factory identity remains literal",
+    "passed": true
+  },
+  {
+    "check": "free gu deletion rejects incomplete phrase",
+    "passed": true
+  },
+  {
+    "check": "free gu deletion enables only exact original phrase/factory",
+    "passed": true
+  },
+  {
+    "check": "free gu deletion dismissal clears confirmations",
+    "passed": true
+  },
+  {
+    "check": "lite hi deletion exact phrase remains literal",
+    "passed": true
+  },
+  {
+    "check": "lite hi deletion factory identity remains literal",
+    "passed": true
+  },
+  {
+    "check": "lite hi deletion rejects incomplete phrase",
+    "passed": true
+  },
+  {
+    "check": "lite hi deletion enables only exact original phrase/factory",
+    "passed": true
+  },
+  {
+    "check": "lite hi deletion dismissal clears confirmations",
+    "passed": true
+  },
+  {
+    "check": "lite gu deletion exact phrase remains literal",
+    "passed": true
+  },
+  {
+    "check": "lite gu deletion factory identity remains literal",
+    "passed": true
+  },
+  {
+    "check": "lite gu deletion rejects incomplete phrase",
+    "passed": true
+  },
+  {
+    "check": "lite gu deletion enables only exact original phrase/factory",
+    "passed": true
+  },
+  {
+    "check": "lite gu deletion dismissal clears confirmations",
+    "passed": true
+  },
+  {
+    "check": "base hi deletion exact phrase remains literal",
+    "passed": true
+  },
+  {
+    "check": "base hi deletion factory identity remains literal",
+    "passed": true
+  },
+  {
+    "check": "base hi deletion rejects incomplete phrase",
+    "passed": true
+  },
+  {
+    "check": "base hi deletion enables only exact original phrase/factory",
+    "passed": true
+  },
+  {
+    "check": "base hi deletion dismissal clears confirmations",
+    "passed": true
+  },
+  {
+    "check": "base gu deletion exact phrase remains literal",
+    "passed": true
+  },
+  {
+    "check": "base gu deletion factory identity remains literal",
+    "passed": true
+  },
+  {
+    "check": "base gu deletion rejects incomplete phrase",
+    "passed": true
+  },
+  {
+    "check": "base gu deletion enables only exact original phrase/factory",
+    "passed": true
+  },
+  {
+    "check": "base gu deletion dismissal clears confirmations",
+    "passed": true
+  }
+]

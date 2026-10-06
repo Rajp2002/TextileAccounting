@@ -1,0 +1,33 @@
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: @rollup/plugin-terser@1.0.0
+npm warn Found: rollup@4.61.0
+npm warn node_modules/rollup
+npm warn   peerOptional rollup@"^1.20.0||^2.0.0||^3.0.0||^4.0.0" from @rollup/plugin-babel@6.1.0
+npm warn   node_modules/@rollup/plugin-babel
+npm warn     @rollup/plugin-babel@"^6.1.0" from workbox-build@7.4.1
+npm warn     node_modules/workbox-build
+npm warn   7 more (@rollup/plugin-commonjs, @rollup/pluginutils, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peerOptional rollup@"^2.0.0||^3.0.0||^4.0.0" from @rollup/plugin-terser@1.0.0
+npm warn node_modules/@rollup/plugin-terser
+npm warn   @rollup/plugin-terser@"^1.0.0" from workbox-build@7.4.1
+npm warn   node_modules/workbox-build
+npm warn deprecated source-map@0.8.0-beta.0: The work that was done in this beta branch won't be included in future versions
+npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+npm warn deprecated glob@11.1.0: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+
+added 1081 packages, and audited 1082 packages in 25s
+
+275 packages are looking for funding
+  run `npm fund` for details
+
+29 vulnerabilities (2 low, 5 moderate, 21 high, 1 critical)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.

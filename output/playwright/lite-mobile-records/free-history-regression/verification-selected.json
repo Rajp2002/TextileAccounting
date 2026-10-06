@@ -1,0 +1,26 @@
+{
+  "evidenceType": "Automated Chromium browser emulation; synthetic localhost transport and records only. No installed iOS/Android PWA, authentication, real server outcomes or payment-provider verification.",
+  "mockBoundaries": [
+    "Next navigation/dynamic/image adapters",
+    "Server actions replaced by synthetic empty answers",
+    "Inert Supabase auth subscription",
+    "Local in-memory Free/billing APIs, original costing engine",
+    "Synthetic Razorpay callback for dismissal/activation",
+    "Successful-save navigation held only for hook state checks; normal saved-history handoff tested separately",
+    "Software keyboard represented by a shrunken visualViewport, not an installed device"
+  ],
+  "base": "http://127.0.0.1:4190",
+  "stage": "lite-id-regression",
+  "createdAt": "2026-10-05T20:42:39.364Z",
+  "externalRequestsBlocked": [],
+  "results": [
+    {
+      "name": "saved-history-route-handoff",
+      "status": "passed"
+    },
+    {
+      "name": "help-close-focus-and-history-filter-summary",
+      "status": "passed"
+    }
+  ]
+}

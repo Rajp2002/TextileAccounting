@@ -1,0 +1,92 @@
+[
+  {
+    "language": "en",
+    "percent": 200,
+    "state": "version",
+    "issues": []
+  },
+  {
+    "language": "en",
+    "percent": 200,
+    "state": "save-quality",
+    "issues": []
+  },
+  {
+    "language": "en",
+    "percent": 200,
+    "state": "new-quality",
+    "issues": []
+  },
+  {
+    "language": "en",
+    "percent": 200,
+    "state": "rename-quality",
+    "issues": []
+  },
+  {
+    "language": "en",
+    "percent": 200,
+    "state": "discard-draft",
+    "issues": []
+  },
+  {
+    "language": "hi",
+    "percent": 200,
+    "state": "version",
+    "issues": []
+  },
+  {
+    "language": "hi",
+    "percent": 200,
+    "state": "save-quality",
+    "issues": []
+  },
+  {
+    "language": "hi",
+    "percent": 200,
+    "state": "new-quality",
+    "issues": []
+  },
+  {
+    "language": "hi",
+    "percent": 200,
+    "state": "rename-quality",
+    "issues": []
+  },
+  {
+    "language": "hi",
+    "percent": 200,
+    "state": "discard-draft",
+    "issues": []
+  },
+  {
+    "language": "gu",
+    "percent": 200,
+    "state": "version",
+    "issues": []
+  },
+  {
+    "language": "gu",
+    "percent": 200,
+    "state": "save-quality",
+    "issues": []
+  },
+  {
+    "language": "gu",
+    "percent": 200,
+    "state": "new-quality",
+    "issues": []
+  },
+  {
+    "language": "gu",
+    "percent": 200,
+    "state": "rename-quality",
+    "issues": []
+  },
+  {
+    "language": "gu",
+    "percent": 200,
+    "state": "discard-draft",
+    "issues": []
+  }
+]

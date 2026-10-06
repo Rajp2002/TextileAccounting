@@ -14,6 +14,9 @@ import { PlanAwareSettingsView } from '@/components/settings/plan-aware/plan-awa
 import { getFactoryCostProfile } from '@/app/(dashboard)/owner/estimator/actions'
 import { getBasePayrollCycleConfig } from '@/app/(dashboard)/owner/production/actions'
 import { RouteMilestones } from '@/components/performance/route-milestones'
+import styles from './lite-settings.module.css'
+import { useTranslation } from '@/lib/i18n/context'
+import { liteSupportingText } from '@/lib/i18n/lite-supporting'
 import { Skeleton } from '@/components/ui/skeleton'
 
 type OrganizationSettings = {
@@ -35,6 +38,7 @@ export default function SettingsPage() {
     const queryClient = useQueryClient()
     const settingsBootstrap = useSettingsBootstrap()
     const tier = useOwnerPlan()
+    const { language } = useTranslation()
     const { data: userProfile, isLoading: profileLoading } = useUserProfile()
     const [factoryName, setFactoryName] = useState('')
 
@@ -96,7 +100,7 @@ export default function SettingsPage() {
     }
     if (!userProfile) return null
 
-    return <div className="settings-page-frame settings-readable">
+    return <div className={`settings-page-frame settings-readable ${tier === 'lite' ? styles.root : ''}`}>
         <RouteMilestones route="/owner/settings" shellVisible primaryUsable secondaryReady />
         <PlanAwareSettingsView
             profile={{
@@ -135,8 +139,9 @@ export default function SettingsPage() {
             <details id="account-data" className="ui-details group overflow-hidden rounded-xl border border-hairline bg-surface/80">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-4 sm:px-5">
                     <div>
-                        <div className="flex items-center gap-2"><User className="h-4 w-4" /><h2 className="text-base font-bold">Account & data</h2></div>
-                        <p className="mt-1 text-sm text-muted-foreground">Organization export, export history, and account deletion.</p>
+                        <div className="flex items-center gap-2"><User className="h-4 w-4" /><h2 className="text-base font-bold">{tier === 'lite' ? liteSupportingText(language, 'accountData') : 'Account & data'}</h2></div>
+                        {tier === 'lite' && <p className={`mt-1 text-sm text-muted-foreground ${styles.mobileSummary}`}>{liteSupportingText(language, 'accountDataSummary')}</p>}
+                        <p className={`mt-1 text-sm text-muted-foreground ${tier === 'lite' ? styles.desktopSummary : ''}`}>Organization export, export history, and account deletion.</p>
                     </div>
                     <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" />
                 </summary>
@@ -149,7 +154,7 @@ export default function SettingsPage() {
                         <Link href="/privacy-request" className="mt-3 block text-xs font-semibold text-saffron-deep hover:underline">Make a privacy or grievance request</Link>
                         <Link href="/security-incident" className="mt-3 block text-xs font-semibold text-saffron-deep hover:underline">Report a security incident</Link>
                     </section>
-                    <div id="account-deletion"><DeleteAccountCard organizationName={org?.name || ''} /></div>
+                    <div id="account-deletion" className={tier === 'lite' ? styles.duplicateDeletion : undefined}><DeleteAccountCard organizationName={org?.name || ''} /></div>
                 </div>
             </details>
         </div>

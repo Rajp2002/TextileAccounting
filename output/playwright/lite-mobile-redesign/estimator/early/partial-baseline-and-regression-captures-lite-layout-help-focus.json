@@ -1,0 +1,22 @@
+{
+  "evidenceType": "Automated Chromium emulation; actual Lite estimator/navigation/paid autosave over synthetic localhost actions. No installed PWA or remote data/provider verification.",
+  "base": "http://127.0.0.1:4197",
+  "stage": "early",
+  "applicationSourceCommit": "working-tree-lite",
+  "createdAt": "2026-10-05T20:22:11.380Z",
+  "externalRequestsBlocked": [],
+  "results": [
+    {
+      "name": "baseline-and-regression-captures",
+      "status": "failed",
+      "error": "locator.waitFor: Timeout 30000ms exceeded.\nCall log:\n  - waiting for getByRole('heading', { name: 'Cost estimate', exact: true }) to be visible\n",
+      "pageErrors": []
+    },
+    {
+      "name": "lite-layout-help-focus",
+      "status": "failed",
+      "error": "Expected values to be strictly equal:\n\nfalse !== true\n",
+      "pageErrors": []
+    }
+  ]
+}

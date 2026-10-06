@@ -1,8 +1,11 @@
+import styles from './lite-billing.module.css'
+import { LiteDisclosure } from '@/components/mobile/lite-disclosure'
 import { createClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth'
 import { getCachedOrgPlanAccess, getSubscriptionDetail } from '@/lib/subscription'
 import { SubscribeButton } from '@/components/billing/SubscribeButton'
 import { BillingAttemptStatus } from '@/components/billing/BillingAttemptStatus'
+import { getBillingAttemptPresentation } from '@/lib/billing-attempts'
 import { BillingDocumentNotice } from '@/components/billing/BillingDocumentNotice'
 import { PaymentHistoryDialog, type BillingHistoryEntry, type BillingHistoryStatus } from '@/components/billing/PaymentHistoryDialog'
 import { ReferralCard } from '@/components/billing/ReferralCard'
@@ -90,6 +93,7 @@ function buildBillingHistoryEntries(
     payments: SubscriptionPaymentRow[],
     attempts: BillingAttemptHistoryRow[],
     subscriptionById: Map<string, BillingSubscriptionRow>,
+    includeRecovery = false,
 ): BillingHistoryEntry[] {
     const paymentOrderIds = new Set(
         payments.map((payment) => payment.razorpay_order_id).filter((value): value is string => Boolean(value))
@@ -140,6 +144,12 @@ function buildBillingHistoryEntries(
             orderId: attempt.provider_order_id ?? null,
             receiptPaymentId: null,
             status: normalizeAttemptHistoryStatus(attempt.status),
+            ...(includeRecovery ? { attempt: {
+                id: attempt.id,
+                status: attempt.status,
+                provider_order_id: attempt.provider_order_id,
+                provider_payment_id: attempt.provider_payment_id,
+            } } : {}),
         }))
 
     return [...paymentEntries, ...attemptEntries].sort((left, right) => (
@@ -333,7 +343,7 @@ export default async function BillingPage() {
     const renewalIsUpcoming = Boolean(
         renewalEligibleAt && new Date(renewalEligibleAt).getTime() > billingNow.getTime()
     )
-    const billingHistoryEntries = buildBillingHistoryEntries(payments, attempts, subscriptionById)
+    const billingHistoryEntries = buildBillingHistoryEntries(payments, attempts, subscriptionById, tier === 'lite' || (tier === 'none' && billingPlanTier === 'lite'))
     const latestAttemptNeedsAttention = Boolean(
         latestAttempt
         && !['activated', 'failed', 'cancelled', 'refunded'].includes(latestAttempt.status)
@@ -346,6 +356,7 @@ export default async function BillingPage() {
     const canRenew = Boolean(renewalAvailable && selfServeActiveTier && activeRenewalPrice)
 
     const isLiteWorkspace = tier === 'lite'
+    const litePresentation = isLiteWorkspace || (tier === 'none' && billingPlanTier === 'lite')
     const isBaseWorkspace = tier === 'base'
     const isActive = subscriptionTier === 'lite' || subscriptionTier === 'base'
     const organizationName = organizationResult.data?.name || 'Weavly workspace'
@@ -387,7 +398,7 @@ export default async function BillingPage() {
     )
 
     return (
-        <div className="billing-workspace-shell w-full max-w-6xl space-y-6 pb-20">
+        <div className={cn("billing-workspace-shell w-full max-w-6xl space-y-6 pb-20", litePresentation && styles.root)}>
             <div className="ui-route-enter space-y-6">
                 <RouteMilestones route="/owner/billing" shellVisible primaryUsable secondaryReady />
                 <PlanAnalyticsBeacon eventName="base_pricing_viewed" properties={{ current_tier: tier }} />
@@ -400,7 +411,7 @@ export default async function BillingPage() {
                 </div>
 
                 {/* In-progress or recovery alerts */}
-                {latestAttemptNeedsAttention && latestAttempt && <BillingAttemptStatus attempt={latestAttempt} />}
+                {latestAttemptNeedsAttention && latestAttempt && <div id={litePresentation ? 'billing-attempt-recovery' : undefined}><BillingAttemptStatus attempt={latestAttempt} singleFlight={litePresentation} /></div>}
                 <AccessStateCallout
                     subscriptionTier={subscriptionTier}
                     subscription={subscription}
@@ -475,7 +486,8 @@ export default async function BillingPage() {
                             </div>
                         </div>
 
-                        <CardContent className="p-4 sm:p-5">
+                        <div className={litePresentation ? styles.primary : "hidden"}>{litePresentation && !canRenew && primaryPlanAction}</div>
+                        <LiteDisclosure enabled={litePresentation} title="details"><CardContent className="p-4 sm:p-5">
                             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                                 <article className="min-w-0 rounded-xl border border-hairline bg-canvas/70 p-4 shadow-[var(--shadow-card)]">
                                     <div className="flex items-center gap-2">
@@ -517,11 +529,11 @@ export default async function BillingPage() {
                                     <p className="mt-2 text-xs leading-relaxed text-body">{accessTiming} · Annual renewals are manual.</p>
                                 </article>
                             </div>
-                        </CardContent>
+                        </CardContent></LiteDisclosure>
                     </Card>
                 </section>
 
-                <section aria-labelledby="view-plans-heading" className="space-y-2.5">
+                <LiteDisclosure enabled={litePresentation} title="plans"><section aria-labelledby="view-plans-heading" className="space-y-2.5">
                     <p className="text-[11px] font-bold uppercase tracking-[0.13em] text-subtle">Available plans &amp; upgrades</p>
                     <Card className="flex flex-col items-start justify-between gap-4 rounded-2xl border-hairline bg-surface p-5 shadow-[var(--shadow-card)] sm:flex-row sm:items-center sm:px-6">
                         <div className="flex min-w-0 items-start gap-3">
@@ -546,13 +558,13 @@ export default async function BillingPage() {
                             </Link>
                         </Button>
                     </Card>
-                </section>
+                </section></LiteDisclosure>
 
                 <section aria-labelledby="billing-history-heading" className="space-y-2.5">
                     <h2 id="billing-history-heading" className="text-[11px] font-bold uppercase tracking-[0.13em] text-subtle">
                         Billing &amp; invoices
                     </h2>
-                    <PaymentHistoryDialog entries={billingHistoryEntries} />
+                    <PaymentHistoryDialog entries={billingHistoryEntries} mobileContentClassName={litePresentation ? styles.history : undefined} unconfirmedAttemptCopy={litePresentation} latestAttemptId={litePresentation && latestAttemptNeedsAttention && latestAttempt?.provider_order_id && getBillingAttemptPresentation(latestAttempt.status).shouldCheck ? latestAttempt.id : undefined} />
                 </section>
             </div>
 

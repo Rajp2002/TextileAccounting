@@ -1,0 +1,12 @@
+
+ RUN  v4.1.8 /Users/rajpatel/Projects/textile Saas
+
+ ✓ __tests__/desktop-dimensions-responsive.test.ts (7 tests) 11ms
+ ✓ __tests__/guided-tour-left-rails.test.ts (12 tests) 19ms
+ ✓ __tests__/rate-review-rail.test.ts (7 tests) 102ms
+ ✓ __tests__/rate-book-tutorial.test.ts (21 tests) 573ms
+
+ Test Files  4 passed (4)
+      Tests  47 passed (47)
+   Start at  02:25:02
+   Duration  3.27s (transform 712ms, setup 0ms, import 3.64s, tests 705ms, environment 1ms)

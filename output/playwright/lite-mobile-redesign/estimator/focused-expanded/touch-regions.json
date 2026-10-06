@@ -1,0 +1,341 @@
+[
+  {
+    "language": "en",
+    "state": "detailed-manual-paise",
+    "small": [
+      {
+        "label": "Decrease Warp Crimp (Take-up)",
+        "width": 38.5,
+        "height": 36.5
+      },
+      {
+        "label": "Increase Warp Crimp (Take-up)",
+        "width": 38.5,
+        "height": 36.5
+      },
+      {
+        "label": "Decrease Default Yarn Waste",
+        "width": 38.5,
+        "height": 36.5
+      },
+      {
+        "label": "Increase Default Yarn Waste",
+        "width": 38.5,
+        "height": 36.5
+      },
+      {
+        "label": "Toggle saved yarns dropdown",
+        "width": 19.25,
+        "height": 19.25
+      },
+      {
+        "label": "cm",
+        "width": 51.953125,
+        "height": 40
+      },
+      {
+        "label": "inch",
+        "width": 72.78125,
+        "height": 42
+      },
+      {
+        "label": "Toggle saved yarns dropdown",
+        "width": 19.25,
+        "height": 19.25
+      },
+      {
+        "label": "Monthly expenses",
+        "width": 262,
+        "height": 42
+      },
+      {
+        "label": "Winding",
+        "width": 262,
+        "height": 35
+      },
+      {
+        "label": "Processing",
+        "width": 262,
+        "height": 35
+      },
+      {
+        "label": "Finishing",
+        "width": 262,
+        "height": 35
+      }
+    ]
+  },
+  {
+    "language": "en",
+    "state": "result",
+    "small": [
+      {
+        "label": "More costing actions",
+        "width": 35,
+        "height": 35
+      },
+      {
+        "label": "Close",
+        "width": 38.5,
+        "height": 38.5
+      }
+    ]
+  },
+  {
+    "language": "en",
+    "state": "quality-picker",
+    "small": []
+  },
+  {
+    "language": "en",
+    "state": "quality-rates",
+    "small": [
+      {
+        "label": "Proposed warp rate 1 (₹/kg)",
+        "width": 126,
+        "height": 35
+      },
+      {
+        "label": "Proposed weft rate 1 (₹/kg)",
+        "width": 126,
+        "height": 35
+      },
+      {
+        "label": "Use saved rates",
+        "width": 274,
+        "height": 31.5
+      },
+      {
+        "label": "Close",
+        "width": 38.5,
+        "height": 38.5
+      }
+    ]
+  },
+  {
+    "language": "hi",
+    "state": "detailed-manual-paise",
+    "small": [
+      {
+        "label": "Decrease Warp Crimp (Take-up)",
+        "width": 38.5,
+        "height": 36.5
+      },
+      {
+        "label": "Increase Warp Crimp (Take-up)",
+        "width": 38.5,
+        "height": 36.5
+      },
+      {
+        "label": "Decrease डिफ़ॉल्ट यार्न Waste",
+        "width": 38.5,
+        "height": 36.5
+      },
+      {
+        "label": "Increase डिफ़ॉल्ट यार्न Waste",
+        "width": 38.5,
+        "height": 36.5
+      },
+      {
+        "label": "Toggle सेव हुआ yarns dropdown",
+        "width": 19.25,
+        "height": 19.25
+      },
+      {
+        "label": "cm",
+        "width": 51.953125,
+        "height": 40
+      },
+      {
+        "label": "इंच",
+        "width": 45.984375,
+        "height": 42
+      },
+      {
+        "label": "Toggle सेव हुआ yarns dropdown",
+        "width": 19.25,
+        "height": 19.25
+      },
+      {
+        "label": "मासिक खर्च",
+        "width": 262,
+        "height": 42
+      },
+      {
+        "label": "वाइंडिंग",
+        "width": 262,
+        "height": 35
+      },
+      {
+        "label": "प्रोसेसिंग",
+        "width": 262,
+        "height": 35
+      },
+      {
+        "label": "फिनिशिंग",
+        "width": 262,
+        "height": 35
+      }
+    ]
+  },
+  {
+    "language": "hi",
+    "state": "result",
+    "small": [
+      {
+        "label": "More costing काम",
+        "width": 35,
+        "height": 35
+      },
+      {
+        "label": "बंद करना",
+        "width": 38.5,
+        "height": 38.5
+      }
+    ]
+  },
+  {
+    "language": "hi",
+    "state": "quality-picker",
+    "small": []
+  },
+  {
+    "language": "hi",
+    "state": "quality-rates",
+    "small": [
+      {
+        "label": "प्रस्तावित ताना दर 1 (₹/kg)",
+        "width": 126,
+        "height": 35
+      },
+      {
+        "label": "प्रस्तावित बाना दर 1 (₹/kg)",
+        "width": 126,
+        "height": 35
+      },
+      {
+        "label": "सेव की गई दरें उपयोग करें",
+        "width": 281.40625,
+        "height": 31.5
+      },
+      {
+        "label": "बंद करना",
+        "width": 38.5,
+        "height": 38.5
+      }
+    ]
+  },
+  {
+    "language": "gu",
+    "state": "detailed-manual-paise",
+    "small": [
+      {
+        "label": "Decrease Warp Crimp (Take-up)",
+        "width": 38.5,
+        "height": 36.5
+      },
+      {
+        "label": "Increase Warp Crimp (Take-up)",
+        "width": 38.5,
+        "height": 36.5
+      },
+      {
+        "label": "Decrease ડિફૉલ્ટ યાર્ન Waste",
+        "width": 38.5,
+        "height": 36.5
+      },
+      {
+        "label": "Increase ડિફૉલ્ટ યાર્ન Waste",
+        "width": 38.5,
+        "height": 36.5
+      },
+      {
+        "label": "Toggle સેવ થયું yarns dropdown",
+        "width": 19.25,
+        "height": 19.25
+      },
+      {
+        "label": "cm",
+        "width": 51.953125,
+        "height": 40
+      },
+      {
+        "label": "ઇંચ",
+        "width": 50.265625,
+        "height": 42
+      },
+      {
+        "label": "Toggle સેવ થયું yarns dropdown",
+        "width": 19.25,
+        "height": 19.25
+      },
+      {
+        "label": "માસિક ખર્ચ",
+        "width": 262,
+        "height": 42
+      },
+      {
+        "label": "વાઇન્ડિંગ",
+        "width": 262,
+        "height": 35
+      },
+      {
+        "label": "પ્રોસેસિંગ",
+        "width": 262,
+        "height": 35
+      },
+      {
+        "label": "ફિનિશિંગ",
+        "width": 262,
+        "height": 35
+      }
+    ]
+  },
+  {
+    "language": "gu",
+    "state": "result",
+    "small": [
+      {
+        "label": "More costing કામ",
+        "width": 35,
+        "height": 35
+      },
+      {
+        "label": "બંધ કરો",
+        "width": 38.5,
+        "height": 38.5
+      }
+    ]
+  },
+  {
+    "language": "gu",
+    "state": "quality-picker",
+    "small": []
+  },
+  {
+    "language": "gu",
+    "state": "quality-rates",
+    "small": [
+      {
+        "label": "સૂચિત તાણાનો દર 1 (₹/kg)",
+        "width": 126,
+        "height": 35
+      },
+      {
+        "label": "સૂચિત વાણાનો દર 1 (₹/kg)",
+        "width": 126,
+        "height": 35
+      },
+      {
+        "label": "સાચવેલા દર વાપરો",
+        "width": 292.265625,
+        "height": 31.5
+      },
+      {
+        "label": "બંધ કરો",
+        "width": 38.5,
+        "height": 38.5
+      }
+    ]
+  }
+]

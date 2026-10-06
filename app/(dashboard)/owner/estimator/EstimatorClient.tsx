@@ -113,6 +113,7 @@ import { freePreflight } from '@/lib/free-transaction'
 import { warningAcknowledgementKey } from '@/lib/warning-acknowledgement'
 import { freeText, type FreeText } from '@/lib/i18n/free-tier'
 import { freeMobileText } from '@/lib/i18n/free-mobile'
+import { liteEstimatorText } from '@/lib/i18n/lite-estimator'
 import { getFreeCostingSections, type FreeCostingSection } from '@/lib/free-costing-sections'
 import { FreeCostingChecklist } from '@/components/estimator/FreeCostingChecklist'
 import { useGutterDock } from '@/hooks/use-gutter-dock'
@@ -869,7 +870,7 @@ function ComponentCountField({
             <Label htmlFor={inputId} className="flex h-8 items-end text-[11px] font-semibold uppercase leading-tight tracking-[0.05em] text-[var(--color-muted)]">
                 {label}
             </Label>
-            <div className="relative">
+            <div className="relative" data-estimator-component-count>
                 <Input
                     id={inputId}
                     data-estimator-field={`${accent}ComponentCount`}
@@ -1006,10 +1007,11 @@ function SectionHeader({ title, icon: Icon, accent = 'warp', badgeContent, detai
     )
 }
 
-function EstimatorCard({ children, accent = 'neutral', 'data-tour-anchor': tourAnchor }: { children: React.ReactNode; accent?: EstimatorAccent; 'data-tour-anchor'?: string }) {
+function EstimatorCard({ children, accent = 'neutral', audit = false, 'data-tour-anchor': tourAnchor }: { children: React.ReactNode; accent?: EstimatorAccent; audit?: boolean; 'data-tour-anchor'?: string }) {
     const accentClass = getAccentStyles(accent).rail
     return (
         <Card
+            data-estimator-audit={audit || undefined}
             data-enter-scroll-target="true"
             data-tour-anchor={tourAnchor}
             onFocusCapture={event => {
@@ -1062,7 +1064,7 @@ function StepperField({
             <Label className="block text-[11px] font-semibold uppercase tracking-[0.05em] text-[var(--color-muted)]">
                 {label}
             </Label>
-            <div className="inline-flex h-11 overflow-hidden rounded-[9px] border border-[var(--color-hairline)] bg-white shadow-[0_1px_2px_rgba(30,37,40,0.04)]">
+            <div data-estimator-stepper className="inline-flex h-11 overflow-hidden rounded-[9px] border border-[var(--color-hairline)] bg-white shadow-[0_1px_2px_rgba(30,37,40,0.04)]">
                 <button
                     type="button"
                     onClick={decrement}
@@ -1072,6 +1074,7 @@ function StepperField({
                     <Minus className="h-3.5 w-3.5" />
                 </button>
                 <Input
+                    aria-label={`${label} (${unit})`}
                     type="number"
                     value={isGhostValue ? '' : value}
                     placeholder={isGhostValue ? formatEstimatorPlaceholder(ghostPlaceholder ?? ghostValue, placeholderKind) : undefined}
@@ -1395,6 +1398,8 @@ function assumptionSourceLabel(source: string): string {
 
 function MobileLiveEstimateShortcut({
     metered = false,
+    compactLite = false,
+    persistenceLabel,
     awaitingCalculation = false,
     inputSections = [],
     onSelectSection,
@@ -1426,6 +1431,8 @@ function MobileLiveEstimateShortcut({
     isTutorialActive = false,
 }: {
     metered?: boolean
+    compactLite?: boolean
+    persistenceLabel?: string
     awaitingCalculation?: boolean
     inputSections?: FreeCostingSection[]
     onSelectSection?: (section: FreeCostingSection) => void
@@ -1461,23 +1468,24 @@ function MobileLiveEstimateShortcut({
     const open = controlledOpen !== undefined ? controlledOpen : uncontrolledOpen
     const setOpen = setControlledOpen ?? setUncontrolledOpen
     const shortcutRef = useRef<HTMLDivElement>(null)
+    const actionHeightProperty = compactLite ? '--lite-mobile-action-height' : '--free-mobile-action-height'
     // Reserve the actual action height, including translated/enlarged labels.
     // Keep that clearance while the keyboard or result sheet hides the dock.
     useEffect(() => {
         const node = shortcutRef.current
-        if (!metered || !node) return
+        if ((!metered && !compactLite) || !node) return
         const measure = () => {
             const height = node.getBoundingClientRect().height
-            if (height > 0) document.documentElement.style.setProperty('--free-mobile-action-height', `${Math.ceil(height)}px`)
+            if (height > 0) document.documentElement.style.setProperty(actionHeightProperty, `${Math.ceil(height)}px`)
         }
         measure()
         const observer = new ResizeObserver(measure)
         observer.observe(node)
         return () => observer.disconnect()
-    }, [metered, visible, keyboardVisible, open])
+    }, [metered, compactLite, actionHeightProperty, visible, keyboardVisible, open])
     useEffect(() => () => {
-        if (metered) document.documentElement.style.removeProperty('--free-mobile-action-height')
-    }, [metered])
+        if (metered || compactLite) document.documentElement.style.removeProperty(actionHeightProperty)
+    }, [metered, compactLite, actionHeightProperty])
     const compactFreePreview = metered && !hasValidCostResult && !isTutorialActive
     const adaptiveFreeModal = metered && !isTutorialActive
     const hasValidPrice = hasValidCostResult && quoteIsValid
@@ -1514,6 +1522,7 @@ function MobileLiveEstimateShortcut({
                 <div
                     ref={shortcutRef}
                     data-free-mobile-action={metered || undefined}
+                    data-lite-mobile-action={compactLite || undefined}
                     className="fixed mobile-floating-action bottom-6 right-4 z-40 md:bottom-7 md:right-7 lg:right-6 xl:right-8"
                     data-testid="mobile-live-estimate-shortcut"
                     data-tour-floating="true"
@@ -1522,17 +1531,18 @@ function MobileLiveEstimateShortcut({
                         type="button"
                         data-tutorial-section={9}
                         data-estimator-field="liveCostShortcut"
-                        aria-label={metered ? freeMobileText(language, hasValidCostResult ? 'saved' : 'review') : `View live cost estimate. ${shortcutLabel}`}
+                        aria-label={compactLite ? liteEstimatorText(language, hasValidCostResult ? 'viewLabel' : 'reviewLabel', { value: productionCostPerM.toFixed(2), count: missingIssueCount, state: persistenceLabel ?? liteEstimatorText(language, 'live') }) : metered ? freeMobileText(language, hasValidCostResult ? 'saved' : 'review') : `View live cost estimate. ${shortcutLabel}`}
                         aria-expanded={open}
                         aria-controls="mobile-live-estimate-panel"
                         onClick={() => setOpen(true)}
                         className="group flex items-center justify-end gap-3 sm:gap-3.5 rounded-full border-2 border-[var(--color-yarn-orange)]/25 bg-[var(--color-canvas-white)]/95 p-2 pl-4 sm:p-2.5 sm:pl-5 text-left shadow-[0_12px_32px_rgba(30,37,40,0.18),0_2px_8px_rgba(30,37,40,0.06)] backdrop-blur-xl transition-all duration-200 motion-reduce:transition-none hover:border-[var(--color-yarn-orange)]/45 hover:shadow-[0_16px_38px_rgba(30,37,40,0.22),0_4px_12px_rgba(30,37,40,0.08)] hover:-translate-y-0.5 active:translate-y-0 active:shadow-[0_8px_20px_rgba(30,37,40,0.16)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] focus-visible:ring-offset-2"
                     >
                         <span className="free-mobile-action-label min-w-0 max-w-[12rem] sm:max-w-[14.5rem] pr-1">
-                            <span className="free-mobile-action-eyebrow block text-[11px] sm:text-xs font-bold uppercase tracking-[0.09em] text-[var(--color-yarn-orange-dark)]">{metered ? <><span className="free-mobile-only">{freeMobileText(language, hasValidCostResult ? 'saved' : 'review')}</span><span className="free-desktop-only">{tx('Live cost')}</span></> : tx('Live cost')}</span>
+                            <span className="free-mobile-action-eyebrow block text-[11px] sm:text-xs font-bold uppercase tracking-[0.09em] text-[var(--color-yarn-orange-dark)]">{compactLite ? <><span className="lite-mobile-only" data-i18n-skip="true">{liteEstimatorText(language, 'live')}</span><span className="lite-desktop-only">{tx('Live cost')}</span></> : metered ? <><span className="free-mobile-only">{freeMobileText(language, hasValidCostResult ? 'saved' : 'review')}</span><span className="free-desktop-only">{tx('Live cost')}</span></> : tx('Live cost')}</span>
                             <span className="mt-0.5 block truncate text-[13px] sm:text-[15px] font-bold text-[var(--color-ink)]">
-                                {metered ? <><span className="free-mobile-only">{hasValidCostResult ? validityLabel : readyToCalculate ? freeText(language, 'readyToCalculate') : freeMobileText(language, 'complete')}</span><span className="free-desktop-only">{hasValidCostResult ? 'View costing' : readyToCalculate ? freeText(language, 'readyToCalculate') : 'Complete inputs'}</span></> : hasValidCostResult ? 'View costing' : readyToCalculate ? freeText(language, 'readyToCalculate') : 'Complete inputs'}
+                                {compactLite ? <><span className="lite-mobile-only" data-i18n-skip="true">{hasValidCostResult ? `₹${productionCostPerM.toFixed(2)}/m` : liteEstimatorText(language, 'complete')}</span><span className="lite-desktop-only">{hasValidCostResult ? 'View costing' : 'Complete inputs'}</span></> : metered ? <><span className="free-mobile-only">{hasValidCostResult ? validityLabel : readyToCalculate ? freeText(language, 'readyToCalculate') : freeMobileText(language, 'complete')}</span><span className="free-desktop-only">{hasValidCostResult ? 'View costing' : readyToCalculate ? freeText(language, 'readyToCalculate') : 'Complete inputs'}</span></> : hasValidCostResult ? 'View costing' : readyToCalculate ? freeText(language, 'readyToCalculate') : 'Complete inputs'}
                             </span>
+                            {compactLite && <span className="lite-mobile-only lite-estimator-outcome text-xs text-muted-foreground" data-i18n-skip="true">{persistenceLabel}</span>}
                         </span>
                         <span className="free-mobile-action-icon relative flex h-[52px] w-[52px] sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-full bg-[var(--color-warning-amber-soft)] text-[var(--color-yarn-orange-dark)] transition-colors group-hover:bg-[var(--color-yarn-orange)] group-hover:text-white">
                             <Calculator className="h-6 w-6" aria-hidden="true" />
@@ -1578,6 +1588,7 @@ function MobileLiveEstimateShortcut({
                         }
                     }}
                     data-free-preview={adaptiveFreeModal ? compactFreePreview ? "inputs" : "result" : undefined}
+                    data-lite-cost-result={compactLite || undefined}
                     className={`max-h-[min(84dvh,44rem)] overflow-y-auto rounded-t-[22px] border-x-0 border-b-0 px-0 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] pt-0 md:inset-x-0 md:mx-auto md:h-auto md:overflow-y-auto md:rounded-b-[22px] md:border md:border-[var(--color-hairline)] ${adaptiveFreeModal ? `gap-0 [&>*]:shrink-0 md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:max-h-[calc(100dvh-3rem)] ${compactFreePreview ? "md:w-[min(calc(100vw-3rem),32rem)]" : "md:w-[min(calc(100vw-3rem),38rem)]"}` : "md:bottom-6 md:top-6 md:max-h-none md:w-[min(calc(100vw-3rem),38rem)]"} ${isTutorialActive ? '!animate-none !transition-none data-[state=open]:!animate-none data-[state=open]:!transition-none' : ''}`}
                 >
                     <SheetHeader className="border-b border-[var(--color-hairline)] bg-[var(--color-warning-amber-soft)]/70 px-5 pb-4 pt-5 pr-16 text-left">
@@ -1586,6 +1597,7 @@ function MobileLiveEstimateShortcut({
                             {metered ? <><span className="free-mobile-only" data-i18n-skip="true" lang={language}>{freeSnapshot ? freeMobileText(language, 'savedIdentity', freeSnapshot) : activeName}</span><span className="free-desktop-only">{activeName}{versionLabel ? ` · ${versionLabel}` : ''}</span></> : <>{activeName}{versionLabel ? ` · ${versionLabel}` : ''}</>}
                         </SheetDescription>
                         {!compactFreePreview && <p className="mt-1 text-[10px] font-medium text-[var(--color-muted)]">{metered ? hasValidCostResult ? freeText(language, 'savedRevisionHint') : freeText(language, 'resultAfterCalculation') : 'Updates live as you edit the estimate.'}</p>}
+                        {compactLite && <p className="lite-mobile-only mt-1 text-sm text-body" data-i18n-skip="true">{persistenceLabel}</p>}
                     </SheetHeader>
 
                     {compactFreePreview ? (
@@ -2564,7 +2576,7 @@ function RowCard({
                             {ratePerKg != null && ratePerKg > 0 ? ` · ₹${ratePerKg.toFixed(2)}/kg` : ''}
                         </span>
                     </span>
-                    <span className="flex min-w-[4.25rem] shrink-0 flex-col items-end gap-1 text-right">
+                    <span data-estimator-row-cost className="flex min-w-[4.25rem] shrink-0 flex-col items-end gap-1 text-right">
                         <span className={`break-words font-mono text-[12px] font-semibold tabular-nums ${showCalculatedValues ? 'text-[var(--color-ink)]' : 'text-[var(--color-muted)]'}`}>
                             {showCalculatedValues ? `Base cost ₹${costPerM.toFixed(2)}/m` : '—'}
                         </span>
@@ -3365,11 +3377,14 @@ export default function EstimatorClient({
     userMetadata,
     wizardDismissed = false,
     freeMode = false,
+    mobileTier,
     onFreeUpgrade,
     disableAutosave = false,
 }: {
     initialFreeCosting?: SavedFreeCosting
     freeMode?: boolean
+    /** Presentation only; server capabilities still authorize every operation. */
+    mobileTier?: import('@/lib/subscription-access').SubscriptionTier
     onFreeUpgrade?: (tier: import('@/lib/subscription-access').SubscriptionTier) => void
     disableAutosave?: boolean
     tutorialDismissed: boolean
@@ -3388,6 +3403,9 @@ export default function EstimatorClient({
     const searchParams = useSearchParams()
     const router = useRouter()
     const productionReturnTo = safeBaseReturnPath(searchParams.get('returnTo'))
+    const liteMode = !freeMode && mobileTier === 'lite'
+    const compactMobile = freeMode || liteMode
+    const helpId = freeMode ? 'free-estimator-help' : 'lite-estimator-help'
 
     const [widthUnit, setWidthUnit] = useState<'cm' | 'inch'>('inch')
     const [hasLoadedWidthUnit, setHasLoadedWidthUnit] = useState(false)
@@ -3607,6 +3625,7 @@ export default function EstimatorClient({
     // Template search
     const [templateSearch,   setTemplateSearch]   = useState('')
     const [showQualityLibrary, setShowQualityLibrary] = useState(false)
+    const qualityPickerTriggerRef = useRef<HTMLButtonElement>(null)
 
     const [showAdvancedOverhead, setShowAdvancedOverhead] = useState(false)
     const [entryMode, setEntryMode] = useState<'quick' | 'detailed'>('quick')
@@ -3870,12 +3889,12 @@ export default function EstimatorClient({
         }
     }, [savedFreeCosting, freeLeaveReason, router])
     const [freePlansOpen, setFreePlansOpen] = useState(false)
-    const [freeHelpOpen, setFreeHelpOpen] = useState(false)
+    const [estimatorHelpOpen, setEstimatorHelpOpen] = useState(false)
     useEffect(() => {
-        if (!freeHelpOpen || !window.matchMedia('(max-width: 767.98px), (pointer: coarse) and (max-height: 500px) and (max-width: 1023.98px)').matches) return
-        const frame = requestAnimationFrame(() => document.getElementById('free-estimator-help-close')?.focus())
+        if (!estimatorHelpOpen || !window.matchMedia('(max-width: 767.98px), (pointer: coarse) and (max-height: 500px) and (max-width: 1023.98px)').matches) return
+        const frame = requestAnimationFrame(() => document.getElementById(`${helpId}-close`)?.focus())
         return () => cancelAnimationFrame(frame)
-    }, [freeHelpOpen])
+    }, [estimatorHelpOpen, helpId])
     const openFreePlans = useCallback(() => {
         setFreePlansOpen(true)
         window.requestAnimationFrame(() => document.getElementById('free-plan-comparison')?.scrollIntoView({ block: 'start' }))
@@ -5162,6 +5181,11 @@ export default function EstimatorClient({
             className: 'border-[var(--wv-madder-200)] bg-[var(--wv-madder-50)] text-[var(--wv-madder-600)]',
         }
     const freeIncompleteBeforeSubmit = freeMode && !showValidation && !estimatorValidation.valid
+    const litePristineIncomplete = liteMode && !showValidation && !hasUnsavedEdits && !sourceQuoteId && !appliedTemplate && !estimatorValidation.valid
+    const litePersistenceLabel = unconfirmedRequestId ? tx('Save not yet confirmed')
+        : savingQuote ? tx('Saving costing…')
+        : lastSavedCosting && !hasUnsavedEdits ? liteEstimatorText(language, 'saved', { version: lastSavedCosting.version })
+        : hasUnsavedEdits || (appliedTemplate && !sourceQuoteId) ? liteEstimatorText(language, 'unsaved') : liteEstimatorText(language, 'live')
     const firstEstimatorIssueField = estimatorValidation.issues[0]?.field
         ?? costingReadiness.issues[0]?.field
         ?? null
@@ -5222,7 +5246,7 @@ export default function EstimatorClient({
     )
 
     return (
-        <div ref={estimatorGutterRef} data-free-costing={freeMode || undefined} data-sentry-block={freeMode || undefined} className="ui-route-enter estimator-mobile-form space-y-5 pb-floating-button md:pb-20 relative">
+        <div ref={estimatorGutterRef} data-free-costing={freeMode || undefined} data-lite-costing={liteMode || undefined} data-sentry-block={freeMode || undefined} className="ui-route-enter estimator-mobile-form space-y-5 pb-floating-button md:pb-20 relative">
             <span hidden data-signin-ready="true" />
             <RouteMilestones
                 route={freeMode ? '/free' : '/owner/estimator'}
@@ -5232,8 +5256,8 @@ export default function EstimatorClient({
             />
             <PageHeader
                 title={tx('Cost estimate')}
-                className={freeMode ? 'free-mobile-page-header' : undefined}
-                actions={freeMode ? <Button id="free-estimator-help-trigger" type="button" variant="ghost" className="free-mobile-help-trigger" aria-expanded={freeHelpOpen || isTutorialActive} aria-controls="free-estimator-help" disabled={isTutorialActive} onClick={() => setFreeHelpOpen(open => !open)}><BookOpen className="h-4 w-4" aria-hidden="true" />{freeMobileText(language, 'help')}</Button> : undefined}
+                className={freeMode ? 'free-mobile-page-header' : liteMode ? 'lite-mobile-page-header' : undefined}
+                actions={compactMobile ? <Button id={`${helpId}-trigger`} type="button" variant="ghost" className={freeMode ? 'free-mobile-help-trigger' : 'lite-mobile-help-trigger'} aria-expanded={estimatorHelpOpen || isTutorialActive} aria-controls={helpId} disabled={isTutorialActive} onClick={() => setEstimatorHelpOpen(open => !open)} data-i18n-skip="true"><BookOpen className="h-4 w-4" aria-hidden="true" />{freeMode ? freeMobileText(language, 'help') : liteEstimatorText(language, 'help')}</Button> : undefined}
             />
             {!freeMode && !disableAutosave && (
                 <LocalSaveStatus
@@ -5551,12 +5575,13 @@ export default function EstimatorClient({
             <div className="estimator-workspace-shell">
                 <aside
                     className="estimator-left-rail space-y-3"
-                    id={freeMode ? 'free-estimator-help' : undefined}
-                    data-free-help-expanded={freeMode ? freeHelpOpen || isTutorialActive : undefined}
+                    id={compactMobile ? helpId : undefined}
+                    data-free-help-expanded={freeMode ? estimatorHelpOpen || isTutorialActive : undefined}
+                    data-lite-help-expanded={liteMode ? estimatorHelpOpen || isTutorialActive : undefined}
                     aria-label="Estimator guides and tools"
                 >
-                    {freeMode && <Button id="free-estimator-help-close" variant="ghost" className="free-mobile-help-trigger" disabled={isTutorialActive} onClick={() => { setFreeHelpOpen(false); document.getElementById('free-estimator-help-trigger')?.focus() }}><X className="h-4 w-4" />{tx('Close')}</Button>}
-                    {freeMode && <p className="free-mobile-only text-sm leading-relaxed text-body">{tx('Quick and Detailed use the same calculation. Detailed shows additional assumptions.')}</p>}
+                    {compactMobile && <Button id={`${helpId}-close`} variant="ghost" className={freeMode ? 'free-mobile-help-trigger' : 'lite-mobile-help-trigger'} disabled={isTutorialActive} onClick={() => { setEstimatorHelpOpen(false); document.getElementById(`${helpId}-trigger`)?.focus() }}><X className="h-4 w-4" />{tx('Close')}</Button>}
+                    {compactMobile && <p className={`${freeMode ? 'free-mobile-only' : 'lite-mobile-only'} text-sm leading-relaxed text-body`}>{tx('Quick and Detailed use the same calculation. Detailed shows additional assumptions.')}</p>}
                     <CostEstimateTutorial
                         accountDismissed={tutorialDismissed}
                         userMetadata={userMetadata}
@@ -5961,6 +5986,7 @@ export default function EstimatorClient({
                         id="active-quality"
                         data-slot="card"
                         data-free-record-loaded={freeMode ? Boolean(freeMeter.completed) : undefined}
+                        data-lite-record-loaded={liteMode ? Boolean(appliedTemplate || sourceQuoteId) : undefined}
                         aria-labelledby="active-quality-title"
                         className="ui-focus-surface rounded-[14px] border border-[var(--color-hairline)] bg-white/95 px-4 py-3 shadow-[var(--shadow-card)] sm:px-5"
                     >
@@ -5969,10 +5995,10 @@ export default function EstimatorClient({
                                 <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--color-yarn-orange-dark)]">Current quality</p>
                                 <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1">
                                     <h2 id="active-quality-title" className="max-w-full break-words text-[15px] font-bold leading-5 text-[var(--color-ink)]">
-                                        {freeMode && freeMeter.completed ? <><span className="free-mobile-only">{freeMobileText(language, 'savedIdentity', {label: freeMeter.completed.label, revision: freeMeter.completed.editWindow?.revision ?? 1})}</span><span className="free-desktop-only">{appliedTemplate?.name ?? (qualityLabel.trim() || 'New quality')}</span></> : appliedTemplate?.name ?? (qualityLabel.trim() || 'New quality')}
+                                        {liteMode ? <><span className="lite-mobile-only" data-i18n-skip="true">{appliedTemplate ? liteEstimatorText(language, 'recipe', {name: appliedTemplate.name}) : qualityLabel.trim() || liteEstimatorText(language, 'new')}</span><span className="lite-desktop-only">{appliedTemplate?.name ?? (qualityLabel.trim() || 'New quality')}</span></> : freeMode && freeMeter.completed ? <><span className="free-mobile-only">{freeMobileText(language, 'savedIdentity', {label: freeMeter.completed.label, revision: freeMeter.completed.editWindow?.revision ?? 1})}</span><span className="free-desktop-only">{appliedTemplate?.name ?? (qualityLabel.trim() || 'New quality')}</span></> : appliedTemplate?.name ?? (qualityLabel.trim() || 'New quality')}
                                     </h2>
                                     {sourceQuoteId && sourceRecordKind === 'costing' && (
-                                        <span className="text-[10px] font-medium text-[var(--color-muted)]">Costing v{sourceQuoteVersionNumber ?? 1}</span>
+                                        <span className="text-[10px] font-medium text-[var(--color-muted)]">{liteMode ? <><span className="lite-mobile-only" data-i18n-skip="true">{liteEstimatorText(language, 'sourceVersion', {version: sourceQuoteVersionNumber ?? 1})}</span><span className="lite-desktop-only">Costing v{sourceQuoteVersionNumber ?? 1}</span></> : <>Costing v{sourceQuoteVersionNumber ?? 1}</>}</span>
                                     )}
                                 </div>
                                 <p className="mt-1 text-[11px] font-medium leading-4 text-[var(--color-muted)]">
@@ -5983,7 +6009,7 @@ export default function EstimatorClient({
                             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                                 <LiquidSegmented
                                     role="tablist"
-                                    aria-label={freeMode ? freeMobileText(language, 'mode') : entryMode === 'quick' ? tx('Quick Costing · same calculation engine') : tx('Full technical inputs & factory assumptions · same calculation engine')}
+                                    aria-label={liteMode ? liteEstimatorText(language, 'mode') : freeMode ? freeMobileText(language, 'mode') : entryMode === 'quick' ? tx('Quick Costing · same calculation engine') : tx('Full technical inputs & factory assumptions · same calculation engine')}
                                     data-tutorial-section={1}
                                     data-estimator-field="entryMode"
                                     value={entryMode}
@@ -5996,6 +6022,7 @@ export default function EstimatorClient({
                             </div>
                         </div>
                         <button
+                            ref={qualityPickerTriggerRef}
                             type="button"
                             data-testid="saved-quality-quick-picker"
                             disabled={freeMode}
@@ -6005,12 +6032,13 @@ export default function EstimatorClient({
                             data-slot="card"
                             onClick={() => setShowQualityLibrary(true)}
                             aria-haspopup="dialog"
-                            aria-label={templatesLoaded && templates.length > 0 ? `Tap to view ${templates.length} saved ${templates.length === 1 ? 'quality' : 'qualities'}` : tx('Saved qualities library')}
+                            aria-expanded={showQualityLibrary}
+                            aria-label={liteMode ? liteEstimatorText(language, templatesLoaded && templates.length > 0 ? 'count' : 'browse', {count: templates.length}) : templatesLoaded && templates.length > 0 ? `Tap to view ${templates.length} saved ${templates.length === 1 ? 'quality' : 'qualities'}` : tx('Saved qualities library')}
                             className="mt-3 flex min-h-12 w-full items-center justify-between gap-3 rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)]/60 px-3.5 py-2.5 text-left transition-colors hover:border-[var(--color-yarn-orange)]/45 hover:bg-[var(--color-warning-amber-soft)]/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)]/35"
                         >
                             <span className="min-w-0">
-                                <span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--color-muted)]">Saved qualities</span>
-                                <span className="mt-0.5 block truncate text-[12px] font-medium text-[var(--color-body)]">
+                                <span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--color-muted)]">{liteMode ? <><span className="lite-mobile-only" data-i18n-skip="true">{liteEstimatorText(language, 'qualities')}{templatesLoaded && templates.length > 0 ? ` · ${templates.length}` : ''}</span><span className="lite-desktop-only">Saved qualities</span></> : 'Saved qualities'}</span>
+                                <span className="lite-quality-picker-description mt-0.5 block truncate text-[12px] font-medium text-[var(--color-body)]">
                                     {templatesLoaded && templates.length > 0
                                         ? `Tap to view ${templates.length} saved ${templates.length === 1 ? 'quality' : 'qualities'}`
                                         : tx('Tap to browse saved qualities library or save this recipe')}
@@ -6021,9 +6049,9 @@ export default function EstimatorClient({
                                 <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
                             </span>
                         </button>
-                        <div data-testid="costing-validity" data-free-incomplete={freeIncompleteBeforeSubmit || undefined} className={`mt-3 flex min-h-10 items-center gap-2 rounded-[10px] border px-3 py-2 text-[11px] leading-4 ${validityStatus.className}`} role="status" aria-live="polite">
+                        <div data-testid="costing-validity" data-free-incomplete={freeIncompleteBeforeSubmit || undefined} data-lite-incomplete={litePristineIncomplete || undefined} className={`mt-3 flex min-h-10 items-center gap-2 rounded-[10px] border px-3 py-2 text-[11px] leading-4 ${validityStatus.className}`} role="status" aria-live="polite">
                             <validityStatus.icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-                            <span className="font-semibold">{freeIncompleteBeforeSubmit ? <><span className="free-mobile-only">{freeMobileText(language, 'complete')}</span><span className="free-desktop-only">{validityStatus.label}</span></> : validityStatus.label}</span>
+                            <span className="font-semibold">{litePristineIncomplete ? <><span className="lite-mobile-only" data-i18n-skip="true">{liteEstimatorText(language, 'complete')}</span><span className="lite-desktop-only">{validityStatus.label}</span></> : freeIncompleteBeforeSubmit ? <><span className="free-mobile-only">{freeMobileText(language, 'complete')}</span><span className="free-desktop-only">{validityStatus.label}</span></> : validityStatus.label}</span>
                             <span className="hidden font-medium opacity-85 sm:inline">{validityStatus.description}</span>
                         </div>
                         {freeMode && awaitingCalculation && estimatorValidation.valid && (
@@ -6036,9 +6064,18 @@ export default function EstimatorClient({
 
                     <SheetContent
                         id="saved-qualities-sheet-panel"
+                        data-lite-quality-sheet={liteMode || undefined}
                         side="bottom"
                         hideOverlay={isTutorialActive}
                         showCloseButton={!isTutorialActive}
+                        onCloseAutoFocus={(e) => {
+                            if (liteMode && !isTutorialActive) {
+                                e.preventDefault()
+                                if (!showConfirmNewQuality && !pendingQualityChange) {
+                                    qualityPickerTriggerRef.current?.focus()
+                                }
+                            }
+                        }}
                         onOpenAutoFocus={(e) => {
                             if (isTutorialActive) {
                                 e.preventDefault()
@@ -6061,6 +6098,8 @@ export default function EstimatorClient({
                             <SheetDescription className="text-[12px] font-medium text-[var(--color-muted)]">Search and select a saved fabric recipe. Your current costing stays in place until you choose one.</SheetDescription>
                         </SheetHeader>
                         <div className="p-4 sm:p-5">
+                            {liteMode && <Button variant="outline" className="lite-mobile-only mb-3 h-auto min-h-11 whitespace-normal" onClick={() => { setShowQualityLibrary(false); setShowConfirmNewQuality(true) }} data-i18n-skip="true"><Plus className="h-4 w-4" />{liteEstimatorText(language, 'new')}</Button>}
+                            {liteMode && !templatesLoaded && <p className="lite-mobile-only mb-3 text-sm" role="status">{tx('Loading saved qualities…')}</p>}
                             {templatesLoaded && templates.length > 0 && (
                                 <div className="relative">
                                     <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted)]" />
@@ -7057,7 +7096,7 @@ export default function EstimatorClient({
                 </EstimatorCard>
 
                 {/* 8. Cost Audit */}
-                <EstimatorCard accent="neutral">
+                <EstimatorCard accent="neutral" audit>
                     <SectionHeader
                         title="Cost Breakdown"
                         icon={ReceiptText}
@@ -7145,7 +7184,7 @@ export default function EstimatorClient({
                                     </div>
                                 </div>
 
-                                <div className="mt-3 grid grid-cols-[1fr_auto_1fr_auto_1fr] items-end gap-2 rounded-[10px] border border-[#CDE5D3] bg-[var(--color-factory-green-soft)] p-3">
+                                <div data-estimator-audit-equation className="mt-3 grid grid-cols-[1fr_auto_1fr_auto_1fr] items-end gap-2 rounded-[10px] border border-[#CDE5D3] bg-[var(--color-factory-green-soft)] p-3">
                                     <div>
                                         <p className="text-[9px] leading-tight text-[var(--color-muted)]">3 · Base yarn subtotal</p>
                                         <p className="mt-1 font-mono text-sm font-semibold text-[var(--color-ink)]">₹{yarnBaseCostPerM.toFixed(2)}</p>
@@ -7164,7 +7203,7 @@ export default function EstimatorClient({
                             </div>
                             <div className="rounded-[12px] border border-[var(--color-hairline)] bg-white p-4">
                                 <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[var(--color-muted)]">Production stack</p>
-                                <div className="mt-2 divide-y divide-[var(--color-hairline)]">
+                                <div data-estimator-audit-stack className="mt-2 divide-y divide-[var(--color-hairline)]">
                                     {auditCostLines.map(line => (
                                         <div key={line.label} className="flex items-center justify-between gap-3 py-1.5 text-xs">
                                             <span className="font-medium text-[var(--color-muted)]">{line.label}</span>
@@ -7226,6 +7265,8 @@ export default function EstimatorClient({
 
             <MobileLiveEstimateShortcut
                 metered={freeMode}
+                compactLite={liteMode}
+                persistenceLabel={liteMode ? litePersistenceLabel : undefined}
                 awaitingCalculation={awaitingCalculation}
                 inputSections={freeMode ? getFreeCostingSections(estimatorValidation, qualityLabel, warningsAcknowledged) : undefined}
                 onSelectSection={section => {
@@ -7243,7 +7284,7 @@ export default function EstimatorClient({
                 isTutorialActive={isTutorialActive}
                 visible={mobileCostingShortcutVisible}
                 keyboardVisible={mobileKeyboardVisible}
-                activeName={freeMode && freeMeter.completed ? freeMeter.completed.label : appliedTemplate?.name ?? (qualityLabel.trim() || 'New quality')}
+                activeName={freeMode && freeMeter.completed ? freeMeter.completed.label : liteMode ? qualityLabel.trim() || liteEstimatorText(language, 'new') : appliedTemplate?.name ?? (qualityLabel.trim() || 'New quality')}
                 freeSnapshot={freeMode && freeMeter.completed ? { label: freeMeter.completed.label, revision: freeMeter.completed.editWindow?.revision ?? 1 } : undefined}
                 versionLabel={freeMode && freeMeter.completed ? `v${freeMeter.completed.editWindow?.revision ?? 1}` : sourceQuoteId && sourceRecordKind === 'costing'
                     ? `Costing v${sourceQuoteVersionNumber ?? 1}`
@@ -7677,7 +7718,7 @@ export default function EstimatorClient({
                                             <p className="font-mono text-[10px] font-medium text-[var(--color-muted)]">{row.calcDenier}D · {row.beamEnds} ends · {row.gstPct}% GST</p>
                                             <p className="text-xs tabular-nums text-[var(--color-muted)]">{tx('Saved rate')}: ₹{row.yarnRate.toFixed(2)}/kg</p>
                                         </div>
-                                        <div className="relative shrink-0 w-36">
+                                        <div data-estimator-proposed-rate className="relative shrink-0 w-36">
                                             <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-[var(--color-muted)]">₹</span>
                                             <Input
                                                 type="number"
@@ -7709,7 +7750,7 @@ export default function EstimatorClient({
                                             <p className="font-mono text-[10px] font-medium text-[var(--color-muted)]">{row.calcDenier}D · {row.picks} PPI · {row.gstPct}% GST</p>
                                             <p className="text-xs tabular-nums text-[var(--color-muted)]">{tx('Saved rate')}: ₹{row.yarnRate.toFixed(2)}/kg</p>
                                         </div>
-                                        <div className="relative shrink-0 w-36">
+                                        <div data-estimator-proposed-rate className="relative shrink-0 w-36">
                                             <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-[var(--color-muted)]">₹</span>
                                             <Input
                                                 type="number"

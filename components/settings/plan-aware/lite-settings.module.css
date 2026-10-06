@@ -1,0 +1,11 @@
+@media(max-width:767.98px){
+ .dialog{max-width:calc(100vw - 1rem);overflow-x:hidden}
+ .dialog :global([data-slot="dialog-title"]){display:block;padding-right:2rem;overflow-wrap:anywhere}
+ .dialog :global([data-slot="dialog-title"]) svg{display:inline-block;margin-right:.5rem}
+ .dialog p,.dialog span,.dialog label,.dialog a{overflow-wrap:anywhere;min-width:0}
+ .dialog label{display:block}
+ .dialog label span{display:block}
+ .dialog input{height:auto;min-height:44px;min-width:0;max-width:100%;font-size:16px}
+ .dialog button,.dialog a{min-height:44px;min-width:44px;max-width:100%;height:auto;white-space:normal;overflow-wrap:anywhere}
+ .dialog :global([data-slot="dialog-close"]){width:44px;height:44px}
+}

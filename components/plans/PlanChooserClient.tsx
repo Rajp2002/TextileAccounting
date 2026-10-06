@@ -41,7 +41,7 @@ export function PlanChooserClient({
 
   const { language, tx, t } = useTranslation()
 
-  const mobileCompact = currentPlan === 'free' || currentPlan === 'unassigned'
+  const mobileCompact = currentPlan === 'free' || currentPlan === 'lite' || currentPlan === 'unassigned'
 
   const finish = useCallback(async (plan: 'free' | 'paid') => {
     setBusy(true)

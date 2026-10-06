@@ -31,7 +31,12 @@ describe('Guided Tour Left Rail Placement Across All Sections', () => {
         const savedFree = read('app/free/costings/SavedFreeCostings.tsx')
         const savedTutorial = read('components/estimator/SavedCostingsTutorial.tsx')
 
-        expect(quotesClient).toContain('<aside className="saved-costings-left-rail space-y-3"')
+        const guide = quotesClient.match(/<aside\b[^>]*className=\{cn\("saved-costings-left-rail space-y-3",\s*isLite && mobileStyles\.help\)\}[^>]*>[\s\S]*?<\/aside>/)?.[0]
+        expect(guide).toBeDefined()
+        expect(guide).toContain('<SavedCostingsTutorial')
+        expect(guide).toContain('data-expanded={helpOpen || tourStep !== null}')
+        expect(quotesClient.match(/<SavedCostingsTutorial\b/g)).toHaveLength(1)
+        expect(quotesClient).toContain("useOwnerPlan() === 'lite'")
         expect(quotesClient).toContain('<SavedCostingsTutorial')
         expect(savedFree).toContain('<aside className="saved-costings-left-rail"')
         expect(savedTutorial).toContain('<TourInvitation')
@@ -45,7 +50,15 @@ describe('Guided Tour Left Rail Placement Across All Sections', () => {
         const ratesClient = read('app/(dashboard)/owner/rates/RatesClient.tsx')
         const rateTutorial = read('components/rates/RateBookTutorial.tsx')
 
-        expect(ratesClient).toContain('<aside className="rates-left-rail-desktop space-y-3"')
+        const guide = ratesClient.match(/<aside\b[^>]*className=\{cn\("rates-left-rail-desktop space-y-3",\s*isLite && mobileStyles\.help\)\}[^>]*>[\s\S]*?<\/aside>/)?.[0]
+        expect(guide).toBeDefined()
+        expect(guide).toContain('<RateBookTutorial')
+        expect(guide).toContain('data-expanded={helpOpen || tourStep !== null}')
+        expect(ratesClient.match(/<RateBookTutorial\b/g)).toHaveLength(1)
+        expect(ratesClient).toContain("useOwnerPlan() === 'lite'")
+        const mobileStyles = read('components/estimator/lite-records.module.css')
+        expect(mobileStyles.slice(0, mobileStyles.indexOf('@media'))).not.toMatch(/\.help[^{}]*\{/)
+        expect(mobileStyles).toContain(".help:not([data-expanded='true']) { display: none; }")
         expect(ratesClient).toContain('<RateBookTutorial')
         expect(rateTutorial).toContain('<TourInvitation')
         expect(rateTutorial).toContain('tourId="rate-book"')

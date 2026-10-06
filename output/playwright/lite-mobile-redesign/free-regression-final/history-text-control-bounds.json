@@ -1,0 +1,74 @@
+[
+  {
+    "language": "en",
+    "percent": 200,
+    "state": "initial",
+    "issues": []
+  },
+  {
+    "language": "en",
+    "percent": 200,
+    "state": "active-filters",
+    "issues": []
+  },
+  {
+    "language": "en",
+    "percent": 200,
+    "state": "help-and-filters",
+    "issues": []
+  },
+  {
+    "language": "en",
+    "percent": 200,
+    "state": "help-details-and-filters",
+    "issues": []
+  },
+  {
+    "language": "hi",
+    "percent": 200,
+    "state": "initial",
+    "issues": []
+  },
+  {
+    "language": "hi",
+    "percent": 200,
+    "state": "active-filters",
+    "issues": []
+  },
+  {
+    "language": "hi",
+    "percent": 200,
+    "state": "help-and-filters",
+    "issues": []
+  },
+  {
+    "language": "hi",
+    "percent": 200,
+    "state": "help-details-and-filters",
+    "issues": []
+  },
+  {
+    "language": "gu",
+    "percent": 200,
+    "state": "initial",
+    "issues": []
+  },
+  {
+    "language": "gu",
+    "percent": 200,
+    "state": "active-filters",
+    "issues": []
+  },
+  {
+    "language": "gu",
+    "percent": 200,
+    "state": "help-and-filters",
+    "issues": []
+  },
+  {
+    "language": "gu",
+    "percent": 200,
+    "state": "help-details-and-filters",
+    "issues": []
+  }
+]

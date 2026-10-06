@@ -1,6 +1,10 @@
 'use client'
 
 import Link from 'next/link'
+import { BillingAttemptStatus, type BillingAttemptRecovery } from './BillingAttemptStatus'
+import { getBillingAttemptPresentation } from '@/lib/billing-attempts'
+import { useTranslation } from '@/lib/i18n/context'
+import { liteSupportingText } from '@/lib/i18n/lite-supporting'
 import { ArrowUpRight, CheckCircle2, Clock3, Download, ReceiptText, XCircle } from 'lucide-react'
 import {
     Dialog,
@@ -30,6 +34,7 @@ export type BillingHistoryEntry = {
     orderId: string | null
     receiptPaymentId: string | null
     status: BillingHistoryStatus
+    attempt?: BillingAttemptRecovery & { id: string }
 }
 
 function formatShortDate(iso: string | null): string {
@@ -56,7 +61,9 @@ function getPurchaseTypeLabel(purchaseType: string | null | undefined): string {
     return 'Subscription payment'
 }
 
-function BillingHistoryRow({ entry }: { entry: BillingHistoryEntry }) {
+function BillingHistoryRow({ entry, unconfirmedAttemptCopy = false, latestAttemptId }: { entry: BillingHistoryEntry; unconfirmedAttemptCopy?: boolean; latestAttemptId?: string }) {
+    const { language } = useTranslation()
+    const uncertain = unconfirmedAttemptCopy && entry.kind === 'attempt' && entry.status === 'incomplete'
     const statusPresentation = {
         captured: {
             label: 'Captured',
@@ -71,7 +78,7 @@ function BillingHistoryRow({ entry }: { entry: BillingHistoryEntry }) {
             className: 'border-risk/25 bg-risk-soft text-risk',
         },
         incomplete: {
-            label: 'Incomplete',
+            label: uncertain ? liteSupportingText(language, 'unconfirmed') : 'Incomplete',
             status: 'pending',
             icon: Clock3,
             className: 'border-warning/25 bg-warning-soft text-warning',
@@ -105,6 +112,7 @@ function BillingHistoryRow({ entry }: { entry: BillingHistoryEntry }) {
                         <span>{formatShortDate(entry.date)}</span>
                         <span aria-hidden="true">·</span>
                         <span>{getPurchaseTypeLabel(entry.purchaseType)}</span>
+                        {uncertain && entry.orderId && <><span aria-hidden="true">·</span><span>{liteSupportingText(language, 'order')} <span data-i18n-skip="true">{entry.orderId.slice(-8)} · {entry.attempt?.status}</span></span></>}
                         {entry.method && (
                             <>
                                 <span aria-hidden="true">·</span>
@@ -134,16 +142,16 @@ function BillingHistoryRow({ entry }: { entry: BillingHistoryEntry }) {
                         Download receipt <Download className="h-3.5 w-3.5" aria-hidden="true" />
                     </Link>
                 ) : (
-                    <p className="text-[11px] text-subtle">
-                        {entry.status === 'incomplete' ? 'No payment captured' : entry.status === 'failed' ? 'Payment not completed' : 'No receipt'}
-                    </p>
+                    <div className="text-[11px] text-subtle">
+                        {uncertain ? <div className="space-y-2"><p>{liteSupportingText(language, 'noReceipt')}</p>{entry.attempt?.id === latestAttemptId ? <DialogClose asChild><Button type="button" variant="outline" onClick={()=>requestAnimationFrame(()=>document.getElementById('billing-attempt-recovery')?.querySelector<HTMLButtonElement>('button')?.focus())}>{liteSupportingText(language,'backPaymentStatus')}</Button></DialogClose> : entry.attempt && getBillingAttemptPresentation(entry.attempt.status).shouldCheck && entry.attempt.provider_order_id ? <BillingAttemptStatus attempt={entry.attempt} singleFlight /> : null}</div> : entry.status === 'incomplete' ? 'No payment captured' : entry.status === 'failed' ? 'Payment not completed' : 'No receipt'}
+                    </div>
                 )}
             </div>
         </div>
     )
 }
 
-export function PaymentHistoryDialog({ entries, mobileContentClassName }: { entries: BillingHistoryEntry[]; mobileContentClassName?: string }) {
+export function PaymentHistoryDialog({ entries, mobileContentClassName, unconfirmedAttemptCopy = false, latestAttemptId }: { entries: BillingHistoryEntry[]; mobileContentClassName?: string; unconfirmedAttemptCopy?: boolean; latestAttemptId?: string }) {
     const latestPaid = entries.find((entry) => entry.receiptPaymentId)
         ?? entries.find((entry) => entry.status === 'captured')
         ?? null
@@ -194,7 +202,7 @@ export function PaymentHistoryDialog({ entries, mobileContentClassName }: { entr
                     {entries.length > 0 ? (
                         <Card className="gap-0 overflow-hidden p-0 shadow-none">
                             <div className="divide-y divide-hairline">
-                                {entries.map((entry) => <BillingHistoryRow key={entry.id} entry={entry} />)}
+                                {entries.map((entry) => <BillingHistoryRow key={entry.id} entry={entry} unconfirmedAttemptCopy={unconfirmedAttemptCopy} latestAttemptId={latestAttemptId} />)}
                             </div>
                         </Card>
                     ) : (

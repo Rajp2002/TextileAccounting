@@ -1,0 +1,47 @@
+[
+  {
+    "name": "base-estimator-320x568-synthetic.png",
+    "changedPixels": 0,
+    "totalPixels": 181760
+  },
+  {
+    "name": "base-estimator-390x844-synthetic.png",
+    "changedPixels": 0,
+    "totalPixels": 329160
+  },
+  {
+    "name": "base-estimator-430x932-synthetic.png",
+    "changedPixels": 0,
+    "totalPixels": 400760
+  },
+  {
+    "name": "base-estimator-1440x900-synthetic.png",
+    "changedPixels": 0,
+    "totalPixels": 1296000
+  },
+  {
+    "name": "free-estimator-320x568-synthetic.png",
+    "changedPixels": 0,
+    "totalPixels": 181760
+  },
+  {
+    "name": "free-estimator-390x844-synthetic.png",
+    "changedPixels": 0,
+    "totalPixels": 329160
+  },
+  {
+    "name": "free-estimator-430x932-synthetic.png",
+    "changedPixels": 0,
+    "totalPixels": 400760
+  },
+  {
+    "name": "free-estimator-1440x900-synthetic.png",
+    "changedPixels": 0,
+    "totalPixels": 1296000
+  },
+  {
+    "name": "lite-estimator-1440x900-synthetic.png",
+    "changedPixels": 0,
+    "totalPixels": 1296000
+  }
+]

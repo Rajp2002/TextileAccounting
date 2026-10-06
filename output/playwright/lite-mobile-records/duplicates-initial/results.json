@@ -1,0 +1,13 @@
+{
+  "results": [
+    {
+      "name": "same-task rate save",
+      "calls": 2
+    },
+    {
+      "name": "same-task favourite update",
+      "calls": 2
+    }
+  ],
+  "failed": 2
+}

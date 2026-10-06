@@ -1,0 +1,196 @@
+{
+  "results": [
+    {
+      "name": "Help mounted, focus, close and active tour",
+      "status": "passed",
+      "detail": "Both existing guide instances are reachable, focused, closable and visible while tour is active"
+    },
+    {
+      "name": "Search, counted filters, archived/favourites and re-opened disclosure",
+      "status": "passed",
+      "detail": "Search/no-results and active filter state remain available after closing/reopening"
+    },
+    {
+      "name": "Compare exact saved versions, dismiss/reopen, exit mode",
+      "status": "passed",
+      "detail": {
+        "requests": [],
+        "provenance": "Compare Saved Costings\nCompare two immutable snapshots using the same saved calculation and rounding contract. The current Rate Book is not read.\n\nv1 (1 Oct 2026) \u2192 v2 (2 Oct 2026): suggested price \u20b91.16/m higher\n\nCanonical comparison ready\n\nFormula estimator_v3_2026_08 \u00b7 rounding snapshot v2 \u00b7 detail source canonical result.\n\nChange is calculated as New minus Old. Cost-driving changes are separated from reference/co"
+      }
+    },
+    {
+      "name": "Export names selected saved version and date; closing sends no document",
+      "status": "passed",
+      "detail": "Preview Internal Cost Estimate\nConfirm exactly what will be shared before generating the document.\n\nInternal cost sheet \u00b7 based on Cotton Roto Sheeting costing v1 \u00b7 saved 1 Oct 2026\n\nLIVE PREVIEW\n\nThe PDF uses this same document layout.\n\nInternal Cost Estimate\n\nDetailed costs, assumptions, break-even, margin, and profit stay inside the factory.\n\nCustomer Quotation\n\nFinal price and commercial details only. Internal costs and margin stay hidden.\n\nBusiness name\nParty / customer (optional)\nInternal "
+    },
+    {
+      "name": "Existing paid draft overwrite warning Cancel and restore payload",
+      "status": "passed",
+      "detail": {
+        "sourceQuoteId": "33333333-3333-4333-8333-333333333333",
+        "sourceQuoteVersionNumber": 1
+      }
+    },
+    {
+      "name": "Saved archive Cancel leaves action untouched, failed attempt retains record",
+      "status": "passed",
+      "detail": [
+        {
+          "name": "library",
+          "payload": {
+            "id": "33333333-3333-4333-8333-333333333333",
+            "expectedUpdatedAt": "2026-10-01T10:00:00Z",
+            "isArchived": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rate invalid input, typed values after rejected/uncertain save and exact retry",
+      "status": "passed",
+      "detail": [
+        {
+          "id": "44444444-4444-4444-8444-444444444444",
+          "expectedUpdatedAt": "2026-10-01T10:00:00Z",
+          "name": "80/72 Roto Polyester",
+          "category": "yarn_warp",
+          "unit": "per_kg",
+          "currentValue": 199,
+          "effectiveDate": "2026-10-06",
+          "lastReviewedAt": "2026-10-06",
+          "reviewIntervalDays": 30,
+          "source": "Typed supplier note",
+          "notes": "Confirm supplier price before future estimates",
+          "applyAsDefault": false
+        },
+        {
+          "id": "44444444-4444-4444-8444-444444444444",
+          "expectedUpdatedAt": "2026-10-01T10:00:00Z",
+          "name": "80/72 Roto Polyester",
+          "category": "yarn_warp",
+          "unit": "per_kg",
+          "currentValue": 199,
+          "effectiveDate": "2026-10-06",
+          "lastReviewedAt": "2026-10-06",
+          "reviewIntervalDays": 30,
+          "source": "Typed supplier note",
+          "notes": "Confirm supplier price before future estimates",
+          "applyAsDefault": false
+        },
+        {
+          "id": "44444444-4444-4444-8444-444444444444",
+          "expectedUpdatedAt": "2026-10-01T10:00:00Z",
+          "name": "80/72 Roto Polyester",
+          "category": "yarn_warp",
+          "unit": "per_kg",
+          "currentValue": 199,
+          "effectiveDate": "2026-10-06",
+          "lastReviewedAt": "2026-10-06",
+          "reviewIntervalDays": 30,
+          "source": "Typed supplier note",
+          "notes": "Confirm supplier price before future estimates",
+          "applyAsDefault": false
+        }
+      ]
+    },
+    {
+      "name": "Favourite duplicate rejection followed by retry preserves payload",
+      "status": "passed",
+      "detail": [
+        {
+          "name": "library",
+          "payload": {
+            "id": "33333333-3333-4333-8333-333333333333",
+            "expectedUpdatedAt": "2026-10-01T10:00:00Z",
+            "isFavorite": true
+          }
+        },
+        {
+          "name": "library",
+          "payload": {
+            "id": "33333333-3333-4333-8333-333333333333",
+            "expectedUpdatedAt": "2026-10-01T10:00:00Z",
+            "isFavorite": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "In-flow due modal, dismissal and explicit captured bulk set",
+      "status": "passed",
+      "detail": {
+        "name": "rate-review-all",
+        "payload": [
+          {
+            "id": "44444444-4444-4444-8444-444444444444",
+            "expectedUpdatedAt": "2026-10-01T10:00:00Z"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Rate filters retain state; Back/Forward sends no actions; small viewport focus",
+      "status": "passed",
+      "detail": {
+        "bounds": {
+          "top": 242.84375,
+          "bottom": 286.84375,
+          "height": 320,
+          "focused": true
+        },
+        "keyboard": "Viewport resize emulation only; no native keyboard"
+      }
+    },
+    {
+      "name": "Retained Free history stays mounted and preserves search through close",
+      "status": "passed",
+      "detail": {
+        "mounted": 1,
+        "search": "Earlier"
+      }
+    },
+    {
+      "name": "Embedded history has unique connected labels and unchanged defaults",
+      "status": "passed",
+      "detail": {
+        "embedded": {
+          "duplicates": [],
+          "labels": [
+            {
+              "id": "lite-prior-saved-costings-search",
+              "connected": true
+            },
+            {
+              "id": "lite-prior-saved-costings-sort",
+              "connected": true
+            },
+            {
+              "id": "lite-prior-saved-costings-margin",
+              "connected": true
+            }
+          ]
+        },
+        "defaults": [
+          {
+            "id": "saved-costings-search",
+            "connected": true
+          },
+          {
+            "id": "saved-costings-sort",
+            "connected": true
+          },
+          {
+            "id": "saved-costings-margin",
+            "connected": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "Retained-history load error cannot be hidden by disclosure",
+      "status": "passed",
+      "detail": "Existing load alert remains visible"
+    }
+  ],
+  "failed": 0
+}

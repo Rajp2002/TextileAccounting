@@ -81,6 +81,10 @@ import { EmptyState, PageHeader, StatusBadge, Toolbar } from '@/components/ui/pa
 import { LiquidSegmented } from '@/components/ui/liquid-segmented'
 import PlanAnalyticsBeacon from '@/components/billing/PlanAnalyticsBeacon'
 import { trackPlanEvent } from '@/lib/plan-analytics'
+import { useOwnerPlan } from '@/components/providers/owner-plan-provider'
+import { liteRecordsCopy } from '@/lib/i18n/lite-records'
+import { MOBILE_WORKSPACE_QUERY } from '@/lib/mobile-workflow-navigation'
+import mobileStyles from '@/components/estimator/lite-records.module.css'
 
 type YarnRateCategory = Extract<CostRateCategory, 'yarn_warp' | 'yarn_weft'>
 type YarnDirectionFilter = 'all' | YarnRateCategory
@@ -806,9 +810,11 @@ function RateBookReferenceCard() {
 function RateReviewFloatingButton({
     dueReviewRates,
     onOpenModal,
+    liteMobile = false,
 }: {
     dueReviewRates: CostRateRow[]
     onOpenModal: () => void
+    liteMobile?: boolean
 }) {
     const { tx } = useTranslation()
     const dueCount = dueReviewRates.length
@@ -821,7 +827,7 @@ function RateReviewFloatingButton({
             onClick={onOpenModal}
             aria-haspopup="dialog"
             aria-label={tx(`Open ${dueCount} rates due for review`)}
-            className="rail-inline-actions fixed bottom-[calc(var(--mobile-nav-height)+0.75rem)] right-4 z-40 inline-flex min-h-11 items-center gap-2.5 rounded-full bg-saffron px-4 py-3 text-sm font-bold text-white shadow-[var(--shadow-panel)] transition-colors hover:bg-saffron-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron focus-visible:ring-offset-2 md:bottom-6 md:right-6"
+            className={cn("rail-inline-actions fixed bottom-[calc(var(--mobile-nav-height)+0.75rem)] right-4 z-40 inline-flex min-h-11 items-center gap-2.5 rounded-full bg-saffron px-4 py-3 text-sm font-bold text-white shadow-[var(--shadow-panel)] transition-colors hover:bg-saffron-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron focus-visible:ring-offset-2 md:bottom-6 md:right-6", liteMobile && mobileStyles.floating)}
         >
             <CalendarClock className="h-5 w-5" aria-hidden="true" />
             <span>{tx(dueCount === 1 ? '1 Rate Needs Review' : `${dueCount} Rates Need Review`)}</span>
@@ -848,6 +854,15 @@ export default function RatesClient({
     orgId?: string
 }) {
     const { t, tx, language } = useTranslation()
+    const isLite = useOwnerPlan() === 'lite'
+    const mobileCopy = liteRecordsCopy[language]
+    const [helpOpen, setHelpOpen] = useState(false)
+    const [filtersOpen, setFiltersOpen] = useState(false)
+    useEffect(() => {
+        if (!isLite || !helpOpen || !window.matchMedia(MOBILE_WORKSPACE_QUERY).matches) return
+        const frame = requestAnimationFrame(() => document.getElementById('lite-ratebook-help')?.querySelector<HTMLButtonElement>('button')?.focus())
+        return () => cancelAnimationFrame(frame)
+    }, [helpOpen, isLite])
     const [demoYarnDeleted, setDemoYarnDeleted] = useState(false)
     const [showDeleteNudge, setShowDeleteNudge] = useState(false)
 
@@ -911,6 +926,13 @@ export default function RatesClient({
     const [quickEditError, setQuickEditError] = useState<string | null>(null)
     const [isPending, startTransition] = useTransition()
     const [pendingAction, setPendingAction] = useState<PendingRateAction | null>(null)
+    const liteMutationInFlight = useRef(false)
+    const beginLiteMutation = () => {
+        if (!isLite || !window.matchMedia(MOBILE_WORKSPACE_QUERY).matches) return true
+        if (liteMutationInFlight.current) return false
+        liteMutationInFlight.current = true
+        return true
+    }
 
     useEffect(() => {
         function handleKeyDown(event: KeyboardEvent) {
@@ -1057,6 +1079,7 @@ export default function RatesClient({
             toast.info(tourCommonCopy[language].sampleBanner)
             return
         }
+        if (!beginLiteMutation()) return
         setPendingAction({ id: target.id ?? 'new-rate', kind: 'save' })
         startTransition(async () => {
             try {
@@ -1096,6 +1119,7 @@ export default function RatesClient({
                 toast.error(tx(message))
             } finally {
                 setPendingAction(null)
+                liteMutationInFlight.current = false
             }
         })
     }
@@ -1147,6 +1171,7 @@ export default function RatesClient({
             applyAsDefault: rate.apply_as_default,
         }
         setQuickEditError(null)
+        if (!beginLiteMutation()) return
         setPendingAction({ id: rate.id, kind: 'save' })
         startTransition(async () => {
             try {
@@ -1188,6 +1213,7 @@ export default function RatesClient({
                 toast.error(tx(message))
             } finally {
                 setPendingAction(null)
+                liteMutationInFlight.current = false
             }
         })
     }
@@ -1204,6 +1230,7 @@ export default function RatesClient({
             return
         }
         setReviewError(null)
+        if (!beginLiteMutation()) return
         setPendingAction({ id: target.id, kind: 'review' })
         startTransition(async () => {
             try {
@@ -1227,6 +1254,7 @@ export default function RatesClient({
                 toast.error(message)
             } finally {
                 setPendingAction(null)
+                liteMutationInFlight.current = false
             }
         })
     }
@@ -1240,6 +1268,7 @@ export default function RatesClient({
             return
         }
         setReviewError(null)
+        if (!beginLiteMutation()) return
         setPendingAction({ id: target.id, kind: 'review' })
         startTransition(async () => {
             try {
@@ -1260,6 +1289,7 @@ export default function RatesClient({
                 toast.error(message)
             } finally {
                 setPendingAction(null)
+                liteMutationInFlight.current = false
             }
         })
     }
@@ -1274,6 +1304,7 @@ export default function RatesClient({
             setShowDueReviews(false)
             return
         }
+        if (!beginLiteMutation()) return
         setPendingAction({ id: 'all-review', kind: 'review' })
         startTransition(async () => {
             try {
@@ -1301,6 +1332,7 @@ export default function RatesClient({
                 toast.error(message)
             } finally {
                 setPendingAction(null)
+                liteMutationInFlight.current = false
             }
         })
     }
@@ -1354,6 +1386,7 @@ export default function RatesClient({
         }
         const restoring = target.is_active === false
         setArchiveError(null)
+        if (!beginLiteMutation()) return
         setPendingAction({ id: target.id, kind: restoring ? 'restore' : 'archive' })
         startTransition(async () => {
             try {
@@ -1379,6 +1412,7 @@ export default function RatesClient({
                         action: {
                             label: tx('Undo'),
                             onClick: () => {
+                                if (!beginLiteMutation()) return
                                 setPendingAction({ id: target.id, kind: 'restore' })
                                 startTransition(async () => {
                                     try {
@@ -1396,6 +1430,7 @@ export default function RatesClient({
                                         toast.error(tx(userFacingError(error, 'The archive could not be undone. Refresh and try again.')))
                                     } finally {
                                         setPendingAction(null)
+                                        liteMutationInFlight.current = false
                                     }
                                 })
                             },
@@ -1409,6 +1444,7 @@ export default function RatesClient({
                 toast.error(message)
             } finally {
                 setPendingAction(null)
+                liteMutationInFlight.current = false
             }
         })
     }
@@ -1423,6 +1459,7 @@ export default function RatesClient({
             return
         }
         setDeleteError(null)
+        if (!beginLiteMutation()) return
         setPendingAction({ id: target.id, kind: 'delete' })
         startTransition(async () => {
             try {
@@ -1442,6 +1479,7 @@ export default function RatesClient({
                 toast.error(message)
             } finally {
                 setPendingAction(null)
+                liteMutationInFlight.current = false
             }
         })
     }
@@ -1470,7 +1508,7 @@ export default function RatesClient({
     return (
         <>
             {/* Rate Book Left Rail - pinned to top of left rail beside sidebar, matching the Cost Estimator left rail pattern */}
-            <aside className="rates-left-rail-desktop space-y-3" aria-label={tx('Rate Book guides and tools')}>
+            <aside id={isLite ? 'lite-ratebook-help' : undefined} data-expanded={helpOpen || tourStep !== null} className={cn("rates-left-rail-desktop space-y-3", isLite && mobileStyles.help)} aria-label={tx('Rate Book guides and tools')}>
                 <RateBookTutorial
                     enabled={!isPending}
                     orgId={orgId}
@@ -1491,7 +1529,7 @@ export default function RatesClient({
                 </div>
             </aside>
 
-            <div className="rates-workspace ui-route-enter mx-auto w-full max-w-7xl space-y-6" data-ratebook-tutorial-root="true">
+            <div className={cn("rates-workspace ui-route-enter mx-auto w-full max-w-7xl space-y-6", isLite && mobileStyles.workspace)} data-lite-rates={isLite || undefined} data-ratebook-tutorial-root="true">
             <PlanAnalyticsBeacon eventName="rate_book_viewed" />
             {/* Rate Book is part of both Lite and Base and is the source of truth for yarn prices. */}
             <RouteMilestones
@@ -1502,9 +1540,11 @@ export default function RatesClient({
             />
             <div className="space-y-1" data-ratebook-field="overview">
                 <PageHeader
+                    className={isLite ? mobileStyles.header : undefined}
                     title={t('common.yarn_rate_book')}
                     actions={(
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                            {isLite && <Button type="button" variant="outline" className={mobileStyles.mobileOnly} aria-controls="lite-ratebook-help" aria-expanded={helpOpen || tourStep !== null} onClick={() => setHelpOpen(open => !open)} data-i18n-skip="true" lang={language}>{mobileCopy.help}</Button>}
                             <Button
                                 data-ratebook-field="addRateAction"
                                 onClick={() => { setSaveError(null); setDraft(defaultDraft(defaultReviewIntervalDays)) }}
@@ -1582,10 +1622,12 @@ export default function RatesClient({
                 </div>
             )}
 
+            {isLite && dueReviewRates.length > 0 && <button type="button" className={cn(mobileStyles.mobileOnly, mobileStyles.reviewDue)} onClick={() => setShowDueReviews(true)} aria-haspopup="dialog" aria-label={`${mobileCopy.reviewDue}: ${dueReviewRates.length}`} data-i18n-skip="true" lang={language}><span><CalendarClock className="h-4 w-4 shrink-0" aria-hidden="true" />{mobileCopy.reviewDue}</span><strong>{dueReviewRates.length}</strong><ChevronRight className="h-4 w-4 shrink-0" aria-hidden="true" /></button>}
+
             {/* Primary Register Surface (Principle 3: One Primary Surface Per Workflow) */}
             <div className="rounded-2xl border border-hairline bg-surface shadow-xs overflow-hidden" data-ratebook-section={2} data-ratebook-section-card="true" data-ratebook-field="rateTableCard">
-                <div className="flex flex-col gap-3 border-b border-hairline px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-4">
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <div className={cn("flex flex-col gap-3 border-b border-hairline px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-4", isLite && mobileStyles.registerHeader)}>
+                    <div className={cn("flex flex-wrap items-center gap-x-3 gap-y-1", isLite && mobileStyles.registerMeta)}>
                         <h2 className="text-sm sm:text-base font-semibold tracking-tight text-ink">
                             {tx('Yarn rates')} · <span className="font-bold text-ink">{activeYarnRates.length}</span> {tx('active yarn rates')}
                         </h2>
@@ -1642,6 +1684,8 @@ export default function RatesClient({
                             )}
                         </div>
 
+                        {isLite && <Button type="button" variant="outline" className={cn(mobileStyles.mobileOnly, mobileStyles.rateFilterToggle)} aria-expanded={filtersOpen} aria-controls="lite-ratebook-filters" onClick={() => setFiltersOpen(open => !open)} data-i18n-skip="true" lang={language}>{mobileCopy.filters}{[categoryFilter !== 'all', statusFilter !== 'all'].filter(Boolean).length > 0 ? ` · ${[categoryFilter !== 'all', statusFilter !== 'all'].filter(Boolean).length}` : ''}<ChevronDown className="h-4 w-4 shrink-0" aria-hidden="true" /></Button>}
+                        <div id={isLite ? 'lite-ratebook-filters' : undefined} className={cn('contents', isLite && mobileStyles.rateFilterControls)} data-expanded={filtersOpen}>
                         <LiquidSegmented
                             data-ratebook-field="directionFilter"
                             fullWidth
@@ -1712,6 +1756,7 @@ export default function RatesClient({
                                 {tx('Clear filters')}
                             </Button>
                         )}
+                        </div>
                     </div>
                 </Toolbar>
                 <p className="sr-only">
@@ -2221,6 +2266,7 @@ export default function RatesClient({
 
             {/* Floating Review Action on Narrower Screens (< 1540px) */}
             <RateReviewFloatingButton
+                liteMobile={isLite}
                 dueReviewRates={dueReviewRates}
                 onOpenModal={() => { if (dueReviewRates.length > 0) setShowDueReviews(true) }}
             />

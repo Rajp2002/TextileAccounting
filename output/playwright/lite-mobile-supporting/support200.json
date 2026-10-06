@@ -1,0 +1,32 @@
+[
+  {
+    "view": "support",
+    "lang": "en",
+    "issues": []
+  },
+  {
+    "view": "thread",
+    "lang": "en",
+    "issues": []
+  },
+  {
+    "view": "support",
+    "lang": "hi",
+    "issues": []
+  },
+  {
+    "view": "thread",
+    "lang": "hi",
+    "issues": []
+  },
+  {
+    "view": "support",
+    "lang": "gu",
+    "issues": []
+  },
+  {
+    "view": "thread",
+    "lang": "gu",
+    "issues": []
+  }
+]

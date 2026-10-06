@@ -1,0 +1,305 @@
+[
+  {
+    "language": "en",
+    "percent": 200,
+    "state": "version",
+    "issues": [
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "Applied quality: Synthetic Quality A — Surat plain weave with a long identifiable fabric r",
+          "You changed the recipe for Saved Quality Synthetic Quality A — Surat plain weave with a lo"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "Applied quality: Synthetic Quality A — Surat plain weave with a long identifiable fabric r",
+          "You changed the recipe for Saved Quality Synthetic Quality A — Surat plain weave with a lo"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "Applied quality: Synthetic Quality A — Surat plain weave with a long identifiable fabric r",
+          "You changed the recipe for Saved Quality Synthetic Quality A — Surat plain weave with a lo"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "Applied quality: Synthetic Quality A — Surat plain weave with a long identifiable fabric r",
+          "Saving the costing creates a new snapshot and does not change the Saved Quality unless you"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "Applied quality: Synthetic Quality A — Surat plain weave with a long identifiable fabric r",
+          "Saving the costing creates a new snapshot and does not change the Saved Quality unless you"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "Applied quality: Synthetic Quality A — Surat plain weave with a long identifiable fabric r",
+          "Saving the costing creates a new snapshot and does not change the Saved Quality unless you"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "Applied quality: Synthetic Quality A — Surat plain weave with a long identifiable fabric r",
+          "Saving the costing creates a new snapshot and does not change the Saved Quality unless you"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "Applied quality: Synthetic Quality A — Surat plain weave with a long identifiable fabric r",
+          "Saving the costing creates a new snapshot and does not change the Saved Quality unless you"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "Applied quality: Synthetic Quality A — Surat plain weave with a long identifiable fabric r",
+          "Saving the costing creates a new snapshot and does not change the Saved Quality unless you"
+        ]
+      }
+    ]
+  },
+  {
+    "language": "en",
+    "percent": 200,
+    "state": "save-quality",
+    "issues": []
+  },
+  {
+    "language": "en",
+    "percent": 200,
+    "state": "new-quality",
+    "issues": []
+  },
+  {
+    "language": "en",
+    "percent": 200,
+    "state": "rename-quality",
+    "issues": []
+  },
+  {
+    "language": "en",
+    "percent": 200,
+    "state": "discard-draft",
+    "issues": []
+  },
+  {
+    "language": "hi",
+    "percent": 200,
+    "state": "version",
+    "issues": [
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "क्वालिटी लागू: Synthetic क्वालिटी एक — Surat plain बुनाई साथ एक long identifiable फैब्रिक ",
+          "आपने सेव हुआ क्वालिटी Synthetic क्वालिटी एक — Surat plain बुनाई साथ एक long identifiable फ"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "क्वालिटी लागू: Synthetic क्वालिटी एक — Surat plain बुनाई साथ एक long identifiable फैब्रिक ",
+          "आपने सेव हुआ क्वालिटी Synthetic क्वालिटी एक — Surat plain बुनाई साथ एक long identifiable फ"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "क्वालिटी लागू: Synthetic क्वालिटी एक — Surat plain बुनाई साथ एक long identifiable फैब्रिक ",
+          "कॉस्टिंग सहेजने पर नया स्नैपशॉट बनेगा। नीचे चुनने तक सेव हुआ क्वालिटी नहीं बदलेगी।"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "क्वालिटी लागू: Synthetic क्वालिटी एक — Surat plain बुनाई साथ एक long identifiable फैब्रिक ",
+          "कॉस्टिंग सहेजने पर नया स्नैपशॉट बनेगा। नीचे चुनने तक सेव हुआ क्वालिटी नहीं बदलेगी।"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "क्वालिटी लागू: Synthetic क्वालिटी एक — Surat plain बुनाई साथ एक long identifiable फैब्रिक ",
+          "कॉस्टिंग सहेजने पर नया स्नैपशॉट बनेगा। नीचे चुनने तक सेव हुआ क्वालिटी नहीं बदलेगी।"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "क्वालिटी लागू: Synthetic क्वालिटी एक — Surat plain बुनाई साथ एक long identifiable फैब्रिक ",
+          "कॉस्टिंग सहेजने पर नया स्नैपशॉट बनेगा। नीचे चुनने तक सेव हुआ क्वालिटी नहीं बदलेगी।"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "क्वालिटी लागू: Synthetic क्वालिटी एक — Surat plain बुनाई साथ एक long identifiable फैब्रिक ",
+          "कॉस्टिंग सहेजने पर नया स्नैपशॉट बनेगा। नीचे चुनने तक सेव हुआ क्वालिटी नहीं बदलेगी।"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "क्वालिटी लागू: Synthetic क्वालिटी एक — Surat plain बुनाई साथ एक long identifiable फैब्रिक ",
+          "कॉस्टिंग सहेजने पर नया स्नैपशॉट बनेगा। नीचे चुनने तक सेव हुआ क्वालिटी नहीं बदलेगी।"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "क्वालिटी लागू: Synthetic क्वालिटी एक — Surat plain बुनाई साथ एक long identifiable फैब्रिक ",
+          "कॉस्टिंग सहेजने पर नया स्नैपशॉट बनेगा। नीचे चुनने तक सेव हुआ क्वालिटी नहीं बदलेगी।"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "क्वालिटी लागू: Synthetic क्वालिटी एक — Surat plain बुनाई साथ एक long identifiable फैब्रिक ",
+          "इससे अगला कॉस्टिंग वर्जन बनेगा"
+        ]
+      }
+    ]
+  },
+  {
+    "language": "hi",
+    "percent": 200,
+    "state": "save-quality",
+    "issues": []
+  },
+  {
+    "language": "hi",
+    "percent": 200,
+    "state": "new-quality",
+    "issues": []
+  },
+  {
+    "language": "hi",
+    "percent": 200,
+    "state": "rename-quality",
+    "issues": []
+  },
+  {
+    "language": "hi",
+    "percent": 200,
+    "state": "discard-draft",
+    "issues": []
+  },
+  {
+    "language": "gu",
+    "percent": 200,
+    "state": "version",
+    "issues": [
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "ક્વોલિટી લાગુ: Synthetic ક્વોલિટી એક — Surat plain વણાટ સાથે એક long identifiable ફેબ્રિક ",
+          "તમે સેવ થયું ક્વોલિટી Synthetic ક્વોલિટી એક — Surat plain વણાટ સાથે એક long identifiable ફ"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "ક્વોલિટી લાગુ: Synthetic ક્વોલિટી એક — Surat plain વણાટ સાથે એક long identifiable ફેબ્રિક ",
+          "તમે સેવ થયું ક્વોલિટી Synthetic ક્વોલિટી એક — Surat plain વણાટ સાથે એક long identifiable ફ"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "ક્વોલિટી લાગુ: Synthetic ક્વોલિટી એક — Surat plain વણાટ સાથે એક long identifiable ફેબ્રિક ",
+          "કોસ્ટિંગ સેવ કરવાથી નવો સ્નેપશોટ બનશે. નીચે પસંદ ન કરો ત્યાં સુધી સેવ થયું ક્વોલિટી બદલાશે"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "ક્વોલિટી લાગુ: Synthetic ક્વોલિટી એક — Surat plain વણાટ સાથે એક long identifiable ફેબ્રિક ",
+          "કોસ્ટિંગ સેવ કરવાથી નવો સ્નેપશોટ બનશે. નીચે પસંદ ન કરો ત્યાં સુધી સેવ થયું ક્વોલિટી બદલાશે"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "ક્વોલિટી લાગુ: Synthetic ક્વોલિટી એક — Surat plain વણાટ સાથે એક long identifiable ફેબ્રિક ",
+          "કોસ્ટિંગ સેવ કરવાથી નવો સ્નેપશોટ બનશે. નીચે પસંદ ન કરો ત્યાં સુધી સેવ થયું ક્વોલિટી બદલાશે"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "ક્વોલિટી લાગુ: Synthetic ક્વોલિટી એક — Surat plain વણાટ સાથે એક long identifiable ફેબ્રિક ",
+          "કોસ્ટિંગ સેવ કરવાથી નવો સ્નેપશોટ બનશે. નીચે પસંદ ન કરો ત્યાં સુધી સેવ થયું ક્વોલિટી બદલાશે"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "ક્વોલિટી લાગુ: Synthetic ક્વોલિટી એક — Surat plain વણાટ સાથે એક long identifiable ફેબ્રિક ",
+          "કોસ્ટિંગ સેવ કરવાથી નવો સ્નેપશોટ બનશે. નીચે પસંદ ન કરો ત્યાં સુધી સેવ થયું ક્વોલિટી બદલાશે"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "ક્વોલિટી લાગુ: Synthetic ક્વોલિટી એક — Surat plain વણાટ સાથે એક long identifiable ફેબ્રિક ",
+          "કોસ્ટિંગ સેવ કરવાથી નવો સ્નેપશોટ બનશે. નીચે પસંદ ન કરો ત્યાં સુધી સેવ થયું ક્વોલિટી બદલાશે"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "ક્વોલિટી લાગુ: Synthetic ક્વોલિટી એક — Surat plain વણાટ સાથે એક long identifiable ફેબ્રિક ",
+          "કોસ્ટિંગ સેવ કરવાથી નવો સ્નેપશોટ બનશે. નીચે પસંદ ન કરો ત્યાં સુધી સેવ થયું ક્વોલિટી બદલાશે"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "ક્વોલિટી લાગુ: Synthetic ક્વોલિટી એક — Surat plain વણાટ સાથે એક long identifiable ફેબ્રિક ",
+          "કોસ્ટિંગ સેવ કરવાથી નવો સ્નેપશોટ બનશે. નીચે પસંદ ન કરો ત્યાં સુધી સેવ થયું ક્વોલિટી બદલાશે"
+        ]
+      },
+      {
+        "kind": "text-overlap",
+        "labels": [
+          "ક્વોલિટી લાગુ: Synthetic ક્વોલિટી એક — Surat plain વણાટ સાથે એક long identifiable ફેબ્રિક ",
+          "કોસ્ટિંગ સેવ કરવાથી નવો સ્નેપશોટ બનશે. નીચે પસંદ ન કરો ત્યાં સુધી સેવ થયું ક્વોલિટી બદલાશે"
+        ]
+      }
+    ]
+  },
+  {
+    "language": "gu",
+    "percent": 200,
+    "state": "save-quality",
+    "issues": []
+  },
+  {
+    "language": "gu",
+    "percent": 200,
+    "state": "new-quality",
+    "issues": []
+  },
+  {
+    "language": "gu",
+    "percent": 200,
+    "state": "rename-quality",
+    "issues": []
+  },
+  {
+    "language": "gu",
+    "percent": 200,
+    "state": "discard-draft",
+    "issues": []
+  }
+]

@@ -1,0 +1,959 @@
+
+> textile-saas@0.1.0 prebuild
+> npm run test
+
+
+> textile-saas@0.1.0 test
+> vitest run
+
+
+ RUN  v4.1.8 /private/var/folders/fg/zfs5p7f92n923glf5hxny7v40000gn/T/weavly-lite-final-verification-v5xwdtd9
+
+ ✓ __tests__/desktop-dimensions-responsive.test.ts (7 tests) 13ms
+ ✓ __tests__/guided-tour-left-rails.test.ts (12 tests) 21ms
+ ✓ __tests__/admin-support-page-access.test.tsx (14 tests) 39ms
+ ✓ __tests__/rate-review-rail.test.ts (7 tests) 121ms
+ ✓ __tests__/workers-tour-preview.test.tsx (14 tests) 624ms
+ ✓ __tests__/base-payroll-readiness.test.ts (29 tests) 589ms
+ ✓ __tests__/rate-book-tutorial.test.ts (21 tests) 511ms
+ ✓ __tests__/configuration-tour-preview.test.tsx (26 tests) 495ms
+ ✓ __tests__/machine-register-refinement.test.ts (16 tests) 271ms
+ ✓ __tests__/tour-legacy-retired.test.ts (5 tests) 333ms
+ ✓ __tests__/stock-audit-page.test.tsx (17 tests) 343ms
+stderr | __tests__/lite-archive-completeness.test.ts > owner archive completeness > fails the whole export, and records the failure, when any page fails
+Organization export query failed { dataset: 'audit_log', code: '08006', message: 'connection reset' }
+
+ ✓ __tests__/lite-archive-completeness.test.ts (12 tests) 303ms
+ ✓ __tests__/backup-inventory-comparison.test.ts (3 tests) 313ms
+ ✓ __tests__/worker-register-refinement.test.ts (17 tests) 257ms
+ ✓ __tests__/free-transaction-flow.test.tsx (31 tests) 254ms
+ ✓ __tests__/weaving-intro.test.ts (38 tests) 230ms
+ ✓ __tests__/public-page-i18n.test.ts (18 tests) 447ms
+ ✓ __tests__/tour-modal-placement-guard.test.ts (20 tests) 179ms
+stdout | __tests__/tour-program-consistency.test.ts > GT-17 cross-tour consistency review > holds English titles, bodies and details to DR-27, DR-28 and DR-29
+
+DR-27/28/29 English limits (tokens counted as 30 characters)
+Cost Estimator       entries= 29  longest title 39/48  body 149/190  detail 124/260
+Saved Costings       entries= 39  longest title 38/48  body 182/190  detail 149/260
+Yarn Rate Book       entries= 17  longest title 44/48  body 146/190  detail 127/260
+Dispatches           entries= 22  longest title 39/48  body 140/190  detail 160/260
+Fabric Stock         entries= 14  longest title 38/48  body 146/190  detail 157/260
+Yarn Stock           entries= 17  longest title 39/48  body 129/190  detail 261/260
+Payroll              entries= 37  longest title 34/48  body 148/190  detail 96/260
+Production           entries= 17  longest title 33/48  body 149/190  detail 141/260
+Daily Sheet          entries= 28  longest title 44/48  body 127/190  detail 116/260
+Machines             entries= 13  longest title 31/48  body 113/190  detail 97/260
+Workers              entries= 20  longest title 33/48  body 132/190  detail 0/260
+Machine Assignments  entries= 17  longest title 31/48  body 141/190  detail 138/260
+RECORDED EXCEPTIONS: Yarn Stock correct.detail (detail is 261, limit 260)
+
+stdout | __tests__/tour-program-consistency.test.ts > GT-17 cross-tour consistency review > keeps Gujarati and Hindi within DR-34: at most 60% longer than English, and the same number of sentences
+
+DR-34 Gujarati/Hindi length ratio
+Cost Estimator       longest gu/hi ratio 1.15x  sentence-count differences 0
+Saved Costings       longest gu/hi ratio 1.37x  sentence-count differences 0
+Yarn Rate Book       longest gu/hi ratio 1.71x  sentence-count differences 0
+Dispatches           longest gu/hi ratio 1.17x  sentence-count differences 0
+Fabric Stock         longest gu/hi ratio 1.25x  sentence-count differences 0
+Yarn Stock           longest gu/hi ratio 1.70x  sentence-count differences 0
+Payroll              longest gu/hi ratio 1.42x  sentence-count differences 4
+Production           longest gu/hi ratio 1.17x  sentence-count differences 0
+Daily Sheet          longest gu/hi ratio 1.29x  sentence-count differences 0
+Machines             longest gu/hi ratio 1.19x  sentence-count differences 0
+Workers              longest gu/hi ratio 1.54x  sentence-count differences 0
+Machine Assignments  longest gu/hi ratio 1.18x  sentence-count differences 0
+RECORDED EXCEPTIONS: Yarn Rate Book handoff.empty.title hi (1.71x English (21 -> 36)); Yarn Stock balance.title hi (1.70x English (20 -> 34)); Payroll calculation.salary.body gu (sentence count 2 vs English 1); Payroll calculation.salary.body hi (sentence count 2 vs English 1); Payroll calculation.recovery.body gu (sentence count 2 vs English 1); Payroll calculation.recovery.body hi (sentence count 2 vs English 1)
+
+ ✓ __tests__/tour-program-consistency.test.ts (7 tests) 219ms
+ ✓ __tests__/build-type-cache.test.ts (1 test) 212ms
+ ✓ __tests__/dispatch-tutorial-panel.test.tsx (31 tests) 127ms
+ ✓ __tests__/backup-sanitized-inventory.test.ts (13 tests) 6732ms
+     ✓ emits valid JSON and allows continuation for zero Storage counts  924ms
+     ✓ fails closed when Storage contains objects  516ms
+     ✓ fails closed for aligned or otherwise malformed psql output  517ms
+     ✓ fails closed when required Storage fields are missing  509ms
+     ✓ fails closed when psql returns more than one JSON row  518ms
+     ✓ rejects non-integer or invalid Storage counts: { bucket_count: -1 }  510ms
+     ✓ rejects non-integer or invalid Storage counts: { object_count: 0.5 }  517ms
+     ✓ rejects non-integer or invalid Storage counts: { total_bytes: '0' }  515ms
+     ✓ keeps psql stderr separate from the JSON file and sanitized workflow output  535ms
+     ✓ fails closed without echoing psql stderr when the query command fails  545ms
+     ✓ accepts valid JSON with unusual whitespace and Unicode identifiers  559ms
+     ✓ does not echo the database URL or fixture credential  562ms
+ ✓ __tests__/base-payroll-pdf.test.ts (19 tests) 190ms
+ ✓ __tests__/auth-transition.test.tsx (32 tests) 183ms
+ ✓ __tests__/tour-real-page-guard.test.ts (17 tests) 105ms
+ ✓ __tests__/production-task-loading.test.tsx (8 tests) 177ms
+ ✓ __tests__/free-usage-counter.test.ts (29 tests) 140ms
+ ✓ __tests__/management-register-rendering.test.ts (5 tests) 113ms
+ ✓ __tests__/free-service.test.ts (13 tests) 87ms
+ ✓ __tests__/autosave-status.test.tsx (9 tests) 83ms
+ ✓ __tests__/p1-billing-orders.test.ts (19 tests) 82ms
+ ✓ __tests__/lite-draft-truth.test.tsx (9 tests) 156ms
+ ✓ __tests__/admin-auth-flow.test.ts (34 tests) 105ms
+ ✓ __tests__/navigation-disclosure.test.tsx (15 tests) 90ms
+ ✓ __tests__/admin-sensitive-session.test.tsx (7 tests) 89ms
+ ✓ __tests__/lite-telemetry-lifecycle.test.ts (4 tests) 75ms
+ ✓ __tests__/landing-sample-engine-state.test.tsx (5 tests) 88ms
+ ✓ __tests__/admin-legacy-gates.test.tsx (7 tests) 81ms
+ ✓ __tests__/sprint15-trust-gate.test.ts (7 tests) 55ms
+ ✓ __tests__/estimator-scenario-selection.test.ts (16 tests) 78ms
+ ✓ __tests__/payroll-record-details.test.tsx (12 tests) 77ms
+ ✓ __tests__/payroll-cycle-integration.test.ts (6 tests) 112ms
+ ✓ __tests__/free-estimator.test.ts (8 tests) 80ms
+ ✓ __tests__/mobile-workflow-navigation.test.ts (36 tests) 53ms
+ ✓ __tests__/free-billing-workspace.test.tsx (3 tests) 66ms
+ ✓ __tests__/estimator.test.ts (35 tests) 50ms
+ ✓ __tests__/admin-proxy-routing.test.ts (39 tests) 58ms
+ ✓ __tests__/admin-legacy-read.test.ts (27 tests) 68ms
+ ✓ __tests__/sprint10-saved-costings-rates-comparison.test.ts (20 tests) 76ms
+ ✓ __tests__/admin-founder.test.ts (30 tests) 41ms
+ ✓ __tests__/lite-quick-detailed-parity.test.ts (4 tests) 60ms
+ ✓ __tests__/saved-quality-costing-library.test.ts (9 tests) 43ms
+ ✓ __tests__/payroll-cycle-engine.test.ts (43 tests) 57ms
+ ✓ __tests__/lite-recovery-matrix.test.ts (3 tests) 60ms
+ ✓ __tests__/machines-register-tour-help.test.tsx (4 tests) 63ms
+ ✓ __tests__/rate-book-tour-flow.test.tsx (7 tests) 64ms
+ ✓ __tests__/pwa-update.test.ts (16 tests) 59ms
+ ✓ __tests__/base-manual-incentives.test.ts (5 tests) 46ms
+ ✓ __tests__/free-leave-guard-hook.test.tsx (5 tests) 43ms
+ ✓ __tests__/machines-tour-preview.test.tsx (4 tests) 50ms
+ ✓ __tests__/stock-tour.test.tsx (33 tests) 42ms
+ ✓ __tests__/admin-shell.test.tsx (3 tests) 103ms
+ ✓ __tests__/free-continuation-integration.test.ts (23 tests) 98ms
+ ✓ __tests__/assignment-workspace-loader.test.ts (19 tests) 78ms
+ ✓ __tests__/b17-razorpay-lifecycle-boundaries.test.ts (8 tests) 45ms
+ ✓ __tests__/admin-payments.test.ts (19 tests) 53ms
+ ✓ __tests__/estimator-yarn-ratebook-dropdown.test.ts (11 tests) 31ms
+ ✓ __tests__/cost-estimate-tutorial-i18n.test.ts (7 tests) 58ms
+ ✓ __tests__/tour-data-safety-contract.test.ts (70 tests) 49ms
+ ✓ __tests__/estimator-metered-readiness.test.ts (8 tests) 36ms
+ ✓ __tests__/admin-formal.test.ts (14 tests) 48ms
+stderr | __tests__/proxy-terminal-session-recovery.test.ts > Proxy terminal Auth session recovery > expires every auth chunk and redirects a protected request to login
+{"level":"warning","event":"terminal_auth_session_recovered","code":"refresh_token_not_found","route":"/owner/estimator"}
+
+stderr | __tests__/proxy-terminal-session-recovery.test.ts > Proxy terminal Auth session recovery > renders a clean login request when Auth returns a terminal session error
+{"level":"warning","event":"terminal_auth_session_recovered","code":"session_not_found","route":"/login"}
+
+stderr | __tests__/proxy-terminal-session-recovery.test.ts > Proxy post-login session handling > still expires a genuinely idle current session locally
+{"level":"warning","event":"auth_session_inactivity_expired","route":"/owner/estimator","idle_ms":91233823828}
+
+stderr | __tests__/proxy-terminal-session-recovery.test.ts > PWA idle-session cold start > renders login in one response and clears both browser and forwarded session cookies
+{"level":"warning","event":"auth_session_inactivity_expired","route":"/login","idle_ms":91233823832}
+
+stderr | __tests__/proxy-terminal-session-recovery.test.ts > PWA idle-session cold start > redirects an idle protected page with cookie deletions so login does not revalidate it
+{"level":"warning","event":"auth_session_inactivity_expired","route":"/owner/estimator","idle_ms":91233823834}
+
+stderr | __tests__/proxy-terminal-session-recovery.test.ts > PWA idle-session cold start > returns JSON and clears cookies for an idle protected API request
+{"level":"warning","event":"auth_session_inactivity_expired","route":"/api/private","idle_ms":91233823836}
+
+ ✓ __tests__/proxy-terminal-session-recovery.test.ts (18 tests) 54ms
+ ✓ __tests__/worker-pay-basis.test.tsx (6 tests) 41ms
+ ✓ __tests__/feature-demo-languages.test.ts (19 tests) 27ms
+ ✓ __tests__/tour-panel-render.test.tsx (6 tests) 42ms
+ ✓ __tests__/admin-tenant-identity.test.ts (8 tests) 43ms
+ ✓ __tests__/free-recalculation-history.test.ts (4 tests) 44ms
+ ✓ __tests__/production-scoped-loader.test.ts (26 tests) 54ms
+ ✓ __tests__/sprint17-costing-quotation-hardening.test.ts (7 tests) 43ms
+ ✓ __tests__/monthly-overhead-calculator.test.ts (9 tests) 47ms
+ ✓ __tests__/base-machine-register.test.ts (15 tests) 33ms
+ ✓ __tests__/finance.test.ts (43 tests | 1 skipped) 49ms
+ ✓ __tests__/base-payroll-settlement-period.test.ts (10 tests) 46ms
+ ✓ __tests__/costing-characterization.test.ts (16 tests) 45ms
+ ✓ __tests__/tour-invitation-lifecycle.test.ts (10 tests) 45ms
+ ✓ __tests__/lite-rate-reconciliation.test.ts (9 tests) 44ms
+ ✓ __tests__/admin-release-gates.test.ts (25 tests) 45ms
+ ✓ __tests__/base-production-core.test.ts (11 tests) 26ms
+ ✓ __tests__/payroll-tour.test.ts (7 tests) 40ms
+ ✓ __tests__/motion-feedback.test.tsx (17 tests) 39ms
+ ✓ __tests__/challan-payment-terms.test.ts (4 tests) 39ms
+ ✓ __tests__/founder-only-billing-access.test.ts (23 tests) 43ms
+ ✓ __tests__/daily-sheet-tour.test.ts (7 tests) 30ms
+ ✓ __tests__/admin-signout.test.ts (10 tests) 37ms
+ ✓ __tests__/dispatch-tour.test.ts (8 tests) 26ms
+ ✓ __tests__/auth-rate-limit-fallback.test.ts (3 tests) 42ms
+ ✓ __tests__/stock-audit-figures.test.ts (6 tests) 36ms
+ ✓ __tests__/tour-preferences-and-actions.test.ts (43 tests) 34ms
+ ✓ __tests__/p1-estimator-draft-recovery.test.ts (7 tests) 34ms
+ ✓ __tests__/admin-factories-dal.test.ts (5 tests) 26ms
+ ✓ __tests__/base-p1-remediation.test.ts (5 tests) 32ms
+ ✓ __tests__/saved-costings-tour.test.ts (12 tests) 39ms
+ ✓ __tests__/liquid-toggle.test.tsx (5 tests) 33ms
+ ✓ __tests__/configuration-tour.test.ts (10 tests) 33ms
+ ✓ __tests__/management-register-loaders.test.ts (7 tests) 36ms
+ ✓ __tests__/lite-task-validation.test.ts (5 tests) 32ms
+ ✓ __tests__/sprint16-billing-language.test.ts (4 tests) 33ms
+ ✓ __tests__/yarn-rate-reconciliation.test.ts (13 tests) 31ms
+ ✓ __tests__/costing-save-boundary.test.ts (4 tests) 27ms
+ ✓ __tests__/lite-historical-immutability.test.ts (1 test) 41ms
+ ✓ __tests__/admin-support.test.ts (9 tests) 31ms
+ ✓ __tests__/rate-book-search-filter.test.ts (13 tests) 30ms
+ ✓ __tests__/lite-yarn-density.test.ts (12 tests) 49ms
+ ✓ __tests__/mobile-input-navigation.test.ts (9 tests) 15ms
+ ✓ __tests__/motion-polish.test.ts (36 tests) 29ms
+ ✓ __tests__/estimator-quote-payload.test.ts (5 tests) 29ms
+ ✓ __tests__/founder-only-customer-auth.test.ts (14 tests) 28ms
+ ✓ __tests__/sprint5-quotations-pdf-export.test.ts (5 tests) 33ms
+ ✓ __tests__/production-tour.test.ts (10 tests) 27ms
+ ✓ __tests__/lite-input-basis.test.ts (14 tests) 30ms
+ ✓ __tests__/base-payroll-history.test.ts (4 tests) 27ms
+ ✓ __tests__/base-estimator-refinements.test.ts (9 tests) 30ms
+ ✓ __tests__/cost-rates.test.ts (4 tests) 17ms
+ ✓ __tests__/cost-estimate-tutorial-transitions.test.ts (3 tests) 24ms
+ ✓ __tests__/plan-selection-actions.test.ts (12 tests) 16ms
+ ✓ __tests__/lite-saved-costings-truth.test.ts (10 tests) 27ms
+ ✓ __tests__/sprint8-costing-trust.test.ts (4 tests) 26ms
+ ✓ __tests__/workers-tour.test.ts (7 tests) 30ms
+ ✓ __tests__/admin-retention-dal.test.ts (6 tests) 27ms
+ ✓ __tests__/pwa-install-coordinator.test.ts (18 tests) 23ms
+ ✓ __tests__/lite-rate-impact.test.ts (8 tests) 25ms
+ ✓ __tests__/free-workspace-launch-hint.test.ts (12 tests) 42ms
+ ✓ __tests__/support-data-rights.test.ts (5 tests) 25ms
+ ✓ __tests__/mobile-viewport.test.ts (16 tests) 20ms
+ ✓ __tests__/admin-retention.test.ts (5 tests) 23ms
+ ✓ __tests__/signup-legal-acceptance.test.ts (5 tests) 22ms
+ ✓ __tests__/base-assignment-connectors.test.ts (3 tests) 20ms
+ ✓ __tests__/sprint0-costing-truth.test.ts (4 tests) 36ms
+ ✓ __tests__/runtime-source-map-traces.test.ts (1 test) 24ms
+ ✓ __tests__/base-estimator-go-readiness.test.ts (12 tests) 22ms
+ ✓ __tests__/base-onboarding-wizard.test.ts (15 tests) 17ms
+ ✓ __tests__/saved-quality-commercial-reuse.test.ts (3 tests) 28ms
+ ✓ __tests__/lite-prior-history.test.tsx (6 tests) 23ms
+ ✓ __tests__/estimator-production-readiness.test.ts (15 tests) 22ms
+ ✓ __tests__/lite-estimated-language.test.ts (5 tests) 44ms
+ ✓ __tests__/batch10-estimator-quote-order-snapshots.test.ts (9 tests) 22ms
+ ✓ __tests__/lite-web-vitals-route.test.ts (5 tests) 22ms
+ ✓ __tests__/yarn-stock.test.ts (6 tests) 22ms
+ ✓ __tests__/estimator-placeholder-ux.test.ts (8 tests) 23ms
+ ✓ __tests__/costing-defaults-initialization.test.ts (7 tests) 27ms
+ ✓ __tests__/lite-document-privacy.test.ts (2 tests) 24ms
+ ✓ __tests__/estimator-tour-live-sheet-centering.test.ts (32 tests) 22ms
+ ✓ __tests__/free-request-identity.test.ts (8 tests) 20ms
+ ✓ __tests__/mobile-tour-positioning.test.ts (5 tests) 22ms
+ ✓ __tests__/sprint2-calculation-safety.test.ts (9 tests) 32ms
+ ✓ __tests__/admin-payments-dal.test.ts (7 tests) 24ms
+ ✓ __tests__/owner-unlock-request.test.ts (2 tests) 36ms
+ ✓ __tests__/standalone-plan-chooser.test.ts (15 tests) 24ms
+ ✓ __tests__/admin-factory-metrics.test.ts (11 tests) 33ms
+ ✓ __tests__/rate-book-quick-edit.test.ts (24 tests) 24ms
+ ✓ __tests__/support-export-action.test.ts (2 tests) 23ms
+ ✓ __tests__/sprint4-record-management.test.ts (3 tests) 12ms
+ ✓ __tests__/admin-retained-review.test.ts (3 tests) 21ms
+ ✓ __tests__/base-release-blocker-remediation.test.ts (5 tests) 15ms
+ ✓ __tests__/machines-tour.test.ts (8 tests) 22ms
+ ✓ __tests__/tour-i18n-parity.test.ts (4 tests) 22ms
+ ✓ __tests__/lite-document-source.test.ts (9 tests) 21ms
+ ✓ __tests__/sprint3-estimator-simplicity.test.ts (4 tests) 19ms
+ ✓ __tests__/enter-key-navigation.test.ts (12 tests) 18ms
+ ✓ __tests__/width-field.test.ts (6 tests) 19ms
+ ✓ __tests__/base-fixed-salary.test.ts (9 tests) 19ms
+ ✓ __tests__/sprint7-ux-polish.test.ts (7 tests) 20ms
+ ✓ __tests__/landing-page.test.ts (5 tests) 19ms
+ ✓ __tests__/sprint3-profile-draft-recovery.test.ts (5 tests) 19ms
+ ✓ __tests__/guided-tour-fixes-and-demo-data.test.ts (11 tests) 18ms
+ ✓ __tests__/plan-aware-settings-permissions.test.ts (12 tests) 9ms
+ ✓ __tests__/free-transaction.test.ts (22 tests) 16ms
+ ✓ __tests__/sprint5-rate-book-ui.test.ts (6 tests) 18ms
+ ✓ __tests__/challan-draft-entry.test.ts (4 tests) 17ms
+ ✓ __tests__/tour-common-i18n.test.ts (3 tests) 16ms
+ ✓ __tests__/support-export-route.test.ts (5 tests) 17ms
+ ✓ __tests__/base-production-continuity.test.ts (5 tests) 18ms
+ ✓ __tests__/estimator-only-experience.test.ts (8 tests) 15ms
+ ✓ __tests__/sprint22-auth-boundary.test.ts (8 tests) 16ms
+ ✓ __tests__/rate-book-p1-features.test.ts (14 tests) 15ms
+ ✓ __tests__/pilot-no-go-remediation.test.ts (5 tests) 17ms
+ ✓ __tests__/estimator-core-tour.test.ts (7 tests) 14ms
+ ✓ __tests__/lite-winding-scope.test.ts (2 tests) 14ms
+ ✓ __tests__/date-only-format.test.ts (6 tests) 16ms
+ ✓ __tests__/auth-login-performance.test.ts (8 tests) 10ms
+ ✓ __tests__/management-navigation.test.ts (18 tests) 14ms
+ ✓ __tests__/rate-book-table-deltas.test.ts (9 tests) 19ms
+ ✓ __tests__/costing-export-boundary.test.ts (4 tests) 15ms
+ ✓ __tests__/lite-trust-journey.test.ts (10 tests) 15ms
+ ✓ __tests__/quality-stock.test.ts (5 tests) 19ms
+ ✓ __tests__/account-deletion-preflight.test.ts (7 tests) 15ms
+ ✓ __tests__/free-tier-policy.test.ts (8 tests) 20ms
+ ✓ __tests__/inventory-audit.test.ts (6 tests) 13ms
+ ✓ __tests__/tour-target-readiness.test.ts (7 tests) 13ms
+ ✓ __tests__/admin-overview.test.ts (4 tests) 14ms
+ ✓ __tests__/sprint4-billing-trust.test.ts (5 tests) 14ms
+ ✓ __tests__/lite-quality-recall.test.ts (12 tests) 15ms
+ ✓ __tests__/delivery-challans.test.ts (4 tests) 19ms
+ ✓ __tests__/disclosure-navigation.test.ts (15 tests) 14ms
+ ✓ __tests__/base-payroll-continuity.test.ts (6 tests) 13ms
+ ✓ __tests__/release-runtime-config.test.ts (9 tests) 12ms
+ ✓ __tests__/base-daily-sheet-navigation.test.ts (13 tests) 13ms
+ ✓ __tests__/warning-acknowledgement.test.ts (5 tests) 16ms
+ ✓ __tests__/performance-bundle-boundaries.test.ts (5 tests) 13ms
+ ✓ __tests__/prepared-document-share.test.ts (8 tests) 13ms
+ ✓ __tests__/free-first-use.test.ts (9 tests) 12ms
+ ✓ __tests__/free-costing-sections.test.ts (5 tests) 13ms
+ ✓ __tests__/sprint21-base-route-boundaries.test.ts (4 tests) 11ms
+ ✓ __tests__/free-billing-presentation.test.ts (5 tests) 14ms
+ ✓ __tests__/tutorial-target.test.ts (18 tests) 14ms
+ ✓ __tests__/sign-in-telemetry.test.ts (4 tests) 11ms
+ ✓ __tests__/sprint9-editor-reliability.test.ts (2 tests) 12ms
+ ✓ __tests__/tour-quota-and-data-safety.test.ts (4 tests) 12ms
+ ✓ __tests__/offline-recovery.test.ts (12 tests) 12ms
+ ✓ __tests__/base-onboarding-payroll-step.test.ts (11 tests) 10ms
+ ✓ __tests__/base-operator.test.ts (7 tests) 11ms
+ ✓ __tests__/p1-razorpay-idempotency.test.ts (13 tests) 9ms
+ ✓ __tests__/tutorial-viewport-lock.test.ts (5 tests) 11ms
+ ✓ __tests__/i18n-runtime.test.ts (7 tests) 11ms
+ ✓ __tests__/active-qualities-production-flow.test.ts (6 tests) 10ms
+ ✓ __tests__/tour-scroll.test.ts (5 tests) 12ms
+ ✓ __tests__/billing-live-readiness.test.ts (6 tests) 10ms
+ ✓ __tests__/base-production-correction-history.test.ts (4 tests) 7ms
+ ✓ __tests__/off-009-mutation-outcome.test.ts (3 tests) 11ms
+ ✓ __tests__/sprint-estimator-aesthetic.test.ts (5 tests) 11ms
+ ✓ __tests__/estimator-tour-phone-live-sheet.test.ts (4 tests) 10ms
+ ✓ __tests__/batch1-auth-waterfall-elimination.test.ts (17 tests) 10ms
+ ✓ __tests__/estimator-tour-tablet-column.test.ts (4 tests) 10ms
+ ✓ __tests__/base-p1-coverage.test.ts (3 tests) 11ms
+ ✓ __tests__/estimator-overhead-dialog.test.ts (4 tests) 10ms
+ ✓ __tests__/machine-assignment-optimistic.test.ts (8 tests) 9ms
+ ✓ __tests__/cost-estimate-tutorial-ordering.test.ts (7 tests) 10ms
+ ✓ __tests__/yarn-component-minimize-complete.test.ts (12 tests) 10ms
+ ✓ __tests__/machine-readiness.test.ts (6 tests) 8ms
+ ✓ __tests__/customer-contact-channels.test.ts (10 tests) 11ms
+ ✓ __tests__/terms-base-rollout-accuracy.test.ts (7 tests) 10ms
+ ✓ __tests__/factory-cost-wizard-account.test.ts (11 tests) 9ms
+ ✓ __tests__/bill-009-referral-year-credit.test.ts (5 tests) 8ms
+ ✓ __tests__/rate-book-popover-usage.test.ts (16 tests) 11ms
+ ✓ __tests__/stock-audit-adjustment-rollout.test.ts (3 tests) 10ms
+ ✓ __tests__/free-plan-guided-tour.test.ts (6 tests) 9ms
+ ✓ __tests__/sprint1-costing-save-trust.test.ts (4 tests) 18ms
+ ✓ __tests__/base-worker-deductions.test.ts (5 tests) 14ms
+ ✓ __tests__/base-plan-localization.test.ts (3 tests) 9ms
+ ✓ __tests__/current-plan-boundary.test.ts (3 tests) 10ms
+ ✓ __tests__/costing-save-trust.test.ts (3 tests) 9ms
+ ✓ __tests__/admin-support-send-attempt.test.ts (4 tests) 11ms
+ ✓ __tests__/tour-placement.test.ts (10 tests) 8ms
+ ✓ __tests__/base-pilot-blockers.test.ts (2 tests) 9ms
+ ✓ __tests__/stock-navigation.test.ts (13 tests) 9ms
+ ✓ __tests__/b10-india-calendar-boundaries.test.ts (2 tests) 10ms
+ ✓ __tests__/r0-stop-line-stabilization.test.ts (4 tests) 7ms
+ ✓ __tests__/production-mode.test.ts (6 tests) 9ms
+ ✓ __tests__/privacy-policy-accuracy.test.ts (8 tests) 9ms
+ ✓ __tests__/base-complete-query.test.ts (3 tests) 9ms
+ ✓ __tests__/free-leave-guard.test.ts (9 tests) 9ms
+ ✓ __tests__/base-privacy-request-workflow.test.ts (4 tests) 8ms
+ ✓ __tests__/tour-text.test.ts (5 tests) 8ms
+ ✓ __tests__/machine-assignment-groups.test.ts (6 tests) 8ms
+ ✓ __tests__/admin-privacy.test.ts (4 tests) 9ms
+ ✓ __tests__/gutter-dock.test.ts (5 tests) 8ms
+ ✓ __tests__/free-upgrade-handoff.test.ts (5 tests) 8ms
+ ✓ __tests__/free-costing-window.test.ts (3 tests) 8ms
+ ✓ __tests__/auth-reset-flow.test.ts (5 tests) 7ms
+ ✓ __tests__/lite-draft-identity-isolation.test.ts (1 test) 7ms
+ ✓ __tests__/free-default-signup.test.ts (3 tests) 8ms
+ ✓ __tests__/lite-analytics-privacy.test.ts (2 tests) 12ms
+ ✓ __tests__/estimator-left-rail.test.ts (3 tests) 14ms
+ ✓ __tests__/base-rate-book-production-readiness.test.ts (2 tests) 13ms
+ ✓ __tests__/account-deletion.test.ts (5 tests) 7ms
+ ✓ __tests__/free-plan-settings-billing.test.ts (4 tests) 7ms
+ ✓ __tests__/guided-tour-focus.test.ts (3 tests) 7ms
+ ✓ __tests__/lite-plan-copy-regression.test.ts (4 tests) 7ms
+ ✓ __tests__/worker-operational.test.ts (7 tests) 7ms
+ ✓ __tests__/base-security-incident-workflow.test.ts (5 tests) 7ms
+ ✓ __tests__/estimator-boundary-migrations.test.ts (8 tests) 9ms
+ ✓ __tests__/base-p0-remediation.test.ts (4 tests) 7ms
+ ✓ __tests__/estimator-autofill.test.ts (4 tests) 7ms
+ ✓ __tests__/cost-estimate-tutorial-modal.test.ts (3 tests) 8ms
+ ✓ __tests__/p0-authz-boundary.test.ts (5 tests) 7ms
+ ✓ __tests__/lite-localization-regression.test.ts (3 tests) 7ms
+ ✓ __tests__/route-milestones.test.ts (2 tests) 7ms
+ ✓ __tests__/summary-view-security-invoker.test.ts (7 tests) 7ms
+ ✓ __tests__/b10-rate-limit-retry.test.ts (3 tests) 7ms
+ ✓ __tests__/paid-plan-standardized-billing.test.ts (4 tests) 7ms
+ ✓ __tests__/tour-sample-ids.test.ts (12 tests) 6ms
+ ✓ __tests__/tour-no-autostart.test.ts (5 tests) 7ms
+ ✓ __tests__/yarn-review-margin-preferences.test.ts (4 tests) 6ms
+ ✓ __tests__/estimator-first-billing-rollout.test.ts (2 tests) 7ms
+ ✓ __tests__/b12-stock-source-integrity.test.ts (5 tests) 6ms
+ ✓ __tests__/lite-web-vitals.test.ts (5 tests) 6ms
+ ✓ __tests__/auth-012-organization-rls.test.ts (2 tests) 6ms
+ ✓ __tests__/p0-provisioning-audit-actor.test.ts (5 tests) 6ms
+ ✓ __tests__/toast-presentation.test.ts (4 tests) 7ms
+ ✓ __tests__/shift-log-safe-update-guard.test.ts (4 tests) 6ms
+ ✓ __tests__/pwa-refresh-safety.test.ts (2 tests) 6ms
+ ✓ __tests__/base-organization-metadata.test.ts (2 tests) 6ms
+ ✓ __tests__/machine-link-rpc-tenant-boundary.test.ts (4 tests) 6ms
+ ✓ __tests__/bill-010-referral-staged-rewards.test.ts (3 tests) 6ms
+ ✓ __tests__/logout-route.test.ts (2 tests) 6ms
+ ✓ __tests__/base-costing-export-status-boundary.test.ts (1 test) 6ms
+ ✓ __tests__/security-advisor-hardening.test.ts (4 tests) 10ms
+ ✓ __tests__/bill-008-referral-boundary.test.ts (3 tests) 6ms
+ ✓ __tests__/phase1-scope.test.ts (4 tests) 6ms
+ ✓ __tests__/pwa-install-nudge.test.ts (4 tests) 6ms
+ ✓ __tests__/costing-workspace-foundation.test.ts (2 tests) 6ms
+ ✓ __tests__/prod-002-single-shift-activation.test.ts (3 tests) 6ms
+ ✓ __tests__/lite-accessibility-interaction.test.ts (3 tests) 6ms
+ ✓ __tests__/settings-responsive-layout.test.ts (1 test) 5ms
+ ✓ __tests__/settings-payroll-query-gating.test.ts (2 tests) 5ms
+ ✓ __tests__/saved-costings-archive-rail.test.ts (1 test) 5ms
+ ✓ __tests__/machine-operator-payroll.test.ts (2 tests) 5ms
+ ✓ __tests__/base-settings-cold-load.test.ts (2 tests) 5ms
+ ✓ __tests__/auth-015-session-revocation.test.ts (2 tests) 6ms
+ ✓ __tests__/saved-costing-plan-panels.test.ts (1 test) 5ms
+ ✓ __tests__/base-onboarding-route-guard.test.ts (1 test) 7ms
+ ✓ __tests__/client-request-id.test.ts (2 tests) 10ms
+ ✓ __tests__/p1-auth-login-route.test.ts (1 test) 10ms
+ ✓ __tests__/tour-active-guard.test.ts (1 test) 5ms
+ ✓ __tests__/saved-costing-archive-state.test.ts (2 tests) 5ms
+
+ Test Files  325 passed (325)
+      Tests  2988 passed | 1 skipped (2989)
+   Start at  02:26:47
+   Duration  55.50s (transform 7.91s, setup 0ms, import 111.47s, tests 21.08s, environment 60ms)
+
+
+> textile-saas@0.1.0 build
+> node scripts/reset-build-type-cache.mjs && next build --webpack
+
+[build] Reset .next/cache/.tsbuildinfo; full TypeScript validation remains enabled.
+▲ Next.js 16.2.12 (webpack)
+- Experiments (use with caution):
+  · clientTraceMetadata
+  · optimizePackageImports
+  · serverActions
+
+  Creating an optimized production build ...
+ ✓ (pwa) Compiling for server...
+ ✓ (pwa) Compiling for server...
+ ✓ (pwa) Compiling for client (static)...
+ ○ (pwa) Service worker: /private/var/folders/fg/zfs5p7f92n923glf5hxny7v40000gn/T/weavly-lite-final-verification-v5xwdtd9/public/sw.js
+ ○ (pwa)   URL: /sw.js
+ ○ (pwa)   Scope: /
+ ✓ (pwa) Found a custom worker implementation at /private/var/folders/fg/zfs5p7f92n923glf5hxny7v40000gn/T/weavly-lite-final-verification-v5xwdtd9/worker/index.ts.
+ ✓ (pwa) Building the custom worker to /private/var/folders/fg/zfs5p7f92n923glf5hxny7v40000gn/T/weavly-lite-final-verification-v5xwdtd9/public/worker-550bdb0cbe256269.js...
+ ○ (pwa) This app will fallback to these precached routes when fetching from the cache and the network fails:
+ ○ (pwa)   Documents (pages): /_offline
+ ○ (pwa) Custom runtimeCaching array found, using it instead of the default one.
+✓ Compiled successfully in 92s
+  Running next.config.js provided runAfterProductionCompile ...
+[build] Archived uploaded server source maps: {
+  archived: 240,
+  traces: [
+    {
+      trace: 'server/app/(admin-auth)/admin/login/page.js.nft.json',
+      removed: 26
+    },
+    {
+      trace: 'server/app/(admin-auth)/admin/verify/page.js.nft.json',
+      removed: 28
+    },
+    {
+      trace: 'server/app/(admin-console)/admin/audit/page.js.nft.json',
+      removed: 26
+    },
+    {
+      trace: 'server/app/(admin-console)/admin/factories/[orgId]/page.js.nft.json',
+      removed: 28
+    },
+    {
+      trace: 'server/app/(admin-console)/admin/factories/page.js.nft.json',
+      removed: 32
+    },
+    {
+      trace: 'server/app/(admin-console)/admin/formal/[kind]/[id]/page.js.nft.json',
+      removed: 29
+    },
+    {
+      trace: 'server/app/(admin-console)/admin/formal/new/page.js.nft.json',
+      removed: 29
+    },
+    {
+      trace: 'server/app/(admin-console)/admin/formal/page.js.nft.json',
+      removed: 29
+    },
+    {
+      trace: 'server/app/(admin-console)/admin/formal/retention/page.js.nft.json',
+      removed: 28
+    },
+    {
+      trace: 'server/app/(admin-console)/admin/formal/review/[orgId]/page.js.nft.json',
+      removed: 27
+    },
+    {
+      trace: 'server/app/(admin-console)/admin/legacy/[kind]/[id]/page.js.nft.json',
+      removed: 28
+    },
+    {
+      trace: 'server/app/(admin-console)/admin/legacy/page.js.nft.json',
+      removed: 28
+    },
+    {
+      trace: 'server/app/(admin-console)/admin/page.js.nft.json',
+      removed: 28
+    },
+    {
+      trace: 'server/app/(admin-console)/admin/payments/page.js.nft.json',
+      removed: 26
+    },
+    {
+      trace: 'server/app/(admin-console)/admin/support/[id]/page.js.nft.json',
+      removed: 32
+    },
+    {
+      trace: 'server/app/(admin-console)/admin/support/page.js.nft.json',
+      removed: 32
+    },
+    {
+      trace: 'server/app/(admin-console)/admin/system/page.js.nft.json',
+      removed: 25
+    },
+    {
+      trace: 'server/app/(auth)/forgot-password/page.js.nft.json',
+      removed: 23
+    },
+    { trace: 'server/app/(auth)/login/page.js.nft.json', removed: 47 },
+    {
+      trace: 'server/app/(auth)/onboarding/base/page.js.nft.json',
+      removed: 26
+    },
+    {
+      trace: 'server/app/(auth)/onboarding/page.js.nft.json',
+      removed: 20
+    },
+    {
+      trace: 'server/app/(auth)/onboarding/plans/page.js.nft.json',
+      removed: 15
+    },
+    {
+      trace: 'server/app/(auth)/reset-password/page.js.nft.json',
+      removed: 21
+    },
+    { trace: 'server/app/(auth)/signup/page.js.nft.json', removed: 27 },
+    { trace: 'server/app/(auth)/verify/page.js.nft.json', removed: 18 },
+    {
+      trace: 'server/app/(dashboard)/owner/assignments/page.js.nft.json',
+      removed: 44
+    },
+    {
+      trace: 'server/app/(dashboard)/owner/billing/page.js.nft.json',
+      removed: 36
+    },
+    {
+      trace: 'server/app/(dashboard)/owner/data-export/page.js.nft.json',
+      removed: 33
+    },
+    {
+      trace: 'server/app/(dashboard)/owner/dispatches/[id]/print/page.js.nft.json',
+      removed: 36
+    },
+    {
+      trace: 'server/app/(dashboard)/owner/dispatches/page.js.nft.json',
+      removed: 40
+    },
+    {
+      trace: 'server/app/(dashboard)/owner/estimator/page.js.nft.json',
+      removed: 54
+    },
+    {
+      trace: 'server/app/(dashboard)/owner/machines/page.js.nft.json',
+      removed: 48
+    },
+    {
+      trace: 'server/app/(dashboard)/owner/operations/page.js.nft.json',
+      removed: 35
+    },
+    {
+      trace: 'server/app/(dashboard)/owner/payroll/page.js.nft.json',
+      removed: 59
+    },
+    {
+      trace: 'server/app/(dashboard)/owner/production/daily-sheet/page.js.nft.json',
+      removed: 59
+    },
+    {
+      trace: 'server/app/(dashboard)/owner/production/page.js.nft.json',
+      removed: 59
+    },
+    {
+      trace: 'server/app/(dashboard)/owner/quotes/page.js.nft.json',
+      removed: 48
+    },
+    {
+      trace: 'server/app/(dashboard)/owner/rates/page.js.nft.json',
+      removed: 39
+    },
+    {
+      trace: 'server/app/(dashboard)/owner/settings/audit/page.js.nft.json',
+      removed: 40
+    },
+    {
+      trace: 'server/app/(dashboard)/owner/settings/page.js.nft.json',
+      removed: 50
+    },
+    {
+      trace: 'server/app/(dashboard)/owner/setup/page.js.nft.json',
+      removed: 35
+    },
+    {
+      trace: 'server/app/(dashboard)/owner/stock/audit/page.js.nft.json',
+      removed: 40
+    },
+    {
+      trace: 'server/app/(dashboard)/owner/stock/page.js.nft.json',
+      removed: 43
+    },
+    {
+      trace: 'server/app/(dashboard)/owner/stock/yarn/page.js.nft.json',
+      removed: 44
+    },
+    {
+      trace: 'server/app/(dashboard)/owner/workers/page.js.nft.json',
+      removed: 48
+    },
+    {
+      trace: 'server/app/(plan-selection)/plans/page.js.nft.json',
+      removed: 28
+    },
+    {
+      trace: 'server/app/(public)/track/[token]/page.js.nft.json',
+      removed: 14
+    },
+    {
+      trace: 'server/app/(support)/support/[id]/page.js.nft.json',
+      removed: 32
+    },
+    {
+      trace: 'server/app/(support)/support/page.js.nft.json',
+      removed: 32
+    },
+    { trace: 'server/app/_global-error/page.js.nft.json', removed: 4 },
+    { trace: 'server/app/_not-found/page.js.nft.json', removed: 13 },
+    {
+      trace: 'server/app/api/admin/audit/route.js.nft.json',
+      removed: 13
+    },
+    {
+      trace: 'server/app/api/admin/auth/session/route.js.nft.json',
+      removed: 11
+    },
+    {
+      trace: 'server/app/api/admin/factories/[orgId]/route.js.nft.json',
+      removed: 13
+    },
+    {
+      trace: 'server/app/api/admin/factories/route.js.nft.json',
+      removed: 13
+    },
+    {
+      trace: 'server/app/api/admin/formal/[kind]/[id]/route.js.nft.json',
+      removed: 13
+    },
+    {
+      trace: 'server/app/api/admin/formal/retained-records/[orgId]/route.js.nft.json',
+      removed: 13
+    },
+    {
+      trace: 'server/app/api/admin/formal/retention/route.js.nft.json',
+      removed: 14
+    },
+    {
+      trace: 'server/app/api/admin/formal/route.js.nft.json',
+      removed: 13
+    },
+    {
+      trace: 'server/app/api/admin/legacy/[kind]/[id]/route.js.nft.json',
+      removed: 13
+    },
+    {
+      trace: 'server/app/api/admin/legacy/dpas/[id]/bindings/route.js.nft.json',
+      removed: 13
+    },
+    {
+      trace: 'server/app/api/admin/legacy/route.js.nft.json',
+      removed: 13
+    },
+    {
+      trace: 'server/app/api/admin/overview/route.js.nft.json',
+      removed: 15
+    },
+    {
+      trace: 'server/app/api/admin/payments/route.js.nft.json',
+      removed: 13
+    },
+    {
+      trace: 'server/app/api/admin/session/route.js.nft.json',
+      removed: 11
+    },
+    {
+      trace: 'server/app/api/admin/support/[id]/messages/route.js.nft.json',
+      removed: 12
+    },
+    {
+      trace: 'server/app/api/admin/support/[id]/notes/route.js.nft.json',
+      removed: 12
+    },
+    {
+      trace: 'server/app/api/admin/support/[id]/route.js.nft.json',
+      removed: 12
+    },
+    {
+      trace: 'server/app/api/admin/support/route.js.nft.json',
+      removed: 12
+    },
+    {
+      trace: 'server/app/api/admin/system/route.js.nft.json',
+      removed: 12
+    },
+    {
+      trace: 'server/app/api/analytics/plan-events/route.js.nft.json',
+      removed: 11
+    },
+    {
+      trace: 'server/app/api/analytics/web-vitals/route.js.nft.json',
+      removed: 12
+    },
+    {
+      trace: 'server/app/api/billing/checkout-script/route.js.nft.json',
+      removed: 5
+    },
+    {
+      trace: 'server/app/api/billing/checkout-state/route.js.nft.json',
+      removed: 8
+    },
+    {
+      trace: 'server/app/api/billing/create-order/route.js.nft.json',
+      removed: 9
+    },
+    {
+      trace: 'server/app/api/billing/invoice/[invoiceId]/route.js.nft.json',
+      removed: 9
+    },
+    {
+      trace: 'server/app/api/billing/receipt/[paymentId]/route.js.nft.json',
+      removed: 9
+    },
+    {
+      trace: 'server/app/api/billing/redeem-referral-year/route.js.nft.json',
+      removed: 11
+    },
+    {
+      trace: 'server/app/api/billing/status/route.js.nft.json',
+      removed: 10
+    },
+    {
+      trace: 'server/app/api/billing/verify-payment/route.js.nft.json',
+      removed: 10
+    },
+    {
+      trace: 'server/app/api/free/account/route.js.nft.json',
+      removed: 14
+    },
+    {
+      trace: 'server/app/api/free/calculate/route.js.nft.json',
+      removed: 14
+    },
+    {
+      trace: 'server/app/api/free/costings/route.js.nft.json',
+      removed: 14
+    },
+    {
+      trace: 'server/app/api/free/events/route.js.nft.json',
+      removed: 14
+    },
+    {
+      trace: 'server/app/api/free/status/route.js.nft.json',
+      removed: 14
+    },
+    {
+      trace: 'server/app/api/referrals/apply/route.js.nft.json',
+      removed: 12
+    },
+    {
+      trace: 'server/app/api/referrals/generate/route.js.nft.json',
+      removed: 12
+    },
+    {
+      trace: 'server/app/api/subscriptions/auto-renew/route.js.nft.json',
+      removed: 9
+    },
+    {
+      trace: 'server/app/api/subscriptions/create/route.js.nft.json',
+      removed: 8
+    },
+    {
+      trace: 'server/app/api/support/[id]/messages/route.js.nft.json',
+      removed: 12
+    },
+    {
+      trace: 'server/app/api/support/[id]/route.js.nft.json',
+      removed: 12
+    },
+    {
+      trace: 'server/app/api/support/export/route.js.nft.json',
+      removed: 12
+    },
+    { trace: 'server/app/api/support/route.js.nft.json', removed: 12 },
+    {
+      trace: 'server/app/api/support/session/route.js.nft.json',
+      removed: 12
+    },
+    {
+      trace: 'server/app/api/telemetry/logout/route.js.nft.json',
+      removed: 6
+    },
+    {
+      trace: 'server/app/api/telemetry/sign-in/route.js.nft.json',
+      removed: 6
+    },
+    {
+      trace: 'server/app/api/webhooks/razorpay/route.js.nft.json',
+      removed: 9
+    },
+    {
+      trace: 'server/app/api/workspace-hint/route.js.nft.json',
+      removed: 11
+    },
+    {
+      trace: 'server/app/auth/auth-code-error/page.js.nft.json',
+      removed: 14
+    },
+    {
+      trace: 'server/app/auth/callback/route.js.nft.json',
+      removed: 11
+    },
+    ... 22 more items
+  ]
+}
+✓ Completed runAfterProductionCompile in 281ms
+  Running TypeScript ...
+  Finished TypeScript in 40s ...
+  Collecting page data using 15 workers ...
+  Generating static pages using 15 workers (0/52) ...
+  Generating static pages using 15 workers (13/52)
+  Generating static pages using 15 workers (26/52)
+  Generating static pages using 15 workers (39/52)
+✓ Generating static pages using 15 workers (52/52) in 1076ms
+  Finalizing page optimization ...
+  Collecting build traces ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /admin
+├ ƒ /admin/audit
+├ ƒ /admin/factories
+├ ƒ /admin/factories/[orgId]
+├ ƒ /admin/formal
+├ ƒ /admin/formal/[kind]/[id]
+├ ƒ /admin/formal/new
+├ ƒ /admin/formal/retention
+├ ƒ /admin/formal/review/[orgId]
+├ ƒ /admin/legacy
+├ ƒ /admin/legacy/[kind]/[id]
+├ ƒ /admin/login
+├ ƒ /admin/payments
+├ ƒ /admin/support
+├ ƒ /admin/support/[id]
+├ ƒ /admin/system
+├ ƒ /admin/verify
+├ ƒ /api/admin/audit
+├ ƒ /api/admin/auth/session
+├ ƒ /api/admin/factories
+├ ƒ /api/admin/factories/[orgId]
+├ ƒ /api/admin/formal
+├ ƒ /api/admin/formal/[kind]/[id]
+├ ƒ /api/admin/formal/retained-records/[orgId]
+├ ƒ /api/admin/formal/retention
+├ ƒ /api/admin/legacy
+├ ƒ /api/admin/legacy/[kind]/[id]
+├ ƒ /api/admin/legacy/dpas/[id]/bindings
+├ ƒ /api/admin/overview
+├ ƒ /api/admin/payments
+├ ƒ /api/admin/session
+├ ƒ /api/admin/support
+├ ƒ /api/admin/support/[id]
+├ ƒ /api/admin/support/[id]/messages
+├ ƒ /api/admin/support/[id]/notes
+├ ƒ /api/admin/system
+├ ƒ /api/analytics/plan-events
+├ ƒ /api/analytics/web-vitals
+├ ƒ /api/billing/checkout-script
+├ ƒ /api/billing/checkout-state
+├ ƒ /api/billing/create-order
+├ ƒ /api/billing/invoice/[invoiceId]
+├ ƒ /api/billing/receipt/[paymentId]
+├ ƒ /api/billing/redeem-referral-year
+├ ƒ /api/billing/status
+├ ƒ /api/billing/verify-payment
+├ ƒ /api/free/account
+├ ƒ /api/free/calculate
+├ ƒ /api/free/costings
+├ ƒ /api/free/events
+├ ƒ /api/free/status
+├ ƒ /api/referrals/apply
+├ ƒ /api/referrals/generate
+├ ƒ /api/subscriptions/auto-renew
+├ ƒ /api/subscriptions/create
+├ ƒ /api/support
+├ ƒ /api/support/[id]
+├ ƒ /api/support/[id]/messages
+├ ƒ /api/support/export
+├ ƒ /api/support/session
+├ ƒ /api/telemetry/logout
+├ ƒ /api/telemetry/sign-in
+├ ƒ /api/webhooks/razorpay
+├ ƒ /api/workspace-hint
+├ ○ /auth/auth-code-error
+├ ƒ /auth/callback
+├ ○ /auth/confirm
+├ ƒ /auth/signout
+├ ○ /feature-archived
+├ ƒ /forgot-password
+├ ƒ /free
+├ ƒ /free/account
+├ ƒ /free/billing
+├ ƒ /free/costings
+├ ƒ /free/settings
+├ ○ /install
+├ ƒ /locked
+├ ƒ /login
+├ ○ /manifest.webmanifest
+├ ○ /offline
+├ ƒ /onboarding
+├ ƒ /onboarding/base
+├ ○ /onboarding/plans
+├ ƒ /owner/assignments
+├ ƒ /owner/billing
+├ ƒ /owner/data-export
+├ ƒ /owner/dispatches
+├ ƒ /owner/dispatches/[id]/print
+├ ƒ /owner/estimator
+├ ƒ /owner/machines
+├ ƒ /owner/operations
+├ ƒ /owner/payroll
+├ ƒ /owner/production
+├ ƒ /owner/production/daily-sheet
+├ ƒ /owner/quotes
+├ ƒ /owner/rates
+├ ƒ /owner/settings
+├ ƒ /owner/settings/audit
+├ ○ /owner/settings/dpa
+├ ƒ /owner/setup
+├ ƒ /owner/stock
+├ ƒ /owner/stock/audit
+├ ƒ /owner/stock/yarn
+├ ƒ /owner/workers
+├ ƒ /plans
+├ ○ /privacy
+├ ○ /privacy-request
+├ ○ /refund-policy
+├ ƒ /reset-password
+├ ○ /security-incident
+├ ○ /signup
+├ ƒ /support
+├ ƒ /support/[id]
+├ ○ /terms
+├ ƒ /track/[token]
+└ ○ /verify
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand

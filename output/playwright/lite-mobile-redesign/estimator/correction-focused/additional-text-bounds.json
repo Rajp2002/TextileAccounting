@@ -1,0 +1,104 @@
+[
+  {
+    "language": "en",
+    "percent": 200,
+    "state": "detailed-manual-paise",
+    "issues": []
+  },
+  {
+    "language": "en",
+    "percent": 200,
+    "state": "result",
+    "issues": []
+  },
+  {
+    "language": "en",
+    "percent": 200,
+    "state": "quality-picker",
+    "issues": []
+  },
+  {
+    "language": "en",
+    "percent": 200,
+    "state": "quality-rates",
+    "issues": []
+  },
+  {
+    "language": "hi",
+    "percent": 200,
+    "state": "detailed-manual-paise",
+    "issues": [
+      {
+        "kind": "unit-reservation",
+        "field": "manualKgPer100m",
+        "unit": "किग्रा",
+        "reserved": 37.85,
+        "needed": 52.9375
+      },
+      {
+        "kind": "unit-reservation",
+        "field": "manualKgPer100m",
+        "unit": "किग्रा",
+        "reserved": 37.85,
+        "needed": 52.9375
+      }
+    ]
+  },
+  {
+    "language": "hi",
+    "percent": 200,
+    "state": "result",
+    "issues": []
+  },
+  {
+    "language": "hi",
+    "percent": 200,
+    "state": "quality-picker",
+    "issues": []
+  },
+  {
+    "language": "hi",
+    "percent": 200,
+    "state": "quality-rates",
+    "issues": []
+  },
+  {
+    "language": "gu",
+    "percent": 200,
+    "state": "detailed-manual-paise",
+    "issues": [
+      {
+        "kind": "unit-reservation",
+        "field": "manualKgPer100m",
+        "unit": "કિલો",
+        "reserved": 37.85,
+        "needed": 51.265625
+      },
+      {
+        "kind": "unit-reservation",
+        "field": "manualKgPer100m",
+        "unit": "કિલો",
+        "reserved": 37.85,
+        "needed": 51.265625
+      }
+    ]
+  },
+  {
+    "language": "gu",
+    "percent": 200,
+    "state": "result",
+    "issues": []
+  },
+  {
+    "language": "gu",
+    "percent": 200,
+    "state": "quality-picker",
+    "issues": []
+  },
+  {
+    "language": "gu",
+    "percent": 200,
+    "state": "quality-rates",
+    "issues": []
+  }
+]

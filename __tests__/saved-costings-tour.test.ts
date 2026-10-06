@@ -125,7 +125,10 @@ describe('Saved Costings reference tour', () => {
     expect(freePage).toContain('free userId={userId} orgId={orgId} userMetadata={userMetadata}')
     expect(read('app/free/costings/page.tsx')).toContain('userMetadata={{ tour_preferences: user.user_metadata?.tour_preferences }}')
     expect(read('app/free/costings/page.tsx')).toContain('await freeContext({ allowInactive: true })')
-    expect(read('app/(dashboard)/owner/quotes/page.tsx')).toContain('previousFreeGrant && <SavedFreeCostings embedded />')
+    const quotesPage = read('app/(dashboard)/owner/quotes/page.tsx')
+    expect(quotesPage).toContain("previousFreeGrant && (planAccess.effectiveTier === 'lite'")
+    expect(quotesPage).toContain('<LitePriorFreeHistory><SavedFreeCostings embedded idPrefix="lite-prior-" /></LitePriorFreeHistory>')
+    expect(quotesPage).toContain(': <SavedFreeCostings embedded />')
   })
   it('loads runtime and copy only after launch and never completes the core via Compare', () => {
     expect(tutorial).toContain("dynamic(() => import('./SavedCostingsTourRuntime'), { ssr: false })")

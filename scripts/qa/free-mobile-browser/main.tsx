@@ -7,7 +7,7 @@ import SavedFreeCostings from '@/app/free/costings/SavedFreeCostings'
 import FreeClient from '@/app/free/FreeClient'
 import { MobileViewport } from '@/components/mobile-viewport'
 import { MobileInputNavigation } from '@/components/mobile-input-navigation'
-import { Toaster } from 'sonner'
+import { Toaster } from '@/components/ui/sonner'
 import '@/app/globals.css'
 import '@/app/mobile.css'
 

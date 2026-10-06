@@ -1,0 +1,15 @@
+{
+  "passed": 47,
+  "failed": 0,
+  "files": 4,
+  "lint": "passed, zero warnings",
+  "diffCheck": "passed",
+  "appEdits": false,
+  "command": "node scripts/performance/isolated-command.mjs npx vitest run __tests__/desktop-dimensions-responsive.test.ts __tests__/guided-tour-left-rails.test.ts __tests__/rate-review-rail.test.ts __tests__/rate-book-tutorial.test.ts --exclude '.claude/**' --exclude '.codex/**' --exclude 'scratch/**' --exclude 'output/**'",
+  "sha256": {
+    "__tests__/desktop-dimensions-responsive.test.ts": "0abd5305a2e8c5b8b865d74cb06790af705bc8c2c448c36ab82803cf0f00a544",
+    "__tests__/guided-tour-left-rails.test.ts": "3d10ead787ac4bf5915da45aa9ee82e096e6c45d72f02ab3fac37d60382e1393",
+    "__tests__/rate-review-rail.test.ts": "924d71f45af853a41d8888a8d4e18e5c5386767545564f2b902e8b3e075bb2a4",
+    "__tests__/rate-book-tutorial.test.ts": "d4164bc8fc10b0f4b82a88be023152afd6182bd7a94ce49c57cf6a7da7b37315"
+  }
+}

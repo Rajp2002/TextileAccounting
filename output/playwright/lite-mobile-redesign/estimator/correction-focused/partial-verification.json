@@ -1,0 +1,42 @@
+{
+  "evidenceType": "Automated Chromium emulation; actual Lite estimator/navigation/paid autosave over synthetic localhost actions. No installed PWA or remote data/provider verification.",
+  "base": "http://127.0.0.1:4197",
+  "stage": "correction-focused",
+  "applicationSourceCommit": "working-tree-lite-corrections",
+  "createdAt": "2026-10-05T20:40:20.041Z",
+  "externalRequestsBlocked": [],
+  "results": [
+    {
+      "name": "baseline-and-regression-captures",
+      "status": "failed",
+      "error": "page.goto: Timeout 8000ms exceeded.\nCall log:\n  - navigating to \"http://127.0.0.1:4197/owner/estimator\", waiting until \"load\"\n",
+      "pageErrors": []
+    },
+    {
+      "name": "saved-export-source-and-unsaved-values",
+      "status": "passed"
+    },
+    {
+      "name": "detailed-modes-manual-zero-and-units",
+      "status": "passed"
+    },
+    {
+      "name": "strong-text-additional-panels-and-touch",
+      "status": "failed",
+      "error": "Detailed/result/picker/rate clipping: see additional-text-bounds.json\n\n2 !== 0\n",
+      "pageErrors": []
+    },
+    {
+      "name": "strong-text-paid-dialogs",
+      "status": "failed",
+      "error": "Paid dialog clipping: see dialog-text-bounds.json\n\n3 !== 0\n",
+      "pageErrors": []
+    },
+    {
+      "name": "immutable-version-source-and-no-change-save",
+      "status": "failed",
+      "error": "Expected values to be strictly equal:\n\nundefined !== 1\n",
+      "pageErrors": []
+    }
+  ]
+}

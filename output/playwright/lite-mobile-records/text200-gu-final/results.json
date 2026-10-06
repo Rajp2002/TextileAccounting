@@ -1,0 +1,113 @@
+{
+  "results": [
+    {
+      "scene": "quotes",
+      "language": "gu",
+      "scaled": 244,
+      "touch": true,
+      "documentWidth": 320,
+      "textIssues": [],
+      "targetIssues": [],
+      "inputIssues": [],
+      "adornmentIssues": [],
+      "status": "passed"
+    },
+    {
+      "scene": "quotes-details",
+      "language": "gu",
+      "scaled": 398,
+      "touch": true,
+      "documentWidth": 320,
+      "textIssues": [],
+      "targetIssues": [],
+      "inputIssues": [],
+      "adornmentIssues": [],
+      "status": "passed"
+    },
+    {
+      "scene": "quotes-compare",
+      "language": "gu",
+      "scaled": 621,
+      "touch": true,
+      "documentWidth": 320,
+      "textIssues": [],
+      "targetIssues": [],
+      "inputIssues": [],
+      "adornmentIssues": [],
+      "status": "passed"
+    },
+    {
+      "scene": "quotes-export",
+      "language": "gu",
+      "scaled": 323,
+      "touch": true,
+      "documentWidth": 320,
+      "textIssues": [],
+      "targetIssues": [],
+      "inputIssues": [],
+      "adornmentIssues": [],
+      "status": "passed"
+    },
+    {
+      "scene": "quotes-prior",
+      "language": "gu",
+      "scaled": 326,
+      "touch": true,
+      "documentWidth": 320,
+      "textIssues": [],
+      "targetIssues": [],
+      "inputIssues": [],
+      "adornmentIssues": [],
+      "status": "passed"
+    },
+    {
+      "scene": "rates",
+      "language": "gu",
+      "scaled": 421,
+      "touch": true,
+      "documentWidth": 320,
+      "textIssues": [],
+      "targetIssues": [],
+      "inputIssues": [],
+      "adornmentIssues": [],
+      "status": "passed"
+    },
+    {
+      "scene": "rates-edit",
+      "language": "gu",
+      "scaled": 460,
+      "touch": true,
+      "documentWidth": 320,
+      "textIssues": [],
+      "targetIssues": [],
+      "inputIssues": [],
+      "adornmentIssues": [],
+      "status": "passed"
+    },
+    {
+      "scene": "rates-due",
+      "language": "gu",
+      "scaled": 500,
+      "touch": true,
+      "documentWidth": 320,
+      "textIssues": [],
+      "targetIssues": [],
+      "inputIssues": [],
+      "adornmentIssues": [],
+      "status": "passed"
+    },
+    {
+      "scene": "rates-add",
+      "language": "gu",
+      "scaled": 483,
+      "touch": true,
+      "documentWidth": 320,
+      "textIssues": [],
+      "targetIssues": [],
+      "inputIssues": [],
+      "adornmentIssues": [],
+      "status": "passed"
+    }
+  ],
+  "failed": 0
+}

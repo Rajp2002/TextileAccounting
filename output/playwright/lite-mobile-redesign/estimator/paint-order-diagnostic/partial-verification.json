@@ -1,0 +1,16 @@
+{
+  "evidenceType": "Automated Chromium emulation; actual Lite estimator/navigation/paid autosave over synthetic localhost actions. No installed PWA or remote data/provider verification.",
+  "base": "http://127.0.0.1:4197",
+  "stage": "paint-order-diagnostic",
+  "applicationSourceCommit": "edc8571e05522588e680620add984d755aaa5fda",
+  "createdAt": "2026-10-05T20:51:29.792Z",
+  "externalRequestsBlocked": [],
+  "results": [
+    {
+      "name": "strong-text-paid-dialogs",
+      "status": "failed",
+      "error": "warning notice paint order\n\n'dialog' !== 'toast'\n",
+      "pageErrors": []
+    }
+  ]
+}

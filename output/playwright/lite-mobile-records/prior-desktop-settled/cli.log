@@ -1,0 +1,6 @@
+### Result
+[]
+### Ran Playwright code
+```js
+await (async(page)=>{const c=await page.context().browser().newContext({viewport:{width:1440,height:900}});const p=await c.newPage();try{await p.goto('http://127.0.0.1:4195/owner/quotes?prior=1');await p.locator('h1').last().waitFor();await p.waitForTimeout(2000);const styles=await p.locator('[data-lite-prior-history]').evaluate(el=>{const all=[el,...el.querySelectorAll('*')];return all.filter(el=>{const s=getComputedStyle(el);return s.opacity!=='1'||s.backgroundColor.includes('0.8')||s.filter!=='none'}).slice(0,25).map(el=>({tag:el.tagName,class:el.className,style:el.getAttribute('style'),opacity:getComputedStyle(el).opacity,filter:getComputedStyle(el).filter}))});await p.screenshot({path:'/Users/rajpatel/Projects/textile Saas/output/playwright/lite-mobile-records/prior-desktop-settled/desktop-prior-settled.png',fullPage:true});return styles}finally{await c.close()}})(page);
+```

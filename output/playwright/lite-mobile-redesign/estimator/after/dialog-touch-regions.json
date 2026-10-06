@@ -1,0 +1,77 @@
+[
+  {
+    "language": "en",
+    "state": "version",
+    "small": []
+  },
+  {
+    "language": "en",
+    "state": "save-quality",
+    "small": []
+  },
+  {
+    "language": "en",
+    "state": "new-quality",
+    "small": []
+  },
+  {
+    "language": "en",
+    "state": "rename-quality",
+    "small": []
+  },
+  {
+    "language": "en",
+    "state": "discard-draft",
+    "small": []
+  },
+  {
+    "language": "hi",
+    "state": "version",
+    "small": []
+  },
+  {
+    "language": "hi",
+    "state": "save-quality",
+    "small": []
+  },
+  {
+    "language": "hi",
+    "state": "new-quality",
+    "small": []
+  },
+  {
+    "language": "hi",
+    "state": "rename-quality",
+    "small": []
+  },
+  {
+    "language": "hi",
+    "state": "discard-draft",
+    "small": []
+  },
+  {
+    "language": "gu",
+    "state": "version",
+    "small": []
+  },
+  {
+    "language": "gu",
+    "state": "save-quality",
+    "small": []
+  },
+  {
+    "language": "gu",
+    "state": "new-quality",
+    "small": []
+  },
+  {
+    "language": "gu",
+    "state": "rename-quality",
+    "small": []
+  },
+  {
+    "language": "gu",
+    "state": "discard-draft",
+    "small": []
+  }
+]

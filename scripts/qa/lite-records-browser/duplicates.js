@@ -1,0 +1,19 @@
+/* eslint-disable @typescript-eslint/no-unused-expressions -- Playwright CLI evaluates this callback expression. */
+async (page) => {
+  const context=await page.context().browser().newContext({viewport:{width:320,height:568},hasTouch:true,isMobile:true});
+  const p=await context.newPage(); p.setDefaultTimeout(5000); const results=[];
+  try {
+    await p.goto('http://127.0.0.1:4195/owner/rates'); await p.locator('h1').last().waitFor();
+    await p.getByRole('button',{name:'Edit rate',exact:true}).first().click();
+    await p.locator('input[id^="quick-rate-"]').fill('199');
+    await p.evaluate(()=>{window.__liteRecords.mode='reject';window.__liteRecords.delay=400});
+    await p.getByRole('button',{name:'Save Rate',exact:true}).evaluate(el=>{el.click();el.click()}); await p.waitForTimeout(700);
+    results.push({name:'same-task rate save',calls:await p.evaluate(()=>window.__liteRecords.calls.filter(call=>call.name==='rate-save').length)});
+    await p.goto('http://127.0.0.1:4195/owner/quotes'); await p.locator('h1').last().waitFor();
+    await p.getByRole('button',{name:/^Premium Airjet Twill/}).click();
+    await p.evaluate(()=>{window.__liteRecords.mode='reject';window.__liteRecords.delay=400});
+    await p.getByRole('button',{name:/^Add Premium Airjet Twill.*to favourites$/}).evaluate(el=>{el.click();el.click()}); await p.waitForTimeout(700);
+    results.push({name:'same-task favourite update',calls:await p.evaluate(()=>window.__liteRecords.calls.filter(call=>call.name==='library').length)});
+    return {results,failed:results.filter(row=>row.calls!==1).length};
+  } finally {await context.close()}
+}

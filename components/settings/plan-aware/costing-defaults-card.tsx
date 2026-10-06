@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useId } from 'react'
+import React, { useState, useId, useRef } from 'react'
 import { Calculator, CheckCircle2, Loader2, AlertCircle } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -25,12 +25,14 @@ interface CostingDefaultsCardProps {
     initialDefaults: CostingDefaultsData
     onDefaultsUpdated?: (newDefaults: CostingDefaultsData) => void
     onDirtyChange?: (dirty: boolean) => void
+    mobileFeedback?: boolean
 }
 
 export function CostingDefaultsCard({
     initialDefaults,
     onDefaultsUpdated,
     onDirtyChange,
+    mobileFeedback = false,
 }: CostingDefaultsCardProps) {
     const { t, tx } = useTranslation()
     const [justSaved, flashSaved] = useSavedFlash()
@@ -41,6 +43,8 @@ export function CostingDefaultsCard({
     const [savedState, setSavedState] = useState<CostingDefaultsData>(initialDefaults)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+    const submittingRef = useRef(false)
+    const [saveError, setSaveError] = useState<string | null>(null)
     const [staleError, setStaleError] = useState<string | null>(null)
 
     // Check whether form differs from confirmed saved state
@@ -72,6 +76,7 @@ export function CostingDefaultsCard({
             return copy
         })
         setStaleError(null)
+        setSaveError(null)
     }
 
     const handleDiscard = () => {
@@ -79,6 +84,7 @@ export function CostingDefaultsCard({
         setFieldErrors({})
         setStaleError(null)
         onDirtyChange?.(false)
+        setSaveError(null)
     }
 
     const validate = () => {
@@ -94,13 +100,16 @@ export function CostingDefaultsCard({
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
+        if (mobileFeedback && submittingRef.current) return
         const errors = validate()
         if (Object.keys(errors).length > 0) {
             setFieldErrors(errors)
             return
         }
 
+        submittingRef.current = true
         setIsSubmitting(true)
+        setSaveError(null)
         setFieldErrors({})
         setStaleError(null)
 
@@ -119,7 +128,9 @@ export function CostingDefaultsCard({
                 if ('stale' in result && result.stale) {
                     setStaleError(tx('These settings changed elsewhere. Review the latest values before saving.'))
                 } else {
-                    toast.error(tx(userFacingError(result.error, 'Failed to save costing defaults')))
+                    const message = tx(userFacingError(result.error, 'Failed to save costing defaults'))
+                    if (mobileFeedback) setSaveError(message)
+                    toast.error(message)
                 }
             } else if (result.success && result.defaults) {
                 const confirmed: CostingDefaultsData = {
@@ -135,8 +146,10 @@ export function CostingDefaultsCard({
             }
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'Failed to save costing defaults'
+            if (mobileFeedback) setSaveError(tx(message))
             toast.error(tx(message))
         } finally {
+            submittingRef.current = false
             setIsSubmitting(false)
         }
     }
@@ -165,6 +178,7 @@ export function CostingDefaultsCard({
                 </Badge>
             </div>
 
+            {mobileFeedback && saveError && <p role="alert" className="mt-4 text-sm text-risk">{saveError}</p>}
             {staleError && (
                 <div className="mt-4 flex items-center gap-2.5 rounded-xl border border-warning/30 bg-warning-soft p-3.5 text-sm text-ink" role="alert">
                     <AlertCircle className="h-4 w-4 shrink-0 text-warning" aria-hidden="true" />

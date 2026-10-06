@@ -1,0 +1,1199 @@
+[
+  {
+    "language": "en",
+    "percent": 200,
+    "state": "detailed-manual-paise",
+    "issues": [
+      {
+        "kind": "text-control",
+        "label": "Base cost ₹3.90/m",
+        "control": "Collapse Warp 1 details"
+      },
+      {
+        "kind": "text-control",
+        "label": "Base cost ₹3.08/m",
+        "control": "Collapse Weft 1 details"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Base weight × individual yarn rate (plus GST, if entered), sum all yarns, then apply wasta",
+        "left": 44,
+        "right": 361.71875
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Base weight × individual yarn rate (plus GST, if entered), sum all yarns, then apply wasta",
+        "ancestor": "8Cost BreakdownEngine audit used for the final production cost.₹17.98/"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Base weight × individual yarn rate (plus GST, if entered), sum all yarns, then apply wasta",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Base weight × individual yarn rate (plus GST, if entered), sum all yarns, then apply wasta",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Base weight × individual yarn rate (plus GST, if entered), sum all yarns, then apply wasta",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Base weight × individual yarn rate (plus GST, if entered), sum all yarns, then apply wasta",
+        "ancestor": "8Cost BreakdownEngine audit used for the final production cost.₹17.98/"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Adjusted yarn cost",
+        "left": 254.078125,
+        "right": 324.890625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Adjusted yarn cost",
+        "ancestor": "8Cost BreakdownEngine audit used for the final production cost.₹17.98/"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Adjusted yarn cost",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Adjusted yarn cost",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Adjusted yarn cost",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Adjusted yarn cost",
+        "left": 254.078125,
+        "right": 328.21875
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Adjusted yarn cost",
+        "ancestor": "8Cost BreakdownEngine audit used for the final production cost.₹17.98/"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Adjusted yarn cost",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Adjusted yarn cost",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Adjusted yarn cost",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "6.98",
+        "left": 269.796875,
+        "right": 323.109375
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "6.98",
+        "ancestor": "8Cost BreakdownEngine audit used for the final production cost.₹17.98/"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "6.98",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "6.98",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "6.98",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "/m",
+        "left": 323.109375,
+        "right": 351.59375
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/m",
+        "ancestor": "8Cost BreakdownEngine audit used for the final production cost.₹17.98/"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/m",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/m",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/m",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "6.98",
+        "left": 293.515625,
+        "right": 338.625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "6.98",
+        "ancestor": "8Cost BreakdownEngine audit used for the final production cost.₹17.98/"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "6.98",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "6.98",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "6.98",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "/m",
+        "left": 338.625,
+        "right": 363.09375
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/m",
+        "ancestor": "8Cost BreakdownEngine audit used for the final production cost.₹17.98/"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/m",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/m",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/m",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "8.00",
+        "left": 293.703125,
+        "right": 338.625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "8.00",
+        "ancestor": "8Cost BreakdownEngine audit used for the final production cost.₹17.98/"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "8.00",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "8.00",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "8.00",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "/m",
+        "left": 338.625,
+        "right": 363.09375
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/m",
+        "ancestor": "8Cost BreakdownEngine audit used for the final production cost.₹17.98/"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/m",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/m",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/m",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "3.00",
+        "left": 294.09375,
+        "right": 338.625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "3.00",
+        "ancestor": "8Cost BreakdownEngine audit used for the final production cost.₹17.98/"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "3.00",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "3.00",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "3.00",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "/m",
+        "left": 338.625,
+        "right": 363.09375
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/m",
+        "ancestor": "8Cost BreakdownEngine audit used for the final production cost.₹17.98/"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/m",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/m",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/m",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "17.98",
+        "left": 273.53125,
+        "right": 334.609375
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "17.98",
+        "ancestor": "8Cost BreakdownEngine audit used for the final production cost.₹17.98/"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "17.98",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "17.98",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "17.98",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "/m",
+        "left": 334.609375,
+        "right": 363.09375
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/m",
+        "ancestor": "8Cost BreakdownEngine audit used for the final production cost.₹17.98/"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/m",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/m",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/m",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "unit-reservation",
+        "field": "warpComponentCount",
+        "unit": "components",
+        "reserved": 84,
+        "needed": 127.296875
+      },
+      {
+        "kind": "unit-reservation",
+        "field": "weftComponentCount",
+        "unit": "components",
+        "reserved": 84,
+        "needed": 127.296875
+      },
+      {
+        "kind": "unit-reservation",
+        "field": "overheadOverridePerM",
+        "unit": "₹",
+        "reserved": 14,
+        "needed": 225
+      }
+    ]
+  },
+  {
+    "language": "en",
+    "percent": 200,
+    "state": "result",
+    "issues": [
+      {
+        "kind": "text-viewport",
+        "label": "Save Quality & Create Costing",
+        "left": 54.5,
+        "right": 437.03125
+      },
+      {
+        "kind": "text-control",
+        "label": "Save Quality & Create Costing",
+        "control": "liveCostActions"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Save Quality & Create Costing",
+        "ancestor": "liveCostActions"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Save Quality & Create Costing",
+        "ancestor": "Live costSynthetic Lite costingUpdates live as you edit the estimate.N"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Save Quality & Create Costing",
+        "ancestor": "Synthetic TextileliteCostingCost EstimatorSaved CostingsYarn Rate Book"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Save Quality & Create Costing",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      }
+    ]
+  },
+  {
+    "language": "en",
+    "percent": 200,
+    "state": "quality-picker",
+    "issues": []
+  },
+  {
+    "language": "en",
+    "percent": 200,
+    "state": "quality-rates",
+    "issues": [
+      {
+        "kind": "unit-reservation",
+        "field": "Proposed warp rate 1 (₹/kg)",
+        "unit": "₹",
+        "reserved": 42,
+        "needed": 115.5
+      },
+      {
+        "kind": "unit-reservation",
+        "field": "Proposed weft rate 1 (₹/kg)",
+        "unit": "₹",
+        "reserved": 42,
+        "needed": 115.5
+      },
+      {
+        "kind": "input-vertical-clip",
+        "field": "Proposed warp rate 1 (₹/kg)",
+        "required": 45.7142,
+        "available": 26
+      },
+      {
+        "kind": "input-vertical-clip",
+        "field": "Proposed weft rate 1 (₹/kg)",
+        "required": 45.7142,
+        "available": 26
+      }
+    ]
+  },
+  {
+    "language": "hi",
+    "percent": 200,
+    "state": "detailed-manual-paise",
+    "issues": [
+      {
+        "kind": "text-control",
+        "label": "Base कॉस्ट ₹3.90/m",
+        "control": "Collapse Warp 1 विवरण"
+      },
+      {
+        "kind": "text-control",
+        "label": "Base कॉस्ट ₹3.08/m",
+        "control": "Collapse Weft 1 विवरण"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Base weight × individual यार्न रेट (plus GST, if entered), sum सभी yarns, फिर apply wastag",
+        "left": 44,
+        "right": 335.328125
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Base weight × individual यार्न रेट (plus GST, if entered), sum सभी yarns, फिर apply wastag",
+        "ancestor": "8कॉस्ट विवरणEngine ऑडिट उपयोग किया गया के लिए का अंतिम उत्पादन कॉस्ट.₹"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Base weight × individual यार्न रेट (plus GST, if entered), sum सभी yarns, फिर apply wastag",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Base weight × individual यार्न रेट (plus GST, if entered), sum सभी yarns, फिर apply wastag",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Base weight × individual यार्न रेट (plus GST, if entered), sum सभी yarns, फिर apply wastag",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Base weight × individual यार्न रेट (plus GST, if entered), sum सभी yarns, फिर apply wastag",
+        "left": 44,
+        "right": 331.953125
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Base weight × individual यार्न रेट (plus GST, if entered), sum सभी yarns, फिर apply wastag",
+        "ancestor": "8कॉस्ट विवरणEngine ऑडिट उपयोग किया गया के लिए का अंतिम उत्पादन कॉस्ट.₹"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Base weight × individual यार्न रेट (plus GST, if entered), sum सभी yarns, फिर apply wastag",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Base weight × individual यार्न रेट (plus GST, if entered), sum सभी yarns, फिर apply wastag",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Base weight × individual यार्न रेट (plus GST, if entered), sum सभी yarns, फिर apply wastag",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Adjusted यार्न कॉस्ट",
+        "left": 254.078125,
+        "right": 324.890625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Adjusted यार्न कॉस्ट",
+        "ancestor": "8कॉस्ट विवरणEngine ऑडिट उपयोग किया गया के लिए का अंतिम उत्पादन कॉस्ट.₹"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Adjusted यार्न कॉस्ट",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Adjusted यार्न कॉस्ट",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Adjusted यार्न कॉस्ट",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Adjusted यार्न कॉस्ट",
+        "ancestor": "8कॉस्ट विवरणEngine ऑडिट उपयोग किया गया के लिए का अंतिम उत्पादन कॉस्ट.₹"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "6.98",
+        "left": 269.796875,
+        "right": 323.109375
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "6.98",
+        "ancestor": "8कॉस्ट विवरणEngine ऑडिट उपयोग किया गया के लिए का अंतिम उत्पादन कॉस्ट.₹"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "6.98",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "6.98",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "6.98",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "/मीटर",
+        "left": 323.109375,
+        "right": 330.5625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/मीटर",
+        "ancestor": "8कॉस्ट विवरणEngine ऑडिट उपयोग किया गया के लिए का अंतिम उत्पादन कॉस्ट.₹"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/मीटर",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/मीटर",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/मीटर",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "/मीटर",
+        "left": 297.1875,
+        "right": 342.0625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/मीटर",
+        "ancestor": "8कॉस्ट विवरणEngine ऑडिट उपयोग किया गया के लिए का अंतिम उत्पादन कॉस्ट.₹"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/मीटर",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/मीटर",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/मीटर",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "/मीटर",
+        "left": 297.1875,
+        "right": 342.0625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/मीटर",
+        "ancestor": "8कॉस्ट विवरणEngine ऑडिट उपयोग किया गया के लिए का अंतिम उत्पादन कॉस्ट.₹"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/मीटर",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/मीटर",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/मीटर",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "/मीटर",
+        "left": 297.1875,
+        "right": 342.0625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/मीटर",
+        "ancestor": "8कॉस्ट विवरणEngine ऑडिट उपयोग किया गया के लिए का अंतिम उत्पादन कॉस्ट.₹"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/मीटर",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/मीटर",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/मीटर",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "/मीटर",
+        "left": 290.421875,
+        "right": 342.0625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/मीटर",
+        "ancestor": "8कॉस्ट विवरणEngine ऑडिट उपयोग किया गया के लिए का अंतिम उत्पादन कॉस्ट.₹"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/मीटर",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/मीटर",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/मीटर",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "unit-reservation",
+        "field": "manualKgPer100m",
+        "unit": "किग्रा",
+        "reserved": 37.85,
+        "needed": 52.9375
+      },
+      {
+        "kind": "unit-reservation",
+        "field": "manualKgPer100m",
+        "unit": "किग्रा",
+        "reserved": 37.85,
+        "needed": 52.9375
+      },
+      {
+        "kind": "unit-reservation",
+        "field": "overheadOverridePerM",
+        "unit": "₹",
+        "reserved": 14,
+        "needed": 225
+      }
+    ]
+  },
+  {
+    "language": "hi",
+    "percent": 200,
+    "state": "result",
+    "issues": [
+      {
+        "kind": "text-viewport",
+        "label": "क्वालिटी सेव करें और कॉस्टिंग बनाएं",
+        "left": 54.5,
+        "right": 413
+      },
+      {
+        "kind": "text-control",
+        "label": "क्वालिटी सेव करें और कॉस्टिंग बनाएं",
+        "control": "liveCostActions"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "क्वालिटी सेव करें और कॉस्टिंग बनाएं",
+        "ancestor": "liveCostActions"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "क्वालिटी सेव करें और कॉस्टिंग बनाएं",
+        "ancestor": "लाइव लागतSynthetic Lite costingUpdates live के रूप में आपके पास बदलें "
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "क्वालिटी सेव करें और कॉस्टिंग बनाएं",
+        "ancestor": "Synthetic Textileliteकॉस्टिंगलागत अनुमानकसेव की गई कॉस्टिंगयार्न रेट ब"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "क्वालिटी सेव करें और कॉस्टिंग बनाएं",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      }
+    ]
+  },
+  {
+    "language": "hi",
+    "percent": 200,
+    "state": "quality-picker",
+    "issues": []
+  },
+  {
+    "language": "hi",
+    "percent": 200,
+    "state": "quality-rates",
+    "issues": [
+      {
+        "kind": "unit-reservation",
+        "field": "प्रस्तावित ताना दर 1 (₹/kg)",
+        "unit": "₹",
+        "reserved": 42,
+        "needed": 115.5
+      },
+      {
+        "kind": "unit-reservation",
+        "field": "प्रस्तावित बाना दर 1 (₹/kg)",
+        "unit": "₹",
+        "reserved": 42,
+        "needed": 115.5
+      },
+      {
+        "kind": "input-vertical-clip",
+        "field": "प्रस्तावित ताना दर 1 (₹/kg)",
+        "required": 45.7142,
+        "available": 26
+      },
+      {
+        "kind": "input-vertical-clip",
+        "field": "प्रस्तावित बाना दर 1 (₹/kg)",
+        "required": 45.7142,
+        "available": 26
+      }
+    ]
+  },
+  {
+    "language": "gu",
+    "percent": 200,
+    "state": "detailed-manual-paise",
+    "issues": [
+      {
+        "kind": "text-control",
+        "label": "Base કોસ્ટ ₹3.90/m",
+        "control": "Collapse Warp 1 વિગતો"
+      },
+      {
+        "kind": "text-control",
+        "label": "Base કોસ્ટ ₹3.08/m",
+        "control": "Collapse Weft 1 વિગતો"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Base weight × individual યાર્ન ભાવ (plus GST, if entered), sum બધા yarns, પછી apply wastag",
+        "ancestor": "8કોસ્ટ વિગતોEngine ઑડિટ વપરાયેલ માટે આ અંતિમ ઉત્પાદન કોસ્ટ.₹17.98/મીટર"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Base weight × individual યાર્ન ભાવ (plus GST, if entered), sum બધા yarns, પછી apply wastag",
+        "left": 44,
+        "right": 335.265625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Base weight × individual યાર્ન ભાવ (plus GST, if entered), sum બધા yarns, પછી apply wastag",
+        "ancestor": "8કોસ્ટ વિગતોEngine ઑડિટ વપરાયેલ માટે આ અંતિમ ઉત્પાદન કોસ્ટ.₹17.98/મીટર"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Base weight × individual યાર્ન ભાવ (plus GST, if entered), sum બધા yarns, પછી apply wastag",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Base weight × individual યાર્ન ભાવ (plus GST, if entered), sum બધા yarns, પછી apply wastag",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Base weight × individual યાર્ન ભાવ (plus GST, if entered), sum બધા yarns, પછી apply wastag",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Base weight × individual યાર્ન ભાવ (plus GST, if entered), sum બધા yarns, પછી apply wastag",
+        "left": 44,
+        "right": 329.140625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Base weight × individual યાર્ન ભાવ (plus GST, if entered), sum બધા yarns, પછી apply wastag",
+        "ancestor": "8કોસ્ટ વિગતોEngine ઑડિટ વપરાયેલ માટે આ અંતિમ ઉત્પાદન કોસ્ટ.₹17.98/મીટર"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Base weight × individual યાર્ન ભાવ (plus GST, if entered), sum બધા yarns, પછી apply wastag",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Base weight × individual યાર્ન ભાવ (plus GST, if entered), sum બધા yarns, પછી apply wastag",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Base weight × individual યાર્ન ભાવ (plus GST, if entered), sum બધા yarns, પછી apply wastag",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Adjusted યાર્ન કોસ્ટ",
+        "left": 254.078125,
+        "right": 324.890625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Adjusted યાર્ન કોસ્ટ",
+        "ancestor": "8કોસ્ટ વિગતોEngine ઑડિટ વપરાયેલ માટે આ અંતિમ ઉત્પાદન કોસ્ટ.₹17.98/મીટર"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Adjusted યાર્ન કોસ્ટ",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Adjusted યાર્ન કોસ્ટ",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Adjusted યાર્ન કોસ્ટ",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "Adjusted યાર્ન કોસ્ટ",
+        "left": 254.078125,
+        "right": 324.34375
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Adjusted યાર્ન કોસ્ટ",
+        "ancestor": "8કોસ્ટ વિગતોEngine ઑડિટ વપરાયેલ માટે આ અંતિમ ઉત્પાદન કોસ્ટ.₹17.98/મીટર"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Adjusted યાર્ન કોસ્ટ",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Adjusted યાર્ન કોસ્ટ",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "Adjusted યાર્ન કોસ્ટ",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "6.98",
+        "left": 269.796875,
+        "right": 323.109375
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "6.98",
+        "ancestor": "8કોસ્ટ વિગતોEngine ઑડિટ વપરાયેલ માટે આ અંતિમ ઉત્પાદન કોસ્ટ.₹17.98/મીટર"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "6.98",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "6.98",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "6.98",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "/મીટર",
+        "left": 323.109375,
+        "right": 330.5625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/મીટર",
+        "ancestor": "8કોસ્ટ વિગતોEngine ઑડિટ વપરાયેલ માટે આ અંતિમ ઉત્પાદન કોસ્ટ.₹17.98/મીટર"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/મીટર",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/મીટર",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/મીટર",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "/મીટર",
+        "left": 291.8125,
+        "right": 342.0625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/મીટર",
+        "ancestor": "8કોસ્ટ વિગતોEngine ઑડિટ વપરાયેલ માટે આ અંતિમ ઉત્પાદન કોસ્ટ.₹17.98/મીટર"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/મીટર",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/મીટર",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/મીટર",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "/મીટર",
+        "left": 291.8125,
+        "right": 342.0625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/મીટર",
+        "ancestor": "8કોસ્ટ વિગતોEngine ઑડિટ વપરાયેલ માટે આ અંતિમ ઉત્પાદન કોસ્ટ.₹17.98/મીટર"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/મીટર",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/મીટર",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/મીટર",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "/મીટર",
+        "left": 291.8125,
+        "right": 342.0625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/મીટર",
+        "ancestor": "8કોસ્ટ વિગતોEngine ઑડિટ વપરાયેલ માટે આ અંતિમ ઉત્પાદન કોસ્ટ.₹17.98/મીટર"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/મીટર",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/મીટર",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/મીટર",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "text-viewport",
+        "label": "/મીટર",
+        "left": 284.234375,
+        "right": 342.0625
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/મીટર",
+        "ancestor": "8કોસ્ટ વિગતોEngine ઑડિટ વપરાયેલ માટે આ અંતિમ ઉત્પાદન કોસ્ટ.₹17.98/મીટર"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/મીટર",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/મીટર",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "/મીટર",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      },
+      {
+        "kind": "unit-reservation",
+        "field": "manualKgPer100m",
+        "unit": "કિલો",
+        "reserved": 37.85,
+        "needed": 51.265625
+      },
+      {
+        "kind": "unit-reservation",
+        "field": "manualKgPer100m",
+        "unit": "કિલો",
+        "reserved": 37.85,
+        "needed": 51.265625
+      },
+      {
+        "kind": "unit-reservation",
+        "field": "overheadOverridePerM",
+        "unit": "₹",
+        "reserved": 14,
+        "needed": 225
+      }
+    ]
+  },
+  {
+    "language": "gu",
+    "percent": 200,
+    "state": "result",
+    "issues": [
+      {
+        "kind": "text-viewport",
+        "label": "ક્વોલિટી સાચવો અને કોસ્ટિંગ બનાવો",
+        "left": 54.5,
+        "right": 441
+      },
+      {
+        "kind": "text-control",
+        "label": "ક્વોલિટી સાચવો અને કોસ્ટિંગ બનાવો",
+        "control": "liveCostActions"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "ક્વોલિટી સાચવો અને કોસ્ટિંગ બનાવો",
+        "ancestor": "liveCostActions"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "ક્વોલિટી સાચવો અને કોસ્ટિંગ બનાવો",
+        "ancestor": "લાઇવ ખર્ચSynthetic Lite costingUpdates live તરીકે તમારી પાસે ફેરફાર કર"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "ક્વોલિટી સાચવો અને કોસ્ટિંગ બનાવો",
+        "ancestor": "Synthetic Textileliteકોસ્ટિંગખર્ચ અંદાજકસાચવેલી કોસ્ટિંગયાર્ન રેટ બુકસ"
+      },
+      {
+        "kind": "text-ancestor-clip",
+        "label": "ક્વોલિટી સાચવો અને કોસ્ટિંગ બનાવો",
+        "ancestor": "Synthetic Weavly Lite estimator fixture[data-sonner-toaster][dir=ltr],"
+      }
+    ]
+  },
+  {
+    "language": "gu",
+    "percent": 200,
+    "state": "quality-picker",
+    "issues": []
+  },
+  {
+    "language": "gu",
+    "percent": 200,
+    "state": "quality-rates",
+    "issues": [
+      {
+        "kind": "text-ancestor-clip",
+        "label": "સાચવેલી રેસિપીના દર લાઇવ બજાર દર નથી. તમારા સપ્લાયર સાથે ખાતરી કરો.",
+        "ancestor": "ક્વોલિટી સંપાદિત કરો: Synthetic ક્વોલિટી એક — Surat plain વણાટ સાથે એક"
+      },
+      {
+        "kind": "unit-reservation",
+        "field": "સૂચિત તાણાનો દર 1 (₹/kg)",
+        "unit": "₹",
+        "reserved": 42,
+        "needed": 115.5
+      },
+      {
+        "kind": "unit-reservation",
+        "field": "સૂચિત વાણાનો દર 1 (₹/kg)",
+        "unit": "₹",
+        "reserved": 42,
+        "needed": 115.5
+      },
+      {
+        "kind": "input-vertical-clip",
+        "field": "સૂચિત તાણાનો દર 1 (₹/kg)",
+        "required": 45.7142,
+        "available": 26
+      },
+      {
+        "kind": "input-vertical-clip",
+        "field": "સૂચિત વાણાનો દર 1 (₹/kg)",
+        "required": 45.7142,
+        "available": 26
+      }
+    ]
+  }
+]

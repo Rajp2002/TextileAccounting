@@ -61,11 +61,14 @@ type MarginFilter = 'all' | 'negative' | 'under_10' | '10_to_20' | 'over_20'
 
 const DEMO_STORAGE_KEY = 'weavly:free-demo-costing-deleted'
 
-export default function SavedFreeCostings({ userId, orgId, userMetadata, embedded = false, initialCostingId }: {
-  userId?: string; orgId?: string; userMetadata?: Record<string, unknown>; embedded?: boolean; initialCostingId?: string
+export default function SavedFreeCostings({ userId, orgId, userMetadata, embedded = false, initialCostingId, idPrefix = '' }: {
+  userId?: string; orgId?: string; userMetadata?: Record<string, unknown>; embedded?: boolean; initialCostingId?: string; idPrefix?: string
 }) {
   const router = useRouter()
   const { language, tx } = useTranslation()
+  const searchId = `${idPrefix}saved-costings-search`
+  const sortId = `${idPrefix}saved-costings-sort`
+  const marginId = `${idPrefix}saved-costings-margin`
   const [tourStep, setTourStep] = useState<SavedCostingStep | null>(null)
   const [helpOpen, setHelpOpen] = useState(false)
   const [filtersOpen, setFiltersOpen] = useState(false)
@@ -297,11 +300,11 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
           <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(260px,1fr)_auto_auto]">
             <div className="relative min-w-0">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
-              <Label htmlFor="saved-costings-search" className="sr-only">
+              <Label htmlFor={searchId} className="sr-only">
                 {tx('Search saved costings')}
               </Label>
               <Input
-                id="saved-costings-search"
+                id={searchId}
                 value={searchQuery}
                 onChange={event => setSearchQuery(event.target.value)}
                 placeholder={tx('Search saved costings…')}
@@ -314,11 +317,11 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
             </Button>}
             <div id="free-history-filters" data-expanded={filtersOpen || tourStep !== null} data-costing-tour="free-filters" className="flex flex-wrap items-center gap-2">
               <div className="flex items-center gap-2">
-                <Label htmlFor="saved-costings-sort" className="sr-only">
+                <Label htmlFor={sortId} className="sr-only">
                   {tx('Sort by')}
                 </Label>
                 <select
-                  id="saved-costings-sort"
+                  id={sortId}
                   value={costingSort}
                   onChange={event => setCostingSort(event.target.value as CostingSort)}
                   className="h-10 rounded-md border border-hairline bg-surface px-3 text-sm font-medium text-ink"
@@ -330,11 +333,11 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
                 </select>
               </div>
               <div className="flex items-center gap-2">
-                <Label htmlFor="saved-costings-margin" className="sr-only">
+                <Label htmlFor={marginId} className="sr-only">
                   {tx('Margin')}
                 </Label>
                 <select
-                  id="saved-costings-margin"
+                  id={marginId}
                   value={marginFilter}
                   onChange={event => setMarginFilter(event.target.value as MarginFilter)}
                   className="h-10 rounded-md border border-hairline bg-surface px-3 text-sm font-medium text-ink"

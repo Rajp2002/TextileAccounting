@@ -1,0 +1,42 @@
+[
+  {
+    "check": "closed composer truthfully shows unsaved memory-only draft",
+    "passed": true
+  },
+  {
+    "check": "reopened composer preserves memory draft",
+    "passed": true
+  },
+  {
+    "check": "repeated Lite support create makes one request",
+    "passed": true
+  },
+  {
+    "check": "uncertain create freezes original draft",
+    "passed": true
+  },
+  {
+    "check": "uncertain create retry retains original request key and payload",
+    "passed": true
+  },
+  {
+    "check": "reply shortcut focuses mounted textarea",
+    "passed": true
+  },
+  {
+    "check": "repeated Lite support reply makes one request",
+    "passed": true
+  },
+  {
+    "check": "uncertain reply freezes original draft",
+    "passed": true
+  },
+  {
+    "check": "uncertain reply retry retains original request key and payload",
+    "passed": true
+  },
+  {
+    "check": "confirmed reply clears draft",
+    "passed": true
+  }
+]

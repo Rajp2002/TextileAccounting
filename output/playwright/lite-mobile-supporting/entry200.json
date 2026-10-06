@@ -1,0 +1,32 @@
+[
+  {
+    "view": "plans",
+    "lang": "en",
+    "issues": []
+  },
+  {
+    "view": "signup",
+    "lang": "en",
+    "issues": []
+  },
+  {
+    "view": "plans",
+    "lang": "hi",
+    "issues": []
+  },
+  {
+    "view": "signup",
+    "lang": "hi",
+    "issues": []
+  },
+  {
+    "view": "plans",
+    "lang": "gu",
+    "issues": []
+  },
+  {
+    "view": "signup",
+    "lang": "gu",
+    "issues": []
+  }
+]

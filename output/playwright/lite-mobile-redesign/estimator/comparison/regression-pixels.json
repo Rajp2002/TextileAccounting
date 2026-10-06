@@ -1,0 +1,50 @@
+{
+  "evidenceType": "Matching synthetic Chromium screenshots; captured initial states only.",
+  "comparisons": [
+    {
+      "image": "base-estimator-320x568-synthetic.png",
+      "changedPixels": 0,
+      "totalPixels": 181760
+    },
+    {
+      "image": "base-estimator-390x844-synthetic.png",
+      "changedPixels": 0,
+      "totalPixels": 329160
+    },
+    {
+      "image": "base-estimator-430x932-synthetic.png",
+      "changedPixels": 0,
+      "totalPixels": 400760
+    },
+    {
+      "image": "base-estimator-1440x900-synthetic.png",
+      "changedPixels": 0,
+      "totalPixels": 1296000
+    },
+    {
+      "image": "free-estimator-320x568-synthetic.png",
+      "changedPixels": 0,
+      "totalPixels": 181760
+    },
+    {
+      "image": "free-estimator-390x844-synthetic.png",
+      "changedPixels": 0,
+      "totalPixels": 329160
+    },
+    {
+      "image": "free-estimator-430x932-synthetic.png",
+      "changedPixels": 0,
+      "totalPixels": 400760
+    },
+    {
+      "image": "free-estimator-1440x900-synthetic.png",
+      "changedPixels": 0,
+      "totalPixels": 1296000
+    },
+    {
+      "image": "lite-estimator-1440x900-synthetic.png",
+      "changedPixels": 0,
+      "totalPixels": 1296000
+    }
+  ]
+}

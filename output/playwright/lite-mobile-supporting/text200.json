@@ -1,0 +1,62 @@
+[
+  {
+    "view": "settings",
+    "lang": "en",
+    "issues": []
+  },
+  {
+    "view": "billing",
+    "lang": "en",
+    "issues": []
+  },
+  {
+    "view": "audit",
+    "lang": "en",
+    "issues": []
+  },
+  {
+    "view": "export",
+    "lang": "en",
+    "issues": []
+  },
+  {
+    "view": "settings",
+    "lang": "hi",
+    "issues": []
+  },
+  {
+    "view": "billing",
+    "lang": "hi",
+    "issues": []
+  },
+  {
+    "view": "audit",
+    "lang": "hi",
+    "issues": []
+  },
+  {
+    "view": "export",
+    "lang": "hi",
+    "issues": []
+  },
+  {
+    "view": "settings",
+    "lang": "gu",
+    "issues": []
+  },
+  {
+    "view": "billing",
+    "lang": "gu",
+    "issues": []
+  },
+  {
+    "view": "audit",
+    "lang": "gu",
+    "issues": []
+  },
+  {
+    "view": "export",
+    "lang": "gu",
+    "issues": []
+  }
+]
