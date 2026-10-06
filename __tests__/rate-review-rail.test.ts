@@ -46,25 +46,50 @@ describe('Rate Review Right Rail layout & interaction', () => {
         expect(floatingControlStart).toBeGreaterThan(routeWrapperEnd)
     })
 
-    it('places the archive policy at the bottom of the desktop rail and keeps it reachable on narrow screens', () => {
+    it('stacks principles, help and archive and restore at the bottom of the desktop rail, in that order', () => {
         const routeArchiveStart = rates.indexOf('<ArchivePolicyNotice />')
         const reviewRailStart = rates.indexOf('<aside className="rates-review-rail-desktop')
-        const referenceStart = rates.indexOf('<RateBookReferenceCard />', reviewRailStart)
         const reviewRailEnd = rates.indexOf('</aside>', reviewRailStart)
-        const archiveRailStart = rates.indexOf('<aside className="rates-archive-policy-rail-desktop"')
-        const archiveStart = rates.indexOf('<ArchivePolicyNotice />', archiveRailStart)
-        const archiveRailEnd = rates.indexOf('</aside>', archiveRailStart)
+        const addActionStart = rates.indexOf('railPrimaryAction', reviewRailStart)
+        const reviewWidgetStart = rates.indexOf('<RateReviewRailWidget', reviewRailStart)
+        const bottomStart = rates.indexOf('<div className="rates-review-rail-bottom">', reviewRailStart)
+        const principlesStart = rates.indexOf('<RateBookReferenceCard />', bottomStart)
+        const helpStart = rates.indexOf('<RateBookHelp />', bottomStart)
+        const archiveStart = rates.indexOf('<ArchivePolicyNotice />', bottomStart)
 
         expect(rates).toContain('<div className="rail-inline-actions">')
+        expect(rates).not.toContain('rates-archive-policy-rail-desktop')
         expect(routeArchiveStart).toBeGreaterThanOrEqual(0)
         expect(reviewRailStart).toBeGreaterThan(routeArchiveStart)
-        expect(referenceStart).toBeGreaterThan(reviewRailStart)
-        expect(reviewRailEnd).toBeGreaterThan(referenceStart)
-        expect(archiveRailStart).toBeGreaterThan(reviewRailEnd)
-        expect(archiveStart).toBeGreaterThan(archiveRailStart)
-        expect(archiveStart).toBeLessThan(archiveRailEnd)
-        expect(styles).toContain('.rates-archive-policy-rail-desktop')
-        expect(styles).toMatch(/\.rates-archive-policy-rail-desktop,[\s\S]*?\{[\s\S]*?position:\s*fixed;[\s\S]*?bottom:\s*var\(--rail-bottom\);/)
+        expect(addActionStart).toBeGreaterThan(reviewRailStart)
+        expect(reviewWidgetStart).toBeGreaterThan(addActionStart)
+        expect(bottomStart).toBeGreaterThan(reviewWidgetStart)
+        expect(principlesStart).toBeGreaterThan(bottomStart)
+        expect(helpStart).toBeGreaterThan(principlesStart)
+        expect(archiveStart).toBeGreaterThan(helpStart)
+        expect(reviewRailEnd).toBeGreaterThan(archiveStart)
+    })
+
+    it('anchors the review rail to the full viewport height with the guidance pills at the bottom', () => {
+        expect(styles).not.toContain('.rates-archive-policy-rail-desktop')
+        expect(styles).toMatch(/\.rates-review-rail-desktop \{[\s\S]*?position:\s*fixed;[\s\S]*?top:\s*var\(--rail-top\);[\s\S]*?bottom:\s*var\(--rail-bottom\);[\s\S]*?display:\s*flex;[\s\S]*?flex-direction:\s*column;/)
+        expect(styles).toMatch(/\.rates-review-rail-bottom \{[\s\S]*?margin-top:\s*auto;/)
+    })
+
+    it('moves the help pill into the right rail from 1280px while keeping the left-rail copy below it', () => {
+        const leftRail = rates.slice(rates.indexOf('<aside id={isLite'), rates.indexOf('</aside>', rates.indexOf('<aside id={isLite')))
+        expect(leftRail).toMatch(/<div className="left-rail-bottom rail-inline-actions mt-auto pt-3">\s*<RateBookHelp \/>/)
+        expect(rates.match(/<RateBookHelp \/>/g)).toHaveLength(2)
+    })
+
+    it('renders the principles as a disclosure that is collapsed by default', () => {
+        const start = rates.indexOf('function RateBookReferenceCard()')
+        const card = rates.slice(start, rates.indexOf('function RateReviewFloatingButton', start))
+        expect(card).toContain('<details')
+        expect(card).toContain('<summary')
+        expect(card).not.toMatch(/<details[^>]*\bopen\b/)
+        expect(card).toContain("tx('Rate Book Principles')")
+        expect(card).toContain('copy.principles.map')
     })
 
     it('provides accessible modal triggers for rates due for review', () => {

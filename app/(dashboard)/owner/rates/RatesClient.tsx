@@ -32,7 +32,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SwitchField } from '@/components/ui/switch-field'
-import { railPrimaryAction } from '@/components/ui/rail'
+import { railIcon, railPrimaryAction, railSurface } from '@/components/ui/rail'
 import { cn } from '@/lib/utils'
 import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -787,23 +787,25 @@ function RateReviewRailWidget({
 function RateBookReferenceCard() {
     const { tx, language } = useTranslation()
     const copy = rateBookHelpCopy[language]
+    // Collapsed by default (no `open`): it sits in the bottom stack of the right rail beside the help and archive pills.
     return (
-        <Card className="border-hairline bg-surface/90 shadow-sm backdrop-blur-xs">
-            <CardContent className="p-4 space-y-3">
-                <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-subtle">
-                    <BookOpen className="h-4 w-4 text-saffron" aria-hidden="true" />
-                    <span>{tx('Rate Book Principles')}</span>
-                </div>
-                <ul data-i18n-skip="true" lang={language} className="space-y-2 text-xs text-body leading-relaxed">
-                    {copy.principles.map(principle => (
-                        <li key={principle} className="flex items-start gap-2">
-                            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-saffron" aria-hidden="true" />
-                            <span>{principle}</span>
-                        </li>
-                    ))}
-                </ul>
-            </CardContent>
-        </Card>
+        <details className={cn(railSurface, 'ui-details group text-xs')}>
+            <summary className="flex min-h-11 cursor-pointer select-none list-none items-center justify-between gap-2.5 px-3.5 py-2.5 text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden">
+                <span className="flex min-w-0 items-center gap-2.5">
+                    <BookOpen className={railIcon} aria-hidden="true" />
+                    <span className="min-w-0">{tx('Rate Book Principles')}</span>
+                </span>
+                <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" />
+            </summary>
+            <ul data-i18n-skip="true" lang={language} className="max-h-[40dvh] space-y-2 overflow-y-auto border-t border-hairline px-3.5 py-3 text-xs leading-relaxed text-body">
+                {copy.principles.map(principle => (
+                    <li key={principle} className="flex items-start gap-2">
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-saffron" aria-hidden="true" />
+                        <span>{principle}</span>
+                    </li>
+                ))}
+            </ul>
+        </details>
     )
 }
 
@@ -1524,7 +1526,8 @@ export default function RatesClient({
                         }
                     }}
                 />
-                <div className="left-rail-bottom mt-auto pt-3">
+                {/* From 1280px the help pill lives in the right rail instead (`rail-inline-actions` hides this copy). */}
+                <div className="left-rail-bottom rail-inline-actions mt-auto pt-3">
                     <RateBookHelp />
                 </div>
             </aside>
@@ -2239,7 +2242,7 @@ export default function RatesClient({
             </div>
 
             {/* Keep viewport-positioned review controls outside the animated route wrapper. */}
-            <aside className="rates-review-rail-desktop space-y-4" aria-label={tx('Rate review and reference')}>
+            <aside className="rates-review-rail-desktop" aria-label={tx('Rate review and reference')}>
                 <div>
                     <Button data-ratebook-field="addRateAction" onClick={() => { setSaveError(null); setDraft(defaultDraft(defaultReviewIntervalDays)) }} className={cn(railPrimaryAction, 'w-full')}>
                         <Plus className="h-4 w-4" aria-hidden="true" />
@@ -2254,14 +2257,14 @@ export default function RatesClient({
                         onOpenModal={() => { if (dueReviewRates.length > 0) setShowDueReviews(true) }}
                     />
                 </div>
-                <div data-ratebook-field="immutabilityNotice">
-                    <RateBookReferenceCard />
+                {/* Guidance pinned to the bottom edge of the rail: principles, help, then archive and restore. */}
+                <div className="rates-review-rail-bottom">
+                    <div data-ratebook-field="immutabilityNotice">
+                        <RateBookReferenceCard />
+                    </div>
+                    <RateBookHelp />
+                    <ArchivePolicyNotice />
                 </div>
-            </aside>
-
-            {/* Pin the archive policy to the bottom edge of the desktop rail. */}
-            <aside className="rates-archive-policy-rail-desktop" aria-label={tx('Rate Book archive policy')}>
-                <ArchivePolicyNotice />
             </aside>
 
             {/* Floating Review Action on Narrower Screens (< 1540px) */}
