@@ -35,3 +35,19 @@ export function getFreeCostingSections(validation: EstimatorValidationResult, qu
     return { ...section, field: issue?.field ?? warning?.field ?? section.field, status: issue ? 'incomplete' : warning ? 'review' : 'complete' }
   })
 }
+
+/**
+ * Which body the Live cost sheet shows. Free keeps the checklist until a calculation exists. Lite and Base
+ * calculate live, so they only swap to it when a missing input blocks the result; with nothing incomplete the
+ * result view still explains any other blocker. The guided tour always teaches the real result.
+ */
+export function liveCostSheetView(input: {
+  metered: boolean
+  tutorialActive: boolean
+  hasValidCostResult: boolean
+  sections: ReadonlyArray<Pick<FreeCostingSection, 'status'>>
+}): 'checklist' | 'result' {
+  if (input.tutorialActive || input.hasValidCostResult) return 'result'
+  if (input.metered) return 'checklist'
+  return input.sections.some(section => section.status === 'incomplete') ? 'checklist' : 'result'
+}
