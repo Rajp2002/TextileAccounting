@@ -114,7 +114,7 @@ import { warningAcknowledgementKey } from '@/lib/warning-acknowledgement'
 import { freeText, type FreeText } from '@/lib/i18n/free-tier'
 import { freeMobileText } from '@/lib/i18n/free-mobile'
 import { liteEstimatorText } from '@/lib/i18n/lite-estimator'
-import { getFreeCostingSections, type FreeCostingSection } from '@/lib/free-costing-sections'
+import { getFreeCostingSections, liveCostSheetView, type FreeCostingSection } from '@/lib/free-costing-sections'
 import { FreeCostingChecklist } from '@/components/estimator/FreeCostingChecklist'
 import { useGutterDock } from '@/hooks/use-gutter-dock'
 import { makeFreeEstimate } from '@/lib/free-estimator-defaults'
@@ -1456,7 +1456,7 @@ function MobileLiveEstimateShortcut({
     readinessMessage: string | null
     onJumpToInput: () => void
     assumptions?: React.ReactNode
-    actions?: React.ReactNode | ((onDismiss: () => void) => React.ReactNode)
+    actions?: React.ReactNode | ((onDismiss: () => void, view: { checklist: boolean }) => React.ReactNode)
     expectedProfitTotal?: number | null
     hasOrderQty?: boolean
     open?: boolean
@@ -1486,8 +1486,9 @@ function MobileLiveEstimateShortcut({
     useEffect(() => () => {
         if (metered || compactLite) document.documentElement.style.removeProperty(actionHeightProperty)
     }, [metered, compactLite, actionHeightProperty])
-    const compactFreePreview = metered && !hasValidCostResult && !isTutorialActive
-    const adaptiveFreeModal = metered && !isTutorialActive
+    const showChecklist = liveCostSheetView({ metered, tutorialActive: isTutorialActive, hasValidCostResult, sections: inputSections }) === 'checklist'
+    // Outside the tour the sheet is as tall as its content and centred; the tour keeps the stretched layout its CSS positions.
+    const adaptiveSheet = !isTutorialActive
     const hasValidPrice = hasValidCostResult && quoteIsValid
     const hasReviewState = needsReview || missingIssueCount > 0 || (!awaitingCalculation && (!hasValidCostResult || !quoteIsValid))
     const readyToCalculate = awaitingCalculation && !hasReviewState
@@ -1587,20 +1588,21 @@ function MobileLiveEstimateShortcut({
                             e.preventDefault()
                         }
                     }}
-                    data-free-preview={adaptiveFreeModal ? compactFreePreview ? "inputs" : "result" : undefined}
+                    data-free-preview={metered && adaptiveSheet ? showChecklist ? "inputs" : "result" : undefined}
+                    data-live-cost-view={adaptiveSheet ? showChecklist ? "inputs" : "result" : undefined}
                     data-lite-cost-result={compactLite || undefined}
-                    className={`max-h-[min(84dvh,44rem)] overflow-y-auto rounded-t-[22px] border-x-0 border-b-0 px-0 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] pt-0 md:inset-x-0 md:mx-auto md:h-auto md:overflow-y-auto md:rounded-b-[22px] md:border md:border-[var(--color-hairline)] ${adaptiveFreeModal ? `gap-0 [&>*]:shrink-0 md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:max-h-[calc(100dvh-3rem)] ${compactFreePreview ? "md:w-[min(calc(100vw-3rem),32rem)]" : "md:w-[min(calc(100vw-3rem),38rem)]"}` : "md:bottom-6 md:top-6 md:max-h-none md:w-[min(calc(100vw-3rem),38rem)]"} ${isTutorialActive ? '!animate-none !transition-none data-[state=open]:!animate-none data-[state=open]:!transition-none' : ''}`}
+                    className={`max-h-[min(84dvh,44rem)] overflow-y-auto rounded-t-[22px] border-x-0 border-b-0 px-0 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] pt-0 md:inset-x-0 md:mx-auto md:h-auto md:overflow-y-auto md:rounded-b-[22px] md:border md:border-[var(--color-hairline)] ${adaptiveSheet ? `gap-0 [&>*]:shrink-0 md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:max-h-[calc(100dvh-3rem)] ${showChecklist ? "md:w-[min(calc(100vw-3rem),32rem)]" : "md:w-[min(calc(100vw-3rem),38rem)]"}` : "md:bottom-6 md:top-6 md:max-h-none md:w-[min(calc(100vw-3rem),38rem)]"} ${isTutorialActive ? '!animate-none !transition-none data-[state=open]:!animate-none data-[state=open]:!transition-none' : ''}`}
                 >
                     <SheetHeader className="border-b border-[var(--color-hairline)] bg-[var(--color-warning-amber-soft)]/70 px-5 pb-4 pt-5 pr-16 text-left">
                         <SheetTitle className="text-[17px]">{metered ? <><span className="free-mobile-only">{freeMobileText(language, hasValidCostResult ? 'saved' : 'review')}</span><span className="free-desktop-only">{tx('Live cost')}</span></> : tx('Live cost')}</SheetTitle>
                         <SheetDescription data-free-result-identity={metered || undefined} className="truncate text-[12px] font-semibold text-[var(--color-ink)]">
                             {metered ? <><span className="free-mobile-only" data-i18n-skip="true" lang={language}>{freeSnapshot ? freeMobileText(language, 'savedIdentity', freeSnapshot) : activeName}</span><span className="free-desktop-only">{activeName}{versionLabel ? ` · ${versionLabel}` : ''}</span></> : <>{activeName}{versionLabel ? ` · ${versionLabel}` : ''}</>}
                         </SheetDescription>
-                        {!compactFreePreview && <p className="mt-1 text-[10px] font-medium text-[var(--color-muted)]">{metered ? hasValidCostResult ? freeText(language, 'savedRevisionHint') : freeText(language, 'resultAfterCalculation') : 'Updates live as you edit the estimate.'}</p>}
+                        {!showChecklist && <p className="mt-1 text-[10px] font-medium text-[var(--color-muted)]">{metered ? hasValidCostResult ? freeText(language, 'savedRevisionHint') : freeText(language, 'resultAfterCalculation') : 'Updates live as you edit the estimate.'}</p>}
                         {compactLite && <p className="lite-mobile-only mt-1 text-sm text-body" data-i18n-skip="true">{persistenceLabel}</p>}
                     </SheetHeader>
 
-                    {compactFreePreview ? (
+                    {showChecklist ? (
                         <FreeCostingChecklist sections={inputSections} onSelect={section => {
                             setOpen(false)
                             onSelectSection?.(section)
@@ -1680,8 +1682,8 @@ function MobileLiveEstimateShortcut({
                     </>}
 
                     {actions && (
-                        <div data-estimator-field="liveCostActions" className={`border-t border-[var(--color-hairline)]/80 px-5 pb-1 pt-4 ${adaptiveFreeModal && !compactFreePreview ? "mt-4" : ""}`}>
-                            {typeof actions === 'function' ? actions(() => { if (!isTutorialActive) setOpen(false) }) : actions}
+                        <div data-estimator-field="liveCostActions" className={`border-t border-[var(--color-hairline)]/80 px-5 pb-1 pt-4 ${adaptiveSheet && !showChecklist ? "mt-4" : ""}`}>
+                            {typeof actions === 'function' ? actions(() => { if (!isTutorialActive) setOpen(false) }, { checklist: showChecklist }) : actions}
                         </div>
                     )}
                 </SheetContent>
@@ -7268,7 +7270,7 @@ export default function EstimatorClient({
                 compactLite={liteMode}
                 persistenceLabel={liteMode ? litePersistenceLabel : undefined}
                 awaitingCalculation={awaitingCalculation}
-                inputSections={freeMode ? getFreeCostingSections(estimatorValidation, qualityLabel, warningsAcknowledged) : undefined}
+                inputSections={getFreeCostingSections(estimatorValidation, qualityLabel, warningsAcknowledged)}
                 onSelectSection={section => {
                     if (DETAILED_ESTIMATOR_ISSUE_FIELDS.has(section.field) || findEstimatorIssueTarget(section.field)) jumpToEstimatorIssue(section.field)
                     else {
@@ -7312,7 +7314,7 @@ export default function EstimatorClient({
                         onToggle={toggleAssumptions}
                     />
                 ) : undefined}
-                actions={(onDismiss) => (
+                actions={(onDismiss, view) => (
                     <EstimatorLiveCostActions
                         freeCanCalculate={freeMode ? freeCanCalculate && estimatorValidation.valid && !!qualityLabel.trim() : undefined}
                         savingQuote={savingQuote}
@@ -7325,7 +7327,7 @@ export default function EstimatorClient({
                         totalProductionCostPerM={totals.totalProductionCostPerM}
                         exportReady={Boolean(exportModel)}
                         firstCostingReadinessMessage={firstCostingReadinessMessage}
-                        actionReadinessMessage={actionReadinessMessage}
+                        actionReadinessMessage={view.checklist ? null : actionReadinessMessage}
                         actionReadinessId={actionReadinessId}
                         topCostingActionLabel={topCostingActionLabel}
                         onSaveCosting={() => void handleSaveQuote('draft')}
