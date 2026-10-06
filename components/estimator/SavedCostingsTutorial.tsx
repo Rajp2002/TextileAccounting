@@ -117,6 +117,23 @@ const railCopy = {
   }
 } as const
 
+/**
+ * The "More help" disclosure. Free renders it in the right rail from 1280px and inside the left
+ * rail below that (see `rail-inline-actions`), so it is its own component rather than tutorial markup.
+ */
+export function SavedCostingsHelp({ free = false }: { free?: boolean }) {
+    const { language } = useTranslation()
+    const copy = railCopy[language]
+    const helpFields = free ? [copy.fields.freeHelp, copy.fields.customer, copy.fields.share]
+        : [copy.fields.filters, copy.fields.breakdown, copy.fields.organize, copy.fields.separateQuality, copy.fields.customer, copy.fields.share]
+    return (
+        <details data-i18n-skip="true" lang={language} className={cn(railSurface, 'ui-details group text-xs')}>
+            <summary className="flex min-h-[44px] cursor-pointer select-none list-none items-center justify-between gap-2.5 px-3.5 py-2.5 text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden"><span className="flex min-w-0 items-center gap-2.5"><CircleHelp className={railIcon} aria-hidden="true" /><span className="min-w-0">{copy.help}</span></span><ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" /></summary>
+            <div className="max-h-[40dvh] space-y-3 overflow-y-auto border-t border-hairline px-3.5 py-3">{helpFields.map(([title, description]) => <section key={title}><h3 className="font-semibold text-ink">{title}</h3><p className="mt-1 leading-relaxed text-body">{description}</p></section>)}</div>
+        </details>
+    )
+}
+
 export function SavedCostingsTutorial({ step, onStepChange, onComplete, free = false, production = false, inline = false, ending = 'empty', userId, orgId, userMetadata }: {
     step: SavedCostingStep | null; onStepChange: (step: SavedCostingStep | null) => void; onComplete?: () => void
     free?: boolean; production?: boolean; inline?: boolean; ending?: SavedCostingEnding
@@ -127,8 +144,6 @@ export function SavedCostingsTutorial({ step, onStepChange, onComplete, free = f
     const [comparisonTour, setComparisonTour] = useState(false)
     const launcher = useRef<HTMLDivElement>(null)
     const returnFocus = useRef<HTMLElement | null>(null)
-    const helpFields = free ? [copy.fields.freeHelp, copy.fields.customer, copy.fields.share]
-        : [copy.fields.filters, copy.fields.breakdown, copy.fields.organize, copy.fields.separateQuality, copy.fields.customer, copy.fields.share]
     return <>
         <div ref={launcher} data-costing-tour="guide" className={inline ? 'mb-4' : 'saved-costings-tour-launcher mb-4 flex min-h-0 flex-1 flex-col justify-between h-full'}>
             <TourInvitation tourId="saved-costings" userId={userId} orgId={orgId} userMetadata={userMetadata} align="full" className="w-full" onLaunch={() => {
@@ -136,17 +151,14 @@ export function SavedCostingsTutorial({ step, onStepChange, onComplete, free = f
                 setComparisonTour(false)
                 onStepChange(free ? 'snapshots' : 'find')
             }} />
-            <div data-i18n-skip="true" lang={language} className="@container left-rail-bottom mt-auto pt-3">
+            <div data-i18n-skip="true" lang={language} className={cn('@container left-rail-bottom mt-auto pt-3', free && 'rail-inline-actions')}>
                 <div className="grid items-start gap-2 @lg:grid-cols-2">
                     {!free && <Button type="button" variant="outline" data-tour-control="compare-tour" className={cn(railButton, 'h-auto whitespace-normal')} onClick={event => {
                         returnFocus.current = event.currentTarget
                         setComparisonTour(true)
                         onStepChange('compareSelect')
                     }}><span className="flex min-w-0 items-center gap-2.5"><GitCompareArrows className={railIcon} aria-hidden="true" /><span className="min-w-0">{copy.compare}</span></span><ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" /></Button>}
-                    <details className={cn(railSurface, 'ui-details group text-xs')}>
-                        <summary className="flex min-h-[44px] cursor-pointer select-none list-none items-center justify-between gap-2.5 px-3.5 py-2.5 text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden"><span className="flex min-w-0 items-center gap-2.5"><CircleHelp className={railIcon} aria-hidden="true" /><span className="min-w-0">{copy.help}</span></span><ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" /></summary>
-                        <div className="max-h-[40dvh] space-y-3 overflow-y-auto border-t border-hairline px-3.5 py-3">{helpFields.map(([title, description]) => <section key={title}><h3 className="font-semibold text-ink">{title}</h3><p className="mt-1 leading-relaxed text-body">{description}</p></section>)}</div>
-                    </details>
+                    <SavedCostingsHelp free={free} />
                 </div>
             </div>
         </div>
