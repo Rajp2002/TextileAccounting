@@ -133,7 +133,7 @@ describe('Sample rate guards run before any business action or UI mutation', () 
             const beginLiteMutation = vi.fn(() => true)
             const toast = { info: vi.fn() }
             const scope = { draft: rate, archiveRate: rate, isSampleRecordId, toast, tourCommonCopy, language: 'gu',
-                setPendingAction: pending, setArchiveError: mutate, beginLiteMutation, setHistoryRate: mutate, setHistoryRows: mutate,
+                setPendingAction: pending, setArchiveError: mutate, beginLiteMutation, setHistoryRate: mutate, setHistoryMode: mutate, setHistoryRows: mutate,
                 setHistoryError: mutate, setHistoryLoading: mutate,
                 startTransition: (fn: () => void) => fn(), saveCostRate: business, getCostRateHistory: business, archiveCostRate: business,
             }

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { RateBookTutorial, RateBookHelp, rateBookHelpCopy } from '@/components/rates/RateBookTutorial'
+import { RateTrendDialog } from '@/components/rates/RateTrendDialog'
 import type { RateBookStep } from '@/lib/rate-book-tour'
 import { isSampleRecordId } from '@/lib/tours/sample-ids'
 import { tourCommonCopy } from '@/lib/i18n/tour-common'
@@ -12,6 +13,7 @@ import {
     ArchiveRestore,
     BookOpen,
     CalendarClock,
+    ChartLine,
     CheckCircle2,
     ChevronDown,
     ChevronRight,
@@ -908,6 +910,7 @@ export default function RatesClient({
     const [draft, setDraft] = useState<CostRateInput | null>(null)
     const [showDueReviews, setShowDueReviews] = useState(false)
     const [historyRate, setHistoryRate] = useState<CostRateRow | null>(null)
+    const [historyMode, setHistoryMode] = useState<'activity' | 'trend'>('activity')
     const [historyRows, setHistoryRows] = useState<RateHistoryRow[]>([])
     const [historyLoading, setHistoryLoading] = useState(false)
     const [historyError, setHistoryError] = useState<string | null>(null)
@@ -1352,12 +1355,13 @@ export default function RatesClient({
         setShowConflicts(false)
     }
 
-    const openHistory = async (rate: CostRateRow) => {
+    const openHistory = async (rate: CostRateRow, mode: 'activity' | 'trend' = 'activity') => {
         if (isSampleRecordId(rate.id)) {
             toast.info(tourCommonCopy[language].sampleBanner)
             return
         }
         setHistoryRate(rate)
+        setHistoryMode(mode)
         setHistoryRows([])
         setHistoryError(null)
         setHistoryLoading(true)
@@ -1855,10 +1859,21 @@ export default function RatesClient({
                                                     {rate.apply_as_default && <p className="mt-1 text-[10px] font-semibold text-success">Default for new costings</p>}
                                                 </td>
                                                 <td data-ratebook-field="rateAndTrend" tabIndex={-1} className="px-3 py-3 align-top">
-                                                    <p className="font-mono text-sm font-bold text-ink">{formatRateValue(rate.current_value, rate.unit)}</p>
-                                                    <div className="mt-1.5">
-                                                        <PriceDeltaBadge currentValue={rate.current_value} previousValue={rate.previous_value} unit={rate.unit} />
-                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => openHistory(rate, 'trend')}
+                                                        title={tx('View price history')}
+                                                        className="group/trend -mx-2 -my-1.5 block rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/50"
+                                                    >
+                                                        <span className="flex items-center gap-1.5 font-mono text-sm font-bold text-ink">
+                                                            {formatRateValue(rate.current_value, rate.unit)}
+                                                            <ChartLine className="h-3.5 w-3.5 text-subtle/60 transition-colors group-hover/trend:text-saffron-deep" aria-hidden="true" />
+                                                        </span>
+                                                        <span className="mt-1.5 block">
+                                                            <PriceDeltaBadge currentValue={rate.current_value} previousValue={rate.previous_value} unit={rate.unit} />
+                                                        </span>
+                                                        <span className="sr-only">{`${tx('View price history')}: ${rate.name}`}</span>
+                                                    </button>
                                                 </td>
                                                 <td data-ratebook-field="reviewStatusBadge" className="px-3 py-3 align-top">
                                                     <ReviewBadge rate={rate} />
@@ -1974,11 +1989,20 @@ export default function RatesClient({
                                             </div>
 
                                             <div className="mt-3.5 flex items-baseline justify-between gap-3 border-y border-hairline/70 py-2.5">
-                                                <div data-ratebook-field="rateAndTrend" tabIndex={-1} className="flex flex-wrap items-baseline gap-2">
-                                                    <span className="font-mono text-xl font-black tracking-tight text-ink">
-                                                        {formatRateValue(rate.current_value, rate.unit)}
-                                                    </span>
-                                                    <PriceDeltaBadge currentValue={rate.current_value} previousValue={rate.previous_value} unit={rate.unit} />
+                                                <div data-ratebook-field="rateAndTrend" tabIndex={-1} className="min-w-0">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => openHistory(rate, 'trend')}
+                                                        title={tx('View price history')}
+                                                        className="group/trend -mx-2 flex min-h-11 flex-wrap items-center gap-x-2 gap-y-1 rounded-lg px-2 text-left transition-colors hover:bg-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/50"
+                                                    >
+                                                        <span className="font-mono text-xl font-black tracking-tight text-ink">
+                                                            {formatRateValue(rate.current_value, rate.unit)}
+                                                        </span>
+                                                        <PriceDeltaBadge currentValue={rate.current_value} previousValue={rate.previous_value} unit={rate.unit} />
+                                                        <ChartLine className="h-4 w-4 text-subtle/60 transition-colors group-hover/trend:text-saffron-deep" aria-hidden="true" />
+                                                        <span className="sr-only">{`${tx('View price history')}: ${rate.name}`}</span>
+                                                    </button>
                                                 </div>
                                                 {rate.apply_as_default && (
                                                     <span className="text-[10px] font-semibold text-success">Default</span>
@@ -2184,7 +2208,16 @@ export default function RatesClient({
                 </DialogContent>
             </Dialog>
 
-            <Sheet open={Boolean(historyRate)} onOpenChange={open => { if (!open) { setHistoryRate(null); setHistoryError(null) } }}>
+            <RateTrendDialog
+                rate={historyMode === 'trend' ? historyRate : null}
+                rows={historyRows}
+                loading={historyLoading}
+                error={historyError}
+                onClose={() => { setHistoryRate(null); setHistoryError(null) }}
+                onOpenActivity={() => setHistoryMode('activity')}
+            />
+
+            <Sheet open={Boolean(historyRate) && historyMode === 'activity'} onOpenChange={open => { if (!open) { setHistoryRate(null); setHistoryError(null) } }}>
                 <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
                     <SheetHeader className="border-b border-hairline px-6 py-5">
                         <SheetTitle className="flex items-center gap-2"><History className="h-5 w-5 text-info" /> {historyRate?.name} activity</SheetTitle>

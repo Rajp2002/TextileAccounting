@@ -133,7 +133,7 @@ describe('Rate Book P3: Quick Rate Edit Dialog in RatesClient.tsx', () => {
 
         it('keeps the Sheet only for the rate activity history', () => {
             expect((client.match(/<Sheet open=/g) || []).length).toBe(1)
-            expect(client).toContain('<Sheet open={Boolean(historyRate)}')
+            expect(client).toContain("<Sheet open={Boolean(historyRate) && historyMode === 'activity'}")
         })
     })
 
