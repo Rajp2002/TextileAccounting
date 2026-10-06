@@ -47,7 +47,9 @@ import { createDocumentGenerationGuard } from '@/lib/document-generation'
 import { useTranslation } from '@/lib/i18n/context'
 import { canSharePreparedFile, sharePreparedDocument } from '@/lib/prepared-document-share'
 
-type ExportStatus = 'idle' | 'saving' | 'generating' | 'generated' | 'download-started' | 'print-opened' | 'share-opened' | 'failed'
+const PDF_LAYOUT_WIDTH_PX = 700
+
+type ExportStatus ='idle' | 'saving' | 'generating' | 'generated' | 'download-started' | 'print-opened' | 'share-opened' | 'failed'
 
 type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected'
 
@@ -317,7 +319,9 @@ export function CostingExportDialog({
       if (!isCurrentGeneration()) return
       const pdf = new jsPDF({ unit: 'pt', format: 'a4' })
       const host = document.createElement('div')
-      host.style.width = '760px'
+      // The document is laid out 700px wide and scaled onto the 523pt A4 text
+      // block (x0.747), so its 12px body text prints at about 9pt.
+      host.style.width = `${PDF_LAYOUT_WIDTH_PX}px`
       host.style.position = 'fixed'
       host.style.left = '0'
       host.style.top = '0'
@@ -331,7 +335,7 @@ export function CostingExportDialog({
           margin: [36, 36, 36, 36],
           autoPaging: 'text',
           width: 523,
-          windowWidth: 760,
+          windowWidth: PDF_LAYOUT_WIDTH_PX,
         })
       } finally {
         host.remove()

@@ -18,7 +18,7 @@ import {
   SlidersHorizontal,
 } from 'lucide-react'
 import type { EstimateState, EstimatorV3Totals, CostingResultSnapshot } from '@/lib/estimator'
-import { createCostingExportModel } from '@/lib/estimator-export'
+import { createCostingExportModel, shortDocumentReference } from '@/lib/estimator-export'
 import { CostingExportDialog } from '@/components/estimator/CostingExportDialog'
 import { SavedCostingsTutorial } from '@/components/estimator/SavedCostingsTutorial'
 import { savedCostingTourEnding, isSavedCostingHandoff, costingTourSurface, makeSavedCostingTourExport, makeSavedCostingTourExamples, type SavedCostingStep } from '@/lib/saved-costings-tour'
@@ -746,7 +746,7 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
         }}
         model={exportModel}
         sourceRecordKind="costing"
-        documentReference={selected?.id}
+        documentReference={shortDocumentReference(selected?.id)}
       />
     </>
   )
