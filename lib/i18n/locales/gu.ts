@@ -517,11 +517,7 @@ export const gu = {
   production: {
     activateQuality: "ક્વોલિટી ચાલુ કરો",
     assignLooms: "લૂમ ફાળવો",
-    manageWorkers: "કારીગર બદલો",
-    machineBoard: "મશીન બોર્ડ",
-    switchQuality: "ક્વોલિટી બદલો",
     qualityActions: "ક્વોલિટીના વિકલ્પો",
-    manageOperatorsForLoom: "{loom} માટે ઓપરેટરોનું સંચાલન કરો",
     cost: "ખર્ચ",
     log_production: "પ્રોડક્શન નોંધો (Log Prod)",
     save_all: "બધા સેવ કરો (Save All Entries)",

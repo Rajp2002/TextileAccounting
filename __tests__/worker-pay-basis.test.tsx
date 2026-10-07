@@ -4,7 +4,6 @@ import { gu } from '../lib/i18n/locales/gu'
 import { hi } from '../lib/i18n/locales/hi'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { readFileSync } from 'node:fs'
 import { workersTutorialCopy } from '../lib/i18n/workers-tutorial'
 import { makeWorkersTourExamples } from '../lib/workers-tour'
 
@@ -42,11 +41,5 @@ describe('Base worker wage-source display', () => {
             expect(renderToStaticMarkup(<WorkerPayBasis worker={{ pay_type: 'piece_rate' }} />)).toContain(workersTutorialCopy[language].wageSource)
             expect(renderToStaticMarkup(<WorkerPayBasis worker={{ pay_type: 'fixed_monthly' }} />)).toContain(workersTutorialCopy[language].salaryBasis)
         }
-    })
-    it('uses the shared pay source for current and available operators in Manage Workers', () => {
-        const source = readFileSync('app/(dashboard)/owner/production/BaseMachineBoard.tsx', 'utf8')
-        expect(source).not.toMatch(/(?:currentWorker|worker)\.rate_per_meter/)
-        expect(source).toContain('<WorkerPayBasis worker={currentWorker} quality={currentJobByMachine.get(managingMachine.id)}')
-        expect(source).toContain('<WorkerPayBasis worker={worker} quality={managingMachine ? currentJobByMachine.get(managingMachine.id) : undefined}')
     })
 })

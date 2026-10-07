@@ -72,7 +72,6 @@ import {
     settleBaseWorkerPayroll,
 } from './actions'
 import BaseActiveQualities from './BaseActiveQualities'
-import BaseMachineBoard from './BaseMachineBoard'
 import BaseAssignmentWorkspace from './BaseAssignmentWorkspace'
 import BaseDailyProductionSheet from './BaseDailyProductionSheet'
 import BasePayrollReadinessPanel from './BasePayrollReadinessPanel'
@@ -719,7 +718,7 @@ export default function BaseProductionClient({
             {view === 'operations' && <BaseAssignmentWorkspace key={`${initialData.orgId}:${navigation.worker ?? "all"}:${navigation.machine ?? "all"}:${navigation.shift ?? "day"}`} initialData={initialData} focusWorkerId={searchParams.get("worker") ?? undefined} focusMachineId={searchParams.get("machine") ?? undefined} initialShift={navigation.shift} tourMetadata={tourMetadata} />}
 
             {(view === 'production' || (view === 'payroll' && activeTab !== 'history')) && <div className="space-y-4">
-                {view === 'production' && activeTab === 'jobs' && <div className="space-y-6">
+                {view === 'production' && activeTab === 'jobs' && (
                     <BaseActiveQualities
                         jobs={initialData.jobs}
                         costings={initialData.costings}
@@ -731,16 +730,7 @@ export default function BaseProductionClient({
                         isActivateModalOpen={isActivateModalOpen}
                         onOpenActivateModalChange={setIsActivateModalOpen}
                     />
-                    <BaseMachineBoard
-                        machines={initialData.machines}
-                        jobs={initialData.jobs}
-                        workers={initialData.workers}
-                        assignments={initialData.assignments}
-                        machineJobContexts={initialData.machineJobContexts}
-                        today={initialData.today}
-                        onActivateQualityClick={() => setIsActivateModalOpen(true)}
-                    />
-                </div>}
+                )}
 
                 {view === 'production' && activeTab === 'production' && <div>
                     <BaseDailyProductionSheet initialData={initialData} navigation={navigation} onAddWorker={() => openSetup('worker')} onAddMachine={() => openSetup('machine')} onOpenHistory={() => setIsHistoryOpen(true)} />

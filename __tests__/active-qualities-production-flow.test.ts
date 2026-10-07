@@ -12,6 +12,8 @@ describe('Active Qualities Production Simplification Flow', () => {
     const clientPath = 'app/(dashboard)/owner/production/BaseProductionClient.tsx'
     const activeQualitiesPath = 'app/(dashboard)/owner/production/BaseActiveQualities.tsx'
     const machineBoardPath = 'app/(dashboard)/owner/production/BaseMachineBoard.tsx'
+    const qualityDialogPath = 'app/(dashboard)/owner/production/MachineQualityDialog.tsx'
+    const assignmentWorkspacePath = 'app/(dashboard)/owner/production/BaseAssignmentWorkspace.tsx'
     const quotesClientPath = 'app/(dashboard)/owner/quotes/QuotesClient.tsx'
 
     it('creates database migration with essential RPCs preserving workers and enforcing single active quality', () => {
@@ -73,23 +75,29 @@ describe('Active Qualities Production Simplification Flow', () => {
         expect(component).toContain('0 Looms assigned')
     })
 
-    it('renders the BaseMachineBoard component with loom cards, shift operators, switch quality and operator management', () => {
-        expect(existsSync(join(process.cwd(), machineBoardPath))).toBe(true)
-        const component = read(machineBoardPath)
+    it('puts a loom\'s quality in a dialog opened from its machine card in Machine Assignments, not on a Production board', () => {
+        // The Production overview no longer carries a per-loom board.
+        expect(existsSync(join(process.cwd(), machineBoardPath))).toBe(false)
 
-        expect(component).toContain("t('production.machineBoard')")
-        expect(component).toContain('Running')
-        expect(component).toContain('Available')
-        expect(component).toContain('Switch Quality')
-        expect(component).toContain('Assign Quality')
-        expect(component).toContain("t('production.manageOperatorsForLoom', { loom: managingMachine?.custom_label || managingMachine?.name || '' })")
-        expect(component).toContain('switchBaseMachineQuality')
-        expect(component).toContain('setBaseMachineJobContext')
-        expect(component).toContain('Day Shift')
-        expect(component).toContain('Night Shift')
+        expect(existsSync(join(process.cwd(), qualityDialogPath))).toBe(true)
+        const dialog = read(qualityDialogPath)
+        // A loom with a quality is switched, one without gets its first quality; both read the active qualities.
+        expect(dialog).toContain('switchBaseMachineQuality')
+        expect(dialog).toContain('setBaseMachineJobContext')
+        expect(dialog).toContain('currentJobId ?')
+        expect(dialog).toContain('type="radio"')
+
+        const workspace = read(assignmentWorkspacePath)
+        expect(workspace).toContain("import MachineQualityDialog from './MachineQualityDialog'")
+        expect(workspace).toContain('<MachineQualityDialog')
+        expect(workspace).toContain('onClick={() => openQualityDialog(machine)}')
+        // Only qualities that are planned or running can be chosen.
+        expect(workspace).toContain('jobs={activeJobs}')
+        // The same card renders on the desktop board and the phone machine list.
+        expect(workspace.match(/renderMachineIdentity\(machine\)/g)).toHaveLength(2)
     })
 
-    it('embeds BaseActiveQualities and BaseMachineBoard in BaseProductionClient with 4 KPI summary cards', () => {
+    it('embeds BaseActiveQualities in BaseProductionClient with 4 KPI summary cards', () => {
         const client = read(clientPath)
 
         // KPI cards
@@ -100,7 +108,7 @@ describe('Active Qualities Production Simplification Flow', () => {
 
         // Separate route content and components
         expect(client).toContain('<BaseActiveQualities')
-        expect(client).toContain('<BaseMachineBoard')
+        expect(client).not.toContain('BaseMachineBoard')
         expect(client).not.toContain("<TabsList")
         expect(client).toContain("/daily-sheet")
 
