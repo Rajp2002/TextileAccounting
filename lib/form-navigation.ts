@@ -123,6 +123,30 @@ export function findNavigableFormInputs(
 }
 
 /**
+ * Keeps a field inside the visible viewport, clear of a sticky header above and the
+ * keyboard's field bar below, scrolling a scroll-locked dialog rather than the page.
+ */
+export function keepFieldInVisibleViewport(field: HTMLElement) {
+    if (typeof window === 'undefined' || !field.isConnected || !field.getBoundingClientRect) return
+    const viewport = window.visualViewport
+    if (viewport && Math.abs(viewport.scale - 1) > 0.05) return
+    const top = (viewport?.offsetTop ?? 0) + 72
+    const bottom = (viewport?.offsetTop ?? 0) + (viewport?.height ?? window.innerHeight) - 80
+    const rect = field.getBoundingClientRect()
+    const delta = rect.bottom > bottom ? rect.bottom - bottom : rect.top < top ? rect.top - top : 0
+    if (!delta) return
+    let parent = field.parentElement
+    while (parent && parent !== document.body) {
+        if (/(auto|scroll)/.test(window.getComputedStyle(parent).overflowY) && parent.scrollHeight > parent.clientHeight) {
+            parent.scrollBy({ top: delta, behavior: 'auto' })
+            return
+        }
+        parent = parent.parentElement
+    }
+    window.scrollBy({ top: delta, behavior: 'auto' })
+}
+
+/**
  * Comfortably brings an element into view, ensuring clearance from top/bottom bars.
  */
 export function scrollInputIntoComfortableView(
@@ -130,6 +154,13 @@ export function scrollInputIntoComfortableView(
     scrollOptions?: ScrollIntoViewOptions
 ) {
     if (!element) return
+
+    // A phone's keyboard covers the lower part of the layout viewport, so centring a
+    // section there hides the field being typed into. Move only as far as needed.
+    if (typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches) {
+        keepFieldInVisibleViewport(element)
+        return
+    }
 
     const sectionTarget = typeof element.closest === 'function'
         ? element.closest<HTMLElement>('[data-enter-scroll-target]')

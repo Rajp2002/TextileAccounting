@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
+import { createPortal, flushSync } from 'react-dom'
 import { ChevronLeft, ChevronRight, Check } from 'lucide-react'
 import { useMobileKeyboard } from '@/hooks/use-mobile-keyboard'
 import { useTranslation } from '@/lib/i18n/context'
@@ -11,6 +11,7 @@ export function MobileInputNavigation() {
     const keyboardVisible = useMobileKeyboard()
     const [input, setInput] = useState<HTMLInputElement | null>(null)
     const activeInput = useRef<HTMLInputElement | null>(null)
+    const [, setFlowVersion] = useState(0)
     const { t } = useTranslation()
 
     useEffect(() => {
@@ -42,17 +43,26 @@ export function MobileInputNavigation() {
         if (!visible) return
         document.documentElement.style.setProperty('--mobile-input-accessory-height', '56px')
         let frame = 0
+        let refreshFrame = 0
         const keepVisible = () => {
             cancelAnimationFrame(frame)
             frame = requestAnimationFrame(() => {
                 if (activeInput.current) keepMobileInputVisible(activeInput.current)
             })
         }
+        // Typing can add or remove fields (a component count adds yarn rows).
+        const refresh = () => {
+            cancelAnimationFrame(refreshFrame)
+            refreshFrame = requestAnimationFrame(() => setFlowVersion(version => version + 1))
+        }
         keepVisible()
         window.visualViewport?.addEventListener('resize', keepVisible)
+        document.addEventListener('input', refresh)
         return () => {
             cancelAnimationFrame(frame)
+            cancelAnimationFrame(refreshFrame)
             window.visualViewport?.removeEventListener('resize', keepVisible)
+            document.removeEventListener('input', refresh)
             document.documentElement.style.removeProperty('--mobile-input-accessory-height')
         }
     }, [visible])
@@ -62,7 +72,8 @@ export function MobileInputNavigation() {
     const dialog = input.closest<HTMLElement>('[role="dialog"]')
     const move = (direction: 'previous' | 'next') => {
         const field = activeInput.current
-        if (field) moveMobileInput(field, direction)
+        // A collapsed yarn row must open within this tap so its field can take focus.
+        if (field) moveMobileInput(field, direction, toggle => flushSync(() => toggle.click()))
     }
 
     // Inside a modal, keep the controls in its focus/accessibility boundary.
