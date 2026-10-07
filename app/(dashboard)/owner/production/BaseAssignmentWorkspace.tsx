@@ -17,7 +17,7 @@ import { Fragment, memo, useCallback, useEffect, useEffectEvent, useImperativeHa
 import { useRouter } from 'next/navigation'
 import { flushSync } from 'react-dom'
 import { toast } from 'sonner'
-import { ArrowUpRight, Check, CircleHelp, Link2, Loader2, Moon, Plus, Search, Sun, Unlink, Users, Wrench } from 'lucide-react'
+import { ArrowUpRight, Check, ChevronDown, CircleHelp, Layers, Link2, Loader2, Moon, Plus, Search, Sun, Unlink, Users, Wrench } from 'lucide-react'
 import { railButton, railIcon } from '@/components/ui/rail'
 
 import { Badge } from '@/components/ui/badge'
@@ -43,6 +43,7 @@ import {
 } from './actions'
 import type { BaseAssignmentsInitialData } from '../assignments/loaders'
 import { buildWorkerColorMap, DEFAULT_PALETTE, type WorkerPalette } from './worker-colors'
+import MachineQualityDialog from './MachineQualityDialog'
 
 const GuidedTour = dynamic(() => import('@/components/tours/GuidedTour').then(module => module.GuidedTour), { ssr: false }) as typeof GuidedTourComponent
 
@@ -447,6 +448,9 @@ export default function BaseAssignmentWorkspace({
     const [hoveredWorkerId, setHoveredWorkerId] = useState<string | null>(null)
     const [hoveredMachineId, setHoveredMachineId] = useState<string | null>(null)
     const [selectedPickerWorkerId, setPickerWorkerId] = useState<string | null>(null)
+    // The machine whose quality is being chosen; kept after the dialog closes so it can fade out.
+    const [qualityMachineId, setQualityMachineId] = useState<string | null>(null)
+    const [qualityDialogOpen, setQualityDialogOpen] = useState(false)
     const [boardChanges, setBoardChanges] = useState<BoardChange[]>([])
     const [newLinkKey, setNewLinkKey] = useState<string | null>(null)
     const [selectedMobileView, setMobileView] = useState<'workers' | 'machines'>('workers')
@@ -513,6 +517,16 @@ export default function BaseAssignmentWorkspace({
         }
         return result
     }, [activeJobIds, initialData.machineJobContexts, initialData.today])
+    const jobById = useMemo(() => new Map(initialData.jobs.map((job) => [job.id, job])), [initialData.jobs])
+    const loomsByJob = useMemo(() => {
+        const result = new Map<string, number>()
+        for (const machine of initialData.machines) {
+            const jobId = machine.is_active ? currentJobByMachine.get(machine.id) : undefined
+            if (jobId) result.set(jobId, (result.get(jobId) ?? 0) + 1)
+        }
+        return result
+    }, [currentJobByMachine, initialData.machines])
+    const qualityMachine = qualityMachineId ? machineById.get(qualityMachineId) ?? null : null
 
     // Tour samples never show live pending changes.
     const shownChanges = useMemo(() => tourStep ? [] : boardChanges, [boardChanges, tourStep])
@@ -849,6 +863,18 @@ export default function BaseAssignmentWorkspace({
         }
     }, [draggingWorkerId])
 
+    function openQualityDialog(machine: BaseProductionMachine) {
+        if (tourStep || !machine.is_active) return
+        // A connector dropped on a machine must not also open its quality.
+        if (draggingWorkerId || dragSession.current) return
+        if (isSampleRecordId(machine.id)) {
+            toast.info(tourCommonCopy[language].sampleBanner)
+            return
+        }
+        setQualityMachineId(machine.id)
+        setQualityDialogOpen(true)
+    }
+
     async function handleAssign(workerId: string, machineId: string, source: BoardChange['source'] = 'picker') {
         if (tourStep) return
         if (isSampleRecordId(workerId) || isSampleRecordId(machineId)) {
@@ -1003,6 +1029,39 @@ export default function BaseAssignmentWorkspace({
         }
     }
 
+    /** The name is the explicit control for a machine's quality; its card stretches the tap target, and the unlink and job links sit above it. */
+    const renderMachineIdentity = (machine: BaseProductionMachine) => {
+        const jobId = currentJobByMachine.get(machine.id)
+        const job = jobId ? jobById.get(jobId) : undefined
+        const name = machineLabel(machine)
+        return (
+            <div className="min-w-0 flex-1">
+                {machine.is_active ? (
+                    <button
+                        type="button"
+                        data-configuration-tour="quality"
+                        onClick={() => openQualityDialog(machine)}
+                        aria-label={tx(job ? 'Change quality for {machine}' : 'Choose quality for {machine}', { machine: name })}
+                        className="block max-w-full truncate rounded-md text-left font-semibold text-ink outline-none after:absolute after:inset-0 after:rounded-xl focus-visible:after:ring-2 focus-visible:after:ring-loom/40"
+                    >
+                        {name}
+                    </button>
+                ) : (
+                    <p className="truncate font-semibold text-ink">{name}</p>
+                )}
+                <p className="mt-0.5 text-xs text-muted-foreground">{formatMachineType(machine.machine_type)}{machine.is_active ? '' : ' · inactive'}</p>
+                {job && (
+                    <p className="mt-1 flex items-center gap-1 text-xs text-body">
+                        <Layers className="h-3 w-3 shrink-0 text-muted-foreground" aria-hidden="true" />
+                        <span className="truncate" title={job.quality_label}>{job.quality_label}</span>
+                        <span className="shrink-0 text-muted-foreground">v{job.costing_version || 1}</span>
+                        <ChevronDown className="h-3 w-3 shrink-0 text-muted-foreground" aria-hidden="true" />
+                    </p>
+                )}
+            </div>
+        )
+    }
+
     const renderWorkerCard = (worker: BaseProductionWorker) => {
         const assignments = assignmentByWorker.get(worker.id) ?? []
         const palette = workerColorMap.get(worker.id) ?? DEFAULT_PALETTE
@@ -1081,7 +1140,7 @@ export default function BaseAssignmentWorkspace({
                 data-configuration-tour="machine"
                 data-machine-node={machine.id}
                 data-board-item={`machine:${machine.id}`}
-                className={`min-h-[76px] rounded-xl border bg-surface px-3.5 py-3 shadow-xs transition-[border-color,background-color,box-shadow,scale] duration-200 ${hoveredMachineId === machine.id && draggingWorkerId ? 'scale-[1.01] border-saffron bg-saffron-soft/45 shadow-md ring-2 ring-saffron/20' : isDropTargetValid ? 'border-saffron/55 bg-saffron-soft/20' : hoveredMachineId === machine.id ? 'border-hairline-strong shadow-xs' : 'border-hairline'} ${!hasActiveJob ? 'opacity-90' : ''}`}
+                className={`relative min-h-[76px] rounded-xl border bg-surface px-3.5 py-3 shadow-xs transition-[border-color,background-color,box-shadow,scale] duration-200 ${machine.is_active && !draggingWorkerId ? 'cursor-pointer' : ''} ${hoveredMachineId === machine.id && draggingWorkerId ? 'scale-[1.01] border-saffron bg-saffron-soft/45 shadow-md ring-2 ring-saffron/20' : isDropTargetValid ? 'border-saffron/55 bg-saffron-soft/20' : hoveredMachineId === machine.id ? 'border-hairline-strong shadow-xs' : 'border-hairline'} ${!hasActiveJob ? 'opacity-90' : ''}`}
             >
                 <div className="flex items-start justify-between gap-2">
                     <span
@@ -1111,10 +1170,7 @@ export default function BaseAssignmentWorkspace({
                     >
                         <Link2 className="h-3.5 w-3.5" />
                     </span>
-                    <div className="min-w-0 flex-1">
-                        <p className="truncate font-semibold text-ink">{machineLabel(machine)}</p>
-                        <p className="mt-0.5 text-xs text-muted-foreground">{formatMachineType(machine.machine_type)}{machine.is_active ? '' : ' · inactive'}</p>
-                    </div>
+                    {renderMachineIdentity(machine)}
                     <div className="flex items-center gap-2">
                         {worker ? (
                             <span
@@ -1144,7 +1200,7 @@ export default function BaseAssignmentWorkspace({
                                 aria-label={`Remove ${worker?.name ?? 'worker'} from ${machineLabel(machine)}`}
                                 onClick={() => void handleRemove(assignment.id, machine.id)}
                                 disabled={isPendingAssignmentId(assignment.id) || isSaving}
-                                className="h-8 w-8 rounded-lg text-muted-foreground hover:bg-risk-soft/40 hover:text-risk transition-colors"
+                                className="relative z-10 h-8 w-8 rounded-lg text-muted-foreground hover:bg-risk-soft/40 hover:text-risk transition-colors"
                             >
                                 <Unlink className="h-3.5 w-3.5" />
                             </Button>
@@ -1157,7 +1213,7 @@ export default function BaseAssignmentWorkspace({
                         onClick={event => { if (tourStep) event.preventDefault() }}
                         prefetch={tourStep ? false : undefined}
                         href={`/owner/production?${new URLSearchParams({ tab: 'jobs', returnTo: configurationReturnTo })}#machine-jobs`}
-                        className="mt-2.5 inline-flex items-center gap-1 text-xs font-medium text-saffron-deep hover:text-saffron underline underline-offset-2"
+                        className="relative z-10 mt-2.5 inline-flex items-center gap-1 text-xs font-medium text-saffron-deep hover:text-saffron underline underline-offset-2"
                     >
                         Set job in Production <ArrowUpRight className="h-3 w-3" />
                     </Link>
@@ -1420,12 +1476,9 @@ export default function BaseAssignmentWorkspace({
                                 const jobId = currentJobByMachine.get(machine.id) ?? 'none'
                                 const hasActiveJob = jobId !== 'none'
                                 return (
-                                    <div key={machine.id} data-configuration-tour="machine" data-configuration-tour-connections className="rounded-xl border border-hairline bg-surface p-3 shadow-xs">
+                                    <div key={machine.id} data-configuration-tour="machine" data-configuration-tour-connections className="relative rounded-xl border border-hairline bg-surface p-3 shadow-xs">
                                         <div className="flex items-start justify-between gap-2">
-                                            <div className="min-w-0">
-                                                <p className="truncate font-semibold text-ink">{machineLabel(machine)}</p>
-                                                <p className="mt-0.5 text-xs text-muted-foreground">{formatMachineType(machine.machine_type)}</p>
-                                            </div>
+                                            {renderMachineIdentity(machine)}
                                             <div className="flex shrink-0 items-center gap-1.5">
                                                 {worker ? (
                                                     <span
@@ -1455,7 +1508,7 @@ export default function BaseAssignmentWorkspace({
                                                         aria-label={`Remove ${worker?.name ?? 'worker'} from ${machineLabel(machine)}`}
                                                         onClick={() => void handleRemove(assignment.id, machine.id)}
                                                         disabled={isPendingAssignmentId(assignment.id) || savingMachineIds.has(machine.id)}
-                                                        className="h-8 w-8 rounded-lg text-muted-foreground hover:bg-risk-soft/40 hover:text-risk transition-colors"
+                                                        className="relative z-10 h-8 w-8 rounded-lg text-muted-foreground hover:bg-risk-soft/40 hover:text-risk transition-colors"
                                                     >
                                                         <Unlink className="h-3.5 w-3.5" />
                                                     </Button>
@@ -1468,7 +1521,7 @@ export default function BaseAssignmentWorkspace({
                                                 onClick={event => { if (tourStep) event.preventDefault() }}
                                                 prefetch={tourStep ? false : undefined}
                                                 href={`/owner/production?${new URLSearchParams({ tab: 'jobs', returnTo: configurationReturnTo })}#machine-jobs`}
-                                                className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-saffron-deep hover:text-saffron underline underline-offset-2"
+                                                className="relative z-10 mt-2 inline-flex items-center gap-1 text-xs font-medium text-saffron-deep hover:text-saffron underline underline-offset-2"
                                             >
                                                 Set job in Production <ArrowUpRight className="h-3 w-3" />
                                             </Link>
@@ -1560,6 +1613,17 @@ export default function BaseAssignmentWorkspace({
                     </SheetFooter>
                 </SheetContent>
             </Sheet>
+            <MachineQualityDialog
+                machine={qualityMachine}
+                open={qualityDialogOpen && !tourStep}
+                onOpenChange={setQualityDialogOpen}
+                jobs={activeJobs}
+                currentJobId={qualityMachine ? currentJobByMachine.get(qualityMachine.id) ?? null : null}
+                loomsByJob={loomsByJob}
+                today={initialData.today}
+                productionHref={`/owner/production?${new URLSearchParams({ tab: 'jobs', returnTo: configurationReturnTo })}`}
+                onSaved={() => router.refresh()}
+            />
             {tourStep === 'ma-linked' && <div data-configuration-tour="saved-preview" data-i18n-skip="true" lang={language} role="status" className="col-span-full flex items-center justify-between gap-3 rounded-xl border border-hairline bg-surface p-4 shadow-sm">
                 <div>
                     <p className="font-semibold">{tourCopy.savedLabel}</p>

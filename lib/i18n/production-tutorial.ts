@@ -3,7 +3,7 @@ import type { ProductionOverviewTourStep } from '../production-tour'
 import { formatTourText } from '../tours/tour-text'
 
 type StepCopy = { title: string; body: string; detail?: string }
-type OverviewCopyKey = 'overview' | 'prereq' | 'activate' | 'looms' | 'operators' | 'board' | 'handoff'
+type OverviewCopyKey = 'overview' | 'prereq' | 'activate' | 'looms' | 'handoff'
 type ProductionCopy = Record<OverviewCopyKey, StepCopy> & {
     guide: { benefit: string }
 
@@ -29,15 +29,6 @@ export const productionTutorialCopy: Record<Language, ProductionCopy> = {
         "looms": {
             "title": "Put the quality on looms",
             "body": "{c:assignLooms} ticks the looms that will weave it. A loom weaves one quality at a time."
-        },
-        "operators": {
-            "title": "Give each loom a worker per shift",
-            "body": "{c:manageWorkers} sets the day and night operator of a loom. You can also do this for many looms in Machine Assignments."
-        },
-        "board": {
-            "title": "Read the machine board",
-            "body": "{c:machineBoard} shows each loom as running or available, with its quality and operators.",
-            "detail": "{c:switchQuality} moves a loom to another quality. To stop a quality everywhere, use {c:qualityActions} on its card."
         },
         "handoff": {
             "title": "Start your first quality",
@@ -66,15 +57,6 @@ export const productionTutorialCopy: Record<Language, ProductionCopy> = {
             "title": "ક્વોલિટીને લૂમ પર મૂકો",
             "body": "{c:assignLooms} તેને વણનારા લૂમ પર ટિક કરે છે. એક લૂમ એક વખતે એક જ ક્વોલિટી વણે છે."
         },
-        "operators": {
-            "title": "દરેક લૂમને શિફ્ટ પ્રમાણે કારીગર આપો",
-            "body": "{c:manageWorkers} લૂમનો દિવસ અને રાતનો ઓપરેટર નક્કી કરે છે. ઘણા લૂમ માટે આ મશીન ફાળવણીમાં પણ થાય છે."
-        },
-        "board": {
-            "title": "મશીન બોર્ડ વાંચો",
-            "body": "{c:machineBoard}માં દરેક લૂમ ચાલુ કે ખાલી, તેની ક્વોલિટી અને ઓપરેટર સાથે દેખાય છે.",
-            "detail": "{c:switchQuality} લૂમને બીજી ક્વોલિટી પર લઈ જાય છે. કોઈ ક્વોલિટી બધે બંધ કરવા તેના કાર્ડ પર {c:qualityActions} વાપરો."
-        },
         "handoff": {
             "title": "તમારી પહેલી ક્વોલિટી શરૂ કરો",
             "body": "તમારા લૂમ પર ક્વોલિટી મૂકવા {c:activateQuality} પસંદ કરો. પછી દરેક શિફ્ટના મીટર દૈનિક શીટમાં નોંધો."
@@ -102,15 +84,6 @@ export const productionTutorialCopy: Record<Language, ProductionCopy> = {
             "title": "क्वालिटी को लूम पर लगाएँ",
             "body": "{c:assignLooms} उसे बुनने वाले लूम पर टिक करता है। एक लूम एक बार में एक ही क्वालिटी बुनता है।"
         },
-        "operators": {
-            "title": "हर लूम को शिफ्ट के अनुसार कारीगर दें",
-            "body": "{c:manageWorkers} लूम का दिन और रात का ऑपरेटर तय करता है। कई लूम के लिए यह मशीन आवंटन में भी होता है।"
-        },
-        "board": {
-            "title": "मशीन बोर्ड पढ़ें",
-            "body": "{c:machineBoard} में हर लूम चालू या खाली, अपनी क्वालिटी और ऑपरेटर के साथ दिखता है।",
-            "detail": "{c:switchQuality} लूम को दूसरी क्वालिटी पर ले जाता है। किसी क्वालिटी को हर जगह रोकने के लिए उसके कार्ड पर {c:qualityActions} इस्तेमाल करें।"
-        },
         "handoff": {
             "title": "अपनी पहली क्वालिटी शुरू करें",
             "body": "अपने लूम पर क्वालिटी लगाने के लिए {c:activateQuality} चुनें। फिर हर शिफ्ट के मीटर दैनिक शीट में दर्ज करें।"
@@ -125,8 +98,6 @@ export const productionTutorialCopy: Record<Language, ProductionCopy> = {
 export function productionTourControlLabels(t: (key: string) => string) {
     return {
         activateQuality: t('production.activateQuality'), assignLooms: t('production.assignLooms'),
-        manageWorkers: t('production.manageWorkers'), machineBoard: t('production.machineBoard'),
-        switchQuality: t('production.switchQuality'), qualityActions: t('production.qualityActions'),
     }
 }
 

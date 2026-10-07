@@ -517,11 +517,7 @@ export const en = {
   production: {
     activateQuality: "Activate Quality",
     assignLooms: "Assign Looms",
-    manageWorkers: "Manage Workers",
-    machineBoard: "Machine Board",
-    switchQuality: "Switch Quality",
     qualityActions: "Quality actions",
-    manageOperatorsForLoom: "Manage Operators for {loom}",
     cost: "Cost",
     log_production: "Record Shift Production",
     save_all: "Save All Entries",

@@ -15,7 +15,6 @@ vi.mock('../app/(dashboard)/owner/production/actions', () => ({
     createBaseWorkerAdvance: vi.fn(), createBaseWorkerDeduction: vi.fn(), settleBaseWorkerPayroll: vi.fn(),
 }))
 vi.mock('../app/(dashboard)/owner/production/BaseActiveQualities', () => ({ default: () => null }))
-vi.mock('../app/(dashboard)/owner/production/BaseMachineBoard', () => ({ default: () => null }))
 vi.mock('../app/(dashboard)/owner/production/BaseAssignmentWorkspace', () => ({ default: () => null }))
 vi.mock('../app/(dashboard)/owner/production/BaseDailyProductionSheet', () => ({ default: () => null }))
 vi.mock('../app/(dashboard)/owner/production/BaseWorkerIncentives', () => ({ default: () => null }))

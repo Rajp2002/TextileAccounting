@@ -517,11 +517,7 @@ export const hi = {
   production: {
     activateQuality: "क्वालिटी चालू करें",
     assignLooms: "लूम दें",
-    manageWorkers: "कारीगर बदलें",
-    machineBoard: "मशीन बोर्ड",
-    switchQuality: "क्वालिटी बदलें",
     qualityActions: "क्वालिटी के विकल्प",
-    manageOperatorsForLoom: "{loom} के ऑपरेटर प्रबंधित करें",
     cost: "लागत",
     log_production: "प्रोडक्शन दर्ज करें (Log Prod)",
     save_all: "सभी दर्ज करें (Save All Entries)",

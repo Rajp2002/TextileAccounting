@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { productionTourSteps, productionTourSpecs, productionTourSelector } from '../lib/production-tour'
 import { productionSampleData } from '../lib/tours/sample-data/production'
 import { productionTutorialCopy, productionStepCopy, productionTourControlLabels } from '../lib/i18n/production-tutorial'
@@ -14,14 +14,14 @@ const languages = ['en', 'gu', 'hi'] as const
 const page = readFileSync('docs/guided-tours/pages/production.md', 'utf8')
 
 describe('Production Overview tour', () => {
-    it('teaches seven setup steps then hands off to live activation, opening three real dialogs and sheets', () => {
-        expect(productionTourSteps).toEqual(['pd-overview', 'pd-prereq', 'pd-activate', 'pd-looms', 'pd-operators', 'pd-board', 'pd-handoff'])
+    it('teaches four setup steps then hands off to live activation, opening two real dialogs', () => {
+        expect(productionTourSteps).toEqual(['pd-overview', 'pd-prereq', 'pd-activate', 'pd-looms', 'pd-handoff'])
         expect(productionTourSpecs.map(step => step.id)).toEqual(productionTourSteps)
-        expect(productionTourSpecs.map(step => step.kind)).toEqual(['sample', 'sample', 'sample', 'sample', 'sample', 'sample', 'handoff'])
-        expect(productionTourSpecs.filter(step => step.context).map(step => step.id)).toEqual(['pd-activate', 'pd-looms', 'pd-operators'])
+        expect(productionTourSpecs.map(step => step.kind)).toEqual(['sample', 'sample', 'sample', 'sample', 'handoff'])
+        expect(productionTourSpecs.filter(step => step.context).map(step => step.id)).toEqual(['pd-activate', 'pd-looms'])
         expect(productionTourSpecs.filter(step => step.context).every(step => step.context === '[data-tour-surface="true"]')).toBe(true)
-        expect(productionTourSpecs.filter(step => step.detail).map(step => step.id)).toEqual(['pd-prereq', 'pd-activate', 'pd-board'])
-        expect(productionTourSpecs.map(step => step.anchor)).toEqual(['overview', 'qualities', 'activate', 'allocate', 'operators', 'board'].map(field => `[data-production-tour="${field}"]`).concat('[data-tour-anchor="production.activate"]'))
+        expect(productionTourSpecs.filter(step => step.detail).map(step => step.id)).toEqual(['pd-prereq', 'pd-activate'])
+        expect(productionTourSpecs.map(step => step.anchor)).toEqual(['overview', 'qualities', 'activate', 'allocate'].map(field => `[data-production-tour="${field}"]`).concat('[data-tour-anchor="production.activate"]'))
         expect(productionTourSelector('pd-prereq')).toBe('[data-production-tour="qualities"]')
     })
     it.each(languages)('%s transcribes every approved Overview copy row exactly and resolves live tokens', language => {
@@ -49,25 +49,20 @@ describe('Production Overview tour', () => {
         }
         expect(copy.prereq.body).toContain({ en: 'stock of every yarn', gu: 'દરેક યાર્નનો સ્ટોક', hi: 'हर धागे का स्टॉक' }[language])
         expect(copy.activate.detail).toBeTruthy()
-        expect(copy.board.detail).toContain('{c:qualityActions}')
         expect(productionStepCopy(language, 'pd-activate', controls).body).toContain(controls.activateQuality)
         expect(productionStepCopy(language, 'pd-looms', controls).body).toContain(controls.assignLooms)
-        expect(productionStepCopy(language, 'pd-operators', controls).body).toContain(controls.manageWorkers)
-        expect(productionStepCopy(language, 'pd-board', controls).body).toContain(controls.machineBoard)
-        expect(productionStepCopy(language, 'pd-board', controls).detail).toContain(controls.switchQuality)
         expect(productionStepCopy(language, 'pd-handoff', controls).body).toContain(controls.activateQuality)
         expect(copy.guide.benefit).toBe(tourInvitationCopy[language].benefits.production)
     })
-    it.each(languages)('%s shares exact approved labels, including owner-approved title/cost', language => {
+    it.each(languages)('%s shares exact approved labels, including the owner-approved cost', language => {
         const dictionary = dictionaries[language].production
         for (const row of page.split('\n')) {
             const cells = row.split('|').map(cell => cell.trim())
             const key = cells[1]?.match(/^`(?:production\.)?(\w+)`$/)?.[1]
             if (!key || !(key in dictionary)) continue
-            if (key === 'manageOperatorsForLoom' || key === 'cost') expect(dictionary[key]).toBe(cells[2 + languages.indexOf(language)])
+            if (key === 'cost') expect(dictionary[key]).toBe(cells[2 + languages.indexOf(language)])
             else if (language !== 'en') expect(dictionary[key as keyof typeof dictionary]).toBe(cells[language === 'gu' ? 3 : 4])
         }
-        expect(dictionary.manageOperatorsForLoom).toContain('{loom}')
     })
     it('moves Daily Sheet ownership out of Overview', () => {
         const source = readFileSync('components/production/ProductionSampleWorkspace.tsx', 'utf8')
@@ -93,14 +88,14 @@ describe('Production Overview tour', () => {
         const root = 'app/(dashboard)/owner/production/'
         const client = readFileSync(root + 'BaseProductionClient.tsx', 'utf8')
         const qualities = readFileSync(root + 'BaseActiveQualities.tsx', 'utf8')
-        const board = readFileSync(root + 'BaseMachineBoard.tsx', 'utf8')
         for (const source of [client, qualities]) {
             expect(source.match(/data-tour-anchor="production.activate"/g)).toHaveLength(1)
             expect(source).toContain("t('production.activateQuality')")
         }
         for (const key of ['assignLooms', 'qualityActions', 'cost']) expect(qualities).toContain(`t('production.${key}')`)
-        for (const key of ['machineBoard', 'manageWorkers', 'switchQuality']) expect(board).toContain(`t('production.${key}')`)
-        expect(board).toContain("t('production.manageOperatorsForLoom', { loom: managingMachine?.custom_label || managingMachine?.name || '' })")
+        // Loom quality and operators moved to Machine Assignments; the Overview no longer carries a board.
+        expect(existsSync(root + 'BaseMachineBoard.tsx')).toBe(false)
+        expect(client).not.toContain('BaseMachineBoard')
         expect(qualities).toContain('onClick={onActivateQuality ?? (() => onOpenActivateModalChange?.(true))}')
         expect(client).toContain("view === 'production' && activeTab === 'jobs'")
     })

@@ -618,7 +618,7 @@ if (dailySheet) {
 }
 if (production) {
   const issues = []
-  const expected = ['pd-overview', 'pd-prereq', 'pd-activate', 'pd-looms', 'pd-operators', 'pd-board', 'pd-handoff'].slice(0, record.exitAt || 7)
+  const expected = ['pd-overview', 'pd-prereq', 'pd-activate', 'pd-looms', 'pd-handoff'].slice(0, record.exitAt || 5)
   if (JSON.stringify(record.steps.map(step => step.step)) !== JSON.stringify(expected)) issues.push('Production step order/count mismatch')
   const intersection = (a, b) => a && b ? Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x)) * Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y)) : 0
   const unchanged = state => state?.mounts === 1 && !state.unmounts && state.sameSearchNode && state.search === record.productionBefore.search && JSON.stringify(state.filter) === JSON.stringify(record.productionBefore.filter) && JSON.stringify(state.storage) === JSON.stringify(record.productionBefore.storage)

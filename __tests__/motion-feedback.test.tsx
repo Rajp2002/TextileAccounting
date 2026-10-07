@@ -99,7 +99,6 @@ describe('alerts and swapped views', () => {
         ['app/(dashboard)/owner/dispatches/ChallansClient.tsx', `<div key={history ? 'history' : 'active'} className="ui-content-swap`],
         ['app/(dashboard)/owner/production/BasePayrollRecords.tsx', `{recordsView === 'workers' && <div className="ui-content-swap`],
         ['app/(dashboard)/owner/production/BasePayrollRecords.tsx', `{recordsView === 'machines' && <div className="ui-content-swap`],
-        ['app/(dashboard)/owner/production/BaseMachineBoard.tsx', '<div key={filterStatus} className="ui-content-swap'],
     ])('%s settles the panel its segmented control swaps', (path, marker) => {
         expect(read(path)).toContain(marker)
     })
