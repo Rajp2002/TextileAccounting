@@ -5,6 +5,7 @@ import { getUserClaims } from '@/lib/auth'
 import { getOrgTier } from '@/lib/subscription'
 import { getBaseOnboardingInitialState } from './actions'
 import { founderOnlyIdentity } from '@/lib/admin/founder-email'
+import { SUPERVISOR_HOME_PATH } from '@/lib/supervisor-access'
 import { BaseOnboardingWizard } from '@/components/onboarding/base/BaseOnboardingWizard'
 
 export const dynamic = 'force-dynamic'
@@ -34,7 +35,7 @@ export default async function BaseOnboardingPage() {
     }
 
     if (role === 'supervisor') {
-        redirect('/feature-archived')
+        redirect(SUPERVISOR_HOME_PATH)
     }
 
     if (!orgId || role !== 'owner') {

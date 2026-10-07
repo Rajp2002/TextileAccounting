@@ -24,6 +24,9 @@ import { LEGAL_DOCUMENTS } from '@/lib/legal-documents'
 import { LEGAL_OPERATOR } from '@/lib/legal-operator'
 import { freeWorkspaceHintValue, WORKSPACE_HINT_COOKIE, WORKSPACE_HINT_COOKIE_OPTIONS } from '@/lib/workspace-hint'
 import { founderEmailAllowed, FOUNDER_ONLY_LOGIN_MESSAGE } from '@/lib/admin/founder-email'
+import { SUPERVISOR_HOME_PATH } from '@/lib/supervisor-access'
+
+const REVOKED_ACCOUNT_MESSAGE = 'This account no longer has access. Ask the factory owner.'
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -356,7 +359,9 @@ export async function signIn(input: { email: string; password: string; traceId?:
     let orgId = jwt.org_id ?? data.session.user.app_metadata?.org_id
     let onboardingComplete = jwt.onboarding_complete ?? data.session.user.app_metadata?.onboarding_complete
 
-    const needsOrganization = userRole === 'owner' || userRole === 'supervisor'
+    // Supervisors have no organization claim; their factory link is checked
+    // by the supervisor pages.
+    const needsOrganization = userRole === 'owner'
     if (!userRole || (needsOrganization && !orgId)) {
         const { data: refreshed } = await telemetry.measure(
             'claims_refresh',
@@ -374,16 +379,21 @@ export async function signIn(input: { email: string; password: string; traceId?:
     // This happens when the custom_access_token_hook can't find the profile
     // fast enough (PWA cold-open, network lag, or hook race condition).
     // Mirror the pattern used in getOnboardingStatus() — query DB directly.
-    if (!userRole || ((userRole === 'owner' || userRole === 'supervisor') && !orgId)) {
+    if (!userRole || (userRole === 'owner' && !orgId)) {
         const { data: profile } = await telemetry.measure('profile_fallback', async () => {
             const admin = createAdminClient()
             // Use a single join query to fetch both profile role and org onboarding status
             return admin
                 .from('profiles')
-                .select('role, org_id, organizations(onboarding_complete)')
+                .select('role, org_id, access_revoked_at, organizations(onboarding_complete)')
                 .eq('id', data.session.user.id)
                 .maybeSingle()
         })
+
+        if (profile?.access_revoked_at) {
+            await supabase.auth.signOut({ scope: 'local' })
+            return fail(REVOKED_ACCOUNT_MESSAGE, 'revoked_profile')
+        }
 
         if (profile?.role) {
             userRole = profile.role
@@ -413,7 +423,7 @@ export async function signIn(input: { email: string; password: string; traceId?:
         if (tier === 'lite' || tier === 'base') return succeed('/owner/estimator')
         return succeed('/owner/estimator')
     } else if (userRole === 'supervisor') {
-        return succeed('/feature-archived')
+        return succeed(SUPERVISOR_HOME_PATH)
     } else if (userRole === 'admin') {
         await supabase.auth.signOut({ scope: 'local' })
         return fail(FOUNDER_ONLY_LOGIN_MESSAGE, 'founder_only_identity')

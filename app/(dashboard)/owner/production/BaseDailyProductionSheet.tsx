@@ -19,6 +19,7 @@ import { buildMachineCollectionSheet, compareMachineLabels, machineReadingState,
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { useTranslation } from '@/lib/i18n/context'
+import { supervisorText } from '@/lib/i18n/supervisor-access'
 import { AlertTriangle, ArrowUpRight, CheckCircle2, Clock3, ClipboardList, FileClock, Loader2, Lock, LockOpen, Plus, Printer, Save, Users } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
@@ -188,7 +189,7 @@ export default function BaseDailyProductionSheet({
     navigation?: BaseProductionNavigation
 }) {
     const router = useRouter()
-    const { tx, t } = useTranslation()
+    const { tx, t, language } = useTranslation()
     const tourSample = useTourSample('daily-sheet')
     const sample = Boolean(tourSample)
     const tourStep = tourSample?.step
@@ -1161,7 +1162,7 @@ export default function BaseDailyProductionSheet({
                                         <Badge variant={revision.change_kind === 'created' ? 'secondary' : 'warning'} className="font-bold text-[10px]">{revision.change_kind === 'created' ? 'Original' : 'Corrected'}</Badge>
                                     </div>
                                     {revision.correction_reason && <p className="mt-2.5 text-xs sm:text-sm leading-relaxed text-body">{revision.correction_reason}</p>}
-                                    <p className="mt-1 text-xs text-muted-foreground">Changed by {revision.changed_by === initialData.actorId ? 'you' : revision.changed_by ? `owner ${revision.changed_by.slice(0, 8)}` : 'an earlier owner'}</p>
+                                    <p className="mt-1 text-xs text-muted-foreground">Changed by {revision.changed_by === initialData.actorId ? 'you' : revision.changed_by && initialData.supervisorNames?.[revision.changed_by] ? supervisorText(language, 'savedBy', { name: initialData.supervisorNames[revision.changed_by] }) : revision.changed_by ? `owner ${revision.changed_by.slice(0, 8)}` : 'an earlier owner'}</p>
                                     {baseProductionAuditChanges(revision.before_snapshot, revision.after_snapshot).map(change => <div key={change.key} className="mt-2 rounded-lg border border-hairline bg-surface-soft/40 p-2.5 text-xs"><p className="font-bold text-ink">{workerById.get(change.line.workerId)?.name ?? 'Worker'} · {change.line.machine}{change.line.job ? ` · ${change.line.job}` : ''}</p><p className="mt-0.5 text-body">Metres: {formatMeters(change.before?.meters ?? 0)} → {formatMeters(change.after?.meters ?? 0)}</p><p className="text-body">Rate: ₹{(change.before?.rate ?? 0).toFixed(2)}/m → ₹{(change.after?.rate ?? 0).toFixed(2)}/m</p><p className="text-body">Earnings: ₹{(change.before?.pay ?? 0).toFixed(2)} → ₹{(change.after?.pay ?? 0).toFixed(2)}</p><p className="text-body">Status: {change.before?.status ?? 'Not recorded'} → {change.after?.status ?? 'Removed'}</p></div>)}
                                     <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-surface-soft px-3 py-2 text-xs text-body font-medium">
                                         {beforeMeters === null

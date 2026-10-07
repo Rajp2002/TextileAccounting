@@ -57,6 +57,8 @@ export type BaseProductionInitialData = {
     settlementLines: BasePayrollSettlementLine[]
     payrollPeriods: BasePayrollPeriod[]
     allocations: BaseProductionAllocation[]
+    /** Supervisor id → name for "saved by" on revisions; loaded by the page (supervisor-names.ts). */
+    supervisorNames?: Record<string, string>
 }
 
 type QueryError = { message?: string } | null

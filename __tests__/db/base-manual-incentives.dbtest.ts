@@ -96,7 +96,7 @@ describe('Manual incentive entitlements', () => {
         expect((await pgError(db.query("SELECT public.review_base_worker_incentive($1,now(),'approve',NULL)",[id]))).code).toBe('23503')
         expect((await pgError(create(await fixture('fixed_monthly',true)))).code).toBe('42501')
         await asSuperuser(db)
-        await db.query("UPDATE public.profiles SET role = 'supervisor' WHERE id = $1",[f.owner.userId])
+        await db.query("UPDATE public.profiles SET role = 'admin' WHERE id = $1",[f.owner.userId])
         expect((await pgError(create(f,100,'Another source'))).code).toBe('42501')
     })
 })

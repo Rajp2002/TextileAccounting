@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { BrandBackground } from '@/components/brand-background'
 import type { Session } from '@supabase/supabase-js'
+import { SUPERVISOR_HOME_PATH } from '@/lib/supervisor-access'
 
 function parseJWTClaims(token: string): Record<string, unknown> {
     try {
@@ -38,7 +39,7 @@ function ConfirmContent() {
                 router.push('/owner/estimator')
             }
         } else if (role === 'supervisor') {
-            router.push('/feature-archived')
+            router.push(SUPERVISOR_HOME_PATH)
         } else {
             router.push('/login')
         }
@@ -97,7 +98,7 @@ function ConfirmContent() {
                 if (role === 'owner') {
                     router.push(onboardingComplete ? '/owner/estimator' : '/onboarding')
                 } else if (role === 'supervisor') {
-                    router.push('/feature-archived')
+                    router.push(SUPERVISOR_HOME_PATH)
                 } else {
                     router.push('/login')
                 }

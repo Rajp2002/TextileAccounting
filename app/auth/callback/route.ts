@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { parseJWT } from '@/lib/auth'
 import { founderOnlyIdentity } from '@/lib/admin/founder-email'
+import { SUPERVISOR_HOME_PATH } from '@/lib/supervisor-access'
 
 /**
  * Validates that a `next` redirect target is a safe internal path.
@@ -71,7 +72,7 @@ export async function GET(request: Request) {
                 if (!onboardingComplete) return NextResponse.redirect(`${origin}/onboarding`)
                 return NextResponse.redirect(`${origin}/owner/estimator`)
             } else if (role === 'supervisor') {
-                return NextResponse.redirect(`${origin}/feature-archived`)
+                return NextResponse.redirect(`${origin}${SUPERVISOR_HOME_PATH}`)
             }
 
             return NextResponse.redirect(`${origin}${next}`)
