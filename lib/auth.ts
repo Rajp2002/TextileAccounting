@@ -8,6 +8,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { isUserRevoked } from '@/lib/rate-limit'
 import type { User } from '@supabase/supabase-js'
 import { founderOnlyIdentity } from '@/lib/admin/founder-email'
+import { SUPERVISOR_HOME_PATH } from '@/lib/supervisor-access'
 
 type JsonRecord = Record<string, unknown>
 type AuthClaims = {
@@ -20,7 +21,7 @@ type AuthClaims = {
 
 export function getRoleHomePath(role?: string) {
     if (role === 'owner') return '/owner/estimator'
-    if (role === 'supervisor') return '/feature-archived'
+    if (role === 'supervisor') return SUPERVISOR_HOME_PATH
     if (role === 'admin') return '/admin'
     return '/login'
 }

@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getUserClaims } from '@/lib/auth'
 import { getOrgTier } from '@/lib/subscription'
 import { founderOnlyIdentity } from '@/lib/admin/founder-email'
+import { SUPERVISOR_HOME_PATH } from '@/lib/supervisor-access'
 
 /** Redirect owners to their selected plan's current workspace. */
 export default async function OnboardingPage() {
@@ -33,7 +34,7 @@ export default async function OnboardingPage() {
         orgId = profile?.org_id ?? undefined
     }
 
-    if (role === 'supervisor') redirect('/feature-archived')
+    if (role === 'supervisor') redirect(SUPERVISOR_HOME_PATH)
 
     if (role === 'owner' && orgId) {
         const tier = await getOrgTier(orgId)

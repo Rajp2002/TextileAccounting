@@ -19,10 +19,11 @@ import {
 } from '@/lib/workspace-hint'
 import { isDedicatedSupportRoute, isFounderAuthRoute, isFounderLoginRoute, isFounderRoute, safeFounderReturnPath } from '@/lib/admin/routes'
 import { founderOnlyIdentity, FOUNDER_ONLY_LOGIN_MESSAGE } from '@/lib/admin/founder-email'
+import { SUPERVISOR_HOME_PATH, SUPERVISOR_JOIN_PATH } from '@/lib/supervisor-access'
 
 function getRoleHomePath(role?: string, freeWorkspaceHint = false): string {
     if (role === 'owner') return freeWorkspaceHint ? FREE_WORKSPACE_PATH : '/owner/estimator'
-    if (role === 'supervisor') return '/feature-archived'
+    if (role === 'supervisor') return SUPERVISOR_HOME_PATH
     if (role === 'admin') return '/admin'
     return '/login'
 }
@@ -64,6 +65,7 @@ function isAuthRoute(pathname: string): boolean {
         isFounderAuthRoute(pathname) ||
         pathname.startsWith('/login') ||
         pathname.startsWith('/signup') ||
+        pathname.startsWith(SUPERVISOR_JOIN_PATH) ||
         pathname.startsWith('/forgot-password') ||
         pathname.startsWith('/auth')
     )
@@ -85,6 +87,7 @@ function isPublicRoute(pathname: string): boolean {
         pathname === '/install' ||
         pathname.startsWith('/login') ||
         pathname.startsWith('/signup') ||
+        pathname.startsWith(SUPERVISOR_JOIN_PATH) ||
         isPasswordRecoveryRoute(pathname) ||
         pathname.startsWith('/auth') ||
         pathname.startsWith('/verify') ||
@@ -156,7 +159,7 @@ export async function updateSession(request: NextRequest) {
     if (request.method === 'POST' && isAuthRoute(pathname) && !isSignOutRequest) {
         const ip = getClientIpFromHeaders(request.headers)
 
-        const isSignup = pathname.startsWith('/signup') || pathname.startsWith('/join')
+        const isSignup = pathname.startsWith('/signup') || pathname.startsWith(SUPERVISOR_JOIN_PATH)
         const resetAt = await checkAuthRateLimit(ip, isSignup)
 
         if (resetAt !== null) {
@@ -386,6 +389,9 @@ export async function updateSession(request: NextRequest) {
                 .maybeSingle()
             if (!routingError && routingProfile && !routingProfile.access_revoked_at
                 && ['owner', 'supervisor', 'admin'].includes(routingProfile.role)) role = routingProfile.role
+            // A removed or declined supervisor's token can outlive the account.
+            // Show the login page instead of routing it to a home it cannot open.
+            else if (!routingError && role === 'supervisor' && (!routingProfile || routingProfile.access_revoked_at)) role = undefined
         } catch {
             // Keep the existing optimistic customer route on source failure.
             // Every destination still requires its independent live guard.
@@ -476,7 +482,7 @@ export async function updateSession(request: NextRequest) {
             }
             return NextResponse.redirect(new URL(getRoleHomePath(role, freeWorkspaceHint), request.url))
         } else if (role === 'supervisor') {
-            return NextResponse.redirect(new URL('/feature-archived', request.url))
+            return NextResponse.redirect(new URL(SUPERVISOR_HOME_PATH, request.url))
         } else if (role === 'admin') {
             return NextResponse.redirect(new URL('/admin', request.url))
         }
@@ -534,14 +540,17 @@ export async function updateSession(request: NextRequest) {
             return NextResponse.redirect(new URL('/owner/estimator', request.url))
         }
 
-        // 2. Owner restricted routes (Admins can access for support/audit)
-        if (pathname.startsWith('/owner') && role === 'supervisor') {
-            return NextResponse.redirect(new URL(getRoleHomePath(role), request.url))
+        // 2. Supervisors only have their own pages. Server actions post to
+        // those pages; /api and /auth keep their own guards.
+        if (role === 'supervisor' && !pathname.startsWith(SUPERVISOR_HOME_PATH)
+            && !pathname.startsWith('/api/') && !pathname.startsWith('/auth/')) {
+            return NextResponse.redirect(new URL(SUPERVISOR_HOME_PATH, request.url))
         }
 
-        // 3. Retired supervisor routes are no longer part of the product.
-        if (pathname.startsWith('/supervisor')) {
-            return NextResponse.redirect(new URL(getRoleHomePath(role), request.url))
+        // 3. Supervisor pages are not part of an owner or founder workspace.
+        // A token without a role reaches the page's own server guard.
+        if (pathname.startsWith(SUPERVISOR_HOME_PATH) && (role === 'owner' || role === 'admin')) {
+            return NextResponse.redirect(new URL(getRoleHomePath(role, freeWorkspaceHint), request.url))
         }
     }
 
