@@ -24,7 +24,9 @@ async function addMember(orgId: string) {
     const userId = randomUUID()
     await asSuperuser(db)
     await db.query('INSERT INTO auth.users(id, email, created_at) VALUES ($1, $2, now())', [userId, `${userId}@example.test`])
-    await db.query("INSERT INTO public.profiles(id, org_id, role, full_name) VALUES ($1, $2, 'supervisor', 'Test Member')", [userId, orgId])
+    // Any non-owner member. An active supervisor can no longer hold an org_id
+    // (profiles_active_supervisor_has_no_org), so the member is an admin.
+    await db.query("INSERT INTO public.profiles(id, org_id, role, full_name) VALUES ($1, $2, 'admin', 'Test Member')", [userId, orgId])
     return userId
 }
 

@@ -30,7 +30,7 @@ describe('AD09 requester export and retained-record deletion compatibility', () 
         expect((await pgError(db.query('SELECT public.admin_requester_support_export($1,$2,now())', [owner.userId, other.orgId]))).code).toBe('42501')
         await asSuperuser(db); await db.query("UPDATE public.profiles SET access_revoked_at=now() WHERE id=$1", [owner.userId])
         expect((await pgError(preflight(owner))).code).toBe('42501')
-        await asSuperuser(db); await db.query("UPDATE public.profiles SET access_revoked_at=NULL,role='supervisor' WHERE id=$1", [owner.userId])
+        await asSuperuser(db); await db.query("UPDATE public.profiles SET access_revoked_at=NULL,role='admin' WHERE id=$1", [owner.userId])
         expect((await pgError(preflight(owner))).code).toBe('42501')
     })
     it('exports the entire own public history, including bound manual intake; peers, foreign/unbound tickets and private values stay excluded', async () => {
