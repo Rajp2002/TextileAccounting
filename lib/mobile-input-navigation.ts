@@ -23,6 +23,19 @@ export function getMobileInputNavigation(input: HTMLInputElement) {
     }
 }
 
+const isCollapsedSection = (element: HTMLElement) => element.getAttribute('data-input-flow-expand') !== null
+
+/**
+ * The iPhone's own ∨ cannot open a collapsed row, so open the row that comes next while the
+ * user is on the field before it. It opens below the field, so nothing on screen moves.
+ */
+export function openNextCollapsedSection(input: HTMLInputElement) {
+    const next = getMobileInputNavigation(input)?.next
+    if (!next || !isCollapsedSection(next)) return false
+    next.click()
+    return true
+}
+
 /**
  * Re-read the live form on every tap, so added/removed rows never leave stale targets.
  * `expand` must open a collapsed section synchronously (flushSync) so its field can be
@@ -35,7 +48,7 @@ export function moveMobileInput(
 ) {
     let target = getMobileInputNavigation(input)?.[direction]
     if (!target) return false
-    if (target.getAttribute('data-input-flow-expand') !== null) {
+    if (isCollapsedSection(target)) {
         const regionId = target.getAttribute('aria-controls')
         expand(target)
         const fields = findNavigableFormInputs(regionId ? document.getElementById(regionId) : null, INPUT_SELECTOR)
