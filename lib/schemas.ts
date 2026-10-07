@@ -14,6 +14,7 @@
 
 import { z } from 'zod'
 import { SIGNUP_LEGAL_ACCEPTANCE } from './legal-documents'
+import { isValidJoinCode, normalizeJoinCode } from './supervisor-access'
 
 // ─── Primitives ───────────────────────────────────────────────────────────────
 
@@ -87,6 +88,24 @@ export const SignupLegalAcceptanceSchema = z.object({
             path: ['termsVersion'],
             message: 'The legal documents changed. Refresh the page and review them again.',
         })
+    }
+})
+
+/**
+ * SupervisorJoinSchema — the public /join form. The phone arrives already
+ * normalized to 10 digits by the join action.
+ */
+export const SupervisorJoinSchema = z.object({
+    code:        z.string().transform(normalizeJoinCode).refine(isValidJoinCode, 'Check the code with your factory owner.'),
+    fullName:    z.string().trim().min(2, 'Enter your name.').max(80, 'Name too long'),
+    email:       z.string().trim().email('Enter a valid email address.').max(254),
+    phone:       z.string().trim().regex(/^\d{10}$/, 'Enter a valid 10-digit mobile number.'),
+    password:    PasswordSchema,
+    confirmPassword: z.string(),
+    legalAcceptance: SignupLegalAcceptanceSchema,
+}).superRefine((data, ctx) => {
+    if (data.password !== data.confirmPassword) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['confirmPassword'], message: 'Passwords do not match.' })
     }
 })
 

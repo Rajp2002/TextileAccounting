@@ -241,18 +241,18 @@ describe('supervisor isolation', () => {
         await asSuperuser(db)
         const tables = (await db.query(`SELECT c.table_name FROM information_schema.columns c
             JOIN information_schema.tables t ON t.table_schema = c.table_schema AND t.table_name = c.table_name AND t.table_type = 'BASE TABLE'
-            WHERE c.table_schema = 'public' AND c.column_name = 'org_id' ORDER BY 1`)).rows.map(row => row.table_name as string)
+            WHERE c.table_schema = 'public' AND c.column_name = 'org_id' ORDER BY 1`)).rows.map((row: { table_name: string }) => row.table_name)
         expect(tables).toEqual(expect.arrayContaining(['base_daily_production_entries', 'estimator_quotes', 'org_subscriptions', 'factory_supervisors', 'supervisor_join_codes', 'dispatches']))
         for (const status of ['pending', 'approved', 'removed'] as const) {
             const supervisor = status === 'approved' ? f.supervisor : (await seedSupervisor(db, f.owner.orgId, status)).userId
             await asSupervisor(db, supervisor)
             for (const table of tables) {
                 const visible = await db.query(`SELECT count(*)::int AS n FROM public.${table} WHERE org_id = $1`, [f.owner.orgId])
-                    .then(result => result.rows[0].n as number, (error: { code?: string }) => error.code === '42501' ? 0 : Promise.reject(error))
+                    .then((result: { rows: Array<{ n: number }> }) => result.rows[0].n, (error: { code?: string }) => error.code === '42501' ? 0 : Promise.reject(error))
                 expect({ status, table, visible }).toEqual({ status, table, visible: 0 })
             }
             expect((await db.query('SELECT count(*)::int AS n FROM public.organizations')).rows[0].n).toBe(0)
-            expect((await db.query('SELECT id FROM public.profiles')).rows.map(row => row.id)).toEqual([supervisor])
+            expect((await db.query('SELECT id FROM public.profiles')).rows.map((row: { id: string }) => row.id)).toEqual([supervisor])
         }
     })
 
