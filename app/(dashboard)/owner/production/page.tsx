@@ -6,6 +6,7 @@ import ProductionGuidedTour from '@/components/production/ProductionGuidedTour'
 
 import BaseProductionClient from './BaseProductionClient'
 import { loadBaseProductionInitialData } from './loaders'
+import { loadSupervisorNames } from './supervisor-names'
 
 export default async function BaseProductionPage({
     searchParams,
@@ -23,12 +24,15 @@ export default async function BaseProductionPage({
     }
     const { user, profile } = await requireRole(['owner'])
     const today = getSuratTodayString()
-    const initialData = await loadBaseProductionInitialData(profile.org_id, today, 'production')
+    const [initialData, supervisorNames] = await Promise.all([
+        loadBaseProductionInitialData(profile.org_id, today, 'production'),
+        loadSupervisorNames(),
+    ])
     const initialCostingId = typeof query.costingId === 'string' ? query.costingId : null
 
     return (
         <ProductionGuidedTour userId={user.id} orgId={profile.org_id} userMetadata={user.user_metadata}>
-            <BaseProductionClient initialData={{ ...initialData, actorId: user.id }} initialCostingId={initialCostingId} />
+            <BaseProductionClient initialData={{ ...initialData, actorId: user.id, supervisorNames }} initialCostingId={initialCostingId} />
         </ProductionGuidedTour>
     )
 }
