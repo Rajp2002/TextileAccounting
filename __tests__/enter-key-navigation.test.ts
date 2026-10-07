@@ -218,10 +218,55 @@ describe('Form Enter-Key Navigation Engine', () => {
         }
     })
 
+    describe('on a touch phone, where the keyboard covers the lower layout viewport', () => {
+        function phone(fieldRect: { top: number; bottom: number }) {
+            const scrollBy = vi.fn()
+            const body = {}
+            vi.stubGlobal('document', { body })
+            vi.stubGlobal('window', {
+                innerHeight: 900,
+                visualViewport: { height: 400, offsetTop: 0, scale: 1 },
+                matchMedia: (query: string) => ({ matches: query === '(pointer: coarse)' }),
+                getComputedStyle: () => ({ overflowY: 'visible' }),
+                scrollBy,
+            })
+            const input = createMockElement()
+            // The card fits above the keyboard, so the desktop rule would centre it.
+            const section = { getBoundingClientRect: () => ({ height: 200 }), scrollIntoView: vi.fn() } as unknown as HTMLElement
+            Object.assign(input, { isConnected: true, parentElement: body, getBoundingClientRect: () => fieldRect })
+            input.closest = (() => section) as typeof input.closest
+            return { input, section, scrollBy }
+        }
+
+        it('lifts a field behind the keyboard into the visible band instead of centring its section', () => {
+            try {
+                const { input, section, scrollBy } = phone({ top: 500, bottom: 544 })
+                scrollInputIntoComfortableView(input, { behavior: 'auto', block: 'center' })
+                expect(section.scrollIntoView).not.toHaveBeenCalled()
+                expect(input.scrollIntoView).not.toHaveBeenCalled()
+                expect(scrollBy).toHaveBeenCalledWith({ top: 224, behavior: 'auto' })
+            } finally {
+                vi.unstubAllGlobals()
+            }
+        })
+
+        it('leaves a field that is already visible above the keyboard where it is', () => {
+            try {
+                const { input, section, scrollBy } = phone({ top: 200, bottom: 244 })
+                scrollInputIntoComfortableView(input)
+                expect(section.scrollIntoView).not.toHaveBeenCalled()
+                expect(input.scrollIntoView).not.toHaveBeenCalled()
+                expect(scrollBy).not.toHaveBeenCalled()
+            } finally {
+                vi.unstubAllGlobals()
+            }
+        })
+    })
+
     it('respects reduced motion when centring a section', () => {
         vi.stubGlobal('window', {
             innerHeight: 900,
-            matchMedia: () => ({ matches: true }),
+            matchMedia: (query: string) => ({ matches: query.includes('reduced-motion') }),
         })
         try {
             const input = createMockElement()

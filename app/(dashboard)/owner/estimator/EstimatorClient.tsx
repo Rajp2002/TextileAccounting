@@ -133,6 +133,7 @@ import {
     DEFAULT_INPUT_SELECTOR,
     isElementNavigable,
 } from '@/lib/form-navigation'
+import { focusFieldOnPress, selectFieldAfterTap } from '@/lib/field-press-selection'
 import {
     Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
@@ -885,15 +886,8 @@ function ComponentCountField({
                     step={1}
                     value={draftValue}
                     onFocus={event => event.currentTarget.select()}
-                    onPointerDown={event => {
-                        // A pointer press after focus can collapse the selection
-                        // made above. Preserve it so typing replaces the current
-                        // value instead of appending to it (1 + 2 => 12).
-                        if (event.currentTarget === document.activeElement) return
-                        event.preventDefault()
-                        event.currentTarget.focus()
-                        event.currentTarget.select()
-                    }}
+                    onPointerDown={focusFieldOnPress}
+                    onClick={selectFieldAfterTap}
                     placeholder={String(DEFAULT_YARN_COMPONENT_COUNT)}
                     onChange={event => {
                         const rawValue = event.target.value
@@ -1082,12 +1076,8 @@ function StepperField({
                     step={step}
                     min={0}
                     onFocus={event => event.currentTarget.select()}
-                    onPointerDown={event => {
-                        if (event.currentTarget === document.activeElement) return
-                        event.preventDefault()
-                        event.currentTarget.focus()
-                        event.currentTarget.select()
-                    }}
+                    onPointerDown={focusFieldOnPress}
+                    onClick={selectFieldAfterTap}
                     onChange={e => {
                         const next = parseNonNegativeInput(e.target.value)
                         if (next !== null) onChange(next)
@@ -1152,12 +1142,8 @@ function NumField({
                         setDraftText(null)
                         event.currentTarget.select()
                     }}
-                    onPointerDown={event => {
-                        if (event.currentTarget === document.activeElement) return
-                        event.preventDefault()
-                        event.currentTarget.focus()
-                        event.currentTarget.select()
-                    }}
+                    onPointerDown={focusFieldOnPress}
+                    onClick={selectFieldAfterTap}
                     onBlur={() => {
                         setFocused(false)
                         setDraftText(null)
@@ -2537,6 +2523,7 @@ function RowCard({
             <div className={`flex min-w-0 items-stretch gap-1 border-b border-[var(--color-hairline)] ${c.strip}`}>
                 <button
                     type="button"
+                    data-input-flow-expand="true"
                     aria-expanded={isExpanded}
                     aria-controls={detailsId}
                     aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${displayName} details`}

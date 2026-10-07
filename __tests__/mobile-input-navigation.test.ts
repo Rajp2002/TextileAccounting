@@ -1,11 +1,15 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { getMobileInputNavigation, keepMobileInputVisible, moveMobileInput } from '../lib/mobile-input-navigation'
 
 function form() {
     const fields: HTMLInputElement[] = []
     const container = {
         tagName: 'FORM',
-        querySelectorAll: () => fields.filter(field => field.matches('input')),
+        querySelectorAll: (selector: string) => fields.filter(field => field.tagName === 'BUTTON'
+            ? selector.includes('button[data-input-flow-expand][aria-expanded="false"]')
+            : field.matches('input')),
         submit: vi.fn(),
         requestSubmit: vi.fn(),
     }
@@ -96,6 +100,56 @@ describe('mobile number-pad field navigation', () => {
         expect(added.focus).toHaveBeenCalledOnce()
     })
 
+    describe('a collapsed section between fields (a phone yarn row)', () => {
+        function collapsedRow(h: ReturnType<typeof form>, rowFields: HTMLInputElement[]) {
+            const region = { querySelectorAll: () => [] as HTMLInputElement[] }
+            const toggle = {
+                tagName: 'BUTTON', type: 'button', disabled: false, tabIndex: 0, isConnected: true,
+                offsetWidth: 100, offsetHeight: 44, offsetParent: {}, getClientRects: () => [{ width: 100, height: 44 }],
+                getAttribute: (name: string) => ({ 'data-input-flow-expand': 'true', 'aria-controls': 'row-2' } as Record<string, string>)[name] ?? null,
+                matches: () => true,
+                closest: (selector: string) => selector.startsWith('[data-enter-navigate-container]') ? h.container : null,
+                click: vi.fn(),
+            }
+            h.fields.push(toggle as unknown as HTMLInputElement)
+            vi.stubGlobal('document', { getElementById: (id: string) => id === 'row-2' ? region : null })
+            // Opening the row mounts its fields, as React does inside flushSync.
+            const expand = vi.fn(() => { region.querySelectorAll = () => rowFields })
+            return { toggle, expand }
+        }
+
+        it('Next opens the row and focuses its first field inside the same tap', () => {
+            const h = form()
+            const count = h.add()
+            const denier = { ...h.add(), focus: vi.fn(), select: vi.fn() }
+            h.fields.pop()
+            const rate = { ...h.add(), focus: vi.fn() }
+            h.fields.pop()
+            const { toggle, expand } = collapsedRow(h, [h.asInput(denier), h.asInput(rate)])
+            h.add()
+            expect(getMobileInputNavigation(h.asInput(count))?.next).toBe(toggle)
+            expect(moveMobileInput(h.asInput(count), 'next', expand)).toBe(true)
+            expect(expand).toHaveBeenCalledWith(toggle)
+            expect(denier.focus).toHaveBeenCalledWith({ preventScroll: true })
+            expect(denier.select).toHaveBeenCalledOnce()
+            expect(rate.focus).not.toHaveBeenCalled()
+        })
+
+        it('Previous opens the row and focuses its last field', () => {
+            const h = form()
+            h.add()
+            const denier = { ...h.add(), focus: vi.fn() }
+            h.fields.pop()
+            const rate = { ...h.add(), focus: vi.fn() }
+            h.fields.pop()
+            const { expand } = collapsedRow(h, [h.asInput(denier), h.asInput(rate)])
+            const after = h.add()
+            expect(moveMobileInput(h.asInput(after), 'previous', expand)).toBe(true)
+            expect(rate.focus).toHaveBeenCalledOnce()
+            expect(denier.focus).not.toHaveBeenCalled()
+        })
+    })
+
     it('does not navigate outside a known form, dialog, or main content boundary', () => {
         const h = form()
         const field = h.add('number', { scope: null })
@@ -133,5 +187,23 @@ describe('field clearance above the number-pad accessory', () => {
         keepMobileInputVisible({ isConnected: true, getBoundingClientRect: rect } as unknown as HTMLElement)
         keepMobileInputVisible({ isConnected: false, getBoundingClientRect: rect } as unknown as HTMLElement)
         expect(rect).not.toHaveBeenCalled()
+    })
+})
+
+describe('number-pad accessory wiring', () => {
+    const read = (file: string) => readFileSync(join(process.cwd(), file), 'utf8')
+
+    it('opens a collapsed yarn row synchronously so iOS keeps the keyboard up', () => {
+        const accessory = read('components/mobile-input-navigation.tsx')
+        expect(accessory).toMatch(/import \{[^}]*\bflushSync\b[^}]*\} from 'react-dom'/)
+        expect(accessory).toContain('moveMobileInput(field, direction, toggle => flushSync(() => toggle.click()))')
+        const estimator = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
+        expect(estimator).toMatch(/data-input-flow-expand="true"\s+aria-expanded=\{isExpanded\}\s+aria-controls=\{detailsId\}/)
+    })
+
+    it('re-reads Previous and Next while the user types, so added rows never leave Next disabled', () => {
+        const accessory = read('components/mobile-input-navigation.tsx')
+        expect(accessory).toMatch(/document\.addEventListener\('input', refresh\)/)
+        expect(accessory).toMatch(/document\.removeEventListener\('input', refresh\)/)
     })
 })

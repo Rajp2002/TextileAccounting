@@ -1,27 +1,26 @@
 'use client'
 
-import Link, { useLinkStatus } from 'next/link'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import type { ComponentProps } from 'react'
+import { navigationIntentForClick, startNavigationIntent } from '@/lib/navigation-intent'
 import { cn } from '@/lib/utils'
 
-/** Keep Next's partial prefetching and interruptible navigation in one place. */
-export function NavigationLink({ children, className, ...props }: ComponentProps<typeof Link>) {
+/**
+ * Keep Next's partial prefetching and interruptible navigation in one place. A tap
+ * records its destination, so tabs and menus select it before the page arrives.
+ */
+export function NavigationLink({ className, onClick, ...props }: ComponentProps<typeof Link>) {
+    const pathname = usePathname()
+
     return (
-        <Link {...props} className={cn('mobile-touch-target relative', className)}>
-            {children}
-            <NavigationPending />
-        </Link>
-    )
-}
-
-function NavigationPending() {
-    const { pending } = useLinkStatus()
-
-    return pending ? (
-        <span
-            aria-hidden="true"
-            data-navigation-pending="true"
-            className="navigation-pending pointer-events-none absolute inset-0 rounded-[inherit] border border-current bg-current/10"
+        <Link
+            {...props}
+            onClick={event => {
+                onClick?.(event)
+                startNavigationIntent(navigationIntentForClick(event, props.href, pathname))
+            }}
+            className={cn('mobile-touch-target relative', className)}
         />
-    ) : null
+    )
 }

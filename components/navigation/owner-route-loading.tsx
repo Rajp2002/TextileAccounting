@@ -39,6 +39,11 @@ function titleForPath(pathname: string | null) {
         ?? 'Weavly'
 }
 
+/** Free's estimator and saved costings use a compact left-aligned title on phones. */
+function mobileHeaderClass(pathname: string | null) {
+    return pathname === '/free' || pathname === '/free/costings' ? 'free-mobile-page-header' : ''
+}
+
 function routeForPath(pathname: string | null) {
     return ROUTE_TITLES.find(([prefix]) => pathname === prefix || pathname?.startsWith(`${prefix}/`))?.[0]
         ?? pathname
@@ -56,7 +61,7 @@ export function OwnerRouteLoading() {
     return (
         <div className="w-full space-y-6 pt-2 pb-8" role="status" aria-busy="true" aria-label={isStockAudit ? t('stockAudit.loadingLabel', { title }) : `Loading ${title}`}>
             <RouteMilestones route={route} shellVisible primaryUsable={false} />
-            <div className={`${pageTitleLayoutClass(pathname ?? route)} border-b border-hairline/80 pb-5 text-center`}>
+            <div className={`${pageTitleLayoutClass(pathname ?? route)} ${mobileHeaderClass(pathname)} border-b border-hairline/80 pb-5 text-center`}>
                 <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-ink sm:text-[2rem]">{title}</h1>
             </div>
             <div className="grid gap-4 md:grid-cols-2">

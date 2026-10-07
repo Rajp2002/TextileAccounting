@@ -1,16 +1,20 @@
 import { RouteMilestones } from '@/components/performance/route-milestones'
 import { PageHeader } from '@/components/ui/page-header'
 import { pageTitleLayoutClass } from '@/components/navigation/page-title-layout'
+import { cn } from '@/lib/utils'
 
 export function BaseRouteLoading({
     route,
     title,
     centeredTitle = true,
+    headerClassName,
     children,
 }: {
     route: string
     title: string
     centeredTitle?: boolean
+    /** The page's own phone header class, so the title does not jump when the page arrives. */
+    headerClassName?: string
     children: React.ReactNode
 }) {
     return (
@@ -19,7 +23,7 @@ export function BaseRouteLoading({
             <PageHeader
                 title={title}
                 centered={centeredTitle}
-                className={pageTitleLayoutClass(route)}
+                className={cn(pageTitleLayoutClass(route), headerClassName)}
             />
             {children}
         </div>

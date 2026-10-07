@@ -34,8 +34,16 @@ describe('Estimator placeholder clarity', () => {
         expect(estimator).not.toContain('const isGhostValue = value === DEFAULT_YARN_COMPONENT_COUNT')
         expect(estimator).toContain('value={draftValue}')
         expect(estimator).toContain('placeholder={String(DEFAULT_YARN_COMPONENT_COUNT)}')
-        expect(estimator).toContain('onPointerDown={event => {')
-        expect(estimator).toContain('event.preventDefault()')
+        expect(estimator).toContain('onPointerDown={focusFieldOnPress}')
+        expect(estimator).toContain('onClick={selectFieldAfterTap}')
+    })
+
+    it('never focuses a number field on touch-down, so scrolling past fields keeps the keyboard closed', () => {
+        const estimator = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
+
+        expect(estimator).not.toMatch(/onPointerDown=\{event => \{[^}]*event\.currentTarget\.focus\(\)/)
+        expect(estimator.match(/onPointerDown=\{focusFieldOnPress\}/g)).toHaveLength(3)
+        expect(estimator.match(/onClick=\{selectFieldAfterTap\}/g)).toHaveLength(3)
     })
 
     it('applies saffron emphasis to user inputted component count values', () => {
