@@ -5,7 +5,8 @@ import { createPortal, flushSync } from 'react-dom'
 import { ChevronLeft, ChevronRight, Check } from 'lucide-react'
 import { useMobileKeyboard } from '@/hooks/use-mobile-keyboard'
 import { useTranslation } from '@/lib/i18n/context'
-import { getMobileInputNavigation, keepMobileInputVisible, moveMobileInput } from '@/lib/mobile-input-navigation'
+import { hasIosFieldBar } from '@/lib/form-navigation'
+import { getMobileInputNavigation, keepMobileInputVisible, moveMobileInput, openNextCollapsedSection } from '@/lib/mobile-input-navigation'
 
 export function MobileInputNavigation() {
     const keyboardVisible = useMobileKeyboard()
@@ -15,13 +16,21 @@ export function MobileInputNavigation() {
     const { t } = useTranslation()
 
     useEffect(() => {
+        // iOS always draws its own ∧ ∨ ✓ bar for these fields and no page can remove it. A second
+        // bar would only cover the field iOS has just scrolled above its own, so iOS keeps the flow;
+        // its ∨ cannot open a collapsed yarn row, so the next row opens while the field before it is used.
+        const iosFieldBar = hasIosFieldBar()
         let frame = 0
         const sync = () => {
             const element = document.activeElement
             if (element instanceof HTMLElement && element.closest('[data-mobile-input-accessory]')) return
-            const next = element instanceof HTMLInputElement && getMobileInputNavigation(element) ? element : null
-            activeInput.current = next
-            setInput(next)
+            const field = element instanceof HTMLInputElement && getMobileInputNavigation(element) ? element : null
+            if (iosFieldBar) {
+                if (field) openNextCollapsedSection(field)
+                return
+            }
+            activeInput.current = field
+            setInput(field)
         }
         const onBlur = () => {
             cancelAnimationFrame(frame)

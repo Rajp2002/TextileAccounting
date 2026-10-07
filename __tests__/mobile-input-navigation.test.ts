@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { getMobileInputNavigation, keepMobileInputVisible, moveMobileInput } from '../lib/mobile-input-navigation'
+import { getMobileInputNavigation, keepMobileInputVisible, moveMobileInput, openNextCollapsedSection } from '../lib/mobile-input-navigation'
 
 function form() {
     const fields: HTMLInputElement[] = []
@@ -135,6 +135,25 @@ describe('mobile number-pad field navigation', () => {
             expect(rate.focus).not.toHaveBeenCalled()
         })
 
+        it('opens the row ahead of time when the next stop is a collapsed row, so the iPhone ∨ can enter it', () => {
+            const h = form()
+            const count = h.add()
+            const { toggle } = collapsedRow(h, [])
+            const after = h.add()
+            expect(openNextCollapsedSection(h.asInput(count))).toBe(true)
+            expect(toggle.click).toHaveBeenCalledOnce()
+            expect(after.focus).not.toHaveBeenCalled()
+        })
+
+        it('does not open a collapsed row above the field, which would push it down the screen', () => {
+            const h = form()
+            h.add()
+            const { toggle } = collapsedRow(h, [])
+            const after = h.add()
+            expect(openNextCollapsedSection(h.asInput(after))).toBe(false)
+            expect(toggle.click).not.toHaveBeenCalled()
+        })
+
         it('Previous opens the row and focuses its last field', () => {
             const h = form()
             h.add()
@@ -205,5 +224,24 @@ describe('number-pad accessory wiring', () => {
         const accessory = read('components/mobile-input-navigation.tsx')
         expect(accessory).toMatch(/document\.addEventListener\('input', refresh\)/)
         expect(accessory).toMatch(/document\.removeEventListener\('input', refresh\)/)
+    })
+})
+
+describe('iPhone keyboard bar', () => {
+    const read = (file: string) => readFileSync(join(process.cwd(), file), 'utf8')
+
+    it('detects the iOS field bar from WebKit-only CSS support, and nothing elsewhere', async () => {
+        const { hasIosFieldBar } = await import('../lib/form-navigation')
+        expect(hasIosFieldBar()).toBe(false)
+        vi.stubGlobal('CSS', { supports: (property: string, value: string) => property === '-webkit-touch-callout' && value === 'none' })
+        expect(hasIosFieldBar()).toBe(true)
+        vi.stubGlobal('CSS', { supports: () => false })
+        expect(hasIosFieldBar()).toBe(false)
+    })
+
+    it('leaves the field bar to iOS and opens the next yarn row ahead instead', () => {
+        const accessory = read('components/mobile-input-navigation.tsx')
+        expect(accessory).toContain('if (iosFieldBar) {')
+        expect(accessory).toContain('openNextCollapsedSection(field)')
     })
 })

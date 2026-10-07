@@ -250,6 +250,19 @@ describe('Form Enter-Key Navigation Engine', () => {
             }
         })
 
+        it('leaves an iPhone to scroll the field into view itself, above its own keyboard bar', () => {
+            try {
+                const { input, section, scrollBy } = phone({ top: 500, bottom: 544 })
+                vi.stubGlobal('CSS', { supports: (property: string) => property === '-webkit-touch-callout' })
+                scrollInputIntoComfortableView(input, { behavior: 'auto', block: 'center' })
+                expect(section.scrollIntoView).not.toHaveBeenCalled()
+                expect(input.scrollIntoView).not.toHaveBeenCalled()
+                expect(scrollBy).not.toHaveBeenCalled()
+            } finally {
+                vi.unstubAllGlobals()
+            }
+        })
+
         it('leaves a field that is already visible above the keyboard where it is', () => {
             try {
                 const { input, section, scrollBy } = phone({ top: 200, bottom: 244 })

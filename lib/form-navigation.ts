@@ -123,6 +123,15 @@ export function findNavigableFormInputs(
 }
 
 /**
+ * iOS WebKit (Safari, home-screen apps and every iOS browser) shows its own ∧ ∨ ✓ bar above
+ * the keyboard, which no page can remove, and scrolls each focused field into view above it,
+ * ignoring preventScroll. `-webkit-touch-callout` is supported only there.
+ */
+export function hasIosFieldBar() {
+    return typeof CSS !== 'undefined' && typeof CSS.supports === 'function' && CSS.supports('-webkit-touch-callout', 'none')
+}
+
+/**
  * Keeps a field inside the visible viewport, clear of a sticky header above and the
  * keyboard's field bar below, scrolling a scroll-locked dialog rather than the page.
  */
@@ -154,6 +163,9 @@ export function scrollInputIntoComfortableView(
     scrollOptions?: ScrollIntoViewOptions
 ) {
     if (!element) return
+
+    // iOS has already scrolled the field above its own bar; a second scroll fights it.
+    if (hasIosFieldBar()) return
 
     // A phone's keyboard covers the lower part of the layout viewport, so centring a
     // section there hides the field being typed into. Move only as far as needed.
@@ -228,7 +240,8 @@ export function focusAndSelectInput(
     if (!element) return
 
     if (typeof element.focus === 'function') {
-        element.focus({ preventScroll: true })
+        // iOS reveals the field itself; elsewhere the scroll below places it.
+        element.focus({ preventScroll: !hasIosFieldBar() })
     }
 
     if (autoSelect && (isInputElement(element) || isTextAreaElement(element))) {
