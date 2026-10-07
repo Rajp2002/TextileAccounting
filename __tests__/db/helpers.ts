@@ -63,6 +63,34 @@ export async function seedOwnerOrg(db: Db, options: SeedOptions = {}) {
     return { userId, orgId }
 }
 
+/** Act as a signed-in supervisor: the token hook mints a role but no org claim. */
+export async function asSupervisor(db: Db, userId: string) {
+    await db.query('RESET ROLE')
+    await db.query("SELECT set_config('request.jwt.claims', $1, false), set_config('request.jwt.claim.sub', $2, false)", [
+        JSON.stringify({ sub: userId, role: 'authenticated', user_role: 'supervisor' }),
+        userId,
+    ])
+    await db.query('SET ROLE authenticated')
+}
+
+export type SupervisorStatus = 'pending' | 'approved' | 'removed'
+
+/** Seed a supervisor linked to an organization (as superuser). Supervisors have no profile org. */
+export async function seedSupervisor(db: Db, orgId: string, status: SupervisorStatus = 'approved', name = 'Test Supervisor') {
+    const userId = randomUUID()
+    await asSuperuser(db)
+    await db.query('INSERT INTO auth.users(id, email, created_at) VALUES ($1, $2, now())', [userId, `${userId}@example.test`])
+    await db.query(
+        "INSERT INTO public.profiles(id, org_id, role, full_name, email, access_revoked_at) VALUES ($1, NULL, 'supervisor', $2, $3, CASE WHEN $4 THEN now() END)",
+        [userId, name, `${userId}@example.test`, status === 'removed'],
+    )
+    await db.query(
+        "INSERT INTO public.factory_supervisors(user_id, org_id, status, decided_at) VALUES ($1, $2, $3, CASE WHEN $3 = 'pending' THEN NULL ELSE now() END)",
+        [userId, orgId, status],
+    )
+    return { userId }
+}
+
 /** Resolve with the Postgres error (code and message) a statement raises. */
 export async function pgError(promise: Promise<unknown>): Promise<{ code?: string; message: string }> {
     try {
