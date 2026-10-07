@@ -189,6 +189,11 @@ const nextConfig: NextConfig = {
       ],
     },
     optimizePackageImports: ['lucide-react', 'date-fns', 'framer-motion'],
+    // Reuse a page visited in the last 30 seconds, so switching back to a tab is instant
+    // instead of a skeleton and a server round trip. Server actions that revalidate clear
+    // this cache, so the user's own saves show at once; another device's edits can take
+    // up to 30 seconds to appear on a revisited tab (accepted 2026-10-08).
+    staleTimes: { dynamic: 30 },
   },
   images: { formats: ['image/avif', 'image/webp'] },
 };

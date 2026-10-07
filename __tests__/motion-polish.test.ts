@@ -40,8 +40,8 @@ describe('quiet motion system tokens', () => {
 })
 
 describe('page arrivals', () => {
-    it('fades every owner and Free page in from the shared main container', () => {
-        expect(globals).toMatch(/\.dashboard-main > \*\s*\{\s*animation: ui-route-enter var\(--motion-base\)[^;]*backwards;/)
+    it('settles every owner and Free page in from the shared main container', () => {
+        expect(globals).toMatch(/\.dashboard-main > \*\s*\{\s*animation: ui-page-settle var\(--motion-base\)[^;]*backwards;/)
         // A page that also opts into ui-route-enter must not fade twice.
         expect(globals).toMatch(/\.dashboard-main > \* \.ui-route-enter\s*\{\s*animation: none;/)
         expect(read('app/free/FreeWorkspace.tsx')).toContain('dashboard-main')

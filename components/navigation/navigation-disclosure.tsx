@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { BellRing, ChevronRight } from 'lucide-react'
 import { NavigationLink } from './navigation-link'
+import { useNavigationPathname } from '@/hooks/use-navigation-pathname'
 import { useTranslation } from '@/lib/i18n/context'
 import { isCurrentNavigationPage, type NavigationGroup } from '@/lib/disclosure-navigation'
 import { cn } from '@/lib/utils'
@@ -11,15 +12,16 @@ import { cn } from '@/lib/utils'
 const prefersReducedMotion = () =>
     typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-export function NavigationDisclosure({ group, expanded, onToggle, onCollapse, onCurrentDestination, onNavigate, yarnReviewDueCount = 0 }: {
+export function NavigationDisclosure({ group, expanded, onToggle, onCollapse, onCurrentDestination, onNavigate, prefetchDestinations = false, yarnReviewDueCount = 0 }: {
     group: NavigationGroup; expanded: boolean; onToggle: () => void; onCollapse: () => void;
-    onCurrentDestination?: () => void; onNavigate: () => void; yarnReviewDueCount?: number
+    onCurrentDestination?: () => void; onNavigate: () => void; prefetchDestinations?: boolean; yarnReviewDueCount?: number
 }) {
     const pathname = usePathname()
+    const shownPath = useNavigationPathname()
     const { t } = useTranslation()
     const id = useId()
     const trigger = useRef<HTMLButtonElement>(null)
-    const active = group.children.some(child => child.active(pathname, child.href))
+    const active = group.children.some(child => child.active(shownPath, child.href))
     const Icon = group.icon
 
     // Keep the submenu rendered for its 160ms closing animation. The state is
@@ -94,13 +96,14 @@ export function NavigationDisclosure({ group, expanded, onToggle, onCollapse, on
                         {group.children.map(destination => (
                             <li key={destination.id}>
                                 <NavigationLink
-                                    prefetch={false}
+                                    // Collapsed desktop groups stay quiet; the phone drawer readies its pages.
+                                    prefetch={prefetchDestinations ? undefined : false}
                                     href={destination.href}
                                     data-nav-id={destination.id}
                                     aria-current={
-                                        isCurrentNavigationPage(pathname, destination.href)
+                                        isCurrentNavigationPage(shownPath, destination.href)
                                             ? 'page'
-                                            : destination.active(pathname, destination.href)
+                                            : destination.active(shownPath, destination.href)
                                                 ? 'location'
                                                 : undefined
                                     }
@@ -124,7 +127,7 @@ export function NavigationDisclosure({ group, expanded, onToggle, onCollapse, on
                                     }}
                                     className={cn(
                                         'relative flex min-h-11 items-center gap-2 rounded-lg px-3 py-2.5 text-sm transition-colors duration-120 motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--wv-brand-accent)]',
-                                        destination.active(pathname, destination.href)
+                                        destination.active(shownPath, destination.href)
                                             ? 'ui-nav-mark bg-[var(--wv-neel-700)] font-semibold text-[var(--wv-neel-50)] shadow-sm before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[2px] before:rounded-r before:bg-[var(--wv-brand-accent)]'
                                             : 'text-[var(--wv-neel-300)] hover:bg-[var(--wv-bg-inverse-raised)] hover:text-[var(--wv-neel-50)]'
                                     )}

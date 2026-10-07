@@ -1646,10 +1646,20 @@
  * animation utility still wins over these defaults.
  */
 @layer components {
-  /* Every owner and Free page (and its loading skeleton) fades in as it commits.
-     Opacity only, so fixed rails and tour measurements are unaffected. */
+  /* Every owner and Free page settles in as it commits. It starts half-visible, not
+     blank, so the swap from its skeleton never blinks. The skeleton itself appears
+     at once: it is the instant answer to the tap. Opacity only, so fixed rails and
+     tour measurements are unaffected. */
+  @keyframes ui-page-settle {
+    from { opacity: 0.5; }
+  }
+
   .dashboard-main > * {
-    animation: ui-route-enter var(--motion-base) ease-out backwards;
+    animation: ui-page-settle var(--motion-base) ease-out backwards;
+  }
+
+  .dashboard-main > [aria-busy="true"] {
+    animation: none;
   }
 
   /* <details> panels slide open and closed where ::details-content and
@@ -2234,23 +2244,6 @@
 }
 [data-tour-surface="true"] [data-slot="dialog-header"],
 [data-costing-tour-dialog="true"] [data-slot="dialog-header"] { position: static; }
-
-/* A slow route acknowledges the click without flashing on cached transitions. */
-.navigation-pending {
-  opacity: 0;
-  animation: navigation-pending-reveal 100ms ease-out 100ms forwards;
-}
-
-@keyframes navigation-pending-reveal {
-  to { opacity: 1; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .navigation-pending {
-    animation: none;
-    opacity: 1;
-  }
-}
 
 /* ── Navigation Disclosure Motion System ── */
 .submenu-wrapper {

@@ -1,6 +1,6 @@
 export default function OwnerLoading() {
     return (
-        <div className="w-full space-y-6 pt-2 pb-8">
+        <div className="w-full space-y-6 pt-2 pb-8" role="status" aria-busy="true" aria-label="Loading">
             {/* Header Skeleton */}
             <div className="space-y-2">
                 <div className="ui-skeleton h-8 w-1/4 max-w-[200px] rounded-md bg-surface-muted"></div>
