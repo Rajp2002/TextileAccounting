@@ -11,6 +11,10 @@ The current subscription plans are **Free, Lite, and Base**. The active product 
 
 Plan prices and checkout eligibility are defined in [`lib/billing-constants.ts`](../../lib/billing-constants.ts) and [`lib/billing-lifecycle.ts`](../../lib/billing-lifecycle.ts). The retirement migration is [`20260924085030_retire_full_suite_tier.sql`](../../supabase/migrations/20260924085030_retire_full_suite_tier.sql).
 
+## Base supervisors
+
+Base owners can let floor supervisors fill in the daily sheet (metres only, today and yesterday). Supervisors join at `/join` with the factory code from Settings, wait for owner approval, then use `/supervisor/daily-sheet`. Design: [spec](../superpowers/specs/2026-10-07-base-supervisor-daily-sheet-design.md), [plan](../superpowers/plans/2026-10-07-base-supervisor-daily-sheet.md). Migrations: `20261007120000_supervisor_membership.sql`, `20261007120100_supervisor_daily_sheet.sql`.
+
 ## Worker payroll refinement
 
 The [first implementation increment](../worker-payroll-refinement.md) documents fixed operator approval, production applicability snapshots, prospective zero-rate resolution and the remaining incentive/costing scope.
