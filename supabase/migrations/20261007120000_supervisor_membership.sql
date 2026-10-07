@@ -204,3 +204,337 @@ $$;
 
 GRANT EXECUTE ON FUNCTION public.custom_access_token_hook(JSONB) TO supabase_auth_admin;
 REVOKE EXECUTE ON FUNCTION public.custom_access_token_hook(JSONB) FROM PUBLIC;
+
+-- ── Owner management ────────────────────────────────────────────────────────
+
+-- The caller's org when they are an unrevoked owner with Base production
+-- access. Writes are also refused while the org is locked.
+CREATE FUNCTION private.require_owner_base_org(p_write boolean)
+RETURNS uuid
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = ''
+AS $function$
+DECLARE
+  v_org_id uuid;
+BEGIN
+  SELECT profile.org_id INTO v_org_id
+  FROM public.profiles AS profile
+  WHERE profile.id = (SELECT auth.uid())
+    AND profile.role = 'owner'
+    AND profile.access_revoked_at IS NULL;
+  IF v_org_id IS NULL OR NOT private.base_production_core_access(v_org_id) THEN
+    RAISE EXCEPTION 'Base owner access is required' USING ERRCODE = '42501';
+  END IF;
+  IF p_write AND private.supervisor_org_locked(v_org_id) THEN
+    RAISE EXCEPTION 'Organization is locked. Business writes are disabled until compliance unlock.' USING ERRCODE = '42501';
+  END IF;
+  RETURN v_org_id;
+END;
+$function$;
+
+CREATE FUNCTION private.unique_supervisor_join_code()
+RETURNS text
+LANGUAGE plpgsql
+VOLATILE
+SECURITY DEFINER
+SET search_path = ''
+AS $function$
+DECLARE
+  v_code text;
+BEGIN
+  LOOP
+    v_code := private.generate_supervisor_join_code();
+    EXIT WHEN NOT EXISTS (SELECT 1 FROM public.supervisor_join_codes WHERE code = v_code);
+  END LOOP;
+  RETURN v_code;
+END;
+$function$;
+
+CREATE FUNCTION private.supervisor_access_state(p_org_id uuid)
+RETURNS jsonb
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = ''
+AS $function$
+  SELECT jsonb_build_object(
+    'joining_enabled', COALESCE(code.joining_enabled, false),
+    'code', code.code,
+    'pending', COALESCE((
+      SELECT jsonb_agg(jsonb_build_object(
+        'user_id', membership.user_id, 'full_name', profile.full_name, 'email', profile.email,
+        'phone', profile.phone, 'requested_at', membership.requested_at
+      ) ORDER BY membership.requested_at, membership.user_id)
+      FROM public.factory_supervisors AS membership
+      JOIN public.profiles AS profile ON profile.id = membership.user_id
+      WHERE membership.org_id = p_org_id AND membership.status = 'pending'
+    ), '[]'::jsonb),
+    'approved', COALESCE((
+      SELECT jsonb_agg(jsonb_build_object(
+        'user_id', membership.user_id, 'full_name', profile.full_name, 'email', profile.email,
+        'phone', profile.phone, 'requested_at', membership.requested_at, 'decided_at', membership.decided_at
+      ) ORDER BY profile.full_name, membership.user_id)
+      FROM public.factory_supervisors AS membership
+      JOIN public.profiles AS profile ON profile.id = membership.user_id
+      WHERE membership.org_id = p_org_id AND membership.status = 'approved'
+        AND profile.access_revoked_at IS NULL
+    ), '[]'::jsonb)
+  )
+  FROM (SELECT p_org_id AS org_id) AS anchor
+  LEFT JOIN public.supervisor_join_codes AS code ON code.org_id = anchor.org_id;
+$function$;
+
+CREATE FUNCTION public.get_supervisor_access()
+RETURNS jsonb
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = ''
+AS $function$
+BEGIN
+  RETURN private.supervisor_access_state(private.require_owner_base_org(false));
+END;
+$function$;
+
+CREATE FUNCTION public.set_supervisor_joining(p_enabled boolean)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $function$
+DECLARE
+  v_org_id uuid := private.require_owner_base_org(true);
+BEGIN
+  IF p_enabled IS NULL THEN
+    RAISE EXCEPTION 'Choose whether supervisors can join' USING ERRCODE = '22023';
+  END IF;
+  UPDATE public.supervisor_join_codes
+  SET joining_enabled = p_enabled, updated_at = now(), updated_by = (SELECT auth.uid())
+  WHERE org_id = v_org_id;
+  IF NOT FOUND THEN
+    INSERT INTO public.supervisor_join_codes(org_id, code, joining_enabled, updated_by)
+    VALUES (v_org_id, private.unique_supervisor_join_code(), p_enabled, (SELECT auth.uid()));
+  END IF;
+  RETURN private.supervisor_access_state(v_org_id);
+END;
+$function$;
+
+CREATE FUNCTION public.regenerate_supervisor_join_code()
+RETURNS text
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $function$
+DECLARE
+  v_org_id uuid := private.require_owner_base_org(true);
+  v_code text := private.unique_supervisor_join_code();
+BEGIN
+  UPDATE public.supervisor_join_codes
+  SET code = v_code, updated_at = now(), updated_by = (SELECT auth.uid())
+  WHERE org_id = v_org_id;
+  IF NOT FOUND THEN
+    INSERT INTO public.supervisor_join_codes(org_id, code, joining_enabled, updated_by)
+    VALUES (v_org_id, v_code, false, (SELECT auth.uid()));
+  END IF;
+  RETURN v_code;
+END;
+$function$;
+
+CREATE FUNCTION public.approve_supervisor(p_user_id uuid)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $function$
+DECLARE
+  v_org_id uuid := private.require_owner_base_org(true);
+BEGIN
+  UPDATE public.factory_supervisors
+  SET status = 'approved', decided_at = now(), decided_by = (SELECT auth.uid()), updated_at = now()
+  WHERE user_id = p_user_id AND org_id = v_org_id AND status = 'pending';
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'This request is no longer waiting for approval.' USING ERRCODE = '22023';
+  END IF;
+END;
+$function$;
+
+-- A pending supervisor has written nothing, so the request and its profile
+-- are deleted. The application then deletes the auth account so the email
+-- can be used again.
+CREATE FUNCTION public.decline_supervisor(p_user_id uuid)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $function$
+DECLARE
+  v_org_id uuid := private.require_owner_base_org(true);
+BEGIN
+  PERFORM 1 FROM public.factory_supervisors
+  WHERE user_id = p_user_id AND org_id = v_org_id AND status = 'pending'
+  FOR UPDATE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'This request is no longer waiting for approval.' USING ERRCODE = '22023';
+  END IF;
+  DELETE FROM public.profiles WHERE id = p_user_id AND role = 'supervisor' AND org_id IS NULL;
+END;
+$function$;
+
+-- The profile stays so saved production keeps its attribution; revocation
+-- strips the token claims and stops every supervisor check.
+CREATE FUNCTION public.remove_supervisor(p_user_id uuid)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $function$
+DECLARE
+  v_org_id uuid := private.require_owner_base_org(true);
+BEGIN
+  UPDATE public.factory_supervisors
+  SET status = 'removed', decided_at = now(), decided_by = (SELECT auth.uid()), updated_at = now()
+  WHERE user_id = p_user_id AND org_id = v_org_id AND status = 'approved';
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'This supervisor is no longer active.' USING ERRCODE = '22023';
+  END IF;
+  UPDATE public.profiles
+  SET access_revoked_at = now(), access_revoked_by = (SELECT auth.uid())
+  WHERE id = p_user_id;
+END;
+$function$;
+
+-- Every supervisor ever linked to the owner's factory, for "saved by" labels.
+CREATE FUNCTION public.get_supervisor_display_names()
+RETURNS jsonb
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = ''
+AS $function$
+DECLARE
+  v_org_id uuid := private.require_owner_base_org(false);
+BEGIN
+  RETURN COALESCE((
+    SELECT jsonb_agg(jsonb_build_object('user_id', membership.user_id, 'full_name', profile.full_name)
+      ORDER BY profile.full_name, membership.user_id)
+    FROM public.factory_supervisors AS membership
+    JOIN public.profiles AS profile ON profile.id = membership.user_id
+    WHERE membership.org_id = v_org_id
+  ), '[]'::jsonb);
+END;
+$function$;
+
+-- ── Supervisor status ───────────────────────────────────────────────────────
+
+CREATE FUNCTION public.get_supervisor_status()
+RETURNS jsonb
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = ''
+AS $function$
+  SELECT COALESCE((
+    SELECT jsonb_build_object(
+      'status', membership.status,
+      'org_id', membership.org_id,
+      'factory_name', organization.name,
+      'plan_active', private.org_has_active_base(membership.org_id),
+      'locked', private.supervisor_org_locked(membership.org_id),
+      'today', (now() AT TIME ZONE 'Asia/Kolkata')::date
+    )
+    FROM public.profiles AS profile
+    JOIN public.factory_supervisors AS membership ON membership.user_id = profile.id
+    JOIN public.organizations AS organization ON organization.id = membership.org_id
+    WHERE profile.id = (SELECT auth.uid())
+      AND profile.role = 'supervisor'
+      AND profile.access_revoked_at IS NULL
+      AND membership.status IN ('pending', 'approved')
+  ), jsonb_build_object(
+    'status', 'none', 'org_id', NULL, 'factory_name', NULL,
+    'plan_active', false, 'locked', false,
+    'today', (now() AT TIME ZONE 'Asia/Kolkata')::date
+  ));
+$function$;
+
+-- ── Joining (server action only, before the supervisor has a session) ───────
+
+CREATE FUNCTION public.lookup_supervisor_join_code(p_code text)
+RETURNS jsonb
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = ''
+AS $function$
+DECLARE
+  v_code text := upper(regexp_replace(COALESCE(p_code, ''), '[^A-Za-z0-9]', '', 'g'));
+BEGIN
+  IF v_code !~ '^[A-HJ-NP-Z2-9]{8}$' THEN
+    RETURN NULL;
+  END IF;
+  RETURN (
+    SELECT jsonb_build_object('org_id', organization.id, 'factory_name', organization.name)
+    FROM public.supervisor_join_codes AS code
+    JOIN public.organizations AS organization ON organization.id = code.org_id
+    WHERE code.code = v_code
+      AND code.joining_enabled
+      AND NOT private.supervisor_org_locked(organization.id)
+      AND private.org_has_active_base(organization.id)
+  );
+END;
+$function$;
+
+CREATE FUNCTION public.register_supervisor_join_request(
+  p_user_id uuid, p_code text, p_full_name text, p_email text, p_phone text
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $function$
+DECLARE
+  v_factory jsonb := public.lookup_supervisor_join_code(p_code);
+  v_name text := btrim(COALESCE(p_full_name, ''));
+BEGIN
+  IF v_factory IS NULL THEN
+    RAISE EXCEPTION 'Check the code with your factory owner.' USING ERRCODE = '22023';
+  END IF;
+  IF p_user_id IS NULL OR char_length(v_name) NOT BETWEEN 2 AND 80 OR NULLIF(btrim(p_email), '') IS NULL THEN
+    RAISE EXCEPTION 'A name, email and account are required' USING ERRCODE = '22023';
+  END IF;
+  INSERT INTO public.profiles(id, org_id, role, full_name, email, phone)
+  VALUES (p_user_id, NULL, 'supervisor', v_name, lower(btrim(p_email)), NULLIF(btrim(p_phone), ''));
+  INSERT INTO public.factory_supervisors(user_id, org_id, status)
+  VALUES (p_user_id, (v_factory ->> 'org_id')::uuid, 'pending');
+  RETURN v_factory;
+END;
+$function$;
+
+-- ── Grants ──────────────────────────────────────────────────────────────────
+
+REVOKE ALL ON FUNCTION private.require_owner_base_org(boolean) FROM PUBLIC, anon, authenticated, service_role;
+REVOKE ALL ON FUNCTION private.unique_supervisor_join_code() FROM PUBLIC, anon, authenticated, service_role;
+REVOKE ALL ON FUNCTION private.supervisor_access_state(uuid) FROM PUBLIC, anon, authenticated, service_role;
+
+REVOKE ALL ON FUNCTION public.get_supervisor_access() FROM PUBLIC, anon, authenticated, service_role;
+REVOKE ALL ON FUNCTION public.set_supervisor_joining(boolean) FROM PUBLIC, anon, authenticated, service_role;
+REVOKE ALL ON FUNCTION public.regenerate_supervisor_join_code() FROM PUBLIC, anon, authenticated, service_role;
+REVOKE ALL ON FUNCTION public.approve_supervisor(uuid) FROM PUBLIC, anon, authenticated, service_role;
+REVOKE ALL ON FUNCTION public.decline_supervisor(uuid) FROM PUBLIC, anon, authenticated, service_role;
+REVOKE ALL ON FUNCTION public.remove_supervisor(uuid) FROM PUBLIC, anon, authenticated, service_role;
+REVOKE ALL ON FUNCTION public.get_supervisor_display_names() FROM PUBLIC, anon, authenticated, service_role;
+REVOKE ALL ON FUNCTION public.get_supervisor_status() FROM PUBLIC, anon, authenticated, service_role;
+REVOKE ALL ON FUNCTION public.lookup_supervisor_join_code(text) FROM PUBLIC, anon, authenticated, service_role;
+REVOKE ALL ON FUNCTION public.register_supervisor_join_request(uuid, text, text, text, text) FROM PUBLIC, anon, authenticated, service_role;
+
+GRANT EXECUTE ON FUNCTION public.get_supervisor_access() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.set_supervisor_joining(boolean) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.regenerate_supervisor_join_code() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.approve_supervisor(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.decline_supervisor(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.remove_supervisor(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.get_supervisor_display_names() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.get_supervisor_status() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.lookup_supervisor_join_code(text) TO service_role;
+GRANT EXECUTE ON FUNCTION public.register_supervisor_join_request(uuid, text, text, text, text) TO service_role;
