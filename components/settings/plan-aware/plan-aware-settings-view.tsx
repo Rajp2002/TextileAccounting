@@ -11,6 +11,7 @@ import { PayrollCycleSettingsCard } from '../payroll/PayrollCycleSettingsCard'
 import { type PayrollCycleConfig } from '@/lib/payroll-cycle-engine'
 import { SecurityCard } from './security-card'
 import { DeletionReviewCard } from './deletion-review-card'
+import { SupervisorAccessCard } from '../supervisors/SupervisorAccessCard'
 import { useUnloadProtection } from './unsaved-changes-dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { freeSupportingText } from '@/lib/i18n/free-supporting'
@@ -199,6 +200,7 @@ export function PlanAwareSettingsView({
                         isAuthorizedEditor={factory.isAuthorizedEditor ?? true}
                         onDirtyChange={setPayrollDirty}
                     />}
+                    {tier === 'base' && <SupervisorAccessCard orgId={factory.id} factoryName={factory.name} />}
                     <FreeSettingsGroup compact={tier === 'free' || tier === 'lite'} title={freeSupportingText(language, 'security')} summary={profile.emailVerified ? profile.email : `${profile.email} · ${freeSupportingText(language, 'emailUnverified')}`}><SecurityCard email={profile.email} /></FreeSettingsGroup>
                     <FreeSettingsGroup compact={tier === 'free' || tier === 'lite'} title={freeSupportingText(language, 'display')} summary={freeSupportingText(language, 'device')}><StartupIntroSetting /></FreeSettingsGroup>
 
