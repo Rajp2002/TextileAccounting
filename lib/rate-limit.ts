@@ -47,6 +47,10 @@ const ACCESS_CODE_LIMIT = 5
 const ACCESS_CODE_WINDOW_SECONDS = 10 * 60
 const ACCESS_CODE_LOCKOUT_SECONDS = 10 * 60
 const ACCESS_CODE_UNAVAILABLE_MESSAGE = 'Access-code protection is temporarily unavailable. Try again later.'
+// Factory-code checks on the public /join page, per IP. Codes are 8 characters
+// from a 32-letter alphabet, so this only slows probing; it never stops joining.
+const SUPERVISOR_JOIN_LIMIT = 20
+const SUPERVISOR_JOIN_WINDOW_SECONDS = 15 * 60
 
 type LocalAuthBucket = {
     count: number
@@ -209,7 +213,9 @@ function checkLocalAuthRateLimit(
     identifier: string,
     reason: string,
     error?: unknown,
-    nowMs = Date.now()
+    nowMs = Date.now(),
+    limit = AUTH_LIMIT,
+    windowSeconds = AUTH_WINDOW_SECONDS,
 ): number | null {
     alertAuthFallback(reason, error)
 
@@ -222,13 +228,13 @@ function checkLocalAuthRateLimit(
 
         bucket = {
             count: 0,
-            reset: nowMs + AUTH_WINDOW_SECONDS * 1000,
+            reset: nowMs + windowSeconds * 1000,
         }
         localAuthBuckets.set(identifier, bucket)
     }
 
-    bucket.count = Math.min(bucket.count + 1, AUTH_LIMIT + 1)
-    return bucket.count > AUTH_LIMIT ? bucket.reset : null
+    bucket.count = Math.min(bucket.count + 1, limit + 1)
+    return bucket.count > limit ? bucket.reset : null
 }
 
 /**
@@ -259,6 +265,36 @@ export async function checkAuthRateLimit(ip: string, isSignup: boolean = false):
         return result.success ? null : result.reset
     } catch (err) {
         return checkLocalAuthRateLimit(identifier, 'Auth Redis error', err)
+    }
+}
+
+let _supervisorJoinLimiter: Ratelimit | null | undefined = undefined
+function getSupervisorJoinLimiter() {
+    if (_supervisorJoinLimiter === undefined) _supervisorJoinLimiter = createLimiter(SUPERVISOR_JOIN_LIMIT, SUPERVISOR_JOIN_WINDOW_SECONDS)
+    return _supervisorJoinLimiter
+}
+
+/**
+ * Factory-code checks and join requests on /join, by IP. Returns null if
+ * allowed, or the reset timestamp (ms). Like auth, a missing or failing Redis
+ * uses the bounded per-runtime fallback instead of allowing unlimited probing.
+ */
+export async function checkSupervisorJoinRateLimit(ip: string): Promise<number | null> {
+    const identifier = `supervisor-join:${ip}`
+    const fallback = (reason: string, error?: unknown) =>
+        checkLocalAuthRateLimit(identifier, reason, error, Date.now(), SUPERVISOR_JOIN_LIMIT, SUPERVISOR_JOIN_WINDOW_SECONDS)
+    let limiter: Ratelimit | null
+    try {
+        limiter = getSupervisorJoinLimiter()
+    } catch (err) {
+        return fallback('Supervisor join limiter initialization failed', err)
+    }
+    if (!limiter) return fallback('Supervisor join limiter unavailable')
+    try {
+        const result = await limiter.limit(identifier)
+        return result.success ? null : result.reset
+    } catch (err) {
+        return fallback('Supervisor join Redis error', err)
     }
 }
 
