@@ -15,7 +15,7 @@ import { applyTranslationGuards, translateStrictBasePlanText } from '../lib/i18n
 const state = vi.hoisted(() => ({ language: 'en' as 'en' | 'hi' | 'gu' }))
 vi.mock('@/lib/i18n/context', () => ({ useTranslation: () => ({ language: state.language, tx: (text: string) => text }) }))
 vi.mock('@/components/tours/TourInvitation', () => ({ TourInvitation: () => null }))
-import { RateBookHelp, rateBookHelpCopy, formatRateBookHelpText } from '../components/rates/RateBookTutorial'
+import { RateBookHelp, RateBookHelpTopics, rateBookHelpCopy, formatRateBookHelpText } from '../components/rates/RateBookTutorial'
 
 const rates = readFileSync('app/(dashboard)/owner/rates/RatesClient.tsx', 'utf8')
 const provider = readFileSync('lib/i18n/context.tsx', 'utf8')
@@ -74,11 +74,15 @@ describe('Rate Book approved copy and control parity', () => {
         state.language = language
         const copy = rateBookHelpCopy[language]
         expect(Object.keys(copy.fields)).toEqual(['directionFilter', 'quickReviewAction', 'rateAndTrend', 'rateDrawerFields', 'reviewRailWidget', 'activityAndArchive'])
-        const html = renderToStaticMarkup(<RateBookHelp />)
-        expect(html).toContain(`lang="${language}"`)
-        expect(html).toContain(copy.helpTitle)
-        expect(html.match(/<details\b/g)).toHaveLength(7)
-        expect(html).not.toContain('<details open')
+        // The pill is closed on first render; its topics render, all open, as the modal body.
+        const pill = renderToStaticMarkup(<RateBookHelp />)
+        expect(pill).toContain(`lang="${language}"`)
+        expect(pill).toContain('data-i18n-skip="true"')
+        expect(pill).toContain(copy.helpTitle)
+        expect(pill).not.toContain('<details')
+        const html = renderToStaticMarkup(<RateBookHelpTopics />)
+        expect(html).not.toContain('<details')
+        expect(html.match(/<section\b/g)).toHaveLength(6)
         for (const field of Object.values(copy.fields)) {
             expect(html).toContain(formatRateBookHelpText(field.title, text => text))
             expect(formatRateBookHelpText(field.description, text => text)).not.toMatch(/\{\w+\}/)

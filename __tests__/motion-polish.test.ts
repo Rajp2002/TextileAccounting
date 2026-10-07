@@ -60,8 +60,6 @@ describe('expandable panels', () => {
         'app/(dashboard)/owner/production/registers/WorkersRegister.tsx',
         'app/(dashboard)/owner/billing/page.tsx',
         'app/(dashboard)/owner/quotes/QuotesClient.tsx',
-        'components/rates/RateBookTutorial.tsx',
-        'components/estimator/SavedCostingsTutorial.tsx',
         'components/estimator/UpgradeBenefitsPreview.tsx',
     ]
 

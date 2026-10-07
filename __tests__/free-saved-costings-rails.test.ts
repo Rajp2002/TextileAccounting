@@ -45,6 +45,14 @@ describe('Free Saved Costings right rail', () => {
         expect(tutorial).toContain("cn('@container left-rail-bottom mt-auto pt-3', free && 'rail-inline-actions')")
     })
 
+    it('opens the help in a modal from a rail pill instead of expanding inline', () => {
+        const help = tutorial.slice(tutorial.indexOf('export function SavedCostingsHelp('), tutorial.indexOf('export function SavedCostingsTutorial('))
+        expect(help).toContain('<RailDialog')
+        expect(help).toContain('<RailDialogSection')
+        expect(help).not.toContain('<details')
+        expect(help).not.toContain('<summary')
+    })
+
     it('hides the help rail below 1280px, anchors it to the bottom edge above that, and reserves the gutter for it', () => {
         expect(styles).toMatch(/\.saved-costings-archive-rail-desktop,\s*\.saved-costings-help-rail-desktop,[\s\S]*?\{\s*display:\s*none;/)
         expect(styles).toMatch(/\.saved-costings-help-rail-desktop,[\s\S]*?\{[\s\S]*?position:\s*fixed;[\s\S]*?bottom:\s*var\(--rail-bottom\);/)

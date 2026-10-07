@@ -34,7 +34,8 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SwitchField } from '@/components/ui/switch-field'
-import { railIcon, railPrimaryAction, railSurface } from '@/components/ui/rail'
+import { railPrimaryAction } from '@/components/ui/rail'
+import { RailDialog } from '@/components/ui/rail-dialog'
 import { cn } from '@/lib/utils'
 import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -789,25 +790,18 @@ function RateReviewRailWidget({
 function RateBookReferenceCard() {
     const { tx, language } = useTranslation()
     const copy = rateBookHelpCopy[language]
-    // Collapsed by default (no `open`): it sits in the bottom stack of the right rail beside the help and archive pills.
+    // A pill that opens a modal, like the help and archive pills it sits beside in the bottom stack of the right rail.
     return (
-        <details className={cn(railSurface, 'ui-details group text-xs')}>
-            <summary className="flex min-h-11 cursor-pointer select-none list-none items-center justify-between gap-2.5 px-3.5 py-2.5 text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden">
-                <span className="flex min-w-0 items-center gap-2.5">
-                    <BookOpen className={railIcon} aria-hidden="true" />
-                    <span className="min-w-0">{tx('Rate Book Principles')}</span>
-                </span>
-                <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" />
-            </summary>
-            <ul data-i18n-skip="true" lang={language} className="max-h-[40dvh] space-y-2 overflow-y-auto border-t border-hairline px-3.5 py-3 text-xs leading-relaxed text-body">
+        <RailDialog icon={BookOpen} title={tx('Rate Book Principles')} lang={language} i18nSkip>
+            <ul className="space-y-3 rounded-xl border border-hairline bg-surface-soft/60 p-3.5 text-sm leading-relaxed text-body">
                 {copy.principles.map(principle => (
-                    <li key={principle} className="flex items-start gap-2">
-                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-saffron" aria-hidden="true" />
+                    <li key={principle} className="flex items-start gap-2.5">
+                        <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-saffron" aria-hidden="true" />
                         <span>{principle}</span>
                     </li>
                 ))}
             </ul>
-        </details>
+        </RailDialog>
     )
 }
 
