@@ -82,14 +82,15 @@ describe('Rate Review Right Rail layout & interaction', () => {
         expect(rates.match(/<RateBookHelp \/>/g)).toHaveLength(2)
     })
 
-    it('renders the principles as a disclosure that is collapsed by default', () => {
+    it('opens the principles in a modal from a rail pill instead of expanding inline', () => {
         const start = rates.indexOf('function RateBookReferenceCard()')
         const card = rates.slice(start, rates.indexOf('function RateReviewFloatingButton', start))
-        expect(card).toContain('<details')
-        expect(card).toContain('<summary')
-        expect(card).not.toMatch(/<details[^>]*\bopen\b/)
+        expect(card).toContain('<RailDialog')
+        expect(card).not.toContain('<details')
+        expect(card).not.toContain('<summary')
         expect(card).toContain("tx('Rate Book Principles')")
         expect(card).toContain('copy.principles.map')
+        expect(card).toMatch(/<RailDialog[^>]*\bi18nSkip\b/)
     })
 
     it('provides accessible modal triggers for rates due for review', () => {

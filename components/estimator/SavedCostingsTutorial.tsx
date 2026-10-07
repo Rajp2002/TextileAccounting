@@ -2,10 +2,11 @@
 
 import dynamic from 'next/dynamic'
 import { useRef, useState } from 'react'
-import { ChevronDown, ChevronRight, CircleHelp, GitCompareArrows } from 'lucide-react'
+import { ChevronRight, CircleHelp, GitCompareArrows } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { TourInvitation } from '@/components/tours/TourInvitation'
-import { railButton, railIcon, railSurface } from '@/components/ui/rail'
+import { railButton, railIcon } from '@/components/ui/rail'
+import { RailDialog, RailDialogSection } from '@/components/ui/rail-dialog'
 import { cn } from '@/lib/utils'
 import { useTranslation } from '@/lib/i18n/context'
 import type { SavedCostingEnding, SavedCostingStep } from '@/lib/saved-costings-tour'
@@ -127,10 +128,9 @@ export function SavedCostingsHelp({ free = false }: { free?: boolean }) {
     const helpFields = free ? [copy.fields.freeHelp, copy.fields.customer, copy.fields.share]
         : [copy.fields.filters, copy.fields.breakdown, copy.fields.organize, copy.fields.separateQuality, copy.fields.customer, copy.fields.share]
     return (
-        <details data-i18n-skip="true" lang={language} className={cn(railSurface, 'ui-details group text-xs')}>
-            <summary className="flex min-h-[44px] cursor-pointer select-none list-none items-center justify-between gap-2.5 px-3.5 py-2.5 text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden"><span className="flex min-w-0 items-center gap-2.5"><CircleHelp className={railIcon} aria-hidden="true" /><span className="min-w-0">{copy.help}</span></span><ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" /></summary>
-            <div className="max-h-[40dvh] space-y-3 overflow-y-auto border-t border-hairline px-3.5 py-3">{helpFields.map(([title, description]) => <section key={title}><h3 className="font-semibold text-ink">{title}</h3><p className="mt-1 leading-relaxed text-body">{description}</p></section>)}</div>
-        </details>
+        <RailDialog icon={CircleHelp} title={copy.help} lang={language} i18nSkip>
+            {helpFields.map(([title, description]) => <RailDialogSection key={title} title={title}>{description}</RailDialogSection>)}
+        </RailDialog>
     )
 }
 

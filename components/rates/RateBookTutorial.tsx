@@ -2,10 +2,9 @@
 
 import dynamic from 'next/dynamic'
 import { useRef } from 'react'
-import { ChevronDown, CircleHelp } from 'lucide-react'
+import { CircleHelp } from 'lucide-react'
 import { TourInvitation } from '@/components/tours/TourInvitation'
-import { railIcon, railSurface } from '@/components/ui/rail'
-import { cn } from '@/lib/utils'
+import { RailDialog, RailDialogSection } from '@/components/ui/rail-dialog'
 import { useTranslation } from '@/lib/i18n/context'
 import type { RateBookStep } from '@/lib/rate-book-tour'
 
@@ -126,21 +125,20 @@ export function formatRateBookHelpText(text: string, tx: (phrase: string) => str
     return Object.entries(helpLabels).reduce((result, [token, label]) => result.replaceAll(`{${token}}`, tx(label)), text)
 }
 
-export function RateBookHelp() {
+/** The six help topics, all open, as the body of the Rate Book help modal. */
+export function RateBookHelpTopics() {
     const { language, tx } = useTranslation()
-    const copy = rateBookHelpCopy[language]
-    return <details data-i18n-skip="true" lang={language} className={cn(railSurface, 'ui-details group text-xs')}>
-        <summary className="flex min-h-11 cursor-pointer select-none list-none items-center justify-between gap-2.5 px-3.5 py-2.5 text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden">
-            <span className="flex min-w-0 items-center gap-2.5"><CircleHelp className={railIcon} aria-hidden="true" /><span className="min-w-0">{copy.helpTitle}</span></span>
-            <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" />
-        </summary>
-        <div className="max-h-[35vh] space-y-2.5 overflow-y-auto border-t border-hairline px-3.5 py-3">
-            {Object.entries(copy.fields).map(([field, text]) => <details key={field} className="ui-details rounded-xl border border-hairline/60 bg-surface-soft/60 p-2.5 text-xs">
-                <summary className="cursor-pointer font-semibold text-ink">{formatRateBookHelpText(text.title, tx)}</summary>
-                <p className="mt-1.5 leading-relaxed text-body">{formatRateBookHelpText(text.description, tx)}</p>
-            </details>)}
-        </div>
-    </details>
+    return <>
+        {Object.entries(rateBookHelpCopy[language].fields).map(([field, text]) =>
+            <RailDialogSection key={field} title={formatRateBookHelpText(text.title, tx)}>{formatRateBookHelpText(text.description, tx)}</RailDialogSection>)}
+    </>
+}
+
+export function RateBookHelp() {
+    const { language } = useTranslation()
+    return <RailDialog icon={CircleHelp} title={rateBookHelpCopy[language].helpTitle} lang={language} i18nSkip>
+        <RateBookHelpTopics />
+    </RailDialog>
 }
 
 export function RateBookTutorial({ step, onStepChange, enabled, sampleRow, hasRealRates, userId, orgId, userMetadata, onTourFinish }: {
