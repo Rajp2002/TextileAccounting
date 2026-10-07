@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { asSuperuser, asSupervisor, asUser, freshDatabase, pgError, seedOwnerOrg, seedSupervisor, type Db } from './helpers'
+import { buildSupervisorSheet, parseSupervisorSheet } from '@/lib/supervisor-daily-sheet'
 
 // Supervisors record and correct the Base daily sheet (today and yesterday)
 // through the same reviewed core the owner uses, and read a metres-only view.
@@ -215,6 +216,15 @@ describe('supervisor sheet read', () => {
         expect(data.revisions).toEqual([expect.objectContaining({ revision_number: 1, change_kind: 'created', changed_by_name: 'Ramesh', after_total: 120 })])
         const forbidden = [...keysDeep(data)].filter(key => /rate|salary|price|earning|gross|cost|pay_basis|amount/.test(key))
         expect(forbidden).toEqual([])
+    })
+
+    it('is exactly what the supervisor sheet model reads', async () => {
+        const f = await factory()
+        await supervisorSave(f, dates.today, 120)
+        const sheet = buildSupervisorSheet(parseSupervisorSheet(await readSheet(f.supervisor, dates.today)), dates.today, 'day')
+        expect(sheet.rows).toEqual([expect.objectContaining({ machineId: f.machine, workerId: f.worker, jobId: f.job, jobLabel: 'Cotton', paid: false })])
+        expect(sheet.baseline[f.worker]).toMatchObject({ status: 'entered', machineMeters: { [`${f.machine}:${f.job}`]: '120' } })
+        expect(parseSupervisorSheet(await readSheet(f.supervisor, dates.yesterday, 'night')).batch).toBeNull()
     })
 
     it('is refused outside the window, while pending, after the plan lapses and while locked', async () => {
