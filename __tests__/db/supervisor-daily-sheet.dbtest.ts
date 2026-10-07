@@ -277,6 +277,19 @@ describe('supervisor isolation', () => {
         }
     })
 
+    it('retired functions that check only the role claim still act on no factory for a supervisor', async () => {
+        const f = await factory()
+        await asSupervisor(db, f.supervisor)
+        const dispatch = await pgError(db.query(
+            "SELECT public.create_stock_sale_dispatch($1, $2, ARRAY[]::uuid[], ARRAY[]::numeric[], ARRAY[]::numeric[], $3, NULL, NULL, NULL, NULL, NULL, NULL, NULL, $4, $5)",
+            [f.owner.orgId, randomUUID(), dates.today, f.supervisor, randomUUID()],
+        ))
+        expect(dispatch.message).toMatch(/does not belong to the caller|outside your organization/)
+        await db.query("SELECT public.copy_previous_shift($1, 'day', $2, 'day')", [dates.today, dates.yesterday]).catch(() => undefined)
+        await asSuperuser(db)
+        expect((await db.query('SELECT count(*)::int AS n FROM public.shift_assignments WHERE org_id = $1', [f.owner.orgId])).rows[0].n).toBe(0)
+    })
+
     it('no policy reads the supervisor membership or code tables', async () => {
         await asSuperuser(db)
         const { rows } = await db.query(`SELECT tablename, policyname FROM pg_policies
