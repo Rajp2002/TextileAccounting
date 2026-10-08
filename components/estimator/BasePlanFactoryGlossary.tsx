@@ -52,7 +52,7 @@ export function BasePlanFactoryGlossary() {
       <DialogTrigger asChild>
         <button
           type="button"
-          className={cn('estimator-touch-target', railButton)}
+          className={cn('phone-guidance estimator-touch-target', railButton)}
           aria-label={t('base_plan.glossary_title')}
         >
           <span className="flex min-w-0 items-center gap-2.5">

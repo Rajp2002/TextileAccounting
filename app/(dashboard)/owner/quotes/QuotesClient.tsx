@@ -1270,7 +1270,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
 
     return (
         <>
-            <aside id={isLite ? 'lite-costings-help' : undefined} data-expanded={helpOpen || tourStep !== null} className={cn("saved-costings-left-rail space-y-3", isLite && mobileStyles.help)} aria-label={tx('Saved Costings guides and tools')}>
+            <aside id={isLite ? 'lite-costings-help' : undefined} data-expanded={helpOpen || tourStep !== null} className={cn("phone-guidance saved-costings-left-rail space-y-3", isLite && mobileStyles.help)} aria-label={tx('Saved Costings guides and tools')}>
                 <SavedCostingsTutorial step={tourStep} onStepChange={setTourStep} onComplete={() => setShowCostingDeleteNudge(true)} production={canUseProductionPipeline} ending={savedCostingTourEnding(quotes.filter(quote => isStandaloneCosting(quote.record_kind)).length, tourUnavailable)} userId={userId} orgId={orgId} userMetadata={userMetadata} />
             </aside>
             <div className={cn("saved-costings-workspace ui-route-enter max-w-6xl mx-auto space-y-4 sm:space-y-6", isLite && mobileStyles.workspace)} data-lite-costings={isLite || undefined}>
@@ -1279,7 +1279,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             <PageHeader
                 title={t('common.saved_costings_title')}
                 actions={<>
-                    {isLite && <Button type="button" variant="outline" className={mobileStyles.mobileOnly} aria-controls="lite-costings-help" aria-expanded={helpOpen || tourStep !== null} onClick={() => setHelpOpen(open => !open)} data-i18n-skip="true" lang={language}>{mobileCopy.help}</Button>}
+                    {isLite && <Button type="button" variant="outline" className={cn(mobileStyles.mobileOnly, "phone-guidance")} aria-controls="lite-costings-help" aria-expanded={helpOpen || tourStep !== null} onClick={() => setHelpOpen(open => !open)} data-i18n-skip="true" lang={language}>{mobileCopy.help}</Button>}
                     <Button
                         data-tour-anchor="costings.new" onClick={() => router.push('/owner/estimator')}
                         className="rail-inline-actions h-10 w-full sm:w-auto rounded-xl bg-loom px-4 font-medium text-white shadow-xs hover:bg-loom-elevated hover:text-white focus-visible:ring-saffron"
@@ -1552,7 +1552,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             )}
             </div>
             )}
-            <div className="rail-inline-actions">
+            <div className="phone-guidance rail-inline-actions">
                 <ArchivePolicyNotice />
             </div>
             </div>

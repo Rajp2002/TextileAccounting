@@ -1225,7 +1225,7 @@ export default function BaseAssignmentWorkspace({
     return (
         <div className="configuration-workspace" inert={tourStep !== null}>
             {!tourStep && (focusWorkerId || focusMachineId) && <div role="status" className="col-span-full rounded border p-3"><p>{(focusWorkerId && !liveData.workers.some(worker => worker.id === focusWorkerId)) || (focusMachineId && !liveData.machines.some(machine => machine.id === focusMachineId)) ? 'This record is unavailable.' : focusWorkerId ? 'Worker filter active' : 'Machine filter active'}</p><Link className="inline-flex min-h-11 items-center underline" href={`/owner/assignments?shift=${shift}`}>View all assignments</Link></div>}
-            <aside className="configuration-guide-rail" aria-label="Machine Assignments guide">
+            <aside className="phone-guidance configuration-guide-rail" aria-label="Machine Assignments guide">
                 <div ref={tourLauncher}>
                     <TourInvitation
                         tourId="configuration"

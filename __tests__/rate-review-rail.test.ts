@@ -57,7 +57,7 @@ describe('Rate Review Right Rail layout & interaction', () => {
         const helpStart = rates.indexOf('<RateBookHelp />', bottomStart)
         const archiveStart = rates.indexOf('<ArchivePolicyNotice />', bottomStart)
 
-        expect(rates).toContain('<div className="rail-inline-actions">')
+        expect(rates).toContain('<div className="phone-guidance rail-inline-actions">')
         expect(rates).not.toContain('rates-archive-policy-rail-desktop')
         expect(routeArchiveStart).toBeGreaterThanOrEqual(0)
         expect(reviewRailStart).toBeGreaterThan(routeArchiveStart)

@@ -1508,7 +1508,7 @@ export default function RatesClient({
     return (
         <>
             {/* Rate Book Left Rail - pinned to top of left rail beside sidebar, matching the Cost Estimator left rail pattern */}
-            <aside id={isLite ? 'lite-ratebook-help' : undefined} data-expanded={helpOpen || tourStep !== null} className={cn("rates-left-rail-desktop space-y-3", isLite && mobileStyles.help)} aria-label={tx('Rate Book guides and tools')}>
+            <aside id={isLite ? 'lite-ratebook-help' : undefined} data-expanded={helpOpen || tourStep !== null} className={cn("phone-guidance rates-left-rail-desktop space-y-3", isLite && mobileStyles.help)} aria-label={tx('Rate Book guides and tools')}>
                 <RateBookTutorial
                     enabled={!isPending}
                     orgId={orgId}
@@ -1545,7 +1545,7 @@ export default function RatesClient({
                     title={t('common.yarn_rate_book')}
                     actions={(
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                            {isLite && <Button type="button" variant="outline" className={mobileStyles.mobileOnly} aria-controls="lite-ratebook-help" aria-expanded={helpOpen || tourStep !== null} onClick={() => setHelpOpen(open => !open)} data-i18n-skip="true" lang={language}>{mobileCopy.help}</Button>}
+                            {isLite && <Button type="button" variant="outline" className={cn(mobileStyles.mobileOnly, "phone-guidance")} aria-controls="lite-ratebook-help" aria-expanded={helpOpen || tourStep !== null} onClick={() => setHelpOpen(open => !open)} data-i18n-skip="true" lang={language}>{mobileCopy.help}</Button>}
                             <Button
                                 data-ratebook-field="addRateAction"
                                 onClick={() => { setSaveError(null); setDraft(defaultDraft(defaultReviewIntervalDays)) }}
@@ -2263,7 +2263,7 @@ export default function RatesClient({
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-            <div className="rail-inline-actions">
+            <div className="phone-guidance rail-inline-actions">
                 <ArchivePolicyNotice />
             </div>
             </div>

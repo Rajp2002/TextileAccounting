@@ -92,12 +92,12 @@ describe('Rate Book shared-runtime integration', () => {
         expect(rates).toContain('tourCommonCopy[language].sampleBanner')
     })
 
-    it('makes the rail inline at every narrow width while preserving the pinned tier', () => {
+    it('makes the rail inline at every narrow width above the phone while preserving the pinned tier', () => {
         const css = read('app/globals.css')
         expect(css).toMatch(/\.rates-left-rail-desktop \{\s*display: block;\s*width: 100%;\s*margin-bottom: 1.25rem;/)
         expect(css).not.toMatch(/\.rates-left-rail-desktop \{\s*display: none/)
         expect(css).toMatch(/@media\s*\(min-width:\s*1440px\)[\s\S]*?\.rates-left-rail-desktop,[\s\S]*?position: fixed/)
-        const rail = rates.match(/<aside\b[^>]*className=\{cn\("rates-left-rail-desktop space-y-3",\s*isLite && mobileStyles\.help\)\}/)
+        const rail = rates.match(/<aside\b[^>]*className=\{cn\("phone-guidance rates-left-rail-desktop space-y-3",\s*isLite && mobileStyles\.help\)\}/)
         expect(rail).not.toBeNull()
         expect(rail!.index).toBeLessThan(rates.indexOf('data-ratebook-tutorial-root'))
     })

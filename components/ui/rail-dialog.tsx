@@ -26,7 +26,7 @@ export function RailDialog({ icon: Icon, title, lang, i18nSkip, children }: {
     return (
         <Dialog>
             <DialogTrigger asChild>
-                <button type="button" data-i18n-skip={skip} lang={lang} className={cn('estimator-touch-target', railButton)}>
+                <button type="button" data-i18n-skip={skip} lang={lang} className={cn('phone-guidance estimator-touch-target', railButton)}>
                     <span className="flex min-w-0 items-center gap-2.5">
                         <Icon className={railIcon} aria-hidden="true" />
                         <span className="min-w-0">{title}</span>

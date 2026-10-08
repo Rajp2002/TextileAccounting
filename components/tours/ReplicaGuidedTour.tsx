@@ -53,7 +53,7 @@ export default function ReplicaGuidedTour<S extends string>({
     }, [step])
 
     return <>
-        <aside className={`${railClassName} guided-tour-left-rail space-y-2`} aria-label={railLabel}>
+        <aside className={`phone-guidance ${railClassName} guided-tour-left-rail space-y-2`} aria-label={railLabel}>
             <div ref={launcher}>
                 <TourInvitation tourId={tourId} userId={userId} orgId={orgId} userMetadata={userMetadata}
                     align="full" className="w-full" onLaunch={async () => {
