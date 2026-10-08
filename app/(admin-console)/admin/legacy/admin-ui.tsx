@@ -502,7 +502,7 @@ export function AdminDashboardUI({
                             </div>
                             <Input placeholder="Subject" id="g_subject" />
                             <Input placeholder="Requester email" type="email" id="g_requester_email" />
-                            <Input placeholder="Worker ID (Optional)" type="number" id="g_worker_id" />
+                            <Input placeholder="Worker ID (Optional)" type="number" inputMode="numeric" id="g_worker_id" />
                             <textarea className="w-full min-h-[100px] p-3 rounded-md border text-sm" placeholder="Description" id="g_description" />
                             <Button className="w-full" onClick={async () => {
                                 const subject = (document.getElementById('g_subject') as HTMLInputElement).value

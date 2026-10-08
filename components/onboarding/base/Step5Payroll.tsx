@@ -130,6 +130,7 @@ export function Step5Payroll({
                             <input
                                 id="anchor-day-input"
                                 type="number"
+                                inputMode="numeric"
                                 min="1"
                                 max="31"
                                 value={payroll.anchorDay ?? 1}
@@ -181,6 +182,7 @@ export function Step5Payroll({
                             <input
                                 id="interval-days-input"
                                 type="number"
+                                inputMode="numeric"
                                 min="1"
                                 max="60"
                                 value={payroll.intervalDays ?? 14}

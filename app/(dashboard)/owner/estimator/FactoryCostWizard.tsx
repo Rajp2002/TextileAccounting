@@ -422,6 +422,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                             <Label className="text-[10px] uppercase tracking-wider font-bold text-[var(--wv-text-secondary)]">Total Loom Count</Label>
                                             <Input
                                                 type="number"
+                                                inputMode="numeric"
                                                 min={1}
                                                 step={1}
                                                 value={loomCount || ''}
@@ -436,7 +437,8 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                             <div className="space-y-1.5">
                                                 <Label className="text-[10px] uppercase tracking-wider font-bold text-[var(--wv-text-secondary)]">Working Days / Month</Label>
                                                 <Input 
-                                                    type="number" 
+                                                    type="number"
+                                                    inputMode="numeric"
                                                     min={1}
                                                     step={1}
                                                     value={workingDays === (initialState.monthlyWorkingDays || 26) ? '' : workingDays}
