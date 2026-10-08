@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
@@ -10,6 +10,7 @@ const read = (relPath: string) => readFileSync(join(process.cwd(), relPath), 'ut
 
 const clientPath = 'app/(dashboard)/owner/production/BaseProductionClient.tsx'
 const qualitiesPath = 'app/(dashboard)/owner/production/BaseActiveQualities.tsx'
+const chartPath = 'app/(dashboard)/owner/production/BaseProductionLoomChart.tsx'
 
 const TODAY_KEYS = [
     'todayProduction',
@@ -21,7 +22,25 @@ const TODAY_KEYS = [
     'vsYesterday',
     'yesterdayTotal',
     'otherQualities',
+    'loomOutputTitle',
+    'yesterday',
+    'qualityAverage',
+    'belowQualityAverage',
+    'belowAverage',
+    'changeVsYday',
+    'openDailySheet',
+    'barsAppearWhenSaved',
+    'rankedByToday',
+    'rankedByYesterday',
+    'noLoomOutput',
 ] as const
+
+const PLACEHOLDERS: Record<string, string> = {
+    vsYesterday: '{change}',
+    yesterdayTotal: '{meters}',
+    otherQualities: '{meters}',
+    changeVsYday: '{change}',
+}
 
 describe('Production overview: today analytics', () => {
     it('computes today and yesterday from the data the page already loads, with no new query', () => {
@@ -32,18 +51,60 @@ describe('Production overview: today analytics', () => {
         expect(client).toContain('getBasePreviousDate(initialData.today)')
         expect(client).toContain('compareBaseProductionDays(')
         expect(client).toContain('metersOutsideBaseJobs(')
+        expect(client).toContain('buildBaseLoomOutputRows(')
         expect(client).not.toMatch(/\.from\('base_(daily_)?production/)
     })
 
-    it('leads the existing overview card with the total and keeps the tour anchor', () => {
+    it('keeps the stats card to its four tiles and puts the loom chart under Active Qualities', () => {
         const client = read(clientPath)
         const card = client.slice(client.indexOf('data-production-tour="overview"'))
+        const tilesOnly = card.slice(0, card.indexOf('</Card>'))
 
-        expect(card).toContain("t('production.todayProduction')")
-        expect(card.indexOf("t('production.todayProduction')")).toBeLessThan(card.indexOf('Active Qualities'))
-        // Not-entered is a state of its own, never a zero.
-        expect(card).toContain("t('production.notEnteredYet')")
-        expect(card).toContain("t('production.vsYesterday'")
+        // The overview card (and its tour anchor) is untouched by the chart.
+        expect(tilesOnly).not.toContain('production.todayProduction')
+        expect(tilesOnly).toContain('Active Qualities')
+
+        expect(client).toContain("import BaseProductionLoomChart from './BaseProductionLoomChart'")
+        const qualities = client.indexOf('<BaseActiveQualities')
+        const chart = client.indexOf('<BaseProductionLoomChart')
+        expect(qualities).toBeGreaterThan(-1)
+        expect(chart).toBeGreaterThan(qualities)
+    })
+
+    it('draws yesterday as a taller frame with today inside it, so neither bar can hide the other', () => {
+        expect(existsSync(join(process.cwd(), chartPath))).toBe(true)
+        const chart = read(chartPath)
+
+        const yesterdayBar = chart.indexOf('data-bar="yesterday"')
+        const todayBar = chart.indexOf('data-bar="today"')
+        expect(yesterdayBar).toBeGreaterThan(-1)
+        // Yesterday is painted first, so today sits on top of it.
+        expect(todayBar).toBeGreaterThan(yesterdayBar)
+
+        const frameHeight = chart.match(/const FRAME_HEIGHT = (\d+)/)
+        const barHeight = chart.match(/const BAR_HEIGHT = (\d+)/)
+        expect(frameHeight).not.toBeNull()
+        expect(barHeight).not.toBeNull()
+        // The frame must stand clear of today's bar above and below, or yesterday's end is hidden.
+        expect(Number(frameHeight![1]) - Number(barHeight![1])).toBeGreaterThanOrEqual(6)
+    })
+
+    it('never shows "not entered" as zero and offers the way to enter it', () => {
+        const chart = read(chartPath)
+
+        expect(chart).toContain("t('production.notEnteredYet')")
+        expect(chart).toContain("t('production.barsAppearWhenSaved')")
+        expect(chart).toContain("t('production.openDailySheet')")
+        expect(chart).toContain("t('production.vsYesterday'")
+        expect(chart).toContain("t('production.noLoomOutput')")
+    })
+
+    it('flags a lagging loom with an icon and words as well as colour', () => {
+        const chart = read(chartPath)
+
+        expect(chart).toContain('row.lagging')
+        expect(chart).toContain("t('production.belowAverage')")
+        expect(chart).toContain("t('production.belowQualityAverage')")
     })
 
     it('hands each quality card its own figure for today', () => {
@@ -65,8 +126,8 @@ describe('Production overview: today analytics', () => {
             expect(production[key].length, key).toBeGreaterThan(0)
         }
         // Placeholders must survive translation.
-        for (const key of ['vsYesterday', 'yesterdayTotal', 'otherQualities'] as const) {
-            expect(production[key], key).toContain(key === 'vsYesterday' ? '{change}' : '{meters}')
+        for (const [key, placeholder] of Object.entries(PLACEHOLDERS)) {
+            expect(production[key], key).toContain(placeholder)
         }
         expect(production.vsYesterday).toContain('{meters}')
     })
