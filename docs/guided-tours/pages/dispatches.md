@@ -66,8 +66,8 @@ Replica steps use the existing `DispatchTourPreview` surfaces (`dispatchTourSurf
 | 4 | `lots` | PS-SAMPLE-DIALOG | `[data-dispatch-tour="lots"]` | draft dialog | 60 + 40 = 100 m; ₹4,000 |
 | 5 | `saveDraft` (content "draft") | PS-SAMPLE-DIALOG | `[data-dispatch-tour="saveDraft"]` | draft dialog | |
 | 6 | `confirm` | PS-SAMPLE-DIALOG | `[data-dispatch-tour="confirm"]` | confirm dialog | Copy says fabric only (DP-1) |
-| 7 | `receipt` | PS-SAMPLE-DIALOG | `[data-dispatch-tour="receipt"]` | receipt dialog; the replica shows "Received as sent" as a separate button above the dialog form, matching the live toolbar | 98 of 100 m |
-| 8 | `difference` | PS-SAMPLE | `[data-dispatch-tour="difference"]` | detail card | ₹3,920 |
+| 7 | `receipt` | PS-SAMPLE-DIALOG | `[data-dispatch-tour="receipt"]` | receipt dialog, shown on its own: since the detail became a dialog (2026-10-09), operation steps open only their own dialog so one tour surface is on screen. "Received as sent" is named in the copy and lives in the detail dialog's balance band | 98 of 100 m |
+| 8 | `difference` | PS-SAMPLE-DIALOG | `[data-dispatch-tour="difference"]` | dispatch detail dialog (`DispatchDetailDialog.tsx`, `sm:max-w-3xl`); anchor is its Fabric and Amount breakdown | ₹3,920 |
 | 9 | `payment` | PS-SAMPLE-DIALOG | `[data-dispatch-tour="payment"]` | payment dialog | ₹2,000 paid, ₹1,920 due |
 | 10 | `handoff` *(new; replaces `balance` and `finish`)* | PS-HANDOFF | `[data-tour-anchor="dispatch.new"]` *(proposed on both "New dispatch" buttons, `ChallansClient.tsx:288-294`)* | live page | Done focuses the visible New dispatch |
 
@@ -119,7 +119,7 @@ Resolve each from `ChallansClient.tsx` / `ChallanDraftEditor.tsx` at its render 
 | `reverseEntry` | history row button | નોંધ ઉલટાવો | प्रविष्टि वापस लें | Use key |
 | `newDispatch` | `challan.new` | નવો ડિસ્પેચ | नया डिस्पैच | none |
 
-Hard-coded English in the detail panel ("Metres Breakdown", "Financial Summary", "Payment Terms", "Lot Breakdown", "Rs") is not named by the tour and stays out of scope (PI-13).
+Hard-coded English in the detail panel ("Metres Breakdown", "Financial Summary", "Payment Terms", "Lot Breakdown", "Rs") was not named by the tour (PI-13). The 2026-10-09 detail redesign replaced it with translated `challan.*` keys and ₹.
 
 ## G. State variants
 

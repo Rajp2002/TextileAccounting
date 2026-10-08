@@ -22,7 +22,7 @@ describe('Dispatch tour', () => {
             expect(spec.anchor).toBe(dispatchTourSelector(spec.id))
             expect(spec.anchor).toBe(spec.id === 'handoff' ? '[data-tour-anchor="dispatch.new"]' : `[data-dispatch-tour="${spec.id}"]`)
             expect(spec.kind).toBe(spec.id === 'handoff' ? 'handoff' : 'sample')
-            expect(spec.context).toBe(['overview', 'difference', 'handoff'].includes(spec.id) ? undefined : '[data-tour-surface="true"]')
+            expect(spec.context).toBe(['overview', 'handoff'].includes(spec.id) ? undefined : '[data-tour-surface="true"]')
             expect(Boolean(spec.detail)).toBe(['confirm', 'payment'].includes(spec.id))
         }
     })
@@ -83,10 +83,12 @@ describe('Dispatch tour', () => {
     it('resolves control labels from the exact live keys and anchors both button instances', () => {
         expect(dispatchTourControlLabels(key => key)).toEqual({ saveDraft: 'challan.saveDraft', confirmLeft: 'challan.confirm', print: 'challan.print', receivedAsSent: 'challan.receivedAsSent', recordPayment: 'challan.payment', reverseEntry: 'challan.reverse_entry', newDispatch: 'challan.new' })
         const page = read('app/(dashboard)/owner/dispatches/ChallansClient.tsx')
+        const detail = read('app/(dashboard)/owner/dispatches/DispatchDetailDialog.tsx')
         expect(page).toContain('<Button data-tour-anchor={tourAnchor} disabled={disabled} onClick={onClick} className={railPrimaryAction}>')
         expect(page.match(/<NewDispatchButton tourAnchor="dispatch.new" onClick=\{beginDraft\}/g)).toHaveLength(2)
-        for (const key of ['confirm', 'print', 'receivedAsSent', 'reverse_entry', 'new']) expect(page).toContain(`tx('${key}')`)
-        expect(page).toContain("'payment',")
+        expect(page).toContain("tx('new')")
+        // The dispatch's own controls live in its detail dialog.
+        for (const key of ['confirm', 'print', 'receivedAsSent', 'payment', 'reverse_entry']) expect(detail).toContain(`tx('${key}')`)
         expect(read('app/(dashboard)/owner/dispatches/ChallanDraftEditor.tsx')).toContain("tx('saveDraft')")
         const wrapper = read('components/dispatches/DispatchGuidedTour.tsx')
         expect(wrapper).toContain("dynamic(() => import('./DispatchSampleWorkspace'), { ssr: false })")
