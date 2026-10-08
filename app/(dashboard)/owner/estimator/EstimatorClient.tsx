@@ -188,6 +188,7 @@ import { formatTimestampDate } from '@/lib/format'
 import { formatSuratDateTime } from '@/lib/time'
 import { resolveAppliedQualityBasis, restoreSavedQualityCostingAssumptions, type SavedQualityCostingReuse } from '@/lib/saved-costings'
 import { trackPlanEvent } from '@/lib/plan-analytics'
+import { warpConstructionText, weftConstructionText } from '@/lib/estimator-construction'
 import { formatEstimatorPlaceholder, type EstimatorPlaceholderKind } from '@/lib/estimator-placeholder'
 import { LiveValue } from '@/components/ui/live-value'
 
@@ -2816,7 +2817,6 @@ function WeavingRateFields({
 }
 
 function QuickCostingView({
-    constructionFields,
     state,
     dispatch,
     totals,
@@ -2840,7 +2840,6 @@ function QuickCostingView({
     onSelectWarpYarn,
     onSelectWeftYarn,
 }: {
-    constructionFields: React.ReactNode
     state: EstimateState
     dispatch: React.Dispatch<Action>
     totals: EstimatorV3Totals
@@ -2897,7 +2896,6 @@ function QuickCostingView({
                         />
                         <p className="text-[10px] font-medium leading-normal text-[var(--wv-cotton-500)]">Use the name your staff and repeat customers will recognise.</p>
                     </div>
-                    <div className="sm:col-span-2">{constructionFields}</div>
                     <NumField fieldKey="warpCrimpPct"
                         label="Warp crimp (take-up)"
                         value={state.warpCrimpPct}
@@ -3489,10 +3487,9 @@ export default function EstimatorClient({
     }, [])
 
     const [qualityLabel,    setQualityLabel]    = useState(initialFreeCosting?.label ?? '')
-    const [warpInstruction, setWarpInstruction] = useState('')
-    const [weftInstruction, setWeftInstruction] = useState('')
-    const lastGeneratedWarp = useRef<string | null>(null)
-    const lastGeneratedWeft = useRef<string | null>(null)
+    // Construction text is never typed: it follows the yarn component names.
+    const warpInstruction = useMemo(() => warpConstructionText(state.warpRows), [state.warpRows])
+    const weftInstruction = useMemo(() => weftConstructionText(state.weftRows), [state.weftRows])
     const [sourceQuoteId, setSourceQuoteId] = useState<string | null>(null)
     const [sourceQuoteUpdatedAt, setSourceQuoteUpdatedAt] = useState<string | null>(null)
     const [sourceQuoteVersionNumber, setSourceQuoteVersionNumber] = useState<number | null>(null)
@@ -3759,16 +3756,6 @@ export default function EstimatorClient({
         setHasUnsavedEdits(true)
         setQualityLabel(value)
     }, [markUserEdit])
-    const setWarpInstructionFromUser = useCallback((value: string) => {
-        markUserEdit()
-        setHasUnsavedEdits(true)
-        setWarpInstruction(value)
-    }, [markUserEdit])
-    const setWeftInstructionFromUser = useCallback((value: string) => {
-        markUserEdit()
-        setHasUnsavedEdits(true)
-        setWeftInstruction(value)
-    }, [markUserEdit])
 
     const handleSelectWarpYarn = useCallback((rowId: string, yarn: SavedYarnOption) => {
         dispatch({
@@ -3894,8 +3881,6 @@ export default function EstimatorClient({
         const restored = checkpoint ?? restoreDraft()
         if (!restored) return
         suppressAutosaveUntilChanged({ preserveDraftStatus: !checkpoint })
-        lastGeneratedWarp.current = null
-        lastGeneratedWeft.current = null
 
         startJourney(restored.sourceQuoteId ? 'saved_costing' : 'restored_draft')
         rawDispatch({ type: 'RESTORE_DRAFT', draftState: restored.state })
@@ -3905,8 +3890,6 @@ export default function EstimatorClient({
         ))
         setPartyName(restored.partyName)
         setQualityLabel(restored.qualityLabel)
-        setWarpInstruction(restored.warpInstruction)
-        setWeftInstruction(restored.weftInstruction)
         setSourceQuoteId(restored.sourceQuoteId ?? null)
         setSourceQuoteUpdatedAt(restored.sourceQuoteUpdatedAt ?? null)
         setSourceQuoteVersionNumber(restored.sourceQuoteVersionNumber ?? null)
@@ -4047,54 +4030,6 @@ export default function EstimatorClient({
             sourceRecordKind ?? 'costing',
         ))
     }, [buildCurrentDraft, orgId, saveDraft, sourceRecordKind, state])
-
-    // Auto-fill warpInstruction based on warp rows' labels
-    useEffect(() => {
-        const currentWarpLabels = state.warpRows
-            .map(row => row.label?.trim())
-            .filter(Boolean)
-            .join(' + ')
-
-        if (lastGeneratedWarp.current === null) {
-            lastGeneratedWarp.current = currentWarpLabels
-        }
-
-        if (warpInstruction !== currentWarpLabels) {
-            if (!warpInstruction || warpInstruction === lastGeneratedWarp.current) {
-                setWarpInstruction(currentWarpLabels)
-                lastGeneratedWarp.current = currentWarpLabels
-            }
-        }
-    }, [state.warpRows, warpInstruction])
-
-    // Auto-fill weftInstruction based on weft rows' labels and picks
-    useEffect(() => {
-        const weftLabels = state.weftRows
-            .map(row => row.label?.trim())
-            .filter(Boolean)
-            .join(' + ')
-        const totalPicks = state.weftRows.reduce((sum, row) => sum + (row.picks || 0), 0)
-
-        let currentWeftGen = ''
-        if (weftLabels && totalPicks > 0) {
-            currentWeftGen = `${weftLabels} - ${totalPicks} Picks`
-        } else if (weftLabels) {
-            currentWeftGen = weftLabels
-        } else if (totalPicks > 0) {
-            currentWeftGen = `${totalPicks} Picks`
-        }
-
-        if (lastGeneratedWeft.current === null) {
-            lastGeneratedWeft.current = currentWeftGen
-        }
-
-        if (weftInstruction !== currentWeftGen) {
-            if (!weftInstruction || weftInstruction === lastGeneratedWeft.current) {
-                setWeftInstruction(currentWeftGen)
-                lastGeneratedWeft.current = currentWeftGen
-            }
-        }
-    }, [state.weftRows, weftInstruction])
 
     const requireCapacityForCurrentCosting = requiresFactoryCapacity(state, false)
     const estimatorValidation = useMemo(
@@ -4313,10 +4248,6 @@ export default function EstimatorClient({
         setSourceFactoryProfileUpdatedAt(null)
         setSourceRecordKind(null)
         quoteRequestIdRef.current = null
-        setWarpInstruction('')
-        setWeftInstruction('')
-        lastGeneratedWarp.current = null
-        lastGeneratedWeft.current = null
         setShowQualityLibrary(false)
         setPendingQualityChange(null)
         setHasUnsavedEdits(false)
@@ -4638,10 +4569,6 @@ export default function EstimatorClient({
         setAppliedTemplate(null)
         setQualityLabel('')
         setPartyName('')
-        setWarpInstruction('')
-        setWeftInstruction('')
-        lastGeneratedWarp.current = null
-        lastGeneratedWeft.current = null
         setSourceQuoteId(null)
         setSourceQuoteUpdatedAt(null)
         setSourceQuoteVersionNumber(null)
@@ -5215,33 +5142,6 @@ export default function EstimatorClient({
         { label: 'Post-processing', value: totals.audit.postProcessingCostPerMeter },
         { label: 'Factory expenses / other', value: totals.audit.overheadCostPerMeter },
     ].filter(line => line.value > 0)
-    const constructionFields = (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-                <Label className="text-[10px] uppercase font-bold text-[var(--wv-neel-500)]">{t('estimator.order_basics.warp_construction')}</Label>
-                <Input
-                    data-estimator-field="warpConstruction"
-                    aria-label="Warp yarn construction"
-                    value={warpInstruction === lastGeneratedWarp.current ? '' : warpInstruction}
-                    onChange={e => setWarpInstructionFromUser(e.target.value)}
-                    placeholder={formatEstimatorPlaceholder(lastGeneratedWarp.current || '50/48 + Rainbow')}
-                    className="text-sm font-medium placeholder:text-[var(--wv-cotton-500)] border-[var(--wv-cotton-400)] h-11"
-                />
-            </div>
-            <div className="space-y-1.5">
-                <Label className="text-[10px] uppercase font-bold text-[var(--wv-neel-500)]">{t('estimator.order_basics.weft_construction')}</Label>
-                <Input
-                    data-estimator-field="weftConstruction"
-                    aria-label="Weft yarn construction"
-                    value={weftInstruction === lastGeneratedWeft.current ? '' : weftInstruction}
-                    onChange={e => setWeftInstructionFromUser(e.target.value)}
-                    placeholder={formatEstimatorPlaceholder(lastGeneratedWeft.current || '50/48 - 68 Picks')}
-                    className="text-sm font-medium placeholder:text-[var(--wv-cotton-500)] border-[var(--wv-cotton-400)] h-11"
-                />
-            </div>
-        </div>
-    )
-
     return (
         <div ref={estimatorGutterRef} data-free-costing={freeMode || undefined} data-lite-costing={liteMode || undefined} data-sentry-block={freeMode || undefined} className="ui-route-enter estimator-mobile-form space-y-5 pb-floating-button md:pb-20 relative">
             <span hidden data-signin-ready="true" />
@@ -6256,7 +6156,6 @@ export default function EstimatorClient({
                 {entryMode === 'quick' && !showAdvancedOverhead ? (
                     <div key="quick" className="ui-content-swap">
                     <QuickCostingView
-                        constructionFields={constructionFields}
                         state={state}
                         dispatch={dispatch}
                         totals={totals}
@@ -6327,7 +6226,6 @@ export default function EstimatorClient({
                             />
                         </div>
 
-                        {constructionFields}
                         {/* Global Defaults Block */}
                         <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,240px),1fr))] gap-4 rounded-[13px] border border-[#D7E7F1] bg-[#F7FBFD] p-4">
                             <div className="min-w-0">

@@ -1468,9 +1468,7 @@ export const en = {
       title: "Cost Estimate Details",
       party: "Customer (Party)",
       quality_label: "Fabric Quality",
-      fabric_quality_name: "Fabric Quality",
-      warp_construction: "Warp Yarn Construction",
-      weft_construction: "Weft Yarn Construction"
+      fabric_quality_name: "Fabric Quality"
     },
     warp: {
       title: "Warp Yarn Composition",

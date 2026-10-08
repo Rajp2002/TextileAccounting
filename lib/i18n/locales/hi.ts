@@ -1463,9 +1463,7 @@ export const hi = {
       title: "लागत विवरण",
       party: "ग्राहक (पार्टी)",
       quality_label: "क्वालिटी / फैब्रिक लेबल",
-      fabric_quality_name: "फैब्रिक / क्वालिटी का नाम",
-      warp_construction: "ताना निर्माण (Warp Construction)",
-      weft_construction: "बाना निर्माण (Weft Construction)"
+      fabric_quality_name: "फैब्रिक / क्वालिटी का नाम"
     },
     warp: {
       title: "ताना सूत संरचना (Warp)",

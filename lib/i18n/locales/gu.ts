@@ -1465,9 +1465,7 @@ export const gu = {
       title: "કોસ્ટિંગ વિગતો",
       party: "ગ્રાહક (પાર્ટી)",
       quality_label: "ક્વોલિટી / ફેબ્રિક લેબલ",
-      fabric_quality_name: "ફેબ્રિક / ક્વોલિટીનું નામ",
-      warp_construction: "તાણો બાંધણ (Warp Construction)",
-      weft_construction: "ભરણ બાંધણ (Weft Construction)"
+      fabric_quality_name: "ફેબ્રિક / ક્વોલિટીનું નામ"
     },
     warp: {
       title: "તાણા સુતર રચના (Warp)",
