@@ -41,6 +41,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { formatINR } from '@/lib/finance'
+import { formatBaseMeters } from '@/lib/base-production-analytics'
 import { useTourSample } from '@/lib/tours/sample-context'
 import { tourSurfaceProps } from '@/lib/tours/sample-surface'
 import {
@@ -64,6 +65,10 @@ interface BaseActiveQualitiesProps {
     machines: BaseProductionMachine[]
     machineJobContexts: BaseMachineJobContext[]
     today: string
+    /** Metres each quality produced today, from the saved daily sheets. */
+    todayMetersByJobId?: ReadonlyMap<string, number>
+    /** False until a sheet is saved for today, so "not entered" is never shown as zero. */
+    todayEntered?: boolean
     onActivateQuality?: () => void
     onViewHistory?: (jobId: string) => void
     isActivateModalOpen?: boolean
@@ -97,6 +102,8 @@ export default function BaseActiveQualities({
     machines,
     machineJobContexts,
     today,
+    todayMetersByJobId,
+    todayEntered = false,
     onActivateQuality,
     onViewHistory,
     isActivateModalOpen = false,
@@ -525,6 +532,15 @@ export default function BaseActiveQualities({
                                             </div>
                                         )}
                                     </div>
+
+                                    {todayMetersByJobId && (
+                                        <div className="mt-3.5 flex items-baseline justify-between gap-2">
+                                            <span className="text-xs font-semibold text-muted-foreground" data-i18n-skip="true">{t('production.today')}</span>
+                                            <span className="text-lg font-black tracking-tight text-ink tabular-nums">
+                                                {todayEntered ? formatBaseMeters(todayMetersByJobId.get(job.id) ?? 0) : '—'}
+                                            </span>
+                                        </div>
+                                    )}
 
                                     {/* Machine status and Primary CTA */}
                                     <div className="mt-4 flex items-center justify-between gap-2 border-t border-hairline/60 pt-3">
