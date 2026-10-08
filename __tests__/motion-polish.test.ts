@@ -54,7 +54,7 @@ describe('expandable panels', () => {
     const panels = [
         'app/(dashboard)/owner/settings/page.tsx',
         'app/(dashboard)/owner/dispatches/ChallanDraftEditor.tsx',
-        'app/(dashboard)/owner/dispatches/ChallansClient.tsx',
+        'app/(dashboard)/owner/dispatches/DispatchDetailDialog.tsx',
         'app/(dashboard)/owner/estimator/EstimatorClient.tsx',
         'app/(dashboard)/owner/production/registers/MachinesRegister.tsx',
         'app/(dashboard)/owner/production/registers/WorkersRegister.tsx',

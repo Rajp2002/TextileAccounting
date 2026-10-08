@@ -2,21 +2,13 @@
 import { reportPwaWorkflowSuccess } from '@/lib/pwa-workflow-success'
 import { RouteMilestones } from '@/components/performance/route-milestones'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import Link from 'next/link'
 import {
     Plus,
     Search,
     Truck,
-    Printer,
     RefreshCw,
     AlertTriangle,
-    CheckCircle2,
-    Clock,
-    ArrowUpRight,
-    FileText,
     History,
-    RotateCcw,
-    Edit3,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -38,7 +30,6 @@ import { dispatchSampleDraft, dispatchSampleFields, dispatchSampleSelectedId } f
 import type { DispatchTourStep } from '@/lib/dispatch-tour'
 import {
     paymentStatus,
-    safeEvidenceUrl,
     type Challan,
     type ChallanDraft,
     type ChallanEvent,
@@ -48,6 +39,8 @@ import type { StockQuality } from '@/lib/quality-stock'
 import { getChallan, listChallans, mutateChallan } from './challan-actions'
 import { businessDate, challanDueStatus } from '@/lib/challan-payment-terms'
 import ChallanDraftEditor from './ChallanDraftEditor'
+import DispatchDetailDialog from './DispatchDetailDialog'
+import { deliveryBadgeVariant, formatDocumentDate, formatMeters, paymentBadgeVariant } from '@/lib/dispatch-detail'
 
 function NewDispatchButton({ onClick, disabled, label, tourAnchor }: { onClick: () => void; disabled: boolean; label: string; tourAnchor?: "dispatch.new" }) {
     return (
@@ -64,48 +57,6 @@ const blank = (): ChallanDraft => ({
     document: { date: new Date().toLocaleDateString('en-CA') },
     lines: [{ lot: '', meters: 0 }],
 })
-function formatDocumentDate(value: string) {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return value
-    const date = new Date(value + 'T00:00:00Z')
-    if (Number.isNaN(date.getTime())) return value
-    return new Intl.DateTimeFormat('en-IN', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-        timeZone: 'UTC',
-    }).format(date)
-}
-function formatMeters(value: number) {
-    return Number(value).toLocaleString('en-IN', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    })
-}
-function deliveryBadgeVariant(status: Challan['delivery_status']) {
-    switch (status) {
-        case 'received':
-            return 'success'
-        case 'sent':
-            return 'info'
-        case 'reversed':
-            return 'risk'
-        default:
-            return 'secondary'
-    }
-}
-function paymentBadgeVariant(status: string) {
-    switch (status) {
-        case 'settled':
-            return 'success'
-        case 'partial':
-        case 'unpaid':
-            return 'warning'
-        case 'credit':
-            return 'info'
-        default:
-            return 'secondary'
-    }
-}
 export default function ChallansClient({
     initialData,
     qualities,
@@ -139,6 +90,7 @@ export default function ChallansClient({
         [error, setError] = useState('')
     const [selectedState, setSelected] = useState<Challan | null>(null),
         [events, setEvents] = useState<ChallanEvent[]>([]),
+        [eventsLoading, setEventsLoading] = useState(false),
         [draftState, setDraft] = useState<ChallanDraft | null>(null)
     const [operationState, setOperation] = useState<
             ChallanMutation['action'] | null
@@ -153,7 +105,9 @@ export default function ChallansClient({
     const operation: ChallanMutation['action'] | null = tourStep === 'confirm' || tourStep === 'receipt' || tourStep === 'payment' ? tourStep : operationState
     const fields = (tourStep && dispatchSampleFields(tourStep)) || fieldsState
     const lock = useRef(false),
-        draftId = useRef('')
+        draftId = useRef(''),
+        // Bumped when the detail closes, so a load still in flight cannot reopen it.
+        viewRequest = useRef(0)
     useEffect(() => {
         if (tourSample) return // a tour sample never reads the real page's pending request
         try {
@@ -199,9 +153,11 @@ export default function ChallansClient({
         }
     }
     async function view(id: string) {
+        const request = ++viewRequest.current
         setBusy(true)
         try {
             const r = await getChallan(id)
+            if (request !== viewRequest.current) return
             if (r.error) setError(r.error)
             else {
                 setSelected(r.data!)
@@ -209,10 +165,19 @@ export default function ChallansClient({
                 setDraft(null)
             }
         } catch {
-            setError(tx('loadError'))
+            if (request === viewRequest.current) setError(tx('loadError'))
         } finally {
             setBusy(false)
+            if (request === viewRequest.current) setEventsLoading(false)
         }
+    }
+    /** Opens the dispatch at once from its list row; only its history waits for the server. */
+    function openDetail(d: Challan) {
+        setSelected(d)
+        setEvents([])
+        setEventsLoading(true)
+        setError('')
+        void view(d.id)
     }
     async function save(
         action: ChallanMutation['action'],
@@ -394,7 +359,7 @@ export default function ChallansClient({
                                 className={isSelected
                                     ? 'grid w-full grid-cols-1 gap-x-6 gap-y-3 rounded-2xl border border-saffron/60 bg-surface/95 p-4 text-left shadow-[var(--shadow-card)] ring-1 ring-saffron/20 transition-[border-color,box-shadow,transform] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center'
                                     : 'grid w-full grid-cols-1 gap-x-6 gap-y-3 rounded-2xl border border-hairline/85 bg-surface/95 p-4 text-left shadow-[var(--shadow-card)] transition-[border-color,box-shadow,transform] hover:border-saffron/35 hover:shadow-[var(--shadow-panel)] motion-safe:hover:-translate-y-0.5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center'}
-                                onClick={() => view(d.id)}
+                                onClick={() => openDetail(d)}
                                 disabled={busy || !!pending}
                             >
                                 <div className="min-w-0">
@@ -501,485 +466,44 @@ export default function ChallansClient({
                     )}
                 </DialogContent>
             </Dialog>
-            {selected && !draft && (
-                <section className="space-y-6 rounded-2xl border border-hairline bg-surface p-5 sm:p-7 shadow-xs">
-                    {/* Header bar */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-hairline">
-                        <div className="space-y-1.5">
-                            <div className="flex flex-wrap items-center gap-2">
-                                <span className="font-mono text-xs font-black uppercase tracking-wider px-2.5 py-1 rounded-md bg-surface-soft border border-hairline text-ink">
-                                    {selected.number}
-                                </span>
-                                <Badge
-                                    variant={
-                                        selected.delivery_status === 'received'
-                                            ? 'success'
-                                            : selected.delivery_status === 'sent'
-                                              ? 'brand'
-                                              : 'outline'
-                                    }
-                                    className="font-bold text-xs capitalize"
-                                >
-                                    {tx(selected.delivery_status)}
-                                </Badge>
-                                <Badge
-                                    variant={
-                                        selected.difference_status === 'accepted'
-                                            ? 'success'
-                                            : selected.difference_status === 'none'
-                                              ? 'outline'
-                                              : 'warning'
-                                    }
-                                    className="font-bold text-xs capitalize"
-                                >
-                                    {tx(selected.difference_status)}
-                                </Badge>
-                                <Badge
-                                    variant={
-                                        paymentStatus(selected) === 'settled'
-                                            ? 'success'
-                                            : paymentStatus(selected) === 'unpaid'
-                                              ? 'warning'
-                                              : 'brand'
-                                    }
-                                    className="font-bold text-xs capitalize"
-                                >
-                                    {tx(paymentStatus(selected))}
-                                </Badge>
-                                {selected.archived_at && (
-                                    <Badge variant="outline" className="text-muted-foreground text-xs font-semibold">
-                                        {tx('archived')}
-                                    </Badge>
-                                )}
-                            </div>
-                            <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-ink">
-                                {selected.document.customer_name}
-                            </h2>
-                            <p className="text-xs sm:text-sm font-medium text-body flex flex-wrap items-center gap-2">
-                                <span className="font-bold text-ink">{selected.quality_label}</span>
-                                {selected.document.date && (
-                                    <>
-                                        <span className="text-muted-foreground/50">·</span>
-                                        <span>{selected.document.date}</span>
-                                    </>
-                                )}
-                            </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-9 px-3.5 rounded-xl border-hairline bg-surface hover:bg-surface-soft text-ink font-semibold gap-1.5 shadow-xs"
-                                disabled={busy || !!pending}
-                                onClick={() => view(selected.id)}
-                            >
-                                <RefreshCw className={`h-3.5 w-3.5 ${busy ? 'animate-spin' : ''}`} />
-                                {tx('refresh')}
-                            </Button>
-                            <Link
-                                className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-xl border border-hairline bg-surface hover:bg-surface-soft text-ink font-semibold shadow-xs transition-colors hover:text-loom"
-                                target="_blank"
-                                href={`/owner/dispatches/${selected.id}/print`}
-                            >
-                                <Printer className="h-3.5 w-3.5 text-muted-foreground" />
-                                {tx('print')}
-                            </Link>
-                        </div>
-                    </div>
-
-                    {/* Metrics Overview Cards */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {/* Metres Card */}
-                        <div className="p-4 rounded-xl border border-hairline bg-surface-soft/30 space-y-3">
-                            <div className="flex items-center justify-between">
-                                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                                    Metres Breakdown
-                                </span>
-                                <Truck className="h-3.5 w-3.5 text-muted-foreground" />
-                            </div>
-                            <div data-dispatch-tour="difference" className="grid grid-cols-2 gap-2 text-sm">
-                                <div>
-                                    <span className="text-xs text-muted-foreground block">{tx('sentMeters')}</span>
-                                    <span className="font-bold text-ink tabular-nums">{selected.sent_meters} m</span>
-                                </div>
-                                <div>
-                                    <span className="text-xs text-muted-foreground block">{tx('acknowledged')}</span>
-                                    <span className="font-bold text-ink tabular-nums">{selected.acknowledged_meters ?? '—'} m</span>
-                                </div>
-                                <div>
-                                    <span className="text-xs text-muted-foreground block">{tx('chargeable')}</span>
-                                    <span className="font-bold text-ink tabular-nums">{selected.chargeable_meters} m</span>
-                                </div>
-                                {selected.acknowledged_meters !== null && (
-                                    <div>
-                                        <span className="text-xs text-muted-foreground block">{tx('differenceMeters')}</span>
-                                        <span className="font-bold text-[var(--wv-ochre-800)] tabular-nums">
-                                            {(
-                                                Number(selected.sent_meters) -
-                                                Number(selected.acknowledged_meters)
-                                            ).toFixed(2)}{' '}
-                                            m
-                                        </span>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Financial Card */}
-                        <div className="p-4 rounded-xl border border-hairline bg-surface-soft/30 space-y-3">
-                            <div className="flex items-center justify-between">
-                                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                                    Financial Summary
-                                </span>
-                                <span className="text-xs font-bold text-muted-foreground">₹</span>
-                            </div>
-                            <div className="grid grid-cols-2 gap-2 text-sm">
-                                <div>
-                                    <span className="text-xs text-muted-foreground block">{tx('sellingRate')}</span>
-                                    <span className="font-bold text-ink tabular-nums">Rs {money(selected.selling_rate)}</span>
-                                </div>
-                                <div>
-                                    <span className="text-xs text-muted-foreground block">{tx('paid')}</span>
-                                    <span className="font-bold text-[var(--wv-moss-700)] tabular-nums">Rs {money(selected.paid_amount)}</span>
-                                </div>
-                                <div>
-                                    <span className="text-xs text-muted-foreground block">{tx('adjustments')}</span>
-                                    <span className="font-bold text-ink tabular-nums">Rs {money(selected.adjustment_amount)}</span>
-                                </div>
-                                <div>
-                                    <span className="text-xs text-muted-foreground block">
-                                        {Number(selected.balance) < 0
-                                            ? tx('credit')
-                                            : tx('balance')}
-                                    </span>
-                                    <span
-                                        className={`font-black tabular-nums ${
-                                            Number(selected.balance) > 0
-                                                ? 'text-[var(--wv-madder-600)]'
-                                                : 'text-[var(--wv-moss-700)]'
-                                        }`}
-                                    >
-                                        Rs {money(Math.abs(selected.balance))}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Terms & Due Card */}
-                        <div className="p-4 rounded-xl border border-hairline bg-surface-soft/30 space-y-3 sm:col-span-2 lg:col-span-1">
-                            <div className="flex items-center justify-between">
-                                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                                    Payment Terms
-                                </span>
-                                <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                            </div>
-                            <div className="space-y-2 text-sm">
-                                <div>
-                                    <span className="text-xs text-muted-foreground block">{tx('payment_due_date')}</span>
-                                    <div className="flex items-center gap-2 mt-0.5">
-                                        <span className="font-bold text-ink">
-                                            {selected.payment_due_date || tx('dueDateNotSet')}
-                                        </span>
-                                        {dueLabel(selected) && selected.payment_due_date && (
-                                            <Badge variant="warning" className="text-2xs font-bold px-1.5 py-0">
-                                                {dueLabel(selected)}
-                                            </Badge>
-                                        )}
-                                    </div>
-                                </div>
-                                {selected.payment_terms && (
-                                    <div>
-                                        <span className="text-xs text-muted-foreground block">{tx('payment_terms')}</span>
-                                        <p className="font-medium text-ink text-xs break-words line-clamp-2 mt-0.5">
-                                            {selected.payment_terms}
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Action Toolbar */}
-                    <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-hairline">
-                        {selected.delivery_status === 'draft' ? (
-                            <>
-                                <Button
-                                    variant="outline"
-                                    className="h-10 px-4 rounded-xl border-hairline font-bold text-ink shadow-xs hover:bg-surface-soft gap-1.5"
-                                    disabled={busy || !!pending}
-                                    onClick={() =>
-                                        setDraft({
-                                            quality_id: selected.quality_id,
-                                            selling_rate: selected.selling_rate,
-                                            document: selected.document,
-                                            lines: selected.lines,
-                                        })
-                                    }
-                                >
-                                    <Edit3 className="h-4 w-4" />
-                                    {tx('edit')}
-                                </Button>
-                                <Button
-                                    className="h-10 px-5 rounded-xl bg-loom text-white font-bold hover:bg-loom-elevated shadow-xs gap-1.5"
-                                    disabled={busy || !!pending}
-                                    onClick={() => start('confirm')}
-                                >
-                                    <CheckCircle2 className="h-4 w-4" />
-                                    {tx('confirm')}
-                                </Button>
-                            </>
-                        ) : (
-                            selected.delivery_status !== 'reversed' && (
-                                <>
-                                    {selected.delivery_status === 'sent' && (
-                                        <Button
-                                            className="h-10 px-5 rounded-xl bg-loom text-white font-bold hover:bg-loom-elevated shadow-xs gap-1.5"
-                                            disabled={busy || !!pending}
-                                            onClick={() =>
-                                                save('receipt', {
-                                                    meters: selected.sent_meters,
-                                                })
-                                            }
-                                        >
-                                            <CheckCircle2 className="h-4 w-4" />
-                                            {tx('receivedAsSent')}
-                                        </Button>
-                                    )}
-                                    <Button
-                                        variant="outline"
-                                        className="h-10 px-4 rounded-xl border-hairline font-bold text-ink shadow-xs hover:bg-surface-soft gap-1.5"
-                                        disabled={busy || !!pending}
-                                        onClick={() => start('receipt')}
-                                    >
-                                        <Truck className="h-4 w-4" />
-                                        {tx('receipt')}
-                                    </Button>
-                                    {selected.acknowledged_meters !== null &&
-                                        Number(selected.acknowledged_meters) !==
-                                            Number(selected.sent_meters) && (
-                                            <Button
-                                                variant="outline"
-                                                className="h-10 px-4 rounded-xl border-hairline font-bold text-ink shadow-xs hover:bg-surface-soft gap-1.5"
-                                                disabled={busy || !!pending}
-                                                onClick={() => start('resolve')}
-                                            >
-                                                <AlertTriangle className="h-4 w-4 text-[var(--wv-ochre-800)]" />
-                                                {tx('resolve')}
-                                            </Button>
-                                        )}
-                                    {(
-                                        [
-                                            'payment',
-                                            'adjustment',
-                                            'payment_terms',
-                                            ...(Number(selected.balance) < 0
-                                                ? ['refund']
-                                                : []),
-                                        ] as ChallanMutation['action'][]
-                                    ).map((a) => (
-                                        <Button
-                                            key={a}
-                                            variant="outline"
-                                            className="h-10 px-4 rounded-xl border-hairline font-bold text-ink shadow-xs hover:bg-surface-soft"
-                                            disabled={busy || !!pending}
-                                            onClick={() => start(a)}
-                                        >
-                                            {tx(
-                                                a === 'payment_terms'
-                                                    ? 'changePaymentTerms'
-                                                    : a,
-                                            )}
-                                        </Button>
-                                    ))}
-                                    {selected.delivery_status === 'sent' &&
-                                        !events.some((e) =>
-                                            [
-                                                'payment',
-                                                'refund',
-                                                'adjustment',
-                                            ].includes(e.action),
-                                        ) && (
-                                            <Button
-                                                variant="outline"
-                                                className="h-10 px-4 rounded-xl border-hairline font-bold text-[var(--wv-madder-600)] hover:bg-[var(--wv-madder-50)] shadow-xs gap-1.5"
-                                                disabled={busy || !!pending}
-                                                onClick={() =>
-                                                    start('reverse_dispatch')
-                                                }
-                                            >
-                                                <RotateCcw className="h-4 w-4" />
-                                                {tx('reverse_dispatch')}
-                                            </Button>
-                                        )}
-                                </>
-                            )
-                        )}
-                    </div>
-
-                    {/* Document Details Disclosure */}
-                    <details className="ui-details group rounded-2xl border border-hairline bg-surface-soft/40 p-4 sm:p-5 transition-all">
-                        <summary className="cursor-pointer font-bold text-ink flex items-center justify-between select-none">
-                            <span className="flex items-center gap-2 text-sm font-extrabold uppercase tracking-wider text-ink">
-                                <FileText className="h-4 w-4 text-loom" />
-                                {tx('details')}
-                            </span>
-                            <span className="text-xs font-semibold text-muted-foreground group-open:rotate-180 transition-transform">
-                                ▼
-                            </span>
-                        </summary>
-                        <dl className="grid gap-3 pt-4 sm:grid-cols-2 lg:grid-cols-3 border-t border-hairline mt-3">
-                            {Object.entries(selected.document)
-                                .filter(([, v]) => v)
-                                .map(([k, v]) => (
-                                    <div key={k} className="p-3 rounded-xl bg-surface border border-hairline/60">
-                                        <dt className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                                            {tx(k)}
-                                        </dt>
-                                        <dd className="mt-1 font-semibold text-ink break-words text-sm">
-                                            {k === 'external_attachment' &&
-                                            safeEvidenceUrl(v) ? (
-                                                <a
-                                                    className="text-loom font-bold underline inline-flex items-center gap-1"
-                                                    href={safeEvidenceUrl(v)!}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                >
-                                                    {tx('evidence')}
-                                                    <ArrowUpRight className="h-3.5 w-3.5" />
-                                                </a>
-                                            ) : (
-                                                v
-                                            )}
-                                        </dd>
-                                    </div>
-                                ))}
-                        </dl>
-                        <div className="mt-4 pt-3 border-t border-hairline">
-                            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
-                                Lot Breakdown ({selected.lines.length} lots)
-                            </h4>
-                            <div className="flex flex-wrap gap-2">
-                                {selected.lines.map((l, i) => (
-                                    <span
-                                        key={i}
-                                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-surface border border-hairline text-xs font-semibold text-ink"
-                                    >
-                                        <span className="font-mono font-bold text-muted-foreground">{l.lot || `Lot ${i + 1}`}</span>
-                                        <span className="font-bold text-ink tabular-nums">{l.meters} m</span>
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
-                    </details>
-
-                    {/* Audit Trail Disclosure */}
-                    <details open className="ui-details group rounded-2xl border border-hairline bg-surface-soft/40 p-4 sm:p-5 transition-all">
-                        <summary className="cursor-pointer font-bold text-ink flex items-center justify-between select-none">
-                            <span className="flex items-center gap-2 text-sm font-extrabold uppercase tracking-wider text-ink">
-                                <History className="h-4 w-4 text-loom" />
-                                {tx('audit')}
-                            </span>
-                            <span className="text-xs font-semibold text-muted-foreground group-open:rotate-180 transition-transform">
-                                ▼
-                            </span>
-                        </summary>
-                        <ol className="mt-4 space-y-3 border-t border-hairline pt-3">
-                            {events.map((e) => (
-                                <li
-                                    key={e.id}
-                                    className="p-3.5 rounded-xl bg-surface border border-hairline text-sm space-y-2"
-                                >
-                                    <div className="flex flex-wrap items-center justify-between gap-2">
-                                        <div className="flex items-center gap-2">
-                                            <Badge variant="outline" className="font-bold text-xs uppercase tracking-wider">
-                                                {tx(e.action)}
-                                            </Badge>
-                                            <span className="text-xs text-muted-foreground tabular-nums">
-                                                {new Date(e.created_at).toLocaleString()}
-                                            </span>
-                                            {e.amount !== null && (
-                                                <span className="font-extrabold text-ink tabular-nums text-sm">
-                                                    Rs {money(e.amount)}
-                                                </span>
-                                            )}
-                                        </div>
-                                        {[
-                                            'payment',
-                                            'refund',
-                                            'adjustment',
-                                        ].includes(e.action) &&
-                                            !events.some(
-                                                (r) => r.reverses_id === e.id,
-                                            ) && (
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    className="h-8 px-2.5 rounded-lg border-hairline text-xs font-semibold text-[var(--wv-madder-600)] hover:bg-[var(--wv-madder-50)]"
-                                                    disabled={busy || !!pending}
-                                                    onClick={() => {
-                                                        start('reverse_entry')
-                                                        setFields({
-                                                            event_id: e.id,
-                                                        })
-                                                    }}
-                                                >
-                                                    <RotateCcw className="h-3 w-3 mr-1" />
-                                                    {tx('reverse_entry')}
-                                                </Button>
-                                            )}
-                                    </div>
-                                    {e.action === 'payment_terms' && (
-                                        <div className="text-xs text-body bg-surface-soft p-2.5 rounded-lg space-y-1">
-                                            <p>
-                                                <span className="font-bold">{tx('previousTerms')}:</span>{' '}
-                                                {e.previous_terms?.payment_due_date || tx('dueDateNotSet')}{' '}
-                                                · {e.previous_terms?.payment_terms || '—'}
-                                            </p>
-                                            <p>
-                                                <span className="font-bold">{tx('updatedTerms')}:</span>{' '}
-                                                {String(e.payload.data.payment_due_date || tx('dueDateNotSet'))}{' '}
-                                                · {String(e.payload.data.payment_terms || '—')}
-                                            </p>
-                                        </div>
-                                    )}
-                                    {e.action === 'receipt' && (
-                                        <p className="text-xs font-semibold text-body">
-                                            {tx('acknowledged')}: <span className="text-ink font-bold tabular-nums">{String(e.payload.data.meters)} m</span>
-                                        </p>
-                                    )}
-                                    {e.action === 'resolve' && (
-                                        <p className="text-xs font-semibold text-body">
-                                            {tx(String(e.payload.data.decision))}
-                                        </p>
-                                    )}
-                                    {Boolean(e.payload.data.reason || e.payload.data.date || e.payload.data.method) && (
-                                        <p className="text-xs text-muted-foreground">
-                                            {[e.payload.data.reason, e.payload.data.date, e.payload.data.method].filter(Boolean).map(String).join(' · ')}
-                                        </p>
-                                    )}
-                                    {typeof e.payload.data.evidence === 'string' &&
-                                        safeEvidenceUrl(e.payload.data.evidence) && (
-                                            <a
-                                                className="text-xs text-loom font-bold underline inline-flex items-center gap-1"
-                                                href={safeEvidenceUrl(e.payload.data.evidence)!}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                            >
-                                                {tx('evidence')}
-                                                <ArrowUpRight className="h-3 w-3" />
-                                            </a>
-                                        )}
-                                    {e.reverses_id && (
-                                        <p className="text-xs text-muted-foreground font-mono">
-                                            {tx('reverses')}: {e.reverses_id}
-                                        </p>
-                                    )}
-                                </li>
-                            ))}
-                        </ol>
-                    </details>
-                </section>
-            )}
+            <DispatchDetailDialog
+                challan={selected}
+                // A tour step that teaches an operation shows only that dialog; one tour surface at a time.
+                open={!!selected && !draft && !(tourSample && operation)}
+                events={events}
+                eventsLoading={eventsLoading}
+                busy={busy}
+                locked={busy || !!pending}
+                error={error}
+                onRetry={pending && !busy ? () => save(pending.action, pending.payload) : undefined}
+                today={today}
+                surface={surface}
+                onClose={() => {
+                    // A save in progress keeps the dispatch open; a history load does not.
+                    if (lock.current || pending) return
+                    viewRequest.current++
+                    setSelected(null)
+                    setEvents([])
+                    setEventsLoading(false)
+                    setError('')
+                }}
+                onRefresh={() => selected && view(selected.id)}
+                onStart={start}
+                onReceivedAsSent={() => selected && save('receipt', { meters: selected.sent_meters })}
+                onEditDraft={() =>
+                    selected &&
+                    setDraft({
+                        quality_id: selected.quality_id,
+                        selling_rate: selected.selling_rate,
+                        document: selected.document,
+                        lines: selected.lines,
+                    })
+                }
+                onReverseEntry={(eventId) => {
+                    start('reverse_entry')
+                    setFields({ event_id: eventId })
+                }}
+            />
             <Dialog
                 open={!!operation}
                 onOpenChange={(open) => {
