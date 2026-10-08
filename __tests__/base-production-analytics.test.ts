@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
     calculateBaseProductionDay,
     compareBaseProductionDays,
+    buildBaseLoomOutputRows,
     formatBaseMeters,
     getBasePreviousDate,
     metersOutsideBaseJobs,
@@ -118,6 +119,30 @@ describe('calculateBaseProductionDay', () => {
         expect(day.metersByJobId.get('job-2')).toBe(40)
     })
 
+    it('splits the day by loom as well', () => {
+        const day = calculateBaseProductionDay({
+            date: TODAY,
+            entries: [
+                entry({ id: 'entry-1' }),
+                entry({ id: 'entry-legacy', job_id: 'job-2', meters: 40, machine_id: 'machine-3', allocation_mode: 'worker_total', batch_id: null }),
+                entry({ id: 'entry-unplaced', job_id: 'job-2', meters: 25, machine_id: null, allocation_mode: 'worker_total', batch_id: null }),
+            ],
+            allocations: [
+                allocation({ id: 'a1', entry_id: 'entry-1', machine_id: 'machine-1', meters: 120.5 }),
+                allocation({ id: 'a2', entry_id: 'entry-1', machine_id: 'machine-2', meters: 80 }),
+                allocation({ id: 'a3', entry_id: 'entry-1', machine_id: 'machine-1', meters: 10 }),
+            ],
+            batches: [batch()],
+        })
+
+        expect(day.metersByMachineId.get('machine-1')).toBe(130.5)
+        expect(day.metersByMachineId.get('machine-2')).toBe(80)
+        expect(day.metersByMachineId.get('machine-3')).toBe(40)
+        // Metres with no loom still count in the total, just not against a loom.
+        expect(day.totalMeters).toBe(120.5 + 80 + 10 + 40 + 25)
+        expect(day.metersByMachineId.size).toBe(3)
+    })
+
     it('adds decimal metres exactly and ignores zero or negative readings', () => {
         const day = calculateBaseProductionDay({
             date: TODAY,
@@ -182,6 +207,7 @@ describe('compareBaseProductionDays', () => {
         date: TODAY,
         totalMeters,
         metersByJobId: new Map<string, number>(),
+        metersByMachineId: new Map<string, number>(),
         savedShifts: shifts,
         hasSavedSheet: shifts.day || shifts.night,
     })
@@ -263,5 +289,122 @@ describe('formatBaseMeters', () => {
         expect(formatBaseMeters(1240)).toBe('1,240 m')
         expect(formatBaseMeters(123456.5)).toBe('1,23,456.5 m')
         expect(formatBaseMeters(0)).toBe('0 m')
+    })
+})
+
+describe('buildBaseLoomOutputRows', () => {
+    const machine = (id: string, name: string, overrides: Record<string, unknown> = {}) => ({
+        id, name, custom_label: null as string | null, is_active: true, ...overrides,
+    })
+    const dayOf = (date: string, byMachine: Record<string, number>, saved = true) => ({
+        date,
+        totalMeters: Object.values(byMachine).reduce((sum, meters) => sum + meters, 0),
+        metersByJobId: new Map<string, number>(),
+        metersByMachineId: new Map(Object.entries(byMachine)),
+        savedShifts: { day: saved, night: false },
+        hasSavedSheet: saved,
+    })
+    const jobs = new Map([['job-a', 'Quality A'], ['job-b', 'Quality B']])
+
+    it('lists each running loom with its quality and both days', () => {
+        const rows = buildBaseLoomOutputRows({
+            machines: [machine('m1', 'Loom 1', { custom_label: 'North 1' })],
+            runningJobIdByMachineId: new Map([['m1', 'job-a']]),
+            jobLabelById: jobs,
+            today: dayOf(TODAY, { m1: 150 }),
+            yesterday: dayOf(YESTERDAY, { m1: 120 }),
+        })
+
+        expect(rows).toEqual([expect.objectContaining({
+            machineId: 'm1', label: 'North 1', qualityLabel: 'Quality A',
+            todayMeters: 150, yesterdayMeters: 120, deltaPercent: 25,
+        })])
+    })
+
+    it('ranks by today once it is saved, and by yesterday before that', () => {
+        const machines = [machine('m1', 'Loom 1'), machine('m2', 'Loom 2'), machine('m10', 'Loom 10')]
+        const running = new Map([['m1', 'job-a'], ['m2', 'job-a'], ['m10', 'job-a']])
+
+        const saved = buildBaseLoomOutputRows({
+            machines, runningJobIdByMachineId: running, jobLabelById: jobs,
+            today: dayOf(TODAY, { m1: 90, m2: 140, m10: 90 }),
+            yesterday: dayOf(YESTERDAY, { m1: 200, m2: 100, m10: 100 }),
+        })
+        // Ties fall back to natural loom order, so Loom 2 does not sort after Loom 10.
+        expect(saved.map(row => row.label)).toEqual(['Loom 2', 'Loom 1', 'Loom 10'])
+
+        const unsaved = buildBaseLoomOutputRows({
+            machines, runningJobIdByMachineId: running, jobLabelById: jobs,
+            today: dayOf(TODAY, {}, false),
+            yesterday: dayOf(YESTERDAY, { m1: 200, m2: 100, m10: 150 }),
+        })
+        expect(unsaved.map(row => row.label)).toEqual(['Loom 1', 'Loom 10', 'Loom 2'])
+        expect(unsaved.every(row => row.todayMeters === 0)).toBe(true)
+        // Without a saved sheet every loom would read as -100%, which is not a change.
+        expect(unsaved.every(row => row.deltaPercent === null)).toBe(true)
+    })
+
+    it('leaves out inactive looms and idle looms that produced nothing', () => {
+        const rows = buildBaseLoomOutputRows({
+            machines: [
+                machine('m1', 'Loom 1'),
+                machine('m2', 'Loom 2', { is_active: false }),
+                machine('m3', 'Loom 3'),
+                machine('m4', 'Loom 4'),
+            ],
+            runningJobIdByMachineId: new Map([['m1', 'job-a']]),
+            jobLabelById: jobs,
+            today: dayOf(TODAY, { m1: 100, m2: 50, m4: 30 }),
+            yesterday: dayOf(YESTERDAY, { m1: 100 }),
+        })
+
+        // Loom 3 is idle with no output; Loom 4 has no quality now but did produce today.
+        expect(rows.map(row => row.label)).toEqual(['Loom 1', 'Loom 4'])
+        expect(rows[1].qualityLabel).toBeNull()
+    })
+
+    it('compares each loom with its own yesterday, and omits the change when yesterday was nothing', () => {
+        const rows = buildBaseLoomOutputRows({
+            machines: [machine('m1', 'Loom 1'), machine('m2', 'Loom 2')],
+            runningJobIdByMachineId: new Map([['m1', 'job-a'], ['m2', 'job-a']]),
+            jobLabelById: jobs,
+            today: dayOf(TODAY, { m1: 90, m2: 60 }),
+            yesterday: dayOf(YESTERDAY, { m1: 120 }),
+        })
+
+        expect(rows.find(row => row.machineId === 'm1')?.deltaPercent).toBe(-25)
+        expect(rows.find(row => row.machineId === 'm2')?.deltaPercent).toBeNull()
+    })
+
+    it('flags a loom below 75% of the average of looms on the same quality', () => {
+        const rows = buildBaseLoomOutputRows({
+            machines: [machine('m1', 'Loom 1'), machine('m2', 'Loom 2'), machine('m3', 'Loom 3'), machine('m4', 'Loom 4')],
+            runningJobIdByMachineId: new Map([['m1', 'job-a'], ['m2', 'job-a'], ['m3', 'job-a'], ['m4', 'job-b']]),
+            jobLabelById: jobs,
+            // Quality A averages 110 m, so 82.5 m is the line; Quality B has a single loom.
+            today: dayOf(TODAY, { m1: 150, m2: 80, m3: 100, m4: 20 }),
+            yesterday: dayOf(YESTERDAY, {}),
+        })
+        const byId = Object.fromEntries(rows.map(row => [row.machineId, row]))
+
+        expect(byId.m2.lagging).toBe(true)
+        expect(byId.m1.lagging).toBe(false)
+        expect(byId.m3.lagging).toBe(false)
+        expect(byId.m2.peerAverage).toBe(110)
+        // A quality's only loom has no peers to fall behind, however small its output.
+        expect(byId.m4.lagging).toBe(false)
+        expect(byId.m4.peerAverage).toBeNull()
+    })
+
+    it('never flags a loom before today is entered', () => {
+        const rows = buildBaseLoomOutputRows({
+            machines: [machine('m1', 'Loom 1'), machine('m2', 'Loom 2')],
+            runningJobIdByMachineId: new Map([['m1', 'job-a'], ['m2', 'job-a']]),
+            jobLabelById: jobs,
+            today: dayOf(TODAY, {}, false),
+            yesterday: dayOf(YESTERDAY, { m1: 150, m2: 10 }),
+        })
+
+        expect(rows.every(row => !row.lagging && row.peerAverage === null)).toBe(true)
     })
 })
