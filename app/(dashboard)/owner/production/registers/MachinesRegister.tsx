@@ -131,7 +131,7 @@ export default function MachinesRegister({
             />
           </div>
           {!isOpen && (
-            <aside className="machines-left-rail guided-tour-left-rail space-y-3" aria-label="Machines guides and tools">
+            <aside className="phone-guidance machines-left-rail guided-tour-left-rail space-y-3" aria-label="Machines guides and tools">
               <div ref={tourLauncher} data-machines-tour="launcher">
                 <TourInvitation
                   tourId="machines"
@@ -215,7 +215,7 @@ export default function MachinesRegister({
                   </div>
                 </section>
                 <details
-                  className={cn('ui-details group overflow-hidden', railSurface)}
+                  className={cn('phone-guidance ui-details group overflow-hidden', railSurface)}
                   data-i18n-skip="true"
                   lang={language}
                 >

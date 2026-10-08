@@ -6,6 +6,7 @@ import type { TourId } from '@/lib/tours/tour-types'
 import { useTranslation } from '@/lib/i18n/context'
 import { tourInvitationCopy } from '@/lib/i18n/tour-invitations'
 import { tourCommonCopy } from '@/lib/i18n/tour-common'
+import { usePhoneViewport } from '@/lib/phone-viewport'
 import { useTourInvitation } from '@/hooks/use-tour-invitation'
 import { Button } from '@/components/ui/button'
 import { railGuideButton, railGuideIcon, railGuideSurface, railPrimaryAction } from '@/components/ui/rail'
@@ -24,7 +25,18 @@ export interface TourInvitationProps {
     dataTestId?: string
 }
 
-export function TourInvitation({ tourId, userId, userMetadata, orgId, onLaunch, className = '', dataTestId }: TourInvitationProps) {
+/**
+ * Tours are not offered on the phone. Gating here, before `useTourInvitation` runs, means a phone
+ * records no "first shown" impression for a card nobody saw, and the account's tour state stays
+ * exactly as it was for the next desktop visit. `.phone-guidance` hides the markup on first paint.
+ */
+export function TourInvitation(props: TourInvitationProps) {
+    const phone = usePhoneViewport()
+    if (phone) return null
+    return <TourInvitationContent {...props} />
+}
+
+function TourInvitationContent({ tourId, userId, userMetadata, orgId, onLaunch, className = '', dataTestId }: TourInvitationProps) {
     const { language } = useTranslation()
     const copy = tourInvitationCopy[language]
     const common = tourCommonCopy[language]
@@ -59,7 +71,7 @@ export function TourInvitation({ tourId, userId, userMetadata, orgId, onLaunch, 
             data-testid={dataTestId ?? `tour-guide-${tourId}`}
             data-tour-id={tourId}
             data-tour-invitation="true"
-            className={cn('mobile-guide-card @container p-4 text-ink', railGuideSurface, className)}
+            className={cn('phone-guidance mobile-guide-card @container p-4 text-ink', railGuideSurface, className)}
         >
             <div className="mobile-guide-layout grid grid-cols-1 items-center gap-3.5">
                 <div className="mobile-guide-heading order-1 min-w-0">
@@ -114,7 +126,7 @@ export function TourInvitation({ tourId, userId, userMetadata, orgId, onLaunch, 
         data-testid={dataTestId ?? `tour-launcher-${tourId}`}
         data-tour-control="quiet-tour"
         data-costing-tour={tourId === 'saved-costings' ? 'launcher' : undefined}
-        className={cn('estimator-touch-target', railGuideButton, className)}
+        className={cn('phone-guidance estimator-touch-target', railGuideButton, className)}
     >
         <span className="flex min-w-0 items-center gap-3">
             <span className={railGuideIcon} aria-hidden="true"><Compass className="h-5 w-5" /></span>

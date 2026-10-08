@@ -559,6 +559,13 @@
   }
 }
 
+/* Tours and explainer pills (help, glossary, archive and restore) are desktop and tablet guidance.
+   The phone has no rail to hold them, so they never render there. This repeats PHONE_VIEWPORT_QUERY
+   from lib/phone-viewport.ts so the markup is hidden on first paint, before hydration. */
+@media (max-width: 767.98px), (pointer: coarse) and (max-height: 500px) and (max-width: 1023.98px) {
+  .phone-guidance { display: none !important; }
+}
+
 .mobile-input-accessory { display: none; }
 
 @media (any-pointer: coarse) {

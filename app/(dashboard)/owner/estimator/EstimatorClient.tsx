@@ -5154,7 +5154,7 @@ export default function EstimatorClient({
             <PageHeader
                 title={tx('Cost estimate')}
                 className={freeMode ? 'free-mobile-page-header' : liteMode ? 'lite-mobile-page-header' : undefined}
-                actions={compactMobile ? <Button id={`${helpId}-trigger`} type="button" variant="ghost" className={freeMode ? 'free-mobile-help-trigger' : 'lite-mobile-help-trigger'} aria-expanded={estimatorHelpOpen || isTutorialActive} aria-controls={helpId} disabled={isTutorialActive} onClick={() => setEstimatorHelpOpen(open => !open)} data-i18n-skip="true"><BookOpen className="h-4 w-4" aria-hidden="true" />{freeMode ? freeMobileText(language, 'help') : liteEstimatorText(language, 'help')}</Button> : undefined}
+                actions={compactMobile ? <Button id={`${helpId}-trigger`} type="button" variant="ghost" className={`phone-guidance ${freeMode ? 'free-mobile-help-trigger' : 'lite-mobile-help-trigger'}`} aria-expanded={estimatorHelpOpen || isTutorialActive} aria-controls={helpId} disabled={isTutorialActive} onClick={() => setEstimatorHelpOpen(open => !open)} data-i18n-skip="true"><BookOpen className="h-4 w-4" aria-hidden="true" />{freeMode ? freeMobileText(language, 'help') : liteEstimatorText(language, 'help')}</Button> : undefined}
             />
             {!freeMode && !disableAutosave && (
                 <LocalSaveStatus
@@ -5471,7 +5471,7 @@ export default function EstimatorClient({
                 instead of taking space from the estimator canvas. */}
             <div className="estimator-workspace-shell">
                 <aside
-                    className="estimator-left-rail space-y-3"
+                    className="phone-guidance estimator-left-rail space-y-3"
                     id={compactMobile ? helpId : undefined}
                     data-free-help-expanded={freeMode ? estimatorHelpOpen || isTutorialActive : undefined}
                     data-lite-help-expanded={liteMode ? estimatorHelpOpen || isTutorialActive : undefined}
@@ -7150,7 +7150,7 @@ export default function EstimatorClient({
             </div>
 
                 <aside
-                    className="estimator-reference-rail space-y-3"
+                    className="phone-guidance estimator-reference-rail space-y-3"
                     aria-label="Estimator reference information"
                 >
                     <BasePlanFactoryGlossary />

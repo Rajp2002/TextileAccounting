@@ -253,7 +253,7 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
 
   return (
     <>
-      {!embedded && <aside className="saved-costings-left-rail" id="free-history-help" data-free-history-help data-expanded={helpOpen || tourStep !== null} aria-label={tx('Saved Costings guides and tools')}>
+      {!embedded && <aside className="phone-guidance saved-costings-left-rail" id="free-history-help" data-free-history-help data-expanded={helpOpen || tourStep !== null} aria-label={tx('Saved Costings guides and tools')}>
         <Button variant="ghost" className="free-mobile-help-trigger" disabled={tourStep !== null} onClick={() => { setHelpOpen(false); document.getElementById('free-history-help-trigger')?.focus() }}>
           <X className="h-4 w-4" /> {tx('Close')}
         </Button>
@@ -266,7 +266,7 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
           title={freeText(language, 'savedCostings')}
           actions={(
             <>
-            {!embedded && <Button id="free-history-help-trigger" variant="ghost" className="free-mobile-help-trigger" aria-expanded={helpOpen || tourStep !== null} aria-controls="free-history-help" disabled={tourStep !== null} onClick={() => setHelpOpen(open => !open)}>
+            {!embedded && <Button id="free-history-help-trigger" variant="ghost" className="phone-guidance free-mobile-help-trigger" aria-expanded={helpOpen || tourStep !== null} aria-controls="free-history-help" disabled={tourStep !== null} onClick={() => setHelpOpen(open => !open)}>
               <BookOpen className="h-4 w-4" /> {freeMobileText(language, 'help')}
             </Button>}
             <Button data-tour-anchor="free-costings.new" variant="saffron" className={!embedded ? 'rail-inline-actions' : undefined} onClick={() => router.push('/free')}>

@@ -12,11 +12,11 @@ describe('Estimator Left Rail & Guided Tour CTA', () => {
 
     it('renders the left rail inside the estimator workspace shell before main content and reference rail', () => {
         const shellStart = estimator.indexOf('className="estimator-workspace-shell"')
-        const leftRailStart = estimator.indexOf('<aside\n                    className="estimator-left-rail', shellStart)
+        const leftRailStart = estimator.indexOf('<aside\n                    className="phone-guidance estimator-left-rail', shellStart)
         const tutorialStart = estimator.indexOf('<CostEstimateTutorial', leftRailStart)
         const leftRailEnd = estimator.indexOf('</aside>', leftRailStart)
         const mainContentStart = estimator.indexOf('className="estimator-workspace-main min-w-0"', leftRailEnd)
-        const referenceRailStart = estimator.indexOf('className="estimator-reference-rail', mainContentStart)
+        const referenceRailStart = estimator.indexOf('className="phone-guidance estimator-reference-rail', mainContentStart)
 
         expect(shellStart).toBeGreaterThanOrEqual(0)
         expect(leftRailStart).toBeGreaterThan(shellStart)

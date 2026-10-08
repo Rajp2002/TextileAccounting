@@ -220,7 +220,7 @@ export default function WorkersRegister({
           /></div>
 
           {!isOpen && (
-            <aside className="workers-left-rail guided-tour-left-rail space-y-3" aria-label="Workers guided tour">
+            <aside className="phone-guidance workers-left-rail guided-tour-left-rail space-y-3" aria-label="Workers guided tour">
               <div ref={tourLauncher} data-workers-tour="launcher">
                 <TourInvitation
                   tourId="workers"
@@ -300,7 +300,7 @@ export default function WorkersRegister({
             />
           )}
           {!isOpen && (
-            <aside className="workers-reference-rail" aria-label={tourCopy.helpTitle}>
+            <aside className="phone-guidance workers-reference-rail" aria-label={tourCopy.helpTitle}>
               <div className="workers-reference-action">
                 <WorkerAddButton onAdd={tourStep ? () => {} : add} />
               </div>

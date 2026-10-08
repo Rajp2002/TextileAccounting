@@ -18,7 +18,7 @@ describe('Guided Tour Left Rail Placement Across All Sections', () => {
         const estimator = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
         const tutorial = read('components/estimator/CostEstimateTutorial.tsx')
 
-        expect(estimator).toContain('<aside\n                    className="estimator-left-rail space-y-3"')
+        expect(estimator).toContain('<aside\n                    className="phone-guidance estimator-left-rail space-y-3"')
         expect(estimator).toContain('<CostEstimateTutorial')
         expect(tutorial).toContain('<TourInvitation')
         expect(tutorial).toContain('align="full"')
@@ -31,14 +31,14 @@ describe('Guided Tour Left Rail Placement Across All Sections', () => {
         const savedFree = read('app/free/costings/SavedFreeCostings.tsx')
         const savedTutorial = read('components/estimator/SavedCostingsTutorial.tsx')
 
-        const guide = quotesClient.match(/<aside\b[^>]*className=\{cn\("saved-costings-left-rail space-y-3",\s*isLite && mobileStyles\.help\)\}[^>]*>[\s\S]*?<\/aside>/)?.[0]
+        const guide = quotesClient.match(/<aside\b[^>]*className=\{cn\("phone-guidance saved-costings-left-rail space-y-3",\s*isLite && mobileStyles\.help\)\}[^>]*>[\s\S]*?<\/aside>/)?.[0]
         expect(guide).toBeDefined()
         expect(guide).toContain('<SavedCostingsTutorial')
         expect(guide).toContain('data-expanded={helpOpen || tourStep !== null}')
         expect(quotesClient.match(/<SavedCostingsTutorial\b/g)).toHaveLength(1)
         expect(quotesClient).toContain("useOwnerPlan() === 'lite'")
         expect(quotesClient).toContain('<SavedCostingsTutorial')
-        expect(savedFree).toContain('<aside className="saved-costings-left-rail"')
+        expect(savedFree).toContain('<aside className="phone-guidance saved-costings-left-rail"')
         expect(savedTutorial).toContain('<TourInvitation')
         expect(savedTutorial).toContain('tourId="saved-costings"')
         expect(savedTutorial).toContain('align="full"')
@@ -50,7 +50,7 @@ describe('Guided Tour Left Rail Placement Across All Sections', () => {
         const ratesClient = read('app/(dashboard)/owner/rates/RatesClient.tsx')
         const rateTutorial = read('components/rates/RateBookTutorial.tsx')
 
-        const guide = ratesClient.match(/<aside\b[^>]*className=\{cn\("rates-left-rail-desktop space-y-3",\s*isLite && mobileStyles\.help\)\}[^>]*>[\s\S]*?<\/aside>/)?.[0]
+        const guide = ratesClient.match(/<aside\b[^>]*className=\{cn\("phone-guidance rates-left-rail-desktop space-y-3",\s*isLite && mobileStyles\.help\)\}[^>]*>[\s\S]*?<\/aside>/)?.[0]
         expect(guide).toBeDefined()
         expect(guide).toContain('<RateBookTutorial')
         expect(guide).toContain('data-expanded={helpOpen || tourStep !== null}')
@@ -68,7 +68,7 @@ describe('Guided Tour Left Rail Placement Across All Sections', () => {
     it('verifies Machine Assignments renders TourInvitation in .configuration-guide-rail', () => {
         const assignments = read('app/(dashboard)/owner/production/BaseAssignmentWorkspace.tsx')
 
-        expect(assignments).toContain('<aside className="configuration-guide-rail"')
+        expect(assignments).toContain('<aside className="phone-guidance configuration-guide-rail"')
         expect(assignments).toContain('<TourInvitation')
         expect(assignments).toContain('tourId="configuration"')
         expect(assignments).toContain('align="full"')
@@ -91,7 +91,7 @@ describe('Guided Tour Left Rail Placement Across All Sections', () => {
     it('verifies Workers Register renders TourInvitation in .workers-left-rail', () => {
         const workersRegister = read('app/(dashboard)/owner/production/registers/WorkersRegister.tsx')
 
-        expect(workersRegister).toContain('<aside className="workers-left-rail guided-tour-left-rail space-y-3"')
+        expect(workersRegister).toContain('<aside className="phone-guidance workers-left-rail guided-tour-left-rail space-y-3"')
         expect(workersRegister).toContain('data-workers-tour="launcher"')
         expect(workersRegister).toContain('<TourInvitation')
         expect(workersRegister).toContain('tourId="workers"')
@@ -103,7 +103,7 @@ describe('Guided Tour Left Rail Placement Across All Sections', () => {
     it('verifies Machines Register renders TourInvitation in .machines-left-rail', () => {
         const machinesRegister = read('app/(dashboard)/owner/production/registers/MachinesRegister.tsx')
 
-        expect(machinesRegister).toContain('<aside className="machines-left-rail guided-tour-left-rail space-y-3"')
+        expect(machinesRegister).toContain('<aside className="phone-guidance machines-left-rail guided-tour-left-rail space-y-3"')
         expect(machinesRegister).toContain('data-machines-tour="launcher"')
         expect(machinesRegister).toContain('<TourInvitation')
         expect(machinesRegister).toContain('tourId="machines"')
@@ -132,7 +132,7 @@ describe('Guided Tour Left Rail Placement Across All Sections', () => {
         expect(stockTour).toContain('railClassName="stock-left-rail"')
         expect(stockTour).toContain('workspaceClassName="stock-workspace-shell')
         expect(stockTour).toContain('tourId={kind}')
-        expect(shell).toContain('className={`${railClassName} guided-tour-left-rail space-y-2`}')
+        expect(shell).toContain('className={`phone-guidance ${railClassName} guided-tour-left-rail space-y-2`}')
         expect(shell).toContain('<TourInvitation')
         expect(shell).toContain('align="full"')
         expect(invitationProps(shell)).not.toContain('amber')
@@ -147,7 +147,7 @@ describe('Guided Tour Left Rail Placement Across All Sections', () => {
         expect(dispatchTour).toContain('railClassName="dispatch-left-rail"')
         expect(dispatchTour).toContain('workspaceClassName=""')
         expect(dispatchTour).toContain('tourId="dispatch"')
-        expect(shell).toContain('className={`${railClassName} guided-tour-left-rail space-y-2`}')
+        expect(shell).toContain('className={`phone-guidance ${railClassName} guided-tour-left-rail space-y-2`}')
         expect(shell).toContain('<TourInvitation')
         expect(shell).toContain('align="full"')
         expect(shell).not.toContain('guideCard=')
@@ -163,7 +163,7 @@ describe('Guided Tour Left Rail Placement Across All Sections', () => {
         expect(dailyTour).toContain('workspaceClassName=""')
         expect(dailyTour).toContain('tourId="daily-sheet"')
         expect(dailyTour).not.toContain('<TourInvitation')
-        expect(shell).toContain('className={`${railClassName} guided-tour-left-rail space-y-2`}')
+        expect(shell).toContain('className={`phone-guidance ${railClassName} guided-tour-left-rail space-y-2`}')
         // Same composition as Production: the workspace is centred between the rails from 1440px and clears the right rail from 1280px.
         const tier = styles.slice(styles.indexOf('@media (min-width: 1440px) {'))
         const centred = tier.slice(tier.indexOf('.estimator-workspace-shell,'), tier.indexOf('width: min(100%, var(--workspace-w));'))
