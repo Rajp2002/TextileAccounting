@@ -13,6 +13,7 @@ import { tourSurfaceProps } from '@/lib/tours/sample-surface'
 import { TourSampleBanner } from '@/components/tours/TourSampleBanner'
 import {
     ArrowLeft,
+    BarChart3,
     CheckCircle2,
     Clock3,
     Factory,
@@ -52,6 +53,13 @@ import { buildBasePayrollReadiness } from '@/lib/base-payroll-readiness'
 import { basePayrollReview } from '@/lib/base-payroll-review'
 import { baseDailySheetHref, baseProductionHref, baseProductionTabForPath, readBaseProductionNavigation } from '@/lib/base-production-navigation'
 import { trackPlanEvent } from '@/lib/plan-analytics'
+import {
+    calculateBaseProductionDay,
+    compareBaseProductionDays,
+    formatBaseMeters,
+    getBasePreviousDate,
+    metersOutsideBaseJobs,
+} from '@/lib/base-production-analytics'
 import {
     calculateBaseEntryGrossPay,
     calculateBasePayrollPeriodSummary,
@@ -372,6 +380,23 @@ export default function BaseProductionClient({
     }, [initialData.machineJobContexts, initialData.jobs, initialData.today])
     const runningMachinesCount = activeMachines.filter(m => runningMachineIds.has(m.id)).length
     const availableMachinesCount = Math.max(0, activeMachines.length - runningMachinesCount)
+    // Today's output comes from the daily sheets this page already loads, attributed the way job progress is.
+    const todayProduction = useMemo(() => calculateBaseProductionDay({
+        date: initialData.today,
+        entries: initialData.entries,
+        allocations: initialData.allocations,
+        batches: initialData.dailyBatches,
+    }), [initialData.today, initialData.entries, initialData.allocations, initialData.dailyBatches])
+    const yesterdayComparison = useMemo(() => compareBaseProductionDays(todayProduction, calculateBaseProductionDay({
+        date: getBasePreviousDate(initialData.today),
+        entries: initialData.entries,
+        allocations: initialData.allocations,
+        batches: initialData.dailyBatches,
+    })), [todayProduction, initialData.today, initialData.entries, initialData.allocations, initialData.dailyBatches])
+    const retiredQualityMeters = useMemo(
+        () => metersOutsideBaseJobs(todayProduction, activeJobs.map((job) => job.id)),
+        [todayProduction, activeJobs],
+    )
     const assignedWorkerIds = useMemo(() => {
         const set = new Set<string>()
         for (const assignment of initialData.assignments) {
@@ -607,7 +632,48 @@ export default function BaseProductionClient({
             )}
 
             {view === 'production' && !isDailySheetView && (
-                <Card data-production-tour="overview" className="overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs">
+                <Card data-production-tour="overview" className="gap-0 overflow-hidden rounded-2xl border border-hairline bg-surface py-0 shadow-xs">
+                    <div className="flex flex-col gap-3 border-b border-hairline p-4 sm:flex-row sm:items-end sm:justify-between sm:p-5">
+                        <div>
+                            <div className="mb-1 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                                <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                                <span data-i18n-skip="true">{t('production.todayProduction')}</span>
+                            </div>
+                            <p className="text-2xl font-black tracking-tight text-ink sm:text-3xl">
+                                {todayProduction.hasSavedSheet ? formatBaseMeters(todayProduction.totalMeters) : '—'}
+                            </p>
+                            <p className="mt-1 text-xs text-muted-foreground" data-i18n-skip="true">
+                                {!todayProduction.hasSavedSheet
+                                    ? t('production.notEnteredYet')
+                                    : todayProduction.savedShifts.day && todayProduction.savedShifts.night
+                                        ? t('production.shiftsSavedBoth')
+                                        : todayProduction.savedShifts.day
+                                            ? t('production.shiftsSavedDay')
+                                            : todayProduction.savedShifts.night
+                                                ? t('production.shiftsSavedNight')
+                                                : t('production.recorded')}
+                            </p>
+                        </div>
+                        <div className="space-y-1 text-xs text-muted-foreground sm:text-right" data-i18n-skip="true">
+                            {yesterdayComparison && (
+                                todayProduction.hasSavedSheet && yesterdayComparison.comparable ? (
+                                    <p className={`font-semibold ${yesterdayComparison.deltaMeters > 0 ? 'text-success' : yesterdayComparison.deltaMeters < 0 ? 'text-warning' : 'text-muted-foreground'}`}>
+                                        {t('production.vsYesterday', {
+                                            change: yesterdayComparison.deltaPercent !== null
+                                                ? `${new Intl.NumberFormat('en-IN', { maximumFractionDigits: 1, signDisplay: 'exceptZero' }).format(yesterdayComparison.deltaPercent)}%`
+                                                : `${new Intl.NumberFormat('en-IN', { maximumFractionDigits: 2, signDisplay: 'exceptZero' }).format(yesterdayComparison.deltaMeters)} m`,
+                                            meters: formatBaseMeters(yesterdayComparison.previousMeters),
+                                        })}
+                                    </p>
+                                ) : (
+                                    <p>{t('production.yesterdayTotal', { meters: formatBaseMeters(yesterdayComparison.previousMeters) })}</p>
+                                )
+                            )}
+                            {retiredQualityMeters > 0 && (
+                                <p>{t('production.otherQualities', { meters: formatBaseMeters(retiredQualityMeters) })}</p>
+                            )}
+                        </div>
+                    </div>
                     <div className="grid grid-cols-2 divide-y sm:grid-cols-4 sm:divide-y-0 sm:divide-x divide-hairline">
                         <div className="p-4 sm:p-5">
                             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
@@ -725,6 +791,8 @@ export default function BaseProductionClient({
                         machines={initialData.machines}
                         machineJobContexts={initialData.machineJobContexts}
                         today={initialData.today}
+                        todayMetersByJobId={todayProduction.metersByJobId}
+                        todayEntered={todayProduction.hasSavedSheet}
                         onActivateQuality={() => setIsActivateModalOpen(true)}
                         onViewHistory={() => router.push('/owner/production/daily-sheet')}
                         isActivateModalOpen={isActivateModalOpen}
