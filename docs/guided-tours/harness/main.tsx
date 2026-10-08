@@ -17,7 +17,7 @@ try { localStorage.setItem('weavly_language', lang) } catch {}
 if (params.get('fresh') === '1') { try { Object.keys(localStorage).filter(k => k.startsWith('weavly:tour')).forEach(k => localStorage.removeItem(k)); sessionStorage.clear() } catch {} }
 ;(window as any).__harnessPath = params.get('path') ?? {
   production: '/owner/production', 'daily-sheet': '/owner/production/daily-sheet', 'fabric-stock': '/owner/stock', 'yarn-stock': '/owner/stock/yarn', dispatch: '/owner/dispatches',
-  payroll: '/owner/payroll', 'payroll-extra': '/owner/payroll', machines: '/owner/machines', workers: '/owner/workers', 'workers-salary': '/owner/workers', estimator: '/owner/estimator', 'free-estimator': '/free',
+  payroll: '/owner/payroll', 'payroll-extra': '/owner/payroll', 'payroll-records': '/owner/payroll', machines: '/owner/machines', workers: '/owner/workers', 'workers-salary': '/owner/workers', estimator: '/owner/estimator', 'free-estimator': '/free',
   rates: '/owner/rates', 'rates-populated': '/owner/rates', quotes: '/owner/quotes', 'quotes-compare': '/owner/quotes', 'free-costings': '/free/costings', assignments: '/owner/assignments',
 }[scenario]
 // These fixtures use the same path-dependent translation rules as the real app.
@@ -237,7 +237,62 @@ async function PayrollFixture() {
   return <Tour variant="base" userId="u1" orgId="o1" userMetadata={{}}><PayrollLiveFixture Client={Client} initialData={initialData} /></Tour>
 }
 
+
+// Payroll records review: several months of realistic payments on a monthly cycle.
+async function PayrollRecordsFixture() {
+  const { default: Client } = await import('@/app/(dashboard)/owner/production/BaseProductionClient')
+  const pay = (id: string, worker: string, start: string, end: string, gross: number, recovered = 0, extra: any = {}) => ({
+    id, worker_id: `w-${worker}`, worker_name_snapshot: worker, period_start: start, period_end: end, gross_pay: gross,
+    advance_balance_before: extra.before ?? recovered, advance_deducted: recovered, remaining_advance_balance: extra.after ?? 0,
+    net_payout: gross - recovered, payment_mode: extra.mode ?? 'cash', paid_at: `${extra.paid ?? end}T11:00:00+05:30`,
+    status: extra.status ?? 'paid', reversal_reason: extra.reason ?? null, reversed_at: extra.reversedAt ?? null, recovery_receipt_complete: true,
+  })
+  const piece = (id: string, settlement: string, worker: string, date: string, machine: string, costing: string, rate: number, meters: number) => ({
+    id, settlement_id: settlement, worker_id: `w-${worker}`, production_date: date, shift: 'day', machine_id: `m-${machine}`, machine_label: machine,
+    job_id: 'j1', costing_label: costing, meters, worker_rate_snapshot: rate, gross_pay: Math.round(rate * meters * 100) / 100, source_kind: 'machine_allocation',
+  })
+  const salary = (id: string, settlement: string, start: string, end: string) => ({
+    id, settlement_id: settlement, worker_id: 'w-Mahesh', production_date: start, shift: null, machine_id: null, machine_label: 'Fixed salary', job_id: null,
+    costing_label: `${start} to ${end}`, meters: 0, worker_rate_snapshot: 15000, gross_pay: 15000, source_kind: 'fixed_salary',
+  })
+  const period = (start: string, end: string, settledAt: string) => ({ id: `p-${start}`, period_start: start, period_end: end, status: 'settled', total_gross: 0, total_recovery: 0, total_net: 0, total_workers: 0, paid_workers: 0, settled_at: settledAt, settled_by: 'u1', calculation_snapshot: null })
+  const settlements = [
+    pay('jul-ramesh', 'Ramesh', '2026-07-01', '2026-07-31', 8200, 0, { paid: '2026-08-01' }),
+    pay('jul-mahesh', 'Mahesh', '2026-07-01', '2026-07-31', 15000, 0, { mode: 'bank_transfer', paid: '2026-08-01' }),
+    pay('aug-ramesh', 'Ramesh', '2026-08-01', '2026-08-31', 8680, 1000, { before: 3000, after: 2000, paid: '2026-09-01' }),
+    pay('aug-mahesh', 'Mahesh', '2026-08-01', '2026-08-31', 15000, 0, { mode: 'bank_transfer', paid: '2026-09-01' }),
+    pay('aug-suresh', 'Suresh', '2026-07-20', '2026-08-31', 6020, 0, { mode: 'upi', paid: '2026-09-01' }),
+    pay('aug-kalpesh', 'Kalpesh', '2026-08-01', '2026-08-31', 4000, 0, { paid: '2026-09-01', status: 'reversed', reason: 'Recorded twice by mistake', reversedAt: '2026-09-03' }),
+    pay('sep-dinesh-1', 'Dinesh', '2026-09-01', '2026-09-19', 2100, 0, { paid: '2026-09-19' }),
+    pay('sep-dinesh-2', 'Dinesh', '2026-09-20', '2026-09-30', 2450, 0, { paid: '2026-10-01' }),
+    pay('sep-ramesh', 'Ramesh', '2026-09-01', '2026-09-30', 9120, 1000, { before: 2000, after: 1000, paid: '2026-10-01' }),
+    pay('sep-mahesh', 'Mahesh', '2026-09-01', '2026-09-30', 15000, 0, { mode: 'bank_transfer', paid: '2026-10-01' }),
+    pay('sep-suresh', 'Suresh', '2026-09-01', '2026-09-30', 6300, 0, { mode: 'upi', paid: '2026-10-01' }),
+    pay('oct-ramesh', 'Ramesh', '2026-10-01', '2026-10-05', 1400, 0, { paid: '2026-10-05' }),
+  ]
+  const settlementLines = [
+    piece('l1', 'jul-ramesh', 'Ramesh', '2026-07-15', 'Loom 3', 'Cotton navy 60s', 7, 1171.43),
+    salary('l2', 'jul-mahesh', '2026-07-01', '2026-07-31'),
+    piece('l3', 'aug-ramesh', 'Ramesh', '2026-08-10', 'Loom 3', 'Cotton navy 60s', 7, 800),
+    piece('l4', 'aug-ramesh', 'Ramesh', '2026-08-20', 'Loom 5', 'Rayon white 40s', 7, 440),
+    salary('l5', 'aug-mahesh', '2026-08-01', '2026-08-31'),
+    piece('l6', 'aug-suresh', 'Suresh', '2026-07-25', 'Loom 7', 'Poly grey twill', 7, 860),
+    piece('l7', 'aug-kalpesh', 'Kalpesh', '2026-08-12', 'Loom 5', 'Rayon white 40s', 8, 500),
+    piece('l8', 'sep-dinesh-1', 'Dinesh', '2026-09-10', 'Loom 7', 'Poly grey twill', 7, 300),
+    piece('l9', 'sep-dinesh-2', 'Dinesh', '2026-09-25', 'Loom 7', 'Poly grey twill', 7, 350),
+    piece('l10', 'sep-ramesh', 'Ramesh', '2026-09-12', 'Loom 3', 'Cotton navy 60s', 7, 900),
+    piece('l11', 'sep-ramesh', 'Ramesh', '2026-09-22', 'Loom 5', 'Rayon white 40s', 7, 402.86),
+    salary('l12', 'sep-mahesh', '2026-09-01', '2026-09-30'),
+    piece('l13', 'sep-suresh', 'Suresh', '2026-09-18', 'Loom 3', 'Cotton navy 60s', 7, 900),
+    piece('l14', 'oct-ramesh', 'Ramesh', '2026-10-03', 'Loom 3', 'Cotton navy 60s', 7, 200),
+  ]
+  const empty = params.get('empty') === '1'
+  const initialData: any = { orgId: 'o1', actorId: 'u1', factoryName: 'Sample Mills', today: '2026-10-08', payrollPeriod: { start: '2026-10-01', end: '2026-10-31' }, costings: [], jobs: [], entries: [], workers: [], machines: [], assignments: [], machineJobContexts: [], dailyBatches: [], batchRevisions: [], advances: [], settlements: empty ? [] : settlements, settlementLines: empty ? [] : settlementLines, payrollPeriods: empty ? [] : [period('2026-07-01', '2026-07-31', '2026-08-02T10:00:00+05:30'), period('2026-08-01', '2026-08-31', '2026-09-02T10:00:00+05:30')], payables: [], allocations: [] }
+  return <div data-harness-live="true"><Client initialData={initialData} view="payroll" /></div>
+}
+
 const scenarios: Record<string, () => Promise<React.ReactElement>> = {
+  'payroll-records': PayrollRecordsFixture,
   foundation: async () => <Foundation />,
   labels: async () => <LabelProbe />,
   production: ProductionFixture,

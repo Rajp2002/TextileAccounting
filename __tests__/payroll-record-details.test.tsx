@@ -9,7 +9,7 @@ import { gu } from '../lib/i18n/locales/gu'
 const runtime = vi.hoisted(() => ({ language: 'en' as 'en' | 'hi' | 'gu' }))
 const locales = { en, hi, gu }
 vi.mock('@/lib/i18n/context', () => ({ useTranslation: () => ({
-    t: (key: string) => locales[runtime.language].payroll.recordDetails[key.replace('payroll.recordDetails.', '') as keyof typeof en.payroll.recordDetails] ?? key,
+    t: (key: string) => key.split('.').reduce<unknown>((node, part) => (node as Record<string, unknown> | undefined)?.[part], locales[runtime.language]) as string ?? key,
     tx: (text: string) => text,
 }) }))
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }))

@@ -63,7 +63,7 @@ import {
     DEFAULT_MONTHLY_CYCLE_RULE,
     getPeriodContaining,
     addDays,
-    formatDateLabel,
+    formatPayrollPeriodLabel,
 } from '@/lib/payroll-cycle-engine'
 
 import {
@@ -253,6 +253,8 @@ export default function BaseProductionClient({
     const searchParams = useSearchParams()
     const navigation = readBaseProductionNavigation(searchParams)
     const [payrollTab, setPayrollTab] = useState('pay')
+    // Records open on the newest period, or on the one just reviewed in the settlement workspace.
+    const [recordsPeriodStart, setRecordsPeriodStart] = useState<string | undefined>()
     const tourShowsRecords = payrollTourStep === 'pra-records' || payrollTourStep === 'pra-export' || payrollTourStep === 'pra-correct'
     const activeTab = view === 'production' ? baseProductionTabForPath(pathname) : tourShowsRecords ? 'history' : payrollTab
     const isDailySheetView = view === 'production' && activeTab === 'production'
@@ -300,17 +302,7 @@ export default function BaseProductionClient({
     const activePeriodRecord = payroll?.periodRecord ?? null
     const activePeriodSummary = payroll?.summary
 
-    const activePeriodLabel = useMemo(() => {
-        if (activeCycleRule.type === 'monthly' && activeCycleRule.anchorDay === 1) {
-            const [yearStr, monthStr] = activePeriod.start.split('-')
-            const year = Number(yearStr)
-            const month = Number(monthStr)
-            if (year && month) {
-                return new Intl.DateTimeFormat('en-IN', { month: 'long', year: 'numeric' }).format(new Date(year, month - 1, 1))
-            }
-        }
-        return `${formatDateLabel(activePeriod.start)} – ${formatDateLabel(activePeriod.end)}`
-    }, [activePeriod, activeCycleRule])
+    const activePeriodLabel = formatPayrollPeriodLabel(activePeriod.start, activePeriod.end)
 
     const workerById = useMemo(
         () => new Map(initialData.workers.map((worker) => [worker.id, worker])),
@@ -603,7 +595,7 @@ export default function BaseProductionClient({
             )}
 
             {view === 'payroll' && activeTab === 'history' && (
-                <BasePayrollRecords initialData={initialData} onBack={() => setPayrollTab('pay')} />
+                <BasePayrollRecords initialData={initialData} initialPeriodStart={recordsPeriodStart} onBack={() => setPayrollTab('pay')} />
             )}
 
             {view === 'production' && !isDailySheetView && (
@@ -894,7 +886,7 @@ export default function BaseProductionClient({
 
             {view === 'payroll' && activeTab !== 'history' && (
                 <div className="payroll-records-action">
-                    <Button data-tour-anchor="payroll.records" variant="outline" className="min-h-11 w-full rounded-lg px-4" onClick={() => setPayrollTab('history')}>
+                    <Button data-tour-anchor="payroll.records" variant="outline" className="min-h-11 w-full rounded-lg px-4" onClick={() => { setRecordsPeriodStart(undefined); setPayrollTab('history') }}>
                         <History className="size-4" aria-hidden="true" /> <span data-i18n-skip="true">{t('payroll.payrollRecords')}</span> <ChevronRight className="size-4" aria-hidden="true" />
                     </Button>
                 </div>
@@ -1004,6 +996,7 @@ export default function BaseProductionClient({
                         router.refresh()
                     }}
                     onViewRecords={() => {
+                        setRecordsPeriodStart(activePeriod.start)
                         setPayrollTab('history')
                     }}
                 />
