@@ -59,6 +59,7 @@ export function Step2Defaults({
                             <input
                                 id="wastage-input"
                                 type="number"
+                                inputMode="decimal"
                                 step="0.1"
                                 min="0"
                                 max="50"
@@ -87,6 +88,7 @@ export function Step2Defaults({
                             <input
                                 id="margin-input"
                                 type="number"
+                                inputMode="decimal"
                                 step="0.5"
                                 min="0"
                                 max="90"

@@ -3,6 +3,7 @@
 import React, { useRef, useEffect } from 'react'
 import { Trash2, AlertCircle } from 'lucide-react'
 import { toast } from '@/lib/app-notifications'
+import { resolveInputMode } from '@/lib/input-mode'
 import { cn } from '@/lib/utils'
 import { useTranslation } from '@/lib/i18n/context'
 
@@ -224,6 +225,7 @@ export function BulkEntryGrid<T extends { id: string; error?: string }>({
                                                         else inputRefs.current.delete(refKey)
                                                     }}
                                                     type={col.type || 'text'}
+                                                    inputMode={resolveInputMode({ type: col.type })}
                                                     value={val ?? ''}
                                                     placeholder={tx(col.placeholder)}
                                                     onChange={e => {

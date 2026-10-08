@@ -440,6 +440,7 @@ export function PayrollCycleSettingsCard({
                                 <Input
                                     id="interval-weeks-input"
                                     type="number"
+                                    inputMode="numeric"
                                     min={1}
                                     max={52}
                                     value={intervalWeeks}
@@ -473,6 +474,7 @@ export function PayrollCycleSettingsCard({
                                 <Input
                                     id="interval-days-input"
                                     type="number"
+                                    inputMode="numeric"
                                     min={1}
                                     max={365}
                                     value={intervalDays}
