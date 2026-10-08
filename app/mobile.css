@@ -45,7 +45,6 @@
 }
 
 .mobile-navigation,
-.mobile-workflow-navigation,
 .mobile-record-details,
 .mobile-comparison-label { display: none; }
 
@@ -349,11 +348,10 @@
   }
   html:has(.mobile-workspace-header) { scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 76px); }
 
-  .mobile-workflow-navigation, .mobile-record-details { display: block; }
+  .mobile-record-details { display: block; }
   .desktop-record-details { display: none; }
   [data-slot="label"] { font-size: 14px; line-height: 1.4; }
   [data-slot="button"] { font-size: 14px; }
-  .mobile-workflow-link,
   .mobile-record-details dd { font-size: 14px; }
 
   /* Keep each saved metric and its old/new/change values together on phones.

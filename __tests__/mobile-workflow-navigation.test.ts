@@ -1,19 +1,12 @@
-import { createElement } from 'react'
-import { renderToStaticMarkup } from 'react-dom/server'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { getMobileWorkflowNavigation, currentMobileWorkflow } from '../lib/mobile-workflow-navigation'
 import { groupOwnerNavigation } from '../lib/disclosure-navigation'
 import { visibleOwnerNavigation } from '../lib/owner-navigation'
-import { MobileWorkflowNavigation } from '../components/navigation/mobile-workflow-navigation'
 import type { SubscriptionTier } from '../lib/subscription-access'
 import type { ProductionMode } from '../lib/production-mode'
 import { en } from '../lib/i18n/locales/en'
 import { hi } from '../lib/i18n/locales/hi'
 import { gu } from '../lib/i18n/locales/gu'
-
-const location = vi.hoisted(() => ({ pathname: '/owner/estimator' }))
-vi.mock('next/navigation', () => ({ usePathname: () => location.pathname }))
-vi.mock('../lib/i18n/context', () => ({ useTranslation: () => ({ t: (key: string) => key }) }))
 
 const sections = (tier: SubscriptionTier = 'base', productionMode: ProductionMode = 'market_run') => visibleOwnerNavigation({ tier, productionMode })
 const navigation = (tier: SubscriptionTier = 'base', productionMode: ProductionMode = 'market_run') => getMobileWorkflowNavigation(sections(tier, productionMode), tier)
@@ -98,29 +91,5 @@ describe('balanced mobile workflow navigation', () => {
             expect(typeof value).toBe('string')
             expect(value).toBeTruthy()
         }
-    })
-})
-
-describe('contextual navigation semantics', () => {
-    it('uses real route links with exactly one current destination and 44px targets', () => {
-        location.pathname = '/owner/production/daily-sheet'
-        const html = renderToStaticMarkup(createElement(MobileWorkflowNavigation, { tier: 'base', productionMode: 'market_run' }))
-        for (const href of ['/owner/production/daily-sheet', '/owner/production', '/owner/assignments', '/owner/machines']) expect(html).toContain(`href="${href}"`)
-        expect(html.match(/aria-current="page"/g)).toHaveLength(1)
-        expect(html).toContain('min-h-[44px]')
-        expect(html).toContain('overflow-x-auto')
-        expect(html).not.toMatch(/role="(?:tab|tablist|menu|menuitem)"/)
-    })
-
-    it('distinguishes an exact destination from its record detail', () => {
-        location.pathname = '/owner/stock/yarn/example'
-        const html = renderToStaticMarkup(createElement(MobileWorkflowNavigation, { tier: 'base', productionMode: 'market_run' }))
-        expect(html.match(/aria-current="location"/g)).toHaveLength(1)
-        expect(html).not.toContain('aria-current="page"')
-    })
-
-    it.each(['free', 'lite', 'none'] as const)('renders no contextual header for %s', tier => {
-        location.pathname = '/owner/estimator'
-        expect(renderToStaticMarkup(createElement(MobileWorkflowNavigation, { tier, productionMode: 'market_run' }))).toBe('')
     })
 })

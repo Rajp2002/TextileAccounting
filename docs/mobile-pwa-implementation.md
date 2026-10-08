@@ -44,7 +44,8 @@ Verified:
 
 Implemented:
 
-- Base uses direct Costing, Production, Stock, Workforce destinations plus More. Related links stay visible within each domain, including assignments, machines, dispatches, rate book, and payroll. Free/Lite retain their entitled destinations with shorter labels. The full drawer and desktop directory remain available.
+- Base uses direct Costing, Production, Stock, Workforce destinations plus More. Free/Lite retain their entitled destinations with shorter labels. The full drawer and desktop directory remain available.
+- Update (2026-10-09): the per-domain top strip that listed related links (rate book, assignments, machines, dispatches, payroll) was removed because it duplicated the bottom bar. Those pages are reached through More, which lists them as expandable groups.
 - Phone guides use a compact invitation with visible Start and expandable explanation/dismissal. Opening/collapsing help does not change stored tour preferences.
 - Daily date/shift controls share a row; progress and secondary actions are compact while retaining the original mounted controls and tour anchors.
 - Payroll phone detail uses labelled values from the same formatted row data as desktop tables. Costing comparisons reflow the same table values into metric/Old/New/Change blocks.
