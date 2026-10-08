@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { ChevronDown, Search, X } from 'lucide-react'
+import { ArrowLeftRight, ChevronDown, Search, X } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { useTranslation } from '@/lib/i18n/context'
 
@@ -17,6 +17,8 @@ interface WorkerToolbarProps {
   onStatusFilterChange?: (value: WorkerStatusFilter) => void
   totalCount?: number
   filteredCount?: number
+  /** Opens the "Switch shifts" modal. The pill is not shown without it. */
+  onSwitchShifts?: () => void
   // Backward compatibility
   payType?: string
   onPayTypeChange?: (value: string) => void
@@ -33,6 +35,7 @@ export function WorkerToolbar({
   onStatusFilterChange,
   totalCount,
   filteredCount,
+  onSwitchShifts,
   inactive,
   onInactiveChange,
 }: WorkerToolbarProps) {
@@ -107,6 +110,18 @@ export function WorkerToolbar({
           </select>
           <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle/70" aria-hidden="true" />
         </div>
+
+        {onSwitchShifts && (
+          <button
+            type="button"
+            data-workers-switch-shifts
+            onClick={onSwitchShifts}
+            className="inline-flex h-10 min-h-[44px] w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-hairline bg-surface px-4 text-sm font-medium text-ink shadow-2xs transition-colors hover:border-hairline-strong hover:bg-surface-soft focus-visible:border-saffron focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron sm:min-h-10 sm:w-auto"
+          >
+            <ArrowLeftRight className="h-4 w-4 text-subtle" aria-hidden="true" />
+            {tx('Switch shifts')}
+          </button>
+        )}
 
         {/* Subtle worker count */}
         {typeof totalCount === 'number' && typeof filteredCount === 'number' && (

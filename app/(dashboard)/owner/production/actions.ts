@@ -415,6 +415,55 @@ export async function removeBaseWorkerMachineAssignment(input: { assignmentId: s
     return { success: true, removed: Boolean(result?.removed ?? result?.deleted) }
 }
 
+const ShiftRotationSchema = z.object({ workerIds: z.array(UuidSchema).min(1).max(500) })
+
+/**
+ * Moves the selected piece-rate workers to the opposite shift, together with their
+ * looms, starting today. All or nothing; clashes come back for the modal to show.
+ */
+export async function rotateBaseWorkerShifts(input: { workerIds: string[] }) {
+    await requireBaseProductionOwner()
+    const parsed = safeParse(ShiftRotationSchema, input)
+    if ('error' in parsed) return parsed
+
+    const supabase = await createServerClient()
+    const { data, error } = await supabase.rpc('rotate_base_worker_shifts', {
+        p_worker_ids: [...new Set(parsed.data.workerIds)],
+        p_effective_from: getSuratTodayString(),
+    })
+
+    if (error) return databaseError(error, 'Shifts could not be switched. Please try again.')
+    const result = data as {
+        conflict?: boolean
+        message?: string
+        clashes?: Array<{ worker_name: string; machine_name: string; shift: 'day' | 'night'; held_by_worker_name: string }>
+        workers_moved?: number
+        looms_moved?: number
+    } | null
+    if (result?.conflict) {
+        return {
+            conflict: true as const,
+            message: result.message ?? 'A loom already has a worker on the shift someone is moving to.',
+            clashes: (result.clashes ?? []).map(clash => ({
+                workerName: clash.worker_name,
+                machineName: clash.machine_name,
+                shift: clash.shift,
+                heldByWorkerName: clash.held_by_worker_name,
+            })),
+        }
+    }
+
+    revalidatePath('/owner/workers')
+    revalidatePath('/owner/production')
+    revalidatePath('/owner/payroll')
+    revalidatePath('/owner/operations')
+    return {
+        success: true as const,
+        workersMoved: Number(result?.workers_moved ?? 0),
+        loomsMoved: Number(result?.looms_moved ?? 0),
+    }
+}
+
 export async function setBaseMachineJobContext(input: {
     machineId: string
     jobId: string | null

@@ -17,14 +17,17 @@ import { loadWorkersRegister, loadMachinesRegister } from '../app/(dashboard)/ow
   fixture.eq.mockReturnValue(chain); fixture.from.mockReturnValue(chain)
  })
  describe('independent authorized register reads', () => {
-  it('workers reads operational workers and assignments without payroll or advance tables', async () => {
+  it('workers reads operational workers, assignments and loom names without payroll or advance tables', async () => {
    const data = await loadWorkersRegister()
    expect(fixture.from.mock.calls).toEqual([
     ['base_production_workers'],
     ['base_worker_machine_assignments'],
+    ['base_production_machines'],
    ])
    expect(fixture.eq).toHaveBeenCalledWith('org_id','tenant-one')
    expect(data?.workers[0]).toMatchObject({ id: 'record-one', monthly_salary: 10000, pay_type: 'fixed_monthly' })
+   // The shift-switch modal gets only open day/night assignments plus loom names.
+   expect(data?.rotation).toEqual({ assignments: [], machineNames: { 'record-one': 'Fixture' } })
   })
   it('machines reads operational machines, assignments, job contexts, workers and jobs without payroll or salary tables', async () => {
    await loadMachinesRegister()

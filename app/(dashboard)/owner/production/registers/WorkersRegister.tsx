@@ -16,6 +16,7 @@ import {
 } from '@/components/workers/WorkerToolbar'
 import { WorkforceGroup } from '@/components/workers/WorkforceGroup'
 import { WorkerEmptyState } from '@/components/workers/WorkerEmptyState'
+import { SwitchShiftsDialog, type ShiftRotationData } from '@/components/workers/SwitchShiftsDialog'
 import WorkerEditor from './WorkerEditor'
 import { TourInvitation } from '@/components/tours/TourInvitation'
 import type { GuidedTour as GuidedTourComponent } from '@/components/tours/GuidedTour'
@@ -32,9 +33,12 @@ const GuidedTour = dynamic(() => import('@/components/tours/GuidedTour').then(mo
 
 export default function WorkersRegister({
   workers,
+  rotation,
   today, userId, orgId, userMetadata,
 }: {
   workers: BaseProductionWorkerWithOperational[]
+  /** Open loom assignments and loom names; the "Switch shifts" pill needs them. */
+  rotation?: ShiftRotationData
   today: string
   userId?: string
   orgId?: string
@@ -44,6 +48,7 @@ export default function WorkersRegister({
   const { tx, t, language } = useTranslation()
   const [tourStep, setTourStep] = useState<WorkersTourStep | null>(null)
   const [tourPath, setTourPath] = useState<WorkersTourPath>('piece')
+  const [switchShiftsOpen, setSwitchShiftsOpen] = useState(false)
   const arrivedIds = useArrivals(workers.map(worker => worker.id))
   const tourLauncher = useRef<HTMLDivElement>(null)
   const tourReturnFocus = useRef<HTMLElement | null>(null)
@@ -251,6 +256,7 @@ export default function WorkersRegister({
               onStatusFilterChange={tourStep ? () => {} : handleStatusChange}
               totalCount={tourSampleActive ? sampleWorkers.length : workers.length}
               filteredCount={tourSampleActive ? sampleWorkers.length : visible.length}
+              onSwitchShifts={tourStep || !rotation ? undefined : () => setSwitchShiftsOpen(true)}
             />
           </div>
 
@@ -325,6 +331,7 @@ export default function WorkersRegister({
               </div>
             </aside>
           )}
+          {rotation && <SwitchShiftsDialog open={switchShiftsOpen} onOpenChange={setSwitchShiftsOpen} workers={workers} assignments={rotation.assignments} machineNames={rotation.machineNames} />}
           {preview && <WorkerEditor key={`${preview}-${language}`} today={today} tourPreview={{ worker: preview === 'piece' ? sampleWorkers[0] : sampleWorkers[1], editing: preview === 'edit' }}>{() => null}</WorkerEditor>}
           {preview && <style>{'[data-workers-tour-preview="true"] [data-slot="dialog-close"] { display: none; }'}</style>}
           {tourStep && <GuidedTour tourId="workers" steps={steps} step={tourStep}

@@ -26,13 +26,16 @@ export async function loadWorkersRegister(today?: string) {
     const db = await createClient()
     const effectiveDate = today ?? getSuratTodayString()
 
-    const [workersResult, assignmentsResult] = await Promise.all([
+    const [workersResult, assignmentsResult, machinesResult] = await Promise.all([
         readCompleteBaseRows((from, to) => db.from('base_production_workers')
             .select('id, name, rate_per_meter, shift_availability, is_active, pay_type, role, operator_eligible, operator_effective_from, operator_approved_by, operator_approved_at, monthly_salary, salary_effective_from, salary_history, start_date, end_date, updated_at', from === 0 ? { count: 'exact' } : {})
             .eq('org_id', orgId).order('is_active', { ascending: false }).order('name').order('id').range(from, to)),
         readCompleteBaseRows((from, to) => db.from('base_worker_machine_assignments')
             .select('id, worker_id, machine_id, shift, active, effective_from, effective_to', from === 0 ? { count: 'exact' } : {})
             .eq('org_id', orgId).eq('active', true).range(from, to)),
+        readCompleteBaseRows((from, to) => db.from('base_production_machines')
+            .select('id, name', from === 0 ? { count: 'exact' } : {})
+            .eq('org_id', orgId).order('name').order('id').range(from, to)),
     ])
 
     if (workersResult.error) throw new Error('Unable to load workers. Please retry.')
@@ -52,7 +55,16 @@ export async function loadWorkersRegister(today?: string) {
         }
     })
 
-    return { orgId, workers }
+    // Open-ended loom assignments and loom names for the "Switch shifts" modal. If either
+    // read failed the modal sees no looms and its clash preview is empty; the database
+    // repeats the clash check before it writes anything.
+    const rotationAssignments = (assignmentsResult.data ?? [])
+        .filter(assignment => assignment.active && !assignment.effective_to && (assignment.shift === 'day' || assignment.shift === 'night'))
+        .map(assignment => ({ worker_id: String(assignment.worker_id), machine_id: String(assignment.machine_id), shift: assignment.shift as 'day' | 'night' }))
+    const machineNames: Record<string, string> = {}
+    for (const machine of (machinesResult.data ?? [])) machineNames[String(machine.id)] = String(machine.name || 'Loom')
+
+    return { orgId, workers, rotation: { assignments: rotationAssignments, machineNames } }
 }
 
 export async function loadMachinesRegister(today?: string) {
