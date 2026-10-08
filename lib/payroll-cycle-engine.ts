@@ -193,6 +193,27 @@ export function formatDateLabel(dateStr: string): string {
     return `${day} ${monthNames[month - 1]} ${year}`
 }
 
+const MONTH_LONG_NAMES = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December',
+]
+
+/**
+ * Short owner-facing name for a pay period: "September 2026" for a whole calendar
+ * month, otherwise the narrowest readable range ("14 – 20 Sep 2026").
+ */
+export function formatPayrollPeriodLabel(start: string, end: string): string {
+    const from = parseYMD(start)
+    const to = parseYMD(end)
+    if (from.year === to.year && from.month === to.month && from.day === 1 && to.day === getDaysInMonth(to.year, to.month)) {
+        return `${MONTH_LONG_NAMES[from.month - 1]} ${from.year}`
+    }
+    const [fromLabel, toLabel] = [formatDateLabel(start), formatDateLabel(end)]
+    if (from.year !== to.year) return `${fromLabel} – ${toLabel}`
+    if (from.month !== to.month) return `${fromLabel.replace(` ${from.year}`, '')} – ${toLabel}`
+    return `${from.day} – ${toLabel}`
+}
+
 export function getOrdinalSuffix(day: number): string {
     if (day >= 11 && day <= 13) return 'th'
     switch (day % 10) {

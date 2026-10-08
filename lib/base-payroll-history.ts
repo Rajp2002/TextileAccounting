@@ -6,6 +6,7 @@ import type {
     BasePayrollSettlement,
     BasePayrollSettlementLine,
 } from './base-production-core'
+import { DEFAULT_MONTHLY_CYCLE_RULE, getPeriodContaining, type PayrollCycleRule } from './payroll-cycle-engine'
 
 export type BasePayrollHistoryEarning = {
     kind?: 'manual_incentive'
@@ -26,6 +27,9 @@ export type BasePayrollHistoryWorker = {
     settlementId: string
     workerId: string
     workerName: string
+    /** The dates this one payment covers; they can start in an earlier period. */
+    coverStart?: string
+    coverEnd?: string
     grossPay: number
     advanceBalanceBefore: number
     advanceRecovered: number
@@ -80,6 +84,7 @@ export function buildBasePayrollHistory(
     settlements: BasePayrollSettlement[],
     lines: BasePayrollSettlementLine[],
     periodRecords: BasePayrollPeriod[] = [],
+    cycleRule: PayrollCycleRule = DEFAULT_MONTHLY_CYCLE_RULE,
 ): BasePayrollHistoryPeriod[] {
     const linesBySettlement = new Map<string, BasePayrollSettlementLine[]>()
     for (const line of lines) {
@@ -88,25 +93,29 @@ export function buildBasePayrollHistory(
         linesBySettlement.set(line.settlement_id, current)
     }
 
-    const settlementsByPeriod = new Map<string, BasePayrollSettlement[]>()
-    for (const settlement of settlements) {
-        const key = `${settlement.period_start}:${settlement.period_end}`
-        const current = settlementsByPeriod.get(key) ?? []
-        current.push(settlement)
-        settlementsByPeriod.set(key, current)
-    }
-
     const periodRecordByKey = new Map<string, BasePayrollPeriod>()
     for (const record of periodRecords) {
         periodRecordByKey.set(`${record.period_start}:${record.period_end}`, record)
     }
 
-    // Ensure settled periods appear even if all settlement lines are empty
-    for (const record of periodRecords) {
-        const key = `${record.period_start}:${record.period_end}`
-        if (!settlementsByPeriod.has(key)) {
-            settlementsByPeriod.set(key, [])
-        }
+    // A payment belongs to the pay period its covered dates end in. A completed
+    // period keeps its stored dates even if the cycle rule changed afterwards.
+    function periodKeyFor(date: string) {
+        const record = periodRecords.find(item => item.period_start <= date && date <= item.period_end)
+        if (record) return `${record.period_start}:${record.period_end}`
+        const period = getPeriodContaining(date, cycleRule)
+        return `${period.start}:${period.end}`
+    }
+
+    // Completed periods appear even when every worker in them earned nothing.
+    const settlementsByPeriod = new Map<string, BasePayrollSettlement[]>(
+        [...periodRecordByKey.keys()].map(key => [key, []]),
+    )
+    for (const settlement of settlements) {
+        const key = periodKeyFor(settlement.period_end)
+        const current = settlementsByPeriod.get(key) ?? []
+        current.push(settlement)
+        settlementsByPeriod.set(key, current)
     }
 
     return [...settlementsByPeriod.entries()].map(([key, periodSettlements]) => {
@@ -145,6 +154,8 @@ export function buildBasePayrollHistory(
                 reversalReason: settlement.reversal_reason,
                 workerId: settlement.worker_id,
                 workerName: settlement.worker_name_snapshot ?? 'Worker',
+                coverStart: settlement.period_start,
+                coverEnd: settlement.period_end,
                 grossPay: settlement.gross_pay,
                 advanceBalanceBefore: settlement.advance_balance_before ?? settlement.advance_deducted,
                 advanceRecovered: settlement.advance_deducted,
@@ -155,7 +166,7 @@ export function buildBasePayrollHistory(
                 meters: round(earnings.reduce((sum, earning) => sum + earning.meters, 0)),
                 earnings,
             }
-        }).sort((a, b) => a.workerName.localeCompare(b.workerName))
+        }).sort((a, b) => a.workerName.localeCompare(b.workerName) || a.paidAt.localeCompare(b.paidAt))
 
         const machineGroups = new Map<string, BasePayrollHistoryMachine>()
         for (const worker of workers.filter(worker => worker.status !== 'reversed')) {
@@ -187,9 +198,7 @@ export function buildBasePayrollHistory(
             }
         }
 
-        const [keyStart, keyEnd] = key.split(':')
-        const start = periodSettlements[0]?.period_start ?? keyStart ?? ''
-        const end = periodSettlements[0]?.period_end ?? keyEnd ?? ''
+        const [start, end] = key.split(':')
         const periodRecord = periodRecordByKey.get(key) ?? null
 
         return {
@@ -224,6 +233,7 @@ export function buildBasePayrollHistoryCsv(period: BasePayrollHistoryPeriod) {
         'Metres', 'Line Gross Pay', 'Worker Gross Pay', 'Advance Balance Before',
         'Advance Recovered', 'Remaining Advance Balance', 'Worker Net Pay', 'Payment Mode', 'Paid At', 'Record Status', 'Reversal Reason', 'Rate Unit',
         'Incentive Service Start', 'Incentive Service End', 'Evidence Reference', 'Approved By', 'Approved At', 'Calculation Version',
+        'Work Covered From', 'Work Covered To',
     ]
     const rows: Array<Array<string | number>> = []
 
@@ -242,6 +252,7 @@ export function buildBasePayrollHistoryCsv(period: BasePayrollHistoryPeriod) {
                 earning.incentiveSnapshot?.service_start ?? '', earning.incentiveSnapshot?.service_end ?? '',
                 earning.incentiveSnapshot?.evidence_reference ?? '', earning.incentiveSnapshot?.approved_by ?? '',
                 earning.incentiveSnapshot?.approved_at ?? '', earning.incentiveSnapshot?.calculation_version ?? '',
+                worker.coverStart ?? period.start, worker.coverEnd ?? period.end,
             ])
         }
     }
