@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { Loader2, ArrowRight, Eye, EyeOff, Building2, CheckCircle2 } from 'lucide-react'
 import AuthLayout from '@/components/auth/auth-layout'
+import { AccountTypeSwitch } from '@/components/auth/AccountTypeSwitch'
 import { AuthTransition } from '@/components/auth/auth-transition'
 import { createOrganizationAndRedirect } from '@/app/(auth)/actions/auth'
 import { cn } from '@/lib/utils'
@@ -149,6 +150,7 @@ function SignupForm() {
             subtitle={selectedPlan === 'free' ? freeText(language,'signupSubtitle') : 'Get started as a factory owner'}
         >
             <form onSubmit={handleSubmit} className={cn("space-y-5", compactMobile && "max-sm:space-y-4")} noValidate>
+                <AccountTypeSwitch current="owner" />
                 {/* Factory Name */}
                 {selectedPlan !== 'free' && <div className="space-y-1.5">
                     <Label htmlFor="factoryName" className="text-ink font-medium">

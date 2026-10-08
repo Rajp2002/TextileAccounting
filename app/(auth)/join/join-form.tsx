@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import Link from 'next/link'
 import { ArrowRight, Eye, EyeOff, Factory, Loader2 } from 'lucide-react'
 import AuthLayout from '@/components/auth/auth-layout'
+import { AccountTypeSwitch } from '@/components/auth/AccountTypeSwitch'
 import { AuthTransition } from '@/components/auth/auth-transition'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -118,6 +119,7 @@ export function JoinForm({ initialCode }: { initialCode: string }) {
     return (
         <AuthLayout title={text('joinTitle')} subtitle={factoryName ? text('codeFound', { factory: factoryName }) : text('joinSubtitle')}>
             <form onSubmit={submit} className="space-y-4" noValidate>
+                <AccountTypeSwitch current="supervisor" />
                 {!factoryName ? (
                     <div className="space-y-1.5">
                         <Label htmlFor="join-code" className="font-medium text-ink">{text('codeLabel')}</Label>
