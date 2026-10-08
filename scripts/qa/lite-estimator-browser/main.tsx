@@ -3,7 +3,6 @@ import { createRoot } from 'react-dom/client'
 import { I18nProvider } from '@/lib/i18n/context'
 import { OwnerPlanProvider } from '@/components/providers/owner-plan-provider'
 import { OwnerSidebar } from '@/components/navigation/owner-sidebar'
-import { MobileWorkflowNavigation } from '@/components/navigation/mobile-workflow-navigation'
 import { BrandBackground } from '@/components/brand-background'
 import EstimatorClient from '@/app/(dashboard)/owner/estimator/EstimatorClient'
 import FreeWorkspace from '@/app/free/FreeWorkspace'
@@ -35,7 +34,6 @@ function App() {
     return <OwnerPlanProvider access={{ subscriptionTier: tier, effectiveTier: tier }}><div className="relative isolate min-h-svh overflow-x-hidden bg-background" data-owner-shell>
         <BrandBackground variant="app" /><OwnerSidebar factoryName="Synthetic Textile" userName="Synthetic Owner" subscriptionTier={tier} productionMode="market_run" />
         <div className="mobile-workspace-content relative z-10 min-w-0 px-safe"><main id="owner-main" tabIndex={-1} className="dashboard-main mx-auto min-h-svh w-full min-w-0 max-w-7xl px-3 pb-5 pt-[calc(1rem+env(safe-area-inset-top,0px))] xs:px-4 md:px-6 md:pb-6 md:pt-[calc(1.5rem+var(--safe-area-top))] lg:px-8">
-            <MobileWorkflowNavigation tier={tier} productionMode="market_run" />
             {pathname === '/owner/estimator' ? <PaidEstimator mobileTier={tier} initialProfile={profile} initialTemplates={params.has('qualities-loading') ? undefined : templates} initialWorkers={[]} staleDefaultRateNames={[]} canUseProductionPipeline={tier === 'base'} organizationName="Synthetic Textile" tutorialDismissed={!params.has('guide-invite')} wizardDismissed userId={userId} orgId={orgId} /> : <section data-synthetic-destination><h1>Synthetic {pathname} destination</h1><p>Navigation fixture only; records screen verified separately.</p></section>}
         </main></div>
     </div></OwnerPlanProvider>

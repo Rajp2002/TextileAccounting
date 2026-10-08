@@ -47,11 +47,10 @@ describe('instant navigation chrome', () => {
         expect(read('app/globals.css')).not.toContain('.navigation-pending')
     })
 
-    it('selects tabs, drawer items, and workflow pills from the intended page', () => {
+    it('selects tabs and drawer items from the intended page', () => {
         for (const file of [
             'components/navigation/owner-sidebar.tsx',
             'components/navigation/navigation-disclosure.tsx',
-            'components/navigation/mobile-workflow-navigation.tsx',
         ]) {
             expect(read(file), file).toContain('useNavigationPathname()')
         }
