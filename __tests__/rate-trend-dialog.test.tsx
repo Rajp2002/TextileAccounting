@@ -64,6 +64,19 @@ describe('RateTrendChart', () => {
         expect(html).not.toMatch(/>(Jul|Aug|Sep|Oct)</)
     })
 
+    it('charts a yarn whose only history row is its first edit, starting from the price it had before', () => {
+        const edited: RateTrendRow[] = [
+            { id: 'edit', value: 125, previous_value: 118, event_type: 'changed', effective_date: '2026-10-07', created_at: '2026-10-07T06:00:00Z', source: null },
+        ]
+        const trend = buildRateTrend(edited, '2026-10-09')!
+        const html = renderToStaticMarkup(<RateTrendChart trend={trend} unit="per_kg" yarnName="jari" />)
+        expect(html.match(/role="button"/g)).toHaveLength(2)
+        expect(html).toMatch(/aria-label="7 Oct 2026, ₹118\.00\/kg, Rate before first change"/)
+        expect(html).toMatch(/aria-label="7 Oct 2026, ₹125\.00\/kg, Price changed"/)
+        // Flat at the old price, one step up, then flat to today.
+        expect(html).toMatch(/<path[^>]*d="M[\d.]+,[\d.]+ H[\d.]+ V[\d.]+ H[\d.]+"[^>]*stroke-linejoin/)
+    })
+
     it('shows an entry made today as a point, not a line running to the edge of the chart', () => {
         const trend = buildRateTrend([rows[2]], '2026-07-01')!
         const html = renderToStaticMarkup(<RateTrendChart trend={trend} unit="per_kg" yarnName="Cotton" />)

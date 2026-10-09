@@ -19,7 +19,8 @@ export type RateTrendRow = {
     source: string | null
 }
 
-export type RateTrendPointKind = 'recorded' | 'changed' | 'reviewed'
+/** `opening` is not a history row: it is the price before the first logged change. */
+export type RateTrendPointKind = 'recorded' | 'changed' | 'reviewed' | 'opening'
 
 export type RateTrendPoint = {
     id: string
@@ -58,6 +59,12 @@ function parseDay(value: string) {
  * Turns the Rate Book history rows into a series that fits its own history:
  * the axis runs from the first entry to today (or to a later, future-dated
  * entry), so three months of history fills the chart as fully as a year does.
+ *
+ * A yarn discovered from a Saved Quality is created with no history row, so its
+ * first edit is the only row, a `changed` entry whose `previous_value` is the
+ * price it started at. That start is added as an `opening` point on the same
+ * day (the date it was set is not recorded); without it the chart shows one
+ * flat price and no change, while the rate list shows the rise.
  */
 export function buildRateTrend(rows: RateTrendRow[], today: string): RateTrend | null {
     const ordered = rows
@@ -68,16 +75,26 @@ export function buildRateTrend(rows: RateTrendRow[], today: string): RateTrend |
             || a.id.localeCompare(b.id))
     if (ordered.length === 0) return null
 
-    const points: RateTrendPoint[] = ordered.map((row, index) => {
-        const value = Number(row.value)
-        const previous = index > 0 ? Number(ordered[index - 1].value) : null
+    const firstRow = ordered[0]
+    const startedAt = firstRow.event_type === 'changed' && firstRow.previous_value != null ? Number(firstRow.previous_value) : null
+    const series: Array<{ row: RateTrendRow; kind: RateTrendPointKind; value: number }> = ordered.map(row => ({
+        row,
+        kind: row.event_type as RateTrendPointKind,
+        value: Number(row.value),
+    }))
+    if (startedAt !== null && Number.isFinite(startedAt) && startedAt !== series[0].value) {
+        series.unshift({ row: { ...firstRow, id: `${firstRow.id}:opening`, source: null }, kind: 'opening', value: startedAt })
+    }
+
+    const points: RateTrendPoint[] = series.map(({ row, kind, value }, index) => {
+        const previous = index > 0 ? series[index - 1].value : null
         const delta = previous === null ? null : value - previous
         return {
             id: row.id,
             time: parseDay(row.effective_date),
             date: row.effective_date.slice(0, 10),
             value,
-            kind: row.event_type as RateTrendPointKind,
+            kind,
             source: row.source,
             delta,
             deltaPercent: delta === null || !previous ? null : (delta * 100) / previous,
