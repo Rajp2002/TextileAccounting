@@ -51,6 +51,7 @@ export default function MachinesRegister({
   useLocalizedPageTitle(`${tx('Machines')} | Weavly`)
 
   const returnTo = safeBaseReturnPath(params.get('returnTo'))
+  const existingNames = useMemo(() => machines.map(machine => machine.name), [machines])
 
   // Initialize search & status filter from query parameters if present, defaulting to 'all'
   const initialSearch = params.get('search') ?? ''
@@ -118,6 +119,7 @@ export default function MachinesRegister({
       today={today}
       initialOpen={params.get('add') === 'machine'}
       returnTo={returnTo}
+      existingNames={existingNames}
     >
       {({ add, edit }) => (
         <div inert={tourStep !== null} className="machines-workspace-shell w-full space-y-5 pb-10 sm:space-y-6">

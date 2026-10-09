@@ -66,6 +66,7 @@ export default function WorkersRegister({
   const labels = workersTourControlLabels(t)
   useLocalizedPageTitle(`${tx('Workers')} | Weavly`)
 
+  const existingNames = useMemo(() => workers.map(worker => worker.name), [workers])
   const focus = params.get('worker')
   const returnTo = safeBaseReturnPath(params.get('returnTo'))
 
@@ -206,6 +207,7 @@ export default function WorkersRegister({
       today={today}
       initialOpen={params.get('add') === 'worker'}
       returnTo={returnTo}
+      existingNames={existingNames}
     >
       {({ add, edit }) => (
         <div className="workers-workspace-shell w-full space-y-5 pb-10 sm:space-y-6">

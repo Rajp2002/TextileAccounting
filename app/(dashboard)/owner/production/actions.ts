@@ -9,6 +9,10 @@ import { hasCapability } from '@/lib/subscription-access'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { DateSchema, UuidSchema, safeParse } from '@/lib/schemas'
 import { buildDeductionDescription } from '@/lib/base-bulk-adjustment'
+import {
+    BASE_MACHINE_TYPE_OPTIONS, BULK_NAME_LIMIT, BULK_ROLE_LIMIT, MAX_BULK_MACHINES, MAX_BULK_WORKERS, MAX_MONTHLY_SALARY,
+    findBulkNameIssues, isValidMonthlySalary, normalizeBulkName,
+} from '@/lib/base-bulk-register'
 import { getSuratTodayString } from '@/lib/time'
 import {
     validateCycleRule,
@@ -46,6 +50,28 @@ const BaseWorkerSchema = z.object({
     name: z.string().trim().min(1, 'Worker name is required').max(120, 'Worker name is too long'),
     shiftAvailability: z.enum(['day', 'night', 'both']),
     isActive: z.boolean().default(true),
+})
+
+const BulkNameSchema = z.string().trim().min(1, 'Enter a name.').max(BULK_NAME_LIMIT, 'Name is too long')
+
+const BaseBulkWorkersSchema = z.object({
+    pieceRateNames: z.array(BulkNameSchema).max(MAX_BULK_WORKERS),
+    fixedStaff: z.array(z.object({
+        name: BulkNameSchema,
+        role: z.string().trim().max(BULK_ROLE_LIMIT, 'Role is too long').default(''),
+        monthlySalary: z.number().finite().max(MAX_MONTHLY_SALARY),
+    })).max(MAX_BULK_WORKERS),
+    startDate: DateSchema.optional().or(z.literal('')),
+}).superRefine((input, context) => {
+    const total = input.pieceRateNames.length + input.fixedStaff.length
+    if (total === 0) context.addIssue({ code: 'custom', path: ['pieceRateNames'], message: 'Add at least one worker.' })
+    if (total > MAX_BULK_WORKERS) context.addIssue({ code: 'custom', path: ['pieceRateNames'], message: `Add up to ${MAX_BULK_WORKERS} workers at a time.` })
+    if (input.fixedStaff.some((row) => !isValidMonthlySalary(row.monthlySalary))) {
+        context.addIssue({ code: 'custom', path: ['fixedStaff'], message: 'Enter a positive monthly salary for every fixed rate staff member.' })
+    }
+    if (input.fixedStaff.length > 0 && !input.startDate) {
+        context.addIssue({ code: 'custom', path: ['startDate'], message: 'Enter a joining date for the fixed rate staff.' })
+    }
 })
 
 const UpdateWorkerSchema = BaseWorkerSchema.extend({
@@ -154,6 +180,17 @@ const BaseMachineSchema = z.object({
     machineType: BaseMachineTypeSchema,
     customLabel: z.string().trim().max(80, 'Custom label is too long').optional().or(z.literal('')),
     isActive: z.boolean().default(true),
+})
+
+const BaseBulkMachinesSchema = z.object({
+    sections: z.array(z.object({
+        machineType: BaseMachineTypeSchema,
+        names: z.array(BulkNameSchema).max(MAX_BULK_MACHINES),
+    })).min(1, 'Add at least one machine.').max(BASE_MACHINE_TYPE_OPTIONS.length * 2),
+}).superRefine((input, context) => {
+    const total = input.sections.reduce((count, section) => count + section.names.length, 0)
+    if (total === 0) context.addIssue({ code: 'custom', path: ['sections'], message: 'Add at least one machine.' })
+    if (total > MAX_BULK_MACHINES) context.addIssue({ code: 'custom', path: ['sections'], message: `Add up to ${MAX_BULK_MACHINES} machines at a time.` })
 })
 
 const UpdateMachineSchema = BaseMachineSchema.extend({
@@ -301,6 +338,53 @@ export async function createBaseProductionMachine(input: {
     }
 
     return { error: 'Machine numbering is busy. Please try again.' }
+}
+
+/**
+ * Creates machines of one or more types in one insert. Names are unique across the whole
+ * factory, whatever the type, so a repeated or existing name rejects the batch.
+ */
+export async function createBaseProductionMachinesBulk(input: {
+    sections: { machineType: 'jacquard' | 'power_loom' | 'rapier' | 'water_jet' | 'air_jet' | 'circular' | 'other'; names: string[] }[]
+}) {
+    const { user, profile } = await requireBaseProductionOwner()
+    const parsed = safeParse(BaseBulkMachinesSchema, input)
+    if ('error' in parsed) return parsed
+
+    const rows = parsed.data.sections.flatMap((section) => section.names.map((name) => ({ name: normalizeBulkName(name), machineType: section.machineType })))
+    const names = rows.map((row) => row.name)
+
+    const supabase = await createServerClient()
+    const { data: existingMachines, error: machinesError } = await supabase
+        .from('base_production_machines')
+        .select('name')
+        .eq('org_id', profile.org_id)
+    if (machinesError) return databaseError(machinesError, 'Machines could not be checked. Please try again.')
+
+    const issues = findBulkNameIssues(names, (existingMachines ?? []).map((machine) => String(machine.name)))
+    const problem = issues.findIndex(Boolean)
+    if (problem !== -1) {
+        return { error: issues[problem] === 'exists' ? `${names[problem]} is already on your machines list.` : `${names[problem]} appears more than once.` }
+    }
+
+    const { error } = await supabase
+        .from('base_production_machines')
+        .insert(rows.map((row) => ({
+            org_id: profile.org_id,
+            name: row.name,
+            machine_type: row.machineType,
+            custom_label: null,
+            is_active: true,
+            created_by: user.id,
+        })))
+
+    if (error?.code === '23505') return { error: 'Some of these machines were added at the same time. Reload and try again.' }
+    if (error) return databaseError(error, 'Machines could not be added. Please try again.')
+
+    revalidatePath('/owner/production')
+    revalidatePath('/owner/payroll')
+    revalidatePath('/owner/operations')
+    return { success: true, added: names.length }
 }
 
 export async function updateBaseProductionMachine(input: {
@@ -759,6 +843,73 @@ export async function createBaseProductionWorker(input: BaseWorkerCompensationIn
     revalidatePath('/owner/settings')
     revalidatePath('/owner/estimator')
     return { success: true }
+}
+
+/**
+ * Creates piece rate workers and fixed rate staff in one insert, so the batch lands whole
+ * or not at all. A name that is already on the register, or repeated, rejects the batch.
+ */
+export async function createBaseProductionWorkersBulk(input: {
+    pieceRateNames: string[]
+    fixedStaff: { name: string; role?: string; monthlySalary: number }[]
+    startDate?: string
+}) {
+    const { user, profile } = await requireBaseProductionOwner()
+    const parsed = safeParse(BaseBulkWorkersSchema, input)
+    if ('error' in parsed) return parsed
+
+    const pieceRows = parsed.data.pieceRateNames.map((name) => ({ name: normalizeBulkName(name) }))
+    const staffRows = parsed.data.fixedStaff.map((row) => ({ ...row, name: normalizeBulkName(row.name) }))
+    const names = [...pieceRows, ...staffRows].map((row) => row.name)
+
+    const supabase = await createServerClient()
+    const { data: existingWorkers, error: existingError } = await supabase
+        .from('base_production_workers')
+        .select('name')
+        .eq('org_id', profile.org_id)
+    if (existingError) return databaseError(existingError, 'Workers could not be checked. Please try again.')
+
+    const issues = findBulkNameIssues(names, (existingWorkers ?? []).map((worker) => String(worker.name)))
+    const problem = issues.findIndex(Boolean)
+    if (problem !== -1) {
+        return { error: issues[problem] === 'exists' ? `${names[problem]} is already on your workers list.` : `${names[problem]} appears more than once.` }
+    }
+
+    const common = { org_id: profile.org_id, rate_per_meter: 0, shift_availability: 'both', is_active: true, created_by: user.id }
+    const { error } = await supabase
+        .from('base_production_workers')
+        .insert([
+            ...pieceRows.map((row) => ({
+                ...common,
+                name: row.name,
+                pay_type: 'piece_rate',
+                operator_eligible: true,
+                role: '',
+                monthly_salary: 0,
+                start_date: null,
+                salary_effective_from: null,
+            })),
+            ...staffRows.map((row) => ({
+                ...common,
+                name: row.name,
+                pay_type: 'fixed_monthly',
+                operator_eligible: false,
+                role: row.role,
+                monthly_salary: row.monthlySalary,
+                start_date: parsed.data.startDate,
+                salary_effective_from: parsed.data.startDate,
+            })),
+        ])
+
+    if (error?.code === '23505') return { error: 'Some of these workers were added at the same time. Reload and try again.' }
+    if (error) return databaseError(error, 'Workers could not be added. Please try again.')
+
+    revalidatePath('/owner/production')
+    revalidatePath('/owner/payroll')
+    revalidatePath('/owner/operations')
+    revalidatePath('/owner/settings')
+    revalidatePath('/owner/estimator')
+    return { success: true, added: names.length }
 }
 
 export async function updateBaseProductionWorker(input: BaseWorkerCompensationInput & {
