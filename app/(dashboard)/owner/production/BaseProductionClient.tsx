@@ -15,11 +15,9 @@ import {
     ArrowLeft,
     CheckCircle2,
     Clock3,
-    Factory,
     History,
     ChevronLeft,
     ChevronRight,
-    Layers,
     Loader2,
     Minus,
     Plus,
@@ -27,7 +25,6 @@ import {
     Settings2,
     Users,
     WalletCards,
-    Wrench,
 } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
@@ -85,6 +82,7 @@ import {
 import BaseActiveQualities from './BaseActiveQualities'
 import BaseAssignmentWorkspace from './BaseAssignmentWorkspace'
 import BaseProductionLoomChart from './BaseProductionLoomChart'
+import BaseProductionTodayBand from './BaseProductionTodayBand'
 import BaseDailyProductionSheet from './BaseDailyProductionSheet'
 import BasePayrollReadinessPanel from './BasePayrollReadinessPanel'
 import BaseWorkerIncentives from './BaseWorkerIncentives'
@@ -366,7 +364,6 @@ export default function BaseProductionClient({
     }, [initialData.machineJobContexts, jobById, initialData.today])
     const runningMachineIds = useMemo(() => new Set(runningJobIdByMachineId.keys()), [runningJobIdByMachineId])
     const runningMachinesCount = activeMachines.filter(m => runningMachineIds.has(m.id)).length
-    const availableMachinesCount = Math.max(0, activeMachines.length - runningMachinesCount)
     // Today's output comes from the daily sheets this page already loads, attributed the way job progress is.
     const todayProduction = useMemo(() => calculateBaseProductionDay({
         date: initialData.today,
@@ -541,7 +538,7 @@ export default function BaseProductionClient({
     }
 
     return (
-        <div className={`${isDailySheetView ? 'space-y-4' : 'space-y-5'} ${view === 'payroll' ? 'payroll-workspace-shell pb-10' : 'pb-8'} ${view === 'production' && !isDailySheetView ? 'production-overview-workspace' : ''} ${view === 'operations' ? 'configuration-page-frame' : ''}`}>
+        <div className={`${isDailySheetView ? 'space-y-4' : view === 'production' ? 'space-y-6' : 'space-y-5'} ${view === 'payroll' ? 'payroll-workspace-shell pb-10' : 'pb-8'} ${view === 'production' && !isDailySheetView ? 'production-overview-workspace' : ''} ${view === 'operations' ? 'configuration-page-frame' : ''}`}>
             <RouteMilestones route={view === 'payroll' ? '/owner/payroll' : view === 'operations' ? '/owner/assignments' : isDailySheetView ? '/owner/production/daily-sheet' : '/owner/production'} shellVisible primaryUsable />
             <TourSampleBanner />
             {navigation.returnTo && (
@@ -625,46 +622,14 @@ export default function BaseProductionClient({
             )}
 
             {view === 'production' && !isDailySheetView && (
-                <Card data-production-tour="overview" className="overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs">
-                    <div className="grid grid-cols-2 divide-y sm:grid-cols-4 sm:divide-y-0 sm:divide-x divide-hairline">
-                        <div className="p-4 sm:p-5">
-                            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                                <Layers className="h-4 w-4 text-muted-foreground" />
-                                <span>Active Qualities</span>
-                            </div>
-                            <p className="text-xl sm:text-2xl font-black tracking-tight text-ink">{activeJobs.length}</p>
-                            <p className="mt-1 text-xs text-muted-foreground">In active production</p>
-                        </div>
-                        <div className="p-4 sm:p-5">
-                            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                                <Factory className="h-4 w-4 text-[var(--wv-moss-700)]" />
-                                <span>Machines Running</span>
-                            </div>
-                            <p className="text-xl sm:text-2xl font-black tracking-tight text-ink">
-                                {runningMachinesCount} <span className="text-sm font-semibold text-muted-foreground">/ {activeMachines.length}</span>
-                            </p>
-                            <p className="mt-1 text-xs text-muted-foreground">
-                                {activeMachines.length > 0 ? Math.round((runningMachinesCount / activeMachines.length) * 100) : 0}% capacity
-                            </p>
-                        </div>
-                        <div className="p-4 sm:p-5">
-                            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                                <Users className="h-4 w-4 text-muted-foreground" />
-                                <span>Workers Assigned</span>
-                            </div>
-                            <p className="text-xl sm:text-2xl font-black tracking-tight text-ink">{assignedWorkerIds.size}</p>
-                            <p className="mt-1 text-xs text-muted-foreground">Operating looms</p>
-                        </div>
-                        <div className="p-4 sm:p-5">
-                            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                                <Wrench className="h-4 w-4 text-muted-foreground" />
-                                <span>Looms Available</span>
-                            </div>
-                            <p className="text-xl sm:text-2xl font-black tracking-tight text-ink">{availableMachinesCount}</p>
-                            <p className="mt-1 text-xs text-muted-foreground">Ready for quality</p>
-                        </div>
-                    </div>
-                </Card>
+                <BaseProductionTodayBand
+                    today={todayProduction}
+                    comparison={yesterdayComparison}
+                    otherQualityMeters={retiredQualityMeters}
+                    runningLooms={runningMachinesCount}
+                    activeLooms={activeMachines.length}
+                    workersOnLooms={assignedWorkerIds.size}
+                />
             )}
 
             {view === 'payroll' && activeTab !== 'history' && activePeriodSummary && (
@@ -735,7 +700,7 @@ export default function BaseProductionClient({
 
             {view === 'operations' && <BaseAssignmentWorkspace key={`${initialData.orgId}:${navigation.worker ?? "all"}:${navigation.machine ?? "all"}:${navigation.shift ?? "day"}`} initialData={initialData} focusWorkerId={searchParams.get("worker") ?? undefined} focusMachineId={searchParams.get("machine") ?? undefined} initialShift={navigation.shift} tourMetadata={tourMetadata} />}
 
-            {(view === 'production' || (view === 'payroll' && activeTab !== 'history')) && <div className="space-y-4">
+            {(view === 'production' || (view === 'payroll' && activeTab !== 'history')) && <div className={view === 'production' && !isDailySheetView ? 'space-y-8 pt-2' : 'space-y-4'}>
                 {view === 'production' && activeTab === 'jobs' && (
                     <BaseActiveQualities
                         jobs={initialData.jobs}
@@ -755,8 +720,6 @@ export default function BaseProductionClient({
                     <BaseProductionLoomChart
                         rows={loomOutputRows}
                         today={todayProduction}
-                        comparison={yesterdayComparison}
-                        otherQualityMeters={retiredQualityMeters}
                         dailySheetHref="/owner/production/daily-sheet"
                     />
                 )}

@@ -11,13 +11,15 @@ const read = (relPath: string) => readFileSync(join(process.cwd(), relPath), 'ut
 const clientPath = 'app/(dashboard)/owner/production/BaseProductionClient.tsx'
 const qualitiesPath = 'app/(dashboard)/owner/production/BaseActiveQualities.tsx'
 const chartPath = 'app/(dashboard)/owner/production/BaseProductionLoomChart.tsx'
+const bandPath = 'app/(dashboard)/owner/production/BaseProductionTodayBand.tsx'
 
 const TODAY_KEYS = [
     'todayProduction',
     'notEnteredYet',
-    'shiftsSavedBoth',
-    'shiftsSavedDay',
-    'shiftsSavedNight',
+    'dayShiftSaved',
+    'dayShiftPending',
+    'nightShiftSaved',
+    'nightShiftPending',
     'recorded',
     'vsYesterday',
     'yesterdayTotal',
@@ -33,6 +35,23 @@ const TODAY_KEYS = [
     'rankedByToday',
     'rankedByYesterday',
     'noLoomOutput',
+    'loomsRunning',
+    'noActiveLooms',
+    'noIdleLooms',
+    'idleLooms',
+    'workersOnLooms',
+    'workersOnLoomsNote',
+    'activeQualities',
+    'activeQualitiesHint',
+    'noActiveQualities',
+    'noActiveQualitiesHint',
+    'qualityColumn',
+    'weaverWage',
+    'loomsColumn',
+    'activeSince',
+    'newerCostingAvailable',
+    'loomsRunningCount',
+    'noLoomsAssigned',
 ] as const
 
 const PLACEHOLDERS: Record<string, string> = {
@@ -40,6 +59,10 @@ const PLACEHOLDERS: Record<string, string> = {
     yesterdayTotal: '{meters}',
     otherQualities: '{meters}',
     changeVsYday: '{change}',
+    idleLooms: '{count}',
+    activeSince: '{date}',
+    newerCostingAvailable: '{version}',
+    loomsRunningCount: '{count}',
 }
 
 describe('Production overview: today analytics', () => {
@@ -55,19 +78,23 @@ describe('Production overview: today analytics', () => {
         expect(client).not.toMatch(/\.from\('base_(daily_)?production/)
     })
 
-    it('keeps the stats card to its four tiles and puts the loom chart under Active Qualities', () => {
+    it('leads with the today band, then Active Qualities, then the loom chart', () => {
         const client = read(clientPath)
-        const card = client.slice(client.indexOf('data-production-tour="overview"'))
-        const tilesOnly = card.slice(0, card.indexOf('</Card>'))
+        const band = read(bandPath)
 
-        // The overview card (and its tour anchor) is untouched by the chart.
-        expect(tilesOnly).not.toContain('production.todayProduction')
-        expect(tilesOnly).toContain('Active Qualities')
+        // Today's total and the tour's overview anchor live in the band at the top of the page.
+        expect(band).toContain('data-production-tour="overview"')
+        expect(band).toContain("t('production.todayProduction')")
+        expect(band).toContain("t('production.loomsRunning')")
+        expect(band).toContain("t('production.workersOnLooms')")
 
+        expect(client).toContain("import BaseProductionTodayBand from './BaseProductionTodayBand'")
         expect(client).toContain("import BaseProductionLoomChart from './BaseProductionLoomChart'")
+        const todayBand = client.indexOf('<BaseProductionTodayBand')
         const qualities = client.indexOf('<BaseActiveQualities')
         const chart = client.indexOf('<BaseProductionLoomChart')
-        expect(qualities).toBeGreaterThan(-1)
+        expect(todayBand).toBeGreaterThan(-1)
+        expect(qualities).toBeGreaterThan(todayBand)
         expect(chart).toBeGreaterThan(qualities)
     })
 
@@ -91,11 +118,12 @@ describe('Production overview: today analytics', () => {
 
     it('never shows "not entered" as zero and offers the way to enter it', () => {
         const chart = read(chartPath)
+        const band = read(bandPath)
 
-        expect(chart).toContain("t('production.notEnteredYet')")
+        expect(band).toContain("t('production.notEnteredYet')")
+        expect(band).toContain("t('production.vsYesterday'")
         expect(chart).toContain("t('production.barsAppearWhenSaved')")
         expect(chart).toContain("t('production.openDailySheet')")
-        expect(chart).toContain("t('production.vsYesterday'")
         expect(chart).toContain("t('production.noLoomOutput')")
     })
 
@@ -116,7 +144,7 @@ describe('Production overview: today analytics', () => {
         expect(qualities).toContain('todayMetersByJobId?: ReadonlyMap<string, number>')
         expect(qualities).toContain('todayEntered?: boolean')
         expect(qualities).toContain("t('production.today')")
-        expect(qualities).toContain('todayMetersByJobId.get(job.id)')
+        expect(qualities).toContain('todayMetersByJobId?.get(job.id)')
     })
 
     it.each([['en', en], ['hi', hi], ['gu', gu]] as const)('ships every new string in %s', (_language, locale) => {
