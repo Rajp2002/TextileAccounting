@@ -38,6 +38,7 @@ import {
 import type { StockQuality } from '@/lib/quality-stock'
 import { getChallan, listChallans, mutateChallan } from './challan-actions'
 import { businessDate, challanDueStatus } from '@/lib/challan-payment-terms'
+import { isSameChallanDraft } from '@/lib/challan-draft-entry'
 import ChallanDraftEditor from './ChallanDraftEditor'
 import DispatchDetailDialog from './DispatchDetailDialog'
 import { deliveryBadgeVariant, formatDocumentDate, formatMeters, paymentBadgeVariant } from '@/lib/dispatch-detail'
@@ -179,11 +180,13 @@ export default function ChallansClient({
         setError('')
         void view(d.id)
     }
+    /** Resolves to the saved challan's id, or null when nothing was saved. `onSaved` runs the moment the server confirms, before the lists reload. */
     async function save(
         action: ChallanMutation['action'],
         payload: Record<string, unknown>,
-    ) {
-        if (lock.current) return
+        onSaved?: (id: string) => void,
+    ): Promise<string | null> {
+        if (lock.current) return null
         lock.current = true
         setBusy(true)
         setError('')
@@ -200,20 +203,43 @@ export default function ChallansClient({
             if ('error' in result) {
                 setError(result.error!)
                 if (!result.uncertain) remember(null)
-                return
+                return null
             }
             remember(null)
+            onSaved?.(result.id)
             setDraft(null)
             setOperation(null)
             if (!tourSample) reportPwaWorkflowSuccess('dispatch')
             await view(result.id)
             await load()
+            return result.id
         } catch {
             setError(tx('retry'))
+            return null
         } finally {
             lock.current = false
             setBusy(false)
         }
+    }
+    /**
+     * Prints the draft. A challan prints with its number, which saving assigns,
+     * so the draft is saved first, unless it is a saved draft left unchanged.
+     * The tab opens inside the click, where popup blockers allow it, and goes
+     * to the print page once the challan exists.
+     */
+    async function savePrint(value: ChallanDraft) {
+        if (tourSample || lock.current || pending) return
+        const tab = window.open('', '_blank')
+        if (tab) tab.opener = null
+        const openPrint = (id: string) => {
+            if (tab) tab.location.href = `/owner/dispatches/${id}/print`
+            else setError(tx('printBlocked'))
+        }
+        if (selected && isSameChallanDraft(value, selected)) {
+            openPrint(selected.id)
+            return
+        }
+        if (!(await save('save', value, openPrint))) tab?.close()
     }
     function start(action: ChallanMutation['action']) {
         setOperation(action)
@@ -447,6 +473,7 @@ export default function ChallansClient({
                             draft={draft}
                             onChange={setDraft}
                             onSave={(value) => save('save', value)}
+                            onSavePrint={savePrint}
                             qualities={qualities}
                             number={selected?.number}
                             disabled={busy || !!pending}

@@ -182,6 +182,9 @@ export const hi = {
         overdueDays: "{days} दिन अतिदेय",
         previousTerms: "पिछली शर्तें",
         updatedTerms: "नई शर्तें",
+        saveAndPrint: "सहेजें और प्रिंट करें",
+        printNeeds: "प्रिंट करने के लिए भरें: {items}",
+        printBlocked: "सहेजा गया। आपके ब्राउज़र ने प्रिंट टैब रोक दिया। डिस्पैच विवरण में देखें / प्रिंट / PDF सहेजें का उपयोग करें।",
 
         fabricAndRate: "कपड़ा और बिक्री दर",
         senderAndDelivery: "भेजने वाला, ग्राहक और डिलीवरी",
