@@ -182,6 +182,9 @@ export const en = {
         overdueDays: "Overdue by {days} days",
         previousTerms: "Previous terms",
         updatedTerms: "Updated terms",
+        saveAndPrint: "Save & print",
+        printNeeds: "To print, complete: {items}",
+        printBlocked: "Saved. Your browser blocked the print tab. Use Preview / Print / Save PDF in the dispatch details.",
 
         fabricAndRate: "Fabric & selling rate",
         senderAndDelivery: "Sender, customer & delivery",

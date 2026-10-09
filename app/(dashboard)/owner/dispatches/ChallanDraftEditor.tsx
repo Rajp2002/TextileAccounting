@@ -1,7 +1,7 @@
 'use client'
 
 import { useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react'
-import { Plus, Trash2, Eye } from 'lucide-react'
+import { Plus, Trash2, Eye, Printer } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { SwitchField } from '@/components/ui/switch-field'
@@ -11,21 +11,16 @@ import {
     handleEnterKeyNavigation,
 } from '@/lib/form-navigation'
 import {
+    REQUIRED_CHALLAN_DOCUMENT_FIELDS,
     challanDraftProgress,
+    challanPrintReadiness,
     isEmptyChallanLine,
     prepareChallanDraft,
 } from '@/lib/challan-draft-entry'
 import { type ChallanDraft } from '@/lib/delivery-challans'
 import type { StockQuality } from '@/lib/quality-stock'
 
-const required = [
-    'date',
-    'sender_name',
-    'sender_address',
-    'customer_name',
-    'customer_address',
-    'delivery_address',
-]
+const required: readonly string[] = REQUIRED_CHALLAN_DOCUMENT_FIELDS
 const optional = [
     'customer_phone',
     'sender_gstin',
@@ -47,6 +42,7 @@ export default function ChallanDraftEditor({
     draft,
     onChange,
     onSave,
+    onSavePrint,
     qualities,
     number,
     disabled,
@@ -55,6 +51,8 @@ export default function ChallanDraftEditor({
     draft: ChallanDraft
     onChange: (draft: ChallanDraft) => void
     onSave: (draft: ChallanDraft) => void
+    /** Saves the draft, which assigns its number, then prints it. */
+    onSavePrint: (draft: ChallanDraft) => void
     qualities: StockQuality[]
     number?: string
     disabled: boolean
@@ -67,6 +65,7 @@ export default function ChallanDraftEditor({
     const focusRow = useRef<number | null>(null)
     const saveButton = useRef<HTMLButtonElement>(null)
     const progress = challanDraftProgress(draft)
+    const readiness = challanPrintReadiness(draft)
     const quality = qualities.find((q) => q.id === draft.quality_id)
     const format = (n: number) =>
         n.toLocaleString(`${language}-IN`, { maximumFractionDigits: 2 })
@@ -636,6 +635,19 @@ export default function ChallanDraftEditor({
                         {tx('livePreview')}
                     </SwitchField>
                     <Button
+                        type="button"
+                        variant="outline"
+                        className="h-11 min-h-[44px] gap-1.5 rounded-xl border-hairline px-4 font-bold text-ink shadow-xs hover:bg-surface-soft"
+                        disabled={disabled || !readiness.ready}
+                        aria-describedby={
+                            readiness.ready ? undefined : 'challan-print-hint'
+                        }
+                        onClick={() => onSavePrint(prepareChallanDraft(draft))}
+                    >
+                        <Printer className="h-4 w-4" aria-hidden="true" />
+                        {tx('saveAndPrint')}
+                    </Button>
+                    <Button
                         ref={saveButton}
                         className={`${
                             showPreview ? 'hidden lg:inline-flex' : ''
@@ -646,6 +658,16 @@ export default function ChallanDraftEditor({
                         {tx('saveDraft')}
                     </Button>
                 </div>
+                {!readiness.ready && (
+                    <p
+                        id="challan-print-hint"
+                        className="w-full text-xs font-semibold text-muted-foreground"
+                    >
+                        {t('challan.printNeeds', {
+                            items: readiness.missing.map(tx).join(', '),
+                        })}
+                    </p>
+                )}
                 {error && (
                     <p role="alert" className="w-full text-xs font-semibold text-[var(--wv-madder-600)] bg-[var(--wv-madder-50)] p-3 rounded-xl border border-[var(--wv-madder-200)]">
                         {error}
