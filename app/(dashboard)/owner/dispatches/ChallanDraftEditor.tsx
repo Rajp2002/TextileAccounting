@@ -18,9 +18,16 @@ import {
     prepareChallanDraft,
 } from '@/lib/challan-draft-entry'
 import { type ChallanDraft } from '@/lib/delivery-challans'
+import {
+    WEAVLY_LOGO_DATA_URI,
+    WEAVLY_LOGO_HEIGHT,
+    WEAVLY_LOGO_WIDTH,
+} from '@/lib/estimator-export-logo'
 import type { StockQuality } from '@/lib/quality-stock'
 
 const required: readonly string[] = REQUIRED_CHALLAN_DOCUMENT_FIELDS
+const LOGO_WIDTH = 88
+const LOGO_HEIGHT = Math.round((LOGO_WIDTH * WEAVLY_LOGO_HEIGHT) / WEAVLY_LOGO_WIDTH)
 const optional = [
     'customer_phone',
     'sender_gstin',
@@ -45,6 +52,7 @@ export default function ChallanDraftEditor({
     onSavePrint,
     qualities,
     number,
+    businessName,
     disabled,
     error,
 }: {
@@ -55,6 +63,8 @@ export default function ChallanDraftEditor({
     onSavePrint: (draft: ChallanDraft) => void
     qualities: StockQuality[]
     number?: string
+    /** The factory's name from its account, shown on the document as on the printed copy. */
+    businessName?: string
     disabled: boolean
     error?: string
 }) {
@@ -475,18 +485,41 @@ export default function ChallanDraftEditor({
                         {tx('livePreview')}
                     </p>
                     <div className="space-y-4 rounded-2xl border border-hairline bg-surface p-5 sm:p-6 text-ink shadow-sm">
-                        <header className="flex flex-wrap justify-between gap-2 border-b border-hairline pb-3">
-                            <div>
-                                <h3 className="text-lg font-extrabold tracking-tight text-ink">
-                                    {tx('title')}
-                                </h3>
-                                <span className="inline-block mt-0.5 text-xs font-bold text-[var(--wv-ochre-800)] bg-[var(--wv-ochre-50)] px-2 py-0.5 rounded-md">
-                                    {tx('draft')}
-                                </span>
+                        <div className="flex h-1.5 overflow-hidden rounded-full" aria-hidden="true">
+                            <i className="block w-[88%] bg-ink" />
+                            <i className="block w-[12%] bg-saffron" />
+                        </div>
+                        <header className="flex flex-wrap items-center justify-between gap-3 border-b border-hairline pb-3">
+                            <div className="flex min-w-0 items-center">
+                                {/* Embedded data URI, as on the printed copy: it renders offline and identically. */}
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                    src={WEAVLY_LOGO_DATA_URI}
+                                    width={LOGO_WIDTH}
+                                    height={LOGO_HEIGHT}
+                                    alt="Weavly"
+                                    className="block flex-none"
+                                />
+                                <div className="ml-3.5 min-w-0 border-l border-hairline pl-3.5">
+                                    <p
+                                        data-i18n-skip="true"
+                                        className="break-words text-sm font-extrabold leading-tight text-ink"
+                                    >
+                                        {businessName?.trim() ||
+                                            draft.document.sender_name ||
+                                            '—'}
+                                    </p>
+                                    <h3 className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.14em] text-saffron-deep">
+                                        {tx('documentTitle')}
+                                    </h3>
+                                </div>
                             </div>
                             <div className="text-right text-xs font-medium text-body">
                                 <p className="font-mono font-bold text-ink">{number ?? tx('numberOnSave')}</p>
                                 <p>{draft.document.date}</p>
+                                <span className="mt-0.5 inline-block text-xs font-bold text-[var(--wv-ochre-800)] bg-[var(--wv-ochre-50)] px-2 py-0.5 rounded-md">
+                                    {tx('draft')}
+                                </span>
                             </div>
                         </header>
                         <div className="grid grid-cols-2 gap-4 text-sm">

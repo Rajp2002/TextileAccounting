@@ -61,9 +61,12 @@ const blank = (): ChallanDraft => ({
 export default function ChallansClient({
     initialData,
     qualities,
+    businessName,
 }: {
     initialData: Challan[]
     qualities: StockQuality[]
+    /** The factory's name from its account; the editor's preview falls back to the sender name without it. */
+    businessName?: string
 }) {
     const { t, language } = useTranslation()
     const tx = (s: string) => t(`challan.${s}`)
@@ -476,6 +479,7 @@ export default function ChallansClient({
                             onSavePrint={savePrint}
                             qualities={qualities}
                             number={selected?.number}
+                            businessName={businessName}
                             disabled={busy || !!pending}
                             error={error}
                         />
