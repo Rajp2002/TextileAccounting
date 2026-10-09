@@ -145,7 +145,9 @@ export function RateTrendChart({ trend, unit, yarnName }: { trend: RateTrend; un
     }
 
     const kindLabel = (point: RateTrendPoint, index: number) =>
-        index === 0 ? tx('First entry') : point.kind === 'reviewed' ? tx('Reviewed, price unchanged') : tx('Price changed')
+        point.kind === 'opening' ? tx('Rate before first change')
+            : index === 0 ? tx('First entry')
+                : point.kind === 'reviewed' ? tx('Reviewed, price unchanged') : tx('Price changed')
     const hasReviews = trend.points.some(point => point.kind === 'reviewed')
 
     const moveFocus = (event: KeyboardEvent, index: number) => {

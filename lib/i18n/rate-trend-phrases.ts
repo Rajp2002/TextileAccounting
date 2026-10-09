@@ -17,6 +17,7 @@ const PHRASES: Array<[string, string, string]> = [
   ['Price changes', 'भाव बदलाव', 'ભાવ ફેરફાર'],
   ['No change', 'कोई बदलाव नहीं', 'કોઈ ફેરફાર નથી'],
   ['First entry', 'पहली एंट्री', 'પહેલી એન્ટ્રી'],
+  ['Rate before first change', 'पहले बदलाव से पहले का रेट', 'પહેલા ફેરફાર પહેલાંનો રેટ'],
   ['Price changed', 'भाव बदला', 'ભાવ બદલાયો'],
   ['Reviewed, price unchanged', 'समीक्षा हुई, भाव वही', 'સમીક્ષા થઈ, ભાવ એ જ'],
   ['Full activity', 'पूरी गतिविधि', 'પૂરી પ્રવૃત્તિ'],

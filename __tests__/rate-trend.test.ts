@@ -7,6 +7,7 @@ import {
     timeFraction,
     type RateTrendRow,
 } from '../lib/rate-trend'
+import { getRatePriceDelta } from '../lib/cost-rates'
 
 const day = (date: string) => Date.parse(`${date}T00:00:00Z`)
 
@@ -108,6 +109,59 @@ describe('buildRateTrend', () => {
             row({ value: 308, effective_date: '2026-09-01', event_type: 'changed' }),
         ], '2026-10-07')!
         expect(trend.stats).toEqual({ first: 280, latest: 308, change: 28, changePercent: 10, priceChanges: 1 })
+    })
+
+    describe('a yarn whose starting price was never recorded', () => {
+        // Yarn rates discovered from a Saved Quality are created with no history row
+        // (discover_yarn_rate_atomic), so the first edit is the only row: a `changed`
+        // entry that carries the old price as previous_value.
+        const firstEditOnly = () => [
+            row({ id: 'edit', value: 125, previous_value: 118, event_type: 'changed', effective_date: '2026-10-07' }),
+        ]
+
+        it('opens the chart on the price before the first change, so the change is not lost', () => {
+            const trend = buildRateTrend(firstEditOnly(), '2026-10-09')!
+            expect(trend.points.map(point => [point.value, point.kind])).toEqual([[118, 'opening'], [125, 'changed']])
+            expect(trend.points[0].date).toBe('2026-10-07')
+            expect(trend.points[1].delta).toBe(7)
+            expect(trend.stats.first).toBe(118)
+            expect(trend.stats.change).toBe(7)
+            expect(trend.stats.changePercent).toBeCloseTo(5.932, 3)
+            expect(trend.stats.priceChanges).toBe(1)
+        })
+
+        it('reports the same rise the Rate Book list shows beside the rate', () => {
+            const trend = buildRateTrend(firstEditOnly(), '2026-10-09')!
+            const fromList = getRatePriceDelta(125, 118, 'per_kg')
+            const fromChart = getRatePriceDelta(trend.stats.latest, trend.stats.first, 'per_kg')
+            expect(fromChart.direction).toBe('increased')
+            expect(fromChart).toEqual(fromList)
+        })
+
+        it('keeps both points on the first change date, since the earlier date is not known', () => {
+            const trend = buildRateTrend(firstEditOnly(), '2026-10-09')!
+            expect(trend.points[0].time).toBe(trend.points[1].time)
+            expect(trend.startTime).toBe(day('2026-10-07'))
+            expect(trend.spanDays).toBe(2)
+        })
+
+        it('does not invent a start when the history already begins with a recorded price', () => {
+            const trend = buildRateTrend([
+                row({ id: 'first', value: 118, event_type: 'recorded', effective_date: '2026-09-01' }),
+                row({ id: 'edit', value: 125, previous_value: 118, event_type: 'changed', effective_date: '2026-10-07' }),
+            ], '2026-10-09')!
+            expect(trend.points.map(point => point.kind)).toEqual(['recorded', 'changed'])
+        })
+
+        it('does not invent a start for a review that left the price unchanged, or a change with no previous price', () => {
+            expect(buildRateTrend([row({ value: 125, previous_value: 125, event_type: 'reviewed', effective_date: '2026-10-07' })], '2026-10-09')!.points).toHaveLength(1)
+            expect(buildRateTrend([row({ value: 125, previous_value: null, event_type: 'changed', effective_date: '2026-10-07' })], '2026-10-09')!.points).toHaveLength(1)
+        })
+
+        it('reads a previous price that arrives as a numeric string', () => {
+            const trend = buildRateTrend([row({ value: 125, previous_value: '118.0000' as unknown as number, event_type: 'changed', effective_date: '2026-10-07' })], '2026-10-09')!
+            expect(trend.points[0].value).toBe(118)
+        })
     })
 
     it('reads numeric strings from the database as numbers', () => {
