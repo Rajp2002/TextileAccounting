@@ -160,6 +160,32 @@ async function ProductionFixture() {
     initialData.workers = [{ id: 'tour-fixture-worker', name: 'Sample worker', is_active: true, pay_type: 'per_meter', shift_availability: 'both', worker_rate_per_meter: 2 }]
     initialData.machineJobContexts = [{ id: 'tour-fixture-context', machine_id: 'tour-fixture-loom', job_id: 'tour-fixture-quality', active: true, effective_from: today, effective_to: null }]
   }
+  if (params.get('populated') === 'rich') {
+    const yesterday = '2026-09-26'
+    const jobs = [
+      { id: 'q-demo', quality_label: 'Demo - Signature Polyester', status: 'active', start_date: '2026-09-02', created_at: '2026-09-02', planned_cost_per_meter: 35.22, worker_rate_per_meter: 16, costing_id: 'c-demo-2', costing_group_id: 'g-demo', costing_version: 2 },
+      { id: 'q-d345', quality_label: 'D.345', status: 'active', start_date: '2026-08-19', created_at: '2026-08-19', planned_cost_per_meter: 33.15, worker_rate_per_meter: 8.25, costing_id: 'c-d345-1', costing_group_id: 'g-d345', costing_version: 1 },
+    ]
+    initialData.jobs = jobs
+    initialData.costings = [
+      { id: 'c-demo-2', costing_group_id: 'g-demo', version_number: 2, quality_label: 'Demo - Signature Polyester', worker_rate_per_meter: 16, production_cost_per_meter: 35.22 },
+      { id: 'c-d345-1', costing_group_id: 'g-d345', version_number: 1, quality_label: 'D.345', worker_rate_per_meter: 8.25, production_cost_per_meter: 33.15 },
+      { id: 'c-d345-2', costing_group_id: 'g-d345', version_number: 2, quality_label: 'D.345', worker_rate_per_meter: 8.5, production_cost_per_meter: 33.4 },
+    ]
+    const looms: [string, string, string, number, number][] = [
+      ['m01', '01', 'q-demo', 125, 128], ['m06', '06', 'q-demo', 126, 121], ['m03', '03', 'q-d345', 134, 123],
+      ['m05', '05', 'q-d345', 115, 107], ['mj1', 'jacquard 1', 'q-d345', 111, 105], ['m04', '04', 'q-d345', 79, 102],
+    ]
+    initialData.machines = looms.map(([id, label]) => ({ id, name: label, custom_label: null, machine_type: 'power_loom', is_active: true }))
+    initialData.machineJobContexts = looms.map(([id, , job]) => ({ id: `ctx-${id}`, machine_id: id, job_id: job, active: true, effective_from: '2026-09-01', effective_to: null }))
+    initialData.workers = ['Ramesh', 'Suresh', 'Mahesh', 'Dinesh'].map(name => ({ id: `w-${name}`, name, is_active: true, pay_type: 'per_meter', shift_availability: 'both', worker_rate_per_meter: 8 }))
+    initialData.assignments = initialData.workers.map((worker: any, index: number) => ({ id: `a-${index}`, worker_id: worker.id, machine_id: looms[index][0], shift: 'day', active: true, effective_from: '2026-09-01', effective_to: null }))
+    initialData.entries = looms.flatMap(([id, label, job, todayMeters, yesterdayMeters], index) => [
+      { id: `e-t-${id}`, production_date: today, shift: 'day', worker_id: initialData.workers[index % 4].id, job_id: job, machine_id: id, machine_label: label, meters: todayMeters, entry_status: 'recorded', allocation_mode: 'worker_total' },
+      { id: `e-y-${id}`, production_date: yesterday, shift: 'day', worker_id: initialData.workers[index % 4].id, job_id: job, machine_id: id, machine_label: label, meters: yesterdayMeters, entry_status: 'recorded', allocation_mode: 'worker_total' },
+    ])
+    initialData.dailyBatches = [{ id: 'b-t', production_date: today, shift: 'day' }, { id: 'b-y', production_date: yesterday, shift: 'day' }]
+  }
   return <Tour userId="u1" orgId="o1" userMetadata={{}}><ProductionLiveFixture Client={Client} initialData={initialData} /></Tour>
 }
 

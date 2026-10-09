@@ -65,14 +65,14 @@ describe('Active Qualities Production Simplification Flow', () => {
         expect(existsSync(join(process.cwd(), activeQualitiesPath))).toBe(true)
         const component = read(activeQualitiesPath)
 
-        expect(component).toContain('Active Qualities')
+        expect(component).toContain("t('production.activeQualities')")
         expect(component).toContain('Activate Quality')
         expect(component).toContain('Assign Looms')
         expect(component).toContain('Deactivate Quality')
         expect(component).toContain('activateSavedCostingForProduction')
         expect(component).toContain('bulkAssignMachinesToQuality')
         expect(component).toContain('This quality is currently running on')
-        expect(component).toContain('0 Looms assigned')
+        expect(component).toContain("t('production.noLoomsAssigned')")
     })
 
     it('puts a loom\'s quality in a dialog opened from its machine card in Machine Assignments, not on a Production board', () => {
@@ -97,14 +97,13 @@ describe('Active Qualities Production Simplification Flow', () => {
         expect(workspace.match(/renderMachineIdentity\(machine\)/g)).toHaveLength(2)
     })
 
-    it('embeds BaseActiveQualities in BaseProductionClient with 4 KPI summary cards', () => {
+    it('embeds BaseActiveQualities in BaseProductionClient under the today band', () => {
         const client = read(clientPath)
 
-        // KPI cards
-        expect(client).toContain('Active Qualities')
-        expect(client).toContain('Machines Running')
-        expect(client).toContain('Looms Available')
-        expect(client).toContain('Workers Assigned')
+        // Looms running and workers on looms sit beside today's metres in the band.
+        expect(client).toContain('<BaseProductionTodayBand')
+        expect(client).toContain('runningLooms={runningMachinesCount}')
+        expect(client).toContain('workersOnLooms={assignedWorkerIds.size}')
 
         // Separate route content and components
         expect(client).toContain('<BaseActiveQualities')

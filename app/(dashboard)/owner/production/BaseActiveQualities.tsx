@@ -9,7 +9,6 @@ import {
     AlertCircle,
     CheckCircle2,
     ExternalLink,
-    Factory,
     History,
     Layers,
     Loader2,
@@ -22,7 +21,6 @@ import {
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
 import {
     Dialog,
     DialogContent,
@@ -40,6 +38,8 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
+import { EmptyState } from '@/components/ui/page-header'
+import { compareMachineLabels } from '@/lib/base-machine-register'
 import { formatINR } from '@/lib/finance'
 import { formatBaseMeters } from '@/lib/base-production-analytics'
 import { useTourSample } from '@/lib/tours/sample-context'
@@ -154,6 +154,12 @@ export default function BaseActiveQualities({
         }
         return map
     }, [activeMachines, currentJobIdByMachine])
+
+    // Every metre today belongs to a quality, so the map's sum is the day's total.
+    const todayTotalMeters = useMemo(
+        () => [...(todayMetersByJobId?.values() ?? [])].reduce((total, meters) => total + meters, 0),
+        [todayMetersByJobId]
+    )
 
     // While the Production tour teaches a dialog, show the real one for the first running quality.
     const tourAssigningJob = tourStep === 'pd-looms' ? activeJobs[0] ?? null : null
@@ -408,76 +414,143 @@ export default function BaseActiveQualities({
     }
 
     return (
-        <section className="space-y-4" data-production-tour="qualities">
-            <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-                <div>
-                    <div className="flex items-center gap-2">
-                        <h2 className="text-lg font-bold text-ink">Active Qualities</h2>
-                        <Badge variant="secondary" className="rounded-full px-2.5 py-0.5 text-xs font-bold">
-                            {activeJobs.length} active
-                        </Badge>
-                    </div>
-                    <p className="text-xs sm:text-sm text-muted-foreground">
-                        Saved qualities currently activated for production across your looms.
-                    </p>
-                </div>
-
+        <section className="space-y-3" data-production-tour="qualities">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
+                <h2 className="text-lg font-semibold text-ink" data-i18n-skip="true">
+                    {t('production.activeQualities')}
+                    <span className="ml-2 font-medium tabular-nums text-muted-foreground">{activeJobs.length}</span>
+                </h2>
+                <p className="text-sm text-muted-foreground" data-i18n-skip="true">{t('production.activeQualitiesHint')}</p>
             </div>
 
-            {/* Empty state if no active qualities */}
             {activeJobs.length === 0 && (
-                <Card className="rounded-2xl border border-dashed border-hairline-strong bg-surface p-8 text-center shadow-xs">
-                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-surface-soft text-muted-foreground mb-3">
-                        <Layers className="h-6 w-6" />
-                    </div>
-                    <h3 className="text-base font-bold text-ink">No Active Qualities</h3>
-                    <p className="mt-1 text-xs text-muted-foreground max-w-sm mx-auto">
-                        Activate a quality from your Saved Costings shortlist to start assigning looms and tracking production.
-                    </p>
-                </Card>
+                <EmptyState
+                    icon={Layers}
+                    title={t('production.noActiveQualities')}
+                    description={t('production.noActiveQualitiesHint')}
+                    className="rounded-2xl"
+                    action={onOpenActivateModalChange && (
+                        <Button variant="outline" onClick={() => onOpenActivateModalChange(true)} className="min-h-[44px] rounded-lg md:min-h-0" data-i18n-skip="true">
+                            <Plus className="size-4" aria-hidden="true" />
+                            {t('production.activateQuality')}
+                        </Button>
+                    )}
+                />
             )}
 
-            {/* Active Qualities Cards Grid */}
             {activeJobs.length > 0 && (
-                <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] gap-4">
-                    {activeJobs.map((job) => {
-                        const assignedMachines = runningMachinesByJobId.get(job.id) ?? []
-                        const machineCount = assignedMachines.length
-                        const groupKey = job.costing_group_id || job.costing_id
-                        const latestVersion = latestVersionByGroup.get(groupKey) ?? (job.costing_version || 1)
-                        const hasNewerVersion = latestVersion > (job.costing_version || 1)
+                <div className="overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs lg:grid lg:grid-cols-[minmax(0,2.2fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,1.5fr)_minmax(0,1.4fr)_auto] lg:gap-x-6">
+                    <div aria-hidden="true" className="hidden h-10 items-center border-b border-hairline bg-surface-soft/40 px-6 text-xs font-medium text-muted-foreground lg:col-span-full lg:grid lg:grid-cols-subgrid" data-i18n-skip="true">
+                        <span>{t('production.qualityColumn')}</span>
+                        <span>{t('production.weaverWage')}</span>
+                        <span>{t('production.cost')}</span>
+                        <span>{t('production.loomsColumn')}</span>
+                        <span>{t('production.today')}</span>
+                        <span />
+                    </div>
+                    <ul className="divide-y divide-hairline lg:col-span-full lg:grid lg:grid-cols-subgrid">
+                        {activeJobs.map((job) => {
+                            const assignedMachines = runningMachinesByJobId.get(job.id) ?? []
+                            const machineCount = assignedMachines.length
+                            const loomLabels = assignedMachines
+                                .map((machine) => ({ machineLabel: machine.custom_label || machine.name, machineId: machine.id }))
+                                .sort(compareMachineLabels)
+                                .map((machine) => machine.machineLabel)
+                            const groupKey = job.costing_group_id || job.costing_id
+                            const latestVersion = latestVersionByGroup.get(groupKey) ?? (job.costing_version || 1)
+                            const hasNewerVersion = latestVersion > (job.costing_version || 1)
+                            const jobTodayMeters = todayMetersByJobId?.get(job.id) ?? 0
+                            const todayShare = todayEntered && todayTotalMeters > 0 ? Math.round((jobTodayMeters / todayTotalMeters) * 100) : null
 
-                        return (
-                            <Card
-                                key={job.id}
-                                className="group relative overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs transition-all hover:border-hairline-strong hover:shadow-sm"
-                            >
-                                <div className="p-4 sm:p-5">
-                                    <div className="flex items-start justify-between gap-2">
-                                        <div className="min-w-0 flex-1">
-                                            <div className="flex items-center gap-2 flex-wrap">
-                                                <h3 className="truncate text-base font-bold text-ink" title={job.quality_label}>
-                                                    {job.quality_label}
-                                                </h3>
-                                                <span className="inline-flex items-center rounded-md bg-surface-soft px-1.5 py-0.5 text-[11px] font-semibold text-muted-foreground">
-                                                    v{job.costing_version || 1}
-                                                </span>
-                                            </div>
-                                            <p className="mt-0.5 text-xs text-muted-foreground">
-                                                Activated {formatDateOnly(job.start_date || job.created_at)}
+                            return (
+                                <li
+                                    key={job.id}
+                                    className="grid grid-cols-2 items-center gap-x-4 gap-y-3 px-4 py-4 sm:px-6 lg:col-span-full lg:grid-cols-subgrid lg:gap-y-0"
+                                >
+                                    <div className="min-w-0">
+                                        <h3 className="break-words text-base font-semibold text-ink">{job.quality_label}</h3>
+                                        <p className="mt-0.5 text-xs text-muted-foreground tabular-nums" data-i18n-skip="true">
+                                            v{job.costing_version || 1} · {t('production.activeSince', { date: formatDateOnly(job.start_date || job.created_at) })}
+                                        </p>
+                                        {hasNewerVersion && (
+                                            <p className="mt-1 flex items-center gap-1 text-xs font-medium text-[var(--wv-ochre-800)]" data-i18n-skip="true">
+                                                <AlertCircle className="size-3.5 shrink-0" aria-hidden="true" />
+                                                {t('production.newerCostingAvailable', { version: latestVersion })}
                                             </p>
-                                        </div>
+                                        )}
+                                    </div>
+
+                                    <div className="min-w-0">
+                                        <p className="text-xs text-muted-foreground lg:sr-only" data-i18n-skip="true">{t('production.weaverWage')}</p>
+                                        <p className="text-sm text-body tabular-nums" data-i18n-skip="true">
+                                            {job.worker_rate_per_meter > 0
+                                                ? <><span className="font-semibold text-ink">{formatINR(job.worker_rate_per_meter)}</span>/m</>
+                                                : '—'}
+                                        </p>
+                                    </div>
+
+                                    <div className="min-w-0">
+                                        <p className="text-xs text-muted-foreground lg:sr-only" data-i18n-skip="true">{t('production.cost')}</p>
+                                        <p className="text-sm text-body tabular-nums" data-i18n-skip="true">
+                                            {job.planned_cost_per_meter > 0
+                                                ? <><span className="font-semibold text-ink">{formatINR(job.planned_cost_per_meter)}</span>/m</>
+                                                : '—'}
+                                        </p>
+                                    </div>
+
+                                    <div className="col-span-2 min-w-0 lg:col-span-1">
+                                        <p className="text-xs text-muted-foreground lg:sr-only" data-i18n-skip="true">{t('production.loomsColumn')}</p>
+                                        {machineCount > 0 ? (
+                                            <>
+                                                <p className="text-sm font-semibold text-ink" data-i18n-skip="true">{t('production.loomsRunningCount', { count: machineCount })}</p>
+                                                <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground" title={loomLabels.join(', ')}>
+                                                    {loomLabels.join(' · ')}
+                                                </p>
+                                            </>
+                                        ) : (
+                                            <p className="text-sm text-muted-foreground" data-i18n-skip="true">{t('production.noLoomsAssigned')}</p>
+                                        )}
+                                    </div>
+
+                                    <div className="col-start-2 row-start-1 text-right lg:col-start-auto lg:row-start-auto lg:text-left">
+                                        <p className="text-xs text-muted-foreground lg:sr-only" data-i18n-skip="true">{t('production.today')}</p>
+                                        {todayMetersByJobId && (
+                                            <div className="flex items-center justify-end gap-3 lg:justify-start">
+                                                <span className="text-base font-semibold tracking-tight text-ink tabular-nums">
+                                                    {todayEntered ? formatBaseMeters(jobTodayMeters) : '—'}
+                                                </span>
+                                                {todayShare !== null && (
+                                                    <>
+                                                        <span aria-hidden="true" className="hidden h-1.5 max-w-[7.5rem] flex-1 overflow-hidden rounded-full bg-surface-soft lg:block">
+                                                            <span className="ui-meter-fill block h-full rounded-full bg-ink" style={{ width: `${todayShare}%` }} />
+                                                        </span>
+                                                        <span className="text-xs text-muted-foreground tabular-nums">{todayShare}%</span>
+                                                    </>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="col-span-2 flex items-center gap-2 lg:col-span-1 lg:justify-end">
+                                        <Button
+                                            variant="outline"
+                                            onClick={() => openAssignMachines(job)}
+                                            className="min-h-[44px] flex-1 rounded-lg lg:min-h-0 lg:flex-none"
+                                        >
+                                            <Wrench className="size-4" aria-hidden="true" />
+                                            <span data-i18n-skip="true">{t('production.assignLooms')}</span>
+                                        </Button>
 
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
                                                 <Button
                                                     variant="ghost"
-                                                    size="icon-xs"
-                                                    className="h-8 w-8 text-muted-foreground hover:text-ink rounded-lg"
+                                                    size="icon"
+                                                    className="size-[44px] shrink-0 rounded-lg text-muted-foreground hover:text-ink lg:size-10"
                                                     data-i18n-skip="true"
                                                     aria-label={t('production.qualityActions')}
                                                 >
-                                                    <MoreVertical className="h-4 w-4" />
+                                                    <MoreVertical className="size-4" />
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-lg">
@@ -502,64 +575,10 @@ export default function BaseActiveQualities({
                                             </DropdownMenuContent>
                                         </DropdownMenu>
                                     </div>
-
-                                    {/* Newer costing version badge if available */}
-                                    {hasNewerVersion && (
-                                        <div className="mt-2.5 flex items-center gap-1.5 rounded-lg border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)]/80 px-2.5 py-1 text-[11px] font-semibold text-[var(--wv-ochre-900)]">
-                                            <AlertCircle className="h-3.5 w-3.5 shrink-0 text-[var(--wv-ochre-700)]" />
-                                            <span>Newer costing v{latestVersion} available</span>
-                                        </div>
-                                    )}
-
-                                    {/* Operational specs */}
-                                    <div className="mt-3.5 flex flex-wrap gap-2 text-xs">
-                                        <div className="rounded-lg bg-surface-soft/60 px-2.5 py-1 text-body">
-                                            Weaver wage: <span className="font-bold text-ink">{job.worker_rate_per_meter > 0 ? formatINR(job.worker_rate_per_meter) : '—'}/m</span>
-                                        </div>
-                                        {job.planned_cost_per_meter > 0 && (
-                                            <div className="rounded-lg bg-surface-soft/60 px-2.5 py-1 text-body">
-                                                <span data-i18n-skip="true">{t('production.cost')}</span>: <span className="font-bold text-ink">{formatINR(job.planned_cost_per_meter)}/m</span>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {todayMetersByJobId && (
-                                        <div className="mt-3.5 flex items-baseline justify-between gap-2">
-                                            <span className="text-xs font-semibold text-muted-foreground" data-i18n-skip="true">{t('production.today')}</span>
-                                            <span className="text-lg font-black tracking-tight text-ink tabular-nums">
-                                                {todayEntered ? formatBaseMeters(todayMetersByJobId.get(job.id) ?? 0) : '—'}
-                                            </span>
-                                        </div>
-                                    )}
-
-                                    {/* Machine status and Primary CTA */}
-                                    <div className="mt-4 flex items-center justify-between gap-2 border-t border-hairline/60 pt-3">
-                                        <div className="flex items-center gap-1.5">
-                                            <Factory className="h-4 w-4 text-muted-foreground" />
-                                            <span className="text-xs font-semibold text-ink">
-                                                {machineCount > 0 ? (
-                                                    <span className="text-[var(--wv-moss-700)] font-bold">
-                                                        {machineCount} {machineCount === 1 ? 'Loom' : 'Looms'} running
-                                                    </span>
-                                                ) : (
-                                                    <span className="text-muted-foreground">0 Looms assigned</span>
-                                                )}
-                                            </span>
-                                        </div>
-
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => openAssignMachines(job)}
-                                            className="h-8 rounded-lg px-3 text-xs font-bold border-hairline bg-surface hover:bg-surface-soft"
-                                        >
-                                            <Wrench className="mr-1.5 h-3.5 w-3.5" /> <span data-i18n-skip="true">{t('production.assignLooms')}</span>
-                                        </Button>
-                                    </div>
-                                </div>
-                            </Card>
-                        )
-                    })}
+                                </li>
+                            )
+                        })}
+                    </ul>
                 </div>
             )}
 

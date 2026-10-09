@@ -45,7 +45,7 @@ REDUCED_MOTION=1 node run-tour.mjs <scenario> en 1024x768      # reduced-motion 
 node probe-labels.mjs                                          # writes labels-out.json
 ```
 
-Scenarios in `main.tsx` today: `foundation`, `production`, `fabric-stock`, `yarn-stock`, `dispatch`, `payroll`, `payroll-records` (several months of settled payments; add `&empty=1` for none), `machines`, `workers`, `workers-salary`, `assignments`, `estimator`, `free-estimator`, `rates`, `quotes`, `quotes-compare`, `free-costings`, `labels`.
+Scenarios in `main.tsx` today: `foundation`, `production` (add `&populated=1` for one loom, or `&populated=rich` for two qualities on six looms with today's and yesterday's metres), `fabric-stock`, `yarn-stock`, `dispatch`, `payroll`, `payroll-records` (several months of settled payments; add `&empty=1` for none), `machines`, `workers`, `workers-salary`, `assignments`, `estimator`, `free-estimator`, `rates`, `quotes`, `quotes-compare`, `free-costings`, `labels`.
 
 The one `404` console error in every run is the missing favicon; ignore it.
 
