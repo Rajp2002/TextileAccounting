@@ -554,7 +554,7 @@ function DueForReviewDialog({
                             return (
                                 <div
                                     key={rate.id}
-                                    className={`rounded-xl border p-4 ${reviewState === 'overdue' ? 'border-risk/30 bg-risk-soft/70' : reviewState === 'due_soon' ? 'border-warning/30 bg-warning-soft/70' : 'border-info/30 bg-info-soft/60'}`}
+                                    className={`rounded-xl border p-4 ${reviewState === 'overdue' ? 'border-risk/30 bg-risk-soft/70' : reviewState === 'due_soon' ? 'border-warning/30 bg-warning-soft/70' : 'border-wv-neel-900/25 bg-wv-neel-200/45'}`}
                                 >
                                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                                         <div className="min-w-0">
@@ -1845,9 +1845,9 @@ export default function RatesClient({
                                                 key={rate.id}
                                                 data-ratebook-field="yarnRow"
                                                 data-ratebook-row-id={rate.id}
-                                                className={`transition-colors duration-150 motion-reduce:transition-none ${archived ? 'bg-surface-soft opacity-80' : reviewState === 'overdue' ? 'bg-risk-soft/70 hover:bg-risk-soft' : reviewState === 'due_soon' ? 'bg-warning-soft/70 hover:bg-warning-soft' : reviewState === 'needs_review' ? 'bg-info-soft/60 hover:bg-info-soft' : 'hover:bg-surface-soft/70'}`}
+                                                className={`transition-colors duration-150 motion-reduce:transition-none ${archived ? 'bg-surface-soft opacity-80' : reviewState === 'overdue' ? 'bg-risk-soft/70 hover:bg-risk-soft' : reviewState === 'due_soon' ? 'bg-warning-soft/70 hover:bg-warning-soft' : reviewState === 'needs_review' ? 'bg-wv-neel-200/45 hover:bg-wv-neel-200/70' : 'hover:bg-surface-soft/70'}`}
                                             >
-                                                <td data-ratebook-field="yarnNameCell" className="px-3 py-3 align-top">
+                                                <td data-ratebook-field="yarnNameCell" className={`px-3 py-3 align-top ${reviewState === 'needs_review' && !archived ? 'shadow-[inset_3px_0_0_0_var(--wv-neel-900)]' : ''}`}>
                                                     <p className="font-semibold text-ink">{rate.name}</p>
                                                     <p className="mt-1 text-[11px] text-subtle">{COST_RATE_CATEGORY_LABELS[rate.category]} {archived && '· Archived'}</p>
                                                     {rate.apply_as_default && <p className="mt-1 text-[10px] font-semibold text-success">Default for new costings</p>}
@@ -1964,14 +1964,15 @@ export default function RatesClient({
                                         : reviewState === 'due_soon'
                                             ? 'border-l-warning'
                                             : reviewState === 'needs_review'
-                                                ? 'border-l-info'
+                                                ? 'border-l-wv-neel-900'
                                                 : 'border-l-hairline-strong'
+                                const cardBackground = !archived && reviewState === 'needs_review' ? 'bg-wv-neel-200/45' : 'bg-surface'
                                 return (
                                     <Card
                                         key={rate.id}
                                         data-ratebook-field="yarnRow"
                                         data-ratebook-row-id={rate.id}
-                                        className={`ui-surface overflow-hidden rounded-2xl border border-hairline border-l-4 bg-surface ${cardAccent}`}
+                                        className={`ui-surface overflow-hidden rounded-2xl border border-hairline border-l-4 ${cardBackground} ${cardAccent}`}
                                     >
                                         <CardContent className="p-4">
                                             <div className="flex items-start justify-between gap-3">
