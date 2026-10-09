@@ -9,12 +9,13 @@ import { SwitchField } from '@/components/ui/switch-field'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useUnloadProtection } from '@/components/settings/plan-aware/unsaved-changes-dialog'
 import { useTranslation } from '@/lib/i18n/context'
+import { cn } from '@/lib/utils'
+import { BulkWorkerEntry } from '@/components/workers/BulkWorkerEntry'
+import { emptyBulkWorkersDraft, evaluateBulkWorkers, isBulkWorkersDraftEmpty, type BulkWorkersDraft } from '@/lib/base-bulk-register'
 import type { BaseProductionWorker, BaseWorkerShiftAvailability } from '@/lib/base-production-core'
-import { MAX_BULK_WORKERS, parseBulkWorkerLines, type BulkLineProblem } from '@/lib/base-bulk-register'
 import { createBaseProductionWorker, createBaseProductionWorkersBulk, updateBaseProductionWorker } from '../actions'
 
 type WorkerDraft = {
@@ -33,12 +34,11 @@ function emptyWorkerDraft(): WorkerDraft {
     return { name: '', shiftAvailability: 'both', isActive: true, payType: 'piece_rate', role: '', operatorEligible: true, monthlySalary: '', startDate: '', endDate: '', salaryEffectiveFrom: '' }
 }
 const NO_NAMES: readonly string[] = []
-const SKIPPED_NAMES_SHOWN = 3
-const PROBLEMS_SHOWN = 5
+const BULK_SUBMIT_ID = 'base-bulk-submit'
 
 export default function WorkerEditor({ today, initialOpen = false, returnTo, existingNames = NO_NAMES, children, tourPreview }: {
  today: string; initialOpen?: boolean; returnTo?: string;
- /** Names already on the register, so bulk entry can leave them out. */
+ /** Names already on the register, so bulk entry can flag them. */
  existingNames?: readonly string[];
  tourPreview?: { worker: BaseProductionWorker; editing: boolean };
  children: (actions: { isOpen: boolean; add: () => void; edit: (record: BaseProductionWorker) => void }) => ReactNode
@@ -59,16 +59,13 @@ export default function WorkerEditor({ today, initialOpen = false, returnTo, exi
  const [original, setOriginal] = useState(() => JSON.stringify(emptyWorkerDraft()))
  const [pendingAction, setPendingAction] = useState<string | null>(null)
  const [bulk, setBulk] = useState(false)
- const [bulkText, setBulkText] = useState('')
+ const [bulkDraft, setBulkDraft] = useState<BulkWorkersDraft>(() => emptyBulkWorkersDraft(today))
  const bulkActive = bulk && !editingWorkerId
- const bulkResult = useMemo(
-   () => bulkActive ? parseBulkWorkerLines(bulkText, { payType: workerDraft.payType, existingNames }) : null,
-   [bulkActive, bulkText, workerDraft.payType, existingNames],
+ const bulkEvaluation = useMemo(
+   () => evaluateBulkWorkers(bulkDraft.piece, bulkDraft.staff, existingNames, bulkDraft.joiningDate),
+   [bulkDraft, existingNames],
  )
- const bulkCount = bulkResult?.rows.length ?? 0
- const bulkOverLimit = Math.max(0, bulkCount - MAX_BULK_WORKERS)
- const bulkReady = bulkResult !== null && bulkCount > 0 && bulkResult.problems.length === 0 && bulkOverLimit === 0
- const dirty = !tourPreview && open && (JSON.stringify(workerDraft) !== original || bulkText.trim() !== '')
+ const dirty = !tourPreview && open && (JSON.stringify(workerDraft) !== original || !isBulkWorkersDraftEmpty(bulkDraft))
  useUnloadProtection(dirty)
  function closeDialog() {
    if (tourPreview) return
@@ -85,22 +82,14 @@ export default function WorkerEditor({ today, initialOpen = false, returnTo, exi
      toast.success(typeof message === 'function' ? message(result) : tx(message)); trackPlanEvent('production_activity', { action: key }); onSuccess(); router.refresh()
    } catch { toast.error(tx('The action could not be completed.')) } finally { setPendingAction(null) }
  }
+ function resetBulk() { setBulk(false); setBulkDraft(emptyBulkWorkersDraft(today)) }
  function bulkAddedMessage(result: unknown) {
-        const { added = 0, skipped = 0 } = (result ?? {}) as { added?: number; skipped?: number }
-        const message = added === 1 ? tx('1 worker added.') : tx('{count} workers added.', { count: added })
-        return skipped > 0 ? `${message} ${tx('{count} skipped (already on your list).', { count: skipped })}` : message
+        const { added = 0 } = (result ?? {}) as { added?: number }
+        return added === 1 ? tx('1 worker added.') : tx('{count} workers added.', { count: added })
  }
- function bulkProblemMessage(problem: BulkLineProblem) {
-        switch (problem.reason) {
-            case 'missing_salary': return tx('Line {line}: add the monthly salary after the name, like Ramesh, 12000.', { line: problem.line })
-            case 'invalid_salary': return tx('Line {line}: enter a salary above 0 and up to ₹1,00,00,000.', { line: problem.line })
-            case 'missing_name': return tx('Line {line}: add a name before the salary.', { line: problem.line })
-            case 'name_too_long': return tx('Line {line}: the name is too long. Use at most 120 characters.', { line: problem.line })
-        }
- }
- const bulkSubmitLabel = bulkCount === 0 ? tx('Add workers') : bulkCount === 1 ? tx('Add 1 worker') : tx('Add {count} workers', { count: bulkCount })
+ const bulkSubmitLabel = bulkEvaluation.readyCount === 0 ? tx('Add workers') : bulkEvaluation.readyCount === 1 ? tx('Add 1 worker') : tx('Add {count} workers', { count: bulkEvaluation.readyCount })
  function openEditWorker(worker: BaseProductionWorker) {
-        setBulk(false); setBulkText('')
+        resetBulk()
         setEditingWorkerId(worker.id)
         const draft: WorkerDraft = {
             payType: worker.pay_type ?? 'piece_rate',
@@ -122,16 +111,13 @@ export default function WorkerEditor({ today, initialOpen = false, returnTo, exi
         event.preventDefault()
         if (tourPreview) return
         if (bulkActive) {
-            if (!bulkResult || !bulkReady) return
+            if (!bulkEvaluation.valid) return
             void runAction(
                 'worker-create-bulk',
                 () => createBaseProductionWorkersBulk({
-                    payType: workerDraft.payType,
-                    role: workerDraft.role,
-                    operatorEligible: workerDraft.operatorEligible,
-                    shiftAvailability: workerDraft.shiftAvailability,
-                    startDate: workerDraft.startDate,
-                    rows: bulkResult.rows,
+                    pieceRateNames: bulkEvaluation.pieceNames,
+                    fixedStaff: bulkEvaluation.fixedStaff,
+                    startDate: bulkDraft.joiningDate,
                 }),
                 bulkAddedMessage,
                 saved,
@@ -171,32 +157,19 @@ export default function WorkerEditor({ today, initialOpen = false, returnTo, exi
  return <>
  {children({
    isOpen: open,
-   add: () => { setRecord(null); setEditingWorkerId(null); setBulk(false); setBulkText(''); setWorkerDraft(emptyWorkerDraft()); setOriginal(JSON.stringify(emptyWorkerDraft())); setOpen(true) },
+   add: () => { setRecord(null); setEditingWorkerId(null); resetBulk(); setWorkerDraft(emptyWorkerDraft()); setOriginal(JSON.stringify(emptyWorkerDraft())); setOpen(true) },
    edit: value => { setRecord(value); openEditWorker(value) },
  })}
              <Dialog modal={!tourPreview} open={open} onOpenChange={(open) => !open && closeDialog()}>
-                <DialogContent data-workers-tour-preview={tourPreview ? "true" : undefined} data-tour-surface={tourPreview ? "true" : undefined} onOpenAutoFocus={event => { if (tourPreview) event.preventDefault() }} onCloseAutoFocus={event => { if (tourPreview) event.preventDefault() }} onInteractOutside={event => { if (tourPreview) event.preventDefault() }} onEscapeKeyDown={event => { if (tourPreview) event.preventDefault() }} className="max-h-[90dvh] overflow-y-auto">
-                    <DialogHeader><DialogTitle>{editingWorkerId ? 'Edit worker' : bulkActive ? tx('Add workers') : 'Add worker'}</DialogTitle><DialogDescription>Choose piece-rate or monthly pay independently of operator approval. Pay type cannot be changed later.</DialogDescription></DialogHeader>
+                <DialogContent data-workers-tour-preview={tourPreview ? "true" : undefined} data-tour-surface={tourPreview ? "true" : undefined} onOpenAutoFocus={event => { if (tourPreview) event.preventDefault() }} onCloseAutoFocus={event => { if (tourPreview) event.preventDefault() }} onInteractOutside={event => { if (tourPreview) event.preventDefault() }} onEscapeKeyDown={event => { if (tourPreview) event.preventDefault() }} className={cn('max-h-[90dvh] overflow-y-auto', bulkActive && 'sm:max-w-2xl')}>
+                    <DialogHeader><DialogTitle>{editingWorkerId ? 'Edit worker' : bulkActive ? tx('Add workers') : 'Add worker'}</DialogTitle><DialogDescription>{bulkActive ? tx('Add several workers at once. Type a name and press Enter for the next row.') : 'Choose piece-rate or monthly pay independently of operator approval. Pay type cannot be changed later.'}</DialogDescription></DialogHeader>
                     <form onSubmit={handleWorkerSubmit}><fieldset disabled={Boolean(tourPreview)} className="space-y-4">
-                        {!editingWorkerId && !tourPreview && <div data-workers-bulk-toggle className="space-y-1">
+                        {!editingWorkerId && !tourPreview && <div data-workers-bulk-toggle>
                             <SwitchField checked={bulk} disabled={Boolean(pendingAction)} onCheckedChange={setBulk}>{tx('Add in bulk')}</SwitchField>
-                            <p className="text-xs text-body">{tx('Add several workers at once, one name per line.')}</p>
                         </div>}
-                        {!bulkActive && <div data-workers-tour-field="name" className="space-y-2"><Label htmlFor="base-worker-name">Worker name</Label><Input id="base-worker-name" autoFocus={!tourPreview} required maxLength={120} value={workerDraft.name} onChange={(event) => setWorkerDraft((current) => ({ ...current, name: event.target.value }))} placeholder="e.g. Ramesh" /></div>}
+                        {bulkActive ? <BulkWorkerEntry draft={bulkDraft} onChange={update => setBulkDraft(update)} evaluation={bulkEvaluation} joiningLabel={t('workers.joiningDate')} submitButtonId={BULK_SUBMIT_ID} /> : <>
+                        <div data-workers-tour-field="name" className="space-y-2"><Label htmlFor="base-worker-name">Worker name</Label><Input id="base-worker-name" autoFocus={!tourPreview} required maxLength={120} value={workerDraft.name} onChange={(event) => setWorkerDraft((current) => ({ ...current, name: event.target.value }))} placeholder="e.g. Ramesh" /></div>
                         <div data-workers-tour-field="payType" className="space-y-2"><Label htmlFor="base-worker-pay-type">Pay type</Label><Select disabled={Boolean(editingWorkerId)} value={workerDraft.payType} onValueChange={value => setWorkerDraft(current => ({ ...current, payType: value as WorkerDraft['payType'], operatorEligible: value === 'piece_rate', startDate: current.startDate || today }))}><SelectTrigger id="base-worker-pay-type"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="piece_rate">Piece rate (per metre)</SelectItem><SelectItem value="fixed_monthly">{t('workers.fixedMonthlySalary')}</SelectItem></SelectContent></Select></div>
-                        {bulkActive && bulkResult && <div data-workers-bulk-names className="space-y-2">
-                            <Label htmlFor="base-worker-bulk-names">{tx('Worker names')}</Label>
-                            <Textarea id="base-worker-bulk-names" autoFocus rows={6} spellCheck={false} value={bulkText} onChange={event => setBulkText(event.target.value)} aria-describedby="base-worker-bulk-help base-worker-bulk-status" className="max-h-60 min-h-32 overflow-y-auto" placeholder={workerDraft.payType === 'fixed_monthly' ? 'Ramesh, 12000\nSuresh, 15000' : 'Ramesh\nSuresh\nMahesh'} />
-                            <p id="base-worker-bulk-help" className="text-xs text-body">{workerDraft.payType === 'fixed_monthly' ? tx('One worker per line: the name, then a comma and the monthly salary, like Ramesh, 12000.') : tx('One name per line. You can paste a list from WhatsApp or Excel.')}</p>
-                            <div id="base-worker-bulk-status" aria-live="polite" className="space-y-1 text-xs">
-                                {bulkCount > 0 && <p className="font-semibold text-ink">{bulkCount === 1 ? tx('1 worker ready') : tx('{count} workers ready', { count: bulkCount })}</p>}
-                                {bulkResult.skipped.length > 0 && <p className="text-body">{tx('Skipping {count} already on your list or repeated:', { count: bulkResult.skipped.length })} {bulkResult.skipped.slice(0, SKIPPED_NAMES_SHOWN).map(skipped => skipped.name).join(', ')}{bulkResult.skipped.length > SKIPPED_NAMES_SHOWN ? ` +${bulkResult.skipped.length - SKIPPED_NAMES_SHOWN}` : ''}</p>}
-                                {bulkResult.problems.slice(0, PROBLEMS_SHOWN).map(problem => <p key={problem.line} className="text-destructive">{bulkProblemMessage(problem)}</p>)}
-                                {bulkResult.problems.length > PROBLEMS_SHOWN && <p className="text-destructive">{tx('…and {count} more lines to fix.', { count: bulkResult.problems.length - PROBLEMS_SHOWN })}</p>}
-                                {bulkOverLimit > 0 && <p className="text-destructive">{tx('Add up to {max} at a time. Remove {extra} to continue.', { max: MAX_BULK_WORKERS, extra: bulkOverLimit })}</p>}
-                            </div>
-                            <p className="text-xs text-body">{tx('Role, operator approval and shift below apply to everyone in this list.')}</p>
-                        </div>}
                         <div data-workers-tour-field="role" className="space-y-2"><Label htmlFor="base-staff-role">Role</Label><Input id="base-staff-role" value={workerDraft.role} maxLength={80} onChange={event => setWorkerDraft(current => ({ ...current, role: event.target.value }))} placeholder="e.g. Supervisor" /></div>
                         <div className="space-y-2">
                             <SwitchField checked={workerDraft.operatorEligible} onCheckedChange={operatorEligible => setWorkerDraft(current => ({ ...current, operatorEligible }))}>{tx('Approved loom operator')}</SwitchField>
@@ -204,7 +177,7 @@ export default function WorkerEditor({ today, initialOpen = false, returnTo, exi
                             {workerDraft.operatorEligible && workerDraft.payType === 'fixed_monthly' && <p className="text-xs text-body">{tx('Production is recorded without piece earnings. Monthly salary accrues once per worker.')}</p>}
                         </div>
                         {workerDraft.payType === 'fixed_monthly' && <>
-                            {!bulkActive && <div data-workers-tour-field="salary" className="space-y-2"><Label htmlFor="base-staff-salary">Monthly salary (₹)</Label><Input id="base-staff-salary" type="number" min="0.01" max="10000000" step="0.01" required value={workerDraft.monthlySalary} onChange={event => setWorkerDraft(current => ({ ...current, monthlySalary: event.target.value }))} /></div>}
+                            <div data-workers-tour-field="salary" className="space-y-2"><Label htmlFor="base-staff-salary">Monthly salary (₹)</Label><Input id="base-staff-salary" type="number" min="0.01" max="10000000" step="0.01" required value={workerDraft.monthlySalary} onChange={event => setWorkerDraft(current => ({ ...current, monthlySalary: event.target.value }))} /></div>
                             <div data-workers-tour-field="joining" className="space-y-2"><Label htmlFor="base-staff-start">{t('workers.joiningDate')}</Label><Input id="base-staff-start" type="date" required disabled={Boolean(editingWorkerId)} value={workerDraft.startDate} onChange={event => setWorkerDraft(current => ({ ...current, startDate: event.target.value }))} /></div>
                             {editingWorkerId && <>
                                 <div data-workers-tour-field="effective" className="space-y-2"><Label htmlFor="base-staff-effective">{t('workers.salaryEffectiveFrom')}</Label><Input id="base-staff-effective" type="date" min={today} value={workerDraft.salaryEffectiveFrom} onChange={event => setWorkerDraft(current => ({ ...current, salaryEffectiveFrom: event.target.value }))} /><p className="text-xs text-body">Used only when changing salary. Earlier earnings and paid records stay unchanged.</p></div>
@@ -213,7 +186,8 @@ export default function WorkerEditor({ today, initialOpen = false, returnTo, exi
                         </>}
                         {workerDraft.operatorEligible && <div data-workers-tour-field="availability" className="space-y-2"><Label htmlFor="base-worker-shift">{t('workers.shiftAvailability')}</Label><Select value={workerDraft.shiftAvailability} onValueChange={(value) => setWorkerDraft((current) => ({ ...current, shiftAvailability: value as BaseWorkerShiftAvailability }))}><SelectTrigger id="base-worker-shift" className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="day">Day shift</SelectItem><SelectItem value="night">Night shift</SelectItem><SelectItem value="both">Day & night</SelectItem></SelectContent></Select><p className="text-xs text-muted-foreground">You can edit this later. The assignment board only shows workers available for the selected shift.</p></div>}
                         {editingWorkerId && <SwitchField data-workers-tour-field="active" className="font-normal" checked={workerDraft.isActive} onCheckedChange={(isActive) => setWorkerDraft((current) => ({ ...current, isActive }))}>Active worker</SwitchField>}
-                        <DialogFooter><Button type="button" variant="outline" onClick={closeDialog}>Cancel</Button><Button type="submit" disabled={pendingAction?.startsWith('worker-') || (bulkActive && !bulkReady)}>{pendingAction?.startsWith('worker-') ? <Loader2 className="h-4 w-4 animate-spin" /> : null}{returnTo ? tx('Save and return') : editingWorkerId ? 'Save changes' : bulkActive ? bulkSubmitLabel : 'Add worker'}</Button></DialogFooter>
+                        </>}
+                        <DialogFooter><Button type="button" variant="outline" onClick={closeDialog}>Cancel</Button><Button id={bulkActive ? BULK_SUBMIT_ID : undefined} type="submit" disabled={pendingAction?.startsWith('worker-') || (bulkActive && !bulkEvaluation.valid)}>{pendingAction?.startsWith('worker-') ? <Loader2 className="h-4 w-4 animate-spin" /> : null}{returnTo ? tx('Save and return') : editingWorkerId ? 'Save changes' : bulkActive ? bulkSubmitLabel : 'Add worker'}</Button></DialogFooter>
                     </fieldset></form>
                 </DialogContent>
             </Dialog>

@@ -1,15 +1,31 @@
 import { describe, expect, it } from 'vitest'
 import {
+    BASE_MACHINE_TYPE_OPTIONS,
     MAX_BULK_MACHINES,
     MAX_BULK_WORKERS,
-    buildBulkMachineNames,
     bulkNameKey,
+    emptyBulkMachinesDraft,
+    emptyBulkWorkersDraft,
+    evaluateBulkMachines,
+    evaluateBulkWorkers,
+    findBulkNameIssues,
+    isBulkMachinesDraftEmpty,
+    isBulkWorkersDraftEmpty,
+    isValidMonthlySalary,
+    nextUnusedMachineType,
     normalizeBulkName,
-    parseBulkWorkerLines,
-    partitionBulkNames,
+    parseBulkNamePaste,
+    parseBulkStaffPaste,
+    type BulkMachineSection,
+    type BulkPieceRow,
+    type BulkStaffRow,
 } from '../lib/base-bulk-register'
 
-describe('normalizeBulkName', () => {
+const piece = (...names: string[]): BulkPieceRow[] => names.map((name, index) => ({ id: `p${index}`, name }))
+const staff = (...rows: [string, string, number?][]): BulkStaffRow[] => rows.map(([name, role, monthlySalary], index) => ({ id: `s${index}`, name, role, monthlySalary }))
+const section = (machineType: BulkMachineSection['machineType'], ...names: string[]): BulkMachineSection => ({ id: machineType, machineType, rows: names.map((name, index) => ({ id: `${machineType}${index}`, name })) })
+
+describe('names', () => {
     it('trims and collapses inner whitespace', () => {
         expect(normalizeBulkName('  Ramesh   Patel ')).toBe('Ramesh Patel')
     })
@@ -18,136 +34,152 @@ describe('normalizeBulkName', () => {
     })
 })
 
-describe('parseBulkWorkerLines (piece rate)', () => {
-    it('reads one name per line and ignores blank lines', () => {
-        const result = parseBulkWorkerLines('Ramesh\n\n  Suresh  \r\nMahesh\n', { payType: 'piece_rate' })
-        expect(result.rows.map(row => row.name)).toEqual(['Ramesh', 'Suresh', 'Mahesh'])
-        expect(result.problems).toEqual([])
-        expect(result.skipped).toEqual([])
+describe('findBulkNameIssues', () => {
+    it('ignores blank names and passes fresh ones', () => {
+        expect(findBulkNameIssues(['Ramesh', '', '   ', 'Suresh'])).toEqual([null, null, null, null])
     })
-    it('strips bullets and list numbers pasted from chat or notes', () => {
-        const result = parseBulkWorkerLines('1. Ramesh\n2) Suresh\n- Mahesh\n• Dinesh\n* Kiran', { payType: 'piece_rate' })
-        expect(result.rows.map(row => row.name)).toEqual(['Ramesh', 'Suresh', 'Mahesh', 'Dinesh', 'Kiran'])
+    it('flags names already on the register, case-insensitively', () => {
+        expect(findBulkNameIssues(['Ramesh', 'Suresh'], [' suresh '])).toEqual([null, 'exists'])
     })
-    it('keeps a comma inside a piece-rate name instead of treating it as a salary', () => {
-        const result = parseBulkWorkerLines('Patel, Ramesh', { payType: 'piece_rate' })
-        expect(result.rows).toEqual([{ name: 'Patel, Ramesh', monthlySalary: 0 }])
+    it('flags only the later copy of a repeated name', () => {
+        expect(findBulkNameIssues(['Ramesh', 'ramesh', 'Suresh', 'RAMESH '])).toEqual([null, 'repeated', null, 'repeated'])
     })
-    it('skips names repeated in the list, case-insensitively, keeping the first', () => {
-        const result = parseBulkWorkerLines('Ramesh\nramesh\nSuresh\nRAMESH ', { payType: 'piece_rate' })
-        expect(result.rows.map(row => row.name)).toEqual(['Ramesh', 'Suresh'])
-        expect(result.skipped).toEqual([
-            { name: 'ramesh', reason: 'repeated' },
-            { name: 'RAMESH', reason: 'repeated' },
-        ])
-    })
-    it('skips names already in the factory', () => {
-        const result = parseBulkWorkerLines('Ramesh\nSuresh', { payType: 'piece_rate', existingNames: [' suresh '] })
-        expect(result.rows.map(row => row.name)).toEqual(['Ramesh'])
-        expect(result.skipped).toEqual([{ name: 'Suresh', reason: 'exists' }])
-    })
-    it('flags names longer than the 120 character limit as problems', () => {
-        const result = parseBulkWorkerLines(`${'a'.repeat(121)}\nRamesh`, { payType: 'piece_rate' })
-        expect(result.rows.map(row => row.name)).toEqual(['Ramesh'])
-        expect(result.problems).toEqual([expect.objectContaining({ line: 1, reason: 'name_too_long' })])
-    })
-    it('reports the one-based line number of each problem', () => {
-        const result = parseBulkWorkerLines('Ramesh\n\n' + 'b'.repeat(130), { payType: 'piece_rate' })
-        expect(result.problems[0].line).toBe(3)
+    it('flags names over 120 characters', () => {
+        expect(findBulkNameIssues(['a'.repeat(121), 'a'.repeat(120)])).toEqual(['too_long', null])
     })
 })
 
-describe('parseBulkWorkerLines (monthly salary)', () => {
-    const options = { payType: 'fixed_monthly' as const }
-    it('reads "Name, salary" lines', () => {
-        const result = parseBulkWorkerLines('Ramesh, 12000\nSuresh Patel,18500.50', options)
-        expect(result.rows).toEqual([
-            { name: 'Ramesh', monthlySalary: 12000 },
-            { name: 'Suresh Patel', monthlySalary: 18500.5 },
-        ])
-        expect(result.problems).toEqual([])
+describe('isValidMonthlySalary', () => {
+    it('accepts positive amounts up to 1 crore with at most two decimals', () => {
+        for (const value of [1, 12000, 18500.5, 18500.55, 10_000_000]) expect(isValidMonthlySalary(value)).toBe(true)
     })
-    it('accepts tab separated pastes from a spreadsheet', () => {
-        const result = parseBulkWorkerLines('Ramesh\t12000', options)
-        expect(result.rows).toEqual([{ name: 'Ramesh', monthlySalary: 12000 }])
-    })
-    it('accepts a rupee sign and thousands separators', () => {
-        const result = parseBulkWorkerLines('Ramesh, ₹12,000\nSuresh,₹ 1,05,000', options)
-        expect(result.rows).toEqual([
-            { name: 'Ramesh', monthlySalary: 12000 },
-            { name: 'Suresh', monthlySalary: 105000 },
-        ])
-    })
-    it('keeps extra commas in the name and reads the salary from the end', () => {
-        const result = parseBulkWorkerLines('Ramesh Patel, Weaver, 12000', options)
-        expect(result.rows).toEqual([{ name: 'Ramesh Patel, Weaver', monthlySalary: 12000 }])
-    })
-    it('flags a line with no salary', () => {
-        const result = parseBulkWorkerLines('Ramesh\nSuresh, 9000', options)
-        expect(result.rows.map(row => row.name)).toEqual(['Suresh'])
-        expect(result.problems).toEqual([expect.objectContaining({ line: 1, text: 'Ramesh', reason: 'missing_salary' })])
-    })
-    it('flags a zero or oversized salary', () => {
-        const result = parseBulkWorkerLines('Ramesh, 0\nSuresh, 10000001\nMahesh, 10000000', options)
-        expect(result.rows.map(row => row.name)).toEqual(['Mahesh'])
-        expect(result.problems.map(problem => [problem.line, problem.reason])).toEqual([[1, 'invalid_salary'], [2, 'invalid_salary']])
-    })
-    it('flags a salary with no name', () => {
-        const result = parseBulkWorkerLines(', 12000', options)
-        expect(result.rows).toEqual([])
-        expect(result.problems).toEqual([expect.objectContaining({ line: 1, reason: 'missing_name' })])
-    })
-    it('flags a salary with more than two decimals', () => {
-        const result = parseBulkWorkerLines('Ramesh, 100.123', options)
-        expect(result.rows).toEqual([])
-        expect(result.problems).toEqual([expect.objectContaining({ reason: 'missing_salary' })])
-    })
-    it('skips duplicates by name regardless of salary', () => {
-        const result = parseBulkWorkerLines('Ramesh, 9000\nramesh, 12000', { ...options, existingNames: [] })
-        expect(result.rows).toEqual([{ name: 'Ramesh', monthlySalary: 9000 }])
-        expect(result.skipped).toEqual([{ name: 'ramesh', reason: 'repeated' }])
+    it('rejects zero, negatives, too large, more decimals and nothing', () => {
+        for (const value of [0, -5, 10_000_001, 100.123, Number.NaN, undefined]) expect(isValidMonthlySalary(value)).toBe(false)
     })
 })
 
-describe('partitionBulkNames', () => {
-    it('separates fresh names from repeated and existing ones in input order', () => {
-        const { fresh, skipped } = partitionBulkNames(
-            [{ name: 'Ramesh' }, { name: 'Suresh' }, { name: 'ramesh' }, { name: 'Mahesh' }],
-            ['mahesh'],
-        )
-        expect(fresh).toEqual([{ name: 'Ramesh' }, { name: 'Suresh' }])
-        expect(skipped).toEqual([
-            { name: 'ramesh', reason: 'repeated' },
-            { name: 'Mahesh', reason: 'exists' },
-        ])
+describe('parseBulkNamePaste', () => {
+    it('reads one name per line, skipping blanks', () => {
+        expect(parseBulkNamePaste('Ramesh\n\n  Suresh  \r\nMahesh\n')).toEqual(['Ramesh', 'Suresh', 'Mahesh'])
+    })
+    it('strips bullets and list numbers from chat or notes', () => {
+        expect(parseBulkNamePaste('1. Ramesh\n2) Suresh\n- Mahesh\n• Dinesh\n* Kiran')).toEqual(['Ramesh', 'Suresh', 'Mahesh', 'Dinesh', 'Kiran'])
+    })
+    it('keeps machine numbers that start with digits', () => {
+        expect(parseBulkNamePaste('01\n02\n10A')).toEqual(['01', '02', '10A'])
     })
 })
 
-describe('buildBulkMachineNames', () => {
-    it('numbers from 1 when there are no machines yet', () => {
-        expect(buildBulkMachineNames({ count: 3, existingNames: [] })).toEqual(['Loom #1', 'Loom #2', 'Loom #3'])
+describe('parseBulkStaffPaste', () => {
+    it('reads "Name, Role, Salary" comma lines', () => {
+        expect(parseBulkStaffPaste('Ramesh, Supervisor, 18000\nSuresh Patel, Weaving master, ₹22,500')).toEqual([
+            { name: 'Ramesh', role: 'Supervisor', monthlySalary: 18000 },
+            { name: 'Suresh Patel', role: 'Weaving master', monthlySalary: 22500 },
+        ])
     })
-    it('continues after the highest existing numbered name', () => {
-        expect(buildBulkMachineNames({ count: 2, existingNames: ['Loom #1', 'loom #7', 'Loom #3'] })).toEqual(['Loom #8', 'Loom #9'])
+    it('reads "Name, Salary" and plain names', () => {
+        expect(parseBulkStaffPaste('Mahesh, 15000\nDinesh')).toEqual([
+            { name: 'Mahesh', role: '', monthlySalary: 15000 },
+            { name: 'Dinesh', role: '' },
+        ])
     })
-    it('uses a custom prefix and ignores other prefixes when numbering', () => {
-        expect(buildBulkMachineNames({ count: 2, prefix: ' Rapier ', existingNames: ['Loom #12', 'Rapier #2'] })).toEqual(['Rapier #3', 'Rapier #4'])
+    it('reads spreadsheet rows in any column order', () => {
+        expect(parseBulkStaffPaste('Ramesh\tSupervisor\t18000\nSuresh\t22,000\tManager\nMahesh\t15000')).toEqual([
+            { name: 'Ramesh', role: 'Supervisor', monthlySalary: 18000 },
+            { name: 'Suresh', role: 'Manager', monthlySalary: 22000 },
+            { name: 'Mahesh', role: '', monthlySalary: 15000 },
+        ])
     })
-    it('treats a blank prefix as Loom', () => {
-        expect(buildBulkMachineNames({ count: 1, prefix: '   ', existingNames: [] })).toEqual(['Loom #1'])
+    it('keeps extra commas in a role', () => {
+        expect(parseBulkStaffPaste('Ramesh, Shift, night, 9000')).toEqual([{ name: 'Ramesh', role: 'Shift, night', monthlySalary: 9000 }])
     })
-    it('starts after a lone numbered machine without reusing its name', () => {
-        const names = buildBulkMachineNames({ count: 3, existingNames: ['Loom #2'] })
-        expect(names).toEqual(['Loom #3', 'Loom #4', 'Loom #5'])
+})
+
+describe('evaluateBulkWorkers', () => {
+    it('counts ready piece-rate names and fixed staff and ignores blank rows', () => {
+        const result = evaluateBulkWorkers(piece('Ramesh', '', 'Suresh'), staff(['Mahesh', 'Supervisor', 18000], ['', '']), [], '2026-10-10')
+        expect(result.pieceNames).toEqual(['Ramesh', 'Suresh'])
+        expect(result.fixedStaff).toEqual([{ name: 'Mahesh', role: 'Supervisor', monthlySalary: 18000 }])
+        expect(result.readyCount).toBe(3)
+        expect(result.hasIssues).toBe(false)
+        expect(result.valid).toBe(true)
     })
-    it('does not treat regex characters in the prefix specially', () => {
-        expect(buildBulkMachineNames({ count: 2, prefix: 'A.B (x)', existingNames: ['AxB (x) #9'] })).toEqual(['A.B (x) #1', 'A.B (x) #2'])
+    it('is not valid when nothing is entered', () => {
+        expect(evaluateBulkWorkers(piece(''), staff(['', '']), [], '2026-10-10').valid).toBe(false)
     })
-    it('returns an empty list for a count that is not a whole positive number', () => {
-        expect(buildBulkMachineNames({ count: 0, existingNames: [] })).toEqual([])
-        expect(buildBulkMachineNames({ count: -2, existingNames: [] })).toEqual([])
-        expect(buildBulkMachineNames({ count: 2.5, existingNames: [] })).toEqual([])
-        expect(buildBulkMachineNames({ count: Number.NaN, existingNames: [] })).toEqual([])
+    it('flags repeats across both sections, keeping the first', () => {
+        const result = evaluateBulkWorkers(piece('Ramesh'), staff(['ramesh', 'Supervisor', 18000]), [], '2026-10-10')
+        expect(result.staff[0]).toEqual({ name: 'repeated' })
+        expect(result.valid).toBe(false)
+    })
+    it('flags names already on the register in either section', () => {
+        const result = evaluateBulkWorkers(piece('Ramesh'), staff(['Suresh', '', 9000]), ['RAMESH', 'suresh'], '2026-10-10')
+        expect(result.piece).toEqual(['exists'])
+        expect(result.staff[0].name).toBe('exists')
+        expect(result.hasIssues).toBe(true)
+    })
+    it('needs a name and a valid salary for a fixed row that has anything in it', () => {
+        const result = evaluateBulkWorkers([], staff(['', 'Supervisor', 9000], ['Mahesh', '', undefined], ['Dinesh', '', 100.123], ['Kiran', '', 0]), [], '2026-10-10')
+        expect(result.staff).toEqual([
+            { name: 'missing_name' },
+            { salary: 'missing_salary' },
+            { salary: 'invalid_salary' },
+            { salary: 'missing_salary' },
+        ])
+        expect(result.valid).toBe(false)
+    })
+    it('flags a role over 80 characters', () => {
+        expect(evaluateBulkWorkers([], staff(['Mahesh', 'r'.repeat(81), 9000]), [], '2026-10-10').staff[0]).toEqual({ role: 'too_long' })
+    })
+    it('needs a joining date only when there is fixed staff', () => {
+        expect(evaluateBulkWorkers(piece('Ramesh'), [], [], '').valid).toBe(true)
+        expect(evaluateBulkWorkers([], staff(['Mahesh', '', 9000]), [], '').valid).toBe(false)
+    })
+    it('blocks a batch over the cap and says by how many', () => {
+        const names = Array.from({ length: MAX_BULK_WORKERS + 3 }, (_, index) => `Worker ${index}`)
+        const result = evaluateBulkWorkers(piece(...names), [], [], '2026-10-10')
+        expect(result.overLimit).toBe(3)
+        expect(result.valid).toBe(false)
+    })
+})
+
+describe('evaluateBulkMachines', () => {
+    it('groups ready names by section and skips blank rows and empty sections', () => {
+        const result = evaluateBulkMachines([section('power_loom', '01', '02', ''), section('rapier', ''), section('water_jet', 'WJ-1')], [])
+        expect(result.ready).toEqual([
+            { machineType: 'power_loom', names: ['01', '02'] },
+            { machineType: 'water_jet', names: ['WJ-1'] },
+        ])
+        expect(result.readyCount).toBe(3)
+        expect(result.valid).toBe(true)
+    })
+    it('flags a name repeated in another section, because names are unique across the factory', () => {
+        const result = evaluateBulkMachines([section('power_loom', '01'), section('rapier', '01')], [])
+        expect(result.sections).toEqual([[null], ['repeated']])
+        expect(result.valid).toBe(false)
+    })
+    it('flags names already on the register', () => {
+        const result = evaluateBulkMachines([section('power_loom', 'Loom #1', '02')], ['loom #1'])
+        expect(result.sections).toEqual([['exists', null]])
+        expect(result.hasIssues).toBe(true)
+    })
+    it('is not valid when nothing is entered and blocks a batch over the cap', () => {
+        expect(evaluateBulkMachines([section('power_loom', '')], []).valid).toBe(false)
+        const names = Array.from({ length: MAX_BULK_MACHINES + 2 }, (_, index) => `M${index}`)
+        const result = evaluateBulkMachines([section('power_loom', ...names)], [])
+        expect(result.overLimit).toBe(2)
+        expect(result.valid).toBe(false)
+    })
+})
+
+describe('machine types', () => {
+    it('offers the same seven types the single form does', () => {
+        expect(BASE_MACHINE_TYPE_OPTIONS.map((option) => option.value)).toEqual(['jacquard', 'power_loom', 'rapier', 'water_jet', 'air_jet', 'circular', 'other'])
+    })
+    it('starts a new section on the first type not already used', () => {
+        expect(nextUnusedMachineType([])).toBe('jacquard')
+        expect(nextUnusedMachineType(['jacquard', 'power_loom'])).toBe('rapier')
+        expect(nextUnusedMachineType(BASE_MACHINE_TYPE_OPTIONS.map((option) => option.value))).toBe('other')
     })
 })
 
@@ -155,5 +187,22 @@ describe('limits', () => {
     it('caps one batch at 200 workers and 100 machines', () => {
         expect(MAX_BULK_WORKERS).toBe(200)
         expect(MAX_BULK_MACHINES).toBe(100)
+    })
+})
+
+describe('bulk drafts', () => {
+    it('start empty and stay empty until a cell has text', () => {
+        expect(isBulkWorkersDraftEmpty(emptyBulkWorkersDraft('2026-10-10'))).toBe(true)
+        expect(isBulkMachinesDraftEmpty(emptyBulkMachinesDraft())).toBe(true)
+        expect(isBulkWorkersDraftEmpty({ ...emptyBulkWorkersDraft('2026-10-10'), piece: piece('', '  ') })).toBe(true)
+    })
+    it('count any typed name, role or salary as a change', () => {
+        expect(isBulkWorkersDraftEmpty({ ...emptyBulkWorkersDraft('2026-10-10'), piece: piece('Ramesh') })).toBe(false)
+        expect(isBulkWorkersDraftEmpty({ ...emptyBulkWorkersDraft('2026-10-10'), staff: staff(['', '', 9000]) })).toBe(false)
+        expect(isBulkMachinesDraftEmpty({ sections: [section('rapier', '01')] })).toBe(false)
+    })
+    it('open with one power loom section and the joining date set to today', () => {
+        expect(emptyBulkMachinesDraft().sections.map((entry) => entry.machineType)).toEqual(['power_loom'])
+        expect(emptyBulkWorkersDraft('2026-10-10').joiningDate).toBe('2026-10-10')
     })
 })
