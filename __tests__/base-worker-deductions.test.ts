@@ -16,7 +16,7 @@ describe('Base Worker Deductions', () => {
         expect(actions).toContain('const BaseDeductionSchema = z.object({')
         expect(actions).toContain("export async function createBaseWorkerDeduction(input: {")
         expect(actions).toContain(".from('base_worker_advances')")
-        expect(actions).toContain("parsed.data.reason ? `[Deduction: ${parsed.data.reason}]` : '[Deduction]'")
+        expect(actions).toContain('buildDeductionDescription(parsed.data.reason, parsed.data.description)')
         expect(actions).toContain("revalidatePath('/owner/payroll')")
     })
 
@@ -45,12 +45,14 @@ describe('Base Worker Deductions', () => {
         expect(client).toContain('base-deduction-amount')
         expect(client).toContain('base-deduction-description')
 
-        // Factory-tailored reason options
-        expect(client).toContain('Mistake / Damage')
-        expect(client).toContain('Water access / Utilities')
-        expect(client).toContain('Penalty / Absence')
-        expect(client).toContain('Mess / Canteen / Food')
-        expect(client).toContain('Other')
+        // Factory-tailored reason options now live in lib/base-bulk-adjustment.ts, shared with the bulk dialog.
+        const reasons = readProjectFile('lib/base-bulk-adjustment.ts')
+        expect(client).toContain('DEDUCTION_REASONS')
+        expect(reasons).toContain("'Mistake / Damage'")
+        expect(reasons).toContain("'Water access / Utilities'")
+        expect(reasons).toContain("'Penalty / Absence'")
+        expect(reasons).toContain("'Mess / Canteen / Food'")
+        expect(reasons).toContain("'Other'")
 
         // Form submit and server action wiring
         expect(client).toContain('handleDeductionSubmit')
