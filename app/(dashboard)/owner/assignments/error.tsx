@@ -5,7 +5,7 @@ export default function RegisterError({ reset }: { reset: () => void }) {
     const { tx } = useTranslation()
 
     return (
-        <section role="alert" className="mx-auto w-full max-w-6xl space-y-4 p-6">
+        <section role="alert" className="mx-auto w-full space-y-4 p-6">
             <h1 className="border-b border-hairline/80 pb-5 text-center text-[1.75rem] font-bold leading-tight tracking-tight text-ink sm:text-[2rem]">
                 {tx('Machine Assignments')}
             </h1>

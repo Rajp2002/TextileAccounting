@@ -9,7 +9,7 @@ import { History } from 'lucide-react'
 export default function AuditTrailPage() {
     const lite = useOwnerPlan() === 'lite'
     return (
-        <div className={`mx-auto w-full max-w-6xl space-y-6 pb-10 ${lite ? styles.page : ''}`}>
+        <div className={`mx-auto w-full space-y-6 pb-10 ${lite ? styles.page : ''}`}>
             <div className="border-b border-hairline/80 pb-5 text-center">
                 <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-ink sm:text-[2rem]">Audit Trail</h1>
             </div>

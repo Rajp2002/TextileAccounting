@@ -9,7 +9,7 @@ export default function RegisterError({ reset }: { reset: () => void }) {
   const { tx } = useTranslation()
 
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-6">
+    <div className="mx-auto w-full space-y-6">
       <header className="border-b border-hairline/80 pb-5 text-center">
         <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-ink sm:text-[2rem]">
           {tx('Workers')}

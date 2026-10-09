@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { pageTitleLayoutClass } from '@/components/navigation/page-title-layout'
 
 const root = process.cwd()
 const read = (path: string) => readFileSync(join(root, path), 'utf8')
@@ -23,6 +24,24 @@ describe('Desktop workspace composition (sidebar | full-width workspace)', () =>
         expect(styles).not.toMatch(/--rail-[a-z]+:|--workspace-w:/)
         // No route hard-codes its own viewport offset.
         expect(styles).not.toMatch(/left:\s*calc\(248px\s*\+/)
+    })
+
+    it('lets the content column fill the space beside the sidebar, up to one shared cap', () => {
+        // One token caps both workspace shells (Lite/Base and Free) and positions the docked Live Cost shortcut.
+        expect(styles).toMatch(/--main-max:\s*120rem;/)
+        for (const shell of ['app/(dashboard)/owner/layout.tsx', 'app/free/FreeWorkspace.tsx']) {
+            const source = read(shell)
+            expect(source, shell).toContain('max-w-[var(--main-max)]')
+            expect(source, shell).not.toContain('max-w-7xl')
+        }
+        // Loading titles sit in the same full-width shell as their page; only the narrow form pages keep a cap.
+        for (const route of ['/owner/rates', '/owner/stock', '/owner/quotes', '/owner/billing', '/owner/settings/audit', '/free', '/owner/some-new-route']) {
+            expect(pageTitleLayoutClass(route), route).not.toMatch(/max-w-/)
+        }
+        expect(pageTitleLayoutClass('/owner/data-export')).toContain('max-w-2xl')
+        expect(read('app/(dashboard)/owner/data-export/page.tsx')).toContain('max-w-2xl')
+        expect(read('app/(dashboard)/owner/settings/page.tsx')).toContain('max-w-[960px]')
+        expect(read('components/settings/plan-aware/plan-aware-settings-view.tsx')).toContain('max-w-[960px]')
     })
 
     it('gives every route workspace the full content width at every breakpoint', () => {

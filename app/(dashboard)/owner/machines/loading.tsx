@@ -3,7 +3,7 @@ import { BaseRouteLoading } from '@/components/navigation/base-route-loading'
 export default function Loading() {
   return (
     <BaseRouteLoading route="/owner/machines" title="Machines">
-      <div className="mx-auto w-full max-w-6xl space-y-6" aria-hidden="true">
+      <div className="mx-auto w-full space-y-6" aria-hidden="true">
         {/* Toolbar Skeleton */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="h-10 sm:h-11 flex-1 ui-skeleton rounded-xl bg-surface-soft" />

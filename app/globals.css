@@ -761,8 +761,11 @@
     --shell-sidebar-w: 0px;
     --shell-area: calc(100vw - var(--shell-sidebar-w));
     --main-pad: 0.75rem;
-    --main-max: 80rem;
-    /* Right edge of the dashboard content column (main is capped at 80rem). */
+    /* The content column fills the space beside the sidebar and stops growing at
+       this width on very wide monitors. Both workspace shells read it, so the
+       column and the docked Live Cost shortcut below can't drift apart. */
+    --main-max: 120rem;
+    /* Right edge of the dashboard content column (main is capped at --main-max). */
     --main-inset: calc((var(--shell-area) - min(var(--shell-area), var(--main-max))) / 2 + var(--main-pad));
   }
 

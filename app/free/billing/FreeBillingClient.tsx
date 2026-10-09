@@ -38,7 +38,7 @@ export default function FreeBillingClient({
   const text = (key: Parameters<typeof freeSupportingText>[1], values: Record<string, string | number> = {}) => freeSupportingText(language, key, values)
 
   return (
-    <div className={`mx-auto max-w-6xl space-y-6 pb-16 ${styles.root}`}>
+    <div className={`mx-auto space-y-6 pb-16 ${styles.root}`}>
       <PageHeader
         title={text('billingTitle')}
       />
