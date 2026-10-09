@@ -8,6 +8,7 @@ import { getOrgTier } from '@/lib/subscription'
 import { hasCapability } from '@/lib/subscription-access'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { DateSchema, UuidSchema, safeParse } from '@/lib/schemas'
+import { buildDeductionDescription } from '@/lib/base-bulk-adjustment'
 import { getSuratTodayString } from '@/lib/time'
 import {
     validateCycleRule,
@@ -102,6 +103,15 @@ const BaseAdvanceSchema = z.object({
 const BaseDeductionSchema = z.object({
     workerId: UuidSchema,
     amount: z.number().finite().positive('Deduction must be greater than 0').max(10_000_000, 'Deduction is too high'),
+    reason: z.string().trim().max(100, 'Reason is too long').optional().or(z.literal('')),
+    description: z.string().trim().max(240, 'Description is too long').optional().or(z.literal('')),
+})
+
+const BaseBulkAdjustmentSchema = z.object({
+    kind: z.enum(['advance', 'deduction']),
+    workerIds: z.array(UuidSchema).min(1, 'Choose at least one worker.').max(500, 'Too many workers selected.'),
+    amount: z.number().finite().positive('Amount must be greater than 0').max(10_000_000, 'Amount is too high')
+        .refine(value => Math.abs(value * 100 - Math.round(value * 100)) < 0.000001, 'Use at most two decimal places'),
     reason: z.string().trim().max(100, 'Reason is too long').optional().or(z.literal('')),
     description: z.string().trim().max(240, 'Description is too long').optional().or(z.literal('')),
 })
@@ -1028,10 +1038,7 @@ export async function createBaseWorkerDeduction(input: {
     if (workerError) return databaseError(workerError, 'Worker could not be loaded. Please try again.')
     if (!worker?.is_active) return { error: 'Choose an active worker.' }
 
-    const combinedDescription = [
-        parsed.data.reason ? `[Deduction: ${parsed.data.reason}]` : '[Deduction]',
-        parsed.data.description?.trim(),
-    ].filter(Boolean).join(' ').slice(0, 240)
+    const combinedDescription = buildDeductionDescription(parsed.data.reason, parsed.data.description)
 
     const { error } = await supabase
         .from('base_worker_advances')
@@ -1049,6 +1056,60 @@ export async function createBaseWorkerDeduction(input: {
     revalidatePath('/owner/payroll')
     revalidatePath('/owner/operations')
     return { success: true }
+}
+
+/**
+ * Records the same advance or deduction for every selected worker. One insert, so a
+ * bad worker id or a database error saves nothing instead of half the list.
+ */
+export async function createBaseWorkerAdjustmentsBulk(input: {
+    kind: 'advance' | 'deduction'
+    workerIds: string[]
+    amount: number
+    reason?: string
+    description?: string
+}) {
+    const { user, profile } = await requireBaseProductionOwner()
+    const parsed = safeParse(BaseBulkAdjustmentSchema, input)
+    if ('error' in parsed) return parsed
+
+    const supabase = await createServerClient()
+    const { data: workers, error: workersError } = await supabase
+        .from('base_production_workers')
+        .select('id')
+        .eq('org_id', profile.org_id)
+        .eq('is_active', true)
+
+    if (workersError) return databaseError(workersError, 'Workers could not be loaded. Please try again.')
+
+    const activeIds = new Set((workers ?? []).map(worker => worker.id as string))
+    const workerIds = [...new Set(parsed.data.workerIds)]
+    if (workerIds.some(workerId => !activeIds.has(workerId))) {
+        return { error: 'Some selected workers are no longer active. Close this window and try again.' }
+    }
+
+    const description = parsed.data.kind === 'deduction'
+        ? buildDeductionDescription(parsed.data.reason, parsed.data.description)
+        : parsed.data.description || null
+
+    const { error } = await supabase
+        .from('base_worker_advances')
+        .insert(workerIds.map(workerId => ({
+            org_id: profile.org_id,
+            worker_id: workerId,
+            amount: parsed.data.amount,
+            description,
+            created_by: user.id,
+        })))
+
+    if (error) return databaseError(error, parsed.data.kind === 'deduction'
+        ? 'Deductions could not be recorded. Please try again.'
+        : 'Advances could not be recorded. Please try again.')
+
+    revalidatePath('/owner/production')
+    revalidatePath('/owner/payroll')
+    revalidatePath('/owner/operations')
+    return { success: true as const, count: workerIds.length }
 }
 
 const BaseIncentiveSchema = z.object({

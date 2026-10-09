@@ -47,6 +47,8 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
+import { BulkAdjustmentDialog } from '@/components/payroll/BulkAdjustmentDialog'
+import { DEDUCTION_REASONS, type DeductionReason } from '@/lib/base-bulk-adjustment'
 import { formatINR } from '@/lib/finance'
 import { buildBasePayrollReadiness } from '@/lib/base-payroll-readiness'
 import { basePayrollReview } from '@/lib/base-payroll-review'
@@ -192,16 +194,6 @@ type AdvanceDraft = {
     description: string
 }
 
-const DEDUCTION_REASONS = [
-    'Mistake / Damage',
-    'Water access / Utilities',
-    'Penalty / Absence',
-    'Mess / Canteen / Food',
-    'Other',
-] as const
-
-type DeductionReason = typeof DEDUCTION_REASONS[number]
-
 type DeductionDraft = {
     workerId: string
     amount: string
@@ -281,6 +273,7 @@ export default function BaseProductionClient({
     const [paymentMode, setPaymentMode] = useState<BasePayrollPaymentMode>('cash')
     const [advanceDraft, setAdvanceDraft] = useState<AdvanceDraft>(() => emptyAdvanceDraft(tourSample ? initialData.workers[0]?.id : ''))
     const [deductionDraft, setDeductionDraft] = useState<DeductionDraft>(() => emptyDeductionDraft(tourSample ? initialData.workers[0]?.id : ''))
+    const [bulkOpen, setBulkOpen] = useState(false)
     const [workspaceOpened, setWorkspaceOpen] = useState(false)
     const workspaceOpen = workspaceOpened || payrollTourStep === 'pr-settle' || payrollTourStep === 'pr-paid' || payrollTourStep === 'pr-complete'
     const [workspaceHasOpened, setWorkspaceHasOpened] = useState(workspaceOpen)
@@ -624,6 +617,10 @@ export default function BaseProductionClient({
                                         : activePeriodSummary.status === 'in_progress'
                                             ? t('payroll.continueSettlement')
                                             : t('payroll.settlePayroll')}</span>
+                            </Button>
+                            <Button data-payroll-bulk-pill type="button" variant="outline" className="min-h-[44px] w-full rounded-lg px-4" onClick={() => setBulkOpen(true)}>
+                                <Users className="size-4" aria-hidden="true" />
+                                <span data-i18n-skip="true">{tx('Bulk advance / deduction')}</span>
                             </Button>
                         </>
                     )}
@@ -1014,6 +1011,15 @@ export default function BaseProductionClient({
                     </form>
                 </DialogContent>
             </Dialog>
+
+            {view === 'payroll' && (
+                <BulkAdjustmentDialog
+                    open={bulkOpen}
+                    onOpenChange={setBulkOpen}
+                    workers={initialData.workers}
+                    onSaved={() => router.refresh()}
+                />
+            )}
 
             <ConfirmActionDialog
                 open={Boolean(settlingWorkerId)}
