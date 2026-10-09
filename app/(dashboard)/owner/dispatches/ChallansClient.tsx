@@ -10,7 +10,6 @@ import {
     AlertTriangle,
     History,
 } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { railPrimaryAction } from '@/components/ui/rail'
 import { Input } from '@/components/ui/input'
@@ -41,7 +40,9 @@ import { getChallan, listChallans, mutateChallan } from './challan-actions'
 import { businessDate, challanDueStatus } from '@/lib/challan-payment-terms'
 import { isSameChallanDraft } from '@/lib/challan-draft-entry'
 import ChallanDraftEditor from './ChallanDraftEditor'
-import DispatchDetailDialog from './DispatchDetailDialog'
+import DispatchDetailDialog, { ChallanNumber, DispatchDetailPanel } from './DispatchDetailDialog'
+import { useMediaQuery } from '@/hooks/use-media-query'
+import { cn } from '@/lib/utils'
 import { deliveryBadgeVariant, formatDocumentDate, formatMeters, paymentBadgeVariant } from '@/lib/dispatch-detail'
 
 function NewDispatchButton({ onClick, disabled, label, tourAnchor }: { onClick: () => void; disabled: boolean; label: string; tourAnchor?: "dispatch.new" }) {
@@ -50,6 +51,19 @@ function NewDispatchButton({ onClick, disabled, label, tourAnchor }: { onClick: 
             <Plus className="size-4" aria-hidden="true" />
             {label}
         </Button>
+    )
+}
+
+/** Wide enough to keep the list and the open challan side by side; narrower screens open the challan as a dialog. */
+const SPLIT_QUERY = '(min-width: 1280px)'
+const DOT: Record<string, string> = { success: 'bg-success', info: 'bg-info', warning: 'bg-[var(--wv-ochre-400)]', risk: 'bg-risk' }
+
+function StatusDot({ variant, label }: { variant: string; label: string }) {
+    return (
+        <span className="inline-flex items-center gap-1.5">
+            <span aria-hidden="true" className={cn('size-1.5 shrink-0 rounded-full', DOT[variant] ?? 'bg-hairline-strong')} />
+            {label}
+        </span>
     )
 }
 
@@ -71,6 +85,7 @@ export default function ChallansClient({
 }) {
     const { t, language } = useTranslation()
     const tx = (s: string) => t(`challan.${s}`)
+    const split = useMediaQuery(SPLIT_QUERY)
     const tourSample = useTourSample('dispatch')
     const tourStep = tourSample?.step as DispatchTourStep | undefined
     const surface = tourSurfaceProps(Boolean(tourSample))
@@ -96,7 +111,9 @@ export default function ChallansClient({
     const [selectedState, setSelected] = useState<Challan | null>(null),
         [events, setEvents] = useState<ChallanEvent[]>([]),
         [eventsLoading, setEventsLoading] = useState(false),
-        [draftState, setDraft] = useState<ChallanDraft | null>(null)
+        [draftState, setDraft] = useState<ChallanDraft | null>(null),
+        // The narrow-screen dialog opens only when asked to; the wide panel always shows a challan.
+        [detailOpen, setDetailOpen] = useState(false)
     const [operationState, setOperation] = useState<
             ChallanMutation['action'] | null
         >(null),
@@ -157,7 +174,7 @@ export default function ChallansClient({
             setBusy(false)
         }
     }
-    async function view(id: string) {
+    async function view(id: string, reveal = true) {
         const request = ++viewRequest.current
         setBusy(true)
         try {
@@ -167,7 +184,11 @@ export default function ChallansClient({
             else {
                 setSelected(r.data!)
                 setEvents(r.events!)
-                setDraft(null)
+                // A load for the wide panel never touches an open draft; a save or a tap shows its challan.
+                if (reveal) {
+                    setDraft(null)
+                    setDetailOpen(true)
+                }
             }
         } catch {
             if (request === viewRequest.current) setError(tx('loadError'))
@@ -177,13 +198,34 @@ export default function ChallansClient({
         }
     }
     /** Opens the dispatch at once from its list row; only its history waits for the server. */
-    function openDetail(d: Challan) {
+    function openDetail(d: Challan, reveal = true) {
         setSelected(d)
         setEvents([])
         setEventsLoading(true)
         setError('')
-        void view(d.id)
+        if (reveal) setDetailOpen(true)
+        void view(d.id, reveal)
     }
+    // On a wide screen the panel always shows a challan from the list: the first one until another is picked.
+    const showFirst = useRef(openDetail)
+    useEffect(() => { showFirst.current = openDetail })
+    useEffect(() => {
+        if (!split || tourSample || draftState || pending) return
+        if (rows.length > 0 && !rows.some((row) => row.id === selectedState?.id)) showFirst.current(rows[0], false)
+    }, [split, tourSample, draftState, pending, rows, selectedState?.id])
+    // A Fabric stock card's Dispatch opens here with its quality chosen.
+    useEffect(() => {
+        if (tourSample) return
+        const qualityId = new URLSearchParams(window.location.search).get('quality')
+        if (!qualityId) return
+        window.history.replaceState(null, '', window.location.pathname)
+        if (!qualities.some((quality) => quality.id === qualityId)) return
+        viewRequest.current++
+        setEventsLoading(false)
+        setSelected(null)
+        setDraft({ ...blank(), quality_id: qualityId })
+        draftId.current = crypto.randomUUID()
+    }, [tourSample, qualities])
     /** Resolves to the saved challan's id, or null when nothing was saved. `onSaved` runs the moment the server confirms, before the lists reload. */
     async function save(
         action: ChallanMutation['action'],
@@ -266,12 +308,30 @@ export default function ChallansClient({
         )
         setError('')
     }
+    function editDraft() {
+        if (!selected) return
+        setDraft({
+            quality_id: selected.quality_id,
+            selling_rate: selected.selling_rate,
+            document: selected.document,
+            lines: selected.lines,
+        })
+    }
+    function reverseEntry(eventId: string) {
+        start('reverse_entry')
+        setFields({ event_id: eventId })
+    }
     function beginDraft() {
+        // A new draft saves under its own id: no challan may still be loading into `selected` behind it.
+        viewRequest.current++
+        setEventsLoading(false)
         setSelected(null)
         setDraft(blank())
         draftId.current = crypto.randomUUID()
         setError('')
     }
+    // The wide panel shows the chosen challan, or the first in the list while its history loads.
+    const shown = selected ?? rows[0] ?? null
     const field = (key: string, type = 'text', required = false) => (
         <label key={key} className="grid gap-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground">
             <span>{tx(key === 'evidence' ? 'evidenceLink' : key)}{required ? ' *' : ''}</span>
@@ -302,9 +362,11 @@ export default function ChallansClient({
                     <NewDispatchButton tourAnchor="dispatch.new" onClick={beginDraft} disabled={busy || !!pending} label={tx('new')} />
                 </>}
             />
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="xl:grid xl:h-[calc(100dvh-10.5rem)] xl:min-h-[34rem] xl:grid-cols-[minmax(21rem,25rem)_minmax(0,1fr)] xl:overflow-clip xl:rounded-2xl xl:border xl:border-hairline xl:bg-surface xl:shadow-xs">
+            <div className="flex min-h-0 flex-col gap-4 xl:border-r xl:border-hairline xl:bg-surface-soft/40 xl:p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center xl:flex-col xl:items-stretch">
                 <LiquidSegmented
-                    className="w-full sm:w-fit"
+                    className="w-full sm:w-fit xl:w-full"
                     fullWidth
                     aria-label={tx('dispatchViews')}
                     disabled={busy}
@@ -331,7 +393,7 @@ export default function ChallansClient({
                         />
                         <Input
                             type="search"
-                            className="h-11 w-full rounded-xl border-hairline/80 bg-surface/95 pl-10 pr-3 text-sm text-ink shadow-xs placeholder:text-subtle/60 focus-visible:border-saffron focus-visible:ring-saffron/30"
+                            className="h-10 w-full rounded-lg border-hairline bg-surface pl-10 pr-3 text-sm text-ink shadow-xs placeholder:text-subtle/60 focus-visible:border-saffron focus-visible:ring-saffron/30 max-md:min-h-[44px]"
                             aria-label={tx('search')}
                             placeholder={tx('search')}
                             value={search}
@@ -343,14 +405,14 @@ export default function ChallansClient({
                         variant="outline"
                         disabled={busy}
                         aria-label={tx('searchButton')}
-                        className="h-11 shrink-0 rounded-xl px-3 text-xs sm:text-sm"
+                        className="h-10 shrink-0 rounded-lg border-hairline px-3 text-sm max-md:min-h-[44px]"
                     >
                         <Search className="h-4 w-4" aria-hidden="true" />
-                        <span className="hidden sm:inline">{tx('searchButton')}</span>
+                        <span className="hidden sm:inline xl:hidden">{tx('searchButton')}</span>
                     </Button>
                 </form>
             </div>
-            {error && (
+            {error && !(split && shown) && (
                 <p
                     role="alert"
                     className="rounded-xl border border-risk/25 bg-risk-soft/55 p-3 text-sm font-medium text-risk"
@@ -359,99 +421,112 @@ export default function ChallansClient({
                 </p>
             )}
             {pending && !busy && (
-                <Button variant="secondary" onClick={() => save(pending.action, pending.payload)} className="h-9 rounded-xl text-xs">
+                <Button variant="secondary" onClick={() => save(pending.action, pending.payload)} className="h-10 rounded-lg text-sm">
                     {tx('retryButton')}
                 </Button>
             )}
-            <section data-dispatch-tour="overview" aria-labelledby="challan-list-heading" className="space-y-3">
-                <div className="flex items-center justify-between gap-3">
+            <section data-dispatch-tour="overview" aria-labelledby="challan-list-heading" className="flex min-h-0 flex-1 flex-col gap-2">
+                <div className="flex items-center justify-between gap-3 px-1">
                     <h2 id="challan-list-heading" className="text-[11px] font-semibold uppercase tracking-[0.14em] text-subtle">
                         {tx(history ? 'historyHeading' : 'activeHeading')}
                     </h2>
-                    <span className="text-xs font-medium tabular-nums text-subtle">
-                        {t('challan.recordCount', { count: rows.length })}
-                    </span>
+                    <span className="text-xs font-semibold tabular-nums text-subtle">{rows.length}</span>
                 </div>
-                <div key={history ? 'history' : 'active'} className="ui-content-swap grid gap-2.5">
+                <div className="min-h-0 flex-1 xl:-mx-1 xl:overflow-y-auto xl:px-1 xl:pb-1">
+                {rows.length > 0 && (
+                <div key={history ? 'history' : 'active'} className="ui-content-swap grid gap-1 rounded-2xl border border-hairline bg-surface p-1.5 shadow-xs xl:rounded-none xl:border-0 xl:bg-transparent xl:p-0 xl:shadow-none">
                     {rows.map((d) => {
                         const isDisputed = ['review', 'disputed'].includes(d.difference_status)
-                        const isSelected = selected?.id === d.id
+                        const isSelected = shown?.id === d.id && (split || detailOpen)
                         const balanceLabel = Number(d.balance) < 0 ? tx('credit') : tx('balance')
+                        const due = challanDueStatus(d, today)
+                        const settled = Number(d.balance) <= 0
+                        const payment = paymentStatus(d)
                         return (
                             <button
                                 key={d.id}
                                 type="button"
                                 aria-pressed={isSelected}
-                                className={isSelected
-                                    ? 'grid w-full grid-cols-1 gap-x-6 gap-y-3 rounded-2xl border border-saffron/60 bg-surface/95 p-4 text-left shadow-[var(--shadow-card)] ring-1 ring-saffron/20 transition-[border-color,box-shadow,transform] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center'
-                                    : 'grid w-full grid-cols-1 gap-x-6 gap-y-3 rounded-2xl border border-hairline/85 bg-surface/95 p-4 text-left shadow-[var(--shadow-card)] transition-[border-color,box-shadow,transform] hover:border-saffron/35 hover:shadow-[var(--shadow-panel)] motion-safe:hover:-translate-y-0.5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center'}
+                                className={cn(
+                                    'w-full rounded-xl px-3.5 py-3 text-left transition-colors duration-150 disabled:opacity-60',
+                                    isSelected ? 'bg-[var(--wv-bg-selected)] ring-1 ring-inset ring-[var(--wv-neel-200)]' : 'hover:bg-surface-soft/80',
+                                )}
                                 onClick={() => openDetail(d)}
-                                disabled={busy || !!pending}
+                                disabled={!!pending || (busy && !eventsLoading)}
                             >
-                                <div className="min-w-0">
-                                    <p className="font-mono text-[11px] font-semibold tracking-[0.08em] text-subtle">
-                                        {d.number}
-                                    </p>
-                                    <h3 className="mt-1 truncate text-[15px] font-bold leading-tight tracking-tight text-ink">
-                                        {d.document.customer_name}
-                                    </h3>
-                                    <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-body">
-                                        <span className="font-medium text-ink">{d.quality_label}</span>
-                                        <span aria-hidden="true" className="text-subtle/60">·</span>
-                                        <span className="tabular-nums">{formatMeters(d.sent_meters)} m</span>
-                                        <span aria-hidden="true" className="text-subtle/60">·</span>
+                                <span className="flex items-baseline justify-between gap-3">
+                                    <span className="min-w-0 truncate text-[15px] font-semibold leading-tight text-ink">{d.document.customer_name}</span>
+                                    <span className="shrink-0 text-[15px] font-semibold leading-tight tabular-nums text-ink">
+                                        <span className="sr-only">{balanceLabel}: </span>
+                                        ₹{money(Math.abs(d.balance))}
+                                    </span>
+                                </span>
+                                <span className="mt-1 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 text-[13px]">
+                                    <span className="min-w-0 text-subtle">
+                                        <ChallanNumber value={d.number} className="text-xs" />
+                                        <span aria-hidden="true"> · </span>
                                         <time dateTime={d.document.date}>{formatDocumentDate(d.document.date)}</time>
-                                    </p>
-                                </div>
-                                <div className="flex min-w-0 flex-col gap-2 sm:items-end">
-                                    <div className="flex flex-wrap items-center gap-1.5 sm:justify-end">
-                                        <Badge variant={deliveryBadgeVariant(d.delivery_status)} className="border-current/10 text-[10px] font-semibold">
-                                            {tx(d.delivery_status)}
-                                        </Badge>
-                                        <Badge variant={paymentBadgeVariant(paymentStatus(d))} className="border-current/10 text-[10px] font-semibold">
-                                            {tx(paymentStatus(d))}
-                                        </Badge>
-                                    </div>
-                                    <div className="sm:text-right">
-                                        <p className="text-[15px] font-bold leading-tight tabular-nums text-ink">
-                                            <span className="sr-only">{balanceLabel}: </span>
-                                            ₹{money(Math.abs(d.balance))}
-                                        </p>
-                                        <p className="mt-1 text-[11px] font-medium leading-snug text-subtle">
-                                            {Number(d.balance) <= 0
-                                                ? Number(d.balance) < 0 ? tx('credit') : tx('paidInFull')
-                                                : <>
-                                                    {dueLabel(d)}
-                                                    {d.payment_due_date && ' · ' + formatDocumentDate(d.payment_due_date)}
-                                                </>}
-                                        </p>
-                                    </div>
-                                </div>
+                                    </span>
+                                    <span className={cn(
+                                        'shrink-0',
+                                        settled ? 'text-success' : due?.kind === 'overdueDays' ? 'font-semibold text-risk' : due?.kind === 'dueToday' ? 'font-semibold text-[var(--wv-ochre-800)]' : 'text-subtle',
+                                    )}>
+                                        {settled ? (Number(d.balance) < 0 ? tx('credit') : tx('paidInFull')) : dueLabel(d)}
+                                    </span>
+                                </span>
+                                <span className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-body">
+                                    <span className="min-w-0 truncate">{d.quality_label} · <span className="tabular-nums">{formatMeters(d.sent_meters)} m</span></span>
+                                    <StatusDot variant={deliveryBadgeVariant(d.delivery_status)} label={tx(d.delivery_status)} />
+                                    {payment !== 'draft' && d.delivery_status !== 'reversed' && <StatusDot variant={paymentBadgeVariant(payment)} label={tx(payment)} />}
+                                </span>
                                 {isDisputed && (
-                                    <div className="col-span-full flex items-center gap-1.5 rounded-xl border border-warning/25 bg-warning-soft/55 px-3 py-1.5 text-xs font-semibold text-warning">
-                                        <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-                                        <span>{tx(d.difference_status)}</span>
-                                    </div>
+                                    <span className="mt-1.5 flex items-center gap-1.5 text-xs font-semibold text-[var(--wv-ochre-800)]">
+                                        <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                                        {tx(d.difference_status)}
+                                    </span>
                                 )}
                             </button>
                         )
                     })}
                 </div>
+                )}
                 {!rows.length && (
                     <EmptyState
                         icon={history ? History : Truck}
                         title={tx('empty')}
+                        className="xl:min-h-64 xl:border-0 xl:bg-transparent"
                         action={!history && !search.trim() && (
                             <NewDispatchButton onClick={beginDraft} disabled={busy || !!pending} label={tx('new')} />
                         )}
                     />
                 )}
                 {rows.length > 0 && rows.length % 50 === 0 && (
-                    <Button variant="outline" onClick={() => load(history, true)} disabled={busy} className="h-10 rounded-xl text-xs">
+                    <Button variant="outline" onClick={() => load(history, true)} disabled={busy} className="mt-2 h-10 w-full rounded-lg text-sm">
                         {tx('more')}
                     </Button>
                 )}
+                </div>
             </section>
+            </div>
+            <div className="hidden min-h-0 xl:block xl:overflow-y-auto">
+                <DispatchDetailPanel
+                    emptyLabel={tx('detailEmpty')}
+                    challan={shown}
+                    events={selected ? events : []}
+                    eventsLoading={eventsLoading || (!selected && !tourSample && !!shown)}
+                    busy={busy}
+                    locked={busy || !!pending || eventsLoading || !selected}
+                    error={error}
+                    onRetry={pending && !busy ? () => save(pending.action, pending.payload) : undefined}
+                    today={today}
+                    onRefresh={() => selected && view(selected.id, false)}
+                    onStart={start}
+                    onReceivedAsSent={() => selected && save('receipt', { meters: selected.sent_meters })}
+                    onEditDraft={editDraft}
+                    onReverseEntry={reverseEntry}
+                />
+            </div>
+            </div>
             <Dialog
                 open={!!draft}
                 onOpenChange={(open) => {
@@ -497,7 +572,7 @@ export default function ChallansClient({
             <DispatchDetailDialog
                 challan={selected}
                 // A tour step that teaches an operation shows only that dialog; one tour surface at a time.
-                open={!!selected && !draft && !(tourSample && operation)}
+                open={!split && !!selected && (detailOpen || !!tourSelectedId) && !draft && !(tourSample && operation)}
                 events={events}
                 eventsLoading={eventsLoading}
                 busy={busy}
@@ -510,6 +585,7 @@ export default function ChallansClient({
                     // A save in progress keeps the dispatch open; a history load does not.
                     if (lock.current || pending) return
                     viewRequest.current++
+                    setDetailOpen(false)
                     setSelected(null)
                     setEvents([])
                     setEventsLoading(false)
@@ -518,19 +594,8 @@ export default function ChallansClient({
                 onRefresh={() => selected && view(selected.id)}
                 onStart={start}
                 onReceivedAsSent={() => selected && save('receipt', { meters: selected.sent_meters })}
-                onEditDraft={() =>
-                    selected &&
-                    setDraft({
-                        quality_id: selected.quality_id,
-                        selling_rate: selected.selling_rate,
-                        document: selected.document,
-                        lines: selected.lines,
-                    })
-                }
-                onReverseEntry={(eventId) => {
-                    start('reverse_entry')
-                    setFields({ event_id: eventId })
-                }}
+                onEditDraft={editDraft}
+                onReverseEntry={reverseEntry}
             />
             <Dialog
                 open={!!operation}

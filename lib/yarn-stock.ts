@@ -23,15 +23,33 @@ export type YarnMovement = {
     challan_id: string | null; recipe_snapshot: { recipe?: YarnRecipe; sent_meters?: number; meters?: number; kg_per_100m?: number; costing_id?: string | null; version?: number } | null
 }
 export type YarnCursor = { at: string; id: string }
+/** A movement of the last three weeks, read for week totals, daily use and trend lines (see lib/stock-activity.ts). */
+export type YarnActivity = Pick<YarnMovement, 'id' | 'yarn_id' | 'kind' | 'kg_delta' | 'balance_after' | 'reason' | 'challan_id' | 'recipe_snapshot' | 'created_at'>
 export type YarnBoard = {
     org_id: string
     started_at: string | null; as_of: string | null; yarns: YarnBalance[]; qualities: YarnQuality[]
     costings: YarnCosting[]; movements: YarnMovement[]; nextCursor: YarnCursor | null
+    /** Movements since `activitySince()`, newest first. Absent for a dated, filtered or paged load and for tour samples; null when it could not be read. */
+    activity?: YarnActivity[] | null
 }
 export const YarnFilterSchema = z.object({
     asOf: z.iso.date().optional(), yarnId: z.string().uuid().optional(),
     cursor: z.object({ at: z.string().datetime({ offset: true }), id: z.string().uuid() }).optional(),
+    activity: z.boolean().optional(),
 })
+/** Which week total a yarn movement counts towards. Production uses yarn; older records used it at dispatch. */
+export function yarnActivityBucket(kind: string): 'received' | 'used' | 'adjusted' | null {
+    if (kind === 'receipt') return 'received'
+    if (kind === 'production_consumption' || kind === 'production_reversal' || kind === 'dispatch' || kind === 'dispatch_reversal') return 'used'
+    if (kind === 'opening' || kind === 'correction' || kind === 'audit_adjustment') return 'adjusted'
+    return null
+}
+/** Each fabric whose linked recipe draws on this yarn, with the role and rate. */
+export function yarnFeeds(yarnKey: string, qualities: readonly YarnQuality[]) {
+    return qualities.flatMap(quality => (quality.recipe ?? [])
+        .filter(layer => layer.yarn_key === yarnKey)
+        .map(layer => ({ qualityId: quality.id, quality: quality.quality_label, role: layer.role, kgPer100m: layer.kg_per_100m })))
+}
 export type YarnFilter = z.input<typeof YarnFilterSchema>
 export function yarnHistoryPage(rows: YarnMovement[]) {
     const movements = rows.slice(0, 50), last = movements.at(-1)

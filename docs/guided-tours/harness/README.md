@@ -45,6 +45,8 @@ REDUCED_MOTION=1 node run-tour.mjs <scenario> en 1024x768      # reduced-motion 
 node probe-labels.mjs                                          # writes labels-out.json
 ```
 
+Add `&showcase=1` to `fabric-stock`, `yarn-stock` or `dispatch` to see the page with a populated factory instead of the tour sample: `showcase.ts` holds two qualities, four yarns with three weeks of activity, and four challans, and answers those pages' server actions (any stub whose name is in `window.__harnessFixtures` returns that fixture). Use it for visual checks of the stock and dispatch pages, not for tours.
+
 Scenarios in `main.tsx` today: `foundation`, `production` (add `&populated=1` for one loom, or `&populated=rich` for two qualities on six looms with today's and yesterday's metres), `fabric-stock`, `yarn-stock`, `dispatch`, `payroll`, `payroll-records` (several months of settled payments; add `&empty=1` for none), `machines`, `workers`, `workers-salary`, `assignments`, `estimator`, `free-estimator`, `rates`, `quotes`, `quotes-compare`, `free-costings`, `labels`.
 
 The one `404` console error in every run is the missing favicon; ignore it.

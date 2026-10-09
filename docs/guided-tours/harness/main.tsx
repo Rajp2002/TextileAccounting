@@ -102,6 +102,7 @@ async function DispatchFixture() {
   if (params.get('pending') === '1') sessionStorage.setItem('weavly-challan-pending', JSON.stringify({ id: 'tour-pending-dispatch', requestId: 'tour-pending-request', version: 1, action: 'confirm', data: {} }))
   const initialData = params.get('populated') === '1' ? [{ id: 'tour-fixture-dispatch', quality_id: 'tour-fixture-quality', quality_label: 'Sample fabric', number: 'SAMPLE-1', selling_rate: 40, document: { date: today, customer_name: 'Sample customer' }, lines: [{ lot: 'SAMPLE-1', meters: 100 }], sent_meters: 100, chargeable_meters: 100, acknowledged_meters: null, delivery_status: 'sent', difference_status: 'none', adjustment_amount: 0, paid_amount: 0, balance: 4000, version: 1, archived_at: null, issued_at: today, created_at: today }] : []
   const qualities = params.get('noStock') === '1' ? [] : [{ id: 'tour-fixture-quality', quality_label: 'Sample fabric', quality_key: 'sample fabric', meters: 600, production_meters: 600, opening_recorded: true }]
+  if (params.get('showcase') === '1') { const show = await import('./showcase'); show.installShowcase(); return <Tour userId="u1" orgId="o1" userMetadata={{}}><DispatchLiveFixture Client={Client} initialData={show.challans()} qualities={show.fabricBoard().qualities} /></Tour> }
   return <Tour userId="u1" orgId="o1" userMetadata={{}}><DispatchLiveFixture Client={Client} initialData={initialData} qualities={qualities} /></Tour>
 }
 
@@ -118,6 +119,7 @@ async function FabricFixture() {
   const { default: Client } = await import('@/app/(dashboard)/owner/stock/QualityStockClient')
   const qualities = params.get('populated') === '1' ? [{ id: 'tour-fixture-fabric', quality_label: 'Retained fabric', quality_key: 'retained fabric', meters: 600, production_meters: 100, opening_recorded: params.get('allOpening') === '1' }] : []
   const initialData = { qualities, total_meters: qualities.length ? 600 : 0, movements: [], nextCursor: null, cutover: null }
+  if (params.get('showcase') === '1') { const show = await import('./showcase'); show.installShowcase(); return <Tour kind="fabric-stock" userId="u1" orgId="o1" userMetadata={{}}><FabricLiveFixture Client={Client} initialData={show.fabricBoard()} /></Tour> }
   return <Tour kind="fabric-stock" userId="u1" orgId="o1" userMetadata={{}}><FabricLiveFixture Client={Client} initialData={initialData} /></Tour>
 }
 
@@ -139,6 +141,7 @@ async function YarnFixture() {
     yarns: populated ? [{ id: 'tour-fixture-yarn', yarn_name: 'Retained yarn', yarn_key: 'retained yarn', weight_kg: 75, opening_recorded: true }] : [],
     qualities: populated ? [{ id: 'tour-fixture-fabric', quality_label: 'Retained fabric', quality_key: 'retained fabric', meters: 200, recipe: costings.length ? recipe : null, costing_id: costings[0]?.id ?? null, version: 1 }] : [],
     costings: populated ? costings : [], movements: [], nextCursor: null }
+  if (params.get('showcase') === '1') { const show = await import('./showcase'); show.installShowcase(); return <Tour kind="yarn-stock" userId="u1" orgId="o1" userMetadata={{}}><YarnLiveFixture Client={Client} initialData={show.yarnBoard()} /></Tour> }
   return <Tour kind="yarn-stock" userId="u1" orgId="o1" userMetadata={{}}><YarnLiveFixture Client={Client} initialData={initialData} /></Tour>
 }
 

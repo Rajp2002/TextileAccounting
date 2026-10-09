@@ -171,6 +171,7 @@ export const en = {
   }
 },
     challan: {
+        detailEmpty: "Pick a challan from the list to see it here.",
         payment_due_date: "Full payment due date",
         payment_terms: "Agreed payment terms",
         paymentTermsHelp: "Leave blank if no date is agreed. Choose any agreed date; partial payments do not change it.",
@@ -372,7 +373,30 @@ export const en = {
     "saved": "Stock saved.",
     "loadError": "Stock could not be loaded. Please try again.",
     "validation": "Enter a quality, non-negative metres with at most two decimals, and a reason of at least 3 characters.",
-    "retrySame": "Retry with these same details to check or complete this save safely. Close and refresh before entering a different change."
+    "retrySame": "Retry with these same details to check or complete this save safely. Close and refresh before entering a different change.",
+    "intro": "Finished grey fabric on hand, ready to dispatch.",
+    "onHand": "On hand",
+    "lastWeek": "Last 7 days",
+    "woven": "Woven",
+    "dispatched": "Dispatched",
+    "adjusted": "Corrected",
+    "netChange": "Net change",
+    "qualityCount": "{count} qualities",
+    "shareLabel": "Share of stock by quality",
+    "others": "{count} other qualities",
+    "updated": "Updated {date}",
+    "trendLabel": "Balance over the last 3 weeks",
+    "quietWeek": "No movements in the last 7 days",
+    "dispatchAction": "Dispatch",
+    "recent": "Recent movements",
+    "recentHelp": "The last 7 days, day by day.",
+    "recentEmpty": "No stock movements in the last 7 days.",
+    "fullHistory": "Full history",
+    "today": "Today",
+    "production_reversal": "Production reversed",
+    "audit_adjustment": "Audit adjustment",
+    "activityUnavailable": "Weekly figures could not be loaded. Stock balances are current.",
+    "qualityCountOne": "1 quality"
 },
 
   nav: {
