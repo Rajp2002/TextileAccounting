@@ -20,7 +20,7 @@ function stubServerModules() {
       const names = new Set()
       for (const m of src.matchAll(/export\s+(?:async\s+)?function\s+(\w+)/g)) names.add(m[1])
       for (const m of src.matchAll(/export\s+const\s+(\w+)/g)) names.add(m[1])
-      const body = [...names].map(n => `export const ${n} = async (...args) => { (window.__serverCalls ||= []).push({ fn: ${JSON.stringify(n)}, file: ${JSON.stringify(path.relative(repo, file))} }); console.warn('[harness] server action called', ${JSON.stringify(n)}); return { success: false, error: 'harness', data: null } }`)
+      const body = [...names].map(n => `export const ${n} = async (...args) => { (window.__serverCalls ||= []).push({ fn: ${JSON.stringify(n)}, file: ${JSON.stringify(path.relative(repo, file))} }); console.warn('[harness] server action called', ${JSON.stringify(n)}); return window.__harnessFixtures?.[${JSON.stringify(n)}]?.(...args) ?? { success: false, error: 'harness', data: null } }`)
       return body.join('\n') + '\nexport default {}\n'
     },
   }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { reportPwaWorkflowSuccess } from '@/lib/pwa-workflow-success'
 import { RouteMilestones } from '@/components/performance/route-milestones'
 import Link from 'next/link'
@@ -15,22 +15,30 @@ import {
     SlidersHorizontal,
     Filter,
     AlertCircle,
+    ClipboardCheck,
     Plus,
     X,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { PageHeader } from '@/components/ui/page-header'
+import { EmptyState, PageHeader } from '@/components/ui/page-header'
+import { railPrimaryAction } from '@/components/ui/rail'
 import { PageGuide } from '@/components/tours/TourInvitation'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { COMPOSITION_SLOTS, CompositionBar, DayGroupList, OTHER_SWATCH, SignedQuantity, StockTrend, Swatch, formatIndiaDay, swatchFor } from '@/components/stock/stock-presentation'
 import { useTranslation } from '@/lib/i18n/context'
 import { useTourSample } from '@/lib/tours/sample-context'
 import { tourSurfaceProps } from '@/lib/tours/sample-surface'
 import { fabricStockSampleForm } from '@/lib/tours/sample-data/stock'
 import type { FabricStockTourStep } from '@/lib/stock-tour'
-import { StockAdjustmentSchema, type QualityStockBoard, type StockAdjustmentInput, type StockQuality } from '@/lib/quality-stock'
+import { businessDate } from '@/lib/challan-payment-terms'
+import { activitySince, balanceTrail, groupByIndiaDay, totalsSince, weekSince, type ActivityRow } from '@/lib/stock-activity'
+import { StockAdjustmentSchema, fabricActivityBucket, type QualityStockBoard, type StockAdjustmentInput, type StockQuality } from '@/lib/quality-stock'
 import { getQualityStockBoard, recordQualityStockAdjustment } from './actions'
+
+// Phones render rem at 14px, so the 44px touch target needs a pixel minimum.
+const secondaryAction = 'h-10 rounded-lg border-hairline bg-surface font-semibold text-ink shadow-xs hover:bg-surface-soft max-md:min-h-[44px]'
 
 export default function QualityStockClient({ initialData }: { initialData: QualityStockBoard }) {
     const { t, language } = useTranslation()
@@ -79,10 +87,15 @@ export default function QualityStockClient({ initialData }: { initialData: Quali
         if (loading.current) return
         loading.current = true; setBusy(true); setError('')
         try {
-            const result = await getQualityStockBoard({ qualityId: filter || undefined, cursor: more ? data.nextCursor ?? undefined : undefined })
+            const result = await getQualityStockBoard({ qualityId: filter || undefined, cursor: more ? data.nextCursor ?? undefined : undefined, activity: !filter && !more })
             if ('error' in result) { setError(tx('loadError')); return }
             setQualityId(filter)
-            setData(previous => ({ ...result.data, movements: more ? [...previous.movements, ...result.data.movements.filter(row => !previous.movements.some(old => old.id === row.id))] : result.data.movements }))
+            // A filtered or older page carries no activity; the page keeps the week it already shows.
+            setData(previous => ({
+                ...result.data,
+                activity: result.data.activity === undefined ? previous.activity : result.data.activity,
+                movements: more ? [...previous.movements, ...result.data.movements.filter(row => !previous.movements.some(old => old.id === row.id))] : result.data.movements,
+            }))
         } catch { setError(tx('loadError')) }
         finally { loading.current = false; setBusy(false) }
     }
@@ -90,6 +103,11 @@ export default function QualityStockClient({ initialData }: { initialData: Quali
     function open(kind: 'opening' | 'correction', quality?: StockQuality) {
         setForm({ kind, quality }); setLabel(quality?.quality_label ?? ''); setMeters(kind === 'correction' ? String(quality?.meters ?? '') : '')
         setReason(''); setSaveError(''); setRequest(null)
+    }
+
+    function openHistory(filter: string) {
+        setIsHistoryOpen(true)
+        if (filter !== qualityId || data.movements.length === 0) void load(filter)
     }
 
     async function save() {
@@ -102,173 +120,273 @@ export default function QualityStockClient({ initialData }: { initialData: Quali
         try {
             const result = await recordQualityStockAdjustment(input)
             if ('error' in result) { setSaveError(tx(result.errorKey)); return }
-            setForm(null); setRequest(null); setNotice(tx('saved')); if (!tourSample) reportPwaWorkflowSuccess('stock'); await load()
+            setForm(null); setRequest(null); setNotice(tx('saved')); if (!tourSample) reportPwaWorkflowSuccess('stock'); await load('')
         } catch { setSaveError(tx('retrySame')) }
         finally { writing.current = false; setSaving(false) }
     }
 
-    const qualities = data.qualities.filter(row => row.quality_label.toLocaleLowerCase().includes(search.toLocaleLowerCase()))
+    // Largest first: the composition bar, the legend and the cards share one order and one colour per quality.
+    const ranked = useMemo(() => [...data.qualities].sort((a, b) => Number(b.meters) - Number(a.meters) || a.quality_label.localeCompare(b.quality_label)), [data.qualities])
+    const colorOf = new Map(ranked.map((quality, rank) => [quality.id, swatchFor(rank)]))
+    const labelOf = new Map(data.qualities.map(quality => [quality.id, quality.quality_label]))
+    const qualities = ranked.filter(row => row.quality_label.toLocaleLowerCase().includes(search.toLocaleLowerCase()))
+    const total = Number(data.total_meters)
+    const share = (value: number) => total > 0 ? Math.round((Math.max(value, 0) / total) * 100) : 0
+    const others = ranked.slice(COMPOSITION_SLOTS)
+    const othersMeters = others.reduce((sum, quality) => sum + Number(quality.meters), 0)
 
-    const historyButton = (
-        <Button
-            type="button"
-            variant="outline"
-            aria-haspopup="dialog"
-            onClick={() => setIsHistoryOpen(true)}
-            className="h-10 gap-2 rounded-lg border-hairline bg-surface font-semibold text-ink shadow-xs hover:bg-surface-soft"
-        >
-            <History className="h-4 w-4" aria-hidden="true" />
-            {tx('history')}
-            {data.movements.length > 0 && (
-                <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-saffron-soft px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-saffron-deep">
-                    {data.movements.length}
-                </span>
-            )}
-        </Button>
-    )
+    // Week totals, trends and the recent list come from the server's three-week window. A tour sample has none,
+    // so the recent list falls back to the history page it was given.
+    const activity = data.activity
+    const since = weekSince()
+    const rows: ActivityRow[] = (activity ?? []).map(row => ({ id: row.id, itemId: row.quality_id, kind: row.kind, delta: Number(row.meters_delta), balanceAfter: Number(row.balance_after), createdAt: row.created_at }))
+    const week = activity ? totalsSince(rows, since, fabricActivityBucket) : null
+    const recent = activity ? activity.filter(row => Date.parse(row.created_at) >= Date.parse(since)) : data.movements.slice(0, 12)
+    const today = businessDate()
+    const dayLabel = (date: string) => date === today ? tx('today') : formatIndiaDay(date, language)
+    const shortDate = (iso: string) => new Date(iso).toLocaleDateString(`${language}-IN`, { day: 'numeric', month: 'short', timeZone: 'Asia/Kolkata' })
+    const kindLabel = (kind: string) => tx(kind === 'production' ? 'productionEntry' : kind)
+    const reasonLabel = (value: string) => value === 'Production updated' ? tx('productionUpdated') : value
+    const weekFacts = (totals: Partial<Record<'woven' | 'dispatched' | 'adjusted', number>>) => (['woven', 'dispatched', 'adjusted'] as const)
+        .filter(key => totals[key])
+        .map(key => ({ key, label: tx(key), value: totals[key]! }))
 
     return (
         <div className="stock-workspace-shell space-y-6" data-i18n-skip="true">
             <RouteMilestones route="/owner/stock" shellVisible primaryUsable />
-            {/* Header */}
             <PageHeader
                 title={tx('title')}
+                description={tx('intro')}
                 actions={<>
                     <PageGuide />
-                    <Button asChild variant="outline" className="h-10 rounded-lg border-hairline bg-surface gap-1.5 font-semibold text-ink shadow-xs hover:bg-surface-soft">
+                    <Button asChild variant="outline" className={secondaryAction}>
                         <Link href="/owner/stock/audit">
-                            <Warehouse className="h-4 w-4" />
+                            <ClipboardCheck className="h-4 w-4" aria-hidden="true" />
                             {tx('audit')}
                         </Link>
                     </Button>
-                    <Button variant="outline" disabled={busy} onClick={() => void load()} className="h-10 rounded-lg border-hairline bg-surface font-semibold text-ink shadow-xs hover:bg-surface-soft">
-                        <RefreshCw className={`h-4 w-4 ${busy ? 'animate-spin' : ''}`} />
-                        {tx('refresh')}
-                    </Button>
-                    {historyButton}
-                    <Button data-tour-anchor="fabric.opening" onClick={() => open('opening')} className="h-10 rounded-lg bg-loom text-white font-semibold shadow-xs hover:bg-loom-hover">
-                        <Plus className="h-4 w-4" />
+                    <Button data-tour-anchor="fabric.opening" onClick={() => open('opening')} className={railPrimaryAction}>
+                        <Plus className="h-4 w-4" aria-hidden="true" />
                         {tx('opening')}
                     </Button>
                 </>}
             />
 
-            {notice && <p role="status" className="rounded-xl border border-[var(--wv-moss-200)] bg-[var(--wv-moss-50)]/80 p-3.5 text-xs sm:text-sm font-medium text-[var(--wv-moss-700)] shadow-xs">{notice}</p>}
-            {error && <p role="alert" className="rounded-xl border border-[var(--wv-madder-200)] bg-[var(--wv-madder-50)]/80 p-3.5 text-xs sm:text-sm font-medium text-[var(--wv-madder-600)] shadow-xs">{error} <button className="underline font-bold ml-1 hover:text-[var(--wv-madder-600)]" onClick={() => void load()}>{tx('retry')}</button></p>}
+            {notice && <p role="status" className="rounded-xl border border-[var(--wv-moss-200)] bg-[var(--wv-moss-50)] p-3.5 text-sm font-medium text-[var(--wv-moss-700)]">{notice}</p>}
+            {error && <p role="alert" className="rounded-xl border border-[var(--wv-madder-200)] bg-[var(--wv-madder-50)] p-3.5 text-sm font-medium text-[var(--wv-madder-600)]">{error} <button className="ml-1 font-bold underline" onClick={() => void load('')}>{tx('retry')}</button></p>}
 
-            {/* Available stock card */}
-            <div data-stock-tour="balance" className="rounded-2xl border border-hairline/80 bg-surface/95 p-6 shadow-[var(--shadow-card)] backdrop-blur-sm">
-                <div className="flex items-center gap-4">
-                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-loom/10 text-loom shadow-xs">
-                        <Warehouse className="h-7 w-7" />
-                    </div>
+            {/* On hand: the total, this week's flow and each quality's share of the stock. */}
+            <section data-stock-tour="balance" aria-labelledby="fabric-on-hand" className="space-y-5 rounded-2xl border border-hairline bg-surface p-5 shadow-xs sm:p-6">
+                <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-5">
                     <div>
-                        <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">{tx('available')}</p>
-                        <p className="text-3xl sm:text-4xl font-black tracking-tight tabular-nums text-ink">
-                            {metres(data.total_meters)} <span className="text-base sm:text-lg font-bold text-muted-foreground">{tx('metres')}</span>
+                        <p id="fabric-on-hand" className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                            <span aria-hidden="true" className="size-1.5 rounded-full bg-saffron" />
+                            {tx('onHand')}
                         </p>
-                        <p className="mt-0.5 text-xs font-medium text-body">
-                            {data.qualities.length} {data.qualities.length === 1 ? 'quality' : tx('qualities')} tracked in stock
+                        <p className="mt-3 text-5xl font-semibold leading-none tracking-[-0.035em] text-ink tabular-nums">
+                            {metres(total)}
+                            <span className="ml-1.5 text-2xl font-medium tracking-normal text-muted-foreground">{tx('metres')}</span>
                         </p>
+                        <p className="mt-3 text-sm text-body">{data.qualities.length === 1 ? tx('qualityCountOne') : t('qualityStock.qualityCount', { count: data.qualities.length })}</p>
                     </div>
+                    {week ? (
+                        <div className="min-w-0">
+                            <p className="text-sm font-medium text-muted-foreground">{tx('lastWeek')}</p>
+                            <dl className="mt-2 flex flex-wrap gap-x-7 gap-y-3">
+                                {[...weekFacts(week), { key: 'net', label: tx('netChange'), value: Object.values(week).reduce((sum, value) => sum + (value ?? 0), 0) }].map(fact => (
+                                    <div key={fact.key}>
+                                        <dt className="text-[13px] text-muted-foreground">{fact.label}</dt>
+                                        <dd className="mt-0.5 text-lg">
+                                            <SignedQuantity value={fact.value} unit={tx('metres')} format={metres} className={fact.key === 'net' ? 'text-ink' : undefined} />
+                                        </dd>
+                                    </div>
+                                ))}
+                            </dl>
+                        </div>
+                    ) : activity === null ? (
+                        <p className="max-w-xs text-sm text-muted-foreground">{tx('activityUnavailable')}</p>
+                    ) : null}
                 </div>
-            </div>
-
-            {/* Stock by quality section */}
-            <section className="space-y-4" aria-labelledby="stock-qualities">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                        <h2 id="stock-qualities" className="text-xl font-bold tracking-tight text-ink">{tx('byQuality')}</h2>
-                        <span className="inline-flex items-center rounded-full bg-surface-soft px-2.5 py-0.5 text-xs font-bold text-muted-foreground">
-                            {qualities.length}
-                        </span>
-                    </div>
-                    <div className="relative w-full sm:w-72">
-                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                        <Label htmlFor="stock-search" className="sr-only">{tx('search')}</Label>
-                        <Input
-                            id="stock-search"
-                            placeholder={tx('search')}
-                            value={search}
-                            onChange={event => setSearch(event.target.value)}
-                            className="h-10 pl-9 rounded-xl border-hairline/80 bg-surface/95 text-xs shadow-xs focus:border-loom focus:ring-1 focus:ring-loom"
+                {total > 0 && ranked.length > 1 && (
+                    <div className="space-y-3">
+                        <CompositionBar
+                            label={tx('shareLabel')}
+                            segments={[
+                                ...ranked.slice(0, COMPOSITION_SLOTS).map(quality => ({ key: quality.id, value: Number(quality.meters), color: colorOf.get(quality.id)! })),
+                                ...(others.length ? [{ key: 'others', value: othersMeters, color: OTHER_SWATCH }] : []),
+                            ]}
                         />
+                        <ul className="flex flex-wrap gap-x-8 gap-y-2 text-sm">
+                            {ranked.slice(0, COMPOSITION_SLOTS).map(quality => (
+                                <li key={quality.id} className="flex min-w-0 items-center gap-2">
+                                    <Swatch color={colorOf.get(quality.id)!} />
+                                    <span className="truncate font-semibold text-ink">{quality.quality_label}</span>
+                                    <span className="shrink-0 tabular-nums text-muted-foreground">{metres(quality.meters)} {tx('metres')} · {share(Number(quality.meters))}%</span>
+                                </li>
+                            ))}
+                            {others.length > 0 && (
+                                <li className="flex items-center gap-2">
+                                    <Swatch color={OTHER_SWATCH} />
+                                    <span className="font-semibold text-ink">{others.length === 1 ? others[0].quality_label : t('qualityStock.others', { count: others.length })}</span>
+                                    <span className="tabular-nums text-muted-foreground">{metres(othersMeters)} {tx('metres')} · {share(othersMeters)}%</span>
+                                </li>
+                            )}
+                        </ul>
+                    </div>
+                )}
+            </section>
+
+            {/* One card per quality, in the same order and colour as the bar above. */}
+            <section className="space-y-4" aria-labelledby="stock-qualities">
+                <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+                    <h2 id="stock-qualities" className="text-base font-semibold text-ink">
+                        {tx('byQuality')}
+                        <span className="ml-2 font-medium tabular-nums text-muted-foreground">{qualities.length}</span>
+                    </h2>
+                    <div className="flex items-center gap-2">
+                        <div className="relative w-full sm:w-72">
+                            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+                            <Label htmlFor="stock-search" className="sr-only">{tx('search')}</Label>
+                            <Input
+                                id="stock-search"
+                                type="search"
+                                placeholder={tx('search')}
+                                value={search}
+                                onChange={event => setSearch(event.target.value)}
+                                className="h-10 rounded-lg border-hairline bg-surface pl-9 shadow-xs max-md:min-h-[44px]"
+                            />
+                        </div>
+                        <Button variant="ghost" disabled={busy} onClick={() => void load('')} className="h-10 shrink-0 rounded-lg font-semibold text-body max-md:min-h-[44px]">
+                            <RefreshCw className={`h-4 w-4 ${busy ? 'animate-spin' : ''}`} aria-hidden="true" />
+                            <span className="max-sm:sr-only">{tx('refresh')}</span>
+                        </Button>
                     </div>
                 </div>
 
                 {qualities.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-hairline py-12 px-4 text-center bg-surface/40">
-                        <p className="text-sm font-semibold text-ink">
-                            {search ? tx('noMatches') : tx('empty')}
-                        </p>
-                        <Button asChild variant="link" className="mt-2 text-loom font-semibold">
-                            <Link href="/owner/production">{tx('production')}</Link>
-                        </Button>
-                    </div>
+                    <EmptyState
+                        icon={Warehouse}
+                        title={search ? tx('noMatches') : tx('empty')}
+                        action={!search && (
+                            <Button asChild variant="outline" className={secondaryAction}>
+                                <Link href="/owner/production">{tx('production')}</Link>
+                            </Button>
+                        )}
+                    />
                 ) : (
-                    <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] gap-4">
-                        {qualities.map(quality => (
-                            <div
-                                key={quality.id}
-                                data-stock-tour={quality.id === qualities[0]?.id ? 'openingPending' : undefined}
-                                className="group relative flex flex-col justify-between rounded-2xl border border-hairline/80 bg-surface/95 p-5 shadow-[var(--shadow-card)] backdrop-blur-sm transition-all hover:border-loom/40 hover:shadow-md"
-                            >
-                                <div className="space-y-3">
-                                    <div className="flex items-start justify-between gap-2">
-                                        <h3 className="break-words text-base font-bold text-ink leading-snug">
-                                            {quality.quality_label}
+                    <div className={qualities.length <= 2 ? 'grid gap-4 md:grid-cols-2' : 'grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(min(100%,26rem),1fr))]'}>
+                        {qualities.map(quality => {
+                            const color = colorOf.get(quality.id) ?? OTHER_SWATCH
+                            const trail = activity ? balanceTrail(rows, quality.id, Number(quality.meters), activitySince()) : null
+                            const own = activity ? weekFacts(totalsSince(rows.filter(row => row.itemId === quality.id), since, fabricActivityBucket)) : null
+                            const lastAt = activity?.find(row => row.quality_id === quality.id)?.created_at
+                            return (
+                                <article
+                                    key={quality.id}
+                                    data-stock-tour={quality.id === qualities[0]?.id ? 'openingPending' : undefined}
+                                    className="flex flex-col gap-4 rounded-2xl border border-hairline bg-surface p-5 shadow-xs sm:px-6"
+                                >
+                                    <div className="flex items-start justify-between gap-3">
+                                        <h3 className="flex min-w-0 items-start gap-2.5 text-base font-semibold leading-snug text-ink">
+                                            <Swatch color={color} className="mt-1.5" />
+                                            <span className="break-words">{quality.quality_label}</span>
                                         </h3>
-                                        {!quality.opening_recorded && (
-                                            <span className="shrink-0 inline-flex items-center gap-1 rounded-full border border-[var(--wv-ochre-200)]/80 bg-[var(--wv-ochre-50)]/90 px-2 py-0.5 text-[10px] font-bold text-[var(--wv-ochre-800)]" title={tx('openingPending')}>
-                                                <AlertCircle className="h-3 w-3" />
-                                                <span>{tx('pending')}</span>
+                                        {!quality.opening_recorded ? (
+                                            <span className="inline-flex shrink-0 items-center gap-1.5 text-[13px] font-semibold text-[var(--wv-ochre-800)]" title={tx('openingPending')}>
+                                                <AlertCircle className="h-3.5 w-3.5" aria-hidden="true" />
+                                                {tx('pending')}
                                             </span>
-                                        )}
+                                        ) : lastAt ? (
+                                            <span className="shrink-0 text-[13px] tabular-nums text-muted-foreground">{t('qualityStock.updated', { date: shortDate(lastAt) })}</span>
+                                        ) : null}
                                     </div>
-                                    <div>
-                                        <p className="text-2xl sm:text-3xl font-black tracking-tight tabular-nums text-ink">
-                                            {metres(quality.meters)} <span className="text-xs font-semibold text-muted-foreground">{tx('metres')}</span>
+                                    <div className="flex items-end justify-between gap-4">
+                                        <p className="text-4xl font-semibold leading-none tracking-[-0.03em] text-ink tabular-nums">
+                                            {metres(quality.meters)}
+                                            <span className="ml-1.5 text-lg font-medium tracking-normal text-muted-foreground">{tx('metres')}</span>
                                         </p>
+                                        {trail && <StockTrend points={trail} color={color} label={tx('trendLabel')} className="w-1/2" />}
                                     </div>
-                                </div>
-
-                                <div className="mt-4 pt-3 border-t border-hairline/60 flex flex-wrap items-center gap-2">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => open(quality.opening_recorded ? 'correction' : 'opening', quality)}
-                                        className="h-8 rounded-lg border-hairline text-xs font-semibold shadow-xs hover:bg-surface-soft"
-                                    >
-                                        {quality.opening_recorded ? tx('correct') : tx('opening')}
-                                    </Button>
-                                    {!quality.opening_recorded && (
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => open('correction', quality)}
-                                            className="h-8 rounded-lg border-hairline text-xs font-semibold shadow-xs hover:bg-surface-soft"
-                                        >
-                                            {tx('correct')}
-                                        </Button>
+                                    {own && (
+                                        <p className="text-[13px] text-body">
+                                            <span className="text-muted-foreground">{tx('lastWeek')}: </span>
+                                            {own.length === 0 ? tx('quietWeek') : own.map((fact, index) => (
+                                                <span key={fact.key}>
+                                                    {index > 0 && <span aria-hidden="true" className="text-muted-foreground"> · </span>}
+                                                    {fact.label} <SignedQuantity value={fact.value} unit={tx('metres')} format={metres} />
+                                                </span>
+                                            ))}
+                                        </p>
                                     )}
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        disabled={busy}
-                                        onClick={() => {
-                                            setQualityId(quality.id)
-                                            setIsHistoryOpen(true)
-                                            void load(quality.id)
-                                        }}
-                                        className="h-8 rounded-lg text-xs font-semibold text-muted-foreground hover:text-loom hover:bg-loom/5 ml-auto gap-1"
-                                    >
-                                        <History className="h-3.5 w-3.5" />
-                                        <span>{tx('history')}</span>
-                                    </Button>
-                                </div>
-                            </div>
-                        ))}
+                                    <div className="mt-auto flex flex-wrap items-center gap-2 border-t border-hairline pt-4">
+                                        <Button asChild className={railPrimaryAction}>
+                                            <Link href={`/owner/dispatches?quality=${quality.id}`}>
+                                                <Truck className="h-4 w-4" aria-hidden="true" />
+                                                {tx('dispatchAction')}
+                                            </Link>
+                                        </Button>
+                                        <Button variant="outline" onClick={() => open(quality.opening_recorded ? 'correction' : 'opening', quality)} className={secondaryAction}>
+                                            {quality.opening_recorded ? tx('correct') : tx('opening')}
+                                        </Button>
+                                        {!quality.opening_recorded && (
+                                            <Button variant="outline" onClick={() => open('correction', quality)} className={secondaryAction}>
+                                                {tx('correct')}
+                                            </Button>
+                                        )}
+                                        <Button
+                                            variant="ghost"
+                                            disabled={busy}
+                                            aria-haspopup="dialog"
+                                            onClick={() => openHistory(quality.id)}
+                                            className="ml-auto h-10 rounded-lg font-semibold text-body max-md:min-h-[44px]"
+                                        >
+                                            {tx('history')}
+                                        </Button>
+                                    </div>
+                                </article>
+                            )
+                        })}
                     </div>
+                )}
+            </section>
+
+            {/* The last seven days, day by day; the full ledger opens from Movement history. */}
+            <section aria-labelledby="stock-recent" className="overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs">
+                <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 sm:px-6">
+                    <div>
+                        <h2 id="stock-recent" className="text-base font-semibold text-ink">{tx('recent')}</h2>
+                        {activity && <p className="mt-0.5 text-sm text-muted-foreground">{tx('recentHelp')}</p>}
+                    </div>
+                    <Button variant="outline" aria-haspopup="dialog" onClick={() => openHistory('')} className={secondaryAction}>
+                        <History className="h-4 w-4" aria-hidden="true" />
+                        {tx('fullHistory')}
+                    </Button>
+                </div>
+                {recent.length === 0 ? (
+                    <p className="border-t border-hairline px-5 py-5 text-sm text-muted-foreground sm:px-6">{tx('recentEmpty')}</p>
+                ) : (
+                    <DayGroupList
+                        days={groupByIndiaDay(recent).map(day => ({
+                            key: day.date,
+                            label: dayLabel(day.date),
+                            net: <SignedQuantity value={day.rows.reduce((sum, row) => sum + Number(row.meters_delta), 0)} unit={tx('metres')} format={metres} className="font-medium" />,
+                            rows: day.rows,
+                        }))}
+                        renderRow={row => (
+                            <li key={row.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-4 py-0.5 text-sm sm:grid-cols-[minmax(0,1.2fr)_minmax(0,0.9fr)_minmax(0,1.4fr)_auto]">
+                                <span className="min-w-0">
+                                    <span className="block truncate font-semibold text-ink">{labelOf.get(row.quality_id) ?? ''}</span>
+                                    <span className="block text-xs text-muted-foreground sm:hidden">{kindLabel(row.kind)}</span>
+                                </span>
+                                <span className="text-body max-sm:hidden">{kindLabel(row.kind)}</span>
+                                <span className="truncate text-muted-foreground max-sm:hidden" title={reasonLabel(row.reason)}>
+                                    {/* Production rows say only "Production updated"; the entry type already says it. */}
+                                    {row.kind === 'production' || row.kind === 'production_reversal' ? null : reasonLabel(row.reason)}
+                                </span>
+                                <SignedQuantity value={Number(row.meters_delta)} unit={tx('metres')} format={metres} className="text-right" />
+                            </li>
+                        )}
+                    />
                 )}
             </section>
 
@@ -283,7 +401,7 @@ export default function QualityStockClient({ initialData }: { initialData: Quali
                                     <History className="h-5 w-5" />
                                 </div>
                                 <div className="min-w-0">
-                                    <DialogTitle id="stock-history" className="text-lg font-bold text-ink">
+                                    <DialogTitle className="text-lg font-bold text-ink">
                                         {tx('history')}
                                     </DialogTitle>
                                     <DialogDescription className="text-xs text-body truncate">

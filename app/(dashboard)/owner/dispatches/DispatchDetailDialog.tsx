@@ -1,5 +1,5 @@
 'use client'
-import type { ReactNode } from 'react'
+import { useId, type ReactNode } from 'react'
 import Link from 'next/link'
 import {
     AlertTriangle,
@@ -14,9 +14,11 @@ import {
     RefreshCw,
     RotateCcw,
     Truck,
+    FileSearch,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { EmptyState } from '@/components/ui/page-header'
 import {
     Dialog,
     DialogContent,
@@ -78,26 +80,8 @@ function Figure({ label, value, strong, tone }: { label: ReactNode; value: React
     )
 }
 
-export default function DispatchDetailDialog({
-    challan: d,
-    open,
-    events,
-    eventsLoading,
-    busy,
-    locked,
-    error,
-    onRetry,
-    today,
-    surface,
-    onClose,
-    onRefresh,
-    onStart,
-    onReceivedAsSent,
-    onEditDraft,
-    onReverseEntry,
-}: {
+type DetailProps = {
     challan: Challan | null
-    open: boolean
     events: ChallanEvent[]
     eventsLoading: boolean
     busy: boolean
@@ -106,19 +90,37 @@ export default function DispatchDetailDialog({
     error: string
     onRetry?: () => void
     today: string
-    surface: ReturnType<typeof tourSurfaceProps>
-    onClose: () => void
     onRefresh: () => void
     onStart: (action: ChallanMutation['action']) => void
     onReceivedAsSent: () => void
     onEditDraft: () => void
     onReverseEntry: (eventId: string) => void
+}
+
+/** A challan's number with its padding zeros quieted, so the digits that identify it stand out. */
+export function ChallanNumber({ value, className }: { value: string; className?: string }) {
+    const [, prefix = '', zeros = '', rest = value] = /^([^\d]*)(0*)(\d.*)$/.exec(value) ?? []
+    return (
+        <span className={cn('font-mono tracking-[0.04em]', className)}>
+            {prefix}<span className="opacity-55">{zeros}</span>{rest}
+        </span>
+    )
+}
+
+/** The dispatch detail as a dialog: phones, tablets and narrow windows open it from the list. */
+export default function DispatchDetailDialog({
+    open,
+    surface,
+    onClose,
+    ...props
+}: DetailProps & {
+    open: boolean
+    surface: ReturnType<typeof tourSurfaceProps>
+    onClose: () => void
 }) {
-    const { t } = useTranslation()
-    const tx = (s: string, vars?: Record<string, string | number>) => t(`challan.${s}`, vars)
     return (
         <Dialog
-            open={open && !!d}
+            open={open && !!props.challan}
             onOpenChange={(next) => {
                 if (!next) onClose()
             }}
@@ -134,10 +136,43 @@ export default function DispatchDetailDialog({
                 {...surface.content}
                 className="gap-0 sm:max-w-3xl"
             >
-                {d && renderBody(d)}
+                {props.challan && <DispatchDetailBody {...props} challan={props.challan} />}
             </DialogContent>
         </Dialog>
     )
+}
+
+/** The dispatch detail beside the list on wide screens: the same body, with the challan it shows always in view. */
+export function DispatchDetailPanel({ emptyLabel, ...props }: DetailProps & { emptyLabel: string }) {
+    return (
+        <section aria-live="polite" className="min-w-0 px-5 py-6 sm:px-7" data-i18n-skip="true">
+            {props.challan
+                ? <DispatchDetailBody {...props} challan={props.challan} panel />
+                : <EmptyState icon={FileSearch} title={emptyLabel} className="min-h-80 border-0 bg-transparent" />}
+        </section>
+    )
+}
+
+function DispatchDetailBody({
+    challan: d,
+    events,
+    eventsLoading,
+    busy,
+    locked,
+    error,
+    onRetry,
+    today,
+    onRefresh,
+    onStart,
+    onReceivedAsSent,
+    onEditDraft,
+    onReverseEntry,
+    panel = false,
+}: DetailProps & { challan: Challan; panel?: boolean }) {
+    const { t } = useTranslation()
+    const tx = (s: string, vars?: Record<string, string | number>) => t(`challan.${s}`, vars)
+    const ids = useId()
+    return renderBody(d)
 
     function renderBody(d: Challan) {
         const status = paymentStatus(d)
@@ -186,20 +221,20 @@ export default function DispatchDetailDialog({
 
         return (
             <>
-                <DialogHeader className="gap-3 sm:flex-row sm:items-start sm:justify-between sm:pr-12">
+                <HeaderFrame panel={panel}>
                     <div className="min-w-0 space-y-1">
-                        <DialogDescription className="text-xs text-subtle">
-                            <span className="font-mono font-semibold tracking-[0.06em]">{d.number}</span>
+                        <HeaderDescription panel={panel}>
+                            <ChallanNumber value={d.number} className="font-semibold" />
                             {d.document.date && (
                                 <>
                                     <span aria-hidden="true"> · </span>
                                     <time dateTime={d.document.date}>{formatDocumentDate(d.document.date)}</time>
                                 </>
                             )}
-                        </DialogDescription>
-                        <DialogTitle className="text-xl font-bold leading-tight tracking-tight text-ink sm:text-2xl">
+                        </HeaderDescription>
+                        <HeaderTitle panel={panel}>
                             {d.document.customer_name}
-                        </DialogTitle>
+                        </HeaderTitle>
                         <p className="text-sm text-body">
                             <span className="font-semibold text-ink">{d.quality_label}</span>
                             <span aria-hidden="true" className="text-subtle/60"> · </span>
@@ -243,7 +278,7 @@ export default function DispatchDetailDialog({
                             {tx('refresh')}
                         </Button>
                     </div>
-                </DialogHeader>
+                </HeaderFrame>
 
                 {['review', 'disputed'].includes(d.difference_status) && (
                     <p className="mt-4 flex items-center gap-2 rounded-lg border border-warning/25 bg-warning-soft/55 px-3 py-2 text-xs font-semibold text-warning">
@@ -343,8 +378,8 @@ export default function DispatchDetailDialog({
                 </section>
 
                 <div data-dispatch-tour="difference" className="mt-5 grid gap-x-8 gap-y-5 sm:grid-cols-2">
-                    <section aria-labelledby="dispatch-fabric-heading">
-                        <h3 id="dispatch-fabric-heading" className="pb-2 text-xs font-semibold text-subtle">
+                    <section aria-labelledby={`${ids}-fabric`}>
+                        <h3 id={`${ids}-fabric`} className="pb-2 text-xs font-semibold text-subtle">
                             {tx('fabricHeading')}
                         </h3>
                         <dl className="text-sm">
@@ -375,8 +410,8 @@ export default function DispatchDetailDialog({
                             </Button>
                         )}
                     </section>
-                    <section aria-labelledby="dispatch-amount-heading">
-                        <h3 id="dispatch-amount-heading" className="pb-2 text-xs font-semibold text-subtle">
+                    <section aria-labelledby={`${ids}-amount`}>
+                        <h3 id={`${ids}-amount`} className="pb-2 text-xs font-semibold text-subtle">
                             {tx('amountHeading')}
                         </h3>
                         <dl className="text-sm">
@@ -425,8 +460,8 @@ export default function DispatchDetailDialog({
                     </div>
                 )}
 
-                <section aria-labelledby="dispatch-history-heading" className="mt-6">
-                    <h3 id="dispatch-history-heading" className="text-sm font-bold text-ink">
+                <section aria-labelledby={`${ids}-history`} className="mt-6">
+                    <h3 id={`${ids}-history`} className="text-sm font-bold text-ink">
                         {tx('audit')}
                     </h3>
                     {eventsLoading ? (
@@ -622,4 +657,21 @@ export default function DispatchDetailDialog({
             )
         }
     }
+}
+
+function HeaderFrame({ panel, children }: { panel: boolean; children: ReactNode }) {
+    const className = 'gap-3 sm:flex-row sm:items-start sm:justify-between'
+    return panel
+        ? <header className={cn('flex flex-col', className)}>{children}</header>
+        : <DialogHeader className={cn(className, 'sm:pr-12')}>{children}</DialogHeader>
+}
+
+function HeaderDescription({ panel, children }: { panel: boolean; children: ReactNode }) {
+    const className = 'text-xs text-subtle'
+    return panel ? <p className={className}>{children}</p> : <DialogDescription className={className}>{children}</DialogDescription>
+}
+
+function HeaderTitle({ panel, children }: { panel: boolean; children: ReactNode }) {
+    const className = 'text-xl font-bold leading-tight tracking-tight text-ink sm:text-2xl'
+    return panel ? <h2 className={className}>{children}</h2> : <DialogTitle className={className}>{children}</DialogTitle>
 }

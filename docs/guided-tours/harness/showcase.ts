@@ -1,0 +1,90 @@
+/* eslint-disable -- harness fixture data for previewing the stock and dispatch redesign. */
+// Dates are relative to now, so "this week" and the trend lines always have data.
+const at = (daysAgo: number, h: number, m: number) => { const d = new Date(); d.setDate(d.getDate() - daysAgo); d.setHours(h, m, 0, 0); return d.toISOString() }
+const day = (daysAgo: number) => { const d = new Date(); d.setDate(d.getDate() - daysAgo); return d.toLocaleDateString('en-CA') }
+
+export function fabricBoard() {
+  const qualities = [
+    { id: 'q1', quality_label: 'D.345', quality_key: 'd.345', meters: 860, production_meters: 1155, opening_recorded: true },
+    { id: 'q2', quality_label: 'Demo - Signature Polyester', quality_key: 'demo - signature polyester', meters: 818, production_meters: 592, opening_recorded: true },
+  ]
+  const label: Record<string, string> = { q1: 'D.345', q2: 'Demo - Signature Polyester' }
+  const rows: [string, string, string, number, number, string, string][] = [
+    ['f1', 'q1', 'production', 125, 860, 'Production updated', at(1, 18, 40)],
+    ['f2', 'q2', 'production', 100, 818, 'Production updated', at(2, 19, 5)],
+    ['f3', 'q1', 'dispatch', -295, 735, 'Dispatch DC000000000002', at(3, 11, 20)],
+    ['f4', 'q2', 'correction', -18, 718, 'Counted after rewinding', at(4, 17, 15)],
+    ['f5', 'q1', 'production', 210, 1030, 'Production updated', at(5, 18, 50)],
+    ['f6', 'q2', 'production', 156, 736, 'Production updated', at(6, 19, 10)],
+    ['f7', 'q1', 'production', 320, 820, 'Production updated', at(7, 19, 0)],
+    ['f8', 'q2', 'production', 180, 580, 'Production updated', at(8, 19, 0)],
+    ['f9', 'q1', 'opening', 500, 500, 'Counted on first day', at(20, 19, 44)],
+    ['f10', 'q2', 'opening', 400, 400, 'Counted on first day', at(20, 19, 44)],
+  ]
+  const activity = rows.map(([id, quality_id, kind, meters_delta, balance_after, reason, created_at]) => ({ id, quality_id, kind, meters_delta, balance_after, reason, source_table: null, source_id: null, created_at }))
+  const movements = activity.map(row => ({ ...row, quality_label: label[row.quality_id], created_by: null, production_before: null, production_after: null }))
+  return { qualities, total_meters: 1678, movements, nextCursor: null, cutover: null, activity }
+}
+
+export function yarnBoard() {
+  const yarns = [
+    { id: 'y1', yarn_name: '40 span', yarn_key: '40 span', weight_kg: 87.126112, opening_recorded: true },
+    { id: 'y2', yarn_name: 'Demo Polyester Warp 75D', yarn_key: 'demo polyester warp 75d', weight_kg: 165.644, opening_recorded: true },
+    { id: 'y3', yarn_name: 'Demo Polyester Weft 150D', yarn_key: 'demo polyester weft 150d', weight_kg: 143.931008, opening_recorded: true },
+    { id: 'y4', yarn_name: 'jari', yarn_key: 'jari', weight_kg: 11.941333333, opening_recorded: true },
+  ]
+  const d345 = [{ yarn_name: 'jari', yarn_key: 'jari', kg_per_100m: 5.866666667, role: 'warp' }, { yarn_name: '40 span', yarn_key: '40 span', kg_per_100m: 4.1888, role: 'weft' }]
+  const demo = [{ yarn_name: 'Demo Polyester Warp 75D', yarn_key: 'demo polyester warp 75d', kg_per_100m: 4.2, role: 'warp' }, { yarn_name: 'Demo Polyester Weft 150D', yarn_key: 'demo polyester weft 150d', kg_per_100m: 6.8544, role: 'weft' }]
+  const qualities = [
+    { id: 'q1', quality_label: 'D.345', quality_key: 'd.345', meters: 860, recipe: d345, costing_id: 'c1', version: 3 },
+    { id: 'q2', quality_label: 'Demo - Signature Polyester', quality_key: 'demo - signature polyester', meters: 818, recipe: demo, costing_id: 'c2', version: 1 },
+  ]
+  const costings = [
+    { id: 'c1', quality_label: 'D.345', quality_key: 'd.345', version_number: 3, saved_at: at(12, 11, 0), recipe: d345 },
+    { id: 'c2', quality_label: 'Demo - Signature Polyester', quality_key: 'demo - signature polyester', version_number: 1, saved_at: at(21, 10, 0), recipe: demo },
+  ]
+  const name: Record<string, string> = Object.fromEntries(yarns.map(y => [y.id, y.yarn_name]))
+  const use = (id: string, yarn: string, kg: number, after: number, metres: number, rate: number, daysAgo: number, h: number) =>
+    ({ id, yarn_id: yarn, kind: 'production_consumption', kg_delta: -kg, balance_after: after, reason: 'Production', challan_id: null, recipe_snapshot: { meters: metres, kg_per_100m: rate }, created_at: at(daysAgo, h, 40) })
+  const activity = [
+    use('m1', 'y4', 7.333333, 11.941333, 125, 5.866666667, 1, 18), use('m2', 'y1', 5.236, 87.126112, 125, 4.1888, 1, 18),
+    use('m3', 'y3', 6.8544, 143.931008, 100, 6.8544, 2, 19), use('m4', 'y2', 4.2, 165.644, 100, 4.2, 2, 19),
+    use('m5', 'y4', 12.32, 19.274666, 210, 5.866666667, 5, 18), use('m6', 'y1', 8.79648, 92.362112, 210, 4.1888, 5, 18),
+    use('m7', 'y3', 10.692864, 150.785408, 156, 6.8544, 6, 19), use('m8', 'y2', 6.552, 169.844, 156, 4.2, 6, 19),
+    use('m9', 'y4', 18.773333, 31.594666, 320, 5.866666667, 7, 19), use('m10', 'y1', 13.40416, 101.158592, 320, 4.1888, 7, 19),
+    { id: 'm11', yarn_id: 'y1', kind: 'receipt', kg_delta: 50, balance_after: 114.562752, reason: 'Bill 2291, Ambica Yarns', challan_id: null, recipe_snapshot: null, created_at: at(8, 10, 30) },
+    use('m12', 'y3', 12.33792, 161.478272, 180, 6.8544, 8, 19), use('m13', 'y2', 7.56, 176.396, 180, 4.2, 8, 19),
+    ...yarns.map((y, i) => ({ id: `o${i}`, yarn_id: y.id, kind: 'opening', kg_delta: { y1: 64.562752, y2: 183.956, y3: 173.816192, y4: 50.368 }[y.id]!, balance_after: { y1: 64.562752, y2: 183.956, y3: 173.816192, y4: 50.368 }[y.id]!, reason: 'Weighed in godown', challan_id: null, recipe_snapshot: null, created_at: at(20, 19, 44) })),
+  ]
+  const movements = activity.map(row => ({ ...row, yarn_name: name[row.yarn_id], created_by: null }))
+  return { org_id: 'o1', started_at: at(20, 19, 44), as_of: null, yarns, qualities, costings, movements, nextCursor: null, activity }
+}
+
+export function challans() {
+  const base = { selling_rate: 25, adjustment_amount: 0, version: 1, archived_at: null, payment_terms: '' }
+  return [
+    { ...base, id: 'd6', number: 'DC000000000006', quality_id: 'q1', quality_label: 'D.345', document: { date: day(1), customer_name: 'Shree Ambika Fabrics' }, lines: [{ lot: 'L-118', meters: 160 }, { lot: 'L-119', meters: 160 }], sent_meters: 320, chargeable_meters: 320, acknowledged_meters: null, delivery_status: 'sent', difference_status: 'none', paid_amount: 0, balance: 8000, payment_due_date: day(-59), issued_at: at(1, 11, 0), created_at: at(1, 11, 0) },
+    { ...base, id: 'd5', number: 'DC000000000005', quality_id: 'q2', quality_label: 'Demo - Signature Polyester', selling_rate: 22.5, document: { date: day(2), customer_name: 'Laxmi Textiles' }, lines: [{ lot: 'L-212', meters: 270 }], sent_meters: 270, chargeable_meters: 270, acknowledged_meters: null, delivery_status: 'sent', difference_status: 'none', paid_amount: 0, balance: 6075, payment_due_date: day(-43), issued_at: at(2, 11, 0), created_at: at(2, 11, 0) },
+    { ...base, id: 'd2', number: 'DC000000000002', quality_id: 'q1', quality_label: 'D.345', document: { date: day(3), customer_name: 'amit' }, lines: [{ lot: 'L-101', meters: 150 }, { lot: 'L-102', meters: 145 }], sent_meters: 295, chargeable_meters: 295, acknowledged_meters: 295, delivery_status: 'received', difference_status: 'none', paid_amount: 2625, balance: 4750, payment_due_date: day(-51), payment_terms: '30 days from dispatch', issued_at: at(3, 11, 20), created_at: at(3, 11, 20) },
+    { ...base, id: 'd4', number: 'DC000000000004', quality_id: 'q2', quality_label: 'Demo - Signature Polyester', selling_rate: 22.5, document: { date: day(18), customer_name: 'Om Sai Traders' }, lines: [{ lot: 'L-190', meters: 140 }], sent_meters: 140, chargeable_meters: 140, acknowledged_meters: 134, delivery_status: 'received', difference_status: 'review', paid_amount: 0, balance: 3150, payment_due_date: day(12), issued_at: at(18, 11, 0), created_at: at(18, 11, 0) },
+  ]
+}
+
+export function challanEvents(id: string) {
+  if (id !== 'd2') return [{ id: `${id}-e1`, action: 'confirm', payload: { data: {} }, amount: null, reverses_id: null, created_at: at(3, 11, 20), created_by: 'u1' }]
+  return [
+    { id: 'e1', action: 'confirm', payload: { data: {} }, amount: null, reverses_id: null, created_at: at(3, 11, 20), created_by: 'u1' },
+    { id: 'e2', action: 'receipt', payload: { data: { meters: 295 } }, amount: null, reverses_id: null, created_at: at(2, 10, 2), created_by: 'u1' },
+    { id: 'e3', action: 'payment', payload: { data: { date: day(1), method: 'Bank transfer' } }, amount: 2625, reverses_id: null, created_at: at(1, 16, 10), created_by: 'u1' },
+  ]
+}
+
+/** Server-action answers for the showcase; any other action falls back to the harness stub. */
+export function installShowcase() {
+  ;(window as any).__harnessFixtures = {
+    getQualityStockBoard: () => ({ data: fabricBoard() }),
+    getYarnStockBoard: () => ({ data: yarnBoard() }),
+    listChallans: () => ({ data: challans() }),
+    getChallan: (id: string) => ({ data: challans().find(c => c.id === id), events: challanEvents(id) }),
+  }
+}

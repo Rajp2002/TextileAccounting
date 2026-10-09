@@ -6,7 +6,8 @@ import { requireRole, requireWritableOrg } from '@/lib/auth'
 import { getOrgTier } from '@/lib/subscription'
 import { hasCapability } from '@/lib/subscription-access'
 import { createClient } from '@/lib/supabase/server'
-import { StockAdjustmentSchema, stockHistoryPage, type QualityStockBoard, type StockAdjustmentInput, type StockCursor } from '@/lib/quality-stock'
+import { StockAdjustmentSchema, stockHistoryPage, type QualityStockBoard, type StockActivity, type StockAdjustmentInput, type StockCursor } from '@/lib/quality-stock'
+import { ACTIVITY_ROW_LIMIT, activitySince } from '@/lib/stock-activity'
 
 async function requireStockOwner(write = false) {
     const session = write ? await requireWritableOrg(['owner']) : await requireRole(['owner'])
@@ -14,21 +15,39 @@ async function requireStockOwner(write = false) {
     return session
 }
 
-export async function getQualityStockBoard(input: { qualityId?: string; cursor?: StockCursor } = {}): Promise<{ data: QualityStockBoard } | { error: string }> {
-    await requireStockOwner()
-    const parsed = z.object({ qualityId: z.string().uuid().optional(), cursor: z.object({ at: z.string().datetime({ offset: true }), id: z.string().uuid() }).optional() }).safeParse(input)
+/** The last three weeks of movements, for week totals and trend lines. Null when they cannot be read; the board still loads. */
+async function readStockActivity(supabase: Awaited<ReturnType<typeof createClient>>, orgId: string): Promise<StockActivity[] | null> {
+    const { data, error } = await supabase.from('quality_stock_movements')
+        .select('id,quality_id,kind,meters_delta,balance_after,reason,source_table,source_id,created_at')
+        .eq('org_id', orgId).gte('created_at', activitySince())
+        .order('created_at', { ascending: false }).order('id', { ascending: false }).limit(ACTIVITY_ROW_LIMIT)
+    if (error || !data) {
+        console.error('[quality-stock] activity', error?.code)
+        return null
+    }
+    return data.map(row => ({ ...row, meters_delta: Number(row.meters_delta), balance_after: Number(row.balance_after) })) as StockActivity[]
+}
+
+export async function getQualityStockBoard(input: { qualityId?: string; cursor?: StockCursor; activity?: boolean } = {}): Promise<{ data: QualityStockBoard } | { error: string }> {
+    const session = await requireStockOwner()
+    const parsed = z.object({ qualityId: z.string().uuid().optional(), cursor: z.object({ at: z.string().datetime({ offset: true }), id: z.string().uuid() }).optional(), activity: z.boolean().optional() }).safeParse(input)
     if (!parsed.success) return { error: 'Invalid stock history filter.' }
     const supabase = await createClient()
-    const { data, error } = await supabase.rpc('get_quality_stock_board', {
-        p_quality_id: parsed.data.qualityId ?? null,
-        p_before_at: parsed.data.cursor?.at ?? null,
-        p_before_id: parsed.data.cursor?.id ?? null,
-    })
+    // Week totals and trends describe all qualities, so only the stock page's unfiltered first page reads them.
+    const fresh = parsed.data.activity === true && !parsed.data.qualityId && !parsed.data.cursor
+    const [{ data, error }, activity] = await Promise.all([
+        supabase.rpc('get_quality_stock_board', {
+            p_quality_id: parsed.data.qualityId ?? null,
+            p_before_at: parsed.data.cursor?.at ?? null,
+            p_before_id: parsed.data.cursor?.id ?? null,
+        }),
+        fresh ? readStockActivity(supabase, session.profile.org_id) : Promise.resolve(undefined),
+    ])
     if (error || !data) {
         console.error('[quality-stock] load', error?.code)
         return { error: 'Stock could not be loaded. Please try again.' }
     }
-    return { data: { ...data, ...stockHistoryPage(data.movements) } as QualityStockBoard }
+    return { data: { ...data, ...stockHistoryPage(data.movements), ...(activity === undefined ? {} : { activity }) } as QualityStockBoard }
 }
 
 export async function recordQualityStockAdjustment(input: StockAdjustmentInput): Promise<{ success: true; duplicate: boolean } | { error: string; errorKey: string }> {

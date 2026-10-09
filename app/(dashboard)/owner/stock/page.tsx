@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export default async function StockPage() {
     const { user, profile } = await requireRole(['owner'])
-    const result = await getQualityStockBoard()
+    const result = await getQualityStockBoard({ activity: true })
     if ('error' in result) throw new Error(result.error)
     return <StockGuidedTour kind="fabric-stock" userId={user.id} orgId={profile.org_id} userMetadata={user.user_metadata}>
         <QualityStockClient initialData={result.data} />
