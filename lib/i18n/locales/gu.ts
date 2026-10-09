@@ -185,6 +185,7 @@ export const gu = {
         saveAndPrint: "સાચવો અને પ્રિન્ટ કરો",
         printNeeds: "પ્રિન્ટ કરવા માટે ભરો: {items}",
         printBlocked: "સચવાયું. તમારા બ્રાઉઝરે પ્રિન્ટ ટેબ અટકાવ્યું. ડિસ્પેચ વિગતોમાં જુઓ / પ્રિન્ટ / PDF સાચવો વાપરો.",
+        documentTitle: "ડિલિવરી ચલણ",
 
         fabricAndRate: "કાપડ અને વેચાણ ભાવ",
         senderAndDelivery: "મોકલનાર, ગ્રાહક અને ડિલિવરી",

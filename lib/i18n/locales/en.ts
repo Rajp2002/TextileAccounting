@@ -185,6 +185,7 @@ export const en = {
         saveAndPrint: "Save & print",
         printNeeds: "To print, complete: {items}",
         printBlocked: "Saved. Your browser blocked the print tab. Use Preview / Print / Save PDF in the dispatch details.",
+        documentTitle: "Delivery challan",
 
         fabricAndRate: "Fabric & selling rate",
         senderAndDelivery: "Sender, customer & delivery",

@@ -1,13 +1,27 @@
 import React from 'react'
 import { readFileSync } from 'node:fs'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import ChallanPrint from '../app/(dashboard)/owner/dispatches/ChallanPrint'
+import ChallanDraftEditor from '../app/(dashboard)/owner/dispatches/ChallanDraftEditor'
 import { WEAVLY_LOGO_DATA_URI } from '../lib/estimator-export-logo'
-import type { Challan } from '../lib/delivery-challans'
+import type { Challan, ChallanDraft } from '../lib/delivery-challans'
 import { en } from '../lib/i18n/locales/en'
 import { hi } from '../lib/i18n/locales/hi'
 import { gu } from '../lib/i18n/locales/gu'
+
+vi.mock('@/lib/i18n/context', () => ({
+    useTranslation: () => ({
+        language: 'en',
+        t: (key: string, values?: Record<string, string>) =>
+            String(
+                key.split('.').reduce<unknown>(
+                    (node, part) => (node as Record<string, unknown> | undefined)?.[part],
+                    en,
+                ) ?? key,
+            ).replace(/\{(\w+)\}/g, (match, name) => values?.[name] ?? match),
+    }),
+}))
 
 const read = (path: string) => readFileSync(path, 'utf8')
 
@@ -160,5 +174,72 @@ describe('printing from the draft editor', () => {
                         name === 'gu' ? /[઀-૿]/ : /[ऀ-ॿ]/,
                     )
         }
+    })
+})
+
+describe('the editor preview and Print button, as rendered', () => {
+    const complete: ChallanDraft = {
+        quality_id: '10000000-0000-4000-8000-000000000001',
+        selling_rate: 150,
+        document: {
+            date: '2026-10-09',
+            sender_name: 'amit',
+            sender_address: '95 Rutherford Rd N',
+            customer_name: 'Bobby',
+            customer_address: '95 Rutherford Rd N',
+            delivery_address: 'Godown 4',
+        },
+        lines: [{ lot: '101', meters: 225 }],
+    }
+    const render = (draft: ChallanDraft, businessName?: string) =>
+        renderToStaticMarkup(
+            <ChallanDraftEditor
+                draft={draft}
+                onChange={() => {}}
+                onSave={() => {}}
+                onSavePrint={() => {}}
+                qualities={[]}
+                businessName={businessName}
+                disabled={false}
+            />,
+        )
+    const printButton = (page: string) =>
+        page.match(/<button[^>]*>(?:(?!<\/button>).)*Save &amp; print<\/button>/)?.[0] ?? ''
+
+    it('carries the printed masthead: brand bar, Weavly mark, factory name and document type', () => {
+        const page = render(complete, 'Shree Weaves')
+        expect(page).toContain(`src="${WEAVLY_LOGO_DATA_URI}"`)
+        expect(page).toContain('alt="Weavly"')
+        expect(page).toContain('bg-ink')
+        expect(page).toContain('bg-saffron')
+        expect(page).toMatch(/Shree Weaves<\/p><h3[^>]*>Delivery challan<\/h3>/)
+        expect(page).toContain('Challan number assigned on save')
+    })
+
+    it('names the sender in the masthead until the factory name is known, and escapes it', () => {
+        expect(render(complete)).toMatch(/>amit<\/p><h3/)
+        expect(render(complete, '  ')).toMatch(/>amit<\/p><h3/)
+        const hostile = render(complete, '<img src=x onerror=alert(1)>')
+        expect(hostile).not.toContain('<img src=x')
+        expect(hostile).toContain('&lt;img src=x')
+    })
+
+    it('disables Print and says what is missing until the draft is complete', () => {
+        const blank = render({
+            ...complete,
+            quality_id: '',
+            document: { date: '2026-10-09', sender_name: 'amit' },
+            lines: [{ lot: '', meters: 0 }],
+        })
+        expect(printButton(blank)).toContain('disabled=""')
+        expect(printButton(blank)).toContain('aria-describedby="challan-print-hint"')
+        expect(blank).toContain(
+            'To print, complete: Fabric quality, Sender address, Customer name, Customer address, Delivery address, Lot / taka entry',
+        )
+        const ready = render(complete)
+        expect(printButton(ready)).not.toBe('')
+        expect(printButton(ready)).not.toContain('disabled=""')
+        expect(printButton(ready)).not.toContain('aria-describedby')
+        expect(ready).not.toContain('To print, complete')
     })
 })
