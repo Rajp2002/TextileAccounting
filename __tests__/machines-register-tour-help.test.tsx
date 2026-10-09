@@ -9,7 +9,10 @@ const state = vi.hoisted(() => ({ language: 'en' as Language }))
 vi.mock('next/navigation', () => ({ useSearchParams: () => new URLSearchParams('search=existing&status=needs_setup') }))
 vi.mock('@/lib/i18n/context', () => ({ useTranslation: () => ({ language: state.language, tx: (text: string) => text }) }))
 vi.mock('@/components/navigation/navigation-link', () => ({ NavigationLink: ({ children, ...props }: React.ComponentProps<'a'>) => <a {...props}>{children}</a> }))
-vi.mock('@/components/tours/TourInvitation', () => ({ TourInvitation: () => <button>Take a tour</button> }))
+// The Guide renders its topics as they would appear in its modal, so help stays provably reachable.
+vi.mock('@/components/tours/TourInvitation', () => ({
+    TourInvitation: ({ topics = [] }: { topics?: { id: string; title: string; content?: React.ReactNode }[] }) => <div data-guide="true"><button>Take a tour</button>{topics.map(topic => <section key={topic.id} data-guide-topic={topic.id}>{topic.title}{topic.content}</section>)}</div>,
+}))
 vi.mock('@/components/machines/MachinesGuidedTour', () => ({ default: () => <div data-testid="machines-tutorial" /> }))
 vi.mock('@/app/(dashboard)/owner/production/registers/MachineEditor', () => ({
     default: ({ children }: { children: (actions: { add: () => void; edit: () => void; isOpen: boolean }) => React.ReactNode }) => children({ add: () => {}, edit: () => {}, isOpen: false }),
@@ -26,7 +29,9 @@ describe('Machines contextual help', () => {
         expect(html).toContain('data-machines-tour="production-next"')
         expect(html).toContain('data-machines-tour="assignments-next"')
         expect(html).toContain(copy.helpTitle)
-        expect(html).toContain('<details')
+        // Help opens from the header Guide as a topic, not as an inline disclosure.
+        expect(html).toContain('data-guide-topic="machines-help"')
+        expect(html).not.toContain('<details')
         for (const [title] of copy.help) expect(html).toContain(title)
         expect(html).toContain('value="existing"')
         expect(html).not.toContain('data-testid="machines-tutorial"')

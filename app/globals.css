@@ -752,41 +752,18 @@
   }
 
   /* ── Workspace composition ──────────────────────────────────────────────
-     Every rail route shares one composition:
-
-       sidebar | left rail | workspace | right rail
-
-     The left rail holds the route's guide. The right rail holds the route's
-     primary action and reference material, with bottom-anchored notices.
-     Rails leave the page flow only when a comfortable workspace still fits
-     beside them, and everything below that recomposes inline:
-
-       < 1280px   one column; guide above, actions/reference inline
-       ≥ 1280px   workspace + right rail
-       ≥ 1440px   left rail + workspace + right rail
-
-     All offsets derive from the tokens below, so both rails sit the same
-     distance from the centred workspace on every route instead of drifting
-     to the viewport edges, and text renders at its real size. */
+     Every route is one column beside the sidebar: the page header (title,
+     the route's Guide, its primary action), then the page itself at the full
+     content width. There are no side rails. A route's tour and help open from
+     its Guide button as a modal, page controls (period pickers, history,
+     review status) sit in the page flow, and nothing is pinned beside it. */
   :root {
     --shell-sidebar-w: 0px;
     --shell-area: calc(100vw - var(--shell-sidebar-w));
     --main-pad: 0.75rem;
     --main-max: 80rem;
-    --workspace-max: 72rem;
-    --rail-w: 14rem;
-    --rail-gap: 1.25rem;
-    --rail-edge: 1.5rem;
-    --rail-top: 1.5rem;
-    --rail-bottom: 1.5rem;
-    --rail-span: calc(var(--rail-w) + var(--rail-gap));
-    /* Symmetric composition: the workspace is centred and both rails hug it. */
-    --workspace-w: min(var(--workspace-max), calc(var(--shell-area) - 2 * var(--rail-edge) - 2 * var(--rail-span)));
-    --rail-outer: calc((var(--shell-area) - var(--workspace-w)) / 2 - var(--rail-span));
     /* Right edge of the dashboard content column (main is capped at 80rem). */
     --main-inset: calc((var(--shell-area) - min(var(--shell-area), var(--main-max))) / 2 + var(--main-pad));
-    --rail-left: calc(var(--shell-sidebar-w) + var(--rail-outer));
-    --rail-right: var(--main-inset);
   }
 
   @media (min-width: 768px) {
@@ -802,13 +779,6 @@
     }
   }
 
-  /* Billing reads as short assurance notes; give its rail a little more room. */
-  :root:has(.billing-right-rail) {
-    --rail-w: 17rem;
-  }
-
-  /* Inline (single column) presentation. These are the base rules; the tier
-     media queries below lift rails out of the flow when there is room. */
   .estimator-workspace-shell,
   .stock-workspace-shell,
   .payroll-workspace-shell,
@@ -829,104 +799,6 @@
     width: 100%;
   }
 
-  .estimator-left-rail,
-  .saved-costings-left-rail,
-  .guided-tour-left-rail,
-  .production-left-rail,
-  .workers-left-rail,
-  .machines-left-rail,
-  .payroll-left-rail,
-  .stock-left-rail,
-  .dispatch-left-rail {
-    width: 100%;
-    margin-bottom: 1.25rem;
-  }
-
-  .configuration-guide-rail {
-    margin-bottom: 1.25rem;
-    max-width: 32rem;
-  }
-
-  .rates-left-rail-desktop {
-    display: block;
-    width: 100%;
-    margin-bottom: 1.25rem;
-  }
-
-  .estimator-reference-rail,
-  .workers-reference-rail,
-  .machines-reference-rail,
-  .configuration-actions-rail {
-    width: 100%;
-    margin-top: 1.25rem;
-  }
-
-  .payroll-period-rail {
-    display: flex;
-    width: 100%;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .payroll-records-action {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 1rem;
-  }
-
-  .production-daily-sheet-rail {
-    display: flex;
-    width: 100%;
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .billing-right-rail {
-    width: 100%;
-    margin-top: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .billing-rail-top,
-  .billing-rail-bottom {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .stock-movement-rail-mobile {
-    display: block;
-    width: 100%;
-    margin-top: 1.5rem;
-  }
-
-  .production-daily-sheet-history-mobile {
-    display: flex;
-  }
-
-  .production-inline-activate {
-    display: inline-flex;
-  }
-
-  /* Desktop-only rail pieces; their inline counterparts cover narrow screens. */
-  .production-activate-rail,
-  .production-activate-action,
-  .workers-reference-action,
-  .machines-reference-action,
-  .billing-rail-action,
-  .production-daily-sheet-action,
-  .dispatch-action-rail,
-  .rates-review-rail-desktop,
-  .saved-costings-action-rail-desktop,
-  .saved-costings-archive-rail-desktop,
-  .saved-costings-help-rail-desktop,
-  .stock-movement-rail-desktop,
-  .production-daily-sheet-history-desktop {
-    display: none;
-  }
-
   .machine-card-grid {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -937,344 +809,21 @@
     }
   }
 
-  /* ── Tier 2: workspace + right rail (≥ 1280px) ───────────────────────── */
+  /* While a guided tour runs on a wide screen, the page keeps a lane on its right for the 360px tour
+     card (plus a 16px gap either side), so the card sits beside what it explains instead of over it.
+     The page returns to its full width the moment the tour ends. */
   @media (min-width: 1280px) {
-    :root {
-      --rail-edge: var(--main-pad);
-    }
-
-    .estimator-workspace-shell,
-    .stock-workspace-shell,
-    .payroll-workspace-shell,
-    .workers-workspace-shell,
-    .machines-workspace-shell,
-    .dispatch-workspace-shell,
-    .production-overview-workspace,
-    .production-daily-sheet-workspace,
-    .configuration-page-frame,
-    .saved-costings-workspace,
-    .rates-workspace,
-    .billing-workspace-shell {
-      width: auto;
-      max-width: none;
-      margin-left: 0;
-      margin-right: 0;
-    }
-
-    /* Top-anchored right rails. */
-    .estimator-reference-rail,
-    .saved-costings-action-rail-desktop,
-    .dispatch-action-rail,
-    .payroll-period-rail,
-    .configuration-actions-rail {
-      position: fixed;
-      top: var(--rail-top);
-      right: var(--rail-right);
-      z-index: 30;
-      width: var(--rail-w);
-      max-height: calc(100dvh - var(--rail-top) - var(--rail-bottom) - 5rem);
-      margin: 0;
-      overflow-y: auto;
-      overscroll-behavior: contain;
-      scrollbar-width: thin;
-    }
-
-    /* Full-height right rails: action at the top, reference at the bottom. */
-    .production-activate-rail,
-    .workers-reference-rail,
-    .machines-reference-rail,
-    .production-daily-sheet-rail,
-    .billing-right-rail {
-      position: fixed;
-      top: var(--rail-top);
-      bottom: var(--rail-bottom);
-      right: var(--rail-right);
-      z-index: 30;
-      display: flex;
-      width: var(--rail-w);
-      flex-direction: column;
-      gap: 1.5rem;
-      margin: 0;
-      overflow-y: auto;
-      overscroll-behavior: contain;
-      scrollbar-width: thin;
-    }
-
-    .production-daily-sheet-rail {
-      gap: 1rem;
-      justify-content: space-between;
-    }
-
-    .billing-right-rail {
-      justify-content: space-between;
-    }
-
-    /* Bottom-anchored right rail notices. */
-    .saved-costings-archive-rail-desktop,
-    .saved-costings-help-rail-desktop,
-    .stock-movement-rail-desktop,
-    .payroll-records-action {
-      position: fixed;
-      right: var(--rail-right);
-      bottom: var(--rail-bottom);
-      z-index: 30;
-      display: block;
-      width: var(--rail-w);
-      margin: 0;
-    }
-
-    /* Rate Book: the add action and review status on top, the guidance pills (principles,
-       help, archive and restore) pinned to the bottom. One column, so an opened pill scrolls
-       the rail instead of overlapping the review card. */
-    .rates-review-rail-desktop {
-      position: fixed;
-      top: var(--rail-top);
-      bottom: var(--rail-bottom);
-      right: var(--rail-right);
-      z-index: 30;
-      display: flex;
-      width: var(--rail-w);
-      flex-direction: column;
-      gap: 1rem;
-      margin: 0;
-      overflow-y: auto;
-      overscroll-behavior: contain;
-      scrollbar-width: thin;
-    }
-
-    .rates-review-rail-desktop > * {
-      flex: none;
-    }
-
-    .rates-review-rail-bottom {
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-      margin-top: auto;
-    }
-
-    .saved-costings-action-rail-desktop,
-    .production-daily-sheet-history-desktop {
-      display: block;
-    }
-
-    .production-daily-sheet-history-desktop {
-      display: flex;
-    }
-
-    .payroll-records-action {
-      display: flex;
-      justify-content: center;
-    }
-
-    .dispatch-action-rail,
-    .production-activate-action,
-    .workers-reference-action,
-    .machines-reference-action,
-    .billing-rail-action,
-    .production-daily-sheet-action {
-      display: flex;
-      flex: none;
-      justify-content: center;
-    }
-
-    .production-activate-action button,
-    .workers-reference-action button,
-    .machines-reference-action button,
-    .dispatch-action-rail button,
-    .billing-rail-action button,
-    .billing-rail-action a,
-    .production-daily-sheet-action button,
-    .payroll-records-action button {
-      width: 100%;
-    }
-
-    .workers-reference-bottom,
-    .machines-reference-bottom,
-    .billing-rail-bottom,
-    .production-daily-sheet-rail-bottom {
-      margin-top: auto;
-    }
-
-    .billing-rail-bottom {
-      padding-top: 1rem;
-    }
-
-    .workers-help-list {
-      grid-template-columns: minmax(0, 1fr);
-    }
-
-    /* Inline counterparts of the right rail. */
-    .workers-inline-add,
-    .machines-inline-add,
-    .dispatch-inline-action,
-    .production-inline-activate,
-    .stock-movement-rail-mobile,
-    .production-daily-sheet-history-mobile,
-    .production-daily-sheet-toolbar-mobile,
-    .rail-inline-actions {
-      display: none;
+    :root:has(.guided-tour-panel) .dashboard-main {
+      padding-right: calc(360px + 2rem);
     }
   }
 
-  /* Reserve the right gutter only on routes that render a right rail. */
-  @media (min-width: 1280px) and (max-width: 1439.98px) {
-    :root:has(:is(
-      .estimator-reference-rail,
-      .rates-review-rail-desktop,
-      .saved-costings-action-rail-desktop,
-      .saved-costings-archive-rail-desktop,
-      .saved-costings-help-rail-desktop,
-      .dispatch-action-rail,
-      .payroll-period-rail,
-      .payroll-records-action,
-      .configuration-actions-rail,
-      .production-activate-rail,
-      .workers-reference-rail,
-      .machines-reference-rail,
-      .production-daily-sheet-rail,
-      .stock-movement-rail-desktop,
-      .billing-right-rail
-    )) :is(
-      .estimator-workspace-shell,
-      .stock-workspace-shell,
-      .payroll-workspace-shell,
-      .workers-workspace-shell,
-      .machines-workspace-shell,
-      .dispatch-workspace-shell,
-      .production-overview-workspace,
-      .production-daily-sheet-workspace,
-      .configuration-page-frame,
-      .saved-costings-workspace,
-      .rates-workspace,
-      .billing-workspace-shell
-    ) {
-      margin-right: var(--rail-span);
-    }
-
-    /* Guides rendered outside their route's shell sit inline above it here;
-       keep them clear of the pinned right rail as well. */
-    :root:has(:is(
-      .rates-review-rail-desktop,
-      .saved-costings-action-rail-desktop,
-      .dispatch-action-rail,
-      .payroll-period-rail,
-      .production-activate-rail,
-      .production-daily-sheet-rail,
-      .stock-movement-rail-desktop
-    )) :is(
-      .saved-costings-left-rail,
-      .rates-left-rail-desktop,
-      .production-left-rail,
-      .payroll-left-rail,
-      .stock-left-rail,
-      .dispatch-left-rail
-    ) {
-      width: auto;
-      margin-right: var(--rail-span);
-    }
-  }
-
-  /* ── Tier 3: left rail + workspace + right rail (≥ 1440px) ───────────── */
-  @media (min-width: 1440px) {
-    :root {
-      --rail-edge: 1.5rem;
-      --rail-right: var(--rail-outer);
-    }
-
-    /* Routes without a guide keep the wider two-column composition, but their
-       right rail sits at the same viewport offset as every other route. The
-       workspace stays in the content column and ends one rail gap before it. */
-    .billing-workspace-shell {
-      margin-right: max(0px, calc(var(--rail-right) + var(--rail-span) - var(--main-inset)));
-    }
-
-    .estimator-workspace-shell,
-    .stock-workspace-shell,
-    .payroll-workspace-shell,
-    .workers-workspace-shell,
-    .machines-workspace-shell,
-    .dispatch-workspace-shell,
-    .production-overview-workspace,
-    .production-daily-sheet-workspace,
-    .configuration-page-frame,
-    .saved-costings-workspace,
-    .rates-workspace {
-      width: min(100%, var(--workspace-w));
-      margin-inline: auto;
-    }
-
-    .estimator-left-rail,
-    .saved-costings-left-rail,
-    .rates-left-rail-desktop,
-    .configuration-guide-rail,
-    .guided-tour-left-rail,
-    .production-left-rail,
-    .workers-left-rail,
-    .machines-left-rail,
-    .payroll-left-rail,
-    .stock-left-rail,
-    .dispatch-left-rail {
-      position: fixed;
-      top: var(--rail-top);
-      left: var(--rail-left);
-      bottom: var(--rail-bottom);
-      z-index: 30;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      width: var(--rail-w);
-      max-width: none;
-      height: calc(100dvh - var(--rail-top) - var(--rail-bottom));
-      max-height: calc(100dvh - var(--rail-top) - var(--rail-bottom));
-      margin: 0;
-      overflow-y: auto;
-      overscroll-behavior: contain;
-      scrollbar-width: thin;
-    }
-
-    .left-rail-bottom {
-      margin-top: auto !important;
-    }
-  }
-
-  @media (min-width: 1680px) {
-    :root {
-      --rail-w: 16rem;
-      --rail-gap: 1.5rem;
-    }
-
-    :root:has(.billing-right-rail) {
-      --rail-w: 18rem;
-    }
-  }
-
-  @media (min-width: 1920px) {
-    :root {
-      --rail-w: 17rem;
-      --rail-gap: 2rem;
-      --rail-edge: 2rem;
-    }
-
-    :root:has(.billing-right-rail) {
-      --rail-w: 19rem;
-    }
-  }
-
-  /* A rail inside another rail route (for example a page nested in a tour
-     wrapper) must not reserve the gutters twice. */
-  :is(.stock-workspace-shell, .payroll-workspace-shell, .production-overview-workspace, .configuration-page-frame) :is(.stock-workspace-shell, .payroll-workspace-shell, .production-overview-workspace, .configuration-page-frame) {
-    width: 100%;
-    max-width: none;
-    margin-inline: 0;
-  }
-
-  /* Dock the estimator's Live Cost shortcut under the right rail so it moves
-     with the composition instead of drifting to the viewport corner. */
+  /* Dock the estimator's Live Cost shortcut to the right edge of the content
+     column so it stays with the page instead of drifting to the viewport corner. */
   @media (min-width: 1280px) {
     [data-testid="mobile-live-estimate-shortcut"] {
-      right: var(--rail-right);
-      bottom: var(--rail-bottom);
+      right: var(--main-inset);
+      bottom: 1.5rem;
     }
   }
 
@@ -1282,13 +831,6 @@
      entrance wrapper would otherwise make it scroll with the estimator. */
   .ui-route-enter.estimator-mobile-form {
     animation: none;
-  }
-
-  .saved-costings-left-rail .saved-costings-tour-launcher {
-    position: static;
-    width: 100%;
-    height: 100%;
-    margin-bottom: 0;
   }
 
   /* Safe Area Padding Utilities for Mobile Apps */

@@ -5,37 +5,33 @@ import { join } from 'node:path'
 const root = process.cwd()
 const read = (path: string) => readFileSync(join(root, path), 'utf8')
 
-describe('Desktop workspace composition (sidebar | left rail | workspace | right rail)', () => {
+describe('Desktop workspace composition (sidebar | full-width workspace)', () => {
     const styles = read('app/globals.css')
     const estimator = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
     const rates = read('app/(dashboard)/owner/rates/RatesClient.tsx')
+    const shells = ['estimator-workspace-shell', 'stock-workspace-shell', 'payroll-workspace-shell', 'workers-workspace-shell',
+        'machines-workspace-shell', 'dispatch-workspace-shell', 'production-overview-workspace', 'production-daily-sheet-workspace',
+        'configuration-page-frame', 'saved-costings-workspace', 'rates-workspace', 'billing-workspace-shell']
 
     it('renders text at its real size instead of zooming the whole document', () => {
         expect(styles).not.toMatch(/:root\s*\{[^}]*\bzoom:/)
         expect(styles).not.toContain('--app-desktop-zoom')
     })
 
-    it('derives every rail offset from one set of composition tokens', () => {
-        for (const token of ['--shell-sidebar-w', '--rail-w', '--rail-gap', '--rail-top', '--rail-bottom', '--rail-span', '--workspace-w', '--rail-outer', '--rail-left', '--rail-right']) {
-            expect(styles).toContain(`${token}:`)
-        }
-        expect(styles).toMatch(/--workspace-w:\s*min\(var\(--workspace-max\),\s*calc\(var\(--shell-area\)\s*-\s*2 \* var\(--rail-edge\)\s*-\s*2 \* var\(--rail-span\)\)\)/)
-        expect(styles).toMatch(/--rail-left:\s*calc\(var\(--shell-sidebar-w\)\s*\+\s*var\(--rail-outer\)\)/)
-        // No route hard-codes its own viewport offset any more.
+    it('derives the content column from one set of shell tokens and keeps no rail tokens', () => {
+        for (const token of ['--shell-sidebar-w', '--shell-area', '--main-pad', '--main-max', '--main-inset']) expect(styles).toContain(`${token}:`)
+        expect(styles).not.toMatch(/--rail-[a-z]+:|--workspace-w:/)
+        // No route hard-codes its own viewport offset.
         expect(styles).not.toMatch(/left:\s*calc\(248px\s*\+/)
     })
 
-    it('lifts the right rail out of the flow at 1280px and both rails at 1440px', () => {
-        expect(styles).toMatch(/@media\s*\(min-width:\s*1280px\)\s*\{[\s\S]*?\.estimator-reference-rail[\s\S]*?position:\s*fixed;[\s\S]*?right:\s*var\(--rail-right\)/)
-        expect(styles).toMatch(/@media\s*\(min-width:\s*1440px\)\s*\{[\s\S]*?\.estimator-left-rail[\s\S]*?position:\s*fixed;[\s\S]*?left:\s*var\(--rail-left\)/)
-        expect(styles).toMatch(/@media\s*\(min-width:\s*1440px\)\s*\{[\s\S]*?\.rates-left-rail-desktop[\s\S]*?position:\s*fixed/)
-        expect(styles).toMatch(/@media\s*\(min-width:\s*1440px\)\s*\{[\s\S]*?\.saved-costings-left-rail[\s\S]*?position:\s*fixed/)
-    })
-
-    it('reserves the workspace width from the tokens so the centre never collides with a rail', () => {
-        expect(styles).toMatch(/@media\s*\(min-width:\s*1440px\)\s*\{[\s\S]*?\.estimator-workspace-shell[\s\S]*?width:\s*min\(100%,\s*var\(--workspace-w\)\)/)
-        expect(styles).toMatch(/margin-right:\s*var\(--rail-span\)/)
-        expect(rates).toMatch(/<div\b[^>]*className=\{cn\("rates-workspace ui-route-enter\b[^"\n]*",\s*isLite && mobileStyles\.workspace\)\}/)
+    it('gives every route workspace the full content width at every breakpoint', () => {
+        const composition = styles.slice(styles.indexOf('/* ── Workspace composition'), styles.indexOf('.estimator-workspace-main {'))
+        for (const shell of shells) expect(composition).toContain(`.${shell}`)
+        expect(composition).toMatch(/\.billing-workspace-shell \{\s*width: 100%;\s*\}/)
+        // Nothing reserves a gutter for a rail or centres the workspace between rails any more.
+        expect(styles).not.toMatch(/margin-right:\s*var\(--rail-span\)|width:\s*min\(100%,\s*var\(--workspace-w\)\)/)
+        expect(rates).toMatch(/<div\b[^>]*className=\{cn\("rates-workspace ui-route-enter w-full space-y-6",\s*isLite && mobileStyles\.workspace\)\}/)
         expect(rates).toContain("useOwnerPlan() === 'lite'")
         const mobileStyles = read('components/estimator/lite-records.module.css')
         // The default composition class remains unconditional; only mobile rules add Lite layout.
@@ -43,26 +39,22 @@ describe('Desktop workspace composition (sidebar | left rail | workspace | right
         expect(mobileStyles).toMatch(/@media[^{}]*max-width: 767\.98px[^{}]*\{[\s\S]*?\.workspace \{ margin-top: 0;/)
     })
 
+    it('keeps a lane beside the page for the tour card while a tour runs on wide screens', () => {
+        expect(styles).toMatch(/@media \(min-width: 1280px\) \{\s*:root:has\(\.guided-tour-panel\) \.dashboard-main \{\s*padding-right: calc\(360px \+ 2rem\);/)
+        // The lane matches the tour card's width.
+        expect(read('components/tours/TourPanel.tsx')).toContain('w-[360px]')
+    })
+
     it('anchors the live cost floating shortcut cleanly without overflowing into center container', () => {
         expect(estimator).toContain('data-testid="mobile-live-estimate-shortcut"')
         expect(estimator).toMatch(/className="[^"]*fixed mobile-floating-action bottom-6 right-4[^"]*lg:right-6 xl:right-8"/)
+        // From 1280px it docks to the content column's right edge.
+        expect(styles).toMatch(/@media \(min-width: 1280px\) \{\s*\[data-testid="mobile-live-estimate-shortcut"\] \{\s*right: var\(--main-inset\);/)
     })
 
-    it('uses one Rate Book guide rail inline on phones and pinned on wide desktops', () => {
+    it('renders one Rate Book tutorial, in the page header', () => {
         expect(rates.match(/<RateBookTutorial\b/g)).toHaveLength(1)
         expect(rates).not.toContain('RateBookTutorialLauncher')
-        expect(styles).toMatch(/\.rates-left-rail-desktop \{\s*display: block;\s*width: 100%;/)
-        expect(styles).not.toMatch(/\.rates-left-rail-desktop \{\s*display: none/)
-    })
-
-    it('orders the inline rail rules before the tier media queries so a rail never expands to full width on desktop', () => {
-        const baseReferenceIndex = styles.indexOf('  .estimator-reference-rail,\n  .workers-reference-rail,')
-        const tierIndex = styles.indexOf('@media (min-width: 1280px) {', baseReferenceIndex)
-        expect(baseReferenceIndex).toBeGreaterThan(0)
-        expect(tierIndex).toBeGreaterThan(baseReferenceIndex)
-
-        const afterTier = styles.slice(tierIndex)
-        expect(afterTier).not.toMatch(/\.estimator-reference-rail\s*\{[^}]*width:\s*100%/)
-        expect(afterTier).not.toMatch(/\.estimator-left-rail\s*\{[^}]*width:\s*100%/)
+        expect(rates.indexOf('<RateBookTutorial')).toBeGreaterThan(rates.indexOf('<PageHeader'))
     })
 })

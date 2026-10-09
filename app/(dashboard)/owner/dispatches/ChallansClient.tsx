@@ -21,7 +21,8 @@ import {
     DialogTitle,
     DialogDescription,
 } from '@/components/ui/dialog'
-import { EmptyState } from '@/components/ui/page-header'
+import { EmptyState, PageHeader } from '@/components/ui/page-header'
+import { PageGuide } from '@/components/tours/TourInvitation'
 import { LiquidSegmented } from '@/components/ui/liquid-segmented'
 import { useTranslation } from '@/lib/i18n/context'
 import { useTourSample } from '@/lib/tours/sample-context'
@@ -290,21 +291,17 @@ export default function ChallansClient({
     return (
         <div
             data-i18n-skip="true"
-            className="dispatch-workspace-shell mx-auto w-full space-y-5 pb-10 sm:space-y-6"
+            className="dispatch-workspace-shell w-full space-y-5 pb-10 sm:space-y-6"
         >
             <RouteMilestones route="/owner/dispatches" shellVisible primaryUsable />
-            <header className="relative border-b border-hairline/70 pb-5 text-center sm:pb-6">
-                <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-ink sm:text-[2rem]">
-                    {tx('title')}
-                </h1>
-                <p className="sr-only">{tx('intro')}</p>
-                <div className="dispatch-inline-action mt-3 flex justify-end sm:absolute sm:right-0 sm:top-0 sm:mt-0">
+            <PageHeader
+                title={tx('title')}
+                description={<span className="sr-only">{tx('intro')}</span>}
+                actions={<>
+                    <PageGuide />
                     <NewDispatchButton tourAnchor="dispatch.new" onClick={beginDraft} disabled={busy || !!pending} label={tx('new')} />
-                </div>
-            </header>
-            <aside className="dispatch-action-rail" aria-label={tx('new')}>
-                <NewDispatchButton tourAnchor="dispatch.new" onClick={beginDraft} disabled={busy || !!pending} label={tx('new')} />
-            </aside>
+                </>}
+            />
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <LiquidSegmented
                     className="w-full sm:w-fit"

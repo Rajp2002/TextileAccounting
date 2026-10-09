@@ -118,10 +118,10 @@ describe('Saved Costings reference tour', () => {
     expect(demo).toContain('void openQuoteExport(quote)')
     expect(page).toContain('showCostingDeleteNudge && !tourStep && !demoCostingDeleted && quotes.length === 0 && initialTemplates.length === 0')
   })
-  it('shadows Free filters and passes account identity while suppressing embedded rails', () => {
+  it('shadows Free filters and passes account identity while suppressing the Guide when embedded', () => {
     expect(freePage).toContain('if (tourSampleActive) return true')
     expect(freePage).toContain('!tourSampleActive && filteredRows.map')
-    expect(freePage).toContain('{!embedded && <aside')
+    expect(freePage).toContain('{!embedded && <SavedCostingsTutorial free')
     expect(freePage).toContain('free userId={userId} orgId={orgId} userMetadata={userMetadata}')
     expect(read('app/free/costings/page.tsx')).toContain('userMetadata={{ tour_preferences: user.user_metadata?.tour_preferences }}')
     expect(read('app/free/costings/page.tsx')).toContain('await freeContext({ allowInactive: true })')
@@ -135,7 +135,8 @@ describe('Saved Costings reference tour', () => {
     expect(tutorial).toContain('{step && <SavedCostingsTourRuntime')
     expect(tutorial).not.toContain("from '@/lib/i18n/saved-costings-tutorial'")
     expect(tutorial).not.toMatch(/createPortal|addEventListener|requestAnimationFrame|setTimeout/)
-    expect(tutorial).toContain('!free && <Button')
+    // Compare versions is a Guide action on paid plans only.
+    expect(tutorial).toContain('...(free ? [] : [compare])')
     expect(tutorial).toContain('copy.fields.organize')
     expect(tutorial).toContain('copy.fields.share')
     expect(runtime).toContain('recordCompletion={!comparison}')

@@ -61,7 +61,7 @@ export function OwnerRouteLoading() {
     return (
         <div className="w-full space-y-6 pt-2 pb-8" role="status" aria-busy="true" aria-label={isStockAudit ? t('stockAudit.loadingLabel', { title }) : `Loading ${title}`}>
             <RouteMilestones route={route} shellVisible primaryUsable={false} />
-            <div className={`${pageTitleLayoutClass(pathname ?? route)} ${mobileHeaderClass(pathname)} border-b border-hairline/80 pb-5 text-center`}>
+            <div className={`${pageTitleLayoutClass(pathname ?? route)} ${mobileHeaderClass(pathname)} border-b border-hairline/70 pb-5 sm:pb-6`}>
                 <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-ink sm:text-[2rem]">{title}</h1>
             </div>
             <div className="grid gap-4 md:grid-cols-2">

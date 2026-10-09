@@ -2,12 +2,10 @@
 
 import dynamic from 'next/dynamic'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { ChevronRight, HelpCircle, ReceiptText } from 'lucide-react'
+import { HelpCircle, ReceiptText } from 'lucide-react'
 import ReplicaGuidedTour from '@/components/tours/ReplicaGuidedTour'
+import { GuideSection, PageTourProvider } from '@/components/tours/TourInvitation'
 import type { GuidedTour as GuidedTourComponent } from '@/components/tours/GuidedTour'
-import { railButton, railIcon } from '@/components/ui/rail'
-import { cn } from '@/lib/utils'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { useTranslation } from '@/lib/i18n/context'
 import { payrollStepCopy, payrollTourControlLabels, payrollTutorialCopy } from '@/lib/i18n/payroll-tutorial'
 import { payrollHelpSpecs, payrollTourSpecs, type PayrollTourStep, type PayrollTourVariant } from '@/lib/payroll-tour'
@@ -27,7 +25,7 @@ export default function PayrollGuidedTour({ userId, orgId, userMetadata, childre
     const { language, t } = useTranslation()
     const copy = payrollTutorialCopy[language]
     const [extraStep, setExtraStep] = useState<PayrollTourStep | null>(null)
-    const extraLauncher = useRef<HTMLButtonElement>(null)
+    const extraLauncher = useRef<HTMLElement>(null)
     const extraScroll = useRef<{ x: number; y: number } | null>(null)
     useEffect(() => {
         if (extraStep === null && extraScroll.current) {
@@ -43,37 +41,28 @@ export default function PayrollGuidedTour({ userId, orgId, userMetadata, childre
 
     return <ReplicaGuidedTour tourId="payroll" steps={payrollTourSpecs} handoffStepId="pr-handoff"
         workspaceClassName=""
-        railClassName="payroll-left-rail" railLabel={t('navigation.payroll')}
         userId={userId} orgId={orgId} userMetadata={userMetadata}
         copy={stepCopy} renderReplica={() => <PayrollSampleWorkspace />}
-        walkthrough={<div className="left-rail-bottom mt-auto space-y-2 pt-3" data-i18n-skip="true" lang={language}>
-            <button ref={extraLauncher} type="button" data-tour-control="payroll-help"
-                onClick={() => {
+        topics={[
+            {
+                id: 'payroll-help', icon: HelpCircle, title: copy.launcher, control: 'payroll-help', lang: language, i18nSkip: true,
+                onSelect: () => {
+                    extraLauncher.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
                     extraScroll.current = { x: window.scrollX, y: window.scrollY }
                     setExtraStep('pra-advance')
-                }} className={cn('estimator-touch-target', railButton)}>
-                <span className="flex min-w-0 items-center gap-2.5"><HelpCircle className={railIcon} aria-hidden="true" /><span>{copy.launcher}</span></span>
-                <ChevronRight className="h-4 w-4 shrink-0" aria-hidden="true" />
-            </button>
-            <Dialog>
-                <DialogTrigger asChild><button type="button" className={cn('estimator-touch-target', railButton)}>
-                    <span className="flex min-w-0 items-center gap-2.5"><ReceiptText className={railIcon} aria-hidden="true" /><span>{copy.calculation.title}</span></span>
-                    <ChevronRight className="h-4 w-4 shrink-0" aria-hidden="true" />
-                </button></DialogTrigger>
-                <DialogContent data-i18n-skip="true" lang={language} className="sm:max-w-lg rounded-2xl border border-hairline bg-surface p-6 shadow-[var(--shadow-card)]">
-                    <DialogHeader><DialogTitle>{copy.calculation.title}</DialogTitle><DialogDescription>{copy.calculation.description}</DialogDescription></DialogHeader>
-                    <div className="space-y-4">
-                        {(['piece', 'salary', 'recovery'] as const).map(section => <section key={section}>
-                            <h3 className="text-sm font-semibold text-ink">{copy.calculation[`${section}.title`]}</h3>
-                            <p className="mt-1 text-sm leading-relaxed text-body">{copy.calculation[`${section}.body`]}</p>
-                        </section>)}
-                    </div>
-                </DialogContent>
-            </Dialog>
-        </div>}>
+                },
+            },
+            {
+                id: 'payroll-calculation', icon: ReceiptText, title: copy.calculation.title, summary: copy.calculation.description, lang: language, i18nSkip: true,
+                content: (['piece', 'salary', 'recovery'] as const).map(section =>
+                    <GuideSection key={section} title={copy.calculation[`${section}.title`]}>{copy.calculation[`${section}.body`]}</GuideSection>),
+            },
+        ]}>
         <div hidden={extraStep !== null && extraStep !== 'pra-handoff'}>{children}</div>
         {extraStep !== null && extraStep !== 'pra-handoff' && <div data-tour-replica="payroll">
-            <TourSampleProvider tourId="payroll" step={extraStep}><PayrollSampleWorkspace /></TourSampleProvider>
+            <PageTourProvider value={{ tourId: 'payroll', sample: true }}>
+                <TourSampleProvider tourId="payroll" step={extraStep}><PayrollSampleWorkspace /></TourSampleProvider>
+            </PageTourProvider>
         </div>}
         {extraStep !== null && <GuidedTour tourId="payroll" steps={payrollHelpSpecs} step={extraStep}
             copy={stepCopy} onStepChange={setExtraStep} launcher={extraLauncher}

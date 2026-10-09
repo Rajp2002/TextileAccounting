@@ -2,17 +2,13 @@
 
 import dynamic from 'next/dynamic'
 import { useRef, useState } from 'react'
-import { ChevronRight, CircleHelp, GitCompareArrows } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { TourInvitation } from '@/components/tours/TourInvitation'
-import { railButton, railIcon } from '@/components/ui/rail'
-import { RailDialog, RailDialogSection } from '@/components/ui/rail-dialog'
-import { cn } from '@/lib/utils'
+import { CircleHelp, GitCompareArrows } from 'lucide-react'
+import { GuideSection, TourInvitation, type GuideTopic } from '@/components/tours/TourInvitation'
 import { useTranslation } from '@/lib/i18n/context'
 import type { SavedCostingEnding, SavedCostingStep } from '@/lib/saved-costings-tour'
 
 const SavedCostingsTourRuntime = dynamic(() => import('./SavedCostingsTourRuntime'), { ssr: false })
-// Existing rail help remains static; step copy is loaded only with the runtime.
+// Existing help remains static; step copy is loaded only with the runtime.
 const railCopy = {
   "en": {
     "help": "More help: documents and library",
@@ -118,49 +114,52 @@ const railCopy = {
   }
 } as const
 
-/**
- * The "More help" disclosure. Free renders it in the right rail from 1280px and inside the left
- * rail below that (see `rail-inline-actions`), so it is its own component rather than tutorial markup.
- */
-export function SavedCostingsHelp({ free = false }: { free?: boolean }) {
+/** "More help: documents and library" as a Guide topic. Free lists fewer fields. */
+export function useSavedCostingsHelpTopic(free = false): GuideTopic {
     const { language } = useTranslation()
     const copy = railCopy[language]
     const helpFields = free ? [copy.fields.freeHelp, copy.fields.customer, copy.fields.share]
         : [copy.fields.filters, copy.fields.breakdown, copy.fields.organize, copy.fields.separateQuality, copy.fields.customer, copy.fields.share]
-    return (
-        <RailDialog icon={CircleHelp} title={copy.help} lang={language} i18nSkip>
-            {helpFields.map(([title, description]) => <RailDialogSection key={title} title={title}>{description}</RailDialogSection>)}
-        </RailDialog>
-    )
+    return {
+        id: 'saved-costings-help', icon: CircleHelp, title: copy.help, lang: language, i18nSkip: true,
+        content: helpFields.map(([title, description]) => <GuideSection key={title} title={title}>{description}</GuideSection>),
+    }
 }
 
-export function SavedCostingsTutorial({ step, onStepChange, onComplete, free = false, production = false, inline = false, ending = 'empty', userId, orgId, userMetadata }: {
+/**
+ * The Saved Costings Guide: the main tour, the version-comparison tour (paid plans) and help, all
+ * from one header button. `topics` adds the page's other help (archive policy) after these.
+ */
+export function SavedCostingsTutorial({ step, onStepChange, onComplete, free = false, production = false, ending = 'empty', topics = [], userId, orgId, userMetadata }: {
     step: SavedCostingStep | null; onStepChange: (step: SavedCostingStep | null) => void; onComplete?: () => void
-    free?: boolean; production?: boolean; inline?: boolean; ending?: SavedCostingEnding
+    free?: boolean; production?: boolean; ending?: SavedCostingEnding
+    topics?: readonly GuideTopic[]
     userId?: string; orgId?: string; userMetadata?: Record<string, unknown> | null
 }) {
     const { language } = useTranslation()
     const copy = railCopy[language]
+    const help = useSavedCostingsHelpTopic(free)
     const [comparisonTour, setComparisonTour] = useState(false)
     const launcher = useRef<HTMLDivElement>(null)
     const returnFocus = useRef<HTMLElement | null>(null)
+    const guideButton = () => launcher.current?.querySelector<HTMLButtonElement>('[data-tour-control="guide"]') ?? null
+    const compare: GuideTopic = {
+        id: 'compare-versions', icon: GitCompareArrows, title: copy.compare, control: 'compare-tour', lang: language, i18nSkip: true,
+        onSelect: () => {
+            returnFocus.current = guideButton()
+            setComparisonTour(true)
+            onStepChange('compareSelect')
+        },
+    }
     return <>
-        <div ref={launcher} data-costing-tour="guide" className={inline ? 'mb-4' : 'saved-costings-tour-launcher mb-4 flex min-h-0 flex-1 flex-col justify-between h-full'}>
-            <TourInvitation tourId="saved-costings" userId={userId} orgId={orgId} userMetadata={userMetadata} align="full" className="w-full" onLaunch={() => {
-                returnFocus.current = launcher.current?.querySelector<HTMLButtonElement>('[data-tour-control="take-tour"], [data-tour-control="quiet-tour"]') ?? null
-                setComparisonTour(false)
-                onStepChange(free ? 'snapshots' : 'find')
-            }} />
-            <div data-i18n-skip="true" lang={language} className={cn('@container left-rail-bottom mt-auto pt-3', free && 'rail-inline-actions')}>
-                <div className="grid items-start gap-2 @lg:grid-cols-2">
-                    {!free && <Button type="button" variant="outline" data-tour-control="compare-tour" className={cn(railButton, 'h-auto whitespace-normal')} onClick={event => {
-                        returnFocus.current = event.currentTarget
-                        setComparisonTour(true)
-                        onStepChange('compareSelect')
-                    }}><span className="flex min-w-0 items-center gap-2.5"><GitCompareArrows className={railIcon} aria-hidden="true" /><span className="min-w-0">{copy.compare}</span></span><ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" /></Button>}
-                    <SavedCostingsHelp free={free} />
-                </div>
-            </div>
+        <div ref={launcher} data-costing-tour="guide" className="contents">
+            <TourInvitation tourId="saved-costings" userId={userId} orgId={orgId} userMetadata={userMetadata}
+                topics={[...(free ? [] : [compare]), help, ...topics]}
+                onLaunch={() => {
+                    returnFocus.current = guideButton()
+                    setComparisonTour(false)
+                    onStepChange(free ? 'snapshots' : 'find')
+                }} />
         </div>
         {step && <SavedCostingsTourRuntime step={step} onStepChange={onStepChange} onComplete={onComplete} free={free} production={production} comparison={comparisonTour} ending={ending} userId={userId} launcher={launcher} returnFocus={returnFocus} />}
     </>

@@ -88,7 +88,23 @@ if (dailySheet) {
 }
 if (assignments && process.env.PRE_TYPE !== undefined) await page.locator('[data-configuration-tour="search"]').filter({ visible: true }).first().fill(process.env.PRE_TYPE)
 await page.screenshot({ path: `${out}/00-page.png` })
-const button = page.locator(scenarioName === 'quotes-compare' ? '[data-tour-control="compare-tour"]' : payrollExtra ? '[data-tour-control="payroll-help"]' : launcher).filter({ visible: true }).first()
+// Tours open from the page header's Guide: open its modal, then choose the tour (or a walkthrough topic) inside it.
+// The foundation fixture has no Guide, so its launcher is clicked directly.
+const guideButton = page.locator('[data-tour-control="guide"]').filter({ visible: true }).first()
+const launchFromGuide = async selector => {
+  if (await guideButton.count()) {
+    await guideButton.click()
+    await page.locator('[data-page-guide="true"]').locator(selector).first().click()
+  } else await page.locator(selector).filter({ visible: true }).first().click()
+}
+const launcherSelector = scenarioName === 'quotes-compare' ? '[data-tour-control="compare-tour"]' : payrollExtra ? '[data-tour-control="payroll-help"]' : launcher
+const button = {
+  count: async () => (await guideButton.count()) || page.locator(launcherSelector).filter({ visible: true }).count(),
+  scrollIntoViewIfNeeded: async () => { if (await guideButton.count()) await guideButton.scrollIntoViewIfNeeded() },
+  click: () => launchFromGuide(launcherSelector),
+}
+// After Exit, focus returns to the Guide button (or the foundation fixture's own launcher).
+const LAUNCHER_FOCUS = ['guide', 'take-tour', 'quiet-tour']
 const record = { scenario, lang, size, steps: [], logs, apiRequests, preClick: process.env.PRE_CLICK ?? null, sampling: settledSampling ? 'settled-geometry' : 'legacy-900ms' }
 if (!(await button.count())) { record.error = 'launcher not found'; writeFileSync(`${out}/record.json`, JSON.stringify(record, null, 2)); await browser.close(); process.exit(0) }
 if (rateBook) {
@@ -100,8 +116,8 @@ if (rateBook) {
       if (process.env.PRE_TYPE !== undefined) await control.fill(process.env.PRE_TYPE)
     }
     record.rateBookBefore = await page.evaluate(() => ({ search: document.querySelector('#yarn-rates-search').value, calls: (window.__serverCalls || []).length }))
-    const activeLaunchers = await page.locator('[data-tour-control="take-tour"], [data-tour-control="quiet-tour"]').filter({ visible: true }).count()
-    if (activeLaunchers !== 1) throw new Error(`Expected one Rate Book launcher, saw ${activeLaunchers}`)
+    const activeLaunchers = await page.locator('[data-tour-control="guide"]').filter({ visible: true }).count()
+    if (activeLaunchers !== 1) throw new Error(`Expected one Rate Book Guide, saw ${activeLaunchers}`)
     if (process.env.PRE_CLICK) {
       // Exercise Exit independently before the full Done run, preserving all original filter state.
       await button.click()
@@ -116,7 +132,7 @@ if (rateBook) {
         activeControl: document.activeElement?.getAttribute('data-tour-control'),
         prefs: Object.fromEntries(Object.entries(localStorage).filter(([key]) => key.startsWith('weavly:tour'))) }))
       if (record.rateBookExit.search !== record.rateBookBefore.search) throw new Error('Rate Book search changed after Exit')
-      if (record.rateBookExit.activeControl !== 'quiet-tour') throw new Error('Exit did not focus the replay launcher')
+      if (record.rateBookExit.activeControl !== 'guide') throw new Error('Exit did not focus the Guide')
       if (Object.values(record.rateBookExit.prefs).some(value => value.includes('"completed":true'))) throw new Error('Exit recorded completion')
     }
   } catch (error) {
@@ -141,7 +157,7 @@ if (workers) {
   await page.keyboard.press('Escape')
   await page.locator('.guided-tour-panel').waitFor({ state: 'detached' })
   record.workersExit = await captureWorkersState()
-  if (record.workersExit.activeControl !== 'quiet-tour') throw new Error('Workers Exit did not focus replay launcher')
+  if (record.workersExit.activeControl !== 'guide') throw new Error('Workers Exit did not focus the Guide')
   if (Object.values(record.workersExit.prefs).some(value => value.includes('"completed":true'))) throw new Error('Workers Exit recorded completion')
 }
 if (machines) {
@@ -478,7 +494,7 @@ if (dispatch) {
   }
   if (record.after.dispatch?.liveHidden || record.after.dispatch?.replica || record.after.dispatch?.mounts !== 1 || record.after.dispatch?.unmounts || !record.after.dispatch?.sameSearchNode || record.after.dispatch?.retainedSearch !== 'Retained search') issues.push('Done did not restore the same live client/state')
   const pending = new URLSearchParams(scenarioQuery).get('pending') === '1'
-  if (pending ? !['take-tour', 'quiet-tour'].includes(record.after.activeControl) : record.after.activeAnchor !== 'dispatch.new') issues.push('Done focus did not reach the enabled handoff or launcher fallback')
+  if (pending ? !LAUNCHER_FOCUS.includes(record.after.activeControl) : record.after.activeAnchor !== 'dispatch.new') issues.push('Done focus did not reach the enabled handoff or launcher fallback')
   if (record.after.serverCalls.some(call => call.fn !== 'recordTourEventAction')) issues.push('unexpected server action')
   if (record.after.navigations.length) issues.push('unexpected navigation')
   if (process.env.REDUCED_MOTION === '1' && record.after.scrollCalls.some(call => call.behavior === 'smooth')) issues.push('reduced motion used smooth scrolling')
@@ -530,8 +546,8 @@ if (stock) {
   }
   if (fabricStock && (record.after.stock?.liveHidden || record.after.stock?.replica || record.after.stock?.mounts !== 1 || record.after.stock?.unmounts || !record.after.stock?.sameSearchNode || record.after.stock?.retainedSearch !== 'Retained')) issues.push('live client/state not restored')
   if (yarnStock && (record.after.yarn?.liveHidden || record.after.yarn?.replica || record.after.yarn?.mounts !== 1 || record.after.yarn?.unmounts || !record.after.yarn?.sameDateNode || record.after.yarn?.date !== '2026-09-14')) issues.push('Yarn live client/state not restored')
-  if (fabricStock && (!record.exitAt ? record.after.activeAnchor !== 'fabric.opening' : !['take-tour', 'quiet-tour'].includes(record.after.activeControl))) issues.push('stock focus restoration failed')
-  if (yarnStock && (!record.exitAt ? record.after.activeAnchor !== 'yarn.opening' : !['take-tour', 'quiet-tour'].includes(record.after.activeControl))) issues.push('Yarn focus restoration failed')
+  if (fabricStock && (!record.exitAt ? record.after.activeAnchor !== 'fabric.opening' : !LAUNCHER_FOCUS.includes(record.after.activeControl))) issues.push('stock focus restoration failed')
+  if (yarnStock && (!record.exitAt ? record.after.activeAnchor !== 'yarn.opening' : !LAUNCHER_FOCUS.includes(record.after.activeControl))) issues.push('Yarn focus restoration failed')
   if (record.exitAt && Object.values(record.after.prefs).some(value => value.includes('"completed":true'))) issues.push('Exit recorded completion')
   if (record.after.serverCalls.some(call => call.fn !== 'recordTourEventAction')) issues.push('unexpected stock server action')
   if (record.after.navigations.length || apiRequests.length) issues.push('unexpected stock navigation/API request')
@@ -568,7 +584,7 @@ if (payroll) {
   if (!unchanged(record.after.payroll) || record.after.payroll.liveHidden || record.after.payroll.replica) issues.push('Payroll live state not restored')
   const anchor = payrollExtra ? 'payroll.records' : 'payroll.settle'
   if (!record.exitAt && record.after.activeAnchor !== anchor) issues.push(`Done did not focus ${anchor}`)
-  if (record.exitAt && !(payrollExtra ? record.after.activeControl === 'payroll-help' : ['take-tour', 'quiet-tour'].includes(record.after.activeControl))) issues.push('Exit did not restore launcher focus')
+  if (record.exitAt && !(payrollExtra ? record.after.activeControl === 'payroll-help' : LAUNCHER_FOCUS.includes(record.after.activeControl))) issues.push('Exit did not restore launcher focus')
   const calls = record.after.serverCalls.slice(record.payrollBefore.calls)
   if (calls.some(call => call.fn !== 'recordTourEventAction')) issues.push('unexpected business action')
   if (payrollExtra && (calls.length || JSON.stringify(record.after.prefs) !== JSON.stringify(record.payrollBefore.prefs))) issues.push('optional walkthrough wrote a preference event')
@@ -604,7 +620,7 @@ if (dailySheet) {
   }
   if (!unchanged(record.after.daily) || record.after.daily.liveHidden || record.after.daily.replica) issues.push('live sheet not restored')
   if (record.exitAt) {
-    if (!['take-tour', 'quiet-tour'].includes(record.after.activeControl)) issues.push('Exit did not restore launcher focus')
+    if (!LAUNCHER_FOCUS.includes(record.after.activeControl)) issues.push('Exit did not restore launcher focus')
     if (JSON.stringify(record.before) !== JSON.stringify(record.after.scroll)) issues.push('Exit scroll not restored')
     if (Object.values(record.after.prefs).some(value => value.includes('"completed":true'))) issues.push('Exit recorded completion')
   } else if (record.after.activeAnchor !== record.dailyBefore.anchor) issues.push('Done did not focus the live handoff')
@@ -638,7 +654,7 @@ if (production) {
   }
   if (!unchanged(record.after.production) || record.after.production.liveHidden || record.after.production.replica) issues.push('live subtree/state not restored')
   if (record.exitAt) {
-    if (!['take-tour', 'quiet-tour'].includes(record.after.activeControl)) issues.push('Exit did not focus the launcher')
+    if (!LAUNCHER_FOCUS.includes(record.after.activeControl)) issues.push('Exit did not focus the launcher')
     if (Object.values(record.after.prefs).some(value => value.includes('"completed":true'))) issues.push('Exit recorded completion')
     if (JSON.stringify(record.before) !== JSON.stringify(record.after.scroll)) issues.push('Exit did not restore scroll')
   } else if (record.after.activeAnchor !== 'production.activate') issues.push('Done did not focus Activate Quality')
@@ -715,7 +731,7 @@ if (estimator) {
   if (after.serverCalls.slice(before.serverCalls.length).some(call => call.fn !== 'recordTourEventAction')) issues.push('unexpected tour server action')
   if (apiRequests.some(request => new URL(request.url).pathname === '/api/free/calculate')) issues.push('Free calculation requested')
   if (record.after.navigations.length) issues.push('unexpected navigation')
-  if (record.exitAt ? !['take-tour', 'quiet-tour'].includes(after.activeControl) : after.activeField !== 'qualityLabel') issues.push('incorrect Exit/Done focus')
+  if (record.exitAt ? !LAUNCHER_FOCUS.includes(after.activeControl) : after.activeField !== 'qualityLabel') issues.push('incorrect Exit/Done focus')
   if (logs.some(line => line.startsWith('pageerror:'))) issues.push('page error')
   record.issues = issues
   writeFileSync(`${out}/record.json`, JSON.stringify(record, null, 2))
@@ -761,7 +777,7 @@ if (workers) {
   if (process.env.REDUCED_MOTION === '1' && record.after.scrollCalls.some(call => call.behavior === 'smooth')) issues.push('Workers reduced motion used smooth scrolling')
   if (logs.some(line => line.startsWith('pageerror:'))) issues.push('page error')
   // Completion replay must also reset to piece, even after the salary path.
-  await page.locator('[data-tour-control="quiet-tour"]').filter({ visible: true }).first().click()
+  await launchFromGuide('[data-tour-control="quiet-tour"]')
   await page.locator('[data-tour-step="wk-paytype"][data-tour-status="ready"]').waitFor()
   if (await page.locator('[data-tour-control="path-piece"]').getAttribute('aria-pressed') !== 'true') issues.push('completion replay did not reset to piece')
   await page.keyboard.press('Escape')
@@ -788,7 +804,7 @@ if (assignments) {
     if (step.step === 'ma-handoff') {
       const handoff = hasLiveWorker ? 'assignments.first-assign' : 'assignments.add-worker'
       if (!step.assignments.anchors.includes(handoff)) issues.push('handoff: missing expected live target')
-      if (record.after.activeAnchor !== handoff && record.after.activeControl !== 'quiet-tour') issues.push('Done did not focus handoff or restored-view launcher')
+      if (record.after.activeAnchor !== handoff && !LAUNCHER_FOCUS.includes(record.after.activeControl)) issues.push('Done did not focus handoff or restored-view launcher')
     }
   }
   if ((!record.exitAt || record.exitAt >= 6) && !record.assignmentsBack) issues.push('picker Back restoration not exercised')
@@ -800,7 +816,7 @@ if (assignments) {
   if (record.after.navigations.length || apiRequests.length) issues.push('navigation/API request')
   if (process.env.REDUCED_MOTION === '1' && record.after.scrollCalls.some(call => call.behavior === 'smooth')) issues.push('smooth scroll with reduced motion')
   if (record.exitAt && Object.values(record.after.prefs).some(value => value.includes('"completed":true'))) issues.push('Exit recorded completion')
-  await page.locator('[data-tour-control="quiet-tour"]').filter({ visible: true }).first().click()
+  await launchFromGuide('[data-tour-control="quiet-tour"]')
   await page.locator('[data-tour-step="ma-purpose"][data-tour-status="ready"]').waitFor()
   await page.keyboard.press('Escape')
   await page.locator('.guided-tour-panel').waitFor({ state: 'detached' })
@@ -838,14 +854,14 @@ if (machines) {
   }
   for (const key of ['search', 'status', 'url', 'storage', 'names']) if (JSON.stringify(record.machinesAfter[key]) !== JSON.stringify(record.machinesBefore[key])) issues.push(key + ' changed after Machines tour')
   if (record.machinesAfter.preview || record.machinesAfter.samples || record.machinesAfter.inert) issues.push('Machines cleanup incomplete')
-  if (record.exitAt ? !['take-tour', 'quiet-tour'].includes(record.after.activeControl) : record.after.activeAnchor !== 'machines.add') issues.push('Machines Exit/Done focus incorrect')
+  if (record.exitAt ? !LAUNCHER_FOCUS.includes(record.after.activeControl) : record.after.activeAnchor !== 'machines.add') issues.push('Machines Exit/Done focus incorrect')
   if (Math.abs(record.after.scroll.x - record.before.x) > 1 || Math.abs(record.after.scroll.y - record.before.y) > 1) issues.push('Machines launch scroll not restored')
   if (record.after.serverCalls.slice(record.machinesBefore.calls).some(call => call.fn !== 'recordTourEventAction')) issues.push('Machines business server action')
   if (record.after.navigations.length || apiRequests.length) issues.push('Machines navigation/API request')
   if (process.env.REDUCED_MOTION === '1' && record.after.scrollCalls.some(call => call.behavior === 'smooth')) issues.push('Machines reduced motion used smooth scrolling')
   if (record.exitAt && Object.values(record.after.prefs).some(value => value.includes('"completed":true'))) issues.push('Machines Exit recorded completion')
   if (logs.some(line => line.startsWith('pageerror:'))) issues.push('page error')
-  await page.locator('[data-tour-control="quiet-tour"]').filter({ visible: true }).first().click()
+  await launchFromGuide('[data-tour-control="quiet-tour"]')
   await page.locator('[data-tour-step="mc-purpose"][data-tour-status="ready"]').waitFor()
   await page.keyboard.press('Escape')
   await page.locator('.guided-tour-panel').waitFor({ state: 'detached' })

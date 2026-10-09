@@ -1,8 +1,8 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { TourInvitation } from './TourInvitation'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import { PageTourProvider, type GuideTopic, type PageTour } from './TourInvitation'
 import { TourSampleProvider } from '@/lib/tours/sample-context'
 import type { GuidedTour as GuidedTourComponent } from './GuidedTour'
 import type { TourId, TourStepSpec } from '@/lib/tours/tour-types'
@@ -19,20 +19,19 @@ const GuidedTour = dynamic(() => import('./GuidedTour').then(module => module.Gu
  * prepare loads feature copy before launch; the runtime itself is loaded on demand.
  */
 export default function ReplicaGuidedTour<S extends string>({
-    tourId, workspaceClassName, railClassName, railLabel, steps, handoffStepId,
-    copy, renderReplica, renderExtra, prepare, walkthrough, userId, orgId, userMetadata, children,
+    tourId, workspaceClassName, steps, handoffStepId,
+    copy, renderReplica, renderExtra, prepare, topics, userId, orgId, userMetadata, children,
 }: {
     tourId: TourId
     workspaceClassName: string
-    railClassName: string
-    railLabel: string
     steps: readonly TourStepSpec<S>[]
     handoffStepId?: S
     copy: (step: S) => { title: string; body: string; detail?: string; unavailable?: string }
     renderReplica: (step: S) => ReactNode
     renderExtra?: (step: S) => ReactNode
     prepare?: () => Promise<void>
-    walkthrough?: ReactNode
+    /** Help the wrapper owns (a second walkthrough, an explainer), listed in the page's Guide. */
+    topics?: readonly GuideTopic[]
     userId: string
     orgId: string
     userMetadata?: Record<string, unknown>
@@ -52,26 +51,29 @@ export default function ReplicaGuidedTour<S extends string>({
         }
     }, [step])
 
+    // The page header draws the Guide for this tour (PageGuide), so the wrapper hands the tour down
+    // instead of rendering a launcher of its own.
+    const setLauncher = useCallback((element: HTMLDivElement | null) => { launcher.current = element }, [])
+    const tour: PageTour = {
+        tourId, userId, orgId, userMetadata, launcher: setLauncher, topics, onLaunch: async () => {
+            if (launching.current || step !== null) return
+            launching.current = true
+            returnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+            try {
+                await prepare?.()
+                launchScroll.current = { x: window.scrollX, y: window.scrollY }
+                setStep(steps[0].id)
+            } finally { launching.current = false }
+        },
+    }
     return <>
-        <aside className={`phone-guidance ${railClassName} guided-tour-left-rail space-y-2`} aria-label={railLabel}>
-            <div ref={launcher}>
-                <TourInvitation tourId={tourId} userId={userId} orgId={orgId} userMetadata={userMetadata}
-                    align="full" className="w-full" onLaunch={async () => {
-                        if (launching.current || step !== null) return
-                        launching.current = true
-                        returnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
-                        try {
-                            await prepare?.()
-                            launchScroll.current = { x: window.scrollX, y: window.scrollY }
-                            setStep(steps[0].id)
-                        } finally { launching.current = false }
-                    }} />
-            </div>
-            {walkthrough}
-        </aside>
-        <div hidden={step !== null && step !== handoffStepId}>{children}</div>
+        <PageTourProvider value={tour}>
+            <div hidden={step !== null && step !== handoffStepId}>{children}</div>
+        </PageTourProvider>
         {step !== null && step !== handoffStepId && <div className={workspaceClassName} data-tour-replica={tourId}>
-            <TourSampleProvider tourId={tourId} step={step}>{renderReplica(step)}</TourSampleProvider>
+            <PageTourProvider value={{ tourId, sample: true }}>
+                <TourSampleProvider tourId={tourId} step={step}>{renderReplica(step)}</TourSampleProvider>
+            </PageTourProvider>
         </div>}
         {step !== null && <GuidedTour tourId={tourId} steps={steps} step={step} copy={copy}
             extra={renderExtra?.(step)} onStepChange={setStep} launcher={launcher} returnFocus={returnFocus} userId={userId} />}

@@ -52,7 +52,7 @@ describe('Rate Book shared-runtime integration', () => {
             expect(specs.at(-1)?.kind).toBe('handoff')
             for (const step of specs) expect(rates).toContain(step.anchor.slice(1, -1))
         }
-        expect(rates.match(/data-ratebook-field="addRateAction"/g)).toHaveLength(2)
+        expect(rates.match(/data-ratebook-field="addRateAction"/g)).toHaveLength(1)
         expect(rates).toContain('data-ratebook-field="yarnSearch" tabIndex={-1}')
         // The populated handoff lands focus on the first row's price, desktop cell and mobile card alike.
         expect(rates.match(/data-ratebook-field="rateAndTrend" tabIndex=\{-1\}/g)).toHaveLength(2)
@@ -92,14 +92,13 @@ describe('Rate Book shared-runtime integration', () => {
         expect(rates).toContain('tourCommonCopy[language].sampleBanner')
     })
 
-    it('makes the rail inline at every narrow width above the phone while preserving the pinned tier', () => {
+    it('renders the Rate Book guide in the page header, inside the tutorial root, with no rail', () => {
         const css = read('app/globals.css')
-        expect(css).toMatch(/\.rates-left-rail-desktop \{\s*display: block;\s*width: 100%;\s*margin-bottom: 1.25rem;/)
-        expect(css).not.toMatch(/\.rates-left-rail-desktop \{\s*display: none/)
-        expect(css).toMatch(/@media\s*\(min-width:\s*1440px\)[\s\S]*?\.rates-left-rail-desktop,[\s\S]*?position: fixed/)
-        const rail = rates.match(/<aside\b[^>]*className=\{cn\("phone-guidance rates-left-rail-desktop space-y-3",\s*isLite && mobileStyles\.help\)\}/)
-        expect(rail).not.toBeNull()
-        expect(rail!.index).toBeLessThan(rates.indexOf('data-ratebook-tutorial-root'))
+        expect(css).not.toContain('rates-left-rail-desktop')
+        expect(rates).not.toContain('rates-left-rail-desktop')
+        const root = rates.indexOf('data-ratebook-tutorial-root')
+        expect(rates.indexOf('<RateBookTutorial')).toBeGreaterThan(root)
+        expect(rates.indexOf('<RateBookTutorial')).toBeGreaterThan(rates.indexOf('<PageHeader'))
     })
 })
 

@@ -16,6 +16,12 @@ export interface TourCommonCopy {
     startGuide: string
     notNow: string
     launcherAria: string
+    guide: string
+    guideOpen: string
+    guideNew: string
+    guideIntro: string
+    pageHelp: string
+    helpBack: string
 }
 
 export const tourCommonCopy: Record<Language, TourCommonCopy> = {
@@ -34,7 +40,13 @@ export const tourCommonCopy: Record<Language, TourCommonCopy> = {
         "guideTitle": "{name} guide",
         "startGuide": "Start guide",
         "notNow": "Not now",
-        "launcherAria": "Start the {name} guide"
+        "launcherAria": "Start the {name} guide",
+        "guide": "Guide",
+        "guideOpen": "Open the guide and help for this page",
+        "guideNew": "New guide",
+        "guideIntro": "Take the guided tour or read help for this page.",
+        "pageHelp": "Help for this page",
+        "helpBack": "All help"
     },
     "gu": {
         "exit": "માર્ગદર્શિકા બંધ કરો",
@@ -51,7 +63,13 @@ export const tourCommonCopy: Record<Language, TourCommonCopy> = {
         "guideTitle": "{name} માર્ગદર્શિકા",
         "startGuide": "માર્ગદર્શિકા શરૂ કરો",
         "notNow": "હમણાં નહીં",
-        "launcherAria": "{name} માર્ગદર્શિકા શરૂ કરો"
+        "launcherAria": "{name} માર્ગદર્શિકા શરૂ કરો",
+        "guide": "માર્ગદર્શિકા",
+        "guideOpen": "આ પેજની માર્ગદર્શિકા અને મદદ ખોલો",
+        "guideNew": "નવી માર્ગદર્શિકા",
+        "guideIntro": "માર્ગદર્શિકા શરૂ કરો અથવા આ પેજની મદદ વાંચો.",
+        "pageHelp": "આ પેજ માટે મદદ",
+        "helpBack": "બધી મદદ"
     },
     "hi": {
         "exit": "मार्गदर्शिका बंद करें",
@@ -68,6 +86,12 @@ export const tourCommonCopy: Record<Language, TourCommonCopy> = {
         "guideTitle": "{name} मार्गदर्शिका",
         "startGuide": "मार्गदर्शिका शुरू करें",
         "notNow": "अभी नहीं",
-        "launcherAria": "{name} मार्गदर्शिका शुरू करें"
+        "launcherAria": "{name} मार्गदर्शिका शुरू करें",
+        "guide": "मार्गदर्शिका",
+        "guideOpen": "इस पेज की मार्गदर्शिका और मदद खोलें",
+        "guideNew": "नई मार्गदर्शिका",
+        "guideIntro": "मार्गदर्शिका शुरू करें या इस पेज की मदद पढ़ें।",
+        "pageHelp": "इस पेज के लिए मदद",
+        "helpBack": "सारी मदद"
     }
 }

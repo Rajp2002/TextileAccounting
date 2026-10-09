@@ -24,7 +24,6 @@ export default function ProductionGuidedTour({ userId, orgId, userMetadata, chil
 
     return <ReplicaGuidedTour tourId="production" steps={productionTourSpecs} handoffStepId="pd-handoff"
         workspaceClassName=""
-        railClassName="production-left-rail" railLabel={t('navigation.production')}
         userId={userId} orgId={orgId} userMetadata={userMetadata}
         prepare={async () => { setContent(await import('@/lib/i18n/production-tutorial')) }}
         copy={step => {

@@ -10,15 +10,25 @@ import { gu } from '../lib/i18n/locales/gu'
 import { hi } from '../lib/i18n/locales/hi'
 
 const controls = vi.hoisted(() => ({ launch: null as null | (() => Promise<void>), changeStep: null as null | ((step: DispatchTourStep | null) => void) }))
-vi.mock('@/components/tours/TourInvitation', () => ({ TourInvitation: ({ onLaunch }: { onLaunch: () => Promise<void> }) => {
-    controls.launch = onLaunch
-    return <button type="button">Guide</button>
-} }))
+// ReplicaGuidedTour hands its tour to the page through context; the page header's Guide reads it.
+vi.mock('@/components/tours/TourInvitation', async () => {
+    const { createContext, useContext } = await import('react')
+    const PageTour = createContext<{ onLaunch?: () => Promise<void>; sample?: boolean } | null>(null)
+    return { PageTourProvider: PageTour.Provider, usePageTour: () => useContext(PageTour) }
+})
 vi.mock('next/dynamic', () => ({ default: () => ({ onStepChange }: { onStepChange: (step: DispatchTourStep | null) => void }) => {
     controls.changeStep = onStepChange
     return <div data-runtime="true" />
 } }))
 import ReplicaGuidedTour from '../components/tours/ReplicaGuidedTour'
+import { usePageTour } from '../components/tours/TourInvitation'
+
+/** Stands in for the page header's Guide: it takes the live (non-sample) tour's launcher. */
+function GuideProbe() {
+    const tour = usePageTour()
+    useEffect(() => { if (tour && !tour.sample) controls.launch = tour.onLaunch as () => Promise<void> })
+    return <button type="button">Guide</button>
+}
 
 const locales = { en, gu, hi }
 describe('Dispatch shared panel', () => {
@@ -110,9 +120,9 @@ describe('ReplicaGuidedTour state preservation', () => {
         }
         root = createRoot(container as unknown as HTMLElement)
         await act(() => root!.render(<ReplicaGuidedTour tourId="dispatch" workspaceClassName="dispatch-workspace-shell"
-            railClassName="dispatch-left-rail" railLabel="Dispatch guide" steps={dispatchTourSpecs} handoffStepId="handoff"
+            steps={dispatchTourSpecs} handoffStepId="handoff"
             copy={() => ({ title: 'Title', body: 'Body' })} renderReplica={step => <div data-sample>{step}</div>}
-            userId="u1" orgId="o1"><StatefulChild /></ReplicaGuidedTour>))
+            userId="u1" orgId="o1"><GuideProbe /><StatefulChild /></ReplicaGuidedTour>))
         const child = container.find('data-stateful')!
         const live = child.parentNode!
         await act(() => changeValue!('retained draft'))

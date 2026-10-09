@@ -64,16 +64,19 @@ describe('createBaseWorkerAdjustmentsBulk', () => {
 
 describe('Bulk advance / deduction pill', () => {
     const client = read(CLIENT)
-    const railStart = client.indexOf('className="payroll-period-rail"')
-    const railEnd = client.indexOf("{view === 'payroll' && activeTab === 'history' && (", railStart)
-    const rail = client.slice(railStart, railEnd)
+    // The pay-period toolbar under the page header: period stepper, status, then the bulk pill.
+    const toolbarStart = client.indexOf('data-payroll-tour="period" role="group" aria-label="Payroll period and settlement"')
+    const toolbarEnd = client.indexOf("{view === 'payroll' && activeTab === 'history' && (", toolbarStart)
+    const toolbar = client.slice(toolbarStart, toolbarEnd)
 
-    it('sits in the right rail under Settle payroll, hidden on the records tab', () => {
-        expect(railStart).toBeGreaterThan(-1)
-        const pill = rail.indexOf('data-payroll-bulk-pill')
-        expect(pill).toBeGreaterThan(rail.indexOf('data-tour-anchor="payroll.settle"'))
-        expect(pill).toBeGreaterThan(rail.indexOf(') : ('))
-        expect(rail).toContain("tx('Bulk advance / deduction')")
+    it('sits in the pay-period toolbar under the header, after the period, hidden on the records tab', () => {
+        expect(toolbarStart).toBeGreaterThan(-1)
+        // The toolbar renders only on the pay tab with a period summary; Settle payroll is the header's primary action.
+        expect(client.slice(client.lastIndexOf('{view === ', toolbarStart), toolbarStart)).toContain("activeTab !== 'history' && activePeriodSummary")
+        const pill = toolbar.indexOf('data-payroll-bulk-pill')
+        expect(pill).toBeGreaterThan(toolbar.indexOf('aria-label="Payroll period selector"'))
+        expect(toolbar).toContain("tx('Bulk advance / deduction')")
+        expect(toolbar).not.toContain('data-tour-anchor="payroll.settle"')
     })
 
     it('opens the dialog with the active workers and refreshes after saving', () => {

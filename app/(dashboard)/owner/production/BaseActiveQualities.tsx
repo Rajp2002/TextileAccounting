@@ -69,7 +69,6 @@ interface BaseActiveQualitiesProps {
     todayMetersByJobId?: ReadonlyMap<string, number>
     /** False until a sheet is saved for today, so "not entered" is never shown as zero. */
     todayEntered?: boolean
-    onActivateQuality?: () => void
     onViewHistory?: (jobId: string) => void
     isActivateModalOpen?: boolean
     onOpenActivateModalChange?: (open: boolean) => void
@@ -104,7 +103,6 @@ export default function BaseActiveQualities({
     today,
     todayMetersByJobId,
     todayEntered = false,
-    onActivateQuality,
     onViewHistory,
     isActivateModalOpen = false,
     onOpenActivateModalChange,
@@ -424,14 +422,6 @@ export default function BaseActiveQualities({
                     </p>
                 </div>
 
-                <Button
-                    size="sm"
-                    onClick={onActivateQuality ?? (() => onOpenActivateModalChange?.(true))}
-                    data-tour-anchor="production.activate"
-                    className="production-inline-activate h-9 px-3.5 rounded-xl bg-loom text-white font-bold shadow-xs hover:bg-loom-elevated"
-                >
-                    <Plus className="mr-1.5 h-4 w-4" /> <span data-i18n-skip="true">{t('production.activateQuality')}</span>
-                </Button>
             </div>
 
             {/* Empty state if no active qualities */}

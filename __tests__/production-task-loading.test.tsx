@@ -20,6 +20,8 @@ vi.mock('../app/(dashboard)/owner/production/BaseDailyProductionSheet', () => ({
 vi.mock('../app/(dashboard)/owner/production/BaseWorkerIncentives', () => ({ default: () => null }))
 vi.mock('../app/(dashboard)/owner/production/BasePayrollReadinessPanel', () => ({ default: () => null }))
 vi.mock('../components/tours/TourSampleBanner', () => ({ TourSampleBanner: () => null }))
+// The header Guide reads tour preferences through a server action; this test renders the page without it.
+vi.mock('../components/tours/TourInvitation', () => ({ PageGuide: () => null }))
 vi.mock('../lib/tours/sample-context', () => ({ useTourSample: () => null }))
 vi.mock('../lib/i18n/context', () => ({ useTranslation: () => ({ t: (key: string) => key, tx: (text: string) => text }) }))
 vi.mock('../hooks/use-localized-page-title', () => ({ useLocalizedPageTitle: () => undefined }))

@@ -80,12 +80,13 @@ describe('Dispatch tour', () => {
         for (const step of dispatchTourSteps) { const id = dispatchSampleSelectedId(step); if (id) expect(challans.some(row => row.id === id)).toBe(true) }
         expect(Object.keys(s).some(key => /yarn/i.test(key))).toBe(false)
     })
-    it('resolves control labels from the exact live keys and anchors both button instances', () => {
+    it('resolves control labels from the exact live keys and anchors the header button', () => {
         expect(dispatchTourControlLabels(key => key)).toEqual({ saveDraft: 'challan.saveDraft', confirmLeft: 'challan.confirm', print: 'challan.print', receivedAsSent: 'challan.receivedAsSent', recordPayment: 'challan.payment', reverseEntry: 'challan.reverse_entry', newDispatch: 'challan.new' })
         const page = read('app/(dashboard)/owner/dispatches/ChallansClient.tsx')
         const detail = read('app/(dashboard)/owner/dispatches/DispatchDetailDialog.tsx')
         expect(page).toContain('<Button data-tour-anchor={tourAnchor} disabled={disabled} onClick={onClick} className={railPrimaryAction}>')
-        expect(page.match(/<NewDispatchButton tourAnchor="dispatch.new" onClick=\{beginDraft\}/g)).toHaveLength(2)
+        // New dispatch is the page header's one primary action.
+        expect(page.match(/<NewDispatchButton tourAnchor="dispatch.new" onClick=\{beginDraft\}/g)).toHaveLength(1)
         expect(page).toContain("tx('new')")
         // The dispatch's own controls live in its detail dialog.
         for (const key of ['confirm', 'print', 'receivedAsSent', 'payment', 'reverse_entry']) expect(detail).toContain(`tx('${key}')`)

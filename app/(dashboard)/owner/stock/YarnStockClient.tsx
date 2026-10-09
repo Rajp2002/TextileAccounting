@@ -6,6 +6,8 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { ClipboardCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { PageHeader } from '@/components/ui/page-header'
+import { PageGuide } from '@/components/tours/TourInvitation'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -122,9 +124,10 @@ export default function YarnStockClient({ initialData }: { initialData: YarnBoar
     const names = [...new Set([...data.yarns.map(row => row.yarn_name), ...data.costings.flatMap(row => row.recipe.map(layer => layer.yarn_name))])].sort()
     return <div className="space-y-6" data-i18n-skip="true">
         <RouteMilestones route="/owner/stock/yarn" shellVisible primaryUsable />
-        <header className="grid gap-4 border-b border-hairline/80 pb-5 text-center sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center sm:pb-6">
-            <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-ink sm:col-start-2 sm:row-start-1 sm:text-[2rem]">{text.title}</h1>
-            <div className="flex flex-wrap justify-center gap-2 sm:col-start-3 sm:row-start-1 sm:justify-self-end">
+        <PageHeader
+            title={text.title}
+            actions={<>
+                <PageGuide />
                 <Button asChild variant="outline" className="border-loom/30 text-loom hover:bg-loom/5 gap-1.5 font-medium">
                     <Link href="/owner/stock/audit">
                         <ClipboardCheck className="h-4 w-4" />
@@ -132,8 +135,8 @@ export default function YarnStockClient({ initialData }: { initialData: YarnBoar
                     </Link>
                 </Button>
                 <Button variant="outline" disabled={busy} onClick={() => void load()}>{text.refresh}</Button>{current && <><Button data-tour-anchor="yarn.opening" variant="outline" disabled={Boolean(request)} onClick={() => open({ kind: 'opening' })}>{text.opening}</Button><Button disabled={Boolean(request)} onClick={() => open({ kind: 'receipt' })}>{text.receipt}</Button></>}
-            </div>
-        </header>
+            </>}
+        />
         {notice && <p role="status" className="rounded-lg border border-[var(--wv-moss-200)] bg-[var(--wv-moss-50)] p-3 text-[var(--wv-moss-700)]">{text.saved}</p>}
         {error && <p role="alert" className="rounded-lg border border-[var(--wv-madder-200)] bg-[var(--wv-madder-50)] p-3 text-[var(--wv-madder-600)]">{error} <button className="underline" onClick={() => void load()}>{text.retry}</button></p>}
         {!data.started_at && <p className="rounded-lg border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] p-4 text-sm text-[var(--wv-ochre-800)]">{text.startHelp}</p>}

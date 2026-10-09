@@ -478,8 +478,14 @@ Established UI terms (source: `lib/i18n/locales/{en,gu,hi}.ts`, unless noted). T
 | `startGuide` | Start guide | માર્ગદર્શિકા શરૂ કરો | मार्गदर्शिका शुरू करें |
 | `notNow` | Not now | હમણાં નહીં | अभी नहीं |
 | `launcherAria` | Start the {name} guide | {name} માર્ગદર્શિકા શરૂ કરો | {name} मार्गदर्शिका शुरू करें |
+| `guide` | Guide | માર્ગદર્શિકા | मार्गदर्शिका |
+| `guideOpen` | Open the guide and help for this page | આ પેજની માર્ગદર્શિકા અને મદદ ખોલો | इस पेज की मार्गदर्शिका और मदद खोलें |
+| `guideNew` | New guide | નવી માર્ગદર્શિકા | नई मार्गदर्शिका |
+| `guideIntro` | Take the guided tour or read help for this page. | માર્ગદર્શિકા શરૂ કરો અથવા આ પેજની મદદ વાંચો. | मार्गदर्शिका शुरू करें या इस पेज की मदद पढ़ें। |
+| `pageHelp` | Help for this page | આ પેજ માટે મદદ | इस पेज के लिए मदद |
+| `helpBack` | All help | બધી મદદ | सारी मदद |
 
-All gu/hi values: native review pending (LR-08).
+All gu/hi values: native review pending (LR-08). The six Guide keys (`guide` to `helpBack`) were added when the side rails were replaced by the page-header Guide (2026-10-09); their gu/hi values are also pending native review.
 
 ### 9.4 Evidence: how Base pages display English literals today
 

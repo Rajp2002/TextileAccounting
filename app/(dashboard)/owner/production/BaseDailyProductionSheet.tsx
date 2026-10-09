@@ -20,7 +20,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { useTranslation } from '@/lib/i18n/context'
 import { supervisorText } from '@/lib/i18n/supervisor-access'
-import { AlertTriangle, ArrowUpRight, CheckCircle2, Clock3, ClipboardList, FileClock, Loader2, Lock, LockOpen, Plus, Printer, Save, Users } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Clock3, ClipboardList, FileClock, Loader2, Lock, LockOpen, Plus, Printer, Save, Users } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -33,7 +33,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea'
 import { formatINR } from '@/lib/finance'
 import { cn } from '@/lib/utils'
-import { railButton, railIcon, railPrimaryAction, railSurface } from '@/components/ui/rail'
+import { railPrimaryAction, railSurface } from '@/components/ui/rail'
+import { PageHeader } from '@/components/ui/page-header'
+import { PageGuide } from '@/components/tours/TourInvitation'
 import {
     calculateBaseDailyProductionSummary,
     type BaseDailyProductionStatus,
@@ -767,24 +769,32 @@ export default function BaseDailyProductionSheet({
     return (
         <div className="production-daily-sheet-workspace relative min-w-0 pb-28 min-[1280px]:pb-0">
             <DailySheetGuidedTour userId={initialData.actorId ?? ''} orgId={initialData.orgId}
-                empty={sheetWorkers.length === 0} dialogOpen={isReviewOpen || isUnlockDialogOpen || isHistoryDialogOpen || isPayrollExpanded}
+                empty={sheetWorkers.length === 0}
                 controls={<>
-                <div className="production-daily-sheet-rail-top flex flex-col gap-3">
-                    <div className="production-daily-sheet-action">
+                <PageHeader
+                    title="Daily sheet"
+                    actions={<>
+                        <PageGuide />
+                        <Button variant="outline" onClick={onOpenHistory} className="h-10 rounded-lg border-hairline bg-surface font-semibold text-ink shadow-xs hover:bg-surface-soft">
+                            <Clock3 className="h-4 w-4" aria-hidden="true" /> Recent production
+                        </Button>
+                        {/* Below 1280px the sticky sheet toolbar carries Save instead. */}
                         <Button
                             data-daily-tour="save"
                             onClick={() => handleSave()}
                             disabled={saveDisabled}
-                            className={cn(railPrimaryAction, 'w-full gap-2')}
+                            className={cn(railPrimaryAction, 'hidden gap-2 min-[1280px]:inline-flex')}
                         >
                             {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                             <span>{isSaving ? 'Saving…' : currentBatch ? t('dailySheet.saveCorrection') : t('dailySheet.saveShift')}</span>
                         </Button>
-                    </div>
+                    </>}
+                />
 
-                    <div data-daily-tour="shift" className={cn(railSurface, 'p-3 min-[1280px]:p-4 2xl:p-5')}>
-                        <p className="sr-only text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground min-[1280px]:not-sr-only min-[1280px]:mb-3">{t('dailySheet.shiftDetails')}</p>
-                        <div className="grid grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] gap-3 min-[1280px]:grid-cols-1">
+                <div className="grid gap-3 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_auto] lg:items-stretch">
+                    <div data-daily-tour="shift" className={cn(railSurface, 'p-3')}>
+                        <p className="sr-only">{t('dailySheet.shiftDetails')}</p>
+                        <div className="grid grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] gap-3">
                             <div className="min-w-0 space-y-1.5">
                                 <Label htmlFor="base-daily-date" className="text-xs font-bold text-body">Date</Label>
                                 <Input id="base-daily-date" type="date" max={initialData.today} value={productionDate} disabled={isSaving} onChange={(event) => changeSelection(event.target.value, shift)} className="h-10 min-w-0 w-full rounded-xl border-hairline bg-surface px-2 text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom" />
@@ -802,68 +812,43 @@ export default function BaseDailyProductionSheet({
                         </div>
                     </div>
 
-                    <div data-daily-tour="draft" className={cn(railSurface, 'p-3 min-[1280px]:p-4 2xl:p-5')}>
+                    <div data-daily-tour="draft" className={cn(railSurface, 'p-3')}>
                         <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
                             <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Shift progress</p>
                             <span className="text-[11px] font-medium text-body">
                                 {isSaving ? t('common.server_saving') : draftStatus === 'error' ? t('common.draft_error') : draftStatus === 'conflict' ? t('common.draft_conflict') : draftStatus === 'local' ? t('dailySheet.draftOnDevice') : currentBatch ? t('common.server_saved') : 'Not submitted'}
                             </span>
                         </div>
-                        <div className="mt-1 flex flex-wrap items-baseline gap-2 min-[1280px]:mt-3">
-                            <span className="text-base font-bold tabular-nums text-ink min-[1280px]:text-3xl min-[1280px]:font-black">{registerSummary.accounted}<span className="text-muted-foreground min-[1280px]:text-lg">/{registerSummary.total}</span></span>
+                        <div className="mt-1 flex flex-wrap items-baseline gap-2">
+                            <span className="text-base font-bold tabular-nums text-ink">{registerSummary.accounted}<span className="text-muted-foreground">/{registerSummary.total}</span></span>
                             <span className="text-xs font-medium text-body">machines accounted for</span>
                         </div>
-                        <div role="progressbar" aria-label="Machines accounted for" aria-valuenow={registerSummary.accounted} aria-valuemin={0} aria-valuemax={Math.max(registerSummary.total, 1)} className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-soft min-[1280px]:mt-3">
+                        <div role="progressbar" aria-label="Machines accounted for" aria-valuenow={registerSummary.accounted} aria-valuemin={0} aria-valuemax={Math.max(registerSummary.total, 1)} className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-soft">
                             <div className="ui-meter-fill h-full rounded-full bg-loom" style={{ width: `${registerSummary.total ? registerSummary.accounted / registerSummary.total * 100 : 0}%` }} />
                         </div>
-                        <dl className="mt-2 flex flex-wrap justify-between gap-x-3 gap-y-1 text-xs min-[1280px]:mt-4 min-[1280px]:grid min-[1280px]:grid-cols-2 min-[1280px]:gap-0 min-[1280px]:divide-x min-[1280px]:divide-hairline min-[1280px]:border-t min-[1280px]:border-hairline min-[1280px]:pt-4">
-                            <div className="flex flex-wrap items-baseline gap-1 min-[1280px]:block min-[1280px]:pr-3"><dt className="text-xs text-muted-foreground">Pending</dt><dd className="font-bold tabular-nums text-ink min-[1280px]:mt-1 min-[1280px]:text-base">{registerSummary.pending}</dd></div>
-                            <div className="flex flex-wrap items-baseline gap-1 min-[1280px]:block min-[1280px]:pl-3"><dt className="text-xs text-muted-foreground">Production</dt><dd className="font-bold tabular-nums text-ink min-[1280px]:mt-1 min-[1280px]:text-base">{formatMeters(summary.total_meters)}</dd></div>
+                        <dl className="mt-2 flex flex-wrap justify-between gap-x-3 gap-y-1 text-xs">
+                            <div className="flex flex-wrap items-baseline gap-1"><dt className="text-xs text-muted-foreground">Pending</dt><dd className="font-bold tabular-nums text-ink">{registerSummary.pending}</dd></div>
+                            <div className="flex flex-wrap items-baseline gap-1"><dt className="text-xs text-muted-foreground">Production</dt><dd className="font-bold tabular-nums text-ink">{formatMeters(summary.total_meters)}</dd></div>
                         </dl>
                     </div>
 
-                    <div className="flex flex-wrap gap-2 min-[1280px]:flex-col">
-                        <Button variant="outline" className="min-h-[44px] flex-1 whitespace-normal rounded-xl border-hairline bg-surface font-semibold shadow-xs hover:bg-surface-soft min-[1280px]:w-full min-[1280px]:flex-none" onClick={printCollectionSheet} disabled={machineContexts.length === 0}>
+                    <div className="flex flex-wrap gap-2 lg:flex-col lg:justify-center">
+                        <Button variant="outline" className="min-h-[44px] flex-1 whitespace-normal rounded-xl border-hairline bg-surface font-semibold shadow-xs hover:bg-surface-soft lg:flex-none" onClick={printCollectionSheet} disabled={machineContexts.length === 0}>
                             <Printer className="h-4 w-4" /> {t('dailySheet.printSheet')}
                         </Button>
                     {(assignedWorkers.length > 0 || unassignedWorkers.length > 0) && (
-                        <button
+                        <Button
                             type="button"
-                            aria-expanded={isPayrollExpanded}
+                            variant="outline"
+                            aria-haspopup="dialog"
                             aria-controls="base-payroll-rollup"
                             onClick={() => setIsPayrollExpanded(true)}
-                            className={cn(railButton, 'mobile-touch-target h-auto min-w-0 w-auto flex-1 py-2.5 min-[1280px]:w-full min-[1280px]:flex-none')}
+                            className="min-h-[44px] flex-1 whitespace-normal rounded-xl border-hairline bg-surface font-semibold shadow-xs hover:bg-surface-soft lg:flex-none"
                         >
-                            <span className="flex items-start gap-2.5 min-w-0">
-                                <Users className={cn(railIcon, 'mt-0.5')} />
-                                <span className="min-w-0 flex-1">
-                                    <span className="block text-sm font-semibold text-ink">{t('dailySheet.workerReview')}</span>
-                                    <span className="sr-only text-xs text-body font-normal min-[1280px]:not-sr-only min-[1280px]:block">
-                                        {assignedWorkers.length} {assignedWorkers.length === 1 ? 'worker' : 'workers'} · Check totals & pay
-                                    </span>
-                                </span>
-                            </span>
-                            <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-                        </button>
+                            <Users className="h-4 w-4" /> {t('dailySheet.workerReview')}
+                        </Button>
                     )}
                     </div>
-                </div>
-
-                <div className="production-daily-sheet-rail-bottom flex flex-col gap-3">
-                    <button
-                        type="button"
-                        onClick={onOpenHistory}
-                        className={cn('production-daily-sheet-history-desktop', railButton, 'h-auto py-2.5')}
-                    >
-                        <span className="flex items-start gap-2.5 min-w-0">
-                            <Clock3 className={cn(railIcon, 'mt-0.5')} />
-                            <span className="min-w-0 flex-1">
-                                <span className="block text-sm font-semibold text-ink">Recent production</span>
-                                <span className="block text-xs text-body font-normal">Find a saved shift</span>
-                            </span>
-                        </span>
-                        <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-                    </button>
                 </div>
                 </>}>
 
@@ -871,9 +856,6 @@ export default function BaseDailyProductionSheet({
             {unmatchedDraftMeters && <p role="alert" className="rounded-lg border border-warning/40 bg-warning/5 p-3 text-sm">Some draft metres no longer match the current worker assignments. Restore the assignment in Machine Assignments or discard the local draft before saving; no metres have been silently removed.</p>}
             {navigation.job && <p className="rounded-lg border border-saffron/30 bg-saffron-soft p-3 text-sm">Selected job: <strong>{jobById.get(navigation.job)?.quality_label ?? 'Unavailable job'}</strong>. Its machine rows are highlighted; the full shift stays visible.</p>}
             {(draftStatus === 'error' || draftStatus === 'conflict') && <div role="alert" className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-warning/30 bg-warning/5 p-3 text-sm"><p>{draftStatus === 'conflict' ? 'The saved shift changed after this draft. Your local draft is retained; reload the saved version before editing.' : 'Draft could not be saved on this device. Keep this page open and save the shift before leaving.'}</p><Button variant="outline" size="sm" onClick={discardDraft}>Discard local draft</Button></div>}
-            <div className="border-b border-hairline/70 pb-4 text-center">
-                <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-ink sm:text-[2rem]">Daily sheet</h1>
-            </div>
 
             {currentBatch && (
                 <div className={`flex flex-col gap-3 rounded-2xl border px-4 py-3.5 text-xs sm:flex-row sm:items-center sm:justify-between shadow-xs ${isSavedBatchProtected ? 'border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)]/50' : 'border-[var(--wv-moss-200)] bg-[var(--wv-moss-50)]/50'}`}>
@@ -1070,16 +1052,6 @@ export default function BaseDailyProductionSheet({
             )}
             </div>
 
-            <button type="button" onClick={onOpenHistory} className={cn('production-daily-sheet-history-mobile mt-4', railButton, 'h-auto py-2.5')}>
-                <span className="flex items-start gap-2.5 min-w-0">
-                    <Clock3 className={cn(railIcon, 'mt-0.5')} />
-                    <span className="min-w-0 flex-1">
-                        <span className="block text-sm font-semibold text-ink">Recent production</span>
-                        <span className="block text-xs text-body font-normal">Find a saved shift</span>
-                    </span>
-                </span>
-                <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-            </button>
 
             <Dialog open={isReviewOpen} onOpenChange={open => { if (!isSaving) setIsReviewOpen(open) }}>
                 <DialogContent className="max-w-md rounded-2xl border border-hairline bg-surface p-6 shadow-2xl">

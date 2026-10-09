@@ -8,7 +8,7 @@ import { useSearchParams } from 'next/navigation'
 import { useTranslation } from '@/lib/i18n/context'
 import { safeBaseReturnPath } from '@/lib/base-production-navigation'
 import type { BaseProductionWorkerWithOperational } from '@/lib/worker-operational'
-import { WorkerAddButton, WorkersPageHeader } from '@/components/workers/WorkersPageHeader'
+import { WorkersPageHeader } from '@/components/workers/WorkersPageHeader'
 import {
   WorkerToolbar,
   type WorkerShiftFilter,
@@ -25,9 +25,7 @@ import { tourCommonCopy } from '@/lib/i18n/tour-common'
 import { formatTourText } from '@/lib/tours/tour-text'
 import { makeWorkersTourExamples, workersTourEditor, workersHelpSteps, workersTourSpecs, workersTourCopyKey, workersTourControlLabels, type WorkersTourStep, type WorkersTourPath } from '@/lib/workers-tour'
 import { workersTutorialCopy } from '@/lib/i18n/workers-tutorial'
-import { ChevronDown, CircleHelp } from 'lucide-react'
-import { railIcon, railSurface } from '@/components/ui/rail'
-import { cn } from '@/lib/utils'
+import { CircleHelp } from 'lucide-react'
 
 const GuidedTour = dynamic(() => import('@/components/tours/GuidedTour').then(module => module.GuidedTour), { ssr: false }) as typeof GuidedTourComponent
 
@@ -200,8 +198,8 @@ export default function WorkersRegister({
   // Layout grid column classes based on whether one or both groups are visible
   const isSingleGroupVisible = (showPieceGroup && !showFixedGroup) || (!showPieceGroup && showFixedGroup)
   const gridClasses = isSingleGroupVisible
-    ? 'mx-auto grid w-full max-w-2xl grid-cols-1 items-start gap-6'
-    : 'mx-auto grid w-full max-w-5xl grid-cols-1 items-start gap-8 lg:grid-cols-2'
+    ? 'grid w-full max-w-3xl grid-cols-1 items-start gap-6'
+    : 'grid w-full grid-cols-1 items-start gap-8 lg:grid-cols-2'
 
   return (
     <WorkerEditor
@@ -209,10 +207,33 @@ export default function WorkersRegister({
       initialOpen={params.get('add') === 'worker'}
       returnTo={returnTo}
     >
-      {({ add, edit, isOpen }) => (
-        <div className="workers-workspace-shell mx-auto w-full space-y-5 pb-10 sm:space-y-6">
+      {({ add, edit }) => (
+        <div className="workers-workspace-shell w-full space-y-5 pb-10 sm:space-y-6">
           {/* 1. Page Header */}
           <div data-workers-tour="header"><WorkersPageHeader
+            guide={<div ref={tourLauncher} data-workers-tour="launcher" className="contents">
+              <TourInvitation
+                tourId="workers"
+                userId={userId}
+                orgId={orgId}
+                userMetadata={userMetadata}
+                topics={[{
+                  id: 'workers-help', icon: CircleHelp, title: tourCopy.helpTitle, lang: language, i18nSkip: true,
+                  content: <dl className="grid gap-4 text-sm leading-relaxed sm:grid-cols-2">
+                    {workersHelpSteps.map(topic => <div key={topic}>
+                      <dt className="font-semibold text-ink">{tourCopy.fields[topic][0]}</dt>
+                      <dd className="mt-1 text-body">{tourCopy.fields[topic][1]}</dd>
+                    </div>)}
+                  </dl>,
+                }]}
+                onLaunch={() => {
+                  tourReturnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+                  launchScroll.current = { x: window.scrollX, y: window.scrollY }
+                  setTourPath('piece')
+                  setTourStep('wk-paytype')
+                }}
+              />
+            </div>}
             onAdd={tourStep ? () => {} : add}
             returnTo={tourSampleActive ? undefined : returnTo}
             focus={tourSampleActive ? null : focus}
@@ -224,26 +245,6 @@ export default function WorkersRegister({
             }}
           /></div>
 
-          {!isOpen && (
-            <aside className="phone-guidance workers-left-rail guided-tour-left-rail space-y-3" aria-label="Workers guided tour">
-              <div ref={tourLauncher} data-workers-tour="launcher">
-                <TourInvitation
-                  tourId="workers"
-                  userId={userId}
-                  orgId={orgId}
-                  userMetadata={userMetadata}
-                  align="full"
-                  className="w-full"
-                  onLaunch={() => {
-                    tourReturnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
-                    launchScroll.current = { x: window.scrollX, y: window.scrollY }
-                    setTourPath('piece')
-                    setTourStep('wk-paytype')
-                  }}
-                />
-              </div>
-            </aside>
-          )}
           {tourSampleActive && <p data-tour-sample-banner role="status" data-i18n-skip="true" lang={language} className="rounded-lg border border-hairline bg-surface-soft px-3 py-2 text-sm font-semibold text-ink">{tourCommonCopy[language].sampleBanner}</p>}
           {/* 2. Global Toolbar */}
           <div data-workers-tour="toolbar" className="w-full">
@@ -262,7 +263,7 @@ export default function WorkersRegister({
 
           {/* 3. Workforce Groups or Global Empty State */}
           {tourSampleActive ? (
-            <div data-workers-tour="groups" className="mx-auto grid w-full max-w-5xl grid-cols-1 items-start gap-8 lg:grid-cols-2">
+            <div data-workers-tour="groups" className="grid w-full grid-cols-1 items-start gap-8 lg:grid-cols-2">
               {sampleWorkers.map((worker, index) => (
                 <div key={worker.id} data-workers-tour={index === 0 ? 'piece' : 'salary-card'}>
                   <WorkforceGroup title={tx(index === 0 ? 'Piece Rate' : 'Fixed Salary')}
@@ -304,32 +305,6 @@ export default function WorkersRegister({
               onAdd={add}
               onClearFilters={clearFilters}
             />
-          )}
-          {!isOpen && (
-            <aside className="phone-guidance workers-reference-rail" aria-label={tourCopy.helpTitle}>
-              <div className="workers-reference-action">
-                <WorkerAddButton onAdd={tourStep ? () => {} : add} />
-              </div>
-              <div className="workers-reference-bottom">
-                <details
-                  hidden={Boolean(tourStep)}
-                  data-i18n-skip="true"
-                  lang={language}
-                  className={cn('ui-details group overflow-hidden', railSurface)}
-                >
-                  <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-3.5 py-2.5 text-sm font-semibold leading-snug text-ink hover:bg-surface-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-saffron/50 [&::-webkit-details-marker]:hidden">
-                    <span className="flex items-start gap-2.5"><CircleHelp className={cn(railIcon, 'mt-0.5')} aria-hidden="true" />{tourCopy.helpTitle}</span>
-                    <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" />
-                  </summary>
-                  <dl className="workers-help-list grid max-h-[min(60vh,32rem)] gap-4 overflow-y-auto border-t border-hairline px-4 py-4 text-sm leading-relaxed sm:grid-cols-2">
-                    {workersHelpSteps.map(topic => <div key={topic}>
-                      <dt className="font-semibold text-ink">{tourCopy.fields[topic][0]}</dt>
-                      <dd className="mt-1 text-body">{tourCopy.fields[topic][1]}</dd>
-                    </div>)}
-                  </dl>
-                </details>
-              </div>
-            </aside>
           )}
           {rotation && <SwitchShiftsDialog open={switchShiftsOpen} onOpenChange={setSwitchShiftsOpen} workers={workers} assignments={rotation.assignments} machineNames={rotation.machineNames} />}
           {preview && <WorkerEditor key={`${preview}-${language}`} today={today} tourPreview={{ worker: preview === 'piece' ? sampleWorkers[0] : sampleWorkers[1], editing: preview === 'edit' }}>{() => null}</WorkerEditor>}

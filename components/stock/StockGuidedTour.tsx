@@ -23,7 +23,6 @@ export default function StockGuidedTour({ kind, userId, orgId, userMetadata, chi
         steps={kind === 'fabric-stock' ? fabricStockTourSpecs : yarnStockTourSpecs}
         handoffStepId={kind === 'fabric-stock' ? 'fs-handoff' : 'ys-handoff'}
         workspaceClassName="stock-workspace-shell"
-        railClassName="stock-left-rail" railLabel={t(kind === 'fabric-stock' ? 'qualityStock.title' : 'navigation.yarnStock')}
         userId={userId} orgId={orgId} userMetadata={userMetadata}
         prepare={async () => { setContent(await import('@/lib/i18n/stock-tutorial')) }}
         copy={step => {

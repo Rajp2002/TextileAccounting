@@ -9,7 +9,6 @@ import {
     RefreshCw,
     Warehouse,
     History,
-    ArrowUpRight,
     Search,
     Factory,
     Truck,
@@ -20,6 +19,8 @@ import {
     X,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { PageHeader } from '@/components/ui/page-header'
+import { PageGuide } from '@/components/tours/TourInvitation'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -108,57 +109,49 @@ export default function QualityStockClient({ initialData }: { initialData: Quali
 
     const qualities = data.qualities.filter(row => row.quality_label.toLocaleLowerCase().includes(search.toLocaleLowerCase()))
 
-    const historyPill = (
-        <button
+    const historyButton = (
+        <Button
             type="button"
-            aria-expanded={isHistoryOpen}
-            aria-controls="stock-history"
+            variant="outline"
+            aria-haspopup="dialog"
             onClick={() => setIsHistoryOpen(true)}
-            className="group flex w-full items-center justify-between gap-3 rounded-2xl border border-hairline/80 bg-surface/95 p-3.5 sm:p-4 text-left shadow-[var(--shadow-card)] backdrop-blur-sm transition-all hover:border-loom/40 hover:bg-surface-soft/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-loom"
+            className="h-10 gap-2 rounded-lg border-hairline bg-surface font-semibold text-ink shadow-xs hover:bg-surface-soft"
         >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-loom/10 text-loom group-hover:bg-loom group-hover:text-white transition-colors">
-                <History className="h-5 w-5" />
-            </span>
-            <span className="min-w-0 flex-1">
-                <span className="block text-sm font-bold text-ink flex items-center gap-1.5">
-                    {tx('history')}
-                    {data.movements.length > 0 && (
-                        <span className="inline-flex items-center rounded-full bg-saffron-soft px-1.5 py-0.5 text-[10px] font-bold text-saffron-deep">
-                            {data.movements.length}
-                        </span>
-                    )}
+            <History className="h-4 w-4" aria-hidden="true" />
+            {tx('history')}
+            {data.movements.length > 0 && (
+                <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-saffron-soft px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-saffron-deep">
+                    {data.movements.length}
                 </span>
-                <span className="block text-xs text-body truncate">
-                    {data.movements.length === 0 ? tx('noHistory') : `${data.movements.length} logged ${data.movements.length === 1 ? 'entry' : 'entries'} · View ledger`}
-                </span>
-            </span>
-            <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-        </button>
+            )}
+        </Button>
     )
 
     return (
         <div className="stock-workspace-shell space-y-6" data-i18n-skip="true">
             <RouteMilestones route="/owner/stock" shellVisible primaryUsable />
             {/* Header */}
-            <header className="grid gap-4 border-b border-hairline/80 pb-5 text-center sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center sm:pb-6">
-                <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-ink sm:col-start-2 sm:row-start-1 sm:text-[2rem]">{tx('title')}</h1>
-                <div className="flex flex-wrap justify-center gap-2 sm:col-start-3 sm:row-start-1 sm:justify-self-end">
-                    <Button asChild variant="outline" className="h-10 rounded-xl border-loom/30 text-loom hover:bg-loom/5 gap-1.5 font-semibold shadow-xs">
+            <PageHeader
+                title={tx('title')}
+                actions={<>
+                    <PageGuide />
+                    <Button asChild variant="outline" className="h-10 rounded-lg border-hairline bg-surface gap-1.5 font-semibold text-ink shadow-xs hover:bg-surface-soft">
                         <Link href="/owner/stock/audit">
                             <Warehouse className="h-4 w-4" />
                             {tx('audit')}
                         </Link>
                     </Button>
-                    <Button variant="outline" disabled={busy} onClick={() => void load()} className="h-10 rounded-xl border-hairline font-semibold shadow-xs hover:bg-surface-soft">
-                        <RefreshCw className={`mr-2 h-4 w-4 ${busy ? 'animate-spin' : ''}`} />
+                    <Button variant="outline" disabled={busy} onClick={() => void load()} className="h-10 rounded-lg border-hairline bg-surface font-semibold text-ink shadow-xs hover:bg-surface-soft">
+                        <RefreshCw className={`h-4 w-4 ${busy ? 'animate-spin' : ''}`} />
                         {tx('refresh')}
                     </Button>
-                    <Button data-tour-anchor="fabric.opening" onClick={() => open('opening')} className="h-10 rounded-xl bg-loom text-white font-semibold shadow-xs hover:bg-loom-hover">
-                        <Plus className="mr-1.5 h-4 w-4" />
+                    {historyButton}
+                    <Button data-tour-anchor="fabric.opening" onClick={() => open('opening')} className="h-10 rounded-lg bg-loom text-white font-semibold shadow-xs hover:bg-loom-hover">
+                        <Plus className="h-4 w-4" />
                         {tx('opening')}
                     </Button>
-                </div>
-            </header>
+                </>}
+            />
 
             {notice && <p role="status" className="rounded-xl border border-[var(--wv-moss-200)] bg-[var(--wv-moss-50)]/80 p-3.5 text-xs sm:text-sm font-medium text-[var(--wv-moss-700)] shadow-xs">{notice}</p>}
             {error && <p role="alert" className="rounded-xl border border-[var(--wv-madder-200)] bg-[var(--wv-madder-50)]/80 p-3.5 text-xs sm:text-sm font-medium text-[var(--wv-madder-600)] shadow-xs">{error} <button className="underline font-bold ml-1 hover:text-[var(--wv-madder-600)]" onClick={() => void load()}>{tx('retry')}</button></p>}
@@ -278,16 +271,6 @@ export default function QualityStockClient({ initialData }: { initialData: Quali
                     </div>
                 )}
             </section>
-
-            {/* Mobile / Tablet fallback movement history pill */}
-            <div className="stock-movement-rail-mobile">
-                {historyPill}
-            </div>
-
-            {/* Desktop right rail Movement History pill (pinned to bottom right rail) */}
-            <aside aria-label={tx('history')} className="stock-movement-rail-desktop">
-                {historyPill}
-            </aside>
 
             {/* Movement History Modal */}
             <Dialog open={isHistoryOpen || tourStep === 'fs-history'} onOpenChange={setIsHistoryOpen} {...surface.root}>

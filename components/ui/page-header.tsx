@@ -28,7 +28,11 @@ type PageHeaderProps = {
     id?: string
 }
 
-/** Consistent route title block for operational dashboard screens. */
+/**
+ * Consistent route title block for operational dashboard screens: the title on the left and the
+ * route's controls on the right, the page's Guide first and its primary action last. There are no
+ * side rails; everything a route offers sits in this row or in the page below it.
+ */
 export function PageHeader({
     title,
     description,
@@ -36,17 +40,18 @@ export function PageHeader({
     icon: Icon,
     actions,
     meta,
-    centered = true,
+    centered = false,
     className,
     id,
 }: PageHeaderProps) {
     return (
         <header
             id={id}
+            data-page-header="true"
             className={cn(
                 centered
-                    ? 'grid grid-cols-1 gap-4 border-b border-hairline/80 pb-5 text-center sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center'
-                    : 'flex flex-col gap-4 border-b border-hairline/80 pb-5 sm:flex-row sm:items-end sm:justify-between',
+                    ? 'grid grid-cols-1 gap-4 border-b border-hairline/70 pb-5 text-center sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center sm:pb-6'
+                    : 'flex flex-col gap-4 border-b border-hairline/70 pb-5 sm:flex-row sm:items-center sm:justify-between sm:pb-6',
                 className,
             )}
         >
@@ -58,7 +63,7 @@ export function PageHeader({
                 )}
                 <div className={cn('min-w-0', centered && 'w-full')}>
                     {eyebrow && <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-saffron-deep">{eyebrow}</p>}
-                    <h1 className={cn('text-xl font-bold leading-tight text-ink sm:text-2xl', centered && 'text-[1.75rem] tracking-tight sm:text-[2rem]')}>{title}</h1>
+                    <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-ink sm:text-[2rem]">{title}</h1>
                     {description && <div className={cn('mt-1 max-w-3xl text-sm leading-relaxed text-body', centered && 'mx-auto')}>{description}</div>}
                 </div>
             </div>

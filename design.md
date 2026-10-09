@@ -282,30 +282,32 @@ Supervisor screens also use a sticky mobile header with the logo and menu/instal
 
 ## Layout Patterns
 
-### Workspace Composition (Rails)
+### Workspace Composition
 
-Rail routes share one composition, defined once in `app/globals.css` ("Workspace composition"):
+Every owner and Free route is one column beside the sidebar, defined once in `app/globals.css` ("Workspace composition"). There are no side rails.
 
 ```
-sidebar | left rail | workspace | right rail
+sidebar | page header (title · Guide · primary action)
+        | notice strip (only when something needs attention)
+        | page toolbar (filters, period, view tabs, history)
+        | workspace at the full content width (main caps at 80rem)
 ```
 
-- **Left rail:** the route's guide (`TourInvitation align="full"`) and help/walkthrough controls. Every guided route puts its guide here, the Daily Sheet included; its live controls stay in its own right rail.
-- **Right rail:** the route's primary action at the top (same line as the page title), reference material below, and notices such as the archive policy anchored to the bottom.
-- **Tiers:** below `1280px` everything is one column (guide above, actions in the page header, reference inline). From `1280px` the right rail is pinned beside the workspace. From `1440px` both rails are pinned and the workspace is centred between them.
-- **Tokens:** every offset comes from `--rail-w`, `--rail-gap`, `--rail-top`, `--rail-bottom`, `--workspace-w`, `--rail-left`, and `--rail-right`. Never hard-code `left: calc(248px + …)` or a route-specific breakpoint; add the route's shell and rail classes to the grouped selectors instead.
-- **Inline counterparts:** content that must disappear when a rail is pinned uses `rail-inline-actions` (hidden from `1280px`).
-- **Presentation:** use `components/ui/rail.ts` (`railSurface`, `railButton`, `railIcon`, `railPrimaryAction`) so help and actions read as one family. Rail primary actions are ink, never saffron. Help and reference panels are neutral surfaces, not info/warning fills.
-- **Guide card:** the guide is the one rail item meant to be noticed, so it does not use the neutral surfaces. `railGuideSurface`, `railGuideButton` and `railGuideIcon` give it a saffron-tinted surface, a 56px minimum height, larger type and a filled compass tile; the invitation's single action stays an ink `railPrimaryAction`. The card stacks inside a rail and becomes a single row (container query) when shown inline above a page; once dismissed it collapses to the same styling as one row. Titles wrap rather than truncate so Hindi and Gujarati fit.
+- **Page header:** `PageHeader` (`components/ui/page-header.tsx`) puts the title on the left and the route's actions on the right: the Guide first, secondary actions next, and the primary action last. Titles are left-aligned; `centered` remains only for special cases.
+- **Guide:** a route's tour and help open from one Guide button in the header (`TourInvitation` when the page owns its tour, `PageGuide` when a tour wrapper such as `ReplicaGuidedTour` hands the tour down through `PageTourProvider`). The button opens a modal: the tour card first (Start guide and Not now while the tour is new, a replay after), then "Help for this page" as a list of topics. A topic opens as its own view inside the same modal, with a back link; nothing expands in place and no dialog opens over another. While the tour is undecided the Guide button carries a small saffron dot.
+- **Topics:** reference and help (glossary, archive and restore, page help, billing documents) are `GuideTopic`s, built with hooks such as `useArchivePolicyTopic()` and `useFactoryGlossaryTopic()`. A topic with `onSelect` is an action, such as a second walkthrough, that runs after the modal closes.
+- **Notices and controls:** status that needs attention (yarn rates due for review) is one strip under the header with its action. Page controls (payroll period stepper, daily sheet date and shift, stock history) sit in the page toolbar or open as a modal from a header button.
+- **Tokens:** the content column comes from `--shell-sidebar-w`, `--main-pad`, `--main-max` and `--main-inset`. Never hard-code `left: calc(248px + …)`.
+- **Presentation:** use `components/ui/rail.ts` (`railSurface`, `railButton`, `railIcon`, `railPrimaryAction`); the names predate the removal of the rails. Primary actions are ink, never saffron, and share the header row's 40px height (44px on phones). The undecided tour card uses `railGuideSurface` and `railGuideIcon` (saffron tint, filled compass tile); its start action stays an ink `railPrimaryAction`. Titles wrap rather than truncate so Hindi and Gujarati fit.
 
 ### Dashboard Page Header
 
-Use a compact header row:
+Use `PageHeader`, a compact header row:
 
-- Optional icon tile: `h-10 w-10 rounded-xl border border-saffron/30 bg-saffron/10`
-- Page title: `text-xl font-bold text-ink`
-- Context badges or date chips on the right
-- Mobile should stack or wrap without overflow
+- Title on the left: `text-[1.75rem] sm:text-[2rem] font-bold tracking-tight text-ink`, with an optional one-line description and an optional icon tile (`h-10 w-10 rounded-xl border border-saffron/30 bg-saffron/10`)
+- Actions on the right, in order: the Guide, secondary actions (outline), then the one primary action (ink)
+- A hairline bottom border separates it from the page
+- Mobile stacks the actions under the title and wraps without overflow; the Guide is hidden on phones
 
 ### KPI Strips
 

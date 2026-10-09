@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils'
 export function BaseRouteLoading({
     route,
     title,
-    centeredTitle = true,
+    centeredTitle = false,
     headerClassName,
     children,
 }: {

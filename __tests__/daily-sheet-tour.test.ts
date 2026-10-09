@@ -88,22 +88,22 @@ describe('Daily Sheet tour contract', () => {
         expect(sheet).toContain("window.history.replaceState(null, '', baseDailySheetHref({ ...navigation, date, shift: nextShift, entry: undefined }))")
         expect(sheet).toContain('max={initialData.today}')
     })
-    it('uses the existing mounted-child runtime with the guide in the shared left rail', () => {
+    it('uses the existing mounted-child runtime with the guide in the page header', () => {
         const wrapper = readFileSync('components/production/DailySheetGuidedTour.tsx', 'utf8')
         const runtime = readFileSync('components/tours/ReplicaGuidedTour.tsx', 'utf8')
         expect(wrapper).toContain('<ReplicaGuidedTour tourId="daily-sheet"')
         expect(wrapper).toContain('handoffStepId="ds-handoff"')
         expect(wrapper).toContain("dynamic(() => import('./DailySheetSampleWorkspace'), { ssr: false })")
         expect(wrapper).toContain("import('@/lib/i18n/daily-sheet-tutorial')")
-        // The guide is the standard left rail; the live controls keep their own right rail, mounted first in the children slot.
-        expect(wrapper).toContain('railClassName={`production-left-rail ')
-        expect(wrapper).toContain('<aside className="production-daily-sheet-rail min-w-0"')
-        expect(wrapper).not.toMatch(/order-last|!left-auto|group-has-|walkthrough=/)
-        expect(wrapper.indexOf('<aside className="production-daily-sheet-rail')).toBeLessThan(wrapper.lastIndexOf('{children}'))
+        // The header (with the Guide) and the shift toolbar are mounted first in the children slot, so they never move.
+        expect(wrapper).toContain('<div className="production-daily-sheet-controls min-w-0 space-y-4"')
+        expect(wrapper).not.toMatch(/order-last|!left-auto|group-has-|walkthrough=|railClassName/)
+        expect(wrapper.indexOf('production-daily-sheet-controls')).toBeLessThan(wrapper.lastIndexOf('{children}'))
         expect(wrapper).not.toContain('<TourInvitation')
-        expect(runtime.match(/<TourInvitation\b/g)).toHaveLength(1)
+        expect(runtime).not.toContain('<TourInvitation')
         expect(runtime).toContain('<div hidden={step !== null && step !== handoffStepId}>{children}</div>')
-        expect(sheet).toContain('dialogOpen={isReviewOpen || isUnlockDialogOpen || isHistoryDialogOpen || isPayrollExpanded}')
+        // The sheet's header reads the tour through PageGuide.
+        expect(sheet.slice(sheet.indexOf('<PageHeader'), sheet.indexOf('data-daily-tour="shift"'))).toContain('<PageGuide />')
         for (const file of ['DailySheetGuidedTour', 'DailySheetSampleWorkspace']) expect(readFileSync(`components/production/${file}.tsx`, 'utf8')).not.toMatch(/saveBaseDailyProductionBatch|weavly:base-production:|localStorage/)
     })
     it('is opt-in Base-owner content v2', () => {
