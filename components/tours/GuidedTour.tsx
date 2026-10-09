@@ -60,7 +60,7 @@ function ActiveGuidedTour<S extends string>({ tourId, steps, step, copy, onStepC
     useEffect(() => () => {
         restoreScroll(record)
         const fallback = launcher.current
-        const target = handoff.current ?? (isTourTargetVisible(launchFocus.current) ? launchFocus.current : fallback?.matches('button') ? fallback : fallback?.querySelector<HTMLElement>('[data-tour-control="take-tour"], [data-tour-control="quiet-tour"]'))
+        const target = handoff.current ?? (isTourTargetVisible(launchFocus.current) ? launchFocus.current : fallback?.matches('button') ? fallback : fallback?.querySelector<HTMLElement>('[data-tour-control="guide"], [data-tour-control="take-tour"], [data-tour-control="quiet-tour"]'))
         if (target && isTourTargetVisible(target) && !target.matches(':disabled, [aria-disabled="true"]')) target.focus({ preventScroll: true })
     }, [launcher, record])
     const style = compact ? undefined : { left: result.placement?.left ?? 16, top: result.placement?.top ?? 16 }

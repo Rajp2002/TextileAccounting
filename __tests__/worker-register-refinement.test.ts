@@ -79,7 +79,7 @@ beforeEach(() => {
 
 describe('Workforce Register Premium Redesign', () => {
   describe('Page Header & Workforce Groups Structure', () => {
-    it('renders a centered page title with the worker count in the toolbar', () => {
+    it('renders a left-aligned page title, with its actions beside it and the worker count in the toolbar', () => {
       const html = renderToStaticMarkup(
         React.createElement(WorkersRegister, {
           workers: mockWorkers,
@@ -88,8 +88,12 @@ describe('Workforce Register Premium Redesign', () => {
       )
 
       const header = html.match(/<header[^>]*>[\s\S]*?<\/header>/)?.[0]
-      expect(header).toContain('text-center')
+      expect(header).toContain('data-page-header="true"')
+      expect(header).not.toContain('text-center')
       expect(header).toMatch(/<h1[^>]*>Workers<\/h1>/)
+      // Add worker is the header's primary action, rendered once.
+      expect(header).toContain('data-tour-anchor="workers.add"')
+      expect(html.match(/data-tour-anchor="workers.add"/g)).toHaveLength(1)
       expect(header).not.toContain('3 workers')
       expect(html).toContain('3 workers')
       expect(html).toContain('Add worker')

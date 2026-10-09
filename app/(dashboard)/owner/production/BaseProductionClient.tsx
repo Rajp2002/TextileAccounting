@@ -33,6 +33,8 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { railPrimaryAction } from '@/components/ui/rail'
+import { PageHeader } from '@/components/ui/page-header'
+import { PageGuide } from '@/components/tours/TourInvitation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
     Dialog,
@@ -550,81 +552,72 @@ export default function BaseProductionClient({
                     </Link>
                 </Button>
             )}
-            {!isDailySheetView && <header className={view === 'payroll'
-                ? 'flex flex-col justify-between gap-4 border-b border-hairline/70 pb-5 text-center sm:pb-6'
-                : view === 'operations'
-                    ? 'flex flex-col items-center text-center'
-                    : view === 'production'
-                        ? 'flex flex-col items-center border-b border-hairline/70 pb-5 text-center sm:pb-6'
-                        : 'flex flex-col justify-between gap-4 sm:flex-row sm:items-start'}>
-                <div className={view === 'operations' || view === 'production' ? 'flex flex-col items-center' : undefined}>
-                    <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-ink sm:text-[2rem]">
-                        {view === 'operations' ? 'Worker–Machine Assignments' : view === 'payroll' ? 'Payroll' : 'Production'}
-                    </h1>
-                    {view === 'payroll' && <p className="sr-only">Review earnings and settle worker pay for each period.</p>}
-                </div>
-            </header>}
-
-            {view === 'production' && activeTab === 'jobs' && (
-                <aside className="production-activate-rail" aria-label="Production actions">
-                    <div className="production-activate-action">
+            {(view === 'production' || view === 'payroll') && !isDailySheetView && <PageHeader
+                title={view === 'payroll' ? 'Payroll' : 'Production'}
+                description={view === 'payroll' ? <span className="sr-only">Review earnings and settle worker pay for each period.</span> : undefined}
+                actions={<>
+                    <PageGuide />
+                    {view === 'production' && activeTab === 'jobs' && (
                         <Button data-tour-anchor="production.activate" onClick={() => setIsActivateModalOpen(true)} className={railPrimaryAction}>
                             <Plus className="size-4" aria-hidden="true" />
                             <span data-i18n-skip="true">{t('production.activateQuality')}</span>
                         </Button>
-                    </div>
-                </aside>
-            )}
-
-            {view === 'payroll' && activePeriodSummary && (
-                <aside className="payroll-period-rail" aria-label="Payroll period and settlement">
-                    {activeTab === 'history' ? (
-                        <Button variant="outline" className="min-h-11 w-full rounded-lg px-4" onClick={() => setPayrollTab('pay')}>
+                    )}
+                    {view === 'payroll' && activeTab === 'history' && (
+                        <Button variant="outline" className="h-10 rounded-lg px-4" onClick={() => setPayrollTab('pay')}>
                             <WalletCards className="h-4 w-4" /> Current payroll
                         </Button>
-                    ) : (
-                        <>
-                            <div data-payroll-tour="period" className="rounded-2xl border border-hairline/80 bg-surface/95 p-4 shadow-[var(--shadow-card)]">
-                                <div className="mb-3 flex flex-wrap items-center justify-between gap-1.5">
-                                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-subtle">Pay period</p>
-                                    {activePeriodSummary.status === 'settled' ? (
-                                        <Badge variant="success" className="text-xs font-semibold">Settled</Badge>
-                                    ) : activePeriodSummary.status === 'ready_to_complete' ? (
-                                        <Badge variant="brand" className="text-xs font-semibold">Ready to complete</Badge>
-                                    ) : activePeriodSummary.status === 'in_progress' ? (
-                                        <Badge variant="warning" className="text-xs font-semibold">In progress · {activePeriodSummary.paidWorkers}/{activePeriodSummary.totalWorkers}</Badge>
-                                    ) : (
-                                        <Badge variant="secondary" className="text-xs font-semibold">Open</Badge>
-                                    )}
-                                </div>
-                                <div className="flex h-12 items-center rounded-xl border border-hairline bg-surface-soft/35 p-0.5" role="group" aria-label="Payroll period selector">
-                                    <Button variant="ghost" size="icon-xs" onClick={handlePreviousPeriod} className="h-10 w-9 shrink-0 rounded-lg text-subtle hover:text-ink" aria-label="Previous payroll period">
-                                        <ChevronLeft className="size-[1.125rem]" />
-                                    </Button>
-                                    <span className="min-w-0 flex-1 truncate px-1 text-center text-sm font-semibold text-ink">{activePeriodLabel}</span>
-                                    <Button variant="ghost" size="icon-xs" onClick={handleNextPeriod} className="h-10 w-9 shrink-0 rounded-lg text-subtle hover:text-ink" aria-label="Next payroll period">
-                                        <ChevronRight className="size-[1.125rem]" />
-                                    </Button>
-                                </div>
-                                <p className="mt-2.5 text-center text-sm font-medium text-subtle">{formatDateOnly(activePeriodBounds.start)} – {formatDateOnly(activePeriodBounds.end)}</p>
-                            </div>
-                            <Button data-tour-anchor="payroll.settle" onClick={() => setWorkspaceOpen(true)} className="min-h-12 w-full rounded-xl bg-loom px-5 text-[0.9375rem] font-semibold text-white shadow-[var(--shadow-button)] hover:bg-loom-elevated hover:text-white focus-visible:ring-saffron/40">
-                                <WalletCards className="size-[1.125rem]" />
-                                <span data-i18n-skip="true">{activePeriodSummary.status === 'settled'
-                                    ? t('payroll.viewSettledPayroll')
-                                    : activePeriodSummary.status === 'ready_to_complete'
-                                        ? t('payroll.completePayrollRail')
-                                        : activePeriodSummary.status === 'in_progress'
-                                            ? t('payroll.continueSettlement')
-                                            : t('payroll.settlePayroll')}</span>
-                            </Button>
-                            <Button data-payroll-bulk-pill type="button" variant="outline" className="min-h-[44px] w-full rounded-lg px-4" onClick={() => setBulkOpen(true)}>
-                                <Users className="size-4" aria-hidden="true" />
-                                <span data-i18n-skip="true">{tx('Bulk advance / deduction')}</span>
-                            </Button>
-                        </>
                     )}
-                </aside>
+                    {view === 'payroll' && activeTab !== 'history' && (
+                        <Button data-tour-anchor="payroll.records" variant="outline" className="h-10 rounded-lg px-4" onClick={() => { setRecordsPeriodStart(undefined); setPayrollTab('history') }}>
+                            <History className="size-4" aria-hidden="true" /> <span data-i18n-skip="true">{t('payroll.payrollRecords')}</span>
+                        </Button>
+                    )}
+                    {view === 'payroll' && activeTab !== 'history' && activePeriodSummary && (
+                        <Button data-tour-anchor="payroll.settle" onClick={() => setWorkspaceOpen(true)} className={railPrimaryAction}>
+                            <WalletCards className="size-4" aria-hidden="true" />
+                            <span data-i18n-skip="true">{activePeriodSummary.status === 'settled'
+                                ? t('payroll.viewSettledPayroll')
+                                : activePeriodSummary.status === 'ready_to_complete'
+                                    ? t('payroll.completePayrollRail')
+                                    : activePeriodSummary.status === 'in_progress'
+                                        ? t('payroll.continueSettlement')
+                                        : t('payroll.settlePayroll')}</span>
+                        </Button>
+                    )}
+                </>}
+            />}
+
+            {view === 'payroll' && activeTab !== 'history' && activePeriodSummary && (
+                <div data-payroll-tour="period" role="group" aria-label="Payroll period and settlement" className="flex flex-col gap-3 rounded-xl border border-hairline bg-surface p-3 shadow-xs sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                        <div className="flex h-11 items-center rounded-lg border border-hairline bg-surface-soft/35 p-0.5 sm:w-72" role="group" aria-label="Payroll period selector">
+                            <Button variant="ghost" size="icon-xs" onClick={handlePreviousPeriod} className="h-10 w-9 shrink-0 rounded-lg text-subtle hover:text-ink" aria-label="Previous payroll period">
+                                <ChevronLeft className="size-[1.125rem]" />
+                            </Button>
+                            <span className="min-w-0 flex-1 truncate px-1 text-center text-sm font-semibold text-ink">{activePeriodLabel}</span>
+                            <Button variant="ghost" size="icon-xs" onClick={handleNextPeriod} className="h-10 w-9 shrink-0 rounded-lg text-subtle hover:text-ink" aria-label="Next payroll period">
+                                <ChevronRight className="size-[1.125rem]" />
+                            </Button>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-sm font-medium text-subtle">{formatDateOnly(activePeriodBounds.start)} – {formatDateOnly(activePeriodBounds.end)}</span>
+                            {activePeriodSummary.status === 'settled' ? (
+                                <Badge variant="success" className="text-xs font-semibold">Settled</Badge>
+                            ) : activePeriodSummary.status === 'ready_to_complete' ? (
+                                <Badge variant="brand" className="text-xs font-semibold">Ready to complete</Badge>
+                            ) : activePeriodSummary.status === 'in_progress' ? (
+                                <Badge variant="warning" className="text-xs font-semibold">In progress · {activePeriodSummary.paidWorkers}/{activePeriodSummary.totalWorkers}</Badge>
+                            ) : (
+                                <Badge variant="secondary" className="text-xs font-semibold">Open</Badge>
+                            )}
+                        </div>
+                    </div>
+                    <Button data-payroll-bulk-pill type="button" variant="outline" className="min-h-[44px] rounded-lg px-4" onClick={() => setBulkOpen(true)}>
+                        <Users className="size-4" aria-hidden="true" />
+                        <span data-i18n-skip="true">{tx('Bulk advance / deduction')}</span>
+                    </Button>
+                </div>
             )}
 
             {view === 'payroll' && activeTab === 'history' && (
@@ -752,7 +745,6 @@ export default function BaseProductionClient({
                         today={initialData.today}
                         todayMetersByJobId={todayProduction.metersByJobId}
                         todayEntered={todayProduction.hasSavedSheet}
-                        onActivateQuality={() => setIsActivateModalOpen(true)}
                         onViewHistory={() => router.push('/owner/production/daily-sheet')}
                         isActivateModalOpen={isActivateModalOpen}
                         onOpenActivateModalChange={setIsActivateModalOpen}
@@ -929,13 +921,6 @@ export default function BaseProductionClient({
                 </div>}
             </div>}
 
-            {view === 'payroll' && activeTab !== 'history' && (
-                <div className="payroll-records-action">
-                    <Button data-tour-anchor="payroll.records" variant="outline" className="min-h-11 w-full rounded-lg px-4" onClick={() => { setRecordsPeriodStart(undefined); setPayrollTab('history') }}>
-                        <History className="size-4" aria-hidden="true" /> <span data-i18n-skip="true">{t('payroll.payrollRecords')}</span> <ChevronRight className="size-4" aria-hidden="true" />
-                    </Button>
-                </div>
-            )}
 
             <Dialog open={dialog === 'advance'} onOpenChange={(open) => !open && closeDialog()} {...surface.root}>
                 <DialogContent className="max-w-md rounded-2xl border border-hairline bg-surface p-6 shadow-2xl" {...surface.content}>

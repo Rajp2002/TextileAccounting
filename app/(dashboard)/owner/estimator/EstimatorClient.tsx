@@ -168,8 +168,8 @@ import { runMutationWithTimeout } from '@/lib/mutation-outcome'
 import { reconcileTemplateRateUpdate } from '@/lib/template-rate-reconciliation'
 import { buildQualityConstructionCue, matchesQualitySearch } from '@/lib/quality-recall'
 import { getEstimatorFieldTarget } from '@/lib/estimator-field-target'
-import { BasePlanFactoryGlossary } from '@/components/estimator/BasePlanFactoryGlossary'
-import { ArchivePolicyNotice } from '@/components/records/ArchivePolicyNotice'
+import { useFactoryGlossaryTopic } from '@/components/estimator/BasePlanFactoryGlossary'
+import { useArchivePolicyTopic } from '@/components/records/ArchivePolicyNotice'
 import { RouteMilestones } from '@/components/performance/route-milestones'
 import { PageHeader } from '@/components/ui/page-header'
 import { createCostingExportModel } from '@/lib/estimator-export'
@@ -3392,8 +3392,6 @@ export default function EstimatorClient({
     const router = useRouter()
     const productionReturnTo = safeBaseReturnPath(searchParams.get('returnTo'))
     const liteMode = !freeMode && mobileTier === 'lite'
-    const compactMobile = freeMode || liteMode
-    const helpId = freeMode ? 'free-estimator-help' : 'lite-estimator-help'
 
     const [widthUnit, setWidthUnit] = useState<'cm' | 'inch'>('inch')
     const [hasLoadedWidthUnit, setHasLoadedWidthUnit] = useState(false)
@@ -3866,12 +3864,8 @@ export default function EstimatorClient({
         }
     }, [savedFreeCosting, freeLeaveReason, router])
     const [freePlansOpen, setFreePlansOpen] = useState(false)
-    const [estimatorHelpOpen, setEstimatorHelpOpen] = useState(false)
-    useEffect(() => {
-        if (!estimatorHelpOpen || !window.matchMedia('(max-width: 767.98px), (pointer: coarse) and (max-height: 500px) and (max-width: 1023.98px)').matches) return
-        const frame = requestAnimationFrame(() => document.getElementById(`${helpId}-close`)?.focus())
-        return () => cancelAnimationFrame(frame)
-    }, [estimatorHelpOpen, helpId])
+    const factoryGlossaryTopic = useFactoryGlossaryTopic()
+    const archivePolicyTopic = useArchivePolicyTopic()
     const openFreePlans = useCallback(() => {
         setFreePlansOpen(true)
         window.requestAnimationFrame(() => document.getElementById('free-plan-comparison')?.scrollIntoView({ block: 'start' }))
@@ -5154,7 +5148,20 @@ export default function EstimatorClient({
             <PageHeader
                 title={tx('Cost estimate')}
                 className={freeMode ? 'free-mobile-page-header' : liteMode ? 'lite-mobile-page-header' : undefined}
-                actions={compactMobile ? <Button id={`${helpId}-trigger`} type="button" variant="ghost" className={`phone-guidance ${freeMode ? 'free-mobile-help-trigger' : 'lite-mobile-help-trigger'}`} aria-expanded={estimatorHelpOpen || isTutorialActive} aria-controls={helpId} disabled={isTutorialActive} onClick={() => setEstimatorHelpOpen(open => !open)} data-i18n-skip="true"><BookOpen className="h-4 w-4" aria-hidden="true" />{freeMode ? freeMobileText(language, 'help') : liteEstimatorText(language, 'help')}</Button> : undefined}
+                actions={<CostEstimateTutorial
+                    accountDismissed={tutorialDismissed}
+                    userMetadata={userMetadata}
+                    enabled={state.isConfigured && !saving}
+                    freePlan={freeMode}
+                    existingCosting={Boolean(sourceQuoteId && sourceRecordKind === 'costing')}
+                    productionPipeline={canUseProductionPipeline}
+                    orgId={orgId}
+                    userId={userId}
+                    topics={[factoryGlossaryTopic, archivePolicyTopic]}
+                    onPrepare={prepareTutorial}
+                    onOpenLiveCostModal={setLiveEstimateOpen}
+                    onActiveChange={setIsTutorialActive}
+                />}
             />
             {!freeMode && !disableAutosave && (
                 <LocalSaveStatus
@@ -5466,34 +5473,8 @@ export default function EstimatorClient({
                 </div>
             )}
 
-            {/* Keep the editing surface full width. On wide desktop the live
-                estimate and reference links move into the spare viewport rail
-                instead of taking space from the estimator canvas. */}
+            {/* The editing surface uses the full content width; the Guide in the header holds the tour and reference. */}
             <div className="estimator-workspace-shell">
-                <aside
-                    className="phone-guidance estimator-left-rail space-y-3"
-                    id={compactMobile ? helpId : undefined}
-                    data-free-help-expanded={freeMode ? estimatorHelpOpen || isTutorialActive : undefined}
-                    data-lite-help-expanded={liteMode ? estimatorHelpOpen || isTutorialActive : undefined}
-                    aria-label="Estimator guides and tools"
-                >
-                    {compactMobile && <Button id={`${helpId}-close`} variant="ghost" className={freeMode ? 'free-mobile-help-trigger' : 'lite-mobile-help-trigger'} disabled={isTutorialActive} onClick={() => { setEstimatorHelpOpen(false); document.getElementById(`${helpId}-trigger`)?.focus() }}><X className="h-4 w-4" />{tx('Close')}</Button>}
-                    {compactMobile && <p className={`${freeMode ? 'free-mobile-only' : 'lite-mobile-only'} text-sm leading-relaxed text-body`}>{tx('Quick and Detailed use the same calculation. Detailed shows additional assumptions.')}</p>}
-                    <CostEstimateTutorial
-                        accountDismissed={tutorialDismissed}
-                        userMetadata={userMetadata}
-                        enabled={state.isConfigured && !saving}
-                        freePlan={freeMode}
-                        existingCosting={Boolean(sourceQuoteId && sourceRecordKind === 'costing')}
-                        productionPipeline={canUseProductionPipeline}
-                        orgId={orgId}
-                        userId={userId}
-                        onPrepare={prepareTutorial}
-                        onOpenLiveCostModal={setLiveEstimateOpen}
-                        onActiveChange={setIsTutorialActive}
-                    />
-                </aside>
-
                 <div className="estimator-workspace-main min-w-0">
                     <div className="relative min-w-0">
                     {/* ── STICKY QUOTE COCKPIT ─────────────────────────────── */}
@@ -7149,13 +7130,6 @@ export default function EstimatorClient({
             </div>
             </div>
 
-                <aside
-                    className="phone-guidance estimator-reference-rail space-y-3"
-                    aria-label="Estimator reference information"
-                >
-                    <BasePlanFactoryGlossary />
-                    <ArchivePolicyNotice />
-                </aside>
             </div>
 
             <MobileLiveEstimateShortcut

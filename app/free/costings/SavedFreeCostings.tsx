@@ -14,13 +14,12 @@ import {
   FileText,
   X,
   Loader2,
-  BookOpen,
   SlidersHorizontal,
 } from 'lucide-react'
 import type { EstimateState, EstimatorV3Totals, CostingResultSnapshot } from '@/lib/estimator'
 import { createCostingExportModel, shortDocumentReference } from '@/lib/estimator-export'
 import { CostingExportDialog } from '@/components/estimator/CostingExportDialog'
-import { SavedCostingsHelp, SavedCostingsTutorial } from '@/components/estimator/SavedCostingsTutorial'
+import { SavedCostingsTutorial } from '@/components/estimator/SavedCostingsTutorial'
 import { savedCostingTourEnding, isSavedCostingHandoff, costingTourSurface, makeSavedCostingTourExport, makeSavedCostingTourExamples, type SavedCostingStep } from '@/lib/saved-costings-tour'
 import { Button } from '@/components/ui/button'
 import { railPrimaryAction } from '@/components/ui/rail'
@@ -45,7 +44,6 @@ import { FreeRecalculationWindow } from '@/components/estimator/FreeRecalculatio
 import { remainingFreeEditMs, type FreeEditWindow } from '@/lib/free-costing-window'
 import { useFreeEditClock } from '@/hooks/use-free-edit-clock'
 import { formatTimestampDate } from '@/lib/format'
-import { cn } from '@/lib/utils'
 
 type Saved = {
   revision?: number
@@ -72,13 +70,7 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
   const sortId = `${idPrefix}saved-costings-sort`
   const marginId = `${idPrefix}saved-costings-margin`
   const [tourStep, setTourStep] = useState<SavedCostingStep | null>(null)
-  const [helpOpen, setHelpOpen] = useState(false)
   const [filtersOpen, setFiltersOpen] = useState(false)
-  useEffect(() => {
-    if (!helpOpen || !window.matchMedia('(max-width: 767.98px), (pointer: coarse) and (max-height: 500px) and (max-width: 1023.98px)').matches) return
-    const frame = requestAnimationFrame(() => document.getElementById('free-history-help')?.querySelector<HTMLButtonElement>('button')?.focus())
-    return () => cancelAnimationFrame(frame)
-  }, [helpOpen])
   const [demoDeleted, setDemoDeleted] = useState(false)
   const [showDeleteNudge, setShowDeleteNudge] = useState(false)
   const tourExport = useMemo(makeSavedCostingTourExport, [])
@@ -253,24 +245,15 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
 
   return (
     <>
-      {!embedded && <aside className="phone-guidance saved-costings-left-rail" id="free-history-help" data-free-history-help data-expanded={helpOpen || tourStep !== null} aria-label={tx('Saved Costings guides and tools')}>
-        <Button variant="ghost" className="free-mobile-help-trigger" disabled={tourStep !== null} onClick={() => { setHelpOpen(false); document.getElementById('free-history-help-trigger')?.focus() }}>
-          <X className="h-4 w-4" /> {tx('Close')}
-        </Button>
-        <SavedCostingsTutorial free userId={userId} orgId={orgId} userMetadata={userMetadata} ending={savedCostingTourEnding(rows.length, loading || error)} step={tourStep} onStepChange={setTourStep} onComplete={() => setShowDeleteNudge(true)} />
-      </aside>}
-
-      <div className="saved-costings-workspace ui-route-enter max-w-6xl mx-auto space-y-6" data-free-costing data-free-history={!embedded || undefined} data-sentry-block>
+      <div className="saved-costings-workspace ui-route-enter w-full space-y-6" data-free-costing data-free-history={!embedded || undefined} data-sentry-block>
         <PageHeader
           className={!embedded ? 'free-mobile-page-header' : undefined}
           title={freeText(language, 'savedCostings')}
           actions={(
             <>
-            {!embedded && <Button id="free-history-help-trigger" variant="ghost" className="phone-guidance free-mobile-help-trigger" aria-expanded={helpOpen || tourStep !== null} aria-controls="free-history-help" disabled={tourStep !== null} onClick={() => setHelpOpen(open => !open)}>
-              <BookOpen className="h-4 w-4" /> {freeMobileText(language, 'help')}
-            </Button>}
-            <Button data-tour-anchor="free-costings.new" variant="saffron" className={!embedded ? 'rail-inline-actions' : undefined} onClick={() => router.push('/free')}>
-              <Plus className="h-4 w-4" /> {tx('New Costing')}
+            {!embedded && <SavedCostingsTutorial free userId={userId} orgId={orgId} userMetadata={userMetadata} ending={savedCostingTourEnding(rows.length, loading || error)} step={tourStep} onStepChange={setTourStep} onComplete={() => setShowDeleteNudge(true)} />}
+            <Button data-tour-anchor="free-costings.new" className={railPrimaryAction} onClick={() => router.push('/free')}>
+              <Plus className="h-4 w-4" aria-hidden="true" /> {tx('New Costing')}
             </Button>
             </>
           )}
@@ -724,20 +707,6 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
           )}
         </DialogContent>
       </Dialog>
-
-      {/* Right rail from 1280px: the primary action on top, help anchored to the bottom. */}
-      {!embedded && (
-        <>
-          <aside className="saved-costings-action-rail-desktop" aria-label={tx('New Costing')}>
-            <Button data-tour-anchor="free-costings.new" onClick={() => router.push('/free')} className={cn(railPrimaryAction, 'w-full')}>
-              <Plus className="h-4 w-4" aria-hidden="true" /> {tx('New Costing')}
-            </Button>
-          </aside>
-          <div className="saved-costings-help-rail-desktop">
-            <SavedCostingsHelp free />
-          </div>
-        </>
-      )}
 
       {/* Tour preview export dialog */}
       {costingTourSurface(tourStep) === 'export' && (

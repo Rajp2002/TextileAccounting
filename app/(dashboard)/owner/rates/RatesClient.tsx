@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
-import { RateBookTutorial, RateBookHelp, rateBookHelpCopy } from '@/components/rates/RateBookTutorial'
+import { RateBookTutorial, rateBookHelpCopy, useRateBookHelpTopic } from '@/components/rates/RateBookTutorial'
 import { RateTrendDialog } from '@/components/rates/RateTrendDialog'
 import type { RateBookStep } from '@/lib/rate-book-tour'
 import { isSampleRecordId } from '@/lib/tours/sample-ids'
@@ -35,7 +35,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { SwitchField } from '@/components/ui/switch-field'
 import { railPrimaryAction } from '@/components/ui/rail'
-import { RailDialog } from '@/components/ui/rail-dialog'
 import { cn } from '@/lib/utils'
 import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -45,7 +44,7 @@ import { Label } from '@/components/ui/label'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Textarea } from '@/components/ui/textarea'
-import { ArchivePolicyNotice } from '@/components/records/ArchivePolicyNotice'
+import { useArchivePolicyTopic } from '@/components/records/ArchivePolicyNotice'
 import {
     archiveCostRate,
     confirmAllCostRateReviews,
@@ -699,7 +698,8 @@ function ReviewBadge({ rate, compact = false }: { rate: CostRateRow; compact?: b
     return <div className={compact ? 'text-right' : undefined}><StatusBadge status="current" className={compact ? 'text-[10px]' : undefined} /><p className="mt-1 text-[11px] text-subtle">Next review {due}</p></div>
 }
 
-function RateReviewRailWidget({
+/** The Rate Book's review status: one quiet line under the page header, with the review action when rates are due. */
+function RateReviewStrip({
     dueReviewRates,
     mostRecentReview,
     defaultReviewIntervalDays,
@@ -715,124 +715,49 @@ function RateReviewRailWidget({
     const hasDueRates = dueCount > 0
 
     return (
-        <Card className={`overflow-hidden transition-all duration-200 ${hasDueRates ? 'border-warning/40 bg-gradient-to-b from-warning-soft/50 via-surface to-surface shadow-[0_4px_20px_rgba(217,119,6,0.08)]' : 'border-hairline bg-surface'}`}>
-            <CardContent className="p-5 space-y-4">
-                <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-2.5">
-                        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${hasDueRates ? 'bg-warning-soft text-warning ring-2 ring-warning/20' : 'bg-success-soft text-success'}`}>
-                            <CalendarClock className="h-5 w-5" aria-hidden="true" />
-                        </div>
-                        <div>
-                            <p className="text-[11px] font-black uppercase tracking-[0.14em] text-subtle">{tx('Rate Review')}</p>
-                            <h3 className="text-sm font-bold text-ink">{hasDueRates ? tx(`${dueCount} ${dueCount === 1 ? 'Rate Needs' : 'Rates Need'} Review`) : tx('Rates Are Current')}</h3>
-                        </div>
-                    </div>
-                    <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wide ${hasDueRates ? 'bg-warning/20 text-saffron-deep' : 'bg-success-soft text-success'}`}>
-                        {hasDueRates ? `${dueCount} ${dueCount === 1 ? 'due' : 'due'}` : tx('Up to date')}
-                    </span>
+        <div role="status" className={cn('flex flex-col gap-3 rounded-xl border px-4 py-3 sm:flex-row sm:items-center sm:justify-between', hasDueRates ? 'border-warning/40 bg-warning-soft/40' : 'border-hairline bg-surface shadow-xs')}>
+            <div className="flex min-w-0 items-start gap-3">
+                <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg', hasDueRates ? 'bg-warning-soft text-warning' : 'bg-success-soft text-success')}>
+                    <CalendarClock className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <div className="min-w-0">
+                    <p className="text-sm font-bold text-ink">{hasDueRates ? tx(`${dueCount} ${dueCount === 1 ? 'Rate Needs' : 'Rates Need'} Review`) : tx('Rates Are Current')}</p>
+                    <p className="text-xs leading-relaxed text-body">
+                        {hasDueRates
+                            ? tx('Supplier prices or newly discovered rates require confirmation to keep future estimate costings accurate.')
+                            : <>{tx('Last reviewed')}: <span className="font-semibold text-ink">{mostRecentReview ? formatDateOnly(mostRecentReview, { day: 'numeric', month: 'short', year: 'numeric' }) : tx('Not reviewed')}</span> · {tx('Cadence')}: <span className="font-semibold text-ink">{tx(`Every ${defaultReviewIntervalDays} days`)}</span></>}
+                    </p>
                 </div>
-
-                {hasDueRates ? (
-                    <>
-                        <p className="text-xs leading-relaxed text-body">
-                            {tx('Supplier prices or newly discovered rates require confirmation to keep future estimate costings accurate.')}
-                        </p>
-
-                        <div
-                            className="flex items-center justify-between gap-3 rounded-xl border border-hairline/80 bg-surface-soft/60 px-3 py-2.5"
-                            aria-label={tx(`${dueCount} pending ${dueCount === 1 ? 'rate' : 'rates'}`)}
-                        >
-                            <div className="min-w-0">
-                                <p className="text-[10px] font-bold uppercase tracking-wider text-subtle">{tx('Pending Rates')}</p>
-                                <p className="mt-0.5 text-xs font-semibold text-ink">{tx('Awaiting review')}</p>
-                            </div>
-                            <span className="flex h-9 min-w-9 shrink-0 items-center justify-center rounded-full bg-warning/20 px-2.5 text-sm font-black text-saffron-deep">
-                                {dueCount}
-                            </span>
-                        </div>
-
-                        <Button
-                            variant="saffron"
-                            onClick={onOpenModal}
-                            aria-haspopup="dialog"
-                            aria-label={tx(`Open ${dueCount} rates due for review`)}
-                            className="w-full h-10 font-bold shadow-sm justify-between"
-                        >
-                            <span className="flex items-center gap-2">
-                                <CalendarClock className="h-4 w-4" aria-hidden="true" />
-                                {tx(dueCount === 1 ? 'Review 1 Rate' : `Review ${dueCount} Rates`)}
-                            </span>
-                            <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
-                        </Button>
-                    </>
-                ) : (
-                    <>
-                        <p className="text-xs leading-relaxed text-body">
-                            {tx('All active yarn rates are confirmed. Estimates and costings will use verified prices.')}
-                        </p>
-                        <div className="rounded-xl border border-hairline bg-surface-soft/40 p-3 space-y-2 text-xs">
-                            <div className="flex items-center justify-between text-subtle">
-                                <span>{tx('Last reviewed')}</span>
-                                <span className="font-semibold text-ink">{mostRecentReview ? formatDateOnly(mostRecentReview, { day: 'numeric', month: 'short', year: 'numeric' }) : tx('Not reviewed')}</span>
-                            </div>
-                            <div className="flex items-center justify-between text-subtle">
-                                <span>{tx('Cadence')}</span>
-                                <span className="font-semibold text-ink">{tx(`Every ${defaultReviewIntervalDays} days`)}</span>
-                            </div>
-                        </div>
-                    </>
-                )}
-            </CardContent>
-        </Card>
+            </div>
+            {hasDueRates && (
+                <Button
+                    variant="saffron"
+                    onClick={onOpenModal}
+                    aria-haspopup="dialog"
+                    aria-label={tx(`Open ${dueCount} rates due for review`)}
+                    className="h-10 shrink-0 font-bold shadow-xs"
+                >
+                    <CalendarClock className="h-4 w-4" aria-hidden="true" />
+                    {tx(dueCount === 1 ? 'Review 1 Rate' : `Review ${dueCount} Rates`)}
+                    <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                </Button>
+            )}
+        </div>
     )
 }
 
-function RateBookReferenceCard() {
-    const { tx, language } = useTranslation()
+function RateBookPrinciples() {
+    const { language } = useTranslation()
     const copy = rateBookHelpCopy[language]
-    // A pill that opens a modal, like the help and archive pills it sits beside in the bottom stack of the right rail.
     return (
-        <RailDialog icon={BookOpen} title={tx('Rate Book Principles')} lang={language} i18nSkip>
-            <ul className="space-y-3 rounded-xl border border-hairline bg-surface-soft/60 p-3.5 text-sm leading-relaxed text-body">
-                {copy.principles.map(principle => (
-                    <li key={principle} className="flex items-start gap-2.5">
-                        <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-saffron" aria-hidden="true" />
-                        <span>{principle}</span>
-                    </li>
-                ))}
-            </ul>
-        </RailDialog>
-    )
-}
-
-function RateReviewFloatingButton({
-    dueReviewRates,
-    onOpenModal,
-    liteMobile = false,
-}: {
-    dueReviewRates: CostRateRow[]
-    onOpenModal: () => void
-    liteMobile?: boolean
-}) {
-    const { tx } = useTranslation()
-    const dueCount = dueReviewRates.length
-
-    if (dueCount === 0) return null
-
-    return (
-        <button
-            type="button"
-            onClick={onOpenModal}
-            aria-haspopup="dialog"
-            aria-label={tx(`Open ${dueCount} rates due for review`)}
-            className={cn("rail-inline-actions fixed bottom-[calc(var(--mobile-nav-height)+0.75rem)] right-4 z-40 inline-flex min-h-11 items-center gap-2.5 rounded-full bg-saffron px-4 py-3 text-sm font-bold text-white shadow-[var(--shadow-panel)] transition-colors hover:bg-saffron-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron focus-visible:ring-offset-2 md:bottom-6 md:right-6", liteMobile && mobileStyles.floating)}
-        >
-            <CalendarClock className="h-5 w-5" aria-hidden="true" />
-            <span>{tx(dueCount === 1 ? '1 Rate Needs Review' : `${dueCount} Rates Need Review`)}</span>
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-xs font-black text-saffron-deep">
-                {dueCount}
-            </span>
-        </button>
+        <ul className="space-y-3 rounded-xl border border-hairline bg-surface-soft/60 p-3.5 text-sm leading-relaxed text-body">
+            {copy.principles.map(principle => (
+                <li key={principle} className="flex items-start gap-2.5">
+                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-saffron" aria-hidden="true" />
+                    <span>{principle}</span>
+                </li>
+            ))}
+        </ul>
     )
 }
 
@@ -854,13 +779,9 @@ export default function RatesClient({
     const { t, tx, language } = useTranslation()
     const isLite = useOwnerPlan() === 'lite'
     const mobileCopy = liteRecordsCopy[language]
-    const [helpOpen, setHelpOpen] = useState(false)
     const [filtersOpen, setFiltersOpen] = useState(false)
-    useEffect(() => {
-        if (!isLite || !helpOpen || !window.matchMedia(MOBILE_WORKSPACE_QUERY).matches) return
-        const frame = requestAnimationFrame(() => document.getElementById('lite-ratebook-help')?.querySelector<HTMLButtonElement>('button')?.focus())
-        return () => cancelAnimationFrame(frame)
-    }, [helpOpen, isLite])
+    const rateBookHelpTopic = useRateBookHelpTopic()
+    const archivePolicyTopic = useArchivePolicyTopic()
     const [demoYarnDeleted, setDemoYarnDeleted] = useState(false)
     const [showDeleteNudge, setShowDeleteNudge] = useState(false)
 
@@ -1507,30 +1428,7 @@ export default function RatesClient({
 
     return (
         <>
-            {/* Rate Book Left Rail - pinned to top of left rail beside sidebar, matching the Cost Estimator left rail pattern */}
-            <aside id={isLite ? 'lite-ratebook-help' : undefined} data-expanded={helpOpen || tourStep !== null} className={cn("phone-guidance rates-left-rail-desktop space-y-3", isLite && mobileStyles.help)} aria-label={tx('Rate Book guides and tools')}>
-                <RateBookTutorial
-                    enabled={!isPending}
-                    orgId={orgId}
-                    userId={userId}
-                    userMetadata={userMetadata}
-                    step={tourStep}
-                    onStepChange={setTourStep}
-                    sampleRow={isSampleRecordId(visibleRates[0]?.id)}
-                    hasRealRates={activeYarnRates.some(rate => !isSampleRecordId(rate.id))}
-                    onTourFinish={() => {
-                        if (!demoYarnDeleted && rates.some(r => r.id === DEMO_YARN_RATE.id)) {
-                            setShowDeleteNudge(true)
-                        }
-                    }}
-                />
-                {/* From 1280px the help pill lives in the right rail instead (`rail-inline-actions` hides this copy). */}
-                <div className="left-rail-bottom rail-inline-actions mt-auto pt-3">
-                    <RateBookHelp />
-                </div>
-            </aside>
-
-            <div className={cn("rates-workspace ui-route-enter mx-auto w-full max-w-7xl space-y-6", isLite && mobileStyles.workspace)} data-lite-rates={isLite || undefined} data-ratebook-tutorial-root="true">
+            <div className={cn("rates-workspace ui-route-enter w-full space-y-6", isLite && mobileStyles.workspace)} data-lite-rates={isLite || undefined} data-ratebook-tutorial-root="true">
             <PlanAnalyticsBeacon eventName="rate_book_viewed" />
             {/* Rate Book is part of both Lite and Base and is the source of truth for yarn prices. */}
             <RouteMilestones
@@ -1539,24 +1437,49 @@ export default function RatesClient({
                 primaryUsable
                 secondaryReady={!usageLoading}
             />
-            <div className="space-y-1" data-ratebook-field="overview">
+            <div className="space-y-4" data-ratebook-field="overview">
                 <PageHeader
                     className={isLite ? mobileStyles.header : undefined}
                     title={t('common.yarn_rate_book')}
-                    actions={(
-                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                            {isLite && <Button type="button" variant="outline" className={cn(mobileStyles.mobileOnly, "phone-guidance")} aria-controls="lite-ratebook-help" aria-expanded={helpOpen || tourStep !== null} onClick={() => setHelpOpen(open => !open)} data-i18n-skip="true" lang={language}>{mobileCopy.help}</Button>}
-                            <Button
-                                data-ratebook-field="addRateAction"
-                                onClick={() => { setSaveError(null); setDraft(defaultDraft(defaultReviewIntervalDays)) }}
-                                className="rail-inline-actions h-10 w-full sm:w-auto rounded-xl bg-loom px-4 font-medium text-white shadow-xs hover:bg-loom-elevated hover:text-white focus-visible:ring-saffron"
-                            >
-                                <Plus className="h-4 w-4" aria-hidden="true" />
-                                <span>{t('tourControls.rateBook.addRate')}</span>
-                            </Button>
-                        </div>
-                    )}
+                    actions={<>
+                        <RateBookTutorial
+                            enabled={!isPending}
+                            orgId={orgId}
+                            userId={userId}
+                            userMetadata={userMetadata}
+                            step={tourStep}
+                            onStepChange={setTourStep}
+                            sampleRow={isSampleRecordId(visibleRates[0]?.id)}
+                            hasRealRates={activeYarnRates.some(rate => !isSampleRecordId(rate.id))}
+                            topics={[
+                                { id: 'rate-book-principles', icon: BookOpen, title: tx('Rate Book Principles'), lang: language, i18nSkip: true, content: <div data-ratebook-field="immutabilityNotice"><RateBookPrinciples /></div> },
+                                rateBookHelpTopic,
+                                archivePolicyTopic,
+                            ]}
+                            onTourFinish={() => {
+                                if (!demoYarnDeleted && rates.some(r => r.id === DEMO_YARN_RATE.id)) {
+                                    setShowDeleteNudge(true)
+                                }
+                            }}
+                        />
+                        <Button
+                            data-ratebook-field="addRateAction"
+                            onClick={() => { setSaveError(null); setDraft(defaultDraft(defaultReviewIntervalDays)) }}
+                            className={railPrimaryAction}
+                        >
+                            <Plus className="h-4 w-4" aria-hidden="true" />
+                            <span>{t('tourControls.rateBook.addRate')}</span>
+                        </Button>
+                    </>}
                 />
+                <div data-ratebook-section={6} data-ratebook-field="reviewRailWidget" className={isLite ? mobileStyles.desktopOnly : undefined}>
+                    <RateReviewStrip
+                        dueReviewRates={dueReviewRates}
+                        mostRecentReview={mostRecentReview}
+                        defaultReviewIntervalDays={defaultReviewIntervalDays}
+                        onOpenModal={() => { if (dueReviewRates.length > 0) setShowDueReviews(true) }}
+                    />
+                </div>
             </div>
 
             {showDeleteNudge && !demoYarnDeleted && rates.some(r => r.id === DEMO_YARN_RATE.id) && (
@@ -2264,43 +2187,8 @@ export default function RatesClient({
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-            <div className="phone-guidance rail-inline-actions">
-                <ArchivePolicyNotice />
-            </div>
             </div>
 
-            {/* Keep viewport-positioned review controls outside the animated route wrapper. */}
-            <aside className="rates-review-rail-desktop" aria-label={tx('Rate review and reference')}>
-                <div>
-                    <Button data-ratebook-field="addRateAction" onClick={() => { setSaveError(null); setDraft(defaultDraft(defaultReviewIntervalDays)) }} className={cn(railPrimaryAction, 'w-full')}>
-                        <Plus className="h-4 w-4" aria-hidden="true" />
-                        <span>{t('tourControls.rateBook.addRate')}</span>
-                    </Button>
-                </div>
-                <div data-ratebook-section={6} data-ratebook-field="reviewRailWidget">
-                    <RateReviewRailWidget
-                        dueReviewRates={dueReviewRates}
-                        mostRecentReview={mostRecentReview}
-                        defaultReviewIntervalDays={defaultReviewIntervalDays}
-                        onOpenModal={() => { if (dueReviewRates.length > 0) setShowDueReviews(true) }}
-                    />
-                </div>
-                {/* Guidance pinned to the bottom edge of the rail: principles, help, then archive and restore. */}
-                <div className="rates-review-rail-bottom">
-                    <div data-ratebook-field="immutabilityNotice">
-                        <RateBookReferenceCard />
-                    </div>
-                    <RateBookHelp />
-                    <ArchivePolicyNotice />
-                </div>
-            </aside>
-
-            {/* Floating Review Action on Narrower Screens (< 1540px) */}
-            <RateReviewFloatingButton
-                liteMobile={isLite}
-                dueReviewRates={dueReviewRates}
-                onOpenModal={() => { if (dueReviewRates.length > 0) setShowDueReviews(true) }}
-            />
         </>
     )
 }

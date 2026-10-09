@@ -5,8 +5,6 @@
 @media (max-width: 767.98px), (pointer: coarse) and (max-height: 500px) and (max-width: 1023.98px) {
   .mobileOnly { display: inline-flex; }
   .desktopOnly { display: none !important; }
-  .help:not([data-expanded='true']) { display: none; }
-  .help { margin-bottom: 1rem; }
   .workspace { margin-top: 0; }
   .workspace > :global(header), .header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem; padding-bottom: .75rem; text-align: left; }
   .workspace > :global(header) > :first-child, .header > :first-child { width: auto; flex: 1 1 8rem; justify-content: flex-start; }
@@ -14,7 +12,7 @@
   .workspace > :global(header) > :last-child, .header > :last-child { min-width: 0; justify-content: flex-start; }
   .header > :last-child > div { flex-direction: row; flex-wrap: wrap; }
   .workspace > :global(header button), .header :global(button) { width: auto; }
-  .workspace :global(button), .workspace :global(summary), .workspace :global(a), .help :global(button), .help :global(summary), .reviewDue { min-height: 44px; min-width: 44px; max-width: 100%; height: auto; white-space: normal; overflow-wrap: anywhere; }
+  .workspace :global(button), .workspace :global(summary), .workspace :global(a), .reviewDue { min-height: 44px; min-width: 44px; max-width: 100%; height: auto; white-space: normal; overflow-wrap: anywhere; }
   .workspace :global(button), .header :global(button) { flex-shrink: 1; }
   .workspace :global(input:not([type='checkbox'])), .workspace :global(select) { height: auto; min-height: 44px; min-width: 0; max-width: 100%; }
   .workspace :global(.truncate) { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }

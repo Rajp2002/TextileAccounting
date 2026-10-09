@@ -26,7 +26,10 @@ vi.mock('react', async importOriginal => {
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }))
 vi.mock('next/dynamic', () => ({ default: () => () => null }))
 vi.mock('@/lib/i18n/context', () => ({ useTranslation: () => ({ language: state.language, tx: (text: string) => text, t: (key: string) => key.startsWith('assignments.') ? ({ en, gu, hi }[state.language].assignments[key.split('.')[1] as keyof typeof en.assignments]) : ({ en, gu, hi }[state.language].production.assignLooms) }) }))
-vi.mock('@/components/tours/TourInvitation', () => ({ TourInvitation: () => <button>Take a tour</button> }))
+// The Guide renders its topics as they would appear in its modal, so help stays provably reachable.
+vi.mock('@/components/tours/TourInvitation', () => ({
+    TourInvitation: ({ topics = [] }: { topics?: { id: string; title: string; content?: React.ReactNode }[] }) => <div data-guide="true"><button>Take a tour</button>{topics.map(topic => <section key={topic.id} data-guide-topic={topic.id}>{topic.title}{topic.content}</section>)}</div>,
+}))
 vi.mock('@/app/(dashboard)/owner/production/actions', () => ({ removeBaseWorkerMachineAssignment: vi.fn(), upsertBaseWorkerMachineAssignment: vi.fn() }))
 vi.mock('@/components/ui/sheet', () => {
     const Container = ({ children }: { children: React.ReactNode }) => <div>{children}</div>
@@ -60,7 +63,7 @@ describe('Assignment preview rendering', () => {
                 const html = render(step, language, liveData, true)
                 const targetAttribute = configurationTourSelectors[step].slice(1, -1)
                 expect(html).toContain(targetAttribute)
-                expect(html).toContain('class="configuration-workspace" inert=""')
+                expect(html).toContain('class="configuration-workspace space-y-5" inert=""')
                 expect(html).not.toContain('View all assignments')
                 if (step === 'ma-handoff') {
                     expect(html).toContain('Real worker')
@@ -140,7 +143,10 @@ describe('Assignment preview rendering', () => {
 
     it('renders a live night-shift handoff and contextual help when the tour is closed', () => {
         const html = render(null, 'en')
-        expect(html).not.toContain('class="configuration-workspace" inert=""')
+        expect(html).not.toContain('class="configuration-workspace space-y-5" inert=""')
+        // The guide and help live in the page header's Guide, not a rail.
+        expect(html).toContain('data-page-header="true"')
+        expect(html).toContain('data-guide-topic="configuration-help"')
         expect(html).toContain('Real worker')
         expect(html).toContain('Real machine')
         expect(html).not.toContain('Sample worker')

@@ -27,13 +27,13 @@ describe('GT-16: retired legacy tour code', () => {
         expect(read('hooks/use-guided-tour.ts')).toContain("from '@/lib/tutorial-viewport-lock'")
     })
 
-    it('keeps one invitation layout (full-width guide card) plus the compact replay launcher', () => {
+    it('keeps one Guide layout: the header button, and in its modal the guide card or the replay', () => {
         const invitation = read('components/tours/TourInvitation.tsx')
         expect(invitation).not.toContain('tour-invitation-container')
         expect(invitation).not.toMatch(/'start'|'end'|align\s*[!=]==/)
-        expect(invitation).toContain("presentation === 'invite'")
-        expect(invitation).toContain('data-tour-control="take-tour"')
-        expect(invitation).toContain('data-tour-control="quiet-tour"')
+        expect(invitation).toContain("invite: presentation === 'invite'")
+        expect(invitation).toContain("data-tour-control={sample ? undefined : 'guide'}")
+        expect(invitation).toContain("data-tour-control={tour.invite ? 'take-tour' : 'quiet-tour'}")
         expect(invitation).toContain('data-tour-control="dismiss"')
     })
 

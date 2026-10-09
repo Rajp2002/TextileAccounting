@@ -59,11 +59,14 @@ describe('Phone guidance suppression', () => {
             expect(state.invitationHookCalls).toBe(0)
         })
 
-        it.each(['invite', 'replay'] as const)('still renders the %s on larger screens, hidden from first paint by .phone-guidance', presentation => {
+        it.each(['invite', 'replay'] as const)('still renders the Guide for a %s on larger screens, hidden from first paint by .phone-guidance', presentation => {
             state.presentation = presentation
             const html = render()
             expect(html).toContain('phone-guidance')
-            expect(html).toMatch(presentation === 'invite' ? /data-tour-control="take-tour"/ : /data-tour-control="quiet-tour"/)
+            expect(html).toContain('data-tour-control="guide"')
+            // A tour not yet taken or dismissed marks the Guide button as new.
+            if (presentation === 'invite') expect(html).toContain('data-guide-new="true"')
+            else expect(html).not.toContain('data-guide-new')
             expect(state.invitationHookCalls).toBeGreaterThan(0)
         })
 
@@ -76,47 +79,58 @@ describe('Phone guidance suppression', () => {
         })
     })
 
-    describe('explainer pills and guide rails', () => {
-        // Each render site carries .phone-guidance. A site that is renamed or reworded fails here on purpose,
-        // so the replacement is re-checked against the phone rule instead of silently coming back.
-        const sites: [file: string, snippet: string][] = [
-            ['components/ui/rail-dialog.tsx', "className={cn('phone-guidance estimator-touch-target', railButton)}"],
-            ['components/records/ArchivePolicyNotice.tsx', "className={cn('phone-guidance estimator-touch-target', railButton)}"],
-            ['components/estimator/BasePlanFactoryGlossary.tsx', "className={cn('phone-guidance estimator-touch-target', railButton)}"],
-            ['components/tours/ReplicaGuidedTour.tsx', '<aside className={`phone-guidance ${railClassName} guided-tour-left-rail space-y-2`}'],
-            ['app/(dashboard)/owner/production/BaseAssignmentWorkspace.tsx', '<aside className="phone-guidance configuration-guide-rail"'],
-            ['app/(dashboard)/owner/production/registers/MachinesRegister.tsx', '<aside className="phone-guidance machines-left-rail guided-tour-left-rail space-y-3"'],
-            ['app/(dashboard)/owner/production/registers/MachinesRegister.tsx', "className={cn('phone-guidance ui-details group overflow-hidden', railSurface)}"],
-            ['app/(dashboard)/owner/production/registers/WorkersRegister.tsx', '<aside className="phone-guidance workers-left-rail guided-tour-left-rail space-y-3"'],
-            ['app/(dashboard)/owner/production/registers/WorkersRegister.tsx', '<aside className="phone-guidance workers-reference-rail"'],
-            ['app/(dashboard)/owner/rates/RatesClient.tsx', 'className={cn("phone-guidance rates-left-rail-desktop space-y-3", isLite && mobileStyles.help)}'],
-            ['app/(dashboard)/owner/rates/RatesClient.tsx', 'className={cn(mobileStyles.mobileOnly, "phone-guidance")} aria-controls="lite-ratebook-help"'],
-            ['app/(dashboard)/owner/rates/RatesClient.tsx', '<div className="phone-guidance rail-inline-actions">\n                <ArchivePolicyNotice />'],
-            ['app/(dashboard)/owner/quotes/QuotesClient.tsx', 'className={cn("phone-guidance saved-costings-left-rail space-y-3", isLite && mobileStyles.help)}'],
-            ['app/(dashboard)/owner/quotes/QuotesClient.tsx', 'className={cn(mobileStyles.mobileOnly, "phone-guidance")} aria-controls="lite-costings-help"'],
-            ['app/(dashboard)/owner/quotes/QuotesClient.tsx', '<div className="phone-guidance rail-inline-actions">\n                <ArchivePolicyNotice />'],
-            ['app/(dashboard)/owner/estimator/EstimatorClient.tsx', "className={`phone-guidance ${freeMode ? 'free-mobile-help-trigger' : 'lite-mobile-help-trigger'}`}"],
-            ['app/(dashboard)/owner/estimator/EstimatorClient.tsx', 'className="phone-guidance estimator-left-rail space-y-3"'],
-            ['app/(dashboard)/owner/estimator/EstimatorClient.tsx', 'className="phone-guidance estimator-reference-rail space-y-3"'],
-            ['app/free/costings/SavedFreeCostings.tsx', '<aside className="phone-guidance saved-costings-left-rail" id="free-history-help"'],
-            ['app/free/costings/SavedFreeCostings.tsx', '<Button id="free-history-help-trigger" variant="ghost" className="phone-guidance free-mobile-help-trigger"'],
+    describe('the Guide is the only guidance surface', () => {
+        // Tours and help (glossary, archive and restore, page help) all open from one Guide button in the page
+        // header. Its trigger carries .phone-guidance, and both render paths gate on the phone before any hook.
+        const guide = read('components/tours/TourInvitation.tsx')
+
+        it('hides the Guide trigger from first paint on a phone', () => {
+            const trigger = guide.slice(guide.indexOf('function GuideTrigger('), guide.indexOf('function GuideDialog('))
+            expect(trigger).toContain("'phone-guidance relative h-10")
+        })
+
+        it('renders the help-only Guide as nothing on a phone', () => {
+            const helpOnly = guide.slice(guide.indexOf('function HelpGuide('), guide.indexOf('function TourInvitationContent('))
+            expect(helpOnly).toContain('usePhoneViewport()')
+            expect(helpOnly).toContain('if (phone) return null')
+        })
+
+        // A route that grows a side rail or an inline help disclosure again fails here, so the replacement is
+        // re-checked against the Guide and the phone rule instead of silently coming back.
+        const routes = [
+            'app/(dashboard)/owner/estimator/EstimatorClient.tsx',
+            'app/(dashboard)/owner/quotes/QuotesClient.tsx',
+            'app/(dashboard)/owner/rates/RatesClient.tsx',
+            'app/(dashboard)/owner/production/BaseAssignmentWorkspace.tsx',
+            'app/(dashboard)/owner/production/BaseProductionClient.tsx',
+            'app/(dashboard)/owner/production/BaseDailyProductionSheet.tsx',
+            'app/(dashboard)/owner/production/registers/MachinesRegister.tsx',
+            'app/(dashboard)/owner/production/registers/WorkersRegister.tsx',
+            'app/(dashboard)/owner/stock/QualityStockClient.tsx',
+            'app/(dashboard)/owner/dispatches/ChallansClient.tsx',
+            'app/(dashboard)/owner/billing/page.tsx',
+            'app/free/costings/SavedFreeCostings.tsx',
+            'components/tours/ReplicaGuidedTour.tsx',
         ]
-
-        it.each(sites)('%s hides %s', (file, snippet) => {
-            expect(read(file)).toContain(snippet)
+        it.each(routes)('%s has no guide rail', file => {
+            expect(read(file)).not.toMatch(/<aside className="phone-guidance|-left-rail|reference-rail|rail-inline-actions|railSurface\)\}\s*>\s*<summary/)
         })
 
-        it('keeps Machines setup links, which are navigation rather than explainer pills', () => {
+        // These routes' help used to expand in place in their rails; it now opens as a Guide topic.
+        it.each([
+            'app/(dashboard)/owner/production/registers/MachinesRegister.tsx',
+            'app/(dashboard)/owner/production/registers/WorkersRegister.tsx',
+            'app/(dashboard)/owner/billing/page.tsx',
+            'components/billing/BillingDocumentNotice.tsx',
+        ])('%s opens its help from the Guide instead of expanding it inline', file => {
+            expect(read(file)).not.toMatch(/<details[\s>]/)
+        })
+
+        it('keeps Machines setup links in the page, since they are navigation rather than explainer pills', () => {
             const source = read('app/(dashboard)/owner/production/registers/MachinesRegister.tsx')
-            expect(source).not.toContain('phone-guidance machines-reference-rail')
-            expect(source).toContain('<aside className="machines-reference-rail"')
-        })
-
-        it('hides the Workers reference rail whole only because its add action is desktop-only', () => {
-            // On a phone the rail's one non-help child, `.workers-reference-action`, is already display: none and
-            // the same add button lives in `WorkersPageHeader`, so nothing the phone needs goes with the rail.
-            expect(read('app/globals.css')).toMatch(/\.workers-reference-action,[\s\S]*?\{\s*display: none;/)
-            expect(read('app/(dashboard)/owner/production/registers/WorkersRegister.tsx')).toContain('<WorkersPageHeader')
+            const setup = source.slice(source.indexOf('aria-labelledby="machines-setup-heading"'))
+            expect(setup).toContain('data-machines-tour="production-next"')
+            expect(setup.slice(0, 200)).not.toContain('phone-guidance')
         })
     })
 })

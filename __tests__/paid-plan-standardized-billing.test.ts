@@ -12,7 +12,8 @@ describe('Paid plan subscription and billing pages', () => {
     const planChooser = read('components/plans/PlanChooserClient.tsx')
 
     it('1. Owner billing page renders the current workspace, plan comparison, and billing sections', () => {
-        expect(ownerBilling).toMatch(/<PageHeader\s+title="Subscription & Billing"\s*\/>/)
+        // The Guide (billing document notes) and the plan action are the header's actions.
+        expect(ownerBilling).toMatch(/<PageHeader\s+title="Subscription & Billing"\s+actions=\{<>\s*<BillingGuide \/>\s*\{primaryPlanAction\}/)
 
         // Active workspace and included capabilities
         expect(ownerBilling).toContain('id="active-workspace-heading"')
@@ -31,7 +32,9 @@ describe('Paid plan subscription and billing pages', () => {
         expect(ownerBilling).toContain('id="billing-history-heading"')
         expect(ownerBilling).toContain('Billing &amp; invoices')
         expect(ownerBilling).toContain('<PaymentHistoryDialog entries={billingHistoryEntries}')
-        expect(ownerBilling).toContain('<BillingDocumentNotice compact />')
+        expect(ownerBilling).toContain('<BillingGuide />')
+        // Referral rewards are a page section now, not a collapsed rail disclosure.
+        expect(ownerBilling).toContain('id="billing-referral-heading"')
         expect(ownerBilling).toContain('Referral rewards')
     })
 

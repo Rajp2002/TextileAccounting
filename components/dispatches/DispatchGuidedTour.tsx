@@ -19,7 +19,6 @@ export default function DispatchGuidedTour({ userId, orgId, userMetadata, childr
     const [content, setContent] = useState<CopyModule | null>(null)
     return <ReplicaGuidedTour tourId="dispatch" steps={dispatchTourSpecs} handoffStepId="handoff"
         workspaceClassName=""
-        railClassName="dispatch-left-rail" railLabel={t('challan.guideTitle')}
         userId={userId} orgId={orgId} userMetadata={userMetadata}
         prepare={async () => { setContent(await import('@/lib/i18n/dispatch-tutorial')) }}
         copy={step => {

@@ -3,8 +3,7 @@
 import dynamic from 'next/dynamic'
 import { useRef } from 'react'
 import { CircleHelp } from 'lucide-react'
-import { TourInvitation } from '@/components/tours/TourInvitation'
-import { RailDialog, RailDialogSection } from '@/components/ui/rail-dialog'
+import { GuideSection, TourInvitation, type GuideTopic } from '@/components/tours/TourInvitation'
 import { useTranslation } from '@/lib/i18n/context'
 import type { RateBookStep } from '@/lib/rate-book-tour'
 
@@ -125,37 +124,39 @@ export function formatRateBookHelpText(text: string, tx: (phrase: string) => str
     return Object.entries(helpLabels).reduce((result, [token, label]) => result.replaceAll(`{${token}}`, tx(label)), text)
 }
 
-/** The six help topics, all open, as the body of the Rate Book help modal. */
+/** The six help topics, all open, as the body of the Rate Book help topic. */
 export function RateBookHelpTopics() {
     const { language, tx } = useTranslation()
     return <>
         {Object.entries(rateBookHelpCopy[language].fields).map(([field, text]) =>
-            <RailDialogSection key={field} title={formatRateBookHelpText(text.title, tx)}>{formatRateBookHelpText(text.description, tx)}</RailDialogSection>)}
+            <GuideSection key={field} title={formatRateBookHelpText(text.title, tx)}>{formatRateBookHelpText(text.description, tx)}</GuideSection>)}
     </>
 }
 
-export function RateBookHelp() {
+/** Rate Book help as a Guide topic. */
+export function useRateBookHelpTopic(): GuideTopic {
     const { language } = useTranslation()
-    return <RailDialog icon={CircleHelp} title={rateBookHelpCopy[language].helpTitle} lang={language} i18nSkip>
-        <RateBookHelpTopics />
-    </RailDialog>
+    return { id: 'rate-book-help', icon: CircleHelp, title: rateBookHelpCopy[language].helpTitle, lang: language, i18nSkip: true, content: <RateBookHelpTopics /> }
 }
 
-export function RateBookTutorial({ step, onStepChange, enabled, sampleRow, hasRealRates, userId, orgId, userMetadata, onTourFinish }: {
+export function RateBookTutorial({ step, onStepChange, enabled, sampleRow, hasRealRates, userId, orgId, userMetadata, topics, onTourFinish }: {
     step: RateBookStep | null; onStepChange: (step: RateBookStep | null) => void
     enabled: boolean; sampleRow: boolean; hasRealRates: boolean
     userId: string; orgId: string; userMetadata?: Record<string, unknown> | null
+    /** The page's help, listed under the tour in the Guide. */
+    topics?: readonly GuideTopic[]
     onTourFinish?: () => void
 }) {
     const launcher = useRef<HTMLDivElement>(null)
     const returnFocus = useRef<HTMLElement | null>(null)
     return <>
-        <div ref={launcher}>
-            {enabled && <TourInvitation tourId="rate-book" userId={userId} orgId={orgId} userMetadata={userMetadata}
-                align="full" className="w-full" onLaunch={() => {
-                    returnFocus.current = launcher.current?.querySelector<HTMLButtonElement>('[data-tour-control="take-tour"], [data-tour-control="quiet-tour"]') ?? null
+        <div ref={launcher} className="contents">
+            <TourInvitation tourId="rate-book" userId={userId} orgId={orgId} userMetadata={userMetadata} topics={topics}
+                launchDisabled={!enabled} onLaunch={() => {
+                    if (!enabled) return
+                    returnFocus.current = launcher.current?.querySelector<HTMLButtonElement>('[data-tour-control="guide"]') ?? null
                     onStepChange('rb-purpose')
-                }} />}
+                }} />
         </div>
         {step && <RateBookTourRuntime step={step} onStepChange={onStepChange} onDone={onTourFinish}
             sampleRow={sampleRow} hasRealRates={hasRealRates} userId={userId} launcher={launcher} returnFocus={returnFocus} />}

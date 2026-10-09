@@ -84,19 +84,19 @@ describe('Production Overview tour', () => {
         expect(isTourEligible('production', 'free', 'owner')).toBe(false)
         expect(isTourEligible('production', 'base', 'supervisor')).toBe(false)
     })
-    it('keys only the named live controls and preserves both responsive activation targets', () => {
+    it('keys only the named live controls and keeps one activation target, in the page header', () => {
         const root = 'app/(dashboard)/owner/production/'
         const client = readFileSync(root + 'BaseProductionClient.tsx', 'utf8')
         const qualities = readFileSync(root + 'BaseActiveQualities.tsx', 'utf8')
-        for (const source of [client, qualities]) {
-            expect(source.match(/data-tour-anchor="production.activate"/g)).toHaveLength(1)
-            expect(source).toContain("t('production.activateQuality')")
-        }
+        expect(client.match(/data-tour-anchor="production.activate"/g)).toHaveLength(1)
+        expect(client.slice(client.indexOf('<PageHeader'), client.indexOf('data-payroll-tour="period"'))).toContain('data-tour-anchor="production.activate"')
+        expect(client).toContain("t('production.activateQuality')")
+        expect(qualities).not.toContain('data-tour-anchor="production.activate"')
         for (const key of ['assignLooms', 'qualityActions', 'cost']) expect(qualities).toContain(`t('production.${key}')`)
         // Loom quality and operators moved to Machine Assignments; the Overview no longer carries a board.
         expect(existsSync(root + 'BaseMachineBoard.tsx')).toBe(false)
         expect(client).not.toContain('BaseMachineBoard')
-        expect(qualities).toContain('onClick={onActivateQuality ?? (() => onOpenActivateModalChange?.(true))}')
+        expect(client).toContain('onClick={() => setIsActivateModalOpen(true)}')
         expect(client).toContain("view === 'production' && activeTab === 'jobs'")
     })
 })

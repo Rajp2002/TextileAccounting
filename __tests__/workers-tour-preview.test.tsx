@@ -127,7 +127,7 @@ describe('Workers GuidedTour integration without browser execution', () => {
                 expect(html).not.toContain('data-tour-sample-banner')
                 expect(html).not.toContain('data-workers-tour="groups"')
                 expect(html).not.toContain('<fieldset disabled')
-                expect(html.match(/<button[^>]*data-tour-anchor="workers.add"/g)).toHaveLength(2)
+                expect(html.match(/<button[^>]*data-tour-anchor="workers.add"/g)).toHaveLength(1)
             } else {
                 expect(html).not.toContain('Retained worker')
                 expect(html).toContain('data-tour-sample-banner')
@@ -159,10 +159,12 @@ describe('Workers GuidedTour integration without browser execution', () => {
         expect(fixture.query).toBe('search=Retained&shift=night&status=all&returnTo=/owner/assignments')
         expect(fixture.action).not.toHaveBeenCalled()
     })
-    it('hides the launcher when the live add editor is already open', () => {
+    it('keeps the Guide in the page header when the live add editor opens over the page', () => {
+        // The editor is a modal sheet, so the header Guide sits behind it instead of being hidden like the old rail.
         fixture.query = 'add=worker'
         const html = renderRegister(null, 'piece')
-        expect(html).not.toContain('data-tour-control="take-tour"')
+        expect(html).toContain('data-tour-control="take-tour"')
+        expect(html.indexOf('data-tour-control="take-tour"')).toBeLessThan(html.indexOf('</header>'))
     })
     it.each(['en', 'gu', 'hi'] as const)('%s: preview labels use the same keys as the live editor', language => {
         fixture.language = language

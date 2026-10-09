@@ -4,6 +4,7 @@ import React from 'react'
 import { UserPlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { railPrimaryAction } from '@/components/ui/rail'
+import { PageHeader } from '@/components/ui/page-header'
 import { NavigationLink } from '@/components/navigation/navigation-link'
 import { useTranslation } from '@/lib/i18n/context'
 import { managementReturnLabel } from '@/lib/management-navigation'
@@ -11,6 +12,8 @@ import { cn } from '@/lib/utils'
 
 interface WorkersPageHeaderProps {
   onAdd: () => void
+  /** The route's Guide (tour and help), drawn before the primary action. */
+  guide?: React.ReactNode
   returnTo?: string
   focus?: string | null
   hasFocusedWorker?: boolean
@@ -19,6 +22,7 @@ interface WorkersPageHeaderProps {
 
 export function WorkersPageHeader({
   onAdd,
+  guide,
   returnTo,
   focus,
   hasFocusedWorker,
@@ -60,15 +64,11 @@ export function WorkersPageHeader({
         </div>
       )}
 
-      <header className="relative border-b border-hairline/70 pb-5 text-center sm:pb-6">
-        <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-ink sm:text-[2rem]">
-          {tx('Workers')}
-        </h1>
-        <p className="sr-only">{tx('Add and manage your factory workforce.')}</p>
-        <div className="workers-inline-add mt-3 flex justify-end sm:absolute sm:right-0 sm:top-0 sm:mt-0">
-          <WorkerAddButton onAdd={onAdd} />
-        </div>
-      </header>
+      <PageHeader
+        title={tx('Workers')}
+        description={<span className="sr-only">{tx('Add and manage your factory workforce.')}</span>}
+        actions={<>{guide}<WorkerAddButton onAdd={onAdd} /></>}
+      />
     </div>
   )
 }

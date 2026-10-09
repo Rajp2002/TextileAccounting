@@ -18,13 +18,13 @@ import { useRouter } from 'next/navigation'
 import { flushSync } from 'react-dom'
 import { toast } from 'sonner'
 import { ArrowUpRight, Check, ChevronDown, CircleHelp, Layers, Link2, Loader2, Moon, Plus, Search, Sun, Unlink, Users, Wrench } from 'lucide-react'
-import { railButton, railIcon } from '@/components/ui/rail'
+import { railPrimaryAction } from '@/components/ui/rail'
+import { PageHeader } from '@/components/ui/page-header'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { LiquidSegmented } from '@/components/ui/liquid-segmented'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
@@ -1223,78 +1223,54 @@ export default function BaseAssignmentWorkspace({
     }
 
     return (
-        <div className="configuration-workspace" inert={tourStep !== null}>
+        <div className="configuration-workspace space-y-5" inert={tourStep !== null}>
             {!tourStep && (focusWorkerId || focusMachineId) && <div role="status" className="col-span-full rounded border p-3"><p>{(focusWorkerId && !liveData.workers.some(worker => worker.id === focusWorkerId)) || (focusMachineId && !liveData.machines.some(machine => machine.id === focusMachineId)) ? 'This record is unavailable.' : focusWorkerId ? 'Worker filter active' : 'Machine filter active'}</p><Link className="inline-flex min-h-11 items-center underline" href={`/owner/assignments?shift=${shift}`}>View all assignments</Link></div>}
-            <aside className="phone-guidance configuration-guide-rail" aria-label="Machine Assignments guide">
-                <div ref={tourLauncher}>
-                    <TourInvitation
-                        tourId="configuration"
-                        userId={liveData.actorId}
-                        orgId={liveData.orgId}
-                        userMetadata={tourMetadata}
-                        align="full"
-                        className="w-full"
-                        onLaunch={() => {
-                            if (pendingKey || selectedPickerWorkerId) return
-                            tourReturnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
-                            tourReturnScroll.current = { x: window.scrollX, y: window.scrollY }
-                            setTourStep(configurationTourSteps[0])
-                        }}
-                    />
-                </div>
-                <div data-i18n-skip="true" lang={language} className="left-rail-bottom mt-auto pt-3">
-                    <Dialog>
-                        <DialogTrigger asChild>
-                            <button
-                                type="button"
-                                className={cn('estimator-touch-target', railButton)}
-                                aria-label={tourCopy.helpLabel}
-                            >
-                                <span className="flex min-w-0 items-center gap-2.5">
-                                    <CircleHelp className={railIcon} aria-hidden="true" />
-                                    <span className="min-w-0">{tourCopy.helpLabel}</span>
-                                </span>
-                                <span className="shrink-0 text-xs font-medium tabular-nums text-muted-foreground">
-                                    {configurationHelpTopics.length}
-                                </span>
-                            </button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-y-auto rounded-2xl border border-hairline bg-surface p-6 shadow-2xl">
-                            <DialogHeader>
-                                <div className="flex items-center gap-3">
-                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--wv-ochre-100)] text-[var(--wv-ochre-800)] shadow-xs border border-[var(--wv-ochre-200)]/60">
-                                        <CircleHelp className="h-5 w-5" aria-hidden="true" />
-                                    </div>
-                                    <div>
-                                        <DialogTitle className="text-xl font-bold text-ink">
-                                            {tourCopy.helpLabel}
-                                        </DialogTitle>
-                                        <DialogDescription className="mt-1 text-sm text-body">
-                                            {tourCopy.helpIntro}
-                                        </DialogDescription>
-                                    </div>
-                                </div>
-                            </DialogHeader>
-                            <div className="mt-4 space-y-3 divide-y divide-hairline">
-                                {configurationHelpTopics.map(topic => (
-                                    <div key={topic} className="pt-3 first:pt-0">
-                                        <h3 className="text-sm font-semibold text-ink">{tourCopy.help[topic][0]}</h3>
-                                        <p className="mt-1 text-xs sm:text-sm leading-relaxed text-body">{tourCopy.help[topic][1]}</p>
-                                    </div>
-                                ))}
-                            </div>
-                        </DialogContent>
-                    </Dialog>
-                    <div className="sr-only" aria-hidden="true">
-                        {configurationHelpTopics.map(topic => (
-                            <div key={`sr-${topic}`}>
-                                <span>{tourCopy.help[topic][0]}</span>
-                                <span>{tourCopy.help[topic][1]}</span>
-                            </div>
-                        ))}
+            <PageHeader
+                title="Worker–Machine Assignments"
+                actions={<>
+                    <div ref={tourLauncher} className="contents">
+                        <TourInvitation
+                            tourId="configuration"
+                            userId={liveData.actorId}
+                            orgId={liveData.orgId}
+                            userMetadata={tourMetadata}
+                            topics={[{
+                                id: 'configuration-help', icon: CircleHelp, title: tourCopy.helpLabel, summary: tourCopy.helpIntro,
+                                count: configurationHelpTopics.length, lang: language, i18nSkip: true,
+                                content: <div className="space-y-3 divide-y divide-hairline">
+                                    {configurationHelpTopics.map(topic => (
+                                        <div key={topic} className="pt-3 first:pt-0">
+                                            <h3 className="text-sm font-semibold text-ink">{tourCopy.help[topic][0]}</h3>
+                                            <p className="mt-1 text-sm leading-relaxed text-body">{tourCopy.help[topic][1]}</p>
+                                        </div>
+                                    ))}
+                                </div>,
+                            }]}
+                            onLaunch={() => {
+                                if (pendingKey || selectedPickerWorkerId) return
+                                tourReturnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+                                tourReturnScroll.current = { x: window.scrollX, y: window.scrollY }
+                                setTourStep(configurationTourSteps[0])
+                            }}
+                        />
                     </div>
-                </div>
-            </aside>
+                    <Button asChild variant="outline" className="h-10 rounded-lg border-hairline bg-surface px-3.5 font-semibold text-ink shadow-xs hover:border-hairline-strong hover:bg-surface-soft hover:text-ink">
+                        <Link data-tour-anchor="assignments.add-worker" data-configuration-tour="add-worker" onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href={setupHref('worker')}>
+                            <Plus className="h-4 w-4" /> Add worker
+                        </Link>
+                    </Button>
+                    <Button asChild variant="outline" className="h-10 rounded-lg border-hairline bg-surface px-3.5 font-semibold text-ink shadow-xs hover:border-hairline-strong hover:bg-surface-soft hover:text-ink">
+                        <Link data-configuration-tour="add-machine" onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href={setupHref('machine')}>
+                            <Plus className="h-4 w-4" /> Add machine
+                        </Link>
+                    </Button>
+                    <Button asChild className={railPrimaryAction}>
+                        <Link data-configuration-tour="daily-sheet" data-i18n-skip="true" lang={language} onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href={`/owner/production?${new URLSearchParams({ tab: 'production', shift, returnTo: configurationReturnTo })}`}>
+                            {tourCopy.dailySheetLabel} <ArrowUpRight className="h-4 w-4" />
+                        </Link>
+                    </Button>
+                </>}
+            />
             <div className="min-w-0 space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-hairline/70 bg-surface/80 p-2 shadow-xs sm:px-3">
                     <LiquidSegmented
@@ -1309,9 +1285,19 @@ export default function BaseAssignmentWorkspace({
                             { value: 'night', label: 'Night shift', icon: <Moon /> },
                         ]}
                     />
-                    <span data-configuration-tour="count" className="inline-flex items-center gap-1.5 rounded-full border border-hairline bg-surface px-3 py-1 text-xs font-medium text-body shadow-xs" aria-live="polite">
-                        {tx('Assignments: {count}', { count: contextAssignmentCount })} · {tx(shift === 'day' ? 'Day shift' : 'Night shift')}
-                    </span>
+                    <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+                        <span data-configuration-tour="count" className="inline-flex items-center gap-1.5 rounded-full border border-hairline bg-surface px-3 py-1 text-xs font-medium text-body shadow-xs" aria-live="polite">
+                            {tx('Assignments: {count}', { count: contextAssignmentCount })} · {tx(shift === 'day' ? 'Day shift' : 'Night shift')}
+                        </span>
+                        <nav aria-label="Management links" className="flex flex-wrap items-center">
+                            <Link data-configuration-tour="setup" onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href={setupHref('worker').replace('add=worker&', '')} className="inline-flex min-h-10 items-center gap-1 rounded-lg px-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-surface-soft hover:text-ink">
+                                Manage workers <ArrowUpRight className="h-3.5 w-3.5" />
+                            </Link>
+                            <Link onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href={setupHref('machine').replace('add=machine&', '')} className="inline-flex min-h-10 items-center gap-1 rounded-lg px-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-surface-soft hover:text-ink">
+                                Manage machines <ArrowUpRight className="h-3.5 w-3.5" />
+                            </Link>
+                        </nav>
+                    </div>
                 </div>
 
             <Card data-configuration-tour="board" className="hidden overflow-hidden rounded-2xl border border-hairline/80 bg-surface shadow-[var(--shadow-card)] md:flex md:flex-col min-h-[calc(100vh-14.5rem)]">
@@ -1535,30 +1521,6 @@ export default function BaseAssignmentWorkspace({
             </Card>
 
             </div>
-            <aside aria-label="Management links" className="configuration-actions-rail flex flex-wrap gap-2 rounded-2xl border border-hairline/80 bg-surface/95 p-3 shadow-[var(--shadow-card)] backdrop-blur-sm">
-                <Button asChild variant="default" size="sm" className="h-12 w-full justify-between rounded-xl border border-loom bg-loom px-4 text-sm font-semibold text-white shadow-sm hover:border-loom-elevated hover:bg-loom-elevated hover:text-white focus-visible:ring-loom/30">
-                    <Link data-configuration-tour="daily-sheet" data-i18n-skip="true" lang={language} onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href={`/owner/production?${new URLSearchParams({ tab: 'production', shift, returnTo: configurationReturnTo })}`}>
-                        {tourCopy.dailySheetLabel} <ArrowUpRight className="h-4 w-4" />
-                    </Link>
-                </Button>
-                <Button asChild variant="outline" size="sm" className="h-11 w-full justify-start rounded-xl border-hairline bg-surface px-4 text-sm font-semibold text-ink shadow-xs hover:border-hairline-strong hover:bg-surface-soft hover:text-ink">
-                    <Link data-tour-anchor="assignments.add-worker" data-configuration-tour="add-worker" onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href={setupHref('worker')}>
-                        <Plus className="h-4 w-4" /> Add worker
-                    </Link>
-                </Button>
-                <Button asChild variant="outline" size="sm" className="h-11 w-full justify-start rounded-xl border-hairline bg-surface px-4 text-sm font-semibold text-ink shadow-xs hover:border-hairline-strong hover:bg-surface-soft hover:text-ink">
-                    <Link data-configuration-tour="add-machine" onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href={setupHref('machine')}>
-                        <Plus className="h-4 w-4" /> Add machine
-                    </Link>
-                </Button>
-                <div className="my-1 h-px w-full bg-hairline/80" aria-hidden="true" />
-                <Link data-configuration-tour="setup" onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href={setupHref('worker').replace('add=worker&', '')} className="inline-flex min-h-10 w-full items-center justify-between rounded-lg px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-surface-soft hover:text-ink">
-                    Manage workers <ArrowUpRight className="h-3.5 w-3.5" />
-                </Link>
-                <Link onClick={event => { if (tourStep) event.preventDefault() }} prefetch={tourStep ? false : undefined} href={setupHref('machine').replace('add=machine&', '')} className="inline-flex min-h-10 w-full items-center justify-between rounded-lg px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-surface-soft hover:text-ink">
-                    Manage machines <ArrowUpRight className="h-3.5 w-3.5" />
-                </Link>
-            </aside>
 
             <Sheet modal={!tourStep} open={pickerWorkerId !== null} onOpenChange={(open) => { if (!open && !tourStep) setPickerWorkerId(null) }}>
                 <SheetContent inert={Boolean(tourStep)} showCloseButton={!tourStep} hideOverlay={Boolean(tourStep)} data-configuration-tour="picker" data-configuration-picker-preview={tourStep ? "true" : undefined} onOpenAutoFocus={event => { if (tourStep) event.preventDefault() }} onCloseAutoFocus={event => { if (tourStep) event.preventDefault() }} onInteractOutside={event => { if (tourStep) event.preventDefault() }} side="bottom" className="max-h-[82dvh] rounded-t-2xl border-t border-hairline bg-surface pb-6 shadow-xl">

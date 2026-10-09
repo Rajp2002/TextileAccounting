@@ -14,8 +14,11 @@ import { applyTranslationGuards, translateStrictBasePlanText } from '../lib/i18n
 
 const state = vi.hoisted(() => ({ language: 'en' as 'en' | 'hi' | 'gu' }))
 vi.mock('@/lib/i18n/context', () => ({ useTranslation: () => ({ language: state.language, tx: (text: string) => text }) }))
-vi.mock('@/components/tours/TourInvitation', () => ({ TourInvitation: () => null }))
-import { RateBookHelp, RateBookHelpTopics, rateBookHelpCopy, formatRateBookHelpText } from '../components/rates/RateBookTutorial'
+vi.mock('@/components/tours/TourInvitation', () => ({
+    TourInvitation: () => null,
+    GuideSection: ({ title, children }: { title: React.ReactNode; children: React.ReactNode }) => <section><h3>{title}</h3><div>{children}</div></section>,
+}))
+import { RateBookHelpTopics, rateBookHelpCopy, formatRateBookHelpText, useRateBookHelpTopic } from '../components/rates/RateBookTutorial'
 
 const rates = readFileSync('app/(dashboard)/owner/rates/RatesClient.tsx', 'utf8')
 const provider = readFileSync('lib/i18n/context.tsx', 'utf8')
@@ -64,7 +67,8 @@ describe('Rate Book approved copy and control parity', () => {
         expect(rateBookStepCopy(language, 'rb-update', false, controls).detail).toContain(`“${controls.advancedEdit}”`)
     })
     it('uses the same approved resolvers at live controls and preserves the bulk-confirm caveat', () => {
-        expect(rates.match(/t\('tourControls.rateBook.addRate'\)/g)).toHaveLength(2)
+        // Add rate is the page header's one primary action.
+        expect(rates.match(/t\('tourControls.rateBook.addRate'\)/g)).toHaveLength(1)
         for (const label of ['Needs Review', 'Edit rate', 'Advanced edit']) expect(rates).toContain(`tx('${label}')`)
         expect(rateBookTutorialCopy.en['review.detail']).toContain('including ones hidden by your search or filters')
         expect(rateBookTutorialCopy.en['usage.body']).toContain('costings already saved keep their numbers')
@@ -74,12 +78,15 @@ describe('Rate Book approved copy and control parity', () => {
         state.language = language
         const copy = rateBookHelpCopy[language]
         expect(Object.keys(copy.fields)).toEqual(['directionFilter', 'quickReviewAction', 'rateAndTrend', 'rateDrawerFields', 'reviewRailWidget', 'activityAndArchive'])
-        // The pill is closed on first render; its topics render, all open, as the modal body.
-        const pill = renderToStaticMarkup(<RateBookHelp />)
-        expect(pill).toContain(`lang="${language}"`)
-        expect(pill).toContain('data-i18n-skip="true"')
+        // Help is a Guide topic in the active language; its topics render, all open, as the topic view.
+        const Topic = () => {
+            const topic = useRateBookHelpTopic()
+            return <p data-lang={topic.lang} data-skip={String(topic.i18nSkip)}>{topic.title}</p>
+        }
+        const pill = renderToStaticMarkup(<Topic />)
+        expect(pill).toContain(`data-lang="${language}"`)
+        expect(pill).toContain('data-skip="true"')
         expect(pill).toContain(copy.helpTitle)
-        expect(pill).not.toContain('<details')
         const html = renderToStaticMarkup(<RateBookHelpTopics />)
         expect(html).not.toContain('<details')
         expect(html.match(/<section\b/g)).toHaveLength(6)
@@ -88,7 +95,7 @@ describe('Rate Book approved copy and control parity', () => {
             expect(formatRateBookHelpText(field.description, text => text)).not.toMatch(/\{\w+\}/)
         }
         expect(copy.principles).toHaveLength(3)
-        expect(rates).toContain('<RateBookHelp />')
+        expect(rates).toContain('rateBookHelpTopic,')
         expect(rates).toContain('copy.principles.map')
     })
 })

@@ -49,18 +49,16 @@
 .mobile-comparison-label { display: none; }
 
 /* Free-only presentation: paid workspaces and every desktop composition retain
-   their existing controls, rails and density. */
+   their existing controls and density. */
 .free-mobile-only,
 .free-mobile-help-trigger { display: none; }
 
 /* Lite is explicitly opted in by the verified page/workspace tier. */
-.lite-mobile-only,
-.lite-mobile-help-trigger { display: none; }
+.lite-mobile-only { display: none; }
 
 @media (max-width: 767.98px), (pointer: coarse) and (max-height: 500px) and (max-width: 1023.98px) {
   .lite-mobile-only { display: inline; }
   .lite-desktop-only { display: none; }
-  .lite-mobile-help-trigger { display: inline-flex; min-height: 44px; height: auto; white-space: normal; }
   .lite-mobile-page-header {
     display: flex;
     flex-wrap: wrap;
@@ -74,7 +72,6 @@
   .lite-mobile-page-header > div { width: auto; min-width: 0; max-width: 100%; justify-content: flex-start; }
   .lite-mobile-page-header h1 { font-size: 1.375rem; line-height: 1.25; }
   [data-lite-costing].estimator-mobile-form { padding-bottom: calc(var(--lite-mobile-action-height, 72px) + 24px); }
-  [data-lite-costing] .estimator-left-rail[data-lite-help-expanded="false"] { display: none; }
   [data-lite-costing] #estimator-form-panel { margin-top: 0; padding-inline: 0; }
   [data-lite-costing] #active-quality { display: flex; flex-direction: column; gap: 8px; padding: 0; border: 0; background: transparent; box-shadow: none; }
   [data-lite-costing] #active-quality > div:first-child { display: contents; }
@@ -91,9 +88,6 @@
   [data-lite-costing] .free-mobile-quality-identity h2 { font-size: 14px; line-height: 1.5; }
   [data-lite-costing] [data-testid="costing-validity"] { order: 4; margin-top: 0; min-height: 32px; padding: 4px 8px; font-size: 14px; }
   [data-lite-costing] [data-lite-incomplete] { border-color: var(--border); background: var(--muted); color: var(--muted-foreground); }
-  [data-lite-costing] #lite-estimator-help .mobile-guide-layout { grid-template-columns: minmax(0, 1fr); row-gap: .5rem; }
-  [data-lite-costing] #lite-estimator-help .mobile-guide-title-toggle,
-  [data-lite-costing] #lite-estimator-help .mobile-guide-launch button { height: auto; min-height: 44px; overflow-wrap: anywhere; }
   [data-lite-costing].estimator-mobile-form [data-slot="label"].h-8,
   [data-lite-costing].estimator-mobile-form .h-8:has(> [data-slot="label"]) { height: auto; min-height: 2rem; }
   [data-lite-costing].estimator-mobile-form .h-8:has(> [data-slot="label"]) { flex-wrap: wrap; }
@@ -207,7 +201,6 @@
   .free-mobile-page-header > div { width: auto; justify-content: flex-start; min-width: 0; }
   .free-mobile-page-header h1 { font-size: 1.375rem; line-height: 1.25; }
   [data-free-costing].estimator-mobile-form { padding-bottom: calc(var(--free-mobile-action-height, 72px) + 24px); }
-  [data-free-costing] .estimator-left-rail[data-free-help-expanded="false"] { display: none; }
   [data-free-costing] #estimator-form-panel { margin-top: 0; padding-inline: 0; }
   [data-free-costing] #active-quality {
     padding: 0;
@@ -263,8 +256,6 @@
   [data-free-mobile-action] .free-mobile-action-eyebrow { font-size: 12px; text-transform: none; letter-spacing: 0; }
   [data-free-mobile-action] .free-mobile-action-icon { height: 40px; width: 40px; border-radius: 8px; }
   :root:has([data-free-mobile-action]) { scroll-padding-bottom: calc(var(--mobile-nav-height) + var(--free-mobile-action-height, 72px) + 20px); }
-  [data-free-history-help][data-expanded="false"] { display: none; }
-  [data-free-history-help] { display: flex; flex-direction: column; }
   [data-free-history] { row-gap: 12px; }
   [data-free-history] .free-mobile-page-header > div:last-child { max-width: 100%; }
   [data-free-history] [data-slot="input"] { height: auto; min-height: 44px; }
@@ -314,30 +305,6 @@
     text-align: right;
     transform: none;
   }
-  /* Keep route help one tap away without pushing the task below the fold. */
-  .mobile-guide-card { padding: 0.75rem; }
-  .mobile-guide-layout {
-    grid-template-columns: minmax(0, 1fr) auto;
-    column-gap: 0.75rem;
-    row-gap: 0;
-  }
-  .mobile-guide-title-toggle { display: flex; }
-  .mobile-guide-desktop-title,
-  .mobile-guide-icon { display: none; }
-  .mobile-guide-launch { order: 2; }
-  .mobile-guide-details {
-    display: none;
-    order: 3;
-    grid-column: 1 / -1;
-    padding-top: 0.5rem;
-  }
-  .mobile-guide-details[data-expanded="true"] { display: block; }
-  [data-free-history-help] .mobile-guide-layout,
-  [data-free-costing] #free-estimator-help .mobile-guide-layout { grid-template-columns: minmax(0, 1fr); row-gap: .5rem; }
-  [data-free-history-help] .mobile-guide-title-toggle,
-  [data-free-history-help] .mobile-guide-launch button,
-  [data-free-costing] #free-estimator-help .mobile-guide-title-toggle,
-  [data-free-costing] #free-estimator-help .mobile-guide-launch button { height: auto; min-height: 44px; overflow-wrap: anywhere; }
 
   html {
     scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 16px);
@@ -557,8 +524,8 @@
   }
 }
 
-/* Tours and explainer pills (help, glossary, archive and restore) are desktop and tablet guidance.
-   The phone has no rail to hold them, so they never render there. This repeats PHONE_VIEWPORT_QUERY
+/* Tours and the Guide (help, glossary, archive and restore) are desktop and tablet guidance.
+   The phone keeps its screen for the task, so they never render there. This repeats PHONE_VIEWPORT_QUERY
    from lib/phone-viewport.ts so the markup is hidden on first paint, before hydration. */
 @media (max-width: 767.98px), (pointer: coarse) and (max-height: 500px) and (max-width: 1023.98px) {
   .phone-guidance { display: none !important; }

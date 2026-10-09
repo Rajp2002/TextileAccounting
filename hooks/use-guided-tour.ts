@@ -14,7 +14,8 @@ import { lockTourViewport } from '@/lib/tutorial-viewport-lock'
 // Shared behavior of the page-level guided tours in components/tours
 // (Phase 2D). Each tour keeps its own steps, copy and panel content.
 
-const TOUR_TRIGGER = '[data-tour-control="take-tour"], [data-tour-control="quiet-tour"]'
+// The page header's Guide button opens every tour; the in-modal start controls stay as fallbacks.
+const TOUR_TRIGGER = '[data-tour-control="guide"], [data-tour-control="take-tour"], [data-tour-control="quiet-tour"]'
 
 export type TourNavigation = { close: () => void; next: () => void; back: () => void }
 

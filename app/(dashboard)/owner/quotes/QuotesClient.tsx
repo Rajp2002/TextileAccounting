@@ -81,7 +81,7 @@ import {
   type SavedCostingDelta,
 } from '@/lib/saved-costings'
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
-import { ArchivePolicyNotice } from '@/components/records/ArchivePolicyNotice'
+import { useArchivePolicyTopic } from '@/components/records/ArchivePolicyNotice'
 import { createCostingExportModel } from '@/lib/estimator-export'
 import { isStandaloneCosting, type CostingRecordKind } from '@/lib/costing-workspace'
 import { useTranslation } from '@/lib/i18n/context'
@@ -800,12 +800,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
     const { language } = useTranslation()
     const isLite = useOwnerPlan() === 'lite'
     const mobileCopy = liteRecordsCopy[language]
-    const [helpOpen, setHelpOpen] = useState(false)
-    useEffect(() => {
-        if (!isLite || !helpOpen || !window.matchMedia(MOBILE_WORKSPACE_QUERY).matches) return
-        const frame = requestAnimationFrame(() => document.getElementById('lite-costings-help')?.querySelector<HTMLButtonElement>('button')?.focus())
-        return () => cancelAnimationFrame(frame)
-    }, [helpOpen, isLite])
+    const archivePolicyTopic = useArchivePolicyTopic()
     const [tourStep, setTourStep] = useState<SavedCostingStep | null>(null)
     const [selectedRecordIdByGroup, setSelectedRecordIdByGroup] = useState<Record<string, string>>({})
     const selectRecord = (groupKey: string, recordId: string) => setSelectedRecordIdByGroup(prev => ({ ...prev, [groupKey]: recordId }))
@@ -1270,19 +1265,16 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
 
     return (
         <>
-            <aside id={isLite ? 'lite-costings-help' : undefined} data-expanded={helpOpen || tourStep !== null} className={cn("phone-guidance saved-costings-left-rail space-y-3", isLite && mobileStyles.help)} aria-label={tx('Saved Costings guides and tools')}>
-                <SavedCostingsTutorial step={tourStep} onStepChange={setTourStep} onComplete={() => setShowCostingDeleteNudge(true)} production={canUseProductionPipeline} ending={savedCostingTourEnding(quotes.filter(quote => isStandaloneCosting(quote.record_kind)).length, tourUnavailable)} userId={userId} orgId={orgId} userMetadata={userMetadata} />
-            </aside>
-            <div className={cn("saved-costings-workspace ui-route-enter max-w-6xl mx-auto space-y-4 sm:space-y-6", isLite && mobileStyles.workspace)} data-lite-costings={isLite || undefined}>
+            <div className={cn("saved-costings-workspace ui-route-enter w-full space-y-4 sm:space-y-6", isLite && mobileStyles.workspace)} data-lite-costings={isLite || undefined}>
             <RouteMilestones route="/owner/quotes" shellVisible primaryUsable secondaryReady />
             {detailLoadingId && <p role="status" aria-live="polite" className="ui-status-enter rounded-lg border border-info/25 bg-info-soft px-3 py-2 text-xs font-semibold text-info">{tx('Selection saved. Loading the complete snapshot for comparison…')}</p>}
             <PageHeader
                 title={t('common.saved_costings_title')}
                 actions={<>
-                    {isLite && <Button type="button" variant="outline" className={cn(mobileStyles.mobileOnly, "phone-guidance")} aria-controls="lite-costings-help" aria-expanded={helpOpen || tourStep !== null} onClick={() => setHelpOpen(open => !open)} data-i18n-skip="true" lang={language}>{mobileCopy.help}</Button>}
+                    <SavedCostingsTutorial step={tourStep} onStepChange={setTourStep} onComplete={() => setShowCostingDeleteNudge(true)} production={canUseProductionPipeline} ending={savedCostingTourEnding(quotes.filter(quote => isStandaloneCosting(quote.record_kind)).length, tourUnavailable)} topics={[archivePolicyTopic]} userId={userId} orgId={orgId} userMetadata={userMetadata} />
                     <Button
                         data-tour-anchor="costings.new" onClick={() => router.push('/owner/estimator')}
-                        className="rail-inline-actions h-10 w-full sm:w-auto rounded-xl bg-loom px-4 font-medium text-white shadow-xs hover:bg-loom-elevated hover:text-white focus-visible:ring-saffron"
+                        className={railPrimaryAction}
                     >
                         <Plus className="h-4 w-4" aria-hidden="true" />
                         <span>{t('common.new_costing')}</span>
@@ -1552,23 +1544,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             )}
             </div>
             )}
-            <div className="phone-guidance rail-inline-actions">
-                <ArchivePolicyNotice />
             </div>
-            </div>
-
-            {/* Top action: New Costing pill */}
-            <aside className="saved-costings-action-rail-desktop" aria-label={tx('Costing actions')}>
-                <Button data-tour-anchor="costings.new" onClick={() => router.push('/owner/estimator')} className={cn(railPrimaryAction, 'w-full')}>
-                    <Plus className="h-4 w-4" aria-hidden="true" />
-                    <span>{t('common.new_costing')}</span>
-                </Button>
-            </aside>
-
-            {/* Keep the archive policy in the unused right margin on wide screens. */}
-            <aside className="saved-costings-archive-rail-desktop space-y-3" aria-label={tx('Saved Costings archive policy')}>
-                <ArchivePolicyNotice />
-            </aside>
 
             {tourSurface === 'export' && tourExport && <CostingExportDialog key={tourStep} open tutorialPreview onOpenChange={() => {}} model={tourExport} defaultMode={tourStep === 'internal' ? 'internal' : 'customer'} defaultBusinessName="Tour sample" defaultCustomerName="Sample customer" sourceRecordKind="costing" />}
             {quoteToExport && !tourStep && (
