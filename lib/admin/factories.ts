@@ -14,7 +14,7 @@ const sourceSchema = z.object({
     subscriptions: z.array(z.object({
         id: z.uuid(), status: z.string(), plan_tier: z.string().nullable(), current_start: instant.nullable(),
         current_end: instant.nullable(), razorpay_payment_id: z.string().nullable(), created_at: instant.nullable(), payment_evidenced: z.boolean(),
-        is_trial: z.boolean(),
+        is_trial: z.boolean().optional().default(false),
     })).max(1000).nullable(), has_free_grant: z.boolean().nullable(), free_subject_id: z.uuid().nullable(),
     estimator_at: instant.nullable(), production_at: instant.nullable(), last_outcome_at: instant.nullable(),
     open_tickets: z.number().int().nonnegative(),

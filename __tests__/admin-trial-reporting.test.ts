@@ -96,11 +96,14 @@ describe('founder snapshot carries the trial flag through the loaders', () => {
         ]))
     })
 
-    it('a snapshot row without the trial flag fails closed as unavailable, never read as paid history', async () => {
+    it('a snapshot row without the trial flag parses as not a trial, so the console still loads', async () => {
+        // The code can ship before migration 20261011120100; a row without is_trial must not 503 the console.
         const legacy: Partial<SubscriptionInput> = lapsedTrial()
         delete legacy.is_trial
         snapshotReturning([snapshotRow({ subscriptions: [legacy] })])
-        await expect(listFactories()).rejects.toMatchObject({ code: 'FACTORY_SOURCE_UNAVAILABLE', status: 503 })
+        expect((await listFactories()).items).toHaveLength(1)
+        const detail = await getFactoryDetail(ORG)
+        expect(detail.termHistory).toEqual([expect.objectContaining({ id: TRIAL_ID, isTrial: false })])
     })
 })
 

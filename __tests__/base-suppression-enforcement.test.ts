@@ -85,3 +85,11 @@ describe('normalizeSignupPlan (pure)', () => {
         expect(normalizeSignupPlan(undefined)).toBe('free')
     })
 })
+
+describe('public root metadata does not promote Base', () => {
+    it('the site-wide description offers Free and Lite, not Base', () => {
+        const description = read('app/layout.tsx').match(/description: "([^"]*)"/)?.[1] ?? ''
+        expect(description).toContain('Start with Free, choose Lite for unlimited costings and yarn rates.')
+        expect(description).not.toMatch(/\bBase\b/)
+    })
+})
