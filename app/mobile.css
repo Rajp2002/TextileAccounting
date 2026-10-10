@@ -156,7 +156,7 @@
 }
 
 @media (min-width: 768px) {
-  .mobile-workspace-content { padding-left: 248px; padding-right: 0; }
+  .mobile-workspace-content { padding-left: var(--shell-sidebar-w); padding-right: 0; transition: padding-left 180ms cubic-bezier(0.2, 0, 0, 1); }
 }
 
 /* A finger needs room even when a compact control is used on a touch tablet. */
@@ -642,4 +642,5 @@
   }
   .mobile-navigation-item:active .mobile-navigation-icon { transform: none; }
   [data-slot="button"]:active { scale: 1; }
+  .mobile-workspace-content { transition: none; }
 }

@@ -546,7 +546,7 @@ function SavedQualityLibraryView({
                                     onEscapeKeyDown={event => { if (tourStep) event.preventDefault(); else onCloseDetails() }}
                                     onOpenAutoFocus={event => { if (tourStep) event.preventDefault() }}
                                     onCloseAutoFocus={event => { if (tourStep) event.preventDefault() }}
-                                    style={{ left: 'calc(50% + clamp(0px, calc((100vw - 1212px) / 2), 124px))' }}
+                                    style={{ left: 'calc(50% + clamp(0px, calc((100vw - 1212px) / 2), calc(var(--shell-sidebar-w) / 2)))' }}
                                     className="w-[calc(100vw-2rem)] max-h-[calc(100dvh-2rem)] max-w-[calc(100vw-2rem)] gap-0 overflow-hidden p-0 sm:w-[calc(100vw-2rem)] sm:max-h-[calc(100dvh-2rem)] sm:max-w-[1180px]"
                                 >
                                     <div className="max-h-[calc(100dvh-2rem)] min-w-0 overflow-x-hidden overflow-y-auto sm:max-h-[calc(100dvh-2rem)]">

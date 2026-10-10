@@ -28,7 +28,8 @@ describe('Desktop workspace composition (sidebar | full-width workspace)', () =>
 
     it('lets the content column fill the space beside the sidebar, up to one shared cap', () => {
         // One token caps both workspace shells (Lite/Base and Free) and positions the docked Live Cost shortcut.
-        expect(styles).toMatch(/--main-max:\s*120rem;/)
+        // Large monitors stop at a readable width instead of stretching the page edge to edge.
+        expect(styles).toMatch(/--main-max:\s*1440px;/)
         for (const shell of ['app/(dashboard)/owner/layout.tsx', 'app/free/FreeWorkspace.tsx']) {
             const source = read(shell)
             expect(source, shell).toContain('max-w-[var(--main-max)]')

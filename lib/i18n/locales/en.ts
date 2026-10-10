@@ -135,6 +135,8 @@ export const en = {
 } },
  navigation: {
     support: "Support",
+    collapse_menu: "Collapse menu",
+    expand_menu: "Expand menu",
   "mobile_estimate": "Estimate",
   "mobile_costings": "Saved",
   "mobile_rates": "Rates",

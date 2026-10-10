@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 
-// GT-05 at tablet portrait (768-1023px): the fixed 248px sidebar leaves a 448px content column, so the 360px panel
+// GT-05 at tablet portrait (768-1023px): the 248px sidebar leaves a 448px content column, so the 360px panel
 // cannot sit beside the Quick cards. With cards 594-631px tall and centred by the tracker there is no room above or
 // below either, and the placer fell back to a corner over the card (panel/outline overlap at est-warp, est-weft and
 // est-handoff). The tour's own runtime reserves a reading column on the LEFT (over the sidebar) for these widths only:
@@ -25,10 +25,12 @@ describe('Estimator tour, tablet reading column (GT-05 at 768-1023px)', () => {
 
     it('narrows and right-aligns the Quick cards so a 360px panel fits to their left', () => {
         const block = tablet()
-        expect(block).toMatch(/\[data-tour-anchor\^="estimator\.quick-"\]\s*\{[^}]*width:\s*calc\(100% - 120px\)/)
+        expect(block).toMatch(/\[data-tour-anchor\^="estimator\.quick-"\]\s*\{[^}]*width:\s*calc\(100% - \(368px - var\(--shell-sidebar-w\)\)\)/)
         expect(block).toMatch(/\[data-tour-anchor\^="estimator\.quick-"\]\s*\{[^}]*margin-inline-start:\s*auto/)
-        // 248px sidebar + 36px gutter + 120px reservation = the cards start at 404px; the panel needs 16 + 360 + 16 + 6.
-        expect(248 + 36 + 120).toBe(404)
+        // Sidebar + 36px gutter + (368px - sidebar) reservation = the cards start at 404px beside the full menu (120px
+        // reservation) and beside the icon rail (296px); the panel needs 16 + 360 + 16 + 6.
+        for (const sidebar of [248, 72]) expect(sidebar + 36 + (368 - sidebar)).toBe(404)
+        expect(368 - 248).toBe(120)
         expect(16 + 360 + 16 + 6).toBeLessThanOrEqual(404)
     })
 

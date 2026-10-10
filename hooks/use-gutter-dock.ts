@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 
 export interface GutterDockOptions {
-  /** Width of the application sidebar on desktop in pixels. Default: 248 */
+  /** Sidebar width used when the page cannot read --shell-sidebar-w. Default: 248 */
   sidebarWidth?: number
   /** Card width when docked in pixels. Default: 248 */
   cardWidth?: number
@@ -43,6 +43,13 @@ function forcedDockStyle({ sidebarWidth, cardWidth, minClearance }: DockConfig):
   }
 }
 
+/** The sidebar is the full menu or an icon rail, so read its current width from the shell token. */
+function currentSidebarWidth(fallback: number): number {
+  if (typeof document === 'undefined' || typeof getComputedStyle === 'undefined') return fallback
+  const width = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--shell-sidebar-w'))
+  return Number.isFinite(width) ? width : fallback
+}
+
 /**
  * Measures the gutter left of `container` and returns the dock state update.
  * Pure apart from reading layout, so the effect can apply it directly.
@@ -51,7 +58,7 @@ export function dockUpdater(
   container: HTMLElement | null,
   config: DockConfig,
 ): (prev: DockState) => DockState {
-  const { sidebarWidth, cardWidth, minClearance, forceDocked } = config
+  const { cardWidth, minClearance, forceDocked } = config
   const minGutterRequired = cardWidth + minClearance * 2 // 280px
 
   if (typeof window === 'undefined') return prev => prev
@@ -70,7 +77,8 @@ export function dockUpdater(
   }
 
   const rect = container.getBoundingClientRect()
-  // Gutter is the space between sidebar right (248px) and container left edge
+  const sidebarWidth = currentSidebarWidth(config.sidebarWidth)
+  // Gutter is the space between the sidebar's right edge and the container's left edge
   const gutter = rect.left - sidebarWidth
 
   if (gutter >= minGutterRequired && window.innerWidth >= 1200) {

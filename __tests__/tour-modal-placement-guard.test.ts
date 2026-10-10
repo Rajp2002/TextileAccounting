@@ -142,11 +142,12 @@ describe('Tour modal placement rule: the modal stays where it opens, the card ad
             { name: 'Worker review (sm:max-w-3xl)', maxWidth: 48 * ROOT, centre: (vw: number) => vw / 2, gutter: 16, vars },
             { name: 'Saved Costings comparison (sm:max-w-4xl)', maxWidth: 56 * ROOT, centre: (vw: number) => vw / 2, gutter: 16, vars },
             { name: 'Saved Costings export (sm:max-w-6xl)', maxWidth: 72 * ROOT, centre: (vw: number) => vw / 2, gutter: 16, vars },
-            {
-                name: 'Saved Costings library (1180px, beside the sidebar)', maxWidth: 1180, gutter: 32,
-                centre: (vw: number) => vw / 2 + Math.max(0, Math.min((vw - 1212) / 2, 124)),
-                vars: { '--tour-cx': declaration(sidebarAware, '--tour-cx') },
-            },
+            // The sidebar is the full 248px menu or the 72px icon rail; the library centres beside either.
+            ...[248, 72].map(sidebar => ({
+                name: `Saved Costings library (1180px, beside a ${sidebar}px sidebar)`, maxWidth: 1180, gutter: 32,
+                centre: (vw: number) => vw / 2 + Math.max(0, Math.min((vw - 1212) / 2, sidebar / 2)),
+                vars: { '--tour-cx': declaration(sidebarAware, '--tour-cx'), '--shell-sidebar-w': `${sidebar}px` },
+            })),
         ]
         const widths = [768, 900, 1024, 1152, 1280, 1366, 1440, 1536, 1600, 1716, 1792, 1920, 2200, 2560]
 
@@ -196,8 +197,8 @@ describe('Tour modal placement rule: the modal stays where it opens, the card ad
         })
 
         it('keeps the Saved Costings centre in step with the page it mirrors', () => {
-            expect(readFileSync('app/(dashboard)/owner/quotes/QuotesClient.tsx', 'utf8')).toContain("left: 'calc(50% + clamp(0px, calc((100vw - 1212px) / 2), 124px))'")
-            expect(declaration(sidebarAware, '--tour-cx')).toContain('clamp(0px, calc((100vw - 1212px) / 2), 124px)')
+            expect(readFileSync('app/(dashboard)/owner/quotes/QuotesClient.tsx', 'utf8')).toContain("left: 'calc(50% + clamp(0px, calc((100vw - 1212px) / 2), calc(var(--shell-sidebar-w) / 2)))'")
+            expect(declaration(sidebarAware, '--tour-cx')).toContain('clamp(0px, calc((100vw - 1212px) / 2), calc(var(--shell-sidebar-w) / 2))')
         })
 
         it('reads the regular dialog widths from the dialogs themselves', () => {
