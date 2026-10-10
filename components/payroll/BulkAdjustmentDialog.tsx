@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { LiquidSegmented } from '@/components/ui/liquid-segmented'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -151,20 +152,17 @@ export function BulkAdjustmentPanel({ workers, onSaved, onClose }: PanelProps) {
             className="space-y-5"
             onSubmit={(event) => { event.preventDefault(); if (amountValid && count > 0) setStep('confirm') }}
         >
-            <div role="radiogroup" aria-label={tx('Type')} className="grid grid-cols-2 gap-1 rounded-lg border border-hairline bg-surface-soft p-1">
-                {(['advance', 'deduction'] as const).map(option => (
-                    <button
-                        key={option}
-                        type="button"
-                        role="radio"
-                        aria-checked={kind === option}
-                        onClick={() => change(() => setKind(option))}
-                        className={`min-h-[44px] rounded-md px-3 text-sm font-semibold transition-colors ${kind === option ? 'bg-ink text-surface' : 'text-body hover:bg-surface'}`}
-                    >
-                        {option === 'advance' ? tx('Advance') : tx('Deduction')}
-                    </button>
-                ))}
-            </div>
+            <LiquidSegmented
+                aria-label={tx('Type')}
+                fullWidth
+                optionClassName="min-h-[44px]"
+                value={kind}
+                onValueChange={(option) => change(() => setKind(option))}
+                options={[
+                    { value: 'advance', label: tx('Advance') },
+                    { value: 'deduction', label: tx('Deduction') },
+                ]}
+            />
 
             <div className="space-y-2">
                 <Label htmlFor="bulk-adjustment-amount" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{tx('Amount per worker')}</Label>

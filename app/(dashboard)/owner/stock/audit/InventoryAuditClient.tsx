@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useTransition } from 'react'
+import { useRef, useState, useTransition, type ReactNode } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -25,7 +25,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { LiquidSegmented } from '@/components/ui/liquid-segmented'
+import { Tabs, TabsContent } from '@/components/ui/tabs'
 import {
     auditVariance,
     formatAuditQuantity,
@@ -47,7 +48,17 @@ import { useTranslation } from '@/lib/i18n/context'
 interface Props {
     initialData: InventoryAuditBoard
     /** Which tab opens first. Defaults to the material position. */
-    initialTab?: 'material-position' | 'fabric' | 'yarn' | 'reconciliation'
+    initialTab?: AuditTab
+}
+
+const AUDIT_TABS = ['material-position', 'fabric', 'yarn', 'reconciliation'] as const
+type AuditTab = (typeof AUDIT_TABS)[number]
+
+const AUDIT_TAB_ICONS: Record<AuditTab, ReactNode> = {
+    'material-position': <Scale aria-hidden="true" />,
+    fabric: <Warehouse aria-hidden="true" />,
+    yarn: <Package aria-hidden="true" />,
+    reconciliation: <ClipboardCheck aria-hidden="true" />,
 }
 
 export default function InventoryAuditClient({ initialData, initialTab = 'material-position' }: Props) {
@@ -57,7 +68,7 @@ export default function InventoryAuditClient({ initialData, initialTab = 'materi
     const [isPending, startTransition] = useTransition()
     const [data, setData] = useState<InventoryAuditBoard>(initialData)
     const [auditDate, setAuditDate] = useState<string>(initialData.audit_date)
-    const [activeTab, setActiveTab] = useState<string>(initialTab)
+    const [activeTab, setActiveTab] = useState<AuditTab>(initialTab)
     const dateRequest = useRef(0)
     const [expandedYarns, setExpandedYarns] = useState<Set<string>>(new Set())
 
@@ -380,28 +391,29 @@ export default function InventoryAuditClient({ initialData, initialTab = 'materi
             )}
 
             {/* Audit Tabs */}
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-                <TabsList className="rounded-xl bg-surface-soft p-1 border border-hairline">
-                    <TabsTrigger value="material-position" className="rounded-lg text-xs font-bold gap-1.5 data-[state=active]:bg-surface data-[state=active]:shadow-xs">
-                        <Scale className="h-3.5 w-3.5 text-loom" />
-                        {t('stockAudit.tabMaterial')}
-                    </TabsTrigger>
-                    <TabsTrigger value="fabric" className="rounded-lg text-xs font-medium gap-1.5 data-[state=active]:bg-surface data-[state=active]:shadow-xs">
-                        <Warehouse className="h-3.5 w-3.5" />
-                        {t('stockAudit.tabFabric', { count: data.fabric.length })}
-                    </TabsTrigger>
-                    <TabsTrigger value="yarn" className="rounded-lg text-xs font-medium gap-1.5 data-[state=active]:bg-surface data-[state=active]:shadow-xs">
-                        <Package className="h-3.5 w-3.5" />
-                        {t('stockAudit.tabYarn', { count: data.yarns.length })}
-                    </TabsTrigger>
-                    <TabsTrigger value="reconciliation" className="rounded-lg text-xs font-medium gap-1.5 data-[state=active]:bg-surface data-[state=active]:shadow-xs">
-                        <ClipboardCheck className="h-3.5 w-3.5" />
-                        {t('stockAudit.tabReconciliation')}
-                    </TabsTrigger>
-                </TabsList>
+            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as AuditTab)} className="space-y-4">
+                <div className="max-w-full overflow-x-auto pb-0.5">
+                    <LiquidSegmented
+                        role="tablist"
+                        size="sm"
+                        aria-label={t('stockAudit.tabsLabel')}
+                        value={activeTab}
+                        onValueChange={setActiveTab}
+                        options={AUDIT_TABS.map((tab) => ({
+                            value: tab,
+                            id: `stock-audit-tab-${tab}`,
+                            controls: `stock-audit-panel-${tab}`,
+                            icon: AUDIT_TAB_ICONS[tab],
+                            label: tab === 'material-position' ? t('stockAudit.tabMaterial')
+                                : tab === 'fabric' ? t('stockAudit.tabFabric', { count: data.fabric.length })
+                                : tab === 'yarn' ? t('stockAudit.tabYarn', { count: data.yarns.length })
+                                : t('stockAudit.tabReconciliation'),
+                        }))}
+                    />
+                </div>
 
                 {/* Tab: Material Position (Core Feature) */}
-                <TabsContent value="material-position" className="space-y-4">
+                <TabsContent value="material-position" id="stock-audit-panel-material-position" aria-labelledby="stock-audit-tab-material-position" className="space-y-4">
                     <Card className="rounded-2xl border border-hairline overflow-hidden">
                         <CardHeader className="border-b border-hairline bg-surface-soft/40 p-4">
                             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -558,7 +570,7 @@ export default function InventoryAuditClient({ initialData, initialTab = 'materi
                 </TabsContent>
 
                 {/* Tab: Fabric Inventory */}
-                <TabsContent value="fabric" className="space-y-4">
+                <TabsContent value="fabric" id="stock-audit-panel-fabric" aria-labelledby="stock-audit-tab-fabric" className="space-y-4">
                     <Card className="rounded-2xl border border-hairline overflow-hidden">
                         <CardHeader className="border-b border-hairline bg-surface-soft/40 p-4 flex flex-row items-center justify-between">
                             <div>
@@ -661,7 +673,7 @@ export default function InventoryAuditClient({ initialData, initialTab = 'materi
                 </TabsContent>
 
                 {/* Tab: Loose Yarn Inventory */}
-                <TabsContent value="yarn" className="space-y-4">
+                <TabsContent value="yarn" id="stock-audit-panel-yarn" aria-labelledby="stock-audit-tab-yarn" className="space-y-4">
                     <Card className="rounded-2xl border border-hairline overflow-hidden">
                         <CardHeader className="border-b border-hairline bg-surface-soft/40 p-4">
                             <CardTitle className="text-base font-bold text-ink">{t('stockAudit.yarnTitle')}</CardTitle>
@@ -762,7 +774,7 @@ export default function InventoryAuditClient({ initialData, initialTab = 'materi
                 </TabsContent>
 
                 {/* Tab: Reconciliation Summary */}
-                <TabsContent value="reconciliation" className="space-y-4">
+                <TabsContent value="reconciliation" id="stock-audit-panel-reconciliation" aria-labelledby="stock-audit-tab-reconciliation" className="space-y-4">
                     <Card className="rounded-2xl border border-hairline">
                         <CardHeader className="p-5">
                             <CardTitle className="text-base font-bold text-ink">{t('stockAudit.recTitle')}</CardTitle>

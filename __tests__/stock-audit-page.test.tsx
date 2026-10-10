@@ -59,6 +59,16 @@ const render = (tab: 'material-position' | 'fabric' | 'yarn' | 'reconciliation',
 
 beforeEach(() => { state.language = 'en' })
 
+describe('audit views use the liquid tab toggle', () => {
+    it('links the selected tab to its panel', () => {
+        const html = render('yarn')
+        expect(html).toContain('role="tablist"')
+        expect(html).toMatch(/id="stock-audit-tab-yarn"[^>]*aria-selected="true"/)
+        expect(html).toContain('aria-controls="stock-audit-panel-yarn"')
+        expect(html).toMatch(/id="stock-audit-panel-yarn"[^>]*aria-labelledby="stock-audit-tab-yarn"|aria-labelledby="stock-audit-tab-yarn"[^>]*id="stock-audit-panel-yarn"/)
+    })
+})
+
 describe('PI-06: changing the audit date loads that date only', () => {
     const handler = between('async function handleDateChange', 'function handleExportCsv')
 

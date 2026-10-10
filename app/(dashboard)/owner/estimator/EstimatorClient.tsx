@@ -5523,7 +5523,7 @@ export default function EstimatorClient({
                                 value={entryMode}
                                 onValueChange={handleEntryModeChange}
                                 options={[
-                                    { value: 'quick', label: 'Quick', controls: 'estimator-form-panel', title: tx('Essential construction inputs · same calculation engine') },
+                                    { value: 'quick', label: tx('Quick'), controls: 'estimator-form-panel', title: tx('Essential construction inputs · same calculation engine') },
                                     { value: 'detailed', label: tx('Detailed'), controls: 'estimator-form-panel', title: tx('Full technical inputs & factory assumptions · same calculation engine') },
                                 ]}
                             />
@@ -5893,7 +5893,7 @@ export default function EstimatorClient({
                                     value={entryMode}
                                     onValueChange={handleEntryModeChange}
                                     options={[
-                                        { value: 'quick', label: freeMode ? freeText(language, 'quick') : 'Quick', controls: 'estimator-form-panel', title: tx('Quick Costing · same calculation engine') },
+                                        { value: 'quick', label: freeMode ? freeText(language, 'quick') : tx('Quick'), controls: 'estimator-form-panel', title: tx('Quick Costing · same calculation engine') },
                                         { value: 'detailed', label: tx('Detailed'), controls: 'estimator-form-panel', title: tx('Full technical inputs & factory assumptions · same calculation engine') },
                                     ]}
                                 />

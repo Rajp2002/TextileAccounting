@@ -103,6 +103,13 @@ describe('supervisor daily sheet', () => {
         expect(html).not.toMatch(/₹|Rate|Earnings|Pay/)
     })
 
+    it('picks the date and shift with the liquid toggle, one option checked in each', () => {
+        const html = renderToStaticMarkup(<SupervisorDailySheet data={data} date="2026-10-07" shift="night" actorId="sup-1" />)
+        expect(html.match(/data-slot="liquid-segmented"/g)).toHaveLength(2)
+        expect(html.match(/role="radio"[^>]*aria-checked="true"/g)).toHaveLength(2)
+        expect(html).toMatch(/aria-checked="true"[^>]*>Night shift</)
+    })
+
     it.each([
         'components/supervisor/SupervisorDailySheet.tsx',
         'components/supervisor/supervisor-status-view.tsx',
