@@ -31,7 +31,7 @@ export default function LandingPricing() {
         <Beam id="pricing" labelledBy="pricing-title" innerClassName="pb-20 pt-14 sm:pb-24 sm:pt-16 lg:pb-28">
             <h2 id="pricing-title" className={cn(s.label, 'text-[color:var(--lp-saffron-ink)]')}>Pricing</h2>
 
-            <div className={cn('mt-4 grid border-y-2 border-[color:var(--lp-ink)]', plans.length === 2 ? 'md:grid-cols-3' : 'md:grid-cols-2')}>
+            <div className={cn('mt-4 grid border-y-2 border-[color:var(--lp-ink)]', BASE_PLAN_OPEN_TO_NEW_ACCOUNTS ? 'md:grid-cols-3' : 'md:grid-cols-2')}>
                 <article aria-labelledby="pricing-free-title" className="flex min-w-0 flex-col border-b border-[color:var(--lp-line)] py-7 md:border-b-0 md:border-r md:pr-7">
                     <h3 id="pricing-free-title" className={cn(s.display, 'text-[22px] font-semibold text-[color:var(--lp-ink)]')}>Weavly Free</h3>
                     <p className="mt-2 text-[15px] leading-6 text-[color:var(--lp-body)]">Two costings a month, saved, with Cost Sheet export.</p>

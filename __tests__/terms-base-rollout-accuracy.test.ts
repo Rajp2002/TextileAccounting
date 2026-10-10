@@ -18,12 +18,14 @@ const source = (relativePath: string) => fs.readFileSync(path.join(root, relativ
 describe('Free, Lite, and Base commercial policy accuracy', () => {
     const terms = source('app/terms/page.tsx')
     const refunds = source('app/refund-policy/page.tsx')
-    const publicPrices = [TermsOfServicePage, RefundPolicyPage, LandingPricing].map(
-        (page) => renderToStaticMarkup(createElement(page)),
-    )
-    // The landing pricing page offers only the tiers open to new accounts; the legal pages describe every tier.
+    // The legal pages describe every tier, including Base, for existing customers.
+    // The landing pricing page offers only the tiers open to new accounts.
     const landingTiers = BILLING_SELF_SERVE_PLAN_TIERS.filter((tier) => tier !== 'base' || BASE_PLAN_OPEN_TO_NEW_ACCOUNTS)
-    const tiersShownOn = (index: number) => (index === 2 ? landingTiers : BILLING_SELF_SERVE_PLAN_TIERS)
+    const publicPrices = [
+        { html: renderToStaticMarkup(createElement(TermsOfServicePage)), tiers: BILLING_SELF_SERVE_PLAN_TIERS },
+        { html: renderToStaticMarkup(createElement(RefundPolicyPage)), tiers: BILLING_SELF_SERVE_PLAN_TIERS },
+        { html: renderToStaticMarkup(createElement(LandingPricing)), tiers: landingTiers },
+    ]
 
     it('publishes a new version that identifies the pre-incorporation operator', () => {
         expect(LEGAL_DOCUMENTS.terms.version).toBe('2026-09-12')
@@ -42,16 +44,16 @@ describe('Free, Lite, and Base commercial policy accuracy', () => {
         expect(BILLING_PLANS.lite.renewalTotalPaise).toBe(149_900)
         expect(BILLING_PLANS.base.firstYearTotalPaise).toBe(999_900)
         expect(BILLING_PLANS.base.renewalTotalPaise).toBe(499_900)
-        publicPrices.forEach((page, index) => {
+        for (const { html: page, tiers } of publicPrices) {
             expect(page).toContain('Weavly Free')
-            for (const tier of tiersShownOn(index)) {
+            for (const tier of tiers) {
                 const plan = BILLING_PLANS[tier]
                 expect(page).toContain(plan.name)
                 expect(page).toContain(formatINR(plan.firstYearTotalPaise / 100, { hideDecimals: true }))
                 expect(page).toContain(formatINR(plan.renewalTotalPaise / 100, { hideDecimals: true }))
             }
             expect(page).not.toContain('/month')
-        })
+        }
         expect(terms).toContain('one Customer organization or factory workspace')
     })
 

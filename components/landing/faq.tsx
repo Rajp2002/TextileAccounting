@@ -9,7 +9,9 @@ import { BASE_PLAN_OPEN_TO_NEW_ACCOUNTS } from '@/lib/base-plan-visibility'
 const faqs: Array<{ question: string; answer: ReactNode; baseOnly?: boolean }> = [
     {
         question: 'Which plan should I start with?',
-        answer: 'Start with Free if you cost an enquiry now and then. Choose Lite when costing is a daily job and you want reusable qualities and the Yarn Rate Book. Choose Base when you also want production, stock, dispatch and piece-rate pay to run from the same costings.',
+        answer: BASE_PLAN_OPEN_TO_NEW_ACCOUNTS
+            ? 'Start with Free if you cost an enquiry now and then. Choose Lite when costing is a daily job and you want reusable qualities and the Yarn Rate Book. Choose Base when you also want production, stock, dispatch and piece-rate pay to run from the same costings.'
+            : 'Start with Free if you cost an enquiry now and then. Choose Lite when costing is a daily job and you want reusable qualities and the Yarn Rate Book.',
     },
     {
         question: 'How does the Free allowance work?',
@@ -17,7 +19,9 @@ const faqs: Array<{ question: string; answer: ReactNode; baseOnly?: boolean }> =
     },
     {
         question: 'Can I start on Free and upgrade later?',
-        answer: 'Yes. Choose Lite or Base from your account when you need more. Your Free costing records stay in your account. Lite removes the monthly limit; Base also unlocks production and piece-rate settlement.',
+        answer: BASE_PLAN_OPEN_TO_NEW_ACCOUNTS
+            ? 'Yes. Choose Lite or Base from your account when you need more. Your Free costing records stay in your account. Lite removes the monthly limit; Base also unlocks production and piece-rate settlement.'
+            : 'Yes. Choose Lite from your account when you need more. Your Free costing records stay in your account. Lite removes the monthly limit.',
     },
     {
         question: 'Are GST and renewals included in the prices?',
@@ -25,11 +29,15 @@ const faqs: Array<{ question: string; answer: ReactNode; baseOnly?: boolean }> =
     },
     {
         question: 'What happens if I do not renew?',
-        answer: 'Nothing is charged. An expired Lite subscription restricts paid costing access unless another entitlement applies. When a paid Base period ends, the Lite costing desk stays available and Base production actions are restricted. Records are kept while the account is kept, and expiry does not move a paid account onto Free.',
+        answer: BASE_PLAN_OPEN_TO_NEW_ACCOUNTS
+            ? 'Nothing is charged. An expired Lite subscription restricts paid costing access unless another entitlement applies. When a paid Base period ends, the Lite costing desk stays available and Base production actions are restricted. Records are kept while the account is kept, and expiry does not move a paid account onto Free.'
+            : 'Nothing is charged. An expired Lite subscription restricts paid costing access unless another entitlement applies. Records are kept while the account is kept, and expiry does not move a paid account onto Free.',
     },
     {
         question: 'Does it work when the factory internet is poor?',
-        answer: 'Weavly is an installable web app. Calculating, saving and exporting need an internet connection. On Lite and Base, unfinished estimator drafts are kept on your device while you are signed in; on Free, unfinished inputs are not kept as drafts.',
+        answer: BASE_PLAN_OPEN_TO_NEW_ACCOUNTS
+            ? 'Weavly is an installable web app. Calculating, saving and exporting need an internet connection. On Lite and Base, unfinished estimator drafts are kept on your device while you are signed in; on Free, unfinished inputs are not kept as drafts.'
+            : 'Weavly is an installable web app. Calculating, saving and exporting need an internet connection. On Lite, unfinished estimator drafts are kept on your device while you are signed in; on Free, unfinished inputs are not kept as drafts.',
     },
     {
         question: 'Does Base include supervisor accounts or statutory payroll?',

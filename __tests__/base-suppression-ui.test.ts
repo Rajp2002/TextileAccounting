@@ -3,12 +3,30 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { createPublicPageTranslator } from '../lib/i18n/public-pages'
+import hi from '../lib/i18n/public-pages/hi.json'
+import gu from '../lib/i18n/public-pages/gu.json'
 
 const root = process.cwd()
 const read = (file: string) => readFileSync(join(root, file), 'utf8')
 
 /** Base copy as a whole word. Upsell surfaces must not show it to a hidden org. */
 const BASE_WORD = /\bBase\b/
+
+function decodeEntities(text: string) {
+  return text
+    .replace(/&#x([\da-f]+);/gi, (_, hex: string) => String.fromCodePoint(parseInt(hex, 16)))
+    .replace(/&#(\d+);/g, (_, dec: string) => String.fromCodePoint(Number(dec)))
+    .replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')
+}
+
+/** Text nodes and accessible attributes of rendered markup, the units the public-page translator matches. */
+function renderedText(html: string): string[] {
+  const content = html.replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1>/g, '')
+  const text = Array.from(content.matchAll(/>([^<]+)</g), (match) => decodeEntities(match[1]).replace(/\s+/g, ' ').trim())
+  const attributes = Array.from(content.matchAll(/\b(?:alt|title|aria-label|aria-description)="([^"]+)"/g), (match) => decodeEntities(match[1]))
+  return [...new Set([...text, ...attributes])].filter((value) => /[A-Za-z]/.test(value))
+}
 
 const state = vi.hoisted(() => ({
   workspaceTier: 'free' as string,
@@ -124,44 +142,97 @@ describe('Base suppression: public landing plans', () => {
 })
 
 describe('Base suppression: public landing sections', () => {
-  // Fully gated: no Base copy at all while the launch switch is closed.
-  // The footer tagline, fit line and FAQ answers still name Base; they need new
-  // curated copy and are tracked as an open decision, so they are not asserted here.
-  const fullyGated = [
+  const sections = [
     'components/landing/plans',
     'components/landing/pricing',
     'components/landing/workflow',
+    'components/landing/faq',
+    'components/landing/fit',
+    'components/landing/footer',
   ]
-  const baseFaqQuestion = 'Does Base include supervisor accounts or statutory payroll?'
 
-  it('no fully gated landing section names Base while the launch switch is closed', async () => {
-    for (const section of fullyGated) {
-      const mod = await import(`@/${section}`)
-      const html = renderToStaticMarkup(createElement(mod.default))
-      expect(html, section).not.toMatch(BASE_WORD)
+  // Closed-state sentences that replace Base wording. Each needs a Hindi and a
+  // Gujarati entry in lib/i18n/public-pages (the public-page translator matches whole text nodes).
+  const closedCopy = {
+    faqFirstPlan: 'Start with Free if you cost an enquiry now and then. Choose Lite when costing is a daily job and you want reusable qualities and the Yarn Rate Book.',
+    faqUpgrade: 'Yes. Choose Lite from your account when you need more. Your Free costing records stay in your account. Lite removes the monthly limit.',
+    faqNotRenewed: 'Nothing is charged. An expired Lite subscription restricts paid costing access unless another entitlement applies. Records are kept while the account is kept, and expiry does not move a paid account onto Free.',
+    faqOffline: 'Weavly is an installable web app. Calculating, saving and exporting need an internet connection. On Lite, unfinished estimator drafts are kept on your device while you are signed in; on Free, unfinished inputs are not kept as drafts.',
+    footerTagline: 'Costing and factory records for grey-fabric weaving units. Free and Lite.',
+    fitRefusal: 'The server re-runs every costing in exact decimals. On Lite, a total that differs from your screen is refused.',
+  }
+  // The same spots with the launch switch open: the original copy.
+  const openCopy = {
+    faqFirstPlan: 'Start with Free if you cost an enquiry now and then. Choose Lite when costing is a daily job and you want reusable qualities and the Yarn Rate Book. Choose Base when you also want production, stock, dispatch and piece-rate pay to run from the same costings.',
+    faqUpgrade: 'Yes. Choose Lite or Base from your account when you need more. Your Free costing records stay in your account. Lite removes the monthly limit; Base also unlocks production and piece-rate settlement.',
+    faqNotRenewed: 'Nothing is charged. An expired Lite subscription restricts paid costing access unless another entitlement applies. When a paid Base period ends, the Lite costing desk stays available and Base production actions are restricted. Records are kept while the account is kept, and expiry does not move a paid account onto Free.',
+    faqOffline: 'Weavly is an installable web app. Calculating, saving and exporting need an internet connection. On Lite and Base, unfinished estimator drafts are kept on your device while you are signed in; on Free, unfinished inputs are not kept as drafts.',
+    footerTagline: 'Costing and factory records for grey-fabric weaving units. Free, Lite and Base.',
+    fitRefusal: 'The server re-runs every costing in exact decimals. On Lite and Base, a total that differs from your screen is refused.',
+  }
+  const baseTransliteration = /बेस|બેઝ/
+
+  async function renderSection(section: string) {
+    const mod = await import(`@/${section}`)
+    return renderToStaticMarkup(createElement(mod.default))
+  }
+
+  it('no landing section names Base in English, Hindi or Gujarati while the launch switch is closed', async () => {
+    const translators = { hi: createPublicPageTranslator(hi), gu: createPublicPageTranslator(gu) }
+    // The extractor must see the copy it is meant to check, or the sweep below proves nothing.
+    expect(renderedText(await renderSection('components/landing/faq'))).toContain(closedCopy.faqFirstPlan)
+    expect(renderedText(await renderSection('components/landing/footer'))).toContain(closedCopy.footerTagline)
+    for (const section of sections) {
+      for (const text of renderedText(await renderSection(section))) {
+        expect(text, section).not.toMatch(BASE_WORD)
+        for (const [language, translate] of Object.entries(translators)) {
+          const target = translate(text)
+          if (target === undefined) continue
+          expect(target, `${section} (${language})`).not.toMatch(BASE_WORD)
+          expect(target, `${section} (${language})`).not.toMatch(baseTransliteration)
+        }
+      }
+    }
+  })
+
+  it('each closed-state sentence renders and has a Hindi and a Gujarati entry', async () => {
+    const translators = { hi: createPublicPageTranslator(hi), gu: createPublicPageTranslator(gu) }
+    const faq = await renderSection('components/landing/faq')
+    expect(faq).toContain(closedCopy.faqFirstPlan)
+    expect(faq).toContain(closedCopy.faqUpgrade)
+    expect(faq).toContain(closedCopy.faqNotRenewed)
+    expect(faq).toContain(closedCopy.faqOffline)
+    expect(await renderSection('components/landing/footer')).toContain(closedCopy.footerTagline)
+    expect(await renderSection('components/landing/fit')).toContain(closedCopy.fitRefusal)
+    for (const [key, sentence] of Object.entries(closedCopy)) {
+      for (const [language, translate] of Object.entries(translators)) {
+        expect(translate(sentence), `${key} (${language})`).toBeDefined()
+      }
     }
   })
 
   it('the Base-only FAQ question is hidden while the launch switch is closed', async () => {
-    const { default: LandingFAQ } = await import('@/components/landing/faq')
-    const html = renderToStaticMarkup(createElement(LandingFAQ))
-    expect(html).not.toContain(baseFaqQuestion)
-    expect(html).toContain('Which plan should I start with?')
+    const faq = await renderSection('components/landing/faq')
+    expect(faq).not.toContain('Does Base include supervisor accounts or statutory payroll?')
+    expect(faq).toContain('Which plan should I start with?')
   })
 
-  it('the same landing sections name Base again once the launch switch is flipped', async () => {
+  it('the same sections show their original Base copy again once the launch switch is flipped', async () => {
     vi.resetModules()
     vi.doMock('@/lib/base-plan-visibility', async (importOriginal) => ({
       ...(await importOriginal<typeof import('@/lib/base-plan-visibility')>()),
       BASE_PLAN_OPEN_TO_NEW_ACCOUNTS: true,
     }))
-    for (const section of fullyGated) {
-      const mod = await import(`@/${section}`)
-      const html = renderToStaticMarkup(createElement(mod.default))
-      expect(html, section).toMatch(BASE_WORD)
+    const translators = { hi: createPublicPageTranslator(hi), gu: createPublicPageTranslator(gu) }
+    for (const section of ['components/landing/plans', 'components/landing/pricing', 'components/landing/workflow']) {
+      expect(await renderSection(section), section).toMatch(BASE_WORD)
     }
-    const { default: LandingFAQ } = await import('@/components/landing/faq')
-    expect(renderToStaticMarkup(createElement(LandingFAQ))).toContain(baseFaqQuestion)
+    const faq = await renderSection('components/landing/faq')
+    expect(faq).toContain('Does Base include supervisor accounts or statutory payroll?')
+    for (const sentence of Object.values(openCopy)) {
+      expect(faq + await renderSection('components/landing/footer') + await renderSection('components/landing/fit')).toContain(sentence)
+      for (const translate of Object.values(translators)) expect(translate(sentence), sentence).toBeDefined()
+    }
   })
 })
 
