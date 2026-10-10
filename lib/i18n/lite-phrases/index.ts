@@ -1,6 +1,5 @@
 import type { BasePlanLocalLanguage } from '../base-plan-phrases'
 import { ACCOUNT_PHRASES } from './account'
-import { COSTING_DOCUMENT_PHRASES } from './costing-documents'
 import { ESTIMATOR_PHRASES } from './estimator'
 import { RATE_BOOK_PHRASES } from './rates'
 import { SAVED_COSTINGS_PHRASES } from './saved-costings'
@@ -15,8 +14,6 @@ import { VALIDATION_PHRASES } from './validation'
  * that still needs a row. A native review of both languages is still pending.
  */
 const ROWS = [
-    // Document errors also show in the export dialog.
-    ...COSTING_DOCUMENT_PHRASES,
     ...ESTIMATOR_PHRASES,
     ...SAVED_COSTINGS_PHRASES,
     ...SETUP_PHRASES,
