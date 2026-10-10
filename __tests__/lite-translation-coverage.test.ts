@@ -68,3 +68,13 @@ describe('provider phrase map', () => {
         expect(livePhraseMap('hi').get('Save as separate quality')).toMatch(/\p{Script=Devanagari}/u)
     })
 })
+
+describe('nested template values', () => {
+    it('translates a layer label inside a validation message', () => {
+        const match = createTemplatePhraseMatcher(new Map([
+            ['{0} crimp %', '{0} ક્રિમ્પ %'],
+            ['Weft layer {0}', 'ભરણ લેયર {0}'],
+        ]))
+        expect(match('Weft layer 2 crimp %')).toBe('ભરણ લેયર 2 ક્રિમ્પ %')
+    })
+})

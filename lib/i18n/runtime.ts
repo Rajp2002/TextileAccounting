@@ -1402,17 +1402,20 @@ export function createTemplatePhraseMatcher(phrases: Map<string, string>) {
 
   templates.sort((a, b) => b.literalLength - a.literalLength)
 
-  return (source: string): string | undefined => {
+  const match = (source: string, nested: boolean): string | undefined => {
     for (const { pattern, keys, target } of templates) {
-      const match = pattern.exec(source)
-      if (!match) continue
-      const values = new Map(keys.map((key, index) => [key, match[index + 1]]))
+      const found = pattern.exec(source)
+      if (!found) continue
+      const values = new Map(keys.map((key, index) => [key, found[index + 1]]))
       return target.replace(/\{(\w+)\}/g, (token, key: string) => {
         const value = values.get(key)
         if (value === undefined) return token
-        return phrases.get(value.trim()) ?? value
+        // One level down, so "Weft layer 2" inside a message is translated too.
+        return phrases.get(value.trim()) ?? (nested ? undefined : match(value, true)) ?? value
       })
     }
     return undefined
   }
+
+  return (source: string) => match(source, false)
 }
