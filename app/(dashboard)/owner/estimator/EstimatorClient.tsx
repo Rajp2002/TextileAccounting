@@ -106,6 +106,8 @@ import {
 import { useFreeMeter } from '@/hooks/use-free-meter'
 import { FreeUsageCard } from '@/components/estimator/FreeUsageCard'
 import { FactorySetupPrompt } from '@/components/estimator/FactorySetupPrompt'
+import { FabricWeightSummary } from '@/components/estimator/FabricWeightSummary'
+import { calcFabricWeight } from '@/lib/fabric-weight'
 import { FreeTransactionRecovery } from '@/components/estimator/FreeTransactionRecovery'
 import { FreeSavedReceipt } from '@/components/estimator/FreeSavedReceipt'
 import { FreeLeaveDialog } from '@/components/estimator/FreeLeaveDialog'
@@ -4116,6 +4118,7 @@ export default function EstimatorClient({
         ? overheadEditor.totalMonthly / state.monthlyOutputM
         : 0
     const hasValidCostResult = freeMode ? !!freeMeter.completed : costingReadiness.canDisplayMoney
+    const fabricWeight = useMemo(() => hasValidCostResult ? calcFabricWeight(totals) : null, [hasValidCostResult, totals])
     const canPersistCostResult = freeMode ? !!freeMeter.completed && !freeMeter.stale : costingReadiness.canPersist
     const firstCostingReadinessMessage = costingReadiness.issues[0]?.message ?? firstEstimatorValidationMessage
 
@@ -7220,11 +7223,14 @@ export default function EstimatorClient({
                 hasOrderQty={costingResult.quantityM !== null && costingResult.quantityM > 0}
                 expectedProfitTotal={costingResult.expectedProfitTotal}
                 assumptions={!freeMode || freeMeter.completed ? (
-                    <CostingAssumptionsSummary
-                        result={costingResult}
-                        expanded={assumptionsExpanded}
-                        onToggle={toggleAssumptions}
-                    />
+                    <>
+                        {fabricWeight && <FabricWeightSummary weight={fabricWeight} />}
+                        <CostingAssumptionsSummary
+                            result={costingResult}
+                            expanded={assumptionsExpanded}
+                            onToggle={toggleAssumptions}
+                        />
+                    </>
                 ) : undefined}
                 actions={(onDismiss, view) => (
                     <EstimatorLiveCostActions
