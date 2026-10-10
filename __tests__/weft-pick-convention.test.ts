@@ -72,8 +72,22 @@ describe('weft pick convention row transforms', () => {
         expect(next[0].picks).toBe(64)
     })
 
-    it('a legacy single weft growing to two asks for a convention', () => {
+    it('a single weft growing to two shares its picks as the total, 1:1', () => {
         const next = reconcileWeftPickConvention([weft('a', 64)], [weft('a', 64), weft('b', 0)])
-        expect(getWeftPickConvention(next)).toBeNull()
+        expect(getWeftPickConvention(next)).toBe('total_ratio')
+        expect(next.map(row => row.picks)).toEqual([32, 32])
+    })
+
+    it('a 2:4 repeat of 64 total picks gives 21.33 and 42.67 PPI', () => {
+        let rows = reconcileWeftPickConvention([weft('a', 64)], [weft('a', 64), weft('b', 0)])
+        rows = setWeftPickRatio(setWeftPickRatio(rows, 'a', 2), 'b', 4)
+        expect(rows[0].picks).toBeCloseTo(64 / 3, 10)
+        expect(rows[1].picks).toBeCloseTo(128 / 3, 10)
+        expect(rows[0].picks + rows[1].picks).toBe(64)
+    })
+
+    it('a single weft entered per weft keeps per-weft PPI when a weft is added', () => {
+        const next = reconcileWeftPickConvention([weft('a', 64, null)], [weft('a', 64, null), weft('b', 0)])
+        expect(getWeftPickConvention(next)).toBe('per_system')
     })
 })

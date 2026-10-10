@@ -38,8 +38,10 @@ export function setWeftPickRatio(rows: WeftRow[], id: string, ratio: number | nu
 
 /**
  * Carry the convention across added or removed weft systems. A fabric that
- * grows from one weft to several has no recorded convention yet, so the owner
- * is asked rather than given a silent default.
+ * grows from one weft to several starts as the quality's total picks shared
+ * 1:1, the way owners describe a multi-weft quality, and the panel shows that
+ * choice so nothing is assumed out of sight. A saved multi-weft recipe that
+ * never recorded a convention stays ambiguous until the owner picks one.
  */
 export function reconcileWeftPickConvention(previous: WeftRow[], next: WeftRow[]): WeftRow[] {
     if (next.length === 1 && previous.length > 1 && getWeftPickConvention(previous) === 'total_ratio') {
@@ -49,7 +51,7 @@ export function reconcileWeftPickConvention(previous: WeftRow[], next: WeftRow[]
     if (next.length <= 1) return next
     const convention = previous.length > 1
         ? getWeftPickConvention(previous)
-        : previous[0]?.pickRatio === null ? 'per_system' : typeof previous[0]?.pickRatio === 'number' ? 'total_ratio' : null
+        : previous[0]?.pickRatio === null ? 'per_system' : 'total_ratio'
     if (convention === 'per_system') return next.map(row => row.pickRatio === undefined ? { ...row, pickRatio: null } : row)
     if (convention === 'total_ratio') {
         const withRatios = next.map(row => typeof row.pickRatio === 'number' ? row : { ...row, pickRatio: 1 })

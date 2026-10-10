@@ -425,7 +425,7 @@ export function validateWeftPickConvention(weftRows: readonly WeftRow[], issues:
   rows.forEach((row, index) => {
     const ratio = Number(row.pickRatio)
     if (!Number.isFinite(ratio) || ratio <= 0) {
-      issues.push({ field: `weftRows.${index}.pickRatio`, message: `Weft layer ${index + 1} pick ratio must be greater than 0.` })
+      issues.push({ field: 'weftPickRepeat', message: `Weft layer ${index + 1} picks in each repeat must be greater than 0.` })
     }
   })
   const total = rows.reduce((sum, row) => sum + (Number(row.picks) || 0), 0)

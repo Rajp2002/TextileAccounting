@@ -190,7 +190,7 @@ describe('Test G: validation before a reliable estimate', () => {
     it('rejects a zero or negative ratio and picks that drifted from the ratio', () => {
         const zeroRatio = doubleLayer()
         zeroRatio.weftRows = zeroRatio.weftRows.map((row, index) => ({ ...row, pickRatio: index === 0 ? 0 : 1 }))
-        expect(issuesFor(zeroRatio).map(issue => issue.field)).toContain('weftRows.0.pickRatio')
+        expect(issuesFor(zeroRatio).map(issue => issue.field)).toContain('weftPickRepeat')
 
         const drifted = doubleLayer()
         drifted.weftRows = drifted.weftRows.map((row, index) => ({ ...row, pickRatio: index === 0 ? 2 : 1 }))

@@ -5,7 +5,7 @@ import {FreeRecalculationWindow} from '@/components/estimator/FreeRecalculationW
 import dynamic from 'next/dynamic'
 import { useMobileKeyboard } from '@/hooks/use-mobile-keyboard'
 import { KeyboardNextBar } from '@/components/ui/keyboard-next-bar'
-import { useReducer, useEffect, useLayoutEffect, useMemo, useCallback, useState, useRef, useId } from 'react'
+import { Fragment, useReducer, useEffect, useLayoutEffect, useMemo, useCallback, useState, useRef, useId } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { nanoid } from 'nanoid'
 import { Card, CardContent } from '@/components/ui/card'
@@ -2710,7 +2710,7 @@ function WeftPickConventionField({
                             ? tx('Choose one before costing. Two wefts at 64 PPI each is 128 picks in total; 64 total PPI shared 1:1 is 32 each.')
                             : convention === 'per_system'
                                 ? tx('Each weft row has its own PPI. The fabric’s total is their sum.')
-                                : tx('Enter the fabric’s total PPI once and give each weft its share.')}
+                                : tx('Enter the quality’s total picks, then how many picks each weft takes in one repeat, like 2 and 4.')}
                     </p>
                 </div>
                 <LiquidSegmented<WeftPickConvention | 'unset'>
@@ -2719,13 +2719,13 @@ function WeftPickConventionField({
                     value={convention ?? 'unset'}
                     onValueChange={value => { if (value !== 'unset') dispatch({ type: 'SET_WEFT_PICK_CONVENTION', convention: value }) }}
                     options={[
+                        { value: 'total_ratio', label: tx('Total picks + repeat') },
                         { value: 'per_system', label: tx('PPI per weft') },
-                        { value: 'total_ratio', label: tx('Total PPI shared') },
                     ]}
                 />
             </div>
             {convention === 'total_ratio' && (
-                <div className="max-w-xs">
+                <div className="grid gap-3 sm:grid-cols-[minmax(0,180px)_minmax(0,1fr)] sm:items-end">
                     <NumField
                         fieldKey="weftTotalPicks"
                         label={tx('Total picks')}
@@ -2736,6 +2736,32 @@ function WeftPickConventionField({
                         placeholder="e.g. 64"
                         attentionWhenEmpty
                     />
+                    <div data-testid="weft-pick-repeat" data-estimator-field="weftPickRepeat" className="min-w-0 space-y-1.5">
+                        <p className="flex h-8 items-end text-[11px] font-semibold uppercase leading-tight tracking-[0.05em] text-[var(--color-muted)]">{tx('Picks in each repeat')}</p>
+                        <div className="flex flex-wrap items-center gap-2">
+                            {weftRows.map((row, index) => (
+                                <Fragment key={row.id}>
+                                    {index > 0 && <span aria-hidden className="font-mono text-sm font-semibold text-[var(--color-muted)]">:</span>}
+                                    <div className="w-[84px]">
+                                        <Input
+                                            aria-label={`${tx('Picks in each repeat')}: ${row.label?.trim() || `${tx('Weft')} ${index + 1}`}`}
+                                            type="number"
+                                            inputMode="decimal"
+                                            min={0}
+                                            step={1}
+                                            enterKeyHint="next"
+                                            value={typeof row.pickRatio === 'number' && row.pickRatio > 0 ? row.pickRatio : ''}
+                                            placeholder="0"
+                                            onFocus={event => event.currentTarget.select()}
+                                            onChange={event => dispatch({ type: 'SET_WEFT_PICK_RATIO', id: row.id, value: parseNumericInput(event.target.value, { min: 0 }) })}
+                                            aria-invalid={!(Number(row.pickRatio) > 0) || undefined}
+                                            className={`h-11 rounded-[9px] px-2 text-center font-mono text-sm font-semibold text-[var(--color-yarn-orange)] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${Number(row.pickRatio) > 0 ? 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)]' : 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)]'}`}
+                                        />
+                                    </div>
+                                </Fragment>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             )}
             {convention !== null && (
@@ -2767,17 +2793,15 @@ function WeftRowPicksField({
     const convention = weftRows.length > 1 ? getWeftPickConvention(weftRows) : 'per_system'
     if (convention === 'total_ratio') {
         const picks = Number(row.picks) || 0
+        const repeat = weftRows.map(candidate => Number(candidate.pickRatio) || 0)
         return (
-            <NumField
-                fieldKey="pickRatio"
-                label={tx('Pick share')}
-                value={typeof row.pickRatio === 'number' ? row.pickRatio : null}
-                onChange={value => dispatch({ type: 'SET_WEFT_PICK_RATIO', id: row.id, value })}
-                step={0.5}
-                placeholder="e.g. 1"
-                hint={`${tx('Works out to')} ${Number.isInteger(picks) ? picks : picks.toFixed(2)} PPI`}
-                attentionWhenEmpty
-            />
+            <div data-estimator-field="derivedPicks" className="min-w-0 space-y-1.5">
+                <p className="flex h-8 items-end text-[11px] font-semibold uppercase leading-tight tracking-[0.05em] text-[var(--color-muted)]">{tx('Picks for this weft')}</p>
+                <div className="flex h-11 items-center justify-center rounded-[9px] border border-dashed border-[var(--color-hairline)] bg-[var(--color-surface-soft)] font-mono text-sm font-semibold text-[var(--color-ink)]">
+                    {Number.isInteger(picks) ? picks : picks.toFixed(2)} PPI
+                </div>
+                <p className="text-[11px] leading-snug text-[var(--color-muted)]">{`${tx('From the total picks and the repeat')} ${repeat.join(':')}`}</p>
+            </div>
         )
     }
     return (
