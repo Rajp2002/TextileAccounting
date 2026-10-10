@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { connect } from '../../scripts/test-db/cluster.mjs'
 import { asServiceRole, asSuperuser, asUser, freshDatabase, pgError, seedOwnerOrg, type Db } from './helpers'
+import { hasEstablishedPaidHistory } from '../../lib/subscription-access'
 
 // Base suppression and the one-month Lite trial: the trial schema, the
 // start_lite_trial RPC and the plan-flag guard, against the replayed migrations.
@@ -21,6 +22,36 @@ async function seedFreeOwner(): Promise<Owner> {
 async function startTrial(orgId: string) {
     await asServiceRole(db)
     return db.query('SELECT public.start_lite_trial($1) AS id', [orgId])
+}
+
+type RowShape = { status: string; paymentId: string | null; start?: boolean; end?: boolean; isTrial?: boolean }
+
+/** Paid-history rows as checkout, webhook and dismissal leave them; `start`/`end` set the period dates. */
+const paidHistoryRows: RowShape[] = [
+    { status: 'created', paymentId: 'pay_synthetic_created' },
+    ...['active', 'authenticated', 'completed', 'expired'].map(status => ({ status, paymentId: null })),
+    ...['paused', 'halted', 'cancelled'].map(status => ({ status, paymentId: null, start: true, end: true })),
+]
+
+function describeRow(row: RowShape) {
+    return JSON.stringify(row)
+}
+
+async function insertSubscriptionRow(orgId: string, row: RowShape) {
+    await asSuperuser(db)
+    await db.query(
+        `INSERT INTO public.org_subscriptions(org_id, plan_tier, status, razorpay_payment_id, current_start, current_end, is_trial)
+         VALUES ($1, 'lite', $2, $3,
+                 CASE WHEN $4::boolean THEN now() - interval '1 day' END,
+                 CASE WHEN $5::boolean THEN now() + interval '30 days' END,
+                 $6::boolean)`,
+        [orgId, row.status, row.paymentId, row.start ?? false, row.end ?? false, row.isTrial ?? false],
+    )
+}
+
+async function provisionFree(owner: Owner) {
+    await asServiceRole(db)
+    return db.query("SELECT public.provision_free_account($1, $2, now() - interval '1 minute')", [owner.userId, owner.orgId])
 }
 
 /** Resolves once the backend is blocked on a lock; fails if that does not happen within five seconds. */
@@ -138,23 +169,82 @@ describe('Base suppression and Lite trial schema', () => {
         await expect(startTrial(owner.orgId)).resolves.toMatchObject({ rowCount: 1 })
     })
 
-    it('a row with a razorpay_payment_id or a status of active/authenticated/paused/halted/cancelled/completed/expired blocks it', async () => {
-        const blockers: { status: string; paymentId: string | null }[] = [
-            { status: 'created', paymentId: 'pay_synthetic_created' },
-            ...['active', 'authenticated', 'paused', 'halted', 'cancelled', 'completed', 'expired'].map(status => ({ status, paymentId: null })),
-        ]
-        for (const { status, paymentId } of blockers) {
+    it('a row with a razorpay_payment_id, an active/authenticated/completed/expired status, or a paused/halted/cancelled status with dates blocks it', async () => {
+        for (const row of paidHistoryRows) {
             const owner = await seedFreeOwner()
-            await asSuperuser(db)
-            await db.query(
-                "INSERT INTO public.org_subscriptions(org_id, plan_tier, status, razorpay_payment_id) VALUES ($1, 'lite', $2, $3)",
-                [owner.orgId, status, paymentId],
-            )
-            expect(await pgError(startTrial(owner.orgId)), `status ${status}, payment id ${paymentId}`).toEqual({
-                code: 'P0001',
-                message: 'LITE_TRIAL_INELIGIBLE',
-            })
+            await insertSubscriptionRow(owner.orgId, row)
+            expect(await pgError(startTrial(owner.orgId)), describeRow(row)).toEqual({ code: 'P0001', message: 'LITE_TRIAL_INELIGIBLE' })
         }
+    })
+
+    it('dismissed or abandoned checkouts without a payment id or dates do not block the trial', async () => {
+        for (const status of ['created', 'paused', 'halted', 'cancelled']) {
+            const owner = await seedFreeOwner()
+            await insertSubscriptionRow(owner.orgId, { status, paymentId: null })
+            await expect(startTrial(owner.orgId), `status ${status}`).resolves.toMatchObject({ rowCount: 1 })
+        }
+    })
+
+    it('provision_free_account refuses an organization with established paid history', async () => {
+        for (const row of paidHistoryRows) {
+            const owner = await seedOwnerOrg(db, { tier: null })
+            await insertSubscriptionRow(owner.orgId, row)
+            expect(await pgError(provisionFree(owner)), describeRow(row)).toEqual({ code: 'P0001', message: 'FREE_EXISTING_ACCOUNT' })
+        }
+    })
+
+    it('provision_free_account succeeds after a dismissed or abandoned checkout with no grant', async () => {
+        for (const status of ['created', 'paused', 'halted', 'cancelled']) {
+            const owner = await seedOwnerOrg(db, { tier: null })
+            await insertSubscriptionRow(owner.orgId, { status, paymentId: null })
+            await provisionFree(owner)
+            await asSuperuser(db)
+            const { rows } = await db.query('SELECT count(*)::int AS grants FROM public.free_account_grants WHERE org_id = $1', [owner.orgId])
+            expect(rows, `status ${status}`).toEqual([{ grants: 1 }])
+        }
+    })
+
+    it('the shared paid-history predicate matches hasEstablishedPaidHistory for every row shape', async () => {
+        const statuses = ['created', 'pending', 'authenticated', 'active', 'paused', 'halted', 'cancelled', 'completed', 'expired', 'failed']
+        const dateCombinations = [
+            { start: false, end: false },
+            { start: true, end: false },
+            { start: false, end: true },
+            { start: true, end: true },
+        ]
+        const shapes: RowShape[] = []
+        for (const status of statuses) {
+            for (const dates of dateCombinations) {
+                for (const paymentId of [null, '', `pay_synthetic_${randomUUID()}`]) {
+                    shapes.push({ status, paymentId, ...dates })
+                }
+                // Trial rows carry no Razorpay ids (database shape check), so only the null id applies to them.
+                shapes.push({ status, paymentId: null, ...dates, isTrial: true })
+            }
+        }
+        expect(shapes).toHaveLength(statuses.length * dateCombinations.length * 4)
+
+        for (const shape of shapes) {
+            const owner = await seedOwnerOrg(db, { tier: null })
+            await insertSubscriptionRow(owner.orgId, shape)
+            await asServiceRole(db)
+            const { rows: [{ paid }] } = await db.query('SELECT public.org_has_established_paid_history($1) AS paid', [owner.orgId])
+            const tsRow = {
+                status: shape.status,
+                plan_tier: 'lite',
+                current_start: shape.start ? '2026-10-01T00:00:00.000Z' : null,
+                current_end: shape.end ? '2026-11-01T00:00:00.000Z' : null,
+                razorpay_payment_id: shape.paymentId,
+                is_trial: shape.isTrial ?? false,
+            }
+            expect(paid, describeRow(shape)).toBe(hasEstablishedPaidHistory([tsRow]))
+        }
+    })
+
+    it('authenticated users cannot call the shared paid-history predicate', async () => {
+        const owner = await seedOwnerOrg(db, { tier: null })
+        await asUser(db, owner.userId, owner.orgId)
+        expect((await pgError(db.query('SELECT public.org_has_established_paid_history($1)', [owner.orgId]))).code).toBe('42501')
     })
 
     it('authenticated users cannot execute start_lite_trial or change the plan flags', async () => {

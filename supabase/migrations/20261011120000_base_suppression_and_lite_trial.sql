@@ -70,8 +70,38 @@ CREATE TRIGGER guard_organization_plan_flags
 BEFORE INSERT OR UPDATE OF base_plan_visible, lite_trial_eligible ON public.organizations
 FOR EACH ROW EXECUTE FUNCTION public.guard_organization_plan_flags();
 
+-- The one database definition of established paid history. It mirrors
+-- hasEstablishedPaidHistory in lib/subscription-access.ts exactly: a payment
+-- id, an active/authenticated/completed/expired status, or a paused/halted/
+-- cancelled status with a period date. Dismissed or failed checkouts without
+-- those are not paid history, and a Lite trial row never is. Invoker rights:
+-- callers need only the table privilege they already hold.
+CREATE FUNCTION public.org_has_established_paid_history(p_org_id uuid)
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SET search_path = pg_catalog, public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.org_subscriptions AS s
+    WHERE s.org_id = p_org_id
+      AND s.is_trial IS NOT TRUE
+      AND (
+        NULLIF(s.razorpay_payment_id, '') IS NOT NULL
+        OR s.status IN ('active', 'authenticated', 'completed', 'expired')
+        OR (
+          s.status IN ('paused', 'halted', 'cancelled')
+          AND (s.current_start IS NOT NULL OR s.current_end IS NOT NULL)
+        )
+      )
+  );
+$$;
+
+REVOKE ALL ON FUNCTION public.org_has_established_paid_history(uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.org_has_established_paid_history(uuid) TO service_role;
+
 -- Starts the single 30-day Lite trial for an organization that holds a Free
--- grant and has no paid history or payment attempt. The trial row carries no
+-- grant and has no established paid history. The trial row carries no
 -- Razorpay ids, so the payment webhook and the paid-activation trigger never
 -- see it. Refusals raise P0001 with a fixed message the server action maps.
 CREATE FUNCTION public.start_lite_trial(p_org_id uuid)
@@ -100,14 +130,7 @@ BEGIN
     RAISE EXCEPTION 'LITE_TRIAL_FREE_GRANT_REQUIRED';
   END IF;
 
-  IF EXISTS (
-    SELECT 1 FROM public.org_subscriptions AS s
-    WHERE s.org_id = p_org_id
-      AND (
-        s.razorpay_payment_id IS NOT NULL
-        OR s.status IN ('active', 'authenticated', 'paused', 'halted', 'cancelled', 'completed', 'expired')
-      )
-  ) THEN
+  IF public.org_has_established_paid_history(p_org_id) THEN
     RAISE EXCEPTION 'LITE_TRIAL_INELIGIBLE';
   END IF;
 
