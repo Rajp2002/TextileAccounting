@@ -378,7 +378,7 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
             description={
               searchQuery.trim() || marginFilter !== 'all'
                 ? tx('Try searching for a different quality label or clear your filters.')
-                : tx('Complete a calculation in Cost Estimate to save your first costing snapshot.')
+                : tx('Complete a calculation in Cost Estimate to save your first costing.')
             }
             action={
               searchQuery.trim() || marginFilter !== 'all' ? (
@@ -633,7 +633,7 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
                   </div>
                 </div>
                 <DialogDescription>
-                  {tx('Saved costing snapshot')} · {formatTimestampDate(inspectingCosting.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}
+                  {tx('Saved costing')} · {formatTimestampDate(inspectingCosting.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}
                 </DialogDescription>
                 {!embedded && inspectingCosting.editWindow && <FreeRecalculationWindow remainingMs={remainingFreeEditMs(inspectingCosting.editWindow,now)} onRecalculate={() => router.push(`/free?costing=${inspectingCosting.id}`)} />}
                 <DialogClose asChild>
@@ -653,7 +653,7 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
                     <div>
                       <p className="text-sm font-black text-ink">{tx('Costing breakdown')}</p>
                       <p className="mt-0.5 text-xs text-subtle">
-                        {tx('Saved costing snapshot')} · {formatTimestampDate(inspectingCosting.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}
+                        {tx('Saved costing')} · {formatTimestampDate(inspectingCosting.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}
                       </p>
                     </div>
                     <div data-costing-tour="reuse" className="flex flex-wrap gap-2">

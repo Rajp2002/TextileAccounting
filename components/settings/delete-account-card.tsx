@@ -134,7 +134,7 @@ export function DeleteAccountCard({ organizationName }: { organizationName: stri
 
                         <div className="space-y-2">
                             <Label htmlFor="delete-account-confirmation-phrase">
-                                Type <span className="font-mono font-bold">{ACCOUNT_DELETION_CONFIRMATION_PHRASE}</span> to confirm
+                                To confirm, type: <span className="font-mono font-bold">{ACCOUNT_DELETION_CONFIRMATION_PHRASE}</span>
                             </Label>
                             <Input
                                 id="delete-account-confirmation-phrase"

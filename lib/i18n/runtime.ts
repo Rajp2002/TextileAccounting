@@ -1366,3 +1366,53 @@ function preserveWordCase(source: string, replacement: string) {
 function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 }
+
+type TemplatePhrase = { pattern: RegExp; keys: string[]; target: string; literalLength: number }
+
+/**
+ * Matches rendered text against phrases written with `{name}` placeholders,
+ * such as "Saved {count} qualities", so a sentence built from numbers or names
+ * still finds its complete translation. A captured value is translated only
+ * when it is itself an exact phrase (a status, a unit); names and numbers pass
+ * through unchanged. Text that matches nothing returns undefined and stays in
+ * English.
+ */
+export function createTemplatePhraseMatcher(phrases: Map<string, string>) {
+  const templates: TemplatePhrase[] = []
+
+  phrases.forEach((target, source) => {
+    const parts = source.split(/(\{\w+\})/g)
+    if (parts.length === 1) return
+    const literal = parts.filter((part) => !/^\{\w+\}$/.test(part)).join("")
+    // A template has to say something on its own; "{count}" or "v{version}"
+    // would match unrelated text.
+    if ((literal.match(/[A-Za-z]/g) ?? []).length < 4) return
+    const keys: string[] = []
+    const pattern = parts
+      .map((part) => {
+        if (/^\{\w+\}$/.test(part)) {
+          keys.push(part.slice(1, -1))
+          return "(.+?)"
+        }
+        return escapeRegExp(part).replace(/\s+/g, "\\s+")
+      })
+      .join("")
+    templates.push({ pattern: new RegExp(`^${pattern}$`), keys, target, literalLength: literal.length })
+  })
+
+  templates.sort((a, b) => b.literalLength - a.literalLength)
+
+  return (source: string): string | undefined => {
+    for (const { pattern, keys, target } of templates) {
+      const match = pattern.exec(source)
+      if (!match) continue
+      const values = new Map(keys.map((key, index) => [key, match[index + 1]]))
+      return target.replace(/\{(\w+)\}/g, (token, key: string) => {
+        const value = values.get(key)
+        if (value === undefined) return token
+        return phrases.get(value.trim()) ?? value
+      })
+    }
+    return undefined
+  }
+}

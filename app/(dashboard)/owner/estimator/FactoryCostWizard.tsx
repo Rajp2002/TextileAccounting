@@ -431,7 +431,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                                 aria-invalid={loomCount <= 0}
                                                 className="h-10 font-bold"
                                             />
-                                            {loomCount <= 0 && <p className="text-[10px] font-semibold text-[var(--wv-status-warning-fg)]">Required for a trustworthy factory baseline.</p>}
+                                            {loomCount <= 0 && <p className="text-[10px] font-semibold text-[var(--wv-status-warning-fg)]">Needed to work out your factory cost per metre.</p>}
                                         </div>
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-1.5">
@@ -718,7 +718,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                     <DialogHeader>
                         <DialogTitle className="text-[var(--wv-status-warning-fg)]">Review unusual setup values</DialogTitle>
                         <DialogDescription>
-                            These values may be correct for your factory, but they are outside the usual costing range. Confirm them before saving your factory baseline.
+                            These values may be correct for your factory, but they are outside the usual costing range. Confirm them before saving your factory costs.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="max-h-64 space-y-2 overflow-y-auto rounded-lg border border-[var(--wv-status-warning-border)] bg-[var(--wv-status-warning-bg)] p-3">

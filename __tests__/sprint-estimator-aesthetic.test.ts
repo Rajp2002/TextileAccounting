@@ -15,7 +15,7 @@ describe('Estimator aesthetic and responsive refinement', () => {
     expect(client).toContain('estimator-touch-target')
     expect(client).toContain('grid-rows-[0fr]')
     expect(client).toContain('Technical details')
-    expect(client).toContain('Calculation snapshot')
+    expect(client).toContain('Calculation method')
     expect(client).toContain("const [entryMode, setEntryMode] = useState<'quick' | 'detailed'>('quick')")
     expect(client).toContain('const [assumptionsExpanded, setAssumptionsExpanded] = useState(false)')
     expect(client).not.toContain('Assumptions used in this price')

@@ -95,7 +95,7 @@ describe('Base Saved Quality full-costing reuse', () => {
     expect(actions).toContain(".eq('record_kind', 'costing')")
     expect(actions).toContain('latest_costing_reuse')
     expect(estimator).toContain('restoreSavedQualityCostingAssumptions')
-    expect(estimator).toContain('Full costing reuse is active')
+    expect(estimator).toContain('Using today’s yarn rates with the other costs from the latest saved costing.')
     expect(estimator).toContain('data-testid="costing-save-review"')
     expect(estimator).toContain('Included in this')
     expect(estimator).toContain('Sections on:')
