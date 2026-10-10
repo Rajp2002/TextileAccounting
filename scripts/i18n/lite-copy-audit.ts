@@ -42,6 +42,9 @@ const EXCLUDED_FILES = [
     /^lib\/base-/,
     /^lib\/(payroll-cycle-engine|stock-navigation|production-mode|challan-payment-terms|terminology|audit-summaries|db|rate-limit|auth-cache-scope|legal-operator|legal-documents|upgrade-wall|estimator-export|estimator-tour|rate-book-tour|saved-costings-tour)\.ts$/,
     /^lib\/admin\//,
+    // Server-only PDF builders (PR #232): number formats, SVG and CSS, no screen copy.
+    /^lib\/document-branding\//,
+    /^lib\/document-pdf\.ts$/,
     /^lib\/tours\//,
     /^components\/settings\/(payroll|supervisors)\//,
     /^components\/stock\//,

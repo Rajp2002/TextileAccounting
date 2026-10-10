@@ -4,6 +4,7 @@ import { COSTING_DOCUMENT_PHRASES } from './costing-documents'
 import { ESTIMATOR_PHRASES } from './estimator'
 import { RATE_BOOK_PHRASES } from './rates'
 import { SAVED_COSTINGS_PHRASES } from './saved-costings'
+import { SETUP_PHRASES } from './setup'
 import { VALIDATION_PHRASES } from './validation'
 
 /**
@@ -18,6 +19,7 @@ const ROWS = [
     ...COSTING_DOCUMENT_PHRASES,
     ...ESTIMATOR_PHRASES,
     ...SAVED_COSTINGS_PHRASES,
+    ...SETUP_PHRASES,
     ...RATE_BOOK_PHRASES,
     ...ACCOUNT_PHRASES,
     ...VALIDATION_PHRASES,
