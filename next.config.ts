@@ -139,6 +139,8 @@ const withPWA = withPWAInit({
 })
 
 const nextConfig: NextConfig = {
+  // VTracer loads its WASM file from node_modules at runtime; keep it unbundled so the file is traced.
+  serverExternalPackages: ['@visioncortex/vtracer'],
   webpack(config, { buildId, webpack }) {
     config.plugins.push(new webpack.DefinePlugin({
       __WEAVLY_BUILD_ID__: JSON.stringify(buildId),
