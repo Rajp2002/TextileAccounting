@@ -378,7 +378,8 @@ const PRINT_STYLES = `
   .factorylogo{display:block;flex:none}.branded .issuer{min-width:0}.branded .issuer.withlogo{margin-left:16px;padding-left:16px;border-left:1px solid #DED2BD}.branded .issuer:not(.withlogo){margin-left:0;padding-left:0;border-left:0}.issuerline{margin-top:2px;color:#4B5350;font-size:10.5px;line-height:1.4;white-space:pre-line;overflow-wrap:anywhere}.branded .doctype{margin-top:5px}
   .spec{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));overflow:hidden;border:1px solid #DED2BD;border-radius:8px}.spec div{min-width:0;padding:9px 12px;border-left:1px solid #DED2BD}.spec div:nth-child(4n+1){border-left:0}.spec div:nth-child(n+5){border-top:1px solid #DED2BD}.spec span{display:block;color:#4B5350;font-size:9.5px;font-weight:700;letter-spacing:.06em}.spec strong{display:block;margin-top:3px;color:#18252E;font-size:12px;overflow-wrap:anywhere}.spec .wide{grid-column:span 2}
   .poweredby{display:inline-flex;align-items:center;gap:6px}.poweredby img{display:block}
-  html[lang="hi"] .doctype,html[lang="gu"] .doctype,html[lang="hi"] .eyebrow,html[lang="gu"] .eyebrow,html[lang="hi"] th,html[lang="gu"] th,html[lang="hi"] .sectionhead h2,html[lang="gu"] .sectionhead h2,html[lang="hi"] .figure span,html[lang="gu"] .figure span,html[lang="hi"] .parties span,html[lang="gu"] .parties span,html[lang="hi"] .commercial span,html[lang="gu"] .commercial span,html[lang="hi"] .note strong,html[lang="gu"] .note strong,html[lang="hi"] .quotevalue span,html[lang="gu"] .quotevalue span{letter-spacing:0;text-transform:none;font-size:11px}
+  html[lang="hi"] body,html[lang="gu"] body,.costing-pdf-root[lang="hi"],.costing-pdf-root[lang="gu"]{font-family:Arial,Helvetica,"Noto Sans Devanagari","Noto Sans Gujarati","Nirmala UI",Mangal,Shruti,sans-serif}
+  [lang="hi"] .doctype,[lang="gu"] .doctype,[lang="hi"] .eyebrow,[lang="gu"] .eyebrow,[lang="hi"] th,[lang="gu"] th,[lang="hi"] .sectionhead h2,[lang="gu"] .sectionhead h2,[lang="hi"] .figure span,[lang="gu"] .figure span,[lang="hi"] .parties span,[lang="gu"] .parties span,[lang="hi"] .commercial span,[lang="gu"] .commercial span,[lang="hi"] .note strong,[lang="gu"] .note strong,[lang="hi"] .quotevalue span,[lang="gu"] .quotevalue span{letter-spacing:0;text-transform:none;font-size:11px}
 `
 
 /**
@@ -389,7 +390,9 @@ const PRINT_STYLES = `
 export function extractStyledCostingBody(html: string) {
   const styles = [...html.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)].map(match => match[1]).join('\n')
   const body = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i)?.[1] ?? html
-  return `<style>${styles}</style><div class="costing-pdf-root">${body}</div>`
+  // The PDF renders this fragment without <html>, so the document language rides on the root.
+  const language = html.match(/<html[^>]*\blang="([a-z]{2})"/i)?.[1]
+  return `<style>${styles}</style><div class="costing-pdf-root"${language ? ` lang="${language}"` : ''}>${body}</div>`
 }
 
 const LOGO_DISPLAY_WIDTH = 100

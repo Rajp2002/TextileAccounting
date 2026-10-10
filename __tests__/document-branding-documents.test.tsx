@@ -240,3 +240,14 @@ describe('entitlement and storage boundary', () => {
         expect(read('next.config.ts')).toContain("serverExternalPackages: ['@visioncortex/vtracer']")
     })
 })
+
+describe('language in the PDF fragment', () => {
+    it('keeps the document language on the PDF root so the Hindi and Gujarati rules apply', async () => {
+        const { extractStyledCostingBody } = await import('@/lib/estimator-export')
+        const fragment = extractStyledCostingBody(buildCostingPrintHtml(model, { ...customer, language: 'gu' }))
+        expect(fragment).toContain('<div class="costing-pdf-root" lang="gu">')
+        expect(fragment).toContain('.costing-pdf-root[lang="gu"]{font-family:')
+        expect(fragment).toContain('"Noto Sans Gujarati"')
+        expect(fragment).not.toContain('html[lang="gu"] .doctype')
+    })
+})
