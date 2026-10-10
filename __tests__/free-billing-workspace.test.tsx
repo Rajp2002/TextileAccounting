@@ -6,6 +6,8 @@ const workspace = vi.hoisted(() => ({ tier: 'free' }))
 vi.mock('@/app/free/FreeWorkspace', () => ({ useFreeWorkspace: () => workspace }))
 vi.mock('@/lib/i18n/context', () => ({ useTranslation: () => ({ language: 'en' }) }))
 vi.mock('@/components/billing/PaymentHistoryDialog', () => ({ PaymentHistoryDialog: () => <div>Existing payment history</div> }))
+// FreeBillingClient imports StartTrialButton, which imports the server action module. Keep the server code out of this render test.
+vi.mock('@/app/(auth)/onboarding/plans/actions', () => ({ completePlanSelection: async () => ({}) }))
 import FreeBillingClient from '@/app/free/billing/FreeBillingClient'
 
 beforeEach(() => { workspace.tier = 'free'; vi.stubGlobal('React', React) })

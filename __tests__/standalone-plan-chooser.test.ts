@@ -1,6 +1,10 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+
+// PlanCard imports StartTrialButton, which imports the server action module. Keep the server code out of this contract test.
+vi.mock('@/app/(auth)/onboarding/plans/actions', () => ({ completePlanSelection: async () => ({}) }))
+
 import { BILLING_PLANS } from '@/lib/billing-constants'
 import {
   UPGRADE_FEATURE_IMAGES,

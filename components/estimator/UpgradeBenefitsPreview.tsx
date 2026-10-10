@@ -7,8 +7,10 @@ import { ArrowRight } from 'lucide-react'
 import { BILLING_PLANS, type PurchasablePlanTier } from '@/lib/billing-constants'
 import { Button } from '@/components/ui/button'
 import { UpgradeWall } from '@/components/billing/UpgradeWall'
+import { StartTrialButton, TRIAL_PAY_NOW_LINK_CLASS } from '@/components/plans/StartTrialButton'
 import { useTranslation } from '@/lib/i18n/context'
 import { freeText } from '@/lib/i18n/free-tier'
+import { liteTrialText } from '@/lib/i18n/lite-trial'
 import { upgradeText } from '@/lib/upgrade-wall'
 
 const SubscribeButton = dynamic(() => import('@/components/billing/SubscribeButton').then(module => module.SubscribeButton))
@@ -18,12 +20,14 @@ const SubscribeButton = dynamic(() => import('@/components/billing/SubscribeButt
  * Checkout defers its router refresh; `onActivated` verifies access through
  * the Free status read, which switches to the paid estimator in place.
  */
-export function UpgradeBenefitsPreview({ onActivated, open: controlledOpen, onOpenChange, baseVisible = false }: {
+export function UpgradeBenefitsPreview({ onActivated, open: controlledOpen, onOpenChange, baseVisible = false, liteTrialEligible = false }: {
   onActivated: () => void
   open?: boolean
   onOpenChange?: (open: boolean) => void
   /** Base is offered only to organizations that may see it. Defaults to hidden. */
   baseVisible?: boolean
+  /** The Lite trial is offered first only to organizations that may still start it. Defaults to hidden. */
+  liteTrialEligible?: boolean
 }) {
   const { language } = useTranslation()
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
@@ -32,20 +36,25 @@ export function UpgradeBenefitsPreview({ onActivated, open: controlledOpen, onOp
   const summaryRef = useRef<HTMLElement>(null)
   const upgradeEventId = useRef<Partial<Record<PurchasablePlanTier, string>>>({})
   const format = (paise: number) => new Intl.NumberFormat(`${language}-IN`, { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(paise / 100)
-  const paidAction = (tier: PurchasablePlanTier) => <>
+  const checkout = (tier: PurchasablePlanTier, buttonLabel?: string, className?: string) => <div onClickCapture={event => {
+    if (event.target instanceof Element && event.target.closest(`#subscribe-btn-${tier}`)) {
+      upgradeEventId.current[tier] ??= crypto.randomUUID()
+      void fetch('/api/free/events', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ eventId: upgradeEventId.current[tier], name: 'upgrade_started', language, entryPoint: 'billing' }) }).catch(() => {})
+    }
+  }}>
+    <SubscribeButton planTier={tier} deferRefresh buttonLabel={buttonLabel ?? freeText(language, tier === 'lite' ? 'upgradeButton' : 'upgradeBaseButton')} className={className} onSuccess={() => { setOpen(false); onActivated() }} />
+  </div>
+  const paidAction = (tier: PurchasablePlanTier, trialFirst = false) => <>
     <div className="space-y-1">
       <p><span className="text-3xl font-bold tracking-tight text-ink">{format(BILLING_PLANS[tier].firstYearTotalPaise)}</span><span className="ml-2 text-sm text-subtle">/ {upgradeText(language, 'firstYear')}</span></p>
       <p className="text-sm text-body">{upgradeText(language, 'renewal', { amount: format(BILLING_PLANS[tier].renewalTotalPaise) })}</p>
       <p className="text-xs text-subtle">{upgradeText(language, 'tax')}</p>
     </div>
-    <div onClickCapture={event => {
-      if (event.target instanceof Element && event.target.closest(`#subscribe-btn-${tier}`)) {
-        upgradeEventId.current[tier] ??= crypto.randomUUID()
-        void fetch('/api/free/events', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ eventId: upgradeEventId.current[tier], name: 'upgrade_started', language, entryPoint: 'billing' }) }).catch(() => {})
-      }
-    }}>
-      <SubscribeButton planTier={tier} deferRefresh buttonLabel={freeText(language, tier === 'lite' ? 'upgradeButton' : 'upgradeBaseButton')} onSuccess={() => { setOpen(false); onActivated() }} />
-    </div>
+    {trialFirst ? <div className="space-y-2">
+      <StartTrialButton className="w-full" />
+      <p className="text-xs leading-relaxed text-body">{liteTrialText(language, 'trialDisclosure')}</p>
+      {checkout(tier, liteTrialText(language, 'trialPayNow'), TRIAL_PAY_NOW_LINK_CLASS)}
+    </div> : checkout(tier)}
   </>
 
   return <details open={open} onToggle={event => setOpen(event.currentTarget.open)} className="ui-details overflow-hidden rounded-xl border border-saffron/30 bg-saffron-soft/40">
@@ -56,7 +65,7 @@ export function UpgradeBenefitsPreview({ onActivated, open: controlledOpen, onOp
     {open && <div className="border-t border-saffron/20 bg-surface-soft p-3 sm:p-5">
       <UpgradeWall currentPlan="free" baseVisible={baseVisible} actions={{
         free: <><div className="space-y-1"><p className="text-3xl font-bold tracking-tight text-ink">{format(0)}</p><p className="text-sm text-body">{upgradeText(language, 'freePrice')}</p></div><Button type="button" variant="outline" className="w-full" onClick={() => { setOpen(false); summaryRef.current?.focus() }}>{upgradeText(language, 'continueFree')}</Button></>,
-        lite: paidAction('lite'),
+        lite: paidAction('lite', liteTrialEligible),
         base: baseVisible ? paidAction('base') : undefined,
       }} />
       <div className="mt-3 flex justify-end">

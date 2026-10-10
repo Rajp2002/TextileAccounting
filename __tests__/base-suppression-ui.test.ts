@@ -82,7 +82,7 @@ describe('Base suppression: plan chooser', () => {
 
   it('renders only Free and Lite cards for a hidden org, and keeps the Base card for a visible one', async () => {
     const { PlanChooserClient } = await import('@/components/plans/PlanChooserClient')
-    const base = { currentPlan: 'free' as const, isOnboarding: false, freeAvailable: true, billingReady: true, paid: false }
+    const base = { currentPlan: 'free' as const, isOnboarding: false, freeAvailable: true, billingReady: true, paid: false, liteTrialEligible: false }
     const hidden = renderToStaticMarkup(createElement(PlanChooserClient, { ...base, baseVisible: false }))
     expect(hidden).not.toMatch(BASE_WORD)
     expect(hidden).not.toContain('Costing, production and payroll')

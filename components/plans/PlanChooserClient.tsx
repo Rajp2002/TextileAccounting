@@ -20,6 +20,8 @@ interface PlanChooserClientProps {
   paid: boolean
   /** Whether this organization may see Base. Hidden orgs see Free and Lite only. */
   baseVisible: boolean
+  /** Whether this organization may start the Lite trial. The trial replaces the Lite primary action. */
+  liteTrialEligible: boolean
   paymentRecovery?: ReactNode
 }
 
@@ -30,6 +32,7 @@ export function PlanChooserClient({
   billingReady,
   paid,
   baseVisible,
+  liteTrialEligible,
   paymentRecovery,
 }: PlanChooserClientProps) {
   const [busy, setBusy] = useState(false)
@@ -146,6 +149,7 @@ export function PlanChooserClient({
           mobileCompact={mobileCompact}
           onSelectFree={() => void finish('free')}
           onOpenPreview={handleOpenPreview}
+          liteTrialEligible={liteTrialEligible}
         />
 
         {baseVisible && (

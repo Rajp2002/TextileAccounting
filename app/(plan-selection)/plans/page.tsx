@@ -64,6 +64,7 @@ export default async function PlansPage(props: PlansPageProps) {
       billingReady={billingReadiness.canCreateOrder}
       paid={paid}
       baseVisible={access.baseVisible === true}
+      liteTrialEligible={access.liteTrialEligible === true}
       paymentRecovery={
         attempt && !paid ? (
           <BillingAttemptStatus attempt={attempt as BillingAttemptRow} />
