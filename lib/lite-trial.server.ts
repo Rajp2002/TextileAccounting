@@ -1,5 +1,5 @@
 import 'server-only'
-import { finishFreeProvisioning } from './free-account'
+import { canEnrollFree, finishFreeProvisioning, getFreeGrant } from './free-account'
 import { createAdminClient } from './supabase/admin'
 import { getOrgPlanAccess } from './subscription'
 
@@ -24,6 +24,16 @@ export async function startLiteTrialForOwner(
     if (!user.email) return { ok: false, error: 'An email address is required to enroll in Free.' }
     if (!user.email_confirmed_at) return { ok: false, error: 'Please verify your email address before activating Free access.' }
 
+    // Read the grant before provisioning: getFreeGrant is cache()-wrapped, so a read
+    // after provisioning in the same request can return the earlier null. The
+    // checks match the Free branch of completePlanSelection.
+    const grant = await getFreeGrant(orgId)
+    if (grant?.state === 'suspended') return { ok: false, error: 'Free access is not active for this account.' }
+    if (grant?.state === 'pending') return { ok: false, error: 'Free access is pending verification.' }
+    if (!grant && !await canEnrollFree(user.email)) {
+        return { ok: false, error: 'Free enrollment is not available for this account yet.' }
+    }
+
     try {
         const provisioned = await finishFreeProvisioning(user, orgId)
         if (!provisioned) return { ok: false, error: FREE_SETUP_FAILED }
@@ -33,7 +43,13 @@ export async function startLiteTrialForOwner(
 
     const { error } = await createAdminClient().rpc('start_lite_trial', { p_org_id: orgId })
     if (error) {
-        if (error.message.includes('LITE_TRIAL_INELIGIBLE')) return { ok: false, error: NOT_AVAILABLE }
+        if (error.message.includes('LITE_TRIAL_INELIGIBLE')) {
+            // A double-clicked or concurrent request may have started the trial first.
+            // The owner then has the trial they asked for, so this is success.
+            const after = await getOrgPlanAccess(orgId)
+            if (after.effectiveTier === 'lite') return { ok: true }
+            return { ok: false, error: NOT_AVAILABLE }
+        }
         return { ok: false, error: FREE_SETUP_FAILED }
     }
     return { ok: true }

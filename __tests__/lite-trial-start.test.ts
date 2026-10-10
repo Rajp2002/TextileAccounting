@@ -8,7 +8,6 @@ const mocks = vi.hoisted(() => ({
     requireRole: vi.fn(),
     assertOrgWritable: vi.fn(),
     getOrgPlanAccess: vi.fn(),
-    hasEstablishedPaidHistory: vi.fn(),
     getFreeGrant: vi.fn(),
     canEnrollFree: vi.fn(),
     finishFreeProvisioning: vi.fn(),
@@ -19,10 +18,14 @@ const mocks = vi.hoisted(() => ({
 }))
 
 vi.mock('../lib/auth', () => ({ requireRole: mocks.requireRole, assertOrgWritable: mocks.assertOrgWritable }))
-vi.mock('../lib/subscription', () => ({
-    getOrgPlanAccess: mocks.getOrgPlanAccess,
-    hasEstablishedPaidHistory: mocks.hasEstablishedPaidHistory,
-}))
+vi.mock('../lib/subscription', async () => {
+    const actual = await vi.importActual<typeof import('../lib/subscription-access')>('../lib/subscription-access')
+    return {
+        getOrgPlanAccess: mocks.getOrgPlanAccess,
+        // The real paid-history rule, so trial rows are judged exactly as in production.
+        hasEstablishedPaidHistory: actual.hasEstablishedPaidHistory,
+    }
+})
 vi.mock('../lib/free-account', () => ({
     getFreeGrant: mocks.getFreeGrant,
     canEnrollFree: mocks.canEnrollFree,
@@ -54,20 +57,29 @@ const user = {
 }
 const NOT_AVAILABLE = 'Your free trial is not available for this account.'
 const FREE_SETUP = 'Free setup could not finish. Please try again.'
+const BILLING = { error: 'Please manage or renew your subscription from your workspace.', href: '/owner/billing' }
+
+/** Simulates the paid-history select: PostgREST returns only the columns the action asks for. */
+function subscriptionRows(rows: Record<string, unknown>[]) {
+    return {
+        select: vi.fn((columns: string) => {
+            const keys = columns.split(',').map(column => column.trim())
+            const data = rows.map(row => Object.fromEntries(keys.map(key => [key, row[key]])))
+            return { eq: vi.fn().mockResolvedValue({ data }) }
+        }),
+    }
+}
 
 beforeEach(() => {
     vi.resetAllMocks()
     mocks.requireRole.mockResolvedValue({ user, profile: { org_id: org, role: 'owner' } })
     mocks.assertOrgWritable.mockResolvedValue(undefined)
     mocks.getOrgPlanAccess.mockResolvedValue({ effectiveTier: 'none', liteTrialEligible: true })
-    mocks.hasEstablishedPaidHistory.mockReturnValue(false)
     mocks.getFreeGrant.mockResolvedValue(null)
     mocks.canEnrollFree.mockResolvedValue(true)
     mocks.finishFreeProvisioning.mockResolvedValue(true)
     mocks.rpc.mockResolvedValue({ data: 'trial-row', error: null })
-    mocks.from.mockReturnValue({
-        select: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ data: [] }) }),
-    })
+    mocks.from.mockReturnValue(subscriptionRows([]))
     mocks.updateUserById.mockResolvedValue({ data: { user }, error: null })
     mocks.refreshSession.mockResolvedValue({ error: null })
 })
@@ -114,6 +126,58 @@ describe('startLiteTrialForOwner', () => {
         expect(mocks.finishFreeProvisioning).not.toHaveBeenCalled()
         expect(mocks.rpc).not.toHaveBeenCalled()
     })
+
+    it('refuses a suspended Free grant before provisioning or starting the trial', async () => {
+        mocks.getFreeGrant.mockResolvedValue({ subjectId: user.id, state: 'suspended' })
+        expect(await startLiteTrialForOwner(user, org)).toEqual({ ok: false, error: 'Free access is not active for this account.' })
+        expect(mocks.finishFreeProvisioning).not.toHaveBeenCalled()
+        expect(mocks.rpc).not.toHaveBeenCalled()
+    })
+
+    it('refuses a pending Free grant before provisioning or starting the trial', async () => {
+        mocks.getFreeGrant.mockResolvedValue({ subjectId: user.id, state: 'pending' })
+        expect(await startLiteTrialForOwner(user, org)).toEqual({ ok: false, error: 'Free access is pending verification.' })
+        expect(mocks.finishFreeProvisioning).not.toHaveBeenCalled()
+        expect(mocks.rpc).not.toHaveBeenCalled()
+    })
+
+    it('reads the Free grant before provisioning, because a read after provisioning can return the cached null', async () => {
+        expect(await startLiteTrialForOwner(user, org)).toEqual({ ok: true })
+        expect(mocks.getFreeGrant.mock.invocationCallOrder[0]).toBeLessThan(mocks.finishFreeProvisioning.mock.invocationCallOrder[0])
+    })
+
+    it('refuses with the enrollment message when Free enrollment is paused and no grant exists yet', async () => {
+        mocks.canEnrollFree.mockResolvedValue(false)
+        expect(await startLiteTrialForOwner(user, org)).toEqual({ ok: false, error: 'Free enrollment is not available for this account yet.' })
+        expect(mocks.canEnrollFree).toHaveBeenCalledWith(user.email)
+        expect(mocks.finishFreeProvisioning).not.toHaveBeenCalled()
+        expect(mocks.rpc).not.toHaveBeenCalled()
+    })
+
+    it('does not check enrollment again when a Free grant already exists', async () => {
+        mocks.getFreeGrant.mockResolvedValue({ subjectId: user.id, state: 'active' })
+        mocks.canEnrollFree.mockResolvedValue(false)
+        expect(await startLiteTrialForOwner(user, org)).toEqual({ ok: true })
+        expect(mocks.canEnrollFree).not.toHaveBeenCalled()
+        expect(mocks.rpc).toHaveBeenCalledWith('start_lite_trial', { p_org_id: org })
+    })
+
+    it('treats a concurrent request that already started the trial as success', async () => {
+        mocks.getOrgPlanAccess
+            .mockResolvedValueOnce({ effectiveTier: 'none', liteTrialEligible: true })
+            .mockResolvedValueOnce({ effectiveTier: 'lite', liteTrialEligible: false })
+        mocks.rpc.mockResolvedValue({ data: null, error: { message: 'LITE_TRIAL_INELIGIBLE' } })
+        expect(await startLiteTrialForOwner(user, org)).toEqual({ ok: true })
+        expect(mocks.getOrgPlanAccess).toHaveBeenCalledTimes(2)
+    })
+
+    it('keeps refusing LITE_TRIAL_INELIGIBLE when the org is not on a trial afterwards', async () => {
+        mocks.getOrgPlanAccess
+            .mockResolvedValueOnce({ effectiveTier: 'none', liteTrialEligible: true })
+            .mockResolvedValueOnce({ effectiveTier: 'free', liteTrialEligible: false })
+        mocks.rpc.mockResolvedValue({ data: null, error: { message: 'LITE_TRIAL_INELIGIBLE' } })
+        expect(await startLiteTrialForOwner(user, org)).toEqual({ ok: false, error: NOT_AVAILABLE })
+    })
 })
 
 describe('completePlanSelection trial path', () => {
@@ -133,18 +197,24 @@ describe('completePlanSelection trial path', () => {
         expect(mocks.rpc).not.toHaveBeenCalled()
     })
 
-    it('sends paid history to billing before any trial is attempted', async () => {
-        mocks.from.mockReturnValue({
-            select: vi.fn().mockReturnValue({
-                eq: vi.fn().mockResolvedValue({ data: [{ status: 'expired', plan_tier: 'lite', current_end: '2026-08-01T00:00:00Z', razorpay_payment_id: 'pay_1' }] }),
-            }),
-        })
-        mocks.hasEstablishedPaidHistory.mockReturnValue(true)
-        expect(await completePlanSelection('trial')).toEqual({
-            error: 'Please manage or renew your subscription from your workspace.',
-            href: '/owner/billing',
-        })
+    it('sends a real paid row to billing before any trial is attempted', async () => {
+        mocks.from.mockReturnValue(subscriptionRows([
+            { status: 'expired', plan_tier: 'lite', current_end: '2026-08-01T00:00:00Z', razorpay_payment_id: 'pay_1', is_trial: false },
+        ]))
+        expect(await completePlanSelection('trial')).toEqual(BILLING)
         expect(mocks.rpc).not.toHaveBeenCalled()
+    })
+
+    it('a lapsed trial row does not send the owner to billing, and the Free fallback resolves', async () => {
+        mocks.from.mockReturnValue(subscriptionRows([
+            { status: 'active', plan_tier: 'lite', current_start: '2026-08-01T00:00:00Z', current_end: '2026-08-31T00:00:00Z', razorpay_payment_id: null, is_trial: true },
+        ]))
+        mocks.getOrgPlanAccess.mockResolvedValue({ effectiveTier: 'free', liteTrialEligible: false })
+        mocks.getFreeGrant.mockResolvedValue({ subjectId: user.id, state: 'active' })
+        expect(await completePlanSelection('free')).toEqual({ href: '/free' })
+        expect(mocks.rpc).not.toHaveBeenCalled()
+        // A lapsed trial cannot start a second trial either.
+        expect(await completePlanSelection('trial')).toEqual({ error: NOT_AVAILABLE })
     })
 
     it('keeps the pending gate when the trial is refused', async () => {
@@ -187,6 +257,10 @@ describe('Lite trial start contracts', () => {
         expect(branch).toContain('startLiteTrialForOwner(user, profile.org_id)')
         expect(branch).toContain("if (user.app_metadata.plan_selection_pending === true)")
         expect(branch).toContain("return { href: '/owner/estimator' }")
+    })
+
+    it('the paid-history query selects is_trial so a lapsed trial row is not counted as paid history', () => {
+        expect(actions()).toContain("'status, plan_tier, current_start, current_end, razorpay_payment_id, is_trial'")
     })
 
     it('the trial branch refreshes the session with the same error strings as the other branches', () => {

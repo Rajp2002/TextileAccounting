@@ -47,7 +47,7 @@ export async function completePlanSelection(plan: 'free' | 'paid' | 'trial'): Pr
     // Check paid history: an activated paid subscription never silently falls back to Free on expiry
     const admin = createAdminClient()
     const { data: subData } = await admin.from('org_subscriptions')
-        .select('status, plan_tier, current_start, current_end, razorpay_payment_id')
+        .select('status, plan_tier, current_start, current_end, razorpay_payment_id, is_trial')
         .eq('org_id', profile.org_id)
     const hadPaidAccess = hasEstablishedPaidHistory(subData ?? [])
     if (hadPaidAccess) {
