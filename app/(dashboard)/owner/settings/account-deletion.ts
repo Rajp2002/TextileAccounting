@@ -7,6 +7,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireRole } from '@/lib/auth'
 import { checkRateLimit, getDestructiveLimiter, getRateLimitRetrySeconds } from '@/lib/rate-limit'
 import { ACCOUNT_DELETION_CONFIRMATION_PHRASE } from '@/lib/account-deletion'
+import { removeOrganizationBrandingFiles } from '@/lib/document-branding/service.server'
 import { checkOwnAccountDeletion, ACCOUNT_DELETION_REVIEW_MESSAGE, ACCOUNT_DELETION_UNAVAILABLE_MESSAGE } from '@/lib/support/data-rights'
 
 const DeleteAccountInputSchema = z.object({
@@ -92,6 +93,14 @@ export async function deleteAccountPermanently(input: DeleteAccountInput): Promi
             error: deletionError.code === '55000' && deletionError.message === 'ACCOUNT_DELETION_REVIEW_REQUIRED' ? ACCOUNT_DELETION_REVIEW_MESSAGE
                 : 'Your account could not be deleted. Nothing was removed; please try again.',
         }
+    }
+
+    // Logo files live in Storage, outside the deletion transaction. The rows
+    // that pointed at them are gone, so remove the bytes too (best effort).
+    try {
+        await removeOrganizationBrandingFiles(organization.id)
+    } catch {
+        console.error('Document branding files were not removed after account deletion')
     }
 
     // The Auth identity was hard-deleted inside the RPC. This call is best

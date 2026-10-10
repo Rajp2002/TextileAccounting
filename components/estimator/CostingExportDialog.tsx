@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import Link from 'next/link'
 import { addDays, format } from 'date-fns'
 import {
   AlertTriangle,
@@ -47,12 +48,17 @@ import { trackPlanEvent } from '@/lib/plan-analytics'
 import { createDocumentGenerationGuard } from '@/lib/document-generation'
 import { useTranslation } from '@/lib/i18n/context'
 import { canSharePreparedFile, sharePreparedDocument } from '@/lib/prepared-document-share'
-
-const PDF_LAYOUT_WIDTH_PX = 700
+import { renderDocumentPdf } from '@/lib/document-pdf'
+import { getCostingDocumentBranding } from '@/app/(dashboard)/owner/settings/document-branding-actions'
+import { brandingText } from '@/lib/i18n/document-branding'
+import type { DocumentBranding } from '@/lib/document-branding/types'
 
 type ExportStatus ='idle' | 'saving' | 'generating' | 'generated' | 'download-started' | 'print-opened' | 'share-opened' | 'failed'
 
 type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected'
+
+type CostingBranding = { quotation: DocumentBranding; internal_cost_sheet: DocumentBranding }
+type BrandingState = { status: 'loading' } | { status: 'ready'; value: CostingBranding | null }
 
 function getDefaultValidity(value?: string, locked = false) {
   return value || (locked ? '' : format(addDays(new Date(), 15), 'yyyy-MM-dd'))
@@ -109,7 +115,7 @@ export function CostingExportDialog({
   /** What the numbers come from; shown above the form when given. */
   documentSource?: CostingDocumentSource
 }) {
-  const { tx, t } = useTranslation()
+  const { tx, t, language } = useTranslation()
   const generationGuard = useRef(createDocumentGenerationGuard())
   const [mode, setMode] = useState<CostingExportMode>(defaultMode)
   const [businessName, setBusinessName] = useState(defaultBusinessName)
@@ -126,6 +132,10 @@ export function CostingExportDialog({
   const [sharing, setSharing] = useState(false)
   const [latestQuoteUpdatedAt, setLatestQuoteUpdatedAt] = useState(sourceQuoteUpdatedAt)
   const [mobileActions, setMobileActions] = useState(false)
+  const [showFabricSpec, setShowFabricSpec] = useState(true)
+  // Paid plans print the factory's logo and details, resolved on the server.
+  // The tour preview and Free accounts keep the existing document layout.
+  const [branding, setBranding] = useState<BrandingState>({ status: 'ready', value: null })
 
   useEffect(() => {
     const media = window.matchMedia('(max-width: 767px), (max-height: 500px) and (pointer: coarse)')
@@ -160,8 +170,30 @@ export function CostingExportDialog({
     setGeneratedFilename('')
     setSharing(false)
     setLatestQuoteUpdatedAt(sourceQuoteUpdatedAt)
+    setShowFabricSpec(true)
     if (!tutorialPreview) void trackPlanEvent('export_preview_opened', { mode: defaultMode })
   }, [defaultBusinessName, defaultCustomerName, defaultCustomerTerms, defaultInternalNotes, defaultMode, defaultValidUntil, hasModel, open, sourceQuoteStatus, sourceQuoteUpdatedAt, sourceRecordKind, tutorialPreview])
+
+  useEffect(() => {
+    if (!open || !hasModel || tutorialPreview) return
+    let cancelled = false
+    setBranding({ status: 'loading' })
+    getCostingDocumentBranding()
+      .then(value => {
+        if (cancelled) return
+        setBranding({ status: 'ready', value })
+        // Default quotation terms from Settings fill an empty, editable terms box.
+        const terms = value?.quotation.defaultQuotationTerms.trim()
+        if (terms && !lockedQuotation) setCustomerTerms(current => current.trim() ? current : terms)
+      })
+      // Branding is optional: a failure exports the document without it.
+      .catch(() => { if (!cancelled) setBranding({ status: 'ready', value: null }) })
+    return () => { cancelled = true }
+  }, [hasModel, lockedQuotation, open, tutorialPreview])
+
+  const documentBranding = branding.status === 'ready' && branding.value
+    ? branding.value[mode === 'customer' ? 'quotation' : 'internal_cost_sheet']
+    : null
 
   const options = useMemo(() => ({
     mode,
@@ -172,7 +204,10 @@ export function CostingExportDialog({
     showGstNote,
     documentReference: documentReference ?? '',
     allowMissingValidUntil: lockedQuotation && !defaultValidUntil,
-  }), [businessName, customerName, customerTerms, defaultValidUntil, documentReference, internalNotes, lockedQuotation, mode, showGstNote, validUntil])
+    language,
+    branding: documentBranding,
+    showFabricSpec,
+  }), [businessName, customerName, customerTerms, defaultValidUntil, documentBranding, documentReference, internalNotes, language, lockedQuotation, mode, showFabricSpec, showGstNote, validUntil])
 
   const previewHtml = useMemo(() => model ? buildCostingPrintHtml(model, options) : '', [model, options])
   const documentKey = model ? JSON.stringify([previewHtml, getCostingExportFilename(model, options)]) : ''
@@ -191,7 +226,8 @@ export function CostingExportDialog({
     return () => guard.update(null)
   }, [documentKey, open])
   const validationErrors = useMemo(() => validateCostingExportInput(model, options), [model, options])
-  const canGenerate = validationErrors.length === 0 && status !== 'saving' && status !== 'generating'
+  const brandingLoading = branding.status === 'loading'
+  const canGenerate = validationErrors.length === 0 && status !== 'saving' && status !== 'generating' && !brandingLoading
   const isBusy = status === 'saving' || status === 'generating' || sharing
   const exportActionHint = !model
     ? 'Complete the Cost Estimate before creating a document.'
@@ -316,35 +352,10 @@ export function CostingExportDialog({
       if (!isCurrentGeneration()) return
       setStatus('generating')
 
-      const { jsPDF } = await import('jspdf')
+      const blob = await renderDocumentPdf(extractStyledCostingBody(previewHtml))
       if (!isCurrentGeneration()) return
-      const pdf = new jsPDF({ unit: 'pt', format: 'a4' })
-      const host = document.createElement('div')
-      // The document is laid out 700px wide and scaled onto the 523pt A4 text
-      // block (x0.747), so its 12px body text prints at about 9pt.
-      host.style.width = `${PDF_LAYOUT_WIDTH_PX}px`
-      host.style.position = 'fixed'
-      host.style.left = '0'
-      host.style.top = '0'
-      host.style.zIndex = '-1'
-      host.style.pointerEvents = 'none'
-      host.style.background = '#ffffff'
-      host.innerHTML = extractStyledCostingBody(previewHtml)
-      document.body.appendChild(host)
-      try {
-        await pdf.html(host, {
-          margin: [36, 36, 36, 36],
-          autoPaging: 'text',
-          width: 523,
-          windowWidth: PDF_LAYOUT_WIDTH_PX,
-        })
-      } finally {
-        host.remove()
-      }
 
       const filename = getCostingExportFilename(model, options)
-      const blob = pdf.output('blob')
-      if (!isCurrentGeneration()) return
       setGeneratedBlob(blob)
       setGeneratedFilename(filename)
       setGeneratedDocumentKey(documentKey)
@@ -516,7 +527,27 @@ export function CostingExportDialog({
                   <Switch id="export-gst-note" checked={showGstNote} onCheckedChange={setShowGstNote} disabled={isBusy} />
                 </label>
               )}
+              {mode === 'customer' && (
+                <label htmlFor="export-fabric-spec" data-i18n-skip="true" className={cn('flex min-h-11 items-center justify-between gap-4 rounded-lg border border-[var(--wv-border-subtle)] p-3', isBusy ? 'cursor-not-allowed opacity-60' : 'cursor-pointer')}>
+                  <span>
+                    <span className="block text-sm font-medium">{brandingText(language, 'exportSpecToggle')}</span>
+                    <span className="block text-xs text-[var(--wv-text-secondary)]">{brandingText(language, 'exportSpecHelp')}</span>
+                  </span>
+                  <Switch id="export-fabric-spec" checked={showFabricSpec} onCheckedChange={setShowFabricSpec} disabled={isBusy} />
+                </label>
+              )}
             </div>
+
+            {!tutorialPreview && (brandingLoading || branding.value) && (
+              <p data-export-branding data-i18n-skip="true" role="status" className="text-sm leading-relaxed text-[var(--wv-text-secondary)]">
+                {brandingLoading
+                  ? brandingText(language, 'exportBrandingLoading')
+                  : documentBranding?.logo || documentBranding?.profile.address || documentBranding?.profile.gstin
+                    ? brandingText(language, 'exportBrandingApplied')
+                    : brandingText(language, 'exportBrandingMissing')}
+                {!brandingLoading && <> <Link href="/owner/settings#company-profile" className="font-semibold text-[var(--wv-action-primary)] underline-offset-2 hover:underline">{brandingText(language, 'exportBrandingLink')}</Link></>}
+              </p>
+            )}
 
             <div className="rounded-xl border border-[var(--wv-border-subtle)] bg-[var(--wv-bg-subtle)] p-3">
               <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--wv-text-secondary)]">Filename</p>
