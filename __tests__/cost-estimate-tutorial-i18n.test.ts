@@ -9,7 +9,8 @@ import { hi } from '../lib/i18n/locales/hi'
 import { BASE_PLAN_PHRASES, isBasePlanSurfacePath } from '../lib/i18n/base-plan-phrases'
 import { legacyPhraseTranslations } from '../lib/i18n/legacy'
 import { generatedLegacyPhraseTranslations } from '../lib/i18n/legacy-generated'
-import { applyTranslationGuards, translateStrictBasePlanText } from '../lib/i18n/runtime'
+import { applyTranslationGuards, createTemplatePhraseMatcher, translateStrictBasePlanText } from '../lib/i18n/runtime'
+import { isLiteCompleteSurfacePath } from '../lib/i18n/lite-surface'
 
 const locales = { en, gu, hi }
 const spec = readFileSync('docs/guided-tours/pages/cost-estimator.md', 'utf8')
@@ -19,7 +20,7 @@ const provider = readFileSync('lib/i18n/context.tsx', 'utf8')
 const resolverSource = provider.slice(provider.indexOf('function collectPhraseMap('), provider.indexOf('function getReversePhraseMap('))
 const compiled = ts.transpileModule(resolverSource, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText
 // Exercise the real provider precedence/guards without a browser or changing its exports.
-const resolvers = new Function('en', 'BASE_PLAN_PHRASES', 'applyTranslationGuards', 'translateStrictBasePlanText', 'translationCache', `${compiled}; return { collectPhraseMap, translateSourceText }`)(en, BASE_PLAN_PHRASES, applyTranslationGuards, translateStrictBasePlanText, new WeakMap())
+const resolvers = new Function('en', 'BASE_PLAN_PHRASES', 'applyTranslationGuards', 'translateStrictBasePlanText', 'translationCache', 'createTemplatePhraseMatcher', 'templatePhraseMatchers', `${compiled}; return { collectPhraseMap, translateSourceText }`)(en, BASE_PLAN_PHRASES, applyTranslationGuards, translateStrictBasePlanText, new WeakMap(), createTemplatePhraseMatcher, new WeakMap())
 
 describe('Estimator approved copy and live-label parity', () => {
     it.each(['en', 'gu', 'hi'] as const)('transcribes every F.1 string exactly in %s with native script and matching keys', language => {
@@ -37,9 +38,9 @@ describe('Estimator approved copy and live-label parity', () => {
         const t = (key: string) => key.split('.').reduce<unknown>((node, part) => (node as Record<string, unknown>)[part], dictionary) as string
         const map = resolvers.collectPhraseMap(language, language === 'en' ? undefined : { translation: dictionary, legacy: legacyPhraseTranslations[language], generatedLegacy: generatedLegacyPhraseTranslations[language] })
         for (const route of ['/owner/estimator', '/free']) {
-            const strict = isBasePlanSurfacePath(route)
-            expect(strict).toBe(true)
-            const tx = (text: string) => resolvers.translateSourceText(text, language, map, strict) ?? text
+            expect(isBasePlanSurfacePath(route)).toBe(true)
+            const surface = isLiteCompleteSurfacePath(route) ? 'lite' : 'base'
+            const tx = (text: string) => resolvers.translateSourceText(text, language, map, surface) ?? text
             const fresh = estimatorControlLabels(t, tx, false)
             if (language !== 'en') for (const row of tokenRows) expect(fresh[row[0].replaceAll('`', '') as keyof typeof fresh]).toBe(row[language === 'gu' ? 3 : 4])
             const existing = estimatorControlLabels(t, tx, true)

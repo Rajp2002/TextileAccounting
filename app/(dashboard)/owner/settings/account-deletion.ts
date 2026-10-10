@@ -90,7 +90,7 @@ export async function deleteAccountPermanently(input: DeleteAccountInput): Promi
         })
         return {
             error: deletionError.code === '55000' && deletionError.message === 'ACCOUNT_DELETION_REVIEW_REQUIRED' ? ACCOUNT_DELETION_REVIEW_MESSAGE
-                : 'Account deletion could not be completed. No database rows were deleted; please try again.',
+                : 'Your account could not be deleted. Nothing was removed; please try again.',
         }
     }
 

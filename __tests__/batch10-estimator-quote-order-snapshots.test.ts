@@ -130,7 +130,7 @@ describe('Estimator persistence safety', () => {
         expect(quotesClient).toContain("onStartFrom={quote => { setOpenQualityKey(null); void handleRestore(quote, 'duplicate') }}")
         expect(quotesClient).toContain('sourceQuoteId: isDuplicate ? undefined : quote.id')
         expect(quotesClient).toContain('onToggleArchived={requestArchiveState}')
-        expect(quotesClient).toContain('This archives only this costing snapshot.')
+        expect(quotesClient).toContain('This archives only this costing.')
         expect(quotesClient).not.toContain('Delete this Costing?')
         expect(functionBody(estimatorActions, 'deleteEstimatorQuote')).toContain(".in('status', ['draft', 'rejected'])")
     })

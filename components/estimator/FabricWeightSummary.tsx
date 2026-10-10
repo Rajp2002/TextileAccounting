@@ -18,7 +18,7 @@ export function FabricWeightSummary({ weight }: { weight: FabricWeight }) {
                 <p className="mt-0.5 text-xs leading-4 text-[var(--color-muted)]">{tx('Grey cloth from the yarn above, before waste')}</p>
             </div>
             <p className="text-right font-mono text-sm font-semibold tabular-nums text-[var(--color-ink)]">
-                {weight.gsm != null && <span className="block">{formatWeight(weight.gsm)} GSM</span>}
+                {weight.gsm != null && <span className="block">{formatWeight(weight.gsm)} g/m²</span>}
                 <span className={weight.gsm != null ? 'block text-xs font-medium text-[var(--color-muted)]' : 'block'}>{formatWeight(weight.gramsPerMetre)} g/m</span>
             </p>
         </div>

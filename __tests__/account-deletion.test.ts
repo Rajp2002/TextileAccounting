@@ -50,7 +50,7 @@ describe('permanent account deletion guardrails', () => {
         expect(action).toContain('ACCOUNT_DELETION_REVIEW_MESSAGE')
         expect(action).not.toContain('cancellableSubscriptionStatuses')
         expect(action).toContain("supabase.rpc('delete_account_permanently'")
-        expect(action).toContain('No database rows were deleted')
+        expect(action).toContain('Nothing was removed')
         expect(action).toContain('getDestructiveLimiter')
         expect(action.indexOf("not('razorpay_subscription_id', 'is', null)"))
             .toBeLessThan(action.indexOf("supabase.rpc('delete_account_permanently'"))

@@ -258,10 +258,10 @@ export function ReferralCard({ stats }: { stats: ReferralStats | null }) {
                                 <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-saffron" aria-hidden="true" />
                                 <div>
                                     <p className="text-sm font-semibold text-white">
-                                        {activeCredits} active {activeCredits === 1 ? 'referral' : 'referrals'} ready to redeem
+                                        {`${activeCredits} active ${activeCredits === 1 ? 'referral' : 'referrals'} ready to redeem`}
                                     </p>
                                     <p className="mt-1 text-xs leading-relaxed text-surface-muted">
-                                        Redeem all now to reserve {activeCredits} future Base renewals free of charge ({formatAmount(activeValuePaise)} total value).
+                                        {`Redeem all now to reserve ${activeCredits} future Base renewals free of charge (${formatAmount(activeValuePaise)} total value).`}
                                     </p>
                                 </div>
                             </div>
@@ -297,7 +297,7 @@ export function ReferralCard({ stats }: { stats: ReferralStats | null }) {
                                                 </div>
                                                 <p className="mt-1 text-xs leading-relaxed text-surface-muted">{presentation.detail}</p>
                                                 <p className="mt-1 text-xs font-medium text-surface-muted/80">
-                                                    {formatAmount(amountPaise)} free renewal · {formatShortDate(item.date)}
+                                                    {`${formatAmount(amountPaise)} free renewal · ${formatShortDate(item.date)}`}
                                                 </p>
                                             </div>
                                         </div>

@@ -5,7 +5,7 @@ import {FreeRecalculationWindow} from '@/components/estimator/FreeRecalculationW
 import dynamic from 'next/dynamic'
 import { useMobileKeyboard } from '@/hooks/use-mobile-keyboard'
 import { KeyboardNextBar } from '@/components/ui/keyboard-next-bar'
-import { useReducer, useEffect, useLayoutEffect, useMemo, useCallback, useState, useRef, useId } from 'react'
+import { Fragment, useReducer, useEffect, useLayoutEffect, useMemo, useCallback, useState, useRef, useId } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { nanoid } from 'nanoid'
 import { Card, CardContent } from '@/components/ui/card'
@@ -76,8 +76,11 @@ import {
     isWarpRowFilled,
     isWeftRowFilled,
     getWidthWarnings,
+    getTotalWeftPicks,
+    getWeftPickConvention,
     LOOM_TYPE_DEFAULTS,
     type LoomType,
+    type WeftPickConvention,
     type YarnCalculationMode,
     type YarnLinearDensityUnit,
     type EstimateState,
@@ -89,6 +92,7 @@ import {
     type EstimatorV3Totals,
     type CostingResultSnapshot,
 } from '@/lib/estimator'
+import { applyWeftPickConvention, reconcileWeftPickConvention, setWeftPickRatio, setWeftTotalPicks } from '@/lib/weft-pick-convention'
 import {
     getFactoryCostProfile,
     getEstimatorSecondaryData,
@@ -528,6 +532,9 @@ type Action =
     | { type: 'UPDATE_WEFT_ROW'; id: string; field: keyof WeftRow; value: WeftRowValue }
     | { type: 'SELECT_WEFT_YARN'; id: string; yarn: YarnSuggestionSelection }
     | { type: 'REMOVE_WEFT_ROW'; id: string }
+    | { type: 'SET_WEFT_PICK_CONVENTION'; convention: WeftPickConvention }
+    | { type: 'SET_WEFT_TOTAL_PICKS'; value: number | null }
+    | { type: 'SET_WEFT_PICK_RATIO'; id: string; value: number | null }
     | { type: 'ENABLE_SECTION'; section: keyof FactorySections }
     | { type: 'ADD_OVERHEAD_ITEM' }
     | { type: 'UPDATE_OVERHEAD_ITEM'; id: string; field: 'label' | 'monthlyAmount' | 'isLocked'; value: OverheadItemValue }
@@ -692,9 +699,15 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
             if (state.warpRows.length <= 1) return state
             return { ...state, warpRows: state.warpRows.filter(r => r.id !== action.id) }
         case 'ADD_WEFT_ROW':
-            return { ...state, weftRows: [...state.weftRows, makeNewWeftRow()] }
+            return { ...state, weftRows: reconcileWeftPickConvention(state.weftRows, [...state.weftRows, makeNewWeftRow()]) }
         case 'SET_WEFT_COMPONENT_COUNT':
-            return { ...state, weftRows: resizeYarnRows(state.weftRows, action.count, makeNewWeftRow) }
+            return { ...state, weftRows: reconcileWeftPickConvention(state.weftRows, resizeYarnRows(state.weftRows, action.count, makeNewWeftRow)) }
+        case 'SET_WEFT_PICK_CONVENTION':
+            return { ...state, weftRows: applyWeftPickConvention(state.weftRows, action.convention) }
+        case 'SET_WEFT_TOTAL_PICKS':
+            return { ...state, weftRows: setWeftTotalPicks(state.weftRows, action.value) }
+        case 'SET_WEFT_PICK_RATIO':
+            return { ...state, weftRows: setWeftPickRatio(state.weftRows, action.id, action.value) }
         case 'UPDATE_WEFT_ROW':
             return {
                 ...state,
@@ -711,7 +724,7 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
             }
         case 'REMOVE_WEFT_ROW':
             if (state.weftRows.length <= 1) return state
-            return { ...state, weftRows: state.weftRows.filter(r => r.id !== action.id) }
+            return { ...state, weftRows: reconcileWeftPickConvention(state.weftRows, state.weftRows.filter(r => r.id !== action.id)) }
         case 'ENABLE_SECTION':
             return {
                 ...state,
@@ -1406,9 +1419,9 @@ function assumptionSourceLabel(source: string): string {
     switch (source) {
         case 'direct_rate': return 'Direct rate entered'
         case 'monthly_expenses': return 'Monthly expenses ÷ output'
-        case 'manual_input': return 'Estimator input'
+        case 'manual_input': return 'Entered in the estimate'
         case 'not_set': return 'Not set'
-        default: return 'Saved snapshot'
+        default: return 'Saved costing'
     }
 }
 
@@ -1767,7 +1780,7 @@ function CostingAssumptionsSummary({
                         )}
                     </div>
                     <p className="mt-0.5 break-words text-xs font-medium leading-4 text-[var(--color-muted)]">
-                        {activeAssumptionsCount} active · {formatPercent(targetMargin)} target margin · {formatPercent(commission)} commission
+                        {`${activeAssumptionsCount} active · ${formatPercent(targetMargin)} target margin · ${formatPercent(commission)} commission`}
                         {displayQualityWarning && <span className="sr-only"> · {warningItems.join(', ')}</span>}
                     </p>
                 </div>
@@ -1866,7 +1879,7 @@ function CostingAssumptionsSummary({
                                 Technical details
                             </summary>
                             <p className="pb-1 pl-5 text-xs leading-4 text-[var(--color-muted)]">
-                                Calculation snapshot <code className="font-mono text-[var(--color-body)]">{result.calculationVersion}</code> · {result.roundingPolicy}
+                                Calculation method <code className="font-mono text-[var(--color-body)]">{result.calculationVersion}</code> · {result.roundingPolicy}
                             </p>
                         </details>
                     </div>
@@ -1919,7 +1932,7 @@ function CostingSaveReview({
         >
             <p className="text-xs font-bold text-[var(--color-yarn-orange-dark)]">Save review</p>
             <p className="mt-1 text-xs font-medium leading-4 text-[var(--color-muted)]">
-                Included in this costing snapshot:
+                This costing will save:
             </p>
             <div className="mt-2 grid gap-x-4 gap-y-1.5 text-xs sm:grid-cols-2">
                 <p><span className="font-semibold text-[var(--color-ink)]">Yarn rate basis:</span> {yarnRates.join(' · ') || 'No yarn rows'}</p>
@@ -1932,7 +1945,7 @@ function CostingSaveReview({
             </div>
             {fullReuse && (
                 <p className="mt-2 rounded-md border border-[var(--color-info-blue)]/25 bg-[var(--color-info-blue-soft)] px-2.5 py-2 text-xs font-medium leading-4 text-[var(--color-info-blue)]">
-                    Full costing reuse: reopening this Saved Quality restores the recipe, these current yarn rates, overhead basis, commercial values, quantity, and section on/off states. Existing costing snapshots stay unchanged.
+                    Reopening this saved quality brings back its yarns, these yarn rates, factory expenses, prices, quantity and the sections you turned on. Costings you already saved do not change.
                 </p>
             )}
         </section>
@@ -2693,6 +2706,141 @@ function getTemplateDirectWeavingRateInput(template: EstimatorTemplate, state: E
     )
 }
 
+/**
+ * The pick-density convention for a fabric with more than one weft system.
+ * Nothing is preselected for a recipe that never recorded one, because the
+ * same "64 PPI" means 64 or 128 picks in total depending on it.
+ */
+function WeftPickConventionField({
+    weftRows,
+    dispatch,
+}: {
+    weftRows: WeftRow[]
+    dispatch: React.Dispatch<Action>
+}) {
+    const { tx } = useTranslation()
+    if (weftRows.length <= 1) return null
+    const convention = getWeftPickConvention(weftRows)
+    const totalPicks = getTotalWeftPicks(weftRows)
+    const formatPicks = (value: number) => Number.isInteger(value) ? String(value) : value.toFixed(2)
+    return (
+        <div data-estimator-field="weftPickConvention" data-testid="weft-pick-convention" className={`space-y-3 rounded-[12px] border p-3 sm:p-4 ${convention === null ? 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)]' : 'border-[var(--color-hairline)] bg-[var(--color-surface-soft)]'}`}>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                    <p className="text-sm font-semibold text-[var(--color-ink)]">{tx('How are the picks entered?')}</p>
+                    <p className="mt-0.5 text-xs leading-snug text-[var(--color-muted)]">
+                        {convention === null
+                            ? tx('Choose one before costing. Two wefts at 64 PPI each is 128 picks in total; 64 total PPI shared 1:1 is 32 each.')
+                            : convention === 'per_system'
+                                ? tx('Each weft row has its own PPI. The fabric’s total is their sum.')
+                                : tx('Enter the quality’s total picks, then how many picks each weft takes in one repeat, like 2 and 4.')}
+                    </p>
+                </div>
+                <LiquidSegmented<WeftPickConvention | 'unset'>
+                    className="shrink-0 self-start sm:self-center"
+                    aria-label={tx('Pick entry')}
+                    value={convention ?? 'unset'}
+                    onValueChange={value => { if (value !== 'unset') dispatch({ type: 'SET_WEFT_PICK_CONVENTION', convention: value }) }}
+                    options={[
+                        { value: 'total_ratio', label: tx('Total picks + repeat') },
+                        { value: 'per_system', label: tx('PPI per weft') },
+                    ]}
+                />
+            </div>
+            {convention === 'total_ratio' && (
+                <div className="grid gap-3 sm:grid-cols-[minmax(0,180px)_minmax(0,1fr)] sm:items-end">
+                    <NumField
+                        fieldKey="weftTotalPicks"
+                        label={tx('Total picks')}
+                        value={totalPicks}
+                        onChange={value => dispatch({ type: 'SET_WEFT_TOTAL_PICKS', value })}
+                        unit="PPI"
+                        step={0.5}
+                        placeholder="e.g. 64"
+                        attentionWhenEmpty
+                    />
+                    <div data-testid="weft-pick-repeat" data-estimator-field="weftPickRepeat" className="min-w-0 space-y-1.5">
+                        <p className="flex h-8 items-end text-xs font-semibold leading-tight text-[var(--color-muted)]">{tx('Picks in each repeat')}</p>
+                        <div className="flex flex-wrap items-center gap-2">
+                            {weftRows.map((row, index) => (
+                                <Fragment key={row.id}>
+                                    {index > 0 && <span aria-hidden className="font-mono text-sm font-semibold text-[var(--color-muted)]">:</span>}
+                                    <div className="w-[84px]">
+                                        <Input
+                                            aria-label={`${tx('Picks in each repeat')}: ${row.label?.trim() || `${tx('Weft')} ${index + 1}`}`}
+                                            type="number"
+                                            inputMode="decimal"
+                                            min={0}
+                                            step={1}
+                                            enterKeyHint="next"
+                                            value={typeof row.pickRatio === 'number' && row.pickRatio > 0 ? row.pickRatio : ''}
+                                            placeholder="0"
+                                            onFocus={event => event.currentTarget.select()}
+                                            onChange={event => dispatch({ type: 'SET_WEFT_PICK_RATIO', id: row.id, value: parseNumericInput(event.target.value, { min: 0 }) })}
+                                            aria-invalid={!(Number(row.pickRatio) > 0) || undefined}
+                                            className={`h-11 rounded-[9px] px-2 text-center font-mono text-sm font-semibold text-[var(--color-yarn-orange)] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${Number(row.pickRatio) > 0 ? 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)]' : 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)]'}`}
+                                        />
+                                    </div>
+                                </Fragment>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+            {convention !== null && (
+                <p data-testid="weft-pick-summary" className="font-mono text-xs text-[var(--color-ink)]">
+                    {weftRows.map((row, index) => `${row.label?.trim() || `${tx('Weft')} ${index + 1}`} ${formatPicks(Number(row.picks) || 0)}`).join(' + ')}
+                    {' = '}{formatPicks(totalPicks)} PPI
+                </p>
+            )}
+        </div>
+    )
+}
+
+/**
+ * One weft system's pick density. With a shared total the owner enters the
+ * system's share and its PPI is derived; otherwise the PPI is its own.
+ */
+function WeftRowPicksField({
+    row,
+    weftRows,
+    dispatch,
+    label,
+}: {
+    row: WeftRow
+    weftRows: WeftRow[]
+    dispatch: React.Dispatch<Action>
+    label: string
+}) {
+    const { tx } = useTranslation()
+    const convention = weftRows.length > 1 ? getWeftPickConvention(weftRows) : 'per_system'
+    if (convention === 'total_ratio') {
+        const picks = Number(row.picks) || 0
+        const repeat = weftRows.map(candidate => Number(candidate.pickRatio) || 0)
+        return (
+            <div data-estimator-field="derivedPicks" className="min-w-0 space-y-1.5">
+                <p className="flex h-8 items-end text-xs font-semibold leading-tight text-[var(--color-muted)]">{tx('Picks for this weft')}</p>
+                <div className="flex h-11 items-center justify-center rounded-[9px] border border-dashed border-[var(--color-hairline)] bg-[var(--color-surface-soft)] font-mono text-sm font-semibold text-[var(--color-ink)]">
+                    {Number.isInteger(picks) ? picks : picks.toFixed(2)} PPI
+                </div>
+                <p className="text-xs leading-snug text-[var(--color-muted)]">{`${tx('From the total picks and the repeat')} ${repeat.join(':')}`}</p>
+            </div>
+        )
+    }
+    return (
+        <NumField
+            fieldKey="picks"
+            label={weftRows.length > 1 ? `${tx('PPI for this weft')} — REQUIRED` : label}
+            value={row.picks}
+            onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'picks', value: value ?? 0 })}
+            unit="PPI"
+            placeholder="e.g. 68"
+            hint="PPI means picks per inch: weft threads in one inch."
+            attentionWhenEmpty
+        />
+    )
+}
+
 function WeavingRateFields({
     state,
     dispatch,
@@ -3081,6 +3229,7 @@ function QuickCostingView({
                     }
                 />
                 <CardContent className="space-y-4 p-4 sm:p-5">
+                    <WeftPickConventionField weftRows={state.weftRows} dispatch={dispatch} />
                     {state.weftRows.map((row, index) => {
                         const effectiveCostingWidthCm = getEffectiveCostingWidthCm(row)
                         const unverified = unverifiedYarnRows?.[row.id]
@@ -3120,7 +3269,7 @@ function QuickCostingView({
                                     onSelectYarn={yarn => onSelectWeftYarn?.(row.id, yarn)}
                                     onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'label', value })}
                                 />
-                                <NumField fieldKey="picks" label="Picks — REQUIRED" value={row.picks} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'picks', value: value ?? 0 })} unit="PPI" placeholder="e.g. 68" hint="PPI means picks per inch: weft threads in one inch." attentionWhenEmpty />
+                                <WeftRowPicksField row={row} weftRows={state.weftRows} dispatch={dispatch} label="Picks — REQUIRED" />
                                 <WidthField label={`Effective costing width (finished width)${row.calculationMode === 'manual' ? '' : ' — REQUIRED'}`} value={effectiveCostingWidthCm} onChange={value => { dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'effectiveCostingWidthCm', value }); dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'reedSpace', value }) }} unit={widthUnit} placeholder={widthUnit === 'inch' ? 'e.g. 63' : 'e.g. 160'} hint={row.calculationMode === 'manual' ? 'Finished cloth width; saved for audit.' : 'Finished cloth width, not reed width; used with PPI.'} attentionWhenEmpty={row.calculationMode !== 'manual'} />
                                 {row.calculationMode === 'manual' ? (
                                     <NumField fieldKey="manualKgPer100m" label="Weft consumption" value={row.manualKgPer100m ?? null} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'manualKgPer100m', value })} unit="kg/100m" step={0.001} placeholder="e.g. 2.75" attentionWhenEmpty />
@@ -4191,7 +4340,7 @@ export default function EstimatorClient({
                 }
                 else router.push('/owner/quotes')
             } else {
-                setSaveCheckMessage(tx('The save is not confirmed yet. Your original inputs and request identity are preserved.'))
+                setSaveCheckMessage(tx('The save is not confirmed yet. Your entries are kept on this page.'))
             }
         } catch {
             setSaveCheckMessage(tx('Save status is unavailable. Reconnect and check again.'))
@@ -4221,7 +4370,7 @@ export default function EstimatorClient({
                 quoteRequestIdRef.current = null
                 saveDraftNow(buildCurrentDraft(null))
                 toast.error(tx(userFacingError(outcome.value.error, 'The costing could not be saved. Review the inputs and retry.')))
-            } else setSaveCheckMessage(tx('The save is not confirmed yet. Your original inputs and request identity are preserved.'))
+            } else setSaveCheckMessage(tx('The save is not confirmed yet. Your entries are kept on this page.'))
         } catch {
             setSaveCheckMessage(tx('Save status is unavailable. Reconnect and check again.'))
         } finally { setCheckingSave(false); saveQuoteLockRef.current = false }
@@ -4505,7 +4654,7 @@ export default function EstimatorClient({
                 suppressAutosaveUntilChanged()
                 void trackPlanEvent('quality_created', { source: 'estimator' })
                 toast.success(t('estimator.quality.saved'), {
-                    description: tx(`Quality and costing snapshot v${res.versionNumber ?? 1} saved together · ${formatSuratDateTime(res.updatedAt ?? new Date().toISOString())} · rate basis ₹${Number(state.warpRows[0]?.yarnRate ?? 0).toFixed(2)}/kg. Use Save Costing only when you intentionally want another costing version.`),
+                    description: tx(`Quality and costing v${res.versionNumber ?? 1} saved · ${formatSuratDateTime(res.updatedAt ?? new Date().toISOString())} · yarn rate ₹${Number(state.warpRows[0]?.yarnRate ?? 0).toFixed(2)}/kg. Use Save Costing only when you want another costing version.`),
                 })
             } else {
                 const message = res.error ?? t('estimator.quality.saveFailed')
@@ -4911,7 +5060,7 @@ export default function EstimatorClient({
             const offlineDraft = saveDraftNow(buildCurrentDraft(undefined, 'costing'))
             toast.error(tx('Reconnect before saving'), {
                 description: isDraftStored(offlineDraft)
-                    ? tx('Your Cost Estimate and save identity are stored on this device.')
+                    ? tx('Your Cost Estimate is kept on this device.')
                     : offlineDraft === 'disabled'
                         ? tx('This Cost Estimate is kept on this page only. Keep the page open until you reconnect, then save.')
                         : offlineDraft === 'blocked'
@@ -5012,7 +5161,7 @@ export default function EstimatorClient({
                             ? `${wasEditingCosting ? 'New costing version' : 'Costing'} saved and Saved Quality updated`
                             : (wasEditingCosting ? 'New costing version saved' : 'Costing saved'))),
                     {
-                        description: tx(`Costing snapshot v${savedVersion} · ${formatSuratDateTime(savedAt)} · rate basis ₹${Number(state.warpRows[0]?.yarnRate ?? 0).toFixed(2)}/kg${sourceQuoteStatus ? ` · status preserved as ${sourceQuoteStatus}` : ''}.`),
+                        description: tx(`Costing v${savedVersion} · ${formatSuratDateTime(savedAt)} · yarn rate ₹${Number(state.warpRows[0]?.yarnRate ?? 0).toFixed(2)}/kg${sourceQuoteStatus ? ` · status kept as ${sourceQuoteStatus}` : ''}.`),
                     },
                 )
                 if (res.quoteId) {
@@ -5042,7 +5191,7 @@ export default function EstimatorClient({
             console.error('Failed to save estimator quote:', error)
             toast.error(tx(userFacingError(error, 'Failed to save the Cost Estimate. Try again.')), {
                 description: draftStoredBeforeSubmit
-                    ? tx('Your Cost Estimate and retry identity remain saved on this device.')
+                    ? tx('Your Cost Estimate is still kept on this device.')
                     : undefined,
             })
         } finally {
@@ -5374,12 +5523,12 @@ export default function EstimatorClient({
                                     <span className="font-bold">{draft.qualityLabel || 'Untitled'}</span>
                                     {draft.qualityLabel && <span className="text-[var(--color-warning-amber)]"> ({draft.qualityLabel})</span>}
                                     {draft.sourceRecordKind === 'costing' && draft.sourceQuoteVersionNumber && (
-                                        <span className="ml-1 text-[var(--color-warning-amber)]">· Editing costing v{draft.sourceQuoteVersionNumber}</span>
+                                        <span className="ml-1 text-[var(--color-warning-amber)]">{`· Editing costing v${draft.sourceQuoteVersionNumber}`}</span>
                                     )}
                                     {draft.sourceRecordKind === 'costing' && draft.sourceQuoteCreatedAt && (
-                                        <span className="ml-1 text-[var(--color-warning-amber)]">· saved {formatTimestampDate(draft.sourceQuoteCreatedAt, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                                        <span className="ml-1 text-[var(--color-warning-amber)]">{`· saved ${formatTimestampDate(draft.sourceQuoteCreatedAt, { day: 'numeric', month: 'short', year: 'numeric' })}`}</span>
                                     )}
-                                    {draft.sourceRecordKind === 'costing' && ' · a new version will preserve the original'}
+                                    {draft.sourceRecordKind === 'costing' && ' · saving makes a new version and keeps the original'}
                                 </>
                             ) : (
                                 <>
@@ -5455,7 +5604,7 @@ export default function EstimatorClient({
                                     ))}
                                 </ul>
                                 {estimatorWarnings.length > 4 && (
-                                    <p className="mt-1 text-xs font-semibold text-[var(--wv-ochre-800)]">+{estimatorWarnings.length - 4} more unusual value(s)</p>
+                                    <p className="mt-1 text-xs font-semibold text-[var(--wv-ochre-800)]">{`${estimatorWarnings.length - 4} more unusual values`}</p>
                                 )}
                                 <p className="mt-2 text-xs font-medium text-[var(--wv-ochre-800)]">Costing can be reviewed, but a save or quotation requires acknowledgement.</p>
                             </div>
@@ -5489,7 +5638,7 @@ export default function EstimatorClient({
                                     ))}
                                 </ul>
                                 {estimatorValidation.issues.length > 6 && (
-                                    <p className="mt-1 text-xs font-semibold text-[var(--wv-madder-600)]">+{estimatorValidation.issues.length - 6} more input issue(s)</p>
+                                    <p className="mt-1 text-xs font-semibold text-[var(--wv-madder-600)]">{`${estimatorValidation.issues.length - 6} more entries to fix`}</p>
                                 )}
                             </div>
                             {estimatorValidation.issues.some(issue => (
@@ -5546,16 +5695,16 @@ export default function EstimatorClient({
                                             ? t('estimator.sprint1.baseline_not_recorded')
                                             : sourceFactoryProfileUpdatedAt
                                                 ? `${t('estimator.sprint1.baseline_captured')}: ${formatTimestampDate(sourceFactoryProfileUpdatedAt, { day: 'numeric', month: 'short', year: 'numeric' })}`
-                                                : 'Current factory baseline'}
+                                                : 'Current factory costs'}
                                     </span>
-                                    {!sourceQuoteId && <span aria-label={t('estimator.sprint1.new_costing_snapshot')}>New costing snapshot</span>}
+                                    {!sourceQuoteId && <span aria-label={t('estimator.sprint1.new_costing_snapshot')}>New costing</span>}
                                 </div>
                                 {sourceQuoteId && (
                                     <p className="mt-2 max-w-3xl text-xs font-medium leading-4 text-[var(--color-muted)]">
                                         {versionInputChangeSummary
-                                            ? `Changed inputs since v${sourceQuoteVersionNumber ?? 1}: ${versionInputChangeSummary}. Create new version is deliberate; review this summary before saving.`
-                                            : `No costing inputs changed since v${sourceQuoteVersionNumber ?? 1}. Saving again keeps the same version and will not create a duplicate snapshot.`}
-                                        {sourceRecordKind === 'quotation' && sourceQuoteStatus && ` Existing quotation status stays ${sourceQuoteStatus} until you use the allowed status action.`}
+                                            ? `Changed since v${sourceQuoteVersionNumber ?? 1}: ${versionInputChangeSummary}. Check these changes before saving a new version.`
+                                            : `Nothing has changed since v${sourceQuoteVersionNumber ?? 1}. Saving again keeps the same version and does not make a copy.`}
+                                        {sourceRecordKind === 'quotation' && sourceQuoteStatus && ` The quotation stays ${sourceQuoteStatus} until you change its status.`}
                                     </p>
                                 )}
                             </div>
@@ -5677,7 +5826,7 @@ export default function EstimatorClient({
                                 <div className="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1 border-t border-[var(--color-hairline)]/80 pt-3">
                                     <span className="text-xs font-semibold text-[var(--color-muted)]">Material context</span>
                                     <span className="max-w-full break-words text-[12px] font-semibold text-[var(--color-ink)]">{appliedTemplate?.name ?? (qualityLabel.trim() || 'New quality')}</span>
-                                    <span className="text-xs font-medium text-[var(--color-muted)]">· Warp yarn {state.warpRows.length} component{state.warpRows.length === 1 ? '' : 's'} · Weft yarn {state.weftRows.length} component{state.weftRows.length === 1 ? '' : 's'}</span>
+                                    <span className="text-xs font-medium text-[var(--color-muted)]">{`· Warp yarns: ${state.warpRows.length} · Weft yarns: ${state.weftRows.length}`}</span>
                                 </div>
                                 {appliedTemplate && (
                                     <p
@@ -5685,8 +5834,8 @@ export default function EstimatorClient({
                                         className="rounded-lg border border-[var(--wv-lagoon-200)] bg-[var(--wv-lagoon-50)] px-3 py-2 text-xs font-medium leading-4 text-[var(--wv-lagoon-700)]"
                                     >
                                         {appliedTemplate.latest_costing_reuse
-                                            ? 'Full costing reuse is active: current yarn rates are combined with the latest saved costing assumptions.'
-                                            : 'This Saved Quality has no linked costing snapshot yet. Current factory defaults are being used for the costing assumptions.'}
+                                            ? 'Using today’s yarn rates with the other costs from the latest saved costing.'
+                                            : 'This saved quality has no saved costing yet, so your factory defaults are used for the other costs.'}
                                     </p>
                                 )}
                             </div>
@@ -5706,9 +5855,9 @@ export default function EstimatorClient({
                                 className="flex items-start gap-3 rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-3 py-2 text-xs font-medium leading-4 text-[var(--color-muted)] 2xl:col-span-2"
                             >
                                 <div className="min-w-0 flex-1">
-                                    <p><span className="font-semibold text-[var(--color-ink)]">Save quality/recipe:</span> reusable construction and assumptions.</p>
-                                    <p><span className="font-semibold text-[var(--color-ink)]">Save costing snapshot:</span> frozen result for this rate/date/quantity.</p>
-                                    <p><span className="font-semibold text-[var(--color-ink)]">Create new version:</span> deliberate action with the changed-input summary above; an ordinary repeat save does not create a duplicate.</p>
+                                    <p><span className="font-semibold text-[var(--color-ink)]">Save quality:</span> keeps the yarns and settings to reuse later.</p>
+                                    <p><span className="font-semibold text-[var(--color-ink)]">Save costing:</span> keeps this price as it is today, for this rate, date and quantity.</p>
+                                    <p><span className="font-semibold text-[var(--color-ink)]">New version:</span> saves the changes listed above as a new costing. Saving again with no changes does not make a copy.</p>
                                 </div>
                                 <button
                                     type="button"
@@ -5737,8 +5886,8 @@ export default function EstimatorClient({
                                 aria-describedby={actionReadinessMessage ? actionReadinessId : undefined}
                                 aria-busy={savingQuote}
                                 aria-label={sourceQuoteId
-                                    ? 'Save new immutable costing version'
-                                    : 'Save costing snapshot'}
+                                    ? 'Save as a new costing version'
+                                    : 'Save costing'}
                                 title={firstCostingReadinessMessage ?? ((!qualityLabel.trim() || totals.totalProductionCostPerM <= 0)
                                     ? tx('Complete quality and cost inputs first.')
                                     : undefined)}
@@ -5807,8 +5956,8 @@ export default function EstimatorClient({
                             )}
                             <p className="text-xs font-medium leading-relaxed text-[var(--color-muted)]">
                                 {freeMode ? `${freeText(language, 'freeCreationPolicy')} ${freeText(language, 'calculatePolicy')}` : sourceQuoteId
-                                    ? tx('Save New Version creates a new immutable costing snapshot. Earlier versions keep their original economics.')
-                                    : tx('Save Costing creates the reusable quality and its first immutable costing version.')}
+                                    ? tx('Save New Version keeps this as a new costing. Earlier versions keep their own numbers.')
+                                    : tx('Save Costing saves the quality for reuse and keeps this as its first costing.')}
                             </p>
                         </div>
                     </div>
@@ -6371,6 +6520,7 @@ export default function EstimatorClient({
                                         </>
                                     )}
                                     <NumField fieldKey="shortagePct" label="Waste %" value={row.shortagePct} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'shortagePct', value: v })} unit="%" step={0.5} preserveZero placeholder={String(state.yarnShortagePct ?? 0)} placeholderKind="applied-default" hint={`Blank uses ${state.yarnShortagePct}% default; 0 overrides`} warning={row.shortagePct !== null && row.shortagePct > 15 ? 'High waste %' : undefined} />
+                                    <NumField fieldKey="crimpPct" label={tx('Crimp %')} value={row.crimpPct ?? null} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'crimpPct', value: v })} unit="%" step={0.5} preserveZero placeholder={String(state.warpCrimpPct ?? 0)} placeholderKind="applied-default" hint={`${tx('Blank uses the fabric warp crimp of')} ${state.warpCrimpPct ?? 0}%`} warning={row.crimpPct != null && row.crimpPct > 15 ? tx('High crimp %') : undefined} />
                                     {(() => {
                                         const templateRate = appliedTemplate?.warp_rows?.[i]?.yarnRate ?? null
                                         const isUnusuallyLow = templateRate !== null
@@ -6488,6 +6638,7 @@ export default function EstimatorClient({
                         })()}
 
                         <div className="space-y-4">
+                            <WeftPickConventionField weftRows={state.weftRows} dispatch={dispatch} />
                             {state.weftRows.map((row, i) => {
                                 const effectiveCostingWidthCm = getEffectiveCostingWidthCm(row)
                                 const rawEffectiveWidth = widthUnit === 'inch' ? effectiveCostingWidthCm / 2.54 : effectiveCostingWidthCm
@@ -6542,7 +6693,7 @@ export default function EstimatorClient({
                                             onSelectYarn={yarn => handleSelectWeftYarn(row.id, yarn)}
                                             onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'label', value })}
                                         />
-                                        <NumField fieldKey="picks" label={`${t('estimator.field_labels.picks_ppi')} — REQUIRED`} value={row.picks} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'picks', value: v ?? 0 })} placeholder="e.g. 68" attentionWhenEmpty />
+                                        <WeftRowPicksField row={row} weftRows={state.weftRows} dispatch={dispatch} label={`${t('estimator.field_labels.picks_ppi')} — REQUIRED`} />
                                         <WidthField
                                             label={`Effective costing width (finished width)${row.calculationMode === 'manual' ? '' : ' — REQUIRED'}`}
                                             value={effectiveCostingWidthCm}
@@ -6579,6 +6730,7 @@ export default function EstimatorClient({
                                             />
                                         )}
                                         <NumField fieldKey="shortagePct" label="Waste %" value={row.shortagePct} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'shortagePct', value: v })} unit="%" step={0.5} preserveZero placeholder={String(state.yarnShortagePct ?? 0)} placeholderKind="applied-default" hint={`Blank uses ${state.yarnShortagePct}% default; 0 overrides`} warning={row.shortagePct !== null && row.shortagePct > 15 ? 'High waste %' : undefined} />
+                                        <NumField fieldKey="crimpPct" label={tx('Crimp %')} value={row.crimpPct ?? null} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'crimpPct', value: v })} unit="%" step={0.5} preserveZero placeholder="0" placeholderKind="applied-default" hint={tx('Weft take-up for this system. Blank means none.')} warning={row.crimpPct != null && row.crimpPct > 15 ? tx('High crimp %') : undefined} />
                                         {(() => {
                                             const templateRate = appliedTemplate?.weft_rows?.[i]?.yarnRate ?? null
                                             const isUnusuallyLow = templateRate !== null
@@ -6774,8 +6926,7 @@ export default function EstimatorClient({
                                             <div className="flex items-center gap-2 pt-2 mt-2 border-t border-dashed border-[var(--color-hairline)]">
                                                 <AlertTriangle className="h-3 w-3 text-[var(--wv-ochre-800)] shrink-0" />
                                                 <p className="text-xs font-bold text-[var(--wv-ochre-800)] leading-tight">
-                                                    Safety Alert: Direct rate (₹{state.overheadOverridePerM}) is LOWER than the monthly-expense reference (₹{monthlyOverheadReference.toFixed(2)}).
-                                                    This costing will not recover ₹{(monthlyOverheadReference - state.overheadOverridePerM).toFixed(2)} per metre against that reference.
+                                                    {`Your direct rate (₹${state.overheadOverridePerM}/m) is lower than your monthly expenses work out to (₹${monthlyOverheadReference.toFixed(2)}/m). This costing will not cover ₹${(monthlyOverheadReference - state.overheadOverridePerM).toFixed(2)} per metre of those expenses.`}
                                                 </p>
                                             </div>
                                         )}
@@ -6928,7 +7079,7 @@ export default function EstimatorClient({
 
                                                 <div className="space-y-4 border-t border-[var(--color-hairline)] pt-4">
                                                     <div data-estimator-field="monthlyProductionM" className="space-y-1.5">
-                                                        <Label className={`text-xs font-medium ${state.overheadMode === 'monthly_expenses' && (!state.monthlyOutputM || state.monthlyOutputM <= 0) ? 'text-[var(--color-warning-amber)]' : 'text-[var(--color-muted)]'}`}><FieldLabelText label={`Typical monthly production (m)${state.overheadMode === 'monthly_expenses' ? ' — REQUIRED' : ''}`} /></Label>
+                                                        <Label className={`text-xs font-medium ${state.overheadMode === 'monthly_expenses' && (!state.monthlyOutputM || state.monthlyOutputM <= 0) ? 'text-[var(--color-warning-amber)]' : 'text-[var(--color-muted)]'}`}>Typical monthly production (m){state.overheadMode === 'monthly_expenses' && <span className="sr-only"> (required)</span>}</Label>
                                                         <div className="relative">
                                                             <Input
                                                                 enterKeyHint="next"
@@ -7024,7 +7175,7 @@ export default function EstimatorClient({
                         icon={ReceiptText}
                         accent="neutral"
                         step={8}
-                        detail={<p className="text-xs text-[var(--color-muted)]">{hasValidCostResult ? 'Engine audit used for the final production cost.' : awaitingCalculation && estimatorValidation.valid ? freeText(language, 'resultAfterCalculation') : 'Complete the required inputs to calculate the final production cost.'}</p>}
+                        detail={<p className="text-xs text-[var(--color-muted)]">{hasValidCostResult ? 'This breakdown makes up the final production cost.' : awaitingCalculation && estimatorValidation.valid ? freeText(language, 'resultAfterCalculation') : 'Complete the required inputs to calculate the final production cost.'}</p>}
                         badgeContent={hasValidCostResult
                             ? <SectionCostPill value={totals.audit.productionCostPerMeter} />
                             : <span className="rounded-full border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-3 py-1 text-[13px] font-semibold text-[var(--color-muted)]">{costingReadiness.status === 'calculation_required' ? freeText(language, 'readyToCalculate') : 'Incomplete'}</span>}
@@ -7072,8 +7223,11 @@ export default function EstimatorClient({
                                             <p className="font-mono font-semibold text-[var(--color-muted)]">{layer.mode === 'manual' ? 'Manual' : 'Formula'}</p>
                                             <p className="text-xs font-medium leading-tight text-[var(--color-muted)]">{layer.formulaDescription}</p>
                                         </div>
-                                        <p className="font-mono text-[var(--color-ink)]">{layer.baseKgPer100mUsed.toFixed(3)}</p>
-                                        <p className="font-mono text-[var(--color-ink)]">₹{layer.ratePerKg.toFixed(0)}/kg</p>
+                                        <div>
+                                            <p className="font-mono text-[var(--color-ink)]">{layer.baseKgPer100mUsed.toFixed(3)}</p>
+                                            <p data-estimator-audit-grams className="text-xs font-medium leading-tight text-[var(--color-muted)]">{(layer.baseKgPer100mUsed * 10).toFixed(2)} g/m · {(layer.finalKgPer100m * 10).toFixed(2)} g/m {tx('with allowances')}</p>
+                                        </div>
+                                        <p className="font-mono text-[var(--color-ink)]">₹{layer.ratePerKg.toFixed(2)}/kg</p>
                                         <p className="text-right font-mono font-semibold text-[var(--color-factory-green)]">₹{layer.baseCostPerMeter.toFixed(2)}/m</p>
                                         <div>
                                             <p className="font-mono text-[var(--color-warning-amber)]">{layer.totalAdjustmentPct.toFixed(1)}%</p>
@@ -7082,7 +7236,20 @@ export default function EstimatorClient({
                                                 Default waste {layer.defaultWastePct.toFixed(1)}% · {layer.wastePctSource === 'row_override' ? 'Override' : layer.wastePctSource === 'default' ? 'Default' : 'Saved value'} applied {layer.wastePct.toFixed(1)}%
                                             </p>
                                             <p className="text-xs font-semibold leading-tight text-[var(--color-ink)]">Added only after base yarn costs are summed.</p>
+                                            <p data-estimator-audit-system-cost className="mt-1 font-mono text-xs font-semibold text-[var(--color-ink)]">₹{layer.costPerMeter.toFixed(2)}/m {tx('with allowances')}</p>
                                         </div>
+                                    </div>
+                                ))}
+                            </div>
+                            <div data-estimator-audit-system-totals className="grid gap-2 border-t border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-3 py-2.5 text-xs sm:grid-cols-3">
+                                {[
+                                    { label: tx('Warp yarn total'), value: totals.audit.warp.totalCostPerMeter },
+                                    { label: tx('Weft yarn total'), value: totals.audit.weft.totalCostPerMeter },
+                                    { label: tx('Raw yarn total'), value: totals.audit.yarnTotalCostPerMeter },
+                                ].map(line => (
+                                    <div key={line.label} className="flex items-center justify-between gap-3 sm:block">
+                                        <p className="text-xs font-semibold text-[var(--color-muted)]">{line.label}</p>
+                                        <p className="font-mono font-semibold text-[var(--color-ink)]">₹{line.value.toFixed(2)}/m</p>
                                     </div>
                                 ))}
                             </div>

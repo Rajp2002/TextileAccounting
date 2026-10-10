@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { requireRole } from '@/lib/auth'
 import { createAdminClient } from '@/lib/supabase/admin'
 
-export const ACCOUNT_DELETION_REVIEW_MESSAGE = 'Account deletion needs a privacy review because retained records or legacy billing references are linked to this account. No database rows were deleted or provider changes requested. Use the privacy request channel to arrange the review.'
+export const ACCOUNT_DELETION_REVIEW_MESSAGE = 'Your account needs a manual check before it can be deleted, because some older billing records are linked to it. Nothing has been deleted. Send a privacy request and we will arrange the check.'
 export const ACCOUNT_DELETION_UNAVAILABLE_MESSAGE = 'Account deletion readiness could not be verified. Nothing was deleted and no provider changes were requested. Please try again.'
 const EXPORT_UNAVAILABLE = 'Your public support export is unavailable or incomplete. No export was generated; please try again.'
 

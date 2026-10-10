@@ -62,7 +62,7 @@ describe('Base P0 billing recovery', () => {
     expect(button).toContain("/api/billing/status")
     expect(button).toContain('Do not pay again')
     expect(button).not.toContain("markCheckoutRetryable(orderId, 'cancelled')")
-    expect(page).toContain('Weavly has <strong>not received a verified payment yet</strong>')
+    expect(page).toContain('Weavly has not received a verified payment.')
     expect(page).toContain('Resume secure payment')
         expect(page).toContain('resumePendingCheckout={isPending}')
         expect(page).toContain("const cardPlanTiers: readonly PurchasablePlanTier[] = subscriptionTier === 'lite'")

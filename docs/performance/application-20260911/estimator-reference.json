@@ -2,7 +2,6 @@
   "revision": "a92b371930060bfa227e1da4dc3f115efcd3fa58",
   "reference": {
     "normal": {
-      "sha256": "c57ed5aaa386b4f0c10a429990ee785539df707dffd732910ce7972cd1205ed6",
       "scenario": {
         "id": "break-even",
         "label": "Break-even",
@@ -12,10 +11,10 @@
         "costDelta": 0,
         "costDeltaPct": 0,
         "profitDelta": -3991.4054647230314
-      }
+      },
+      "sha256": "06a50abc220c55ec0171e7a480bf5744e0b946f6f0934ab16103752ebe7a94a2"
     },
     "noQuantity": {
-      "sha256": "7c61efaa51e20ed34f52a757113b3cfc3ce1d408dede094f71f2978af6d00ab0",
       "scenario": {
         "id": "break-even",
         "label": "Break-even",
@@ -25,10 +24,10 @@
         "costDelta": 0,
         "costDeltaPct": 0,
         "profitDelta": 0
-      }
+      },
+      "sha256": "9a056397842d2d711211e09c6e169c606f10627e1d4500d8392df111c2795252"
     },
     "zeroQuantity": {
-      "sha256": "3e0276e8830a8a4155efcc7deca69f65e4a07873c35c9fa77a4e1f456a2e6597",
       "scenario": {
         "id": "break-even",
         "label": "Break-even",
@@ -38,10 +37,10 @@
         "costDelta": 0,
         "costDeltaPct": 0,
         "profitDelta": 0
-      }
+      },
+      "sha256": "5e2df6488ef747d995ea75b92609b4be27361843cc47745f8d6a6032f0fbc636"
     },
     "zeroRates": {
-      "sha256": "cd5789a6c05075f9a1ae85805510a5cca1731a196b33a70b3d3f38708a855226",
       "scenario": {
         "id": "break-even",
         "label": "Break-even",
@@ -51,10 +50,10 @@
         "costDelta": 0,
         "costDeltaPct": 0,
         "profitDelta": -2976.5597667638485
-      }
+      },
+      "sha256": "abeb307bbc4ac92ae22a917b651903819667f3032632d158bd7feb2e3e2fc8e8"
     },
     "missingOverhead": {
-      "sha256": "786636b79819a60d987bef0a9f03a0db320e67d8d6b842f01b1fb96a13027466",
       "scenario": {
         "id": "break-even",
         "label": "Break-even",
@@ -64,10 +63,10 @@
         "costDelta": 0,
         "costDeltaPct": 0,
         "profitDelta": -3725.5162518950433
-      }
+      },
+      "sha256": "6613942fc32d44750c53b4f06db45dd5f14982f4d603561ebe4c6921fead5b32"
     },
     "zeroOverhead": {
-      "sha256": "0999a9a6b96932dd9c9444c93883eed754a7f0a7aa33593ee2b79d5e9157b16f",
       "scenario": {
         "id": "break-even",
         "label": "Break-even",
@@ -77,10 +76,10 @@
         "costDelta": 0,
         "costDeltaPct": 0,
         "profitDelta": -3641.5512373177853
-      }
+      },
+      "sha256": "3bbd6c5b0b7c4c9eeff4fe55fce6369d68e39f248d4b7bcdba8fa1c2f05e35c8"
     },
     "monthlyOverhead": {
-      "sha256": "bf8a7d8e2ccc1cc1c39e99e2c3f5b43121ba0598ddaf7478e16489c8476c0d7d",
       "scenario": {
         "id": "break-even",
         "label": "Break-even",
@@ -90,10 +89,10 @@
         "costDelta": 0,
         "costDeltaPct": 0,
         "profitDelta": -3725.5162518950433
-      }
+      },
+      "sha256": "c9a79d5cdc8dbd2aff7afe022970dac073e3613e78593c415052644b3c7c536c"
     },
     "disabledCommercials": {
-      "sha256": "7025dc4258e6d74eaf49e1ce06c9aff743d12ccbf6fcba96f12f5932773150da",
       "scenario": {
         "id": "break-even",
         "label": "Break-even",
@@ -103,10 +102,10 @@
         "costDelta": 0,
         "costDeltaPct": 0,
         "profitDelta": -3991.4054647230314
-      }
+      },
+      "sha256": "fefeaa2ff1722ea0f0ed8d1b168e34877a1002c4c93849648002f4cde4acbc2d"
     },
     "invalidMargin": {
-      "sha256": "999bcba6d0487129373ddf87c87c3479a79301761773650135bfb3734dfe6dfe",
       "scenario": {
         "id": "break-even",
         "label": "Break-even",
@@ -116,10 +115,10 @@
         "costDelta": 0,
         "costDeltaPct": 0,
         "profitDelta": 0
-      }
+      },
+      "sha256": "d03401e3da839c33bb7a595c39638e853e99800b736568c867bfdd93134caa7d"
     },
     "invalidCommission": {
-      "sha256": "b32de102222d9a2ba35207576398eeb2ac1349ed1e0b89547132aab3dd8404a2",
       "scenario": {
         "id": "break-even",
         "label": "Break-even",
@@ -129,10 +128,10 @@
         "costDelta": 0,
         "costDeltaPct": 0,
         "profitDelta": 0
-      }
+      },
+      "sha256": "f6ab64d276a7caae3d753a2765f68f0aa8a0115bc85bb5864c5f6300a2a665a8"
     },
     "missingWidth": {
-      "sha256": "3430b13a14ca6ee1bd3f78cb05f40ad0205cd6eb58529817e330e056b959d91c",
       "scenario": {
         "id": "break-even",
         "label": "Break-even",
@@ -142,10 +141,10 @@
         "costDelta": 0,
         "costDeltaPct": 0,
         "profitDelta": -3431.1557667638485
-      }
+      },
+      "sha256": "5df2ffae3c5d781f108a061bfae4ff8cb5580e0dd400fb03be9941b92887329d"
     },
     "tinyQuantity": {
-      "sha256": "d70f97803f3d20b04eb4ca97a820fd7658c05b25c66b58c6c7f0630b0e22f8e9",
       "scenario": {
         "id": "break-even",
         "label": "Break-even",
@@ -154,11 +153,11 @@
         "quotePricePerM": 28.52220343870106,
         "costDelta": 0,
         "costDeltaPct": 0,
-        "profitDelta": -0.000002852248866626
-      }
+        "profitDelta": -2.852248866626e-06
+      },
+      "sha256": "fa588afc8512a21b99bd1bd797252a745893e27ddf9d6c7d79e5b3fc7afa3079"
     },
     "manualConsumption": {
-      "sha256": "e45d1143bd7350c23fde17f491f6ce86a42bd8277229592d25d41adbcaec8652",
       "scenario": {
         "id": "break-even",
         "label": "Break-even",
@@ -168,10 +167,10 @@
         "costDelta": 0,
         "costDeltaPct": 0,
         "profitDelta": -3940.338929008745
-      }
+      },
+      "sha256": "ed8f0ef62f1fca017b2952f6e4cb25e8b29a4292db6df1cc26b5882ed4101c84"
     },
     "cottonCount": {
-      "sha256": "c6b299aeb448fbe92d78dc208eafb862bb4e555d57898f3e1f899ce020aed238",
       "scenario": {
         "id": "break-even",
         "label": "Break-even",
@@ -181,10 +180,10 @@
         "costDelta": 0,
         "costDeltaPct": 0,
         "profitDelta": -4339.52632186589
-      }
+      },
+      "sha256": "cdc22ece253c4450590cdb54a21303d13652a93628aa25368ff55e99ddbfe3f9"
     },
     "changedRate": {
-      "sha256": "1714821416840c6305ae621f6e2a390d2d14bdb670eaedaae26082176be8a4c3",
       "scenario": {
         "id": "break-even",
         "label": "Break-even",
@@ -194,20 +193,21 @@
         "costDelta": 0,
         "costDeltaPct": 0,
         "profitDelta": -4568.830104723035
-      }
+      },
+      "sha256": "a43e8f497d81040811dde40e7f22e5c0ba3f5469e54cbb408707e5cd86dc3e0b"
     },
     "maximumRows": {
-      "sha256": "056765bfb00f47d1286da77feb88a3c1bed9c59e25617066e04877814667a5fc",
       "scenario": {
         "id": "break-even",
         "label": "Break-even",
         "description": "Minimum selling price after transport and commission at 0% margin",
-        "totalProductionCostPerM": 445.5055627666667,
-        "quotePricePerM": 456.62973173060533,
+        "totalProductionCostPerM": 537.8692703333334,
+        "quotePricePerM": 551.1194581415175,
         "costDelta": 0,
         "costDeltaPct": 0,
-        "profitDelta": -62463.75222390669
-      }
+        "profitDelta": -75389.28564431496
+      },
+      "sha256": "bb8bbe7bad1b9afa368350d498e3bd9bf73da185c232cbbae599229ec3b32b82"
     }
   }
 }

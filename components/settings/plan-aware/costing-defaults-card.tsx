@@ -217,7 +217,7 @@ export function CostingDefaultsCard({
                             </p>
                         ) : (
                             <p className="text-xs text-muted-foreground">
-                                {tx('Applied to yarn rows that do not specify an individual wastage override.')}
+                                {tx('Used for any yarn that has no wastage of its own.')}
                             </p>
                         )}
                     </div>
