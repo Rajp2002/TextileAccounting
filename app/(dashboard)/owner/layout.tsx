@@ -18,6 +18,7 @@ import { createPrincipalCacheScope } from '@/lib/auth-cache-scope'
 import { AuthBoundaryCleanup } from '@/components/auth/auth-boundary-cleanup'
 import { WorkspaceHintSync } from '@/components/auth/workspace-hint-sync'
 import { hasFreeWorkspaceHint, WORKSPACE_HINT_COOKIE } from '@/lib/workspace-hint'
+import { parseSidebarPreference, SIDEBAR_PREFERENCE_COOKIE } from '@/lib/sidebar-preference'
 
 /**
  * The owner chrome is intentionally split into a static frame and two secure
@@ -54,9 +55,11 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
     // Only non-Free orgs reach this point, so a Free routing hint is stale
     // (for example after an upgrade on another device). Proxy uses it only as
     // a launch guess; clear it so the next launch skips the /free detour.
-    const staleFreeWorkspaceHint = hasFreeWorkspaceHint((await cookies()).get(WORKSPACE_HINT_COOKIE)?.value, user.id)
+    const cookieStore = await cookies()
+    const staleFreeWorkspaceHint = hasFreeWorkspaceHint(cookieStore.get(WORKSPACE_HINT_COOKIE)?.value, user.id)
+    const sidebarPreference = parseSidebarPreference(cookieStore.get(SIDEBAR_PREFERENCE_COOKIE)?.value)
     return (
-        <div className="relative isolate min-h-svh overflow-x-hidden bg-background" data-owner-shell>
+        <div className="relative isolate min-h-svh overflow-x-hidden bg-background" data-owner-shell data-workspace-shell data-sidebar-preference={sidebarPreference}>
             {staleFreeWorkspaceHint && <WorkspaceHintSync />}
             <BrandBackground variant={pathname.startsWith('/owner/billing') ? 'billing' : pathname.startsWith('/owner/payroll') ? 'payroll' : pathname.startsWith('/owner/machines') ? 'machines' : pathname === '/owner/dispatches' ? 'dispatches' : pathname === '/owner/workers' ? 'workers' : 'app'} />
             <a href="#owner-main" className="sr-only fixed left-3 top-[calc(0.75rem+var(--safe-area-top))] z-[100] rounded bg-surface p-3 text-ink focus:not-sr-only">Skip to content</a>
@@ -187,10 +190,10 @@ function OwnerSidebarLoading() {
         <>
             <aside data-workspace-sidebar="true"
                 aria-hidden="true"
-                className="hidden md:fixed md:inset-y-0 md:z-30 md:flex md:w-[248px] md:flex-col border-r border-white/10 bg-[var(--wv-bg-inverse)]"
+                className="hidden overflow-hidden md:fixed md:inset-y-0 md:z-30 md:flex md:w-[var(--shell-sidebar-w)] md:flex-col border-r border-white/10 bg-[var(--wv-bg-inverse)]"
             >
                 <div className="border-b border-white/10 px-4 py-5">
-                    <div className="mx-auto h-20 w-44 rounded-lg bg-white/[0.06]" />
+                    <div className="mx-auto h-20 w-44 max-w-full rounded-lg bg-white/[0.06]" />
                     <div className="mt-4 h-11 rounded-lg bg-white/[0.06]" />
                 </div>
                 <div className="space-y-2 px-3 py-5">

@@ -25,10 +25,11 @@ export default function CostEstimateTourRuntime({ step, onStepChange, onDone, on
             it opens outside the tour, and slides left only as far as it must to
             leave the 360px card beside it: left = clamp(16px, centred, viewport
             - sheet - 392px), where 392px is the card plus its 16px gap and
-            16px edge margin. With the 14px root size the sheet is 532px wide, so it is centred from 1316px up. On tablets (768-1023px) the fixed 248px sidebar
-            leaves a 448px column, too narrow for the 360px panel beside a
-            card, so the reading column goes on the left over the sidebar:
-            cards start at 404px (248 + 36 gutter + 120) and the sheet joins
+            16px edge margin. With the 14px root size the sheet is 532px wide, so it is centred from 1316px up. On tablets (768-1023px) the column beside the
+            sidebar is too narrow for the 360px panel beside a card, so the
+            reading column goes on the left over the sidebar: cards start at
+            404px (sidebar + 36 gutter + the reservation, 368px - sidebar,
+            which is 120px beside the full menu and 296px beside the rail) and the sheet joins
             them, 16px to their right so that, moving from the sheet to the
             name field, the outline never starts inside the panel's footprint. */}
         <style>{`
@@ -45,7 +46,7 @@ export default function CostEstimateTourRuntime({ step, onStepChange, onDone, on
                 }
             }
             @media (min-width: 768px) and (max-width: 1023.98px) {
-                [data-tour-anchor^="estimator.quick-"] { width: calc(100% - 120px); margin-inline-start: auto; }
+                [data-tour-anchor^="estimator.quick-"] { width: calc(100% - (368px - var(--shell-sidebar-w))); margin-inline-start: auto; }
                 #mobile-live-estimate-panel {
                     left: 420px !important;
                     right: 20px !important;

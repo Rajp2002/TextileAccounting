@@ -758,21 +758,44 @@
      its Guide button as a modal, page controls (period pickers, history,
      review status) sit in the page flow, and nothing is pinned beside it. */
   :root {
+    /* The desktop sidebar is the full menu or an icon rail (lib/sidebar-preference.ts). */
+    --shell-nav-w: 248px;
+    --shell-nav-rail-w: 72px;
     --shell-sidebar-w: 0px;
     --shell-area: calc(100vw - var(--shell-sidebar-w));
     --main-pad: 0.75rem;
     /* The content column fills the space beside the sidebar and stops growing at
-       this width on very wide monitors. Both workspace shells read it, so the
-       column and the docked Live Cost shortcut below can't drift apart. */
-    --main-max: 120rem;
+       this width, so forms and tables keep a readable line length on large
+       monitors and the page centres in the space left over. Both workspace
+       shells read it, so the column and the docked Live Cost shortcut below
+       can't drift apart. */
+    --main-max: 1440px;
     /* Right edge of the dashboard content column (main is capped at --main-max). */
     --main-inset: calc((var(--shell-area) - min(var(--shell-area), var(--main-max))) / 2 + var(--main-pad));
   }
 
+  /* Tablets and small laptops get the icon rail, so the page keeps the width;
+     from 1280px the full menu. An owner's own choice, written on the shell as
+     data-sidebar-preference, overrides the default at every desktop width. */
   @media (min-width: 768px) {
     :root {
-      --shell-sidebar-w: 248px;
+      --shell-sidebar-w: var(--shell-nav-rail-w);
       --main-pad: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    :root {
+      --shell-sidebar-w: var(--shell-nav-w);
+    }
+  }
+
+  @media (min-width: 768px) {
+    :root:has([data-workspace-shell][data-sidebar-preference="expanded"]) {
+      --shell-sidebar-w: var(--shell-nav-w);
+    }
+    :root:has([data-workspace-shell][data-sidebar-preference="collapsed"]) {
+      --shell-sidebar-w: var(--shell-nav-rail-w);
     }
   }
 
@@ -1784,11 +1807,94 @@
   }
   /* The Saved Costings dialogs centre in the content area beside the sidebar (QuotesClient: left: 50% + clamp(...)). */
   [data-tour-surface="true"][data-slot="dialog-content"][data-costing-tour-dialog="true"] {
-    --tour-cx: calc(50vw + clamp(0px, calc((100vw - 1212px) / 2), 124px));
+    --tour-cx: calc(50vw + clamp(0px, calc((100vw - 1212px) / 2), calc(var(--shell-sidebar-w) / 2)));
   }
 }
 [data-tour-surface="true"] [data-slot="dialog-header"],
 [data-costing-tour-dialog="true"] [data-slot="dialog-header"] { position: static; }
+
+/* ── Desktop sidebar: full menu or icon rail ──
+   The aside is as wide as --shell-sidebar-w and is a size container, so its
+   contents follow its real width: icons only below 240px, the full menu at
+   248px. A rail opens over the page (data-peek) without moving it. */
+.workspace-sidebar {
+  width: var(--shell-sidebar-w);
+  container: workspace-nav / inline-size;
+  overflow: hidden;
+  transition: width 180ms cubic-bezier(0.2, 0, 0, 1), box-shadow 180ms ease;
+}
+.workspace-sidebar[data-peek] {
+  width: var(--shell-nav-w);
+  box-shadow: 16px 0 40px -16px rgb(15 23 42 / 0.45);
+}
+.workspace-sidebar [data-nav-rail-only] { display: none; }
+.workspace-sidebar .navigation-width-toggle {
+  position: absolute;
+  top: calc(0.5rem + env(safe-area-inset-top, 0px));
+  right: 0.5rem;
+}
+.navigation-rail-mark {
+  width: 40px;
+  height: 40px;
+  /* The logo's thread spool, cropped from the wordmark. */
+  background: url("/images/WeavlyLogo.png") no-repeat -65.5px -78.6px / 174px auto;
+}
+
+@container workspace-nav (width < 240px) {
+  .workspace-sidebar [data-nav-full-only],
+  .workspace-sidebar .submenu-wrapper { display: none; }
+  .workspace-sidebar [data-nav-rail-only] { display: block; }
+  .workspace-sidebar .navigation-brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: calc(12px + env(safe-area-inset-top, 0px)) 0 12px;
+  }
+  .workspace-sidebar .navigation-width-toggle { position: static; }
+  .workspace-sidebar [data-nav-sections] > section + section {
+    border-top: 1px solid rgb(255 255 255 / 0.08);
+    padding-top: 1rem;
+  }
+  .workspace-sidebar [data-nav-id] {
+    justify-content: center;
+    gap: 0;
+    padding-inline: 0;
+  }
+  .workspace-sidebar [data-nav-label] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+  /* A yarn-rate review due shows as a dot on the icon; the count stays in its label. */
+  .workspace-sidebar [data-nav-badge] {
+    position: absolute;
+    top: 9px;
+    right: 11px;
+    width: 8px;
+    height: 8px;
+    margin: 0;
+    border-radius: 999px;
+    background: var(--wv-brand-accent);
+    font-size: 0;
+  }
+  .workspace-sidebar [data-nav-badge] > * { display: none; }
+  .workspace-sidebar [data-nav-compact] p { display: none; }
+  .workspace-sidebar [data-nav-compact] button {
+    justify-content: center;
+    gap: 0;
+    padding-inline: 0;
+    font-size: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .workspace-sidebar { transition: none; }
+}
 
 /* ── Navigation Disclosure Motion System ── */
 .submenu-wrapper {

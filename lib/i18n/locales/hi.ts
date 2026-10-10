@@ -134,6 +134,8 @@ export const hi = {
 } },
  navigation: {
     support: "सहायता",
+    collapse_menu: "मेनू छोटा करें",
+    expand_menu: "मेनू पूरा दिखाएं",
   "mobile_estimate": "अनुमान",
   "mobile_costings": "सेव किए",
   "mobile_rates": "दरें",

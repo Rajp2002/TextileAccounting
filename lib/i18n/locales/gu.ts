@@ -134,6 +134,8 @@ export const gu = {
 } },
  navigation: {
     support: "મદદ",
+    collapse_menu: "મેનૂ નાનું કરો",
+    expand_menu: "મેનૂ પૂરું બતાવો",
   "mobile_estimate": "અંદાજ",
   "mobile_costings": "સેવ કરેલ",
   "mobile_rates": "દર",

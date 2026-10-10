@@ -68,8 +68,9 @@ export function NavigationDisclosure({ group, expanded, onToggle, onCollapse, on
                 )}
             >
                 <Icon aria-hidden="true" className="h-[18px] w-[18px] shrink-0" />
-                <span className="min-w-0 flex-1 break-words">{t(group.translationKey)}</span>
+                <span data-nav-label className="min-w-0 flex-1 break-words">{t(group.translationKey)}</span>
                 <ChevronRight
+                    data-nav-full-only
                     aria-hidden="true"
                     className={cn(
                         'nav-chevron h-4 w-4 shrink-0 transition-transform motion-reduce:transition-none',
