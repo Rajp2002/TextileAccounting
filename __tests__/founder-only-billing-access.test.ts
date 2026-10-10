@@ -17,6 +17,8 @@ vi.mock('@/lib/generate-payment-receipt', () => ({ generatePaymentReceiptPdf: mo
 vi.mock('@/lib/generate-gst-invoice', () => ({ generateGstInvoicePdf: mocks.invoicePdf }))
 vi.mock('@/lib/billing-document-policy', () => ({ isGstInvoiceSupported: mocks.invoiceSupported }))
 vi.mock('@sentry/nextjs', () => ({ captureException: vi.fn(), captureMessage: vi.fn() }))
+// create-order now imports lib/subscription (Base gate); stub it so the server-only chain never loads.
+vi.mock('@/lib/subscription', () => ({ getOrgPlanAccess: vi.fn() }))
 
 import { POST as createOrder } from '@/app/api/billing/create-order/route'
 import { POST as verifyPayment } from '@/app/api/billing/verify-payment/route'

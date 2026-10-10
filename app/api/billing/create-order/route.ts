@@ -20,6 +20,7 @@ import {
     type BillingSubscriptionRow,
 } from '@/lib/billing-lifecycle'
 import { getBillingReadiness } from '@/lib/billing-readiness'
+import { getOrgPlanAccess } from '@/lib/subscription'
 
 export const dynamic = 'force-dynamic'
 
@@ -74,6 +75,19 @@ export async function POST(req: NextRequest) {
             { error: 'Only Weavly Lite and Weavly Base are available for self-serve checkout.' },
             { status: 403 },
         )
+    }
+
+    // Base is sold only to orgs that can see it (launch switch, per-org flag,
+    // or prior Base history). Fail closed: anything but an explicit true is refused
+    // before pricing, lifecycle, claim creation or any Razorpay call. Lite skips this read.
+    if (planTier === 'base') {
+        const access = await getOrgPlanAccess(orgId)
+        if (access.baseVisible !== true) {
+            return NextResponse.json(
+                { error: 'Weavly Base is not available for new accounts yet.' },
+                { status: 403 },
+            )
+        }
     }
 
     const billingReadiness = getBillingReadiness()
