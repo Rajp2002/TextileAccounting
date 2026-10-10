@@ -284,7 +284,7 @@ export default async function BillingPage() {
             .order('created_at', { ascending: false }),
         supabase
             .from('org_subscriptions')
-            .select('id, plan_tier, status, current_start, current_end, razorpay_payment_id, razorpay_subscription_id, razorpay_order_id, checkout_purchase_type, checkout_amount_paise, checkout_currency, created_at')
+            .select('id, plan_tier, status, current_start, current_end, razorpay_payment_id, razorpay_subscription_id, razorpay_order_id, checkout_purchase_type, checkout_amount_paise, checkout_currency, created_at, is_trial')
             .eq('org_id', profile.org_id),
         supabase
             .from('billing_checkout_attempts')

@@ -22,6 +22,8 @@ export type BillingSubscriptionRow = {
   checkout_amount_paise?: number | null
   checkout_currency?: string | null
   created_at?: string | null
+  /** A Lite trial row is entitlement only; it is never paid or renewal history. */
+  is_trial?: boolean | null
 }
 
 export type BillingPaymentRow = {
@@ -123,6 +125,9 @@ export function resolveBillingCheckoutPresentation(
 }
 
 function rowHasPaidHistory(row: BillingSubscriptionRow, capturedSubscriptionIds: Set<string>): boolean {
+  // A trial is active entitlement with no payment. Checking it first keeps a
+  // trial out of pricing history even if payment evidence points at its id.
+  if (row.is_trial === true) return false
   if (!isBillingPlanTier(row.plan_tier)) return false
   if (capturedSubscriptionIds.has(row.id)) return true
   if (row.razorpay_payment_id) return true
