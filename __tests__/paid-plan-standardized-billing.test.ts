@@ -40,7 +40,7 @@ describe('Paid plan subscription and billing pages', () => {
 
     it('2. Paid and free billing pages link to the standalone plan comparison', () => {
         expect(ownerBilling).toContain('href="/plans?from=billing"')
-        expect(ownerBilling).toContain("subscriptionTier === 'lite' ? 'Upgrade to Base'")
+        expect(ownerBilling).toContain("subscriptionTier === 'lite' && baseVisible ? 'Upgrade to Base'")
         expect(ownerBilling).toContain("subscriptionTier === 'base' ? 'Compare plans'")
         expect(ownerBilling).toContain("'Explore plans'")
 

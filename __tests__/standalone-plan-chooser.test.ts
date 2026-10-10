@@ -171,7 +171,7 @@ describe('Standalone Plan Chooser & Upgrade Experience', () => {
       expect(billing).toContain('id="view-plans-heading"')
       expect(billing).toContain('Compare plan options')
       expect(billing).toContain('href="/plans?from=billing"')
-      expect(billing).toContain("subscriptionTier === 'lite' ? 'Upgrade to Base'")
+      expect(billing).toContain("subscriptionTier === 'lite' && baseVisible ? 'Upgrade to Base'")
       expect(billing).toContain("subscriptionTier === 'base' ? 'Compare plans'")
       expect(billing).toContain("'Explore plans'")
     })

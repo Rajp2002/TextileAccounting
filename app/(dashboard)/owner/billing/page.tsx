@@ -163,12 +163,14 @@ function AccessStateCallout({
     isActivating,
     isPending,
     isRetryable,
+    baseVisible,
 }: {
     subscriptionTier: string
     subscription: { plan_tier: string; current_end: string | null } | null
     isActivating: boolean
     isPending: boolean
     isRetryable: boolean
+    baseVisible: boolean
 }) {
     if (subscriptionTier === 'lite' || subscriptionTier === 'base') return null
 
@@ -184,7 +186,7 @@ function AccessStateCallout({
                 ? { icon: XCircle, label: 'Payment not completed', title: 'No payment was captured.', text: 'Access was not activated. Choose an available subscription below when you are ready to try again.' }
                 : expiredPlan
                     ? { icon: Lock, label: 'Subscription expired', title: `${expiredPlan.name} access has ended.`, text: 'Choose the available renewal option below to restore access. Your previous payment records remain available.' }
-                    : { icon: Star, label: 'No active subscription', title: 'Choose Lite or Base.', text: 'Start with Weavly Lite for complete costing management, or choose Base when you need connected production management.' }
+                    : { icon: Star, label: 'No active subscription', title: baseVisible ? 'Choose Lite or Base.' : 'Choose Lite.', text: baseVisible ? 'Start with Weavly Lite for complete costing management, or choose Base when you need connected production management.' : 'Start with Weavly Lite for complete costing management.' }
     const Icon = state.icon
 
     return (
@@ -295,6 +297,8 @@ export default async function BillingPage() {
     const { subscription } = subscriptionDetail
     const tier = planAccess.effectiveTier
     const subscriptionTier = planAccess.subscriptionTier
+    // Base is offered only to organizations that may see it (fail closed when unset).
+    const baseVisible = planAccess.baseVisible === true
     const payments = (paymentsResult.data ?? []) as SubscriptionPaymentRow[]
     const billingSubscriptions = (subscriptionsResult.data ?? []) as BillingSubscriptionRow[]
     const billingPayments = payments as BillingPaymentRow[]
@@ -348,9 +352,9 @@ export default async function BillingPage() {
         latestAttempt
         && !['activated', 'failed', 'cancelled', 'refunded'].includes(latestAttempt.status)
     )
-    const visiblePlanTiers: readonly PurchasablePlanTier[] = BILLING_SELF_SERVE_PLAN_TIERS
+    const visiblePlanTiers: readonly PurchasablePlanTier[] = BILLING_SELF_SERVE_PLAN_TIERS.filter(tier => tier !== 'base' || baseVisible)
     const cardPlanTiers: readonly PurchasablePlanTier[] = subscriptionTier === 'lite'
-        ? ['base']
+        ? visiblePlanTiers.filter(tier => tier === 'base')
         : visiblePlanTiers
     const billingReadiness = getBillingReadiness()
     const canRenew = Boolean(renewalAvailable && selfServeActiveTier && activeRenewalPrice)
@@ -391,7 +395,7 @@ export default async function BillingPage() {
     ) : (
         <Button asChild className={cn(railPrimaryAction, 'gap-2')}>
             <Link href="/plans?from=billing">
-                <span>{subscriptionTier === 'lite' ? 'Upgrade to Base' : subscriptionTier === 'base' ? 'Compare plans' : 'Explore plans'}</span>
+                <span>{subscriptionTier === 'lite' && baseVisible ? 'Upgrade to Base' : subscriptionTier === 'base' ? 'Compare plans' : 'Explore plans'}</span>
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
         </Button>
@@ -419,6 +423,7 @@ export default async function BillingPage() {
                     isActivating={isActivating}
                     isPending={isPending}
                     isRetryable={isRetryable}
+                    baseVisible={baseVisible}
                 />
 
                 {/* Plan payments readiness notice when payments gate is blocked */}
@@ -547,14 +552,14 @@ export default async function BillingPage() {
                                     <span className="rounded-full border border-saffron/25 bg-saffron-soft/60 px-2 py-0.5 text-[10px] font-semibold text-saffron-deep">Compare plan options</span>
                                 </div>
                                 <p className="mt-1 max-w-2xl text-sm leading-relaxed text-body">
-                                    Explore Weavly Free, Lite, and Base with clear feature previews and pricing.
+                                    {baseVisible ? 'Explore Weavly Free, Lite, and Base with clear feature previews and pricing.' : 'Explore Weavly Free and Lite with clear feature previews and pricing.'}
                                 </p>
                                 <p className="mt-1.5 text-xs text-subtle">GST included · Annual renewals are manual · Secure Razorpay checkout</p>
                             </div>
                         </div>
                         <Button asChild className="min-h-10 w-full shrink-0 gap-2 rounded-lg bg-loom px-4 py-2.5 text-sm font-semibold text-white shadow-none transition-colors hover:bg-loom-elevated sm:w-auto" size="default">
                             <Link href="/plans?from=billing">
-                                <span>{subscriptionTier === 'lite' ? 'Upgrade to Base' : subscriptionTier === 'base' ? 'Compare plans' : 'Explore plans'}</span>
+                                <span>{subscriptionTier === 'lite' && baseVisible ? 'Upgrade to Base' : subscriptionTier === 'base' ? 'Compare plans' : 'Explore plans'}</span>
                                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
                             </Link>
                         </Button>

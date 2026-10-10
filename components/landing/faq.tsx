@@ -4,8 +4,9 @@ import { Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Beam, Eyebrow } from './beam'
 import s from './landing.module.css'
+import { BASE_PLAN_OPEN_TO_NEW_ACCOUNTS } from '@/lib/base-plan-visibility'
 
-const faqs = [
+const faqs: Array<{ question: string; answer: ReactNode; baseOnly?: boolean }> = [
     {
         question: 'Which plan should I start with?',
         answer: 'Start with Free if you cost an enquiry now and then. Choose Lite when costing is a daily job and you want reusable qualities and the Yarn Rate Book. Choose Base when you also want production, stock, dispatch and piece-rate pay to run from the same costings.',
@@ -33,6 +34,7 @@ const faqs = [
     {
         question: 'Does Base include supervisor accounts or statutory payroll?',
         answer: 'No. Base is for owner-led production entry and piece-rate worker settlement. Separate supervisor accounts, attendance, statutory payroll and broader ERP modules are outside the current plans.',
+        baseOnly: true,
     },
     {
         question: 'How is my data handled, and what about refunds?',
@@ -45,7 +47,7 @@ const faqs = [
             </>
         ),
     },
-] satisfies Array<{ question: string; answer: ReactNode }>
+]
 
 export default function LandingFAQ() {
     return (
@@ -64,7 +66,7 @@ export default function LandingFAQ() {
                 </div>
 
                 <div className="border-t-2 border-[color:var(--lp-ink)]">
-                    {faqs.map((faq) => (
+                    {faqs.filter((faq) => !faq.baseOnly || BASE_PLAN_OPEN_TO_NEW_ACCOUNTS).map((faq) => (
                         <details key={faq.question} name="landing-faq" className={cn(s.faq, 'group border-b border-[color:var(--lp-line-strong)]')}>
                             <summary className="flex min-h-[56px] items-center justify-between gap-6 py-4 text-[16px] font-semibold leading-snug text-[color:var(--lp-ink)] sm:text-[17px]">
                                 {faq.question}

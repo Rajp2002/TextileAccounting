@@ -4,13 +4,19 @@ import { Beam, Eyebrow } from './beam'
 import s from './landing.module.css'
 import { costSample } from './sample-costing'
 import { formatRupees, SAMPLE_START } from './sample-format'
+import { BASE_PLAN_OPEN_TO_NEW_ACCOUNTS } from '@/lib/base-plan-visibility'
 
 const example = costSample(SAMPLE_START)
 
 type Plan = 'Free' | 'Lite' | 'Base'
 
+/** Plans this page offers: Base is left out while its launch switch is closed. */
+const offeredPlans = (plans: Plan[]): Plan[] => plans.filter((plan) => plan !== 'Base' || BASE_PLAN_OPEN_TO_NEW_ACCOUNTS)
+
 function Plans({ plans }: { plans: Plan[] }) {
-    const text = plans.length === 3 ? 'Every plan' : plans.length === 2 ? 'Lite and Base' : 'Base'
+    // Every plan on offer is still "Every plan"; otherwise name only the offered plans.
+    const offered = offeredPlans(plans)
+    const text = plans.length === 3 ? 'Every plan' : offered.join(' and ')
     return <p className={cn(s.label, 'text-[color:var(--lp-saffron-ink)]')}>{text}</p>
 }
 
@@ -133,7 +139,7 @@ export default function LandingWorkflow() {
             </div>
 
             <ol className="mt-14 list-none border-t border-[color:var(--lp-ink)]">
-                {steps.map((step, index) => (
+                {steps.filter((step) => offeredPlans(step.plans).length > 0).map((step, index) => (
                     <li
                         key={step.title}
                         className={cn(s.rise, 'grid gap-5 border-b border-[color:var(--lp-line)] py-8 md:grid-cols-[3.5rem_minmax(0,1fr)_minmax(0,19rem)] md:gap-8 lg:grid-cols-[4.5rem_minmax(0,1fr)_minmax(0,22rem)] lg:gap-12')}

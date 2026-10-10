@@ -24,6 +24,8 @@ interface FreeBillingClientProps {
   initialTier?: string
   grantState?: string
   billingHistory?: BillingHistoryEntry[]
+  /** Base is named only for organizations that may see it. Defaults to hidden. */
+  baseVisible?: boolean
 }
 
 export default function FreeBillingClient({
@@ -31,6 +33,7 @@ export default function FreeBillingClient({
   initialTier,
   grantState,
   billingHistory = [],
+  baseVisible = false,
 }: FreeBillingClientProps) {
   const { language } = useTranslation()
   const { tier } = useFreeWorkspace()
@@ -106,15 +109,17 @@ export default function FreeBillingClient({
             </div>
             <div className="min-w-0">
               <h2 id="view-plans-heading" className="text-base font-semibold tracking-tight text-ink">{text('compare')}</h2>
-              <p className="mt-1 max-w-2xl text-sm leading-relaxed text-body">
-                {text('compareBody')}
-              </p>
+              {baseVisible && (
+                <p className="mt-1 max-w-2xl text-sm leading-relaxed text-body">
+                  {text('compareBody')}
+                </p>
+              )}
               <p className="mt-1.5 text-xs text-subtle">{text('commercial')}</p>
             </div>
           </div>
           <Button asChild className="h-auto w-full shrink-0 gap-2 rounded-lg bg-loom px-4 py-2.5 text-sm font-semibold text-white shadow-none transition-colors hover:bg-loom-elevated sm:w-auto" size="default">
             <Link href="/plans?from=billing">
-              <span>{tier === 'lite' ? 'Upgrade to Base' : upgradeText(language, 'compareAllPlans')}</span>
+              <span>{tier === 'lite' && baseVisible ? 'Upgrade to Base' : upgradeText(language, 'compareAllPlans')}</span>
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
           </Button>

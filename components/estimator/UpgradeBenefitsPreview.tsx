@@ -18,7 +18,13 @@ const SubscribeButton = dynamic(() => import('@/components/billing/SubscribeButt
  * Checkout defers its router refresh; `onActivated` verifies access through
  * the Free status read, which switches to the paid estimator in place.
  */
-export function UpgradeBenefitsPreview({ onActivated, open: controlledOpen, onOpenChange }: { onActivated: () => void; open?: boolean; onOpenChange?: (open: boolean) => void }) {
+export function UpgradeBenefitsPreview({ onActivated, open: controlledOpen, onOpenChange, baseVisible = false }: {
+  onActivated: () => void
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+  /** Base is offered only to organizations that may see it. Defaults to hidden. */
+  baseVisible?: boolean
+}) {
   const { language } = useTranslation()
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
   const open = controlledOpen ?? uncontrolledOpen
@@ -44,14 +50,14 @@ export function UpgradeBenefitsPreview({ onActivated, open: controlledOpen, onOp
 
   return <details open={open} onToggle={event => setOpen(event.currentTarget.open)} className="ui-details overflow-hidden rounded-xl border border-saffron/30 bg-saffron-soft/40">
     <summary ref={summaryRef} className="flex cursor-pointer list-none flex-col gap-3 p-4 outline-none focus-visible:ring-2 focus-visible:ring-saffron sm:flex-row sm:items-center sm:justify-between [&::-webkit-details-marker]:hidden">
-      <span><span className="block font-semibold text-ink">{freeText(language, 'liteHeadline')}</span><span className="mt-1 block text-sm text-body">{freeText(language, 'planSummary')}</span></span>
+      <span><span className="block font-semibold text-ink">{freeText(language, 'liteHeadline')}</span><span className="mt-1 block text-sm text-body">{freeText(language, baseVisible ? 'planSummary' : 'planLiteFit')}</span></span>
       <span className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-loom px-4 py-2 text-sm font-semibold text-white">{upgradeText(language, 'title')}<ArrowRight className="size-4" aria-hidden="true" /></span>
     </summary>
     {open && <div className="border-t border-saffron/20 bg-surface-soft p-3 sm:p-5">
-      <UpgradeWall currentPlan="free" actions={{
+      <UpgradeWall currentPlan="free" baseVisible={baseVisible} actions={{
         free: <><div className="space-y-1"><p className="text-3xl font-bold tracking-tight text-ink">{format(0)}</p><p className="text-sm text-body">{upgradeText(language, 'freePrice')}</p></div><Button type="button" variant="outline" className="w-full" onClick={() => { setOpen(false); summaryRef.current?.focus() }}>{upgradeText(language, 'continueFree')}</Button></>,
         lite: paidAction('lite'),
-        base: paidAction('base'),
+        base: baseVisible ? paidAction('base') : undefined,
       }} />
       <div className="mt-3 flex justify-end">
         <Button asChild variant="ghost" size="sm" className="gap-1 text-xs text-saffron-deep hover:text-saffron-deep">

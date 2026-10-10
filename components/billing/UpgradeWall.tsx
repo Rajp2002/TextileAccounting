@@ -119,20 +119,25 @@ function FeaturePlanCard({ plan, current, selected, children }: { plan: UpgradeP
   )
 }
 
-/** Feature exploration is local UI state. Purchase eligibility stays with the caller. */
-export function UpgradeWall({ currentPlan, selectedPlan, actions, showHeading = true }: {
+/**
+ * Feature exploration is local UI state. Purchase eligibility stays with the caller.
+ * Base is shown only when `baseVisible` is true; it defaults to hidden.
+ */
+export function UpgradeWall({ currentPlan, selectedPlan, actions, showHeading = true, baseVisible = false }: {
   currentPlan?: string
   selectedPlan?: UpgradePlan
   actions?: Partial<Record<UpgradePlan, ReactNode>>
   showHeading?: boolean
+  baseVisible?: boolean
 }) {
   const { language } = useTranslation()
   const id = useId()
+  const plans: readonly UpgradePlan[] = baseVisible ? ['free', 'lite', 'base'] : ['free', 'lite']
   return <section aria-label={upgradeText(language, 'title')} className="@container space-y-5">
     {showHeading && <div data-i18n-skip="true"><h2 className="text-2xl font-bold tracking-tight text-ink">{upgradeText(language, 'title')}</h2><p className="mt-2 text-sm text-body">{upgradeText(language, 'intro')}</p></div>}
     <p data-i18n-skip="true" id={id} className="text-sm text-subtle">{upgradeText(language, 'swipe')}</p>
-    <div aria-describedby={id} className="grid items-stretch gap-4 @4xl:grid-cols-3">
-      {(['free', 'lite', 'base'] as const).map(plan => <FeaturePlanCard key={plan} plan={plan} current={currentPlan === plan} selected={selectedPlan === plan}>{actions?.[plan]}</FeaturePlanCard>)}
+    <div aria-describedby={id} className={`grid items-stretch gap-4 ${baseVisible ? '@4xl:grid-cols-3' : '@4xl:grid-cols-2'}`}>
+      {plans.map(plan => <FeaturePlanCard key={plan} plan={plan} current={currentPlan === plan} selected={selectedPlan === plan}>{actions?.[plan]}</FeaturePlanCard>)}
     </div>
   </section>
 }

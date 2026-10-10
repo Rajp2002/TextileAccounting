@@ -18,6 +18,8 @@ interface PlanChooserClientProps {
   freeAvailable: boolean
   billingReady: boolean
   paid: boolean
+  /** Whether this organization may see Base. Hidden orgs see Free and Lite only. */
+  baseVisible: boolean
   paymentRecovery?: ReactNode
 }
 
@@ -27,6 +29,7 @@ export function PlanChooserClient({
   freeAvailable,
   billingReady,
   paid,
+  baseVisible,
   paymentRecovery,
 }: PlanChooserClientProps) {
   const [busy, setBusy] = useState(false)
@@ -119,8 +122,8 @@ export function PlanChooserClient({
         </div>
       )}
 
-      {/* 3-Column Pricing Grid */}
-      <div className={cn("mx-auto grid max-w-6xl grid-cols-1 gap-6 lg:grid-cols-3", mobileCompact && "max-md:gap-4")}>
+      {/* Pricing grid: three columns when Base is visible, otherwise Free and Lite only */}
+      <div className={cn("mx-auto grid grid-cols-1 gap-6", baseVisible ? "max-w-6xl lg:grid-cols-3" : "max-w-4xl lg:grid-cols-2", mobileCompact && "max-md:gap-4")}>
         <PlanCard
           planTier="free"
           currentPlan={currentPlan}
@@ -145,17 +148,19 @@ export function PlanChooserClient({
           onOpenPreview={handleOpenPreview}
         />
 
-        <PlanCard
-          planTier="base"
-          currentPlan={currentPlan}
-          isOnboarding={isOnboarding}
-          freeAvailable={freeAvailable}
-          billingReady={billingReady}
-          busy={busy}
-          mobileCompact={mobileCompact}
-          onSelectFree={() => void finish('free')}
-          onOpenPreview={handleOpenPreview}
-        />
+        {baseVisible && (
+          <PlanCard
+            planTier="base"
+            currentPlan={currentPlan}
+            isOnboarding={isOnboarding}
+            freeAvailable={freeAvailable}
+            billingReady={billingReady}
+            busy={busy}
+            mobileCompact={mobileCompact}
+            onSelectFree={() => void finish('free')}
+            onOpenPreview={handleOpenPreview}
+          />
+        )}
       </div>
 
       {/* Commercial Terms & Purchase Disclosure Panel */}
@@ -211,6 +216,7 @@ export function PlanChooserClient({
       <PlanPreviewModal
         feature={previewState.feature}
         planTier={previewState.planTier}
+        baseVisible={baseVisible}
         onClose={handleClosePreview}
       />
     </div>
