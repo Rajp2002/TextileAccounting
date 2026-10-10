@@ -275,10 +275,12 @@ export const VALIDATION_PHRASES: LitePhraseRow[] = [
     ["warp", "ताना", "તાણા"],
     ["weft", "बाना", "ભરણ"],
     // Multi-weft picks (cost engine, PR #229).
-    ["Weft layer {0} pick ratio must be greater than 0.", "बाना लेयर {0} का पिक्स अनुपात 0 से ज़्यादा होना चाहिए।", "ભરણ લેયર {0} નો પિક્સ ગુણોત્તર 0 કરતાં વધુ હોવો જોઈએ."],
     ["Total picks (PPI) must be greater than 0.", "कुल पिक्स (PPI) 0 से ज़्यादा होने चाहिए।", "કુલ પિક્સ (PPI) 0 કરતાં વધુ હોવા જોઈએ."],
+    ["Weft layer {0} picks in each repeat must be greater than 0.", "बाना लेयर {0} के हर रिपीट में पिक्स 0 से ज़्यादा होने चाहिए।", "ભરણ લેયર {0} ના દરેક રિપીટમાં પિક્સ 0 કરતાં વધુ હોવા જોઈએ."],
     ["The weft picks no longer match the pick ratio. Re-enter the total picks or the ratio.", "बाने के पिक्स अब अनुपात से मेल नहीं खाते। कुल पिक्स या अनुपात फिर से लिखें।", "ભરણના પિક્સ હવે ગુણોત્તર સાથે મેળ ખાતા નથી. કુલ પિક્સ અથવા ગુણોત્તર ફરી લખો."],
     ["This fabric has more than one weft yarn. Choose whether the picks are entered for each weft yarn or as the total picks shared by a ratio.", "इस कपड़े में एक से ज़्यादा बाना यार्न है। चुनें कि पिक्स हर बाने के लिए अलग लिखे हैं या कुल पिक्स अनुपात से बाँटे गए हैं।", "આ કાપડમાં એકથી વધુ ભરણ યાર્ન છે. પસંદ કરો કે પિક્સ દરેક ભરણ માટે અલગ લખ્યા છે કે કુલ પિક્સ ગુણોત્તરથી વહેંચ્યા છે."],
     ["{0} crimp %", "{0} क्रिम्प %", "{0} ક્રિમ્પ %"],
     ["{0} crimp above 15% is unusual. Confirm this is a percentage of take-up.", "{0} का 15% से ज़्यादा क्रिम्प असामान्य है। पक्का करें कि यह टेक-अप का प्रतिशत है।", "{0} નો 15% થી વધુ ક્રિમ્પ અસામાન્ય છે. ખાતરી કરો કે આ ટેક-અપની ટકાવારી છે."],
+    // Database error text; kept in English in code because the save retry matches it.
+    ["The costing payload contains unsupported fields.", "इस कॉस्टिंग में कुछ ऐसी जानकारी है जिसे Weavly इस्तेमाल नहीं कर सकता। पेज रीफ़्रेश करें और फिर से कोशिश करें।", "આ કોસ્ટિંગમાં એવી વિગતો છે જે Weavly વાપરી શકતું નથી. પેજ રિફ્રેશ કરો અને ફરી પ્રયાસ કરો."],
 ]

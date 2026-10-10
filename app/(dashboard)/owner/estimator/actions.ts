@@ -67,7 +67,8 @@ type InitialQualityRpcResult = SaveRevisionRpcResult & { templateId?: string }
 
 type CostingRpcOutcome = { data: unknown; error: { message: string; code?: string } | null }
 
-const COSTING_PAYLOAD_UNSUPPORTED_FIELDS = 'This costing has details Weavly cannot use. Refresh the page and try again.'
+// Must match the error text raised by save_estimator_costing_revision_v2.
+const COSTING_PAYLOAD_UNSUPPORTED_FIELDS = 'The costing payload contains unsupported fields.'
 
 /**
  * Attests a costing payload and saves it. A database without the LT01B
