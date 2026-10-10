@@ -81,8 +81,8 @@ export function summarizeCostingInputChanges(
   if (rowFieldChanged(previousWarp, currentWarp, ['yarnRate', 'gstPct'])) {
     changed.push('rate')
   }
-  if (rowFieldChanged(previousWarp, currentWarp, ['shortagePct', 'calcDenier', 'cottonCountNe'])
-    || rowFieldChanged(previousWeft, currentWeft, ['shortagePct', 'calcDenier', 'cottonCountNe'])
+  if (rowFieldChanged(previousWarp, currentWarp, ['shortagePct', 'crimpPct', 'calcDenier', 'cottonCountNe'])
+    || rowFieldChanged(previousWeft, currentWeft, ['shortagePct', 'crimpPct', 'calcDenier', 'cottonCountNe'])
     || numberChanged(previous.yarnShortagePct, current.yarnShortagePct)
     || numberChanged(previous.warpCrimpPct, current.warpCrimpPct)) {
     changed.push('waste')
@@ -107,7 +107,7 @@ export function summarizeCostingInputChanges(
     changed.push('overhead')
   }
   if (rowFieldChanged(previousWarp, currentWarp, ['beamEnds', 'calculationMode', 'manualKgPer100m'])
-    || rowFieldChanged(previousWeft, currentWeft, ['picks', 'calculationMode', 'manualKgPer100m'])
+    || rowFieldChanged(previousWeft, currentWeft, ['picks', 'pickRatio', 'calculationMode', 'manualKgPer100m'])
     || numberChanged(previous.perPickCostPaisa, current.perPickCostPaisa)
     || previous.warpingMode !== current.warpingMode
     || previous.sizingMode !== current.sizingMode

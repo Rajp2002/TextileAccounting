@@ -346,7 +346,7 @@ describe('Estimator formula primitives', () => {
         expect(calcWeftYarnKg(68, 62, 50.6)).toBeCloseTo(0.9332003, 6)
     })
 
-    it('divides the 100m weft formula multiplier across all weft components', () => {
+    it('gives every weft system the full 100m run, so identical systems add up', () => {
         const weftComponent = {
             id: 'weft-1',
             picks: 68,
@@ -371,20 +371,13 @@ describe('Estimator formula primitives', () => {
         const threeComponents = calculateForCount(3)
 
         expect(oneComponent.weftRows[0].formulaLengthM).toBe(100)
-        expect(twoComponents.weftRows[0].formulaLengthM).toBe(50)
-        expect(threeComponents.weftRows[0].formulaLengthM).toBeCloseTo(100 / 3, 10)
-        expect(twoComponents.weftRows[0].formulaKgPer100m).toBeCloseTo(
-            oneComponent.weftRows[0].formulaKgPer100m / 2,
-            10,
-        )
-        expect(threeComponents.weftRows[0].formulaKgPer100m).toBeCloseTo(
-            oneComponent.weftRows[0].formulaKgPer100m / 3,
-            10,
-        )
+        expect(twoComponents.weftRows[0].formulaLengthM).toBe(100)
+        expect(threeComponents.weftRows[0].formulaLengthM).toBe(100)
+        expect(twoComponents.weftRows[0].formulaKgPer100m).toBeCloseTo(oneComponent.weftRows[0].formulaKgPer100m, 10)
         const totalWeftKg = (totals: ReturnType<typeof calcFullTotals>) => totals.weftRows
             .reduce((sum, row) => sum + row.kgPer100m, 0)
-        expect(totalWeftKg(twoComponents)).toBeCloseTo(totalWeftKg(oneComponent), 10)
-        expect(totalWeftKg(threeComponents)).toBeCloseTo(totalWeftKg(oneComponent), 10)
+        expect(totalWeftKg(twoComponents)).toBeCloseTo(totalWeftKg(oneComponent) * 2, 10)
+        expect(totalWeftKg(threeComponents)).toBeCloseTo(totalWeftKg(oneComponent) * 3, 10)
     })
 
     it('does not divide explicit manual weft consumption by the component count', () => {

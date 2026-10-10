@@ -1,6 +1,7 @@
 import { BASE_CONTINUITY_PHRASES } from './base-continuity-phrases'
 import { BULK_ADJUSTMENT_PHRASES } from './bulk-adjustment-phrases'
 import { LITE_REFINEMENT_PHRASES } from './lite-refinement-phrases'
+import { LITE_SCREEN_PHRASES } from './lite-phrases'
 import { RATE_TREND_PHRASES } from './rate-trend-phrases'
 import { SHIFT_ROTATION_PHRASES } from './shift-rotation-phrases'
 
@@ -15,6 +16,7 @@ export type BasePlanLocalLanguage = 'hi' | 'gu'
  */
 export const BASE_PLAN_PHRASES: Record<BasePlanLocalLanguage, Record<string, string>> = {
   hi: {
+    ...LITE_SCREEN_PHRASES.hi,
     ...BASE_CONTINUITY_PHRASES.hi,
     ...LITE_REFINEMENT_PHRASES.hi,
     ...RATE_TREND_PHRASES.hi,
@@ -667,6 +669,7 @@ export const BASE_PLAN_PHRASES: Record<BasePlanLocalLanguage, Record<string, str
     'Undo': 'पूर्ववत करें',
   },
   gu: {
+    ...LITE_SCREEN_PHRASES.gu,
     ...BASE_CONTINUITY_PHRASES.gu,
     ...LITE_REFINEMENT_PHRASES.gu,
     ...RATE_TREND_PHRASES.gu,

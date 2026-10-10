@@ -260,7 +260,7 @@ export function SubscribeButton({ planTier = BILLING_SELF_SERVE_DEFAULT_TIER, ti
                             ? tx(`Paid ${displayAmount ?? `₹${(outcome.amount / 100).toLocaleString('en-IN')}`}${outcome.activeUntil ? ` · Active until ${new Date(outcome.activeUntil).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' })} IST` : ''}. ${t('base_plan.billing.success')}`)
                             : tx(outcome.message ?? 'We are checking the provider result. Please do not pay again.')}
                     </p>
-                    {outcome.paymentId && <p className="mt-2 text-[10px] font-semibold uppercase tracking-wider opacity-60">Payment ref. {outcome.paymentId.slice(-8)}</p>}
+                    {outcome.paymentId && <p className="mt-2 text-xs font-semibold opacity-60">Payment ref. {outcome.paymentId.slice(-8)}</p>}
                     {outcome.state !== 'success' && outcome.orderId && outcome.state !== 'retryable' && (
                         <Button type="button" variant="outline" size="sm" onClick={() => void checkPaymentStatus({ orderId: outcome.orderId as string, paymentId: outcome.paymentId, planName: outcome.planName, purchaseType: outcome.purchaseType, amount: outcome.amount })} disabled={loading} className="mt-3 gap-2 bg-surface/70">
                             {loading && <Loader2 className="h-3.5 w-3.5 animate-spin" />} {tx('Check payment status')}

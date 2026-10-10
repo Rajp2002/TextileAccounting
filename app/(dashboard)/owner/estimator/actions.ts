@@ -45,7 +45,7 @@ async function attestCanonicalCostingPayload<T extends Record<string, unknown>>(
     })
     if (error) return { error: error.message }
     if (typeof data !== 'string' || !UUID_PATTERN.test(data)) {
-        return { error: 'The server could not verify the canonical costing payload.' }
+        return { error: 'This costing could not be checked. Refresh the page and try again.' }
     }
     return { payload: { ...payload, server_attestation_id: data } }
 }
@@ -67,6 +67,7 @@ type InitialQualityRpcResult = SaveRevisionRpcResult & { templateId?: string }
 
 type CostingRpcOutcome = { data: unknown; error: { message: string; code?: string } | null }
 
+// Must match the error text raised by save_estimator_costing_revision_v2.
 const COSTING_PAYLOAD_UNSUPPORTED_FIELDS = 'The costing payload contains unsupported fields.'
 
 /**
@@ -83,13 +84,13 @@ async function saveAttestedCostingPayload(
     save: (attestedPayload: Record<string, unknown>) => PromiseLike<CostingRpcOutcome>,
 ): Promise<CostingRpcOutcome | { attestationError: string }> {
     const attestation = await attestCanonicalCostingPayload(userId, orgId, payload)
-    if (!attestation.payload) return { attestationError: attestation.error ?? 'The costing payload could not be verified.' }
+    if (!attestation.payload) return { attestationError: attestation.error ?? 'This costing could not be checked. Refresh the page and try again.' }
     const outcome = await save(attestation.payload)
     const rejectedInputBasis = outcome.error?.code === '22023' && outcome.error.message === COSTING_PAYLOAD_UNSUPPORTED_FIELDS
     if (!rejectedInputBasis) return outcome
 
     const legacyAttestation = await attestCanonicalCostingPayload(userId, orgId, toLegacyEstimatorQuotePayload(payload))
-    if (!legacyAttestation.payload) return { attestationError: legacyAttestation.error ?? 'The costing payload could not be verified.' }
+    if (!legacyAttestation.payload) return { attestationError: legacyAttestation.error ?? 'This costing could not be checked. Refresh the page and try again.' }
     return save(legacyAttestation.payload)
 }
 
@@ -473,9 +474,9 @@ export async function upsertFactoryCostProfile(data: {
         // still require a complete capacity reference. Lite Settings is the
         // one intentional exception: it can save a costing baseline from
         // standard monthly production and expenses without production metadata.
-        if (data.requireCapacity !== false && (!Number.isFinite(loomCount) || loomCount <= 0)) return { error: 'Enter at least one loom before saving the monthly factory baseline.' }
-        if (data.requireCapacity !== false && (!Number.isFinite(workingDays) || workingDays <= 0)) return { error: 'Enter positive working days before saving the monthly factory baseline.' }
-        if (data.requireCapacity !== false && (!Number.isFinite(avgOutput) || avgOutput <= 0)) return { error: 'Enter positive daily output per loom before saving the monthly factory baseline.' }
+        if (data.requireCapacity !== false && (!Number.isFinite(loomCount) || loomCount <= 0)) return { error: 'Enter at least one loom before saving your monthly factory costs.' }
+        if (data.requireCapacity !== false && (!Number.isFinite(workingDays) || workingDays <= 0)) return { error: 'Enter positive working days before saving your monthly factory costs.' }
+        if (data.requireCapacity !== false && (!Number.isFinite(avgOutput) || avgOutput <= 0)) return { error: 'Enter positive daily output per loom before saving your monthly factory costs.' }
         if (monthlyOutput <= 0) return { error: 'Enter the standard monthly production used to divide factory expenses.' }
     }
 
@@ -520,7 +521,7 @@ export async function upsertFactoryCostProfile(data: {
             .maybeSingle()
 
         if (error) return { error: error.message }
-        if (!updated) return { error: 'The factory baseline changed in another tab. Refresh it before saving again.' }
+        if (!updated) return { error: 'Your factory costs were changed in another tab. Refresh before saving again.' }
         updatedAt = updated.updated_at
     } else {
         const { data: saved, error } = await supabase
@@ -647,7 +648,7 @@ export async function applyMonthlyDerivedOverhead(data: {
         .maybeSingle()
 
     if (error) return { error: error.message }
-    if (!updated) return { error: 'The factory baseline changed in another tab. Refresh it before applying overhead.' }
+    if (!updated) return { error: 'Your factory costs were changed in another tab. Refresh before applying factory expenses.' }
 
     revalidatePath('/owner/estimator')
     revalidatePath('/owner/settings')
@@ -944,7 +945,7 @@ export async function saveAsFabricTemplate(data: {
     const { data: atomicResult, error: atomicError } = atomicOutcome as { data: InitialQualityRpcResult | null; error: CostingRpcOutcome['error'] }
     if (atomicError) return { error: templateWriteError(atomicError) }
     if (!atomicResult || atomicResult.success !== true) {
-        return { error: atomicResult?.error ?? 'The quality was not saved because its costing snapshot could not be created.' }
+        return { error: atomicResult?.error ?? 'The quality was not saved because its costing could not be saved. Try again.' }
     }
 
     revalidatePath('/owner/estimator')
@@ -1738,7 +1739,7 @@ export async function auditHistoricalCostingSnapshot(costingId: string, expected
         .select('id, updated_at, reconciliation_status, reconciliation_note, reconciled_at')
         .maybeSingle()
     if (error) return { error: error.message }
-    if (!data) return { error: 'This costing changed in another tab. Refresh before auditing it again.' }
+    if (!data) return { error: 'This costing was changed in another tab. Refresh before checking it again.' }
     revalidatePath('/owner/quotes')
     revalidatePath('/owner/estimator')
     return { data, audit }

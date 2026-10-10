@@ -102,11 +102,13 @@ describe('print and PDF styling', () => {
   })
 
   it('lays the PDF out 700px wide so body text prints near 9pt instead of about 7pt', () => {
-    const dialog = read('components/estimator/CostingExportDialog.tsx')
-    expect(dialog).toContain('const PDF_LAYOUT_WIDTH_PX = 700')
-    expect(dialog).toContain('host.style.width = `${PDF_LAYOUT_WIDTH_PX}px`')
-    expect(dialog).toContain('windowWidth: PDF_LAYOUT_WIDTH_PX')
-    expect(dialog).not.toContain("'760px'")
+    // The dialog hands the document to the shared PDF renderer.
+    expect(read('components/estimator/CostingExportDialog.tsx')).toContain('renderDocumentPdf(extractStyledCostingBody(previewHtml))')
+    const renderer = read('lib/document-pdf.ts')
+    expect(renderer).toContain('export const PDF_LAYOUT_WIDTH_PX = 700')
+    expect(renderer).toContain('host.style.width = `${PDF_LAYOUT_WIDTH_PX}px`')
+    expect(renderer).toContain('windowWidth: PDF_LAYOUT_WIDTH_PX')
+    expect(renderer).not.toContain("'760px'")
   })
 })
 

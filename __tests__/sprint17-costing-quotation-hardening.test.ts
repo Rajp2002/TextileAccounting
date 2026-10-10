@@ -184,15 +184,15 @@ describe('Sprint 17 costing and quotation hardening', () => {
     // Phase 3H: the quotation ledger and its status controls were retired.
     expect(quotes).not.toContain('Quotation ledger')
     expect(quotes).not.toContain('Mark Sent')
-    expect(quotes).toContain('Restore snapshot')
+    expect(quotes).toContain('Restore costing')
     expect(quotes).toContain('New minus Old')
     expect(actions).not.toContain('Next allowed action:')
     expect(migration).toContain('sent_at')
     expect(migration).toContain('stamp_estimator_quote_sent_at')
     expect(hardeningMigration).toContain('SET search_path = pg_catalog, public')
-    expect(estimator).toContain('Save quality/recipe:')
-    expect(estimator).toContain('Save costing snapshot:')
-    expect(estimator).toContain('Create new version:')
+    expect(estimator).toContain('Save quality:')
+    expect(estimator).toContain('Save costing:</span>')
+    expect(estimator).toContain('New version:</span>')
   })
 
   it('keeps internal economics out of the customer quotation in both UI and print output', () => {

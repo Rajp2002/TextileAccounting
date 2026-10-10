@@ -12,6 +12,8 @@ import { type PayrollCycleConfig } from '@/lib/payroll-cycle-engine'
 import { SecurityCard } from './security-card'
 import { DeletionReviewCard } from './deletion-review-card'
 import { SupervisorAccessCard } from '../supervisors/SupervisorAccessCard'
+import { CompanyProfileCard } from './company-profile-card'
+import { brandingText } from '@/lib/i18n/document-branding'
 import { useUnloadProtection } from './unsaved-changes-dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { freeSupportingText } from '@/lib/i18n/free-supporting'
@@ -39,11 +41,21 @@ function currentStartupPreference() {
 const serverStartupPreference = (): StartupIntroPreference => DEFAULT_STARTUP_INTRO_PREFERENCE
 
 /** The same editors remain mounted; only optional mobile presentation folds. */
-function FreeSettingsGroup({ compact, title, summary, dirty = false, children }: { compact: boolean; title: string; summary: string; dirty?: boolean; children: React.ReactNode }) {
+function FreeSettingsGroup({ compact, title, summary, dirty = false, anchor, children }: { compact: boolean; title: string; summary: string; dirty?: boolean; anchor?: string; children: React.ReactNode }) {
+    // A link to this group's anchor (from the export dialog) arrives with it unfolded.
     const [open, setOpen] = useState(false)
     const contentId = useId()
     const content = useRef<HTMLDivElement>(null)
     const { language } = useTranslation()
+    useEffect(() => {
+        if (!compact || !anchor || window.location.hash !== `#${anchor}`) return
+        let scroll = 0
+        const frame = window.requestAnimationFrame(() => {
+            setOpen(true)
+            scroll = window.requestAnimationFrame(() => document.getElementById(anchor)?.scrollIntoView({ block: 'start' }))
+        })
+        return () => { window.cancelAnimationFrame(frame); window.cancelAnimationFrame(scroll) }
+    }, [compact, anchor])
     useEffect(() => {
         if (!compact || !content.current) return
         // An async save can finish after a disclosure closes. Keep its error visible.
@@ -135,8 +147,9 @@ export function PlanAwareSettingsView({
     const [factoryDirty, setFactoryDirty] = useState(false)
     const [defaultsDirty, setDefaultsDirty] = useState(false)
     const [payrollDirty, setPayrollDirty] = useState(false)
+    const [brandingDirty, setBrandingDirty] = useState(false)
 
-    const isAnyDirty = personalDirty || factoryDirty || defaultsDirty || payrollDirty
+    const isAnyDirty = personalDirty || factoryDirty || defaultsDirty || payrollDirty || brandingDirty
     useUnloadProtection(isAnyDirty)
 
     // Fallback defaults object when entitled but no database row exists yet
@@ -191,6 +204,13 @@ export function PlanAwareSettingsView({
                             mobileFeedback={tier === 'lite'}
                             onDefaultsUpdated={tier === 'lite' ? defaults => { setConfirmedDefaults(defaults); onDefaultsChange?.(defaults) } : onDefaultsChange}
                             onDirtyChange={setDefaultsDirty}
+                        /></FreeSettingsGroup>
+                    )}
+
+                    {/* Company profile and document branding (Lite/Base; the card re-checks entitlement) */}
+                    {(tier === 'lite' || tier === 'base') && (
+                        <FreeSettingsGroup compact={tier === 'lite'} anchor="company-profile" title={brandingText(language, 'companyProfileTitle')} summary={brandingText(language, 'companyProfileSummary')} dirty={brandingDirty}><CompanyProfileCard
+                            onDirtyChange={setBrandingDirty}
                         /></FreeSettingsGroup>
                     )}
 

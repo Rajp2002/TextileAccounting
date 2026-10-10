@@ -430,6 +430,7 @@ export function normalizeSavedWarpRows(
       yarnRate: finiteNumber(row.yarnRate ?? legacy.yarnRate, fallbackRow.yarnRate),
       gstPct: finiteNumber(row.gstPct, fallbackRow.gstPct),
       shortagePct: nullableFiniteNumber(row.shortagePct, fallbackRow.shortagePct),
+      ...(row.crimpPct !== undefined ? { crimpPct: nullableFiniteNumber(row.crimpPct, null) } : {}),
     }
   })
 }
@@ -462,6 +463,10 @@ export function normalizeSavedWeftRows(
       yarnRate: finiteNumber(row.yarnRate ?? legacy.yarnRate, fallbackRow.yarnRate),
       gstPct: finiteNumber(row.gstPct, fallbackRow.gstPct),
       shortagePct: nullableFiniteNumber(row.shortagePct, fallbackRow.shortagePct),
+      ...(row.crimpPct !== undefined ? { crimpPct: nullableFiniteNumber(row.crimpPct, null) } : {}),
+      // Keep "absent" distinct from null: absent means the pick convention
+      // was never recorded and must be confirmed for a multi-weft fabric.
+      ...(row.pickRatio !== undefined ? { pickRatio: nullableFiniteNumber(row.pickRatio, null) } : {}),
     }
   })
 }
@@ -973,9 +978,9 @@ export function compareSavedCostingSnapshots(
       ? 'canonical_result'
       : 'saved_inputs'
   const message = !leftAvailable || !rightAvailable
-    ? 'Both costings need a verified canonical result before they can be compared.'
+    ? 'Both costings need their saved numbers checked before they can be compared.'
     : !sameSnapshotSchema || !sameCalculationVersion || !sameRoundingPolicy
-      ? 'These costings use different canonical calculation or rounding versions. Save a new version before comparing them.'
+      ? 'These costings were calculated in different ways. Save a new version of the older one before comparing them.'
       : null
 
   const leftWarp = getAuditForComparison(leftResult, left, 'warp')

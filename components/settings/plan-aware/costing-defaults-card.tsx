@@ -173,7 +173,7 @@ export function CostingDefaultsCard({
                         {tx('Set the starting values for new costings. You can change them for each costing.')}
                     </p>
                 </div>
-                <Badge variant="outline" className="text-[11px] font-medium text-muted-foreground">
+                <Badge variant="outline" className="text-xs font-medium text-muted-foreground">
                     {tx('Costing defaults: Used as starting values for new costings in this factory.')}
                 </Badge>
             </div>
@@ -217,7 +217,7 @@ export function CostingDefaultsCard({
                             </p>
                         ) : (
                             <p className="text-xs text-muted-foreground">
-                                {tx('Applied to yarn rows that do not specify an individual wastage override.')}
+                                {tx('Used for any yarn that has no wastage of its own.')}
                             </p>
                         )}
                     </div>

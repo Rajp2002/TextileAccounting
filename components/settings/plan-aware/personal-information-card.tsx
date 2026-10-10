@@ -125,7 +125,7 @@ export function PersonalInformationCard({
                         {tx('Manage your personal profile details and language preferences.')}
                     </p>
                 </div>
-                <Badge variant="outline" className="text-[11px] font-medium text-muted-foreground">
+                <Badge variant="outline" className="text-xs font-medium text-muted-foreground">
                     {tx('Personal: Only affects your account.')}
                 </Badge>
             </div>

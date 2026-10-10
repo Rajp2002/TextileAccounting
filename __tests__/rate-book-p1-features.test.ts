@@ -119,7 +119,7 @@ describe('Rate Book P1: Server Action batch review (confirmAllCostRateReviews)',
     })
 
     it('validates batch array input, UUID patterns, and timestamps', () => {
-        expect(actions).toContain("if (!Array.isArray(ratesToReview)) return { error: 'Invalid rates payload.' }")
+        expect(actions).toContain("if (!Array.isArray(ratesToReview)) return { error: 'These rates could not be read. Refresh the page and try again.' }")
         expect(actions).toContain('if (ratesToReview.length === 0) return { data: [], count: 0 }')
         expect(actions).toContain('UUID_PATTERN.test(item.id)')
         expect(actions).toContain('Number.isFinite(Date.parse(item.expectedUpdatedAt))')
@@ -151,7 +151,7 @@ describe('Rate Book P1: UI & Interaction Wiring in RatesClient.tsx', () => {
         // Primary row and card buttons call handleQuickReview directly on click
         expect(client).toContain('onClick={() => handleQuickReview(rate)}')
         expect(client).toContain('Confirming…')
-        expect(client).toContain('Existing costing snapshots were not changed.')
+        expect(client).toContain('Costings you already saved did not change.')
     })
 
     it('implements batch review with a Confirm All button in the review queue', () => {

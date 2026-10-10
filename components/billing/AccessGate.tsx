@@ -82,7 +82,7 @@ function UnavailableCapabilityWall({ routeName, baseVisible = false }: { routeNa
                     <Lock className="h-7 w-7 text-subtle" />
                 </div>
                 <div>
-                    <h2 className="text-2xl font-bold text-ink">{featureName} is outside your current plan</h2>
+                    <h2 className="text-2xl font-bold text-ink">{`${featureName} is outside your current plan`}</h2>
                     <p className="mt-2 text-sm leading-relaxed text-body">
                         {`Your Weavly plan includes the complete costing desk. This broader factory module is not part of the current ${baseVisible ? 'Lite or Base' : 'Lite'} rollout.`}
                     </p>
@@ -113,7 +113,7 @@ function ProductionUpgradeWall({ currentTier, routeName }: { currentTier: Subscr
                 <p className="mt-2 text-sm leading-relaxed text-body">
                     {currentTier === 'lite'
                         ? `${featureName} is available with Weavly Base. Keep your costing connected while you create jobs and track production progress.`
-                        : `${featureName} requires an active Weavly Base entitlement.`}
+                        : `${featureName} needs an active Weavly Base plan.`}
                 </p>
             </div>
             <UpgradeWall currentPlan={currentTier} baseVisible actions={{ base: <>

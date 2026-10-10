@@ -182,7 +182,7 @@ describe('Sprint 10 saved costing identity and comparison', () => {
 
     expect(quotes).toContain("tx('Duplicate')")
     expect(quotes).toContain('showFavoritesOnly')
-    expect(quotes).toContain('current Rate Book is not read')
+    expect(quotes).toContain('today’s Rate Book is not used')
     expect(quotes).toContain("title: 'Base yarn calculation'")
     expect(quotes).toContain("title: 'Waste'")
     expect(quotes).toContain("title: 'Overhead'")

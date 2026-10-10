@@ -103,12 +103,12 @@ function BillingHistoryRow({ entry, unconfirmedAttemptCopy = false, latestAttemp
                         <p className="text-sm font-semibold tracking-tight text-ink">{getBillingPlanName(entry.planTier)}</p>
                         <StatusBadge status={statusPresentation.status} label={statusPresentation.label} />
                         {entry.receiptPaymentId && (
-                            <span className="inline-flex items-center gap-1 rounded-full border border-[var(--wv-moss-200)] bg-[var(--wv-moss-50)] px-2 py-1 text-[10px] font-semibold text-[var(--wv-moss-700)]">
+                            <span className="inline-flex items-center gap-1 rounded-full border border-[var(--wv-moss-200)] bg-[var(--wv-moss-50)] px-2 py-1 text-xs font-semibold text-[var(--wv-moss-700)]">
                                 <ReceiptText className="h-3 w-3" aria-hidden="true" /> Receipt available
                             </span>
                         )}
                     </div>
-                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-medium text-subtle">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-medium text-subtle">
                         <span>{formatShortDate(entry.date)}</span>
                         <span aria-hidden="true">·</span>
                         <span>{getPurchaseTypeLabel(entry.purchaseType)}</span>
@@ -137,12 +137,12 @@ function BillingHistoryRow({ entry, unconfirmedAttemptCopy = false, latestAttemp
                         href={`/api/billing/receipt/${entry.receiptPaymentId}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-saffron-deep hover:underline"
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-saffron-deep hover:underline"
                     >
                         Download receipt <Download className="h-3.5 w-3.5" aria-hidden="true" />
                     </Link>
                 ) : (
-                    <div className="text-[11px] text-subtle">
+                    <div className="text-xs text-subtle">
                         {uncertain ? <div className="space-y-2"><p>{liteSupportingText(language, 'noReceipt')}</p>{entry.attempt?.id === latestAttemptId ? <DialogClose asChild><Button type="button" variant="outline" onClick={()=>requestAnimationFrame(()=>document.getElementById('billing-attempt-recovery')?.querySelector<HTMLButtonElement>('button')?.focus())}>{liteSupportingText(language,'backPaymentStatus')}</Button></DialogClose> : entry.attempt && getBillingAttemptPresentation(entry.attempt.status).shouldCheck && entry.attempt.provider_order_id ? <BillingAttemptStatus attempt={entry.attempt} singleFlight /> : null}</div> : entry.status === 'incomplete' ? 'No payment captured' : entry.status === 'failed' ? 'Payment not completed' : 'No receipt'}
                     </div>
                 )}
@@ -175,7 +175,7 @@ export function PaymentHistoryDialog({ entries, mobileContentClassName, unconfir
                     <span className="min-w-0 flex-1">
                         <span className="flex flex-wrap items-center gap-2">
                             <span className="text-sm font-semibold tracking-tight text-ink">View payment history</span>
-                            <span className="rounded-full bg-surface-soft px-2 py-0.5 text-[10px] font-semibold text-subtle">{recordLabel}</span>
+                            <span className="rounded-full bg-surface-soft px-2 py-0.5 text-xs font-semibold text-subtle">{recordLabel}</span>
                         </span>
                         <span className="mt-1 block truncate text-xs text-subtle">{latestSummary}</span>
                     </span>
@@ -215,7 +215,7 @@ export function PaymentHistoryDialog({ entries, mobileContentClassName, unconfir
                 </div>
 
                 <DialogFooter className="border-t border-hairline bg-surface-soft/35 px-5 py-3 sm:px-6">
-                    <p className="flex items-center gap-1.5 text-[11px] text-subtle">
+                    <p className="flex items-center gap-1.5 text-xs text-subtle">
                         <ReceiptText className="h-3.5 w-3.5" aria-hidden="true" />
                         Receipts are available for captured payments.
                     </p>

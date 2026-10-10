@@ -84,7 +84,7 @@ export function auditHistoricalCosting(row: HistoricalCostingAuditRow): CostingA
       .filter(([, stored, expected]) => expected != null && finiteOrNull(stored) == null)
       .map(([label]) => label)
     if (missingStoredFields.length > 0) {
-      reasons.push(`Canonical snapshot exists but stored scalar fields are missing: ${missingStoredFields.join(', ')}.`)
+      reasons.push(`Some saved numbers are missing: ${missingStoredFields.join(', ')}.`)
       return { status: 'needs_review', reasons, variances }
     }
 
@@ -102,11 +102,11 @@ export function auditHistoricalCosting(row: HistoricalCostingAuditRow): CostingA
     ].some(Boolean)
 
     if (mismatched) {
-      reasons.push('Stored scalar fields disagree with the canonical result snapshot by more than ₹0.01.')
+      reasons.push('The saved totals do not match the saved breakdown (difference above ₹0.01).')
       return { status: 'needs_review', reasons, variances }
     }
     if (!row.calculation_version || !row.rounding_policy) {
-      reasons.push('The result is complete but its formula or rounding identifiers are missing.')
+      reasons.push('The result is complete, but it does not record which calculation method was used.')
       return { status: 'legacy', reasons, variances }
     }
     return { status: 'verified', reasons, variances }
@@ -125,7 +125,7 @@ export function auditHistoricalCosting(row: HistoricalCostingAuditRow): CostingA
     return { status: 'unreconstructable', reasons, variances }
   }
 
-  reasons.push('Saved economics predate the canonical result snapshot and require legacy review before customer export.')
+  reasons.push('This costing was saved before this check existed. Check it before sending it to a customer.')
   return { status: 'legacy', reasons, variances }
 }
 

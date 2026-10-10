@@ -140,7 +140,7 @@ export function DeletionReviewCard({ organizationName, accountEmail, restoreMobi
                                 })}
                             </span>
                             <span className="block text-xs text-muted-foreground">
-                                {tx('Active subscriptions are cancelled immediately. Payments already completed are not automatically refunded. Historical records are purged under tenant deletion policy.')}
+                                {tx('Active subscriptions are cancelled immediately. Payments already completed are not automatically refunded. Your past records are then permanently deleted.')}
                             </span>
                         </DialogDescription>
                     </DialogHeader>

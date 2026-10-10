@@ -114,7 +114,7 @@ export function getBillingAttemptPresentation(state: BillingAttemptState): Billi
     case 'duplicate':
       return {
         label: 'Duplicate payment detected',
-        message: 'Access was granted once. The extra payment is being reconciled; do not pay again.',
+        message: 'Your plan is active. We are checking the extra payment; do not pay again.',
         tone: 'warning',
         canRetry: false,
         shouldCheck: true,

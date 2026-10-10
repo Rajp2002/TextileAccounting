@@ -52,8 +52,10 @@ describe('Base Estimator Go-readiness hardening', () => {
 
   it('uses on-canvas PDF rendering, resets recipient state, and avoids the null noopener print handle', () => {
     const dialog = source('components/estimator/CostingExportDialog.tsx')
-    expect(dialog).toContain("host.style.left = '0'")
-    expect(dialog).not.toContain("host.style.left = '-10000px'")
+    const renderer = source('lib/document-pdf.ts')
+    expect(dialog).toContain('renderDocumentPdf(')
+    expect(renderer).toContain("host.style.left = '0'")
+    expect(renderer).not.toContain("host.style.left = '-10000px'")
     expect(dialog).toContain('useEffect(() =>')
     expect(dialog).toContain("window.open('', '_blank')")
     expect(dialog).toContain('printWindow.opener = null')

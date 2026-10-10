@@ -18,6 +18,7 @@ export type PlanCapability =
   | 'account_settings'
   | 'costing_defaults'
   | 'export_document'
+  | 'document_branding'
   | 'production'
   | 'production_management'
   | 'production_tracking'
@@ -33,6 +34,9 @@ const LITE_CAPABILITIES = [
   'account_settings',
   'costing_defaults',
   'export_document',
+  // The factory's logo and business profile on its documents. Free keeps its
+  // existing document layout.
+  'document_branding',
 ] as const satisfies readonly PlanCapability[]
 
 const BASE_CAPABILITIES = [

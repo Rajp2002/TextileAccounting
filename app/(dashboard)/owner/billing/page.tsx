@@ -183,7 +183,7 @@ function AccessStateCallout({
     const state = isActivating
         ? { icon: Clock, label: 'Payment received', title: 'Access is being activated.', text: 'We received a verified payment and are confirming access. Refresh in a few seconds; do not pay again.' }
         : isPending
-            ? { icon: Clock, label: 'Payment incomplete', title: 'Payment has not been confirmed.', text: <>The checkout is not a paid subscription yet; Weavly has <strong>not received a verified payment yet</strong>. If the Razorpay window closed, use <strong>Resume secure payment</strong> below. Weavly will reuse the existing payment order.</> }
+            ? { icon: Clock, label: 'Payment incomplete', title: 'Payment has not been confirmed.', text: 'Your plan is not paid yet; Weavly has not received a verified payment. If the Razorpay window closed, use Resume secure payment below. Weavly will reuse the same payment order.' }
             : isRetryable
                 ? { icon: XCircle, label: 'Payment not completed', title: 'No payment was captured.', text: 'Access was not activated. Choose an available subscription below when you are ready to try again.' }
                 : expiredPlan
@@ -196,7 +196,7 @@ function AccessStateCallout({
             <div className="flex items-start gap-3">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/10 text-saffron"><Icon className="h-4 w-4" aria-hidden="true" /></span>
                 <div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-surface-muted">{state.label}</p>
+                    <p className="text-xs font-bold text-surface-muted">{state.label}</p>
                     <h2 className="mt-1 text-xl font-bold tracking-tight">{state.title}</h2>
                     <p className="mt-2 max-w-2xl text-sm leading-relaxed text-surface-muted">{state.text}</p>
                 </div>
@@ -260,7 +260,7 @@ function PlanSelectionContractReference({
     const decision = decisions[planTier]
     if (!visibleTiers.includes(planTier) || !decision.allowed) return null
     return (
-        <div className="hidden" aria-hidden="true">
+        <div className="hidden" aria-hidden="true" data-i18n-skip="true">
             <span>Choose Weavly Lite or Base</span>
             <span>{BILLING_SELF_SERVE_PLAN_TIERS.join(',')}</span>
             <span data-contract="readiness">canShowPlanCards && billingReadiness.canCreateOrder</span>
@@ -459,14 +459,14 @@ export default async function BillingPage() {
                             <div>
                                 <h2 className="text-sm font-bold text-ink">Plan payments are not open yet</h2>
                                 <p className="mt-1 text-sm leading-relaxed text-body">{billingReadiness.publicMessage}</p>
-                                <p className="mt-2 text-xs leading-relaxed text-subtle">You can continue preparing the workspace. No Razorpay order can be created until the server configuration passes the launch gate.</p>
+                                <p className="mt-2 text-xs leading-relaxed text-subtle">You can continue preparing the workspace. Payments are not open yet.</p>
                             </div>
                         </div>
                     </Card>
                 )}
 
                 <section aria-labelledby="active-workspace-heading" className="space-y-2.5">
-                    <h2 id="active-workspace-heading" className="text-[11px] font-bold uppercase tracking-[0.13em] text-subtle">
+                    <h2 id="active-workspace-heading" className="text-xs font-bold text-subtle">
                         Active workspace
                     </h2>
                     <Card className="gap-0 overflow-hidden rounded-2xl border-hairline border-t-2 border-t-saffron/70 bg-surface shadow-[var(--shadow-panel)]">
@@ -486,13 +486,13 @@ export default async function BillingPage() {
                                         </h3>
                                         <StatusBadge status={isActive ? 'active' : 'info'} label={isActive ? 'Active' : 'Not active'} />
                                     </div>
-                                    <p className="mt-1 text-xs text-subtle">Organization: {organizationName}</p>
+                                    <p className="mt-1 text-xs text-subtle">{`Organization: ${organizationName}`}</p>
                                 </div>
                             </div>
 
                             <div className="flex flex-col gap-3 sm:max-w-[46%] sm:items-end sm:text-right">
                                 <div>
-                                    <p className="text-[10px] font-bold uppercase tracking-[0.13em] text-subtle">Current plan</p>
+                                    <p className="text-xs font-bold text-subtle">Current plan</p>
                                     <p className="mt-0.5 text-sm font-semibold text-ink">
                                         {activePaidTier === 'lite' ? 'Weavly Lite' : activePaidTier === 'base' ? 'Weavly Base' : 'No active subscription'}
                                         {isActive && <span className="font-normal text-subtle"> · {trialEndsAt ? 'Free trial' : 'Annual access'}</span>}
@@ -538,14 +538,14 @@ export default async function BillingPage() {
                                     </div>
                                     <p className="mt-3 text-xl font-bold leading-tight tracking-tight text-ink">
                                         {isBaseWorkspace ? isActive ? 'Full access' : 'Available with Base' : isActive ? 'Always yours' : 'Retained'}
-                                        <span className="ml-1 text-xs font-normal tracking-normal text-body">{isBaseWorkspace ? 'to job cards & looms' : 'to saved snapshots'}</span>
+                                        <span className="ml-1 text-xs font-normal tracking-normal text-body">{isBaseWorkspace ? 'to job cards & looms' : 'to your saved costings'}</span>
                                     </p>
                                     <p className="mt-2 text-xs leading-relaxed text-body">
                                         {isBaseWorkspace
                                             ? 'Track planned and produced metres, shifts, machine maintenance, and job dispatches.'
                                             : isActive
                                                 ? 'Reopen, recalculate, or export your previous costings whenever you need them.'
-                                                : 'Saved snapshots remain in your workspace; paid access may be needed to reopen them.'}
+                                                : 'Your saved costings stay in your account; you may need a paid plan to open them.'}
                                     </p>
                                 </article>
                                 <article className="min-w-0 rounded-xl border border-hairline bg-canvas/70 p-4 shadow-[var(--shadow-card)] sm:col-span-2 lg:col-span-1">
@@ -565,7 +565,7 @@ export default async function BillingPage() {
                 </section>
 
                 <LiteDisclosure enabled={litePresentation} title="plans"><section aria-labelledby="view-plans-heading" className="space-y-2.5">
-                    <p className="text-[11px] font-bold uppercase tracking-[0.13em] text-subtle">Available plans &amp; upgrades</p>
+                    <p className="text-xs font-bold text-subtle">Available plans &amp; upgrades</p>
                     <Card className="flex flex-col items-start justify-between gap-4 rounded-2xl border-hairline bg-surface p-5 shadow-[var(--shadow-card)] sm:flex-row sm:items-center sm:px-6">
                         <div className="flex min-w-0 items-start gap-3">
                             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-loom text-saffron">
@@ -574,7 +574,7 @@ export default async function BillingPage() {
                             <div className="min-w-0">
                                 <div className="flex flex-wrap items-center gap-2">
                                     <h2 id="view-plans-heading" className="text-base font-bold tracking-tight text-ink">Choose your plan</h2>
-                                    <span className="rounded-full border border-saffron/25 bg-saffron-soft/60 px-2 py-0.5 text-[10px] font-semibold text-saffron-deep">Compare plan options</span>
+                                    <span className="rounded-full border border-saffron/25 bg-saffron-soft/60 px-2 py-0.5 text-xs font-semibold text-saffron-deep">Compare plan options</span>
                                 </div>
                                 <p className="mt-1 max-w-2xl text-sm leading-relaxed text-body">
                                     {baseVisible ? 'Explore Weavly Free, Lite, and Base with clear feature previews and pricing.' : 'Explore Weavly Free and Lite with clear feature previews and pricing.'}
@@ -592,7 +592,7 @@ export default async function BillingPage() {
                 </section></LiteDisclosure>
 
                 <section aria-labelledby="billing-history-heading" className="space-y-2.5">
-                    <h2 id="billing-history-heading" className="text-[11px] font-bold uppercase tracking-[0.13em] text-subtle">
+                    <h2 id="billing-history-heading" className="text-xs font-bold text-subtle">
                         Billing &amp; invoices
                     </h2>
                     <PaymentHistoryDialog entries={billingHistoryEntries} mobileContentClassName={litePresentation ? styles.history : undefined} unconfirmedAttemptCopy={litePresentation} latestAttemptId={litePresentation && latestAttemptNeedsAttention && latestAttempt?.provider_order_id && getBillingAttemptPresentation(latestAttempt.status).shouldCheck ? latestAttempt.id : undefined} />
@@ -623,7 +623,7 @@ export default async function BillingPage() {
                 </section>
 
                 <section aria-labelledby="billing-referral-heading" className="space-y-2.5">
-                    <h2 id="billing-referral-heading" className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.13em] text-subtle">
+                    <h2 id="billing-referral-heading" className="flex items-center gap-2 text-xs font-bold text-subtle">
                         <Sparkles className="h-3.5 w-3.5 text-saffron-deep" aria-hidden="true" />
                         Referral rewards
                     </h2>

@@ -366,7 +366,7 @@ export async function confirmCostRateReview(rateId: string, expectedUpdatedAt: s
 export async function confirmAllCostRateReviews(
     ratesToReview: { id: string; expectedUpdatedAt: string }[]
 ): Promise<{ data?: CostRateRow[]; count?: number; error?: string }> {
-    if (!Array.isArray(ratesToReview)) return { error: 'Invalid rates payload.' }
+    if (!Array.isArray(ratesToReview)) return { error: 'These rates could not be read. Refresh the page and try again.' }
     if (ratesToReview.length === 0) return { data: [], count: 0 }
 
     for (const item of ratesToReview) {

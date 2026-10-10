@@ -93,7 +93,7 @@ export function PlanCard({
       {/* Popular/Recommended badge for Lite */}
       {isLite && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-          <span className="inline-flex items-center gap-1 rounded-full bg-saffron-deep px-3 py-0.5 text-[11px] font-bold tracking-wide text-white shadow-sm">
+          <span className="inline-flex items-center gap-1 rounded-full bg-saffron-deep px-3 py-0.5 text-xs font-bold text-white shadow-sm">
             <Sparkles className="h-3 w-3" aria-hidden="true" />
             <span>{freeMobileEntryText(language, 'recommended')}</span>
           </span>
@@ -108,7 +108,7 @@ export function PlanCard({
               {isFree ? 'Weavly Free' : BILLING_PLANS[planTier].name}
             </h3>
             {isCurrent && (
-              <span className="rounded-md border border-hairline bg-surface-soft px-2 py-0.5 text-[11px] font-semibold text-subtle">
+              <span className="rounded-md border border-hairline bg-surface-soft px-2 py-0.5 text-xs font-semibold text-subtle">
                 {upgradeText(language, 'current')}
               </span>
             )}
@@ -131,7 +131,7 @@ export function PlanCard({
               <p className="text-xs font-medium text-body">
                 {upgradeText(language, 'twoEstimatesPerMonth')}
               </p>
-              <p className="text-[11px] text-subtle">{upgradeText(language, 'freePrice')}</p>
+              <p className="text-xs text-subtle">{upgradeText(language, 'freePrice')}</p>
             </>
           ) : (
             <>
@@ -152,7 +152,7 @@ export function PlanCard({
                   amount: formatPaise(BILLING_PLANS[planTier].renewalTotalPaise),
                 })}
               </p>
-              <p className="text-[11px] text-subtle">{upgradeText(language, 'tax')}</p>
+              <p className="text-xs text-subtle">{upgradeText(language, 'tax')}</p>
             </>
           )}
         </div>
@@ -179,7 +179,7 @@ export function PlanCard({
         {/* Interactive Feature Preview Carousel */}
         <div className="space-y-2.5">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-subtle">
+            <span className="text-xs font-bold text-subtle">
               {freeMobileEntryText(language, 'featurePreview')}
             </span>
             <Button
@@ -187,7 +187,7 @@ export function PlanCard({
               variant="ghost"
               size="sm"
               onClick={() => onOpenPreview(activeFeature, planTier)}
-              className={cn("h-6 gap-1 px-1.5 text-[11px] font-semibold text-saffron-deep hover:bg-saffron/10 hover:text-saffron-deep", mobileCompact && "max-md:min-h-[44px]")}
+              className={cn("h-6 gap-1 px-1.5 text-xs font-semibold text-saffron-deep hover:bg-saffron/10 hover:text-saffron-deep", mobileCompact && "max-md:min-h-[44px]")}
             >
               <Play className="h-3 w-3" aria-hidden="true" />
               <span>{upgradeText(language, 'watchDemo')}</span>
@@ -206,7 +206,7 @@ export function PlanCard({
                   aria-selected={active}
                   onClick={() => setActiveFeature(feat)}
                   className={cn(
-                    'rounded-md px-2 py-0.5 text-[11px] font-medium transition-colors',
+                    'rounded-md px-2 py-0.5 text-xs font-medium transition-colors',
                     mobileCompact && 'max-md:min-h-[44px]',
                     active
                       ? 'bg-loom text-white font-semibold'
@@ -355,7 +355,7 @@ export function PlanCard({
               </Button>
             )}
             {!freeAvailable && !isCurrent && (
-              <p className="mt-2 text-center text-[11px] text-destructive">
+              <p className="mt-2 text-center text-xs text-destructive">
                 {tx('Free enrollment unavailable for this account.')}
               </p>
             )}

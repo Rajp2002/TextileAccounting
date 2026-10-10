@@ -51,7 +51,7 @@ describe('costing engine characterization (Package 1A)', () => {
         expect(snapshot.snapshotSchemaVersion).toBe(2)
         expect(snapshot.calculationVersion).toBe(COSTING_CALCULATION_VERSION)
         expect(snapshot.roundingPolicy).toBe(COSTING_ROUNDING_POLICY)
-        expect(COSTING_CALCULATION_VERSION).toBe('estimator_v3_2026_08')
+        expect(COSTING_CALCULATION_VERSION).toBe('estimator_v4_2026_10')
         expect(COSTING_ROUNDING_POLICY).toBe('INR_HALF_UP_2')
     })
 
@@ -136,14 +136,15 @@ describe('multi-row yarn conventions (CS-1)', () => {
         expect(twoRows.totalWarpKgPer100m).toBeCloseTo(2.87, 12)
     })
 
-    it('CHARACTERIZATION (owner statement 2026-09-26, re-opened in EVIDENCE E15): weft formula rows share the 100 m run (100/N m each)', () => {
+    it('INVARIANT (owner decision 2026-09-26, CS-1): each weft row holds its own picks over the full 100 m run', () => {
         const oneRow = result(f1State({ ...plain, weftRows: [weftRow({ picks: 60 })] })).totals
         const twoAt60 = result(f1State({ ...plain, weftRows: [weftRow({ id: 'a', picks: 60 }), weftRow({ id: 'b', picks: 60 })] })).totals
         const twoAt30 = result(f1State({ ...plain, weftRows: [weftRow({ id: 'a', picks: 30 }), weftRow({ id: 'b', picks: 30 })] })).totals
-        expect(twoAt60.weftRows.map(row => row.formulaLengthM)).toEqual([50, 50])
+        expect(twoAt60.weftRows.map(row => row.formulaLengthM)).toEqual([100, 100])
         expect(oneRow.weftRows[0].baseKgPer100mUsed).toBeCloseTo(2.5, 12)
-        expect(twoAt60.weftRows.reduce((sum, row) => sum + row.baseKgPer100mUsed, 0)).toBeCloseTo(2.5, 12)
-        expect(twoAt30.weftRows.reduce((sum, row) => sum + row.baseKgPer100mUsed, 0)).toBeCloseTo(1.25, 12)
+        expect(twoAt60.weftRows.reduce((sum, row) => sum + row.baseKgPer100mUsed, 0)).toBeCloseTo(5, 12)
+        // 30 + 30 picks of the same yarn weigh the same as one 60-pick system.
+        expect(twoAt30.weftRows.reduce((sum, row) => sum + row.baseKgPer100mUsed, 0)).toBeCloseTo(2.5, 12)
     })
 
     it('CHARACTERIZATION (open question): weave cost and worker rate add PPI across weft rows', () => {
@@ -153,13 +154,13 @@ describe('multi-row yarn conventions (CS-1)', () => {
         expect(twoAt30.weaveCostPerM).toBeCloseTo(9.6, 12)
     })
 
-    it('CHARACTERIZATION: a manual weft row counts toward N but is not scaled itself', () => {
+    it('INVARIANT: a manual weft row does not change the formula rows beside it', () => {
         const { totals } = result(f1State({
             ...plain,
             weftRows: [weftRow({ id: 'formula', picks: 60 }), weftRow({ id: 'manual', calculationMode: 'manual', manualKgPer100m: 1 })],
         }))
-        expect(totals.weftRows[0].formulaLengthM).toBe(50)
-        expect(totals.weftRows[0].baseKgPer100mUsed).toBeCloseTo(1.25, 12)
+        expect(totals.weftRows[0].formulaLengthM).toBe(100)
+        expect(totals.weftRows[0].baseKgPer100mUsed).toBeCloseTo(2.5, 12)
         expect(totals.weftRows[1].baseKgPer100mUsed).toBe(1)
     })
 })

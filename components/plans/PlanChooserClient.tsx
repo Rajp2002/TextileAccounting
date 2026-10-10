@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
-import { ShieldCheck, Calendar, Receipt, Sparkles, CheckCircle2 } from 'lucide-react'
+import { ShieldCheck, Calendar, Receipt, CheckCircle2 } from 'lucide-react'
 import { PlanCard } from './PlanCard'
 import { PlanPreviewModal } from './PlanPreviewModal'
 import { Button } from '@/components/ui/button'
@@ -87,10 +87,9 @@ export function PlanChooserClient({
     <div className={cn("space-y-10 pb-16 pt-4", mobileCompact && "max-md:space-y-5 max-md:pb-6 max-md:pt-3")}>
       {/* Title & Subheading */}
       <div className={cn("mx-auto max-w-2xl text-center space-y-3", mobileCompact && "max-md:space-y-2 max-md:text-left")}>
-        <div className={cn("inline-flex items-center gap-1.5 rounded-full border border-saffron/30 bg-saffron/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-saffron-deep", mobileCompact && "max-md:hidden")}>
-          <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-          <span>{tx('TRANSPARENT PRICING · NO HIDDEN FEES')}</span>
-        </div>
+        <p className={cn("text-sm font-medium text-subtle", mobileCompact && "max-md:hidden")}>
+          {tx('Clear pricing, no hidden fees')}
+        </p>
         <h1 className={cn("text-3xl font-extrabold tracking-tight text-ink sm:text-4xl md:text-5xl", mobileCompact && "max-md:text-2xl")}>
           {upgradeText(language, 'title')}
         </h1>
@@ -178,7 +177,7 @@ export function PlanChooserClient({
             <Receipt className="h-5 w-5 shrink-0 text-saffron-deep mt-0.5" aria-hidden="true" />
             <div>
               <h4 className="text-xs font-bold text-ink">{freeMobileEntryText(language, 'receiptDocument')}</h4>
-              <p className={cn("mt-1 text-[11px] leading-relaxed text-subtle", mobileCompact && "max-md:text-xs")}>
+              <p className={cn("mt-1 text-xs leading-relaxed text-subtle", mobileCompact && "max-md:text-xs")}>
                 {t('base_plan.billing.receipt_only')}
               </p>
             </div>
@@ -188,7 +187,7 @@ export function PlanChooserClient({
             <Calendar className="h-5 w-5 shrink-0 text-saffron-deep mt-0.5" aria-hidden="true" />
             <div>
               <h4 className="text-xs font-bold text-ink">{freeMobileEntryText(language, 'manualRenewal')}</h4>
-              <p className={cn("mt-1 text-[11px] leading-relaxed text-subtle", mobileCompact && "max-md:text-xs")}>
+              <p className={cn("mt-1 text-xs leading-relaxed text-subtle", mobileCompact && "max-md:text-xs")}>
                 {freeMobileEntryText(language, 'manualRenewalDescription')}
               </p>
             </div>
@@ -198,7 +197,7 @@ export function PlanChooserClient({
             <CheckCircle2 className="h-5 w-5 shrink-0 text-saffron-deep mt-0.5" aria-hidden="true" />
             <div>
               <h4 className="text-xs font-bold text-ink">{freeMobileEntryText(language, 'verifiedActivation')}</h4>
-              <p className={cn("mt-1 text-[11px] leading-relaxed text-subtle", mobileCompact && "max-md:text-xs")}>
+              <p className={cn("mt-1 text-xs leading-relaxed text-subtle", mobileCompact && "max-md:text-xs")}>
                 {freeMobileEntryText(language, 'verifiedActivationDescription')}
               </p>
             </div>
@@ -208,7 +207,7 @@ export function PlanChooserClient({
             <ShieldCheck className="h-5 w-5 shrink-0 text-saffron-deep mt-0.5" aria-hidden="true" />
             <div>
               <h4 className="text-xs font-bold text-ink">{freeMobileEntryText(language, 'secureCheckout')}</h4>
-              <p className={cn("mt-1 text-[11px] leading-relaxed text-subtle", mobileCompact && "max-md:text-xs")}>
+              <p className={cn("mt-1 text-xs leading-relaxed text-subtle", mobileCompact && "max-md:text-xs")}>
                 {freeMobileEntryText(language, 'secureCheckoutDescription')}
               </p>
             </div>
