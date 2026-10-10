@@ -1275,14 +1275,14 @@ export default function BaseAssignmentWorkspace({
                 <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-hairline/70 bg-surface/80 p-2 shadow-xs sm:px-3">
                     <LiquidSegmented
                         data-configuration-tour="shift"
-                        aria-label="Assignment shift"
+                        aria-label={tx('Assignment shift')}
                         size="sm"
                         disabled={pendingKey !== null}
                         value={shift}
                         onValueChange={setShift}
                         options={[
-                            { value: 'day', label: 'Day shift', icon: <Sun /> },
-                            { value: 'night', label: 'Night shift', icon: <Moon /> },
+                            { value: 'day', label: tx('Day shift'), icon: <Sun /> },
+                            { value: 'night', label: tx('Night shift'), icon: <Moon /> },
                         ]}
                     />
                     <div className="flex flex-wrap items-center gap-1 sm:gap-2">
@@ -1380,13 +1380,13 @@ export default function BaseAssignmentWorkspace({
                         Connect workers to machines
                     </CardTitle>
                     <LiquidSegmented
-                        aria-label="Assignment workspace view"
+                        aria-label={tx('Assignment workspace view')}
                         size="sm"
                         value={mobileView}
                         onValueChange={setMobileView}
                         options={[
-                            { value: 'workers', label: 'Workers', icon: <Users /> },
-                            { value: 'machines', label: 'Machines', icon: <Wrench /> },
+                            { value: 'workers', label: tx('Workers'), icon: <Users /> },
+                            { value: 'machines', label: tx('Machines'), icon: <Wrench /> },
                         ]}
                     />
                 </CardHeader>
@@ -1621,17 +1621,18 @@ function MachineTypeFilters({
     selected: string[]
     onSelect: (machineType: string | null) => void
 }) {
+    const { tx } = useTranslation()
     if (machineTypes.length === 0) return null
 
     return (
         <div className="max-w-full overflow-x-auto pb-0.5" data-configuration-tour="types">
             <LiquidSegmented
                 size="sm"
-                aria-label="Filter by machine type"
+                aria-label={tx('Filter by machine type')}
                 value={selected.length === 1 ? selected[0] : 'all'}
                 onValueChange={(value) => onSelect(value === 'all' ? null : value)}
                 options={[
-                    { value: 'all', label: 'All' },
+                    { value: 'all', label: tx('All') },
                     ...machineTypes.map((machineType) => ({ value: machineType, label: formatMachineType(machineType) })),
                 ]}
             />

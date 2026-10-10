@@ -17,6 +17,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { cn } from '@/lib/utils'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import {
@@ -507,13 +508,13 @@ export function CostingExportDialog({
                 {lockedQuotation && mode === 'customer' && <p id="export-terms-help" className="text-xs text-[var(--wv-text-secondary)]">Accepted quotations keep their original customer terms.</p>}
               </div>
               {mode === 'customer' && (
-                <div className="flex items-center justify-between gap-4 rounded-lg border border-[var(--wv-border-subtle)] p-3">
-                  <div>
-                    <Label htmlFor="export-gst-note">Show GST detail note</Label>
-                    <p className="text-xs text-[var(--wv-text-secondary)]">The quotation-only, not-a-tax-invoice disclaimer is always shown.</p>
-                  </div>
+                <label htmlFor="export-gst-note" className={cn('flex min-h-11 items-center justify-between gap-4 rounded-lg border border-[var(--wv-border-subtle)] p-3', isBusy ? 'cursor-not-allowed opacity-60' : 'cursor-pointer')}>
+                  <span>
+                    <span className="block text-sm font-medium">Show GST detail note</span>
+                    <span className="block text-xs text-[var(--wv-text-secondary)]">The quotation-only, not-a-tax-invoice disclaimer is always shown.</span>
+                  </span>
                   <Switch id="export-gst-note" checked={showGstNote} onCheckedChange={setShowGstNote} disabled={isBusy} />
-                </div>
+                </label>
               )}
             </div>
 

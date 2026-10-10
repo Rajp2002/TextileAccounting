@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { LiquidSegmented } from '@/components/ui/liquid-segmented'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { usePwaRefreshGuard } from '@/hooks/use-pwa-refresh-guard'
@@ -281,7 +282,6 @@ export function SupervisorDailySheet({ data, date, shift, actorId }: { data: Sup
     const statusLine = saving ? text('saving') : draftStatus === 'error' ? text('draftError') : draftStatus === 'conflict' ? text('draftConflict')
         : draftStatus === 'local' ? text('draftOnDevice') : batch ? text('saved') : text('notSubmitted')
     const saveDisabled = saving || inputsDisabled || unmatchedDraft || summary.invalidCount > 0 || summary.register.invalid > 0 || summary.recordedCount === 0
-    const toggle = (active: boolean) => cn('min-h-11 flex-1 rounded-lg px-3 text-sm font-semibold transition-colors', active ? 'bg-ink text-surface' : 'text-body hover:bg-surface-soft')
 
     return (
         <div className="space-y-4 pb-32">
@@ -290,18 +290,26 @@ export function SupervisorDailySheet({ data, date, shift, actorId }: { data: Sup
             </div>
 
             <div className="grid gap-2 sm:grid-cols-2">
-                <div role="group" aria-label={text('dateLabel')} className="flex gap-1 rounded-xl border border-hairline bg-surface p-1 shadow-xs">
-                    <button type="button" aria-pressed={date === data.today} className={toggle(date === data.today)} onClick={() => selectSheet(data.today, shift)}>
-                        {text('today')} · {formatDay(data.today)}
-                    </button>
-                    <button type="button" aria-pressed={date === data.minDate} className={toggle(date === data.minDate)} onClick={() => selectSheet(data.minDate, shift)}>
-                        {text('yesterday')} · {formatDay(data.minDate)}
-                    </button>
-                </div>
-                <div role="group" aria-label={text('shiftLabel')} className="flex gap-1 rounded-xl border border-hairline bg-surface p-1 shadow-xs">
-                    <button type="button" aria-pressed={shift === 'day'} className={toggle(shift === 'day')} onClick={() => selectSheet(date, 'day')}>{text('dayShift')}</button>
-                    <button type="button" aria-pressed={shift === 'night'} className={toggle(shift === 'night')} onClick={() => selectSheet(date, 'night')}>{text('nightShift')}</button>
-                </div>
+                <LiquidSegmented
+                    aria-label={text('dateLabel')}
+                    fullWidth
+                    value={date}
+                    onValueChange={(value) => selectSheet(value, shift)}
+                    options={[
+                        { value: data.today, label: `${text('today')} · ${formatDay(data.today)}` },
+                        { value: data.minDate, label: `${text('yesterday')} · ${formatDay(data.minDate)}` },
+                    ]}
+                />
+                <LiquidSegmented
+                    aria-label={text('shiftLabel')}
+                    fullWidth
+                    value={shift}
+                    onValueChange={(value) => selectSheet(date, value)}
+                    options={[
+                        { value: 'day', label: text('dayShift') },
+                        { value: 'night', label: text('nightShift') },
+                    ]}
+                />
             </div>
 
             {(draftStatus === 'error' || draftStatus === 'conflict' || unmatchedDraft) && (

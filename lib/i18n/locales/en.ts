@@ -35,6 +35,7 @@ export const en = {
     unitKg: "kg",
     legacyTitle: "Notice regarding legacy fabric stock",
     legacyBody: "{metres} metres of fabric stock predate production lot tracking. In accordance with system audit integrity, yarn composition is not guessed or fabricated for historical inventory.",
+    tabsLabel: "Stock audit views",
     tabMaterial: "Material Position (Audit)",
     tabFabric: "Fabric Stock ({count})",
     tabYarn: "Yarn Stock ({count})",
