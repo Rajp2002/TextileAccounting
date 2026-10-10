@@ -114,6 +114,13 @@ describe('Production overview: today analytics', () => {
         expect(barHeight).not.toBeNull()
         // The frame must stand clear of today's bar above and below, or yesterday's end is hidden.
         expect(Number(frameHeight![1]) - Number(barHeight![1])).toBeGreaterThanOrEqual(6)
+
+        // Yesterday's frame is outlined, and a notch through today's bar marks yesterday's end
+        // when today is longer, so a short yesterday stays legible under the dark bar.
+        expect(chart).toMatch(/YESTERDAY_FRAME_CLASS = '[^']*ring-1/)
+        const yesterdayEnd = chart.indexOf('data-bar="yesterday-end"')
+        expect(yesterdayEnd).toBeGreaterThan(todayBar)
+        expect(chart).toContain('row.todayMeters > row.yesterdayMeters')
     })
 
     it('never shows "not entered" as zero and offers the way to enter it', () => {

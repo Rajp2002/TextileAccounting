@@ -12,10 +12,13 @@ import {
 import { useTranslation } from '@/lib/i18n/context'
 import { cn } from '@/lib/utils'
 
-// Yesterday is a taller muted frame and today a thinner solid bar centred in it. Whichever day
+// Yesterday is a taller outlined frame and today a thinner solid bar centred in it. Whichever day
 // is longer, the other's end still shows above and below the bar, so neither can hide the other.
+// When today runs past yesterday, a notch cut through today's bar marks where yesterday ended,
+// so a short yesterday never disappears under a long dark bar.
 const FRAME_HEIGHT = 16
 const BAR_HEIGHT = 8
+const YESTERDAY_FRAME_CLASS = 'bg-wv-cotton-200 ring-1 ring-inset ring-wv-cotton-400'
 
 function share(value: number, max: number) {
     return max > 0 && value > 0 ? Math.max(1, (value / max) * 100) : 0
@@ -90,7 +93,7 @@ export default function BaseProductionLoomChart({
                 >
                     <div
                         data-bar="yesterday"
-                        className="absolute left-0 top-0 rounded-full bg-wv-cotton-300/75"
+                        className={cn('absolute left-0 top-0 rounded-full', YESTERDAY_FRAME_CLASS)}
                         style={{ width: `${share(row.yesterdayMeters, max)}%`, height: FRAME_HEIGHT }}
                     />
                     {entered && (
@@ -99,6 +102,17 @@ export default function BaseProductionLoomChart({
                             className={cn('ui-meter-fill absolute left-0 rounded-full', row.lagging ? 'bg-[var(--wv-ochre-400)]' : 'bg-ink')}
                             style={{
                                 width: `${share(row.todayMeters, max)}%`,
+                                height: BAR_HEIGHT,
+                                top: (FRAME_HEIGHT - BAR_HEIGHT) / 2,
+                            }}
+                        />
+                    )}
+                    {entered && row.yesterdayMeters > 0 && row.todayMeters > row.yesterdayMeters && (
+                        <div
+                            data-bar="yesterday-end"
+                            className="absolute w-0.5 -translate-x-full bg-surface"
+                            style={{
+                                left: `${share(row.yesterdayMeters, max)}%`,
                                 height: BAR_HEIGHT,
                                 top: (FRAME_HEIGHT - BAR_HEIGHT) / 2,
                             }}
@@ -134,7 +148,7 @@ export default function BaseProductionLoomChart({
                             </span>
                         )}
                         <span className="inline-flex items-center gap-1.5">
-                            <span className="inline-block h-3 w-4 rounded-full bg-wv-cotton-300/75" aria-hidden="true" />
+                            <span className={cn('inline-block h-3 w-4 rounded-full', YESTERDAY_FRAME_CLASS)} aria-hidden="true" />
                             {t('production.yesterday')}
                         </span>
                         {hasQualityAverage && (
