@@ -474,11 +474,11 @@ function QuickRateEditDialog({
                             <div className="rounded-lg border border-hairline/60 bg-surface-soft/50 p-3 text-xs leading-relaxed text-subtle">
                                 {savedQualityCount > 0 ? (
                                     <p>
-                                        {tx(`Updates future estimates for ${savedQualityCount} saved ${savedQualityCount === 1 ? 'quality' : 'qualities'}. Past snapshots unchanged.`)}
+                                        {tx(`Updates future estimates for ${savedQualityCount} saved ${savedQualityCount === 1 ? 'quality' : 'qualities'}. Past costings stay the same.`)}
                                     </p>
                                 ) : (
                                     <p>
-                                        {tx('Updates future estimates. Past snapshots unchanged.')}
+                                        {tx('Updates future estimates. Past costings stay the same.')}
                                     </p>
                                 )}
                             </div>
@@ -859,9 +859,9 @@ export default function RatesClient({
                 }
                 setSaveError(null)
                 if (result.syncedQualityCount) {
-                    toast.success(tx(`Rate saved and updated in ${result.syncedQualityCount} Saved ${result.syncedQualityCount === 1 ? 'Quality' : 'Qualities'}. Existing costing snapshots were not changed.`))
+                    toast.success(tx(`Rate saved and updated in ${result.syncedQualityCount} Saved ${result.syncedQualityCount === 1 ? 'Quality' : 'Qualities'}. Costings you already saved did not change.`))
                 } else {
-                    toast.success(tx(target.id ? 'Rate updated. Existing costing snapshots were not changed.' : 'Rate added for future estimates.'))
+                    toast.success(tx(target.id ? 'Rate updated. Costings you already saved did not change.' : 'Rate added for future estimates.'))
                 }
                 void trackPlanEvent('rate_book_action', {
                     action: target.id ? 'update' : 'save',
@@ -955,9 +955,9 @@ export default function RatesClient({
                 setQuickEditError(null)
                 setQuickEditRate(null)
                 if (result.syncedQualityCount) {
-                    toast.success(tx(`Rate saved and updated in ${result.syncedQualityCount} Saved ${result.syncedQualityCount === 1 ? 'Quality' : 'Qualities'}. Existing costing snapshots were not changed.`))
+                    toast.success(tx(`Rate saved and updated in ${result.syncedQualityCount} Saved ${result.syncedQualityCount === 1 ? 'Quality' : 'Qualities'}. Costings you already saved did not change.`))
                 } else {
-                    toast.success(tx('Rate updated. Existing costing snapshots were not changed.'))
+                    toast.success(tx('Rate updated. Costings you already saved did not change.'))
                 }
                 void trackPlanEvent('rate_book_action', {
                     action: 'update',
@@ -981,7 +981,7 @@ export default function RatesClient({
             setRates(current => current.map(rate => rate.id === target.id
                 ? { ...rate, is_reviewed: true, last_reviewed_at: getSuratTodayString() }
                 : rate))
-            toast.success(tx(`${target.name} confirmed at ${formatRateValue(Number(target.current_value), target.unit)}. Existing costing snapshots were not changed.`))
+            toast.success(tx(`${target.name} confirmed at ${formatRateValue(Number(target.current_value), target.unit)}. Costings you already saved did not change.`))
             setReviewRate(null)
             return
         }
@@ -1001,7 +1001,7 @@ export default function RatesClient({
                 setRates(current => current.map(rate => rate.id === target.id
                     ? { ...rate, ...savedRate, is_reviewed: true }
                     : rate))
-                toast.success(tx(`${target.name} confirmed at ${formatRateValue(Number(target.current_value), target.unit)}. Existing costing snapshots were not changed.`))
+                toast.success(tx(`${target.name} confirmed at ${formatRateValue(Number(target.current_value), target.unit)}. Costings you already saved did not change.`))
                 void trackPlanEvent('rate_book_action', { action: 'review', category: target.category })
                 setReviewRate(null)
             } catch (error) {
@@ -1020,7 +1020,7 @@ export default function RatesClient({
             setRates(current => current.map(rate => rate.id === target.id
                 ? { ...rate, is_reviewed: true, last_reviewed_at: getSuratTodayString() }
                 : rate))
-            toast.success(tx(`${target.name} confirmed at ${formatRateValue(Number(target.current_value), target.unit)}. Existing costing snapshots were not changed.`))
+            toast.success(tx(`${target.name} confirmed at ${formatRateValue(Number(target.current_value), target.unit)}. Costings you already saved did not change.`))
             return
         }
         setReviewError(null)
@@ -1038,7 +1038,7 @@ export default function RatesClient({
                 setRates(current => current.map(rate => rate.id === target.id
                     ? { ...rate, ...savedRate, is_reviewed: true }
                     : rate))
-                toast.success(tx(`${target.name} confirmed at ${formatRateValue(Number(target.current_value), target.unit)}. Existing costing snapshots were not changed.`))
+                toast.success(tx(`${target.name} confirmed at ${formatRateValue(Number(target.current_value), target.unit)}. Costings you already saved did not change.`))
                 void trackPlanEvent('rate_book_action', { action: 'review', category: target.category })
             } catch (error) {
                 const message = tx(userFacingError(error, 'The current rate could not be confirmed. Try again.'))
@@ -1056,7 +1056,7 @@ export default function RatesClient({
         const realRates = targetRates.filter(r => r.id !== DEMO_YARN_RATE.id)
         if (realRates.length === 0) {
             setRates(current => current.map(r => r.id === DEMO_YARN_RATE.id ? { ...r, is_reviewed: true, last_reviewed_at: getSuratTodayString() } : r))
-            toast.success(tx(`Confirmed 1 yarn rate as current. Existing costing snapshots were not changed.`))
+            toast.success(tx(`Confirmed 1 yarn rate as current. Costings you already saved did not change.`))
             return
         }
         if (!beginLiteMutation()) return
@@ -1079,7 +1079,7 @@ export default function RatesClient({
                     return updated ? { ...rate, ...updated, is_reviewed: true } : rate
                 }))
                 const count = (result.count ?? realRates.length) + (targetRates.length - realRates.length)
-                toast.success(tx(`Confirmed ${count} yarn ${count === 1 ? 'rate' : 'rates'} as current. Existing costing snapshots were not changed.`))
+                toast.success(tx(`Confirmed ${count} yarn ${count === 1 ? 'rate' : 'rates'} as current. Costings you already saved did not change.`))
                 void trackPlanEvent('rate_book_action', { action: 'confirm_all_reviews', count })
             } catch (error) {
                 const message = tx(userFacingError(error, 'Could not confirm all rates. Refresh and try again.'))
@@ -1158,12 +1158,12 @@ export default function RatesClient({
                     ? { ...rate, is_active: result.isActive ?? restoring, updated_at: result.updatedAt ?? rate.updated_at }
                     : rate))
                 if (restoring) {
-                    toast.success(tx('Rate restored to the active Rate Book. Existing costing snapshots were not changed.'))
+                    toast.success(tx('Rate restored to the active Rate Book. Costings you already saved did not change.'))
                     void trackPlanEvent('rate_book_action', { action: 'restore', category: target.category })
                 } else {
                     const archivedUpdatedAt = result.updatedAt ?? target.updated_at
                     void trackPlanEvent('rate_book_action', { action: 'archive', category: target.category })
-                    toast.success(tx('Rate archived from the active Rate Book. Saved Qualities and costing snapshots were not changed.'), {
+                    toast.success(tx('Rate archived from the Rate Book. Saved qualities and costings did not change.'), {
                         action: {
                             label: tx('Undo'),
                             onClick: () => {
@@ -1665,7 +1665,7 @@ export default function RatesClient({
                             searchQuery.trim()
                                 ? tx('Check the spelling or clear active filters to view all yarns.')
                                 : showArchived
-                                    ? tx('Archived rates stay available here for audit and can be restored when needed.')
+                                    ? tx('Archived rates stay here for your records and can be restored any time.')
                                     : yarnRates.length === 0
                                         ? tx('Save a quality or costing and its yarn rates will appear here automatically.')
                                         : tx(`Add a ${selectedCategoryLabel.toLowerCase()} yarn rate to continue.`)
@@ -1730,7 +1730,7 @@ export default function RatesClient({
                 <DialogContent className="sm:max-w-2xl">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-warning" /> Review different saved rates</DialogTitle>
-                        <DialogDescription>We found the same yarn at different rates in your Saved Qualities. Review the usages before changing the current Rate Book value. Existing costing snapshots remain unchanged.</DialogDescription>
+                        <DialogDescription>We found the same yarn at different rates in your Saved Qualities. Review the usages before changing the current Rate Book value. Costings you already saved do not change.</DialogDescription>
                     </DialogHeader>
                     <div className="max-h-[55vh] space-y-3 overflow-y-auto pr-1">
                         {conflicts.map(conflict => {
@@ -1740,7 +1740,7 @@ export default function RatesClient({
                                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                                         <div>
                                             <p className="font-bold text-ink">{conflict.yarnName}</p>
-                                            <p className="mt-1 text-xs text-body">Used in {qualityCount} saved {qualityCount === 1 ? 'quality' : 'qualities'} · found {conflict.rates.map(rate => `₹${rate}/kg`).join(' and ')}</p>
+                                            <p className="mt-1 text-xs text-body">{`Used in ${qualityCount} saved ${qualityCount === 1 ? 'quality' : 'qualities'} · found ${conflict.rates.map(rate => `₹${rate}/kg`).join(' and ')}`}</p>
                                         </div>
                                         <Button size="sm" onClick={() => editConflict(conflict)} className="shrink-0 bg-saffron text-white hover:bg-saffron-deep"><Pencil className="h-3.5 w-3.5" /> {tx('Change current rate')}</Button>
                                     </div>
@@ -1774,7 +1774,7 @@ export default function RatesClient({
                                     ? t('common.rate_update_saved_quality_summary_one')
                                     : t('common.rate_update_saved_quality_summary_many', { count: draftSavedQualityCount })
                             : t('common.rate_add_future_estimate_summary')}</p><p className="mt-1 text-xs leading-relaxed">{t('common.rate_update_snapshot_summary')}</p></div></div>
-                        <div className="space-y-1.5"><Label htmlFor="cost-rate-name">Yarn name</Label><Input id="cost-rate-name" value={draft.name} onChange={event => updateDraft('name', event.target.value)} placeholder="e.g. 30/1000 MUALTI" maxLength={120} disabled={Boolean(draft.id)} aria-invalid={Boolean(saveError)} aria-describedby={saveError ? 'cost-rate-save-error' : undefined} />{Boolean(draft.id) && <p className="text-xs leading-relaxed text-subtle"><span className="font-semibold text-body">Linked-yarn rename policy:</span> this name is locked in place. To rename it, add a new rate with the replacement name and update saved qualities intentionally. Historical costing snapshots stay unchanged.</p>}{saveError && <p id="cost-rate-save-error" role="alert" className="text-xs font-medium text-destructive">{tx(saveError)}</p>}</div>
+                        <div className="space-y-1.5"><Label htmlFor="cost-rate-name">Yarn name</Label><Input id="cost-rate-name" value={draft.name} onChange={event => updateDraft('name', event.target.value)} placeholder="e.g. 30/1000 MUALTI" maxLength={120} disabled={Boolean(draft.id)} aria-invalid={Boolean(saveError)} aria-describedby={saveError ? 'cost-rate-save-error' : undefined} />{Boolean(draft.id) && <p className="text-xs leading-relaxed text-subtle"><span className="font-semibold text-body">Linked-yarn rename policy:</span> this name is locked in place. To rename it, add a new rate with the replacement name and update saved qualities intentionally. Costings you already saved do not change.</p>}{saveError && <p id="cost-rate-save-error" role="alert" className="text-xs font-medium text-destructive">{tx(saveError)}</p>}</div>
                         <div className="grid grid-cols-2 gap-3"><div className="space-y-1.5"><Label>Used in</Label><select value={draft.category} onChange={event => changeCategory(event.target.value as YarnRateCategory)} disabled={Boolean(draft.id)} className="h-10 w-full rounded-md border border-hairline bg-surface px-3 text-sm disabled:bg-surface-soft">{YARN_CATEGORIES.map(value => <option key={value} value={value}>{COST_RATE_CATEGORY_LABELS[value]}</option>)}</select></div><div className="space-y-1.5"><Label>Unit</Label><Input value="₹ per kg" disabled className="bg-surface-soft" /></div></div>
                         {draft.id && <p className="-mt-3 text-xs leading-relaxed text-subtle">Category and unit stay fixed for a linked yarn so saved qualities and historical costings keep the same meaning.</p>}
                         <div className="space-y-1.5"><Label>{t('common.current_yarn_rate')}</Label><Input type="number" min="0" step="0.01" value={draft.currentValue} onChange={event => updateDraft('currentValue', parseNonNegativeInput(event.target.value) ?? 0)} className="font-mono" /></div>
@@ -1839,7 +1839,7 @@ export default function RatesClient({
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>Confirm current rate?</DialogTitle>
-                        <DialogDescription>Confirm that this displayed rate is correct. This records your review without changing the rate or existing costing snapshots.</DialogDescription>
+                        <DialogDescription>Confirm that this displayed rate is correct. This records that you checked it. The rate and your saved costings do not change.</DialogDescription>
                     </DialogHeader>
                     {reviewRate && <div className="space-y-3 rounded-lg border border-info/25 bg-info-soft p-4 text-info">
                         <div className="flex items-start justify-between gap-3"><div><p className="font-bold">{reviewRate.name}</p><p className="mt-1 text-xs text-info">{COST_RATE_CATEGORY_LABELS[reviewRate.category]}</p></div><p className="font-mono text-lg font-black">{formatRateValue(Number(reviewRate.current_value), reviewRate.unit)}</p></div>
@@ -1867,7 +1867,7 @@ export default function RatesClient({
                 <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
                     <SheetHeader className="border-b border-hairline px-6 py-5">
                         <SheetTitle className="flex items-center gap-2"><History className="h-5 w-5 text-info" /> {historyRate?.name} activity</SheetTitle>
-                        <SheetDescription>Reviews and saved values are shown here for audit. Existing costing snapshots retain their own numbers.</SheetDescription>
+                        <SheetDescription>Your checks and saved rates are listed here for your records. Saved costings keep their own numbers.</SheetDescription>
                     </SheetHeader>
                     <div className="px-6 py-2">
                         {historyLoading ? <div className="flex items-center justify-center gap-2 py-10 text-sm text-subtle" role="status" aria-live="polite"><Loader2 className="h-6 w-6 animate-spin text-saffron" /> {tx('Loading rate activity…')}</div>
@@ -1892,7 +1892,7 @@ export default function RatesClient({
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>{archiveRate?.is_active === false ? `Restore ${archiveRate?.name} to Rate Book?` : `Archive ${archiveRate?.name} from Rate Book?`}</DialogTitle>
-                        <DialogDescription>{archiveRate?.is_active === false ? tx(`This makes the rate visible and editable in the active Rate Book again. ${t('base_plan.archive.restore')} ${t('base_plan.archive.deletion')} ${t('base_plan.archive.privacy')}`) : `${tx('This removes the rate from the active Rate Book. Saved Qualities keep their recipe values, and costing snapshots remain unchanged.')} ${t('base_plan.archive.description')} ${t('base_plan.archive.restore')} ${t('base_plan.archive.deletion')} ${t('base_plan.archive.privacy')}`}</DialogDescription>
+                        <DialogDescription>{archiveRate?.is_active === false ? tx(`This makes the rate visible and editable in the active Rate Book again. ${t('base_plan.archive.restore')} ${t('base_plan.archive.deletion')} ${t('base_plan.archive.privacy')}`) : `${tx('This removes the rate from the active Rate Book. Saved qualities keep their yarn details, and saved costings do not change.')} ${t('base_plan.archive.description')} ${t('base_plan.archive.restore')} ${t('base_plan.archive.deletion')} ${t('base_plan.archive.privacy')}`}</DialogDescription>
                     </DialogHeader>
                     {archiveError && <p role="alert" className="text-sm font-medium text-destructive">{archiveError}</p>}
                     <DialogFooter>

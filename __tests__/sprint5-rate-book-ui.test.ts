@@ -29,7 +29,7 @@ describe('Sprint 5 Rate Book UI boundary', () => {
     expect(actions).toContain("supabase.rpc('save_cost_rate_atomic_versioned'")
     expect(client).toContain('Confirm current rate')
     expect(client).toContain('Confirming…')
-    expect(client).toContain('Existing costing snapshots were not changed.')
+    expect(client).toContain('Costings you already saved did not change.')
   })
 
   it('previews the saved-quality impact before changing a Rate Book value', () => {
@@ -44,7 +44,7 @@ describe('Sprint 5 Rate Book UI boundary', () => {
     expect(actions).toContain('saved_quality_count: candidate?.savedQualityCount ?? 0')
     expect(reconciliation).toContain('savedQualityCount: candidate.savedQualityIds.size')
     expect(english).toContain('This will update the future-estimate rate for 1 saved quality.')
-    expect(english).toContain('Existing costing snapshots will remain unchanged.')
+    expect(english).toContain('Costings you already saved will not change.')
   })
 
   it('uses separate, reversible Rate Book archive and activity language', () => {
@@ -53,7 +53,7 @@ describe('Sprint 5 Rate Book UI boundary', () => {
     expect(client).toContain('Rate activity')
     expect(client).toContain('from Rate Book?')
     expect(client).toContain('Restore')
-    expect(client).toContain('Saved Qualities keep their recipe values')
+    expect(client).toContain('Saved qualities keep their yarn details')
     expect(client).toContain('Loading rate activity…')
     expect(client).toContain('Archiving “${pendingRateName}”…')
     expect(client).toContain('Restoring “${pendingRateName}”…')
@@ -95,7 +95,7 @@ describe('Sprint 5 Rate Book UI boundary', () => {
 
     expect(exportModel).toContain("options.mode === 'customer'")
     expect(exportModel).toContain('needs owner review before it can be used as a customer quotation')
-    expect(read('app/(dashboard)/owner/quotes/QuotesClient.tsx')).toContain('Costing snapshot archived')
-    expect(read('app/(dashboard)/owner/quotes/QuotesClient.tsx')).toContain('This archives only this costing snapshot.')
+    expect(read('app/(dashboard)/owner/quotes/QuotesClient.tsx')).toContain('Costing archived')
+    expect(read('app/(dashboard)/owner/quotes/QuotesClient.tsx')).toContain('This archives only this costing.')
   })
 })

@@ -978,9 +978,9 @@ export function compareSavedCostingSnapshots(
       ? 'canonical_result'
       : 'saved_inputs'
   const message = !leftAvailable || !rightAvailable
-    ? 'Both costings need a verified canonical result before they can be compared.'
+    ? 'Both costings need their saved numbers checked before they can be compared.'
     : !sameSnapshotSchema || !sameCalculationVersion || !sameRoundingPolicy
-      ? 'These costings use different canonical calculation or rounding versions. Save a new version before comparing them.'
+      ? 'These costings were calculated in different ways. Save a new version of the older one before comparing them.'
       : null
 
   const leftWarp = getAuditForComparison(leftResult, left, 'warp')

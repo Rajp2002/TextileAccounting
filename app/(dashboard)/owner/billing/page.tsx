@@ -179,7 +179,7 @@ function AccessStateCallout({
     const state = isActivating
         ? { icon: Clock, label: 'Payment received', title: 'Access is being activated.', text: 'We received a verified payment and are confirming access. Refresh in a few seconds; do not pay again.' }
         : isPending
-            ? { icon: Clock, label: 'Payment incomplete', title: 'Payment has not been confirmed.', text: <>The checkout is not a paid subscription yet; Weavly has <strong>not received a verified payment yet</strong>. If the Razorpay window closed, use <strong>Resume secure payment</strong> below. Weavly will reuse the existing payment order.</> }
+            ? { icon: Clock, label: 'Payment incomplete', title: 'Payment has not been confirmed.', text: 'Your plan is not paid yet; Weavly has not received a verified payment. If the Razorpay window closed, use Resume secure payment below. Weavly will reuse the same payment order.' }
             : isRetryable
                 ? { icon: XCircle, label: 'Payment not completed', title: 'No payment was captured.', text: 'Access was not activated. Choose an available subscription below when you are ready to try again.' }
                 : expiredPlan
@@ -256,7 +256,7 @@ function PlanSelectionContractReference({
     const decision = decisions[planTier]
     if (!visibleTiers.includes(planTier) || !decision.allowed) return null
     return (
-        <div className="hidden" aria-hidden="true">
+        <div className="hidden" aria-hidden="true" data-i18n-skip="true">
             <span>Choose Weavly Lite or Base</span>
             <span>{BILLING_SELF_SERVE_PLAN_TIERS.join(',')}</span>
             <span data-contract="readiness">canShowPlanCards && billingReadiness.canCreateOrder</span>
@@ -429,7 +429,7 @@ export default async function BillingPage() {
                             <div>
                                 <h2 className="text-sm font-bold text-ink">Plan payments are not open yet</h2>
                                 <p className="mt-1 text-sm leading-relaxed text-body">{billingReadiness.publicMessage}</p>
-                                <p className="mt-2 text-xs leading-relaxed text-subtle">You can continue preparing the workspace. No Razorpay order can be created until the server configuration passes the launch gate.</p>
+                                <p className="mt-2 text-xs leading-relaxed text-subtle">You can continue preparing the workspace. Payments are not open yet.</p>
                             </div>
                         </div>
                     </Card>
@@ -456,7 +456,7 @@ export default async function BillingPage() {
                                         </h3>
                                         <StatusBadge status={isActive ? 'active' : 'info'} label={isActive ? 'Active' : 'Not active'} />
                                     </div>
-                                    <p className="mt-1 text-xs text-subtle">Organization: {organizationName}</p>
+                                    <p className="mt-1 text-xs text-subtle">{`Organization: ${organizationName}`}</p>
                                 </div>
                             </div>
 
@@ -508,14 +508,14 @@ export default async function BillingPage() {
                                     </div>
                                     <p className="mt-3 text-xl font-bold leading-tight tracking-tight text-ink">
                                         {isBaseWorkspace ? isActive ? 'Full access' : 'Available with Base' : isActive ? 'Always yours' : 'Retained'}
-                                        <span className="ml-1 text-xs font-normal tracking-normal text-body">{isBaseWorkspace ? 'to job cards & looms' : 'to saved snapshots'}</span>
+                                        <span className="ml-1 text-xs font-normal tracking-normal text-body">{isBaseWorkspace ? 'to job cards & looms' : 'to your saved costings'}</span>
                                     </p>
                                     <p className="mt-2 text-xs leading-relaxed text-body">
                                         {isBaseWorkspace
                                             ? 'Track planned and produced metres, shifts, machine maintenance, and job dispatches.'
                                             : isActive
                                                 ? 'Reopen, recalculate, or export your previous costings whenever you need them.'
-                                                : 'Saved snapshots remain in your workspace; paid access may be needed to reopen them.'}
+                                                : 'Your saved costings stay in your account; you may need a paid plan to open them.'}
                                     </p>
                                 </article>
                                 <article className="min-w-0 rounded-xl border border-hairline bg-canvas/70 p-4 shadow-[var(--shadow-card)] sm:col-span-2 lg:col-span-1">

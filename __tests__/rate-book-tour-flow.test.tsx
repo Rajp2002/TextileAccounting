@@ -10,7 +10,7 @@ import { hi } from '../lib/i18n/locales/hi'
 import { BASE_PLAN_PHRASES } from '../lib/i18n/base-plan-phrases'
 import { legacyPhraseTranslations } from '../lib/i18n/legacy'
 import { generatedLegacyPhraseTranslations } from '../lib/i18n/legacy-generated'
-import { applyTranslationGuards, translateStrictBasePlanText } from '../lib/i18n/runtime'
+import { applyTranslationGuards, createTemplatePhraseMatcher, translateStrictBasePlanText } from '../lib/i18n/runtime'
 
 const state = vi.hoisted(() => ({ language: 'en' as 'en' | 'hi' | 'gu' }))
 vi.mock('@/lib/i18n/context', () => ({ useTranslation: () => ({ language: state.language, tx: (text: string) => text }) }))
@@ -24,7 +24,8 @@ const rates = readFileSync('app/(dashboard)/owner/rates/RatesClient.tsx', 'utf8'
 const provider = readFileSync('lib/i18n/context.tsx', 'utf8')
 const phraseFunctions = provider.slice(provider.indexOf('function collectPhraseMap('), provider.indexOf('function getReversePhraseMap('))
 const compiled = ts.transpileModule(phraseFunctions, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText
-const phraseResolver = new Function('en', 'BASE_PLAN_PHRASES', 'applyTranslationGuards', 'translateStrictBasePlanText', 'translationCache', 'language', 'resources', `${compiled}; const map = collectPhraseMap(language, resources); return text => translateSourceText(text, language, map, true) ?? text`)
+// The Rate Book is a Lite route: only complete phrases, never a word-by-word mix.
+const phraseResolver = new Function('en', 'BASE_PLAN_PHRASES', 'applyTranslationGuards', 'translateStrictBasePlanText', 'translationCache', 'createTemplatePhraseMatcher', 'templatePhraseMatchers', 'language', 'resources', `${compiled}; const map = collectPhraseMap(language, resources); return text => translateSourceText(text, language, map, 'lite') ?? text`)
 const locales = { en, gu, hi }
 
 describe('Rate Book approved copy and control parity', () => {
@@ -43,7 +44,7 @@ describe('Rate Book approved copy and control parity', () => {
             }
         }
         const resources = { translation: locales[language], legacy: language === 'en' ? {} : legacyPhraseTranslations[language], generatedLegacy: language === 'en' ? {} : generatedLegacyPhraseTranslations[language] }
-        const tx = phraseResolver(en, BASE_PLAN_PHRASES, applyTranslationGuards, translateStrictBasePlanText, new WeakMap(), language, resources)
+        const tx = phraseResolver(en, BASE_PLAN_PHRASES, applyTranslationGuards, translateStrictBasePlanText, new WeakMap(), createTemplatePhraseMatcher, new WeakMap(), language, resources)
         const controls = rateBookControlLabels(key => {
             expect(key).toBe('tourControls.rateBook.addRate')
             return locales[language].tourControls.rateBook.addRate

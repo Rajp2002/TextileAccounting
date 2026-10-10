@@ -24,12 +24,12 @@ export async function readAllPages<T>(
         if (pageRows.length === 0) return { data: rows, error: null }
         const last = pageRows[pageRows.length - 1]
         if (after !== null && JSON.stringify(last) === JSON.stringify(after)) {
-            return { data: null, error: { message: 'The paged read did not advance; no complete result was produced.' } }
+            return { data: null, error: { message: 'Your records could not be loaded completely. Refresh the page and try again.' } }
         }
         rows.push(...pageRows)
         after = last
     }
-    return { data: null, error: { message: 'The paged read exceeded its page limit; no complete result was produced.' } }
+    return { data: null, error: { message: 'There are too many records to load at once. Narrow your search and try again.' } }
 }
 
 function quotedFilterValue(value: unknown) {

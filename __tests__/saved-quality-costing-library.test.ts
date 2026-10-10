@@ -24,7 +24,7 @@ describe('saved quality costing library', () => {
     expect(client).toContain('sm:pr-16')
     expect(client).toContain('No costing saved for this quality yet')
     expect(client).toContain('Current recipe')
-    expect(client).toContain('live estimate from the saved yarn recipe and current factory costs')
+    expect(client).toContain('live estimate from the saved yarns and today’s factory costs')
   })
 
   it('treats Base costings as saved qualities without changing Full Suite semantics', () => {

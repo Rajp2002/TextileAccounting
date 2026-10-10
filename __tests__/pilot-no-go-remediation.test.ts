@@ -16,9 +16,9 @@ describe('pilot no-go remediation', () => {
     expect(wizard).toContain('Enter standard monthly production before reviewing cost')
     expect(actions).toContain('The first-run estimator wizard and production-capable workflows')
     expect(actions).toContain('requireCapacity !== false')
-    expect(actions).toContain('Enter at least one loom before saving the monthly factory baseline.')
-    expect(actions).toContain('Enter positive working days before saving the monthly factory baseline.')
-    expect(actions).toContain('Enter positive daily output per loom before saving the monthly factory baseline.')
+    expect(actions).toContain('Enter at least one loom before saving your monthly factory costs.')
+    expect(actions).toContain('Enter positive working days before saving your monthly factory costs.')
+    expect(actions).toContain('Enter positive daily output per loom before saving your monthly factory costs.')
   })
 
   it('keeps comparison direction stable when the user selects New before Old', () => {
@@ -29,8 +29,8 @@ describe('pilot no-go remediation', () => {
 
     expect(orderSavedCostingsForComparison(selectedInReverse).map(item => item.id)).toEqual(['old', 'new'])
     expect(read('app/(dashboard)/owner/quotes/QuotesClient.tsx')).toContain('Change is calculated as New minus Old.')
-    expect(read('app/(dashboard)/owner/quotes/QuotesClient.tsx')).toContain('Old snapshot')
-    expect(read('app/(dashboard)/owner/quotes/QuotesClient.tsx')).toContain('New snapshot')
+    expect(read('app/(dashboard)/owner/quotes/QuotesClient.tsx')).toContain('Older costing')
+    expect(read('app/(dashboard)/owner/quotes/QuotesClient.tsx')).toContain('Newer costing')
   })
 
   it('makes applied waste distinct from the configured default', () => {

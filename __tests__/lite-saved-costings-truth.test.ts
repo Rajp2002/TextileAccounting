@@ -98,7 +98,7 @@ describe('readAllPages', () => {
     it('stops with an error if a page does not advance', async () => {
         const stuck = async (): Promise<PageResult<Row>> => ({ data: [{ id: 'a', created_at: 'x' }], error: null })
         const result = await readAllPages(stuck)
-        expect(result.error?.message).toMatch(/did not advance/)
+        expect(result.error?.message).toMatch(/could not be loaded completely/)
     })
 })
 

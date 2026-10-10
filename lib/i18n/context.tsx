@@ -3,6 +3,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, ReactNode } from "react"
 import { en } from "./locales/en"
 import { isBasePlanSurfacePath } from "./base-plan-surface"
+import { isLiteCompleteSurfacePath } from "./lite-surface"
 import { isPublicPagePath, loadPublicPageTranslator, type PublicPageTranslator } from "./public-pages"
 
 type TranslationRuntime = typeof import("./runtime")
@@ -13,12 +14,20 @@ type TranslationRuntime = typeof import("./runtime")
 let BASE_PLAN_PHRASES: typeof import("./base-plan-phrases").BASE_PLAN_PHRASES = { hi: {}, gu: {} }
 let applyTranslationGuards: TranslationRuntime["applyTranslationGuards"] = (_source, target) => target
 let translateStrictBasePlanText: TranslationRuntime["translateStrictBasePlanText"] = () => undefined
+let createTemplatePhraseMatcher: TranslationRuntime["createTemplatePhraseMatcher"] = () => () => undefined
 
 export type Language = "en" | "hi" | "gu"
 interface TranslationTree {
   [key: string]: string | TranslationTree
 }
 type InterpolationValues = Record<string, string | number | null | undefined>
+/**
+ * How a route completes text that has no exact phrase:
+ * - "lite": phrase templates only; anything else stays English.
+ * - "base": the strict Base-plan cleanup.
+ * - "legacy": known fragments plus the glossary guards.
+ */
+type TranslationSurface = "legacy" | "base" | "lite"
 type LocalizedTextState = {
   source: string
   applied: string
@@ -57,6 +66,12 @@ const translationCache = new WeakMap<Map<string, string>, Map<string, string | u
 const reverseTranslationCache = new WeakMap<Map<string, string>, Map<string, string>>()
 const resourcePromises = new Map<Exclude<Language, "en">, Promise<TranslationResources>>()
 const publicPageTranslators = new WeakMap<Map<string, string>, PublicPageTranslator>()
+const templatePhraseMatchers = new WeakMap<Map<string, string>, ReturnType<TranslationRuntime["createTemplatePhraseMatcher"]>>()
+
+function translationSurfaceFor(pathname: string): TranslationSurface {
+  if (isLiteCompleteSurfacePath(pathname)) return "lite"
+  return isBasePlanSurfacePath(pathname) ? "base" : "legacy"
+}
 
 function loadLanguageResources(language: Exclude<Language, "en">) {
   const existing = resourcePromises.get(language)
@@ -75,6 +90,7 @@ function loadLanguageResources(language: Exclude<Language, "en">) {
       BASE_PLAN_PHRASES = basePlan.BASE_PLAN_PHRASES
       applyTranslationGuards = runtime.applyTranslationGuards
       translateStrictBasePlanText = runtime.translateStrictBasePlanText
+      createTemplatePhraseMatcher = runtime.createTemplatePhraseMatcher
       return { translation, legacy, generatedLegacy, publicPages }
     })
     .catch((error) => {
@@ -154,6 +170,17 @@ function collectPhraseMap(language: Language, resources?: TranslationResources) 
   return phraseMap
 }
 
+function translateCompletePhrase(source: string, phraseMap: Map<string, string>) {
+  const exact = phraseMap.get(source)
+  if (exact !== undefined) return exact
+  let matcher = templatePhraseMatchers.get(phraseMap)
+  if (!matcher) {
+    matcher = createTemplatePhraseMatcher(phraseMap)
+    templatePhraseMatchers.set(phraseMap, matcher)
+  }
+  return matcher(source)
+}
+
 function phraseBoundaryPattern(source: string) {
   const escaped = source.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s+")
   const startsWithWord = /^[A-Za-z0-9]/.test(source)
@@ -182,7 +209,7 @@ function translateKnownFragments(source: string, phraseMap: Map<string, string>)
   return translated === source ? undefined : translated
 }
 
-function translateSourceText(source: string, language: Language, phraseMap: Map<string, string>, strictBasePlan = false) {
+function translateSourceText(source: string, language: Language, phraseMap: Map<string, string>, surface: TranslationSurface = "legacy") {
   if (language === "en") return source
 
   if (typeof window !== "undefined" && isPublicPagePath(window.location.pathname)) {
@@ -194,8 +221,16 @@ function translateSourceText(source: string, language: Language, phraseMap: Map<
     cache = new Map<string, string | undefined>()
     translationCache.set(phraseMap, cache)
   }
-  const cacheKey = `${strictBasePlan ? "base" : "legacy"}:${source}`
+  const cacheKey = `${surface}:${source}`
   if (cache.has(cacheKey)) return cache.get(cacheKey)
+
+  if (surface === "lite") {
+    const complete = translateCompletePhrase(source, phraseMap)
+    cache.set(cacheKey, complete)
+    return complete
+  }
+
+  const strictBasePlan = surface === "base"
 
   const translated = phraseMap.get(source) ?? translateKnownFragments(source, phraseMap)
   if (translated) {
@@ -237,7 +272,7 @@ function shouldTranslateTextNode(node: Text, originals: WeakMap<Text, LocalizedT
   return originals.has(node) || /[A-Za-z]/.test(node.nodeValue ?? "")
 }
 
-function translateTextNode(node: Text, language: Language, phraseMap: Map<string, string>, originals: WeakMap<Text, LocalizedTextState>, strictBasePlan: boolean) {
+function translateTextNode(node: Text, language: Language, phraseMap: Map<string, string>, originals: WeakMap<Text, LocalizedTextState>, surface: TranslationSurface) {
   if (!shouldTranslateTextNode(node, originals)) return
 
   const current = node.nodeValue ?? ""
@@ -255,7 +290,7 @@ function translateTextNode(node: Text, language: Language, phraseMap: Map<string
   }
 
   const originalKey = state.source.trim().replace(/\s+/g, " ")
-  const translated = translateSourceText(originalKey, language, phraseMap, strictBasePlan)
+  const translated = translateSourceText(originalKey, language, phraseMap, surface)
   if (!translated) return
 
   const nextValue = preserveOuterWhitespace(state.source, translated)
@@ -270,7 +305,7 @@ function translateElementAttributes(
   language: Language,
   phraseMap: Map<string, string>,
   originals: WeakMap<Element, ElementAttributeStates>,
-  strictBasePlan: boolean,
+  surface: TranslationSurface,
 ) {
   for (const attribute of TRANSLATABLE_ATTRIBUTES) {
     if (element.closest(SKIP_TRANSLATION_SELECTOR)) return
@@ -294,7 +329,7 @@ function translateElementAttributes(
     }
 
     const originalKey = state.source.trim().replace(/\s+/g, " ")
-    const translated = translateSourceText(originalKey, language, phraseMap, strictBasePlan)
+    const translated = translateSourceText(originalKey, language, phraseMap, surface)
     if (translated && value !== translated) {
       element.setAttribute(attribute, translated)
       states?.set(attribute, { source: state.source, applied: translated })
@@ -310,17 +345,17 @@ function translateSubtree(
   phraseMap: Map<string, string>,
   textOriginals: WeakMap<Text, LocalizedTextState>,
   attributeOriginals: WeakMap<Element, ElementAttributeStates>,
-  strictBasePlan: boolean,
+  surface: TranslationSurface,
 ) {
   if (root.nodeType === Node.TEXT_NODE) {
-    translateTextNode(root as Text, language, phraseMap, textOriginals, strictBasePlan)
+    translateTextNode(root as Text, language, phraseMap, textOriginals, surface)
     return
   }
 
   if (root.nodeType !== Node.ELEMENT_NODE && root.nodeType !== Node.DOCUMENT_NODE) return
 
   if (root.nodeType === Node.ELEMENT_NODE) {
-    translateElementAttributes(root as Element, language, phraseMap, attributeOriginals, strictBasePlan)
+    translateElementAttributes(root as Element, language, phraseMap, attributeOriginals, surface)
   }
 
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT)
@@ -328,9 +363,9 @@ function translateSubtree(
 
   while (current) {
     if (current.nodeType === Node.TEXT_NODE) {
-      translateTextNode(current as Text, language, phraseMap, textOriginals, strictBasePlan)
+      translateTextNode(current as Text, language, phraseMap, textOriginals, surface)
     } else if (current.nodeType === Node.ELEMENT_NODE) {
-      translateElementAttributes(current as Element, language, phraseMap, attributeOriginals, strictBasePlan)
+      translateElementAttributes(current as Element, language, phraseMap, attributeOriginals, surface)
     }
     current = walker.nextNode()
   }
@@ -347,8 +382,8 @@ function LegacyTextLocalizer({ language, phraseMap }: { language: Language; phra
     // observing every edit unless we need to restore a translated document.
     if (language === "en" && !hasLocalized.current) return
 
-    const strictBasePlan = isBasePlanSurfacePath(window.location.pathname)
-    translateSubtree(document.body, language, phraseMap, textOriginals.current, attributeOriginals.current, strictBasePlan)
+    const surface = translationSurfaceFor(window.location.pathname)
+    translateSubtree(document.body, language, phraseMap, textOriginals.current, attributeOriginals.current, surface)
     hasLocalized.current = language !== "en"
     if (language === "en") {
       textOriginals.current = new WeakMap()
@@ -358,17 +393,17 @@ function LegacyTextLocalizer({ language, phraseMap }: { language: Language; phra
 
     const observer = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
-        const currentStrictBasePlan = isBasePlanSurfacePath(window.location.pathname)
+        const currentSurface = translationSurfaceFor(window.location.pathname)
         if (mutation.type === "characterData") {
-          translateTextNode(mutation.target as Text, language, phraseMap, textOriginals.current, currentStrictBasePlan)
+          translateTextNode(mutation.target as Text, language, phraseMap, textOriginals.current, currentSurface)
         }
 
         if (mutation.type === "attributes" && mutation.target instanceof Element) {
-          translateElementAttributes(mutation.target, language, phraseMap, attributeOriginals.current, currentStrictBasePlan)
+          translateElementAttributes(mutation.target, language, phraseMap, attributeOriginals.current, currentSurface)
         }
 
         mutation.addedNodes.forEach((node) => {
-          translateSubtree(node, language, phraseMap, textOriginals.current, attributeOriginals.current, currentStrictBasePlan)
+          translateSubtree(node, language, phraseMap, textOriginals.current, attributeOriginals.current, currentSurface)
         })
       }
     })
@@ -480,8 +515,8 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   }, [activeResources])
 
   const tx = useCallback((text: string, values?: InterpolationValues): string => {
-    const strictBasePlan = typeof window !== "undefined" && isBasePlanSurfacePath(window.location.pathname)
-    const value = translateSourceText(text, activeLang, phraseMap, strictBasePlan) ?? text
+    const surface = typeof window !== "undefined" ? translationSurfaceFor(window.location.pathname) : "legacy"
+    const value = translateSourceText(text, activeLang, phraseMap, surface) ?? text
     return interpolate(value, values)
   }, [activeLang, phraseMap])
 

@@ -1396,9 +1396,9 @@ function assumptionSourceLabel(source: string): string {
     switch (source) {
         case 'direct_rate': return 'Direct rate entered'
         case 'monthly_expenses': return 'Monthly expenses ÷ output'
-        case 'manual_input': return 'Estimator input'
+        case 'manual_input': return 'Entered in the estimate'
         case 'not_set': return 'Not set'
-        default: return 'Saved snapshot'
+        default: return 'Saved costing'
     }
 }
 
@@ -1757,7 +1757,7 @@ function CostingAssumptionsSummary({
                         )}
                     </div>
                     <p className="mt-0.5 break-words text-[11px] font-medium leading-4 text-[var(--color-muted)]">
-                        {activeAssumptionsCount} active · {formatPercent(targetMargin)} target margin · {formatPercent(commission)} commission
+                        {`${activeAssumptionsCount} active · ${formatPercent(targetMargin)} target margin · ${formatPercent(commission)} commission`}
                         {displayQualityWarning && <span className="sr-only"> · {warningItems.join(', ')}</span>}
                     </p>
                 </div>
@@ -1856,7 +1856,7 @@ function CostingAssumptionsSummary({
                                 Technical details
                             </summary>
                             <p className="pb-1 pl-5 text-[10px] leading-4 text-[var(--color-muted)]">
-                                Calculation snapshot <code className="font-mono text-[var(--color-body)]">{result.calculationVersion}</code> · {result.roundingPolicy}
+                                Calculation method <code className="font-mono text-[var(--color-body)]">{result.calculationVersion}</code> · {result.roundingPolicy}
                             </p>
                         </details>
                     </div>
@@ -1909,7 +1909,7 @@ function CostingSaveReview({
         >
             <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--color-yarn-orange-dark)]">Save review</p>
             <p className="mt-1 text-[11px] font-medium leading-4 text-[var(--color-muted)]">
-                Included in this costing snapshot:
+                This costing will save:
             </p>
             <div className="mt-2 grid gap-x-4 gap-y-1.5 text-[11px] sm:grid-cols-2">
                 <p><span className="font-semibold text-[var(--color-ink)]">Yarn rate basis:</span> {yarnRates.join(' · ') || 'No yarn rows'}</p>
@@ -1922,7 +1922,7 @@ function CostingSaveReview({
             </div>
             {fullReuse && (
                 <p className="mt-2 rounded-md border border-[var(--color-info-blue)]/25 bg-[var(--color-info-blue-soft)] px-2.5 py-2 text-[11px] font-medium leading-4 text-[var(--color-info-blue)]">
-                    Full costing reuse: reopening this Saved Quality restores the recipe, these current yarn rates, overhead basis, commercial values, quantity, and section on/off states. Existing costing snapshots stay unchanged.
+                    Reopening this saved quality brings back its yarns, these yarn rates, factory expenses, prices, quantity and the sections you turned on. Costings you already saved do not change.
                 </p>
             )}
         </section>
@@ -4313,7 +4313,7 @@ export default function EstimatorClient({
                 }
                 else router.push('/owner/quotes')
             } else {
-                setSaveCheckMessage(tx('The save is not confirmed yet. Your original inputs and request identity are preserved.'))
+                setSaveCheckMessage(tx('The save is not confirmed yet. Your entries are kept on this page.'))
             }
         } catch {
             setSaveCheckMessage(tx('Save status is unavailable. Reconnect and check again.'))
@@ -4343,7 +4343,7 @@ export default function EstimatorClient({
                 quoteRequestIdRef.current = null
                 saveDraftNow(buildCurrentDraft(null))
                 toast.error(tx(userFacingError(outcome.value.error, 'The costing could not be saved. Review the inputs and retry.')))
-            } else setSaveCheckMessage(tx('The save is not confirmed yet. Your original inputs and request identity are preserved.'))
+            } else setSaveCheckMessage(tx('The save is not confirmed yet. Your entries are kept on this page.'))
         } catch {
             setSaveCheckMessage(tx('Save status is unavailable. Reconnect and check again.'))
         } finally { setCheckingSave(false); saveQuoteLockRef.current = false }
@@ -4627,7 +4627,7 @@ export default function EstimatorClient({
                 suppressAutosaveUntilChanged()
                 void trackPlanEvent('quality_created', { source: 'estimator' })
                 toast.success(t('estimator.quality.saved'), {
-                    description: tx(`Quality and costing snapshot v${res.versionNumber ?? 1} saved together · ${formatSuratDateTime(res.updatedAt ?? new Date().toISOString())} · rate basis ₹${Number(state.warpRows[0]?.yarnRate ?? 0).toFixed(2)}/kg. Use Save Costing only when you intentionally want another costing version.`),
+                    description: tx(`Quality and costing v${res.versionNumber ?? 1} saved · ${formatSuratDateTime(res.updatedAt ?? new Date().toISOString())} · yarn rate ₹${Number(state.warpRows[0]?.yarnRate ?? 0).toFixed(2)}/kg. Use Save Costing only when you want another costing version.`),
                 })
             } else {
                 const message = res.error ?? t('estimator.quality.saveFailed')
@@ -5033,7 +5033,7 @@ export default function EstimatorClient({
             const offlineDraft = saveDraftNow(buildCurrentDraft(undefined, 'costing'))
             toast.error(tx('Reconnect before saving'), {
                 description: isDraftStored(offlineDraft)
-                    ? tx('Your Cost Estimate and save identity are stored on this device.')
+                    ? tx('Your Cost Estimate is kept on this device.')
                     : offlineDraft === 'disabled'
                         ? tx('This Cost Estimate is kept on this page only. Keep the page open until you reconnect, then save.')
                         : offlineDraft === 'blocked'
@@ -5134,7 +5134,7 @@ export default function EstimatorClient({
                             ? `${wasEditingCosting ? 'New costing version' : 'Costing'} saved and Saved Quality updated`
                             : (wasEditingCosting ? 'New costing version saved' : 'Costing saved'))),
                     {
-                        description: tx(`Costing snapshot v${savedVersion} · ${formatSuratDateTime(savedAt)} · rate basis ₹${Number(state.warpRows[0]?.yarnRate ?? 0).toFixed(2)}/kg${sourceQuoteStatus ? ` · status preserved as ${sourceQuoteStatus}` : ''}.`),
+                        description: tx(`Costing v${savedVersion} · ${formatSuratDateTime(savedAt)} · yarn rate ₹${Number(state.warpRows[0]?.yarnRate ?? 0).toFixed(2)}/kg${sourceQuoteStatus ? ` · status kept as ${sourceQuoteStatus}` : ''}.`),
                     },
                 )
                 if (res.quoteId) {
@@ -5164,7 +5164,7 @@ export default function EstimatorClient({
             console.error('Failed to save estimator quote:', error)
             toast.error(tx(userFacingError(error, 'Failed to save the Cost Estimate. Try again.')), {
                 description: draftStoredBeforeSubmit
-                    ? tx('Your Cost Estimate and retry identity remain saved on this device.')
+                    ? tx('Your Cost Estimate is still kept on this device.')
                     : undefined,
             })
         } finally {
@@ -5487,12 +5487,12 @@ export default function EstimatorClient({
                                     <span className="font-bold">{draft.qualityLabel || 'Untitled'}</span>
                                     {draft.qualityLabel && <span className="text-[var(--color-warning-amber)]"> ({draft.qualityLabel})</span>}
                                     {draft.sourceRecordKind === 'costing' && draft.sourceQuoteVersionNumber && (
-                                        <span className="ml-1 text-[var(--color-warning-amber)]">· Editing costing v{draft.sourceQuoteVersionNumber}</span>
+                                        <span className="ml-1 text-[var(--color-warning-amber)]">{`· Editing costing v${draft.sourceQuoteVersionNumber}`}</span>
                                     )}
                                     {draft.sourceRecordKind === 'costing' && draft.sourceQuoteCreatedAt && (
-                                        <span className="ml-1 text-[var(--color-warning-amber)]">· saved {formatTimestampDate(draft.sourceQuoteCreatedAt, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                                        <span className="ml-1 text-[var(--color-warning-amber)]">{`· saved ${formatTimestampDate(draft.sourceQuoteCreatedAt, { day: 'numeric', month: 'short', year: 'numeric' })}`}</span>
                                     )}
-                                    {draft.sourceRecordKind === 'costing' && ' · a new version will preserve the original'}
+                                    {draft.sourceRecordKind === 'costing' && ' · saving makes a new version and keeps the original'}
                                 </>
                             ) : (
                                 <>
@@ -5568,7 +5568,7 @@ export default function EstimatorClient({
                                     ))}
                                 </ul>
                                 {estimatorWarnings.length > 4 && (
-                                    <p className="mt-1 text-xs font-semibold text-[var(--wv-ochre-800)]">+{estimatorWarnings.length - 4} more unusual value(s)</p>
+                                    <p className="mt-1 text-xs font-semibold text-[var(--wv-ochre-800)]">{`${estimatorWarnings.length - 4} more unusual values`}</p>
                                 )}
                                 <p className="mt-2 text-[11px] font-medium text-[var(--wv-ochre-800)]">Costing can be reviewed, but a save or quotation requires acknowledgement.</p>
                             </div>
@@ -5602,7 +5602,7 @@ export default function EstimatorClient({
                                     ))}
                                 </ul>
                                 {estimatorValidation.issues.length > 6 && (
-                                    <p className="mt-1 text-xs font-semibold text-[var(--wv-madder-600)]">+{estimatorValidation.issues.length - 6} more input issue(s)</p>
+                                    <p className="mt-1 text-xs font-semibold text-[var(--wv-madder-600)]">{`${estimatorValidation.issues.length - 6} more entries to fix`}</p>
                                 )}
                             </div>
                             {estimatorValidation.issues.some(issue => (
@@ -5659,16 +5659,16 @@ export default function EstimatorClient({
                                             ? t('estimator.sprint1.baseline_not_recorded')
                                             : sourceFactoryProfileUpdatedAt
                                                 ? `${t('estimator.sprint1.baseline_captured')}: ${formatTimestampDate(sourceFactoryProfileUpdatedAt, { day: 'numeric', month: 'short', year: 'numeric' })}`
-                                                : 'Current factory baseline'}
+                                                : 'Current factory costs'}
                                     </span>
-                                    {!sourceQuoteId && <span aria-label={t('estimator.sprint1.new_costing_snapshot')}>New costing snapshot</span>}
+                                    {!sourceQuoteId && <span aria-label={t('estimator.sprint1.new_costing_snapshot')}>New costing</span>}
                                 </div>
                                 {sourceQuoteId && (
                                     <p className="mt-2 max-w-3xl text-[10px] font-medium leading-4 text-[var(--color-muted)]">
                                         {versionInputChangeSummary
-                                            ? `Changed inputs since v${sourceQuoteVersionNumber ?? 1}: ${versionInputChangeSummary}. Create new version is deliberate; review this summary before saving.`
-                                            : `No costing inputs changed since v${sourceQuoteVersionNumber ?? 1}. Saving again keeps the same version and will not create a duplicate snapshot.`}
-                                        {sourceRecordKind === 'quotation' && sourceQuoteStatus && ` Existing quotation status stays ${sourceQuoteStatus} until you use the allowed status action.`}
+                                            ? `Changed since v${sourceQuoteVersionNumber ?? 1}: ${versionInputChangeSummary}. Check these changes before saving a new version.`
+                                            : `Nothing has changed since v${sourceQuoteVersionNumber ?? 1}. Saving again keeps the same version and does not make a copy.`}
+                                        {sourceRecordKind === 'quotation' && sourceQuoteStatus && ` The quotation stays ${sourceQuoteStatus} until you change its status.`}
                                     </p>
                                 )}
                             </div>
@@ -5790,7 +5790,7 @@ export default function EstimatorClient({
                                 <div className="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1 border-t border-[var(--color-hairline)]/80 pt-3">
                                     <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)]">Material context</span>
                                     <span className="max-w-full break-words text-[12px] font-semibold text-[var(--color-ink)]">{appliedTemplate?.name ?? (qualityLabel.trim() || 'New quality')}</span>
-                                    <span className="text-[11px] font-medium text-[var(--color-muted)]">· Warp yarn {state.warpRows.length} component{state.warpRows.length === 1 ? '' : 's'} · Weft yarn {state.weftRows.length} component{state.weftRows.length === 1 ? '' : 's'}</span>
+                                    <span className="text-[11px] font-medium text-[var(--color-muted)]">{`· Warp yarns: ${state.warpRows.length} · Weft yarns: ${state.weftRows.length}`}</span>
                                 </div>
                                 {appliedTemplate && (
                                     <p
@@ -5798,8 +5798,8 @@ export default function EstimatorClient({
                                         className="rounded-lg border border-[var(--wv-lagoon-200)] bg-[var(--wv-lagoon-50)] px-3 py-2 text-[11px] font-medium leading-4 text-[var(--wv-lagoon-700)]"
                                     >
                                         {appliedTemplate.latest_costing_reuse
-                                            ? 'Full costing reuse is active: current yarn rates are combined with the latest saved costing assumptions.'
-                                            : 'This Saved Quality has no linked costing snapshot yet. Current factory defaults are being used for the costing assumptions.'}
+                                            ? 'Using today’s yarn rates with the other costs from the latest saved costing.'
+                                            : 'This saved quality has no saved costing yet, so your factory defaults are used for the other costs.'}
                                     </p>
                                 )}
                             </div>
@@ -5819,9 +5819,9 @@ export default function EstimatorClient({
                                 className="flex items-start gap-3 rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-3 py-2 text-[10px] font-medium leading-4 text-[var(--color-muted)] 2xl:col-span-2"
                             >
                                 <div className="min-w-0 flex-1">
-                                    <p><span className="font-semibold text-[var(--color-ink)]">Save quality/recipe:</span> reusable construction and assumptions.</p>
-                                    <p><span className="font-semibold text-[var(--color-ink)]">Save costing snapshot:</span> frozen result for this rate/date/quantity.</p>
-                                    <p><span className="font-semibold text-[var(--color-ink)]">Create new version:</span> deliberate action with the changed-input summary above; an ordinary repeat save does not create a duplicate.</p>
+                                    <p><span className="font-semibold text-[var(--color-ink)]">Save quality:</span> keeps the yarns and settings to reuse later.</p>
+                                    <p><span className="font-semibold text-[var(--color-ink)]">Save costing:</span> keeps this price as it is today, for this rate, date and quantity.</p>
+                                    <p><span className="font-semibold text-[var(--color-ink)]">New version:</span> saves the changes listed above as a new costing. Saving again with no changes does not make a copy.</p>
                                 </div>
                                 <button
                                     type="button"
@@ -5850,8 +5850,8 @@ export default function EstimatorClient({
                                 aria-describedby={actionReadinessMessage ? actionReadinessId : undefined}
                                 aria-busy={savingQuote}
                                 aria-label={sourceQuoteId
-                                    ? 'Save new immutable costing version'
-                                    : 'Save costing snapshot'}
+                                    ? 'Save as a new costing version'
+                                    : 'Save costing'}
                                 title={firstCostingReadinessMessage ?? ((!qualityLabel.trim() || totals.totalProductionCostPerM <= 0)
                                     ? tx('Complete quality and cost inputs first.')
                                     : undefined)}
@@ -5920,8 +5920,8 @@ export default function EstimatorClient({
                             )}
                             <p className="text-[11px] font-medium leading-relaxed text-[var(--color-muted)]">
                                 {freeMode ? `${freeText(language, 'freeCreationPolicy')} ${freeText(language, 'calculatePolicy')}` : sourceQuoteId
-                                    ? tx('Save New Version creates a new immutable costing snapshot. Earlier versions keep their original economics.')
-                                    : tx('Save Costing creates the reusable quality and its first immutable costing version.')}
+                                    ? tx('Save New Version keeps this as a new costing. Earlier versions keep their own numbers.')
+                                    : tx('Save Costing saves the quality for reuse and keeps this as its first costing.')}
                             </p>
                         </div>
                     </div>
@@ -6890,8 +6890,7 @@ export default function EstimatorClient({
                                             <div className="flex items-center gap-2 pt-2 mt-2 border-t border-dashed border-[var(--color-hairline)]">
                                                 <AlertTriangle className="h-3 w-3 text-[var(--wv-ochre-800)] shrink-0" />
                                                 <p className="text-[10px] font-bold text-[var(--wv-ochre-800)] leading-tight">
-                                                    Safety Alert: Direct rate (₹{state.overheadOverridePerM}) is LOWER than the monthly-expense reference (₹{monthlyOverheadReference.toFixed(2)}).
-                                                    This costing will not recover ₹{(monthlyOverheadReference - state.overheadOverridePerM).toFixed(2)} per metre against that reference.
+                                                    {`Your direct rate (₹${state.overheadOverridePerM}/m) is lower than your monthly expenses work out to (₹${monthlyOverheadReference.toFixed(2)}/m). This costing will not cover ₹${(monthlyOverheadReference - state.overheadOverridePerM).toFixed(2)} per metre of those expenses.`}
                                                 </p>
                                             </div>
                                         )}
@@ -7140,7 +7139,7 @@ export default function EstimatorClient({
                         icon={ReceiptText}
                         accent="neutral"
                         step={8}
-                        detail={<p className="text-[11px] text-[var(--color-muted)]">{hasValidCostResult ? 'Engine audit used for the final production cost.' : awaitingCalculation && estimatorValidation.valid ? freeText(language, 'resultAfterCalculation') : 'Complete the required inputs to calculate the final production cost.'}</p>}
+                        detail={<p className="text-[11px] text-[var(--color-muted)]">{hasValidCostResult ? 'This breakdown makes up the final production cost.' : awaitingCalculation && estimatorValidation.valid ? freeText(language, 'resultAfterCalculation') : 'Complete the required inputs to calculate the final production cost.'}</p>}
                         badgeContent={hasValidCostResult
                             ? <SectionCostPill value={totals.audit.productionCostPerMeter} />
                             : <span className="rounded-full border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-3 py-1 text-[13px] font-semibold text-[var(--color-muted)]">{costingReadiness.status === 'calculation_required' ? freeText(language, 'readyToCalculate') : 'Incomplete'}</span>}

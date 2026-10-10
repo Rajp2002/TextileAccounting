@@ -96,7 +96,7 @@ describe('Rate Book P3: Quick Rate Edit Dialog in RatesClient.tsx', () => {
 
         it('renders impact reminder regarding future estimates and unchanged snapshots', () => {
             expect(client).toContain('Updates future estimates for ${savedQualityCount} saved')
-            expect(client).toContain('Past snapshots unchanged.')
+            expect(client).toContain('Past costings stay the same.')
         })
 
         it('supports auto-focus and text selection on dialog open', () => {
