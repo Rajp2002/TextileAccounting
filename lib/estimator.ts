@@ -94,7 +94,10 @@ Decimal.set({ precision: 20, rounding: Decimal.ROUND_HALF_UP })
  * evolves, so these are deliberately explicit rather than inferred from the
  * row creation date.
  */
-export const COSTING_CALCULATION_VERSION = 'estimator_v3_2026_08'
+// v4 (2026-10): every weft row is its own yarn system carrying that system's
+// picks; rows are no longer given an equal 100/N share of the fabric length.
+// Warp and weft rows may also carry their own crimp allowance.
+export const COSTING_CALCULATION_VERSION = 'estimator_v4_2026_10'
 export const COSTING_ROUNDING_POLICY = 'INR_HALF_UP_2'
 
 export type CostingReconciliationStatus =
@@ -121,6 +124,7 @@ export interface WarpRow {
   yarnRate: number      // ₹/kg market rate for this yarn
   gstPct: number        // GST % on this specific yarn (different materials = different brackets)
   shortagePct: number | null // shortage/wastage % for this component (null = global fallback, 0 = intentional zero)
+  crimpPct?: number | null // take-up % for this warp system (null/absent = factory warp crimp)
 }
 
 /** One weft component (fabrics can have multi-pick weft blends) */
@@ -129,7 +133,7 @@ export interface WeftRow {
   label?: string
   calculationMode?: YarnCalculationMode
   manualKgPer100m?: number | null
-  picks: number         // picks per inch (PPI) — industry standard in Surat
+  picks: number         // picks per inch (PPI) of THIS weft system — never a share of the total
   reedSpace: number     // legacy effective costing width in cm; use effectiveCostingWidthCm when present
   effectiveCostingWidthCm?: number | null // loom/costing width in cm; used for weft formula
   linearDensityUnit?: YarnLinearDensityUnit
@@ -138,6 +142,63 @@ export interface WeftRow {
   yarnRate: number      // ₹/kg
   gstPct: number
   shortagePct: number | null
+  crimpPct?: number | null // take-up % for this weft system (null/absent = none)
+  /**
+   * Pick-density input convention, stored with the row so a saved recipe
+   * always says how its picks were entered:
+   * - null: picks were entered for each weft system;
+   * - number: the fabric's total PPI was shared by this ratio (picks holds
+   *   the derived share);
+   * - absent: recorded before the convention existed, so it is ambiguous
+   *   when the fabric has more than one weft system.
+   */
+  pickRatio?: number | null
+}
+
+/** How the picks of a multi-weft fabric were entered. */
+export type WeftPickConvention = 'per_system' | 'total_ratio'
+
+/**
+ * The convention recorded on the weft rows, or null when it is unknown.
+ * One weft system is never ambiguous: its picks are the fabric's picks.
+ */
+export function getWeftPickConvention(rows: ReadonlyArray<Pick<WeftRow, 'pickRatio'>>): WeftPickConvention | null {
+  if (rows.length <= 1) return 'per_system'
+  if (rows.every(row => row.pickRatio === null)) return 'per_system'
+  if (rows.every(row => typeof row.pickRatio === 'number')) return 'total_ratio'
+  return null
+}
+
+/** Total picks per inch of the fabric: the sum of every weft system's picks. */
+export function getTotalWeftPicks(rows: ReadonlyArray<Pick<WeftRow, 'picks'>>): number {
+  return rows.reduce((sum, row) => sum.plus(Number(row.picks) || 0), new Decimal(0)).toNumber()
+}
+
+export type WeftPickAllocation =
+  | { ok: true; picks: number[]; totalPicks: number }
+  | { ok: false; reason: 'total_picks' | 'ratio' }
+
+/**
+ * Share a fabric's total PPI between its weft systems by ratio. The last
+ * system takes the remainder so the shares always add back to the total.
+ */
+export function allocateWeftPicks(totalPicks: number, ratios: readonly number[]): WeftPickAllocation {
+  const total = Number(totalPicks)
+  if (!Number.isFinite(total) || total <= 0) return { ok: false, reason: 'total_picks' }
+  if (ratios.length === 0 || ratios.some(ratio => !Number.isFinite(Number(ratio)) || Number(ratio) <= 0)) {
+    return { ok: false, reason: 'ratio' }
+  }
+  const ratioSum = ratios.reduce((sum, ratio) => sum.plus(ratio), new Decimal(0))
+  const picks: number[] = []
+  let allocated = new Decimal(0)
+  ratios.forEach((ratio, index) => {
+    const share = index === ratios.length - 1
+      ? new Decimal(total).minus(allocated)
+      : new Decimal(total).times(ratio).div(ratioSum)
+    allocated = allocated.plus(share.toNumber())
+    picks.push(share.toNumber())
+  })
+  return { ok: true, picks, totalPicks: total }
 }
 
 export function getEffectiveYarnDenier(
@@ -1551,7 +1612,8 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
       : formulaKgPer100m
     const hasRowWasteOverride = r.shortagePct !== null && r.shortagePct !== undefined
     const wastePct = hasRowWasteOverride ? r.shortagePct! : globalShortage
-    const totalAdjustmentPct = new Decimal(warpCrimpPct).plus(wastePct)
+    const crimpPct = r.crimpPct !== null && r.crimpPct !== undefined ? Number(r.crimpPct) : warpCrimpPct
+    const totalAdjustmentPct = new Decimal(crimpPct).plus(wastePct)
     const finalKgPer100m = new Decimal(baseKgPer100mUsed)
       .times(new Decimal(1).plus(totalAdjustmentPct.div(100)))
       .toNumber()
@@ -1570,7 +1632,7 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
       manualKgPer100m,
       formulaKgPer100m,
       baseKgPer100mUsed,
-      crimpPct: warpCrimpPct,
+      crimpPct,
       wastePct,
       defaultWastePct: globalShortage,
       wastePctSource: hasRowWasteOverride ? 'row_override' : 'default',
@@ -1587,13 +1649,11 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
     }
   })
 
-  // ── Layer 2: Weft Yarn (waste only; warp crimp does not apply) ───────────
-  // A 100m fabric run is shared equally by all configured weft components.
-  // Formula rows therefore use 100 / component count (100, 50, 33.333..., ...).
-  // Manual rows remain explicit kg/100m inputs and are not scaled again.
-  const weftFormulaLengthM = new Decimal(100)
-    .div(Math.max(1, estimate.weftRows.length))
-    .toNumber()
+  // ── Layer 2: Weft Yarn (own crimp + waste; the warp crimp does not apply) ─
+  // Every weft row is an independent yarn system whose picks are its own
+  // PPI, so each consumes yarn over the full 100m run. A pick ratio only
+  // decides how many picks a system gets; it never splits the fabric length.
+  const weftFormulaLengthM = 100
   const weftRows: WeftRowResult[] = estimate.weftRows.map(r => {
     const mode: YarnCalculationMode = r.calculationMode === 'manual' ? 'manual' : 'formula'
     const effectiveCostingWidthCm = getEffectiveCostingWidthCm(r)
@@ -1607,7 +1667,8 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
       : formulaKgPer100m
     const hasRowWasteOverride = r.shortagePct !== null && r.shortagePct !== undefined
     const wastePct = hasRowWasteOverride ? r.shortagePct! : globalShortage
-    const totalAdjustmentPct = new Decimal(wastePct)
+    const crimpPct = r.crimpPct !== null && r.crimpPct !== undefined ? Number(r.crimpPct) : 0
+    const totalAdjustmentPct = new Decimal(crimpPct).plus(wastePct)
     const finalKgPer100m = new Decimal(baseKgPer100mUsed)
       .times(new Decimal(1).plus(totalAdjustmentPct.div(100)))
       .toNumber()
@@ -1626,7 +1687,7 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
       formulaLengthM: weftFormulaLengthM,
       formulaKgPer100m,
       baseKgPer100mUsed,
-      crimpPct: 0,
+      crimpPct,
       wastePct,
       defaultWastePct: globalShortage,
       wastePctSource: hasRowWasteOverride ? 'row_override' : 'default',

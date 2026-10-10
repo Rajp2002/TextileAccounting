@@ -76,8 +76,11 @@ import {
     isWarpRowFilled,
     isWeftRowFilled,
     getWidthWarnings,
+    getTotalWeftPicks,
+    getWeftPickConvention,
     LOOM_TYPE_DEFAULTS,
     type LoomType,
+    type WeftPickConvention,
     type YarnCalculationMode,
     type YarnLinearDensityUnit,
     type EstimateState,
@@ -89,6 +92,7 @@ import {
     type EstimatorV3Totals,
     type CostingResultSnapshot,
 } from '@/lib/estimator'
+import { applyWeftPickConvention, reconcileWeftPickConvention, setWeftPickRatio, setWeftTotalPicks } from '@/lib/weft-pick-convention'
 import {
     getFactoryCostProfile,
     getEstimatorSecondaryData,
@@ -525,6 +529,9 @@ type Action =
     | { type: 'UPDATE_WEFT_ROW'; id: string; field: keyof WeftRow; value: WeftRowValue }
     | { type: 'SELECT_WEFT_YARN'; id: string; yarn: YarnSuggestionSelection }
     | { type: 'REMOVE_WEFT_ROW'; id: string }
+    | { type: 'SET_WEFT_PICK_CONVENTION'; convention: WeftPickConvention }
+    | { type: 'SET_WEFT_TOTAL_PICKS'; value: number | null }
+    | { type: 'SET_WEFT_PICK_RATIO'; id: string; value: number | null }
     | { type: 'ENABLE_SECTION'; section: keyof FactorySections }
     | { type: 'ADD_OVERHEAD_ITEM' }
     | { type: 'UPDATE_OVERHEAD_ITEM'; id: string; field: 'label' | 'monthlyAmount' | 'isLocked'; value: OverheadItemValue }
@@ -689,9 +696,15 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
             if (state.warpRows.length <= 1) return state
             return { ...state, warpRows: state.warpRows.filter(r => r.id !== action.id) }
         case 'ADD_WEFT_ROW':
-            return { ...state, weftRows: [...state.weftRows, makeNewWeftRow()] }
+            return { ...state, weftRows: reconcileWeftPickConvention(state.weftRows, [...state.weftRows, makeNewWeftRow()]) }
         case 'SET_WEFT_COMPONENT_COUNT':
-            return { ...state, weftRows: resizeYarnRows(state.weftRows, action.count, makeNewWeftRow) }
+            return { ...state, weftRows: reconcileWeftPickConvention(state.weftRows, resizeYarnRows(state.weftRows, action.count, makeNewWeftRow)) }
+        case 'SET_WEFT_PICK_CONVENTION':
+            return { ...state, weftRows: applyWeftPickConvention(state.weftRows, action.convention) }
+        case 'SET_WEFT_TOTAL_PICKS':
+            return { ...state, weftRows: setWeftTotalPicks(state.weftRows, action.value) }
+        case 'SET_WEFT_PICK_RATIO':
+            return { ...state, weftRows: setWeftPickRatio(state.weftRows, action.id, action.value) }
         case 'UPDATE_WEFT_ROW':
             return {
                 ...state,
@@ -708,7 +721,7 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
             }
         case 'REMOVE_WEFT_ROW':
             if (state.weftRows.length <= 1) return state
-            return { ...state, weftRows: state.weftRows.filter(r => r.id !== action.id) }
+            return { ...state, weftRows: reconcileWeftPickConvention(state.weftRows, state.weftRows.filter(r => r.id !== action.id)) }
         case 'ENABLE_SECTION':
             return {
                 ...state,
@@ -2670,6 +2683,117 @@ function getTemplateDirectWeavingRateInput(template: EstimatorTemplate, state: E
     )
 }
 
+/**
+ * The pick-density convention for a fabric with more than one weft system.
+ * Nothing is preselected for a recipe that never recorded one, because the
+ * same "64 PPI" means 64 or 128 picks in total depending on it.
+ */
+function WeftPickConventionField({
+    weftRows,
+    dispatch,
+}: {
+    weftRows: WeftRow[]
+    dispatch: React.Dispatch<Action>
+}) {
+    const { tx } = useTranslation()
+    if (weftRows.length <= 1) return null
+    const convention = getWeftPickConvention(weftRows)
+    const totalPicks = getTotalWeftPicks(weftRows)
+    const formatPicks = (value: number) => Number.isInteger(value) ? String(value) : value.toFixed(2)
+    return (
+        <div data-estimator-field="weftPickConvention" data-testid="weft-pick-convention" className={`space-y-3 rounded-[12px] border p-3 sm:p-4 ${convention === null ? 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)]' : 'border-[var(--color-hairline)] bg-[var(--color-surface-soft)]'}`}>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                    <p className="text-sm font-semibold text-[var(--color-ink)]">{tx('How are the picks entered?')}</p>
+                    <p className="mt-0.5 text-xs leading-snug text-[var(--color-muted)]">
+                        {convention === null
+                            ? tx('Choose one before costing. Two wefts at 64 PPI each is 128 picks in total; 64 total PPI shared 1:1 is 32 each.')
+                            : convention === 'per_system'
+                                ? tx('Each weft row has its own PPI. The fabric’s total is their sum.')
+                                : tx('Enter the fabric’s total PPI once and give each weft its share.')}
+                    </p>
+                </div>
+                <LiquidSegmented<WeftPickConvention | 'unset'>
+                    className="shrink-0 self-start sm:self-center"
+                    aria-label={tx('Pick entry')}
+                    value={convention ?? 'unset'}
+                    onValueChange={value => { if (value !== 'unset') dispatch({ type: 'SET_WEFT_PICK_CONVENTION', convention: value }) }}
+                    options={[
+                        { value: 'per_system', label: tx('PPI per weft') },
+                        { value: 'total_ratio', label: tx('Total PPI shared') },
+                    ]}
+                />
+            </div>
+            {convention === 'total_ratio' && (
+                <div className="max-w-xs">
+                    <NumField
+                        fieldKey="weftTotalPicks"
+                        label={tx('Total picks')}
+                        value={totalPicks}
+                        onChange={value => dispatch({ type: 'SET_WEFT_TOTAL_PICKS', value })}
+                        unit="PPI"
+                        step={0.5}
+                        placeholder="e.g. 64"
+                        attentionWhenEmpty
+                    />
+                </div>
+            )}
+            {convention !== null && (
+                <p data-testid="weft-pick-summary" className="font-mono text-xs text-[var(--color-ink)]">
+                    {weftRows.map((row, index) => `${row.label?.trim() || `${tx('Weft')} ${index + 1}`} ${formatPicks(Number(row.picks) || 0)}`).join(' + ')}
+                    {' = '}{formatPicks(totalPicks)} PPI
+                </p>
+            )}
+        </div>
+    )
+}
+
+/**
+ * One weft system's pick density. With a shared total the owner enters the
+ * system's share and its PPI is derived; otherwise the PPI is its own.
+ */
+function WeftRowPicksField({
+    row,
+    weftRows,
+    dispatch,
+    label,
+}: {
+    row: WeftRow
+    weftRows: WeftRow[]
+    dispatch: React.Dispatch<Action>
+    label: string
+}) {
+    const { tx } = useTranslation()
+    const convention = weftRows.length > 1 ? getWeftPickConvention(weftRows) : 'per_system'
+    if (convention === 'total_ratio') {
+        const picks = Number(row.picks) || 0
+        return (
+            <NumField
+                fieldKey="pickRatio"
+                label={tx('Pick share')}
+                value={typeof row.pickRatio === 'number' ? row.pickRatio : null}
+                onChange={value => dispatch({ type: 'SET_WEFT_PICK_RATIO', id: row.id, value })}
+                step={0.5}
+                placeholder="e.g. 1"
+                hint={`${tx('Works out to')} ${Number.isInteger(picks) ? picks : picks.toFixed(2)} PPI`}
+                attentionWhenEmpty
+            />
+        )
+    }
+    return (
+        <NumField
+            fieldKey="picks"
+            label={weftRows.length > 1 ? `${tx('PPI for this weft')} — REQUIRED` : label}
+            value={row.picks}
+            onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'picks', value: value ?? 0 })}
+            unit="PPI"
+            placeholder="e.g. 68"
+            hint="PPI means picks per inch: weft threads in one inch."
+            attentionWhenEmpty
+        />
+    )
+}
+
 function WeavingRateFields({
     state,
     dispatch,
@@ -3058,6 +3182,7 @@ function QuickCostingView({
                     }
                 />
                 <CardContent className="space-y-4 p-4 sm:p-5">
+                    <WeftPickConventionField weftRows={state.weftRows} dispatch={dispatch} />
                     {state.weftRows.map((row, index) => {
                         const effectiveCostingWidthCm = getEffectiveCostingWidthCm(row)
                         const unverified = unverifiedYarnRows?.[row.id]
@@ -3097,7 +3222,7 @@ function QuickCostingView({
                                     onSelectYarn={yarn => onSelectWeftYarn?.(row.id, yarn)}
                                     onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'label', value })}
                                 />
-                                <NumField fieldKey="picks" label="Picks — REQUIRED" value={row.picks} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'picks', value: value ?? 0 })} unit="PPI" placeholder="e.g. 68" hint="PPI means picks per inch: weft threads in one inch." attentionWhenEmpty />
+                                <WeftRowPicksField row={row} weftRows={state.weftRows} dispatch={dispatch} label="Picks — REQUIRED" />
                                 <WidthField label={`Effective costing width (finished width)${row.calculationMode === 'manual' ? '' : ' — REQUIRED'}`} value={effectiveCostingWidthCm} onChange={value => { dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'effectiveCostingWidthCm', value }); dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'reedSpace', value }) }} unit={widthUnit} placeholder={widthUnit === 'inch' ? 'e.g. 63' : 'e.g. 160'} hint={row.calculationMode === 'manual' ? 'Finished cloth width; saved for audit.' : 'Finished cloth width, not reed width; used with PPI.'} attentionWhenEmpty={row.calculationMode !== 'manual'} />
                                 {row.calculationMode === 'manual' ? (
                                     <NumField fieldKey="manualKgPer100m" label="Weft consumption" value={row.manualKgPer100m ?? null} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'manualKgPer100m', value })} unit="kg/100m" step={0.001} placeholder="e.g. 2.75" attentionWhenEmpty />
@@ -6335,6 +6460,7 @@ export default function EstimatorClient({
                                         </>
                                     )}
                                     <NumField fieldKey="shortagePct" label="Waste %" value={row.shortagePct} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'shortagePct', value: v })} unit="%" step={0.5} preserveZero placeholder={String(state.yarnShortagePct ?? 0)} placeholderKind="applied-default" hint={`Blank uses ${state.yarnShortagePct}% default; 0 overrides`} warning={row.shortagePct !== null && row.shortagePct > 15 ? 'High waste %' : undefined} />
+                                    <NumField fieldKey="crimpPct" label={tx('Crimp %')} value={row.crimpPct ?? null} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'crimpPct', value: v })} unit="%" step={0.5} preserveZero placeholder={String(state.warpCrimpPct ?? 0)} placeholderKind="applied-default" hint={`${tx('Blank uses the fabric warp crimp of')} ${state.warpCrimpPct ?? 0}%`} warning={row.crimpPct != null && row.crimpPct > 15 ? tx('High crimp %') : undefined} />
                                     {(() => {
                                         const templateRate = appliedTemplate?.warp_rows?.[i]?.yarnRate ?? null
                                         const isUnusuallyLow = templateRate !== null
@@ -6452,6 +6578,7 @@ export default function EstimatorClient({
                         })()}
 
                         <div className="space-y-4">
+                            <WeftPickConventionField weftRows={state.weftRows} dispatch={dispatch} />
                             {state.weftRows.map((row, i) => {
                                 const effectiveCostingWidthCm = getEffectiveCostingWidthCm(row)
                                 const rawEffectiveWidth = widthUnit === 'inch' ? effectiveCostingWidthCm / 2.54 : effectiveCostingWidthCm
@@ -6506,7 +6633,7 @@ export default function EstimatorClient({
                                             onSelectYarn={yarn => handleSelectWeftYarn(row.id, yarn)}
                                             onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'label', value })}
                                         />
-                                        <NumField fieldKey="picks" label={`${t('estimator.field_labels.picks_ppi')} — REQUIRED`} value={row.picks} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'picks', value: v ?? 0 })} placeholder="e.g. 68" attentionWhenEmpty />
+                                        <WeftRowPicksField row={row} weftRows={state.weftRows} dispatch={dispatch} label={`${t('estimator.field_labels.picks_ppi')} — REQUIRED`} />
                                         <WidthField
                                             label={`Effective costing width (finished width)${row.calculationMode === 'manual' ? '' : ' — REQUIRED'}`}
                                             value={effectiveCostingWidthCm}
@@ -6543,6 +6670,7 @@ export default function EstimatorClient({
                                             />
                                         )}
                                         <NumField fieldKey="shortagePct" label="Waste %" value={row.shortagePct} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'shortagePct', value: v })} unit="%" step={0.5} preserveZero placeholder={String(state.yarnShortagePct ?? 0)} placeholderKind="applied-default" hint={`Blank uses ${state.yarnShortagePct}% default; 0 overrides`} warning={row.shortagePct !== null && row.shortagePct > 15 ? 'High waste %' : undefined} />
+                                        <NumField fieldKey="crimpPct" label={tx('Crimp %')} value={row.crimpPct ?? null} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'crimpPct', value: v })} unit="%" step={0.5} preserveZero placeholder="0" placeholderKind="applied-default" hint={tx('Weft take-up for this system. Blank means none.')} warning={row.crimpPct != null && row.crimpPct > 15 ? tx('High crimp %') : undefined} />
                                         {(() => {
                                             const templateRate = appliedTemplate?.weft_rows?.[i]?.yarnRate ?? null
                                             const isUnusuallyLow = templateRate !== null
@@ -7036,8 +7164,11 @@ export default function EstimatorClient({
                                             <p className="font-mono font-semibold text-[var(--color-muted)]">{layer.mode === 'manual' ? 'Manual' : 'Formula'}</p>
                                             <p className="text-[10px] font-medium leading-tight text-[var(--color-muted)]">{layer.formulaDescription}</p>
                                         </div>
-                                        <p className="font-mono text-[var(--color-ink)]">{layer.baseKgPer100mUsed.toFixed(3)}</p>
-                                        <p className="font-mono text-[var(--color-ink)]">₹{layer.ratePerKg.toFixed(0)}/kg</p>
+                                        <div>
+                                            <p className="font-mono text-[var(--color-ink)]">{layer.baseKgPer100mUsed.toFixed(3)}</p>
+                                            <p data-estimator-audit-grams className="text-[10px] font-medium leading-tight text-[var(--color-muted)]">{(layer.baseKgPer100mUsed * 10).toFixed(2)} g/m · {(layer.finalKgPer100m * 10).toFixed(2)} g/m {tx('with allowances')}</p>
+                                        </div>
+                                        <p className="font-mono text-[var(--color-ink)]">₹{layer.ratePerKg.toFixed(2)}/kg</p>
                                         <p className="text-right font-mono font-semibold text-[var(--color-factory-green)]">₹{layer.baseCostPerMeter.toFixed(2)}/m</p>
                                         <div>
                                             <p className="font-mono text-[var(--color-warning-amber)]">{layer.totalAdjustmentPct.toFixed(1)}%</p>
@@ -7046,7 +7177,20 @@ export default function EstimatorClient({
                                                 Default waste {layer.defaultWastePct.toFixed(1)}% · {layer.wastePctSource === 'row_override' ? 'Override' : layer.wastePctSource === 'default' ? 'Default' : 'Saved value'} applied {layer.wastePct.toFixed(1)}%
                                             </p>
                                             <p className="text-[10px] font-semibold leading-tight text-[var(--color-ink)]">Added only after base yarn costs are summed.</p>
+                                            <p data-estimator-audit-system-cost className="mt-1 font-mono text-[11px] font-semibold text-[var(--color-ink)]">₹{layer.costPerMeter.toFixed(2)}/m {tx('with allowances')}</p>
                                         </div>
+                                    </div>
+                                ))}
+                            </div>
+                            <div data-estimator-audit-system-totals className="grid gap-2 border-t border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-3 py-2.5 text-xs sm:grid-cols-3">
+                                {[
+                                    { label: tx('Warp yarn total'), value: totals.audit.warp.totalCostPerMeter },
+                                    { label: tx('Weft yarn total'), value: totals.audit.weft.totalCostPerMeter },
+                                    { label: tx('Raw yarn total'), value: totals.audit.yarnTotalCostPerMeter },
+                                ].map(line => (
+                                    <div key={line.label} className="flex items-center justify-between gap-3 sm:block">
+                                        <p className="text-[10px] font-semibold uppercase tracking-[0.05em] text-[var(--color-muted)]">{line.label}</p>
+                                        <p className="font-mono font-semibold text-[var(--color-ink)]">₹{line.value.toFixed(2)}/m</p>
                                     </div>
                                 ))}
                             </div>

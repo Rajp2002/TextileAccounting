@@ -61,7 +61,7 @@ describe('Sprint 0 canonical costing truth', () => {
     const state = goldenEstimate()
     const result = buildCostingResult(state, calcFullTotals(state))
 
-    expect(result.calculationVersion).toBe('estimator_v3_2026_08')
+    expect(result.calculationVersion).toBe('estimator_v4_2026_10')
     expect(result.roundingPolicy).toBe('INR_HALF_UP_2')
     expect(result.productionCostPerM).toBe(32.19)
     expect(result.overheadPerM).toBe(5.75)

@@ -8,11 +8,11 @@ const yarn = {
   id: z.string().max(80), label: z.string().max(120).optional(),
   calculationMode: z.enum(['formula','manual']).optional(), manualKgPer100m: nullable.optional(),
   linearDensityUnit: z.enum(['denier','cotton_count_ne']).optional(), cottonCountNe: nullable.optional(),
-  calcDenier: num, yarnRate: num, gstPct: num, shortagePct: nullable,
+  calcDenier: num, yarnRate: num, gstPct: num, shortagePct: nullable, crimpPct: nullable.optional(),
 }
 export const freeEstimateSchema = z.object({
   warpRows: z.array(z.object({ ...yarn, beamEnds: num }).strict()).min(1).max(20),
-  weftRows: z.array(z.object({ ...yarn, picks: num, reedSpace: num, effectiveCostingWidthCm: nullable.optional() }).strict()).min(1).max(20),
+  weftRows: z.array(z.object({ ...yarn, picks: num, reedSpace: num, effectiveCostingWidthCm: nullable.optional(), pickRatio: nullable.optional() }).strict()).min(1).max(20),
   tapeLengthM: num, perPickCostPaisa: num, warpingRatePerKg: num, sizingRatePerKg: num,
   windingRatePerKg: num, processingRatePerM: num, finishingRatePerM: num,
   yarnShortagePct: num, warpCrimpPct: num,

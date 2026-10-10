@@ -1,5 +1,7 @@
 import {
+  allocateWeftPicks,
   getEffectiveCostingWidthCm,
+  getWeftPickConvention,
   getEffectiveCommercialInputs,
   getEffectiveOverheadMode,
   getEffectiveYarnDenier,
@@ -340,6 +342,9 @@ function validateWarpRow(row: WarpRow, index: number, issues: EstimatorValidatio
   if (row.shortagePct !== null && row.shortagePct !== undefined) {
     addNumberIssue(issues, warnings, `${prefix}.shortagePct`, `${label} waste %`, row.shortagePct, { max: MAX_WASTE_PERCENT, allowZero: true, warningMax: MAX_COMMON_WASTE_PCT, warningMessage: `${label} waste above 15% is unusual. Confirm this is a percentage, not a multiplier.` })
   }
+  if (row.crimpPct !== null && row.crimpPct !== undefined) {
+    addNumberIssue(issues, warnings, `${prefix}.crimpPct`, `${label} crimp %`, row.crimpPct, { max: 50, allowZero: true, warningMax: MAX_COMMON_CRIMP_PCT, warningMessage: `${label} crimp above 15% is unusual. Confirm this is a percentage of take-up.` })
+  }
 
   if (row.calculationMode === 'manual') {
     addNumberIssue(issues, warnings, `${prefix}.manualKgPer100m`, `${label} manual kg/100m`, row.manualKgPer100m, {
@@ -388,12 +393,51 @@ function validateWeftRow(row: WeftRow, index: number, issues: EstimatorValidatio
   if (row.shortagePct !== null && row.shortagePct !== undefined) {
     addNumberIssue(issues, warnings, `${prefix}.shortagePct`, `${label} waste %`, row.shortagePct, { max: MAX_WASTE_PERCENT, allowZero: true, warningMax: MAX_COMMON_WASTE_PCT, warningMessage: `${label} waste above 15% is unusual. Confirm this is a percentage, not a multiplier.` })
   }
+  if (row.crimpPct !== null && row.crimpPct !== undefined) {
+    addNumberIssue(issues, warnings, `${prefix}.crimpPct`, `${label} crimp %`, row.crimpPct, { max: 50, allowZero: true, warningMax: MAX_COMMON_CRIMP_PCT, warningMessage: `${label} crimp above 15% is unusual. Confirm this is a percentage of take-up.` })
+  }
 
   if (row.calculationMode === 'manual') {
     addNumberIssue(issues, warnings, `${prefix}.manualKgPer100m`, `${label} manual kg/100m`, row.manualKgPer100m, {
       max: MAX_RATE_PER_KG,
       required: true,
     })
+  }
+}
+
+/**
+ * A fabric with several weft systems must say how its picks were entered:
+ * picks for each system, or the total PPI shared by a ratio. The engine never
+ * guesses, because 64 PPI means 64 in total or 128 in total depending on it.
+ */
+export function validateWeftPickConvention(weftRows: readonly WeftRow[], issues: EstimatorValidationIssue[]) {
+  const rows = weftRows.filter(row => row && typeof row === 'object')
+  if (rows.length <= 1) return
+  const convention = getWeftPickConvention(rows)
+  if (convention === null) {
+    issues.push({
+      field: 'weftPickConvention',
+      message: 'This fabric has more than one weft yarn. Choose whether the picks are entered for each weft yarn or as the total picks shared by a ratio.',
+    })
+    return
+  }
+  if (convention !== 'total_ratio') return
+  rows.forEach((row, index) => {
+    const ratio = Number(row.pickRatio)
+    if (!Number.isFinite(ratio) || ratio <= 0) {
+      issues.push({ field: `weftRows.${index}.pickRatio`, message: `Weft layer ${index + 1} pick ratio must be greater than 0.` })
+    }
+  })
+  const total = rows.reduce((sum, row) => sum + (Number(row.picks) || 0), 0)
+  if (!(total > 0)) {
+    issues.push({ field: 'weftTotalPicks', message: 'Total picks (PPI) must be greater than 0.' })
+    return
+  }
+  const allocation = allocateWeftPicks(total, rows.map(row => Number(row.pickRatio)))
+  if (!allocation.ok) return
+  const drifted = rows.some((row, index) => Math.abs((Number(row.picks) || 0) - allocation.picks[index]) > 1e-6)
+  if (drifted) {
+    issues.push({ field: 'weftTotalPicks', message: 'The weft picks no longer match the pick ratio. Re-enter the total picks or the ratio.' })
   }
 }
 
@@ -441,6 +485,7 @@ export function validateEstimatorSnapshot(
     }
     validateWeftRow(row, index, issues, warnings)
   })
+  validateWeftPickConvention(weftRows, issues)
 
   addNumberIssue(issues, warnings, 'tapeLengthM', 'Tape length', estimate.tapeLengthM, {
     max: MAX_TAPE_LENGTH_M,

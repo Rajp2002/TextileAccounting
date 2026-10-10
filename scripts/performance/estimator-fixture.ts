@@ -12,6 +12,8 @@ export function estimatorFixture(rows = 1): EstimateState {
             ...state.weftRows[0], id: `weft-${i}`, label: `Synthetic weft ${i}`,
             calcDenier: 80.125 + i, picks: 64, reedSpace: 58, effectiveCostingWidthCm: 147.32,
             yarnRate: 115.375 + i, gstPct: 5,
+            // More than one weft needs its pick convention recorded; each row is its own PPI.
+            ...(rows > 1 ? { pickRatio: null } : {}),
         })),
         overheadItems: [{ id: 'rent', label: 'Synthetic rent', monthlyAmount: 30000, category: 'rent', isPreset: false, isLocked: false, source: 'manual' }],
         tapeLengthM: 100, perPickCostPaisa: 0.28, warpCrimpPct: 5,
