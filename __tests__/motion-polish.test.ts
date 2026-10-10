@@ -101,6 +101,21 @@ describe('overlay primitives', () => {
         expect(globals).toContain('animation: modal-spring-in 420ms')
         expect(globals).toContain('from { opacity: 0; scale: var(--modal-enter-scale, 0.6); rotate: var(--modal-enter-rotate, 8deg); }')
     })
+
+    it('docks phone dialogs to the bottom edge and slides them up', () => {
+        const phone = mobile.slice(mobile.indexOf('@keyframes dialog-sheet-in'))
+        const sheet = phone.match(/\[data-slot="dialog-content"\]\[data-mobile-presentation="sheet"\]\s*\{([^}]*)\}/)?.[1] ?? ''
+        expect(phone).toContain('@media (max-width: 639.98px)')
+        expect(sheet).toContain('top: calc(var(--mobile-viewport-top) + var(--mobile-viewport-height));')
+        expect(sheet).toContain('width: 100%;')
+        expect(sheet).toContain('translate: 0 -100%;')
+        expect(sheet).toContain('border-radius: 24px 24px 0 0;')
+        expect(sheet).toContain('max-height: calc(var(--mobile-viewport-height) - var(--safe-area-top) - 12px);')
+        expect(sheet).toContain('padding-bottom: max(16px, var(--safe-area-bottom));')
+        expect(phone).toMatch(/\[data-mobile-presentation="sheet"\]\[data-state="open"\]\s*\{\s*animation: dialog-sheet-in/)
+        expect(phone).toMatch(/\[data-mobile-presentation="sheet"\]\[data-state="closed"\]\s*\{\s*animation: dialog-sheet-out/)
+        expect(reducedMotionCss(mobile)).toContain('[data-slot="dialog-content"]')
+    })
 })
 
 describe('navigation markers', () => {

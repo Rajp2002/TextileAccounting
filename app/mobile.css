@@ -583,23 +583,41 @@
   .mobile-input-accessory button:focus-visible { outline: 2px solid var(--ring); outline-offset: -2px; }
 }
 
-/* Compact dialogs sit within thumb reach; wide previews keep their desktop form. */
+/* On phones, dialogs dock to the bottom edge as sheets: full width, rounded top corners,
+   sliding up from the bottom. The anchor is the visible viewport's bottom, so an open
+   keyboard lifts the sheet above it. Wide previews opt out with mobilePresentation="center". */
+@keyframes dialog-sheet-in {
+  from { transform: translateY(100%); }
+  to { transform: none; }
+}
+@keyframes dialog-sheet-out {
+  from { transform: none; }
+  to { transform: translateY(100%); }
+}
 @media (max-width: 639.98px) {
   [data-slot="dialog-content"][data-mobile-presentation="sheet"] {
-    top: calc(var(--mobile-viewport-top) + var(--mobile-viewport-height) - var(--safe-area-bottom) - 8px);
-    left: 50%;
-    width: calc(100% - max(16px, env(safe-area-inset-left, 0px) + env(safe-area-inset-right, 0px)));
+    top: calc(var(--mobile-viewport-top) + var(--mobile-viewport-height));
+    left: 0;
+    width: 100%;
     max-width: none;
-    translate: -50% -100%;
-    border-radius: 24px;
-    padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
-    --modal-enter-scale: 0.92;
-    --modal-enter-rotate: 0deg;
-    --modal-exit-scale: 0.96;
+    max-height: calc(var(--mobile-viewport-height) - var(--safe-area-top) - 12px);
+    translate: 0 -100%;
+    border-width: 1px 0 0;
+    border-radius: 24px 24px 0 0;
+    padding-right: max(16px, var(--safe-area-right));
+    padding-bottom: max(16px, var(--safe-area-bottom));
+    padding-left: max(16px, var(--safe-area-left));
+  }
+  [data-slot="dialog-content"][data-mobile-presentation="sheet"][data-state="open"] {
+    animation: dialog-sheet-in 360ms var(--ease-sheet, cubic-bezier(0.32, 0.72, 0, 1)) both;
+  }
+  [data-slot="dialog-content"][data-mobile-presentation="sheet"][data-state="closed"] {
+    animation: dialog-sheet-out 200ms ease-in both;
   }
   [data-slot="dialog-content"][data-mobile-presentation="center"] {
     top: calc(var(--mobile-viewport-top) + (var(--mobile-viewport-height) + var(--safe-area-top) - var(--safe-area-bottom)) / 2);
   }
+  /* The keyboard covers the home indicator, so the safe-area inset no longer applies. */
   :root[data-mobile-keyboard] [data-slot="dialog-content"][data-mobile-presentation="sheet"],
   :root[data-mobile-keyboard] [data-slot="sheet-content"][data-side="bottom"] { padding-bottom: 16px; }
 }
