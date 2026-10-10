@@ -42,7 +42,7 @@ export async function getFactoryDetail(orgId: string) {
         contact: { verifiedOwnerEmail: source.verified_email },
         quota: source.has_free_grant ? { scope: 'owner_account', subjectId: id(90), sharedFactoryGrants: 2, state: 'active', used: 1, allowance: 2, periodStart: quotaWindow.start, resetsAt: quotaWindow.end, reportingZone: ADMIN_REPORTING_ZONE, policyVersion: 2, recalculationWindowMinutes: 30 } : null,
         quotaState: source.has_free_grant ? 'observed' : 'not_applicable',
-        termHistory: source.subscriptions?.map(term => ({ id: term.id, tier: term.plan_tier, status: term.status, startsAt: term.current_start, endsAt: term.current_end, paymentReference: term.razorpay_payment_id })) ?? null,
+        termHistory: source.subscriptions?.map(term => ({ id: term.id, tier: term.plan_tier, status: term.status, startsAt: term.current_start, endsAt: term.current_end, paymentReference: term.razorpay_payment_id, isTrial: term.is_trial === true })) ?? null,
         paymentReferences: source.subscriptions?.map(term => ({ id: term.id, paymentReference: term.razorpay_payment_id, orderReference: `order_synthetic_${source.id}`, localState: 'captured', recordedAt: at(-20) })) ?? [],
         support: source.id === id(1) ? [{ id: id(200), subject: 'Synthetic costing question', status: 'waiting_on_customer', updatedAt: at(-1) }] : [], coverage: FACTORY_COVERAGE,
     }
