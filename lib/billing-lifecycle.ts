@@ -97,11 +97,15 @@ export function resolveBillingCheckoutPresentation(
   now = new Date(),
   pendingWindowMs = 15 * 60 * 1000,
 ): BillingCheckoutPresentation {
-  const latest = [...subscriptions].sort((left, right) => {
-    const leftTime = validTime(left.created_at) ?? 0
-    const rightTime = validTime(right.created_at) ?? 0
-    return rightTime - leftTime
-  })[0] ?? null
+  // A Lite trial is entitlement, not a checkout, so it can never be the latest
+  // checkout that hides a retryable or pending one.
+  const latest = subscriptions
+    .filter((row) => row.is_trial !== true)
+    .sort((left, right) => {
+      const leftTime = validTime(left.created_at) ?? 0
+      const rightTime = validTime(right.created_at) ?? 0
+      return rightTime - leftTime
+    })[0] ?? null
 
   if (!latest) return { state: 'none', subscription: null }
   if (latest.status === 'authenticated') return { state: 'activating', subscription: latest }

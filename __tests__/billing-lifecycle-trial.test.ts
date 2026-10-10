@@ -1,7 +1,11 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { resolveBillingPurchase, type BillingSubscriptionRow } from '../lib/billing-lifecycle'
+import {
+    resolveBillingCheckoutPresentation,
+    resolveBillingPurchase,
+    type BillingSubscriptionRow,
+} from '../lib/billing-lifecycle'
 
 const root = process.cwd()
 
@@ -89,6 +93,50 @@ describe('Billing lifecycle ignores Lite trial rows', () => {
             purchaseType: 'renewal',
             periodStart: '2026-07-25T00:00:00.000Z',
         })
+    })
+
+    it('a trial row never hides a retryable checkout as the latest row', () => {
+        // The checkout is older than the 15-minute pending window, so it is retryable.
+        // The trial was created after it and must not be read as the latest checkout.
+        const staleCheckout: BillingSubscriptionRow = {
+            id: 'lite-checkout-stale',
+            plan_tier: 'lite',
+            status: 'created',
+            current_end: null,
+            razorpay_order_id: 'order_stale',
+            created_at: '2026-07-09T22:00:00.000Z',
+        }
+        const trialAfterCheckout: BillingSubscriptionRow = {
+            ...liteTrial,
+            created_at: '2026-07-09T23:50:00.000Z',
+        }
+        expect(resolveBillingCheckoutPresentation([staleCheckout, trialAfterCheckout], [], now)).toMatchObject({
+            state: 'retryable',
+            subscription: staleCheckout,
+        })
+    })
+
+    it('a fresh pending checkout stays pending when a trial is newer', () => {
+        const freshCheckout: BillingSubscriptionRow = {
+            id: 'lite-checkout-fresh',
+            plan_tier: 'lite',
+            status: 'created',
+            current_end: null,
+            razorpay_order_id: 'order_fresh',
+            created_at: '2026-07-09T23:55:00.000Z',
+        }
+        const trialNewer: BillingSubscriptionRow = {
+            ...liteTrial,
+            created_at: '2026-07-09T23:58:00.000Z',
+        }
+        expect(resolveBillingCheckoutPresentation([freshCheckout, trialNewer], [], now)).toMatchObject({
+            state: 'pending',
+            subscription: freshCheckout,
+        })
+    })
+
+    it('a trial alone is no checkout at all', () => {
+        expect(resolveBillingCheckoutPresentation([liteTrial], [], now)).toEqual({ state: 'none', subscription: null })
     })
 
     it('reads is_trial in the org_subscriptions selects that build billing rows', () => {

@@ -43,6 +43,8 @@ import { Suspense } from 'react'
 import { PageHeader, StatusBadge } from '@/components/ui/page-header'
 import PlanAnalyticsBeacon from '@/components/billing/PlanAnalyticsBeacon'
 import { getCachedOwnerOrganization } from '@/lib/owner-organization'
+import { liteTrialText } from '@/lib/i18n/lite-trial'
+import { formatToSurat } from '@/lib/time'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -363,8 +365,12 @@ export default async function BillingPage() {
     const litePresentation = isLiteWorkspace || (tier === 'none' && billingPlanTier === 'lite')
     const isBaseWorkspace = tier === 'base'
     const isActive = subscriptionTier === 'lite' || subscriptionTier === 'base'
+    // A Lite trial is entitlement only: it has no payment, renewal window or receipt.
+    const trialEndsAt = planAccess.trialEndsAt ?? null
+    // First-year pricing comes from the purchase decision, which ignores trial rows.
+    const trialPrice = trialEndsAt ? getBillingPrice('lite', purchaseDecisions.lite.purchaseType) : null
     const organizationName = organizationResult.data?.name || 'Weavly workspace'
-    const accessTiming = !isActive
+    const paidAccessTiming = !isActive
         ? subscription?.current_end
             ? `Access ended ${formatShortDate(subscription.current_end)}`
             : 'Choose a plan to activate this workspace'
@@ -375,6 +381,25 @@ export default async function BillingPage() {
                     ? `Renewal opens ${formatShortDate(renewalEligibleAt)} · access through ${formatShortDate(subscription.current_end)}`
                     : `Access through ${formatShortDate(subscription.current_end)}`
             : 'Active annual access'
+    const accessTiming = trialEndsAt ? liteTrialText('en', 'trialEndsOn', { date: formatToSurat(trialEndsAt, 'd MMM yyyy') }) : paidAccessTiming
+
+    const trialSubscribeAction = trialEndsAt && trialPrice && purchaseDecisions.lite.allowed ? (
+        billingReadiness.canCreateOrder ? (
+            <SubscribeButton
+                planTier="lite"
+                tierName={getBillingPlan('lite').name}
+                displayAmount={formatAmount(trialPrice.totalPaise)}
+                buttonLabel={`Subscribe for ${formatAmount(trialPrice.totalPaise)}`}
+                successHref="/owner/billing"
+                successLabel="View payment history"
+                className={railPrimaryAction}
+            />
+        ) : (
+            <Button disabled className={cn(railPrimaryAction, 'opacity-60')}>
+                Subscribe unavailable
+            </Button>
+        )
+    ) : null
 
     const primaryPlanAction = canRenew && selfServeActiveTier && activeRenewalPrice ? (
         billingReadiness.canCreateOrder ? (
@@ -392,7 +417,7 @@ export default async function BillingPage() {
                 Renew unavailable
             </Button>
         )
-    ) : (
+    ) : trialSubscribeAction ?? (
         <Button asChild className={cn(railPrimaryAction, 'gap-2')}>
             <Link href="/plans?from=billing">
                 <span>{subscriptionTier === 'lite' && baseVisible ? 'Upgrade to Base' : subscriptionTier === 'base' ? 'Compare plans' : 'Explore plans'}</span>
@@ -470,7 +495,7 @@ export default async function BillingPage() {
                                     <p className="text-[10px] font-bold uppercase tracking-[0.13em] text-subtle">Current plan</p>
                                     <p className="mt-0.5 text-sm font-semibold text-ink">
                                         {activePaidTier === 'lite' ? 'Weavly Lite' : activePaidTier === 'base' ? 'Weavly Base' : 'No active subscription'}
-                                        {isActive && <span className="font-normal text-subtle"> · Annual access</span>}
+                                        {isActive && <span className="font-normal text-subtle"> · {trialEndsAt ? 'Free trial' : 'Annual access'}</span>}
                                     </p>
                                     <p className="mt-0.5 text-xs leading-relaxed text-subtle">{accessTiming}</p>
                                 </div>
@@ -530,9 +555,9 @@ export default async function BillingPage() {
                                     </div>
                                     <p className="mt-3 text-xl font-bold leading-tight tracking-tight text-ink">
                                         {activePaidTier === 'base' ? 'Base tier' : activePaidTier === 'lite' ? 'Lite tier' : 'No active plan'}
-                                        {isActive && <span className="ml-1 text-xs font-normal tracking-normal text-body">annual access</span>}
+                                        {isActive && <span className="ml-1 text-xs font-normal tracking-normal text-body">{trialEndsAt ? 'free trial' : 'annual access'}</span>}
                                     </p>
-                                    <p className="mt-2 text-xs leading-relaxed text-body">{accessTiming} · Annual renewals are manual.</p>
+                                    <p className="mt-2 text-xs leading-relaxed text-body">{accessTiming}{trialEndsAt ? null : ' · Annual renewals are manual.'}</p>
                                 </article>
                             </div>
                         </CardContent></LiteDisclosure>
