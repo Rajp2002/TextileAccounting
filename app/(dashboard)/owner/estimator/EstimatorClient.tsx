@@ -105,6 +105,7 @@ import {
 } from './actions'
 import { useFreeMeter } from '@/hooks/use-free-meter'
 import { FreeUsageCard } from '@/components/estimator/FreeUsageCard'
+import { FactorySetupPrompt } from '@/components/estimator/FactorySetupPrompt'
 import { FreeTransactionRecovery } from '@/components/estimator/FreeTransactionRecovery'
 import { FreeSavedReceipt } from '@/components/estimator/FreeSavedReceipt'
 import { FreeLeaveDialog } from '@/components/estimator/FreeLeaveDialog'
@@ -3431,6 +3432,9 @@ export default function EstimatorClient({
     const currentProfileRef = useRef<FactoryCostProfile | null | undefined>(initialProfile)
     const [loading,   setLoading]   = useState(false)
     const [saving,    setSaving]    = useState(false)
+    // First-run factory setup is offered inline; the wizard opens on request.
+    const [factoryWizardOpen, setFactoryWizardOpen] = useState(false)
+    const [factoryPromptHidden, setFactoryPromptHidden] = useState(false)
     const [savingQuote, setSavingQuote] = useState(false)
     const saveQuoteLockRef = useRef(false)
     const [savingTemplate, setSavingTemplate] = useState(false)
@@ -5158,7 +5162,7 @@ export default function EstimatorClient({
                 actions={<CostEstimateTutorial
                     accountDismissed={tutorialDismissed}
                     userMetadata={userMetadata}
-                    enabled={state.isConfigured && !saving}
+                    enabled={(state.isConfigured || !factoryWizardOpen) && !saving}
                     freePlan={freeMode}
                     existingCosting={Boolean(sourceQuoteId && sourceRecordKind === 'costing')}
                     productionPipeline={canUseProductionPipeline}
@@ -5243,12 +5247,21 @@ export default function EstimatorClient({
                     }}>{tx('Undo quality change')}</Button>
                 </div>
             )}
-            {!state.isConfigured && !wizardDismissed && (
-                <FactoryCostWizard 
+            {!state.isConfigured && !wizardDismissed && !factoryPromptHidden && !factoryWizardOpen && (
+                <FactorySetupPrompt
+                    hasResult={hasValidCostResult}
+                    onStart={() => setFactoryWizardOpen(true)}
+                    onHide={() => setFactoryPromptHidden(true)}
+                />
+            )}
+            {!state.isConfigured && !wizardDismissed && factoryWizardOpen && (
+                <FactoryCostWizard
                     initialState={state}
                     initialYarnReviewIntervalDays={Number(initialProfile?.yarn_review_interval_days ?? 90)}
                     saving={saving}
+                    onClose={() => setFactoryWizardOpen(false)}
                     onDismiss={async () => {
+                        setFactoryWizardOpen(false)
                         rawDispatch({ type: 'SET', field: 'isConfigured', value: true })
                         if (currentProfileRef.current) {
                             currentProfileRef.current = { ...currentProfileRef.current, is_configured: true }
