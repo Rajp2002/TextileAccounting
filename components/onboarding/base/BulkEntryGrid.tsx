@@ -3,7 +3,7 @@
 import React, { useRef, useEffect } from 'react'
 import { Trash2, AlertCircle } from 'lucide-react'
 import { toast } from '@/lib/app-notifications'
-import { resolveInputMode } from '@/lib/input-mode'
+import { blurNumberInputOnWheel, resolveInputMode } from '@/lib/input-mode'
 import { cn } from '@/lib/utils'
 import { useTranslation } from '@/lib/i18n/context'
 
@@ -261,6 +261,7 @@ export function BulkEntryGrid<T extends { id: string; error?: string }>({
                                                     }}
                                                     type={col.type || 'text'}
                                                     inputMode={resolveInputMode({ type: col.type })}
+                                                    onWheel={blurNumberInputOnWheel}
                                                     step={col.type === 'number' ? 'any' : undefined}
                                                     aria-label={`${tx(col.label)} ${rowIndex + 1}`}
                                                     value={col.type === 'number' && !val ? '' : val ?? ''}

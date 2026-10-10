@@ -1,4 +1,4 @@
-import type { HTMLAttributes } from 'react'
+import type { HTMLAttributes, WheelEvent } from 'react'
 
 export type InputModeAttribute = HTMLAttributes<HTMLInputElement>['inputMode']
 
@@ -16,4 +16,15 @@ export function resolveInputMode({ type, inputMode }: {
 }): InputModeAttribute {
     if (inputMode) return inputMode
     return type === 'number' ? 'decimal' : undefined
+}
+
+/**
+ * Desktop browsers step a focused number field when the mouse wheel turns over it, so scrolling
+ * the page past a rate quietly changes it. Dropping focus first keeps the typed value and lets
+ * the wheel scroll the page as it would anywhere else. An unfocused field never steps, so it is
+ * left alone.
+ */
+export function blurNumberInputOnWheel(event: WheelEvent<HTMLInputElement>) {
+    const input = event.currentTarget
+    if (input.type === 'number' && input.ownerDocument.activeElement === input) input.blur()
 }
