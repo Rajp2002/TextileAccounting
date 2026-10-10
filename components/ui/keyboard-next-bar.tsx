@@ -8,6 +8,7 @@ import {
     DEFAULT_INPUT_SELECTOR,
     findNavigableFormInputs,
     focusAndSelectInput,
+    hasIosFieldBar,
     keepFieldInVisibleViewport,
 } from '@/lib/form-navigation'
 
@@ -43,7 +44,8 @@ function fieldUnit(field: HTMLInputElement) {
 /**
  * Phone number pads (the iPhone decimal pad in particular) have no Return key, so the
  * Enter navigation inside `[data-enter-navigate-container]` cannot be reached by typing.
- * While the software keyboard is open, this bar sits on top of it with a large Next
+ * While the software keyboard is open (outside iOS, which shows its own field bar),
+ * this bar sits on top of it with a large Next
  * (Done on the last field) and a Previous, moving focus inside the user's tap so the
  * keyboard stays open.
  */
@@ -56,6 +58,9 @@ export function KeyboardNextBar({ summary }: { summary?: string | null }) {
     const [, setRevision] = useState(0)
 
     useEffect(() => {
+        // iOS already draws its own ∧ ∨ ✓ bar above every keyboard and no page can
+        // remove it, so a second bar would only duplicate it there.
+        if (hasIosFieldBar()) return
         let frame = 0
         const sync = () => {
             cancelAnimationFrame(frame)

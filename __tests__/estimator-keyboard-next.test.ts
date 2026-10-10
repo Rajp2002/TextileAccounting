@@ -39,3 +39,11 @@ describe('estimator phone keyboard Next flow', () => {
         expect(bar.match(/className="flex h-11/g)?.length).toBe(2)
     })
 })
+
+describe('estimator keyboard Next bar on iPhone', () => {
+    it('stays hidden where iOS draws its own field bar, so the keyboard never shows two', () => {
+        const effect = bar.slice(bar.indexOf('useEffect(() => {'))
+        expect(effect.indexOf('if (hasIosFieldBar()) return')).toBeGreaterThan(-1)
+        expect(effect.indexOf('if (hasIosFieldBar()) return')).toBeLessThan(effect.indexOf("addEventListener('focusin'"))
+    })
+})
