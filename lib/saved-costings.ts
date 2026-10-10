@@ -430,6 +430,7 @@ export function normalizeSavedWarpRows(
       yarnRate: finiteNumber(row.yarnRate ?? legacy.yarnRate, fallbackRow.yarnRate),
       gstPct: finiteNumber(row.gstPct, fallbackRow.gstPct),
       shortagePct: nullableFiniteNumber(row.shortagePct, fallbackRow.shortagePct),
+      ...(row.crimpPct !== undefined ? { crimpPct: nullableFiniteNumber(row.crimpPct, null) } : {}),
     }
   })
 }
@@ -462,6 +463,10 @@ export function normalizeSavedWeftRows(
       yarnRate: finiteNumber(row.yarnRate ?? legacy.yarnRate, fallbackRow.yarnRate),
       gstPct: finiteNumber(row.gstPct, fallbackRow.gstPct),
       shortagePct: nullableFiniteNumber(row.shortagePct, fallbackRow.shortagePct),
+      ...(row.crimpPct !== undefined ? { crimpPct: nullableFiniteNumber(row.crimpPct, null) } : {}),
+      // Keep "absent" distinct from null: absent means the pick convention
+      // was never recorded and must be confirmed for a multi-weft fabric.
+      ...(row.pickRatio !== undefined ? { pickRatio: nullableFiniteNumber(row.pickRatio, null) } : {}),
     }
   })
 }
