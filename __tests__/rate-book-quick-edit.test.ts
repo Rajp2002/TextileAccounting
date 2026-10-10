@@ -15,7 +15,7 @@ describe('Rate Book P3: Quick Rate Edit Dialog in RatesClient.tsx', () => {
 
     describe('Component Architecture & Dialog Setup', () => {
         it('defines QuickRateEditDialog on the shared Dialog primitive, not a Popover', () => {
-            const component = client.slice(client.indexOf('function QuickRateEditDialog('), client.indexOf('function DueForReviewDialog('))
+            const component = client.slice(client.indexOf('function QuickRateEditDialog('), client.indexOf('function PriceDeltaBadge('))
             expect(component).toContain('<Dialog open={Boolean(rate)} onOpenChange={onOpenChange}>')
             expect(component).toContain('<DialogContent')
             expect(component).toContain('<DialogFooter>')
@@ -42,26 +42,30 @@ describe('Rate Book P3: Quick Rate Edit Dialog in RatesClient.tsx', () => {
             expect(client).not.toContain('quickEditIsMobile')
         })
 
-        it('renders a stacked two-pill layout with "Confirm current rate" on top and "Edit rate" beneath it', () => {
-            expect(client).toContain("aria-label={`${reviewLabel} for ${rate.name}`}")
-            expect(client).toContain("aria-label={`Edit rate for ${rate.name}`}")
-            expect(client).toContain("{tx('Edit rate')}")
-            expect(client).toContain('flex flex-col items-stretch gap-1.5 w-full max-w-[170px]')
+        it('puts the review action before "Edit rate" in a due card\'s actions', () => {
+            const card = client.slice(client.indexOf('const renderYarnCard = '), client.indexOf('<PlanAnalyticsBeacon'))
+            expect(card).toContain("aria-label={tx(`${reviewLabel} for ${rate.name}`)}")
+            expect(card).toContain("aria-label={`Edit rate for ${rate.name}`}")
+            expect(card).toContain("{tx('Edit rate')}")
+            expect(card.indexOf('data-ratebook-field="quickReviewAction"')).toBeLessThan(card.indexOf('data-ratebook-field="quickEditAction"'))
         })
 
-        it('keeps the "Edit rate" trigger in both the desktop table and the mobile card', () => {
-            expect((client.match(/data-ratebook-field="quickEditAction"/g) || []).length).toBe(2)
-            expect(client).toContain("<Pencil className=\"h-4 w-4\" /> <span className=\"truncate\">{tx('Edit rate')}</span>")
+        it('renders the "Edit rate" trigger once, in the one yarn card every width shares', () => {
+            expect((client.match(/data-ratebook-field="quickEditAction"/g) || []).length).toBe(1)
+            expect(client).toContain('<Pencil className="h-4 w-4" aria-hidden="true" />{tx(\'Edit rate\')}')
         })
 
-        it('opens the quick edit dialog from the row buttons and blocks closing while a save is pending', () => {
+        it('opens the quick edit dialog from the card button and blocks closing while a save is pending', () => {
             expect(client).toContain('const openQuickEdit = (rate: CostRateRow) => {')
-            expect((client.match(/openQuickEdit\(rate\)/g) || []).length).toBe(2)
+            expect((client.match(/openQuickEdit\(rate\)/g) || []).length).toBe(1)
             expect(client).toContain('if (!open && !quickEditPending) {')
         })
 
-        it('provides "Advanced edit" in row overflow dropdown menu', () => {
-            expect(client).toContain("<Pencil /> {tx('Advanced edit')}")
+        it('has no row overflow menu: "Advanced edit" opens from the quick edit dialog', () => {
+            expect(client).not.toContain('DropdownMenu')
+            expect(client).not.toContain('MoreHorizontal')
+            const component = client.slice(client.indexOf('function QuickRateEditDialog('), client.indexOf('function PriceDeltaBadge('))
+            expect(component).toContain("{tx('Advanced edit')}")
         })
     })
 
@@ -106,8 +110,8 @@ describe('Rate Book P3: Quick Rate Edit Dialog in RatesClient.tsx', () => {
             expect(client).toContain('handleSubmit()')
         })
 
-        it('provides link to Advanced settings (dates, review interval)', () => {
-            expect(client).toContain("{tx('Advanced settings (dates, review interval)...')}")
+        it('provides the Advanced edit link for dates, review interval and archive', () => {
+            expect(client).toContain("{tx('Advanced edit')}")
             expect(client).toContain('onClick={() => onOpenAdvanced(rate)}')
         })
     })
@@ -121,8 +125,14 @@ describe('Rate Book P3: Quick Rate Edit Dialog in RatesClient.tsx', () => {
             expect(dialogStart).toBeGreaterThan(-1)
             expect(addDialog).toContain('<DialogContent data-ratebook-field="rateDrawerFields"')
             expect(addDialog).toContain("tx(draft?.id ? `Change ${draft.name}` : 'Add Yarn Rate')")
-            expect(addDialog).toContain('<DialogFooter>')
+            expect(addDialog).toContain('<DialogFooter className="sm:justify-between">')
             expect(addDialog).not.toContain('SheetContent')
+        })
+
+        it('keeps archive, and delete for an unused yarn, in the advanced form instead of a row menu', () => {
+            expect(addDialog).toContain("{tx('Archive rate')}")
+            expect(addDialog).toContain("{tx('Delete unused rate')}")
+            expect(addDialog).toContain('(!draftRate.fabric_names?.length && draftRate.saved_quality_count === 0 && !draftRate.apply_as_default)')
         })
 
         it('keeps the save guards: no close while pending and a name hint wired to Save', () => {

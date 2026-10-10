@@ -6,6 +6,7 @@ import { createClient as createServerClient } from '@/lib/supabase/server'
 import { getCachedOrgTier } from '@/lib/subscription'
 import { hasCapability } from '@/lib/subscription-access'
 import { getRateReviewStatus, type CostRateRow } from '@/lib/cost-rates'
+import type { PricePoint } from '@/lib/rate-book-board'
 import {
     collectYarnRateCandidates,
     getYarnRateDiscoverySource,
@@ -50,6 +51,8 @@ const CATEGORIES = new Set<CostRateCategory>([
 ])
 const UNITS = new Set<CostRateUnit>(['per_kg', 'per_m', 'percent'])
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+/** How many of a yarn's latest recorded prices its board card draws. */
+const PRICE_TRAIL_POINTS = 24
 
 async function requireBaseTier(orgId: string) {
     return hasCapability(await getCachedOrgTier(orgId), 'rate_book')
@@ -134,9 +137,11 @@ export async function getCostRates(options?: { includeArchived?: boolean }) {
             .select('yarn_review_interval_days')
             .eq('factory_id', profile.org_id)
             .maybeSingle(),
+        // The same history rows also carry each recorded price, which the
+        // board draws as the yarn's price trail.
         supabase
             .from('cost_rate_history')
-            .select('rate_id')
+            .select('rate_id, value, effective_date')
             .eq('org_id', profile.org_id)
             .in('event_type', ['recorded', 'reviewed', 'changed']),
     ])
@@ -146,10 +151,19 @@ export async function getCostRates(options?: { includeArchived?: boolean }) {
     if (reviewedResult.error) return { error: reviewedResult.error.message }
     const yarnReviewIntervalDays = Number(profileResult.data?.yarn_review_interval_days ?? 90)
     const reviewedRateIds = new Set((reviewedResult.data ?? []).map(row => row.rate_id))
+    const pricePoints = new Map<string, PricePoint[]>()
+    for (const row of reviewedResult.data ?? []) {
+        const value = Number(row.value)
+        if (!Number.isFinite(value) || !row.effective_date) continue
+        const points = pricePoints.get(row.rate_id) ?? []
+        points.push({ date: row.effective_date, value })
+        pricePoints.set(row.rate_id, points)
+    }
     return {
         data: (existingRates ?? []).map(rate => ({
             ...rate,
             is_reviewed: reviewedRateIds.has(rate.id),
+            price_points: (pricePoints.get(rate.id) ?? []).sort((left, right) => left.date.localeCompare(right.date)).slice(-PRICE_TRAIL_POINTS),
             discovery_source: isYarnRateDiscoverySource(rate.source)
                 ? getYarnRateDiscoverySource(rate.source)
                 : null,

@@ -19,7 +19,7 @@ export const rateBookHelpCopy = {
       },
       "quickReviewAction": {
         "title": "Confirm only a checked price",
-        "description": "When the supplier price is unchanged, use the row’s review action to confirm it without changing the value. Confirm All as Current applies to all pending reviews, so check every included rate first. Rate Review opens the pending list."
+        "description": "When the supplier price is unchanged, use the card’s review action to confirm it without changing the value. Prices due for a check wait under Needs Review at the top. Confirm All as Current applies to all pending reviews, so check every included rate first."
       },
       "rateAndTrend": {
         "title": "Read the change from your last price",
@@ -35,7 +35,7 @@ export const rateBookHelpCopy = {
       },
       "activityAndArchive": {
         "title": "Keep history when retiring a yarn",
-        "description": "Use the row menu’s {activity} to inspect recorded prices and reviews. {archiveRate} removes an unused yarn from the active list without changing Saved Qualities or historical costings. Find it under {archivedRates} and choose {restoreRate} when needed."
+        "description": "Use {activity} on a yarn’s card to inspect recorded prices and reviews. {archiveRate}, in {advancedEdit}, removes an unused yarn from the active list without changing Saved Qualities or historical costings. Find it under {archivedRates} and choose {restoreRate} when needed."
       }
     },
     "principles": [
@@ -53,7 +53,7 @@ export const rateBookHelpCopy = {
       },
       "quickReviewAction": {
         "title": "जाँचे हुए भाव की ही पुष्टि करें",
-        "description": "सप्लायर का भाव नहीं बदला तो पंक्ति की समीक्षा क्रिया से पुष्टि करें; मूल्य नहीं बदलेगा। सभी को वर्तमान के रूप में पुष्टि करें सभी लंबित रेट पर लागू होता है, इसलिए पहले हर भाव जाँचें। रेट समीक्षा से लंबित सूची खोलें।"
+        "description": "सप्लायर का भाव नहीं बदला तो कार्ड की समीक्षा क्रिया से पुष्टि करें; मूल्य नहीं बदलेगा। जाँच के लिए बाकी भाव ऊपर समीक्षा बाकी में रहते हैं। सभी को वर्तमान के रूप में पुष्टि करें सभी लंबित रेट पर लागू होता है, इसलिए पहले हर भाव जाँचें।"
       },
       "rateAndTrend": {
         "title": "पिछले दर्ज भाव से अंतर देखें",
@@ -69,7 +69,7 @@ export const rateBookHelpCopy = {
       },
       "activityAndArchive": {
         "title": "धागा हटाते समय इतिहास रखें",
-        "description": "पंक्ति मेनू की {activity} में दर्ज भाव और समीक्षाएँ देखें। {archiveRate} से धागा सक्रिय सूची से हटता है; सेव की गई क्वालिटीज़ और पुराने कॉस्टिंग नहीं बदलते। {archivedRates} में उसे ढूँढकर {restoreRate} चुनें।"
+        "description": "धागे के कार्ड पर {activity} में दर्ज भाव और समीक्षाएँ देखें। {advancedEdit} में {archiveRate} से धागा सक्रिय सूची से हटता है; सेव की गई क्वालिटीज़ और पुराने कॉस्टिंग नहीं बदलते। {archivedRates} में उसे ढूँढकर {restoreRate} चुनें।"
       }
     },
     "principles": [
@@ -87,7 +87,7 @@ export const rateBookHelpCopy = {
       },
       "quickReviewAction": {
         "title": "ચકાસેલા ભાવની જ પુષ્ટિ કરો",
-        "description": "સપ્લાયરનો ભાવ ન બદલાયો હોય તો પંક્તિની સમીક્ષા ક્રિયાથી પુષ્ટિ કરો; કિંમત બદલાશે નહીં. બધાને વર્તમાન તરીકે પુષ્ટિ કરો બધા બાકી રેટ પર લાગુ પડે છે, તેથી પહેલાં દરેક ભાવ તપાસો. રેટ સમીક્ષાથી બાકી યાદી ખોલો."
+        "description": "સપ્લાયરનો ભાવ ન બદલાયો હોય તો કાર્ડની સમીક્ષા ક્રિયાથી પુષ્ટિ કરો; કિંમત બદલાશે નહીં. તપાસ બાકી હોય તેવા ભાવ ઉપર સમીક્ષા બાકીમાં રહે છે. બધાને વર્તમાન તરીકે પુષ્ટિ કરો બધા બાકી રેટ પર લાગુ પડે છે, તેથી પહેલાં દરેક ભાવ તપાસો."
       },
       "rateAndTrend": {
         "title": "પાછલા નોંધેલા ભાવથી તફાવત જુઓ",
@@ -103,7 +103,7 @@ export const rateBookHelpCopy = {
       },
       "activityAndArchive": {
         "title": "દોરો દૂર કરતી વખતે ઇતિહાસ રાખો",
-        "description": "પંક્તિ મેનૂની {activity}માં નોંધેલા ભાવ અને સમીક્ષાઓ જુઓ. {archiveRate} દોરાને સક્રિય યાદીમાંથી દૂર કરે છે; સેવ કરેલી ક્વોલિટી અને જૂનાં કોસ્ટિંગ બદલાતાં નથી. {archivedRates}માં તેને શોધીને {restoreRate} પસંદ કરો."
+        "description": "યાર્નના કાર્ડ પર {activity}માં નોંધેલા ભાવ અને સમીક્ષાઓ જુઓ. {advancedEdit}માં {archiveRate} દોરાને સક્રિય યાદીમાંથી દૂર કરે છે; સેવ કરેલી ક્વોલિટી અને જૂનાં કોસ્ટિંગ બદલાતાં નથી. {archivedRates}માં તેને શોધીને {restoreRate} પસંદ કરો."
       }
     },
     "principles": [

@@ -6,7 +6,7 @@ import { getCostRateDisplayNotes, getCostRateDisplaySource, type CostRateRow } f
 const root = process.cwd()
 const read = (path: string) => readFileSync(join(root, path), 'utf8')
 
-describe('Rate Book P2: Compact Popover for Linked Qualities in RatesClient.tsx', () => {
+describe('Rate Book P2: Linked Qualities on each yarn card in RatesClient.tsx', () => {
     const client = read('app/(dashboard)/owner/rates/RatesClient.tsx')
 
     describe('Component Architecture & Radix Popover Integration', () => {
@@ -14,37 +14,34 @@ describe('Rate Book P2: Compact Popover for Linked Qualities in RatesClient.tsx'
             expect(client).toContain("import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'")
         })
 
-        it('imports ChevronDown and keeps ChevronRight and Tags from lucide-react', () => {
+        it('keeps ChevronDown and Tags from lucide-react', () => {
             expect(client).toContain('ChevronDown,')
-            expect(client).toContain('ChevronRight,')
             expect(client).toContain('Tags,')
             // Obsolete Calculator icon only used in old modal must be removed
             expect(client).not.toContain('Calculator,')
         })
 
-        it('defines LinkedQualitiesPopover and LinkedQualitiesCell components', () => {
+        it('defines the usage line and the popover it opens', () => {
             expect(client).toContain('function LinkedQualitiesPopover(')
-            expect(client).toContain('function LinkedQualitiesCell(')
+            expect(client).toContain('function YarnUsage(')
+            expect(client).not.toContain('function LinkedQualitiesCell(')
         })
 
-        it('wires LinkedQualitiesCell in desktop table and LinkedQualitiesPopover in mobile cards', () => {
-            expect(client).toContain('<LinkedQualitiesCell rate={rate} />')
-            expect(client).toContain('<LinkedQualitiesPopover rate={rate} usageNames={usageNames} />')
+        it('names the first two qualities on the card and puts the rest behind the popover', () => {
+            const usage = client.slice(client.indexOf('function YarnUsage('), client.indexOf('function PriceTrailSpark('))
+            expect(usage).toContain("usageNames.slice(0, 2).join(', ')")
+            expect(usage).toContain('<LinkedQualitiesPopover rate={rate} usageNames={usageNames} label={fillCopy(copy.moreNames, { n: rest })} />')
+            expect(client).toContain('<div data-ratebook-field="linkedQualitiesPopover"><YarnUsage rate={rate} loading={usageLoading} copy={copy} /></div>')
         })
     })
 
     describe('Popover Trigger Button Design & Accessibility', () => {
-        it('renders a compact pill trigger with Tags icon, quality count, and ChevronDown', () => {
-            expect(client).toContain('<PopoverTrigger asChild>')
-            expect(client).toContain('<Tags className="h-3.5 w-3.5 shrink-0 text-saffron-deep/80 group-hover:text-saffron-deep"')
-            expect(client).toContain('<span>{label}</span>')
-            expect(client).toContain('<ChevronDown className="h-3.5 w-3.5 shrink-0 text-saffron-deep/70 transition-transform duration-200 group-data-[state=open]:rotate-180 group-hover:text-saffron-deep"')
-        })
-
-        it('applies subtle saffron-tinted background styling to the trigger pill', () => {
-            expect(client).toContain('border-saffron/30 bg-saffron-soft/60')
-            expect(client).toContain('hover:border-saffron/50 hover:bg-saffron-soft')
-            expect(client).toContain('text-saffron-deep')
+        it('opens from a quiet underlined text trigger, not a saffron pill', () => {
+            const popover = client.slice(client.indexOf('function LinkedQualitiesPopover('), client.indexOf('function YarnUsage('))
+            expect(popover).toContain('<PopoverTrigger asChild>')
+            expect(popover).toContain('underline decoration-hairline-strong underline-offset-4')
+            expect(popover).not.toContain('bg-saffron-soft')
+            expect(popover).not.toContain('border-saffron/30')
         })
 
         it('provides accessible aria-label on the trigger button', () => {
@@ -61,10 +58,9 @@ describe('Rate Book P2: Compact Popover for Linked Qualities in RatesClient.tsx'
             expect(client).toContain('Used in {count} active {fullWord}')
         })
 
-        it('renders scrollable list of linked fabric names with subtle saffron bullet indicators', () => {
-            expect(client).toContain('max-h-48 space-y-1.5 overflow-y-auto')
-            expect(client).toContain('bg-surface-soft/60 px-2.5 py-1.5 text-xs font-medium text-body')
-            expect(client).toContain('h-1.5 w-1.5 shrink-0 rounded-full bg-saffron')
+        it('renders a scrollable list of linked fabric names', () => {
+            expect(client).toContain('max-h-48 space-y-1 overflow-y-auto')
+            expect(client).toContain('usageNames.map((name, index) => (')
         })
 
         it('shows source and notes in the popover if recorded', () => {
@@ -78,9 +74,10 @@ describe('Rate Book P2: Compact Popover for Linked Qualities in RatesClient.tsx'
     })
 
     describe('Fallback for Unassigned Yarns (No Linked Usages)', () => {
-        it('renders clean source and notes text directly without a popover button when usageNames is empty', () => {
-            expect(client).toContain("getCostRateDisplaySource(rate) || 'No source recorded'")
-            expect(client).toContain("getCostRateDisplayNotes(rate) || 'No notes'")
+        it('says the yarn is not used yet, with the owner-recorded source, without a popover', () => {
+            const usage = client.slice(client.indexOf('function YarnUsage('), client.indexOf('function PriceTrailSpark('))
+            expect(usage).toContain('const ownSource = rate.discovery_source ? null : rate.source?.trim()')
+            expect(usage).toContain('{loading ? copy.usageLoading : copy.notUsed}')
         })
     })
 

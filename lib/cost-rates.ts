@@ -29,6 +29,8 @@ export type CostRateRow = {
     fabric_names?: string[]
     /** Number of active Saved Qualities whose yarn layer matches this rate. */
     saved_quality_count?: number
+    /** Recorded prices from the rate's history, oldest first, for the board's price trail. */
+    price_points?: { date: string; value: number }[]
 }
 
 export type RateReviewStatus = 'needs_review' | 'current' | 'due_soon' | 'overdue'

@@ -83,6 +83,10 @@ async function SavedQuotesFixture() {
   const { default: C } = await import('@/app/(dashboard)/owner/quotes/QuotesClient')
   const { default: Free } = await import('@/app/free/costings/SavedFreeCostings')
   const { makeSavedCostingTourExamples } = await import('@/lib/saved-costings-tour')
+  if (params.get('showcase') === '1') {
+    const show = await import('./showcase'); show.installShowcase()
+    return <C initialQuotes={show.savedCostings() as any} initialTemplates={show.savedQualities() as any} initialProfile={undefined} initialWorkers={[]} userId="u1" orgId="o1" userMetadata={{}} canUseProductionPipeline={params.get('tier') !== 'lite'} organizationName="Sc pvt" />
+  }
   const rows = params.get('populated') === '1' ? makeSavedCostingTourExamples().map((row, index) => ({ ...row, id: `fixture-saved-${index}`, costing_group_id: 'fixture-quality', label: 'Saved fixture quality', quality_label: 'Saved fixture quality' })) : []
   ;(window as any).__fixtureSavedCostings = rows
   return <>{params.get('retained') === '1' && <Free embedded />}<C initialQuotes={rows} initialTemplates={[]} initialProfile={undefined} initialWorkers={[]} userId="u1" orgId="o1" userMetadata={{}} tourUnavailable={params.get('error') === '1'} canUseProductionPipeline={params.get('tier') !== 'lite'} organizationName="Sample Mills" /></>
@@ -220,6 +224,10 @@ async function RateBookFixture(populated: boolean) {
       current_value: 230, previous_value: 220, effective_date: today, last_reviewed_at: '2099-01-01', review_interval_days: 90,
       source: 'Fixture supplier B', notes: null, apply_as_default: false, updated_at: '2026-09-27T00:00:00Z', is_active: true, is_reviewed: true },
   ] : []
+  if (params.get('showcase') === '1') {
+    const show = await import('./showcase'); show.installShowcase()
+    return <C initialRates={show.rateBook(params.get('due') === '1') as any} initialConflicts={[]} defaultReviewIntervalDays={30} userMetadata={{}} userId="u1" orgId="o1" />
+  }
   return <C initialRates={params.get('archivedOnly') === '1' ? rows.map(row => ({ ...row, is_active: false })) : rows}
     initialConflicts={[]} defaultReviewIntervalDays={90} userMetadata={{}} userId="u1" orgId="o1" />
 }

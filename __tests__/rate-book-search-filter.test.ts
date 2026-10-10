@@ -152,11 +152,11 @@ describe('RatesClient UI contract for search, filters, and keyboard shortcuts', 
         expect(clientSource).toContain("{ value: 'yarn_weft', label: 'Weft' }")
     })
 
-    it('provides a dedicated Needs Review quick status chip with live count', () => {
-        expect(clientSource).toContain("statusFilter === 'needs_review'")
-        expect(clientSource).toContain("dueReviewRates.length")
-        expect(clientSource).toContain("Needs Review")
-        expect(clientSource).toContain("CalendarClock")
+    it('leads with a Needs Review queue, with its live count, that search and direction also narrow', () => {
+        expect(clientSource).toContain("{tx('Needs Review')}")
+        expect(clientSource).toContain('{queueRates.length}</span>')
+        expect(clientSource).toContain('visibleRates.filter(isDue)')
+        expect(clientSource).toContain('const dueCount = dueReviewRates.length')
     })
 
     it('renders clear filters action when active filters exist', () => {

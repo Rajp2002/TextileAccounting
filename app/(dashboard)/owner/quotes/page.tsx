@@ -25,8 +25,10 @@ export default async function QuotesPage(props: { searchParams: Promise<{ status
         organizationPromise,
     ])
     // The prior getEstimatorTemplates({ includeArchived: true }) full read is
-    // intentionally represented by summary=true here; complete recipe rows
-    // remain an intent-time detail payload.
+    // intentionally represented by summary=true here. The summary carries the
+    // warp and weft rows only for the yarn names on each quality card; the rest
+    // of a recipe (profile, rates, costing assumptions) stays an intent-time
+    // detail payload.
     const requestedStatus = searchParams.status
     const status = requestedStatus && ['costings', 'draft', 'sent', 'accepted', 'rejected'].includes(requestedStatus)
         ? requestedStatus

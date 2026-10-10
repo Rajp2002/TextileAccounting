@@ -122,7 +122,8 @@ describe('Base Estimator Go-readiness hardening', () => {
     expect(savedCostings).not.toContain('canUseQuotationWorkflow')
     const savedCostingsHeader = savedCostings.match(/<PageHeader\b([\s\S]*?)\/>/)?.[0] ?? ''
     expect(savedCostingsHeader).toContain("title={t('common.saved_costings_title')}")
-    expect(savedCostingsHeader).not.toContain('description=')
+    // The catalogue redesign (2026-10-10) brings back one short intro line, as on the stock pages.
+    expect(savedCostingsHeader).toContain('description={<span data-i18n-skip="true" lang={language}>{catalogue.intro}</span>}')
     expect(savedCostings).toContain('expand a quality to review its costing history')
   })
 
