@@ -165,7 +165,8 @@ function exportSchemaReadinessError(datasetKey: string, error: unknown): string 
     const migrationInstruction = migration
         ? `Apply ${migration}`
         : 'Apply the reviewed production migrations'
-    return `Organization export is not ready because the database schema for ${datasetKey} is unavailable. ${migrationInstruction}, refresh the PostgREST schema cache with NOTIFY pgrst, 'reload schema', and retry.`
+    console.error(`Organization export schema mismatch for ${datasetKey}. ${migrationInstruction}, then run NOTIFY pgrst, 'reload schema'.`)
+    return 'Your data export is not available right now. Please try again later or contact Weavly support.'
 }
 
 /**
@@ -522,9 +523,9 @@ export async function exportOrganizationData() {
     if (auditError) {
         await supabase.from('organization_export_runs').delete().eq('id', exportRun.id).eq('org_id', orgId)
         console.error('Failed to audit organization export:', auditError.message)
-        const reason = 'Data export could not be audited. No download was generated; please try again.'
+        const reason = 'Your data export could not be prepared. Nothing was downloaded; please try again.'
         await persistFailedExportRun(supabase, { orgId, actorId: user.id, filename, exportedAt, reason })
-        throw new Error('Data export could not be audited. No download was generated; please try again.')
+        throw new Error('Your data export could not be prepared. Nothing was downloaded; please try again.')
     }
 
     return {

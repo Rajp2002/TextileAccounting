@@ -97,7 +97,7 @@ describe('Base Saved Quality full-costing reuse', () => {
     expect(estimator).toContain('restoreSavedQualityCostingAssumptions')
     expect(estimator).toContain('Using today’s yarn rates with the other costs from the latest saved costing.')
     expect(estimator).toContain('data-testid="costing-save-review"')
-    expect(estimator).toContain('Included in this')
+    expect(estimator).toContain('This costing will save:')
     expect(estimator).toContain('Sections on:')
   })
 })

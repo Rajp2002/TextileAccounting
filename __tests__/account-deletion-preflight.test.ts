@@ -62,7 +62,7 @@ describe('deletion readiness without financial side effects', () => {
     it('does not mislabel other unavailable deletion conditions as a retention decision', async () => {
         vi.spyOn(console, 'error').mockImplementation(() => undefined)
         f.deleteRpc.mockResolvedValue({ error: { code: '55000', message: 'STORAGE_OBJECTS_EXIST' } })
-        expect(await deleteAccountPermanently(input)).toEqual({ error: 'Account deletion could not be completed. No database rows were deleted; please try again.' })
+        expect(await deleteAccountPermanently(input)).toEqual({ error: 'Your account could not be deleted. Nothing was removed; please try again.' })
         expect(f.signOut).not.toHaveBeenCalled()
         vi.restoreAllMocks()
     })

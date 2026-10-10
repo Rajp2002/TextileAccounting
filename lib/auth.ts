@@ -212,7 +212,7 @@ export async function requireRole(allowedRoles: string[], options: { allowFreeAc
     }
 }
 
-export const ORG_LOCKED_WRITE_MESSAGE = 'Organization is locked. Business writes are disabled until compliance unlock.'
+export const ORG_LOCKED_WRITE_MESSAGE = 'Your account is locked, so changes cannot be saved right now. Contact Weavly support to unlock it.'
 
 export async function assertOrgWritable(orgId: string) {
     const admin = createAdminClient()
