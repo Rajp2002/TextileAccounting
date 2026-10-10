@@ -50,7 +50,7 @@ describe('Estimator placeholder clarity', () => {
         const estimator = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
 
         expect(estimator).toContain('data-testid={`${accent}-component-count`}')
-        expect(estimator).toContain('text-[var(--color-yarn-orange)] shadow-[0_1px_2px_rgba(30,37,40,0.035)] transition-all placeholder:text-[var(--color-placeholder)] placeholder:font-normal')
+        expect(estimator).toContain('text-[var(--color-yarn-orange)] shadow-xs transition-all placeholder:text-[var(--color-placeholder)] placeholder:font-normal')
     })
 
     it('preserves zero in Warp Crimp instead of ghosting 0 into e.g. 0', () => {
@@ -96,9 +96,20 @@ describe('Estimator placeholder clarity', () => {
         const estimator = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
 
         // Labels must adhere to product standard color and not use accent-colored text
-        expect(estimator).toContain('<Label htmlFor={inputId} className="flex h-8 items-end text-[11px] font-semibold uppercase leading-tight tracking-[0.05em] text-[var(--color-muted)]">')
-        expect(estimator).toContain('<Label className="block text-[11px] font-semibold uppercase tracking-[0.05em] text-[var(--color-muted)]">')
+        expect(estimator).toContain('<Label htmlFor={inputId} className="flex h-8 items-end text-xs font-medium leading-tight text-[var(--color-muted)]">')
+        expect(estimator).toContain('<Label className="block text-xs font-medium text-[var(--color-muted)]">')
         expect(estimator).not.toContain('${accentStyles.text}')
     })
 })
 
+
+describe('required field labels', () => {
+    it('mark required inputs calmly instead of shouting REQUIRED in the visible label', () => {
+        const estimator = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
+        expect(estimator).toContain('function splitRequiredLabel(label: string)')
+        expect(estimator).toContain('{required && <span className="sr-only"> (required)</span>}')
+        expect(estimator).toContain('<FieldLabelText label={label} />')
+        // No label renders the suffix as visible text.
+        expect(estimator).not.toMatch(/>[^<>{}]*— REQUIRED[^<>{}]*</)
+    })
+})

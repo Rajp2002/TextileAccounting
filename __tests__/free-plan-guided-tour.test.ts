@@ -16,7 +16,7 @@ describe('Free Plan Guided Tour & Viewport Scope', () => {
     const freePageSource = fs.readFileSync(freePagePath, 'utf8')
 
     it('enables CostEstimateTutorial regardless of freeMode, passing freePlan={freeMode}', () => {
-        expect(estimatorClientSource).toContain('enabled={state.isConfigured && !saving}')
+        expect(estimatorClientSource).toContain('enabled={(state.isConfigured || !factoryWizardOpen) && !saving}')
         expect(estimatorClientSource).not.toContain('enabled={!freeMode && state.isConfigured && !saving}')
         expect(estimatorClientSource).toContain('freePlan={freeMode}')
     })

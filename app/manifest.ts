@@ -52,11 +52,19 @@ export default function manifest(): MetadataRoute.Manifest {
                 url: '/owner/estimator',
                 icons: [{ src: '/icon-192x192.png?v=3', sizes: '192x192', type: 'image/png' }],
             },
+            // Every paid plan has these, so no install opens onto an upgrade wall.
             {
-                name: 'Production',
-                short_name: 'Production',
-                description: 'Open Base production management.',
-                url: '/owner/production',
+                name: 'Saved Costings',
+                short_name: 'Costings',
+                description: 'Open your saved costings.',
+                url: '/owner/quotes',
+                icons: [{ src: '/icon-192x192.png?v=3', sizes: '192x192', type: 'image/png' }],
+            },
+            {
+                name: 'Yarn Rates',
+                short_name: 'Rates',
+                description: 'Update yarn rates.',
+                url: '/owner/rates',
                 icons: [{ src: '/icon-192x192.png?v=3', sizes: '192x192', type: 'image/png' }],
             },
         ],

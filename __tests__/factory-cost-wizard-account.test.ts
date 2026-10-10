@@ -56,9 +56,24 @@ describe('Factory cost wizard account-level persistence & dismissal', () => {
         })
 
         it('gates FactoryCostWizard with !wizardDismissed and wires onDismiss handler', () => {
-            expect(estimatorSrc).toContain('{!state.isConfigured && !wizardDismissed && (')
+            expect(estimatorSrc).toContain('{!state.isConfigured && !wizardDismissed && factoryWizardOpen && (')
+            expect(estimatorSrc).toContain('{!state.isConfigured && !wizardDismissed && !factoryPromptHidden && !factoryWizardOpen && (')
             expect(estimatorSrc).toContain('onDismiss={async () => {')
             expect(estimatorSrc).toContain('dismissFactoryCostWizard()')
+        })
+    })
+
+    describe('First-run setup lets the owner cost first', () => {
+        it('offers the wizard inline instead of opening it over the estimator', () => {
+            expect(estimatorSrc).toContain('const [factoryWizardOpen, setFactoryWizardOpen] = useState(false)')
+            expect(estimatorSrc).toContain('<FactorySetupPrompt')
+            expect(estimatorSrc).toContain('hasResult={hasValidCostResult}')
+            expect(estimatorSrc).toContain('onClose={() => setFactoryWizardOpen(false)}')
+        })
+
+        it('closing the wizard does not record a dismissal; Skip still does', () => {
+            expect(wizardSrc).toContain('onClick={onClose ?? onDismiss}')
+            expect(wizardSrc).toContain('onClick={onDismiss}')
         })
     })
 

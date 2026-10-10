@@ -76,11 +76,11 @@ export function RateTrendDialog({ rate, rows, loading, error, onClose, onOpenAct
                     <div className="space-y-4">
                         <dl className="grid grid-cols-3 divide-x divide-hairline rounded-xl border border-hairline bg-surface-soft/50">
                             <div className="min-w-0 px-3 py-2.5">
-                                <dt className="text-[11px] font-semibold uppercase tracking-wide text-subtle">{tx('Current')}</dt>
+                                <dt className="text-xs font-semibold text-subtle">{tx('Current')}</dt>
                                 <dd className="mt-1 break-words font-mono text-sm font-bold text-ink">{formatRateValue(trend.stats.latest, rate.unit)}</dd>
                             </div>
                             <div className="min-w-0 px-3 py-2.5">
-                                <dt className="text-[11px] font-semibold uppercase tracking-wide text-subtle">{tx('Since first entry')}</dt>
+                                <dt className="text-xs font-semibold text-subtle">{tx('Since first entry')}</dt>
                                 <dd className={cn(
                                     'mt-1 flex flex-wrap items-center gap-x-1 font-mono text-sm font-bold',
                                     sinceFirst?.direction === 'increased' && 'text-[var(--wv-ochre-800)]',
@@ -96,7 +96,7 @@ export function RateTrendDialog({ rate, rows, loading, error, onClose, onOpenAct
                                 </dd>
                             </div>
                             <div className="min-w-0 px-3 py-2.5">
-                                <dt className="text-[11px] font-semibold uppercase tracking-wide text-subtle">{tx('Price changes')}</dt>
+                                <dt className="text-xs font-semibold text-subtle">{tx('Price changes')}</dt>
                                 <dd className="mt-1 font-mono text-sm font-bold text-ink">{trend.stats.priceChanges}</dd>
                             </div>
                         </dl>

@@ -9,7 +9,7 @@ import { translateStrictBasePlanText } from '../lib/i18n/runtime'
 
 describe('new recovery copy localization', () => {
   it.each(['hi', 'gu'] as const)('translates the new task states in %s', language => {
-    for (const text of ['Save not yet confirmed', 'Check save status', 'Retry original save', 'Saved to factory', 'Undo quality change', 'Switch quality with unfinished changes?', 'Document details changed. Download a fresh PDF before sharing.']) {
+    for (const text of ['Save not yet confirmed', 'Check save status', 'Retry original save', 'Saved to your costings', 'Undo quality change', 'Switch quality with unfinished changes?', 'Document details changed. Download a fresh PDF before sharing.']) {
       expect(translateStrictBasePlanText(text, language)).not.toBe(text)
     }
   })

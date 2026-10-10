@@ -153,7 +153,7 @@ export function PlanPreviewModal({ feature, planTier, onClose }: PlanPreviewModa
           <>
             <div className="flex items-start justify-between gap-4">
               <div className="space-y-1">
-                <p className="text-[11px] font-bold uppercase tracking-wider text-saffron-deep">
+                <p className="text-xs font-bold text-saffron-deep">
                   {upgradeText(language, 'sample')}
                 </p>
                 <DialogTitle className="text-xl font-bold text-ink">{upgradeText(language, feature)}</DialogTitle>

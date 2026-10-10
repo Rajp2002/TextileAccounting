@@ -1,18 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { motion, AnimatePresence, Variants } from 'framer-motion'
-import { 
-    Calculator, 
-    Zap, 
-    ArrowRight, 
-    CheckCircle2, 
-    Settings2,
-    Building2,
-    Briefcase,
+import {
+    Calculator,
+    Zap,
+    ArrowLeft,
+    ArrowRight,
+    Check,
     X
 } from 'lucide-react'
-import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -23,7 +20,7 @@ import { nanoid } from 'nanoid'
 import { parseNonNegativeInput, parseNumericInput } from '@/lib/numeric-input'
 import { FACTORY_COST_PRESETS, type FactoryProfileId } from '@/lib/factory-cost-profiles'
 import { handleEnterKeyNavigation } from '@/lib/form-navigation'
-import { formatEstimatorPlaceholder, type EstimatorPlaceholderKind } from '@/lib/estimator-placeholder'
+import { formatEstimatorPlaceholder } from '@/lib/estimator-placeholder'
 
 type FactoryCostWizardData = Partial<EstimateState> & {
     yarnReviewIntervalDays: number
@@ -35,27 +32,41 @@ interface FactoryCostWizardProps {
     initialYarnReviewIntervalDays: number
     onComplete: (data: FactoryCostWizardData) => Promise<void>
     onDismiss?: () => void
+    /** Closes the wizard without recording a dismissal; the owner can reopen it. */
+    onClose?: () => void
     saving: boolean
 }
 
-function getFactoryDefaultValue(label: string, initialState: EstimateState): number {
-    switch (label) {
-        case 'Warping': return initialState.warpingRatePerKg
-        case 'Sizing': return initialState.sizingRatePerKg
-        case 'Winding': return initialState.windingRatePerKg
-        case 'Processing': return initialState.processingRatePerM
-        case 'Finishing': return initialState.finishingRatePerM
-        case 'Broker commission': return initialState.commissionPct || 0
-        case 'Target margin': return initialState.profitPct || 10
-        case 'Transport charge': return initialState.transportPerM
-        case 'Warp crimp': return initialState.warpCrimpPct
-        case 'Default yarn waste': return initialState.yarnShortagePct
-        default: return 0
-    }
+type WizardStep = 'choice' | 'fast' | 'detailed' | 'detailed-expenses' | 'defaults'
+
+// Values the owner has not entered stay blank: a zero rate is shown as an
+// empty field with a "0" hint, never as an example that looks like real data.
+const enteredValue = (value: number) => (Number.isFinite(value) && value > 0 ? value : '')
+
+const fieldLabelClass = 'text-sm font-medium text-[var(--wv-text-body)]'
+const fieldHintClass = 'text-xs leading-relaxed text-[var(--wv-text-secondary)]'
+
+function UnitInput({ unit, prefix, children }: { unit?: string; prefix?: string; children: ReactNode }) {
+    return (
+        <div className="relative">
+            {prefix && <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-[var(--wv-text-secondary)]">{prefix}</span>}
+            {children}
+            {unit && <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-[var(--wv-text-secondary)]">{unit}</span>}
+        </div>
+    )
 }
 
-export default function FactoryCostWizard({ initialState, initialYarnReviewIntervalDays, onComplete, onDismiss, saving }: FactoryCostWizardProps) {
-    const [step, setStep] = useState<'intro' | 'choice' | 'fast' | 'detailed' | 'detailed-expenses' | 'defaults'>('intro')
+function ErrorNote({ message }: { message: string | null }) {
+    if (!message) return null
+    return (
+        <p role="alert" className="rounded-lg border border-[var(--wv-status-danger-border)] bg-[var(--wv-status-danger-bg)] px-3 py-2 text-sm leading-relaxed text-[var(--wv-status-danger-fg)]">
+            {message}
+        </p>
+    )
+}
+
+export default function FactoryCostWizard({ initialState, initialYarnReviewIntervalDays, onComplete, onDismiss, onClose, saving }: FactoryCostWizardProps) {
+    const [step, setStep] = useState<WizardStep>('choice')
     const [setupPath, setSetupPath] = useState<'direct' | 'monthly_expenses'>(initialState.overheadMode === 'direct' ? 'direct' : 'monthly_expenses')
     const [validationError, setValidationError] = useState<string | null>(null)
     const [pendingCompletion, setPendingCompletion] = useState<FactoryCostWizardData | null>(null)
@@ -77,16 +88,16 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
     const initialOtherExpenses = initialState.overheadItems
         .filter(item => !['rent', 'electricity', 'admin'].includes(item.category))
         .reduce((sum, item) => sum + item.monthlyAmount, 0)
-    
-    // Local state for the wizard inputs
+
     // A direct rate is a price-changing assumption. Keep it blank until the
     // owner enters one instead of presenting an example as if it were real.
+    // When the owner already typed one in the costing, it is carried in here.
     const [overheadPerM, setOverheadPerM] = useState<number | null>(initialState.overheadOverridePerM ?? null)
     const [loomCount, setLoomCount] = useState<number>(initialState.loomCount || 0)
     const [workingDays, setWorkingDays] = useState<number>(initialState.monthlyWorkingDays || 26)
     const [avgOutput, setAvgOutput] = useState<number>(initialState.avgOutputPerLoomPerDay || 50)
     const [monthlyOutput, setMonthlyOutput] = useState<number>(initialState.monthlyOutputM || 0)
-    
+
     // Monthly expenses for detailed path
     const [rent, setRent] = useState<number>(initialRent)
     const [electricity, setElectricity] = useState<number>(initialElectricity)
@@ -109,6 +120,17 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
     const monthlyExpenseTotal = rent + electricity + staff + others
     const monthlyExpensesReady = capacityInputsReady && Number.isFinite(monthlyExpenseTotal) && monthlyExpenseTotal > 0
 
+    const totalSteps = setupPath === 'direct' ? 3 : 4
+    const stepNumber = step === 'choice' ? 1
+        : step === 'fast' || step === 'detailed' ? 2
+        : step === 'detailed-expenses' ? 3
+        : totalSteps
+
+    const goTo = (next: WizardStep) => {
+        setValidationError(null)
+        setStep(next)
+    }
+
     const validateCapacityInputs = () => {
         if (!Number.isFinite(loomCount) || loomCount <= 0) return 'Enter at least one loom before continuing.'
         if (!Number.isFinite(workingDays) || workingDays <= 0) return 'Enter positive working days before continuing.'
@@ -117,14 +139,21 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
         return null
     }
 
+    const handleDirectContinue = () => {
+        if (overheadPerM == null || overheadPerM <= 0) {
+            setValidationError('Enter the direct factory cost per metre before continuing.')
+            return
+        }
+        goTo('defaults')
+    }
+
     const handleCapacityContinue = () => {
         const error = validateCapacityInputs()
         if (error) {
             setValidationError(error)
             return
         }
-        setValidationError(null)
-        setStep('detailed-expenses')
+        goTo('detailed-expenses')
     }
 
     const handleExpensesContinue = () => {
@@ -138,8 +167,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
             setValidationError('Enter at least one monthly factory expense before continuing.')
             return
         }
-        setValidationError(null)
-        setStep('defaults')
+        goTo('defaults')
     }
 
     const getOverheadSetup = (): Partial<EstimateState> => {
@@ -152,7 +180,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
             { id: nanoid(), label: 'Fixed Salary Staff', monthlyAmount: staff, category: 'admin', isPreset: true, isLocked: false, source: 'manual' },
             { id: nanoid(), label: 'Other Expenses', monthlyAmount: others, category: 'custom', isPreset: true, isLocked: false, source: 'manual' },
         ]
-        
+
         return {
             overheadMode: 'monthly_expenses',
             loomCount,
@@ -252,13 +280,30 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
     }
 
     const containerVariants: Variants = {
-        hidden: { opacity: 0, y: 20 },
-        visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } },
-        exit: { opacity: 0, y: -20, transition: { duration: 0.2 } }
+        hidden: { opacity: 0, y: 12 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.25, ease: 'easeOut' } },
+        exit: { opacity: 0, y: -8, transition: { duration: 0.15 } }
     }
 
+    const backTarget: WizardStep | null = step === 'fast' || step === 'detailed' ? 'choice'
+        : step === 'detailed-expenses' ? 'detailed'
+        : step === 'defaults' ? (setupPath === 'direct' ? 'fast' : 'detailed-expenses')
+        : null
+
+    const expenseFields: Array<[string, string, number, (next: number) => void, string]> = [
+        ['wizard-rent', 'Rent / Lease', rent, setRent, 'e.g. 1,00,000'],
+        ['wizard-electricity', 'Electricity and power', electricity, setElectricity, 'e.g. 25,000'],
+        ['wizard-staff', 'Fixed staff salaries', staff, setStaff, 'e.g. 50,000'],
+        ['wizard-others', 'Other (repairs, oil and so on)', others, setOthers, 'e.g. 10,000'],
+    ]
+
     return (
-        <div className="safe-area-page fixed inset-0 z-[100] flex items-center justify-center [--page-gutter-x:1rem] [--page-gutter-y:1rem] bg-[var(--wv-neel-950)]/50 backdrop-blur-sm">
+        <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="factory-cost-wizard-title"
+            className="safe-area-page fixed inset-0 z-[100] flex items-end justify-center bg-[var(--wv-neel-950)]/40 backdrop-blur-[2px] [--page-gutter-x:0px] [--page-gutter-y:0px] sm:items-center sm:[--page-gutter-x:1rem] sm:[--page-gutter-y:1rem]"
+        >
             <AnimatePresence mode="wait">
                 <motion.div
                     key={step}
@@ -266,161 +311,130 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                     initial="hidden"
                     animate="visible"
                     exit="exit"
-                    className="w-full max-w-lg max-h-[calc(100dvh-var(--safe-area-top)-var(--safe-area-bottom)-2rem)] overflow-y-auto"
+                    className="w-full sm:max-w-lg"
                 >
-                    <Card className="border border-[var(--wv-border-default)] shadow-[var(--shadow-card)] overflow-hidden bg-[var(--wv-bg-surface)] text-[var(--wv-text-primary)] relative">
-                        {onDismiss && (
-                            <button
-                                type="button"
-                                onClick={onDismiss}
-                                aria-label="Close setup wizard"
-                                className="absolute top-3.5 right-3.5 z-20 rounded-full p-1.5 text-[var(--wv-text-secondary)] hover:bg-[var(--wv-bg-subtle)] hover:text-[var(--wv-text-primary)] transition-colors"
-                            >
-                                <X className="h-5 w-5" />
-                            </button>
-                        )}
-                        {/* Progress Bar */}
-                        <div className="h-1.5 w-full bg-[var(--wv-cotton-300)] flex">
-                            <div 
-                                className="ui-meter-fill h-full bg-[var(--wv-brand-accent)]" 
-                                style={{ width: `${
-                                    step === 'intro' ? 10 : 
-                                    step === 'choice' ? 42 :
-                                    step === 'fast' ? 58 :
-                                    step === 'detailed' ? 58 :
-                                    step === 'detailed-expenses' ? 76 : 100
-                                }%` }} 
-                            />
-                        </div>
+                    <div className="relative flex max-h-[calc(100dvh-var(--safe-area-top)-var(--safe-area-bottom)-1rem)] flex-col overflow-hidden rounded-t-[14px] border border-[var(--wv-border-default)] bg-[var(--wv-bg-surface)] text-[var(--wv-text-primary)] shadow-[var(--shadow-modal)] sm:max-h-[calc(100dvh-var(--safe-area-top)-var(--safe-area-bottom)-2rem)] sm:rounded-[14px]">
+                        <header className="flex items-center gap-2 border-b border-[var(--wv-border-subtle)] px-4 py-3 sm:px-6">
+                            {backTarget ? (
+                                <button
+                                    type="button"
+                                    onClick={() => goTo(backTarget)}
+                                    aria-label="Back"
+                                    className="-ml-2 flex h-10 w-10 items-center justify-center rounded-lg text-[var(--wv-text-secondary)] transition-colors hover:bg-[var(--wv-bg-subtle)] hover:text-[var(--wv-text-primary)]"
+                                >
+                                    <ArrowLeft className="h-4 w-4" />
+                                </button>
+                            ) : null}
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs font-medium text-[var(--wv-text-secondary)]">{`Factory setup · Step ${stepNumber} of ${totalSteps}`}</p>
+                                <div className="mt-1.5 h-1 w-full max-w-40 overflow-hidden rounded-full bg-[var(--wv-cotton-300)]" aria-hidden="true">
+                                    <div className="ui-meter-fill h-full rounded-full bg-[var(--wv-brand-accent)]" style={{ width: `${(stepNumber / totalSteps) * 100}%` }} />
+                                </div>
+                            </div>
+                            {(onClose ?? onDismiss) && (
+                                <button
+                                    type="button"
+                                    onClick={onClose ?? onDismiss}
+                                    aria-label="Close setup wizard"
+                                    className="-mr-2 flex h-10 w-10 items-center justify-center rounded-lg text-[var(--wv-text-secondary)] transition-colors hover:bg-[var(--wv-bg-subtle)] hover:text-[var(--wv-text-primary)]"
+                                >
+                                    <X className="h-5 w-5" />
+                                </button>
+                            )}
+                        </header>
 
-                        <CardContent
-                            className="p-8"
+                        <div
+                            className="flex-1 overflow-y-auto px-4 py-5 sm:px-6 sm:py-6"
                             data-enter-navigate-container="true"
                             onKeyDown={handleEnterKeyNavigation}
                         >
-                            {step === 'intro' && (
-                                <div className="space-y-6 text-center">
-                                    <div className="mx-auto w-16 h-16 bg-[var(--wv-neel-100)] rounded-2xl flex items-center justify-center">
-                                        <Building2 className="h-8 w-8 text-[var(--wv-neel-900)]" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <h2 className="text-2xl font-black tracking-tight text-[var(--wv-text-primary)]">
+                            {step === 'choice' && (
+                                <div className="space-y-5">
+                                    <div className="space-y-1.5">
+                                        <h2 id="factory-cost-wizard-title" className="text-xl font-semibold tracking-tight text-[var(--wv-text-primary)]">
                                             Set up your grey-fabric costing
                                         </h2>
-                                        <p className="text-[var(--wv-text-secondary)] text-sm leading-relaxed">
-                                            Weavly is set up for grey fabric weaving. Enter your actual factory expenses and rates to calculate a trustworthy ₹/m cost.
+                                        <p className="text-sm leading-relaxed text-[var(--wv-text-secondary)]">
+                                            Your factory cost and usual rates fill every new costing, so you enter them once. How do you work out factory cost today?
                                         </p>
                                     </div>
-                                    <div className="space-y-2">
-                                        <Button 
-                                            onClick={() => setStep('choice')}
-                                            className="w-full h-12 bg-[var(--wv-action-primary)] hover:bg-[var(--wv-action-primary-hover)] text-[var(--wv-text-on-action)] rounded-xl font-bold transition-all shadow-sm"
+                                    <div className="grid gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => { setSetupPath('direct'); goTo('fast') }}
+                                            className="flex min-h-11 items-start gap-3 rounded-xl border border-[var(--wv-border-control)] bg-[var(--wv-bg-surface)] p-4 text-left transition-colors hover:border-[var(--wv-border-strong)] hover:bg-[var(--wv-bg-subtle)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wv-border-focus)]"
                                         >
-                                            Get Started
-                                            <ArrowRight className="ml-2 h-4 w-4" />
-                                        </Button>
-                                        {onDismiss && (
-                                            <button
-                                                type="button"
-                                                onClick={onDismiss}
-                                                className="w-full text-center text-xs font-semibold text-[var(--wv-text-secondary)] hover:text-[var(--wv-text-primary)] transition-colors pt-1"
-                                            >
-                                                Skip for now · I&apos;ve already set this up
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-
-                            {step === 'choice' && (
-                                <div className="space-y-6">
-                                    <div className="text-center space-y-1">
-                                        <h2 className="text-xl font-bold text-[var(--wv-text-primary)]">How would you like to set up?</h2>
-                                        <p className="text-xs text-[var(--wv-text-secondary)]">Choose the method that suits you best.</p>
-                                    </div>
-                                    <div className="grid gap-4">
-                                        <button 
-                                            onClick={() => { setSetupPath('direct'); setStep('fast') }}
-                                            className="flex items-center gap-4 p-5 rounded-2xl border border-[var(--wv-border-control)] bg-[var(--wv-bg-surface)] hover:border-[var(--wv-border-strong)] hover:bg-[var(--wv-bg-subtle)] transition-all text-left group"
-                                        >
-                                            <div className="w-12 h-12 rounded-xl bg-[var(--wv-ochre-100)] flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                                                <Zap className="h-6 w-6 text-[var(--wv-ochre-800)]" />
-                                            </div>
-                                            <div>
-                                                <div className="font-black text-[var(--wv-text-primary)]">I know my factory cost per metre</div>
-                                                <div className="text-xs text-[var(--wv-text-secondary)]">Enter the ₹/m factory cost you already use.</div>
-                                            </div>
+                                            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--wv-ochre-50)]">
+                                                <Zap className="h-5 w-5 text-[var(--wv-ochre-800)]" />
+                                            </span>
+                                            <span className="min-w-0 space-y-0.5">
+                                                <span className="block text-sm font-semibold text-[var(--wv-text-primary)]">I know my factory cost per metre</span>
+                                                <span className="block text-sm text-[var(--wv-text-secondary)]">Enter the ₹/m figure you already use.</span>
+                                            </span>
                                         </button>
-                                        <button 
-                                            onClick={() => { setSetupPath('monthly_expenses'); setStep('detailed') }}
-                                            className="flex items-center gap-4 p-5 rounded-2xl border border-[var(--wv-border-control)] bg-[var(--wv-bg-surface)] hover:border-[var(--wv-border-strong)] hover:bg-[var(--wv-bg-subtle)] transition-all text-left group"
+                                        <button
+                                            type="button"
+                                            onClick={() => { setSetupPath('monthly_expenses'); goTo('detailed') }}
+                                            className="flex min-h-11 items-start gap-3 rounded-xl border border-[var(--wv-border-control)] bg-[var(--wv-bg-surface)] p-4 text-left transition-colors hover:border-[var(--wv-border-strong)] hover:bg-[var(--wv-bg-subtle)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wv-border-focus)]"
                                         >
-                                            <div className="w-12 h-12 rounded-xl bg-[var(--wv-neel-100)] flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                                                <Calculator className="h-6 w-6 text-[var(--wv-neel-900)]" />
-                                            </div>
-                                            <div>
-                                                <div className="font-black text-[var(--wv-text-primary)]">Calculate from monthly expenses</div>
-                                                <div className="text-xs text-[var(--wv-text-secondary)]">Enter expenses and output; we&apos;ll calculate ₹/m for you.</div>
-                                            </div>
+                                            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--wv-neel-50)]">
+                                                <Calculator className="h-5 w-5 text-[var(--wv-neel-900)]" />
+                                            </span>
+                                            <span className="min-w-0 space-y-0.5">
+                                                <span className="block text-sm font-semibold text-[var(--wv-text-primary)]">Work it out from monthly expenses</span>
+                                                <span className="block text-sm text-[var(--wv-text-secondary)]">Enter looms, output and expenses. Weavly divides them into ₹/m.</span>
+                                            </span>
                                         </button>
                                     </div>
+                                    {onDismiss && (
+                                        <button
+                                            type="button"
+                                            onClick={onDismiss}
+                                            className="flex min-h-11 w-full items-center justify-center rounded-lg text-sm font-medium text-[var(--wv-text-secondary)] transition-colors hover:text-[var(--wv-text-primary)]"
+                                        >
+                                            Skip for now · I&apos;ve already set this up
+                                        </button>
+                                    )}
                                 </div>
                             )}
 
                             {step === 'fast' && (
-                                <div className="space-y-6">
-                                    <div className="flex items-center gap-3">
-                                        <button onClick={() => setStep('choice')} className="p-2 hover:bg-[var(--wv-bg-subtle)] rounded-lg text-[var(--wv-text-secondary)] hover:text-[var(--wv-text-primary)] transition-colors">
-                                            <ArrowRight className="h-4 w-4 rotate-180" />
-                                        </button>
-                                        <h2 className="text-lg font-black text-[var(--wv-text-primary)]">Enter your factory cost per metre</h2>
+                                <div className="space-y-5">
+                                    <div className="space-y-1.5">
+                                        <h2 id="factory-cost-wizard-title" className="text-xl font-semibold tracking-tight text-[var(--wv-text-primary)]">Your factory cost per metre</h2>
+                                        <p className={fieldHintClass}>The rate your unit already uses for rent, power, staff, repairs and other fixed costs. Weavly never guesses this number.</p>
                                     </div>
-                                    <div className="p-6 bg-[var(--wv-bg-subtle)] rounded-xl border border-[var(--wv-border-subtle)] space-y-4">
-                                        <div className="space-y-2">
-                                            <Label className="text-[10px] uppercase tracking-wider font-black text-[var(--wv-text-secondary)]">Direct factory overhead (₹/m) — REQUIRED</Label>
-                                            <div className="relative">
-                                                <Input 
-                                                    type="number" 
-                                                    value={overheadPerM === (initialState.overheadOverridePerM ?? null) ? '' : (overheadPerM ?? '')}
-                                                    placeholder={initialState.overheadOverridePerM != null ? formatEstimatorPlaceholder(initialState.overheadOverridePerM) : 'Enter your rate'}
-                                                    onChange={(e) => setOverheadPerM(parseNonNegativeInput(e.target.value))}
-                                                    className="h-14 text-2xl font-black text-[var(--wv-action-primary)] pl-8 pr-12 rounded-xl border-[var(--wv-border-control)] bg-[var(--wv-bg-surface)] focus:ring-[var(--wv-border-focus)] focus:border-[var(--wv-border-focus)]"
-                                                />
-                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 font-black text-[var(--wv-text-secondary)]">₹</span>
-                                                <span className="absolute right-4 top-1/2 -translate-y-1/2 font-bold text-[var(--wv-text-secondary)]">/m</span>
-                                            </div>
-                                        </div>
-                                        <p className="text-[11px] text-[var(--wv-text-secondary)] leading-relaxed italic">
-                                            Enter the rate your unit already uses for rent, power, staff, repairs, and other fixed costs. No direct rate is inferred.
-                                        </p>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="wizard-direct-overhead" className={fieldLabelClass}>Factory cost per metre</Label>
+                                        <UnitInput prefix="₹" unit="/m">
+                                            <Input
+                                                id="wizard-direct-overhead"
+                                                type="number"
+                                                min={0}
+                                                step={0.01}
+                                                value={overheadPerM ?? ''}
+                                                placeholder="e.g. 12.50"
+                                                onChange={(e) => setOverheadPerM(parseNonNegativeInput(e.target.value))}
+                                                aria-invalid={Boolean(validationError) || undefined}
+                                                className="h-12 rounded-lg pl-8 pr-12 font-mono text-lg font-semibold"
+                                            />
+                                        </UnitInput>
                                     </div>
-                                    {validationError && (
-                                        <p role="alert" className="rounded-xl border border-[var(--wv-status-danger-border)] bg-[var(--wv-status-danger-bg)] px-3 py-2 text-[11px] font-semibold leading-relaxed text-[var(--wv-status-danger-fg)]">
-                                            {validationError}
-                                        </p>
-                                    )}
-                                    <Button 
-                                        onClick={() => setStep('defaults')}
-                                        className="w-full h-12 bg-[var(--wv-action-primary)] hover:bg-[var(--wv-action-primary-hover)] text-[var(--wv-text-on-action)] rounded-xl font-bold shadow-sm"
-                                    >
-                                        Next: Cost Defaults
-                                        <ArrowRight className="ml-2 h-4 w-4" />
-                                    </Button>
+                                    <ErrorNote message={validationError} />
                                 </div>
                             )}
 
                             {step === 'detailed' && (
-                                <div className="space-y-6">
-                                    <div className="flex items-center gap-3">
-                                        <button onClick={() => setStep('choice')} className="p-2 hover:bg-[var(--wv-bg-subtle)] rounded-lg text-[var(--wv-text-secondary)] hover:text-[var(--wv-text-primary)] transition-colors">
-                                            <ArrowRight className="h-4 w-4 rotate-180" />
-                                        </button>
-                                        <h2 className="text-lg font-black text-[var(--wv-text-primary)]">Factory Capacity</h2>
+                                <div className="space-y-5">
+                                    <div className="space-y-1.5">
+                                        <h2 id="factory-cost-wizard-title" className="text-xl font-semibold tracking-tight text-[var(--wv-text-primary)]">Factory capacity</h2>
+                                        <p className={fieldHintClass}>Monthly expenses are divided by the metres you normally weave.</p>
                                     </div>
                                     <div className="grid gap-4">
                                         <div className="space-y-1.5">
-                                            <Label className="text-[10px] uppercase tracking-wider font-bold text-[var(--wv-text-secondary)]">Total Loom Count</Label>
+                                            <Label htmlFor="wizard-loom-count" className={fieldLabelClass}>Number of looms</Label>
                                             <Input
+                                                id="wizard-loom-count"
                                                 type="number"
                                                 inputMode="numeric"
                                                 min={1}
@@ -429,204 +443,119 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                                 placeholder="e.g. 24"
                                                 onChange={e => setLoomCount(parseNonNegativeInput(e.target.value) ?? 0)}
                                                 aria-invalid={loomCount <= 0}
-                                                className="h-10 font-bold"
+                                                className="h-11 font-mono"
                                             />
-                                            {loomCount <= 0 && <p className="text-[10px] font-semibold text-[var(--wv-status-warning-fg)]">Needed to work out your factory cost per metre.</p>}
                                         </div>
-                                        <div className="grid grid-cols-2 gap-4">
+                                        <div className="grid gap-4 sm:grid-cols-2">
                                             <div className="space-y-1.5">
-                                                <Label className="text-[10px] uppercase tracking-wider font-bold text-[var(--wv-text-secondary)]">Working Days / Month</Label>
-                                                <Input 
+                                                <Label htmlFor="wizard-working-days" className={fieldLabelClass}>Working days a month</Label>
+                                                <Input
+                                                    id="wizard-working-days"
                                                     type="number"
                                                     inputMode="numeric"
                                                     min={1}
                                                     step={1}
                                                     value={workingDays === (initialState.monthlyWorkingDays || 26) ? '' : workingDays}
-                                                    placeholder={formatEstimatorPlaceholder(initialState.monthlyWorkingDays || 26)}
+                                                    placeholder={formatEstimatorPlaceholder(initialState.monthlyWorkingDays || 26, 'applied-default')}
                                                     onChange={e => setWorkingDays(parseNumericInput(e.target.value, { min: 1 }) ?? 0)}
                                                     aria-invalid={workingDays <= 0}
-                                                    className="h-10 font-bold"
+                                                    className="h-11 font-mono"
                                                 />
                                             </div>
                                             <div className="space-y-1.5">
-                                                <Label className="text-[10px] uppercase tracking-wider font-bold text-[var(--wv-text-secondary)]">Average m / Loom / Day</Label>
-                                                <Input 
-                                                    type="number" 
+                                                <Label htmlFor="wizard-avg-output" className={fieldLabelClass}>Metres per loom a day</Label>
+                                                <Input
+                                                    id="wizard-avg-output"
+                                                    type="number"
                                                     min={0.01}
                                                     step={0.01}
                                                     value={avgOutput === (initialState.avgOutputPerLoomPerDay || 50) ? '' : avgOutput}
-                                                    placeholder={formatEstimatorPlaceholder(initialState.avgOutputPerLoomPerDay || 50)}
+                                                    placeholder={formatEstimatorPlaceholder(initialState.avgOutputPerLoomPerDay || 50, 'applied-default')}
                                                     onChange={e => setAvgOutput(parseNonNegativeInput(e.target.value) ?? 0)}
                                                     aria-invalid={avgOutput <= 0}
-                                                    className="h-10 font-bold"
+                                                    className="h-11 font-mono"
                                                 />
                                             </div>
                                         </div>
-                                        <div className="p-4 bg-[var(--wv-neel-50)] rounded-xl border border-[var(--wv-neel-200)]">
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-xs font-bold text-[var(--wv-neel-900)]">Est. Monthly Production</span>
-                                                <span className={`text-sm font-black ${capacityInputsReady ? 'text-[var(--wv-neel-900)]' : 'text-[var(--wv-status-warning-fg)]'}`}>
-                                                    {capacityInputsReady ? `${(loomCount * workingDays * avgOutput).toLocaleString()}m` : 'Complete capacity inputs'}
-                                                </span>
-                                            </div>
+                                        <div className="flex items-center justify-between gap-3 rounded-lg bg-[var(--wv-bg-subtle)] px-3 py-2.5 text-sm">
+                                            <span className="text-[var(--wv-text-secondary)]">At full capacity</span>
+                                            <span className="font-mono font-medium text-[var(--wv-text-primary)]">
+                                                {loomCount > 0 && workingDays > 0 && avgOutput > 0 ? `${(loomCount * workingDays * avgOutput).toLocaleString('en-IN')} m a month` : '—'}
+                                            </span>
                                         </div>
-                                        <div className="space-y-1.5 rounded-xl border border-[var(--wv-border-subtle)] bg-[var(--wv-bg-subtle)] p-3">
-                                            <Label className="text-[10px] uppercase tracking-wider font-bold text-[var(--wv-text-secondary)]">Standard monthly production</Label>
-                                            <div className="relative">
+                                        <div className="space-y-1.5">
+                                            <Label htmlFor="wizard-monthly-output" className={fieldLabelClass}>Normal monthly production</Label>
+                                            <UnitInput unit="m">
                                                 <Input
+                                                    id="wizard-monthly-output"
                                                     type="number"
                                                     min={1}
                                                     value={monthlyOutput || ''}
                                                     placeholder="e.g. 45,000"
                                                     onChange={event => setMonthlyOutput(parseNumericInput(event.target.value, { min: 1 }) ?? 0)}
                                                     aria-invalid={monthlyOutput <= 0}
-                                                    className="h-10 pr-10 font-mono font-bold"
+                                                    className="h-11 pr-10 font-mono"
                                                 />
-                                                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[var(--wv-text-secondary)]">m/mo</span>
-                                            </div>
-                                            <p className="text-[10px] leading-relaxed text-[var(--wv-text-secondary)]">Use a normal representative production level, not maximum rated capacity, when dividing monthly expenses.</p>
+                                            </UnitInput>
+                                            <p className={fieldHintClass}>Use what you usually weave in a month, not the maximum the looms can do.</p>
                                         </div>
                                     </div>
-                                    {validationError && (
-                                        <p role="alert" className="rounded-xl border border-[var(--wv-status-danger-border)] bg-[var(--wv-status-danger-bg)] px-3 py-2 text-[11px] font-semibold leading-relaxed text-[var(--wv-status-danger-fg)]">
-                                            {validationError}
-                                        </p>
-                                    )}
-                                    <Button 
-                                        onClick={handleCapacityContinue}
-                                        disabled={!capacityInputsReady}
-                                        aria-describedby={!capacityInputsReady ? 'factory-capacity-hint' : undefined}
-                                        className="w-full h-12 bg-[var(--wv-action-primary)] hover:bg-[var(--wv-action-primary-hover)] text-[var(--wv-text-on-action)] rounded-xl font-bold"
-                                    >
-                                        Next: Monthly Expenses
-                                        <ArrowRight className="ml-2 h-4 w-4" />
-                                    </Button>
-                                    {!capacityInputsReady && <p id="factory-capacity-hint" className="text-center text-[11px] font-semibold leading-relaxed text-[var(--wv-status-warning-fg)]">Enter positive loom count, working days, daily productivity, and standard monthly production to continue.</p>}
+                                    <ErrorNote message={validationError} />
+                                    {!capacityInputsReady && !validationError && <p id="factory-capacity-hint" className={fieldHintClass}>Fill in all four numbers to continue.</p>}
                                 </div>
                             )}
 
                             {step === 'detailed-expenses' && (
-                                <div className="space-y-6">
-                                    <div className="flex items-center gap-3">
-                                        <button onClick={() => setStep('detailed')} className="p-2 hover:bg-[var(--wv-bg-subtle)] rounded-lg text-[var(--wv-text-secondary)] hover:text-[var(--wv-text-primary)] transition-colors">
-                                            <ArrowRight className="h-4 w-4 rotate-180" />
-                                        </button>
-                                        <h2 className="text-lg font-black text-[var(--wv-text-primary)]">Monthly Expenses (₹)</h2>
+                                <div className="space-y-5">
+                                    <div className="space-y-1.5">
+                                        <h2 id="factory-cost-wizard-title" className="text-xl font-semibold tracking-tight text-[var(--wv-text-primary)]">Monthly expenses</h2>
+                                        <p className={fieldHintClass}>Enter what you spend in a normal month. Leave a field empty if it does not apply.</p>
                                     </div>
-                                    <div className="grid gap-3">
-                                        <div className="flex items-center gap-3 p-3 rounded-xl border border-[var(--wv-border-subtle)] bg-[var(--wv-bg-subtle)]">
-                                            <div className="w-8 h-8 rounded-lg bg-[var(--wv-bg-surface)] shadow-xs flex items-center justify-center shrink-0">
-                                                <Building2 className="h-4 w-4 text-[var(--wv-text-primary)]" />
+                                    <div className="grid gap-4 sm:grid-cols-2">
+                                        {expenseFields.map(([id, label, value, setter, placeholder]) => (
+                                            <div key={id} className="space-y-1.5">
+                                                <Label htmlFor={id} className={fieldLabelClass}>{label}</Label>
+                                                <UnitInput prefix="₹">
+                                                    <Input
+                                                        id={id}
+                                                        type="number"
+                                                        min={0}
+                                                        value={enteredValue(value)}
+                                                        placeholder={placeholder}
+                                                        onChange={e => setter(parseNonNegativeInput(e.target.value) ?? 0)}
+                                                        className="h-11 pl-7 font-mono"
+                                                    />
+                                                </UnitInput>
                                             </div>
-                                            <div className="grow">
-                                                <Label className="text-[9px] uppercase font-bold text-[var(--wv-text-secondary)]">Rent / Lease</Label>
-                                                <Input 
-                                                    type="number" 
-                                                    value={rent === initialRent ? '' : rent}
-                                                    placeholder={initialRent > 0 ? String(initialRent) : 'e.g. 1,00,000'}
-                                                    onChange={e => setRent(parseNonNegativeInput(e.target.value) ?? 0)}
-                                                    className="h-8 border-none bg-transparent font-black placeholder:text-[var(--wv-text-secondary)] p-0 focus-visible:ring-0"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-3 p-3 rounded-xl border border-[var(--wv-border-subtle)] bg-[var(--wv-bg-subtle)]">
-                                            <div className="w-8 h-8 rounded-lg bg-[var(--wv-bg-surface)] shadow-xs flex items-center justify-center shrink-0">
-                                                <Zap className="h-4 w-4 text-[var(--wv-status-warning-fg)]" />
-                                            </div>
-                                            <div className="grow">
-                                                <Label className="text-[9px] uppercase font-bold text-[var(--wv-text-secondary)]">Electricity & Power</Label>
-                                                <Input 
-                                                    type="number" 
-                                                    value={electricity === initialElectricity ? '' : electricity}
-                                                    placeholder={initialElectricity > 0 ? String(initialElectricity) : 'e.g. 25,000'}
-                                                    onChange={e => setElectricity(parseNonNegativeInput(e.target.value) ?? 0)}
-                                                    className="h-8 border-none bg-transparent font-black placeholder:text-[var(--wv-text-secondary)] p-0 focus-visible:ring-0"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-3 p-3 rounded-xl border border-[var(--wv-border-subtle)] bg-[var(--wv-bg-subtle)]">
-                                            <div className="w-8 h-8 rounded-lg bg-[var(--wv-bg-surface)] shadow-xs flex items-center justify-center shrink-0">
-                                                <Briefcase className="h-4 w-4 text-[var(--wv-action-primary)]" />
-                                            </div>
-                                            <div className="grow">
-                                                <Label className="text-[9px] uppercase font-bold text-[var(--wv-text-secondary)]">Fixed Staff Salary</Label>
-                                                <Input 
-                                                    type="number" 
-                                                    value={staff === initialStaff ? '' : staff}
-                                                    placeholder={initialStaff > 0 ? String(initialStaff) : 'e.g. 50,000'}
-                                                    onChange={e => setStaff(parseNonNegativeInput(e.target.value) ?? 0)}
-                                                    className="h-8 border-none bg-transparent font-black placeholder:text-[var(--wv-text-secondary)] p-0 focus-visible:ring-0"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-3 p-3 rounded-xl border border-[var(--wv-border-subtle)] bg-[var(--wv-bg-subtle)]">
-                                            <div className="w-8 h-8 rounded-lg bg-[var(--wv-bg-surface)] shadow-xs flex items-center justify-center shrink-0">
-                                                <Settings2 className="h-4 w-4 text-[var(--wv-text-secondary)]" />
-                                            </div>
-                                            <div className="grow">
-                                                <Label className="text-[9px] uppercase font-bold text-[var(--wv-text-secondary)]">Others (Repairs, Oil, etc.)</Label>
-                                                <Input 
-                                                    type="number" 
-                                                    value={others === initialOtherExpenses ? '' : others}
-                                                    placeholder={initialOtherExpenses > 0 ? String(initialOtherExpenses) : 'e.g. 10,000'}
-                                                    onChange={e => setOthers(parseNonNegativeInput(e.target.value) ?? 0)}
-                                                    className="h-8 border-none bg-transparent font-black placeholder:text-[var(--wv-text-secondary)] p-0 focus-visible:ring-0"
-                                                />
-                                            </div>
-                                        </div>
+                                        ))}
                                     </div>
-                                    
-                                    <div className={`p-4 rounded-xl border ${monthlyExpensesReady ? 'bg-[var(--wv-status-success-bg)] border-[var(--wv-status-success-border)]' : 'bg-[var(--wv-status-warning-bg)] border-[var(--wv-status-warning-border)]'}`}>
-                                        <div className="flex items-center justify-between">
-                                            <div className="space-y-0.5">
-                                                <div className={`text-[10px] font-bold uppercase tracking-tight ${monthlyExpensesReady ? 'text-[var(--wv-status-success-fg)]' : 'text-[var(--wv-status-warning-fg)]'}`}>{monthlyExpensesReady ? 'Calculated factory cost' : 'Factory cost needs inputs'}</div>
-                                                <div className={`text-xs ${monthlyExpensesReady ? 'text-[var(--wv-status-success-fg)]' : 'text-[var(--wv-status-warning-fg)]'}`}>
-                                                    {monthlyOutput > 0
-                                                        ? `₹${monthlyExpenseTotal.toLocaleString()} per month ÷ ${monthlyOutput.toLocaleString()} m output`
-                                                        : 'Enter standard monthly production before reviewing cost'}
-                                                </div>
-                                            </div>
-                                            {monthlyExpensesReady ? (
-                                                <div className="text-xl font-black text-[var(--wv-status-success-fg)]">
-                                                    ₹{(monthlyExpenseTotal / monthlyOutput).toFixed(2)}
-                                                    <span className="text-xs ml-1">/m</span>
-                                                </div>
-                                            ) : (
-                                                <div className="text-right text-xs font-bold text-[var(--wv-status-warning-fg)]">Complete required inputs</div>
-                                            )}
-                                        </div>
-                                    </div>
-                                    {validationError && (
-                                        <p role="alert" className="rounded-xl border border-[var(--wv-status-danger-border)] bg-[var(--wv-status-danger-bg)] px-3 py-2 text-[11px] font-semibold leading-relaxed text-[var(--wv-status-danger-fg)]">
-                                            {validationError}
-                                        </p>
-                                    )}
 
-                                    <Button 
-                                        onClick={handleExpensesContinue}
-                                        disabled={!monthlyExpensesReady}
-                                        aria-describedby={!monthlyExpensesReady ? 'factory-expenses-hint' : undefined}
-                                        className="w-full h-12 bg-[var(--wv-action-primary)] hover:bg-[var(--wv-action-primary-hover)] text-[var(--wv-text-on-action)] rounded-xl font-bold shadow-sm"
-                                    >
-                                        Next: Cost Defaults
-                                        <ArrowRight className="ml-2 h-4 w-4" />
-                                    </Button>
-                                    {!monthlyExpensesReady && <p id="factory-expenses-hint" className="text-center text-[11px] font-semibold leading-relaxed text-[var(--wv-status-warning-fg)]">Enter positive capacity values and at least one monthly expense before continuing.</p>}
+                                    <div className="flex items-center justify-between gap-3 rounded-lg border border-[var(--wv-border-subtle)] bg-[var(--wv-bg-subtle)] px-4 py-3">
+                                        <div className="min-w-0 space-y-0.5">
+                                            <p className="text-sm font-medium text-[var(--wv-text-primary)]">Factory cost</p>
+                                            <p className="text-xs text-[var(--wv-text-secondary)]">
+                                                {monthlyOutput > 0
+                                                    ? `₹${monthlyExpenseTotal.toLocaleString('en-IN')} a month ÷ ${monthlyOutput.toLocaleString('en-IN')} m`
+                                                    : 'Enter standard monthly production before reviewing cost'}
+                                            </p>
+                                        </div>
+                                        <p className="shrink-0 font-mono text-lg font-semibold text-[var(--wv-text-primary)]">
+                                            {monthlyExpensesReady ? `₹${(monthlyExpenseTotal / monthlyOutput).toFixed(2)}` : '—'}
+                                            <span className="ml-1 text-xs font-normal text-[var(--wv-text-secondary)]">/m</span>
+                                        </p>
+                                    </div>
+                                    <ErrorNote message={validationError} />
+                                    {!monthlyExpensesReady && !validationError && <p id="factory-expenses-hint" className={fieldHintClass}>Enter at least one monthly expense to continue.</p>}
                                 </div>
                             )}
 
                             {step === 'defaults' && (
                                 <div className="space-y-5">
-                                    <div className="flex items-center gap-3">
-                                        <button onClick={() => setStep(setupPath === 'direct' ? 'fast' : 'detailed-expenses')} className="rounded-lg p-2 text-[var(--wv-text-secondary)] hover:text-[var(--wv-text-primary)] hover:bg-[var(--wv-bg-subtle)] transition-colors">
-                                            <ArrowRight className="h-4 w-4 rotate-180" />
-                                        </button>
-                                        <div>
-                                            <h2 className="text-lg font-black text-[var(--wv-text-primary)]">Cost Estimate Defaults</h2>
-                                            <p className="text-xs text-[var(--wv-text-secondary)]">These values pre-fill every new costing. Enter 0 for charges you do not use.</p>
-                                        </div>
+                                    <div className="space-y-1.5">
+                                        <h2 id="factory-cost-wizard-title" className="text-xl font-semibold tracking-tight text-[var(--wv-text-primary)]">Your usual rates</h2>
+                                        <p className={fieldHintClass}>These fill every new costing and can be changed per costing. Leave a field empty for charges you do not use.</p>
                                     </div>
-                                    <div className="grid max-h-[55vh] grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2">
+                                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                         {[
                                             ['Warping', warpingRate, setWarpingRate, '₹/kg', 0.25],
                                             ['Sizing', sizingRate, setSizingRate, '₹/kg', 0.25],
@@ -646,35 +575,33 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                             : label === 'Transport charge' ? selectedSections.transport
                                             : true,
                                         ).map(([label, value, setter, unit, inputStep]) => {
-                                            const ghostValue = getFactoryDefaultValue(String(label), initialState)
-                                            const isGhostValue = Number(value) === ghostValue
-                                            const placeholderKind: EstimatorPlaceholderKind = label === 'Default yarn waste' ? 'applied-default' : 'example'
+                                            const inputId = `wizard-default-${String(label).toLowerCase().replace(/\s+/g, '-')}`
                                             return (
-                                                <div key={String(label)} className="space-y-1.5 rounded-xl border border-[var(--wv-border-subtle)] bg-[var(--wv-bg-subtle)] p-3">
-                                                    <Label className="text-[10px] font-black uppercase tracking-wider text-[var(--wv-text-secondary)]">{String(label)}</Label>
-                                                    <div className="relative">
+                                                <div key={String(label)} className="space-y-1.5">
+                                                    <Label htmlFor={inputId} className={fieldLabelClass}>{String(label)}</Label>
+                                                    <UnitInput unit={String(unit)}>
                                                         <Input
+                                                            id={inputId}
                                                             type="number"
                                                             min={0}
                                                             max={label === 'Broker commission' || label === 'Target margin' ? 99.99 : undefined}
                                                             step={Number(inputStep)}
-                                                            value={isGhostValue ? '' : Number(value)}
-                                                            placeholder={isGhostValue ? formatEstimatorPlaceholder(ghostValue, placeholderKind) : undefined}
+                                                            value={enteredValue(Number(value))}
+                                                            placeholder="0"
                                                             onChange={event => (setter as (next: number) => void)(parseNonNegativeInput(event.target.value) ?? 0)}
-                                                            className={`h-11 pr-14 font-mono font-bold ${placeholderKind === 'applied-default' ? 'text-[var(--wv-brand-accent-strong)] placeholder:text-[var(--wv-brand-accent-strong)]' : 'placeholder:text-[var(--wv-text-secondary)]'}`}
+                                                            className="h-11 pr-14 font-mono"
                                                         />
-                                                        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[var(--wv-text-secondary)]">{String(unit)}</span>
-                                                    </div>
+                                                    </UnitInput>
                                                 </div>
                                             )
                                         })}
-                                        <div className="space-y-1.5 rounded-xl border border-[var(--wv-border-subtle)] bg-[var(--wv-bg-subtle)] p-3">
-                                            <Label htmlFor="onboarding-yarn-review" className="text-[10px] font-black uppercase tracking-wider text-[var(--wv-text-secondary)]">Review yarn rates</Label>
+                                        <div className="space-y-1.5">
+                                            <Label htmlFor="onboarding-yarn-review" className={fieldLabelClass}>Review yarn rates</Label>
                                             <select
                                                 id="onboarding-yarn-review"
                                                 value={yarnReviewIntervalDays}
                                                 onChange={event => setYarnReviewIntervalDays(parseNumericInput(event.target.value, { min: 1 }) ?? 1)}
-                                                className="h-11 w-full rounded-xl border border-hairline bg-surface px-3 text-sm font-semibold text-ink shadow-2xs focus-visible:border-[var(--wv-border-focus)] focus-visible:ring-[var(--wv-border-focus)] cursor-pointer"
+                                                className="h-11 w-full cursor-pointer rounded-lg border border-hairline bg-surface px-3 text-sm text-ink shadow-xs focus-visible:border-[var(--wv-border-focus)] focus-visible:ring-[var(--wv-border-focus)]"
                                             >
                                                 <option value={30}>Every 30 days</option>
                                                 <option value={60}>Every 60 days</option>
@@ -684,27 +611,61 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                             </select>
                                         </div>
                                     </div>
-                                    <p className="rounded-xl border border-[var(--wv-neel-200)] bg-[var(--wv-neel-50)] px-3 py-2 text-[11px] leading-relaxed text-[var(--wv-neel-900)]">
-                                        Your target margin powers the suggested selling price. Yarn review reminders and all defaults can be changed later in Settings.
+                                    <p className={fieldHintClass}>
+                                        Your target margin gives the suggested selling price. You can change any of these later in Settings.
                                     </p>
-                                    {validationError && (
-                                        <p role="alert" className="rounded-xl border border-[var(--wv-status-danger-border)] bg-[var(--wv-status-danger-bg)] px-3 py-2 text-[11px] font-semibold leading-relaxed text-[var(--wv-status-danger-fg)]">
-                                            {validationError}
-                                        </p>
-                                    )}
+                                    <ErrorNote message={validationError} />
+                                </div>
+                            )}
+                        </div>
+
+                        {step !== 'choice' && (
+                            <footer className="border-t border-[var(--wv-border-subtle)] px-4 py-3 sm:px-6">
+                                {step === 'fast' && (
+                                    <Button size="lg" onClick={handleDirectContinue} className="w-full">
+                                        Continue
+                                        <ArrowRight className="h-4 w-4" />
+                                    </Button>
+                                )}
+                                {step === 'detailed' && (
                                     <Button
+                                        size="lg"
+                                        onClick={handleCapacityContinue}
+                                        disabled={!capacityInputsReady}
+                                        aria-describedby={!capacityInputsReady ? 'factory-capacity-hint' : undefined}
+                                        className="w-full"
+                                    >
+                                        Continue
+                                        <ArrowRight className="h-4 w-4" />
+                                    </Button>
+                                )}
+                                {step === 'detailed-expenses' && (
+                                    <Button
+                                        size="lg"
+                                        onClick={handleExpensesContinue}
+                                        disabled={!monthlyExpensesReady}
+                                        aria-describedby={!monthlyExpensesReady ? 'factory-expenses-hint' : undefined}
+                                        className="w-full"
+                                    >
+                                        Continue
+                                        <ArrowRight className="h-4 w-4" />
+                                    </Button>
+                                )}
+                                {step === 'defaults' && (
+                                    <Button
+                                        size="lg"
                                         onClick={handleFinish}
                                         disabled={saving}
                                         aria-busy={saving}
-                                        className="h-12 w-full rounded-xl bg-[var(--wv-action-primary)] font-bold text-[var(--wv-text-on-action)] shadow-sm hover:bg-[var(--wv-action-primary-hover)]"
+                                        className="w-full"
                                     >
-                                        {saving ? 'Saving...' : 'Finish Setup'}
-                                        {!saving && <CheckCircle2 className="ml-2 h-4 w-4" />}
+                                        {saving ? 'Saving…' : 'Save factory setup'}
+                                        {!saving && <Check className="h-4 w-4" />}
                                     </Button>
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
+                                )}
+                            </footer>
+                        )}
+                    </div>
                 </motion.div>
             </AnimatePresence>
 
@@ -716,26 +677,26 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
             }}>
                 <DialogContent className="max-w-lg">
                     <DialogHeader>
-                        <DialogTitle className="text-[var(--wv-status-warning-fg)]">Review unusual setup values</DialogTitle>
+                        <DialogTitle>Check these values</DialogTitle>
                         <DialogDescription>
-                            These values may be correct for your factory, but they are outside the usual costing range. Confirm them before saving your factory costs.
+                            They may be right for your factory, but they are outside the usual range. Confirm them before saving.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="max-h-64 space-y-2 overflow-y-auto rounded-lg border border-[var(--wv-status-warning-border)] bg-[var(--wv-status-warning-bg)] p-3">
+                    <ul className="max-h-64 space-y-2 overflow-y-auto rounded-lg border border-[var(--wv-status-warning-border)] bg-[var(--wv-status-warning-bg)] p-3">
                         {pendingWarnings.map(warning => (
-                            <div key={`${warning.field}:${warning.message}`} className="flex gap-2 text-sm text-[var(--wv-status-warning-fg)]">
-                                <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--wv-status-warning-fg)]" />
+                            <li key={`${warning.field}:${warning.message}`} className="flex gap-2 text-sm text-[var(--wv-status-warning-fg)]">
+                                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--wv-status-warning-fg)]" />
                                 <span>{warning.message}</span>
-                            </div>
+                            </li>
                         ))}
-                    </div>
+                    </ul>
                     <DialogFooter>
                         <Button variant="ghost" onClick={() => {
                             setPendingCompletion(null)
                             setPendingWarnings([])
                         }}>Go back</Button>
-                        <Button className="bg-[var(--wv-action-primary)] text-[var(--wv-text-on-action)] hover:bg-[var(--wv-action-primary-hover)]" onClick={confirmPendingCompletion}>
-                            I reviewed these values
+                        <Button onClick={confirmPendingCompletion}>
+                            Values are correct
                         </Button>
                     </DialogFooter>
                 </DialogContent>
