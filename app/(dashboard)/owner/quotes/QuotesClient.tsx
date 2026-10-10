@@ -16,7 +16,6 @@ import {
     shouldWarnBeforeQuoteRestore,
     type EstimatorAutosaveData,
 } from '@/lib/estimator-drafts'
-import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { SwitchField } from '@/components/ui/switch-field'
@@ -52,10 +51,8 @@ import {
     ArchiveRestore,
     BookmarkPlus,
     ChevronDown,
-    ChevronRight,
     Download,
     Factory,
-    Layers3,
     Sparkles,
     Trash2,
     X,
@@ -87,11 +84,16 @@ import { isStandaloneCosting, type CostingRecordKind } from '@/lib/costing-works
 import { useTranslation } from '@/lib/i18n/context'
 import { trackPlanEvent } from '@/lib/plan-analytics'
 import { RouteMilestones } from '@/components/performance/route-milestones'
-import { EmptyState, PageHeader, StatusBadge, Toolbar } from '@/components/ui/page-header'
+import { EmptyState, PageHeader, StatusBadge } from '@/components/ui/page-header'
+import { LiquidSegmented } from '@/components/ui/liquid-segmented'
 import { useOwnerPlan } from '@/components/providers/owner-plan-provider'
 import { liteRecordsCopy } from '@/lib/i18n/lite-records'
 import { MOBILE_WORKSPACE_QUERY } from '@/lib/mobile-workflow-navigation'
 import mobileStyles from '@/components/estimator/lite-records.module.css'
+import { CompositionBar, Swatch } from '@/components/stock/stock-presentation'
+import { averageMargin, averageYarnShare, costMix, marginRanking, qualityYarns, type CostMixKey } from '@/lib/costing-catalogue'
+import { costingCatalogueText } from '@/lib/i18n/costing-catalogue'
+import { fillCopy } from '@/lib/i18n/fill'
 
 const CostingExportDialog = dynamic(
     () => import('@/components/estimator/CostingExportDialog').then(module => module.CostingExportDialog),
@@ -99,6 +101,25 @@ const CostingExportDialog = dynamic(
 )
 
 /* Historical copy reference retained for source-regression coverage: expand a quality to review its costing history. */
+
+/** Card actions: a quiet bordered button and a text-only one, 44px tall on phones. */
+const secondaryAction = 'h-10 rounded-lg border-hairline bg-surface font-semibold text-ink shadow-xs hover:bg-surface-soft max-md:min-h-[44px]'
+const ghostAction = 'h-10 rounded-lg font-semibold text-body max-md:min-h-[44px]'
+
+/** Where a costing's money goes, in the chart colours the stock pages use: yarn leads in loom navy. */
+const COST_MIX_COLORS: Record<CostMixKey, string> = {
+    yarn: 'var(--wv-viz-1)',
+    weaving: 'var(--wv-viz-2)',
+    processing: 'var(--wv-neel-300)',
+    factory: 'var(--wv-viz-4)',
+}
+
+/** Margin text: ochre under 10%, madder when a costing loses money, ink otherwise. */
+function marginTone(margin: number | null) {
+    if (margin == null) return 'text-muted-foreground'
+    if (margin < 0) return 'text-[var(--wv-madder-600)]'
+    return margin < 10 ? 'text-[var(--wv-ochre-800)]' : 'text-ink'
+}
 
 type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected'
 type QuoteDraftState = ReturnType<typeof makeDefaultEstimateState>
@@ -192,6 +213,8 @@ type QuoteRow = {
     expected_profit_total?: number | null
     actual_margin_percent?: number | null
     costing_result_snapshot?: unknown
+    /** The saved result's per-metre breakdown, read with the library summary for the card's cost mix. */
+    cost_breakdown?: unknown
     costing_input_fingerprint?: string | null
     factory_profile_updated_at?: string | null
     reconciliation_status?: string | null
@@ -434,11 +457,10 @@ function SavedQualityLibraryView({
     tourStep?: SavedCostingStep | null
 }) {
     const { t, tx, language } = useTranslation()
-    const isLite = useOwnerPlan() === 'lite'
-    const mobileCopy = liteRecordsCopy[language]
+    const copy = costingCatalogueText[language]
 
     return (
-        <div className="space-y-3">
+        <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(min(100%,30rem),1fr))]">
             {groups.map((group, groupIndex) => {
                 const isOpen = openKey === group.key
                 const latest = group.records[0] ?? null
@@ -460,6 +482,7 @@ function SavedQualityLibraryView({
                             ['Weft yarn (saved adjusted cost)', activeResult.breakdown.weftCostPerM],
                         ]
                         : []
+                const activeMix = activeResult ? costMix(activeResult.breakdown) : null
                 const openGroupDetails = () => onOpenDetails(group.key, group.records.length === 1 ? group.records[0] : null)
                 const handleInspectRecord = (record: QuoteRow) => {
                     onSelectRecord(group.key, record.id)
@@ -468,75 +491,148 @@ function SavedQualityLibraryView({
                     }
                 }
 
+                const latestMetrics = latest ? getSavedCostingMetrics(latest) : null
+                // The change line compares the costing shown with the version saved before it.
+                const prior = latest
+                    ? group.records
+                        .filter(record => Number(record.version_number ?? 1) < Number(latest.version_number ?? 1))
+                        .sort((left, right) => Number(right.version_number ?? 1) - Number(left.version_number ?? 1))[0] ?? null
+                    : null
+                const previousCost = prior ? getProductionCostPerM(prior) : null
+                const costChange = latestMetrics?.productionCostPerM != null && previousCost != null && previousCost > 0
+                    ? { difference: latestMetrics.productionCostPerM - previousCost, percent: ((latestMetrics.productionCostPerM - previousCost) / previousCost) * 100 }
+                    : null
+                const mix = latest ? costMix(latest.cost_breakdown ?? getHistoricalCostingResult(latest)?.breakdown) : null
+                const yarns = qualityYarns(group.template)
+                const savedMeta = latest
+                    ? [
+                        `v${Number(latest.version_number ?? 1)}`,
+                        fillCopy(copy.savedOn, { date: formatTimestampDate(latest.created_at, { day: 'numeric', month: 'short' }) }),
+                        Number(latest.meters) > 0 ? fillCopy(copy.costedFor, { m: Number(latest.meters).toLocaleString('en-IN') }) : null,
+                    ].filter(Boolean).join(' · ')
+                    : tx('Saved recipe · no saved costing yet')
+
                 return (
-                    <Card
+                    <article
                         key={group.key}
                         data-costing-tour={tourStep && groupIndex === 0 ? "sample" : undefined}
                         data-tour-anchor={!tourStep && groupIndex === 0 && !isSampleRecordId(group.key) ? "costings.first-card" : undefined}
                         tabIndex={!tourStep && groupIndex === 0 ? -1 : undefined}
-                        onClick={event => {
-                            const target = event.target
-                            if (target instanceof Element && target.closest('button, [data-slot="dialog-content"], [data-slot="dialog-overlay"]')) return
-                            openGroupDetails()
-                        }}
-                        className={`ui-disclosure-card cursor-pointer ${isOpen ? 'border-saffron/30 bg-surface shadow-[var(--shadow-panel)]' : 'border-hairline bg-surface shadow-[var(--shadow-card)]'}`}
+                        data-i18n-skip="true"
+                        lang={language}
+                        className="flex flex-col gap-5 rounded-2xl border border-hairline bg-surface p-5 shadow-xs sm:px-6"
                     >
-                        <CardContent className="p-0">
-                            <div className={cn("flex flex-col gap-4 p-4 sm:flex-row sm:flex-wrap sm:items-center sm:p-5 lg:flex-nowrap", tourStep && "xl:flex-wrap", isLite && mobileStyles.cardSummary)}>
-                                <button
-                                    type="button"
-                                    onClick={openGroupDetails}
-                                    aria-haspopup="dialog"
-                                    className={cn("group flex min-w-0 flex-1 items-start gap-3 rounded-lg text-left outline-none focus-visible:ring-2 focus-visible:ring-saffron/35", tourStep && "xl:basis-full")}
-                                >
-                                    <span className="mt-0.5 rounded-lg bg-saffron-soft p-2 text-saffron-deep">
-                                        <Layers3 className="h-5 w-5" />
-                                    </span>
-                                    <span className="min-w-0">
-                                        <span className="flex flex-wrap items-center gap-2">
-                                            <span className="truncate text-base font-black text-ink" title={group.name}>{group.name}</span>
-                                            {group.template && <Badge variant="outline" className="border-info/25 bg-info-soft text-[10px] font-bold text-info">{tx('Fabric Quality')}</Badge>}
-                                            {group.template?.is_active === false && <Badge variant="outline" className="border-hairline bg-surface-soft text-[10px] font-bold text-subtle">{tx('Archived · read-only')}</Badge>}
-                                            {latest && <Badge variant="outline" className="text-[10px] font-bold">v{Number(latest.version_number ?? 1)}</Badge>}
-                                            {latest && getCostingStatus(latest) !== 'verified' && <StatusBadge status="needs_review" label={getCostingBadge(getCostingStatus(latest))} />}
-                                        </span>
-                                        <span className="mt-1 block text-xs text-subtle">
-                                            {group.records.length > 0
-                                                ? `${group.records.length} saved costing ${group.records.length === 1 ? 'snapshot' : 'snapshots'} · updated ${formatTimestampDate(group.updatedAt, { day: 'numeric', month: 'short', year: 'numeric' })}`
-                                                : tx('Saved recipe · no saved costing yet')}
-                                        </span>
-                                    </span>
-                                </button>
-
-                                <div className={cn("grid gap-2 grid-cols-1 sm:grid-cols-2 sm:min-w-[300px]", isLite && mobileStyles.cardMetrics)}>
-                                    <div className="rounded-lg bg-surface-soft px-3 py-2">
-                                        <p className="text-[10px] font-bold uppercase tracking-wide text-subtle">{tx(latest ? 'Latest cost' : 'Current recipe')}</p>
-                                        <p className="mt-1 font-mono text-sm font-black text-ink">{latest
-                                            ? formatCostingMoneyPerM(getProductionCostPerM(latest))
-                                            : group.currentRecipeCostPerM != null
-                                                ? `₹${group.currentRecipeCostPerM.toFixed(2)}/m`
-                                                : tx('Not calculated')}</p>
-                                    </div>
-                                    <div className={cn("rounded-lg bg-surface-soft px-3 py-2", isLite && mobileStyles.desktopOnly)}>
-                                        <p className="text-[10px] font-bold uppercase tracking-wide text-subtle">{tx('History')}</p>
-                                        <p className="mt-1 text-sm font-black text-ink">{tx(`${group.records.length} ${group.records.length === 1 ? 'snapshot' : 'snapshots'}`)}</p>
-                                    </div>
-                                    {isLite && <div data-i18n-skip="true" lang={language} className={cn("rounded-lg bg-surface-soft px-3 py-2", mobileStyles.mobileOnly)}>
-                                        <p className="text-[10px] font-bold uppercase tracking-wide text-subtle">{mobileCopy.sellingPrice}</p>
-                                        <p className="mt-1 font-mono text-sm font-black text-ink">{latest ? formatCostingMoneyPerM(getSuggestedSellingPricePerM(latest)) : tx('Not calculated')}</p>
-                                    </div>}
-                                </div>
-
-                                <button
-                                    type="button"
-                                    onClick={openGroupDetails}
-                                    aria-haspopup="dialog"
-                                    aria-label={`Open ${group.name} details`}
-                                    className="hidden rounded-md p-2 text-subtle hover:bg-surface-soft sm:block"
-                                >
-                                    <ChevronRight className="h-5 w-5" />
-                                </button>
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                                <h3 className="break-words text-[17px] font-semibold leading-snug text-ink" title={group.name}>{group.name}</h3>
+                                <p className="mt-0.5 text-[13px] text-muted-foreground tabular-nums">{savedMeta}</p>
+                                {(group.template?.is_active === false || (latest && getCostingStatus(latest) !== 'verified')) && (
+                                    <p className="mt-1.5 flex flex-wrap gap-x-3 text-[13px] font-medium">
+                                        {group.template?.is_active === false && <span className="text-muted-foreground">{tx('Archived · read-only')}</span>}
+                                        {latest && getCostingStatus(latest) !== 'verified' && <span className="text-[var(--wv-ochre-800)]">{tx(getCostingBadge(getCostingStatus(latest)))}</span>}
+                                    </p>
+                                )}
                             </div>
+                            {latest && (
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => onToggleFavorite(latest)}
+                                    disabled={updatingId === latest.id}
+                                    aria-pressed={Boolean(latest.is_favorite)}
+                                    aria-label={fillCopy(latest.is_favorite ? copy.removeFavourite : copy.addFavourite, { name: group.name })}
+                                    className="-mr-2 -mt-1.5 h-10 w-10 shrink-0 max-md:h-11 max-md:w-11"
+                                >
+                                    <Star className={cn('h-[18px] w-[18px]', latest.is_favorite ? 'fill-saffron text-saffron-deep' : 'text-muted-foreground')} aria-hidden="true" />
+                                </Button>
+                            )}
+                        </div>
+
+                        {latest && latestMetrics ? (
+                            <div>
+                                <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
+                                    <div>
+                                        <p className="text-[13px] text-muted-foreground">{copy.cost}</p>
+                                        <p className="mt-1.5 text-4xl font-semibold leading-none tracking-[-0.03em] text-ink tabular-nums">
+                                            {latestMetrics.productionCostPerM == null ? tx('Not available') : <>₹{latestMetrics.productionCostPerM.toFixed(2)}<span className="ml-1 text-base font-medium tracking-normal text-muted-foreground">/m</span></>}
+                                        </p>
+                                    </div>
+                                    <dl className="flex gap-7 sm:text-right">
+                                        <div>
+                                            <dt className="text-[13px] text-muted-foreground">{copy.sellsAt}</dt>
+                                            <dd className="mt-1.5 text-lg font-semibold text-ink tabular-nums">{latestMetrics.suggestedSellingPricePerM == null ? '—' : `₹${latestMetrics.suggestedSellingPricePerM.toFixed(2)}`}</dd>
+                                        </div>
+                                        <div>
+                                            <dt className="text-[13px] text-muted-foreground">{copy.margin}</dt>
+                                            <dd className={cn('mt-1.5 text-lg font-semibold tabular-nums', marginTone(latestMetrics.actualMarginPct))}>{formatCostingPercent(latestMetrics.actualMarginPct)}</dd>
+                                        </div>
+                                    </dl>
+                                </div>
+                                {costChange && Math.abs(costChange.difference) >= 0.005 && prior && (
+                                    <p className="mt-2 text-[13px] tabular-nums">
+                                        <span className={cn('font-semibold', costChange.difference > 0 ? 'text-[var(--wv-ochre-800)]' : 'text-[var(--wv-moss-700)]')}>
+                                            {costChange.difference > 0 ? '↑' : '↓'} ₹{Math.abs(costChange.difference).toFixed(2)} · {Math.abs(costChange.percent).toFixed(1)}%
+                                        </span>
+                                        <span className="text-muted-foreground"> {fillCopy(copy.fromVersion, { n: Number(prior.version_number ?? 1), date: formatTimestampDate(prior.created_at, { day: 'numeric', month: 'short' }) })}</span>
+                                    </p>
+                                )}
+                            </div>
+                        ) : (
+                            <div>
+                                <p className="text-[13px] text-muted-foreground">{tx('Current recipe')}</p>
+                                <p className="mt-1.5 text-2xl font-semibold text-ink tabular-nums">{group.currentRecipeCostPerM != null ? `₹${group.currentRecipeCostPerM.toFixed(2)}/m` : tx('Not calculated')}</p>
+                                <p className="mt-2 text-[13px] text-muted-foreground">{copy.noCosting}</p>
+                            </div>
+                        )}
+
+                        {mix && (
+                            <div>
+                                <CompositionBar
+                                    label={fillCopy(copy.mixLabel, { parts: mix.parts.map(part => `${copy[part.key]} ${Math.round((part.value / mix.total) * 100)}%`).join(', ') })}
+                                    segments={mix.parts.map(part => ({ key: part.key, value: part.value, color: COST_MIX_COLORS[part.key] }))}
+                                />
+                                <ul className="mt-2.5 flex flex-wrap gap-x-5 gap-y-1 text-[13px] text-muted-foreground">
+                                    {mix.parts.filter(part => part.value > 0).map(part => (
+                                        <li key={part.key} className="flex items-center gap-1.5 tabular-nums">
+                                            <Swatch color={COST_MIX_COLORS[part.key]} className="size-2" />
+                                            {copy[part.key]} <span className="text-body">₹{part.value.toFixed(2)}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+
+                        {(yarns.warp.length > 0 || yarns.weft.length > 0) && (
+                            <p className="text-[13px] leading-snug">
+                                {yarns.warp.length > 0 && <><span className="text-muted-foreground">{copy.warp} </span><span className="text-ink">{yarns.warp.join(', ')}</span></>}
+                                {yarns.warp.length > 0 && yarns.weft.length > 0 && <span className="text-muted-foreground"> · </span>}
+                                {yarns.weft.length > 0 && <><span className="text-muted-foreground">{copy.weft} </span><span className="text-ink">{yarns.weft.join(', ')}</span></>}
+                            </p>
+                        )}
+
+                        <div className="mt-auto flex flex-wrap items-center gap-2 border-t border-hairline pt-4">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={openGroupDetails}
+                                aria-haspopup="dialog"
+                                aria-label={`${copy.breakdown}: ${group.name}`}
+                                className={secondaryAction}
+                            >
+                                {copy.breakdown}
+                            </Button>
+                            {latest && !latest.is_archived && group.template?.is_active !== false && (
+                                <Button type="button" variant="outline" onClick={() => onOpen(latest)} disabled={updatingId === latest.id} className={secondaryAction}>
+                                    <ArrowRight className="h-4 w-4" aria-hidden="true" /> {t('tourControls.savedCostings.use')}
+                                </Button>
+                            )}
+                            {latest && (
+                                <Button type="button" variant="ghost" onClick={() => onExport(latest)} className={cn('ml-auto', ghostAction)}>
+                                    <Download className="h-4 w-4" aria-hidden="true" /> {tx('Export')}
+                                </Button>
+                            )}
+                        </div>
 
                             <Dialog modal={!tourStep} open={isOpen} onOpenChange={open => { if (!open && !tourStep) onCloseDetails() }}>
                                 <DialogContent
@@ -552,8 +648,7 @@ function SavedQualityLibraryView({
                                     <div className="max-h-[calc(100dvh-2rem)] min-w-0 overflow-x-hidden overflow-y-auto sm:max-h-[calc(100dvh-2rem)]">
                                         <DialogHeader className="relative sticky top-0 z-20 border-b border-hairline bg-surface px-5 py-4 pr-16 sm:px-6 sm:pr-16">
                                             <div className="flex min-w-0 items-center gap-2">
-                                                <DialogTitle className="min-w-0 flex-1 truncate text-xl font-black" title={group.name}>{group.name}</DialogTitle>
-                                                {group.template && <Badge variant="outline" className="border-info/25 bg-info-soft text-[10px] font-bold text-info">{tx('Fabric Quality')}</Badge>}
+                                                <DialogTitle className="min-w-0 flex-1 truncate text-xl font-semibold tracking-[-0.01em]" title={group.name}>{group.name}</DialogTitle>
                                                 {group.template?.is_active === false && <Badge variant="outline" className="border-hairline bg-surface-soft text-[10px] font-bold text-subtle">{tx('Archived · read-only')}</Badge>}
                                                 {(activeRecord ?? latest) && <Badge variant="outline" className="text-[10px] font-bold">v{Number((activeRecord ?? latest)?.version_number ?? 1)}</Badge>}
                                             </div>
@@ -622,8 +717,8 @@ function SavedQualityLibraryView({
                                             <section data-costing-tour="breakdown" className="rounded-xl border border-hairline bg-surface p-4">
                                                 <div className="flex flex-wrap items-start justify-between gap-3">
                                                     <div>
-                                                        <p className="text-sm font-black text-ink">{tx(group.records.length > 1 ? `Saved Costing v${Number(activeRecord.version_number ?? 1)} breakdown` : 'Latest Saved Costing breakdown')}</p>
-                                                        <p className="mt-1 text-xs text-subtle">Snapshot v{Number(activeRecord.version_number ?? 1)} · {formatTimestampDate(activeRecord.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                                                        <p className="text-base font-semibold text-ink">{tx(group.records.length > 1 ? `Saved Costing v${Number(activeRecord.version_number ?? 1)} breakdown` : 'Latest Saved Costing breakdown')}</p>
+                                                        <p className="mt-0.5 text-[13px] text-muted-foreground">Snapshot v{Number(activeRecord.version_number ?? 1)} · {formatTimestampDate(activeRecord.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}</p>
                                                     </div>
                                                     <div data-costing-tour="reuse" className="flex flex-wrap gap-2">
                                                         {!activeRecord.is_archived && group.template?.is_active !== false && <Button size="sm" onClick={() => onOpen(activeRecord)} disabled={updatingId === activeRecord.id} aria-busy={updatingId === activeRecord.id} className="rounded-lg bg-loom font-medium text-white hover:bg-loom-elevated hover:text-white"><ArrowRight className="h-3.5 w-3.5" /> {t('tourControls.savedCostings.use')}</Button>}
@@ -648,6 +743,22 @@ function SavedQualityLibraryView({
                                                     </div>
                                                 </div>
 
+                                                {activeMix && (
+                                                    <div className="mt-4" data-i18n-skip="true" lang={language}>
+                                                        <CompositionBar
+                                                            label={fillCopy(copy.mixLabel, { parts: activeMix.parts.map(part => `${copy[part.key]} ${Math.round((part.value / activeMix.total) * 100)}%`).join(', ') })}
+                                                            segments={activeMix.parts.map(part => ({ key: part.key, value: part.value, color: COST_MIX_COLORS[part.key] }))}
+                                                        />
+                                                        <ul className="mt-2.5 flex flex-wrap gap-x-5 gap-y-1 text-[13px] text-muted-foreground">
+                                                            {activeMix.parts.filter(part => part.value > 0).map(part => (
+                                                                <li key={part.key} className="flex items-center gap-1.5 tabular-nums">
+                                                                    <Swatch color={COST_MIX_COLORS[part.key]} className="size-2" />
+                                                                    {copy[part.key]} <span className="text-body">{Math.round((part.value / activeMix.total) * 100)}%</span>
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                )}
                                                 <div className="mt-4 divide-y divide-hairline text-sm">
                                                     {[
                                                         ...activeYarnCostLines,
@@ -662,10 +773,10 @@ function SavedQualityLibraryView({
                                                         </div>
                                                     ))}
                                                 </div>
-                                                <div data-costing-tour="economics" className="mt-2 grid grid-cols-1 gap-2 rounded-lg bg-loom p-3 text-white sm:grid-cols-3">
-                                                    <div><p className="text-[10px] uppercase text-surface-muted">{t('common.production_cost_per_m')}</p><p className="mt-1 font-mono text-sm font-black">₹{latestResult.productionCostPerM.toFixed(2)}/m</p></div>
-                                                    <div><p className="text-[10px] uppercase text-surface-muted">{t('common.suggested_selling_price_per_m')}</p><p className="mt-1 font-mono text-sm font-black text-saffron">₹{latestResult.suggestedSellingPricePerM.toFixed(2)}/m</p></div>
-                                                    <div><p className="text-[10px] uppercase text-surface-muted">Actual Margin</p><p className="mt-1 font-mono text-sm font-black text-success">{latestResult.actualMarginPct.toFixed(1)}%</p></div>
+                                                <div data-costing-tour="economics" className="mt-3 grid overflow-hidden rounded-xl border border-hairline sm:grid-cols-3">
+                                                    <div className="p-4"><p className="text-[13px] text-muted-foreground">{t('common.production_cost_per_m')}</p><p className="mt-1.5 text-2xl font-semibold tracking-[-0.02em] text-ink tabular-nums">₹{latestResult.productionCostPerM.toFixed(2)}<span className="ml-0.5 text-sm font-medium tracking-normal text-muted-foreground">/m</span></p></div>
+                                                    <div className="border-t border-hairline p-4 sm:border-l sm:border-t-0"><p className="text-[13px] text-muted-foreground">{t('common.suggested_selling_price_per_m')}</p><p className="mt-1.5 text-2xl font-semibold tracking-[-0.02em] text-ink tabular-nums">₹{latestResult.suggestedSellingPricePerM.toFixed(2)}<span className="ml-0.5 text-sm font-medium tracking-normal text-muted-foreground">/m</span></p></div>
+                                                    <div className="border-t border-hairline p-4 sm:border-l sm:border-t-0"><p className="text-[13px] text-muted-foreground">Actual Margin</p><p className={cn('mt-1.5 text-2xl font-semibold tracking-[-0.02em] tabular-nums', marginTone(latestResult.actualMarginPct))}>{latestResult.actualMarginPct.toFixed(1)}%</p></div>
                                                 </div>
                                                 {getCostingStatus(activeRecord) !== 'verified' && (
                                                     <div className="mt-3 flex flex-col gap-3 rounded-lg border border-warning/25 bg-warning-soft px-3 py-3 text-xs text-warning sm:flex-row sm:items-center sm:justify-between">
@@ -682,8 +793,8 @@ function SavedQualityLibraryView({
 
                                     {group.records.length > 0 && (
                                         <section data-costing-tour="versions" className="mt-4 rounded-xl border border-hairline bg-surface p-4">
-                                            <p className="text-sm font-black text-ink">Saved Costing history</p>
-                                            <p className="mt-1 text-xs text-subtle">{comparisonMode ? 'Select two versions to compare their saved commercial assumptions.' : 'Open a version to inspect the exact assumptions and economics saved at that time.'}</p>
+                                            <p className="text-base font-semibold text-ink">Saved Costing history</p>
+                                            <p className="mt-0.5 text-[13px] text-muted-foreground">{comparisonMode ? 'Select two versions to compare their saved commercial assumptions.' : 'Open a version to inspect the exact assumptions and economics saved at that time.'}</p>
                                             <div className="mt-3 space-y-2">
                                                 {group.records.map(record => {
                                                     const isInspected = activeRecord?.id === record.id
@@ -737,19 +848,19 @@ function SavedQualityLibraryView({
                                                                     </div>
                                                                     <dl className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
                                                                         <div className="min-w-0 rounded-md bg-surface-soft px-2 py-1.5">
-                                                                            <dt className="truncate text-[9px] font-bold uppercase tracking-wide text-subtle">Cost</dt>
+                                                                            <dt className="truncate text-[12px] text-muted-foreground">Cost</dt>
                                                                             <dd className="mt-0.5 truncate font-mono text-xs font-semibold text-body">{formatCostingMoneyPerM(getProductionCostPerM(record))}</dd>
                                                                         </div>
                                                                         <div className="min-w-0 rounded-md bg-surface-soft px-2 py-1.5">
-                                                                            <dt className="truncate text-[9px] font-bold uppercase tracking-wide text-subtle">Selling price</dt>
+                                                                            <dt className="truncate text-[12px] text-muted-foreground">Selling price</dt>
                                                                             <dd className="mt-0.5 truncate font-mono text-xs font-bold text-saffron-deep">{formatCostingMoneyPerM(getSuggestedSellingPricePerM(record))}</dd>
                                                                         </div>
                                                                         <div className="min-w-0 rounded-md bg-surface-soft px-2 py-1.5">
-                                                                            <dt className="truncate text-[9px] font-bold uppercase tracking-wide text-subtle">Margin</dt>
+                                                                            <dt className="truncate text-[12px] text-muted-foreground">Margin</dt>
                                                                             <dd className="mt-0.5 truncate font-mono text-xs font-bold text-success">{formatCostingPercent(getActualMarginPct(record))}</dd>
                                                                         </div>
                                                                         <div className="min-w-0 rounded-md bg-surface-soft px-2 py-1.5">
-                                                                            <dt className="truncate text-[9px] font-bold uppercase tracking-wide text-subtle">Costing qty.</dt>
+                                                                            <dt className="truncate text-[12px] text-muted-foreground">Costing qty.</dt>
                                                                             <dd className="mt-0.5 truncate text-xs text-body">{Number(record.meters ?? 0).toLocaleString('en-IN')} m</dd>
                                                                         </div>
                                                                     </dl>
@@ -787,8 +898,7 @@ function SavedQualityLibraryView({
                                     </div>
                                 </DialogContent>
                             </Dialog>
-                        </CardContent>
-                    </Card>
+                    </article>
                 )
             })}
         </div>
@@ -1263,6 +1373,41 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
         await handleLibraryState(target, { isArchived: action === 'restore' ? false : true })
     }
 
+    const catalogue = costingCatalogueText[language]
+    // The band reads the whole active library: each quality's latest saved costing, whatever the search or view below.
+    const libraryLatest = useMemo(() => {
+        const templateById = new Map(initialTemplates.map(template => [template.id, template]))
+        const byQuality = new Map<string, { name: string; record: QuoteRow; count: number }>()
+        for (const record of quotes) {
+            const template = record.template_id ? templateById.get(record.template_id) ?? null : null
+            if (isSavedCostingArchived(record, template)) continue
+            const name = template?.name ?? record.quality_label ?? ''
+            const key = normalizeQualityKey(name) || record.id
+            const entry = byQuality.get(key)
+            if (!entry) byQuality.set(key, { name: name || 'Untitled costing', record, count: 1 })
+            else {
+                entry.count += 1
+                if (Date.parse(record.updated_at) > Date.parse(entry.record.updated_at)) entry.record = record
+            }
+        }
+        return [...byQuality.entries()].map(([key, entry]) => ({ key, ...entry, metrics: getSavedCostingMetrics(entry.record) }))
+    }, [initialTemplates, quotes])
+    const bandMargins = libraryLatest.flatMap(entry => entry.metrics.actualMarginPct == null ? [] : [{ key: entry.key, name: entry.name, margin: entry.metrics.actualMarginPct }])
+    const marginBars = marginRanking(bandMargins)
+    const marginScale = Math.max(20, ...bandMargins.map(entry => entry.margin))
+    const libraryAverageMargin = averageMargin(bandMargins.map(entry => entry.margin))
+    const libraryYarnShare = averageYarnShare(libraryLatest.map(entry => costMix(entry.record.cost_breakdown ?? getHistoricalCostingResult(entry.record)?.breakdown)))
+    const savedCostingCount = libraryLatest.reduce((sum, entry) => sum + entry.count, 0)
+    const lastSavedAt = libraryLatest.reduce<string | null>((latest, entry) => !latest || Date.parse(entry.record.created_at) > Date.parse(latest) ? entry.record.created_at : latest, null)
+    const showLibraryBand = !tourSampleActive && !loadError && !showArchived && libraryLatest.length > 0
+    const libraryView = showArchived ? 'archived' : showFavoritesOnly ? 'favourites' : 'all'
+    const setLibraryView = (view: 'all' | 'favourites' | 'archived') => {
+        setOpenQualityKey(null)
+        setShowArchived(view === 'archived')
+        setShowFavoritesOnly(view === 'favourites')
+        setSelectedCostingIds([])
+    }
+
     return (
         <>
             <div className={cn("saved-costings-workspace ui-route-enter w-full space-y-4 sm:space-y-6", isLite && mobileStyles.workspace)} data-lite-costings={isLite || undefined}>
@@ -1270,6 +1415,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             {detailLoadingId && <p role="status" aria-live="polite" className="ui-status-enter rounded-lg border border-info/25 bg-info-soft px-3 py-2 text-xs font-semibold text-info">{tx('Selection saved. Loading the complete snapshot for comparison…')}</p>}
             <PageHeader
                 title={t('common.saved_costings_title')}
+                description={<span data-i18n-skip="true" lang={language}>{catalogue.intro}</span>}
                 actions={<>
                     <SavedCostingsTutorial step={tourStep} onStepChange={setTourStep} onComplete={() => setShowCostingDeleteNudge(true)} production={canUseProductionPipeline} ending={savedCostingTourEnding(quotes.filter(quote => isStandaloneCosting(quote.record_kind)).length, tourUnavailable)} topics={[archivePolicyTopic]} userId={userId} orgId={orgId} userMetadata={userMetadata} />
                     <Button
@@ -1314,10 +1460,68 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     </div>
                 </div>
             )}
-            <Toolbar data-costing-tour="filters" className="overflow-visible rounded-2xl border border-hairline bg-surface shadow-xs p-3 sm:p-4">
-                    <div className="flex min-w-0 flex-wrap items-center gap-2 sm:grid sm:gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(260px,1fr)_auto_auto_auto_auto]">
-                        <div className="relative min-w-0 w-full sm:w-auto">
-                            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle/60" />
+            {/* The library at a glance: how many qualities are costed, their average margin, and margin by quality. */}
+            {showLibraryBand && (
+                <section
+                    aria-labelledby="costing-library-status"
+                    data-i18n-skip="true"
+                    lang={language}
+                    className="grid overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]"
+                >
+                    <div className="flex flex-col justify-between gap-5 p-5 sm:p-6">
+                        <div>
+                            <p id="costing-library-status" className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                                <span aria-hidden="true" className="size-1.5 rounded-full bg-saffron" />
+                                {catalogue.costed}
+                            </p>
+                            <p className="mt-3 text-5xl font-semibold leading-none tracking-[-0.035em] text-ink tabular-nums">
+                                {libraryLatest.length}
+                                <span className="ml-2 text-2xl font-medium tracking-normal text-muted-foreground">{libraryLatest.length === 1 ? catalogue.qualityUnit : catalogue.qualitiesUnit}</span>
+                            </p>
+                            <p className="mt-3 text-sm text-body tabular-nums">
+                                {fillCopy(savedCostingCount === 1 ? catalogue.savedCostingsOne : catalogue.savedCostings, { n: savedCostingCount })}
+                                {lastSavedAt && <span className="text-muted-foreground"> · {fillCopy(catalogue.lastSaved, { date: formatTimestampDate(lastSavedAt, { day: 'numeric', month: 'short' }) })}</span>}
+                            </p>
+                        </div>
+                        {libraryAverageMargin != null && (
+                            <p className="border-t border-hairline pt-4 text-[13px] text-body tabular-nums">
+                                {fillCopy(catalogue.avgMargin, { pct: `${libraryAverageMargin.toFixed(1)}%` })}
+                                {libraryYarnShare != null && <span className="text-muted-foreground"> · {fillCopy(catalogue.yarnShare, { pct: `${libraryYarnShare}%` })}</span>}
+                            </p>
+                        )}
+                    </div>
+                    <div className="border-t border-hairline p-5 sm:p-6 lg:border-l lg:border-t-0">
+                        <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                            <p className="text-sm font-medium text-muted-foreground">{catalogue.marginTitle}</p>
+                            <p className="text-[13px] text-muted-foreground">{marginBars.lowestOnly ? fillCopy(catalogue.lowestNote, { n: marginBars.entries.length }) : catalogue.marginNote}</p>
+                        </div>
+                        {marginBars.entries.length ? (
+                            <ul className="space-y-3">
+                                {marginBars.entries.map(entry => (
+                                    <li key={entry.key} className="grid grid-cols-[minmax(0,1fr)_4.5rem] items-center gap-x-4 sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)_4.5rem]">
+                                        <span className="truncate text-sm font-semibold text-ink" title={entry.name}>{entry.name}</span>
+                                        <span aria-hidden="true" className="hidden h-2 rounded-full bg-surface-soft sm:block">
+                                            <span
+                                                className={cn('block h-full rounded-full', entry.margin < 10 ? 'bg-[var(--wv-ochre-400)]' : 'bg-[var(--wv-viz-1)]')}
+                                                style={{ width: `${Math.max((Math.max(entry.margin, 0) / marginScale) * 100, 2)}%` }}
+                                            />
+                                        </span>
+                                        <span className={cn('text-right text-sm font-semibold tabular-nums', marginTone(entry.margin))}>{entry.margin.toFixed(1)}%</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p className="text-sm text-muted-foreground">{catalogue.noMargins}</p>
+                        )}
+                    </div>
+                </section>
+            )}
+            <div data-costing-tour="filters" className="space-y-3">
+                {/* One wrapping row: search, the view, filters and Compare; on a phone Filters and Compare share a line. */}
+                <div className="flex flex-wrap items-center gap-3">
+                    <div className="contents">
+                        <div className="relative w-full min-w-0 sm:w-auto sm:min-w-[14rem] sm:max-w-sm sm:flex-1">
+                            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
                             <Label htmlFor="saved-costings-search" className="sr-only">{t('common.search_quality_costing')}</Label>
                             <Input
                                 id="saved-costings-search"
@@ -1325,21 +1529,32 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                 onChange={event => setSearchQuery(event.target.value)}
                                 placeholder="Search saved records…"
                                 aria-label="Search saved qualities and costings"
-                                className="h-10 sm:h-11 w-full min-w-0 rounded-xl border-hairline bg-surface pl-10 pr-4 text-sm text-ink placeholder:text-subtle/50 focus-visible:border-saffron focus-visible:ring-saffron"
+                                className="h-10 w-full min-w-0 rounded-lg border-hairline bg-surface pl-9 pr-4 text-sm text-ink shadow-xs max-md:min-h-[44px]"
                             />
                         </div>
-                        <details className="group relative z-20 min-w-0 flex-[1_1_auto]">
-                            <summary className="mobile-touch-target flex min-h-11 cursor-pointer list-none items-center justify-center gap-2 rounded-xl border border-hairline bg-surface px-3 text-sm font-semibold text-ink hover:bg-surface-soft [&::-webkit-details-marker]:hidden">
-                                {isLite ? <span data-i18n-skip="true" lang={language}>{mobileCopy.filters}{[marginFilter !== 'all', showFavoritesOnly, showArchived, costingSort !== 'recent'].filter(Boolean).length > 0 ? ` · ${[marginFilter !== 'all', showFavoritesOnly, showArchived, costingSort !== 'recent'].filter(Boolean).length}` : ''}</span> : <>Filters{marginFilter !== 'all' ? ' · 1' : ''}</>}
-                                <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180 text-subtle/70" />
+                        <LiquidSegmented
+                            className={cn('sm:w-auto', isLite && mobileStyles.desktopOnly)}
+                            aria-label={catalogue.show}
+                            value={libraryView}
+                            onValueChange={setLibraryView}
+                            options={[
+                                { value: 'all', label: <span data-i18n-skip="true" lang={language}>{catalogue.all}</span> },
+                                { value: 'favourites', label: <span data-i18n-skip="true" lang={language}>{catalogue.favourites}</span> },
+                                { value: 'archived', label: t('tourControls.savedCostings.archived') },
+                            ]}
+                        />
+                        <details className="group relative z-20 min-w-0">
+                            <summary className="mobile-touch-target flex h-10 cursor-pointer list-none items-center justify-center gap-2 rounded-lg border border-hairline bg-surface px-3.5 text-sm font-semibold text-ink shadow-xs hover:bg-surface-soft max-md:min-h-[44px] [&::-webkit-details-marker]:hidden">
+                                {isLite ? <span data-i18n-skip="true" lang={language}>{mobileCopy.filters}{[marginFilter !== 'all', showFavoritesOnly, showArchived, costingSort !== 'recent'].filter(Boolean).length > 0 ? ` · ${[marginFilter !== 'all', showFavoritesOnly, showArchived, costingSort !== 'recent'].filter(Boolean).length}` : ''}</span> : <>Filters{marginFilter !== 'all' || costingSort !== 'recent' ? ` · ${[marginFilter !== 'all', costingSort !== 'recent'].filter(Boolean).length}` : ''}</>}
+                                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" />
                             </summary>
-                            <div className={cn("absolute left-0 sm:left-auto sm:right-0 mt-2 grid w-64 max-w-[calc(100vw-3rem)] gap-3 rounded-xl border border-hairline bg-surface p-3 shadow-xs", isLite && mobileStyles.filterMenu)}>
-                                <Label htmlFor="saved-costings-sort" className="text-xs font-semibold text-body">Sort by</Label>
-                                <select id="saved-costings-sort" value={costingSort} onChange={event => setCostingSort(event.target.value as SavedCostingSort)} className="h-10 rounded-xl border border-hairline bg-surface px-3 text-sm font-medium text-ink">
+                            <div className={cn("absolute left-0 mt-2 grid w-64 max-w-[calc(100vw-3rem)] gap-3 rounded-xl border border-hairline bg-surface p-3 shadow-[var(--shadow-panel)] sm:left-auto sm:right-0", isLite && mobileStyles.filterMenu)}>
+                                <Label htmlFor="saved-costings-sort" className="text-[13px] font-medium text-body">Sort by</Label>
+                                <select id="saved-costings-sort" value={costingSort} onChange={event => setCostingSort(event.target.value as SavedCostingSort)} className="h-10 rounded-lg border border-hairline bg-surface px-3 text-sm font-medium text-ink">
                                     <option value="recent">Recently updated</option><option value="oldest">Oldest updated</option><option value="margin_desc">Highest margin</option><option value="cost_asc">Lowest production cost</option>
                                 </select>
-                                <Label htmlFor="saved-costings-margin" className="text-xs font-semibold text-body">Margin</Label>
-                                <select id="saved-costings-margin" value={marginFilter} onChange={event => setMarginFilter(event.target.value as SavedCostingMarginFilter)} className="h-10 rounded-xl border border-hairline bg-surface px-3 text-sm font-medium text-ink">
+                                <Label htmlFor="saved-costings-margin" className="text-[13px] font-medium text-body">Margin</Label>
+                                <select id="saved-costings-margin" value={marginFilter} onChange={event => setMarginFilter(event.target.value as SavedCostingMarginFilter)} className="h-10 rounded-lg border border-hairline bg-surface px-3 text-sm font-medium text-ink">
                                     <option value="all">All margins</option><option value="negative">Negative margin</option><option value="under_10">Under 10%</option><option value="10_to_20">10–20%</option><option value="over_20">Over 20%</option>
                                 </select>
                                 {isLite && <div className={cn(mobileStyles.mobileOnly, mobileStyles.filterExtras)} data-i18n-skip="true" lang={language}>
@@ -1348,56 +1563,46 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                 </div>}
                             </div>
                         </details>
-                        <SwitchField
-                            data-tour-anchor="costings.compare"
-                            variant="pill"
-                            className={cn("min-w-0 flex-[1_1_auto] gap-2 px-2.5 sm:gap-2.5 sm:px-3 [&>span:last-child]:min-w-0 [&>span:last-child]:break-words", isLite && mobileStyles.desktopOnly)}
-                            icon={<GitCompareArrows className="hidden h-4 w-4 sm:block" />}
-                            checked={comparisonMode}
-                            onCheckedChange={() => { setComparisonMode(current => !current); setSelectedCostingIds([]) }}
-                        >
-                            {tx('Compare')}
-                        </SwitchField>
-                        {isLite && <Button type="button" variant={comparisonMode ? 'secondary' : 'outline'} aria-pressed={comparisonMode} className={mobileStyles.mobileOnly} onClick={() => { setComparisonMode(current => !current); setSelectedCostingIds([]) }} data-i18n-skip="true" lang={language}><GitCompareArrows className="h-4 w-4" aria-hidden="true" />{comparisonMode ? mobileCopy.exitCompare : mobileCopy.compare}</Button>}
-                        <SwitchField
-                            variant="pill"
-                            className={cn("min-w-0 flex-[1_1_auto] gap-2 px-2.5 sm:gap-2.5 sm:px-3 [&>span:last-child]:min-w-0 [&>span:last-child]:break-words", isLite && mobileStyles.desktopOnly)}
-                            icon={<Star className={`hidden h-4 w-4 sm:block ${showFavoritesOnly ? 'fill-current' : ''}`} />}
-                            checked={showFavoritesOnly}
-                            onCheckedChange={() => { setOpenQualityKey(null); setShowFavoritesOnly(current => !current); setSelectedCostingIds([]) }}
-                        >
-                            Favourites
-                        </SwitchField>
-                        <Button variant={showArchived ? 'secondary' : 'outline'} onClick={() => { setOpenQualityKey(null); setShowArchived(current => !current); setSelectedCostingIds([]) }} className={cn("min-h-11 min-w-0 flex-[1_1_auto] whitespace-normal rounded-xl", isLite && mobileStyles.desktopOnly)}>
-                            {showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />} {showArchived ? t('common.active') : t('tourControls.savedCostings.archived')}
-                        </Button>
                     </div>
-                    {comparisonMode && selectedCostings.length === 2 ? (
-                        <div className="ui-status-enter mt-3 flex flex-col gap-3 rounded-lg border border-info/25 bg-info-soft/60 p-3 sm:flex-row sm:items-center sm:justify-between" role="status" aria-live="polite" aria-busy={Boolean(detailLoadingId)}>
-                            <div>
-                                <p className="text-xs font-bold text-info">Two costings selected</p>
-                                <p className="mt-1 text-xs leading-relaxed text-body">{detailLoadingId ? 'Preparing the complete saved numbers…' : 'Compare them when you need to explain a change in cost, selling price, margin, or quantity.'}</p>
-                            </div>
-                            <div className="flex shrink-0 flex-wrap gap-2">
-                                <Button variant="secondary" onClick={() => setShowComparison(true)} className="h-9" disabled={Boolean(detailLoadingId)}>
-                                    {detailLoadingId ? <Loader2 className="h-4 w-4 animate-spin" /> : <GitCompareArrows className="h-4 w-4" />} {detailLoadingId ? 'Preparing…' : t('common.compare_costings')}
-                                </Button>
-                                <Button variant="ghost" onClick={() => setSelectedCostingIds([])} className="h-9 text-body">Clear selection</Button>
-                            </div>
+                    <Button
+                        data-tour-anchor="costings.compare"
+                        type="button"
+                        variant={comparisonMode ? 'secondary' : 'outline'}
+                        aria-pressed={comparisonMode}
+                        onClick={() => { setComparisonMode(current => !current); setSelectedCostingIds([]) }}
+                        className={cn('md:ml-auto', secondaryAction, isLite && mobileStyles.desktopOnly)}
+                    >
+                        <GitCompareArrows className="h-4 w-4" aria-hidden="true" />
+                        {tx('Compare')}
+                    </Button>
+                    {isLite && <Button type="button" variant={comparisonMode ? 'secondary' : 'outline'} aria-pressed={comparisonMode} className={mobileStyles.mobileOnly} onClick={() => { setComparisonMode(current => !current); setSelectedCostingIds([]) }} data-i18n-skip="true" lang={language}><GitCompareArrows className="h-4 w-4" aria-hidden="true" />{comparisonMode ? mobileCopy.exitCompare : mobileCopy.compare}</Button>}
+                </div>
+                {comparisonMode && selectedCostings.length === 2 ? (
+                    <div className="ui-status-enter flex flex-col gap-3 rounded-xl border border-hairline bg-surface p-4 shadow-xs sm:flex-row sm:items-center sm:justify-between" role="status" aria-live="polite" aria-busy={Boolean(detailLoadingId)}>
+                        <div>
+                            <p className="text-sm font-semibold text-ink">Two costings selected</p>
+                            <p className="mt-0.5 text-[13px] leading-relaxed text-body">{detailLoadingId ? 'Preparing the complete saved numbers…' : 'Compare them when you need to explain a change in cost, selling price, margin, or quantity.'}</p>
                         </div>
-                    ) : comparisonMode ? (
-                        <p id="compare-costings-help" className="mt-2 text-xs font-medium text-body">
-                            {selectedCostings.length === 1
-                                ? 'One costing selected. Select one more if you want to compare.'
-                                : 'Compare Costings is optional. Select two snapshots when you need to understand a change.'}
-                        </p>
-                    ) : null}
-                    <p className="mt-3 text-xs font-medium text-body">
-                        {tourSampleActive ? '1 sample quality' : loadError ? tx('Saved costings not loaded') : isDemoCostingActive && quotes.length === 0
-                            ? (searchQuery.trim() && !tourExamples[0]?.quality_label?.toLowerCase().includes(searchQuery.trim().toLowerCase()) && !'tour sample'.includes(searchQuery.trim().toLowerCase()) ? '0 qualities' : '1 sample quality')
-                            : `${qualityGroups.length} ${showArchived ? 'archived ' : ''}${qualityGroups.length === 1 ? 'quality' : 'qualities'}`}
+                        <div className="flex shrink-0 flex-wrap gap-2">
+                            <Button onClick={() => setShowComparison(true)} className={railPrimaryAction} disabled={Boolean(detailLoadingId)}>
+                                {detailLoadingId ? <Loader2 className="h-4 w-4 animate-spin" /> : <GitCompareArrows className="h-4 w-4" />} {detailLoadingId ? 'Preparing…' : t('common.compare_costings')}
+                            </Button>
+                            <Button variant="ghost" onClick={() => setSelectedCostingIds([])} className={ghostAction}>Clear selection</Button>
+                        </div>
+                    </div>
+                ) : comparisonMode ? (
+                    <p id="compare-costings-help" className="text-[13px] text-body">
+                        {selectedCostings.length === 1
+                            ? 'One costing selected. Select one more if you want to compare.'
+                            : 'Compare Costings is optional. Select two snapshots when you need to understand a change.'}
                     </p>
-                </Toolbar>
+                ) : null}
+                <p className="text-[13px] text-muted-foreground">
+                    {tourSampleActive ? '1 sample quality' : loadError ? tx('Saved costings not loaded') : isDemoCostingActive && quotes.length === 0
+                        ? (searchQuery.trim() && !tourExamples[0]?.quality_label?.toLowerCase().includes(searchQuery.trim().toLowerCase()) && !'tour sample'.includes(searchQuery.trim().toLowerCase()) ? '0 qualities' : '1 sample quality')
+                        : `${qualityGroups.length} ${showArchived ? 'archived ' : ''}${qualityGroups.length === 1 ? 'quality' : 'qualities'}`}
+                </p>
+            </div>
 
             {tourSampleActive ? (
                 <div className="space-y-3 xl:pr-[192px]">

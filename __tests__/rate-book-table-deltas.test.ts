@@ -70,43 +70,46 @@ describe('Rate Book P2: getRatePriceDelta calculation & formatting', () => {
     })
 })
 
-describe('Rate Book P2: 5-Column Streamlined Table Layout in RatesClient.tsx', () => {
+describe('Rate Book board: one card per yarn in RatesClient.tsx', () => {
     const client = read('app/(dashboard)/owner/rates/RatesClient.tsx')
+    const card = client.slice(client.indexOf('const renderYarnCard = '), client.indexOf('<PlanAnalyticsBeacon'))
 
-    it('uses a 5-column colgroup totaling 100% width with 24% yarn name column', () => {
-        expect(client).toContain('<col className="w-[24%]" />')
-        expect(client).toContain('<col className="w-[18%]" />')
-        expect(client).toContain('<col className="w-[22%]" />')
-
-        // 7-column old widths must not be present
-        expect(client).not.toContain('<col className="w-[13%]" />')
-        expect(client).not.toContain('<col className="w-[11%]" />')
-        expect(client).not.toContain('<col className="w-[10%]" />')
-        expect(client).not.toContain('<col className="w-[15%]" />')
-        expect(client).not.toContain('<col className="w-[23%]" />')
+    it('replaces the five-column table and the separate phone card with one card for every width', () => {
+        expect(client).not.toContain('<colgroup>')
+        expect(client).not.toContain("tx('Current Rate & Trend')")
+        expect(client).not.toContain('lg:hidden')
+        expect((client.match(/data-ratebook-field="yarnRow"/g) || []).length).toBe(1)
+        expect(client).toContain("const yarnCardGrid = 'grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(min(100%,22rem),1fr))]'")
     })
 
-    it('has 5 consolidated headers', () => {
-        expect(client).toContain("tx('Yarn / Quality')")
-        expect(client).toContain("tx('Current Rate & Trend')")
-        expect(client).toContain("tx('Review Status')")
-        expect(client).toContain("tx('Source & Linked Qualities')")
-        expect(client).toContain("tx('Actions')")
+    it('groups the board into Warp and Weft sections with their counts', () => {
+        expect(client).toContain('(categoryFilter === \'all\' || tourStep !== null ? YARN_CATEGORIES : [categoryFilter])')
+        expect(client).toContain("{section.category === 'yarn_warp' ? copy.warp : copy.weft}")
+        expect(client).toContain('{section.rates.map(rate => renderYarnCard(rate, false))}')
     })
 
-    it('integrates PriceDeltaBadge in both desktop table and mobile card', () => {
+    it('reads the price large, its change in words and its trail as a small stepped line', () => {
+        expect(card).toContain('{amount}<span className="ml-1 text-base font-medium tracking-normal text-muted-foreground">{suffix}</span>')
+        expect(card).toContain('<PriceChange rate={rate} copy={copy} language={language} />')
+        expect(card).toContain('priceTrail(rate.price_points ?? [], Number(rate.current_value), todayDate)')
+        expect(card).toContain('<PriceTrailSpark trail={trail}')
+        const change = client.slice(client.indexOf('function PriceChange('), client.indexOf('export default function RatesClient'))
+        expect(change).toContain("delta.direction === 'initial'")
+        expect(change).toContain("delta.direction === 'unchanged'")
+        expect(change).toContain("rose ? '↑' : '↓'")
+    })
+
+    it('keeps PriceDeltaBadge for the quick edit preview', () => {
         expect(client).toContain('function PriceDeltaBadge(')
-        expect(client).toContain('<PriceDeltaBadge currentValue={rate.current_value} previousValue={rate.previous_value} unit={rate.unit} />')
+        expect(client).toContain('<PriceDeltaBadge')
         expect(client).toContain('TrendingUp')
         expect(client).toContain('TrendingDown')
         expect(client).toContain('Minus')
     })
 
-    it('replaces bulky two-box mobile card rate layout with inline price & delta badge', () => {
-        // Old separate "Previous rate" box in mobile cards is removed
-        expect(client).not.toContain('<p className="text-[10px] font-bold uppercase tracking-wide text-subtle">Previous rate</p>')
-        // New inline baseline layout is present
-        expect(client).toContain('font-mono text-xl font-black tracking-tight text-ink')
-        expect(client).toContain('Effective {formatDateOnly(rate.effective_date')
+    it('asks a due card to confirm its price instead of showing a status badge', () => {
+        expect(card).toContain('fillCopy(copy.stillPrice, { price: formatRateValue(rate.current_value, rate.unit) })')
+        expect(card).toContain("due ? 'border-[var(--wv-ochre-200)] bg-[color-mix(in_oklab,var(--wv-ochre-50)_55%,var(--color-surface))]'")
+        expect(client).not.toContain('<StatusBadge')
     })
 })

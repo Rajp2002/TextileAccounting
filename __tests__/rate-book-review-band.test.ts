@@ -4,27 +4,36 @@ vi.mock('@/components/tours/TourInvitation', () => ({ TourInvitation: () => null
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import ts from 'typescript'
+import { rateBookBoardText } from '@/lib/i18n/rate-book-board'
 
 const root = process.cwd()
 const read = (path: string) => readFileSync(join(root, path), 'utf8')
 
 /**
  * The Rate Book has no side rails: the add action and the Guide (tour, principles, help, archive
- * and restore) sit in the page header, and the review status is one strip under it.
+ * and restore) sit in the page header, a summary band sits under it, and prices due for a check
+ * lead the board as a review queue of cards.
  */
-describe('Rate Book review strip and Guide', () => {
+describe('Rate Book summary band, review queue and Guide', () => {
     const rates = read('app/(dashboard)/owner/rates/RatesClient.tsx')
     const styles = read('app/globals.css')
 
-    it('renders the review status as a strip in the page flow, not a fixed rail or a floating pill', () => {
-        expect(rates).toContain('function RateReviewStrip(')
-        expect(rates).toContain('<RateReviewStrip')
+    it('shows where the book stands in one band in the page flow, not a fixed rail or a floating pill', () => {
+        const band = rates.slice(rates.indexOf('data-ratebook-field="reviewRailWidget"'), rates.indexOf('{showDeleteNudge'))
+        expect(band).toContain('copy.allCurrent')
+        expect(band).toContain('copy.toConfirm')
+        expect(band).toContain('{nextReviewLine}')
+        expect(band).toContain('copy.movesTitle')
+        expect(band).toContain('monthMoves.moves.slice(0, 5)')
+        expect(rates).toContain('priceMovesInMonth(activeYarnRates, todayDate.slice(0, 7))')
+        expect(rates).toContain('upcomingReviews(activeYarnRates)')
+        expect(rates).not.toContain('RateReviewStrip')
         expect(rates).not.toContain('RateReviewFloatingButton')
         expect(rates).not.toContain('rates-review-rail-desktop')
         expect(styles).not.toContain('.rates-review-rail')
     })
 
-    it('keeps the header, its Guide and the review strip inside the route wrapper', () => {
+    it('keeps the header, its Guide and the summary band inside the route wrapper', () => {
         const source = ts.createSourceFile('RatesClient.tsx', rates, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
         const routeWrappers: ts.JsxElement[] = []
         const visit = (node: ts.Node) => {
@@ -44,7 +53,11 @@ describe('Rate Book review strip and Guide', () => {
         }
         expect(inside('<PageHeader')).toBe(true)
         expect(inside('<RateBookTutorial')).toBe(true)
-        expect(inside('<RateReviewStrip')).toBe(true)
+        expect(inside('data-ratebook-field="reviewRailWidget"')).toBe(true)
+        // The tour's first step frames the header and the band together.
+        const overview = rates.indexOf('data-ratebook-field="overview"')
+        expect(overview).toBeLessThan(rates.indexOf('<PageHeader'))
+        expect(rates.indexOf('data-ratebook-field="reviewRailWidget"')).toBeGreaterThan(rates.indexOf('<PageHeader'))
     })
 
     it('lists principles, help and archive and restore as Guide topics, in that order', () => {
@@ -61,7 +74,7 @@ describe('Rate Book review strip and Guide', () => {
     })
 
     it('puts Add rate after the Guide as the header primary action', () => {
-        const header = rates.slice(rates.indexOf('<PageHeader'), rates.indexOf('<RateReviewStrip'))
+        const header = rates.slice(rates.indexOf('<PageHeader'), rates.indexOf('data-ratebook-field="reviewRailWidget"'))
         expect(header.indexOf('<RateBookTutorial')).toBeLessThan(header.indexOf('data-ratebook-field="addRateAction"'))
         expect(rates.match(/data-ratebook-field="addRateAction"/g)).toHaveLength(1)
     })
@@ -75,35 +88,36 @@ describe('Rate Book review strip and Guide', () => {
         expect(rates).toContain("title: tx('Rate Book Principles'), lang: language, i18nSkip: true")
     })
 
-    it('provides accessible modal triggers for rates due for review', () => {
-        expect(rates).toContain('aria-haspopup="dialog"')
-        expect(rates).toContain('dueReviewRates')
-        expect(rates).toContain('setShowDueReviews(true)')
-        expect(rates).toContain('<DueForReviewDialog')
+    it('leads with the prices due for a check as cards, instead of a dialog', () => {
+        const queue = rates.slice(rates.indexOf('aria-labelledby="ratebook-review-queue"'), rates.indexOf('{boardSections.map'))
+        expect(queue).toContain("{tx('Needs Review')}")
+        expect(queue).toContain('queueRates.map(rate => renderYarnCard(rate, true))')
+        // The queue and the board split the same filtered list, so a due yarn shows once.
+        expect(rates).toContain('const queueRates = showArchived && tourStep === null ? [] : visibleRates.filter(isDue)')
+        expect(rates).toContain('const boardRates = queueRates.length ? visibleRates.filter(rate => !isDue(rate)) : visibleRates')
+        expect(rates).not.toContain('DueForReviewDialog')
+        expect(rates).not.toContain('setShowDueReviews')
+    })
+
+    it('offers Confirm All only while the queue shows every due rate', () => {
+        const queue = rates.slice(rates.indexOf('aria-labelledby="ratebook-review-queue"'), rates.indexOf('{boardSections.map'))
+        expect(queue).toContain('queueRates.length > 1 && queueRates.length === dueCount')
+        expect(queue).toContain('data-ratebook-field="confirmAll"')
+        expect(queue).toContain('onClick={handleConfirmAll}')
     })
 
     it('shows rate review status, principles, and commercial memory rules', () => {
-        expect(rates).toContain("tx('Rates Are Current')")
+        expect(rateBookBoardText.en.allCurrent).toBe('All prices current')
         expect(rates).toContain('Rate Book Principles')
         expect(rateBookHelpCopy.en.principles.join(' ')).toContain('updates matching yarn prices in linked Saved Qualities')
         expect(rateBookHelpCopy.en.principles.join(' ')).toContain('Historical costing snapshots keep their original numbers')
         expect(rateBookHelpCopy.en.principles.join(' ')).toContain('supplier-price check')
     })
 
-    it('summarizes due rates in one line without rendering individual rows', () => {
-        const strip = rates.slice(rates.indexOf('function RateReviewStrip('), rates.indexOf('function RateBookPrinciples()'))
-        expect(strip).toContain("Rate Needs' : 'Rates Need'} Review`)")
-        expect(strip).toContain("tx('Last reviewed')")
-        expect(strip).toContain("tx('Cadence')")
-        expect(rates).not.toContain('dueReviewRates.slice(0, 3)')
-        expect(rates).not.toContain('onReviewRate')
-    })
-
-    it('keeps category breakdown and clean summary in the full-width main column', () => {
+    it('keeps the warp and weft split and the full-width route wrapper', () => {
         expect(rates).toContain('warpRatesCount')
         expect(rates).toContain('weftRatesCount')
-        expect(rates).toContain('active yarn rates')
-        expect(rates).toContain('Last reviewed')
+        expect(rates).toContain('copy.lastReviewed')
         expect(rates).toContain('"rates-workspace ui-route-enter w-full space-y-6"')
     })
 })

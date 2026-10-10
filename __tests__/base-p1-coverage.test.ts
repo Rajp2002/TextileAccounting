@@ -6,13 +6,15 @@ const root = process.cwd()
 const read = (path: string) => readFileSync(join(root, path), 'utf8')
 
 describe('Base P1 production coverage contracts', () => {
-    it('documents the linked-yarn rename policy and keeps mobile archive reachable', () => {
+    it('documents the linked-yarn rename policy and keeps archive and restore reachable at every width', () => {
         const rates = read('app/(dashboard)/owner/rates/RatesClient.tsx')
 
         expect(rates).toContain('Linked-yarn rename policy:')
         expect(rates).toContain('add a new rate with the replacement name and update saved qualities intentionally')
         expect(rates).toContain('disabled={Boolean(draft.id)}')
-        expect(rates).toContain("aria-label={`${archived ? 'Restore rate' : 'Archive rate'} ${rate.name}`}")
+        // Archive sits in the advanced form; an archived yarn's card offers Restore.
+        expect(rates).toContain('aria-label={`Archive rate ${draftRate.name}`}')
+        expect(rates).toContain('aria-label={`Restore rate ${rate.name}`}')
         expect(rates).toContain('Archive rate')
     })
 

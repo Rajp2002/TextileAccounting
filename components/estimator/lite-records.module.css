@@ -33,17 +33,10 @@
   .registerHeader { flex-direction: row; align-items: center; flex-wrap: wrap; }
   .registerMeta > :not(:first-child) { display: none; }
   .registerMeta h2 { font-size: .75rem; }
-  .workspace :global([data-ratebook-field='yarnRow']) > div { padding: .75rem; }
-  .workspace :global([data-ratebook-field='yarnRow']) :global([role='group']) { flex-wrap: wrap; }
-  .workspace :global([data-ratebook-field='yarnRow']) :global([data-ratebook-field='quickReviewAction']) { flex-basis: 100%; }
   .rateFilterToggle { flex: 1 1 100%; justify-content: space-between; }
+  .workspace :global([data-ratebook-field='yarnRow']) :global([data-ratebook-field='quickReviewAction']) { flex: 1 1 100%; }
   .rateFilterControls { display: flex; flex: 1 1 100%; flex-wrap: wrap; gap: .75rem; min-width: 0; }
   .rateFilterControls:not([data-expanded='true']) { display: none; }
-  .workspace :global([data-ratebook-field='yarnNameCell']) { flex: 1 1 8rem; }
-  .workspace :global([data-ratebook-field='yarnNameCell']) + div { min-width: 0; max-width: 100%; }
-  .workspace :global([data-ratebook-field='yarnRow']) > div > :first-child { flex-wrap: wrap; }
-  .workspace :global([data-ratebook-field='yarnRow']) :global([data-ratebook-field='rateAndTrend']) { min-width: 0; }
-  .workspace :global([data-ratebook-field='yarnRow']) :global([data-ratebook-field='rateAndTrend']) > span { overflow-wrap: anywhere; }
   /* Dialogs use portals; the opt-in route class remains the authority. */
   :global(body):has(.workspace) :global([data-slot='dialog-content']), :global(body):has(.workspace) :global([data-slot='sheet-content']), :global(body):has(.workspace) :global([data-slot='dropdown-menu-content']) { overflow-wrap: anywhere; }
   :global(body):has(.workspace) :global([data-slot='dialog-content'] .truncate), :global(body):has(.workspace) :global([data-slot='sheet-content'] .truncate) { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }

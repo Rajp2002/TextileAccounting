@@ -100,17 +100,14 @@ describe('Rate Book price-history wiring', () => {
     const dialog = read('components/rates/RateTrendDialog.tsx')
     const chart = read('components/rates/RateTrendChart.tsx')
 
-    it('makes the rate and trend area a real button in both the table and the mobile card', () => {
-        const tableCell = rates.slice(rates.indexOf('<td data-ratebook-field="rateAndTrend"'), rates.indexOf('<td data-ratebook-field="reviewStatusBadge"'))
-        const cardCell = rates.slice(rates.indexOf('<div data-ratebook-field="rateAndTrend"'), rates.indexOf('data-ratebook-field="linkedQualitiesPopover" className="mt-3'))
-        for (const cell of [tableCell, cardCell]) {
-            expect(cell).toContain('<button')
-            expect(cell).toContain('type="button"')
-            expect(cell).toContain("openHistory(rate, 'trend')")
-            expect(cell).toContain("tx('View price history')")
-            expect(cell).toContain('PriceDeltaBadge')
-        }
-        expect(rates.match(/data-ratebook-field="rateAndTrend"/g)).toHaveLength(2)
+    it('makes the rate and trend area a real button on the yarn card', () => {
+        const cell = rates.slice(rates.indexOf('<div data-ratebook-field="rateAndTrend"'), rates.indexOf('<div data-ratebook-field="linkedQualitiesPopover">'))
+        expect(cell).toContain('<button')
+        expect(cell).toContain('type="button"')
+        expect(cell).toContain("openHistory(rate, 'trend')")
+        expect(cell).toContain("tx('View price history')")
+        expect(cell).toContain('<PriceChange rate={rate}')
+        expect(rates.match(/data-ratebook-field="rateAndTrend"/g)).toHaveLength(1)
     })
 
     it('opens the trend modal or the activity sheet from one shared history fetch', () => {

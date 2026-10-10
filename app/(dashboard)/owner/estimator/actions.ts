@@ -661,7 +661,9 @@ export async function getEstimatorTemplates(options?: { includeArchived?: boolea
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
-    const templateSelect = options?.summary ? 'id,name,updated_at,is_active' : '*'
+    // The summary carries the recipe rows only for their yarn names, which the
+    // Saved Costings catalogue lists on each quality's card.
+    const templateSelect = options?.summary ? 'id,name,updated_at,is_active,warp_rows,weft_rows' : '*'
     let query = supabase
         .from('estimator_templates')
         // The Supabase select parser cannot represent this conditional string
@@ -1650,7 +1652,7 @@ export async function getEstimatorQuotes(filters?: { status?: string }) {
     // than the server's row cap is never cut short; any page error fails it.
     const summaryQuery = () => supabase
         .from('estimator_quotes')
-        .select('id, status, party_name, quality_label, quote_price_per_meter, landed_cost_per_meter, intended_margin_percent, created_at, updated_at, sent_at, quotation_reference, quotation_valid_until, customer_terms, meters, source_quote_id, costing_group_id, version_number, is_archived, is_favorite, record_kind, template_id, market_run_id, production_cost_per_meter, overhead_per_meter, commission_cost_per_meter, break_even_price_per_meter, expected_profit_per_meter, expected_profit_total, actual_margin_percent, calculation_version, rounding_policy, factory_profile_updated_at, reconciliation_status, reconciliation_note')
+        .select('id, status, party_name, quality_label, quote_price_per_meter, landed_cost_per_meter, intended_margin_percent, created_at, updated_at, sent_at, quotation_reference, quotation_valid_until, customer_terms, meters, source_quote_id, costing_group_id, version_number, is_archived, is_favorite, record_kind, template_id, market_run_id, production_cost_per_meter, overhead_per_meter, commission_cost_per_meter, break_even_price_per_meter, expected_profit_per_meter, expected_profit_total, actual_margin_percent, calculation_version, rounding_policy, factory_profile_updated_at, reconciliation_status, reconciliation_note, cost_breakdown:costing_result_snapshot->breakdown')
         .eq('org_id', profile.org_id)
     type QuoteSummaryRow = NonNullable<Awaited<ReturnType<typeof summaryQuery>>['data']>[number]
     const result = await readAllPages<QuoteSummaryRow>(after => {

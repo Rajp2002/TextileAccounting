@@ -154,12 +154,12 @@ describe('Rate Book P1: UI & Interaction Wiring in RatesClient.tsx', () => {
         expect(client).toContain('Existing costing snapshots were not changed.')
     })
 
-    it('implements batch review with Confirm All button in toolbar and dialog', () => {
+    it('implements batch review with a Confirm All button in the review queue', () => {
         expect(client).toContain('handleConfirmAll')
         expect(client).toContain('Confirm All (')
         expect(client).toContain('as Current')
         expect(client).toContain('confirmAllCostRateReviews')
-        expect(client).toContain('onConfirmAll={handleConfirmAll}')
+        expect(client).toContain('onClick={handleConfirmAll}')
     })
 
     it('provides keyboard-friendly search with / focus shortcut and clear button', () => {
@@ -170,12 +170,12 @@ describe('Rate Book P1: UI & Interaction Wiring in RatesClient.tsx', () => {
         expect(client).toContain('Clear search')
     })
 
-    it('provides 3-way segmented direction control (All, Warp, Weft) and quick status chip', () => {
+    it('provides 3-way segmented direction control (All, Warp, Weft) and the Needs Review queue', () => {
         expect(client).toContain('value={categoryFilter}')
         expect(client).toContain('onValueChange={setCategoryFilter}')
         expect(client).toContain("{ value: 'yarn_warp', label: 'Warp' }")
         expect(client).toContain("{ value: 'yarn_weft', label: 'Weft' }")
-        expect(client).toContain("statusFilter === 'needs_review'")
-        expect(client).toContain('Needs Review')
+        expect(client).not.toContain('statusFilter')
+        expect(client).toContain("{tx('Needs Review')}")
     })
 })

@@ -54,8 +54,8 @@ describe('Rate Book shared-runtime integration', () => {
         }
         expect(rates.match(/data-ratebook-field="addRateAction"/g)).toHaveLength(1)
         expect(rates).toContain('data-ratebook-field="yarnSearch" tabIndex={-1}')
-        // The populated handoff lands focus on the first row's price, desktop cell and mobile card alike.
-        expect(rates.match(/data-ratebook-field="rateAndTrend" tabIndex=\{-1\}/g)).toHaveLength(2)
+        // The populated handoff lands focus on the first card's price; one card serves every width.
+        expect(rates.match(/data-ratebook-field="rateAndTrend" tabIndex=\{-1\}/g)).toHaveLength(1)
         expect(rates).toContain('sampleRow={isSampleRecordId(visibleRates[0]?.id)}')
         expect(rates).toContain('hasRealRates={activeYarnRates.some(rate => !isSampleRecordId(rate.id))}')
     })
