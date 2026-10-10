@@ -541,6 +541,9 @@ export default function BaseDailyProductionSheet({
         }
     }))
 
+    // Operators with no machine on this shift have no reading to enter on the sheet, so a blank row for them is not missing data.
+    const outstandingWorkerCount = sheetWorkers.filter((worker) => (contextsByWorker.get(worker.id) ?? []).length > 0 && getRow(worker.id).status === 'blank').length
+
     const invalidEnteredCount = sheetWorkers.filter((worker) => {
             const row = getRow(worker.id)
             if (row.status !== 'entered') return false
@@ -645,7 +648,7 @@ export default function BaseDailyProductionSheet({
             toast.error('Enter production or mark at least one worker zero or absent.')
             return
         }
-        if (!confirmed && (registerSummary.pending > 0 || summary.outstanding_count > 0)) {
+        if (!confirmed && (registerSummary.pending > 0 || outstandingWorkerCount > 0)) {
             setIsReviewOpen(true)
             return
         }
@@ -1057,7 +1060,7 @@ export default function BaseDailyProductionSheet({
                 <DialogContent className="max-w-md rounded-2xl border border-hairline bg-surface p-6 shadow-2xl">
                     <DialogHeader>
                         <DialogTitle className="text-xl font-bold text-ink">Save an incomplete shift?</DialogTitle>
-                        <DialogDescription className="text-sm text-body">{registerSummary.pending} machines and {summary.outstanding_count} worker rows still have missing readings. Blank readings stay pending, not zero. Entered production will count towards worker pay.</DialogDescription>
+                        <DialogDescription className="text-sm text-body">{registerSummary.pending} machines and {outstandingWorkerCount} worker rows still have missing readings. Blank readings stay pending, not zero. Entered production will count towards worker pay.</DialogDescription>
                     </DialogHeader>
                     <p className="rounded-xl border border-hairline bg-surface-soft/60 p-3 text-sm font-semibold text-ink">{formatDateOnly(productionDate)} · {shift === 'day' ? 'Day' : 'Night'} · {formatMeters(summary.total_meters)}</p>
                     <DialogFooter className="pt-2">
