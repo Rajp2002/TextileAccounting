@@ -107,7 +107,7 @@ export function FactoryDetailsCard({
                         {tx('Identify your active factory workspace and review team connection details.')}
                     </p>
                 </div>
-                <Badge variant="outline" className="text-[11px] font-medium text-muted-foreground">
+                <Badge variant="outline" className="text-xs font-medium text-muted-foreground">
                     {tx('Factory: Used for this factory.')}
                 </Badge>
             </div>

@@ -44,7 +44,7 @@ export function BillingAttemptStatus({ attempt, singleFlight = false }: { attemp
         <div className="min-w-0 flex-1">
           <p className="font-bold">{presentation.label}</p>
           <p className="mt-1 text-sm leading-relaxed opacity-80">{message ?? presentation.message}</p>
-          {attempt.provider_payment_id && <p className="mt-2 text-[10px] font-semibold uppercase tracking-wider opacity-60">Payment ref. {attempt.provider_payment_id.slice(-8)}</p>}
+          {attempt.provider_payment_id && <p className="mt-2 text-xs font-semibold opacity-60">Payment ref. {attempt.provider_payment_id.slice(-8)}</p>}
           {presentation.shouldCheck && attempt.provider_order_id && (
             <Button type="button" variant="outline" size="sm" onClick={() => void checkStatus()} disabled={checking} className="mt-3 gap-2 bg-white/60">
               <RefreshCw className={checking ? 'h-3.5 w-3.5 animate-spin' : 'h-3.5 w-3.5'} /> Check payment status

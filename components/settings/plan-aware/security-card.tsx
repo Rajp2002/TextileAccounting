@@ -62,7 +62,7 @@ export function SecurityCard({ email }: SecurityCardProps) {
                         {tx('Manage your password and sign-in authentication security.')}
                     </p>
                 </div>
-                <Badge variant="outline" className="text-[11px] font-medium text-muted-foreground">
+                <Badge variant="outline" className="text-xs font-medium text-muted-foreground">
                     {tx('Personal: Only affects your account.')}
                 </Badge>
             </div>

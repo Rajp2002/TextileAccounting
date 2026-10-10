@@ -190,7 +190,7 @@ export function RateTrendChart({ trend, unit, yarnName }: { trend: RateTrend; un
                     {geometry.yTicks.map(tick => (
                         <g key={tick.value}>
                             <line x1={plotLeft} x2={plotRight} y1={tick.y} y2={tick.y} className="stroke-hairline" strokeWidth={1} />
-                            <text x={plotLeft - 8} y={tick.y} textAnchor="end" dominantBaseline="middle" className="fill-subtle font-mono text-[11px] tabular-nums">
+                            <text x={plotLeft - 8} y={tick.y} textAnchor="end" dominantBaseline="middle" className="fill-subtle font-mono text-xs tabular-nums">
                                 {formatAxisValue(tick.value)}
                             </text>
                         </g>
@@ -198,7 +198,7 @@ export function RateTrendChart({ trend, unit, yarnName }: { trend: RateTrend; un
                     {geometry.xTicks.map(tick => (
                         <g key={tick.time}>
                             <line x1={tick.x} x2={tick.x} y1={plotBottom} y2={plotBottom + 4} className="stroke-hairline-strong" strokeWidth={1} />
-                            <text x={tick.x} y={plotBottom + 18} textAnchor="middle" className="fill-subtle text-[11px]">
+                            <text x={tick.x} y={plotBottom + 18} textAnchor="middle" className="fill-subtle text-xs">
                                 {(tick.granularity === 'month' ? formatters.month : formatters.day).format(tick.time)}
                             </text>
                         </g>
@@ -274,7 +274,7 @@ export function RateTrendChart({ trend, unit, yarnName }: { trend: RateTrend; un
                         <p className="mt-0.5 text-subtle">{formatters.full.format(active.time)}</p>
                         <p className="mt-1.5 font-semibold text-body">{kindLabel(active, activeIndex)}</p>
                         {activeDelta && (activeDelta.direction === 'increased' || activeDelta.direction === 'decreased') && (
-                            <p className="mt-0.5 font-mono text-[11px] text-body">
+                            <p className="mt-0.5 font-mono text-xs text-body">
                                 {activeDelta.formattedDifference}{activeDelta.formattedPercent && ` (${activeDelta.formattedPercent})`}
                             </p>
                         )}
@@ -283,7 +283,7 @@ export function RateTrendChart({ trend, unit, yarnName }: { trend: RateTrend; un
                 )}
             </div>
 
-            <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-subtle">
+            <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-subtle">
                 <li className="flex items-center gap-1.5">
                     <svg width="10" height="10" aria-hidden="true"><circle cx="5" cy="5" r="4" className="fill-ink" /></svg>
                     {tx('Price changed')}

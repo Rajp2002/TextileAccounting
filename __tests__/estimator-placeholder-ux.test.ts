@@ -50,7 +50,7 @@ describe('Estimator placeholder clarity', () => {
         const estimator = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
 
         expect(estimator).toContain('data-testid={`${accent}-component-count`}')
-        expect(estimator).toContain('text-[var(--color-yarn-orange)] shadow-[0_1px_2px_rgba(30,37,40,0.035)] transition-all placeholder:text-[var(--color-placeholder)] placeholder:font-normal')
+        expect(estimator).toContain('text-[var(--color-yarn-orange)] shadow-xs transition-all placeholder:text-[var(--color-placeholder)] placeholder:font-normal')
     })
 
     it('preserves zero in Warp Crimp instead of ghosting 0 into e.g. 0', () => {

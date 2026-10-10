@@ -400,7 +400,7 @@ function QuickRateEditDialog({
                                     <span className="min-w-0 truncate font-semibold text-ink" title={rate.name}>
                                         {rate.name}
                                     </span>
-                                    <span className="shrink-0 rounded-full bg-surface-soft px-2 py-0.5 text-[11px] font-semibold text-subtle">
+                                    <span className="shrink-0 rounded-full bg-surface-soft px-2 py-0.5 text-xs font-semibold text-subtle">
                                         {rate.category === 'yarn_warp' ? 'Warp yarn' : 'Weft yarn'}
                                     </span>
                                 </span>
@@ -538,7 +538,7 @@ function PriceDeltaBadge({
     if (delta.direction === 'increased') {
         return (
             <span
-                className={`inline-flex items-center gap-1 rounded-md border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] px-1.5 py-0.5 font-mono text-[10px] font-semibold text-[var(--wv-ochre-800)] ${className}`}
+                className={`inline-flex items-center gap-1 rounded-md border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] px-1.5 py-0.5 font-mono text-xs font-semibold text-[var(--wv-ochre-800)] ${className}`}
                 title={delta.previousValueFormatted ? `Previous rate: ${delta.previousValueFormatted}` : undefined}
             >
                 <TrendingUp className="h-3 w-3 shrink-0 text-[var(--wv-ochre-800)]" aria-hidden="true" />
@@ -551,7 +551,7 @@ function PriceDeltaBadge({
     if (delta.direction === 'decreased') {
         return (
             <span
-                className={`inline-flex items-center gap-1 rounded-md border border-[var(--wv-moss-200)] bg-[var(--wv-moss-50)] px-1.5 py-0.5 font-mono text-[10px] font-semibold text-[var(--wv-moss-700)] ${className}`}
+                className={`inline-flex items-center gap-1 rounded-md border border-[var(--wv-moss-200)] bg-[var(--wv-moss-50)] px-1.5 py-0.5 font-mono text-xs font-semibold text-[var(--wv-moss-700)] ${className}`}
                 title={delta.previousValueFormatted ? `Previous rate: ${delta.previousValueFormatted}` : undefined}
             >
                 <TrendingDown className="h-3 w-3 shrink-0 text-[var(--wv-moss-700)]" aria-hidden="true" />
@@ -564,7 +564,7 @@ function PriceDeltaBadge({
     if (delta.direction === 'unchanged') {
         return (
             <span
-                className={`inline-flex items-center gap-1 rounded-md border border-hairline bg-surface-soft/80 px-1.5 py-0.5 text-[10px] font-medium text-subtle ${className}`}
+                className={`inline-flex items-center gap-1 rounded-md border border-hairline bg-surface-soft/80 px-1.5 py-0.5 text-xs font-medium text-subtle ${className}`}
                 title={delta.previousValueFormatted ? `Previous rate: ${delta.previousValueFormatted}` : undefined}
             >
                 <Minus className="h-2.5 w-2.5 shrink-0 text-subtle/70" aria-hidden="true" />
@@ -575,7 +575,7 @@ function PriceDeltaBadge({
 
     return (
         <span
-            className={`inline-flex items-center gap-1 rounded-md border border-hairline/60 bg-surface-soft/40 px-1.5 py-0.5 text-[10px] font-normal italic text-subtle ${className}`}
+            className={`inline-flex items-center gap-1 rounded-md border border-hairline/60 bg-surface-soft/40 px-1.5 py-0.5 text-xs font-normal italic text-subtle ${className}`}
             title="Initial rate recorded"
         >
             <span>Initial rate</span>
@@ -1586,7 +1586,7 @@ export default function RatesClient({
                             </button>
                         ) : (
                             <kbd
-                                className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 select-none rounded border border-hairline bg-surface px-1.5 py-0.5 font-mono text-[10px] font-semibold text-muted-foreground sm:inline-block"
+                                className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 select-none rounded border border-hairline bg-surface px-1.5 py-0.5 font-mono text-xs font-semibold text-muted-foreground sm:inline-block"
                                 aria-hidden="true"
                             >
                                 /
@@ -1610,7 +1610,7 @@ export default function RatesClient({
                                     label: (
                                         <>
                                             <span>{label}</span>
-                                            <span className="rounded-full bg-surface px-1.5 py-0.5 text-[10px] font-bold text-subtle group-aria-checked/option:bg-white/20 group-aria-checked/option:text-white">{count}</span>
+                                            <span className="rounded-full bg-surface px-1.5 py-0.5 text-xs font-bold text-subtle group-aria-checked/option:bg-white/20 group-aria-checked/option:text-white">{count}</span>
                                         </>
                                     ),
                                 }
@@ -1746,11 +1746,11 @@ export default function RatesClient({
                                     </div>
                                     <div className="mt-3 flex flex-wrap gap-1.5">
                                         {conflict.usages.slice(0, 6).map(usage => (
-                                            <span key={`${usage.templateId}-${usage.layer}-${usage.layerNumber}`} className="rounded-full border border-warning/25 bg-surface px-2 py-1 text-[11px] font-medium text-body">
+                                            <span key={`${usage.templateId}-${usage.layer}-${usage.layerNumber}`} className="rounded-full border border-warning/25 bg-surface px-2 py-1 text-xs font-medium text-body">
                                                 {usage.templateName} · {usage.layer} {usage.layerNumber} · ₹{usage.rate}
                                             </span>
                                         ))}
-                                        {conflict.usages.length > 6 && <span className="px-2 py-1 text-[11px] text-subtle">+{conflict.usages.length - 6} more</span>}
+                                        {conflict.usages.length > 6 && <span className="px-2 py-1 text-xs text-subtle">+{conflict.usages.length - 6} more</span>}
                                     </div>
                                 </div>
                             )
@@ -1842,7 +1842,7 @@ export default function RatesClient({
                         <DialogDescription>Confirm that this displayed rate is correct. This records your review without changing the rate or existing costing snapshots.</DialogDescription>
                     </DialogHeader>
                     {reviewRate && <div className="space-y-3 rounded-lg border border-info/25 bg-info-soft p-4 text-info">
-                        <div className="flex items-start justify-between gap-3"><div><p className="font-bold">{reviewRate.name}</p><p className="mt-1 text-xs text-info">{COST_RATE_CATEGORY_LABELS[reviewRate.category]}</p></div><p className="font-mono text-lg font-black">{formatRateValue(Number(reviewRate.current_value), reviewRate.unit)}</p></div>
+                        <div className="flex items-start justify-between gap-3"><div><p className="font-bold">{reviewRate.name}</p><p className="mt-1 text-xs text-info">{COST_RATE_CATEGORY_LABELS[reviewRate.category]}</p></div><p className="font-mono text-lg font-semibold">{formatRateValue(Number(reviewRate.current_value), reviewRate.unit)}</p></div>
                         <p className="text-xs leading-relaxed text-info">Source: {getCostRateDisplaySource(reviewRate) || 'Not recorded'}</p>
                         {getCostRateDisplayNotes(reviewRate) && <p className="text-xs leading-relaxed text-info">{getCostRateDisplayNotes(reviewRate)}</p>}
                     </div>}
@@ -1876,8 +1876,8 @@ export default function RatesClient({
                                 const previous = row.previous_value ?? historyRows[index + 1]?.value
                                 const eventLabel = historyRate ? getRateHistoryEventLabel(row.value, previous, historyRate.unit, row.event_type) : 'Value recorded'
                                 return <div key={row.id} className="rounded-lg border border-hairline bg-surface p-4">
-                                    <div className="flex items-start justify-between gap-3"><div><p className="font-mono text-base font-black text-ink">{historyRate ? formatRateValue(row.value, historyRate.unit) : row.value}</p><p className="mt-1 text-xs font-semibold text-body">{eventLabel}</p></div><p className="text-right text-xs text-subtle">Effective {formatDateOnly(row.effective_date, { day: 'numeric', month: 'short', year: 'numeric' })}<br />Recorded {formatSuratDateTime(row.created_at)}</p></div>
-                                    <p className="mt-2 text-sm font-medium text-body">{row.source || 'No source recorded'}</p>{row.notes && <p className="mt-1 text-xs text-subtle">{row.notes}</p>}<p className="mt-2 text-[11px] text-subtle">Recorded by {row.actor_name || (row.changed_by ? 'owner' : 'system')}</p>
+                                    <div className="flex items-start justify-between gap-3"><div><p className="font-mono text-base font-semibold text-ink">{historyRate ? formatRateValue(row.value, historyRate.unit) : row.value}</p><p className="mt-1 text-xs font-semibold text-body">{eventLabel}</p></div><p className="text-right text-xs text-subtle">Effective {formatDateOnly(row.effective_date, { day: 'numeric', month: 'short', year: 'numeric' })}<br />Recorded {formatSuratDateTime(row.created_at)}</p></div>
+                                    <p className="mt-2 text-sm font-medium text-body">{row.source || 'No source recorded'}</p>{row.notes && <p className="mt-1 text-xs text-subtle">{row.notes}</p>}<p className="mt-2 text-xs text-subtle">Recorded by {row.actor_name || (row.changed_by ? 'owner' : 'system')}</p>
                                 </div>
                             })}</div>
                             : <div className="py-10 text-center text-sm text-subtle">No activity recorded yet. Confirm or change this rate to create the first entry.</div>}

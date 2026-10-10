@@ -176,14 +176,14 @@ export function ReferralCard({ stats }: { stats: ReferralStats | null }) {
             <CardContent className="space-y-5 p-5">
                 <div className="grid grid-cols-2 gap-3">
                     <div className="rounded-lg border border-white/10 bg-white/5 p-3.5">
-                        <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-surface-muted">Used</p>
+                        <p className="mb-1 text-xs font-semibold text-surface-muted">Used</p>
                         <p className="text-2xl font-bold leading-none text-white">{usedReferrals}</p>
-                        <p className="mt-1 text-[11px] text-surface-muted">Awaiting initial payment</p>
+                        <p className="mt-1 text-xs text-surface-muted">Awaiting initial payment</p>
                     </div>
                     <div className="rounded-lg bg-saffron p-3.5 text-ink">
-                        <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider">Active</p>
+                        <p className="mb-1 text-xs font-semibold">Active</p>
                         <p className="text-2xl font-bold leading-none">{activeCredits}</p>
-                        <p className="mt-1 text-[11px]">{formatAmount(activeValuePaise)} ready</p>
+                        <p className="mt-1 text-xs">{formatAmount(activeValuePaise)} ready</p>
                     </div>
                 </div>
 
@@ -209,14 +209,14 @@ export function ReferralCard({ stats }: { stats: ReferralStats | null }) {
                             <div className="absolute inset-0 bg-white/20" />
                         </div>
                     </div>
-                    <p className="mt-2 text-[11px] leading-relaxed text-surface-muted">
+                    <p className="mt-2 text-xs leading-relaxed text-surface-muted">
                         Used referrals stay pending until the new member pays the initial Weavly Base year. Your initial Weavly Base payment is required before any free renewal can be used. Active referrals are eligible to redeem; redeeming them reserves consecutive future renewals.
                     </p>
                 </div>
 
                 <div className="space-y-4 border-t border-white/10 pt-4">
                     <div className="relative group">
-                        <label className="mb-2 block text-[10px] font-semibold uppercase tracking-widest text-saffron">
+                        <label className="mb-2 block text-xs font-semibold text-saffron">
                             Your referral code
                         </label>
                         <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 p-1.5 transition-colors focus-within:border-saffron">
@@ -240,14 +240,14 @@ export function ReferralCard({ stats }: { stats: ReferralStats | null }) {
                                 </Button>
                                 <Button
                                     onClick={shareWhatsApp}
-                                    className="flex h-10 shrink-0 items-center gap-2 rounded-lg bg-saffron px-4 text-[11px] font-semibold uppercase tracking-wider text-white shadow-none hover:bg-saffron-deep"
+                                    className="flex h-10 shrink-0 items-center gap-2 rounded-lg bg-saffron px-4 text-xs font-semibold text-white shadow-none hover:bg-saffron-deep"
                                 >
                                     <Share2 className="h-4 w-4" />
                                     Share
                                 </Button>
                             </div>
                         </div>
-                        <p role="status" aria-atomic="true" className={`mt-2 min-h-4 text-[11px] font-semibold ${copyFailed ? 'text-warning' : 'text-success'}`}>
+                        <p role="status" aria-atomic="true" className={`mt-2 min-h-4 text-xs font-semibold ${copyFailed ? 'text-warning' : 'text-success'}`}>
                             {copied ? 'Referral code copied.' : copyFailed ? 'Copy unavailable. Select the code and copy it manually.' : ''}
                         </p>
                     </div>
@@ -275,7 +275,7 @@ export function ReferralCard({ stats }: { stats: ReferralStats | null }) {
                                 <History className="h-4 w-4 text-saffron" aria-hidden="true" />
                                 <p className="text-sm font-semibold text-white">Referral activity</p>
                             </div>
-                            <p className="text-[11px] text-surface-muted">{redeemedCredits} redeemed</p>
+                            <p className="text-xs text-surface-muted">{redeemedCredits} redeemed</p>
                         </div>
                         {history.length > 0 ? (
                             <div className="divide-y divide-white/10 rounded-xl border border-white/10">
@@ -291,12 +291,12 @@ export function ReferralCard({ stats }: { stats: ReferralStats | null }) {
                                             <div className="min-w-0 flex-1">
                                                 <div className="flex flex-wrap items-center gap-2">
                                                     <p className="truncate text-xs font-semibold text-white">{item.factoryName ?? 'Factory'}</p>
-                                                    <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${presentation.className}`}>
+                                                    <span className={`rounded-full border px-2 py-0.5 text-xs font-semibold ${presentation.className}`}>
                                                         {presentation.label}
                                                     </span>
                                                 </div>
-                                                <p className="mt-1 text-[11px] leading-relaxed text-surface-muted">{presentation.detail}</p>
-                                                <p className="mt-1 text-[10px] font-medium text-surface-muted/80">
+                                                <p className="mt-1 text-xs leading-relaxed text-surface-muted">{presentation.detail}</p>
+                                                <p className="mt-1 text-xs font-medium text-surface-muted/80">
                                                     {formatAmount(amountPaise)} free renewal · {formatShortDate(item.date)}
                                                 </p>
                                             </div>

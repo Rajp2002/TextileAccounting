@@ -649,8 +649,8 @@ function SavedQualityLibraryView({
                                         <DialogHeader className="relative sticky top-0 z-20 border-b border-hairline bg-surface px-5 py-4 pr-16 sm:px-6 sm:pr-16">
                                             <div className="flex min-w-0 items-center gap-2">
                                                 <DialogTitle className="min-w-0 flex-1 truncate text-xl font-semibold tracking-[-0.01em]" title={group.name}>{group.name}</DialogTitle>
-                                                {group.template?.is_active === false && <Badge variant="outline" className="border-hairline bg-surface-soft text-[10px] font-bold text-subtle">{tx('Archived · read-only')}</Badge>}
-                                                {(activeRecord ?? latest) && <Badge variant="outline" className="text-[10px] font-bold">v{Number((activeRecord ?? latest)?.version_number ?? 1)}</Badge>}
+                                                {group.template?.is_active === false && <Badge variant="outline" className="border-hairline bg-surface-soft text-xs font-bold text-subtle">{tx('Archived · read-only')}</Badge>}
+                                                {(activeRecord ?? latest) && <Badge variant="outline" className="text-xs font-bold">v{Number((activeRecord ?? latest)?.version_number ?? 1)}</Badge>}
                                             </div>
                                             <DialogDescription>
                                                 {group.records.length > 0
@@ -836,13 +836,13 @@ function SavedQualityLibraryView({
                                                                     <div className="flex flex-wrap items-center justify-between gap-2">
                                                                         <p className="truncate text-xs font-bold text-ink" title={identity.label}>{identity.label}</p>
                                                                         {isInspected && (
-                                                                            <Badge variant="outline" className="border-saffron/30 bg-saffron-soft text-[10px] font-bold text-saffron-deep">
+                                                                            <Badge variant="outline" className="border-saffron/30 bg-saffron-soft text-xs font-bold text-saffron-deep">
                                                                                 {tx('Active breakdown')}
                                                                             </Badge>
                                                                         )}
                                                                     </div>
-                                                                    <p className="mt-1 truncate text-[10px] text-subtle">{record.factory_profile_updated_at ? `${factoryInputsCapturedLabel} ${formatTimestampDate(record.factory_profile_updated_at, { day: 'numeric', month: 'short', year: 'numeric' })}` : `Saved ${formatTimestampDate(record.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}`}</p>
-                                                                    <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2 text-[11px] text-body">
+                                                                    <p className="mt-1 truncate text-xs text-subtle">{record.factory_profile_updated_at ? `${factoryInputsCapturedLabel} ${formatTimestampDate(record.factory_profile_updated_at, { day: 'numeric', month: 'short', year: 'numeric' })}` : `Saved ${formatTimestampDate(record.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}`}</p>
+                                                                    <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2 text-xs text-body">
                                                                         <span className="min-w-0 max-w-full truncate rounded-full border border-hairline bg-surface-soft px-2 py-0.5" title={contextLabel}>{contextLabel}</span>
                                                                         {costingStatus !== 'verified' && <StatusBadge status="needs_review" label={getCostingBadge(costingStatus)} />}
                                                                     </div>
@@ -1807,14 +1807,14 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                                 {comparisonSummary.map(metric => (
                                     <div key={metric.label} className="rounded-xl border border-hairline bg-surface-soft p-3">
-                                        <p className="text-[10px] font-bold uppercase tracking-wide text-subtle">{metric.label}</p>
+                                        <p className="text-xs font-bold text-subtle">{metric.label}</p>
                                         <div className="mt-2 grid grid-cols-2 gap-2">
                                             <div>
-                                                <p className="text-[10px] font-semibold text-subtle">Old</p>
+                                                <p className="text-xs font-semibold text-subtle">Old</p>
                                                 <p className="mt-0.5 truncate font-mono text-sm font-bold text-ink" title={metric.oldValue}>{metric.oldValue}</p>
                                             </div>
                                             <div>
-                                                <p className="text-[10px] font-semibold text-subtle">New</p>
+                                                <p className="text-xs font-semibold text-subtle">New</p>
                                                 <p className="mt-0.5 truncate font-mono text-sm font-bold text-ink" title={metric.newValue}>{metric.newValue}</p>
                                             </div>
                                         </div>
@@ -1833,7 +1833,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                             <th scope="col" className="comparison-column-label px-4 py-3 text-xs uppercase tracking-wide text-subtle">Metric</th>
                                             {comparisonCostings.map((costing, index) => {
                                                 const identity = getSavedCostingIdentity(costing)
-                                                return <th role="columnheader" scope="col" key={costing.id} className="px-4 py-3 font-bold text-ink"><span className="block">{index === 0 ? 'Old snapshot' : 'New snapshot'}</span><span className="mt-1 block max-w-[220px] break-words text-xs font-semibold text-body" title={identity.label}>{identity.label}</span><span className="mt-1 block text-[10px] font-medium text-subtle">saved {formatTimestampDate(costing.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}</span></th>
+                                                return <th role="columnheader" scope="col" key={costing.id} className="px-4 py-3 font-bold text-ink"><span className="block">{index === 0 ? 'Old snapshot' : 'New snapshot'}</span><span className="mt-1 block max-w-[220px] break-words text-xs font-semibold text-body" title={identity.label}>{identity.label}</span><span className="mt-1 block text-xs font-medium text-subtle">saved {formatTimestampDate(costing.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}</span></th>
                                             })}
                                             <th scope="col" className="comparison-column-label px-4 py-3 text-xs uppercase tracking-wide text-subtle">Change</th>
                                         </tr>
@@ -1842,7 +1842,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                         {comparisonGroups.map(group => (
                                             <Fragment key={group.key}>
                                                 <tr role="row" className="bg-info-soft/70">
-                                                    <th colSpan={4} className="px-4 py-2.5 text-left text-[11px] font-black uppercase tracking-wider text-info">
+                                                    <th colSpan={4} className="px-4 py-2.5 text-left text-xs font-semibold text-info">
                                                         {group.title}
                                                     </th>
                                                 </tr>
@@ -1852,8 +1852,8 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                                 {group.sections.map(section => (
                                                     <Fragment key={`${group.key}-${section.title}`}>
                                                         <tr role="row" key={`${group.key}-${section.title}-heading`} className="bg-surface-soft/70">
-                                                            <th colSpan={4} className="px-4 py-2 text-left text-[11px] font-black uppercase tracking-wider text-body">
-                                                                <span>{section.title}</span>{section.changed && <Badge variant="outline" className="ml-2 border-info/25 bg-info-soft text-[10px] text-info">Changed</Badge>}
+                                                            <th colSpan={4} className="px-4 py-2 text-left text-xs font-semibold text-body">
+                                                                <span>{section.title}</span>{section.changed && <Badge variant="outline" className="ml-2 border-info/25 bg-info-soft text-xs text-info">Changed</Badge>}
                                                             </th>
                                                         </tr>
                                                         {section.rows.map(row => {
@@ -1869,12 +1869,12 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                                                     <td role="cell" className="px-4 py-3 font-mono font-semibold text-ink">
                                                                         <span aria-hidden="true" className="mobile-comparison-label">{tx('Old')}</span>
                                                                         <span>{left}{row.unit === 'rate' && left !== 'Not available' ? '/kg' : ''}</span>
-                                                                        {row.context?.left && <span className="mt-1 block font-sans text-[10px] font-medium leading-4 text-subtle">{row.context.left}</span>}
+                                                                        {row.context?.left && <span className="mt-1 block font-sans text-xs font-medium leading-4 text-subtle">{row.context.left}</span>}
                                                                     </td>
                                                                     <td role="cell" className="px-4 py-3 font-mono font-semibold text-ink">
                                                                         <span aria-hidden="true" className="mobile-comparison-label">{tx('New')}</span>
                                                                         <span>{right}{row.unit === 'rate' && right !== 'Not available' ? '/kg' : ''}</span>
-                                                                        {row.context?.right && <span className="mt-1 block font-sans text-[10px] font-medium leading-4 text-subtle">{row.context.right}</span>}
+                                                                        {row.context?.right && <span className="mt-1 block font-sans text-xs font-medium leading-4 text-subtle">{row.context.right}</span>}
                                                                     </td>
                                                                     <td role="cell" className={`comparison-change px-4 py-3 font-mono font-bold ${row.changed ? numericDelta != null && numericDelta > 0 ? 'text-warning' : 'text-info' : 'text-subtle'}`}><span aria-hidden="true" className="mobile-comparison-label">{tx('Change')}</span>{change}</td>
                                                                 </tr>
@@ -1917,7 +1917,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     </DialogHeader>
                     {existingDraftForRestore && (
                         <div className="rounded-xl border border-warning/25 bg-warning-soft p-3 text-sm text-warning">
-                            <p className="font-black">{existingDraftForRestore.partyName || 'Untitled draft'}</p>
+                            <p className="font-semibold">{existingDraftForRestore.partyName || 'Untitled draft'}</p>
                             <p className="mt-1 text-xs font-bold uppercase tracking-widest text-warning">
                                 {existingDraftForRestore.qualityLabel || 'No quality label'}
                             </p>
