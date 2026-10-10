@@ -11,6 +11,7 @@ export const liteTrialPhrases = {
   ],
   trialNotAvailable: ['Your free trial is not available for this account.', 'આ ખાતા માટે તમારી મફત ટ્રાયલ ઉપલબ્ધ નથી.', 'इस खाते के लिए आपका मुफ़्त ट्रायल उपलब्ध नहीं है।'],
   trialBannerDays: ['Lite trial: {days} days left', 'Lite ટ્રાયલ: {days} દિવસ બાકી', 'Lite ट्रायल: {days} दिन बाकी'],
+  trialBannerOneDay: ['Lite trial: 1 day left', 'Lite ટ્રાયલ: 1 દિવસ બાકી', 'Lite ट्रायल: 1 दिन बाकी'],
   trialBannerLastDay: ['Lite trial ends today', 'Lite ટ્રાયલ આજે પૂરી થાય છે', 'Lite ट्रायल आज खत्म हो रहा है'],
   trialSubscribe: ['Subscribe to keep Lite', 'Lite ચાલુ રાખવા સબ્સ્ક્રાઇબ કરો', 'Lite जारी रखने के लिए सदस्यता लें'],
   trialEndsOn: ['Free trial ends {date}', 'મફત ટ્રાયલ {date} ના રોજ પૂરી થાય છે', 'मुफ़्त ट्रायल {date} को खत्म होगा'],

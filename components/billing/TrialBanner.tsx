@@ -2,13 +2,24 @@
 
 import Link from 'next/link'
 import { Clock3 } from 'lucide-react'
-import { useTranslation } from '@/lib/i18n/context'
+import { useTranslation, type Language } from '@/lib/i18n/context'
 import { liteTrialText } from '@/lib/i18n/lite-trial'
 import { trialDaysLeft } from '@/lib/lite-trial'
 import { cn } from '@/lib/utils'
 
 /** The trial is emphasised once this many days or fewer remain. */
 const EMPHASISED_DAYS_LEFT = 7
+
+/**
+ * Whole days are rounded up, so the final 24 hours count as one day left. That
+ * day gets its own singular copy instead of "1 days left". Zero days (a trial
+ * that has run out) keeps the ends-today copy as a defensive fallback.
+ */
+function countdownMessage(language: Language, days: number) {
+  if (days <= 0) return liteTrialText(language, 'trialBannerLastDay')
+  if (days === 1) return liteTrialText(language, 'trialBannerOneDay')
+  return liteTrialText(language, 'trialBannerDays', { days })
+}
 
 /**
  * Owner shell notice for an in-force Lite trial: the days left and a route to
@@ -18,9 +29,7 @@ export function TrialBanner({ endsAt }: { endsAt: string }) {
   const { language } = useTranslation()
   const days = trialDaysLeft(endsAt)
   const emphasised = days <= EMPHASISED_DAYS_LEFT
-  const message = days === 0
-    ? liteTrialText(language, 'trialBannerLastDay')
-    : liteTrialText(language, 'trialBannerDays', { days })
+  const message = countdownMessage(language, days)
 
   return (
     <div

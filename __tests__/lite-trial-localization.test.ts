@@ -13,13 +13,14 @@ function placeholders(text: string) {
 }
 
 describe('Lite trial localization', () => {
-  it('defines exactly the eleven trial copy keys', () => {
+  it('defines exactly the twelve trial copy keys', () => {
     expect([...keys].sort()).toEqual([
       'startTrial',
       'trialPayNow',
       'trialDisclosure',
       'trialNotAvailable',
       'trialBannerDays',
+      'trialBannerOneDay',
       'trialBannerLastDay',
       'trialSubscribe',
       'trialEndsOn',
@@ -37,6 +38,7 @@ describe('Lite trial localization', () => {
     )
     expect(liteTrialPhrases.trialNotAvailable[EN]).toBe('Your free trial is not available for this account.')
     expect(liteTrialPhrases.trialBannerDays[EN]).toBe('Lite trial: {days} days left')
+    expect(liteTrialPhrases.trialBannerOneDay[EN]).toBe('Lite trial: 1 day left')
     expect(liteTrialPhrases.trialBannerLastDay[EN]).toBe('Lite trial ends today')
     expect(liteTrialPhrases.trialSubscribe[EN]).toBe('Subscribe to keep Lite')
     expect(liteTrialPhrases.trialEndsOn[EN]).toBe('Free trial ends {date}')
@@ -77,6 +79,14 @@ describe('Lite trial localization', () => {
       expect(liteTrialPhrases.trialDisclosure[index], `trialDisclosure ${index}`).toContain('Lite')
       expect(liteTrialPhrases.trialDisclosure[index], `trialDisclosure ${index}`).toContain('Free')
     }
+  })
+
+  it('gives the last day its own copy in every language, with no count placeholder', () => {
+    expect(liteTrialPhrases.trialBannerOneDay[GU]).toBe('Lite ટ્રાયલ: 1 દિવસ બાકી')
+    expect(liteTrialPhrases.trialBannerOneDay[HI]).toBe('Lite ट्रायल: 1 दिन बाकी')
+    expect(liteTrialText('en', 'trialBannerOneDay')).toBe('Lite trial: 1 day left')
+    expect(liteTrialText('gu', 'trialBannerOneDay')).toBe('Lite ટ્રાયલ: 1 દિવસ બાકી')
+    expect(liteTrialText('hi', 'trialBannerOneDay')).toBe('Lite ट्रायल: 1 दिन बाकी')
   })
 
   it('selects the language tuple by language and fills placeholders', () => {

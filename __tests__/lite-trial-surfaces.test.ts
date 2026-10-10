@@ -2,7 +2,7 @@ import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { TrialBanner } from '@/components/billing/TrialBanner'
 import {
   readTrialEndedDismissal,
@@ -30,14 +30,19 @@ vi.mock('@/app/(dashboard)/owner/estimator/EstimatorClient', () => ({ default: (
 const root = process.cwd()
 const read = (file: string) => readFileSync(join(root, file), 'utf8')
 
-const DAY_MS = 24 * 60 * 60 * 1000
+const HOUR_MS = 60 * 60 * 1000
+const DAY_MS = 24 * HOUR_MS
 
-/**
- * An instant `days` whole days ahead. It sits half a day short of the mark so the
- * rounded-up countdown reads `days` whatever clock the test runs on.
- */
+/** A fixed clock, so the countdown is exact rather than depending on when the test runs. */
+const NOW_MS = Date.parse('2026-10-11T04:00:00.000Z')
+
+/** The instant `ms` after (or before, when negative) the fixed clock. */
+function endsIn(ms: number) {
+  return new Date(NOW_MS + ms).toISOString()
+}
+
 function endsInDays(days: number) {
-  return new Date(Date.now() + (days - 0.5) * DAY_MS).toISOString()
+  return endsIn(days * DAY_MS)
 }
 
 const ENDED_AT = '2026-10-01T00:00:00.000Z'
@@ -54,37 +59,67 @@ afterEach(() => {
 })
 
 describe('TrialBanner', () => {
-  it('shows the days left in the trial', () => {
-    const html = renderToStaticMarkup(createElement(TrialBanner, { endsAt: endsInDays(20) }))
-    expect(html).toContain('Lite trial: 20 days left')
+  // The countdown reads the clock, so pin it: every endsAt below is an exact offset from NOW_MS.
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(NOW_MS)
+  })
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
-  it('says the trial ends today when no whole day is left', () => {
-    const html = renderToStaticMarkup(createElement(TrialBanner, { endsAt: new Date(Date.now() - 1000).toISOString() }))
+  const render = (endsAt: string) => renderToStaticMarkup(createElement(TrialBanner, { endsAt }))
+
+  it('shows the days left in the trial', () => {
+    expect(render(endsInDays(20))).toContain('Lite trial: 20 days left')
+  })
+
+  it('reads the final 6 hours as one day left, with the singular and emphasised', () => {
+    const html = render(endsIn(6 * HOUR_MS))
+    expect(html).toContain('Lite trial: 1 day left')
+    expect(html).not.toContain('1 days')
+    expect(html).not.toContain('ends today')
+    expect(html).toContain('bg-wv-status-warning-bg')
+  })
+
+  it('uses the singular for the last day in Hindi and Gujarati', () => {
+    state.language = 'hi'
+    expect(render(endsIn(6 * HOUR_MS))).toContain('Lite ट्रायल: 1 दिन बाकी')
+    state.language = 'gu'
+    expect(render(endsIn(6 * HOUR_MS))).toContain('Lite ટ્રાયલ: 1 દિવસ બાકી')
+  })
+
+  it('rounds a part day up to the plural count, so 2.5 days left reads 3 days', () => {
+    const html = render(endsIn(2.5 * DAY_MS))
+    expect(html).toContain('Lite trial: 3 days left')
+    expect(html).not.toContain('1 day left')
+  })
+
+  it('keeps the ends-today copy as the defensive fallback once the countdown has run out', () => {
+    const html = render(endsIn(-HOUR_MS))
     expect(html).toContain('Lite trial ends today')
     expect(html).not.toContain('days left')
   })
 
   it('links to the owner billing page with the subscribe label and a 44px tap target', () => {
-    const link = anchorFor(renderToStaticMarkup(createElement(TrialBanner, { endsAt: endsInDays(20) })), '/owner/billing')
+    const link = anchorFor(render(endsInDays(20)), '/owner/billing')
     expect(link).toContain('min-h-[44px]')
     expect(link).toContain('>Subscribe to keep Lite</a>')
   })
 
   it('is emphasised with the warning status tokens in the last 7 days, and calm before that', () => {
-    const lastWeek = renderToStaticMarkup(createElement(TrialBanner, { endsAt: endsInDays(7) }))
+    const lastWeek = render(endsInDays(7))
     expect(lastWeek).toContain('bg-wv-status-warning-bg')
     expect(lastWeek).not.toContain('saffron')
 
-    const earlier = renderToStaticMarkup(createElement(TrialBanner, { endsAt: endsInDays(8) }))
-    expect(earlier).not.toContain('bg-wv-status-warning-bg')
+    expect(render(endsInDays(8))).not.toContain('bg-wv-status-warning-bg')
   })
 
-  it('renders the Gujarati and Hindi copy for the same countdown', () => {
+  it('renders the Gujarati and Hindi plural copy for the same countdown', () => {
     state.language = 'hi'
-    expect(renderToStaticMarkup(createElement(TrialBanner, { endsAt: endsInDays(5) }))).toContain('Lite ट्रायल: 5 दिन बाकी')
+    expect(render(endsInDays(5))).toContain('Lite ट्रायल: 5 दिन बाकी')
     state.language = 'gu'
-    expect(renderToStaticMarkup(createElement(TrialBanner, { endsAt: endsInDays(5) }))).toContain('Lite ટ્રાયલ: 5 દિવસ બાકી')
+    expect(render(endsInDays(5))).toContain('Lite ટ્રાયલ: 5 દિવસ બાકી')
   })
 })
 
