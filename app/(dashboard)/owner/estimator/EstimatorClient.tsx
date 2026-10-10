@@ -872,7 +872,7 @@ function ComponentCountField({
 
     return (
         <div className="min-w-0 space-y-1.5">
-            <Label htmlFor={inputId} className="flex h-8 items-end text-[11px] font-semibold uppercase leading-tight tracking-[0.05em] text-[var(--color-muted)]">
+            <Label htmlFor={inputId} className="flex h-8 items-end text-xs font-medium leading-tight text-[var(--color-muted)]">
                 {label}
             </Label>
             <div className="relative" data-estimator-component-count>
@@ -1029,6 +1029,26 @@ function EstimatorCard({ children, accent = 'neutral', audit = false, 'data-tour
     )
 }
 
+// Required inputs are marked by the empty-field highlight and a screen-reader
+// note, not by a shouted "— REQUIRED" suffix in the visible label.
+const REQUIRED_LABEL_SUFFIX = /\s+—\s+REQUIRED$/
+
+function splitRequiredLabel(label: string): { text: string; required: boolean } {
+    return REQUIRED_LABEL_SUFFIX.test(label)
+        ? { text: label.replace(REQUIRED_LABEL_SUFFIX, ''), required: true }
+        : { text: label, required: false }
+}
+
+function FieldLabelText({ label }: { label: string }) {
+    const { text, required } = splitRequiredLabel(label)
+    return (
+        <>
+            {text}
+            {required && <span className="sr-only"> (required)</span>}
+        </>
+    )
+}
+
 function StepperField({
     label,
     value,
@@ -1060,7 +1080,7 @@ function StepperField({
     const valueClass = 'text-[var(--color-yarn-orange)]'
     return (
         <div data-estimator-field={fieldKey} className="min-w-0 space-y-2">
-            <Label className="block text-[11px] font-semibold uppercase tracking-[0.05em] text-[var(--color-muted)]">
+            <Label className="block text-xs font-medium text-[var(--color-muted)]">
                 {label}
             </Label>
             <div data-estimator-stepper className="inline-flex h-11 overflow-hidden rounded-[9px] border border-[var(--color-hairline)] bg-white shadow-[0_1px_2px_rgba(30,37,40,0.04)]">
@@ -1130,7 +1150,7 @@ function NumField({
     const placeholderClass = 'placeholder:text-[var(--color-placeholder)] placeholder:font-normal'
     return (
         <div className="space-y-1.5 min-w-0" data-estimator-field={fieldKey}>
-            <Label htmlFor={inputId} className="flex items-end h-8 text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] leading-tight">{label}</Label>
+            <Label htmlFor={inputId} className="flex items-end h-8 text-xs font-medium text-[var(--color-muted)] leading-tight"><FieldLabelText label={label} /></Label>
             <div className="relative group" data-estimator-unit-field={unit || undefined} style={unit ? { '--estimator-unit-length': Math.max(2, unit.length) } as React.CSSProperties : undefined}>
                 <Input
                     enterKeyHint="next"
@@ -1291,13 +1311,13 @@ function WidthField({
 
     return (
         <div data-estimator-field="effectiveCostingWidthCm" className="space-y-1.5 min-w-0">
-            <Label className={`flex items-end h-8 text-[11px] uppercase tracking-[0.05em] font-semibold leading-tight ${isEmpty ? 'text-[var(--color-warning-amber)]' : 'text-[var(--color-muted)]'}`}>
-                {label}
+            <Label className={`flex items-end h-8 text-xs font-medium leading-tight ${isEmpty ? 'text-[var(--color-warning-amber)]' : 'text-[var(--color-muted)]'}`}>
+                <FieldLabelText label={label} />
             </Label>
             <div className="relative group" data-estimator-unit-field={unit} style={{ '--estimator-unit-length': Math.max(4, unit.length) } as React.CSSProperties}>
                 <Input
                     enterKeyHint="next"
-                    aria-label={label}
+                    aria-label={splitRequiredLabel(label).text}
                     type="number"
                     // Finished width is routinely fractional (for example,
                     // 121.92 cm = 48 inches). Keep the native number input's
@@ -2197,7 +2217,7 @@ function LayerNameField({
                 }
             }}
         >
-            <Label className="flex items-end h-8 text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] leading-tight">
+            <Label className="flex items-end h-8 text-xs font-medium text-[var(--color-muted)] leading-tight">
                 {label}
             </Label>
             <div className="relative">
@@ -2324,7 +2344,7 @@ function CalculationModeField({
 }) {
     return (
         <div data-estimator-field="calculationMode" className="space-y-1.5 min-w-[140px]">
-            <Label className="flex items-end h-8 text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] leading-tight">
+            <Label className="flex items-end h-8 text-xs font-medium text-[var(--color-muted)] leading-tight">
                 Mode
             </Label>
             <LiquidSegmented
@@ -2743,8 +2763,8 @@ function WeavingRateFields({
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                    <Label htmlFor={rateInputId} className="flex h-8 items-end text-[10px] font-medium uppercase tracking-wider text-[var(--color-warning-amber)]">
-                        {inputMode === 'perMeter' ? 'Weaving rate — REQUIRED' : 'Paisa per pick — REQUIRED'}
+                    <Label htmlFor={rateInputId} className="flex h-8 items-end text-xs font-medium leading-tight text-[var(--color-muted)]">
+                        <FieldLabelText label={inputMode === 'perMeter' ? 'Weaving rate — REQUIRED' : 'Paisa per pick — REQUIRED'} />
                     </Label>
                     <div className="relative" data-estimator-unit-field={inputMode === 'perMeter' ? '₹/m' : 'paise/pick'} style={{ '--estimator-unit-length': inputMode === 'perMeter' ? 3 : 10 } as React.CSSProperties}>
                         <Input
@@ -2891,7 +2911,7 @@ function QuickCostingView({
                 <SectionHeader title="Quality basics" icon={Layers} accent="neutral" step={1} tutorialSection={2} />
                 <CardContent className="grid gap-4 p-4 sm:grid-cols-2 sm:p-5">
                     <div className="space-y-1.5 sm:col-span-2">
-                        <Label className="text-[10px] font-bold uppercase text-[var(--wv-neel-500)]">Fabric quality name — REQUIRED</Label>
+                        <Label className="text-xs font-medium text-[var(--color-muted)]"><FieldLabelText label="Fabric quality name — REQUIRED" /></Label>
                         <Input
                             enterKeyHint="next"
                             data-estimator-field="qualityLabel"
@@ -5223,7 +5243,7 @@ export default function EstimatorClient({
             )}
             {lastSavedCosting && !unconfirmedRequestId && (
                 <section role="status" className="rounded-xl border border-[var(--color-factory-green)]/25 bg-[var(--color-factory-green-soft)] p-4">
-                    <h2 className="font-semibold">{tx('Saved to factory')} · {lastSavedCosting.model.qualityLabel} · v{lastSavedCosting.version}</h2>
+                    <h2 className="font-semibold">{tx('Saved to your costings')} · {lastSavedCosting.model.qualityLabel} · v{lastSavedCosting.version}</h2>
                     <p className="mt-1 text-xs text-[var(--color-muted)]">{formatSuratDateTime(lastSavedCosting.savedAt)}</p>
                     <div className="mt-3 flex flex-wrap gap-2">
                         <Button onClick={() => { setExportSavedCosting(true); setShowExportDialog(true) }}>{tx('Create customer quotation')}</Button>
@@ -6724,7 +6744,7 @@ export default function EstimatorClient({
                             <div className="rounded-[9px] border border-dashed border-[var(--color-hairline)] bg-[var(--color-canvas)] p-3.5">
                                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                     <div>
-                                        <p className="text-[13px] font-medium text-[var(--color-ink)]">Direct factory cost per metre (₹/m) — REQUIRED</p>
+                                        <p className="text-[13px] font-medium text-[var(--color-ink)]"><FieldLabelText label="Direct factory cost per metre (₹/m) — REQUIRED" /></p>
                                                 <p className="text-[11px] text-[var(--color-muted)]">Required when you choose a direct factory cost per metre.</p>
                                             </div>
                                             <div className="flex items-center gap-2">
@@ -6905,7 +6925,7 @@ export default function EstimatorClient({
 
                                                 <div className="space-y-4 border-t border-[var(--color-hairline)] pt-4">
                                                     <div data-estimator-field="monthlyProductionM" className="space-y-1.5">
-                                                        <Label className={`text-[10px] font-medium uppercase ${state.overheadMode === 'monthly_expenses' && (!state.monthlyOutputM || state.monthlyOutputM <= 0) ? 'text-[var(--color-warning-amber)]' : 'text-[var(--color-muted)]'}`}>Typical monthly production (m){state.overheadMode === 'monthly_expenses' ? ' — REQUIRED' : ''}</Label>
+                                                        <Label className={`text-xs font-medium ${state.overheadMode === 'monthly_expenses' && (!state.monthlyOutputM || state.monthlyOutputM <= 0) ? 'text-[var(--color-warning-amber)]' : 'text-[var(--color-muted)]'}`}><FieldLabelText label={`Typical monthly production (m)${state.overheadMode === 'monthly_expenses' ? ' — REQUIRED' : ''}`} /></Label>
                                                         <div className="relative">
                                                             <Input
                                                                 enterKeyHint="next"
