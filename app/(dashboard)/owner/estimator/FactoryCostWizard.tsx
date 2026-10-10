@@ -326,7 +326,7 @@ export default function FactoryCostWizard({ initialState, initialYarnReviewInter
                                 </button>
                             ) : null}
                             <div className="min-w-0 flex-1">
-                                <p className="text-xs font-medium text-[var(--wv-text-secondary)]">Factory setup · Step {stepNumber} of {totalSteps}</p>
+                                <p className="text-xs font-medium text-[var(--wv-text-secondary)]">{`Factory setup · Step ${stepNumber} of ${totalSteps}`}</p>
                                 <div className="mt-1.5 h-1 w-full max-w-40 overflow-hidden rounded-full bg-[var(--wv-cotton-300)]" aria-hidden="true">
                                     <div className="ui-meter-fill h-full rounded-full bg-[var(--wv-brand-accent)]" style={{ width: `${(stepNumber / totalSteps) * 100}%` }} />
                                 </div>
