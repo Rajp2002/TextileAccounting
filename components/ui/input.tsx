@@ -1,13 +1,21 @@
 import * as React from "react"
 
-import { resolveInputMode } from "@/lib/input-mode"
+import { blurNumberInputOnWheel, resolveInputMode } from "@/lib/input-mode"
 import { cn } from "@/lib/utils"
 
-function Input({ className, type, inputMode, ...props }: React.ComponentProps<"input">) {
+function Input({ className, type, inputMode, onWheel, ...props }: React.ComponentProps<"input">) {
+  const handleWheel =
+    type === "number"
+      ? (event: React.WheelEvent<HTMLInputElement>) => {
+          blurNumberInputOnWheel(event)
+          onWheel?.(event)
+        }
+      : onWheel
   return (
     <input
       type={type}
       inputMode={resolveInputMode({ type, inputMode })}
+      onWheel={handleWheel}
       data-slot="input"
       className={cn(
         "file:text-foreground placeholder:text-[var(--color-placeholder)] selection:bg-saffron-soft selection:text-ink border-input h-10 w-full min-w-0 rounded-md border bg-surface px-3 py-1 text-sm text-ink shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-surface-soft disabled:opacity-70 scroll-my-16",

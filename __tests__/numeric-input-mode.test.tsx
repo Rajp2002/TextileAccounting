@@ -2,9 +2,10 @@ import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { renderToStaticMarkup } from 'react-dom/server'
 import ts from 'typescript'
-import { describe, expect, it } from 'vitest'
+import type { ReactElement, WheelEvent } from 'react'
+import { describe, expect, it, vi } from 'vitest'
 import { Input } from '@/components/ui/input'
-import { resolveInputMode } from '@/lib/input-mode'
+import { blurNumberInputOnWheel, resolveInputMode } from '@/lib/input-mode'
 
 describe('resolveInputMode', () => {
     it('opens the decimal pad for type=number', () => {
@@ -27,7 +28,50 @@ describe('resolveInputMode', () => {
     })
 })
 
+function wheelOver(type: string, focused: boolean) {
+    const input = { type, blur: vi.fn(), ownerDocument: { activeElement: null as unknown } }
+    if (focused) input.ownerDocument.activeElement = input
+    return { input, event: { currentTarget: input } as unknown as WheelEvent<HTMLInputElement> }
+}
+
+describe('blurNumberInputOnWheel', () => {
+    it('drops focus from a focused number field so the wheel cannot step its value', () => {
+        const { input, event } = wheelOver('number', true)
+        blurNumberInputOnWheel(event)
+        expect(input.blur).toHaveBeenCalledOnce()
+    })
+
+    it('leaves an unfocused number field alone', () => {
+        const { input, event } = wheelOver('number', false)
+        blurNumberInputOnWheel(event)
+        expect(input.blur).not.toHaveBeenCalled()
+    })
+
+    it('leaves other focused fields alone', () => {
+        const { input, event } = wheelOver('text', true)
+        blurNumberInputOnWheel(event)
+        expect(input.blur).not.toHaveBeenCalled()
+    })
+})
+
 describe('Input primitive', () => {
+    type WheelProps = { onWheel?: (event: WheelEvent<HTMLInputElement>) => void }
+
+    it('guards a number field against the mouse wheel and still calls its own onWheel', () => {
+        const own = vi.fn()
+        const element = Input({ type: 'number', onWheel: own }) as ReactElement<WheelProps>
+        const { input, event } = wheelOver('number', true)
+        element.props.onWheel?.(event)
+        expect(input.blur).toHaveBeenCalledOnce()
+        expect(own).toHaveBeenCalledWith(event)
+    })
+
+    it('passes a text field its onWheel untouched', () => {
+        const own = vi.fn()
+        const element = Input({ type: 'text', onWheel: own }) as ReactElement<WheelProps>
+        expect(element.props.onWheel).toBe(own)
+    })
+
     it('renders type=number with the decimal pad by default', () => {
         expect(renderToStaticMarkup(<Input type="number" />)).toMatch(/inputmode="decimal"/i)
     })
@@ -84,9 +128,10 @@ describe('whole-number fields', () => {
 })
 
 describe('raw <input> elements', () => {
-    // <Input> derives its inputMode from `type`; a raw <input> does not, so a numeric one
-    // must say which pad it wants (usually by calling resolveInputMode).
-    it('declare an inputMode whenever the type is number or decided at runtime', () => {
+    // <Input> derives its inputMode and wheel guard from `type`; a raw <input> does not, so a
+    // numeric one must say which pad it wants (usually by calling resolveInputMode) and stop the
+    // mouse wheel from stepping its value (blurNumberInputOnWheel).
+    it('declare an inputMode and a wheel guard whenever the type is number or decided at runtime', () => {
         const offenders: string[] = []
         for (const file of ['app', 'components'].flatMap(root => tsxFiles(join(process.cwd(), root)))) {
             const source = readFileSync(file, 'utf8')
@@ -99,7 +144,7 @@ describe('raw <input> elements', () => {
                     const type = named('type')
                     const staticType = type?.initializer && ts.isStringLiteral(type.initializer) ? type.initializer.text : undefined
                     const needsMode = type && (staticType === undefined || staticType === 'number')
-                    if (needsMode && !named('inputMode')) {
+                    if (needsMode && (!named('inputMode') || !named('onWheel'))) {
                         const { line } = sf.getLineAndCharacterOfPosition(node.getStart(sf))
                         offenders.push(`${file.replace(`${process.cwd()}/`, '')}:${line + 1}`)
                     }

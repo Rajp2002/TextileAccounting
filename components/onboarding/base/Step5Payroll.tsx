@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { Calendar } from 'lucide-react'
+import { blurNumberInputOnWheel } from '@/lib/input-mode'
 import { cn } from '@/lib/utils'
 import { useTranslation } from '@/lib/i18n/context'
 import type { PayrollCycleInput } from '@/lib/base-onboarding'
@@ -131,6 +132,7 @@ export function Step5Payroll({
                                 id="anchor-day-input"
                                 type="number"
                                 inputMode="numeric"
+                                onWheel={blurNumberInputOnWheel}
                                 min="1"
                                 max="31"
                                 value={payroll.anchorDay ?? 1}
@@ -183,6 +185,7 @@ export function Step5Payroll({
                                 id="interval-days-input"
                                 type="number"
                                 inputMode="numeric"
+                                onWheel={blurNumberInputOnWheel}
                                 min="1"
                                 max="60"
                                 value={payroll.intervalDays ?? 14}

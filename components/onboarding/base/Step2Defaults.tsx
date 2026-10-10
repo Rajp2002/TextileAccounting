@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { Sliders, Percent, DollarSign } from 'lucide-react'
+import { blurNumberInputOnWheel } from '@/lib/input-mode'
 import { cn } from '@/lib/utils'
 import { useTranslation } from '@/lib/i18n/context'
 import type { FactoryDefaultsInput } from '@/lib/base-onboarding'
@@ -60,6 +61,7 @@ export function Step2Defaults({
                                 id="wastage-input"
                                 type="number"
                                 inputMode="decimal"
+                                onWheel={blurNumberInputOnWheel}
                                 step="0.1"
                                 min="0"
                                 max="50"
@@ -89,6 +91,7 @@ export function Step2Defaults({
                                 id="margin-input"
                                 type="number"
                                 inputMode="decimal"
+                                onWheel={blurNumberInputOnWheel}
                                 step="0.5"
                                 min="0"
                                 max="90"
