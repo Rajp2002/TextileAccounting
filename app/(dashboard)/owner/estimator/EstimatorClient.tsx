@@ -4,6 +4,7 @@ import {FreeRecalculationWindow} from '@/components/estimator/FreeRecalculationW
 
 import dynamic from 'next/dynamic'
 import { useMobileKeyboard } from '@/hooks/use-mobile-keyboard'
+import { KeyboardNextBar } from '@/components/ui/keyboard-next-bar'
 import { useReducer, useEffect, useLayoutEffect, useMemo, useCallback, useState, useRef, useId } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { nanoid } from 'nanoid'
@@ -875,6 +876,7 @@ function ComponentCountField({
             </Label>
             <div className="relative" data-estimator-component-count>
                 <Input
+                    enterKeyHint="next"
                     id={inputId}
                     data-estimator-field={`${accent}ComponentCount`}
                     data-testid={`${accent}-component-count`}
@@ -1070,6 +1072,7 @@ function StepperField({
                     <Minus className="h-3.5 w-3.5" />
                 </button>
                 <Input
+                    enterKeyHint="next"
                     aria-label={`${label} (${unit})`}
                     type="number"
                     value={isGhostValue ? '' : value}
@@ -1129,6 +1132,7 @@ function NumField({
             <Label htmlFor={inputId} className="flex items-end h-8 text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] leading-tight">{label}</Label>
             <div className="relative group" data-estimator-unit-field={unit || undefined} style={unit ? { '--estimator-unit-length': Math.max(2, unit.length) } as React.CSSProperties : undefined}>
                 <Input
+                    enterKeyHint="next"
                     id={inputId}
                     inputMode="decimal"
                     aria-invalid={isEmpty || undefined}
@@ -1291,6 +1295,7 @@ function WidthField({
             </Label>
             <div className="relative group" data-estimator-unit-field={unit} style={{ '--estimator-unit-length': Math.max(4, unit.length) } as React.CSSProperties}>
                 <Input
+                    enterKeyHint="next"
                     aria-label={label}
                     type="number"
                     // Finished width is routinely fractional (for example,
@@ -2742,6 +2747,7 @@ function WeavingRateFields({
                     </Label>
                     <div className="relative" data-estimator-unit-field={inputMode === 'perMeter' ? '₹/m' : 'paise/pick'} style={{ '--estimator-unit-length': inputMode === 'perMeter' ? 3 : 10 } as React.CSSProperties}>
                         <Input
+                            enterKeyHint="next"
                             id={rateInputId}
                             data-estimator-field="perPickCostPaisa"
                             aria-label={inputMode === 'perMeter' ? 'Weaving rate in rupees per metre' : 'Paisa per pick'}
@@ -2886,6 +2892,7 @@ function QuickCostingView({
                     <div className="space-y-1.5 sm:col-span-2">
                         <Label className="text-[10px] font-bold uppercase text-[var(--wv-neel-500)]">Fabric quality name — REQUIRED</Label>
                         <Input
+                            enterKeyHint="next"
                             data-estimator-field="qualityLabel"
                             aria-label="Fabric quality name"
                             value={qualityLabel}
@@ -6711,6 +6718,7 @@ export default function EstimatorClient({
                                                 <div className="relative w-full sm:w-[140px]">
                                                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-[var(--color-muted)] pointer-events-none">₹</span>
                                                     <Input
+                                                        enterKeyHint="next"
                                                         data-estimator-field="overheadOverridePerM"
                                                         type="number"
                                                         min={0}
@@ -6856,6 +6864,7 @@ export default function EstimatorClient({
                                                                         <div className="relative shrink-0 w-32">
                                                                             <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-[var(--color-muted)] font-medium pointer-events-none">₹</span>
                                                                             <Input
+                                                                                enterKeyHint="next"
                                                                                 type="number"
                                                                                 value={item.monthlyAmount === 0 ? '' : item.monthlyAmount}
                                                                                 placeholder="e.g. 25,000"
@@ -6886,6 +6895,7 @@ export default function EstimatorClient({
                                                         <Label className={`text-[10px] font-medium uppercase ${state.overheadMode === 'monthly_expenses' && (!state.monthlyOutputM || state.monthlyOutputM <= 0) ? 'text-[var(--color-warning-amber)]' : 'text-[var(--color-muted)]'}`}>Typical monthly production (m){state.overheadMode === 'monthly_expenses' ? ' — REQUIRED' : ''}</Label>
                                                         <div className="relative">
                                                             <Input
+                                                                enterKeyHint="next"
                                                                 type="number"
                                                                 value={state.monthlyOutputM || ''}
                                                                 placeholder="e.g. 90,000"
@@ -7131,6 +7141,8 @@ export default function EstimatorClient({
             </div>
 
             </div>
+
+            <KeyboardNextBar summary={!freeMode && hasValidCostResult ? `₹${costingResult.productionCostPerM.toFixed(2)}/m` : null} />
 
             <MobileLiveEstimateShortcut
                 metered={freeMode}
@@ -7590,6 +7602,7 @@ export default function EstimatorClient({
                                         <div data-estimator-proposed-rate className="relative shrink-0 w-36">
                                             <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-[var(--color-muted)]">₹</span>
                                             <Input
+                                                enterKeyHint="next"
                                                 type="number"
                                                 min={0}
                                                 step={1}
@@ -7622,6 +7635,7 @@ export default function EstimatorClient({
                                         <div data-estimator-proposed-rate className="relative shrink-0 w-36">
                                             <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-[var(--color-muted)]">₹</span>
                                             <Input
+                                                enterKeyHint="next"
                                                 type="number"
                                                 min={0}
                                                 step={1}
