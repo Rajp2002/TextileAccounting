@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
 import { SavedCostingsTutorial } from '@/components/estimator/SavedCostingsTutorial'
 import { savedCostingTourEnding, isSavedCostingHandoff, costingTourSurface, makeSavedCostingTourExamples, makeSavedCostingTourExport, type SavedCostingStep } from '@/lib/saved-costings-tour'
 import { tourCommonCopy } from '@/lib/i18n/tour-common'
@@ -407,6 +407,17 @@ function getCurrentRecipeCostPerM(
     }
 }
 
+// A tap anywhere on a saved costing card opens its breakdown. Taps on the card's own
+// controls keep their action, taps inside the breakdown dialog (a portal, so outside the
+// card's DOM) are ignored, and a drag that selects text does not count as a tap.
+function openBreakdownFromCard(event: MouseEvent<HTMLElement>, openBreakdown: () => void) {
+    const target = event.target as Element | null
+    if (!target || !event.currentTarget.contains(target)) return
+    if (target.closest('button, a, input, select, textarea, label, [role="button"], [role="dialog"]')) return
+    if (window.getSelection()?.toString()) return
+    openBreakdown()
+}
+
 function SavedQualityLibraryView({
     groups,
     canUseProductionPipeline,
@@ -520,7 +531,11 @@ function SavedQualityLibraryView({
                         tabIndex={!tourStep && groupIndex === 0 ? -1 : undefined}
                         data-i18n-skip="true"
                         lang={language}
-                        className="flex flex-col gap-5 rounded-2xl border border-hairline bg-surface p-5 shadow-xs sm:px-6"
+                        onClick={tourStep ? undefined : event => openBreakdownFromCard(event, openGroupDetails)}
+                        className={cn(
+                            'flex flex-col gap-5 rounded-2xl border border-hairline bg-surface p-5 shadow-xs sm:px-6',
+                            !tourStep && 'cursor-pointer transition-colors hover:border-hairline-strong',
+                        )}
                     >
                         <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">

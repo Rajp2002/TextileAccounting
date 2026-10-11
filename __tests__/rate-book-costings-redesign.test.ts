@@ -76,9 +76,12 @@ describe('Saved Costings catalogue', () => {
         expect(card).toContain('fillCopy(copy.fromVersion, { n: Number(prior.version_number ?? 1)')
     })
 
-    it('opens the breakdown, reuses and exports from explicit buttons, never a card click', () => {
-        expect(card).not.toContain('onClick={event =>')
-        expect(card).not.toContain('cursor-pointer')
+    it('opens the breakdown from a tap anywhere on the card, keeping each button’s own action', () => {
+        expect(card).toContain('onClick={tourStep ? undefined : event => openBreakdownFromCard(event, openGroupDetails)}')
+        expect(card).toContain("!tourStep && 'cursor-pointer")
+        expect(client).toContain('if (!target || !event.currentTarget.contains(target)) return')
+        expect(client).toContain(`if (target.closest('button, a, input, select, textarea, label, [role="button"], [role="dialog"]')) return`)
+        expect(client).toContain('if (window.getSelection()?.toString()) return')
         expect(card).toContain('aria-haspopup="dialog"')
         expect(card).toContain('{copy.breakdown}')
         expect(card).toContain("{t('tourControls.savedCostings.use')}")
