@@ -351,7 +351,14 @@ function figure(label: string, value: string, tone: 'default' | 'accent' | 'posi
   return `<div class="figure figure-${tone}"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`
 }
 
-/** Weavly navy and saffron on warm neutrals, matching the app (see design.md). */
+/**
+ * Weavly navy and saffron on warm neutrals, matching the app (see design.md).
+ * On screen (the live preview and the print window) the document sits on a
+ * page-sized sheet with the @page margins, so it reads like the PDF instead of
+ * running edge to edge. Every screen rule is scoped to `body > .document`, which
+ * the PDF renderer never has (it wraps the body in `.costing-pdf-root` inside the
+ * app), so a PDF made on a phone keeps the 700px print layout.
+ */
 const PRINT_STYLES = `
   @page{size:A4;margin:12mm 13mm 14mm}
   *{box-sizing:border-box}
@@ -380,6 +387,9 @@ const PRINT_STYLES = `
   .poweredby{display:inline-flex;align-items:center;gap:6px}.poweredby img{display:block}
   html[lang="hi"] body,html[lang="gu"] body,.costing-pdf-root[lang="hi"],.costing-pdf-root[lang="gu"]{font-family:Arial,Helvetica,"Noto Sans Devanagari","Noto Sans Gujarati","Nirmala UI",Mangal,Shruti,sans-serif}
   [lang="hi"] .doctype,[lang="gu"] .doctype,[lang="hi"] .eyebrow,[lang="gu"] .eyebrow,[lang="hi"] th,[lang="gu"] th,[lang="hi"] .sectionhead h2,[lang="gu"] .sectionhead h2,[lang="hi"] .figure span,[lang="gu"] .figure span,[lang="hi"] .parties span,[lang="gu"] .parties span,[lang="hi"] .commercial span,[lang="gu"] .commercial span,[lang="hi"] .note strong,[lang="gu"] .note strong,[lang="hi"] .quotevalue span,[lang="gu"] .quotevalue span{letter-spacing:0;text-transform:none;font-size:11px}
+  @media screen{html:has(>body>.document){background:#EEE8DD}body:has(>.document){padding:24px 16px;background:transparent}body>.document{max-width:794px;padding:45px 49px 53px;border-radius:4px;background:#fff;box-shadow:0 1px 2px rgba(24,37,46,.08),0 8px 24px rgba(24,37,46,.08)}}
+  @media screen and (max-width:760px){body:has(>.document){padding:12px}body>.document{padding:28px 24px 32px}}
+  @media screen and (max-width:480px){body:has(>.document){padding:0}html:has(>body>.document){background:#fff}body>.document{padding:20px 16px 24px;border-radius:0;box-shadow:none}body>.document .figure{padding:10px}body>.document .figure strong{font-size:16px}body>.document th,body>.document td{padding-left:6px;padding-right:6px}body>.document th{letter-spacing:.04em}body>.document th.num{white-space:normal}body>.document td{font-size:11px}}
 `
 
 /**

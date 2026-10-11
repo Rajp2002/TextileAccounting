@@ -5,6 +5,7 @@ import { buildCostingResult, calcFullTotals } from '@/lib/estimator'
 import {
   buildCostingPrintHtml,
   createCostingExportModel,
+  extractStyledCostingBody,
   getCostingExportFilename,
   shortDocumentReference,
   type CostingExportOptions,
@@ -166,5 +167,23 @@ describe('document reference', () => {
 
   it('is what Free costings pass to the export dialog', () => {
     expect(read('app/free/costings/SavedFreeCostings.tsx')).toContain('documentReference={shortDocumentReference(selected?.id)}')
+  })
+})
+
+describe('on-screen preview', () => {
+  it('frames the document as a page with print margins instead of running edge to edge', () => {
+    expect(internalHtml).toContain('body>.document{max-width:794px;padding:45px 49px 53px')
+    expect(internalHtml).toContain('@media screen and (max-width:480px){body:has(>.document){padding:0}')
+  })
+
+  it('keeps the page framing out of the PDF renderer, which wraps the body instead', () => {
+    const styled = extractStyledCostingBody(internalHtml)
+    expect(styled).toContain('<div class="costing-pdf-root"')
+    expect(styled).not.toMatch(/<body[\s>]/)
+    // A phone's viewport must not restyle the 700px PDF host, so every screen rule is scoped to the standalone page.
+    const screenRules = [...internalHtml.matchAll(/@media screen[^{]*\{((?:[^{}]*\{[^{}]*\})*)\}/g)].map(match => match[1])
+    expect(screenRules).toHaveLength(3)
+    const selectors = screenRules.flatMap(rules => [...rules.matchAll(/([^{}]+)\{[^{}]*\}/g)].flatMap(match => match[1].split(',')))
+    for (const selector of selectors) expect(selector).toMatch(/^(html:has\(>body>\.document\)|body:has\(>\.document\)|body>\.document)/)
   })
 })
