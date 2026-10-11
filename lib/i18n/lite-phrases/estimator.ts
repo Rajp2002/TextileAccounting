@@ -467,4 +467,5 @@ export const ESTIMATOR_PHRASES: LitePhraseRow[] = [
     ["Warp yarn total", "ताना यार्न कुल", "તાણા યાર્ન કુલ"],
     ["Weft yarn total", "बाना यार्न कुल", "ભરણ યાર્ન કુલ"],
     ["Raw yarn total", "कुल यार्न लागत", "કુલ યાર્ન ખર્ચ"],
+    ["GST registered: enter the rate before GST and keep this 0. Not registered: enter GST only if your rate excludes it.", "GST रजिस्टर्ड हैं: GST से पहले का रेट लिखें और यहाँ 0 रखें। रजिस्टर्ड नहीं हैं: रेट में GST शामिल न हो, तभी GST लिखें।", "GST રજિસ્ટર્ડ છો: GST પહેલાંનો ભાવ લખો અને અહીં 0 રાખો. રજિસ્ટર્ડ નથી: ભાવમાં GST સામેલ ન હોય તો જ GST લખો."],
 ]
