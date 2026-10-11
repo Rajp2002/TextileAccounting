@@ -141,7 +141,9 @@ describe('Base suppression: public landing plans', () => {
   })
 })
 
-describe('Base suppression: public landing sections', () => {
+// These tests import every landing section cold and render it; on a busy Vercel build host that
+// takes longer than Vitest's 5-second default, which failed a production deploy.
+describe('Base suppression: public landing sections', { timeout: 30_000 }, () => {
   const sections = [
     'components/landing/plans',
     'components/landing/pricing',
