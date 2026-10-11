@@ -206,11 +206,14 @@
   --wv-cotton-300: #D9D5CA;
   --wv-cotton-400: #B5AFA1;
   --wv-cotton-500: #8A867C;
+  /* Placeholder text: about 5:1 on white so example values stay legible. */
+  --wv-cotton-600: #736F66;
 
   --wv-neel-50: #EEF0F6;
   --wv-neel-200: #C9D0E4;
   --wv-neel-300: #A9B0C4;
-  --wv-neel-500: #535A6D;
+  /* Secondary text: at least 8:1 on the canvas, as design.md asks (was #535A6D, 6.2:1). */
+  --wv-neel-500: #3F465A;
   --wv-neel-600: #34487A;
   --wv-neel-700: #28324D;
   --wv-neel-900: #16213E;
@@ -333,7 +336,7 @@
   --color-muted: var(--wv-text-secondary);
   --color-subtle: var(--wv-text-secondary);
   /* Hints must read as hints, never as an entered value. */
-  --color-placeholder: var(--wv-cotton-500);
+  --color-placeholder: var(--wv-cotton-600);
 
   /* Compatibility aliases still used by estimator surfaces. Keep every value
      on the canonical palette; yarn-orange is the readable saffron step. */

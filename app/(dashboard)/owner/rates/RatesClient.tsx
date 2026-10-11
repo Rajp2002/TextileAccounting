@@ -567,7 +567,7 @@ function PriceDeltaBadge({
                 className={`inline-flex items-center gap-1 rounded-md border border-hairline bg-surface-soft/80 px-1.5 py-0.5 text-xs font-medium text-subtle ${className}`}
                 title={delta.previousValueFormatted ? `Previous rate: ${delta.previousValueFormatted}` : undefined}
             >
-                <Minus className="h-2.5 w-2.5 shrink-0 text-subtle/70" aria-hidden="true" />
+                <Minus className="h-2.5 w-2.5 shrink-0 text-subtle" aria-hidden="true" />
                 <span>Unchanged</span>
             </span>
         )

@@ -96,8 +96,8 @@ describe('Estimator placeholder clarity', () => {
         const estimator = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
 
         // Labels must adhere to product standard color and not use accent-colored text
-        expect(estimator).toContain('<Label htmlFor={inputId} className="flex h-8 items-end text-xs font-medium leading-tight text-[var(--color-muted)]">')
-        expect(estimator).toContain('<Label className="block text-xs font-medium text-[var(--color-muted)]">')
+        expect(estimator).toContain('<Label htmlFor={inputId} className="flex h-8 items-end text-xs font-medium leading-tight text-[var(--color-body)]">')
+        expect(estimator).toContain('<Label className="block text-xs font-medium text-[var(--color-body)]">')
         expect(estimator).not.toContain('${accentStyles.text}')
     })
 })
