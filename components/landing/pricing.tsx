@@ -3,6 +3,7 @@ import { ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { BILLING_PLANS, BILLING_SELF_SERVE_PLAN_TIERS } from '@/lib/billing-constants'
 import { BASE_PLAN_OPEN_TO_NEW_ACCOUNTS } from '@/lib/base-plan-visibility'
+import { LITE_TRIAL_DAYS } from '@/lib/lite-trial'
 import { Beam } from './beam'
 import s from './landing.module.css'
 
@@ -16,6 +17,7 @@ function formatRupees(paise: number) {
 }
 
 const terms = [
+    'New accounts get a one-month Lite free trial. No payment is needed to start it.',
     'Paid prices include 18% GST and cover 365 days.',
     'No automatic charge. Renew by hand in the last 30 days.',
     'Free resets on the 1st of each month, 12:00 am IST. No rollover.',
@@ -58,6 +60,9 @@ export default function LandingPricing() {
                     >
                         <h3 id={`pricing-${plan.tier}-title`} className={cn(s.display, 'text-[22px] font-semibold text-[color:var(--lp-ink)]')}>{plan.name}</h3>
                         <p className="mt-2 text-[15px] leading-6 text-[color:var(--lp-body)]">{plan.summary}</p>
+                        {plan.tier === 'lite' && (
+                            <p className="mt-3 text-[15px] font-semibold leading-6 text-[color:var(--lp-ink)]">First month free for new accounts</p>
+                        )}
                         <div className="mt-6">
                             <p className={cn(s.label, 'text-[color:var(--lp-muted)]')}>First year</p>
                             <p className="mt-1 flex items-baseline gap-2">
@@ -80,9 +85,14 @@ export default function LandingPricing() {
                         </div>
                         <div className="mt-auto pt-7">
                             <Link href={`/signup?plan=${plan.tier}`} className={cn(plan.tier === 'lite' ? s.primary : s.secondary, 'w-full')}>
-                                Choose {plan.name}
+                                {plan.tier === 'lite' ? 'Start 1-month free trial' : <>Choose {plan.name}</>}
                                 {plan.tier === 'lite' && <ArrowRight className="h-4 w-4" aria-hidden="true" />}
                             </Link>
+                            {plan.tier === 'lite' && (
+                                <p className="mt-3 text-[13px] leading-5 text-[color:var(--lp-muted)]">
+                                    {`No payment to start. After ${LITE_TRIAL_DAYS} days, pay to stay on Lite or continue on Free.`}
+                                </p>
+                            )}
                         </div>
                     </article>
                 ))}

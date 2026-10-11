@@ -82,7 +82,7 @@ export default function LandingPlans() {
                     </h2>
                 </div>
                 <p className="max-w-[34rem] text-[17px] leading-[1.6] text-[color:var(--lp-body)]">
-                    Same engine and Cost Sheet on every plan. One factory workspace per plan.
+                    Same engine and Cost Sheet on every plan. One factory workspace per plan. Production, stock and dispatch tools come in a later plan.
                 </p>
             </div>
 

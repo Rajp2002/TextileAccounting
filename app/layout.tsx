@@ -24,7 +24,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   applicationName: "Weavly",
   title: "Weavly — Textile Costing & Production Management",
-  description: "Textile costing for weaving factories. Start with Free, choose Lite for unlimited costings and yarn rates.",
+  description: "Textile costing for weaving factories. Start with Free, choose Lite for unlimited costings and yarn rates. New accounts get a one-month Lite free trial.",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
