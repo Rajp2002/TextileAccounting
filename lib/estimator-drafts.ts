@@ -44,6 +44,8 @@ export interface EstimatorAutosaveData<TState = unknown> {
   sourceQuoteStatus?: EstimatorQuoteStatus
   sourceState?: TState
   sourceFactoryProfileUpdatedAt?: string
+  /** The reopened costing was saved before its cost and margin were stored. */
+  sourceCostNotSaved?: boolean
   sourceRecordKind?: CostingRecordKind
   templateId?: string
   /**
@@ -226,6 +228,7 @@ export function parseEstimatorDraft<TState = unknown>(
         : undefined,
       sourceState: isRecord(parsed.sourceState) ? parsed.sourceState as TState : undefined,
       sourceFactoryProfileUpdatedAt: typeof parsed.sourceFactoryProfileUpdatedAt === 'string' ? parsed.sourceFactoryProfileUpdatedAt : undefined,
+      sourceCostNotSaved: parsed.sourceCostNotSaved === true ? true : undefined,
       sourceRecordKind: parsed.sourceRecordKind === 'costing' || parsed.sourceRecordKind === 'quotation' || parsed.sourceRecordKind === 'market_run'
         ? parsed.sourceRecordKind
         : undefined,

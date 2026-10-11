@@ -282,6 +282,7 @@ type SaveAsNewQualityRollback = {
     sourceQuoteStatus: EstimatorQuoteStatus | null
     sourceState: EstimateState | null
     sourceFactoryProfileUpdatedAt: string | null
+    sourceCostNotSaved: boolean
     sourceRecordKind: CostingRecordKind | null
     clientRequestId: string | null
 }
@@ -3691,6 +3692,7 @@ export default function EstimatorClient({
     const [sourceState, setSourceState] = useState<EstimateState | null>(null)
     const [sourceFactoryProfileUpdatedAt, setSourceFactoryProfileUpdatedAt] = useState<string | null>(null)
     const [sourceRecordKind, setSourceRecordKind] = useState<CostingRecordKind | null>(null)
+    const [sourceCostNotSaved, setSourceCostNotSaved] = useState(false)
     const [appliedTemplate,   setAppliedTemplate]   = useState<EstimatorTemplate | null>(null)
     const estimatorOpenedRef = useRef(false)
     const costingStartedRef = useRef(false)
@@ -4003,6 +4005,7 @@ export default function EstimatorClient({
         sourceQuoteStatus: sourceQuoteStatus ?? undefined,
         sourceState: sourceState ?? undefined,
         sourceFactoryProfileUpdatedAt: sourceFactoryProfileUpdatedAt ?? undefined,
+        sourceCostNotSaved: sourceCostNotSaved || undefined,
         sourceRecordKind: recordKindOverride ?? sourceRecordKind ?? undefined,
         templateId: appliedTemplate?.id,
         clientRequestId: clientRequestId ?? undefined,
@@ -4017,6 +4020,7 @@ export default function EstimatorClient({
         sourceQuoteStatus,
         sourceState,
         sourceFactoryProfileUpdatedAt,
+        sourceCostNotSaved,
         sourceRecordKind,
         state,
         warpInstruction,
@@ -4086,6 +4090,7 @@ export default function EstimatorClient({
         setSourceQuoteStatus(restored.sourceQuoteStatus ?? null)
         setSourceState(restored.sourceState ?? null)
         setSourceFactoryProfileUpdatedAt(restored.sourceFactoryProfileUpdatedAt ?? null)
+        setSourceCostNotSaved(Boolean(restored.sourceQuoteId && restored.sourceCostNotSaved))
         setSourceRecordKind(restored.sourceRecordKind ?? null)
         setAppliedTemplate(templates.find(template => template.id === restored.templateId) ?? null)
         quoteRequestIdRef.current = restored.clientRequestId ?? null
@@ -4328,6 +4333,7 @@ export default function EstimatorClient({
         setSourceRecordKind('costing')
         setSourceState(savedState)
         setSourceFactoryProfileUpdatedAt(submitted?.factoryProfileUpdatedAt ?? sourceFactoryProfileUpdatedAt ?? factoryBaselineUpdatedAt)
+        setSourceCostNotSaved(false)
         setLastSavedCosting({ id: receipt.id, version: receipt.version_number, savedAt: receipt.created_at, model: savedModel })
         reportPwaWorkflowSuccess('costing')
     }
@@ -4436,6 +4442,7 @@ export default function EstimatorClient({
         setSourceQuoteStatus(null)
         setSourceState(null)
         setSourceFactoryProfileUpdatedAt(null)
+        setSourceCostNotSaved(false)
         setSourceRecordKind(null)
         quoteRequestIdRef.current = null
         setShowQualityLibrary(false)
@@ -4480,6 +4487,7 @@ export default function EstimatorClient({
             sourceQuoteStatus,
             sourceState,
             sourceFactoryProfileUpdatedAt,
+            sourceCostNotSaved,
             sourceRecordKind,
             clientRequestId: quoteRequestIdRef.current,
         }
@@ -4492,6 +4500,7 @@ export default function EstimatorClient({
         setSourceQuoteStatus(null)
         setSourceState(null)
         setSourceFactoryProfileUpdatedAt(null)
+        setSourceCostNotSaved(false)
         setSourceRecordKind(null)
         quoteRequestIdRef.current = null
         setTemplateSaveError(null)
@@ -4500,6 +4509,7 @@ export default function EstimatorClient({
         appliedTemplate,
         openSaveTemplateDialog,
         qualityLabel,
+        sourceCostNotSaved,
         sourceFactoryProfileUpdatedAt,
         sourceQuoteCreatedAt,
         sourceQuoteId,
@@ -4525,6 +4535,7 @@ export default function EstimatorClient({
         setSourceQuoteStatus(rollback.sourceQuoteStatus)
         setSourceState(rollback.sourceState)
         setSourceFactoryProfileUpdatedAt(rollback.sourceFactoryProfileUpdatedAt)
+        setSourceCostNotSaved(rollback.sourceCostNotSaved)
         setSourceRecordKind(rollback.sourceRecordKind)
         quoteRequestIdRef.current = rollback.clientRequestId
         saveAsNewQualityRollbackRef.current = null
@@ -4657,6 +4668,7 @@ export default function EstimatorClient({
                 setSourceQuoteStatus(null)
                 setSourceState(null)
                 setSourceFactoryProfileUpdatedAt(null)
+                setSourceCostNotSaved(false)
                 setSourceRecordKind(null)
                 quoteRequestIdRef.current = null
                 saveAsNewQualityRollbackRef.current = null
@@ -4766,6 +4778,7 @@ export default function EstimatorClient({
         setSourceQuoteStatus(null)
         setSourceState(null)
         setSourceFactoryProfileUpdatedAt(null)
+        setSourceCostNotSaved(false)
         setSourceRecordKind(null)
         quoteRequestIdRef.current = null
         autoRestoredDraftSavedAtRef.current = null
@@ -4828,6 +4841,7 @@ export default function EstimatorClient({
         setSourceQuoteStatus(null)
         setSourceState(null)
         setSourceFactoryProfileUpdatedAt(null)
+        setSourceCostNotSaved(false)
         setSourceRecordKind(null)
         quoteRequestIdRef.current = null
         setEditRatesTpl(null)
@@ -4972,6 +4986,7 @@ export default function EstimatorClient({
         setSourceQuoteStatus(null)
         setSourceState(null)
         setSourceFactoryProfileUpdatedAt(null)
+        setSourceCostNotSaved(false)
         setSourceRecordKind(null)
         quoteRequestIdRef.current = null
         setEditRatesTpl(null)
@@ -5163,6 +5178,7 @@ export default function EstimatorClient({
                 setSourceQuoteStatus(null)
                 setSourceState(null)
                 setSourceFactoryProfileUpdatedAt(null)
+                setSourceCostNotSaved(false)
                 setSourceRecordKind(null)
                 quoteRequestIdRef.current = null
                 const savedVersion = 'versionNumber' in res && res.versionNumber ? res.versionNumber : 1
@@ -5714,7 +5730,9 @@ export default function EstimatorClient({
                                 </div>
                                 {sourceQuoteId && (
                                     <p className="mt-2 max-w-3xl text-xs font-medium leading-4 text-[var(--color-muted)]">
-                                        {versionInputChangeSummary
+                                        {sourceCostNotSaved && sourceRecordKind === 'costing'
+                                            ? `This costing was saved before Weavly kept cost and margin. Check the yarn rates and factory costs below, then save it as v${(sourceQuoteVersionNumber ?? 1) + 1}. The older version stays as it was saved.`
+                                            : versionInputChangeSummary
                                             ? `Changed since v${sourceQuoteVersionNumber ?? 1}: ${versionInputChangeSummary}. Check these changes before saving a new version.`
                                             : `Nothing has changed since v${sourceQuoteVersionNumber ?? 1}. Saving again keeps the same version and does not make a copy.`}
                                         {sourceRecordKind === 'quotation' && sourceQuoteStatus && ` The quotation stays ${sourceQuoteStatus} until you change its status.`}
