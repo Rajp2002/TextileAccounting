@@ -43,6 +43,7 @@ import { Suspense } from 'react'
 import { PageHeader, StatusBadge } from '@/components/ui/page-header'
 import PlanAnalyticsBeacon from '@/components/billing/PlanAnalyticsBeacon'
 import { getCachedOwnerOrganization } from '@/lib/owner-organization'
+import { liteTrialText } from '@/lib/i18n/lite-trial'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -163,12 +164,14 @@ function AccessStateCallout({
     isActivating,
     isPending,
     isRetryable,
+    baseVisible,
 }: {
     subscriptionTier: string
     subscription: { plan_tier: string; current_end: string | null } | null
     isActivating: boolean
     isPending: boolean
     isRetryable: boolean
+    baseVisible: boolean
 }) {
     if (subscriptionTier === 'lite' || subscriptionTier === 'base') return null
 
@@ -184,7 +187,7 @@ function AccessStateCallout({
                 ? { icon: XCircle, label: 'Payment not completed', title: 'No payment was captured.', text: 'Access was not activated. Choose an available subscription below when you are ready to try again.' }
                 : expiredPlan
                     ? { icon: Lock, label: 'Subscription expired', title: `${expiredPlan.name} access has ended.`, text: 'Choose the available renewal option below to restore access. Your previous payment records remain available.' }
-                    : { icon: Star, label: 'No active subscription', title: 'Choose Lite or Base.', text: 'Start with Weavly Lite for complete costing management, or choose Base when you need connected production management.' }
+                    : { icon: Star, label: 'No active subscription', title: baseVisible ? 'Choose Lite or Base.' : 'Choose Lite.', text: baseVisible ? 'Start with Weavly Lite for complete costing management, or choose Base when you need connected production management.' : 'Start with Weavly Lite for complete costing management.' }
     const Icon = state.icon
 
     return (
@@ -284,7 +287,7 @@ export default async function BillingPage() {
             .order('created_at', { ascending: false }),
         supabase
             .from('org_subscriptions')
-            .select('id, plan_tier, status, current_start, current_end, razorpay_payment_id, razorpay_subscription_id, razorpay_order_id, checkout_purchase_type, checkout_amount_paise, checkout_currency, created_at')
+            .select('id, plan_tier, status, current_start, current_end, razorpay_payment_id, razorpay_subscription_id, razorpay_order_id, checkout_purchase_type, checkout_amount_paise, checkout_currency, created_at, is_trial')
             .eq('org_id', profile.org_id),
         supabase
             .from('billing_checkout_attempts')
@@ -295,6 +298,8 @@ export default async function BillingPage() {
     const { subscription } = subscriptionDetail
     const tier = planAccess.effectiveTier
     const subscriptionTier = planAccess.subscriptionTier
+    // Base is offered only to organizations that may see it (fail closed when unset).
+    const baseVisible = planAccess.baseVisible === true
     const payments = (paymentsResult.data ?? []) as SubscriptionPaymentRow[]
     const billingSubscriptions = (subscriptionsResult.data ?? []) as BillingSubscriptionRow[]
     const billingPayments = payments as BillingPaymentRow[]
@@ -348,9 +353,9 @@ export default async function BillingPage() {
         latestAttempt
         && !['activated', 'failed', 'cancelled', 'refunded'].includes(latestAttempt.status)
     )
-    const visiblePlanTiers: readonly PurchasablePlanTier[] = BILLING_SELF_SERVE_PLAN_TIERS
+    const visiblePlanTiers: readonly PurchasablePlanTier[] = BILLING_SELF_SERVE_PLAN_TIERS.filter(tier => tier !== 'base' || baseVisible)
     const cardPlanTiers: readonly PurchasablePlanTier[] = subscriptionTier === 'lite'
-        ? ['base']
+        ? visiblePlanTiers.filter(tier => tier === 'base')
         : visiblePlanTiers
     const billingReadiness = getBillingReadiness()
     const canRenew = Boolean(renewalAvailable && selfServeActiveTier && activeRenewalPrice)
@@ -359,8 +364,12 @@ export default async function BillingPage() {
     const litePresentation = isLiteWorkspace || (tier === 'none' && billingPlanTier === 'lite')
     const isBaseWorkspace = tier === 'base'
     const isActive = subscriptionTier === 'lite' || subscriptionTier === 'base'
+    // A Lite trial is entitlement only: it has no payment, renewal window or receipt.
+    const trialEndsAt = planAccess.trialEndsAt ?? null
+    // First-year pricing comes from the purchase decision, which ignores trial rows.
+    const trialPrice = trialEndsAt ? getBillingPrice('lite', purchaseDecisions.lite.purchaseType) : null
     const organizationName = organizationResult.data?.name || 'Weavly workspace'
-    const accessTiming = !isActive
+    const paidAccessTiming = !isActive
         ? subscription?.current_end
             ? `Access ended ${formatShortDate(subscription.current_end)}`
             : 'Choose a plan to activate this workspace'
@@ -371,6 +380,25 @@ export default async function BillingPage() {
                     ? `Renewal opens ${formatShortDate(renewalEligibleAt)} · access through ${formatShortDate(subscription.current_end)}`
                     : `Access through ${formatShortDate(subscription.current_end)}`
             : 'Active annual access'
+    const accessTiming = trialEndsAt ? liteTrialText('en', 'trialEndsOn', { date: formatShortDate(trialEndsAt) }) : paidAccessTiming
+
+    const trialSubscribeAction = trialEndsAt && trialPrice && purchaseDecisions.lite.allowed ? (
+        billingReadiness.canCreateOrder ? (
+            <SubscribeButton
+                planTier="lite"
+                tierName={getBillingPlan('lite').name}
+                displayAmount={formatAmount(trialPrice.totalPaise)}
+                buttonLabel={`Subscribe for ${formatAmount(trialPrice.totalPaise)}`}
+                successHref="/owner/billing"
+                successLabel="View payment history"
+                className={railPrimaryAction}
+            />
+        ) : (
+            <Button disabled className={cn(railPrimaryAction, 'opacity-60')}>
+                Subscribe unavailable
+            </Button>
+        )
+    ) : null
 
     const primaryPlanAction = canRenew && selfServeActiveTier && activeRenewalPrice ? (
         billingReadiness.canCreateOrder ? (
@@ -388,10 +416,10 @@ export default async function BillingPage() {
                 Renew unavailable
             </Button>
         )
-    ) : (
+    ) : trialSubscribeAction ?? (
         <Button asChild className={cn(railPrimaryAction, 'gap-2')}>
             <Link href="/plans?from=billing">
-                <span>{subscriptionTier === 'lite' ? 'Upgrade to Base' : subscriptionTier === 'base' ? 'Compare plans' : 'Explore plans'}</span>
+                <span>{subscriptionTier === 'lite' && baseVisible ? 'Upgrade to Base' : subscriptionTier === 'base' ? 'Compare plans' : 'Explore plans'}</span>
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
         </Button>
@@ -419,6 +447,7 @@ export default async function BillingPage() {
                     isActivating={isActivating}
                     isPending={isPending}
                     isRetryable={isRetryable}
+                    baseVisible={baseVisible}
                 />
 
                 {/* Plan payments readiness notice when payments gate is blocked */}
@@ -465,7 +494,7 @@ export default async function BillingPage() {
                                     <p className="text-xs font-bold text-subtle">Current plan</p>
                                     <p className="mt-0.5 text-sm font-semibold text-ink">
                                         {activePaidTier === 'lite' ? 'Weavly Lite' : activePaidTier === 'base' ? 'Weavly Base' : 'No active subscription'}
-                                        {isActive && <span className="font-normal text-subtle"> · Annual access</span>}
+                                        {isActive && <span className="font-normal text-subtle"> · {trialEndsAt ? 'Free trial' : 'Annual access'}</span>}
                                     </p>
                                     <p className="mt-0.5 text-xs leading-relaxed text-subtle">{accessTiming}</p>
                                 </div>
@@ -525,9 +554,9 @@ export default async function BillingPage() {
                                     </div>
                                     <p className="mt-3 text-xl font-bold leading-tight tracking-tight text-ink">
                                         {activePaidTier === 'base' ? 'Base tier' : activePaidTier === 'lite' ? 'Lite tier' : 'No active plan'}
-                                        {isActive && <span className="ml-1 text-xs font-normal tracking-normal text-body">annual access</span>}
+                                        {isActive && <span className="ml-1 text-xs font-normal tracking-normal text-body">{trialEndsAt ? 'free trial' : 'annual access'}</span>}
                                     </p>
-                                    <p className="mt-2 text-xs leading-relaxed text-body">{accessTiming} · Annual renewals are manual.</p>
+                                    <p className="mt-2 text-xs leading-relaxed text-body">{accessTiming}{trialEndsAt ? null : ' · Annual renewals are manual.'}</p>
                                 </article>
                             </div>
                         </CardContent></LiteDisclosure>
@@ -547,14 +576,14 @@ export default async function BillingPage() {
                                     <span className="rounded-full border border-saffron/25 bg-saffron-soft/60 px-2 py-0.5 text-xs font-semibold text-saffron-deep">Compare plan options</span>
                                 </div>
                                 <p className="mt-1 max-w-2xl text-sm leading-relaxed text-body">
-                                    Explore Weavly Free, Lite, and Base with clear feature previews and pricing.
+                                    {baseVisible ? 'Explore Weavly Free, Lite, and Base with clear feature previews and pricing.' : 'Explore Weavly Free and Lite with clear feature previews and pricing.'}
                                 </p>
                                 <p className="mt-1.5 text-xs text-subtle">GST included · Annual renewals are manual · Secure Razorpay checkout</p>
                             </div>
                         </div>
                         <Button asChild className="min-h-10 w-full shrink-0 gap-2 rounded-lg bg-loom px-4 py-2.5 text-sm font-semibold text-white shadow-none transition-colors hover:bg-loom-elevated sm:w-auto" size="default">
                             <Link href="/plans?from=billing">
-                                <span>{subscriptionTier === 'lite' ? 'Upgrade to Base' : subscriptionTier === 'base' ? 'Compare plans' : 'Explore plans'}</span>
+                                <span>{subscriptionTier === 'lite' && baseVisible ? 'Upgrade to Base' : subscriptionTier === 'base' ? 'Compare plans' : 'Explore plans'}</span>
                                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
                             </Link>
                         </Button>

@@ -405,4 +405,17 @@ export const ACCOUNT_PHRASES: LitePhraseRow[] = [
     ["Your data export is not available right now. Please try again later or contact Weavly support.", "आपका डेटा एक्सपोर्ट अभी उपलब्ध नहीं है। कृपया बाद में फिर से कोशिश करें या Weavly सहायता से संपर्क करें।", "તમારો ડેટા એક્સપોર્ટ હમણાં ઉપલબ્ધ નથી. કૃપા કરી પછી ફરી પ્રયાસ કરો અથવા Weavly સહાયનો સંપર્ક કરો."],
     ["Select the right Weavly plan for your textile manufacturing workspace.", "अपनी कपड़ा फैक्ट्री के लिए सही Weavly प्लान चुनें।", "તમારી કાપડ ફેક્ટરી માટે યોગ્ય Weavly પ્લાન પસંદ કરો."],
     ["Delete everything permanently", "सब कुछ हमेशा के लिए हटाएँ", "બધું કાયમ માટે કાઢી નાખો"],
+    // Base-hiding variants and Lite trial copy (Base suppression + Lite trial).
+    ["Choose Lite.", "Lite चुनें।", "Lite પસંદ કરો."],
+    ["Start with Weavly Lite for complete costing management.", "पूरे कॉस्टिंग प्रबंधन के लिए Weavly Lite से शुरू करें।", "સંપૂર્ણ કોસ્ટિંગ સંચાલન માટે Weavly Lite થી શરૂ કરો."],
+    ["Subscribe for {0}", "{0} में सब्सक्राइब करें", "{0} માં સબ્સ્ક્રાઇબ કરો"],
+    ["Subscribe unavailable", "सब्सक्राइब करना अभी उपलब्ध नहीं है", "સબ્સ્ક્રાઇબ કરવું હાલ ઉપલબ્ધ નથી"],
+    ["Free trial", "मुफ़्त ट्रायल", "મફત ટ્રાયલ"],
+    ["free trial", "मुफ़्त ट्रायल", "મફત ટ્રાયલ"],
+    ["Annual access", "सालाना एक्सेस", "વાર્ષિક ઍક્સેસ"],
+    ["Explore Weavly Free and Lite with clear feature previews and pricing.", "Weavly Free और Lite की सुविधाएँ और कीमत साफ़-साफ़ देखें।", "Weavly Free અને Lite ની સુવિધાઓ અને કિંમત સ્પષ્ટ રીતે જુઓ."],
+    ["Your Weavly plan includes the complete costing desk. This broader factory module is not part of the current {0} rollout.", "आपके Weavly प्लान में पूरा कॉस्टिंग डेस्क शामिल है। यह बड़ा फैक्ट्री मॉड्यूल अभी के {0} रोलआउट का हिस्सा नहीं है।", "તમારા Weavly પ્લાનમાં સંપૂર્ણ કોસ્ટિંગ ડેસ્ક સામેલ છે. આ મોટું ફેક્ટરી મૉડ્યૂલ હાલના {0} રોલઆઉટનો ભાગ નથી."],
+    ["Lite or Base", "Lite या Base", "Lite કે Base"],
+    ["Unable to start your trial. Please try again.", "आपका ट्रायल शुरू नहीं हो सका। फिर से कोशिश करें।", "તમારો ટ્રાયલ શરૂ થઈ શક્યો નહીં. ફરી પ્રયાસ કરો."],
+    ["Your free trial is not available for this account.", "इस खाते के लिए मुफ़्त ट्रायल उपलब्ध नहीं है।", "આ ખાતા માટે મફત ટ્રાયલ ઉપલબ્ધ નથી."],
 ]

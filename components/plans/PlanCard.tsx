@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { Check, Play, Loader2, Sparkles, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SubscribeButton } from '@/components/billing/SubscribeButton'
+import { StartTrialButton, TRIAL_PAY_NOW_LINK_CLASS } from '@/components/plans/StartTrialButton'
 import { BILLING_PLANS } from '@/lib/billing-constants'
 import {
   upgradeText,
@@ -14,6 +15,7 @@ import {
 } from '@/lib/upgrade-wall'
 import { useTranslation } from '@/lib/i18n/context'
 import { freeMobileEntryText } from '@/lib/i18n/free-mobile-entry'
+import { liteTrialText } from '@/lib/i18n/lite-trial'
 import { cn } from '@/lib/utils'
 import { FEATURE_DEMOS } from '@/lib/feature-demos'
 
@@ -34,6 +36,8 @@ interface PlanCardProps {
   busy: boolean
   onSelectFree: () => void
   onOpenPreview: (feature: UpgradeFeature, tier: UpgradePlan) => void
+  /** Lite only: the org may start the 30-day trial. Defaults to hidden. */
+  liteTrialEligible?: boolean
 }
 
 export function PlanCard({
@@ -46,6 +50,7 @@ export function PlanCard({
   mobileCompact = false,
   onSelectFree,
   onOpenPreview,
+  liteTrialEligible = false,
 }: PlanCardProps) {
   const [detailsOpen, setDetailsOpen] = useState(false)
   const detailsId = useId()
@@ -368,6 +373,21 @@ export function PlanCard({
               <Button type="button" variant="ghost" disabled className="w-full text-subtle text-xs">
                 <span>{upgradeText(language, 'includedInBase')}</span>
               </Button>
+            ) : liteTrialEligible ? (
+              <div className="space-y-2">
+                <StartTrialButton className="w-full" />
+                <p className="text-xs leading-relaxed text-body">{liteTrialText(language, 'trialDisclosure')}</p>
+                {billingReady && (
+                  <SubscribeButton
+                    planTier="lite"
+                    tierName={BILLING_PLANS.lite.name}
+                    displayAmount={formatPaise(BILLING_PLANS.lite.firstYearTotalPaise)}
+                    buttonLabel={liteTrialText(language, 'trialPayNow')}
+                    successHref="/owner/estimator"
+                    className={TRIAL_PAY_NOW_LINK_CLASS}
+                  />
+                )}
+              </div>
             ) : billingReady ? (
               <SubscribeButton
                 planTier="lite"

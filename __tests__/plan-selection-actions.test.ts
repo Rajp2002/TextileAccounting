@@ -13,6 +13,8 @@ vi.mock('@/lib/subscription', () => ({
     ),
 }))
 vi.mock('@/lib/free-account', () => ({ getFreeGrant: mocks.getFreeGrant, canEnrollFree: mocks.canEnrollFree, finishFreeProvisioning: mocks.finishFreeProvisioning }))
+// The trial path is covered in lite-trial-start.test.ts; this file only needs the action module to load.
+vi.mock('@/lib/lite-trial.server', () => ({ startLiteTrialForOwner: vi.fn() }))
 vi.mock('@/lib/supabase/admin', () => ({
     createAdminClient: () => ({
         auth: { admin: { updateUserById: mocks.updateUserById } },

@@ -3547,6 +3547,8 @@ export default function EstimatorClient({
     mobileTier,
     onFreeUpgrade,
     disableAutosave = false,
+    baseVisible = false,
+    liteTrialEligible = false,
 }: {
     initialFreeCosting?: SavedFreeCosting
     freeMode?: boolean
@@ -3554,6 +3556,10 @@ export default function EstimatorClient({
     mobileTier?: import('@/lib/subscription-access').SubscriptionTier
     onFreeUpgrade?: (tier: import('@/lib/subscription-access').SubscriptionTier) => void
     disableAutosave?: boolean
+    /** Base is offered in the Free upgrade preview only when the org may see it. */
+    baseVisible?: boolean
+    /** The Lite trial is offered in the Free upgrade preview only when the org may start it. */
+    liteTrialEligible?: boolean
     tutorialDismissed: boolean
     userMetadata?: Record<string, unknown> | null
     wizardDismissed?: boolean
@@ -5373,7 +5379,7 @@ export default function EstimatorClient({
             )}
             {freeMode && freePlansOpen && (
                 <div id="free-plan-comparison" className="scroll-mt-4">
-                    <UpgradeBenefitsPreview open onOpenChange={setFreePlansOpen} onActivated={() => void freeMeter.refresh()} />
+                    <UpgradeBenefitsPreview open baseVisible={baseVisible} liteTrialEligible={liteTrialEligible} onOpenChange={setFreePlansOpen} onActivated={() => void freeMeter.refresh()} />
                 </div>
             )}
             {(freeMode || disableAutosave) && (

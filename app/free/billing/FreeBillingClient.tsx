@@ -12,7 +12,9 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { PageHeader, StatusBadge } from '@/components/ui/page-header'
 import { PaymentHistoryDialog, type BillingHistoryEntry } from '@/components/billing/PaymentHistoryDialog'
+import { StartTrialButton } from '@/components/plans/StartTrialButton'
 import { useTranslation } from '@/lib/i18n/context'
+import { liteTrialText } from '@/lib/i18n/lite-trial'
 import { upgradeText } from '@/lib/upgrade-wall'
 import { useFreeWorkspace } from '../FreeWorkspace'
 import { freeSupportingText } from '@/lib/i18n/free-supporting'
@@ -24,6 +26,10 @@ interface FreeBillingClientProps {
   initialTier?: string
   grantState?: string
   billingHistory?: BillingHistoryEntry[]
+  /** Base is named only for organizations that may see it. Defaults to hidden. */
+  baseVisible?: boolean
+  /** Offers the Lite trial from this page to an organization that may still start it. Defaults to hidden. */
+  liteTrialEligible?: boolean
 }
 
 export default function FreeBillingClient({
@@ -31,6 +37,8 @@ export default function FreeBillingClient({
   initialTier,
   grantState,
   billingHistory = [],
+  baseVisible = false,
+  liteTrialEligible = false,
 }: FreeBillingClientProps) {
   const { language } = useTranslation()
   const { tier } = useFreeWorkspace()
@@ -106,15 +114,23 @@ export default function FreeBillingClient({
             </div>
             <div className="min-w-0">
               <h2 id="view-plans-heading" className="text-base font-semibold tracking-tight text-ink">{text('compare')}</h2>
-              <p className="mt-1 max-w-2xl text-sm leading-relaxed text-body">
-                {text('compareBody')}
-              </p>
+              {baseVisible && (
+                <p className="mt-1 max-w-2xl text-sm leading-relaxed text-body">
+                  {text('compareBody')}
+                </p>
+              )}
               <p className="mt-1.5 text-xs text-subtle">{text('commercial')}</p>
+              {liteTrialEligible && tier !== 'lite' && tier !== 'base' && (
+                <div className="mt-3 max-w-md space-y-2">
+                  <StartTrialButton className="w-full sm:w-auto" />
+                  <p className="text-xs leading-relaxed text-body">{liteTrialText(language, 'trialDisclosure')}</p>
+                </div>
+              )}
             </div>
           </div>
           <Button asChild className="h-auto w-full shrink-0 gap-2 rounded-lg bg-loom px-4 py-2.5 text-sm font-semibold text-white shadow-none transition-colors hover:bg-loom-elevated sm:w-auto" size="default">
             <Link href="/plans?from=billing">
-              <span>{tier === 'lite' ? 'Upgrade to Base' : upgradeText(language, 'compareAllPlans')}</span>
+              <span>{tier === 'lite' && baseVisible ? 'Upgrade to Base' : upgradeText(language, 'compareAllPlans')}</span>
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
           </Button>

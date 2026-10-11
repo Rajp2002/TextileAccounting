@@ -25,6 +25,7 @@ import { LEGAL_OPERATOR } from '@/lib/legal-operator'
 import { freeWorkspaceHintValue, WORKSPACE_HINT_COOKIE, WORKSPACE_HINT_COOKIE_OPTIONS } from '@/lib/workspace-hint'
 import { founderEmailAllowed, FOUNDER_ONLY_LOGIN_MESSAGE } from '@/lib/admin/founder-email'
 import { SUPERVISOR_HOME_PATH } from '@/lib/supervisor-access'
+import { normalizeSignupPlan } from '@/lib/base-plan-visibility'
 
 const REVOKED_ACCOUNT_MESSAGE = 'This account no longer has access. Ask the factory owner.'
 
@@ -133,7 +134,9 @@ export async function createOrganization(input: CreateOrganizationInput) {
     })
     if ('error' in parsed) return { error: parsed.error }
 
-    const freeSignup = input.selectedPlan === 'free'
+    // Base is closed to new accounts, so a Base request normalises to Free here as well as on the page.
+    const selectedPlan = normalizeSignupPlan(input.selectedPlan)
+    const freeSignup = selectedPlan === 'free'
     if (founderEmailAllowed(parsed.data.email)) return { error: FOUNDER_ONLY_LOGIN_MESSAGE }
     if (freeSignup && !await canEnrollFree(parsed.data.email)) return { error: 'Free enrollment is not available for this account yet.' }
     const requestHeaders = await headers()

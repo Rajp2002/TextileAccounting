@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils'
 import { isValidIndianPhone, normalizeIndianPhone } from '@/lib/phone'
 import { PasswordSchema } from '@/lib/schemas'
 import { SIGNUP_LEGAL_ACCEPTANCE } from '@/lib/legal-documents'
+import { normalizeSignupPlan } from '@/lib/base-plan-visibility'
 
 type RedirectError = {
     message?: string
@@ -60,9 +61,10 @@ function SignupForm() {
     
     const [referralOpen, setReferralOpen] = useState(Boolean(searchParams?.get('ref')))
     const [referralCode, setReferralCode] = useState(searchParams?.get('ref') || '')
-    // Free is the default for every new account; only an explicit Lite or Base choice skips it.
+    // Free is the default for every new account; only an explicit Lite choice skips it.
+    // Base is closed to new accounts, so plan=base normalises to Free.
     const requestedPlan = searchParams?.get('plan')
-    const selectedPlan = requestedPlan === 'lite' ? 'lite' as const : requestedPlan === 'base' ? 'base' as const : 'free' as const
+    const selectedPlan = normalizeSignupPlan(requestedPlan === 'lite' ? 'lite' as const : requestedPlan === 'base' ? 'base' as const : 'free' as const)
     const compactMobile = selectedPlan === 'free' || selectedPlan === 'lite'
     
     const [loading, setLoading] = useState(false)

@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { BILLING_PLANS, BILLING_SELF_SERVE_PLAN_TIERS } from '../lib/billing-constants'
+import { BASE_PLAN_OPEN_TO_NEW_ACCOUNTS } from '../lib/base-plan-visibility'
 import { LEGAL_DOCUMENTS } from '../lib/legal-documents'
 import { LEGAL_OPERATOR } from '../lib/legal-operator'
 import { createElement } from 'react'
@@ -17,9 +18,14 @@ const source = (relativePath: string) => fs.readFileSync(path.join(root, relativ
 describe('Free, Lite, and Base commercial policy accuracy', () => {
     const terms = source('app/terms/page.tsx')
     const refunds = source('app/refund-policy/page.tsx')
-    const publicPrices = [TermsOfServicePage, RefundPolicyPage, LandingPricing].map(
-        (page) => renderToStaticMarkup(createElement(page)),
-    )
+    // The legal pages describe every tier, including Base, for existing customers.
+    // The landing pricing page offers only the tiers open to new accounts.
+    const landingTiers = BILLING_SELF_SERVE_PLAN_TIERS.filter((tier) => tier !== 'base' || BASE_PLAN_OPEN_TO_NEW_ACCOUNTS)
+    const publicPrices = [
+        { html: renderToStaticMarkup(createElement(TermsOfServicePage)), tiers: BILLING_SELF_SERVE_PLAN_TIERS },
+        { html: renderToStaticMarkup(createElement(RefundPolicyPage)), tiers: BILLING_SELF_SERVE_PLAN_TIERS },
+        { html: renderToStaticMarkup(createElement(LandingPricing)), tiers: landingTiers },
+    ]
 
     it('publishes a new version that identifies the pre-incorporation operator', () => {
         expect(LEGAL_DOCUMENTS.terms.version).toBe('2026-09-12')
@@ -38,9 +44,9 @@ describe('Free, Lite, and Base commercial policy accuracy', () => {
         expect(BILLING_PLANS.lite.renewalTotalPaise).toBe(149_900)
         expect(BILLING_PLANS.base.firstYearTotalPaise).toBe(999_900)
         expect(BILLING_PLANS.base.renewalTotalPaise).toBe(499_900)
-        for (const page of publicPrices) {
+        for (const { html: page, tiers } of publicPrices) {
             expect(page).toContain('Weavly Free')
-            for (const tier of BILLING_SELF_SERVE_PLAN_TIERS) {
+            for (const tier of tiers) {
                 const plan = BILLING_PLANS[tier]
                 expect(page).toContain(plan.name)
                 expect(page).toContain(formatINR(plan.firstYearTotalPaise / 100, { hideDecimals: true }))

@@ -1,3 +1,5 @@
+import { canViewBase } from './base-plan-visibility'
+
 /** Pure subscription access resolution shared by server code and unit tests. */
 export type SubscriptionTier = 'none' | 'free' | 'lite' | 'base'
 
@@ -62,15 +64,24 @@ export type OrgPlanAccess = {
   freeAccount?: boolean
   /** Tier the product should enforce for navigation, routes, and actions. */
   effectiveTier: SubscriptionTier
+  /** End of the in-force Lite trial, when the winning row is a trial. */
+  trialEndsAt?: string | null
+  /** End of a lapsed trial, when no current access row exists at all. */
+  trialEndedAt?: string | null
+  /** Whether this organization may see and buy Base. */
+  baseVisible?: boolean
+  /** Whether this organization may still start the one-time Lite trial. */
+  liteTrialEligible?: boolean
 }
 
-type SubscriptionAccessRow = {
+export type SubscriptionAccessRow = {
   status: string
   plan_tier: string | null
   current_start?: string | null
   current_end: string | null
   razorpay_payment_id?: string | null
   created_at?: string | null
+  is_trial?: boolean | null
 }
 
 const ACCESS_BEARING_STATUSES = new Set([
@@ -136,9 +147,12 @@ export function hasPaidBaseHistory(
   })
 }
 
-/** Failed/cancelled checkout attempts are not previously purchased access. */
+/**
+ * Failed/cancelled checkout attempts are not previously purchased access. A
+ * Lite trial is never a purchase, so trial rows are excluded before the check.
+ */
 export function hasEstablishedPaidHistory(rows: readonly SubscriptionAccessRow[]): boolean {
-  return rows.some(row => Boolean(row.razorpay_payment_id)
+  return rows.filter(row => row.is_trial !== true).some(row => Boolean(row.razorpay_payment_id)
     || ['active', 'authenticated', 'completed', 'expired'].includes(row.status)
     || (['paused', 'halted', 'cancelled'].includes(row.status) && Boolean(row.current_start || row.current_end)))
 }
@@ -157,7 +171,8 @@ function isSubscriptionRowCurrent(row: SubscriptionAccessRow, nowMs: number): bo
 
   const endMs = new Date(row.current_end).getTime()
   if (!Number.isFinite(endMs)) return false
-  const gracePeriodMs = 24 * 60 * 60 * 1000
+  // A trial ends at its stored instant; only provider-billed periods get grace.
+  const gracePeriodMs = row.is_trial === true ? 0 : 24 * 60 * 60 * 1000
   return endMs + gracePeriodMs >= nowMs
 }
 
@@ -166,7 +181,7 @@ function isSubscriptionRowCurrent(row: SubscriptionAccessRow, nowMs: number): bo
  * mask an older paid entitlement that has not expired. Highest access wins.
  */
 export function resolveEffectiveSubscription<T extends SubscriptionAccessRow>(
-  rows: T[],
+  rows: readonly T[],
   nowMs = Date.now()
 ): { tier: SubscriptionTier; subscription: T | null } {
   const rank: Record<SubscriptionTier, number> = { none: 0, free: 0, lite: 1, base: 2 }
@@ -187,4 +202,66 @@ export function resolveEffectiveSubscription<T extends SubscriptionAccessRow>(
   return current[0]
     ? { tier: current[0].tier, subscription: current[0].row }
     : { tier: 'none', subscription: null }
+}
+
+/** Latest `current_end` among lapsed trial rows, used only when nothing is current. */
+function latestLapsedTrialEnd(rows: readonly SubscriptionAccessRow[], nowMs: number): string | null {
+  let latest: { end: string; endMs: number } | null = null
+  for (const row of rows) {
+    if (row.is_trial !== true || !row.current_end) continue
+    const endMs = new Date(row.current_end).getTime()
+    if (!Number.isFinite(endMs) || endMs >= nowMs) continue
+    if (!latest || endMs > latest.endMs) latest = { end: row.current_end, endMs }
+  }
+  return latest?.end ?? null
+}
+
+/**
+ * Resolves an organization's access from its subscription rows and org flags,
+ * without any Free grant lookup. Pair with applyFreeGrantToAccess for Free.
+ */
+export function resolveOrgAccessFromRows(input: {
+  rows: readonly SubscriptionAccessRow[]
+  baseFlag: boolean | null | undefined
+  trialFlag: boolean | null | undefined
+  nowMs?: number
+}): OrgPlanAccess {
+  const { rows } = input
+  const nowMs = input.nowMs ?? Date.now()
+  const effective = resolveEffectiveSubscription(rows, nowMs)
+  // A paid Base period that has ended keeps Lite; a never-paid trial does not.
+  const access = resolveOrgPlanAccess(
+    effective.tier,
+    effective.tier === 'none' && hasPaidBaseHistory(rows, nowMs),
+  )
+  const winner = effective.subscription
+  return {
+    ...access,
+    trialEndsAt: winner && winner.is_trial === true ? winner.current_end : null,
+    trialEndedAt: winner === null ? latestLapsedTrialEnd(rows, nowMs) : null,
+    baseVisible: canViewBase({
+      flag: input.baseFlag,
+      effectiveTier: access.effectiveTier,
+      subscriptionRows: rows,
+    }),
+    liteTrialEligible: input.trialFlag === true
+      && !rows.some(row => row.is_trial === true)
+      && !hasEstablishedPaidHistory(rows),
+  }
+}
+
+/**
+ * Applies the explicit Free grant when the organization resolved to no tier.
+ * Established paid history never falls back to Free silently; a never-paid
+ * trial or organization does. Trial and Base-visibility fields are preserved.
+ */
+export function applyFreeGrantToAccess(
+  access: OrgPlanAccess,
+  rows: readonly SubscriptionAccessRow[],
+  hasFreeGrant: boolean,
+): OrgPlanAccess {
+  if (access.effectiveTier !== 'none' || !hasFreeGrant) return access
+  return hasEstablishedPaidHistory(rows)
+    ? { ...access, freeAccount: true }
+    : { ...access, ...resolveOrgPlanAccess('free'), freeAccount: true }
 }

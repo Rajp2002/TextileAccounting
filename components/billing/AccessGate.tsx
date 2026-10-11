@@ -50,10 +50,12 @@ export default async function AccessGate({
     }
 
     if (capability === 'production' || capability === 'production_management' || capability === 'production_tracking' || capability === 'production_linked') {
+        // A hidden org gets the generic wall: no Base upsell it may not buy.
+        if (planAccess.baseVisible !== true) return <UnavailableCapabilityWall routeName={routeName} baseVisible={false} />
         return <ProductionUpgradeWall currentTier={tier} routeName={routeName} />
     }
 
-    return <UnavailableCapabilityWall routeName={routeName} />
+    return <UnavailableCapabilityWall routeName={routeName} baseVisible={planAccess.baseVisible === true} />
 }
 
 function routeLabel(routeName: string): string {
@@ -70,7 +72,7 @@ function routeLabel(routeName: string): string {
     return routeLabels[routeName] ?? 'This factory feature'
 }
 
-function UnavailableCapabilityWall({ routeName }: { routeName: string }) {
+function UnavailableCapabilityWall({ routeName, baseVisible = false }: { routeName: string; baseVisible?: boolean }) {
     const featureName = routeLabel(routeName)
 
     return (
@@ -82,7 +84,7 @@ function UnavailableCapabilityWall({ routeName }: { routeName: string }) {
                 <div>
                     <h2 className="text-2xl font-bold text-ink">{`${featureName} is outside your current plan`}</h2>
                     <p className="mt-2 text-sm leading-relaxed text-body">
-                        Your Weavly plan includes the complete costing desk. This broader factory module is not part of the current Lite or Base rollout.
+                        {`Your Weavly plan includes the complete costing desk. This broader factory module is not part of the current ${baseVisible ? 'Lite or Base' : 'Lite'} rollout.`}
                     </p>
                 </div>
                 <Link href="/owner/estimator" className="block">
@@ -114,7 +116,7 @@ function ProductionUpgradeWall({ currentTier, routeName }: { currentTier: Subscr
                         : `${featureName} needs an active Weavly Base plan.`}
                 </p>
             </div>
-            <UpgradeWall currentPlan={currentTier} actions={{ base: <>
+            <UpgradeWall currentPlan={currentTier} baseVisible actions={{ base: <>
                 <div className="space-y-1">
                     <p><span className="text-3xl font-bold tracking-tight text-ink">{formatAmount(price.totalPaise)}</span><span className="ml-2 text-sm text-subtle">/ first year</span></p>
                     <p className="text-sm text-body">{formatAmount(renewal.totalPaise)} / year to renew</p>

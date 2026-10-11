@@ -12,6 +12,8 @@ export type SubscriptionInput = {
     id: string; status: string; plan_tier: string | null; current_start: string | null
     current_end: string | null; razorpay_payment_id: string | null; created_at: string | null
     payment_evidenced?: boolean
+    /** A Lite trial: no grace, never paid history, never a paid term. */
+    is_trial?: boolean
 }
 export type PaidTerm = { id: string; tier: 'lite' | 'base'; startsAt: string | null; endsAt: string | null; paymentReference: string; renewal: 'manual_annual' }
 export type FactoryAccess = { effectivePlan: ReportingPlan; subscriptionTier: ReportingPlan; currentPaidTerm: PaidTerm | null; explanation: string }
@@ -29,7 +31,7 @@ export function resolveFactoryAccess(rows: SubscriptionInput[] | null, hasFreeGr
         if (hasFreeGrant === null) effectivePlan = 'unknown'
         else if (hasFreeGrant) effectivePlan = 'free'
     }
-    const evidenced = resolveEffectiveSubscription(rows.filter(row => row.payment_evidenced === true && Boolean(row.razorpay_payment_id)
+    const evidenced = resolveEffectiveSubscription(rows.filter(row => row.is_trial !== true && row.payment_evidenced === true && Boolean(row.razorpay_payment_id)
         && Boolean(row.current_start) && Boolean(row.current_end)), now)
     const paid = evidenced.subscription
     const currentPaidTerm: PaidTerm | null = paid && (evidenced.tier === 'lite' || evidenced.tier === 'base') ? {

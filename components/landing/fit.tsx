@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { Beam, Eyebrow } from './beam'
 import s from './landing.module.css'
+import { BASE_PLAN_OPEN_TO_NEW_ACCOUNTS } from '@/lib/base-plan-visibility'
 
 // The estimator's own labels, from lib/i18n/base-plan-phrases.ts.
 const labels = [
@@ -22,7 +23,9 @@ const facts = [
     },
     {
         title: 'Checked again before it is saved',
-        copy: 'The server re-runs every costing in exact decimals. On Lite and Base, a total that differs from your screen is refused.',
+        copy: BASE_PLAN_OPEN_TO_NEW_ACCOUNTS
+            ? 'The server re-runs every costing in exact decimals. On Lite and Base, a total that differs from your screen is refused.'
+            : 'The server re-runs every costing in exact decimals. On Lite, a total that differs from your screen is refused.',
     },
     {
         title: 'Yesterday’s costing stays yesterday’s',

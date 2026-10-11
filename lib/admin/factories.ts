@@ -14,6 +14,7 @@ const sourceSchema = z.object({
     subscriptions: z.array(z.object({
         id: z.uuid(), status: z.string(), plan_tier: z.string().nullable(), current_start: instant.nullable(),
         current_end: instant.nullable(), razorpay_payment_id: z.string().nullable(), created_at: instant.nullable(), payment_evidenced: z.boolean(),
+        is_trial: z.boolean().optional().default(false),
     })).max(1000).nullable(), has_free_grant: z.boolean().nullable(), free_subject_id: z.uuid().nullable(),
     estimator_at: instant.nullable(), production_at: instant.nullable(), last_outcome_at: instant.nullable(),
     open_tickets: z.number().int().nonnegative(),
@@ -88,7 +89,7 @@ export async function getFactoryDetail(orgId: string) {
         contact: { verifiedOwnerEmail: source.verified_email },
         quota: !quota.error && parsedQuota?.success ? parsedQuota.data as AccountQuota : null,
         quotaState: quota.error || (parsedQuota && !parsedQuota.success) ? 'unavailable' as const : parsedQuota ? 'observed' as const : 'not_applicable' as const,
-        termHistory: source.subscriptions?.slice(-20).reverse().map(term => ({ id: term.id, tier: term.plan_tier, status: term.status, startsAt: term.current_start, endsAt: term.current_end, paymentReference: term.razorpay_payment_id })) ?? null,
+        termHistory: source.subscriptions?.slice(-20).reverse().map(term => ({ id: term.id, tier: term.plan_tier, status: term.status, startsAt: term.current_start, endsAt: term.current_end, paymentReference: term.razorpay_payment_id, isTrial: term.is_trial === true })) ?? null,
         paymentReferences: payments.error ? null : (payments.data ?? []).map(payment => ({ id: payment.id, paymentReference: payment.razorpay_payment_id, orderReference: payment.razorpay_order_id, localState: payment.status, recordedAt: payment.created_at })),
         support: support.error ? null : (support.data ?? []).map(ticket => ({ id: ticket.id, subject: ticket.subject, status: ticket.status, updatedAt: ticket.updated_at })),
         coverage,

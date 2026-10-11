@@ -54,6 +54,8 @@ export default async function FreeBillingPage() {
             organizationName={organizationResult.data?.name ?? ''}
             initialTier={access.effectiveTier}
             grantState={grant?.state}
+            baseVisible={access.baseVisible === true}
+            liteTrialEligible={access.liteTrialEligible === true}
             billingHistory={billingHistory}
         />
     )

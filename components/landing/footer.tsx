@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils'
 import { getCurrentSuratYear } from '@/lib/time'
 import { LEGAL_OPERATOR } from '@/lib/legal-operator'
 import s from './landing.module.css'
+import { BASE_PLAN_OPEN_TO_NEW_ACCOUNTS } from '@/lib/base-plan-visibility'
 
 const footerSections = [
     {
@@ -47,7 +48,9 @@ export default function LandingFooter() {
                             <Image src="/images/WeavlyLogo.png" alt="" fill sizes="9rem" className="object-contain object-left" />
                         </Link>
                         <p className="mt-4 max-w-[20rem] text-[14px] leading-6 text-[color:var(--lp-on-loom-muted)]">
-                            Costing and factory records for grey-fabric weaving units. Free, Lite and Base.
+                            {BASE_PLAN_OPEN_TO_NEW_ACCOUNTS
+                                ? 'Costing and factory records for grey-fabric weaving units. Free, Lite and Base.'
+                                : 'Costing and factory records for grey-fabric weaving units. Free and Lite.'}
                         </p>
                         <p className="mt-5 text-[14px] leading-6 text-[color:var(--lp-on-loom-muted)]">
                             Contact{' '}

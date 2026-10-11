@@ -5,12 +5,25 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { canEnrollFree, finishFreeProvisioning, getFreeGrant } from '@/lib/free-account'
 import { getOrgPlanAccess, hasEstablishedPaidHistory } from '@/lib/subscription'
+import { startLiteTrialForOwner } from '@/lib/lite-trial.server'
+
+/** Clears the onboarding gate and refreshes the session; returns the user-facing error when either step fails. */
+async function clearPlanSelectionPending(userId: string): Promise<string | null> {
+    const { error: updateError } = await createAdminClient().auth.admin.updateUserById(userId, {
+        app_metadata: { plan_selection_pending: false },
+    })
+    if (updateError) return 'Your plan is ready, but we could not finish setup. Please try again.'
+    const supabase = await createClient()
+    const { error: refreshError } = await supabase.auth.refreshSession()
+    if (refreshError) return 'Your plan is saved. Please sign in again to continue.'
+    return null
+}
 
 /** Complete only from verified access; a browser-selected paid tier grants nothing. */
-export async function completePlanSelection(plan: 'free' | 'paid'): Promise<{ href?: string; error?: string }> {
+export async function completePlanSelection(plan: 'free' | 'paid' | 'trial'): Promise<{ href?: string; error?: string }> {
     const { user, profile } = await requireRole(['owner'], { allowFreeAccount: true })
     await assertOrgWritable(profile.org_id)
-    if (plan !== 'free' && plan !== 'paid') return { error: 'Choose a valid plan.' }
+    if (plan !== 'free' && plan !== 'paid' && plan !== 'trial') return { error: 'Choose a valid plan.' }
 
     // Authoritative effective plan access check
     const access = await getOrgPlanAccess(profile.org_id)
@@ -34,7 +47,7 @@ export async function completePlanSelection(plan: 'free' | 'paid'): Promise<{ hr
     // Check paid history: an activated paid subscription never silently falls back to Free on expiry
     const admin = createAdminClient()
     const { data: subData } = await admin.from('org_subscriptions')
-        .select('status, plan_tier, current_start, current_end, razorpay_payment_id')
+        .select('status, plan_tier, current_start, current_end, razorpay_payment_id, is_trial')
         .eq('org_id', profile.org_id)
     const hadPaidAccess = hasEstablishedPaidHistory(subData ?? [])
     if (hadPaidAccess) {
@@ -46,6 +59,17 @@ export async function completePlanSelection(plan: 'free' | 'paid'): Promise<{ hr
             await supabase.auth.refreshSession()
         }
         return { error: 'Please manage or renew your subscription from your workspace.', href: '/owner/billing' }
+    }
+
+    // Lite trial: startLiteTrialForOwner provisions the Free grant, then starts the trial row
+    if (plan === 'trial') {
+        const started = await startLiteTrialForOwner(user, profile.org_id)
+        if (!started.ok) return { error: started.error }
+        if (user.app_metadata.plan_selection_pending === true) {
+            const pendingError = await clearPlanSelectionPending(user.id)
+            if (pendingError) return { error: pendingError }
+        }
+        return { href: '/owner/estimator' }
     }
 
     // Unverified paid selection

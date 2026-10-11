@@ -20,6 +20,7 @@ import {
     type BillingSubscriptionRow,
 } from '@/lib/billing-lifecycle'
 import { getBillingReadiness } from '@/lib/billing-readiness'
+import { getOrgPlanAccess } from '@/lib/subscription'
 
 export const dynamic = 'force-dynamic'
 
@@ -76,6 +77,19 @@ export async function POST(req: NextRequest) {
         )
     }
 
+    // Base is sold only to orgs that can see it (launch switch, per-org flag,
+    // or prior Base history). Fail closed: anything but an explicit true is refused
+    // before pricing, lifecycle, claim creation or any Razorpay call. Lite skips this read.
+    if (planTier === 'base') {
+        const access = await getOrgPlanAccess(orgId)
+        if (access.baseVisible !== true) {
+            return NextResponse.json(
+                { error: 'Weavly Base is not available for new accounts yet.' },
+                { status: 403 },
+            )
+        }
+    }
+
     const billingReadiness = getBillingReadiness()
     if (!billingReadiness.canCreateOrder) {
         return NextResponse.json(
@@ -90,7 +104,7 @@ export async function POST(req: NextRequest) {
     const [subscriptionsResult, paymentsResult] = await Promise.all([
         supabase
             .from('org_subscriptions')
-            .select('id, plan_tier, status, current_start, current_end, razorpay_payment_id, razorpay_subscription_id, razorpay_order_id, checkout_purchase_type, checkout_amount_paise, checkout_currency, created_at')
+            .select('id, plan_tier, status, current_start, current_end, razorpay_payment_id, razorpay_subscription_id, razorpay_order_id, checkout_purchase_type, checkout_amount_paise, checkout_currency, created_at, is_trial')
             .eq('org_id', orgId),
         supabase
             .from('subscription_payments')

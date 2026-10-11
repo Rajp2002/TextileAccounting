@@ -189,4 +189,17 @@ describe('AD03/04 real DB guarded read models and synthetic scale', () => {
         console.log(JSON.stringify({ fixture: '1000 synthetic organizations', operation: 'admin_factory_snapshot aggregate', samples: durations.length, p95Ms: Math.round(p95), budgetMs: 2000, environment: 'disposable loopback PostgreSQL; no production performance claim' }))
         expect(p95).toBeLessThan(2000)
     })
+    it('tags each subscription row with is_trial so a Lite trial is never read as paid history', async () => {
+        await asSuperuser(db)
+        const trialId = randomUUID(), paidId = randomUUID()
+        // Added to the owner org (which already holds a Free grant), so the org counts above are unchanged.
+        await db.query("INSERT INTO public.org_subscriptions(id,org_id,plan_tier,status,current_start,current_end,is_trial) VALUES($1,$2,'lite','active',now(),now()+interval '30 days',true)", [trialId, owner.orgId])
+        await db.query("INSERT INTO public.org_subscriptions(id,org_id,plan_tier,status,current_start,current_end) VALUES($1,$2,'lite','active',now()-interval '1 day',now()+interval '30 days')", [paidId, owner.orgId])
+        await asServiceRole(db)
+        const [factory] = (await read(owner.orgId)).rows
+        expect(factory.has_free_grant).toBe(true)
+        const terms = factory.subscriptions ?? []
+        expect(terms.find(term => term.id === trialId)).toMatchObject({ is_trial: true, plan_tier: 'lite', razorpay_payment_id: null, payment_evidenced: false })
+        expect(terms.find(term => term.id === paidId)).toMatchObject({ is_trial: false, plan_tier: 'lite' })
+    })
 })

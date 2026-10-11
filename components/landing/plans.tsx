@@ -1,18 +1,25 @@
 import { Check, Minus } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { BASE_PLAN_OPEN_TO_NEW_ACCOUNTS } from '@/lib/base-plan-visibility'
 import { Beam, Eyebrow } from './beam'
 import s from './landing.module.css'
 
-export const PLAN_COLUMNS = [
+const ALL_PLAN_COLUMNS = [
     { key: 'free', name: 'Free', fit: 'An enquiry now and then' },
     { key: 'lite', name: 'Lite', fit: 'Costing is a daily job' },
     { key: 'base', name: 'Base', fit: 'The costing runs the floor' },
 ] as const
 
+/** Base has no column while the launch switch is closed. */
+export const PLAN_COLUMNS = ALL_PLAN_COLUMNS.filter(plan => plan.key !== 'base' || BASE_PLAN_OPEN_TO_NEW_ACCOUNTS)
+
+/** Position of each plan's value in a row's cells, independent of which columns are shown. */
+const COLUMN_INDEX = { free: 0, lite: 1, base: 2 } as const
+
 type Cell = boolean | string
 
 // Every row maps to a capability in lib/subscription-access.ts or a route in lib/owner-navigation.ts.
-const groups: Array<{ title: string; rows: Array<{ label: string; cells: [Cell, Cell, Cell] }> }> = [
+const groups: Array<{ title: string; baseOnly?: boolean; rows: Array<{ label: string; cells: [Cell, Cell, Cell] }> }> = [
     {
         title: 'Costing',
         rows: [
@@ -27,7 +34,9 @@ const groups: Array<{ title: string; rows: Array<{ label: string; cells: [Cell, 
         ],
     },
     {
+        // Every row here is a Base capability, so the whole group goes with Base.
         title: 'Factory',
+        baseOnly: true,
         rows: [
             { label: 'Active qualities and machine assignments', cells: [false, false, true] },
             { label: 'Daily production by machine, day and night shift', cells: [false, false, true] },
@@ -82,9 +91,9 @@ export default function LandingPlans() {
                     <caption className="sr-only">What each Weavly plan includes</caption>
                     <colgroup>
                         <col />
-                        <col className="w-[3.75rem] xs:w-[4.5rem] sm:w-[8rem] lg:w-[11.5rem]" />
-                        <col className="w-[3.75rem] xs:w-[4.5rem] sm:w-[8rem] lg:w-[11.5rem]" />
-                        <col className="w-[3.75rem] xs:w-[4.5rem] sm:w-[8rem] lg:w-[11.5rem]" />
+                        {PLAN_COLUMNS.map((plan) => (
+                            <col key={plan.key} className="w-[3.75rem] xs:w-[4.5rem] sm:w-[8rem] lg:w-[11.5rem]" />
+                        ))}
                     </colgroup>
                     <thead>
                         <tr className="border-b-2 border-[color:var(--lp-ink)]">
@@ -97,10 +106,10 @@ export default function LandingPlans() {
                             ))}
                         </tr>
                     </thead>
-                    {groups.map((group) => (
+                    {groups.filter((group) => !group.baseOnly || BASE_PLAN_OPEN_TO_NEW_ACCOUNTS).map((group) => (
                         <tbody key={group.title}>
                             <tr>
-                                <th scope="rowgroup" colSpan={4} className={cn(s.label, 'pb-2 pt-7 text-[color:var(--lp-saffron-ink)]')}>
+                                <th scope="rowgroup" colSpan={PLAN_COLUMNS.length + 1} className={cn(s.label, 'pb-2 pt-7 text-[color:var(--lp-saffron-ink)]')}>
                                     {group.title}
                                 </th>
                             </tr>
@@ -109,9 +118,9 @@ export default function LandingPlans() {
                                     <th scope="row" className="py-3 pr-3 text-[14px] font-normal leading-snug text-[color:var(--lp-body)] sm:text-[15px]">
                                         {row.label}
                                     </th>
-                                    {row.cells.map((cell, index) => (
-                                        <td key={PLAN_COLUMNS[index].key} className="px-1 py-3 text-center sm:px-3">
-                                            <Value cell={cell} />
+                                    {PLAN_COLUMNS.map((plan) => (
+                                        <td key={plan.key} className="px-1 py-3 text-center sm:px-3">
+                                            <Value cell={row.cells[COLUMN_INDEX[plan.key]]} />
                                         </td>
                                     ))}
                                 </tr>
@@ -119,9 +128,11 @@ export default function LandingPlans() {
                         </tbody>
                     ))}
                 </table>
-                <p className="mt-6 max-w-[48rem] text-[14px] leading-6 text-[color:var(--lp-muted)]">
-                    Base is owner-led: no separate supervisor logins, attendance or statutory payroll.
-                </p>
+                {BASE_PLAN_OPEN_TO_NEW_ACCOUNTS && (
+                    <p className="mt-6 max-w-[48rem] text-[14px] leading-6 text-[color:var(--lp-muted)]">
+                        Base is owner-led: no separate supervisor logins, attendance or statutory payroll.
+                    </p>
+                )}
             </div>
         </Beam>
     )

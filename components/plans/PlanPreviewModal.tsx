@@ -11,6 +11,8 @@ import { useTranslation } from '@/lib/i18n/context'
 interface PlanPreviewModalProps {
   feature: UpgradeFeature | null
   planTier: UpgradePlan
+  /** Base copy is shown only to organizations that may see Base. Defaults to hidden. */
+  baseVisible?: boolean
   onClose: () => void
 }
 
@@ -133,7 +135,7 @@ function FeatureVideo({ feature }: { feature: UpgradeFeature }) {
   )
 }
 
-export function PlanPreviewModal({ feature, planTier, onClose }: PlanPreviewModalProps) {
+export function PlanPreviewModal({ feature, planTier, baseVisible = false, onClose }: PlanPreviewModalProps) {
   const { language } = useTranslation()
   const previousFocusRef = useRef<HTMLElement | null>(null)
 
@@ -148,6 +150,7 @@ export function PlanPreviewModal({ feature, planTier, onClose }: PlanPreviewModa
           event.preventDefault()
           previousFocusRef.current?.focus()
         }}
+        {...(baseVisible ? {} : { 'aria-describedby': undefined })}
       >
         {feature && (
           <>
@@ -157,7 +160,7 @@ export function PlanPreviewModal({ feature, planTier, onClose }: PlanPreviewModa
                   {upgradeText(language, 'sample')}
                 </p>
                 <DialogTitle className="text-xl font-bold text-ink">{upgradeText(language, feature)}</DialogTitle>
-                <DialogDescription className="text-xs">{upgradeText(language, 'demoPlanNote')}</DialogDescription>
+                {baseVisible && <DialogDescription className="text-xs">{upgradeText(language, 'demoPlanNote')}</DialogDescription>}
               </div>
               <Button type="button" variant="ghost" size="icon" className="max-sm:size-[44px]" onClick={onClose} aria-label={upgradeText(language, 'closePreview')}>
                 <X className="h-5 w-5" aria-hidden="true" />
