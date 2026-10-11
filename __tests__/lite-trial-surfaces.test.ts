@@ -224,10 +224,9 @@ describe('Trial surfaces are wired from the server', () => {
 
   it('the billing page presents a trial as "Free trial ends <date>" in Surat time, not as a paid period', () => {
     const page = read('app/(dashboard)/owner/billing/page.tsx')
-    expect(page).toContain("import { formatToSurat } from '@/lib/time'")
-    expect(page).toContain("import { liteTrialText } from '@/lib/i18n/lite-trial'")
+        expect(page).toContain("import { liteTrialText } from '@/lib/i18n/lite-trial'")
     expect(page).toContain('const trialEndsAt = planAccess.trialEndsAt ?? null')
-    expect(page).toMatch(/const accessTiming = trialEndsAt\s*\?\s*liteTrialText\('en', 'trialEndsOn', \{ date: formatToSurat\(trialEndsAt, 'd MMM yyyy'\) \}\)\s*:\s*paidAccessTiming/)
+    expect(page).toMatch(/const accessTiming = trialEndsAt\s*\?\s*liteTrialText\('en', 'trialEndsOn', \{ date: formatShortDate\(trialEndsAt\) \}\)\s*:\s*paidAccessTiming/)
     expect(page).toContain("{trialEndsAt ? 'Free trial' : 'Annual access'}")
     expect(page).toContain("{trialEndsAt ? null : ' · Annual renewals are manual.'}")
   })

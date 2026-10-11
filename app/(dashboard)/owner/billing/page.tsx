@@ -44,7 +44,6 @@ import { PageHeader, StatusBadge } from '@/components/ui/page-header'
 import PlanAnalyticsBeacon from '@/components/billing/PlanAnalyticsBeacon'
 import { getCachedOwnerOrganization } from '@/lib/owner-organization'
 import { liteTrialText } from '@/lib/i18n/lite-trial'
-import { formatToSurat } from '@/lib/time'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -381,7 +380,7 @@ export default async function BillingPage() {
                     ? `Renewal opens ${formatShortDate(renewalEligibleAt)} · access through ${formatShortDate(subscription.current_end)}`
                     : `Access through ${formatShortDate(subscription.current_end)}`
             : 'Active annual access'
-    const accessTiming = trialEndsAt ? liteTrialText('en', 'trialEndsOn', { date: formatToSurat(trialEndsAt, 'd MMM yyyy') }) : paidAccessTiming
+    const accessTiming = trialEndsAt ? liteTrialText('en', 'trialEndsOn', { date: formatShortDate(trialEndsAt) }) : paidAccessTiming
 
     const trialSubscribeAction = trialEndsAt && trialPrice && purchaseDecisions.lite.allowed ? (
         billingReadiness.canCreateOrder ? (
