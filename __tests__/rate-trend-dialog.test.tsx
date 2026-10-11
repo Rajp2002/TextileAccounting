@@ -25,12 +25,13 @@ const rows: RateTrendRow[] = [
 describe('RateTrendChart', () => {
     beforeEach(() => { state.language = 'en' })
 
-    it('renders the whole history as a labelled step chart in its final, static state on the server', () => {
+    it('renders the whole history as a labelled line chart in its final, static state on the server', () => {
         const trend = buildRateTrend(rows, '2026-10-07')!
         const html = renderToStaticMarkup(<RateTrendChart trend={trend} unit="per_kg" yarnName="30/1000 MUALTI Cotton" />)
         expect(html).toContain('role="group"')
         expect(html).toContain('Price history chart: 30/1000 MUALTI Cotton')
-        expect(html).toMatch(/<path[^>]*d="M[\d.]+,[\d.]+ H[\d.]+ V[\d.]+ H[\d.]+ V[\d.]+ H[\d.]+"/)
+        // First entry, a flat run to the review, a slope up to the change, then flat to today.
+        expect(html).toMatch(/<path[^>]*d="M([\d.]+),([\d.]+) L[\d.]+,\2 L[\d.]+,[\d.]+ H[\d.]+"/)
         expect(html).not.toContain('stroke-dashoffset')
     })
 
@@ -73,8 +74,8 @@ describe('RateTrendChart', () => {
         expect(html.match(/role="button"/g)).toHaveLength(2)
         expect(html).toMatch(/aria-label="7 Oct 2026, ₹118\.00\/kg, Rate before first change"/)
         expect(html).toMatch(/aria-label="7 Oct 2026, ₹125\.00\/kg, Price changed"/)
-        // Flat at the old price, one step up, then flat to today.
-        expect(html).toMatch(/<path[^>]*d="M[\d.]+,[\d.]+ H[\d.]+ V[\d.]+ H[\d.]+"[^>]*stroke-linejoin/)
+        // From the old price up to the new one on the same day, then flat to today.
+        expect(html).toMatch(/<path[^>]*d="M[\d.]+,[\d.]+ L[\d.]+,[\d.]+ H[\d.]+"[^>]*stroke-linejoin/)
     })
 
     it('shows an entry made today as a point, not a line running to the edge of the chart', () => {
@@ -110,6 +111,12 @@ describe('Rate Book price-history wiring', () => {
         expect(rates.match(/data-ratebook-field="rateAndTrend"/g)).toHaveLength(1)
     })
 
+    it('opens the price-history chart from the Activity button as well as the price', () => {
+        const actions = rates.slice(rates.indexOf("{tx('Edit rate')}"), rates.indexOf("{tx('Activity')}"))
+        expect(actions).toContain("openHistory(rate, 'trend')")
+        expect(actions).not.toMatch(/openHistory\(rate\)/)
+    })
+
     it('opens the trend modal or the activity sheet from one shared history fetch', () => {
         expect(rates).toContain("useState<'activity' | 'trend'>('activity')")
         expect(rates).toMatch(/<Sheet open=\{Boolean\(historyRate\) && historyMode === 'activity'\}/)
@@ -133,7 +140,7 @@ describe('Rate Book price-history wiring', () => {
         expect(dialog).toContain('onOpenActivity')
         expect(chart).toContain('buildYAxis(')
         expect(chart).toContain('buildTimeTicks(')
-        expect(chart).toContain('buildStepPath(')
+        expect(chart).toContain('buildLinePath(')
     })
 
     it('draws the line on only when motion is allowed, and leaves it static afterwards', () => {

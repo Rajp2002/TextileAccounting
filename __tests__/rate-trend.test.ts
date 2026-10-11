@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
     buildRateTrend,
-    buildStepPath,
+    buildLinePath,
     buildTimeTicks,
     buildYAxis,
     timeFraction,
@@ -227,20 +227,21 @@ describe('buildTimeTicks', () => {
     })
 })
 
-describe('buildStepPath', () => {
-    it('holds each value until the next change, then runs flat to the end', () => {
-        const path = buildStepPath([{ x: 0, y: 100 }, { x: 50, y: 40 }, { x: 80, y: 70 }], 120)
-        expect(path.d).toBe('M0,100 H50 V40 H80 V70 H120')
-        expect(path.length).toBe(210)
+describe('buildLinePath', () => {
+    it('joins each price to the next with a straight segment, then runs flat to the end', () => {
+        const path = buildLinePath([{ x: 0, y: 100 }, { x: 30, y: 60 }, { x: 80, y: 60 }, { x: 110, y: 100 }], 150)
+        // Up, flat (a review at the same price), down, then on to today.
+        expect(path.d).toBe('M0,100 L30,60 L80,60 L110,100 H150')
+        expect(path.length).toBe(50 + 50 + 50 + 40)
     })
 
     it('reports how far along the path each point sits so markers can appear as the line reaches them', () => {
-        const path = buildStepPath([{ x: 0, y: 100 }, { x: 50, y: 40 }, { x: 80, y: 70 }], 120)
-        expect(path.stops).toEqual([0, 110, 170])
+        const path = buildLinePath([{ x: 0, y: 100 }, { x: 30, y: 60 }, { x: 80, y: 60 }, { x: 110, y: 100 }], 150)
+        expect(path.stops).toEqual([0, 50, 100, 150])
     })
 
     it('draws a single entry as a flat run, or just its point when there is nowhere to run', () => {
-        expect(buildStepPath([{ x: 10, y: 5 }], 100)).toEqual({ d: 'M10,5 H100', length: 90, stops: [0] })
-        expect(buildStepPath([{ x: 10, y: 5 }], 10)).toEqual({ d: 'M10,5', length: 0, stops: [0] })
+        expect(buildLinePath([{ x: 10, y: 5 }], 100)).toEqual({ d: 'M10,5 H100', length: 90, stops: [0] })
+        expect(buildLinePath([{ x: 10, y: 5 }], 10)).toEqual({ d: 'M10,5', length: 0, stops: [0] })
     })
 })
