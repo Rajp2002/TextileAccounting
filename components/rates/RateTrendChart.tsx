@@ -5,7 +5,7 @@ import type { CostRateUnit } from '@/app/(dashboard)/owner/rates/actions'
 import { formatRateValue, getRatePriceDelta } from '@/lib/cost-rates'
 import { useTranslation } from '@/lib/i18n/context'
 import {
-    buildStepPath,
+    buildLinePath,
     buildTimeTicks,
     buildYAxis,
     timeFraction,
@@ -18,7 +18,8 @@ const HEIGHT = 264
 const MARGIN = { top: 16, right: 16, bottom: 34, left: 52 }
 /** Keeps the first and last markers clear of the plot edge. */
 const PAD_X = 10
-const DRAW_MS = 1700
+/** Long enough to follow each move, never so long it feels slow: 1.5s for two dots, up to 2.6s. */
+const drawMs = (points: number) => Math.min(2600, 900 + 300 * points)
 const LOCALES = { en: 'en-IN', hi: 'hi-IN', gu: 'gu-IN' } as const
 
 /** True on the server too, so server markup is always the finished chart. */
@@ -29,10 +30,12 @@ function prefersReducedMotion() {
 const easeInOutCubic = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2)
 
 /**
- * The price history of one yarn as a step chart: the rate holds until it
- * changes. The time axis is fitted to the history (first entry to today), so
- * three months and a year both fill the plot. Opening it draws the line on
- * from the first entry, following it up and down, then leaves it static.
+ * The price history of one yarn as a line chart: every entry, edit and review
+ * is a dot, joined to the next by a line that slopes with the price change (a
+ * review at the same price runs flat), and the latest price runs on to today.
+ * The time axis is fitted to the history (first entry to today), so three
+ * months and a year both fill the plot. Opening it draws the line on from the
+ * first dot, popping each dot in as the line reaches it, then leaves it static.
  */
 export function RateTrendChart({ trend, unit, yarnName }: { trend: RateTrend; unit: CostRateUnit; yarnName: string }) {
     const { tx, language } = useTranslation()
@@ -76,19 +79,19 @@ export function RateTrendChart({ trend, unit, yarnName }: { trend: RateTrend; un
         const coords = trend.points.map(point => ({ x: xOf(point.time), y: yOf(point.value) }))
         // A history that starts today has nothing to run along: show the point, not a line to the edge.
         const xEnd = trend.spanDays === 0 ? coords[coords.length - 1].x : xMax
-        const step = buildStepPath(coords, xEnd)
+        const line = buildLinePath(coords, xEnd)
         return {
             axis,
             coords,
-            step,
-            areaD: `${step.d} V${plotBottom} H${coords[0].x} Z`,
+            line,
+            areaD: `${line.d} V${plotBottom} H${coords[0].x} Z`,
             xMax: xEnd,
             xTicks: buildTimeTicks(trend.startTime, trend.endTime).map(tick => ({ ...tick, x: xOf(tick.time) })),
             yTicks: axis.ticks.map(value => ({ value, y: yOf(value) })),
             endY: coords[coords.length - 1].y,
         }
     }, [trend, plotLeft, plotRight, plotTop, plotBottom])
-    const { axis, coords, step, xMax } = geometry
+    const { axis, coords, line, xMax } = geometry
 
     const ready = width !== null
     useEffect(() => {
@@ -98,12 +101,13 @@ export function RateTrendChart({ trend, unit, yarnName }: { trend: RateTrend; un
         const clip = clipRef.current
         if (!path || !head || !clip) return
 
-        const total = step.length
+        const total = line.length
+        const duration = drawMs(line.stops.length)
         let shown = 1
         let frame = 0
         const startedAt = performance.now()
         const tick = (now: number) => {
-            const progress = Math.min(1, (now - startedAt) / DRAW_MS)
+            const progress = Math.min(1, (now - startedAt) / duration)
             const distance = easeInOutCubic(progress) * total
             path.style.strokeDashoffset = String(total - distance)
             const tip = path.getPointAtLength(distance)
@@ -111,7 +115,7 @@ export function RateTrendChart({ trend, unit, yarnName }: { trend: RateTrend; un
             head.setAttribute('cy', String(tip.y))
             clip.setAttribute('width', String(Math.max(0, tip.x - plotLeft)))
             let next = shown
-            while (next < step.stops.length && distance >= step.stops[next]) next += 1
+            while (next < line.stops.length && distance >= line.stops[next]) next += 1
             if (next !== shown) {
                 shown = next
                 setRevealed(next)
@@ -126,7 +130,7 @@ export function RateTrendChart({ trend, unit, yarnName }: { trend: RateTrend; un
         }
         frame = requestAnimationFrame(tick)
         return () => cancelAnimationFrame(frame)
-    }, [animating, ready, step, plotLeft])
+    }, [animating, ready, line, plotLeft])
 
     const formatters = useMemo(() => {
         const base = { timeZone: 'UTC' } as const
@@ -207,13 +211,13 @@ export function RateTrendChart({ trend, unit, yarnName }: { trend: RateTrend; un
                     <path d={geometry.areaD} className="fill-ink/5" clipPath={animating ? `url(#${clipId})` : undefined} />
                     <path
                         ref={pathRef}
-                        d={step.d}
+                        d={line.d}
                         fill="none"
                         className="stroke-ink"
                         strokeWidth={2.25}
                         strokeLinejoin="round"
                         strokeLinecap="round"
-                        style={animating ? { strokeDasharray: step.length, strokeDashoffset: step.length } : undefined}
+                        style={animating ? { strokeDasharray: line.length, strokeDashoffset: line.length } : undefined}
                     />
 
                     {trend.points.map((point, index) => {
@@ -221,7 +225,14 @@ export function RateTrendChart({ trend, unit, yarnName }: { trend: RateTrend; un
                         const shown = !animating || index < revealed
                         const review = point.kind === 'reviewed'
                         return (
-                            <g key={point.id} className={cn('transition-opacity duration-200 motion-reduce:transition-none', shown ? 'opacity-100' : 'pointer-events-none opacity-0')}>
+                            <g
+                                key={point.id}
+                                style={{ transformBox: 'fill-box', transformOrigin: 'center' }}
+                                className={cn(
+                                    'transition-[opacity,scale] duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] motion-reduce:transition-none',
+                                    shown ? 'scale-100 opacity-100' : 'pointer-events-none scale-50 opacity-0',
+                                )}
+                            >
                                 {active?.id === point.id && <circle cx={x} cy={y} r={10} className="fill-none stroke-ink/25" strokeWidth={2} />}
                                 <circle
                                     cx={x}

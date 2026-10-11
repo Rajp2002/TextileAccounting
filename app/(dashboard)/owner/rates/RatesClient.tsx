@@ -1378,9 +1378,9 @@ export default function RatesClient({
                             <Pencil className="h-4 w-4" aria-hidden="true" />{tx('Edit rate')}
                         </Button>
                     )}
-                    {/* A due card keeps to its two answers; its price still opens the yarn's history. */}
+                    {/* Activity opens the price-history chart; its Full activity button switches to the audit list. A due card keeps to its two answers; its price still opens the chart. */}
                     {!due && (
-                        <Button variant="ghost" onClick={() => openHistory(rate)} className={cn('ml-auto', ghostAction)}>
+                        <Button variant="ghost" onClick={() => openHistory(rate, 'trend')} className={cn('ml-auto', ghostAction)}>
                             <History className="h-4 w-4" aria-hidden="true" />{tx('Activity')}
                         </Button>
                     )}

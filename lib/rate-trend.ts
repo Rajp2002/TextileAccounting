@@ -201,29 +201,31 @@ export function buildTimeTicks(startTime: number, endTime: number, maxTicks = 5)
     return monthStarts(startTime, endTime, MONTH_STEPS[MONTH_STEPS.length - 1]).slice(0, maxTicks).map(time => ({ time, granularity: 'month' as const }))
 }
 
-export type StepPath = {
+export type LinePath = {
     d: string
     /** Total length of the path, so the draw-on animation can be driven by distance travelled. */
     length: number
-    /** Distance along the path at which the pen reaches each point (after its riser). */
+    /** Distance along the path at which the pen reaches each point. */
     stops: number[]
 }
 
 const round2 = (value: number) => Math.round(value * 100) / 100
 
 /**
- * A rate holds its value until it changes, so the line runs flat and then steps
- * straight up or down at each change, and finally runs flat on to `endX`.
+ * Joins each recorded price to the next with a straight segment, so a rise
+ * slopes up, a fall slopes down, and a review at the same price runs flat to
+ * the day it was confirmed. The last price then runs flat on to `endX`
+ * (today), since it still holds.
  */
-export function buildStepPath(coords: Array<{ x: number; y: number }>, endX: number): StepPath {
+export function buildLinePath(coords: Array<{ x: number; y: number }>, endX: number): LinePath {
     const [first, ...rest] = coords
     let d = `M${round2(first.x)},${round2(first.y)}`
     let length = 0
     const stops = [0]
     let previous = first
     for (const point of rest) {
-        d += ` H${round2(point.x)} V${round2(point.y)}`
-        length += Math.abs(point.x - previous.x) + Math.abs(point.y - previous.y)
+        d += ` L${round2(point.x)},${round2(point.y)}`
+        length += Math.hypot(point.x - previous.x, point.y - previous.y)
         stops.push(length)
         previous = point
     }
