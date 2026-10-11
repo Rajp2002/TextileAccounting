@@ -887,7 +887,7 @@ function ComponentCountField({
 
     return (
         <div className="min-w-0 space-y-1.5">
-            <Label htmlFor={inputId} className="flex h-8 items-end text-xs font-medium leading-tight text-[var(--color-muted)]">
+            <Label htmlFor={inputId} className="flex h-8 items-end text-xs font-medium leading-tight text-[var(--color-body)]">
                 {label}
             </Label>
             <div className="relative" data-estimator-component-count>
@@ -1095,7 +1095,7 @@ function StepperField({
     const valueClass = 'text-[var(--color-yarn-orange)]'
     return (
         <div data-estimator-field={fieldKey} className="min-w-0 space-y-2">
-            <Label className="block text-xs font-medium text-[var(--color-muted)]">
+            <Label className="block text-xs font-medium text-[var(--color-body)]">
                 {label}
             </Label>
             <div data-estimator-stepper className="inline-flex h-11 overflow-hidden rounded-[9px] border border-[var(--color-hairline)] bg-white shadow-xs">
@@ -1172,7 +1172,7 @@ function NumField({
     const placeholderClass = 'placeholder:text-[var(--color-placeholder)] placeholder:font-normal'
     return (
         <div className="space-y-1.5 min-w-0" data-estimator-field={fieldKey}>
-            <Label htmlFor={inputId} className="flex items-end h-8 text-xs font-medium text-[var(--color-muted)] leading-tight"><FieldLabelText label={label} /></Label>
+            <Label htmlFor={inputId} className="flex items-end h-8 text-xs font-medium text-[var(--color-body)] leading-tight"><FieldLabelText label={label} /></Label>
             <div className="relative group" data-estimator-unit-field={unit || undefined} style={unit ? { '--estimator-unit-length': Math.max(2, unit.length) } as React.CSSProperties : undefined}>
                 <Input
                     enterKeyHint="next"
@@ -1229,7 +1229,7 @@ function NumField({
                         <button
                             type="button"
                             onClick={onDismissWarning}
-                            className="estimator-touch-target rounded px-1 text-left text-xs text-[var(--wv-cotton-500)] underline hover:text-[var(--wv-neel-700)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wv-brand-accent-strong)]"
+                            className="estimator-touch-target rounded px-1 text-left text-xs text-[var(--wv-text-secondary)] underline hover:text-[var(--wv-neel-700)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wv-brand-accent-strong)]"
                         >
                             Dismiss
                         </button>
@@ -1333,7 +1333,7 @@ function WidthField({
 
     return (
         <div data-estimator-field="effectiveCostingWidthCm" className="space-y-1.5 min-w-0">
-            <Label className={`flex items-end h-8 text-xs font-medium leading-tight ${isEmpty ? 'text-[var(--color-warning-amber)]' : 'text-[var(--color-muted)]'}`}>
+            <Label className={`flex items-end h-8 text-xs font-medium leading-tight ${isEmpty ? 'text-[var(--color-warning-amber)]' : 'text-[var(--color-body)]'}`}>
                 <FieldLabelText label={label} />
             </Label>
             <div className="relative group" data-estimator-unit-field={unit} style={{ '--estimator-unit-length': Math.max(4, unit.length) } as React.CSSProperties}>
@@ -1361,7 +1361,7 @@ function WidthField({
                     aria-invalid={isEmpty || undefined}
                     className={`h-11 text-xs sm:text-sm font-mono font-semibold text-center px-12 sm:px-16 placeholder:text-[var(--color-placeholder)] placeholder:font-normal focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/15 transition-all shadow-xs group-hover:border-[var(--color-hairline-strong)] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-[9px] text-[var(--color-yarn-orange)] ${isEmpty ? 'bg-[var(--color-warning-amber-soft)] border-[var(--color-warning-amber)] text-[var(--color-warning-amber)] placeholder:text-[var(--color-warning-amber)]' : 'bg-white border-[var(--color-hairline)]'}`}
                 />
-                <span className="absolute right-3.5 sm:right-4 top-1/2 -translate-y-1/2 text-xs text-[var(--wv-cotton-500)] font-bold pointer-events-none">
+                <span className="absolute right-3.5 sm:right-4 top-1/2 -translate-y-1/2 text-xs text-[var(--wv-text-secondary)] font-bold pointer-events-none">
                     {unit}
                 </span>
             </div>
@@ -2239,7 +2239,7 @@ function LayerNameField({
                 }
             }}
         >
-            <Label className="flex items-end h-8 text-xs font-medium text-[var(--color-muted)] leading-tight">
+            <Label className="flex items-end h-8 text-xs font-medium text-[var(--color-body)] leading-tight">
                 {label}
             </Label>
             <div className="relative">
@@ -2267,7 +2267,7 @@ function LayerNameField({
                         type="button"
                         tabIndex={-1}
                         onClick={() => setIsOpen(prev => !prev)}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--wv-cotton-500)] hover:text-[var(--wv-neel-700)] p-1"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--wv-text-secondary)] hover:text-[var(--wv-neel-700)] p-1"
                         aria-label="Toggle saved yarns dropdown"
                     >
                         <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-150 ${isOpen ? 'rotate-180' : ''}`} />
@@ -2283,10 +2283,10 @@ function LayerNameField({
                 >
                     <div className="sticky top-0 z-10 bg-[var(--wv-cotton-100)]/95 backdrop-blur-xs px-3.5 py-2 border-b border-[var(--wv-cotton-200)] flex items-center justify-between text-xs font-bold text-[var(--wv-neel-500)]">
                         <div className="flex items-center gap-1.5">
-                            <BookOpen className="h-3.5 w-3.5 text-[var(--wv-cotton-500)] shrink-0" />
+                            <BookOpen className="h-3.5 w-3.5 text-[var(--wv-text-secondary)] shrink-0" />
                             <span>Saved Yarns ({filteredOptions.length})</span>
                         </div>
-                        <span className="text-xs font-normal text-[var(--wv-cotton-500)] lowercase tracking-normal">auto-fills denier & rate</span>
+                        <span className="text-xs font-normal text-[var(--wv-text-secondary)] lowercase tracking-normal">auto-fills denier & rate</span>
                     </div>
                     <ul className="max-h-64 overflow-y-auto divide-y divide-[var(--wv-cotton-200)]/70 p-1.5">
                         {filteredOptions.map((opt, idx) => {
@@ -2327,8 +2327,8 @@ function LayerNameField({
                                             <span className="inline-flex items-center px-1.5 py-0.2 rounded bg-[var(--wv-cotton-200)] text-[var(--wv-neel-700)] font-semibold text-xs shrink-0">
                                                 {opt.category === 'yarn_warp' ? 'Warp' : opt.category === 'yarn_weft' ? 'Weft' : 'Warp / Weft'}
                                             </span>
-                                            <span className="text-[var(--wv-cotton-400)]">·</span>
-                                            <span className="text-[var(--wv-cotton-500)] font-medium truncate max-w-[200px]">
+                                            <span className="text-[var(--wv-text-secondary)]">·</span>
+                                            <span className="text-[var(--wv-text-secondary)] font-medium truncate max-w-[200px]">
                                                 {opt.source === 'rate_book' ? 'Rate Book' : opt.qualityNames?.[0] ? opt.qualityNames[0] : 'Saved Quality'}
                                             </span>
                                         </div>
@@ -2337,7 +2337,7 @@ function LayerNameField({
                             )
                         })}
                     </ul>
-                    <div className="bg-[var(--wv-cotton-100)]/90 px-3 py-1.5 border-t border-[var(--wv-cotton-200)] flex items-center justify-between text-xs text-[var(--wv-cotton-500)]">
+                    <div className="bg-[var(--wv-cotton-100)]/90 px-3 py-1.5 border-t border-[var(--wv-cotton-200)] flex items-center justify-between text-xs text-[var(--wv-text-secondary)]">
                         <span>Use ↑ ↓ to navigate · Enter to select</span>
                         <span>Esc to close</span>
                     </div>
@@ -2348,7 +2348,7 @@ function LayerNameField({
                     className="absolute left-0 top-full mt-1.5 z-50 w-[320px] max-w-[calc(100vw-2.5rem)] rounded-[12px] border border-[var(--wv-cotton-400)] bg-[var(--wv-cotton-0)] p-3 shadow-xl ring-1 ring-black/5"
                 >
                     <p className="text-xs font-semibold text-[var(--wv-neel-700)]">No matching saved yarn</p>
-                    <p className="mt-0.5 text-xs text-[var(--wv-cotton-500)]">
+                    <p className="mt-0.5 text-xs text-[var(--wv-text-secondary)]">
                         &quot;{inputValue}&quot; will be used as a custom component name.
                     </p>
                 </div>
@@ -2366,7 +2366,7 @@ function CalculationModeField({
 }) {
     return (
         <div data-estimator-field="calculationMode" className="space-y-1.5 min-w-[140px]">
-            <Label className="flex items-end h-8 text-xs font-medium text-[var(--color-muted)] leading-tight">
+            <Label className="flex items-end h-8 text-xs font-medium text-[var(--color-body)] leading-tight">
                 Mode
             </Label>
             <LiquidSegmented
@@ -2920,7 +2920,7 @@ function WeavingRateFields({
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                    <Label htmlFor={rateInputId} className="flex h-8 items-end text-xs font-medium leading-tight text-[var(--color-muted)]">
+                    <Label htmlFor={rateInputId} className="flex h-8 items-end text-xs font-medium leading-tight text-[var(--color-body)]">
                         <FieldLabelText label={inputMode === 'perMeter' ? 'Weaving rate — REQUIRED' : 'Paisa per pick — REQUIRED'} />
                     </Label>
                     <div className="relative" data-estimator-unit-field={inputMode === 'perMeter' ? '₹/m' : 'paise/pick'} style={{ '--estimator-unit-length': inputMode === 'perMeter' ? 3 : 10 } as React.CSSProperties}>
@@ -3068,7 +3068,7 @@ function QuickCostingView({
                 <SectionHeader title="Quality basics" icon={Layers} accent="neutral" step={1} tutorialSection={2} />
                 <CardContent className="grid gap-4 p-4 sm:grid-cols-2 sm:p-5">
                     <div className="space-y-1.5 sm:col-span-2">
-                        <Label className="text-xs font-medium text-[var(--color-muted)]"><FieldLabelText label="Fabric quality name — REQUIRED" /></Label>
+                        <Label className="text-xs font-medium text-[var(--color-body)]"><FieldLabelText label="Fabric quality name — REQUIRED" /></Label>
                         <Input
                             enterKeyHint="next"
                             data-estimator-field="qualityLabel"
@@ -3079,7 +3079,7 @@ function QuickCostingView({
                             placeholder="e.g. 60g Georgette, D.246, Japan Satin"
                             className="h-11 border-[var(--wv-cotton-400)] font-bold"
                         />
-                        <p className="text-xs font-medium leading-normal text-[var(--wv-cotton-500)]">Use the name your staff and repeat customers will recognise.</p>
+                        <p className="text-xs font-medium leading-normal text-[var(--wv-text-secondary)]">Use the name your staff and repeat customers will recognise.</p>
                     </div>
                     <NumField fieldKey="warpCrimpPct"
                         label="Warp crimp (take-up)"
@@ -3341,7 +3341,7 @@ function QuickCostingView({
                         <div className="space-y-3">
                             <div data-estimator-field="warpingMode" className="space-y-1.5 min-w-0">
                                 <div className="flex items-end justify-between h-8">
-                                    <Label className="text-xs font-semibold text-[var(--color-muted)] leading-tight">
+                                    <Label className="text-xs font-semibold text-[var(--color-body)] leading-tight">
                                         Warping
                                     </Label>
                                     {state.warpingMode === 'in_house' && (
@@ -3370,7 +3370,7 @@ function QuickCostingView({
                         <div className="space-y-3">
                             <div data-estimator-field="sizingMode" className="space-y-1.5 min-w-0">
                                 <div className="flex items-end justify-between h-8">
-                                    <Label className="text-xs font-semibold text-[var(--color-muted)] leading-tight">
+                                    <Label className="text-xs font-semibold text-[var(--color-body)] leading-tight">
                                         Sizing
                                     </Label>
                                     {state.sizingMode === 'in_house' && (
@@ -6398,7 +6398,7 @@ export default function EstimatorClient({
                                     placeholder="e.g. 60g Georgette, D.246, Japan Satin"
                                     className="font-bold border-[var(--wv-cotton-400)] h-11"
                                 />
-                                <p className="text-xs text-[var(--wv-cotton-500)] font-medium leading-normal">
+                                <p className="text-xs text-[var(--wv-text-secondary)] font-medium leading-normal">
                                     {appliedTemplate ? t('estimator.sprint1.saved_quality_name_stable') : t('estimator.quality.fabricQualityNameHelper')}
                                 </p>
                             </div>
@@ -6809,7 +6809,7 @@ export default function EstimatorClient({
                             <div className="space-y-3">
                                 <div className="space-y-1.5 min-w-0">
                                     <div className="flex items-end justify-between h-8">
-                                        <Label className="text-xs font-semibold text-[var(--color-muted)] leading-tight">
+                                        <Label className="text-xs font-semibold text-[var(--color-body)] leading-tight">
                                             {t('estimator.warping_sizing.warping')}
                                         </Label>
                                         {state.warpingMode === 'in_house' && (
@@ -6837,7 +6837,7 @@ export default function EstimatorClient({
                             <div className="space-y-3">
                                 <div className="space-y-1.5 min-w-0">
                                     <div className="flex items-end justify-between h-8">
-                                        <Label className="text-xs font-semibold text-[var(--color-muted)] leading-tight">
+                                        <Label className="text-xs font-semibold text-[var(--color-body)] leading-tight">
                                             {t('estimator.warping_sizing.sizing')}
                                         </Label>
                                         {state.sizingMode === 'in_house' && (
@@ -6863,7 +6863,7 @@ export default function EstimatorClient({
                             </div>
                         </div>
 
-                        <div className="text-xs font-medium text-[var(--wv-cotton-500)] italic">
+                        <div className="text-xs font-medium text-[var(--wv-text-secondary)] italic">
                             {t('estimator.warping_sizing.applied_on')} {hasValidCostResult && !awaitingCalculation ? totals.totalWarpKgPer100m.toFixed(2) : '—'} {t('estimator.warping_sizing.warp_consumption')}
                         </div>
                     </CardContent>
@@ -6981,7 +6981,7 @@ export default function EstimatorClient({
                                                              Total: ₹{overheadEditor.totalMonthly.toLocaleString('en-IN')}/mo
                                                         </span>
                                                     )}
-                                                    <ChevronRight className="h-4 w-4 text-[var(--wv-cotton-500)]" />
+                                                    <ChevronRight className="h-4 w-4 text-[var(--wv-text-secondary)]" />
                                                 </div>
                                             </button>
                                         </div>
@@ -7078,7 +7078,7 @@ export default function EstimatorClient({
                                                                             <button 
                                                                                 type="button"
                                                                                 onClick={() => dispatch({ type: 'REMOVE_OVERHEAD_ITEM', id: item.id })}
-                                                                                className="text-[var(--wv-cotton-400)] hover:text-[var(--wv-madder-600)] opacity-0 group-hover:opacity-100 transition-all"
+                                                                                className="text-[var(--wv-text-secondary)] hover:text-[var(--wv-madder-600)] opacity-0 group-hover:opacity-100 transition-all"
                                                                             >
                                                                                 <Trash2 className="h-3.5 w-3.5" />
                                                                             </button>
@@ -7092,7 +7092,7 @@ export default function EstimatorClient({
 
                                                 <div className="space-y-4 border-t border-[var(--color-hairline)] pt-4">
                                                     <div data-estimator-field="monthlyProductionM" className="space-y-1.5">
-                                                        <Label className={`text-xs font-medium ${state.overheadMode === 'monthly_expenses' && (!state.monthlyOutputM || state.monthlyOutputM <= 0) ? 'text-[var(--color-warning-amber)]' : 'text-[var(--color-muted)]'}`}>Typical monthly production (m){state.overheadMode === 'monthly_expenses' && <span className="sr-only"> (required)</span>}</Label>
+                                                        <Label className={`text-xs font-medium ${state.overheadMode === 'monthly_expenses' && (!state.monthlyOutputM || state.monthlyOutputM <= 0) ? 'text-[var(--color-warning-amber)]' : 'text-[var(--color-body)]'}`}>Typical monthly production (m){state.overheadMode === 'monthly_expenses' && <span className="sr-only"> (required)</span>}</Label>
                                                         <div className="relative">
                                                             <Input
                                                                 enterKeyHint="next"
@@ -7149,7 +7149,7 @@ export default function EstimatorClient({
                                             <div className="text-right">
                                                 <p className="text-xs font-semibold text-[var(--wv-neel-500)] leading-none mb-1">Method</p>
                                                 <p className="text-sm font-semibold text-[var(--wv-neel-700)] leading-tight">{state.overheadMode === 'direct' ? 'Direct rate' : 'Monthly expenses'}</p>
-                                                <p className="text-xs text-[var(--wv-cotton-500)] mt-0.5">{state.overheadMode === 'direct' ? 'saved ₹/m input' : 'saved expenses ÷ output'}</p>
+                                                <p className="text-xs text-[var(--wv-text-secondary)] mt-0.5">{state.overheadMode === 'direct' ? 'saved ₹/m input' : 'saved expenses ÷ output'}</p>
                                             </div>
                                         </div>
                                     </CardContent>
@@ -7165,17 +7165,17 @@ export default function EstimatorClient({
                             {state.enabledSections.winding ? (
                                 <NumField fieldKey="windingRatePerKg" label={t('estimator.field_labels.winding_per_kg')} value={state.windingRatePerKg} onChange={v => dispatch({ type: 'SET', field: 'windingRatePerKg', value: v ?? 0 })} unit="₹/kg" placeholder="e.g. 4" hint={t('estimator.post_processing.winding_scope').replace('{kg}', totals.totalAllYarnKgPer100m.toFixed(2))} />
                             ) : (
-                                <button onClick={() => dispatch({ type: 'ENABLE_SECTION', section: 'winding' })} className="h-10 rounded-xl border border-dashed border-[var(--wv-cotton-300)] text-xs font-bold text-[var(--wv-cotton-500)] flex items-center justify-center gap-1.5 hover:bg-[var(--wv-cotton-100)] hover:text-[var(--wv-neel-600)] transition-all"><Plus className="h-3 w-3" /> {t('estimator.post_processing.winding')}</button>
+                                <button onClick={() => dispatch({ type: 'ENABLE_SECTION', section: 'winding' })} className="h-10 rounded-xl border border-dashed border-[var(--wv-cotton-300)] text-xs font-bold text-[var(--wv-text-secondary)] flex items-center justify-center gap-1.5 hover:bg-[var(--wv-cotton-100)] hover:text-[var(--wv-neel-600)] transition-all"><Plus className="h-3 w-3" /> {t('estimator.post_processing.winding')}</button>
                             )}
                             {state.enabledSections.processing ? (
                                 <NumField fieldKey="processingRatePerM" label={t('estimator.field_labels.dyeing_processing')} value={state.processingRatePerM} onChange={v => dispatch({ type: 'SET', field: 'processingRatePerM', value: v ?? 0 })} unit="₹/m" placeholder="e.g. 2" />
                             ) : (
-                                <button onClick={() => dispatch({ type: 'ENABLE_SECTION', section: 'processing' })} className="h-10 rounded-xl border border-dashed border-[var(--wv-cotton-300)] text-xs font-bold text-[var(--wv-cotton-500)] flex items-center justify-center gap-1.5 hover:bg-[var(--wv-cotton-100)] hover:text-[var(--wv-neel-600)] transition-all"><Plus className="h-3 w-3" /> {t('estimator.post_processing.processing')}</button>
+                                <button onClick={() => dispatch({ type: 'ENABLE_SECTION', section: 'processing' })} className="h-10 rounded-xl border border-dashed border-[var(--wv-cotton-300)] text-xs font-bold text-[var(--wv-text-secondary)] flex items-center justify-center gap-1.5 hover:bg-[var(--wv-cotton-100)] hover:text-[var(--wv-neel-600)] transition-all"><Plus className="h-3 w-3" /> {t('estimator.post_processing.processing')}</button>
                             )}
                             {state.enabledSections.finishing ? (
                                 <NumField fieldKey="finishingRatePerM" label={t('estimator.field_labels.finishing_per_m')} value={state.finishingRatePerM} onChange={v => dispatch({ type: 'SET', field: 'finishingRatePerM', value: v ?? 0 })} unit="₹/m" placeholder="e.g. 1.50" />
                             ) : (
-                                <button onClick={() => dispatch({ type: 'ENABLE_SECTION', section: 'finishing' })} className="h-10 rounded-xl border border-dashed border-[var(--wv-cotton-300)] text-xs font-bold text-[var(--wv-cotton-500)] flex items-center justify-center gap-1.5 hover:bg-[var(--wv-cotton-100)] hover:text-[var(--wv-neel-600)] transition-all"><Plus className="h-3 w-3" /> {t('estimator.post_processing.finishing')}</button>
+                                <button onClick={() => dispatch({ type: 'ENABLE_SECTION', section: 'finishing' })} className="h-10 rounded-xl border border-dashed border-[var(--wv-cotton-300)] text-xs font-bold text-[var(--wv-text-secondary)] flex items-center justify-center gap-1.5 hover:bg-[var(--wv-cotton-100)] hover:text-[var(--wv-neel-600)] transition-all"><Plus className="h-3 w-3" /> {t('estimator.post_processing.finishing')}</button>
                             )}
                         </div>
                     </CardContent>
@@ -7681,7 +7681,7 @@ export default function EstimatorClient({
                     </DialogHeader>
                     <div className="py-4 space-y-4">
                         <div className="space-y-1.5">
-                            <Label htmlFor="save-quality-name" className="text-xs font-semibold text-[var(--color-muted)]">{t('estimator.quality.qualityNameLabel')}</Label>
+                            <Label htmlFor="save-quality-name" className="text-xs font-semibold text-[var(--color-body)]">{t('estimator.quality.qualityNameLabel')}</Label>
                             <Input
                                 id="save-quality-name"
                                 placeholder={tx('Japan Satin, Canvas Shine')}
