@@ -8,11 +8,12 @@ import { formatINR } from '@/lib/finance'
 
 export const metadata: Metadata = {
     title: 'Refund & Cancellation Policy — Weavly',
-    description: 'Refund and cancellation rules for Weavly Free, Lite, and Base, including paid upgrades, manual renewal, and billing errors.',
+    description: 'Refund and cancellation rules for Weavly Free and Lite, the Lite free trial, paid upgrades, manual renewal, and billing errors.',
 }
 
 const sections = [
     { href: '#scope', title: 'Scope' },
+    { href: '#lite-trial', title: 'Lite Free Trial' },
     { href: '#non-renewal', title: 'Non-Renewal & Deletion' },
     { href: '#initial-payment', title: 'Initial Payment Refunds' },
     { href: '#renewal-payment', title: 'Renewal Refunds' },
@@ -27,7 +28,7 @@ export default function RefundPolicyPage() {
         <PolicyPage
             activePath="/refund-policy"
             title="Refund & Cancellation Policy"
-            description="How refunds, paid upgrades, manual renewal, and account deletion work across Free, Lite, and Base."
+            description="How refunds, the Lite free trial, paid upgrades, manual renewal, and account deletion work across Free, Lite, and Base."
             lastUpdated={LEGAL_DOCUMENTS.terms.displayDate}
             sections={sections}
             facts={[
@@ -38,13 +39,14 @@ export default function RefundPolicyPage() {
             ]}
         >
             <p className="mb-10 max-w-3xl text-lg font-medium leading-8 text-body">
-                This policy covers Weavly Free accounts and Weavly Lite and Weavly Base purchases offered by {LEGAL_OPERATOR.displayName}. It should be read with the <a href="/terms">Terms of Service</a>. Free has no subscription payment to cancel or refund. If you purchase Lite or Base from Free, the paid-plan rules below apply to that purchase.
+                This policy covers Weavly Free accounts, the Weavly Lite free trial, and Weavly Lite and Weavly Base purchases offered by {LEGAL_OPERATOR.displayName}. It should be read with the <a href="/terms">Terms of Service</a>. Free has no subscription payment to cancel or refund. If you purchase Lite or Base from Free, the paid-plan rules below apply to that purchase.
             </p>
 
             <PolicySection id="scope" title="1. Scope and Plan Boundary">
                 <p>
                     Weavly Free includes two costings per month, saved completed costings, and Cost Sheet exports at no subscription fee. Weavly Lite covers the complete textile costing-management product with unlimited costings: estimator calculations, saved costings, qualities, Rate Book, costing history, and hosted account data. Weavly Base includes all Lite functionality and adds the current Base Production Core, including production records linked to costing/quality data where supported. Other operational modules outside the current catalog are not included in these plans, and their absence is not grounds for a refund.
                 </p>
+                <p>Weavly Base is not offered to new customers during the initial rollout. Its rules below apply to organizations that already hold a Base subscription.</p>
                 <PolicyCallout tone="blue" title="Current catalog">
                     <ul>
                         {BILLING_SELF_SERVE_PLAN_TIERS.map((tier) => (
@@ -55,6 +57,14 @@ export default function RefundPolicyPage() {
                     </ul>
                     <p>Each displayed paid total includes the indicated 18% GST component. The final lawful price and tax treatment displayed at live checkout control. GST tax invoices are issued only after the required supplier registration and tax configuration are complete.</p>
                 </PolicyCallout>
+            </PolicySection>
+
+            <PolicySection id="lite-trial" title="1.1 Lite Free Trial">
+                <ul>
+                    <li><strong>No payment</strong> — The Lite free trial takes no payment and needs no card, so there is nothing to cancel or refund. It ends on its own when the trial period is over.</li>
+                    <li><strong>After the trial</strong> — If Lite is not purchased, the organization moves to Free when the trial ends. Nothing is charged.</li>
+                    <li><strong>Buying Lite during or after the trial</strong> — The purchase is an initial payment under Section 3. Use of Lite during the free trial does not by itself count as use of that paid purchase.</li>
+                </ul>
             </PolicySection>
 
             <PolicySection id="non-renewal" title="2. Non-Renewal, Expiry, and Account Deletion">

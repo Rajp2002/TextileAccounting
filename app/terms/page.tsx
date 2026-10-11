@@ -6,16 +6,18 @@ import { LEGAL_DOCUMENTS } from '@/lib/legal-documents'
 import { LEGAL_OPERATOR } from '@/lib/legal-operator'
 import { ACCESS_DAYS, BILLING_PLANS, BILLING_SELF_SERVE_PLAN_TIERS, RENEWAL_ELIGIBILITY_DAYS } from '@/lib/billing-constants'
 import { formatINR } from '@/lib/finance'
+import { LITE_TRIAL_DAYS } from '@/lib/lite-trial'
 
 export const metadata: Metadata = {
     title: 'Terms of Service — Weavly',
-    description: 'Terms for Weavly Free, Lite, and Base: costing allowances, plan features, annual pricing, renewal, and account data.',
+    description: 'Terms for Weavly Free and Lite: costing allowances, the one-month Lite free trial, plan features, annual pricing, renewal, and account data.',
 }
 
 const sections = [
     { href: '#parties-acceptance', title: 'Parties & Acceptance' },
-    { href: '#base-plan', title: 'Free, Lite & Base Scope' },
+    { href: '#plan-scope', title: 'Free & Lite Scope' },
     { href: '#free-allowance', title: 'Free Allowance' },
+    { href: '#lite-trial', title: 'Lite Free Trial' },
     { href: '#accounts', title: 'Accounts' },
     { href: '#commercial-terms', title: 'Price & Payment' },
     { href: '#customer-data', title: 'Customer Data' },
@@ -35,6 +37,7 @@ const sections = [
 
 const plans = [
     { name: 'Weavly Free', firstYear: '₹0 — no subscription fee', renewal: 'No annual renewal' },
+    { name: 'Weavly Lite free trial', firstYear: `₹0 for ${LITE_TRIAL_DAYS} days`, renewal: 'Not renewable; buy Lite to continue' },
     ...BILLING_SELF_SERVE_PLAN_TIERS.map((tier) => ({
         name: BILLING_PLANS[tier].name,
         firstYear: `${formatINR(BILLING_PLANS[tier].firstYearTotalPaise / 100, { hideDecimals: true })} total (GST included)`,
@@ -47,18 +50,18 @@ export default function TermsOfServicePage() {
         <PolicyPage
             activePath="/terms"
             title="Terms of Service"
-            description="The contract for Weavly Free costing, the complete Lite costing workspace, and Base costing with connected production and worker settlement."
+            description="The contract for Weavly Free costing, the one-month Lite free trial, and the complete Lite costing workspace. Weavly Base is not offered to new customers yet."
             lastUpdated={LEGAL_DOCUMENTS.terms.displayDate}
             sections={sections}
             facts={[
-                { label: 'Available plans', value: 'Weavly Free, Lite, and Base', icon: Database },
-                { label: 'Starting price', value: '₹0 on Free; paid catalog below', icon: IndianRupee },
+                { label: 'Available plans', value: 'Weavly Free and Lite', icon: Database },
+                { label: 'Starting price', value: '₹0 on Free; Lite free for the first month', icon: IndianRupee },
                 { label: 'Renewal', value: `Manual from ${RENEWAL_ELIGIBILITY_DAYS} days before expiry`, icon: CalendarDays },
                 { label: 'Contract location', value: 'Surat, Gujarat, India', icon: Scale },
             ]}
         >
             <p className="mb-10 max-w-3xl text-lg font-medium leading-8 text-body">
-                These Terms of Service (&quot;Terms&quot;) govern use of Weavly Free and paid subscriptions to Weavly Lite and Weavly Base. Until a company is incorporated and these Terms are updated, the Service is offered by {LEGAL_OPERATOR.displayName} (&quot;Weavly&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;). The person accepting these Terms for a factory or business confirms that they are authorized to bind that business.
+                These Terms of Service (&quot;Terms&quot;) govern use of Weavly Free, the Weavly Lite free trial, and paid subscriptions to Weavly Lite, and continue to govern existing Weavly Base subscriptions. Until a company is incorporated and these Terms are updated, the Service is offered by {LEGAL_OPERATOR.displayName} (&quot;Weavly&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;). The person accepting these Terms for a factory or business confirms that they are authorized to bind that business.
             </p>
 
             <PolicySection id="parties-acceptance" title="1. Parties and Acceptance">
@@ -70,17 +73,17 @@ export default function TermsOfServicePage() {
                 </p>
             </PolicySection>
 
-            <PolicySection id="base-plan" title="2. Free, Lite, and Base Plan Scope">
-                <p>Weavly offers three current plans for one Customer organization or factory workspace:</p>
+            <PolicySection id="plan-scope" title="2. Free and Lite Plan Scope">
+                <p>During the initial rollout, Weavly offers two plans to new customers, each for one Customer organization or factory workspace:</p>
                 <ul>
                     <li><strong>Weavly Free:</strong> two successful costings per month, automatic saving of completed costings, viewing their breakdowns, and Cost Sheet export. Reusable qualities, Rate Book, costing defaults, and production management are not included.</li>
                     <li><strong>Weavly Lite:</strong> the complete textile estimator, unlimited costings, live costing calculations, saved costings and history, reusable qualities, Rate Book references, costing tools, and hosted account data.</li>
-                    <li><strong>Weavly Base:</strong> all Lite functionality plus production jobs created from saved costings, planned/produced/remaining metres, machine or loom allocation where enabled, owner production updates, piece-rate worker records, advances, and production settlement records.</li>
+                    <li><strong>Weavly Base:</strong> not offered to new customers during the initial rollout and planned for a later release. For organizations that already hold a Base subscription, it includes all Lite functionality plus production jobs created from saved costings, planned/produced/remaining metres, machine or loom allocation where enabled, owner production updates, piece-rate worker records, advances, and production settlement records.</li>
                     <li>Cost Sheets, exports, costing breakdowns, and other costing-management workflows where enabled in the selected workspace</li>
                     <li>Owner-accessible organization data export and billing history</li>
                 </ul>
                 <p>
-                    Each plan covers one Customer organization or factory workspace. Individual user credentials may not be shared. All three plans use the same underlying costing engine. Free applies a monthly calculation allowance; Lite and Base do not have that monthly limit. Free requires an internet connection for calculations and does not provide recoverable unfinished drafts.
+                    Each plan covers one Customer organization or factory workspace. Individual user credentials may not be shared. Every plan uses the same underlying costing engine. Free applies a monthly calculation allowance; Lite and Base do not have that monthly limit. Free requires an internet connection for calculations and does not provide recoverable unfinished drafts.
                 </p>
                 <PolicyCallout tone="neutral" title="Choose the workflow you need">
                     <p>
@@ -95,7 +98,18 @@ export default function TermsOfServicePage() {
                     <li>A successful calculation saves its inputs and result to your account and uses one allowance. A new calculation after changing inputs uses another allowance. Validation failures and retries of the same completed request do not use an additional allowance.</li>
                     <li>Viewing saved costings, exporting their Cost Sheets, and using the example-data walkthrough do not use the monthly allowance.</li>
                     <li>Free has no subscription fee, card requirement, or time limit. Enrollment and continued use are subject to account verification, availability, and these Terms. Changes to the Free offer will be disclosed in the product and these Terms.</li>
-                    <li>When the allowance is exhausted, wait for the next reset or choose Lite or Base. A paid upgrade requires your explicit purchase; reaching the Free limit never triggers a charge.</li>
+                    <li>When the allowance is exhausted, wait for the next reset, start the Lite free trial if your organization is eligible, or buy Lite. A paid upgrade requires your explicit purchase; reaching the Free limit never triggers a charge.</li>
+                </ul>
+            </PolicySection>
+
+            <PolicySection id="lite-trial" title="2.2 Lite Free Trial">
+                <ul>
+                    <li>During the initial rollout, a new Customer organization may start one free trial of Weavly Lite. The trial is available once per organization. Organizations that existed before the trial was introduced, or that have already used a trial or paid for a plan, are not eligible. Creating additional accounts to obtain further trials is not permitted.</li>
+                    <li>{`The trial gives full Lite access for ${LITE_TRIAL_DAYS} days from the moment it starts. No payment, card, or payment details are needed to start it, and nothing is charged when it ends.`}</li>
+                    <li>The owner starts the trial by choosing it on the plan screen. An owner who starts on Free may start it later from the upgrade screen while the organization is still eligible.</li>
+                    <li>{`To keep Lite, buy the first Lite year at the first-year price. A purchase made during the trial starts a new ${ACCESS_DAYS}-day paid period from the payment date; unused trial days are not added.`}</li>
+                    <li>If Lite is not purchased by the end of the trial, the organization moves to Weavly Free. Records created during the trial are kept. Lite-only features such as reusable qualities and the Rate Book are unavailable on Free and return when Lite is purchased.</li>
+                    <li>The trial is an initial-rollout offer. We may change or withdraw it for organizations that have not started it. A trial that has already started runs for its full period unless access is suspended under Section 10.</li>
                 </ul>
             </PolicySection>
 
@@ -110,7 +124,7 @@ export default function TermsOfServicePage() {
             </PolicySection>
 
             <PolicySection id="commercial-terms" title="4. Price, Payment, Renewal, and Referrals">
-                <h3>4.1 Current Free, Lite, and Base catalog</h3>
+                <h3>4.1 Current catalog</h3>
                 <div className="not-prose my-6 overflow-x-auto rounded-lg border border-wv-border-default">
                     <table className="w-full text-left text-sm">
                         <thead className="bg-surface-soft text-subtle">
@@ -131,8 +145,9 @@ export default function TermsOfServicePage() {
                         </tbody>
                     </table>
                 </div>
+                <p>Weavly Base is listed for organizations that already hold a Base subscription. It is not sold to new customers during the initial rollout and will be offered later.</p>
                 <ul>
-                    <li>Free requires no payment. For Lite or Base, the selected first-year fee is paid upfront for {ACCESS_DAYS} days of access. Any onboarding assistance included with a purchase is limited to what is described at checkout or agreed in writing; custom implementation or data migration is not included unless expressly agreed.</li>
+                    <li>Free and the Lite free trial require no payment. For Lite or Base, the selected first-year fee is paid upfront for {ACCESS_DAYS} days of access. Any onboarding assistance included with a purchase is limited to what is described at checkout or agreed in writing; custom implementation or data migration is not included unless expressly agreed.</li>
                     <li>The final amount, tax treatment, and supplier details shown at live checkout or on the applicable order control if they differ from this page because of a lawful tax or catalog update.</li>
                     <li>Live payment collection and GST tax invoices are subject to completion of the required supplier, payment-provider, and tax configuration. A payment receipt is not a GST tax invoice.</li>
                     <li>Razorpay or another disclosed payment provider may process the payment. You authorize the selected provider to process the transaction information needed to complete it.</li>
@@ -149,6 +164,7 @@ export default function TermsOfServicePage() {
                 <p>
                     A referral program applies only while it is displayed as active in the product. Under the current program, an eligible active Weavly Base Customer that has paid its initial year may earn one non-cash Base renewal credit when a referred organization pays its own initial Base year, subject to the displayed annual cap and anti-abuse checks. Credits are not transferable, cannot be redeemed for cash or an initial purchase, and may be reversed for duplicate, fraudulent, refunded, or chargeback transactions.
                 </p>
+                <p>The current referral program is tied to Base and is not available to new customers while Base is not offered.</p>
             </PolicySection>
 
             <PolicySection id="customer-data" title="5. Customer Data and Privacy">
@@ -207,6 +223,7 @@ export default function TermsOfServicePage() {
             <PolicySection id="termination" title="10. Suspension, Expiry, and Termination">
                 <ul>
                     <li><strong>Expiry</strong> — Paid access lasts for the current {ACCESS_DAYS}-day period unless renewed. On Lite expiry, paid costing access is restricted unless another entitlement applies. Under the current access policy, an organization with a completed paid Base period retains the Lite costing desk after Base expires; Base-only production creation and mutation actions are unavailable until Base is reactivated. A paid account does not automatically revert to Free on expiry.</li>
+                    <li><strong>Trial end</strong> — A Lite free trial that ends without a Lite purchase moves the organization to Free, as described in Section 2.2. This applies only to the free trial, not to a paid period.</li>
                     <li><strong>Production records</strong> — A plan change or expiry does not delete production history. Existing production records remain retained with the organization, and Base capability is restored when an eligible Base renewal is activated.</li>
                     <li><strong>Customer deletion</strong> — The owner may permanently delete the workspace through Settings. Deletion also attempts to cancel any applicable provider subscription before database removal.</li>
                     <li><strong>Immediate protective suspension</strong> — We may restrict access without advance notice when reasonably necessary to address a security threat, unlawful use, fraud, payment reversal, or risk to another customer or the Service.</li>

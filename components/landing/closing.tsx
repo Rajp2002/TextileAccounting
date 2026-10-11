@@ -14,7 +14,7 @@ export default function LandingClosing() {
                         Cost it before you quote it.
                     </h2>
                     <p className="mt-6 max-w-[34rem] text-[17px] leading-[1.6] text-[color:var(--lp-on-loom-muted)]">
-                        Two free costings a month, the full breakdown and a Cost Sheet to send. No card.
+                        Two free costings a month, the full breakdown and a Cost Sheet to send. No card. New accounts can also try Lite free for the first month.
                     </p>
                 </div>
                 <div className="flex flex-col gap-3 xs:flex-row lg:flex-col lg:items-stretch">

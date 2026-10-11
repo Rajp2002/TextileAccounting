@@ -14,6 +14,10 @@ const faqs: Array<{ question: string; answer: ReactNode; baseOnly?: boolean }> =
             : 'Start with Free if you cost an enquiry now and then. Choose Lite when costing is a daily job and you want reusable qualities and the Yarn Rate Book.',
     },
     {
+        question: 'Is there a free trial of Lite?',
+        answer: 'Yes. For the initial rollout, every new account can try Lite free for one month. No payment or card is needed to start. Choose Lite when you sign up, or start the trial later from your Free account. When the month ends, pay for the first Lite year to keep Lite, or carry on with Free. Your records stay either way.',
+    },
+    {
         question: 'How does the Free allowance work?',
         answer: 'Free gives two successful costings a month, with no subscription fee and no card. The allowance resets on the first day of every month at 12:00 am IST and does not roll over. A new calculation after changing inputs counts as a new costing. Viewing saved costings and exporting their Cost Sheets does not use the allowance.',
     },

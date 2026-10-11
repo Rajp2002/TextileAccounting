@@ -28,8 +28,8 @@ describe('Free, Lite, and Base commercial policy accuracy', () => {
     ]
 
     it('publishes a new version that identifies the pre-incorporation operator', () => {
-        expect(LEGAL_DOCUMENTS.terms.version).toBe('2026-09-12')
-        expect(LEGAL_DOCUMENTS.terms.identifier).toBe('terms:2026-09-12')
+        expect(LEGAL_DOCUMENTS.terms.version).toBe('2026-10-11')
+        expect(LEGAL_DOCUMENTS.terms.identifier).toBe('terms:2026-10-11')
         expect(LEGAL_OPERATOR.displayName).toBe('Raj Patel, operating under the Weavly name')
         expect(terms).toContain('LEGAL_DOCUMENTS.terms.displayDate')
         expect(terms).toContain('LEGAL_OPERATOR.displayName')

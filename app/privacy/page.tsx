@@ -44,7 +44,7 @@ export default function PrivacyPolicyPage() {
             ]}
         >
             <p className="mb-10 max-w-3xl text-lg font-medium leading-8 text-body">
-                Weavly (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) provides a business-to-business textile costing product and, on Weavly Base, a connected production-record workflow. Until a company is incorporated and this policy is updated, Weavly means {LEGAL_OPERATOR.displayName}. This policy explains our practices for personal information associated with Weavly Free, Lite, and Base. It is intended to meet the privacy-policy requirements presently applicable under India&apos;s Information Technology Act, 2000 and the Information Technology (Reasonable Security Practices and Procedures and Sensitive Personal Data or Information) Rules, 2011, while preparing for the phased commencement of the Digital Personal Data Protection Act, 2023 and Digital Personal Data Protection Rules, 2025.
+                Weavly (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) provides a business-to-business textile costing product and, for organizations that already hold Weavly Base, a connected production-record workflow. Until a company is incorporated and this policy is updated, Weavly means {LEGAL_OPERATOR.displayName}. This policy explains our practices for personal information associated with Weavly Free, Lite, and Base. It is intended to meet the privacy-policy requirements presently applicable under India&apos;s Information Technology Act, 2000 and the Information Technology (Reasonable Security Practices and Procedures and Sensitive Personal Data or Information) Rules, 2011, while preparing for the phased commencement of the Digital Personal Data Protection Act, 2023 and Digital Personal Data Protection Rules, 2025.
             </p>
 
             <PolicySection id="scope" title="1. Scope and Our Data Roles">
@@ -92,7 +92,7 @@ export default function PrivacyPolicyPage() {
 
                 <h3>2.4 Billing and support information</h3>
                 <ul>
-                    <li>Billing name and address, GSTIN if supplied, plan and subscription status, payment references, receipts, and refund or dispute records</li>
+                    <li>Billing name and address, GSTIN if supplied, plan, free-trial, and subscription status, payment references, receipts, and refund or dispute records</li>
                     <li>Messages, attachments, and account references you send in support, privacy, or grievance communications</li>
                     <li>Razorpay processes payment-instrument information. Weavly receives transaction references and status information, not complete card, bank-account, or UPI credentials</li>
                 </ul>

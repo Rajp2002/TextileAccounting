@@ -11,8 +11,8 @@ describe('Free, Lite, and Base privacy policy accuracy', () => {
     const privacy = source('app/privacy/page.tsx')
 
     it('publishes a new version for the corrected privacy notice', () => {
-        expect(LEGAL_DOCUMENTS.privacy.version).toBe('2026-09-12')
-        expect(LEGAL_DOCUMENTS.privacy.identifier).toBe('privacy:2026-09-12')
+        expect(LEGAL_DOCUMENTS.privacy.version).toBe('2026-10-11')
+        expect(LEGAL_DOCUMENTS.privacy.identifier).toBe('privacy:2026-10-11')
         expect(privacy).toContain('LEGAL_DOCUMENTS.privacy.displayDate')
     })
 

@@ -34,6 +34,7 @@ export default function LandingHero() {
                 </div>
                 <p className="mt-5 text-[14px] leading-6 text-[color:var(--lp-muted)]">
                     Free: two costings a month, no card.{' '}
+                    Lite: first month free for new accounts.{' '}
                     <span className="whitespace-nowrap">
                         Already on Weavly? <Link href="/login" className={s.textLink}>Log in</Link>
                     </span>
