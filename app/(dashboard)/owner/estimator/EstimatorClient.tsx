@@ -639,7 +639,7 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                     calcDenier:  Number(tpl.calculated_yarn_denier ?? tpl.yarn_denier ?? 75),
                     beamEnds:    Number(tpl.beam_ends ?? 3200),
                     yarnRate:    Number(tpl.default_yarn_rate ?? 107),
-                    gstPct:      5,
+                    gstPct:      0,
                     shortagePct: null,
                 }],
                 weftRows: [{
@@ -648,7 +648,7 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                     reedSpace:   Number(tpl.reed_space ?? 110),
                     calcDenier:  Number(tpl.weft_denier ?? 75),
                     yarnRate:    Number(tpl.default_yarn_rate ?? 107),
-                    gstPct:      5,
+                    gstPct:      0,
                     shortagePct: null,
                 }],
                 tapeLengthM:      Number(tpl.tape_length_m ?? state.tapeLengthM),
@@ -1140,6 +1140,13 @@ function StepperField({
         </div>
     )
 }
+
+/**
+ * The yarn GST field adds GST to the yarn rate as a cost. A GST-registered
+ * weaver recovers yarn GST as input credit, so their cost is the rate before
+ * GST; only an unregistered weaver carries the GST as cost.
+ */
+const YARN_GST_HINT = 'GST registered: enter the rate before GST and keep this 0. Not registered: enter GST only if your rate excludes it.'
 
 function NumField({
     label, value, onChange, unit, step = 1, min = 0, hint, warning, onDismissWarning, placeholder, attentionWhenEmpty = false, preserveZero = false, ghostValue, fieldKey, placeholderKind = 'example', needsVerification = false,
@@ -3188,7 +3195,7 @@ function QuickCostingView({
                                 placeholder="e.g. 110"
                                 attentionWhenEmpty
                             />
-                            <NumField fieldKey="gstPct" label="GST" value={row.gstPct} onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'gstPct', value: value ?? 0 })} unit="%" step={0.5} placeholder="e.g. 5" />
+                            <NumField fieldKey="gstPct" label="GST" value={row.gstPct} onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'gstPct', value: value ?? 0 })} unit="%" step={0.5} placeholder="0" placeholderKind="applied-default" hint={index === 0 ? YARN_GST_HINT : undefined} />
                         </RowCard>
                     )})}
                     <Button type="button" variant="outline" className="h-11 w-full gap-2 rounded-[10px] border-dashed border-[var(--wv-status-info-border)] bg-[var(--color-info-blue-soft)] text-[var(--color-info-blue)]" onClick={() => dispatch({ type: 'ADD_WARP_ROW' })}>
@@ -3300,7 +3307,7 @@ function QuickCostingView({
                                     placeholder="e.g. 110"
                                     attentionWhenEmpty
                                 />
-                                <NumField fieldKey="gstPct" label="GST" value={row.gstPct} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'gstPct', value: value ?? 0 })} unit="%" step={0.5} placeholder="e.g. 5" />
+                                <NumField fieldKey="gstPct" label="GST" value={row.gstPct} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'gstPct', value: value ?? 0 })} unit="%" step={0.5} placeholder="0" placeholderKind="applied-default" hint={index === 0 ? YARN_GST_HINT : undefined} />
                             </RowCard>
                         )
                     })}
@@ -6551,7 +6558,7 @@ export default function EstimatorClient({
                                             />
                                         )
                                     })()}
-                                    <NumField fieldKey="gstPct" label={t('estimator.field_labels.gst_pct')} value={row.gstPct} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'gstPct', value: v ?? 0 })} step={0.5} placeholder="e.g. 5" />
+                                    <NumField fieldKey="gstPct" label={t('estimator.field_labels.gst_pct')} value={row.gstPct} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'gstPct', value: v ?? 0 })} step={0.5} placeholder="0" placeholderKind="applied-default" hint={i === 0 ? YARN_GST_HINT : undefined} />
                                 </RowCard>
                             )})}
                         </div>
@@ -6760,7 +6767,7 @@ export default function EstimatorClient({
                                                 />
                                             )
                                         })()}
-                                        <NumField fieldKey="gstPct" label={t('estimator.field_labels.gst_pct')} value={row.gstPct} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'gstPct', value: v ?? 0 })} step={0.5} placeholder="e.g. 5" />
+                                        <NumField fieldKey="gstPct" label={t('estimator.field_labels.gst_pct')} value={row.gstPct} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'gstPct', value: v ?? 0 })} step={0.5} placeholder="0" placeholderKind="applied-default" hint={i === 0 ? YARN_GST_HINT : undefined} />
                                     </RowCard>
                                 )
                             })}
