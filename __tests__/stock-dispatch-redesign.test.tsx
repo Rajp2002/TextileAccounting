@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { ChallanNumber } from '@/app/(dashboard)/owner/dispatches/DispatchDetailDialog'
+import { RecentMovementsSection } from '@/components/stock/stock-presentation'
 import { en } from '@/lib/i18n/locales/en'
 import { hi } from '@/lib/i18n/locales/hi'
 import { gu } from '@/lib/i18n/locales/gu'
@@ -54,6 +55,35 @@ describe('Yarn stock', () => {
         for (const locale of [en, hi, gu]) for (const key of ['intro', 'onHand', 'woven', 'dispatchAction', 'recent', 'qualityCountOne'] as const) {
             expect((locale.qualityStock as Record<string, string>)[key], key).toBeTruthy()
         }
+    })
+})
+
+describe('Recent movements', () => {
+    const section = (open: boolean) => renderToStaticMarkup(
+        <RecentMovementsSection id="recent" title="Recent movements" help="The last 7 days" open={open} onToggle={() => {}} action={<button type="button">Full history</button>}>
+            <p>Movement row</p>
+        </RecentMovementsSection>,
+    )
+
+    it('starts folded on both stock pages and opens from its header', () => {
+        for (const page of [fabric, yarn]) {
+            expect(page).toContain('const [recentOpen, setRecentOpen] = useState(false)')
+            expect(page).toContain('onToggle={() => setRecentOpen(value => !value)}')
+        }
+        // The yarn tour's usage step points at a movement row, so that step opens the section.
+        expect(yarn).toContain("open={recentOpen || tourStep === 'ys-usage'}")
+        const closed = section(false)
+        expect(closed).toContain('aria-expanded="false"')
+        expect(closed).toContain('Full history')
+        expect(closed).not.toContain('Movement row')
+    })
+
+    it('scrolls the open list inside the section instead of the page', () => {
+        const open = section(true)
+        expect(open).toContain('aria-expanded="true"')
+        expect(open).toContain('aria-controls="recent-list"')
+        expect(open).toMatch(/id="recent-list"[^>]*class="[^"]*max-h-\[min\(32rem,60vh\)\] overflow-y-auto overscroll-contain/)
+        expect(open).toContain('Movement row')
     })
 })
 

@@ -26,7 +26,7 @@ import { PageGuide } from '@/components/tours/TourInvitation'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { COMPOSITION_SLOTS, CompositionBar, DayGroupList, OTHER_SWATCH, SignedQuantity, StockTrend, Swatch, formatIndiaDay, swatchFor } from '@/components/stock/stock-presentation'
+import { COMPOSITION_SLOTS, CompositionBar, DayGroupList, OTHER_SWATCH, RecentMovementsSection, SignedQuantity, StockTrend, Swatch, formatIndiaDay, swatchFor } from '@/components/stock/stock-presentation'
 import { useTranslation } from '@/lib/i18n/context'
 import { useTourSample } from '@/lib/tours/sample-context'
 import { tourSurfaceProps } from '@/lib/tours/sample-surface'
@@ -54,6 +54,7 @@ export default function QualityStockClient({ initialData }: { initialData: Quali
     const [notice, setNotice] = useState('')
     const [formState, setForm] = useState<{ kind: 'opening' | 'correction'; quality?: StockQuality } | null>(null)
     const [isHistoryOpen, setIsHistoryOpen] = useState(false)
+    const [recentOpen, setRecentOpen] = useState(false)
     const [labelState, setLabel] = useState('')
     const [metersState, setMeters] = useState('')
     const [reasonState, setReason] = useState('')
@@ -350,18 +351,20 @@ export default function QualityStockClient({ initialData }: { initialData: Quali
                 )}
             </section>
 
-            {/* The last seven days, day by day; the full ledger opens from Movement history. */}
-            <section aria-labelledby="stock-recent" className="overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs">
-                <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 sm:px-6">
-                    <div>
-                        <h2 id="stock-recent" className="text-base font-semibold text-ink">{tx('recent')}</h2>
-                        {activity && <p className="mt-0.5 text-sm text-muted-foreground">{tx('recentHelp')}</p>}
-                    </div>
+            {/* The last seven days, day by day, folded until asked for; the full ledger opens from Movement history. */}
+            <RecentMovementsSection
+                id="stock-recent"
+                title={tx('recent')}
+                help={activity ? tx('recentHelp') : undefined}
+                open={recentOpen}
+                onToggle={() => setRecentOpen(value => !value)}
+                action={(
                     <Button variant="outline" aria-haspopup="dialog" onClick={() => openHistory('')} className={secondaryAction}>
                         <History className="h-4 w-4" aria-hidden="true" />
                         {tx('fullHistory')}
                     </Button>
-                </div>
+                )}
+            >
                 {recent.length === 0 ? (
                     <p className="border-t border-hairline px-5 py-5 text-sm text-muted-foreground sm:px-6">{tx('recentEmpty')}</p>
                 ) : (
@@ -388,7 +391,7 @@ export default function QualityStockClient({ initialData }: { initialData: Quali
                         )}
                     />
                 )}
-            </section>
+            </RecentMovementsSection>
 
             {/* Movement History Modal */}
             <Dialog open={isHistoryOpen || tourStep === 'fs-history'} onOpenChange={setIsHistoryOpen} {...surface.root}>

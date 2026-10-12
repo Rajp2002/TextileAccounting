@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { trailPath, type TrendPoint } from '@/lib/stock-activity'
 
@@ -40,6 +41,45 @@ export function StockTrend({ points, color, label, className }: { points: TrendP
             <path d={area} fill="currentColor" fillOpacity={0.1} />
             <path d={line} fill="none" stroke="currentColor" strokeWidth={2} vectorEffect="non-scaling-stroke" strokeLinejoin="round" />
         </svg>
+    )
+}
+
+/**
+ * The Recent movements panel, folded until its header is pressed. Open, the list scrolls inside the panel and the
+ * scroll stops at its ends, so a long week never stretches or scrolls the page.
+ */
+export function RecentMovementsSection({ id, title, help, open, onToggle, action, children }: {
+    id: string; title: ReactNode; help?: ReactNode; open: boolean; onToggle: () => void; action: ReactNode; children: ReactNode
+}) {
+    const body = `${id}-list`
+    return (
+        <section aria-labelledby={id} className="overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs">
+            {/* The toggle's hit area stretches over the whole header; the header's own action sits above it. */}
+            <div className="relative flex flex-wrap items-center justify-between gap-3 px-5 py-4 sm:px-6">
+                <div className="min-w-0 flex-1">
+                    <h2 id={id} className="text-base font-semibold text-ink">
+                        <button
+                            type="button"
+                            aria-expanded={open}
+                            aria-controls={body}
+                            aria-describedby={help ? `${id}-help` : undefined}
+                            onClick={onToggle}
+                            className="group flex cursor-pointer items-center gap-2 text-left outline-none after:absolute after:inset-0 focus-visible:after:ring-[3px] focus-visible:after:ring-inset focus-visible:after:ring-ring/25"
+                        >
+                            {title}
+                            <ChevronDown aria-hidden="true" className={cn('size-4 shrink-0 text-muted-foreground transition-transform duration-150 group-hover:text-ink motion-reduce:transition-none', open && 'rotate-180')} />
+                        </button>
+                    </h2>
+                    {help && <p id={`${id}-help`} className="mt-0.5 text-sm text-muted-foreground">{help}</p>}
+                </div>
+                <div className="relative">{action}</div>
+            </div>
+            {open && (
+                <div id={body} role="region" aria-labelledby={id} tabIndex={0} className="max-h-[min(32rem,60vh)] overflow-y-auto overscroll-contain outline-none focus-visible:ring-[3px] focus-visible:ring-inset focus-visible:ring-ring/25">
+                    {children}
+                </div>
+            )}
+        </section>
     )
 }
 
