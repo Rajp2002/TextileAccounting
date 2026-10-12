@@ -416,7 +416,9 @@ function SavedQualityLibraryView({
                 const isOpen = openKey === group.key
                 const latest = group.records[0] ?? null
                 const selectedRecordId = tourStep ? (tourStep === 'versions' || tourStep === 'compareSelect' ? null : group.records[0]?.id) : selectedRecordIdByGroup[group.key]
-                const activeRecord = (selectedRecordId ? group.records.find(r => r.id === selectedRecordId) : null) ?? (group.records.length === 1 ? group.records[0] : null)
+                // The breakdown always shows a version: the one picked in the history, else the latest.
+                // The tour's version steps keep it empty so they can point at the history alone.
+                const activeRecord = (selectedRecordId ? group.records.find(r => r.id === selectedRecordId) : null) ?? (tourStep && group.records.length > 1 ? null : latest)
                 const targetRecord = activeRecord ?? latest
                 const latestResult = activeRecord ? getHistoricalCostingResult(activeRecord) : null
                 const activeResult = latestResult
@@ -446,7 +448,7 @@ function SavedQualityLibraryView({
                             ? 'older'
                             : getCostingStatus(activeRecord) !== 'verified' ? 'checked' : null
                 const marginBase = isOpen && activeRecord && !marginReadOnly ? buildDraftStateFromQuote(activeRecord) : null
-                const openGroupDetails = () => onOpenDetails(group.key, group.records.length === 1 ? group.records[0] : null)
+                const openGroupDetails = () => onOpenDetails(group.key, latest)
                 const handleInspectRecord = (record: QuoteRow) => {
                     onSelectRecord(group.key, record.id)
                     if (onEnsureDetail) {
@@ -661,8 +663,8 @@ function SavedQualityLibraryView({
                                     style={{ '--costing-dialog-left': 'calc(50% + clamp(0px, calc((100vw - 1212px) / 2), calc(var(--shell-sidebar-w) / 2)))' } as CSSProperties}
                                     className="w-[calc(100vw-2rem)] max-h-[calc(100dvh-2rem)] max-w-[calc(100vw-2rem)] gap-0 overflow-hidden p-0 sm:left-[var(--costing-dialog-left)] sm:w-[calc(100vw-2rem)] sm:max-h-[calc(100dvh-2rem)] sm:max-w-[1180px]"
                                 >
-                                    <div className="max-h-[calc(100dvh-2rem)] min-w-0 overflow-x-hidden overflow-y-auto sm:max-h-[calc(100dvh-2rem)]">
-                                        <DialogHeader className="relative sticky top-0 z-20 border-b border-hairline bg-surface px-5 py-4 pr-16 sm:px-6 sm:pr-16">
+                                    <div className="max-h-[calc(100dvh-2rem)] min-w-0 overflow-x-hidden overflow-y-auto sm:flex sm:flex-col sm:overflow-y-hidden">
+                                        <DialogHeader className="relative sticky top-0 z-20 shrink-0 border-b border-hairline bg-surface px-5 py-4 pr-16 sm:px-6 sm:pr-16">
                                             <div className="flex min-w-0 items-center gap-2">
                                                 <DialogTitle className="min-w-0 flex-1 truncate text-xl font-semibold tracking-[-0.01em]" title={group.name}>{group.name}</DialogTitle>
                                                 {group.template?.is_active === false && <Badge variant="outline" className="border-hairline bg-surface-soft text-xs font-bold text-subtle">{tx('Archived · read-only')}</Badge>}
@@ -684,9 +686,11 @@ function SavedQualityLibraryView({
                                             </DialogClose>}
                                         </DialogHeader>
 
-                                        <div className="ui-disclosure-content w-full min-w-0 bg-surface-soft/60 p-4 sm:p-5">
+                                        {/* Beside the nav the breakdown stays put and only the version history scrolls; the history keeps a
+                                            minimum height, so on a short window the whole body scrolls instead. */}
+                                        <div className="ui-disclosure-content w-full min-w-0 bg-surface-soft/60 p-4 sm:flex sm:min-h-0 sm:flex-1 sm:flex-col sm:overflow-y-auto sm:p-5">
                                     {!activeRecord || activeDetailLoading || !activeResult ? (
-                                        <div className="flex w-full flex-col items-center justify-center rounded-xl border border-dashed border-hairline bg-surface px-6 py-10 text-center">
+                                        <div className="flex w-full shrink-0 flex-col items-center justify-center rounded-xl border border-dashed border-hairline bg-surface px-6 py-10 text-center">
                                             {activeDetailLoading ? <Loader2 className="h-6 w-6 animate-spin text-info" /> : (activeRecord ?? latest) ? <AlertTriangle className="h-6 w-6 text-warning" /> : <FileText className="h-6 w-6 text-subtle" />}
                                             <p className="mt-3 text-sm font-bold text-body">{tx(activeDetailLoading
                                                 ? 'Loading saved costing details…'
@@ -729,7 +733,7 @@ function SavedQualityLibraryView({
                                             )}
                                         </div>
                                     ) : (
-                                        <div className="grid gap-4 ">
+                                        <div className="grid gap-4 sm:shrink-0">
                                             <CostingMarginScope
                                                 key={activeRecord.id}
                                                 base={marginBase}
@@ -821,10 +825,10 @@ function SavedQualityLibraryView({
                                     )}
 
                                     {group.records.length > 0 && (
-                                        <section data-costing-tour="versions" className="mt-4 rounded-xl border border-hairline bg-surface p-4">
-                                            <p className="text-base font-semibold text-ink">Saved Costing history</p>
-                                            <p className="mt-0.5 text-[13px] text-muted-foreground">{comparisonMode ? 'Select two versions to compare their saved commercial assumptions.' : 'Open a version to inspect the exact assumptions and economics saved at that time.'}</p>
-                                            <div className="mt-3 space-y-2">
+                                        <section data-costing-tour="versions" className="mt-4 flex flex-col rounded-xl border border-hairline bg-surface p-4 sm:min-h-[14rem] sm:flex-1">
+                                            <p className="shrink-0 text-base font-semibold text-ink">Saved Costing history</p>
+                                            <p className="mt-0.5 shrink-0 text-[13px] text-muted-foreground">{comparisonMode ? 'Select two versions to compare their saved commercial assumptions.' : 'Open a version to inspect the exact assumptions and economics saved at that time.'}</p>
+                                            <div className="-mx-1 mt-2 space-y-2 px-1 py-1 sm:min-h-0 sm:flex-1 sm:overflow-y-auto sm:overscroll-contain">
                                                 {group.records.map(record => {
                                                     const isInspected = activeRecord?.id === record.id
                                                     const selected = selectedCostingIds.includes(record.id)
