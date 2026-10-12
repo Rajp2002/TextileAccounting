@@ -460,37 +460,43 @@ function DispatchDetailBody({
                     </div>
                 )}
 
-                <section aria-labelledby={`${ids}-history`} className="mt-6">
-                    <h3 id={`${ids}-history`} className="text-sm font-bold text-ink">
-                        {tx('audit')}
-                    </h3>
-                    {eventsLoading ? (
-                        <div role="status" className="mt-3 space-y-3">
-                            <span className="sr-only">{tx('historyLoading')}</span>
-                            {[0, 1, 2].map((i) => (
-                                <div key={i} aria-hidden="true" className="flex items-center gap-3">
-                                    <span className="size-2.5 shrink-0 rounded-full bg-surface-soft" />
-                                    <span className="h-3.5 flex-1 animate-pulse rounded bg-surface-soft motion-reduce:animate-none" />
-                                </div>
-                            ))}
-                        </div>
-                    ) : events.length === 0 ? (
-                        <p className="mt-3 text-sm text-subtle">{tx('historyEmpty')}</p>
-                    ) : (
-                        <ol className="mt-3">
-                            {[...events].reverse().map((e, index, list) =>
-                                renderEntry(
-                                    e,
-                                    index === list.length - 1,
-                                    reversedIds.has(e.id),
-                                    e.reverses_id ? events.find((r) => r.id === e.reverses_id) : undefined,
-                                ),
-                            )}
-                        </ol>
-                    )}
-                </section>
-
                 <details className="ui-details group mt-6 border-t border-hairline">
+                    <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 py-3 select-none [&::-webkit-details-marker]:hidden">
+                        <h3 className="text-sm font-bold text-ink">{tx('audit')}</h3>
+                        <span className="flex shrink-0 items-center gap-2 text-xs text-subtle">
+                            {!eventsLoading && events.length > 0 && <span className="tabular-nums">{events.length}</span>}
+                            <ChevronDown className="size-4 transition-transform duration-150 group-open:rotate-180 motion-reduce:transition-none" aria-hidden="true" />
+                        </span>
+                    </summary>
+                    <div className="pb-1">
+                        {eventsLoading ? (
+                            <div role="status" className="mt-3 space-y-3">
+                                <span className="sr-only">{tx('historyLoading')}</span>
+                                {[0, 1, 2].map((i) => (
+                                    <div key={i} aria-hidden="true" className="flex items-center gap-3">
+                                        <span className="size-2.5 shrink-0 rounded-full bg-surface-soft" />
+                                        <span className="h-3.5 flex-1 animate-pulse rounded bg-surface-soft motion-reduce:animate-none" />
+                                    </div>
+                                ))}
+                            </div>
+                        ) : events.length === 0 ? (
+                            <p className="mt-3 text-sm text-subtle">{tx('historyEmpty')}</p>
+                        ) : (
+                            <ol className="mt-3">
+                                {[...events].reverse().map((e, index, list) =>
+                                    renderEntry(
+                                        e,
+                                        index === list.length - 1,
+                                        reversedIds.has(e.id),
+                                        e.reverses_id ? events.find((r) => r.id === e.reverses_id) : undefined,
+                                    ),
+                                )}
+                            </ol>
+                        )}
+                    </div>
+                </details>
+
+                <details className="ui-details group border-t border-hairline">
                     <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 py-3 select-none [&::-webkit-details-marker]:hidden">
                         <span className="flex min-w-0 items-center gap-2 text-sm font-bold text-ink">
                             <FileText className="size-4 shrink-0 text-subtle" aria-hidden="true" />
