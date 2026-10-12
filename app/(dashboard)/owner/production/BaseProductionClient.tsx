@@ -538,7 +538,7 @@ export default function BaseProductionClient({
     }
 
     return (
-        <div className={`${isDailySheetView ? 'space-y-4' : view === 'production' ? 'space-y-6' : 'space-y-5'} ${view === 'payroll' ? 'payroll-workspace-shell pb-10' : 'pb-8'} ${view === 'production' && !isDailySheetView ? 'production-overview-workspace' : ''} ${view === 'operations' ? 'configuration-page-frame' : ''}`}>
+        <div className={`${isDailySheetView ? 'space-y-4' : view === 'production' ? 'space-y-6' : 'space-y-5'} ${view === 'payroll' ? `payroll-workspace-shell pb-10${activeTab !== 'history' && activePeriodSummary ? ' payroll-fit-viewport lg:pb-0' : ''}` : 'pb-8'} ${view === 'production' && !isDailySheetView ? 'production-overview-workspace' : ''} ${view === 'operations' ? 'configuration-page-frame' : ''}`}>
             <RouteMilestones route={view === 'payroll' ? '/owner/payroll' : view === 'operations' ? '/owner/assignments' : isDailySheetView ? '/owner/production/daily-sheet' : '/owner/production'} shellVisible primaryUsable />
             <TourSampleBanner />
             {navigation.returnTo && (
@@ -700,7 +700,7 @@ export default function BaseProductionClient({
 
             {view === 'operations' && <BaseAssignmentWorkspace key={`${initialData.orgId}:${navigation.worker ?? "all"}:${navigation.machine ?? "all"}:${navigation.shift ?? "day"}`} initialData={initialData} focusWorkerId={searchParams.get("worker") ?? undefined} focusMachineId={searchParams.get("machine") ?? undefined} initialShift={navigation.shift} tourMetadata={tourMetadata} />}
 
-            {(view === 'production' || (view === 'payroll' && activeTab !== 'history')) && <div className={view === 'production' && !isDailySheetView ? 'space-y-8 pt-2' : 'space-y-4'}>
+            {(view === 'production' || (view === 'payroll' && activeTab !== 'history')) && <div className={view === 'production' && !isDailySheetView ? 'space-y-8 pt-2' : view === 'payroll' ? 'payroll-pay-region space-y-4' : 'space-y-4'}>
                 {view === 'production' && activeTab === 'jobs' && (
                     <BaseActiveQualities
                         jobs={initialData.jobs}
@@ -769,7 +769,7 @@ export default function BaseProductionClient({
                     </Dialog>
                 </div>}
 
-                {view === 'payroll' && <div className="space-y-4">
+                {view === 'payroll' && <div className="payroll-pay-section space-y-4">
                     <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
                         <div className="min-w-0">
                             <h2 className="text-lg font-semibold text-ink">Worker pay</h2>
@@ -796,7 +796,7 @@ export default function BaseProductionClient({
                     ) : visiblePayables.length === 0 ? (
                         <EmptyState title="No matching workers" description="Try another name or payment status." action={<Button variant="outline" onClick={() => { setPayrollSearch(''); setPayrollFilter('all') }} className="rounded-xl border-hairline hover:bg-surface-soft font-semibold">Clear filters</Button>} />
                     ) : (
-                        <div data-payroll-tour="earnings" className="grid gap-4 lg:grid-cols-2">
+                        <div data-payroll-tour="earnings" className="payroll-worker-scroll grid gap-4 lg:grid-cols-2">
                             {visiblePayables.map((payable, index) => {
                                 const worker = workerById.get(payable.worker_id)
                                 const workerReadiness = readinessByWorker.get(payable.worker_id)

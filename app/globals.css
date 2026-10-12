@@ -828,6 +828,43 @@
     width: 100%;
   }
 
+  /* Payroll on desktop: the page frame fits the viewport and only the worker
+     cards scroll, so the period, totals, readiness and filters stay in view.
+     The floor keeps the card list usable on short windows, where the page
+     scrolls as usual. Phones keep normal page scrolling. */
+  @media (min-width: 1024px) {
+    .payroll-workspace-shell.payroll-fit-viewport {
+      display: flex;
+      flex-direction: column;
+      height: max(calc(100svh - 3rem - var(--safe-area-top, 0px)), 56rem);
+    }
+
+    .payroll-workspace-shell.payroll-fit-viewport > * {
+      flex-shrink: 0;
+    }
+
+    .payroll-workspace-shell.payroll-fit-viewport > .payroll-pay-region,
+    .payroll-fit-viewport .payroll-pay-section {
+      display: flex;
+      flex: 1 1 0;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .payroll-fit-viewport .payroll-pay-section > * {
+      flex-shrink: 0;
+    }
+
+    .payroll-fit-viewport .payroll-pay-section > .payroll-worker-scroll {
+      align-content: start;
+      flex: 1 1 0;
+      min-height: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      padding-bottom: 0.25rem;
+    }
+  }
+
   .machine-card-grid {
     grid-template-columns: minmax(0, 1fr);
   }
