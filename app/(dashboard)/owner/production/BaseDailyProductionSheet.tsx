@@ -106,6 +106,31 @@ function parseMeters(value: string | number | null | undefined) {
     return Number.isFinite(numeric) && numeric > 0 ? numeric : 0
 }
 
+// Fits the machine readings into the window below the shift controls, so a long
+// shift scrolls inside the sheet and the page itself never scrolls. The space
+// above and below the readings is measured because banners, wrapped headers and
+// the floating save bar all change it. Phones keep the page scroll (app/mobile.css).
+function fitReadingsToWindow(region: HTMLDivElement | null) {
+    const main = region?.closest('main')
+    if (!region || !main) return
+    let page: HTMLElement = region
+    while (page.parentElement && page.parentElement !== main) page = page.parentElement
+    const fit = () => {
+        const readings = region.getBoundingClientRect()
+        const mainStyle = getComputedStyle(main)
+        const below = page.getBoundingClientRect().bottom - readings.bottom + parseFloat(mainStyle.paddingBottom) + parseFloat(mainStyle.borderBottomWidth)
+        region.style.setProperty('--daily-readings-fit', `${Math.floor(document.documentElement.clientHeight - readings.top - window.scrollY - below)}px`)
+    }
+    // Resizing the readings resizes the page, so refit after the observer callback rather than inside it.
+    let timer = 0
+    const refit = () => { clearTimeout(timer); timer = window.setTimeout(fit) }
+    const observer = new ResizeObserver(refit)
+    observer.observe(page)
+    window.addEventListener('resize', refit)
+    fit()
+    return () => { clearTimeout(timer); observer.disconnect(); window.removeEventListener('resize', refit) }
+}
+
 function isContextValidForDate(
     effectiveFrom: string,
     effectiveTo: string | null,
@@ -770,7 +795,7 @@ export default function BaseDailyProductionSheet({
     const saveDisabled = isSaving || areInputsDisabled || Boolean(unmatchedDraftMeters) || invalidEnteredCount > 0 || registerSummary.invalid > 0 || summary.entered_count + summary.zero_count + summary.absent_count === 0
 
     return (
-        <div className="production-daily-sheet-workspace relative min-w-0 pb-28 min-[1280px]:pb-0">
+        <div className="production-daily-sheet-workspace relative min-w-0 pb-28 min-[768px]:pb-8 min-[1280px]:pb-0">
             <DailySheetGuidedTour userId={initialData.actorId ?? ''} orgId={initialData.orgId}
                 empty={sheetWorkers.length === 0}
                 controls={<>
@@ -855,7 +880,7 @@ export default function BaseDailyProductionSheet({
                 </div>
                 </>}>
 
-            <div ref={sheetRef} className="flex min-w-0 flex-col 2xl:min-h-[calc(100svh-3rem)] 2xl:pb-20">
+            <div ref={sheetRef} className="flex min-w-0 flex-col">
             {unmatchedDraftMeters && <p role="alert" className="rounded-lg border border-warning/40 bg-warning/5 p-3 text-sm">Some draft metres no longer match the current worker assignments. Restore the assignment in Machine Assignments or discard the local draft before saving; no metres have been silently removed.</p>}
             {navigation.job && <p className="rounded-lg border border-saffron/30 bg-saffron-soft p-3 text-sm">Selected job: <strong>{jobById.get(navigation.job)?.quality_label ?? 'Unavailable job'}</strong>. Its machine rows are highlighted; the full shift stays visible.</p>}
             {(draftStatus === 'error' || draftStatus === 'conflict') && <div role="alert" className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-warning/30 bg-warning/5 p-3 text-sm"><p>{draftStatus === 'conflict' ? 'The saved shift changed after this draft. Your local draft is retained; reload the saved version before editing.' : 'Draft could not be saved on this device. Keep this page open and save the shift before leaving.'}</p><Button variant="outline" size="sm" onClick={discardDraft}>Discard local draft</Button></div>}
@@ -888,7 +913,7 @@ export default function BaseDailyProductionSheet({
                 </div>
             )}
 
-            <div className="flex flex-1 flex-col gap-4 py-3 sm:py-4 min-h-0">
+            <div className="flex flex-col gap-4 py-3 sm:py-4">
             {sheetWorkers.length === 0 ? (
                 <Card className="rounded-2xl border border-hairline bg-surface shadow-xs">
                     <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
@@ -905,7 +930,7 @@ export default function BaseDailyProductionSheet({
                 </Card>
             ) : (
                 <>
-                    <Card data-daily-tour="sheet" className="production-daily-register gap-0 overflow-hidden rounded-[22px] border border-hairline border-t-[3px] border-t-saffron-deep bg-surface p-0 shadow-lg shadow-ink/5 flex flex-1 flex-col min-h-[calc(100vh-17.5rem)] 2xl:min-h-[calc(100vh-16rem)]">
+                    <Card data-daily-tour="sheet" className="production-daily-register gap-0 overflow-hidden rounded-[22px] border border-hairline border-t-[3px] border-t-saffron-deep bg-surface p-0 shadow-lg shadow-ink/5">
                         <CardHeader className="border-b border-hairline bg-surface px-4 py-4 sm:px-5 sm:py-5">
                             <div className="flex flex-wrap items-center justify-between gap-3">
                                 <div className="flex items-center gap-3">
@@ -923,11 +948,11 @@ export default function BaseDailyProductionSheet({
                             <CardDescription className="text-xs text-body">Leave a reading blank if it is pending. Enter 0 if the machine did not run.</CardDescription>
                             {showPending && <p className="text-xs text-body font-medium">Showing machines that needed attention when you opened this view. Rows stay in place as you type.</p>}
                         </CardHeader>
-                        <CardContent className="p-0 flex flex-1 flex-col min-h-0">
+                        <CardContent className="p-0">
                             <div className="hidden grid-cols-[minmax(0,1.1fr)_minmax(0,.8fr)_145px_160px] gap-3 border-b border-hairline bg-surface-soft/70 px-5 py-2.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground md:grid">
                                 <span>Machine / job</span><span>Worker</span><span className="text-right">{t('dailySheet.metres')}</span><span>Status / action</span>
                             </div>
-                            <div role="region" aria-label="Machine readings" className="production-daily-readings divide-y divide-hairline overflow-y-auto overscroll-contain flex-1 min-h-0 max-h-[max(20rem,calc(100dvh-25rem))] 2xl:max-h-[max(20rem,calc(100dvh-24rem))]">
+                            <div ref={fitReadingsToWindow} role="region" aria-label="Machine readings" className="production-daily-readings h-[max(20rem,var(--daily-readings-fit,calc(100dvh-25rem)))] divide-y divide-hairline overflow-y-auto overscroll-contain">
                                 {machineContexts.map((context, index) => {
                                     if (showPending && !pendingMachineIds.includes(context.machineId)) return null
                                     if (!context.workerId) return (
