@@ -38,7 +38,7 @@ export function WorkforceGroup({
       : `${resolvedCount} ${tx('workers')}`
 
   return (
-    <section className="flex min-w-0 flex-col gap-3.5">
+    <section className="flex min-w-0 flex-col gap-3.5 fit-screen:min-h-0">
       {/* Group Header */}
       <div className="flex items-start justify-between gap-3">
         <div>
@@ -58,7 +58,8 @@ export function WorkforceGroup({
 
       {/* Group Content */}
       {workers.length > 0 ? (
-        <ul role="list" className="flex flex-col gap-3">
+        // In a window-high column the list takes what is left and scrolls; the 4px inset keeps shadows and focus rings unclipped.
+        <ul role="list" className="flex flex-col gap-3 fit-screen:-mx-1 fit-screen:-mt-1 fit-screen:min-h-0 fit-screen:overflow-y-auto fit-screen:overscroll-contain fit-screen:p-1">
           {workers.map(worker => (
             <li key={worker.id} role="listitem" className={arrivedIds?.has(worker.id) ? 'ui-row-arrive' : undefined}>
               <WorkerCard worker={worker} onEdit={onEdit} tourPreview={tourPreview} />

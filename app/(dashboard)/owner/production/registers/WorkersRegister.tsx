@@ -26,6 +26,7 @@ import { formatTourText } from '@/lib/tours/tour-text'
 import { makeWorkersTourExamples, workersTourEditor, workersHelpSteps, workersTourSpecs, workersTourCopyKey, workersTourControlLabels, type WorkersTourStep, type WorkersTourPath } from '@/lib/workers-tour'
 import { workersTutorialCopy } from '@/lib/i18n/workers-tutorial'
 import { CircleHelp } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 const GuidedTour = dynamic(() => import('@/components/tours/GuidedTour').then(module => module.GuidedTour), { ssr: false }) as typeof GuidedTourComponent
 
@@ -196,11 +197,15 @@ export default function WorkersRegister({
   const showPieceGroup = payType !== 'fixed_monthly' && (!hasActiveSearch || pieceWorkers.length > 0 || fixedWorkers.length === 0)
   const showFixedGroup = payType !== 'piece_rate' && (!hasActiveSearch || fixedWorkers.length > 0 || pieceWorkers.length === 0)
 
-  // Layout grid column classes based on whether one or both groups are visible
+  // Layout grid column classes based on whether one or both groups are visible.
+  // On a desktop screen the groups fill the rest of the window and each list scrolls on its own.
   const isSingleGroupVisible = (showPieceGroup && !showFixedGroup) || (!showPieceGroup && showFixedGroup)
-  const gridClasses = isSingleGroupVisible
-    ? 'grid w-full max-w-3xl grid-cols-1 items-start gap-6'
-    : 'grid w-full grid-cols-1 items-start gap-8 lg:grid-cols-2'
+  const gridClasses = cn(
+    isSingleGroupVisible
+      ? 'grid w-full max-w-3xl grid-cols-1 items-start gap-6'
+      : 'grid w-full grid-cols-1 items-start gap-8 lg:grid-cols-2',
+    'fit-screen:min-h-0 fit-screen:flex-1 fit-screen:grid-rows-[minmax(0,1fr)] fit-screen:items-stretch',
+  )
 
   return (
     <WorkerEditor
@@ -210,7 +215,8 @@ export default function WorkersRegister({
       existingNames={existingNames}
     >
       {({ add, edit }) => (
-        <div className="workers-workspace-shell w-full space-y-5 pb-10 sm:space-y-6">
+        // On a desktop screen the page is the window less main's 1.5rem top and bottom padding, so only the worker lists scroll.
+        <div className="workers-workspace-shell w-full space-y-5 pb-10 sm:space-y-6 fit-screen:flex fit-screen:h-[calc(100dvh-3rem-var(--safe-area-top))] fit-screen:flex-col fit-screen:pb-0">
           {/* 1. Page Header */}
           <div data-workers-tour="header"><WorkersPageHeader
             guide={<div ref={tourLauncher} data-workers-tour="launcher" className="contents">

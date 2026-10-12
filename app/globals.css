@@ -14,6 +14,11 @@
    to compact icon/label sizes when a phone is rotated sideways. */
 @custom-variant landscape (@media (orientation: landscape));
 
+/* A desktop window tall enough for a register page to fit on one screen. The page
+   keeps its header, filters and notes in view and only its list scrolls; phones,
+   narrow windows and short windows keep the ordinary page scroll. */
+@custom-variant fit-screen (@media (min-width: 1024px) and (min-height: 600px));
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
