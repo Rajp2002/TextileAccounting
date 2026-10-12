@@ -197,7 +197,7 @@ describe('Tour modal placement rule: the modal stays where it opens, the card ad
         })
 
         it('keeps the Saved Costings centre in step with the page it mirrors', () => {
-            expect(readFileSync('app/(dashboard)/owner/quotes/QuotesClient.tsx', 'utf8')).toContain("left: 'calc(50% + clamp(0px, calc((100vw - 1212px) / 2), calc(var(--shell-sidebar-w) / 2)))'")
+            expect(readFileSync('app/(dashboard)/owner/quotes/QuotesClient.tsx', 'utf8')).toContain("'--costing-dialog-left': 'calc(50% + clamp(0px, calc((100vw - 1212px) / 2), calc(var(--shell-sidebar-w) / 2)))'")
             expect(declaration(sidebarAware, '--tour-cx')).toContain('clamp(0px, calc((100vw - 1212px) / 2), calc(var(--shell-sidebar-w) / 2))')
         })
 

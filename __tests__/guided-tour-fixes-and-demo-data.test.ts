@@ -77,7 +77,10 @@ describe('Saved Costings Dialog Centering & Sample Pre-population', () => {
         // The per-tour reading-column override is gone; tour-modal-placement-guard.test.ts evaluates the generic rule.
         expect(globalsCssSource).not.toContain('left: calc((100vw - 384px) / 2) !important')
         expect(globalsCssSource).toContain('[data-tour-surface="true"][data-slot="dialog-content"]')
-        expect(quotesClientSource).toContain("left: 'calc(50% + clamp(0px, calc((100vw - 1212px) / 2), calc(var(--shell-sidebar-w) / 2)))'")
+        // The sidebar-aware centring applies from sm up; a phone's bottom sheet keeps `left: 0` from app/mobile.css.
+        expect(quotesClientSource).toContain("'--costing-dialog-left': 'calc(50% + clamp(0px, calc((100vw - 1212px) / 2), calc(var(--shell-sidebar-w) / 2)))'")
+        expect(quotesClientSource).toContain('sm:left-[var(--costing-dialog-left)]')
+        expect(quotesClientSource).not.toContain("style={{ left: 'calc(50%")
     })
 
     it('pre-populates demo costing in QuotesClient when quotes and templates are empty', () => {

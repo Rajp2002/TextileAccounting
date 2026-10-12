@@ -1,0 +1,80 @@
+/*
+ * The one range slider. It began on the landing page's cost sheet and now backs
+ * every slider in the product: a 44px hit area around a thin track, an ink fill
+ * that follows --fill, and a saffron thumb. Surfaces with their own palette (the
+ * landing page) set the --range-* variables on an ancestor; everywhere else the
+ * app tokens below apply.
+ */
+.range {
+  --range-track-color: var(--range-track, var(--color-hairline-strong));
+  --range-fill-color: var(--range-fill, var(--color-ink));
+  --range-thumb-color: var(--range-thumb, var(--color-saffron));
+  --range-thumb-edge-color: var(--range-thumb-edge, var(--color-surface));
+  --range-thumb-ring-color: var(--range-thumb-ring, var(--color-saffron-deep));
+
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 44px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  touch-action: pan-y;
+}
+
+.range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(to right, var(--range-fill-color) var(--fill, 50%), var(--range-track-color) var(--fill, 50%));
+}
+
+.range::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--range-track-color);
+}
+
+.range::-moz-range-progress {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--range-fill-color);
+}
+
+.range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  margin-top: -9px;
+  border-radius: 50%;
+  border: 2px solid var(--range-thumb-edge-color);
+  background: var(--range-thumb-color);
+  box-shadow: 0 0 0 1px var(--range-thumb-ring-color);
+}
+
+.range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--range-thumb-edge-color);
+  background: var(--range-thumb-color);
+  box-shadow: 0 0 0 1px var(--range-thumb-ring-color);
+}
+
+.range:focus-visible {
+  outline: none;
+}
+
+.range:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 2px var(--range-thumb-edge-color), 0 0 0 4px var(--range-thumb-ring-color);
+}
+
+.range:focus-visible::-moz-range-thumb {
+  box-shadow: 0 0 0 2px var(--range-thumb-edge-color), 0 0 0 4px var(--range-thumb-ring-color);
+}
+
+.range:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}

@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent } from 'react'
 import { SavedCostingsTutorial } from '@/components/estimator/SavedCostingsTutorial'
 import { savedCostingTourEnding, isSavedCostingHandoff, costingTourSurface, makeSavedCostingTourExamples, makeSavedCostingTourExport, type SavedCostingStep } from '@/lib/saved-costings-tour'
 import { tourCommonCopy } from '@/lib/i18n/tour-common'
@@ -32,7 +32,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog'
-import { auditHistoricalCostingSnapshot, getEstimatorQuoteDetail, updateSavedCostingLibraryState } from '../estimator/actions'
+import { auditHistoricalCostingSnapshot, getEstimatorQuoteDetail, saveEstimatorQuoteV3, updateSavedCostingLibraryState } from '../estimator/actions'
 import { toast, userFacingError } from '@/lib/app-notifications'
 import { formatTimestampDate } from '@/lib/format'
 import { formatSuratDateTime } from '@/lib/time'
@@ -95,6 +95,8 @@ import { CompositionBar, Swatch } from '@/components/stock/stock-presentation'
 import { averageMargin, averageYarnShare, costMix, marginRanking, qualityYarns, type CostMixKey } from '@/lib/costing-catalogue'
 import { costingCatalogueText } from '@/lib/i18n/costing-catalogue'
 import { fillCopy } from '@/lib/i18n/fill'
+import { costingMarginText } from '@/lib/i18n/costing-margin'
+import { CostingMarginScope, marginTone, type MarginReadOnlyReason } from '@/components/estimator/SavedCostingMargin'
 
 const CostingExportDialog = dynamic(
     () => import('@/components/estimator/CostingExportDialog').then(module => module.CostingExportDialog),
@@ -113,13 +115,6 @@ const COST_MIX_COLORS: Record<CostMixKey, string> = {
     weaving: 'var(--wv-viz-2)',
     processing: 'var(--wv-neel-300)',
     factory: 'var(--wv-viz-4)',
-}
-
-/** Margin text: ochre under 10%, madder when a costing loses money, ink otherwise. */
-function marginTone(margin: number | null) {
-    if (margin == null) return 'text-muted-foreground'
-    if (margin < 0) return 'text-[var(--wv-madder-600)]'
-    return margin < 10 ? 'text-[var(--wv-ochre-800)]' : 'text-ink'
 }
 
 type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected'
@@ -443,6 +438,7 @@ function SavedQualityLibraryView({
     tourStep,
     selectedRecordIdByGroup,
     onSelectRecord,
+    onSaveMargin,
 }: {
     groups: SavedQualityGroup[]
     canUseProductionPipeline: boolean
@@ -466,6 +462,8 @@ function SavedQualityLibraryView({
     factoryInputsCapturedLabel: string
     selectedRecordIdByGroup: Record<string, string>
     onSelectRecord: (groupKey: string, recordId: string) => void
+    /** Saves a what-if margin from the breakdown as the next version; true when it was saved. */
+    onSaveMargin: (record: QuoteRow, groupKey: string, marginPct: number, clientRequestId: string) => Promise<boolean>
     tourStep?: SavedCostingStep | null
 }) {
     const { t, tx, language } = useTranslation()
@@ -495,6 +493,18 @@ function SavedQualityLibraryView({
                         ]
                         : []
                 const activeMix = activeResult ? costMix(activeResult.breakdown) : null
+                // The breakdown's margin slider: only the latest, checked, unarchived version can
+                // be changed (a save adds the next version), and only while its dialog is open.
+                const activeVersionNumber = Number(activeRecord?.version_number ?? 1)
+                const latestVersionNumber = group.records.reduce((highest, record) => Math.max(highest, Number(record.version_number ?? 1)), 1)
+                const marginReadOnly: MarginReadOnlyReason | null = !activeRecord
+                    ? null
+                    : activeRecord.is_archived || group.template?.is_active === false
+                        ? 'archived'
+                        : activeVersionNumber < latestVersionNumber
+                            ? 'older'
+                            : getCostingStatus(activeRecord) !== 'verified' ? 'checked' : null
+                const marginBase = isOpen && activeRecord && !marginReadOnly ? buildDraftStateFromQuote(activeRecord) : null
                 const openGroupDetails = () => onOpenDetails(group.key, group.records.length === 1 ? group.records[0] : null)
                 const handleInspectRecord = (record: QuoteRow) => {
                     onSelectRecord(group.key, record.id)
@@ -684,8 +694,10 @@ function SavedQualityLibraryView({
                                     onEscapeKeyDown={event => { if (tourStep) event.preventDefault(); else onCloseDetails() }}
                                     onOpenAutoFocus={event => { if (tourStep) event.preventDefault() }}
                                     onCloseAutoFocus={event => { if (tourStep) event.preventDefault() }}
-                                    style={{ left: 'calc(50% + clamp(0px, calc((100vw - 1212px) / 2), calc(var(--shell-sidebar-w) / 2)))' }}
-                                    className="w-[calc(100vw-2rem)] max-h-[calc(100dvh-2rem)] max-w-[calc(100vw-2rem)] gap-0 overflow-hidden p-0 sm:w-[calc(100vw-2rem)] sm:max-h-[calc(100dvh-2rem)] sm:max-w-[1180px]"
+                                    // Beside the nav the dialog centres in the content area. On a phone it is a bottom
+                                    // sheet (app/mobile.css) and must keep its own `left: 0`, so the offset is for sm+ only.
+                                    style={{ '--costing-dialog-left': 'calc(50% + clamp(0px, calc((100vw - 1212px) / 2), calc(var(--shell-sidebar-w) / 2)))' } as CSSProperties}
+                                    className="w-[calc(100vw-2rem)] max-h-[calc(100dvh-2rem)] max-w-[calc(100vw-2rem)] gap-0 overflow-hidden p-0 sm:left-[var(--costing-dialog-left)] sm:w-[calc(100vw-2rem)] sm:max-h-[calc(100dvh-2rem)] sm:max-w-[1180px]"
                                 >
                                     <div className="max-h-[calc(100dvh-2rem)] min-w-0 overflow-x-hidden overflow-y-auto sm:max-h-[calc(100dvh-2rem)]">
                                         <DialogHeader className="relative sticky top-0 z-20 border-b border-hairline bg-surface px-5 py-4 pr-16 sm:px-6 sm:pr-16">
@@ -756,6 +768,19 @@ function SavedQualityLibraryView({
                                         </div>
                                     ) : (
                                         <div className="grid gap-4 ">
+                                            <CostingMarginScope
+                                                key={activeRecord.id}
+                                                base={marginBase}
+                                                saved={latestResult}
+                                                readOnly={marginReadOnly}
+                                                versionNumber={activeVersionNumber}
+                                                latestVersionNumber={latestVersionNumber}
+                                                isSample={isSampleRecordId(activeRecord.id)}
+                                                costLabel={t('common.production_cost_per_m')}
+                                                priceLabel={t('common.suggested_selling_price_per_m')}
+                                                onSave={(marginPct, clientRequestId) => onSaveMargin(activeRecord, group.key, marginPct, clientRequestId)}
+                                            >
+                                            {({ paused, pausedTitle, economics }) => (
                                             <section data-costing-tour="breakdown" className="rounded-xl border border-hairline bg-surface p-4">
                                                 <div className="flex flex-wrap items-start justify-between gap-3">
                                                     <div>
@@ -763,17 +788,19 @@ function SavedQualityLibraryView({
                                                         <p className="mt-0.5 text-[13px] text-muted-foreground">{`Version ${Number(activeRecord.version_number ?? 1)} · ${formatTimestampDate(activeRecord.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}`}</p>
                                                     </div>
                                                     <div data-costing-tour="reuse" className="flex flex-wrap gap-2">
-                                                        {!activeRecord.is_archived && group.template?.is_active !== false && <Button size="sm" onClick={() => onOpen(activeRecord)} disabled={updatingId === activeRecord.id} aria-busy={updatingId === activeRecord.id} className="rounded-lg bg-loom font-medium text-white hover:bg-loom-elevated hover:text-white"><ArrowRight className="h-3.5 w-3.5" /> {t('tourControls.savedCostings.use')}</Button>}
-                                                        <Button variant="outline" size="sm" onClick={() => onStartFrom(activeRecord)}><Copy className="h-3.5 w-3.5" /> {tx('Duplicate')}</Button>
-                                                        <Button variant="outline" size="sm" onClick={() => onExport(activeRecord)}><Download className="h-3.5 w-3.5" /> {tx('Export')}</Button>
-                                                        <Button variant="outline" size="sm" onClick={() => onSaveAsNewQuality(activeRecord)}><BookmarkPlus className="h-3.5 w-3.5" /> {tx('Save as separate quality')}</Button>
+                                                        {!activeRecord.is_archived && group.template?.is_active !== false && <Button size="sm" onClick={() => onOpen(activeRecord)} disabled={paused || updatingId === activeRecord.id} title={pausedTitle} aria-busy={updatingId === activeRecord.id} className="rounded-lg bg-loom font-medium text-white hover:bg-loom-elevated hover:text-white"><ArrowRight className="h-3.5 w-3.5" /> {t('tourControls.savedCostings.use')}</Button>}
+                                                        <Button variant="outline" size="sm" onClick={() => onStartFrom(activeRecord)} disabled={paused} title={pausedTitle}><Copy className="h-3.5 w-3.5" /> {tx('Duplicate')}</Button>
+                                                        <Button variant="outline" size="sm" onClick={() => onExport(activeRecord)} disabled={paused} title={pausedTitle}><Download className="h-3.5 w-3.5" /> {tx('Export')}</Button>
+                                                        <Button variant="outline" size="sm" onClick={() => onSaveAsNewQuality(activeRecord)} disabled={paused} title={pausedTitle}><BookmarkPlus className="h-3.5 w-3.5" /> {tx('Save as separate quality')}</Button>
                                                         {canUseProductionPipeline && isStandaloneCosting(activeRecord.record_kind) && !activeRecord.is_archived && (
                                                             <Link
                                                                 prefetch={tourStep ? false : undefined}
                                                                 data-costing-tour="production"
                                                                 href={`/owner/production?tab=jobs&costingId=${encodeURIComponent(activeRecord.id)}`}
-                                                                onClick={() => trackPlanEvent('production_cta_clicked', { source: 'saved_costing_breakdown' })}
-                                                                className="inline-flex h-9 items-center gap-1.5 rounded-md border border-saffron/30 bg-saffron-soft px-3 text-xs font-semibold text-saffron-deep hover:bg-saffron-soft/80"
+                                                                onClick={event => { if (paused) event.preventDefault(); else trackPlanEvent('production_cta_clicked', { source: 'saved_costing_breakdown' }) }}
+                                                                aria-disabled={paused || undefined}
+                                                                title={pausedTitle}
+                                                                className={cn('inline-flex h-9 items-center gap-1.5 rounded-md border border-saffron/30 bg-saffron-soft px-3 text-xs font-semibold text-saffron-deep hover:bg-saffron-soft/80', paused && 'pointer-events-none opacity-50')}
                                                             >
                                                                 <Factory className="h-3.5 w-3.5" /> {tx('Activate for Production')}
                                                             </Link>
@@ -815,11 +842,7 @@ function SavedQualityLibraryView({
                                                         </div>
                                                     ))}
                                                 </div>
-                                                <div data-costing-tour="economics" className="mt-3 grid overflow-hidden rounded-xl border border-hairline sm:grid-cols-3">
-                                                    <div className="p-4"><p className="text-[13px] text-muted-foreground">{t('common.production_cost_per_m')}</p><p className="mt-1.5 text-2xl font-semibold tracking-[-0.02em] text-ink tabular-nums">₹{latestResult.productionCostPerM.toFixed(2)}<span className="ml-0.5 text-sm font-medium tracking-normal text-muted-foreground">/m</span></p></div>
-                                                    <div className="border-t border-hairline p-4 sm:border-l sm:border-t-0"><p className="text-[13px] text-muted-foreground">{t('common.suggested_selling_price_per_m')}</p><p className="mt-1.5 text-2xl font-semibold tracking-[-0.02em] text-ink tabular-nums">₹{latestResult.suggestedSellingPricePerM.toFixed(2)}<span className="ml-0.5 text-sm font-medium tracking-normal text-muted-foreground">/m</span></p></div>
-                                                    <div className="border-t border-hairline p-4 sm:border-l sm:border-t-0"><p className="text-[13px] text-muted-foreground">Actual Margin</p><p className={cn('mt-1.5 text-2xl font-semibold tracking-[-0.02em] tabular-nums', marginTone(latestResult.actualMarginPct))}>{latestResult.actualMarginPct.toFixed(1)}%</p></div>
-                                                </div>
+                                                <div data-costing-tour="economics" className="mt-3">{economics}</div>
                                                 {getCostingStatus(activeRecord) !== 'verified' && (
                                                     <div className="mt-3 flex flex-col gap-3 rounded-lg border border-warning/25 bg-warning-soft px-3 py-3 text-xs text-warning sm:flex-row sm:items-center sm:justify-between">
                                                         <div><p className="font-bold">{tx('Saved costing needs a check')}</p><p className="mt-1">{tx(activeRecord.reconciliation_note || getCostingTrustCopy(getCostingStatus(activeRecord)))}</p></div>
@@ -829,6 +852,8 @@ function SavedQualityLibraryView({
                                                     </div>
                                                 )}
                                             </section>
+                                            )}
+                                            </CostingMarginScope>
 
                                         </div>
                                     )}
@@ -1274,6 +1299,63 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
         }
     }
 
+    // The breakdown's margin slider saves through the same action as a Cost Estimate
+    // edit, so a new margin is a new version (v+1) and every earlier version keeps its
+    // numbers. Cost and price are recomputed by the server from the saved inputs.
+    const saveCostingMargin = async (record: QuoteRow, groupKey: string, marginPct: number, clientRequestId: string) => {
+        const copy = costingMarginText[language]
+        if (isSampleRecordId(record.id)) {
+            toast.info(tx('This is a sample costing for exploration.'))
+            return false
+        }
+        if (typeof navigator !== 'undefined' && !navigator.onLine) {
+            toast.error(copy.offline)
+            return false
+        }
+        try {
+            const linkedOrder = getLinkedOrder(record)
+            const estimate = { ...buildDraftStateFromQuote(record), profitPct: marginPct }
+            const result = buildCostingResult(estimate, calcFullTotals(estimate))
+            const response = await saveEstimatorQuoteV3({
+                clientRequestId,
+                partyName: record.party_name,
+                qualityLabel: record.quality_label || '',
+                warpInstruction: record.warp_instruction || linkedOrder?.warp_instruction || undefined,
+                weftInstruction: record.weft_instruction || linkedOrder?.weft_instruction || undefined,
+                estimate,
+                totalProductionCostPerM: result.productionCostPerM,
+                quotePricePerM: result.suggestedSellingPricePerM,
+                status: record.status,
+                recordKind: 'costing',
+                sourceQuoteId: record.id,
+                expectedSourceUpdatedAt: record.updated_at,
+                templateId: record.template_id ?? undefined,
+                // The inputs are unchanged, so the version keeps the factory baseline they came from.
+                factoryProfileUpdatedAt: record.factory_profile_updated_at ?? undefined,
+            })
+            if (!('success' in response) || !response.success || !response.quoteId) {
+                const message = userFacingError('error' in response ? response.error : null, '')
+                toast.error(message ? tx(message) : copy.saveFailed)
+                return false
+            }
+            const values = { n: response.versionNumber ?? Number(record.version_number ?? 1) + 1, pct: `${marginPct.toFixed(1)}%` }
+            const detail = await getEstimatorQuoteDetail(response.quoteId)
+            if (!detail.data) {
+                toast.success(fillCopy(copy.savedReload, values))
+                return true
+            }
+            const created = detail.data as unknown as QuoteRow
+            setQuotes(current => [created, ...current.filter(item => item.id !== created.id)])
+            selectRecord(groupKey, created.id)
+            toast.success(fillCopy(copy.saved, values))
+            return true
+        } catch (error) {
+            console.error('Failed to save the margin as a new costing version:', error)
+            toast.error(tx(userFacingError(error, copy.saveFailed)))
+            return false
+        }
+    }
+
     const restoreQuoteToEstimator = (quote: QuoteRow, mode: 'edit' | 'duplicate' = 'edit') => {
         try {
             const draftKey = getEstimatorDraftStorageKey(orgId, userId)
@@ -1651,7 +1733,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                 <div className="space-y-3 xl:pr-[192px]">
                     <p className="rounded-lg border border-hairline bg-surface-soft px-3 py-2 text-sm font-semibold text-ink" data-i18n-skip="true" lang={language}>{tourCommonCopy[language].sampleBanner}</p>
                     <SavedQualityLibraryView
-                    selectedRecordIdByGroup={{}} onSelectRecord={() => {}}
+                    selectedRecordIdByGroup={{}} onSelectRecord={() => {}} onSaveMargin={async () => false}
                         groups={tourGroups} canUseProductionPipeline={canUseProductionPipeline}
                         openKey={tourSurface === 'library' ? 'tour-preview' : null}
                         tourStep={tourStep} comparisonMode={tourStep === 'compareSelect'}
@@ -1707,7 +1789,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     <div data-costing-tour="sample" className="space-y-3">
                         <p className="rounded-lg border border-hairline bg-surface-soft px-3 py-2 text-sm font-semibold text-ink" data-i18n-skip="true" lang={language}>{tourCommonCopy[language].sampleBanner}</p>
                         <SavedQualityLibraryView
-                            selectedRecordIdByGroup={selectedRecordIdByGroup} onSelectRecord={selectRecord}
+                            selectedRecordIdByGroup={selectedRecordIdByGroup} onSelectRecord={selectRecord} onSaveMargin={saveCostingMargin}
                             groups={tourGroups}
                             canUseProductionPipeline={canUseProductionPipeline}
                             openKey={openQualityKey}
@@ -1764,7 +1846,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                 />
             ) : (
                 <SavedQualityLibraryView
-                    selectedRecordIdByGroup={selectedRecordIdByGroup} onSelectRecord={selectRecord}
+                    selectedRecordIdByGroup={selectedRecordIdByGroup} onSelectRecord={selectRecord} onSaveMargin={saveCostingMargin}
                     groups={qualityGroups}
                     canUseProductionPipeline={canUseProductionPipeline}
                     openKey={openQualityKey}

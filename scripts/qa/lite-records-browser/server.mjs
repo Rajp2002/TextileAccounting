@@ -11,6 +11,7 @@ const server = await createServer({ root, cacheDir: '/tmp/weavly-lite-records-vi
   { find: '../estimator/actions', replacement: stub },
   { find: '@/app/(dashboard)/owner/estimator/actions', replacement: stub },
   { find: './actions', replacement: stub },
+  { find: '@/app/(dashboard)/owner/settings/document-branding-actions', replacement: stub },
   { find: '@/app/actions/tour-preferences', replacement: stub },
   { find: '@/lib/plan-analytics', replacement: stub },
   { find: 'next/link', replacement: stub },

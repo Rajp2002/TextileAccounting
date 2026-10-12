@@ -64,7 +64,9 @@ describe('Base Estimator Go-readiness hardening', () => {
   it('shows production cost from recipe totals and distinguishes commercial break-even', () => {
     const saved = source('app/(dashboard)/owner/quotes/QuotesClient.tsx')
     expect(saved).toContain('getProductionCostPerM')
-    expect(saved).toContain('latestResult.productionCostPerM')
+    // The breakdown's cost and price tiles render inside the margin control, from the saved result.
+    expect(saved).toContain('saved={latestResult}')
+    expect(source('components/estimator/SavedCostingMargin.tsx')).toContain('shown.productionCostPerM')
     expect(saved).toContain("['Break-even selling price'")
   })
 
