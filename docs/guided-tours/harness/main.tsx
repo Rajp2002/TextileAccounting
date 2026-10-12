@@ -18,7 +18,7 @@ if (params.get('fresh') === '1') { try { Object.keys(localStorage).filter(k => k
 ;(window as any).__harnessPath = params.get('path') ?? {
   production: '/owner/production', 'daily-sheet': '/owner/production/daily-sheet', 'fabric-stock': '/owner/stock', 'yarn-stock': '/owner/stock/yarn', dispatch: '/owner/dispatches',
   payroll: '/owner/payroll', 'payroll-extra': '/owner/payroll', 'payroll-records': '/owner/payroll', machines: '/owner/machines', workers: '/owner/workers', 'workers-salary': '/owner/workers', estimator: '/owner/estimator', 'free-estimator': '/free',
-  rates: '/owner/rates', 'rates-populated': '/owner/rates', quotes: '/owner/quotes', 'quotes-compare': '/owner/quotes', 'free-costings': '/free/costings', assignments: '/owner/assignments',
+  rates: '/owner/rates', 'rates-populated': '/owner/rates', quotes: '/owner/quotes', offer: '/owner/quotes/offer', 'quotes-compare': '/owner/quotes', 'free-costings': '/free/costings', assignments: '/owner/assignments',
 }[scenario]
 // These fixtures use the same path-dependent translation rules as the real app.
 if (['production', 'daily-sheet', 'quotes', 'quotes-compare', 'free-costings', 'dispatch', 'fabric-stock', 'yarn-stock', 'rates', 'rates-populated', 'estimator', 'free-estimator', 'workers', 'workers-salary', 'assignments', 'machines'].includes(scenario)) history.replaceState(null, '', (window as any).__harnessPath + location.search)
@@ -328,7 +328,35 @@ async function PayrollRecordsFixture() {
   return <div data-harness-live="true"><Client initialData={initialData} view="payroll" /></div>
 }
 
+
+// Check an offer (2026-10-12 refinement): the owner's test quality plus a few others, one needing a recalculation.
+async function OfferFixture() {
+  const { default: C } = await import('@/app/(dashboard)/owner/quotes/offer/OfferCheckClient')
+  const daysAgo = (n: number) => { const d = new Date(); d.setDate(d.getDate() - n); return d.toISOString() }
+  const stress = (cost: number, yarnUp: number, fixed: number | null) => ({ available: true, fixedOverheadPerM: fixed, cases: [
+    { id: 'yarn-up-10', productionCostPerM: +(cost + yarnUp).toFixed(2), costChangePerM: yarnUp },
+    { id: 'output-down-15', productionCostPerM: fixed == null ? +(cost + 0.84).toFixed(2) : cost, costChangePerM: fixed == null ? 0.84 : 0 },
+  ] })
+  const bases: Record<string, any> = {
+    c1: { costingId: 'c1', qualityLabel: 'D.NO:252/254 MASLIEN SELF BUTTI', versionNumber: 2, savedAt: daysAgo(65), productionCostPerM: 50.71, transportPerM: 0, commissionPct: 0, breakEvenPricePerM: 50.71, sellingPricePerM: 57.95, targetMarginPct: 12.5, quantityM: 1000, stress: stress(50.71, 2.94, 13.25) },
+    c2: { costingId: 'c2', qualityLabel: 'Demo - Signature Polyester', versionNumber: 1, savedAt: daysAgo(21), productionCostPerM: 17.44, transportPerM: 0.5, commissionPct: 2, breakEvenPricePerM: 18.31, sellingPricePerM: 19.82, targetMarginPct: 12, quantityM: null, stress: stress(17.44, 1.12, null) },
+    c3: { costingId: 'c3', qualityLabel: 'D.345', versionNumber: 3, savedAt: daysAgo(12), productionCostPerM: 24.1, transportPerM: 0, commissionPct: 0, breakEvenPricePerM: 24.1, sellingPricePerM: 27.39, targetMarginPct: 12, quantityM: 5000, stress: { available: false } },
+  }
+  const candidates = [
+    { key: 'template:t1', name: 'D.NO:252/254 MASLIEN SELF BUTTI', latestId: 'c1', recordIds: ['c1'], versionNumber: 2, savedAt: daysAgo(65), updatedAt: daysAgo(1), sellingPricePerM: 57.95, checkable: true },
+    { key: 'template:t2', name: 'Demo - Signature Polyester', latestId: 'c2', recordIds: ['c2'], versionNumber: 1, savedAt: daysAgo(21), updatedAt: daysAgo(3), sellingPricePerM: 19.82, checkable: true },
+    { key: 'template:t3', name: 'D.345', latestId: 'c3', recordIds: ['c3'], versionNumber: 3, savedAt: daysAgo(12), updatedAt: daysAgo(5), sellingPricePerM: 27.39, checkable: true },
+    { key: 'label:old', name: 'Old georgette 60gm', latestId: 'c4', recordIds: ['c4'], versionNumber: 1, savedAt: daysAgo(200), updatedAt: daysAgo(200), sellingPricePerM: 31, checkable: false },
+  ]
+  ;(window as any).__harnessFixtures = { getOfferBase: (id: string) => new Promise(resolve => setTimeout(() => resolve(bases[id] ? { data: { ok: true, base: bases[id] } } : { data: { ok: false, reason: 'not_checked' } }), Number(params.get('delay') ?? 400))) }
+  if (params.get('empty') === '1') return <C candidates={[]} loadError={false} initialKey={null} initialBase={null} />
+  if (params.get('error') === '1') return <C candidates={[]} loadError initialKey={null} initialBase={null} />
+  const initial = candidates.find(c => c.latestId === params.get('costing')) ?? null
+  return <C candidates={candidates as any} loadError={false} initialKey={initial?.key ?? null} initialBase={initial ? (bases[initial.latestId] ? { ok: true, base: bases[initial.latestId] } : { ok: false, reason: 'not_checked' }) as any : null} />
+}
+
 const scenarios: Record<string, () => Promise<React.ReactElement>> = {
+  offer: OfferFixture,
   'payroll-records': PayrollRecordsFixture,
   foundation: async () => <Foundation />,
   labels: async () => <LabelProbe />,
