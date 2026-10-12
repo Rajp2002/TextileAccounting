@@ -53,6 +53,7 @@ import {
     ChevronDown,
     Download,
     Factory,
+    RefreshCw,
     Sparkles,
     Trash2,
     X,
@@ -503,6 +504,11 @@ function SavedQualityLibraryView({
                 }
 
                 const latestMetrics = latest ? getSavedCostingMetrics(latest) : null
+                // Costings saved before cost and margin were stored keep their
+                // saved price but have no cost. The owner recalculates them
+                // into a new version; the old one is never rewritten.
+                const costNotSaved = latestMetrics != null && latestMetrics.productionCostPerM == null
+                const canReuseLatest = latest != null && !latest.is_archived && group.template?.is_active !== false
                 // The change line compares the costing shown with the version saved before it.
                 const prior = latest
                     ? group.records
@@ -569,9 +575,13 @@ function SavedQualityLibraryView({
                                 <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
                                     <div>
                                         <p className="text-[13px] text-muted-foreground">{copy.cost}</p>
-                                        <p className="mt-1.5 text-4xl font-semibold leading-none tracking-[-0.03em] text-ink tabular-nums">
-                                            {latestMetrics.productionCostPerM == null ? tx('Not available') : <>₹{latestMetrics.productionCostPerM.toFixed(2)}<span className="ml-1 text-base font-medium tracking-normal text-muted-foreground">/m</span></>}
-                                        </p>
+                                        {latestMetrics.productionCostPerM == null ? (
+                                            <p className="mt-1.5 text-2xl font-semibold leading-none text-muted-foreground">{copy.notSaved}</p>
+                                        ) : (
+                                            <p className="mt-1.5 text-4xl font-semibold leading-none tracking-[-0.03em] text-ink tabular-nums">
+                                                ₹{latestMetrics.productionCostPerM.toFixed(2)}<span className="ml-1 text-base font-medium tracking-normal text-muted-foreground">/m</span>
+                                            </p>
+                                        )}
                                     </div>
                                     <dl className="flex gap-7 sm:text-right">
                                         <div>
@@ -580,10 +590,17 @@ function SavedQualityLibraryView({
                                         </div>
                                         <div>
                                             <dt className="text-[13px] text-muted-foreground">{copy.margin}</dt>
-                                            <dd className={cn('mt-1.5 text-lg font-semibold tabular-nums', marginTone(latestMetrics.actualMarginPct))}>{formatCostingPercent(latestMetrics.actualMarginPct)}</dd>
+                                            <dd className={cn('mt-1.5 text-lg font-semibold tabular-nums', marginTone(latestMetrics.actualMarginPct))}>{costNotSaved ? '—' : formatCostingPercent(latestMetrics.actualMarginPct)}</dd>
                                         </div>
                                     </dl>
                                 </div>
+                                {costNotSaved && (
+                                    <p data-costing-recalculate-note="true" className="mt-3 text-[13px] leading-snug text-muted-foreground">
+                                        {canReuseLatest
+                                            ? fillCopy(copy.costNotSavedNote, { n: Number(latest.version_number ?? 1) + 1 })
+                                            : copy.costNotSavedReadOnly}
+                                    </p>
+                                )}
                                 {costChange && Math.abs(costChange.difference) >= 0.005 && prior && (
                                     <p className="mt-2 text-[13px] tabular-nums">
                                         <span className={cn('font-semibold', costChange.difference > 0 ? 'text-[var(--wv-ochre-800)]' : 'text-[var(--wv-moss-700)]')}>
@@ -637,11 +654,21 @@ function SavedQualityLibraryView({
                             >
                                 {copy.breakdown}
                             </Button>
-                            {latest && !latest.is_archived && group.template?.is_active !== false && (
+                            {latest && canReuseLatest && (costNotSaved ? (
+                                <Button
+                                    type="button"
+                                    onClick={() => onOpen(latest)}
+                                    disabled={updatingId === latest.id}
+                                    aria-label={fillCopy(copy.recalculateLabel, { name: group.name })}
+                                    className="h-10 rounded-lg font-semibold max-md:min-h-[44px]"
+                                >
+                                    <RefreshCw className="h-4 w-4" aria-hidden="true" /> {copy.recalculate}
+                                </Button>
+                            ) : (
                                 <Button type="button" variant="outline" onClick={() => onOpen(latest)} disabled={updatingId === latest.id} className={secondaryAction}>
                                     <ArrowRight className="h-4 w-4" aria-hidden="true" /> {t('tourControls.savedCostings.use')}
                                 </Button>
-                            )}
+                            ))}
                             {latest && (
                                 <Button type="button" variant="ghost" onClick={() => onExport(latest)} className={cn('ml-auto', ghostAction)}>
                                     <Download className="h-4 w-4" aria-hidden="true" /> {tx('Export')}
@@ -1274,6 +1301,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                 sourceQuoteStatus: isDuplicate ? undefined : quote.status,
                 sourceState: isDuplicate ? undefined : restoredState,
                 sourceFactoryProfileUpdatedAt: isDuplicate ? undefined : quote.factory_profile_updated_at ?? undefined,
+                sourceCostNotSaved: isDuplicate ? undefined : getProductionCostPerM(quote) == null || undefined,
                 sourceRecordKind: quote.record_kind ?? 'costing',
                 templateId: startsNewBaseQuality ? undefined : quote.template_id ?? undefined,
                 restoreOnEstimatorEntry: true,

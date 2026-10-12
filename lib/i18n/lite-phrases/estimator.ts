@@ -201,6 +201,7 @@ export const ESTIMATOR_PHRASES: LitePhraseRow[] = [
     ["{0} more entries to fix", "{0} और जानकारी ठीक करनी है", "બીજી {0} માહિતી સુધારવાની છે"],
     ["Current factory costs", "अभी के फैक्ट्री खर्च", "હાલના ફેક્ટરી ખર્ચ"],
     ["Changed since v{0}: {1}. Check these changes before saving a new version.", "v{0} के बाद बदला: {1}। नया वर्ज़न सेव करने से पहले ये बदलाव जाँचें।", "v{0} પછી બદલાયું: {1}. નવું વર્ઝન સાચવતા પહેલાં આ ફેરફાર તપાસો."],
+    ["This costing was saved before Weavly kept cost and margin. Check the yarn rates and factory costs below, then save it as v{0}. The older version stays as it was saved.", "यह कॉस्टिंग Weavly के लागत और मार्जिन रखने से पहले सेव हुई थी। नीचे यार्न रेट और फैक्ट्री खर्च जाँचें, फिर इसे v{0} के रूप में सेव करें। पुराना वर्ज़न जैसा सेव हुआ था वैसा ही रहेगा।", "આ કોસ્ટિંગ Weavly ખર્ચ અને માર્જિન સાચવતું થયું તે પહેલાં સાચવેલી છે. નીચે યાર્નના ભાવ અને ફેક્ટરી ખર્ચ તપાસો, પછી તેને v{0} તરીકે સાચવો. જૂનું વર્ઝન જેમ સાચવ્યું હતું તેમ જ રહેશે."],
     ["Nothing has changed since v{0}. Saving again keeps the same version and does not make a copy.", "v{0} के बाद कुछ नहीं बदला। फिर सेव करने पर वही वर्ज़न रहेगा, कॉपी नहीं बनेगी।", "v{0} પછી કંઈ બદલાયું નથી. ફરી સાચવવાથી એ જ વર્ઝન રહેશે, કૉપી નહીં બને."],
     ["The quotation stays {0} until you change its status.", "स्टेटस बदलने तक कोटेशन {0} ही रहेगा।", "સ્ટેટસ બદલો ત્યાં સુધી ક્વોટેશન {0} જ રહેશે."],
     ["Break-even floor", "ब्रेक-ईवन न्यूनतम भाव", "બ્રેક-ઈવન લઘુતમ ભાવ"],
