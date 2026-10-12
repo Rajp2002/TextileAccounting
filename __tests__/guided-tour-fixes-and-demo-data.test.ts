@@ -98,6 +98,14 @@ describe('Saved Costings Dialog Centering & Sample Pre-population', () => {
         expect(quotesClientSource).toContain("tx('Dismiss')")
     })
 
+    it('offers delete on the sample costing card outside the tour, like the sample yarn card', () => {
+        expect(quotesClientSource).toContain('const handleDeleteSampleCosting = () => {')
+        expect(quotesClientSource).toContain("toast.success(tx('Sample costing removed from Saved costings.'))")
+        expect(quotesClientSource).toContain('onDeleteSample={handleDeleteSampleCosting}')
+        expect(quotesClientSource).toContain('onDeleteSample && isSampleRecordId(group.key) && !tourStep')
+        expect(quotesClientSource).toContain('onClick={onDeleteSample}')
+    })
+
     it('supports selecting and comparing tour sample costings in QuotesClient', () => {
         expect(quotesClientSource).toContain('quotes.find(quote => quote.id === id) ?? tourExamples.find(e => e.id === id)')
         const tourExamples = makeSavedCostingTourExamples()

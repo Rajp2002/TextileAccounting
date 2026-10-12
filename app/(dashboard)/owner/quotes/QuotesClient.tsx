@@ -439,6 +439,7 @@ function SavedQualityLibraryView({
     selectedRecordIdByGroup,
     onSelectRecord,
     onSaveMargin,
+    onDeleteSample,
 }: {
     groups: SavedQualityGroup[]
     canUseProductionPipeline: boolean
@@ -465,6 +466,8 @@ function SavedQualityLibraryView({
     /** Saves a what-if margin from the breakdown as the next version; true when it was saved. */
     onSaveMargin: (record: QuoteRow, groupKey: string, marginPct: number, clientRequestId: string) => Promise<boolean>
     tourStep?: SavedCostingStep | null
+    /** Removes the sample costing; the sample card offers it outside the tour, as the sample yarn card does. */
+    onDeleteSample?: () => void
 }) {
     const { t, tx, language } = useTranslation()
     const copy = costingCatalogueText[language]
@@ -564,20 +567,34 @@ function SavedQualityLibraryView({
                                     </p>
                                 )}
                             </div>
-                            {latest && (
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => onToggleFavorite(latest)}
-                                    disabled={updatingId === latest.id}
-                                    aria-pressed={Boolean(latest.is_favorite)}
-                                    aria-label={fillCopy(latest.is_favorite ? copy.removeFavourite : copy.addFavourite, { name: group.name })}
-                                    className="-mr-2 -mt-1.5 h-10 w-10 shrink-0 max-md:h-11 max-md:w-11"
-                                >
-                                    <Star className={cn('h-[18px] w-[18px]', latest.is_favorite ? 'fill-saffron text-saffron-deep' : 'text-muted-foreground')} aria-hidden="true" />
-                                </Button>
-                            )}
+                            <div className="-mr-2 -mt-1.5 flex shrink-0 items-center gap-1">
+                                {onDeleteSample && isSampleRecordId(group.key) && !tourStep && (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={onDeleteSample}
+                                        className="h-10 gap-1.5 px-3 text-xs font-semibold max-md:h-11"
+                                    >
+                                        <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                                        {tx('Delete sample costing')}
+                                    </Button>
+                                )}
+                                {latest && (
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => onToggleFavorite(latest)}
+                                        disabled={updatingId === latest.id}
+                                        aria-pressed={Boolean(latest.is_favorite)}
+                                        aria-label={fillCopy(latest.is_favorite ? copy.removeFavourite : copy.addFavourite, { name: group.name })}
+                                        className="h-10 w-10 shrink-0 max-md:h-11 max-md:w-11"
+                                    >
+                                        <Star className={cn('h-[18px] w-[18px]', latest.is_favorite ? 'fill-saffron text-saffron-deep' : 'text-muted-foreground')} aria-hidden="true" />
+                                    </Button>
+                                )}
+                            </div>
                         </div>
 
                         {latest && latestMetrics ? (
@@ -1004,6 +1021,12 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             localStorage.setItem(DEMO_COSTING_STORAGE_KEY, 'true')
         } catch {}
     }, [])
+
+    // The sample card's own delete: the same removal as the banner, with a confirmation toast like the sample yarn card.
+    const handleDeleteSampleCosting = () => {
+        handleDeleteDemoCosting()
+        toast.success(tx('Sample costing removed from Saved costings.'))
+    }
 
     const router = useRouter()
     const [quotes, setQuotes] = useState<QuoteRow[]>(initialQuotes)
@@ -1811,6 +1834,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                             auditingId={updatingId}
                             onToggleFavorite={() => { toast.info(tx('This is a sample costing for exploration.')) }}
                             onToggleArchived={() => { toast.info(tx('This is a sample costing for exploration.')) }}
+                            onDeleteSample={handleDeleteSampleCosting}
                             onEnsureDetail={ensureQuoteDetail}
                             factoryInputsCapturedLabel={t('estimator.sprint1.baseline_captured')}
                         />
