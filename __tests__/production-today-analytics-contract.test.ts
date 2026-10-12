@@ -167,3 +167,19 @@ describe('Production overview: today analytics', () => {
         expect(production.vsYesterday).toContain('{meters}')
     })
 })
+
+describe('production overview loom rows scroll region', () => {
+    const chart = readFileSync('app/(dashboard)/owner/production/BaseProductionLoomChart.tsx', 'utf8')
+    const mobileCss = readFileSync('app/mobile.css', 'utf8')
+
+    it('fits the loom rows to the window so only the rows scroll', () => {
+        expect(chart).toContain("fitRegionToWindow('--loom-rows-fit')")
+        const region = chart.match(/ref=\{fitRowsToWindow\}[\s\S]*?'(production-loom-rows [^']+)'/)
+        expect(region?.[1]).toContain('overflow-y-auto')
+        expect(region?.[1]).toContain('max-h-[max(12rem,var(--loom-rows-fit,')
+    })
+
+    it('keeps phones on the page scroll', () => {
+        expect(mobileCss).toMatch(/\.production-loom-rows \{\s*height: auto;\s*max-height: none;\s*overflow-y: visible;/)
+    })
+})
