@@ -207,7 +207,8 @@ describe('thin assignment route and client parity', () => {
             return tree
         }))
         expect(html).toContain('href="/owner/production/daily-sheet?date=2026-10-01&amp;shift=night"')
-        expect(html).toContain('Localized: Worker–Machine Assignments')
+        // The visible title belongs to the workspace's PageHeader; the client must not add a second one.
+        expect(html).not.toContain('<h1')
         expect(fixture.title).toHaveBeenCalledWith('Localized: Worker–Machine Assignments | Weavly')
     })
 
