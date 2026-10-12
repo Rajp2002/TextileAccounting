@@ -1,4 +1,4 @@
-import {getFreeGrant} from '@/lib/free-account'
+import { getFreeGrant, hasSavedFreeCostings } from '@/lib/free-account'
 import SavedFreeCostings from '@/app/free/costings/SavedFreeCostings'
 import { getEstimatorQuotes, getEstimatorTemplates } from '../estimator/actions'
 import QuotesClient from './QuotesClient'
@@ -36,7 +36,10 @@ export default async function QuotesPage(props: { searchParams: Promise<{ status
     const { user, profile } = auth
     const canUseProductionPipeline = hasCapability(planAccess.effectiveTier, 'production')
 
-    const previousFreeGrant = await getFreeGrant(profile.org_id)
+    const freeGrant = await getFreeGrant(profile.org_id)
+    // Only real Free records earn the history block; a trial's dormant grant
+    // would otherwise render an empty Free list with its demo example.
+    const previousFreeGrant = freeGrant && await hasSavedFreeCostings(profile.org_id, freeGrant.subjectId)
     return (<>
         {previousFreeGrant && (planAccess.effectiveTier === 'lite'
             ? <LitePriorFreeHistory><SavedFreeCostings embedded idPrefix="lite-prior-" /></LitePriorFreeHistory>

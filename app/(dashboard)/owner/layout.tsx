@@ -11,7 +11,7 @@ import { createPerfTimer } from '@/lib/perf'
 import { getCachedOrgPlanAccess } from '@/lib/subscription'
 import { hasOwnerArchiveAccess } from '@/lib/subscription-access'
 import { OwnerPlanProvider } from '@/components/providers/owner-plan-provider'
-import { TrialBanner } from '@/components/billing/TrialBanner'
+import { TrialNudge } from '@/components/billing/TrialNudge'
 import { createSignInServerTimerFromCookie } from '@/lib/sign-in-telemetry.server'
 import { getRateReviewStatus } from '@/lib/cost-rates'
 import { getCachedOwnerOrganization } from '@/lib/owner-organization'
@@ -131,11 +131,7 @@ async function OwnerRouteBoundary({ children }: { children: React.ReactNode }) {
     return (
         <OwnerPlanProvider access={planAccess}>
             <AuthBoundaryCleanup scope={cacheScope} />
-            {planAccess.trialEndsAt ? (
-                <div className="mb-4">
-                    <TrialBanner endsAt={planAccess.trialEndsAt} />
-                </div>
-            ) : null}
+            {planAccess.trialEndsAt ? <TrialNudge endsAt={planAccess.trialEndsAt} /> : null}
             {children}
         </OwnerPlanProvider>
     )

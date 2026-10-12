@@ -161,7 +161,8 @@ export default function SavedFreeCostings({ userId, orgId, userMetadata, embedde
   }
 
   const tourSampleActive = tourStep !== null && !isSavedCostingHandoff(tourStep)
-  const showDemoCard = (!demoDeleted && rows.length === 0) || tourSampleActive
+  // Embedded Free history sits under the Lite page, which has its own tour sample.
+  const showDemoCard = (!embedded && !demoDeleted && rows.length === 0) || tourSampleActive
 
   const filteredRows = useMemo(() => {
     let list = [...rows]

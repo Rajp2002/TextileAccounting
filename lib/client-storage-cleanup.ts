@@ -123,6 +123,8 @@ export async function clearLegacyOfflineMutationQueue() {
 function clearLegacySessionStorage(storage: Storage, preservePwaSession: boolean) {
     const keysToRemove = [
         ...(preservePwaSession ? [] : ['weavly_pwa_session_alive']),
+        // The Lite trial nudge shows once per sign-in (components/billing/TrialNudge.tsx).
+        'weavly_trial_nudge_shown_at',
     ].filter((key) => !TRANSITION_STORAGE_KEYS.has(key))
 
     for (const key of keysToRemove) storage.removeItem(key)
