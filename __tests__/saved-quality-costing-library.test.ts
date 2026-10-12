@@ -141,5 +141,15 @@ describe('saved quality costing library', () => {
     expect(client).toContain('Active breakdown')
     expect(client).toContain('selectedRecordIdByGroup')
   })
-})
 
+  it('lists favourites first then newest, and scrolls only the card list on wide screens', () => {
+    const client = read('app/(dashboard)/owner/quotes/QuotesClient.tsx')
+    const css = read('app/globals.css')
+
+    expect(client).toContain('Number(b.records[0]?.is_favorite === true) - Number(a.records[0]?.is_favorite === true)')
+    expect(client).toContain('favouriteOrder || Date.parse(b.updatedAt) - Date.parse(a.updatedAt)')
+    expect(client).toContain('<div className="saved-costings-scroll">')
+    expect(css).toMatch(/\.saved-costings-workspace \{[^}]*height: calc\(100svh/)
+    expect(css).toMatch(/\.saved-costings-scroll \{[^}]*overflow-y: auto/)
+  })
+})
