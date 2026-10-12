@@ -75,6 +75,27 @@ describe('Machine Operational Readiness Business Logic', () => {
     expect(readiness.costingLabel).toBeNull()
   })
 
+  it('marks a machine the owner made unavailable as inactive even with worker and costing', () => {
+    const machine: BaseProductionMachineWithReadiness = {
+      ...baseMachine,
+      is_active: false,
+      inactive_reason: '  Under repair  ',
+      assignedWorkerName: 'Ramesh Patel',
+      assignedCostingLabel: 'Quality 60x60 Cotton',
+    }
+
+    const readiness = getMachineReadiness(machine)
+    expect(readiness.isActive).toBe(false)
+    expect(readiness.status).toBe('inactive')
+    expect(readiness.inactiveReason).toBe('Under repair')
+  })
+
+  it('has no inactive reason while the machine is available', () => {
+    const readiness = getMachineReadiness({ ...baseMachine, inactive_reason: 'stale', assignedWorkerName: 'R', assignedCostingLabel: 'Q' })
+    expect(readiness.status).toBe('active')
+    expect(readiness.inactiveReason).toBeNull()
+  })
+
   it('honors boolean overrides hasWorker and hasCosting when provided', () => {
     const machine: BaseProductionMachineWithReadiness = {
       ...baseMachine,

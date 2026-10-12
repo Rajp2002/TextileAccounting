@@ -53,7 +53,7 @@ export const machinesTutorialCopy: Record<Language, MachinesCopy> = {
         help: [
             ['Find a loom', 'Search by name, custom label, type, worker or costing. All machines shows the full register; Active requires worker and costing assignments effective today. Needs setup finds a missing assignment. Check each shift in Machine Assignments.'],
             ['Edit details', 'Use Edit to change name, type or custom label. A name is required when editing. The original machine name remains searchable even when a custom label appears on the card.'],
-            ['Availability is separate', 'In Edit, clear Available for new assignments and daily context to stop offering the loom for new worker or quality assignments. This does not change its Active readiness badge or erase existing assignments.'],
+            ['Availability is separate', 'In Edit, clear Available for new assignments and daily context to stop offering the loom for new worker or quality assignments. Give a short reason before saving; the card then shows an Inactive badge with that reason. Existing assignments are not erased.'],
             ['Review one loom', 'View assignment on a card opens Machine Assignments filtered to that loom. If its quality is missing, complete Production setup first using the link above.'],
         ],
     },
@@ -97,7 +97,7 @@ export const machinesTutorialCopy: Record<Language, MachinesCopy> = {
         help: [
             ['લૂમ શોધો', 'નામ, કસ્ટમ લેબલ, પ્રકાર, કારીગર કે કોસ્ટિંગથી શોધો. બધા મશીનો આખું રજિસ્ટર બતાવે છે; સક્રિય માટે આજે લાગુ કારીગર અને કોસ્ટિંગ જરૂરી છે. ગોઠવણી જરૂરીમાં ખૂટતી ફાળવણી મળે છે. મશીન ફાળવણીમાં દરેક શિફ્ટ તપાસો.'],
             ['વિગતો બદલો', 'નામ, પ્રકાર કે કસ્ટમ લેબલ બદલવા સંપાદન પસંદ કરો. સંપાદન વખતે નામ જરૂરી છે. કાર્ડ પર કસ્ટમ લેબલ હોય તોપણ મૂળ મશીનના નામથી શોધી શકો છો.'],
-            ['ઉપલબ્ધતા અલગ છે', 'સંપાદનમાં નવી ફાળવણી અને દૈનિક સંદર્ભ માટે ઉપલબ્ધનું ચિહ્ન દૂર કરો, જેથી નવી કારીગર કે ક્વોલિટી ફાળવણીમાં લૂમ ન મળે. તેનાથી સક્રિય તૈયારી બેજ બદલાતો નથી કે હાલની ફાળવણી દૂર થતી નથી.'],
+            ['ઉપલબ્ધતા અલગ છે', 'સંપાદનમાં નવી ફાળવણી અને દૈનિક સંદર્ભ માટે ઉપલબ્ધનું ચિહ્ન દૂર કરો, જેથી નવી કારીગર કે ક્વોલિટી ફાળવણીમાં લૂમ ન મળે. સાચવતા પહેલાં ટૂંકું કારણ લખો; કાર્ડ પર નિષ્ક્રિય બેજ અને તે કારણ દેખાશે. હાલની ફાળવણી દૂર થતી નથી.'],
             ['એક લૂમની ફાળવણી જુઓ', 'કાર્ડ પર ફાળવણી જુઓ આ લૂમ માટે ફિલ્ટર કરેલું મશીન ફાળવણી બોર્ડ ખોલે છે. ક્વોલિટી ખૂટે તો ઉપરની લિંકથી પહેલાં Production ગોઠવણી કરો.'],
         ],
     },
@@ -141,7 +141,7 @@ export const machinesTutorialCopy: Record<Language, MachinesCopy> = {
         help: [
             ['लूम खोजें', 'नाम, कस्टम लेबल, प्रकार, कारीगर या कॉस्टिंग से खोजें। सभी मशीनें पूरा रजिस्टर दिखाता है; सक्रिय के लिए आज लागू कारीगर और कॉस्टिंग चाहिए। सेटअप आवश्यक में अधूरा आवंटन मिलता है। मशीन आवंटन में हर शिफ्ट जाँचें।'],
             ['विवरण बदलें', 'नाम, प्रकार या कस्टम लेबल बदलने के लिए संपादन चुनें। संपादन में नाम ज़रूरी है। कार्ड पर कस्टम लेबल होने पर भी मूल मशीन नाम से खोज सकते हैं।'],
-            ['उपलब्धता अलग है', 'संपादन में नए आवंटन और दैनिक संदर्भ के लिए उपलब्ध का निशान हटाएँ ताकि नए कारीगर या क्वालिटी आवंटन में लूम न आए। इससे सक्रिय तैयारी बैज नहीं बदलता और मौजूदा आवंटन नहीं मिटते।'],
+            ['उपलब्धता अलग है', 'संपादन में नए आवंटन और दैनिक संदर्भ के लिए उपलब्ध का निशान हटाएँ ताकि नए कारीगर या क्वालिटी आवंटन में लूम न आए। सहेजने से पहले छोटा कारण लिखें; कार्ड पर निष्क्रिय बैज और वह कारण दिखेगा। मौजूदा आवंटन नहीं मिटते।'],
             ['एक लूम का आवंटन देखें', 'कार्ड पर आवंटन देखें इस लूम के लिए फ़िल्टर किया हुआ मशीन आवंटन बोर्ड खोलता है। क्वालिटी गायब हो तो ऊपर के लिंक से पहले Production सेटअप पूरा करें।'],
         ],
     },

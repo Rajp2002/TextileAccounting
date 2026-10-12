@@ -19,6 +19,7 @@ export function MachineCard({ machine, onEdit, tourPreview = false }: MachineCar
   const { tx } = useTranslation()
   const readiness = getMachineReadiness(machine)
   const displayName = machine.custom_label || machine.name
+  const isInactive = readiness.status === 'inactive'
   const formattedType = machine.machine_type ? machine.machine_type.replaceAll('_', ' ') : ''
 
   return (
@@ -27,7 +28,7 @@ export function MachineCard({ machine, onEdit, tourPreview = false }: MachineCar
       className={cn(
         'group flex h-full flex-col justify-between overflow-hidden rounded-2xl border bg-surface/95 p-4 shadow-[var(--shadow-card)] transition-[border-color,box-shadow,transform] duration-200 sm:p-[18px]',
         'hover:border-saffron/35 hover:shadow-[var(--shadow-panel)] motion-safe:hover:-translate-y-0.5',
-        readiness.isActive ? 'border-hairline/85' : 'border-warning/35'
+        readiness.isActive || isInactive ? 'border-hairline/85' : 'border-warning/35'
       )}
     >
       <div className="space-y-4">
@@ -39,7 +40,9 @@ export function MachineCard({ machine, onEdit, tourPreview = false }: MachineCar
                 'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-colors',
                 readiness.isActive
                   ? 'border-saffron/20 bg-saffron-soft/45 text-saffron-deep'
-                  : 'border-warning/20 bg-warning-soft/55 text-warning'
+                  : isInactive
+                    ? 'border-hairline bg-surface-soft text-subtle'
+                    : 'border-warning/20 bg-warning-soft/55 text-warning'
               )}
               aria-hidden="true"
             >
@@ -108,6 +111,14 @@ export function MachineCard({ machine, onEdit, tourPreview = false }: MachineCar
             </p>
           </div>
         </div>
+
+        {/* Why the owner took the machine out of use */}
+        {isInactive && readiness.inactiveReason && (
+          <p data-machines-inactive-reason data-i18n-skip="true" className="text-xs leading-relaxed text-body">
+            <span className="font-semibold text-subtle">{tx('Reason')}: </span>
+            {readiness.inactiveReason}
+          </p>
+        )}
       </div>
 
       {/* C. Card Actions */}

@@ -81,7 +81,7 @@ export async function loadMachinesRegister(today?: string) {
         jobsResult,
     ] = await Promise.all([
         readCompleteBaseRows((from, to) => db.from('base_production_machines')
-            .select('id, name, machine_type, custom_label, is_active', from === 0 ? { count: 'exact' } : {})
+            .select('id, name, machine_type, custom_label, is_active, inactive_reason', from === 0 ? { count: 'exact' } : {})
             .eq('org_id', orgId).order('is_active', { ascending: false }).order('name').order('id').range(from, to)),
         readCompleteBaseRows((from, to) => db.from('base_worker_machine_assignments')
             .select('id, worker_id, machine_id, shift, active, effective_from, effective_to', from === 0 ? { count: 'exact' } : {})

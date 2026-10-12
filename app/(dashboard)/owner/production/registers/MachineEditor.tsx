@@ -23,9 +23,11 @@ type MachineDraft = {
     machineType: 'jacquard' | 'power_loom' | 'rapier' | 'water_jet' | 'air_jet' | 'circular' | 'other'
     customLabel: string
     isActive: boolean
+    inactiveReason: string
 }
+const MAX_INACTIVE_REASON = 200
 function emptyMachineDraft(): MachineDraft {
-    return { name: '', machineType: 'other', customLabel: '', isActive: true }
+    return { name: '', machineType: 'other', customLabel: '', isActive: true, inactiveReason: '' }
 }
 const NO_NAMES: readonly string[] = []
 const BULK_SUBMIT_ID = 'base-bulk-submit'
@@ -48,13 +50,14 @@ export default function MachineEditor({ initialOpen = false, returnTo, existingN
  const { tx } = useTranslation()
  const [open, setOpen] = useState(initialOpen || Boolean(tourPreview))
  const [editingMachineId, setEditingMachineId] = useState<string | null>(tourPreview?.editing ? tourPreview.machine.id : null)
- const [machineDraft, setMachineDraft] = useState<MachineDraft>(() => tourPreview ? { name: tourPreview.machine.name, machineType: tourPreview.machine.machine_type as MachineDraft['machineType'], customLabel: tourPreview.machine.custom_label ?? '', isActive: tourPreview.machine.is_active } : emptyMachineDraft())
+ const [machineDraft, setMachineDraft] = useState<MachineDraft>(() => tourPreview ? { name: tourPreview.machine.name, machineType: tourPreview.machine.machine_type as MachineDraft['machineType'], customLabel: tourPreview.machine.custom_label ?? '', isActive: tourPreview.machine.is_active, inactiveReason: tourPreview.machine.inactive_reason ?? '' } : emptyMachineDraft())
  const [original, setOriginal] = useState(() => JSON.stringify(emptyMachineDraft()))
  const [pendingAction, setPendingAction] = useState<string | null>(null)
  const [bulk, setBulk] = useState(false)
  const [bulkDraft, setBulkDraft] = useState<BulkMachinesDraft>(() => emptyBulkMachinesDraft())
  const bulkActive = bulk && !editingMachineId
  const bulkEvaluation = useMemo(() => evaluateBulkMachines(bulkDraft.sections, existingNames), [bulkDraft, existingNames])
+ const reasonMissing = Boolean(editingMachineId) && !machineDraft.isActive && !machineDraft.inactiveReason.trim()
  const dirty = !tourPreview && open && (JSON.stringify(machineDraft) !== original || !isBulkMachinesDraftEmpty(bulkDraft))
  useUnloadProtection(dirty)
  function closeDialog() {
@@ -86,6 +89,7 @@ export default function MachineEditor({ initialOpen = false, returnTo, existingN
             machineType: machine.machine_type as MachineDraft['machineType'],
             customLabel: machine.custom_label ?? '',
             isActive: machine.is_active,
+            inactiveReason: machine.inactive_reason ?? '',
         }
         setMachineDraft(draft)
         setOriginal(JSON.stringify(draft))
@@ -105,6 +109,7 @@ export default function MachineEditor({ initialOpen = false, returnTo, existingN
             return
         }
         if (editingMachineId) {
+            if (reasonMissing) { toast.error(tx('Add a reason before marking this machine unavailable.')); return }
             void runAction(
                 'machine-update',
                 () => updateBaseProductionMachine({
@@ -113,6 +118,7 @@ export default function MachineEditor({ initialOpen = false, returnTo, existingN
                     machineType: machineDraft.machineType,
                     customLabel: machineDraft.customLabel,
                     isActive: machineDraft.isActive,
+                    inactiveReason: machineDraft.isActive ? '' : machineDraft.inactiveReason,
                 }),
                 'Machine updated.',
                 saved,
@@ -149,8 +155,9 @@ export default function MachineEditor({ initialOpen = false, returnTo, existingN
                         <div data-machines-tour-field="type" className="space-y-2"><Label htmlFor="base-machine-type">Machine type</Label><Select value={machineDraft.machineType} onValueChange={(value) => setMachineDraft((current) => ({ ...current, machineType: value as MachineDraft['machineType'] }))}><SelectTrigger id="base-machine-type" className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="jacquard">Jacquard</SelectItem><SelectItem value="power_loom">Power loom</SelectItem><SelectItem value="rapier">Rapier</SelectItem><SelectItem value="water_jet">Water jet</SelectItem><SelectItem value="air_jet">Air jet</SelectItem><SelectItem value="circular">Circular</SelectItem><SelectItem value="other">Other</SelectItem></SelectContent></Select></div>
                         <div data-machines-tour-field="label" className="space-y-2"><Label htmlFor="base-machine-label">Custom label <span className="font-normal text-muted-foreground">(optional)</span></Label><Input id="base-machine-label" value={machineDraft.customLabel} onChange={(event) => setMachineDraft((current) => ({ ...current, customLabel: event.target.value }))} placeholder="e.g. Rapier #1" /></div>
                         {editingMachineId && <SwitchField data-machines-tour-field="availability" className="font-normal" checked={machineDraft.isActive} onCheckedChange={(isActive) => setMachineDraft((current) => ({ ...current, isActive }))}>Available for new assignments and daily context</SwitchField>}
+                        {editingMachineId && !machineDraft.isActive && <div data-machines-tour-field="inactive-reason" className="space-y-2"><Label htmlFor="base-machine-inactive-reason">{tx('Reason for unavailability')}</Label><Input id="base-machine-inactive-reason" autoFocus={!tourPreview} value={machineDraft.inactiveReason} maxLength={MAX_INACTIVE_REASON} required aria-required="true" onChange={(event) => setMachineDraft((current) => ({ ...current, inactiveReason: event.target.value }))} placeholder={tx('e.g. Under repair, waiting for spare parts')} /></div>}
                         </>}
-                        <DialogFooter><Button type="button" variant="outline" onClick={closeDialog}>Cancel</Button><Button id={bulkActive ? BULK_SUBMIT_ID : undefined} type="submit" disabled={pendingAction?.startsWith('machine-') || (bulkActive && !bulkEvaluation.valid)}>{pendingAction?.startsWith('machine-') ? <Loader2 className="h-4 w-4 animate-spin" /> : editingMachineId ? <Edit3 className="h-4 w-4" /> : <Plus className="h-4 w-4" />} {returnTo ? tx('Save and return') : editingMachineId ? 'Save changes' : bulkActive ? bulkSubmitLabel : 'Add machine'}</Button></DialogFooter>
+                        <DialogFooter><Button type="button" variant="outline" onClick={closeDialog}>Cancel</Button><Button id={bulkActive ? BULK_SUBMIT_ID : undefined} type="submit" disabled={pendingAction?.startsWith('machine-') || (bulkActive && !bulkEvaluation.valid) || reasonMissing}>{pendingAction?.startsWith('machine-') ? <Loader2 className="h-4 w-4 animate-spin" /> : editingMachineId ? <Edit3 className="h-4 w-4" /> : <Plus className="h-4 w-4" />} {returnTo ? tx('Save and return') : editingMachineId ? 'Save changes' : bulkActive ? bulkSubmitLabel : 'Add machine'}</Button></DialogFooter>
                     </fieldset></form>
                 </DialogContent>
             </Dialog>

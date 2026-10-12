@@ -1,6 +1,6 @@
 import type { BaseProductionMachine } from './base-production-core'
 
-export type MachineReadinessStatus = 'active' | 'needs_setup'
+export type MachineReadinessStatus = 'active' | 'needs_setup' | 'inactive'
 
 export type MachineReadiness = {
     isActive: boolean
@@ -9,6 +9,7 @@ export type MachineReadiness = {
     workerName: string | null
     costingLabel: string | null
     status: MachineReadinessStatus
+    inactiveReason: string | null
 }
 
 export type BaseProductionMachineWithReadiness = BaseProductionMachine & {
@@ -26,6 +27,9 @@ export type BaseProductionMachineWithReadiness = BaseProductionMachine & {
  * 2. A worker is assigned to that machine.
  *
  * Otherwise, the machine status is NEEDS SETUP.
+ *
+ * A machine the owner marked unavailable (is_active = false) is INACTIVE whatever its
+ * assignments are, and is never active.
  */
 export function getMachineReadiness(machine: BaseProductionMachineWithReadiness): MachineReadiness {
     const hasWorker = typeof machine.hasWorker === 'boolean'
@@ -36,8 +40,9 @@ export function getMachineReadiness(machine: BaseProductionMachineWithReadiness)
         ? machine.hasCosting
         : Boolean(machine.assignedCostingLabel && machine.assignedCostingLabel.trim().length > 0)
 
-    const isActive = hasWorker && hasCosting
-    const status: MachineReadinessStatus = isActive ? 'active' : 'needs_setup'
+    const markedUnavailable = machine.is_active === false
+    const isActive = !markedUnavailable && hasWorker && hasCosting
+    const status: MachineReadinessStatus = markedUnavailable ? 'inactive' : isActive ? 'active' : 'needs_setup'
 
     return {
         isActive,
@@ -46,5 +51,6 @@ export function getMachineReadiness(machine: BaseProductionMachineWithReadiness)
         workerName: machine.assignedWorkerName ?? null,
         costingLabel: machine.assignedCostingLabel ?? null,
         status,
+        inactiveReason: markedUnavailable ? machine.inactive_reason?.trim() || null : null,
     }
 }

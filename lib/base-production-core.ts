@@ -18,6 +18,8 @@ export type BaseProductionMachine = {
     machine_type: string
     custom_label: string | null
     is_active: boolean
+    /** Why the owner marked the machine unavailable; null while it is available. */
+    inactive_reason?: string | null
 }
 
 export type BaseWorkerMachineAssignment = {

@@ -33,6 +33,7 @@ export function normalizeMachine(row: Record<string, unknown>): BaseProductionMa
         machine_type: String(row.machine_type || 'other'),
         custom_label: toStringOrNull(row.custom_label),
         is_active: row.is_active !== false,
+        inactive_reason: toStringOrNull(row.inactive_reason),
         assignedWorkerName: toStringOrNull(row.assignedWorkerName),
         assignedCostingLabel: toStringOrNull(row.assignedCostingLabel),
         hasWorker: typeof row.hasWorker === 'boolean' ? row.hasWorker : undefined,

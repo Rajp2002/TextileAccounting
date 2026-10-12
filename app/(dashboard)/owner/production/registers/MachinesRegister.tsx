@@ -60,7 +60,9 @@ export default function MachinesRegister({
       ? 'active'
       : params.get('status') === 'needs_setup'
         ? 'needs_setup'
-        : 'all'
+        : params.get('status') === 'inactive'
+          ? 'inactive'
+          : 'all'
 
   const [search, setSearch] = useState(initialSearch)
   const [statusFilter, setStatusFilter] = useState<MachineStatusFilter>(initialFilter)
@@ -93,8 +95,7 @@ export default function MachinesRegister({
       const readiness = getMachineReadiness(machine)
 
       // 1. Status filter
-      if (statusFilter === 'active' && !readiness.isActive) return false
-      if (statusFilter === 'needs_setup' && readiness.isActive) return false
+      if (statusFilter !== 'all' && readiness.status !== statusFilter) return false
 
       // 2. Search query filter
       if (!query) return true
@@ -106,6 +107,7 @@ export default function MachinesRegister({
         typeFormatted,
         readiness.workerName ?? '',
         readiness.costingLabel ?? '',
+        readiness.inactiveReason ?? '',
       ]
         .join(' ')
         .toLowerCase()

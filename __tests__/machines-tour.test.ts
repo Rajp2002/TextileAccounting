@@ -28,9 +28,9 @@ describe('Machines tour', () => {
         examples[0].name = 'Changed'
         expect(makeMachinesTourExamples()[0].name).toBe('Sample loom 1')
     })
-    it('keeps availability separate from readiness', () => {
+    it('shows an unavailable machine as inactive and otherwise follows assignments', () => {
         const machine = makeMachinesTourExamples()[0]
-        expect(getMachineReadiness({ ...machine, is_active: false }).status).toBe('active')
+        expect(getMachineReadiness({ ...machine, is_active: false }).status).toBe('inactive')
         expect(getMachineReadiness({ ...machine, hasWorker: false }).status).toBe('needs_setup')
         expect(getMachineReadiness({ ...machine, hasCosting: false }).status).toBe('needs_setup')
     })
