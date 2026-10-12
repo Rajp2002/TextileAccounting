@@ -2,18 +2,25 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useEffect, useId, useMemo, useRef, useState } from 'react'
-import { ArrowLeft, Calculator, FileText, Loader2, TriangleAlert } from 'lucide-react'
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
+import { ArrowLeft, Calculator, FileText, Info, Loader2, RotateCcw, TriangleAlert, type LucideIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { RangeSlider } from '@/components/ui/range-slider'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { EmptyState, PageHeader } from '@/components/ui/page-header'
 import { RouteMilestones } from '@/components/performance/route-milestones'
-import { LOSS_TEXT, Line, OfferCheckResult, metres, percent, rupees } from '@/components/estimator/OfferCheckResult'
+import {
+    LOSS_TEXT,
+    OfferCheckResult,
+    OfferFigurePlaceholder,
+    OfferPriceTrack,
+    metres,
+    rupees,
+} from '@/components/estimator/OfferCheckResult'
 import { useTranslation } from '@/lib/i18n/context'
 import { fillCopy } from '@/lib/i18n/fill'
-import { offerCheckText } from '@/lib/i18n/offer-check'
+import { offerCheckText, type OfferCheckText } from '@/lib/i18n/offer-check'
 import { formatTimestampDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import {
@@ -29,6 +36,71 @@ import {
 import { getOfferBase } from './actions'
 
 type LoadState = 'idle' | 'loading' | 'failed'
+
+const FIELD_LABEL = 'text-[13px] font-medium text-muted-foreground'
+/** The three inputs share one height, 44px everywhere (the root font is 14px, so rem sizes would fall short). */
+const FIELD_HEIGHT = 'h-[44px] min-h-[44px] max-md:min-h-[44px]'
+
+function candidateMeta(copy: OfferCheckText, item: OfferCandidate) {
+    return item.checkable && item.sellingPricePerM != null
+        ? fillCopy(copy.optionLabel, { n: item.versionNumber, price: item.sellingPricePerM.toFixed(2) })
+        : fillCopy(copy.optionRecalc, { n: item.versionNumber })
+}
+
+/** Before a quality is chosen: where the answer will be, and the three things the check asks for. */
+function OfferSteps({ copy }: { copy: OfferCheckText }) {
+    const steps = [copy.stepQuality, copy.stepPrice, copy.stepQuantity]
+    return (
+        <div className="grid gap-8 @2xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] @2xl:gap-12">
+            <OfferFigurePlaceholder copy={copy} />
+            <ol className="space-y-4 @2xl:border-l @2xl:border-hairline @2xl:pl-8">
+                {steps.map((step, index) => (
+                    <li key={step} className="flex items-start gap-3">
+                        <span
+                            aria-hidden="true"
+                            className={cn(
+                                'flex size-6 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold tabular-nums',
+                                index === 0 ? 'bg-ink text-surface' : 'border border-hairline-strong text-muted-foreground',
+                            )}
+                        >
+                            {index + 1}
+                        </span>
+                        <span className={cn('pt-0.5 text-sm leading-snug', index === 0 ? 'font-medium text-ink' : 'text-body')}>{step}</span>
+                    </li>
+                ))}
+            </ol>
+        </div>
+    )
+}
+
+/** A quiet panel for the answers the check cannot give: an icon, what happened, and the way on. */
+function OfferNotice({ icon: Icon, tone, title, body, action, role }: {
+    icon: LucideIcon
+    tone: 'risk' | 'thin'
+    title: string
+    body?: string
+    action?: ReactNode
+    role?: 'alert'
+}) {
+    return (
+        <div role={role} className="flex max-w-xl items-start gap-4">
+            <span
+                aria-hidden="true"
+                className={cn(
+                    'flex size-10 shrink-0 items-center justify-center rounded-full',
+                    tone === 'risk' ? 'bg-[var(--wv-madder-50)] text-[var(--wv-madder-600)]' : 'bg-[var(--wv-ochre-50)] text-[var(--wv-ochre-800)]',
+                )}
+            >
+                <Icon className="size-[18px]" />
+            </span>
+            <div className="min-w-0 pt-1.5">
+                <p className="text-base font-semibold leading-snug text-ink">{title}</p>
+                {body && <p className="mt-1.5 text-sm leading-relaxed text-body">{body}</p>}
+                {action && <div className="mt-4">{action}</div>}
+            </div>
+        </div>
+    )
+}
 
 export default function OfferCheckClient({
     candidates,
@@ -94,24 +166,28 @@ export default function OfferCheckClient({
     )
     const range = useMemo(() => (base ? offerSliderRange(base) : null), [base])
 
-    if (loadError) {
-        return (
-            <div className="ui-route-enter w-full space-y-4 sm:space-y-6" data-offer-check data-i18n-skip="true" lang={language}>
-                <PageHeader title={copy.title} description={copy.intro} />
-                <div role="alert" className="flex flex-wrap items-center gap-3 rounded-xl border border-[var(--wv-madder-200)] bg-[var(--wv-madder-50)] p-4 text-sm text-[var(--wv-madder-600)]">
-                    <TriangleAlert className="size-4 shrink-0" aria-hidden="true" />
-                    <p className="min-w-0 flex-1">{copy.listFailed}</p>
-                    <Button type="button" variant="outline" onClick={() => router.refresh()} className="min-h-10 max-md:min-h-[44px]">{copy.retry}</Button>
-                </div>
-            </div>
-        )
-    }
-
     const backAction = (
         <Button asChild variant="outline" className="min-h-10 rounded-lg border-hairline bg-surface font-semibold text-ink shadow-xs max-md:min-h-[44px]">
             <Link href="/owner/quotes"><ArrowLeft className="size-4" aria-hidden="true" />{copy.back}</Link>
         </Button>
     )
+
+    if (loadError) {
+        return (
+            <div className="ui-route-enter w-full space-y-4 sm:space-y-6" data-offer-check data-i18n-skip="true" lang={language}>
+                <PageHeader title={copy.title} description={copy.intro} actions={backAction} />
+                <div className="rounded-2xl border border-hairline bg-surface p-5 shadow-xs sm:p-8">
+                    <OfferNotice
+                        role="alert"
+                        icon={TriangleAlert}
+                        tone="risk"
+                        title={copy.listFailed}
+                        action={<Button type="button" variant="outline" onClick={() => router.refresh()} className="min-h-10 max-md:min-h-[44px]">{copy.retry}</Button>}
+                    />
+                </div>
+            </div>
+        )
+    }
 
     if (candidates.length === 0) {
         return (
@@ -129,76 +205,97 @@ export default function OfferCheckClient({
 
     const priceInvalid = price.status === 'invalid'
     const quantityInvalid = quantity.status === 'invalid'
-    const fieldClass = 'h-11 rounded-lg border-hairline bg-surface text-base tabular-nums max-md:min-h-[44px]'
     const usableQuantity = base?.quantityM != null && base.quantityM > 0 ? base.quantityM : null
+    const quantityIsUsable = usableQuantity != null && quantity.status === 'ok' && quantity.value === usableQuantity
+    const fieldClass = cn(FIELD_HEIGHT, 'rounded-lg border-hairline bg-surface tabular-nums shadow-xs')
+
+    const track = base && range ? (
+        <OfferPriceTrack
+            base={base}
+            range={range}
+            value={snapOfferToSlider(price.status === 'ok' ? price.value : base.sellingPricePerM, range)}
+            valueText={price.status === 'ok' ? rupees(price.value) : rupees(base.sellingPricePerM)}
+            onValueChange={value => setPriceText(value.toFixed(2))}
+            copy={copy}
+        />
+    ) : null
+
+    const meta = base
+        ? fillCopy(copy.basedOn, { n: base.versionNumber, date: formatTimestampDate(base.savedAt, { day: 'numeric', month: 'short' }), cost: base.productionCostPerM.toFixed(2) })
+        : candidate ? candidateMeta(copy, candidate) : null
 
     return (
         <div className="ui-route-enter w-full space-y-4 sm:space-y-6" data-offer-check data-i18n-skip="true" lang={language}>
             <RouteMilestones route="/owner/quotes" shellVisible primaryUsable secondaryReady />
             <PageHeader title={copy.title} description={copy.intro} actions={backAction} />
 
-            <section className="grid overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs lg:grid-cols-[minmax(0,23rem)_minmax(0,1fr)]">
-                <div className="space-y-5 p-5 sm:p-6">
-                    <div>
-                        <Label htmlFor={qualityId} className="text-[13px] font-medium text-muted-foreground">{copy.qualityLabel}</Label>
-                        <select
-                            id={qualityId}
+            <section aria-label={copy.title} className="@container overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs">
+                {/* The three inputs, as one band across the top; the answer reads below them. */}
+                <div className="grid grid-cols-2 gap-x-3 gap-y-5 border-b border-hairline bg-surface-soft/45 p-4 sm:gap-x-4 sm:p-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)_minmax(0,0.9fr)] lg:px-8">
+                    <div className="col-span-2 min-w-0 lg:col-span-1">
+                        <Label htmlFor={qualityId} className={FIELD_LABEL}>{copy.qualityLabel}</Label>
+                        <Select
                             value={key ?? ''}
-                            onChange={event => {
-                                const next = candidates.find(item => item.key === event.target.value)
+                            onValueChange={value => {
+                                const next = candidates.find(item => item.key === value)
                                 if (next) void openCandidate(next)
                             }}
-                            className="mt-1.5 h-11 w-full min-w-0 rounded-lg border border-hairline bg-surface px-3 text-base font-medium text-ink shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/25 max-md:min-h-[44px]"
                         >
-                            <option value="" disabled>{copy.qualityPlaceholder}</option>
-                            {candidates.map(item => {
-                                const name = item.name || copy.untitled
-                                return (
-                                    <option key={item.key} value={item.key}>
-                                        {item.checkable && item.sellingPricePerM != null
-                                            ? fillCopy(copy.optionLabel, { name, n: item.versionNumber, price: item.sellingPricePerM.toFixed(2) })
-                                            : fillCopy(copy.optionRecalc, { name, n: item.versionNumber })}
-                                    </option>
-                                )
-                            })}
-                        </select>
-                        {base && candidate && (
-                            <p className="mt-2 text-[13px] leading-5 text-muted-foreground tabular-nums">
-                                {fillCopy(copy.basedOn, {
-                                    n: base.versionNumber,
-                                    date: formatTimestampDate(base.savedAt, { day: 'numeric', month: 'short' }),
-                                    cost: base.productionCostPerM.toFixed(2),
-                                    price: base.sellingPricePerM.toFixed(2),
-                                    margin: percent(base.targetMarginPct),
+                            <SelectTrigger
+                                id={qualityId}
+                                className={cn(FIELD_HEIGHT, 'mt-2 w-full min-w-0 rounded-lg border-hairline bg-surface px-3.5 text-base font-semibold text-ink shadow-xs data-[placeholder]:font-normal')}
+                            >
+                                <SelectValue placeholder={copy.qualityPlaceholder}>
+                                    {candidate ? <span className="truncate">{candidate.name || copy.untitled}</span> : null}
+                                </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent position="popper" sideOffset={6} className="max-h-[min(22rem,var(--radix-select-content-available-height))] rounded-xl">
+                                {candidates.map(item => {
+                                    const name = item.name || copy.untitled
+                                    return (
+                                        <SelectItem key={item.key} value={item.key} textValue={name} className="rounded-lg py-2.5 pl-3 pr-9">
+                                            <span className="flex min-w-0 flex-col items-start gap-0.5">
+                                                <span className="max-w-full truncate text-sm font-semibold text-ink">{name}</span>
+                                                <span className={cn('text-[13px] tabular-nums', item.checkable ? 'text-muted-foreground' : 'text-[var(--wv-ochre-800)]')}>{candidateMeta(copy, item)}</span>
+                                            </span>
+                                        </SelectItem>
+                                    )
                                 })}
-                            </p>
+                            </SelectContent>
+                        </Select>
+                        {meta && (
+                            <p className={cn('mt-2 text-[13px] leading-5 tabular-nums', candidate && !candidate.checkable ? 'text-[var(--wv-ochre-800)]' : 'text-muted-foreground')}>{meta}</p>
                         )}
                     </div>
 
-                    <div className="grid grid-cols-1 gap-x-3 gap-y-5 max-lg:grid-cols-2 max-lg:gap-y-1 lg:gap-y-5">
-                        <div className="min-w-0 lg:row-start-1">
-                            <Label htmlFor={priceId} className="text-[13px] font-medium text-muted-foreground">{copy.priceLabel}</Label>
-                            <div className="relative mt-1.5">
-                                <span aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-base text-muted-foreground">₹</span>
-                                <Input
-                                    ref={priceRef}
-                                    id={priceId}
-                                    type="text"
-                                    inputMode="decimal"
-                                    autoComplete="off"
-                                    value={priceText}
-                                    onChange={event => setPriceText(event.target.value)}
-                                    disabled={!base}
-                                    aria-invalid={priceInvalid || undefined}
-                                    aria-describedby={`${priceId}-hint`}
-                                    placeholder={base ? base.sellingPricePerM.toFixed(2) : undefined}
-                                    className={cn(fieldClass, 'pl-7')}
-                                />
-                            </div>
-                            <p id={`${priceId}-hint`} className={cn('mt-1.5 text-[13px] leading-5', priceInvalid ? LOSS_TEXT : 'text-muted-foreground')}>{priceInvalid ? copy.priceError : copy.priceHint}</p>
+                    <div className="min-w-0">
+                        <Label htmlFor={priceId} className={FIELD_LABEL}>{copy.priceLabel}</Label>
+                        <div className="relative mt-2">
+                            <span aria-hidden="true" className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-base text-muted-foreground">₹</span>
+                            <Input
+                                ref={priceRef}
+                                id={priceId}
+                                type="text"
+                                inputMode="decimal"
+                                autoComplete="off"
+                                value={priceText}
+                                onChange={event => setPriceText(event.target.value)}
+                                disabled={!base}
+                                aria-invalid={priceInvalid || undefined}
+                                aria-describedby={`${priceId}-hint`}
+                                placeholder={base ? base.sellingPricePerM.toFixed(2) : undefined}
+                                className={cn(fieldClass, 'pl-8 pr-11 text-lg font-semibold placeholder:font-normal')}
+                            />
+                            <span aria-hidden="true" className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">{copy.perMetre}</span>
                         </div>
-                        <div className="min-w-0 max-lg:col-start-2 max-lg:row-start-1 lg:row-start-3">
-                            <Label htmlFor={quantityId} className="text-[13px] font-medium text-muted-foreground">{copy.quantityLabel}</Label>
+                        <p id={`${priceId}-hint`} className={priceInvalid ? cn('mt-2 text-[13px] leading-5', LOSS_TEXT) : 'sr-only'}>{priceInvalid ? copy.priceError : copy.priceHint}</p>
+                    </div>
+
+                    <div className="min-w-0">
+                        <Label htmlFor={quantityId} className={cn(FIELD_LABEL, 'flex flex-wrap items-baseline gap-x-1.5')}>
+                            {copy.quantityLabel} <span className="font-normal text-muted-foreground/80">· {copy.optional}</span>
+                        </Label>
+                        <div className="relative mt-2">
                             <Input
                                 id={quantityId}
                                 type="text"
@@ -209,78 +306,61 @@ export default function OfferCheckClient({
                                 disabled={!base}
                                 aria-invalid={quantityInvalid || undefined}
                                 aria-describedby={`${quantityId}-hint`}
-                                className={cn(fieldClass, 'mt-1.5')}
+                                className={cn(fieldClass, 'pr-10 text-base font-medium')}
                             />
-                            <div className="mt-1.5">
-                                <p id={`${quantityId}-hint`} className={cn('text-[13px] leading-5', quantityInvalid ? LOSS_TEXT : 'text-muted-foreground')}>{quantityInvalid ? copy.quantityError : copy.quantityHint}</p>
-                                {usableQuantity != null && (
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        onClick={() => setQuantityText(String(usableQuantity))}
-                                        className="-ml-2 h-auto min-h-9 justify-start whitespace-normal px-2 py-1 text-left text-[13px] font-semibold leading-snug underline decoration-hairline-strong underline-offset-4 max-md:min-h-[44px]"
-                                    >
-                                        {fillCopy(copy.useQuantity, { m: metres(usableQuantity) })}
-                                    </Button>
-                                )}
-                            </div>
+                            <span aria-hidden="true" className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">{copy.metreUnit}</span>
                         </div>
-                        {base && range && (
-                            <div className="mt-1 max-lg:col-span-2 max-lg:row-start-2 lg:row-start-2">
-                                <RangeSlider
-                                    min={range.min}
-                                    max={range.max}
-                                    step={range.step}
-                                    value={snapOfferToSlider(price.status === 'ok' ? price.value : base.sellingPricePerM, range)}
-                                    aria-label={copy.priceSlider}
-                                    aria-valuetext={price.status === 'ok' ? rupees(price.value) : rupees(base.sellingPricePerM)}
-                                    onValueChange={value => setPriceText(value.toFixed(2))}
-                                />
-                                <div className="mt-0.5 flex justify-between text-xs text-muted-foreground tabular-nums" aria-hidden="true">
-                                    <span>{rupees(range.min)}</span>
-                                    <span>{rupees(range.max)}</span>
-                                </div>
-                            </div>
+                        <p id={`${quantityId}-hint`} className={quantityInvalid ? cn('mt-2 text-[13px] leading-5', LOSS_TEXT) : 'sr-only'}>{quantityInvalid ? copy.quantityError : copy.quantityHint}</p>
+                        {usableQuantity != null && !quantityIsUsable && !quantityInvalid && (
+                            <button
+                                type="button"
+                                onClick={() => setQuantityText(String(usableQuantity))}
+                                className="-mx-1 mt-1 inline-flex min-h-9 items-center rounded-md px-1 text-left text-[13px] font-semibold leading-snug text-ink underline decoration-hairline-strong underline-offset-4 transition-colors hover:decoration-ink focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/25 max-md:min-h-[44px]"
+                            >
+                                {fillCopy(copy.useQuantity, { m: metres(usableQuantity) })}
+                            </button>
                         )}
                     </div>
                 </div>
 
-                <div className="border-t border-hairline p-5 sm:p-6 lg:border-l lg:border-t-0" aria-live="polite" aria-busy={load === 'loading'}>
+                <div className="p-5 sm:p-6 lg:p-8" aria-busy={load === 'loading'}>
                     {load === 'loading' ? (
-                        <p role="status" className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="size-4 animate-spin" aria-hidden="true" />{copy.loading}</p>
+                        <div role="status" className="space-y-6">
+                            <p className="flex items-center gap-2 text-[13px] text-muted-foreground"><Loader2 className="size-4 animate-spin" aria-hidden="true" />{copy.loading}</p>
+                            <div aria-hidden="true" className="space-y-3">
+                                <div className="ui-skeleton h-11 w-48 rounded-lg bg-surface-soft" />
+                                <div className="ui-skeleton h-4 w-72 max-w-full rounded bg-surface-soft" />
+                            </div>
+                            <div aria-hidden="true" className="ui-skeleton h-2 w-full rounded-full bg-surface-soft" />
+                        </div>
                     ) : load === 'failed' ? (
-                        <div role="alert" className="flex flex-wrap items-center gap-3 text-sm text-[var(--wv-madder-600)]">
-                            <TriangleAlert className="size-4 shrink-0" aria-hidden="true" />
-                            <p className="min-w-0 flex-1">{copy.loadFailed}</p>
-                            {candidate && <Button type="button" variant="outline" onClick={() => void openCandidate(candidate)} className="min-h-10 max-md:min-h-[44px]">{copy.retry}</Button>}
-                        </div>
+                        <OfferNotice
+                            role="alert"
+                            icon={TriangleAlert}
+                            tone="risk"
+                            title={copy.loadFailed}
+                            action={candidate && <Button type="button" variant="outline" onClick={() => void openCandidate(candidate)} className="min-h-10 max-md:min-h-[44px]">{copy.retry}</Button>}
+                        />
                     ) : !candidate ? (
-                        <p className="text-sm text-muted-foreground">{copy.qualityPlaceholder}</p>
-                    ) : result && !result.ok ? (
-                        <div className="max-w-md">
-                            <p className="text-sm leading-relaxed text-body">{copy.notChecked}</p>
-                            <Button asChild variant="outline" className="mt-4 min-h-10 max-md:min-h-[44px]"><Link href="/owner/quotes">{copy.notCheckedAction}</Link></Button>
-                        </div>
-                    ) : !candidate.checkable ? (
-                        <div className="max-w-md">
-                            <p className="text-sm leading-relaxed text-body">{copy.notChecked}</p>
-                            <Button asChild variant="outline" className="mt-4 min-h-10 max-md:min-h-[44px]"><Link href="/owner/quotes">{copy.notCheckedAction}</Link></Button>
-                        </div>
-                    ) : base && evaluation ? (
-                        <OfferCheckResult base={base} evaluation={evaluation} hasQuantity={quantity.status === 'ok'} copy={copy} />
+                        <OfferSteps copy={copy} />
+                    ) : (result && !result.ok) || !candidate.checkable ? (
+                        <OfferNotice
+                            icon={RotateCcw}
+                            tone="thin"
+                            title={copy.notCheckedTitle}
+                            body={copy.notChecked}
+                            action={<Button asChild variant="outline" className="min-h-10 max-md:min-h-[44px]"><Link href="/owner/quotes">{copy.notCheckedAction}</Link></Button>}
+                        />
                     ) : base ? (
-                        <div>
-                            <p className="text-sm text-muted-foreground">{copy.prompt}</p>
-                            <dl className="mt-5 max-w-sm border-t border-hairline pt-3">
-                                <Line label={copy.comparePrice} value={rupees(base.sellingPricePerM)} />
-                                <Line label={copy.compareBreakEven} value={rupees(base.breakEvenPricePerM)} />
-                            </dl>
-                        </div>
+                        <OfferCheckResult base={base} evaluation={evaluation} hasQuantity={quantity.status === 'ok'} copy={copy} track={track} />
                     ) : null}
                 </div>
-            </section>
 
-            <p className="max-w-3xl text-[13px] leading-5 text-muted-foreground">{copy.basis}</p>
+                <p className="flex items-start gap-2.5 border-t border-hairline bg-surface-soft/45 px-5 py-3.5 text-[13px] leading-5 text-muted-foreground sm:px-6 lg:px-8">
+                    <Info className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                    <span>{copy.basis}</span>
+                </p>
+            </section>
         </div>
     )
 }

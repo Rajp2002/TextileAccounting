@@ -3,10 +3,10 @@ import path from 'node:path'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
-import { OfferCheckResult } from '@/components/estimator/OfferCheckResult'
+import { OfferCheckResult, OfferPriceTrack } from '@/components/estimator/OfferCheckResult'
 import { I18nContext } from '@/lib/i18n/context'
 import { offerCheckText } from '@/lib/i18n/offer-check'
-import { buildOfferBase, evaluateOffer, listOfferCandidates, type OfferBase } from '@/lib/offer-check'
+import { buildOfferBase, evaluateOffer, listOfferCandidates, offerSliderRange, type OfferBase } from '@/lib/offer-check'
 import { makeSavedCostingTourExamples } from '@/lib/saved-costings-tour'
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: () => {}, push: () => {} }) }))
@@ -42,8 +42,17 @@ function provide(language: 'en' | 'hi' | 'gu', child: React.ReactElement) {
     return renderToStaticMarkup(createElement(I18nContext.Provider, { value }, child))
 }
 
-const renderResult = (offer: number, quantity: number | null, language: 'en' | 'hi' | 'gu' = 'en', source: OfferBase = base) =>
-    provide(language, createElement(OfferCheckResult, { base: source, evaluation: evaluateOffer(source, offer, quantity), hasQuantity: quantity != null, copy: offerCheckText[language] }))
+const trackFor = (source: OfferBase, value: number, language: 'en' | 'hi' | 'gu' = 'en') =>
+    createElement(OfferPriceTrack, { base: source, range: offerSliderRange(source), value, valueText: `₹${value}`, onValueChange: () => {}, copy: offerCheckText[language] })
+
+const renderResult = (offer: number | null, quantity: number | null, language: 'en' | 'hi' | 'gu' = 'en', source: OfferBase = base) =>
+    provide(language, createElement(OfferCheckResult, {
+        base: source,
+        evaluation: offer == null ? null : evaluateOffer(source, offer, quantity),
+        hasQuantity: quantity != null,
+        copy: offerCheckText[language],
+        track: trackFor(source, offer ?? source.sellingPricePerM, language),
+    }))
 
 describe('offer check copy', () => {
     const keys = Object.keys(offerCheckText.en).sort()
@@ -81,7 +90,12 @@ describe('the answer to an offer', () => {
     it('puts the offer between break-even and the costing price, in words as well as on the track', () => {
         const html = renderResult(19, null)
         expect(html).toContain(offerCheckText.en.verdictBelow.replace('{amount}', '0.82'))
-        expect(html).toContain('role="img"')
+        // The track is the page's one slider: the offer is its thumb, break-even and the costing price its ticks.
+        expect(html).toContain('data-offer-track')
+        expect(html).toContain('type="range"')
+        expect(html).toContain(`aria-label="${offerCheckText.en.priceSlider}"`)
+        expect(html).toContain(offerCheckText.en.legendBreakEven)
+        expect(html).toContain(offerCheckText.en.legendPrice)
         expect(html).toContain('Offer ₹0.82 below')
         expect(html).toContain('(4.1%)')
         expect(html).toContain('Offer ₹1.56 above')
@@ -94,6 +108,14 @@ describe('the answer to an offer', () => {
         expect(html).toContain('text-[var(--wv-madder-600)]')
         expect(html).toContain('Loss on 1,000 m')
         expect(html).toContain('₹1,440')
+    })
+
+    it('holds the figure and asks for the price before there is one, with the track already in place', () => {
+        const html = renderResult(null, null)
+        expect(html).toContain(offerCheckText.en.prompt.replace("'", '&#x27;'))
+        expect(html).toContain('data-offer-track')
+        expect(html).not.toContain('data-offer-profit')
+        expect(html).not.toContain(offerCheckText.en.linesTitle)
     })
 
     it('prices the whole order only once there is a quantity', () => {
@@ -163,14 +185,21 @@ describe('the check an offer page', () => {
     it('asks for a saved costing first, with the inputs waiting', async () => {
         const html = await renderPage({})
         expect(html).toContain(offerCheckText.en.title)
-        expect(html).toContain('Fabric 75D · v2 · ₹19.82/m')
+        // The quality picker is the shared Weavly select, never the browser's own.
+        expect(html).toContain('role="combobox"')
+        // (Radix adds a hidden native select on the server for forms; it is never what the owner sees.)
+        expect(html).not.toMatch(/<select(?![^>]*aria-hidden="true")/)
         expect(html).toContain(offerCheckText.en.qualityPlaceholder)
         expect(html).toContain('disabled=""')
-        expect(html).not.toContain(offerCheckText.en.keep)
+        expect(html).toContain(offerCheckText.en.stepQuality)
+        expect(html).toContain(offerCheckText.en.stepPrice.replace("'", '&#x27;'))
+        expect(html).not.toContain('data-offer-profit')
     })
 
     it('starts from the costing a card linked to and waits for the price', async () => {
         const html = await renderPage({ initialKey: candidates[0].key, initialBase: built })
+        expect(html).toContain('Fabric 75D')
+        expect(html).toContain('v2 · saved')
         expect(html).toContain(offerCheckText.en.prompt.replace("'", '&#x27;'))
         expect(html).toContain('placeholder="19.82"')
         expect(html).toContain('type="range"')
@@ -203,7 +232,9 @@ describe('the check an offer page', () => {
             quote_price_per_meter: 18, production_cost_per_meter: null, reconciliation_status: 'legacy', record_kind: 'costing',
         }], [])
         const html = await renderPage({ candidates: [recalc], initialKey: recalc.key })
-        expect(html).toContain('Old quality · v1 · recalculate first')
+        expect(html).toContain('Old quality')
+        expect(html).toContain('v1 · recalculate first')
+        expect(html).toContain(offerCheckText.en.notCheckedTitle)
         expect(html).toContain(offerCheckText.en.notChecked)
     })
 })
@@ -234,6 +265,14 @@ describe('where the check lives', () => {
         expect(quotes).toContain('href={`/owner/quotes/offer?costing=${latest.id}`}')
         // Not on the sample card, a costing without a saved cost, or an archived one.
         expect(quotes).toContain("latest && canReuseLatest && !costNotSaved && !tourStep && !isSampleRecordId(group.key) && getCostingStatus(latest) === 'verified'")
+    })
+
+    it('keeps one price track mounted from the prompt to the answer', () => {
+        // Swapping trees when the first price arrives would remount the slider and drop a drag or keyboard focus.
+        const client = read('app/(dashboard)/owner/quotes/offer/OfferCheckClient.tsx')
+        expect(client).toContain('<OfferCheckResult base={base} evaluation={evaluation}')
+        expect(client.match(/<OfferCheckResult /g)).toHaveLength(1)
+        expect(client.match(/<OfferPriceTrack/g)).toHaveLength(1)
     })
 
     it('rebuilds a saved costing the same way for the page and the check', () => {
