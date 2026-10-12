@@ -5,7 +5,7 @@ import { ChevronDown, Search, X } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { useTranslation } from '@/lib/i18n/context'
 
-export type MachineStatusFilter = 'all' | 'active' | 'needs_setup'
+export type MachineStatusFilter = 'all' | 'active' | 'needs_setup' | 'inactive'
 
 interface MachineToolbarProps {
   search: string
@@ -66,6 +66,7 @@ export function MachineToolbar({
             <option value="all">{tx('All machines')}</option>
             <option value="active">{tx('Active machines')}</option>
             <option value="needs_setup">{tx('Needs setup')}</option>
+            <option value="inactive">{tx('Inactive machines')}</option>
           </select>
           <ChevronDown
             className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle/60"

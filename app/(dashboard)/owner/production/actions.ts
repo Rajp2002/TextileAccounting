@@ -196,6 +196,7 @@ const BaseBulkMachinesSchema = z.object({
 const UpdateMachineSchema = BaseMachineSchema.extend({
     machineId: UuidSchema,
     name: z.string().trim().min(1, 'Machine name is required').max(120, 'Machine name is too long'),
+    inactiveReason: z.string().trim().max(200, 'Reason is too long').optional().or(z.literal('')),
 })
 
 const BaseAssignmentSchema = z.object({
@@ -393,10 +394,15 @@ export async function updateBaseProductionMachine(input: {
     machineType: 'jacquard' | 'power_loom' | 'rapier' | 'water_jet' | 'air_jet' | 'circular' | 'other'
     customLabel?: string
     isActive: boolean
+    inactiveReason?: string
 }) {
     const { profile } = await requireBaseProductionOwner()
     const parsed = safeParse(UpdateMachineSchema, input)
     if ('error' in parsed) return parsed
+
+    // A machine can only be taken out of use with a reason, and an available machine carries none.
+    const inactiveReason = parsed.data.isActive ? null : parsed.data.inactiveReason?.trim() || null
+    if (!parsed.data.isActive && !inactiveReason) return { error: 'Add a reason before marking this machine unavailable.' }
 
     const supabase = await createServerClient()
     const { error } = await supabase
@@ -406,6 +412,7 @@ export async function updateBaseProductionMachine(input: {
             machine_type: parsed.data.machineType,
             custom_label: parsed.data.customLabel?.trim() || null,
             is_active: parsed.data.isActive,
+            inactive_reason: inactiveReason,
             updated_at: new Date().toISOString(),
         })
         .eq('org_id', profile.org_id)

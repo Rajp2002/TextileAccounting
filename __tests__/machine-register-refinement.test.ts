@@ -182,6 +182,34 @@ describe('Machines Register Premium UI Redesign', () => {
       expect(html).toContain('1 / 3 machines')
     })
 
+    it('shows an Inactive badge and the reason for a machine made unavailable, even when fully assigned', () => {
+      const unavailable: BaseProductionMachineWithReadiness = {
+        ...activeMachine1,
+        ...normalizeMachine({ id: 'mach-4', name: 'Machine 04', machine_type: 'rapier', is_active: false, inactive_reason: 'Under repair' }),
+        assignedWorkerName: 'Ramesh Patel',
+        assignedCostingLabel: 'Quality 60x60 Cotton',
+        hasWorker: true,
+        hasCosting: true,
+      }
+      fixture.query = 'status=inactive'
+      const html = renderToStaticMarkup(
+        React.createElement(MachinesRegister, { machines: [...mockMachines, unavailable], today: '2026-09-12' })
+      )
+
+      expect(html).toContain('Machine 04')
+      expect(html).toContain('Inactive')
+      expect(html).toContain('Under repair')
+      expect(html).not.toContain('Main Loom')
+      expect(html).not.toContain('Machine 03')
+      expect(html).toContain('1 / 4 machines')
+
+      fixture.query = 'status=active'
+      const activeOnly = renderToStaticMarkup(
+        React.createElement(MachinesRegister, { machines: [...mockMachines, unavailable], today: '2026-09-12' })
+      )
+      expect(activeOnly).not.toContain('Machine 04')
+    })
+
     it('filters machines by name, custom label, machine type, worker, and costing', () => {
       // Search by custom label
       fixture.query = 'search=Main'
@@ -389,6 +417,10 @@ describe('Machines Register Premium UI Redesign', () => {
         'machine',
         "We couldn't load your machines.",
         'Try again',
+        'Inactive machines',
+        'Reason for unavailability',
+        'e.g. Under repair, waiting for spare parts',
+        'Add a reason before marking this machine unavailable.',
       ]
 
       const hi = BASE_CONTINUITY_PHRASES.hi as Record<string, string>
