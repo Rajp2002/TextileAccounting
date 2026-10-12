@@ -122,7 +122,8 @@ export default function MachinesRegister({
       existingNames={existingNames}
     >
       {({ add, edit }) => (
-        <div inert={tourStep !== null} className="machines-workspace-shell w-full space-y-5 pb-10 sm:space-y-6">
+        // On a desktop screen the page is the window less main's 1.5rem top and bottom padding, so only the machine grid scrolls.
+        <div inert={tourStep !== null} className="machines-workspace-shell w-full space-y-5 pb-10 sm:space-y-6 fit-screen:flex fit-screen:h-[calc(100dvh-3rem-var(--safe-area-top))] fit-screen:flex-col fit-screen:pb-0">
           {/* 1. Page Header */}
           <div data-machines-tour="header">
             <MachinesPageHeader
