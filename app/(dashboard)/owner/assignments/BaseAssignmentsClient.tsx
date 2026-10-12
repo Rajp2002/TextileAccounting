@@ -41,11 +41,6 @@ export default function BaseAssignmentsClient({ initialData, tourMetadata }: {
                     </Link>
                 </Button>
             )}
-            <header className="flex flex-col items-center text-center">
-                <div className="flex flex-col items-center">
-                    <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-ink sm:text-[2rem]">{tx('Worker–Machine Assignments')}</h1>
-                </div>
-            </header>
             <BaseAssignmentWorkspace
                 key={`${initialData.orgId}:${navigation.worker ?? 'all'}:${navigation.machine ?? 'all'}:${navigation.shift ?? 'day'}`}
                 initialData={initialData}
