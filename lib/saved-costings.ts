@@ -5,6 +5,7 @@ import {
   normalizeCurrencySnapshot,
   parseCostingResultSnapshot,
   type CostingResultSnapshot,
+  type EstimateState,
   type EstimatorYarnLayerAudit,
   type FactorySections,
   type OverheadMode,
@@ -1102,5 +1103,113 @@ export function compareSavedCostingSnapshots(
       ...price,
       changed: Object.values(price).some(deltaChanged),
     },
+  }
+}
+
+/**
+ * The columns of a saved costing that rebuild the estimate it was saved from.
+ * The Saved Costings page and the offer check both read a costing through
+ * `buildDraftStateFromQuote`, so a costing is never rebuilt two ways.
+ */
+export type SavedCostingStateRow = {
+  snapshot_data?: Partial<EstimateState> | null
+  warp_rows?: unknown
+  weft_rows?: unknown
+  beam_ends?: number | null
+  reed_space?: number | null
+  weft_denier?: number | null
+  yarn_denier?: number | null
+  yarn_rate_per_kg?: number | null
+  ppi?: number | null
+  tape_length_m?: number | null
+  per_pick_cost_paise?: number | null
+  warping_rate_per_kg?: number | null
+  sizing_rate_per_kg?: number | null
+  winding_rate_per_kg?: number | null
+  processing_rate_per_m?: number | null
+  finishing_rate_per_m?: number | null
+  yarn_shortage_pct?: number | null
+  warp_crimp_pct?: number | null
+  overhead_items?: EstimateState['overheadItems'] | null
+  monthly_output_m?: number | null
+  overhead_override_per_m?: number | null
+  overhead_mode?: EstimateState['overheadMode'] | null
+  commission_pct?: number | null
+  transport_per_m?: number | null
+  profit_margin_pct?: number | null
+  intended_margin_percent?: number | null
+  meters?: number | null
+  enabled_sections?: Partial<FactorySections> | null
+  loom_type?: EstimateState['loomType'] | null
+  estimator_rpm?: number | null
+  estimator_power_kw?: number | null
+  hours_per_shift?: number | null
+  warping_mode?: EstimateState['warpingMode'] | null
+  sizing_mode?: EstimateState['sizingMode'] | null
+  loom_count?: number | null
+  monthly_working_days?: number | null
+  avg_output_per_loom_per_day?: number | null
+}
+
+export function buildDraftStateFromQuote(quote: SavedCostingStateRow): EstimateState {
+  const base = makeDefaultEstimateState()
+  const snapshot = quote.snapshot_data ?? ({} as Partial<EstimateState>)
+  const warpRows = Array.isArray(snapshot.warpRows) && snapshot.warpRows.length > 0 ? snapshot.warpRows : quote.warp_rows
+  const weftRows = Array.isArray(snapshot.weftRows) && snapshot.weftRows.length > 0 ? snapshot.weftRows : quote.weft_rows
+  const numberOr = (value: unknown, fallback: number) => {
+    const parsed = Number(value)
+    return value !== null && value !== undefined && value !== '' && Number.isFinite(parsed) ? parsed : fallback
+  }
+  const inputBasis = resolveSavedCostingInputBasis(
+    { ...quote, warping_rate_per_kg: snapshot.warpingRatePerKg ?? quote.warping_rate_per_kg },
+    snapshot,
+  )
+  return {
+    ...base,
+    ...snapshot,
+    warpRows: normalizeSavedWarpRows(warpRows, base.warpRows[0], {
+      beamEnds: quote.beam_ends,
+      warpDenier: quote.yarn_denier,
+      yarnRate: quote.yarn_rate_per_kg,
+    }),
+    weftRows: normalizeSavedWeftRows(weftRows, base.weftRows[0], {
+      picks: quote.ppi,
+      reedSpace: quote.reed_space,
+      weftDenier: quote.weft_denier ?? quote.yarn_denier,
+      yarnRate: quote.yarn_rate_per_kg,
+    }),
+    tapeLengthM: numberOr(snapshot.tapeLengthM ?? quote.tape_length_m, base.tapeLengthM),
+    perPickCostPaisa: numberOr(snapshot.perPickCostPaisa ?? quote.per_pick_cost_paise, base.perPickCostPaisa),
+    warpingRatePerKg: numberOr(snapshot.warpingRatePerKg ?? quote.warping_rate_per_kg, base.warpingRatePerKg),
+    sizingRatePerKg: numberOr(snapshot.sizingRatePerKg ?? quote.sizing_rate_per_kg, base.sizingRatePerKg),
+    windingRatePerKg: numberOr(snapshot.windingRatePerKg ?? quote.winding_rate_per_kg, base.windingRatePerKg),
+    processingRatePerM: numberOr(snapshot.processingRatePerM ?? quote.processing_rate_per_m, base.processingRatePerM),
+    finishingRatePerM: numberOr(snapshot.finishingRatePerM ?? quote.finishing_rate_per_m, base.finishingRatePerM),
+    yarnShortagePct: numberOr(snapshot.yarnShortagePct ?? quote.yarn_shortage_pct, base.yarnShortagePct),
+    warpCrimpPct: numberOr(snapshot.warpCrimpPct ?? quote.warp_crimp_pct, base.warpCrimpPct),
+    overheadItems: Array.isArray(snapshot.overheadItems) ? snapshot.overheadItems : Array.isArray(quote.overhead_items) ? quote.overhead_items : base.overheadItems,
+    monthlyOutputM: numberOr(snapshot.monthlyOutputM ?? quote.monthly_output_m, base.monthlyOutputM),
+    // LT01B: stored modes and applied overhead first; older records keep
+    // the earlier inference because their modes were never stored.
+    overheadOverridePerM: inputBasis.overheadOverridePerM ?? base.overheadOverridePerM,
+    overheadMode: inputBasis.overheadMode,
+    overheadPct: 0,
+    commissionPct: numberOr(snapshot.commissionPct ?? quote.commission_pct, base.commissionPct),
+    transportPerM: numberOr(snapshot.transportPerM ?? quote.transport_per_m, base.transportPerM),
+    profitPct: numberOr(snapshot.profitPct ?? quote.profit_margin_pct ?? quote.intended_margin_percent, base.profitPct),
+    orderQuantityM: numberOr(snapshot.orderQuantityM ?? quote.meters, 0) || null,
+    enabledSections: { ...base.enabledSections, ...(quote.enabled_sections ?? {}), ...(snapshot.enabledSections ?? {}) },
+    loomType: snapshot.loomType ?? quote.loom_type ?? base.loomType,
+    loomRpm: snapshot.loomRpm ?? (quote.estimator_rpm != null ? numberOr(quote.estimator_rpm, 0) : base.loomRpm),
+    loomPowerKw: snapshot.loomPowerKw ?? (quote.estimator_power_kw != null ? numberOr(quote.estimator_power_kw, 0) : base.loomPowerKw),
+    loomRpmIsCustomised: snapshot.loomRpmIsCustomised ?? (quote.estimator_rpm != null),
+    loomPowerKwIsCustomised: snapshot.loomPowerKwIsCustomised ?? (quote.estimator_power_kw != null),
+    hoursPerShift: numberOr(snapshot.hoursPerShift ?? quote.hours_per_shift, base.hoursPerShift ?? 12),
+    warpingMode: inputBasis.warpingMode ?? base.warpingMode,
+    sizingMode: snapshot.sizingMode ?? quote.sizing_mode ?? base.sizingMode,
+    loomCount: numberOr(snapshot.loomCount ?? quote.loom_count, base.loomCount),
+    monthlyWorkingDays: numberOr(snapshot.monthlyWorkingDays ?? quote.monthly_working_days, base.monthlyWorkingDays),
+    avgOutputPerLoomPerDay: numberOr(snapshot.avgOutputPerLoomPerDay ?? quote.avg_output_per_loom_per_day, base.avgOutputPerLoomPerDay),
+    isConfigured: true,
   }
 }

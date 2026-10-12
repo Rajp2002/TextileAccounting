@@ -53,6 +53,7 @@ import {
     ChevronDown,
     Download,
     Factory,
+    Handshake,
     RefreshCw,
     Sparkles,
     Trash2,
@@ -65,10 +66,8 @@ import {
   filterAndSortSavedCostings,
   getSavedCostingIdentity,
   isSavedCostingArchived,
-  normalizeSavedWarpRows,
-  normalizeSavedWeftRows,
   getSavedCostingMetrics,
-  resolveSavedCostingInputBasis,
+  buildDraftStateFromQuote,
   canPriceSavedRecipe,
   formatRevisionLead,
   type SavedQualityFactoryProfile,
@@ -96,6 +95,7 @@ import { averageMargin, averageYarnShare, costMix, marginRanking, qualityYarns, 
 import { costingCatalogueText } from '@/lib/i18n/costing-catalogue'
 import { fillCopy } from '@/lib/i18n/fill'
 import { costingMarginText } from '@/lib/i18n/costing-margin'
+import { offerCheckText } from '@/lib/i18n/offer-check'
 import { CostingMarginScope, marginTone, type MarginReadOnlyReason } from '@/components/estimator/SavedCostingMargin'
 
 const CostingExportDialog = dynamic(
@@ -233,69 +233,6 @@ type SavedQualityGroup = {
     records: QuoteRow[]
     updatedAt: string
     currentRecipeCostPerM: number | null
-}
-
-function buildDraftStateFromQuote(quote: QuoteRow): QuoteDraftState {
-    const base = makeDefaultEstimateState()
-    const snapshot = quote.snapshot_data ?? ({} as Partial<QuoteDraftState>)
-    const warpRows = Array.isArray(snapshot.warpRows) && snapshot.warpRows.length > 0 ? snapshot.warpRows : quote.warp_rows
-    const weftRows = Array.isArray(snapshot.weftRows) && snapshot.weftRows.length > 0 ? snapshot.weftRows : quote.weft_rows
-    const numberOr = (value: unknown, fallback: number) => {
-        const parsed = Number(value)
-        return value !== null && value !== undefined && value !== '' && Number.isFinite(parsed) ? parsed : fallback
-    }
-    const inputBasis = resolveSavedCostingInputBasis(
-        { ...quote, warping_rate_per_kg: snapshot.warpingRatePerKg ?? quote.warping_rate_per_kg },
-        snapshot,
-    )
-    return {
-        ...base,
-        ...snapshot,
-        warpRows: normalizeSavedWarpRows(warpRows, base.warpRows[0], {
-            beamEnds: quote.beam_ends,
-            warpDenier: quote.yarn_denier,
-            yarnRate: quote.yarn_rate_per_kg,
-        }),
-        weftRows: normalizeSavedWeftRows(weftRows, base.weftRows[0], {
-            picks: quote.ppi,
-            reedSpace: quote.reed_space,
-            weftDenier: quote.weft_denier ?? quote.yarn_denier,
-            yarnRate: quote.yarn_rate_per_kg,
-        }),
-        tapeLengthM: numberOr(snapshot.tapeLengthM ?? quote.tape_length_m, base.tapeLengthM),
-        perPickCostPaisa: numberOr(snapshot.perPickCostPaisa ?? quote.per_pick_cost_paise, base.perPickCostPaisa),
-        warpingRatePerKg: numberOr(snapshot.warpingRatePerKg ?? quote.warping_rate_per_kg, base.warpingRatePerKg),
-        sizingRatePerKg: numberOr(snapshot.sizingRatePerKg ?? quote.sizing_rate_per_kg, base.sizingRatePerKg),
-        windingRatePerKg: numberOr(snapshot.windingRatePerKg ?? quote.winding_rate_per_kg, base.windingRatePerKg),
-        processingRatePerM: numberOr(snapshot.processingRatePerM ?? quote.processing_rate_per_m, base.processingRatePerM),
-        finishingRatePerM: numberOr(snapshot.finishingRatePerM ?? quote.finishing_rate_per_m, base.finishingRatePerM),
-        yarnShortagePct: numberOr(snapshot.yarnShortagePct ?? quote.yarn_shortage_pct, base.yarnShortagePct),
-        warpCrimpPct: numberOr(snapshot.warpCrimpPct ?? quote.warp_crimp_pct, base.warpCrimpPct),
-        overheadItems: Array.isArray(snapshot.overheadItems) ? snapshot.overheadItems : Array.isArray(quote.overhead_items) ? quote.overhead_items : base.overheadItems,
-        monthlyOutputM: numberOr(snapshot.monthlyOutputM ?? quote.monthly_output_m, base.monthlyOutputM),
-        // LT01B: stored modes and applied overhead first; older records keep
-        // the earlier inference because their modes were never stored.
-        overheadOverridePerM: inputBasis.overheadOverridePerM ?? base.overheadOverridePerM,
-        overheadMode: inputBasis.overheadMode,
-        overheadPct: 0,
-        commissionPct: numberOr(snapshot.commissionPct ?? quote.commission_pct, base.commissionPct),
-        transportPerM: numberOr(snapshot.transportPerM ?? quote.transport_per_m, base.transportPerM),
-        profitPct: numberOr(snapshot.profitPct ?? quote.profit_margin_pct ?? quote.intended_margin_percent, base.profitPct),
-        orderQuantityM: numberOr(snapshot.orderQuantityM ?? quote.meters, 0) || null,
-        enabledSections: { ...base.enabledSections, ...(quote.enabled_sections ?? {}), ...(snapshot.enabledSections ?? {}) },
-        loomType: snapshot.loomType ?? quote.loom_type ?? base.loomType,
-        loomRpm: snapshot.loomRpm ?? (quote.estimator_rpm != null ? numberOr(quote.estimator_rpm, 0) : base.loomRpm),
-        loomPowerKw: snapshot.loomPowerKw ?? (quote.estimator_power_kw != null ? numberOr(quote.estimator_power_kw, 0) : base.loomPowerKw),
-        loomRpmIsCustomised: snapshot.loomRpmIsCustomised ?? (quote.estimator_rpm != null),
-        loomPowerKwIsCustomised: snapshot.loomPowerKwIsCustomised ?? (quote.estimator_power_kw != null),
-        hoursPerShift: numberOr(snapshot.hoursPerShift ?? quote.hours_per_shift, base.hoursPerShift ?? 12),
-        warpingMode: inputBasis.warpingMode ?? base.warpingMode,
-        sizingMode: snapshot.sizingMode ?? quote.sizing_mode ?? base.sizingMode,
-        loomCount: numberOr(snapshot.loomCount ?? quote.loom_count, base.loomCount),
-        monthlyWorkingDays: numberOr(snapshot.monthlyWorkingDays ?? quote.monthly_working_days, base.monthlyWorkingDays),
-        avgOutputPerLoomPerDay: numberOr(snapshot.avgOutputPerLoomPerDay ?? quote.avg_output_per_loom_per_day, base.avgOutputPerLoomPerDay),
-        isConfigured: true,
-    }
 }
 
 function getCostingStatus(quote: QuoteRow) {
@@ -471,6 +408,7 @@ function SavedQualityLibraryView({
 }) {
     const { t, tx, language } = useTranslation()
     const copy = costingCatalogueText[language]
+    const offerCopy = offerCheckText[language]
 
     return (
         <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(min(100%,30rem),1fr))]">
@@ -696,6 +634,13 @@ function SavedQualityLibraryView({
                                     <ArrowRight className="h-4 w-4" aria-hidden="true" /> {t('tourControls.savedCostings.use')}
                                 </Button>
                             ))}
+                            {latest && canReuseLatest && !costNotSaved && !tourStep && !isSampleRecordId(group.key) && getCostingStatus(latest) === 'verified' && (
+                                <Button asChild variant="ghost" className={ghostAction}>
+                                    <Link href={`/owner/quotes/offer?costing=${latest.id}`} aria-label={fillCopy(offerCopy.cardActionLabel, { name: group.name })}>
+                                        <Handshake className="h-4 w-4" aria-hidden="true" /> {offerCopy.cardAction}
+                                    </Link>
+                                </Button>
+                            )}
                             {latest && (
                                 <Button type="button" variant="ghost" onClick={() => onExport(latest)} className={cn('ml-auto', ghostAction)}>
                                     <Download className="h-4 w-4" aria-hidden="true" /> {tx('Export')}
@@ -1566,6 +1511,13 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                 description={<span data-i18n-skip="true" lang={language}>{catalogue.intro}</span>}
                 actions={<>
                     <SavedCostingsTutorial step={tourStep} onStepChange={setTourStep} onComplete={() => setShowCostingDeleteNudge(true)} production={canUseProductionPipeline} ending={savedCostingTourEnding(quotes.filter(quote => isStandaloneCosting(quote.record_kind)).length, tourUnavailable)} topics={[archivePolicyTopic]} userId={userId} orgId={orgId} userMetadata={userMetadata} />
+                    {quotes.length > 0 && !tourStep && (
+                        <Button asChild variant="outline" className={secondaryAction}>
+                            <Link href="/owner/quotes/offer" data-i18n-skip="true" lang={language}>
+                                <Handshake className="h-4 w-4" aria-hidden="true" /> {offerCheckText[language].cardAction}
+                            </Link>
+                        </Button>
+                    )}
                     <Button
                         data-tour-anchor="costings.new" onClick={() => router.push('/owner/estimator')}
                         className={railPrimaryAction}
