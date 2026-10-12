@@ -352,14 +352,13 @@
   }
   .mobile-workspace-content > .dashboard-main { min-height: calc(100svh - var(--mobile-nav-height)); }
 
-  /* Phone entry uses the page scroll, including a rotated phone. A desktop
-     viewport subtraction can otherwise leave only a fraction of one row. */
+  /* Phone entry uses the page scroll, including a rotated phone. The desktop
+     fit to the window can otherwise leave only a fraction of one row. */
   .production-daily-readings {
-    max-height: none;
+    height: auto;
     overflow-y: visible;
     overscroll-behavior: auto;
   }
-  .production-daily-register { min-height: 0; }
 
   /* Navigation measures wrapped labels and already includes the safe area. */
   .mobile-sticky-action,
