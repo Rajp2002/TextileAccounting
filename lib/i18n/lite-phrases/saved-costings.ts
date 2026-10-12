@@ -220,4 +220,5 @@ export const SAVED_COSTINGS_PHRASES: LitePhraseRow[] = [
     ["Select two versions to compare their saved commercial assumptions.", "दो वर्ज़न चुनें और उनकी सेव की गई दलाली, भाड़ा और मार्जिन की तुलना करें।", "બે વર્ઝન પસંદ કરો અને તેમની સાચવેલી દલાલી, ભાડું અને માર્જિનની સરખામણી કરો."],
     ["Select {0} version {1} for comparison", "तुलना के लिए {0} का वर्ज़न {1} चुनें", "સરખામણી માટે {0} નું વર્ઝન {1} પસંદ કરો"],
     ["Delete sample costing", "नमूना कॉस्टिंग हटाएँ", "નમૂના કોસ્ટિંગ કાઢી નાખો"],
+    ["Sample costing removed from Saved costings.", "नमूना कॉस्टिंग सेव की गई कॉस्टिंग से हटाई गई।", "નમૂના કોસ્ટિંગ સાચવેલી કોસ્ટિંગમાંથી કાઢી નાખી."],
 ]
