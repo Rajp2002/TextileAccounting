@@ -289,11 +289,21 @@ type SaveAsNewQualityRollback = {
 
 type WarningContinuation = () => void | Promise<unknown>
 
+// New estimates start with an empty first warp and weft name, so the field shows
+// its placeholder rather than a value to delete. Factory defaults are not copied in.
+function withBlankFirstYarnNames(state: EstimateState): EstimateState {
+    return {
+        ...state,
+        warpRows: state.warpRows.map((row, index) => index === 0 ? { ...row, label: '' } : row),
+        weftRows: state.weftRows.map((row, index) => index === 0 ? { ...row, label: '' } : row),
+    }
+}
+
 function buildEstimatorBaseline(
     profile?: FactoryCostProfile,
     workers: FixedWorkerOverhead[] = [],
 ): EstimateState {
-    const base = makeDefaultEstimateState()
+    const base = withBlankFirstYarnNames(makeDefaultEstimateState())
     if (!profile) return base
     const initialProfile = profile
 
@@ -310,20 +320,6 @@ function buildEstimatorBaseline(
         warpingRatePerKg: Number(profile.warping_rate_per_kg ?? base.warpingRatePerKg),
         sizingRatePerKg: Number(profile.sizing_rate_per_kg ?? base.sizingRatePerKg),
         windingRatePerKg: Number(profile.winding_rate_per_kg ?? base.windingRatePerKg),
-        warpRows: base.warpRows.map((row, index) => index === 0
-            ? {
-                ...row,
-                label: profile.default_warp_yarn_name || row.label,
-                yarnRate: Number(profile.default_warp_yarn_rate_per_kg ?? row.yarnRate),
-            }
-            : row),
-        weftRows: base.weftRows.map((row, index) => index === 0
-            ? {
-                ...row,
-                label: profile.default_weft_yarn_name || row.label,
-                yarnRate: Number(profile.default_weft_yarn_rate_per_kg ?? row.yarnRate),
-            }
-            : row),
         processingRatePerM: Number(profile.default_processing_rate_per_m ?? base.processingRatePerM),
         finishingRatePerM: Number(profile.default_finishing_rate_per_m ?? base.finishingRatePerM),
         overheadPct: 0,
@@ -557,8 +553,6 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                 warpingRatePerKg:   Number(profile.warping_rate_per_kg ?? 2),
                 sizingRatePerKg:    Number(profile.sizing_rate_per_kg  ?? 1.5),
                 windingRatePerKg:   Number(profile.winding_rate_per_kg ?? 0),
-                warpRows:           state.warpRows.map((row, index) => index === 0 ? { ...row, label: profile.default_warp_yarn_name || row.label, yarnRate: Number(profile.default_warp_yarn_rate_per_kg ?? row.yarnRate) } : row),
-                weftRows:           state.weftRows.map((row, index) => index === 0 ? { ...row, label: profile.default_weft_yarn_name || row.label, yarnRate: Number(profile.default_weft_yarn_rate_per_kg ?? row.yarnRate) } : row),
                 processingRatePerM: Number(profile.default_processing_rate_per_m ?? state.processingRatePerM),
                 finishingRatePerM:  Number(profile.default_finishing_rate_per_m ?? state.finishingRatePerM),
                 overheadItems:      makeExpenseItemsManual(savedItems ?? state.overheadItems, Number(profile.loom_count ?? state.loomCount)),
@@ -1150,11 +1144,11 @@ function StepperField({
 const YARN_GST_HINT = 'GST registered: enter the rate before GST and keep this 0. Not registered: enter GST only if your rate excludes it.'
 
 function NumField({
-    label, value, onChange, unit, step = 1, min = 0, hint, warning, onDismissWarning, placeholder, attentionWhenEmpty = false, preserveZero = false, ghostValue, fieldKey, placeholderKind = 'example', needsVerification = false,
+    label, value, onChange, unit, step = 1, min = 0, hint, warning, onDismissWarning, placeholder, attentionWhenEmpty = false, preserveZero = false, ghostValue, fieldKey, placeholderKind = 'example',
 }: {
     label: string; value: number | null; onChange: (v: number | null) => void
     unit?: string; step?: number; min?: number; hint?: string; warning?: string; fieldKey?: string
-    onDismissWarning?: () => void; placeholder?: string; attentionWhenEmpty?: boolean; preserveZero?: boolean; ghostValue?: number; placeholderKind?: EstimatorPlaceholderKind; needsVerification?: boolean
+    onDismissWarning?: () => void; placeholder?: string; attentionWhenEmpty?: boolean; preserveZero?: boolean; ghostValue?: number; placeholderKind?: EstimatorPlaceholderKind
 }) {
     const inputId = useId()
     const [focused, setFocused] = useState(false)
@@ -1204,7 +1198,7 @@ function NumField({
                         onChange(val)
                     }}
                     className={`h-11 text-xs sm:text-sm font-mono font-semibold text-center ${unit ? 'px-10 sm:px-14' : 'px-3'} border ${placeholderClass} focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-[9px] text-[var(--color-yarn-orange)] shadow-xs ${
-                        isEmpty ? 'bg-[var(--color-warning-amber-soft)] border-[var(--color-warning-amber)] text-[var(--color-warning-amber)] placeholder:text-[var(--color-warning-amber)]' : needsVerification ? 'border-[var(--wv-ochre-400)] bg-[var(--wv-ochre-50)]/50 text-[var(--wv-ochre-900)] ring-1 ring-[var(--wv-ochre-400)]/40' : 'bg-[var(--color-canvas-white)] border-[var(--color-hairline)] hover:border-[var(--color-hairline-strong)]'
+                        isEmpty ? 'bg-[var(--color-warning-amber-soft)] border-[var(--color-warning-amber)] text-[var(--color-warning-amber)] placeholder:text-[var(--color-warning-amber)]' : 'bg-[var(--color-canvas-white)] border-[var(--color-hairline)] hover:border-[var(--color-hairline-strong)]'
                     }`}
                 />
                 {unit && (
@@ -1214,12 +1208,6 @@ function NumField({
                 )}
             </div>
             {isEmpty && <p id={`${inputId}-help`} className="text-xs font-semibold text-[var(--color-warning-amber)]">Required</p>}
-            {needsVerification && !isEmpty && (
-                <p className="text-xs font-semibold text-[var(--wv-ochre-800)] flex items-center gap-1">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[var(--wv-ochre-400)] shrink-0 inline-block" />
-                    Auto-filled · Verify
-                </p>
-            )}
             {warning ? (
                 <div className="flex flex-col gap-0.5 mt-1">
                     <div className="flex items-center gap-1">
@@ -1249,11 +1237,9 @@ type YarnDensityField = 'linearDensityUnit' | 'cottonCountNe' | 'calcDenier'
 function YarnDensityFields({
     row,
     onChange,
-    needsVerification = false,
 }: {
     row: YarnDensityRow
     onChange: (field: YarnDensityField, value: YarnLinearDensityUnit | number | null) => void
-    needsVerification?: boolean
 }) {
     const effectiveDenier = getEffectiveYarnDenier(row)
     const densityWarning = getYarnDensityWarning(effectiveDenier)
@@ -1278,7 +1264,6 @@ function YarnDensityFields({
             hint="Enter total linear density after any ply or doubling"
             warning={densityWarning}
             attentionWhenEmpty
-            needsVerification={needsVerification}
         />
     )
 }
@@ -2421,8 +2406,6 @@ function RowCard({
     children,
     accent = 'indigo',
     isComplete = false,
-    unverifiedNotice,
-    onConfirmVerification,
 }: {
     title: string
     index: number
@@ -2438,8 +2421,6 @@ function RowCard({
     children: React.ReactNode
     accent?: 'indigo' | 'emerald'
     isComplete?: boolean
-    unverifiedNotice?: { denier: boolean; rate: boolean; denierVal: number; rateVal: number; yarnName: string }
-    onConfirmVerification?: () => void
 }) {
     const colors = {
         indigo:  { strip: 'bg-[var(--color-info-blue-soft)]', badge: 'bg-[var(--color-info-blue-soft)] text-[var(--color-info-blue)] border-[var(--wv-status-info-border)]' },
@@ -2605,11 +2586,6 @@ function RowCard({
                                     <Check className="h-2.5 w-2.5 stroke-[2.5]" /> Done
                                 </span>
                             )}
-                            {unverifiedNotice && (unverifiedNotice.denier || unverifiedNotice.rate) && (
-                                <span className="inline-flex items-center gap-1 rounded-full border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] px-2 py-0.5 text-xs font-semibold text-[var(--wv-ochre-800)]">
-                                    Verify Denier & Rate
-                                </span>
-                            )}
                         </span>
                         <span className="mt-0.5 block break-words text-xs font-medium leading-4 text-[var(--color-muted)]">
                             {title} · {showCalculatedValues ? `Base weight ${kgPer100m.toFixed(3)} kg/100m` : (isComplete ? 'Complete' : 'Complete inputs')}
@@ -2646,39 +2622,6 @@ function RowCard({
                         <p className="border-b border-[var(--color-hairline)]/70 px-4 py-2 text-xs font-medium leading-4 text-[var(--color-muted)]">
                             Manual workflow: calculate this base weight and cost first. {adjustmentDetail}
                         </p>
-                    )}
-                    {unverifiedNotice && (unverifiedNotice.denier || unverifiedNotice.rate) && (
-                        <div
-                            data-testid="yarn-auto-propagate-verification-banner"
-                            className="mx-4 mt-3 flex flex-wrap items-center justify-between gap-2 rounded-[9px] border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] p-2.5 text-xs text-[var(--wv-ochre-900)] shadow-xs transition-all"
-                        >
-                            <div className="flex items-center gap-2 min-w-0">
-                                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--wv-ochre-200)] text-[var(--wv-ochre-800)] font-bold text-xs">
-                                    !
-                                </span>
-                                <div className="text-xs leading-tight">
-                                    <span className="font-semibold text-[var(--wv-ochre-800)]">Auto-filled from Rate Book:</span>{' '}
-                                    <span>
-                                        {unverifiedNotice.denier && unverifiedNotice.rate
-                                            ? `Denier (${unverifiedNotice.denierVal} D) & Yarn Rate (₹${unverifiedNotice.rateVal}/kg)`
-                                            : unverifiedNotice.denier
-                                            ? `Denier (${unverifiedNotice.denierVal} D)`
-                                            : `Yarn Rate (₹${unverifiedNotice.rateVal}/kg)`}
-                                        . Please verify these parameters.
-                                    </span>
-                                </div>
-                            </div>
-                            {onConfirmVerification && (
-                                <button
-                                    type="button"
-                                    onClick={onConfirmVerification}
-                                    className="inline-flex shrink-0 items-center gap-1 rounded-[6px] bg-[var(--wv-action-primary)] px-2.5 py-1 text-xs font-semibold text-white shadow-xs hover:bg-[var(--wv-action-primary-hover)] active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wv-brand-accent-strong)]"
-                                >
-                                    <Check className="h-3 w-3 stroke-[2.5]" />
-                                    Confirm Values
-                                </button>
-                            )}
-                        </div>
                     )}
                     {/* Warp rows have eight formula fields; four desktop columns keep the
                         fields balanced across two readable rows instead of leaving GST alone. */}
@@ -3019,9 +2962,6 @@ function QuickCostingView({
     directWeavingRateInput,
     onDirectWeavingRateInputChange,
     savedYarnOptions,
-    unverifiedYarnRows,
-    onConfirmYarnVerification,
-    onYarnFieldManualEdit,
     onSelectWarpYarn,
     onSelectWeftYarn,
 }: {
@@ -3042,9 +2982,6 @@ function QuickCostingView({
     directWeavingRateInput: string
     onDirectWeavingRateInputChange: (value: string) => void
     savedYarnOptions?: SavedYarnOption[]
-    unverifiedYarnRows?: Record<string, { yarnName: string; denier: boolean; rate: boolean; autoFilledDenier: number; autoFilledRate: number }>
-    onConfirmYarnVerification?: (rowId: string) => void
-    onYarnFieldManualEdit?: (rowId: string, field: 'calcDenier' | 'yarnRate') => void
     onSelectWarpYarn?: (rowId: string, yarn: SavedYarnOption) => void
     onSelectWeftYarn?: (rowId: string, yarn: SavedYarnOption) => void
 }) {
@@ -3119,7 +3056,6 @@ function QuickCostingView({
                 />
                 <CardContent className="space-y-4 p-4 sm:p-5">
                     {state.warpRows.map((row, index) => {
-                        const unverified = unverifiedYarnRows?.[row.id]
                         return (
                         <RowCard
                             key={row.id}
@@ -3141,14 +3077,6 @@ function QuickCostingView({
                             )}
                             showCalculatedValues={hasValidCostResult}
                             isComplete={isWarpRowFilled(row)}
-                            unverifiedNotice={unverified ? {
-                                denier: unverified.denier,
-                                rate: unverified.rate,
-                                denierVal: unverified.autoFilledDenier,
-                                rateVal: unverified.autoFilledRate,
-                                yarnName: unverified.yarnName,
-                            } : undefined}
-                            onConfirmVerification={() => onConfirmYarnVerification?.(row.id)}
                         >
                             <CalculationModeField
                                 value={row.calculationMode === 'manual' ? 'manual' : 'formula'}
@@ -3170,11 +3098,7 @@ function QuickCostingView({
                                 <>
                                     <YarnDensityFields
                                         row={row}
-                                        needsVerification={unverified?.denier}
                                         onChange={(field, value) => {
-                                            if (field === 'calcDenier') {
-                                                onYarnFieldManualEdit?.(row.id, 'calcDenier')
-                                            }
                                             dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field, value })
                                         }}
                                     />
@@ -3186,9 +3110,7 @@ function QuickCostingView({
                                 fieldKey="yarnRate"
                                 label={`${t('common.current_yarn_rate')} — REQUIRED`}
                                 value={row.yarnRate}
-                                needsVerification={unverified?.rate}
                                 onChange={value => {
-                                    onYarnFieldManualEdit?.(row.id, 'yarnRate')
                                     dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'yarnRate', value: value ?? 0 })
                                 }}
                                 unit="₹/kg"
@@ -3240,7 +3162,6 @@ function QuickCostingView({
                     <WeftPickConventionField weftRows={state.weftRows} dispatch={dispatch} />
                     {state.weftRows.map((row, index) => {
                         const effectiveCostingWidthCm = getEffectiveCostingWidthCm(row)
-                        const unverified = unverifiedYarnRows?.[row.id]
                         return (
                             <RowCard
                                 key={row.id}
@@ -3257,14 +3178,6 @@ function QuickCostingView({
                                 adjustmentDetail={formatWasteProvenance(row.shortagePct, totals.weftRows[index]?.defaultWastePct ?? state.yarnShortagePct, totals.weftRows[index]?.wastePct ?? state.yarnShortagePct, totals.weftRows[index]?.totalAdjustmentPct ?? 0)}
                                 showCalculatedValues={hasValidCostResult}
                                 isComplete={isWeftRowFilled(row)}
-                                unverifiedNotice={unverified ? {
-                                    denier: unverified.denier,
-                                    rate: unverified.rate,
-                                    denierVal: unverified.autoFilledDenier,
-                                    rateVal: unverified.autoFilledRate,
-                                    yarnName: unverified.yarnName,
-                                } : undefined}
-                                onConfirmVerification={() => onConfirmYarnVerification?.(row.id)}
                             >
                                 <CalculationModeField value={row.calculationMode === 'manual' ? 'manual' : 'formula'} onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'calculationMode', value })} />
                                 <LayerNameField
@@ -3284,11 +3197,7 @@ function QuickCostingView({
                                 ) : (
                                     <YarnDensityFields
                                         row={row}
-                                        needsVerification={unverified?.denier}
                                         onChange={(field, value) => {
-                                            if (field === 'calcDenier') {
-                                                onYarnFieldManualEdit?.(row.id, 'calcDenier')
-                                            }
                                             dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field, value })
                                         }}
                                     />
@@ -3298,9 +3207,7 @@ function QuickCostingView({
                                     fieldKey="yarnRate"
                                     label={`${t('common.current_yarn_rate')} — REQUIRED`}
                                     value={row.yarnRate}
-                                    needsVerification={unverified?.rate}
                                     onChange={value => {
-                                        onYarnFieldManualEdit?.(row.id, 'yarnRate')
                                         dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'yarnRate', value: value ?? 0 })
                                     }}
                                     unit="₹/kg"
@@ -3636,49 +3543,10 @@ export default function EstimatorClient({
     const [partyName,       setPartyName]       = useState('')
     const [staleRateNames,  setStaleRateNames]  = useState(staleDefaultRateNames)
     const [rateBookYarns,   setRateBookYarns]   = useState<RateBookYarnRecord[]>([])
-    const [unverifiedYarnRows, setUnverifiedYarnRows] = useState<Record<string, {
-        denier: boolean
-        rate: boolean
-        autoFilledDenier: number
-        autoFilledRate: number
-        yarnName: string
-    }>>({})
 
     const savedYarnOptions = useMemo(() => {
         return buildSavedYarnOptions(rateBookYarns, templates)
     }, [rateBookYarns, templates])
-
-    const handleConfirmYarnVerification = useCallback((rowId: string) => {
-        setUnverifiedYarnRows(prev => {
-            if (!prev[rowId]) return prev
-            const next = { ...prev }
-            delete next[rowId]
-            return next
-        })
-    }, [])
-
-    const handleYarnFieldManualEdit = useCallback((rowId: string, field: 'calcDenier' | 'yarnRate') => {
-        setUnverifiedYarnRows(prev => {
-            const existing = prev[rowId]
-            if (!existing) return prev
-            const isDenier = field === 'calcDenier'
-            const remainingDenier = isDenier ? false : existing.denier
-            const remainingRate = isDenier ? existing.rate : false
-            if (!remainingDenier && !remainingRate) {
-                const next = { ...prev }
-                delete next[rowId]
-                return next
-            }
-            return {
-                ...prev,
-                [rowId]: {
-                    ...existing,
-                    denier: remainingDenier,
-                    rate: remainingRate,
-                }
-            }
-        })
-    }, [])
 
     const [qualityLabel,    setQualityLabel]    = useState(initialFreeCosting?.label ?? '')
     // Construction text is never typed: it follows the yarn component names.
@@ -3958,16 +3826,6 @@ export default function EstimatorClient({
             id: rowId,
             yarn: { name: yarn.name, density: yarn.density ?? null, yarnRate: yarn.yarnRate },
         })
-        setUnverifiedYarnRows(prev => ({
-            ...prev,
-            [rowId]: {
-                denier: (yarn.denier ?? 0) > 0,
-                rate: yarn.yarnRate > 0,
-                autoFilledDenier: yarn.denier ?? 0,
-                autoFilledRate: yarn.yarnRate,
-                yarnName: yarn.name,
-            },
-        }))
     }, [dispatch])
 
     const handleSelectWeftYarn = useCallback((rowId: string, yarn: SavedYarnOption) => {
@@ -3976,16 +3834,6 @@ export default function EstimatorClient({
             id: rowId,
             yarn: { name: yarn.name, density: yarn.density ?? null, yarnRate: yarn.yarnRate },
         })
-        setUnverifiedYarnRows(prev => ({
-            ...prev,
-            [rowId]: {
-                denier: (yarn.denier ?? 0) > 0,
-                rate: yarn.yarnRate > 0,
-                autoFilledDenier: yarn.denier ?? 0,
-                autoFilledRate: yarn.yarnRate,
-                yarnName: yarn.name,
-            },
-        }))
     }, [dispatch])
 
     const buildCurrentDraft = useCallback((
@@ -6377,9 +6225,6 @@ export default function EstimatorClient({
                         directWeavingRateInput={directWeavingRateInput}
                         onDirectWeavingRateInputChange={setDirectWeavingRateInput}
                         savedYarnOptions={savedYarnOptions}
-                        unverifiedYarnRows={unverifiedYarnRows}
-                        onConfirmYarnVerification={handleConfirmYarnVerification}
-                        onYarnFieldManualEdit={handleYarnFieldManualEdit}
                         onSelectWarpYarn={handleSelectWarpYarn}
                         onSelectWeftYarn={handleSelectWeftYarn}
                     />
@@ -6488,7 +6333,6 @@ export default function EstimatorClient({
                     <CardContent className="p-5 sm:p-6 space-y-5">
                         <div className="space-y-4">
                             {state.warpRows.map((row, i) => {
-                                const unverified = unverifiedYarnRows[row.id]
                                 return (
                                 <RowCard
                                     key={row.id}
@@ -6510,14 +6354,6 @@ export default function EstimatorClient({
                                     )}
                                     showCalculatedValues={hasValidCostResult}
                                     isComplete={isWarpRowFilled(row)}
-                                    unverifiedNotice={unverified ? {
-                                        denier: unverified.denier,
-                                        rate: unverified.rate,
-                                        denierVal: unverified.autoFilledDenier,
-                                        rateVal: unverified.autoFilledRate,
-                                        yarnName: unverified.yarnName,
-                                    } : undefined}
-                                    onConfirmVerification={() => handleConfirmYarnVerification(row.id)}
                                 >
                                     <CalculationModeField
                                         value={row.calculationMode === 'manual' ? 'manual' : 'formula'}
@@ -6539,11 +6375,7 @@ export default function EstimatorClient({
                                         <>
                                             <YarnDensityFields
                                                 row={row}
-                                                needsVerification={unverified?.denier}
                                                 onChange={(field, value) => {
-                                                    if (field === 'calcDenier') {
-                                                        handleYarnFieldManualEdit(row.id, 'calcDenier')
-                                                    }
                                                     dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field, value })
                                                 }}
                                             />
@@ -6564,13 +6396,11 @@ export default function EstimatorClient({
                                                 label={`${t('common.current_yarn_rate')} — REQUIRED`}
                                                 value={row.yarnRate} 
                                                 onChange={v => {
-                                                    handleYarnFieldManualEdit(row.id, 'yarnRate')
                                                     dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'yarnRate', value: v ?? 0 })
                                                 }} 
                                                 step={1}
                                                 placeholder="e.g. 110"
                                                 attentionWhenEmpty
-                                                needsVerification={unverified?.rate}
                                                 warning={isUnusuallyLow && !isDismissed ? 'Unusually low' : undefined}
                                                 onDismissWarning={() => setDismissedWarnings(prev => [...prev, warningId])}
                                             />
@@ -6678,7 +6508,6 @@ export default function EstimatorClient({
                                     inputUnit: widthUnit,
                                     rawInputValue: rawEffectiveWidth,
                                 })[0]?.message
-                                const unverified = unverifiedYarnRows[row.id]
 
                                 return (
                                     <RowCard
@@ -6701,14 +6530,6 @@ export default function EstimatorClient({
                                         )}
                                         showCalculatedValues={hasValidCostResult}
                                         isComplete={isWeftRowFilled(row)}
-                                        unverifiedNotice={unverified ? {
-                                            denier: unverified.denier,
-                                            rate: unverified.rate,
-                                            denierVal: unverified.autoFilledDenier,
-                                            rateVal: unverified.autoFilledRate,
-                                            yarnName: unverified.yarnName,
-                                        } : undefined}
-                                        onConfirmVerification={() => handleConfirmYarnVerification(row.id)}
                                     >
                                         <CalculationModeField
                                             value={row.calculationMode === 'manual' ? 'manual' : 'formula'}
@@ -6751,11 +6572,7 @@ export default function EstimatorClient({
                                         ) : (
                                             <YarnDensityFields
                                                 row={row}
-                                                needsVerification={unverified?.denier}
                                                 onChange={(field, value) => {
-                                                    if (field === 'calcDenier') {
-                                                        handleYarnFieldManualEdit(row.id, 'calcDenier')
-                                                    }
                                                     dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field, value })
                                                 }}
                                             />
@@ -6774,12 +6591,10 @@ export default function EstimatorClient({
                                                     label={`${t('common.current_yarn_rate')} — REQUIRED`}
                                                     value={row.yarnRate}
                                                     onChange={v => {
-                                                        handleYarnFieldManualEdit(row.id, 'yarnRate')
                                                         dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'yarnRate', value: v ?? 0 })
                                                     }}
                                                     placeholder="e.g. 110"
                                                     attentionWhenEmpty
-                                                    needsVerification={unverified?.rate}
                                                     warning={isUnusuallyLow && !isDismissed ? 'Unusually low' : undefined}
                                                     onDismissWarning={() => setDismissedWarnings(prev => [...prev, warningId])}
                                                 />
