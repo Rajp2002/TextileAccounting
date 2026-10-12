@@ -823,6 +823,18 @@
     width: 100%;
   }
 
+  /* Rate Book: on desktop the yarn list is the only scrolling region; RatesClient
+     sets --rates-board-max to the viewport height left below the filters. */
+  @media (min-width: 768px) {
+    .rates-board-scroll {
+      max-height: max(20rem, var(--rates-board-max, 100000px));
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      margin-inline: -0.25rem;
+      padding: 0.25rem;
+    }
+  }
+
   .estimator-workspace-main {
     min-width: 0;
     width: 100%;
