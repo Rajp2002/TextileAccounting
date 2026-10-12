@@ -1,0 +1,83 @@
+/*
+ * Brand surfaces of the offer check, one calculator sheet in Weavly's own colours:
+ *   .selvedge  the woven edge of a bolt: a loom-navy line over a saffron one, along the sheet's top
+ *   .band      warm cream (a breath of saffron over cotton) for the inputs and the footnote
+ *   .loom      the answer: loom navy, the same navy as the sidebar, with a faint warp-and-weft weave
+ *   .thread    the logo's thread running into its spool, a quiet watermark for the empty states only
+ *   .stripe    fine warp threads laid over the price track's zones
+ * The tone variables are the semantic colours re-tuned for a dark ground (the light-ground
+ * ones fall under 4.5:1 on navy); everything inside .loom reads them.
+ */
+
+.selvedge {
+  position: absolute;
+  inset: 0 0 auto 0;
+  z-index: 1;
+  height: 5px;
+  pointer-events: none;
+  background: linear-gradient(to bottom, var(--wv-bg-inverse) 0 3px, var(--wv-saffron-500) 3px 5px, transparent 5px);
+}
+
+.band {
+  background-color: color-mix(in oklab, var(--wv-ochre-50) 30%, var(--wv-cotton-100));
+}
+
+.loom {
+  --loom-loss: color-mix(in oklab, var(--wv-madder-200) 72%, var(--wv-madder-600));
+  --loom-thin: var(--wv-ochre-400);
+  --loom-good: var(--wv-moss-200);
+  --loom-rule: rgb(255 255 255 / 0.11);
+
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  color: var(--wv-text-inverse);
+  background-color: var(--wv-bg-inverse);
+  background-image: radial-gradient(110% 100% at 100% 0%, color-mix(in oklab, var(--wv-neel-700) 50%, transparent), transparent 62%);
+}
+
+/* The cloth: a fine twill, diagonal ribs rather than a grid, a whisper of light. Behind everything. */
+.loom::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(135deg, rgb(255 255 255 / 0.035) 0 1px, transparent 1px 4px);
+}
+
+/* The logo's thread and spool, cropped from the wordmark below the letters (400x242 source px at 0.45). */
+.thread {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: -1;
+  width: 180px;
+  height: 109px;
+  pointer-events: none;
+  opacity: 0.17;
+  background: url('/images/WeavlyLogoDark.png') no-repeat -76.5px -192.6px / 460.8px auto;
+}
+
+.stripe {
+  background-image: repeating-linear-gradient(90deg, rgb(255 255 255 / 0.2) 0 1px, transparent 1px 3px);
+}
+
+/* Phones recompose: the figure and the steps need the width, so the watermark goes. */
+@media (max-width: 767px) {
+  .thread {
+    display: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .selvedge,
+  .thread,
+  .loom::before {
+    display: none;
+  }
+
+  .loom {
+    border-block: 1px solid CanvasText;
+  }
+}

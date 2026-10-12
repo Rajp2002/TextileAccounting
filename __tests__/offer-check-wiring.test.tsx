@@ -158,6 +158,50 @@ describe('the answer to an offer', () => {
     })
 })
 
+describe("Weavly's look on the offer check", () => {
+    it('puts the answer, and the prompt before it, on the loom-navy panel with the price track', () => {
+        for (const offer of [null, 19]) {
+            const html = renderResult(offer, null)
+            expect(html).toContain('data-offer-loom')
+            expect(html).toContain('data-offer-track')
+        }
+        // The working (per metre, costing, what-ifs) stays on white beneath the panel.
+        expect(renderResult(19, null)).toContain(offerCheckText.en.linesTitle)
+    })
+
+    it('tunes the tones for the dark ground and keeps losses red', () => {
+        expect(renderResult(16, 1000)).toContain('text-[var(--loom-loss)]')
+        expect(renderResult(19, null)).toContain('text-[var(--loom-thin)]')
+        expect(renderResult(25, null)).not.toMatch(/text-\[var\(--loom-(loss|thin)\)\]/)
+    })
+
+    it('lays tape-measure ticks along the track, every fifth one longer', () => {
+        const html = renderResult(19, null)
+        const ticks = html.match(/absolute top-\[calc\(50%\+9px\)\] w-px[^"]*"/g) ?? []
+        expect(ticks.length).toBeGreaterThanOrEqual(8)
+        expect(ticks.length).toBeLessThanOrEqual(18)
+        expect(ticks.some(tick => tick.includes('h-2'))).toBe(true)
+        expect(ticks.some(tick => tick.includes('h-1'))).toBe(true)
+    })
+
+    it('draws the brand surfaces from theme tokens, never hard-coded colours', () => {
+        const css = read('components/estimator/offer-check.module.css')
+        expect(css).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
+        for (const token of ['--wv-bg-inverse', '--wv-saffron-500', '--wv-text-inverse', '--wv-madder-200', '--wv-ochre-400']) expect(css).toContain(token)
+        // The logo's own thread and spool, not a redrawn one.
+        expect(css).toContain('/images/WeavlyLogoDark.png')
+        expect(fs.existsSync(path.join(root, 'public/images/WeavlyLogoDark.png'))).toBe(true)
+    })
+
+    it('keeps decoration out of the way: no watermark on phones or in forced colours, and none behind an answer', () => {
+        const css = read('components/estimator/offer-check.module.css')
+        expect(css).toMatch(/@media \(max-width: 767px\)\s*\{\s*\.thread\s*\{\s*display: none/)
+        expect(css).toMatch(/@media \(forced-colors: active\)/)
+        // The thread appears only while there is no evaluation (idle and prompt), as the result passes `thread={!evaluation}`.
+        expect(read('components/estimator/OfferCheckResult.tsx')).toContain('thread={!evaluation}')
+    })
+})
+
 describe('the check an offer page', () => {
     const candidates = listOfferCandidates([{
         id: 'a1',
@@ -181,6 +225,14 @@ describe('the check an offer page', () => {
             initialBase: props.initialBase ?? null,
         }))
     }
+
+    it('wears the selvedge and keeps its inputs on the warm band', async () => {
+        const client = read('app/(dashboard)/owner/quotes/offer/OfferCheckClient.tsx')
+        expect(client).toContain('styles.selvedge')
+        expect(client.match(/styles\.band/g)).toHaveLength(2)
+        const html = await renderPage({})
+        expect(html).toContain('data-offer-loom')
+    })
 
     it('asks for a saved costing first, with the inputs waiting', async () => {
         const html = await renderPage({})
