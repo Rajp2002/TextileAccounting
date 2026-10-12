@@ -32,6 +32,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { formatINR } from '@/lib/finance'
+import { fitRegionToWindow } from '@/lib/fit-region-to-window'
 import { cn } from '@/lib/utils'
 import { railPrimaryAction, railSurface } from '@/components/ui/rail'
 import { PageHeader } from '@/components/ui/page-header'
@@ -106,30 +107,8 @@ function parseMeters(value: string | number | null | undefined) {
     return Number.isFinite(numeric) && numeric > 0 ? numeric : 0
 }
 
-// Fits the machine readings into the window below the shift controls, so a long
-// shift scrolls inside the sheet and the page itself never scrolls. The space
-// above and below the readings is measured because banners, wrapped headers and
-// the floating save bar all change it. Phones keep the page scroll (app/mobile.css).
-function fitReadingsToWindow(region: HTMLDivElement | null) {
-    const main = region?.closest('main')
-    if (!region || !main) return
-    let page: HTMLElement = region
-    while (page.parentElement && page.parentElement !== main) page = page.parentElement
-    const fit = () => {
-        const readings = region.getBoundingClientRect()
-        const mainStyle = getComputedStyle(main)
-        const below = page.getBoundingClientRect().bottom - readings.bottom + parseFloat(mainStyle.paddingBottom) + parseFloat(mainStyle.borderBottomWidth)
-        region.style.setProperty('--daily-readings-fit', `${Math.floor(document.documentElement.clientHeight - readings.top - window.scrollY - below)}px`)
-    }
-    // Resizing the readings resizes the page, so refit after the observer callback rather than inside it.
-    let timer = 0
-    const refit = () => { clearTimeout(timer); timer = window.setTimeout(fit) }
-    const observer = new ResizeObserver(refit)
-    observer.observe(page)
-    window.addEventListener('resize', refit)
-    fit()
-    return () => { clearTimeout(timer); observer.disconnect(); window.removeEventListener('resize', refit) }
-}
+// Fits the machine readings into the window below the shift controls (see lib/fit-region-to-window.ts).
+const fitReadingsToWindow = fitRegionToWindow('--daily-readings-fit')
 
 function isContextValidForDate(
     effectiveFrom: string,

@@ -9,6 +9,7 @@ import {
     type BaseLoomOutputRow,
     type BaseProductionDay,
 } from '@/lib/base-production-analytics'
+import { fitRegionToWindow } from '@/lib/fit-region-to-window'
 import { useTranslation } from '@/lib/i18n/context'
 import { cn } from '@/lib/utils'
 
@@ -19,6 +20,9 @@ import { cn } from '@/lib/utils'
 const FRAME_HEIGHT = 16
 const BAR_HEIGHT = 8
 const YESTERDAY_FRAME_CLASS = 'bg-wv-cotton-200 ring-1 ring-inset ring-wv-cotton-400'
+
+// Fits the rows into the window above the footer, so many looms scroll inside the card, not the page.
+const fitRowsToWindow = fitRegionToWindow('--loom-rows-fit')
 
 function share(value: number, max: number) {
     return max > 0 && value > 0 ? Math.max(1, (value / max) * 100) : 0
@@ -183,7 +187,15 @@ export default function BaseProductionLoomChart({
                             </div>
                         )}
 
-                        <div className={cn('grid', columns.length > 1 && 'xl:grid-cols-2 xl:divide-x xl:divide-hairline')}>
+                        <div
+                            ref={fitRowsToWindow}
+                            role="region"
+                            aria-label={t('production.loomOutputTitle')}
+                            className={cn(
+                                'production-loom-rows grid max-h-[max(12rem,var(--loom-rows-fit,calc(100dvh-25rem)))] overflow-y-auto overscroll-contain',
+                                columns.length > 1 && 'xl:grid-cols-2 xl:divide-x xl:divide-hairline',
+                            )}
+                        >
                             {columns.map((column, index) => (
                                 <ul
                                     key={index}

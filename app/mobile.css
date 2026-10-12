@@ -354,8 +354,10 @@
 
   /* Phone entry uses the page scroll, including a rotated phone. The desktop
      fit to the window can otherwise leave only a fraction of one row. */
-  .production-daily-readings {
+  .production-daily-readings,
+  .production-loom-rows {
     height: auto;
+    max-height: none;
     overflow-y: visible;
     overscroll-behavior: auto;
   }
