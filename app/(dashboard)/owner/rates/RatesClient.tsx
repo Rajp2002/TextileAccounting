@@ -740,6 +740,8 @@ export default function RatesClient({
                     candidate,
                 ]))
                 setRates(current => current.map(rate => {
+                    // The tour's sample yarn keeps its sample quality; no real quality will ever use it.
+                    if (isSampleRecordId(rate.id)) return rate
                     const candidate = candidateByKey.get(`${rate.category}:${normalizeYarnName(rate.name)}`)
                     return {
                         ...rate,
@@ -775,15 +777,16 @@ export default function RatesClient({
     const warpRatesCount = useMemo(() => targetYarnRates.filter(rate => rate.category === 'yarn_warp').length, [targetYarnRates])
     const weftRatesCount = useMemo(() => targetYarnRates.filter(rate => rate.category === 'yarn_weft').length, [targetYarnRates])
 
+    // The sample yarn only asks for a review while the tour is teaching it; outside the tour it never nags.
     const dueReviewRates = useMemo(
         () => activeYarnRates
-            .filter(rate => getRateReviewStatus(rate) !== 'current')
+            .filter(rate => getRateReviewStatus(rate) !== 'current' && (tourStep !== null || !isSampleRecordId(rate.id)))
             .sort((left, right) => {
                 const priority = { needs_review: 0, overdue: 1, due_soon: 2, current: 3 }
                 const statusDifference = priority[getRateReviewStatus(left)] - priority[getRateReviewStatus(right)]
                 return statusDifference || left.name.localeCompare(right.name, 'en-IN')
             }),
-        [activeYarnRates],
+        [activeYarnRates, tourStep],
     )
 
     const filteredRates = useMemo(
@@ -1262,7 +1265,7 @@ export default function RatesClient({
 
     const copy = rateBookBoardText[language]
     const todayDate = today()
-    const isDue = (rate: CostRateRow) => rate.is_active !== false && getRateReviewStatus(rate) !== 'current'
+    const isDue = (rate: CostRateRow) => rate.is_active !== false && getRateReviewStatus(rate) !== 'current' && (tourStep !== null || !isSampleRecordId(rate.id))
     // Prices due for a check lead the page; the board holds the rest. Search and direction narrow both.
     const queueRates = showArchived && tourStep === null ? [] : visibleRates.filter(isDue)
     const boardRates = queueRates.length ? visibleRates.filter(rate => !isDue(rate)) : visibleRates
@@ -1285,6 +1288,9 @@ export default function RatesClient({
     /** One yarn as a card: its price and how it moved, who uses it and its actions. A due card asks to confirm the price. */
     const renderYarnCard = (rate: CostRateRow, due: boolean) => {
         const archived = rate.is_active === false
+        const sample = isSampleRecordId(rate.id)
+        // Outside the tour the sample card says what it is instead of a review status, and offers only its removal.
+        const quietSample = sample && tourStep === null
         const reviewState = getRateReviewStatus(rate)
         const actionKind = pendingAction?.id === rate.id ? pendingAction.kind : null
         const reviewLabel = reviewState === 'needs_review' ? 'Confirm current rate' : 'Confirm review'
@@ -1297,7 +1303,7 @@ export default function RatesClient({
             : !due
                 ? fillCopy(copy.reviewOn, { date: rateDateLabel(dueDate, language) })
                 : reviewState === 'needs_review'
-                    ? copy.discovered
+                    ? rate.discovery_source ? copy.discovered : copy.newYarn
                     : dueIn < 0
                         ? dueIn === -1 ? copy.overdueOne : fillCopy(copy.overdueDays, { n: -dueIn })
                         : dueIn === 0 ? copy.dueToday : dueIn === 1 ? copy.dueTomorrow : fillCopy(copy.dueInDays, { n: dueIn })
@@ -1312,8 +1318,11 @@ export default function RatesClient({
                 )}
             >
                 <div className="flex items-baseline justify-between gap-3">
-                    <h3 data-ratebook-field="yarnNameCell" className="min-w-0 break-words text-base font-semibold leading-snug text-ink">{rate.name}</h3>
-                    <p data-ratebook-field="reviewStatusBadge" className={cn('shrink-0 text-[13px] tabular-nums', due ? 'font-semibold text-[var(--wv-ochre-800)]' : 'text-muted-foreground')}>{status}</p>
+                    <h3 data-ratebook-field="yarnNameCell" className="min-w-0 break-words text-base font-semibold leading-snug text-ink">
+                        {rate.name}
+                        {sample && <span data-ratebook-field="sampleBadge" className="ml-2 inline-flex translate-y-[-1px] items-center rounded-md bg-[var(--wv-saffron-100)] px-2 py-0.5 align-middle text-xs font-semibold text-saffron-deep ring-1 ring-inset ring-[var(--wv-saffron-200)]">{copy.example}</span>}
+                    </h3>
+                    {!quietSample && <p data-ratebook-field="reviewStatusBadge" className={cn('shrink-0 text-[13px] tabular-nums', due ? 'font-semibold text-[var(--wv-ochre-800)]' : 'text-muted-foreground')}>{status}</p>}
                 </div>
                 <div data-ratebook-field="rateAndTrend" tabIndex={-1} className="flex items-end justify-between gap-4">
                     <button
@@ -1340,50 +1349,58 @@ export default function RatesClient({
                     </button>
                     {trail && <PriceTrailSpark trail={trail} label={fillCopy(copy.trendLabel, { from: formatRateValue(trail[0].value, rate.unit), to: formatRateValue(trail.at(-1)!.value, rate.unit) })} />}
                 </div>
-                <div data-ratebook-field="linkedQualitiesPopover"><YarnUsage rate={rate} loading={usageLoading} copy={copy} /></div>
+                {quietSample
+                    ? <p className="text-[13px] leading-snug text-muted-foreground">{copy.sampleNote}</p>
+                    : <div data-ratebook-field="linkedQualitiesPopover"><YarnUsage rate={rate} loading={usageLoading} copy={copy} /></div>}
                 {rate.apply_as_default && <p className="-mt-2 text-[13px] font-medium text-success">{copy.defaultForNew}</p>}
                 <div className="mt-auto flex flex-wrap items-center gap-2 border-t border-hairline pt-4" role="group" aria-label={tx('Actions')}>
-                    {due && (
-                        <Button
-                            data-ratebook-field="quickReviewAction"
-                            onClick={() => handleQuickReview(rate)}
-                            disabled={isPending}
-                            aria-label={tx(`${reviewLabel} for ${rate.name}`)}
-                            className={railPrimaryAction}
-                        >
-                            {actionKind === 'review' ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" aria-hidden="true" />}
-                            {tx(actionKind === 'review' ? 'Confirming…' : reviewLabel)}
+                    {quietSample ? (
+                        <Button variant="outline" onClick={handleDeleteDemoYarn} className={secondaryAction}>
+                            <Trash2 className="h-4 w-4" aria-hidden="true" />{tx('Delete sample yarn')}
                         </Button>
-                    )}
-                    {archived ? (
-                        <Button
-                            variant="outline"
-                            onClick={() => { setArchiveError(null); setArchiveRate(rate) }}
-                            disabled={isPending}
-                            aria-label={`Restore rate ${rate.name}`}
-                            className={secondaryAction}
-                        >
-                            {actionKind === 'restore' ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArchiveRestore className="h-4 w-4" aria-hidden="true" />}
-                            {tx(actionKind === 'restore' ? `Restoring ${rate.name}…` : 'Restore rate')}
-                        </Button>
-                    ) : (
-                        <Button
-                            data-ratebook-field="quickEditAction"
-                            variant="outline"
-                            disabled={isPending}
-                            onClick={() => openQuickEdit(rate)}
-                            aria-label={`Edit rate for ${rate.name}`}
-                            className={secondaryAction}
-                        >
-                            <Pencil className="h-4 w-4" aria-hidden="true" />{tx('Edit rate')}
-                        </Button>
-                    )}
-                    {/* Activity opens the price-history chart; its Full activity button switches to the audit list. A due card keeps to its two answers; its price still opens the chart. */}
-                    {!due && (
-                        <Button variant="ghost" onClick={() => openHistory(rate, 'trend')} className={cn('ml-auto', ghostAction)}>
-                            <History className="h-4 w-4" aria-hidden="true" />{tx('Activity')}
-                        </Button>
-                    )}
+                    ) : <>
+                        {due && (
+                            <Button
+                                data-ratebook-field="quickReviewAction"
+                                onClick={() => handleQuickReview(rate)}
+                                disabled={isPending}
+                                aria-label={tx(`${reviewLabel} for ${rate.name}`)}
+                                className={railPrimaryAction}
+                            >
+                                {actionKind === 'review' ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" aria-hidden="true" />}
+                                {tx(actionKind === 'review' ? 'Confirming…' : reviewLabel)}
+                            </Button>
+                        )}
+                        {archived ? (
+                            <Button
+                                variant="outline"
+                                onClick={() => { setArchiveError(null); setArchiveRate(rate) }}
+                                disabled={isPending}
+                                aria-label={`Restore rate ${rate.name}`}
+                                className={secondaryAction}
+                            >
+                                {actionKind === 'restore' ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArchiveRestore className="h-4 w-4" aria-hidden="true" />}
+                                {tx(actionKind === 'restore' ? `Restoring ${rate.name}…` : 'Restore rate')}
+                            </Button>
+                        ) : (
+                            <Button
+                                data-ratebook-field="quickEditAction"
+                                variant="outline"
+                                disabled={isPending}
+                                onClick={() => openQuickEdit(rate)}
+                                aria-label={`Edit rate for ${rate.name}`}
+                                className={secondaryAction}
+                            >
+                                <Pencil className="h-4 w-4" aria-hidden="true" />{tx('Edit rate')}
+                            </Button>
+                        )}
+                        {/* Activity opens the price-history chart; its Full activity button switches to the audit list. A due card keeps to its two answers; its price still opens the chart. */}
+                        {!due && (
+                            <Button variant="ghost" onClick={() => openHistory(rate, 'trend')} className={cn('ml-auto', ghostAction)}>
+                                <History className="h-4 w-4" aria-hidden="true" />{tx('Activity')}
+                            </Button>
+                        )}
+                    </>}
                 </div>
             </article>
         )
