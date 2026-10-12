@@ -1,4 +1,5 @@
 import React from 'react'
+import { buildCostingResult, calcFullTotals } from '../../../lib/estimator'
 type FixtureControl = { calls: Array<{ name: string; payload: unknown }>; mode: string; delay: number; rates: Record<string, unknown>[]; quotes: Record<string, unknown>[] }
 function control() { return Reflect.get(window, '__liteRecords') as FixtureControl }
 async function request(name: string, payload: unknown) {
@@ -15,6 +16,18 @@ export default function Link({ href, children, ...props }: React.AnchorHTMLAttri
 export async function recordTourEventAction() { return { success: true } }
 export async function trackPlanEvent() { return true }
 export async function getEstimatorQuoteDetail(id: string) { const error = await request('detail', id); return error ? { error } : { data: control().quotes.find(quote => quote.id === id) } }
+export async function saveEstimatorQuoteV3(payload: { sourceQuoteId?: string; estimate: Record<string, unknown>; clientRequestId: string }) {
+  const error = await request('save-version', payload)
+  if (error) return { error }
+  const fixture = control()
+  const source = fixture.quotes.find(quote => quote.id === payload.sourceQuoteId) as (Record<string, unknown> & { version_number: number }) | undefined
+  if (!source) return { error: 'The costing being edited no longer exists.' }
+  const state = payload.estimate as unknown as Parameters<typeof calcFullTotals>[0]
+  const result = buildCostingResult(state, calcFullTotals(state))
+  const created = { ...source, id: crypto.randomUUID(), version_number: source.version_number + 1, source_quote_id: source.id, snapshot_data: state, costing_result_snapshot: result, quote_price_per_meter: result.suggestedSellingPricePerM, intended_margin_percent: result.targetMarginPct, actual_margin_percent: result.actualMarginPct, created_at: '2026-10-12T10:00:00Z', updated_at: '2026-10-12T10:00:00Z', is_favorite: false }
+  fixture.quotes.unshift(created)
+  return { success: true, quoteId: created.id as string, versionNumber: created.version_number, updatedAt: created.updated_at, createdAt: created.created_at }
+}
 export async function auditHistoricalCostingSnapshot(id: string) { const error = await request('audit', id); return error ? { error } : { data: control().quotes.find(quote => quote.id === id) } }
 export async function updateSavedCostingLibraryState(payload: { id: string; isArchived?: boolean; isFavorite?: boolean }) { const error = await request('library', payload); return error ? { error } : { data: { is_archived: payload.isArchived, is_favorite: payload.isFavorite, updated_at: '2026-10-06T12:00:00Z' } } }
 export async function updateQuotationDocumentMetadata(payload: unknown) { const error = await request('document', payload); return error ? { error } : { data: { updated_at: '2026-10-06T12:00:00Z' } } }
@@ -26,3 +39,4 @@ export async function confirmAllCostRateReviews(payload: Array<{ id: string; exp
 export async function archiveCostRate(id: string, expectedUpdatedAt: string) { const error = await request('rate-archive', { id, expectedUpdatedAt }); return error ? { error } : { data: { updated_at: '2026-10-06T12:00:00Z' } } }
 export async function restoreCostRate(id: string, expectedUpdatedAt: string) { const error = await request('rate-restore', { id, expectedUpdatedAt }); return error ? { error } : { data: { ...control().rates.find(rate => rate.id === id), is_active: true, updated_at: '2026-10-06T12:00:00Z' } } }
 export async function deleteCostRate(id: string, expectedUpdatedAt: string) { const error = await request('rate-delete', { id, expectedUpdatedAt }); return error ? { error } : { success: true } }
+export async function getCostingDocumentBranding() { return null }

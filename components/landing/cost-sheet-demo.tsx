@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useState, type CSSProperties } from 'react'
+import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
+import { RangeSlider } from '@/components/ui/range-slider'
 import s from './landing.module.css'
 import { formatCount, formatRupees, formatRupeesWhole, SAMPLE_QUALITY, SAMPLE_START, type SampleInputs, type SampleResult } from './sample-format'
 import { useSampleCosting, type SampleEngineState } from './sample-costing-context'
@@ -164,7 +165,6 @@ export function CostSheetDemo() {
                 <div className="grid gap-x-8 sm:grid-cols-2">
                     {CONTROLS.map((control) => {
                         const value = inputs[control.key]
-                        const fill = ((value - control.min) / (control.max - control.min)) * 100
                         const id = `sample-${control.key}`
                         return (
                             <div key={control.key} className="pt-1">
@@ -174,17 +174,14 @@ export function CostSheetDemo() {
                                         {control.display(value)}
                                     </output>
                                 </div>
-                                <input
+                                <RangeSlider
                                     id={id}
-                                    type="range"
-                                    className={s.range}
                                     min={control.min}
                                     max={control.max}
                                     step={control.step}
                                     value={value}
                                     aria-valuetext={control.spoken(value)}
-                                    onChange={(event) => setInput(control.key, Number(event.target.value))}
-                                    style={{ '--fill': `${fill}%` } as CSSProperties}
+                                    onValueChange={(next) => setInput(control.key, next)}
                                 />
                             </div>
                         )
