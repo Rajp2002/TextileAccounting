@@ -50,7 +50,7 @@ describe('Sprint 4 quality, history, and record management', () => {
         expect(library).toContain('Archived · read-only')
         expect(library).toContain('!latest.is_archived')
         // A yarn discovered from a saved quality waits in the review queue until the owner confirms it.
-        expect(rates).toContain("reviewState === 'needs_review'\n                    ? copy.discovered")
+        expect(rates).toContain("reviewState === 'needs_review'\n                    ? rate.discovery_source ? copy.discovered : copy.newYarn")
         expect(rates).toContain('Recorded by {row.actor_name')
     })
 })

@@ -14,6 +14,7 @@ export const rateBookBoardText = {
         queueHint: 'Check each price with your supplier. Confirm it if it is still right, or use {edit} for a new price.',
         usedIn: 'Used in {names}', moreNames: '+{n} more', notUsed: 'Not used in a saved quality yet', usageLoading: 'Checking which qualities use it…',
         firstPrice: 'First price · {date}', noChange: 'No change · confirmed {date}', changedOn: 'on {date}',
+        example: 'Example', sampleNote: 'Sample yarn for learning the Rate Book. It is not your data and is not used in any costing. Delete it anytime.', newYarn: 'New yarn',
         trendLabel: 'Price from {from} to {to}', archived: 'Archived', defaultForNew: 'Default for new costings',
     },
     hi: {
@@ -30,6 +31,7 @@ export const rateBookBoardText = {
         queueHint: 'हर रेट अपने सप्लायर से मिलाएँ। सही हो तो पुष्टि करें, नया रेट हो तो {edit} इस्तेमाल करें।',
         usedIn: '{names} में इस्तेमाल', moreNames: '+{n} और', notUsed: 'अभी किसी सेव की गई क्वालिटी में नहीं', usageLoading: 'देख रहे हैं कि कौन सी क्वालिटी इसे इस्तेमाल करती है…',
         firstPrice: 'पहला रेट · {date}', noChange: 'कोई बदलाव नहीं · पुष्टि {date}', changedOn: '{date} को',
+        example: 'उदाहरण', sampleNote: 'Rate Book सीखने के लिए सैंपल धागा। यह आपका डेटा नहीं है और किसी कॉस्टिंग में इस्तेमाल नहीं होता। कभी भी हटा सकते हैं।', newYarn: 'नया धागा',
         trendLabel: '{from} से {to} तक का रेट', archived: 'आर्काइव किया गया', defaultForNew: 'नई कॉस्टिंग के लिए डिफ़ॉल्ट',
     },
     gu: {
@@ -46,6 +48,7 @@ export const rateBookBoardText = {
         queueHint: 'દરેક ભાવ સપ્લાયર સાથે મેળવો. સાચો હોય તો પુષ્ટિ કરો, નવો ભાવ હોય તો {edit} વાપરો.',
         usedIn: '{names}માં વપરાય છે', moreNames: '+{n} વધુ', notUsed: 'હજી કોઈ સેવ કરેલી ક્વોલિટીમાં નથી', usageLoading: 'કઈ ક્વોલિટી તેને વાપરે છે તે જોઈએ છીએ…',
         firstPrice: 'પહેલો ભાવ · {date}', noChange: 'કોઈ ફેરફાર નહીં · પુષ્ટિ {date}', changedOn: '{date}એ',
+        example: 'ઉદાહરણ', sampleNote: 'Rate Book શીખવા માટે સેમ્પલ યાર્ન. તે તમારો ડેટા નથી અને કોઈ કોસ્ટિંગમાં વપરાતો નથી. ગમે ત્યારે કાઢી શકો છો.', newYarn: 'નવું યાર્ન',
         trendLabel: '{from}થી {to} સુધીનો ભાવ', archived: 'આર્કાઇવ કરેલું', defaultForNew: 'નવી કોસ્ટિંગ માટે ડિફૉલ્ટ',
     },
 } as const
