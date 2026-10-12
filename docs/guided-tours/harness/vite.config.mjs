@@ -28,6 +28,7 @@ function stubServerModules() {
 
 export default defineConfig({
   root: import.meta.dirname,
+  publicDir: path.resolve(repo, 'public'),
   plugins: [stubServerModules()],
   resolve: {
     alias: [

@@ -14,10 +14,12 @@ import {
     LOSS_TEXT,
     OfferCheckResult,
     OfferFigurePlaceholder,
+    OfferLoomPanel,
     OfferPriceTrack,
     metres,
     rupees,
 } from '@/components/estimator/OfferCheckResult'
+import styles from '@/components/estimator/offer-check.module.css'
 import { useTranslation } from '@/lib/i18n/context'
 import { fillCopy } from '@/lib/i18n/fill'
 import { offerCheckText, type OfferCheckText } from '@/lib/i18n/offer-check'
@@ -53,19 +55,19 @@ function OfferSteps({ copy }: { copy: OfferCheckText }) {
     return (
         <div className="grid gap-8 @2xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] @2xl:gap-12">
             <OfferFigurePlaceholder copy={copy} />
-            <ol className="space-y-4 @2xl:border-l @2xl:border-hairline @2xl:pl-8">
+            <ol className="space-y-4 @2xl:border-l @2xl:border-white/10 @2xl:pl-8">
                 {steps.map((step, index) => (
                     <li key={step} className="flex items-start gap-3">
                         <span
                             aria-hidden="true"
                             className={cn(
                                 'flex size-6 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold tabular-nums',
-                                index === 0 ? 'bg-ink text-surface' : 'border border-hairline-strong text-muted-foreground',
+                                index === 0 ? 'bg-wv-text-inverse text-wv-bg-inverse' : 'border border-white/30 text-wv-text-inverse-secondary',
                             )}
                         >
                             {index + 1}
                         </span>
-                        <span className={cn('pt-0.5 text-sm leading-snug', index === 0 ? 'font-medium text-ink' : 'text-body')}>{step}</span>
+                        <span className={cn('pt-0.5 text-sm leading-snug', index === 0 ? 'font-medium text-wv-text-inverse' : 'text-wv-text-inverse-secondary')}>{step}</span>
                     </li>
                 ))}
             </ol>
@@ -229,9 +231,10 @@ export default function OfferCheckClient({
             <RouteMilestones route="/owner/quotes" shellVisible primaryUsable secondaryReady />
             <PageHeader title={copy.title} description={copy.intro} actions={backAction} />
 
-            <section aria-label={copy.title} className="@container overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs">
+            <section aria-label={copy.title} className="@container relative overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs">
+                <span aria-hidden="true" className={styles.selvedge} />
                 {/* The three inputs, as one band across the top; the answer reads below them. */}
-                <div className="grid grid-cols-2 gap-x-3 gap-y-5 border-b border-hairline bg-surface-soft/45 p-4 sm:gap-x-4 sm:p-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)_minmax(0,0.9fr)] lg:px-8">
+                <div className={cn(styles.band, 'grid grid-cols-2 gap-x-3 gap-y-5 border-b border-hairline p-4 pt-5 sm:gap-x-4 sm:p-6 sm:pt-7 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)_minmax(0,0.9fr)] lg:px-8')}>
                     <div className="col-span-2 min-w-0 lg:col-span-1">
                         <Label htmlFor={qualityId} className={FIELD_LABEL}>{copy.qualityLabel}</Label>
                         <Select
@@ -323,40 +326,48 @@ export default function OfferCheckClient({
                     </div>
                 </div>
 
-                <div className="p-5 sm:p-6 lg:p-8" aria-busy={load === 'loading'}>
+                <div aria-busy={load === 'loading'}>
                     {load === 'loading' ? (
-                        <div role="status" className="space-y-6">
-                            <p className="flex items-center gap-2 text-[13px] text-muted-foreground"><Loader2 className="size-4 animate-spin" aria-hidden="true" />{copy.loading}</p>
-                            <div aria-hidden="true" className="space-y-3">
-                                <div className="ui-skeleton h-11 w-48 rounded-lg bg-surface-soft" />
-                                <div className="ui-skeleton h-4 w-72 max-w-full rounded bg-surface-soft" />
+                        <OfferLoomPanel>
+                            <div role="status" className="space-y-6">
+                                <p className="flex items-center gap-2 text-[13px] text-wv-text-inverse-secondary"><Loader2 className="size-4 animate-spin" aria-hidden="true" />{copy.loading}</p>
+                                <div aria-hidden="true" className="space-y-3">
+                                    <div className="ui-skeleton h-11 w-48 rounded-lg bg-white/10" />
+                                    <div className="ui-skeleton h-4 w-72 max-w-full rounded bg-white/10" />
+                                </div>
+                                <div aria-hidden="true" className="ui-skeleton h-2.5 w-full rounded-full bg-white/10" />
                             </div>
-                            <div aria-hidden="true" className="ui-skeleton h-2 w-full rounded-full bg-surface-soft" />
-                        </div>
+                        </OfferLoomPanel>
                     ) : load === 'failed' ? (
-                        <OfferNotice
-                            role="alert"
-                            icon={TriangleAlert}
-                            tone="risk"
-                            title={copy.loadFailed}
-                            action={candidate && <Button type="button" variant="outline" onClick={() => void openCandidate(candidate)} className="min-h-10 max-md:min-h-[44px]">{copy.retry}</Button>}
-                        />
+                        <div className="p-5 sm:p-6 lg:p-8">
+                            <OfferNotice
+                                role="alert"
+                                icon={TriangleAlert}
+                                tone="risk"
+                                title={copy.loadFailed}
+                                action={candidate && <Button type="button" variant="outline" onClick={() => void openCandidate(candidate)} className="min-h-10 max-md:min-h-[44px]">{copy.retry}</Button>}
+                            />
+                        </div>
                     ) : !candidate ? (
-                        <OfferSteps copy={copy} />
+                        <OfferLoomPanel thread>
+                            <OfferSteps copy={copy} />
+                        </OfferLoomPanel>
                     ) : (result && !result.ok) || !candidate.checkable ? (
-                        <OfferNotice
-                            icon={RotateCcw}
-                            tone="thin"
-                            title={copy.notCheckedTitle}
-                            body={copy.notChecked}
-                            action={<Button asChild variant="outline" className="min-h-10 max-md:min-h-[44px]"><Link href="/owner/quotes">{copy.notCheckedAction}</Link></Button>}
-                        />
+                        <div className="p-5 sm:p-6 lg:p-8">
+                            <OfferNotice
+                                icon={RotateCcw}
+                                tone="thin"
+                                title={copy.notCheckedTitle}
+                                body={copy.notChecked}
+                                action={<Button asChild variant="outline" className="min-h-10 max-md:min-h-[44px]"><Link href="/owner/quotes">{copy.notCheckedAction}</Link></Button>}
+                            />
+                        </div>
                     ) : base ? (
                         <OfferCheckResult base={base} evaluation={evaluation} hasQuantity={quantity.status === 'ok'} copy={copy} track={track} />
                     ) : null}
                 </div>
 
-                <p className="flex items-start gap-2.5 border-t border-hairline bg-surface-soft/45 px-5 py-3.5 text-[13px] leading-5 text-muted-foreground sm:px-6 lg:px-8">
+                <p className={cn(styles.band, 'flex items-start gap-2.5 border-t border-hairline px-5 py-3.5 text-[13px] leading-5 text-muted-foreground sm:px-6 lg:px-8')}>
                     <Info className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
                     <span>{copy.basis}</span>
                 </p>
