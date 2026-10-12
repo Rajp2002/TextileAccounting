@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { TrialBanner } from '@/components/billing/TrialBanner'
+import { TrialNudgeCard, trialNudgeRemainingMs, TRIAL_NUDGE_VISIBLE_MS } from '@/components/billing/TrialNudge'
 import {
   readTrialEndedDismissal,
   TrialEndedNotice,
@@ -58,7 +58,7 @@ afterEach(() => {
   state.workspace = { paid: false, tier: 'free' }
 })
 
-describe('TrialBanner', () => {
+describe('TrialNudgeCard', () => {
   // The countdown reads the clock, so pin it: every endsAt below is an exact offset from NOW_MS.
   beforeEach(() => {
     vi.useFakeTimers()
@@ -68,7 +68,7 @@ describe('TrialBanner', () => {
     vi.useRealTimers()
   })
 
-  const render = (endsAt: string) => renderToStaticMarkup(createElement(TrialBanner, { endsAt }))
+  const render = (endsAt: string) => renderToStaticMarkup(createElement(TrialNudgeCard, { endsAt }))
 
   it('shows the days left in the trial', () => {
     expect(render(endsInDays(20))).toContain('Lite trial: 20 days left')
@@ -215,11 +215,38 @@ describe('Free workspace shows the trial-ended notice only on Free', () => {
   })
 })
 
+describe('trialNudgeRemainingMs', () => {
+  const NOW = 1_000_000_000
+
+  it('gives a fresh launch the full two minutes', () => {
+    expect(TRIAL_NUDGE_VISIBLE_MS).toBe(120_000)
+    expect(trialNudgeRemainingMs(null, NOW)).toBe(TRIAL_NUDGE_VISIBLE_MS)
+  })
+
+  it('resumes with what is left after an in-app navigation', () => {
+    expect(trialNudgeRemainingMs(String(NOW - 30_000), NOW)).toBe(90_000)
+  })
+
+  it('stays hidden once the window has passed or the owner dismissed it', () => {
+    expect(trialNudgeRemainingMs(String(NOW - TRIAL_NUDGE_VISIBLE_MS), NOW)).toBe(0)
+    expect(trialNudgeRemainingMs('dismissed', NOW)).toBe(0)
+  })
+
+  it('treats an unreadable marker as a fresh launch', () => {
+    expect(trialNudgeRemainingMs('garbage', NOW)).toBe(TRIAL_NUDGE_VISIBLE_MS)
+  })
+})
+
 describe('Trial surfaces are wired from the server', () => {
-  it('the owner layout renders TrialBanner only when the access has a trial, above the route content', () => {
+  it('the owner layout floats TrialNudge only when the access has a trial, instead of a pinned banner', () => {
     const layout = read('app/(dashboard)/owner/layout.tsx')
-    expect(layout).toContain("import { TrialBanner } from '@/components/billing/TrialBanner'")
-    expect(layout).toMatch(/\{planAccess\.trialEndsAt \? \([\s\S]*?<TrialBanner endsAt=\{planAccess\.trialEndsAt\} \/>[\s\S]*?\) : null\}\s*\{children\}/)
+    expect(layout).toContain("import { TrialNudge } from '@/components/billing/TrialNudge'")
+    expect(layout).toContain('{planAccess.trialEndsAt ? <TrialNudge endsAt={planAccess.trialEndsAt} /> : null}')
+    expect(layout).not.toContain('TrialBanner')
+  })
+
+  it('sign-out clears the nudge marker so the next sign-in shows it again', () => {
+    expect(read('lib/client-storage-cleanup.ts')).toContain("'weavly_trial_nudge_shown_at'")
   })
 
   it('the billing page presents a trial as "Free trial ends <date>" in Surat time, not as a paid period', () => {

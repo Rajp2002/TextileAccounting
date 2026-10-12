@@ -129,6 +129,10 @@ describe('Saved Costings reference tour', () => {
     expect(quotesPage).toContain("previousFreeGrant && (planAccess.effectiveTier === 'lite'")
     expect(quotesPage).toContain('<LitePriorFreeHistory><SavedFreeCostings embedded idPrefix="lite-prior-" /></LitePriorFreeHistory>')
     expect(quotesPage).toContain(': <SavedFreeCostings embedded />')
+    // A Lite trial carries a dormant Free grant; only saved Free costings earn the history block.
+    expect(quotesPage).toContain('const previousFreeGrant = freeGrant && await hasSavedFreeCostings(profile.org_id, freeGrant.subjectId)')
+    // Embedded history never shows the Free demo; the Lite page has its own tour sample.
+    expect(freePage).toContain('const showDemoCard = (!embedded && !demoDeleted && rows.length === 0) || tourSampleActive')
   })
   it('loads runtime and copy only after launch and never completes the core via Compare', () => {
     expect(tutorial).toContain("dynamic(() => import('./SavedCostingsTourRuntime'), { ssr: false })")

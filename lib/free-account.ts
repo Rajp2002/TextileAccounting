@@ -64,3 +64,16 @@ export async function finishFreeProvisioning(user: { id: string; email?: string;
   if (error) throw new Error('FREE_PROVISIONING_PENDING')
   return true
 }
+
+/**
+ * Whether the org kept any Free costings. A Lite trial account carries a dormant
+ * Free grant from signup, so a grant alone does not mean there is Free history
+ * to show beside the Lite records.
+ */
+export const hasSavedFreeCostings = cache(async (orgId: string, subjectId: string): Promise<boolean> => {
+  const { count, error } = await createAdminClient().from('free_saved_costings')
+    .select('id', { count: 'exact', head: true })
+    .eq('subject_id', subjectId).eq('org_id', orgId)
+  if (error) return false
+  return (count ?? 0) > 0
+})
