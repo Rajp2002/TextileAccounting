@@ -1065,7 +1065,9 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                 return (rightMargin ?? Number.NEGATIVE_INFINITY) - (leftMargin ?? Number.NEGATIVE_INFINITY)
             }
             if (costingSort === 'cost_asc') return (a.records[0] ? getProductionCostPerM(a.records[0]) ?? Number.POSITIVE_INFINITY : Number.POSITIVE_INFINITY) - (b.records[0] ? getProductionCostPerM(b.records[0]) ?? Number.POSITIVE_INFINITY : Number.POSITIVE_INFINITY)
-            return Date.parse(b.updatedAt) - Date.parse(a.updatedAt)
+            // The default view lists favourites first, then the most recently updated.
+            const favouriteOrder = Number(b.records[0]?.is_favorite === true) - Number(a.records[0]?.is_favorite === true)
+            return favouriteOrder || Date.parse(b.updatedAt) - Date.parse(a.updatedAt)
         })
     }, [costingSort, initialProfile, initialTemplates, initialWorkers, marginFilter, quotes, searchQuery, showArchived, showFavoritesOnly])
     const selectedCostings = useMemo(
@@ -1765,7 +1767,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                         )}
                     />
                 ) : (
-                    <div data-costing-tour="sample" className="space-y-3">
+                    <div data-costing-tour="sample" className="saved-costings-scroll space-y-3">
                         <p className="rounded-lg border border-hairline bg-surface-soft px-3 py-2 text-sm font-semibold text-ink" data-i18n-skip="true" lang={language}>{tourCommonCopy[language].sampleBanner}</p>
                         <SavedQualityLibraryView
                             selectedRecordIdByGroup={selectedRecordIdByGroup} onSelectRecord={selectRecord} onSaveMargin={saveCostingMargin}
@@ -1797,7 +1799,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     </div>
                 )
             ) : (
-            <div>
+            <div className="saved-costings-scroll">
             {qualityGroups.length === 0 ? (
                 <EmptyState
                     icon={FileText}

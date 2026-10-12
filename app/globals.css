@@ -892,6 +892,26 @@
     }
   }
 
+  /* Saved Costings on a wide screen: the header, summary band and filters stay put and only the card
+     list scrolls. The workspace fills the viewport inside the main padding (1.5rem top and bottom); the
+     list keeps a minimum height so a short window falls back to the page scrolling instead of a sliver. */
+  @media (min-width: 1024px) {
+    .saved-costings-workspace {
+      display: flex;
+      flex-direction: column;
+      height: calc(100svh - 3rem - var(--safe-area-top, 0px));
+    }
+
+    .saved-costings-scroll {
+      flex: 1 1 auto;
+      min-height: 24rem;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      padding: 0.25rem;
+      margin: -0.25rem;
+    }
+  }
+
   /* While a guided tour runs on a wide screen, the page keeps a lane on its right for the 360px tour
      card (plus a 16px gap either side), so the card sits beside what it explains instead of over it.
      The page returns to its full width the moment the tour ends. */
