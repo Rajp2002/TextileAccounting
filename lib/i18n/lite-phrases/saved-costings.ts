@@ -6,6 +6,7 @@ import type { LitePhraseRow } from './types'
  * numbers, names and dates filled in at runtime.
  */
 export const SAVED_COSTINGS_PHRASES: LitePhraseRow[] = [
+    ["Check an offer", "ऑफ़र जाँचें", "ઓફર તપાસો"],
     ["Saved numbers checked.", "सेव किए गए आँकड़े जाँच लिए गए।", "સાચવેલા આંકડા તપાસાઈ ગયા."],
     ["Saved values are preserved, but the stored numbers need owner review before quotation export.", "सेव की गई वैल्यू वैसी ही रखी गई हैं, पर कोटेशन एक्सपोर्ट से पहले मालिक को ये आँकड़े जाँचने होंगे।", "સાચવેલા આંકડા જેમ હતા તેમ રાખ્યા છે, પણ ક્વોટેશન એક્સપોર્ટ કરતાં પહેલાં માલિકે આ આંકડા તપાસવા પડશે."],
     ["Saved values are preserved, but older assumptions are incomplete. Save a new costing before using it as a quotation.", "सेव की गई वैल्यू वैसी ही रखी गई हैं, पर पुरानी जानकारी अधूरी है। इसे कोटेशन में लेने से पहले नई कॉस्टिंग सेव करें।", "સાચવેલા આંકડા જેમ હતા તેમ રાખ્યા છે, પણ જૂની માહિતી અધૂરી છે. ક્વોટેશનમાં વાપરતાં પહેલાં નવી કોસ્ટિંગ સાચવો."],
