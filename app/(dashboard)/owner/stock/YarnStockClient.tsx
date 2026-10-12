@@ -12,7 +12,7 @@ import { PageGuide } from '@/components/tours/TourInvitation'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { COMPOSITION_SLOTS, CompositionBar, DayGroupList, OTHER_SWATCH, SignedQuantity, StockTrend, Swatch, formatIndiaDay, swatchFor } from '@/components/stock/stock-presentation'
+import { COMPOSITION_SLOTS, CompositionBar, DayGroupList, OTHER_SWATCH, RecentMovementsSection, SignedQuantity, StockTrend, Swatch, formatIndiaDay, swatchFor } from '@/components/stock/stock-presentation'
 import { useTranslation } from '@/lib/i18n/context'
 import { useTourSample } from '@/lib/tours/sample-context'
 import { tourSurfaceProps } from '@/lib/tours/sample-surface'
@@ -39,6 +39,7 @@ export default function YarnStockClient({ initialData }: { initialData: YarnBoar
     const [date, setDate] = useState(''), [filter, setFilter] = useState('')
     const [busy, setBusy] = useState(false), [error, setError] = useState(''), [notice, setNotice] = useState(false)
     const [historyOpen, setHistoryOpen] = useState(false)
+    const [recentOpen, setRecentOpen] = useState(false)
     const [entryState, setEntry] = useState<Entry | null>(null)
     const [nameState, setName] = useState(''), [weightState, setWeight] = useState(''), [reasonState, setReason] = useState(''), [costingState, setCosting] = useState('')
     const [saving, setSaving] = useState(false), [saveError, setSaveError] = useState(''), [request, setRequest] = useState<YarnMutation | null>(null)
@@ -373,18 +374,21 @@ export default function YarnStockClient({ initialData }: { initialData: YarnBoar
             </ul>
         </section>}
 
-        {/* The last seven days, day by day; the full ledger opens from Movement history. */}
-        <section aria-labelledby="yarn-recent" className="overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs">
-            <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 sm:px-6">
-                <div>
-                    <h2 id="yarn-recent" className="text-base font-semibold text-ink">{text.recent}</h2>
-                    {activity && <p className="mt-0.5 text-sm text-muted-foreground">{text.recentHelp}</p>}
-                </div>
+        {/* The last seven days, day by day, folded until asked for; the full ledger opens from Movement history.
+            The usage step of the tour points at a row here, so that step opens it. */}
+        <RecentMovementsSection
+            id="yarn-recent"
+            title={text.recent}
+            help={activity ? text.recentHelp : undefined}
+            open={recentOpen || tourStep === 'ys-usage'}
+            onToggle={() => setRecentOpen(value => !value)}
+            action={(
                 <Button variant="outline" aria-haspopup="dialog" onClick={() => openHistory('')} className={secondaryAction}>
                     <History className="h-4 w-4" aria-hidden="true" />
                     {text.fullHistory}
                 </Button>
-            </div>
+            )}
+        >
             {recent.length === 0 ? (
                 <p className="border-t border-hairline px-5 py-5 text-sm text-muted-foreground sm:px-6">{activity ? text.recentEmpty : text.noHistory}</p>
             ) : (
@@ -410,7 +414,7 @@ export default function YarnStockClient({ initialData }: { initialData: YarnBoar
                     )}
                 />
             )}
-        </section>
+        </RecentMovementsSection>
 
         {/* The full ledger: every movement for one yarn or all yarns, through the date being viewed. */}
         <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
