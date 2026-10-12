@@ -658,6 +658,30 @@ export default function RatesClient({
     const [showArchived, setShowArchived] = useState(false)
     const [tourStep, setTourStep] = useState<RateBookStep | null>(null)
     const searchRef = useRef<HTMLInputElement>(null)
+    const boardRef = useRef<HTMLDivElement>(null)
+
+    // On desktop the page itself stays put and only the yarn list scrolls: the
+    // list is capped to whatever viewport height is left below the header, band
+    // and filters (which vary with banners, conflicts and the tour).
+    useEffect(() => {
+        const board = boardRef.current
+        if (!board) return
+        const main = board.closest('main')
+        const fit = () => {
+            const room = window.innerHeight - board.getBoundingClientRect().top - (main ? Number.parseFloat(getComputedStyle(main).paddingBottom) || 0 : 0)
+            const next = `${Math.max(0, Math.floor(room))}px`
+            if (board.style.getPropertyValue('--rates-board-max') !== next) board.style.setProperty('--rates-board-max', next)
+        }
+        fit()
+        window.addEventListener('resize', fit)
+        const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(fit)
+        if (board.parentElement) observer?.observe(board.parentElement)
+        if (main) observer?.observe(main)
+        return () => {
+            window.removeEventListener('resize', fit)
+            observer?.disconnect()
+        }
+    }, [])
     const [draft, setDraft] = useState<CostRateInput | null>(null)
     const [historyRate, setHistoryRate] = useState<CostRateRow | null>(null)
     const [historyMode, setHistoryMode] = useState<'activity' | 'trend'>('activity')
@@ -1659,7 +1683,7 @@ export default function RatesClient({
                 {visibleRates.length} {visibleRates.length === 1 ? 'yarn rate' : 'yarn rates'} found.
             </p>
 
-            <div className="space-y-8" data-ratebook-section={2} data-ratebook-section-card="true" data-ratebook-field="rateTableCard" data-i18n-skip="true" lang={language}>
+            <div ref={boardRef} className="rates-board-scroll space-y-8" data-ratebook-section={2} data-ratebook-section-card="true" data-ratebook-field="rateTableCard" data-i18n-skip="true" lang={language}>
                 {tourStep !== null && isSampleRecordId(visibleRates[0]?.id) && <p className="rounded-lg border border-hairline bg-surface-soft px-3 py-2 text-sm font-semibold text-ink">{tourCommonCopy[language].sampleBanner}</p>}
 
                 {visibleRates.length === 0 ? (
