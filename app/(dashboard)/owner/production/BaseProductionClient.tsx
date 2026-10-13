@@ -80,6 +80,7 @@ import {
 import {
     createBaseWorkerAdvance,
     createBaseWorkerDeduction,
+    setBaseStaffDayOff,
     settleBaseWorkerPayroll,
 } from './actions'
 import BaseActiveQualities from './BaseActiveQualities'
@@ -88,6 +89,7 @@ import BaseProductionLoomChart from './BaseProductionLoomChart'
 import BaseProductionTodayBand from './BaseProductionTodayBand'
 import BaseDailyProductionSheet from './BaseDailyProductionSheet'
 import BasePayrollReadinessPanel from './BasePayrollReadinessPanel'
+import BaseStaffAttendanceCalendar from './BaseStaffAttendanceCalendar'
 import BaseWorkerIncentives from './BaseWorkerIncentives'
 import type { BaseProductionInitialData } from './loaders'
 
@@ -269,6 +271,9 @@ export default function BaseProductionClient({
     const [payrollFilter, setPayrollFilter] = useState('all')
     // The worker whose breakdown modal is open, if any.
     const [breakdownWorkerId, setBreakdownWorkerId] = useState<string | null>(null)
+    // Day-off saves in flight. Each stays busy until refreshed payroll data replaces the data it was tapped on.
+    const [dayOffRequests, setDayOffRequests] = useState<Array<{ date: string; data: unknown }>>([])
+    const [dayOffError, setDayOffError] = useState<string | null>(null)
 
     const [openDialog, setDialog] = useState<DialogName>(null)
     const dialog: DialogName = payrollTourStep === 'pra-advance' ? 'advance' : payrollTourStep === 'pra-deduction' ? 'deduction' : openDialog
@@ -435,6 +440,25 @@ export default function BaseProductionClient({
             allocations: initialData.allocations,
         })
         : null
+    const pendingDayOffDates = new Set(dayOffRequests.filter(request => request.data === initialData.staffDaysOff).map(request => request.date))
+
+    async function toggleStaffDayOff(workerId: string, date: string, off: boolean) {
+        if (pendingDayOffDates.has(date)) return
+        const request = { date, data: initialData.staffDaysOff as unknown }
+        setDayOffError(null)
+        setDayOffRequests(current => [...current.filter(item => item.data === request.data), request])
+        const fail = (message: string) => {
+            setDayOffError(message)
+            setDayOffRequests(current => current.filter(item => item !== request))
+        }
+        try {
+            const error = getActionError(await setBaseStaffDayOff({ workerId, offDate: date, off }))
+            if (error) return fail(error)
+            router.refresh()
+        } catch (error) {
+            fail(error instanceof Error ? error.message : 'The day could not be saved.')
+        }
+    }
 
     useEffect(() => {
         if (tourSample) return // a tour sample is not a page view
@@ -857,7 +881,7 @@ export default function BaseProductionClient({
                                                 <Metric label="Net pay" value={formatINR(payable.net_payout, { hideDecimals: true })} emphasis />
                                             </div>
                                             <div data-payroll-tour={index === 0 ? 'recovery' : undefined} className="rounded-xl border border-hairline/70 bg-surface-soft/55 p-3 text-xs leading-relaxed text-body">
-                                                {payable.pay_type === 'fixed_monthly' && payable.status !== 'paid' && <div className="mb-2 space-y-1">{payable.salary_lines?.map(line => <p key={line.start}>{formatDateOnly(line.start)} – {formatDateOnly(line.end)}: {formatINR(line.monthlySalary)} × {line.days}/{line.monthDays} days = {formatINR(line.grossPay)}</p>)}</div>}
+                                                {payable.pay_type === 'fixed_monthly' && payable.status !== 'paid' && <div className="mb-2 space-y-1">{payable.salary_lines?.map(line => <p key={line.start}>{formatDateOnly(line.start)} – {formatDateOnly(line.end)}: {formatINR(line.monthlySalary)} × {line.days}/{line.monthDays} days{line.offDays > 0 ? ` (${tx('{count} off', { count: line.offDays })})` : ''} = {formatINR(line.grossPay)}</p>)}</div>}
                                                 {(payable.incentive_pay ?? 0) > 0 && <p className="mb-2">{tx('Approved incentive earnings')}: {formatINR(payable.incentive_pay ?? 0)}</p>}
                                                 {payable.incentive_review_ids?.length ? <p className="mb-2">{tx('Review incentives and include their complete service periods before payment.')}</p> : null}
                                                 {payable.status === 'paid'
@@ -909,8 +933,8 @@ export default function BaseProductionClient({
             </div>}
 
 
-            <Dialog open={Boolean(breakdownPayable)} onOpenChange={(open) => !open && setBreakdownWorkerId(null)} {...surface.root}>
-                <DialogContent className="max-w-lg rounded-2xl border border-hairline bg-surface p-6 shadow-2xl" {...surface.content}>
+            <Dialog open={Boolean(breakdownPayable)} onOpenChange={(open) => { if (!open) { setBreakdownWorkerId(null); setDayOffError(null) } }} {...surface.root}>
+                <DialogContent className="max-w-lg rounded-2xl border border-hairline bg-surface p-4 shadow-2xl sm:p-6" {...surface.content}>
                     {breakdownPayable && (
                         <>
                             <DialogHeader>
@@ -918,9 +942,13 @@ export default function BaseProductionClient({
                                 <DialogDescription className="text-sm text-body">{tx('Period breakdown')} · {formatDateOnly(breakdownPayable.period_start)} – {formatDateOnly(breakdownPayable.period_end)}</DialogDescription>
                             </DialogHeader>
                             {breakdownPayable.pay_type === 'fixed_monthly' ? (
-                                <div className="space-y-1 text-sm text-body">
-                                    {breakdownPayable.salary_lines?.map(line => <p key={line.start}>{formatDateOnly(line.start)} – {formatDateOnly(line.end)}: {formatINR(line.monthlySalary)} × {line.days}/{line.monthDays} days = {formatINR(line.grossPay)}</p>)}
-                                </div>
+                                <BaseStaffAttendanceCalendar
+                                    lines={breakdownPayable.salary_lines ?? []}
+                                    locked={breakdownPayable.status === 'paid'}
+                                    pendingDates={pendingDayOffDates}
+                                    error={dayOffError}
+                                    onToggle={tourSample ? undefined : (date, off) => void toggleStaffDayOff(breakdownPayable.worker_id, date, off)}
+                                />
                             ) : breakdown?.rows.length ? (
                                 <div className="divide-y divide-hairline text-sm">
                                     <div className="grid grid-cols-[minmax(0,1fr)_auto_auto_auto] gap-x-3 pb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
