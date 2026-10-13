@@ -159,6 +159,7 @@ const workflowPhrases = [
   ['Filter by machine type', 'मशीन के प्रकार से छाँटें', 'મશીનના પ્રકાર પ્રમાણે ગાળો'],
   ['Saved for', 'इसके लिए सेव किया', 'આ માટે સેવ કર્યું'],
   ['Editing is locked to prevent accidental changes.', 'अनजाने बदलाव रोकने के लिए संपादन बंद है।', 'આકસ્મિક ફેરફાર રોકવા માટે સંપાદન બંધ છે.'],
+  ['Entered readings are locked. Blank readings stay open to complete.', 'दर्ज किए गए रीडिंग बंद हैं। खाली रीडिंग पूरी करने के लिए खुली हैं।', 'દાખલ કરેલા રીડિંગ બંધ છે. ખાલી રીડિંગ પૂરાં કરવા માટે ખુલ્લા છે.'],
   ['Edit saved log', 'सेव किया लॉग सुधारें', 'સેવ કરેલો લોગ સુધારો'],
   ['Machine sheet', 'मशीन की शीट', 'મશીનની શીટ'],
   ['Worker payroll roll-up', 'कारीगर की कुल मज़दूरी', 'કારીગરની કુલ મજૂરી'],

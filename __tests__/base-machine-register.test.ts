@@ -1,7 +1,23 @@
 import { describe, expect, it } from 'vitest'
-import { buildMachineCollectionSheet, compareMachineLabels, compareMachineSheetOrder, machineReadingState, machineWorkerStatus, readMachineRecords, summarizeMachineRegister } from '../lib/base-machine-register'
+import { buildMachineCollectionSheet, compareMachineLabels, compareMachineSheetOrder, isSavedMachineReadingProtected, machineReadingState, machineWorkerStatus, readMachineRecords, summarizeMachineRegister } from '../lib/base-machine-register'
 import { parseBaseProductionDraft } from '../lib/base-production-draft'
 import { baseProductionAuditChanges } from '../lib/base-production-audit'
+
+describe('saved shift reading protection', () => {
+    it('protects only the readings a saved shift recorded as entered, stopped or absent', () => {
+        expect(isSavedMachineReadingProtected('entered', true)).toBe(true)
+        expect(isSavedMachineReadingProtected('not_running', true)).toBe(true)
+        expect(isSavedMachineReadingProtected('absent', true)).toBe(true)
+    })
+    it('keeps a pending or unrecorded reading open to complete the shift', () => {
+        expect(isSavedMachineReadingProtected('pending', true)).toBe(false)
+        expect(isSavedMachineReadingProtected(undefined, true)).toBe(false)
+    })
+    it('protects every reading in a shift saved before the register existed', () => {
+        expect(isSavedMachineReadingProtected(undefined, false)).toBe(true)
+        expect(isSavedMachineReadingProtected('pending', false)).toBe(true)
+    })
+})
 
 describe('machine register entry semantics', () => {
     it('never converts missing readings to stopped machines', () => {

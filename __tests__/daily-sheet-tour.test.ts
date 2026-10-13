@@ -83,7 +83,7 @@ describe('Daily Sheet tour contract', () => {
         expect(sheet).toContain("firstReading ? 'daily.first-reading' : undefined")
         expect(sheet).toContain('firstReading={context.machineId === firstReadingMachineId}')
         expect(sheet).toContain("getRow(context.workerId!).status !== 'absent' && context.jobId")
-        expect(sheet).toContain("currentBatch ? t('dailySheet.saveCorrection') : t('dailySheet.saveShift')")
+        expect(sheet).toContain("const saveLabel = currentBatch && !isSavedBatchProtected ? t('dailySheet.saveCorrection') : t('dailySheet.saveShift')")
         // PI-04 (fixed): a date or shift change stays on the Daily Sheet's own path; see base-daily-sheet-navigation.test.ts.
         expect(sheet).toContain("window.history.replaceState(null, '', baseDailySheetHref({ ...navigation, date, shift: nextShift, entry: undefined }))")
         expect(sheet).toContain('max={initialData.today}')

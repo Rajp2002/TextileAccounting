@@ -15,7 +15,7 @@ import { DAILY_SAMPLE_READINGS } from '@/lib/tours/sample-data/production'
 import { baseDailySheetHref, baseProductionHref, validBaseDate, type BaseProductionNavigation } from '@/lib/base-production-navigation'
 import { baseProductionDraftKey, parseBaseProductionDraft } from '@/lib/base-production-draft'
 import { baseProductionAuditChanges } from '@/lib/base-production-audit'
-import { buildMachineCollectionSheet, compareMachineSheetOrder, machineReadingState, machineWorkerStatus, summarizeMachineRegister } from '@/lib/base-machine-register'
+import { buildMachineCollectionSheet, compareMachineSheetOrder, isSavedMachineReadingProtected, machineReadingState, machineWorkerStatus, summarizeMachineRegister } from '@/lib/base-machine-register'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { useTranslation } from '@/lib/i18n/context'
@@ -106,6 +106,9 @@ function parseMeters(value: string | number | null | undefined) {
     const numeric = typeof value === 'number' ? value : Number(value)
     return Number.isFinite(numeric) && numeric > 0 ? numeric : 0
 }
+
+// The server requires a reason for every save to a saved shift; this one records a completion, not a correction.
+const COMPLETED_READINGS_REASON = 'Completed pending machine readings'
 
 // Fits the machine readings into the window below the shift controls (see lib/fit-region-to-window.ts).
 const fitReadingsToWindow = fitRegionToWindow('--daily-readings-fit')
@@ -330,12 +333,13 @@ export default function BaseDailyProductionSheet({
     const isCurrentBatchLocked = Boolean(
         sheetWorkers.length > 0 && sheetWorkers.every((worker) => settledWorkerIds.has(worker.id)),
     )
+    // A saved shift that has not been unlocked. Which readings it protects is decided per reading (isMachineReadingProtected).
     const isSavedBatchProtected = Boolean(
         currentBatch
         && !isCurrentBatchLocked
         && unlockedBatchId !== currentBatch.id,
     )
-    const areInputsDisabled = isSaving || isCurrentBatchLocked || isSavedBatchProtected || draftStatus === 'conflict'
+    const areInputsDisabled = isSaving || isCurrentBatchLocked || draftStatus === 'conflict'
 
     const allocationsByEntry = useMemo(() => {
         const map = new Map<string, typeof initialData.allocations>()
@@ -435,10 +439,11 @@ export default function BaseDailyProductionSheet({
         return map
     }, [machineContexts])
 
-    useEffect(() => {
+    // What each worker holds on the saved shift. A draft is compared with this to find a change to a protected reading.
+    const savedRows = useMemo<Record<string, DraftRow>>(() => {
         const existingByWorker = new Map(currentBatchEntries.map((entry) => [entry.worker_id, entry]))
 
-        const baseline = Object.fromEntries(sheetWorkers.map((worker) => {
+        return Object.fromEntries(sheetWorkers.map((worker) => {
             const existing = existingByWorker.get(worker.id)
             const contexts = contextsByWorker.get(worker.id) ?? []
             const existingAllocations = existing ? allocationsByEntry.get(existing.id) ?? [] : []
@@ -486,12 +491,15 @@ export default function BaseDailyProductionSheet({
                 machineMeters,
                 savedUnallocatedMeters: hasUnallocatedHistoricalTotal ? existing!.meters : null,
             }]
-        }))
+        })) as Record<string, DraftRow>
+    }, [allocationsByEntry, contextsByWorker, currentBatch?.machine_records, currentBatchEntries, sheetWorkers])
+
+    useEffect(() => {
         if (sample) {
             // The tour shows a sheet part-way through a shift: readings typed, so it is a draft on this device.
             setDraftStatus('local')
             setCorrectionReason('')
-            setRows(Object.fromEntries(Object.entries(baseline).map(([workerId, row]) => {
+            setRows(Object.fromEntries(Object.entries(savedRows).map(([workerId, row]) => {
                 const machineMeters = { ...row.machineMeters }
                 for (const context of contextsByWorker.get(workerId) ?? []) {
                     const reading = DAILY_SAMPLE_READINGS[context.machineId]
@@ -508,20 +516,60 @@ export default function BaseDailyProductionSheet({
             if (draft && currentBatch?.client_request_id === draft.requestId) {
                 localStorage.removeItem(draftKey!)
             } else if (draft) {
-                setRows({ ...baseline, ...draft.rows })
+                setRows({ ...savedRows, ...draft.rows })
                 setRequestId(draft.requestId)
                 setCorrectionReason(draft.reason)
                 setDraftStatus(draft.revision === (currentBatch?.updated_at ?? null) ? 'local' : 'conflict')
                 return
             }
         } catch { setDraftStatus('error') }
-        setRows(baseline)
+        setRows(savedRows)
         setRequestId(newClientRequestId())
-    }, [allocationsByEntry, contextsByWorker, currentBatchEntries, sheetWorkers, draftKey, currentBatch?.client_request_id, currentBatch?.updated_at, currentBatch?.machine_records, draftReset, sample])
+    }, [savedRows, contextsByWorker, draftKey, currentBatch?.client_request_id, currentBatch?.updated_at, draftReset, sample])
 
     useEffect(() => {
         setUnlockedBatchId(null)
     }, [productionDate, shift])
+
+    // Machine states as saved. A shift saved before the register existed has none, so it protects everything.
+    const hasSavedRegister = (currentBatch?.machine_records?.length ?? 0) > 0
+    const savedMachineStates = new Map((currentBatch?.machine_records ?? []).map(record => [record.machine_id, record.state]))
+
+    function isMachineReadingProtected(context: MachineContext) {
+        return isSavedBatchProtected && isSavedMachineReadingProtected(savedMachineStates.get(context.machineId), hasSavedRegister)
+    }
+
+    // A status change rewrites every machine on the row, so the row stays closed while any of its machines is protected.
+    function isWorkerReadingProtected(workerId: string) {
+        if (!isSavedBatchProtected) return false
+        const contexts = contextsByWorker.get(workerId) ?? []
+        if (contexts.length > 0) return contexts.some(isMachineReadingProtected)
+        // An operator with no machine keeps one worker-level reading, protected once anything was saved for it.
+        return !hasSavedRegister || savedRows[workerId]?.status !== 'blank'
+    }
+
+    // Each reading whose draft differs from the saved shift. Protected ones need an unlock; open ones complete the shift.
+    const readingChanges = sheetWorkers.flatMap((worker) => {
+        const saved = savedRows[worker.id]
+        if (!saved) return []
+        const row = getRow(worker.id)
+        const contexts = contextsByWorker.get(worker.id) ?? []
+        if (contexts.length === 0) {
+            return row.status !== saved.status || row.meters.trim() !== saved.meters.trim()
+                ? [{ locked: isWorkerReadingProtected(worker.id) }]
+                : []
+        }
+        return contexts.flatMap((context) => {
+            const key = contextKey(context)
+            const current = row.machineMeters[key] ?? ''
+            const previous = saved.machineMeters[key] ?? ''
+            const changed = current.trim() !== previous.trim()
+                || machineReadingState(current, row.status) !== machineReadingState(previous, saved.status)
+            return changed ? [{ locked: isMachineReadingProtected(context) }] : []
+        })
+    })
+    const lockedChangeCount = readingChanges.filter((change) => change.locked).length
+    const openChangeCount = readingChanges.length - lockedChangeCount
 
     function getRow(workerId: string): DraftRow {
         return rows[workerId] ?? { meters: '', status: 'blank', machineMeters: {}, savedUnallocatedMeters: null }
@@ -608,7 +656,7 @@ export default function BaseDailyProductionSheet({
     }
 
     function handleMachineMetersChange(context: MachineContext, value: string) {
-        if (!context.workerId || areInputsDisabled || settledWorkerIds.has(context.workerId)) return
+        if (!context.workerId || areInputsDisabled || settledWorkerIds.has(context.workerId) || isMachineReadingProtected(context)) return
         const current = getRow(context.workerId)
         const machineMeters = { ...current.machineMeters, [contextKey(context)]: value }
         updateRow(context.workerId, {
@@ -661,7 +709,7 @@ export default function BaseDailyProductionSheet({
             toast.error('This production sheet is finalized and cannot be changed.')
             return
         }
-        if (isSavedBatchProtected) {
+        if (isSavedBatchProtected && lockedChangeCount > 0) {
             toast.error('Unlock the saved production log before making a correction.')
             return
         }
@@ -692,7 +740,8 @@ export default function BaseDailyProductionSheet({
                 shift,
                 clientRequestId: requestId,
                 expectedUpdatedAt: currentBatch?.updated_at ?? null,
-                correctionReason: currentBatch ? correctionReason : undefined,
+                // Filling open readings on a saved shift changes no recorded reading, so it does not need a typed explanation.
+                correctionReason: currentBatch ? (isSavedBatchProtected ? COMPLETED_READINGS_REASON : correctionReason) : undefined,
                 entries: sheetWorkers.filter((worker) => !operatorReview.omittedWorkerIds.has(worker.id)).map((worker) => {
                     const row = getRow(worker.id)
                     const contexts = contextsByWorker.get(worker.id) ?? []
@@ -754,6 +803,8 @@ export default function BaseDailyProductionSheet({
         ? machineReadingState(getRow(context.workerId).machineMeters[contextKey(context)], getRow(context.workerId).status)
         : 'pending' as const
     const registerSummary = summarizeMachineRegister(machineContexts.map(machineState))
+    // A machine with a worker and no reading yet is one the protected shift still lets the user complete.
+    const hasOpenBlankReading = machineContexts.some((context) => Boolean(context.workerId) && !isMachineReadingProtected(context) && machineState(context) === 'pending')
 
     function togglePending() {
         setPendingMachineIds(machineContexts.filter(context => machineState(context) === 'pending' || machineState(context) === 'invalid').map(context => context.machineId))
@@ -802,9 +853,11 @@ export default function BaseDailyProductionSheet({
     // Prefer the first visible enabled reading; retain a disabled target for locked-sheet fallback.
     const visibleReadingContexts = machineContexts.filter(context => context.workerId && (!showPending || pendingMachineIds.includes(context.machineId)))
     const firstPendingMachineId = machineContexts.find(context => context.workerId && machineState(context) === 'pending')?.machineId
-    const firstReadingMachineId = draftStatus === 'error' ? undefined : (visibleReadingContexts.find(context => !areInputsDisabled && !settledWorkerIds.has(context.workerId!) && getRow(context.workerId!).status !== 'absent' && context.jobId) ?? visibleReadingContexts[0])?.machineId
+    const firstReadingMachineId = draftStatus === 'error' ? undefined : (visibleReadingContexts.find(context => !areInputsDisabled && !settledWorkerIds.has(context.workerId!) && !isMachineReadingProtected(context) && getRow(context.workerId!).status !== 'absent' && context.jobId) ?? visibleReadingContexts[0])?.machineId
 
-    const saveDisabled = isSaving || areInputsDisabled || Boolean(unmatchedDraftMeters) || invalidEnteredCount > 0 || registerSummary.invalid > 0 || summary.entered_count + summary.zero_count + summary.absent_count === 0
+    // On a saved shift, Save completes open readings only; with none filled there is nothing to save.
+    const saveDisabled = isSaving || areInputsDisabled || Boolean(unmatchedDraftMeters) || invalidEnteredCount > 0 || registerSummary.invalid > 0 || summary.entered_count + summary.zero_count + summary.absent_count === 0 || (isSavedBatchProtected && openChangeCount === 0)
+    const saveLabel = currentBatch && !isSavedBatchProtected ? t('dailySheet.saveCorrection') : t('dailySheet.saveShift')
 
     return (
         <div className="production-daily-sheet-workspace relative min-w-0 pb-28 min-[768px]:pb-8 min-[1280px]:pb-0">
@@ -826,7 +879,7 @@ export default function BaseDailyProductionSheet({
                             className={cn(railPrimaryAction, 'hidden gap-2 min-[1280px]:inline-flex')}
                         >
                             {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                            <span>{isSaving ? 'Saving…' : currentBatch ? t('dailySheet.saveCorrection') : t('dailySheet.saveShift')}</span>
+                            <span>{isSaving ? 'Saving…' : saveLabel}</span>
                         </Button>
                     </>}
                 />
@@ -906,7 +959,7 @@ export default function BaseDailyProductionSheet({
                             {isCurrentBatchLocked
                                 ? 'All worker entries on this sheet are settled and protected.'
                                 : isSavedBatchProtected
-                                    ? 'Editing is locked to prevent accidental changes.'
+                                    ? (hasOpenBlankReading ? tx('Entered readings are locked. Blank readings stay open to complete.') : 'Editing is locked to prevent accidental changes.')
                                     : 'Correction mode is active. Review every changed value before saving.'}
                         </span>
                     </div>
@@ -976,7 +1029,7 @@ export default function BaseDailyProductionSheet({
                                     const row = getRow(context.workerId!)
                                     const value = row.machineMeters[contextKey(context)] ?? ''
                                     const state = machineState(context)
-                                    const disabled = areInputsDisabled || settledWorkerIds.has(context.workerId!)
+                                    const disabled = areInputsDisabled || settledWorkerIds.has(context.workerId!) || isMachineReadingProtected(context)
                                     return (
                                         <MachineReadingRow key={context.machineId} context={context} index={index} value={value} state={state}
                                             absent={row.status === 'absent'} disabled={disabled} paid={settledWorkerIds.has(context.workerId!)}
@@ -1021,7 +1074,7 @@ export default function BaseDailyProductionSheet({
                                                     <p className="text-xs text-muted-foreground">{contexts.length > 0 ? `${contexts.length} machine${contexts.length === 1 ? '' : 's'} · weaver rates applied` : 'No current machine assignment'}</p>
                                                 </div>
                                                 <div className="text-sm text-body">{contexts.length > 0 ? contexts.map((context) => <span key={context.machineId} className="mr-1 inline-flex"><Badge variant="outline" className="border-hairline bg-surface text-xs font-semibold">{context.machineLabel}</Badge></span>) : <span className="text-xs font-semibold text-warning">Unassigned worker entry</span>}</div>
-                                                <Select value={row.status} onValueChange={(value) => handleStatusChange(worker.id, value as BaseDailyProductionStatus)} disabled={areInputsDisabled || settledWorkerIds.has(worker.id)}>
+                                                <Select value={row.status} onValueChange={(value) => handleStatusChange(worker.id, value as BaseDailyProductionStatus)} disabled={areInputsDisabled || settledWorkerIds.has(worker.id) || isWorkerReadingProtected(worker.id)}>
                                                     <SelectTrigger className="h-10 w-full rounded-xl border-hairline bg-surface text-xs font-bold text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom" aria-label={`${worker.name} status`}><SelectValue /></SelectTrigger>
                                                     <SelectContent className="rounded-xl border-hairline bg-surface shadow-lg">
                                                         <SelectItem value="blank">Not entered</SelectItem>
@@ -1053,7 +1106,7 @@ export default function BaseDailyProductionSheet({
                                                     inputMode="decimal"
                                                     placeholder={t('dailySheet.metres')}
                                                     value={row.meters}
-                                                    disabled={row.status === 'zero' || row.status === 'absent' || areInputsDisabled || settledWorkerIds.has(worker.id)}
+                                                    disabled={row.status === 'zero' || row.status === 'absent' || areInputsDisabled || settledWorkerIds.has(worker.id) || isWorkerReadingProtected(worker.id)}
                                                     onChange={(event) => handleUnassignedMetersChange(worker.id, event.target.value)}
                                                     className="h-10 rounded-xl border-hairline bg-surface text-right text-sm font-bold tabular-nums text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom"
                                                 />
@@ -1087,7 +1140,7 @@ export default function BaseDailyProductionSheet({
                     </div>
                     <Button data-daily-tour="save" onClick={() => handleSave()} disabled={saveDisabled} className="h-10 sm:h-11 min-w-[132px] sm:min-w-[160px] rounded-xl bg-loom hover:bg-loom-elevated text-white font-bold tracking-wide shadow-xs">
                         {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                        <span>{isSaving ? 'Saving…' : currentBatch ? t('dailySheet.saveCorrection') : t('dailySheet.saveShift')}</span>
+                        <span>{isSaving ? 'Saving…' : saveLabel}</span>
                     </Button>
                 </div>
             )}

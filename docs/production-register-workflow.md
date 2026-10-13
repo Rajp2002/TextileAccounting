@@ -10,7 +10,7 @@ Implemented for the owner’s Base production screen. Input remains **metres pro
 4. Enter `0` or choose **Not running** for an individual machine. A blank remains pending; worker absence remains a separate worker-level control in the collapsed payroll section.
 5. **Show pending** captures the current pending/invalid rows. Completed rows remain in that view until it is toggled, so typing never changes row order or removes the focused row.
 6. The fixed save bar displays machine completion, total metres, and device-local draft status. Incomplete shifts require explicit confirmation; entered output still contributes to payroll.
-7. Saved shifts are protected. Existing correction reasons, revision checks, request receipts, and paid-worker locks remain in force.
+7. Saved shifts protect their recorded readings. Entered, stopped and absent machines lock once saved; pending machines stay open, so an incomplete shift can be completed without unlocking it. Completing pending readings records a revision with the reason "Completed pending machine readings". Changing a locked reading still needs **Edit saved log** and a typed correction reason. Revision checks, request receipts, and paid-worker locks remain in force.
 
 ## Persistence and rollout
 

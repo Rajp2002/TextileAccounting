@@ -36,6 +36,13 @@ export function machineReadingState(value: string | undefined, workerStatus: Bas
     return meters === 0 ? 'not_running' : 'entered'
 }
 
+// A saved shift protects the readings it recorded. A pending reading was never recorded, so it stays open to complete.
+// A shift saved before the register existed has no per-machine states, so every reading in it stays protected.
+export function isSavedMachineReadingProtected(savedState: BaseMachineRecord['state'] | undefined, hasRegister: boolean) {
+    if (!hasRegister) return true
+    return savedState !== undefined && savedState !== 'pending'
+}
+
 export function machineWorkerStatus(values: string[]): BaseDailyProductionStatus {
     if (values.some(value => machineReadingState(value, 'blank') === 'entered' || machineReadingState(value, 'blank') === 'invalid')) return 'entered'
     if (values.some(value => machineReadingState(value, 'blank') === 'not_running')) return 'zero'
