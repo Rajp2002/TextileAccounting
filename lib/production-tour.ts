@@ -22,5 +22,5 @@ export const productionTourSpecs: readonly TourStepSpec<ProductionOverviewTourSt
     anchor: productionTourSelector(id),
     kind: id === 'pd-handoff' ? 'handoff' : 'sample',
     ...(['pd-activate', 'pd-looms'].includes(id) ? { context: TOUR_SURFACE_SELECTOR } : {}),
-    ...(['pd-prereq', 'pd-activate'].includes(id) ? { detail: true } : {}),
+    ...(id === 'pd-prereq' ? { detail: true } : {}),
 }))

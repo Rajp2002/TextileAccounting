@@ -629,35 +629,6 @@ export async function setBaseMachineJobContext(input: {
     return { success: true, context: data }
 }
 
-export async function validateQualityActivationYarnAction(input: { costingId: string }) {
-    await requireBaseProductionOwner()
-    const parsed = safeParse(z.object({ costingId: UuidSchema }), input)
-    if ('error' in parsed) return parsed
-
-    const supabase = await createServerClient()
-    const { data, error } = await supabase.rpc('validate_quality_activation_yarn', {
-        p_costing_id: parsed.data.costingId,
-    })
-
-    if (error) return databaseError(error, 'Could not check required yarn stock.')
-    return { success: true, validation: data as {
-        can_activate: boolean
-        error?: string
-        costing_id: string
-        quality_label: string
-        costing_version: number
-        yarns: Array<{
-            yarn_id: string | null
-            yarn_name: string
-            yarn_key: string
-            role: string
-            kg_per_100m: number
-            current_stock_kg: number
-            status: 'available' | 'zero_stock' | 'missing'
-        }>
-    } }
-}
-
 export async function activateSavedCostingForProduction(input: { costingId: string }) {
     await requireBaseProductionOwner()
     const parsed = safeParse(z.object({ costingId: UuidSchema }), input)
@@ -670,14 +641,9 @@ export async function activateSavedCostingForProduction(input: { costingId: stri
 
     if (error) return databaseError(error, 'Saved quality could not be activated for production. Please try again.')
 
-    const result = data as Record<string, unknown>
-    if (result && result.blocked) {
-        return { success: false, blocked: true, ...result }
-    }
-
     revalidatePath('/owner/production')
     revalidatePath('/owner/quotes')
-    return { success: true, ...result }
+    return { success: true, ...(data as Record<string, unknown>) }
 }
 
 export async function deactivateQualityProduction(input: { jobId: string }) {
