@@ -32,13 +32,14 @@ mark a past day off so it is not paid.
 
 | Column | Type |
 | --- | --- |
+| `id` | uuid primary key, default `gen_random_uuid()` (stable paging for the loader and export) |
 | `org_id` | uuid, not null, references `organizations` on delete cascade |
 | `worker_id` | uuid, not null; `(org_id, worker_id)` references `base_production_workers(org_id, id)` on delete restrict |
 | `off_date` | date, not null |
 | `created_by` | uuid, not null, references `auth.users` |
 | `created_at` | timestamptz, not null, default `now()` |
 
-Primary key `(org_id, worker_id, off_date)`. RLS enabled; `REVOKE ALL` from
+Unique `(org_id, worker_id, off_date)`. RLS enabled; `REVOKE ALL` from
 `PUBLIC, anon, authenticated, service_role`; `GRANT SELECT` to `authenticated`
 with a read policy `public.base_production_core_access(org_id)`; `GRANT SELECT`
 to `service_role` for the owner archive. No direct writes.

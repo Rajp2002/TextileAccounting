@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 const migration = readFileSync('supabase/migrations/20261014160000_base_staff_days_off.sql', 'utf8')
+const actions = readFileSync('app/(dashboard)/owner/production/actions.ts', 'utf8')
 const rpc = migration.slice(migration.indexOf('CREATE OR REPLACE FUNCTION public.set_base_staff_day_off'), migration.indexOf('REVOKE ALL ON FUNCTION public.set_base_staff_day_off'))
 
 describe('Fixed-salary days-off migration contract', () => {
@@ -20,6 +21,12 @@ describe('Fixed-salary days-off migration contract', () => {
         expect(rpc).toContain("status = 'paid' AND period_end >= p_off_date")
         expect(rpc).toContain("status = 'settled'")
         expect(rpc).toContain('p_off_date > v_today')
+    })
+    it('toggles a day only through the Base owner action', () => {
+        const action = actions.slice(actions.indexOf('export async function setBaseStaffDayOff'))
+        expect(action.slice(0, 900)).toContain('await requireBaseProductionOwner()')
+        expect(action.slice(0, 900)).toContain("supabase.rpc('set_base_staff_day_off'")
+        expect(action.slice(0, 900)).toContain("revalidatePath('/owner/payroll')")
     })
     it('switches the payroll writer and snapshot to the days-off lines, failing loudly on drift', () => {
         expect(migration).toContain("RAISE EXCEPTION 'Unexpected fixed-salary payroll gross'")

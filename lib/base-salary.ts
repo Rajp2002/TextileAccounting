@@ -7,6 +7,16 @@ export type BaseSalaryRate = { effective_from: string; monthly_salary: number }
 export type BaseSalaryLine = { start: string; end: string; days: number; offDays: number; offDates: string[]; monthDays: number
     monthlySalary: number; dayRate: number; grossPay: number }
 
+export type BaseStaffDayOff = { worker_id: string; off_date: string }
+
+/** Attach each fixed-salary worker's days off; workers without any are returned unchanged. */
+export function withStaffDaysOff(workers: BaseProductionWorker[], daysOff: BaseStaffDayOff[] | undefined): BaseProductionWorker[] {
+    if (!daysOff?.length) return workers
+    const byWorker = new Map<string, string[]>()
+    for (const day of daysOff) byWorker.set(day.worker_id, [...(byWorker.get(day.worker_id) ?? []), day.off_date])
+    return workers.map(worker => byWorker.has(worker.id) ? { ...worker, days_off: byWorker.get(worker.id)!.sort() } : worker)
+}
+
 export function readBaseSalaryHistory(value: unknown): BaseSalaryRate[] {
     if (!Array.isArray(value)) return []
     return value.flatMap(item => {

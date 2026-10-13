@@ -68,6 +68,7 @@ import {
     calculateBaseWorkerPayables,
     type BasePayrollPaymentMode,
 } from '@/lib/base-production-core'
+import { withStaffDaysOff } from '@/lib/base-salary'
 import {
     type PayrollCycleRule,
     DEFAULT_MONTHLY_CYCLE_RULE,
@@ -169,12 +170,12 @@ type BaseProductionView = 'production' | 'operations' | 'payroll'
 // The shared production client also serves daily entry and assignments. Keep
 // payroll's full-history calculations dormant until the payroll view needs them.
 export function useBasePayrollForView(view: BaseProductionView, initialData: BaseProductionInitialData, period: { start: string; end: string }) {
-    const { workers, entries, allocations, incentives, advances, settlements, payrollPeriods, today } = initialData
+    const { workers, staffDaysOff, entries, allocations, incentives, advances, settlements, payrollPeriods, today } = initialData
     return useMemo(() => {
         if (view !== 'payroll') return null
         const cutoff = period.end < today ? period.end : today
         const payables = calculateBaseWorkerPayables({
-            workers, entries, allocations, incentives: incentives ?? [], advances, settlements, periodEnd: cutoff,
+            workers: withStaffDaysOff(workers, staffDaysOff), entries, allocations, incentives: incentives ?? [], advances, settlements, periodEnd: cutoff,
         })
         const periodRecord = (payrollPeriods ?? []).find(record => record.period_start === period.start && record.period_end === period.end) ?? null
         return {
@@ -183,7 +184,7 @@ export function useBasePayrollForView(view: BaseProductionView, initialData: Bas
             summary: calculateBasePayrollPeriodSummary({ payables, periodRecord: periodRecord ?? undefined }),
             readiness: buildBasePayrollReadiness({ payables, entries, allocations }),
         }
-    }, [view, workers, entries, allocations, incentives, advances, settlements, payrollPeriods, today, period.start, period.end])
+    }, [view, workers, staffDaysOff, entries, allocations, incentives, advances, settlements, payrollPeriods, today, period.start, period.end])
 }
 
 const NO_PAYABLES: ReturnType<typeof calculateBaseWorkerPayables> = []

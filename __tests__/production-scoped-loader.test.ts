@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { calculateBaseWorkerPayables } from '@/lib/base-production-core'
+import { withStaffDaysOff } from '@/lib/base-salary'
 import { buildBasePayrollHistory } from '@/lib/base-payroll-history'
 import { DEFAULT_MONTHLY_CYCLE_RULE } from '@/lib/payroll-cycle-engine'
 
@@ -25,7 +26,7 @@ import ProductionPage from '../app/(dashboard)/owner/production/page'
 import DailySheetPage from '../app/(dashboard)/owner/production/daily-sheet/page'
 
 const productionOnly = ['estimator_quotes', 'base_production_jobs', 'base_production_machines', 'base_worker_machine_assignments', 'base_machine_job_contexts', 'base_production_batch_revisions']
-const payrollOnly = ['base_worker_advances', 'base_worker_incentives', 'base_payroll_settlement_lines', 'base_payroll_periods']
+const payrollOnly = ['base_worker_advances', 'base_worker_incentives', 'base_payroll_settlement_lines', 'base_payroll_periods', 'base_staff_days_off']
 const shared = ['organizations', 'base_payroll_cycle_configs', 'base_production_entries', 'base_production_workers', 'base_payroll_settlements', 'base_production_batches', 'base_daily_production_entries', 'base_daily_production_allocations']
 const allTables = [...shared, ...productionOnly, ...payrollOnly]
 const today = '2026-10-02'
@@ -75,6 +76,7 @@ beforeEach(() => {
         ],
         base_worker_advances: [{ id: 'advance', worker_id: 'piece', amount: 100, recovered_amount: 20, status: 'pending' }],
         base_worker_incentives: [{ id: 'incentive', worker_id: 'piece', service_start: '2026-09-01', service_end: '2026-09-02', amount: 25, evidence_reference: 'Approved task', status: 'approved', approved_by: 'owner', approved_at: '2026-09-03T00:00:00Z' }],
+        base_staff_days_off: [{ id: 'day-off', worker_id: 'salary', off_date: '2026-09-20' }],
         base_payroll_settlements: [
             { id: 'reversed', worker_id: 'piece', period_start: '2025-08-01', period_end: '2025-08-31', gross_pay: 200, net_payout: 200, status: 'reversed', worker_name_snapshot: 'Piece worker', reversal: { reason: 'Payment not made', created_at: '2025-09-01T00:00:00Z' } },
             { id: 'paid-salary', worker_id: 'salary', period_start: '2026-08-15', period_end: '2026-08-31', gross_pay: 16451.61, net_payout: 16451.61, status: 'paid', worker_name_snapshot: 'Salary worker' },
@@ -94,7 +96,7 @@ beforeEach(() => {
 
 const load = (scope?: BaseProductionLoadScope) => loadBaseProductionInitialData(fixture.orgId, today, scope)
 const queriedTables = () => [...new Set(fixture.queries.map(query => query.table))].sort()
-const payables = (data: BaseProductionInitialData) => calculateBaseWorkerPayables({ ...data, periodEnd: today })
+const payables = (data: BaseProductionInitialData) => calculateBaseWorkerPayables({ ...data, workers: withStaffDaysOff(data.workers, data.staffDaysOff), periodEnd: today })
 
 describe('task-scoped production and payroll loading', () => {
     it.each([
@@ -122,12 +124,13 @@ describe('task-scoped production and payroll loading', () => {
     it('preserves all payroll evidence, older unpaid work, reversals, salary changes and saved rates', async () => {
         const complete = await load('complete')
         const payroll = await load('payroll')
-        for (const key of ['orgId', 'factoryName', 'today', 'payrollPeriod', 'payrollCycleConfig', 'workers', 'entries', 'allocations', 'advances', 'incentives', 'settlements', 'settlementLines', 'payrollPeriods', 'dailyBatches'] as const) {
+        for (const key of ['orgId', 'factoryName', 'today', 'payrollPeriod', 'payrollCycleConfig', 'workers', 'entries', 'allocations', 'advances', 'incentives', 'staffDaysOff', 'settlements', 'settlementLines', 'payrollPeriods', 'dailyBatches'] as const) {
             expect(payroll[key]).toEqual(complete[key])
         }
         expect(payables(payroll)).toEqual(payables(complete))
         expect(payables(payroll).find(worker => worker.worker_id === 'piece')).toMatchObject({ period_start: '2025-08-10', meters: 120, base_pay: 260, gross_pay: 285, advance_recovery: 80, net_payout: 205, status: 'unsettled' })
-        expect(payables(payroll).find(worker => worker.worker_id === 'salary')).toMatchObject({ period_start: '2026-09-01', gross_pay: 33629.03 })
+        expect(payables(payroll).find(worker => worker.worker_id === 'salary')).toMatchObject({ period_start: '2026-09-01', gross_pay: 32529.03 })
+        expect(payroll.staffDaysOff).toEqual([{ worker_id: 'salary', off_date: '2026-09-20' }])
         expect(buildBasePayrollHistory(payroll.settlements, payroll.settlementLines, payroll.payrollPeriods)).toEqual(buildBasePayrollHistory(complete.settlements, complete.settlementLines, complete.payrollPeriods))
         expect(payroll.settlements.find(row => row.id === 'reversed')).toMatchObject({ status: 'reversed', reversal_reason: 'Payment not made' })
         for (const key of ['costings', 'jobs', 'machines', 'assignments', 'machineJobContexts', 'batchRevisions'] as const) expect(payroll[key]).toEqual([])
@@ -139,7 +142,7 @@ describe('task-scoped production and payroll loading', () => {
         for (const key of ['orgId', 'factoryName', 'today', 'payrollPeriod', 'payrollCycleConfig', 'workers', 'entries', 'allocations', 'settlements', 'dailyBatches', 'costings', 'jobs', 'machines', 'assignments', 'machineJobContexts', 'batchRevisions'] as const) expect(production[key]).toEqual(complete[key])
         expect(production.jobs[0].status).toBe('active')
         expect(production.batchRevisions[0]).toMatchObject({ change_kind: 'corrected', correction_reason: 'Meter correction', revision_number: 2 })
-        for (const key of ['advances', 'incentives', 'settlementLines', 'payrollPeriods'] as const) expect(production[key]).toEqual([])
+        for (const key of ['advances', 'incentives', 'staffDaysOff', 'settlementLines', 'payrollPeriods'] as const) expect(production[key]).toEqual([])
     })
 
     it.each(['production', 'payroll'] as const)('continues short server pages without date truncation for %s', async scope => {

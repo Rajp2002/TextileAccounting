@@ -10,12 +10,13 @@
 -- until the period is reopened.
 
 CREATE TABLE public.base_staff_days_off (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   org_id uuid NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
   worker_id uuid NOT NULL,
   off_date date NOT NULL,
   created_by uuid NOT NULL REFERENCES auth.users(id),
   created_at timestamptz NOT NULL DEFAULT now(),
-  PRIMARY KEY (org_id, worker_id, off_date),
+  UNIQUE (org_id, worker_id, off_date),
   FOREIGN KEY (org_id, worker_id) REFERENCES public.base_production_workers(org_id, id) ON DELETE RESTRICT
 );
 ALTER TABLE public.base_staff_days_off ENABLE ROW LEVEL SECURITY;
