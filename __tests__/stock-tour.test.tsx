@@ -98,21 +98,18 @@ describe('GT-08 Fabric Stock', () => {
         expect(corrected.movements.every(row => row.id.startsWith('tour-') && row.quality_id.startsWith('tour-'))).toBe(true)
         if (language !== 'en') expect(corrected.qualities[0].quality_label).toMatch(language === 'gu' ? /[\u0a80-\u0aff]/ : /[\u0900-\u097f]/)
     })
-    it('keys the exact live controls and keeps the audit client in the same layout without a guide', () => {
-        expect(fabricStockTourControlLabels(key => key)).toEqual({ pending: 'qualityStock.pending', openingStock: 'qualityStock.opening', correctBalance: 'qualityStock.correct', movementHistory: 'qualityStock.history', refresh: 'qualityStock.refresh', auditInventory: 'qualityStock.audit' })
+    it('keys the exact live controls, and the Stock Audit is gone from the page', () => {
+        expect(fabricStockTourControlLabels(key => key)).toEqual({ pending: 'qualityStock.pending', openingStock: 'qualityStock.opening', correctBalance: 'qualityStock.correct', movementHistory: 'qualityStock.history', refresh: 'qualityStock.refresh' })
         const live = read('app/(dashboard)/owner/stock/QualityStockClient.tsx')
         expect(live).toContain('<Button data-tour-anchor="fabric.opening" onClick={() => open(\'opening\')}')
-        for (const key of ['audit', 'pending', 'opening', 'correct', 'history', 'refresh']) expect(live).toContain(`tx('${key}')`)
-        expect(read('app/(dashboard)/owner/stock/YarnStockClient.tsx')).toContain("t('qualityStock.audit')")
-        for (const [language, audit, pending] of [['en', 'Audit Inventory', 'Pending'], ['gu', 'સ્ટોક ઓડિટ', 'બાકી'], ['hi', 'स्टॉक ऑडिट', 'बाकी']] as const) {
-            expect(locales[language].qualityStock.audit).toBe(audit)
+        for (const key of ['pending', 'opening', 'correct', 'history', 'refresh']) expect(live).toContain(`tx('${key}')`)
+        // The Stock Audit was deleted on 2026-10-14.
+        expect(live).not.toContain('/owner/stock/audit')
+        expect(live).not.toContain("tx('audit')")
+        expect(fs.existsSync('app/(dashboard)/owner/stock/audit/page.tsx')).toBe(false)
+        for (const [language, pending] of [['en', 'Pending'], ['gu', 'બાકી'], ['hi', 'बाकी']] as const) {
             expect(locales[language].qualityStock.pending).toBe(pending)
         }
-        const audit = read('app/(dashboard)/owner/stock/audit/page.tsx')
-        expect(audit).not.toMatch(/StockGuidedTour|TourInvitation/)
-        expect(audit).toContain("await requireRole(['owner'])")
-        expect(audit).toContain('<div className="stock-workspace-shell">')
-        expect(audit).toContain('<InventoryAuditClient initialData={result.data} />')
         expect(getTourDefinition('fabric-stock').contentVersion).toBe('v2')
         expect(getTourDefinition('yarn-stock').contentVersion).toBe('v2')
     })

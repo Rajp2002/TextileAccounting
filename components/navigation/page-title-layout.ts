@@ -1,6 +1,5 @@
 const PAGE_TITLE_LAYOUTS: Array<[string, string]> = [
     ['/owner/production/daily-sheet', 'mx-auto w-full'],
-    ['/owner/stock/audit', 'mx-auto w-full'],
     ['/owner/settings/audit', 'mx-auto w-full'],
     ['/owner/data-export', 'mx-auto w-full max-w-2xl'],
     ['/owner/workers', 'workers-workspace-shell mx-auto w-full'],

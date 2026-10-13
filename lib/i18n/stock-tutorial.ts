@@ -24,7 +24,7 @@ export const fabricStockTutorialCopy: Record<Language, FabricCopy> = {
         "correct": {
             "title": "After a count, enter the counted total",
             "body": "{c:correctBalance} replaces the balance with what you counted. Enter 590, not −10; Weavly records the −10 m difference.",
-            "detail": "Use this for your regular counts. For a full dated audit of all fabric and yarn, kept as a record, use {c:auditInventory} at the top of the page."
+            "detail": "Use this for every count. Weavly keeps the difference in the stock history."
         },
         "history": {
             "title": "Trace every change",
@@ -56,7 +56,7 @@ export const fabricStockTutorialCopy: Record<Language, FabricCopy> = {
         "correct": {
             "title": "ગણતરી પછી ગણેલો કુલ જથ્થો લખો",
             "body": "{c:correctBalance} બેલેન્સને ગણેલા જથ્થાથી બદલે છે. 590 લખો, −10 નહીં; Weavly −10 મીટરનો ફરક નોંધે છે.",
-            "detail": "નિયમિત ગણતરી માટે આ જ વાપરો. બધા કાપડ અને યાર્નનું તારીખ સાથેનું પૂરું ઓડિટ રેકોર્ડ તરીકે રાખવા, પેજની ઉપર {c:auditInventory} વાપરો."
+            "detail": "દરેક ગણતરી માટે આ જ વાપરો. Weavly ફરક સ્ટોકના ઇતિહાસમાં રાખે છે."
         },
         "history": {
             "title": "દરેક ફેરફાર તપાસો",
@@ -88,7 +88,7 @@ export const fabricStockTutorialCopy: Record<Language, FabricCopy> = {
         "correct": {
             "title": "गिनती के बाद गिना हुआ कुल लिखें",
             "body": "{c:correctBalance} बैलेंस को गिनी हुई मात्रा से बदलता है। 590 लिखें, −10 नहीं; Weavly −10 मीटर का फ़र्क दर्ज करता है।",
-            "detail": "नियमित गिनती के लिए यही इस्तेमाल करें। सारे कपड़े और धागे का तारीख के साथ पूरा ऑडिट रिकॉर्ड के रूप में रखने के लिए पेज के ऊपर {c:auditInventory} इस्तेमाल करें।"
+            "detail": "हर गिनती के लिए यही इस्तेमाल करें। Weavly फ़र्क स्टॉक के इतिहास में रखता है।"
         },
         "history": {
             "title": "हर बदलाव देखें",
@@ -246,7 +246,6 @@ export function fabricStockTourControlLabels(t: (key: string) => string) {
         correctBalance: t('qualityStock.correct'),
         movementHistory: t('qualityStock.history'),
         refresh: t('qualityStock.refresh'),
-        auditInventory: t('qualityStock.audit'),
     }
 }
 

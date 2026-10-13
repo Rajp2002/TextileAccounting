@@ -47,7 +47,6 @@ describe('balanced mobile workflow navigation', () => {
         ['/owner/assignments', 'production', 'assignments'],
         ['/owner/machines/example', 'production', 'machines'],
         ['/owner/stock', 'stock', 'fabric'],
-        ['/owner/stock/audit', 'stock', 'fabric'],
         ['/owner/stock/yarn/example', 'stock', 'yarn'],
         ['/owner/dispatches/example/print', 'stock', 'dispatches'],
         ['/owner/workers/example', 'workforce', 'workers'],
