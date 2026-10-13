@@ -602,6 +602,91 @@ export function calculateBaseWorkerPayables({
     })
 }
 
+export type BaseWorkerMachineBreakdownRow = {
+    machine_label: string
+    rate_per_meter: number
+    meters: number
+    pay: number
+}
+
+export type BaseWorkerMachineBreakdown = {
+    rows: BaseWorkerMachineBreakdownRow[]
+    meters: number
+    pay: number
+}
+
+/**
+ * One worker's production in a pay period, grouped by machine and by the weaver rate
+ * snapshotted on each allocation. Follows the same rules as calculateBaseWorkerPayables
+ * so the pay total matches that worker's base pay.
+ */
+export function calculateBaseWorkerMachineBreakdown({
+    workerId,
+    fallbackRate,
+    periodStart,
+    periodEnd,
+    entries,
+    allocations = [],
+}: {
+    workerId: string
+    fallbackRate: number
+    periodStart: string
+    periodEnd: string
+    entries: BaseProductionEntry[]
+    allocations?: BaseProductionAllocation[]
+}): BaseWorkerMachineBreakdown {
+    const allocationsByEntry = new Map<string, BaseProductionAllocation[]>()
+    for (const allocation of allocations) {
+        const current = allocationsByEntry.get(allocation.entry_id) ?? []
+        current.push(allocation)
+        allocationsByEntry.set(allocation.entry_id, current)
+    }
+
+    const groups = new Map<string, { machine_label: string; rate: Decimal; meters: Decimal; pay: Decimal }>()
+    const addLine = (machineLabel: string, rate: Decimal, meters: Decimal, pay: Decimal) => {
+        const key = `${machineLabel}|${rate.toFixed(4)}`
+        const current = groups.get(key) ?? { machine_label: machineLabel, rate, meters: new Decimal(0), pay: new Decimal(0) }
+        groups.set(key, { ...current, meters: current.meters.plus(meters), pay: current.pay.plus(pay) })
+    }
+
+    const periodEntries = entries.filter((entry) => (
+        entry.worker_id === workerId
+        && entry.production_date >= periodStart
+        && entry.production_date <= periodEnd
+    ))
+    for (const entry of periodEntries) {
+        if (entry.allocation_mode === 'machine_breakdown') {
+            if (entry.piece_earning_state === 'inapplicable') continue
+            for (const allocation of allocationsByEntry.get(entry.id) ?? []) {
+                if (allocation.piece_earning_state === 'inapplicable') continue
+                const meters = toDecimal(allocation.meters)
+                const rate = toDecimal(allocation.worker_rate_snapshot)
+                addLine(allocation.machine_label || 'Machine', rate, meters, meters.times(rate))
+            }
+        } else {
+            // Legacy worker totals were never tied to a machine.
+            const meters = toDecimal(entry.meters)
+            const rate = toDecimal(entry.worker_rate_snapshot ?? fallbackRate)
+            addLine('', rate, meters, meters.times(rate))
+        }
+    }
+
+    const rows = [...groups.values()]
+        .sort((a, b) => a.machine_label.localeCompare(b.machine_label) || a.rate.comparedTo(b.rate))
+        .map((group) => ({
+            machine_label: group.machine_label,
+            rate_per_meter: toRoundedNumber(group.rate),
+            meters: toRoundedNumber(group.meters),
+            pay: toRoundedNumber(group.pay),
+        }))
+    const totals = [...groups.values()].reduce(
+        (sum, group) => ({ meters: sum.meters.plus(group.meters), pay: sum.pay.plus(group.pay) }),
+        { meters: new Decimal(0), pay: new Decimal(0) },
+    )
+
+    return { rows, meters: toRoundedNumber(totals.meters), pay: toRoundedNumber(totals.pay) }
+}
+
 export function getMonthPayrollBounds(dateOrMonth: string): { start: string; end: string; monthKey: string; label: string } {
     const parts = dateOrMonth.slice(0, 7).split('-').map(Number)
     const year = parts[0]
