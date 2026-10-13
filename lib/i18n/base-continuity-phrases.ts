@@ -272,6 +272,11 @@ const workflowPhrases = [
   ['Switch quality', 'क्वालिटी बदलें', 'ક્વોલિટી બદલો'],
   ['Cancel', 'रद्द करें', 'રદ કરો'],
   ['Quality saved for {machine}.', '{machine} के लिए क्वालिटी सेव हुई।', '{machine} માટે ક્વોલિટી સેવ થઈ.'],
+  ['Quality removed for {machine}.', '{machine} से क्वालिटी हटा दी गई।', '{machine} માટેની ક્વોલિટી હટાવી દેવામાં આવી.'],
+  ['Choose quality', 'क्वालिटी चुनें', 'ક્વોલિટી પસંદ કરો'],
+  ['No quality', 'कोई क्वालिटी नहीं', 'કોઈ ક્વોલિટી નહીં'],
+  ['Stop weaving on this loom. Workers stay assigned.', 'इस लूम पर बुनाई बंद करें। कारीगर जुड़े रहेंगे।', 'આ લૂમ પર વણાટ બંધ કરો. કારીગરો જોડાયેલા રહેશે.'],
+  ['Remove quality', 'क्वालिटी हटाएँ', 'ક્વોલિટી હટાવો'],
   ['Could not save the quality. Try again.', 'क्वालिटी सेव नहीं हो सकी। फिर कोशिश करें।', 'ક્વોલિટી સેવ થઈ શકી નથી. ફરી પ્રયાસ કરો.'],
   // Add in bulk: workers and machines
   ['Add in bulk', 'एक साथ कई जोड़ें', 'એકસાથે ઘણા ઉમેરો'],

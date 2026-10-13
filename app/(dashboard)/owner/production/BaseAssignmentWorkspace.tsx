@@ -1126,6 +1126,19 @@ export default function BaseAssignmentWorkspace({
         )
     }
 
+    /** A loom with no quality opens the same quality dialog as one that has a quality, so new looms never leave this board. */
+    const renderChooseQuality = (machine: BaseProductionMachine, spacing: string) => (
+        <button
+            type="button"
+            data-configuration-tour="job"
+            onClick={() => openQualityDialog(machine)}
+            aria-label={tx('Choose quality for {machine}', { machine: machineLabel(machine) })}
+            className={`relative z-10 inline-flex items-center gap-1 text-xs font-medium text-saffron-deep underline underline-offset-2 hover:text-saffron ${spacing}`}
+        >
+            {tx('Choose quality')} <ChevronDown className="h-3 w-3" aria-hidden="true" />
+        </button>
+    )
+
     const renderMachineCard = (machine: BaseProductionMachine) => {
         const assignment = assignmentByMachine.get(machine.id)
         const worker = assignment ? workerById.get(assignment.worker_id) : null
@@ -1207,17 +1220,7 @@ export default function BaseAssignmentWorkspace({
                         )}
                     </div>
                 </div>
-                {!hasActiveJob && machine.is_active && (
-                    <Link
-                        data-configuration-tour="job"
-                        onClick={event => { if (tourStep) event.preventDefault() }}
-                        prefetch={tourStep ? false : undefined}
-                        href={`/owner/production?${new URLSearchParams({ tab: 'jobs', returnTo: configurationReturnTo })}#machine-jobs`}
-                        className="relative z-10 mt-2.5 inline-flex items-center gap-1 text-xs font-medium text-saffron-deep hover:text-saffron underline underline-offset-2"
-                    >
-                        Set job in Production <ArrowUpRight className="h-3 w-3" />
-                    </Link>
-                )}
+                {!hasActiveJob && machine.is_active && renderChooseQuality(machine, 'mt-2.5')}
             </div>
         )
     }
@@ -1501,17 +1504,7 @@ export default function BaseAssignmentWorkspace({
                                                 )}
                                             </div>
                                         </div>
-                                        {!hasActiveJob && machine.is_active && (
-                                            <Link
-                                                data-configuration-tour="job"
-                                                onClick={event => { if (tourStep) event.preventDefault() }}
-                                                prefetch={tourStep ? false : undefined}
-                                                href={`/owner/production?${new URLSearchParams({ tab: 'jobs', returnTo: configurationReturnTo })}#machine-jobs`}
-                                                className="relative z-10 mt-2 inline-flex items-center gap-1 text-xs font-medium text-saffron-deep hover:text-saffron underline underline-offset-2"
-                                            >
-                                                Set job in Production <ArrowUpRight className="h-3 w-3" />
-                                            </Link>
-                                        )}
+                                        {!hasActiveJob && machine.is_active && renderChooseQuality(machine, 'mt-2')}
                                     </div>
                                 )
                             })}
