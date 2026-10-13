@@ -7,7 +7,7 @@ Implemented locally; production deployment and complete release verification are
 ## Destinations and state
 
 - Fabric Stock remains `/owner/stock` (existing default and legacy destination).
-- Yarn Stock remains `/owner/stock/yarn`.
+- Yarn Stock (`/owner/stock/yarn`) was deleted on 2026-10-14; Stock is a plain sidebar link to Fabric again.
 - Both retain their existing separate server pages and stock clients.
 - `lib/stock-navigation.ts` defines category destinations and the common pathname resolver.
 - Stock starts collapsed. Disclosure state belongs to each navigation surface, independently of active-route styling.
@@ -25,7 +25,7 @@ Implemented locally; production deployment and complete release verification are
 - `app/(dashboard)/owner/stock/StockNavigation.tsx`: deleted obsolete category selector.
 - `app/(dashboard)/owner/stock/loading.tsx`, `error.tsx`: category-specific loading/error headings and localized loading announcement.
 - `lib/i18n/locales/en.ts`, `hi.ts`, `gu.ts`: Stock/category labels and Fabric heading.
-- `lib/i18n/yarn-stock.ts`: English Yarn Stock heading aligned with the page name.
+- `lib/i18n/yarn-stock.ts` (deleted 2026-10-14 with Yarn Stock).
 - `__tests__/stock-navigation.test.ts`: destination matching, adjacency isolation, preserved URLs and locale coverage.
 
 ## Access and preserved behavior

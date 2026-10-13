@@ -79,7 +79,7 @@ export function AccountantCsvExports() {
                 </div>
             ))}
             <p className="mt-4 text-xs leading-5 text-subtle">
-                {tx('Payroll, yarn stock and stock audit CSVs stay on the Payroll and Stock pages while Base is active. All of these records are also in the complete export above.')}
+                {tx('Payroll CSVs stay on the Payroll page while Base is active. All of these records are also in the complete export above.')}
             </p>
         </section>
     )

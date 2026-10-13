@@ -438,5 +438,5 @@ export const ACCOUNT_PHRASES: LitePhraseRow[] = [
     ["Preparing", "तैयार हो रहा है", "તૈયાર થઈ રહ્યું છે"],
     ["Spreadsheet downloaded", "स्प्रेडशीट डाउनलोड हुई", "સ્પ્રેડશીટ ડાઉનલોડ થઈ"],
     ["This spreadsheet could not be prepared. Nothing was downloaded; please try again.", "यह स्प्रेडशीट तैयार नहीं हो सकी। कुछ भी डाउनलोड नहीं हुआ; फिर से कोशिश करें।", "આ સ્પ્રેડશીટ તૈયાર થઈ શકી નહીં. કંઈ ડાઉનલોડ થયું નથી; ફરી પ્રયાસ કરો."],
-    ["Payroll, yarn stock and stock audit CSVs stay on the Payroll and Stock pages while Base is active. All of these records are also in the complete export above.", "पेरोल, यार्न स्टॉक और स्टॉक ऑडिट की CSV, Base चालू रहने तक पेरोल और स्टॉक पेज पर रहती हैं। ये सभी रिकॉर्ड ऊपर वाले पूरे एक्सपोर्ट में भी हैं।", "પેરોલ, યાર્ન સ્ટોક અને સ્ટોક ઑડિટની CSV, Base ચાલુ હોય ત્યાં સુધી પેરોલ અને સ્ટોક પેજ પર રહે છે. આ બધા રેકોર્ડ ઉપરના પૂરા એક્સપોર્ટમાં પણ છે."],
+    ["Payroll CSVs stay on the Payroll page while Base is active. All of these records are also in the complete export above.", "पेरोल की CSV, Base चालू रहने तक पेरोल पेज पर रहती हैं। ये सभी रिकॉर्ड ऊपर वाले पूरे एक्सपोर्ट में भी हैं।", "પેરોલની CSV, Base ચાલુ હોય ત્યાં સુધી પેરોલ પેજ પર રહે છે. આ બધા રેકોર્ડ ઉપરના પૂરા એક્સપોર્ટમાં પણ છે."],
 ]

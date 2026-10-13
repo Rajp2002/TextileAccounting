@@ -26,7 +26,7 @@ Started 2026-09-27 in a cloud session that continued an earlier session interrup
   - [x] Machine Assignments
   - [x] Machines
   - [x] Workers
-  - [x] Fabric Stock, Yarn Stock, Stock audit
+  - [x] Fabric Stock (Yarn Stock and Stock audit deleted 2026-10-14)
   - [x] Dispatches (+ print)
   - [x] Payroll
 - [x] Label probe (how gu/hi display tour-named controls): `audit/label-probe.md`

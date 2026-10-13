@@ -1,6 +1,6 @@
 # Quality stock
 
-**Yarn inventory:** Stock has a separate Yarn tab for unused yarn physically in stock. Recorded production deducts yarn using its saved costing; dispatch reduces fabric stock without a second yarn deduction. [Yarn inventory until dispatch](yarn_inventory.md) documents the superseded September 12 design. The current behavior is defined by `20260920000000_unified_inventory_audit_architecture.sql`.
+**Yarn stock and the stock audit were deleted on 2026-10-14** (`20261014120000_remove_yarn_stock_and_stock_audit.sql`). Stock tracks fabric metres only; production adds metres and a confirmed dispatch removes them.
 
 Updated September 8, 2026. This replaces the old Full Suite stock feature; historical migrations and business records are retained.
 

@@ -13,7 +13,7 @@ One strict order. One active task at a time. A task starts only when every depen
 | 7 | GT-06 | Yarn Rate Book, migrate the bespoke engine | GT-05 | Task gate | [GT-06](tasks/GT-06-rate-book.md) |
 | 8 | GT-07 | Dispatches; introduces the replica workspace shell and live handoff (EC-18) | GT-06 | Task gate | [GT-07](tasks/GT-07-dispatches.md) |
 | 9 | GT-08 | Fabric Stock; remove the tour from the audit page; `qualityStock.audit` key | GT-07 | Task gate | [GT-08](tasks/GT-08-fabric-stock.md) |
-| 10 | GT-09 | Yarn Stock | GT-08 | Task gate | [GT-09](tasks/GT-09-yarn-stock.md) |
+| 10 | GT-09 | Yarn Stock | GT-08 | Task gate | Removed 2026-10-14 (Yarn Stock deleted) |
 | 11 | GT-10 | Payroll (core + "Advances, records and corrections"); remove the `full` variant | GT-09 | Task gate | [GT-10](tasks/GT-10-payroll.md) |
 | 12 | GT-11 | Production "Set up production" (Overview) | GT-10 | Task gate | [GT-11](tasks/GT-11-production.md) |
 | 13 | GT-12 | Daily Sheet "Record a shift" (new tour and launcher) | GT-11 | Task gate | [GT-12](tasks/GT-12-daily-sheet.md) |
@@ -22,7 +22,7 @@ One strict order. One active task at a time. A task starts only when every depen
 | 16 | GT-15 | Machine Assignments | GT-14 | Task gate | [GT-15](tasks/GT-15-machine-assignments.md) |
 | 17 | GT-16 | Retire tour code made unused by GT-03..GT-15 | GT-15 | Task gate | [GT-16](tasks/GT-16-retire-legacy.md) |
 | 18 | GT-17 | Cross-feature regression and final acceptance | GT-16 | **G2 (reviewer + owner + native review)** | [GT-17](tasks/GT-17-final-acceptance.md) |
-| — | GT-B1 | Stock audit tour | GT-17 **and** PI-06, PI-07 fixed (page spec §C; the owner decision is recorded as D-20) | Task gate | [GT-B1](tasks/GT-B1-stock-audit.md) — **BLOCKED** |
+| — | GT-B1 | Stock audit tour | GT-17 **and** PI-06, PI-07 fixed (page spec §C; the owner decision is recorded as D-20) | Task gate | Removed 2026-10-14 (Stock Audit deleted) |
 
 ## Dependency check
 

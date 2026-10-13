@@ -40,7 +40,7 @@ const groups: Array<{ title: string; baseOnly?: boolean; rows: Array<{ label: st
         rows: [
             { label: 'Active qualities and machine assignments', cells: [false, false, true] },
             { label: 'Daily production by machine, day and night shift', cells: [false, false, true] },
-            { label: 'Fabric and yarn stock', cells: [false, false, true] },
+            { label: 'Fabric stock', cells: [false, false, true] },
             { label: 'Dispatches on delivery challans', cells: [false, false, true] },
             { label: 'Workers, piece-rate payroll, advances and settlement', cells: [false, false, true] },
         ],
