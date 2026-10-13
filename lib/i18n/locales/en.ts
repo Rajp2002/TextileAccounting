@@ -44,8 +44,6 @@ export const en = {
   "assignments": "Machine Assignments",
   "stock": "Stock",
   "fabric": "Fabric",
-  "yarn": "Yarn",
-  "yarnStock": "Yarn Stock",
   "dispatches": "Dispatches",
   "machines": "Machines",
   "workers": "Workers",
@@ -220,7 +218,6 @@ export const en = {
 },
 
   qualityStock: {
-    audit: "Audit Inventory",
     pending: "Pending",
         dispatch: "Dispatch",
         dispatch_reversal: "Dispatch reversal",

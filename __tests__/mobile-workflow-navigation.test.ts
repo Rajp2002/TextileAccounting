@@ -30,7 +30,7 @@ describe('balanced mobile workflow navigation', () => {
         expect(navigation().groups.map(group => [group.id, group.destinations.map(item => item.href)])).toEqual([
             ['costing', ['/owner/estimator', '/owner/quotes', '/owner/rates']],
             ['production', ['/owner/production/daily-sheet', '/owner/production', '/owner/assignments', '/owner/machines']],
-            ['stock', ['/owner/stock', '/owner/stock/yarn', '/owner/dispatches']],
+            ['stock', ['/owner/stock', '/owner/dispatches']],
             ['workforce', ['/owner/workers', '/owner/payroll']],
         ])
         expect(directory.filter(item => ['/owner/settings', '/owner/billing'].includes(item.href))).toHaveLength(2)
@@ -47,7 +47,6 @@ describe('balanced mobile workflow navigation', () => {
         ['/owner/assignments', 'production', 'assignments'],
         ['/owner/machines/example', 'production', 'machines'],
         ['/owner/stock', 'stock', 'fabric'],
-        ['/owner/stock/yarn/example', 'stock', 'yarn'],
         ['/owner/dispatches/example/print', 'stock', 'dispatches'],
         ['/owner/workers/example', 'workforce', 'workers'],
         ['/owner/payroll', 'workforce', 'payroll'],

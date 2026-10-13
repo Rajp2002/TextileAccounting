@@ -60,12 +60,12 @@ describe('Tour Invitation i18n Parity (EN, GU, HI)', () => {
     expect(isTourEligible('daily-sheet', 'base', 'supervisor')).toBe(false)
     for (const tour of Object.values(tourRegistry)) {
       expect(tour).not.toHaveProperty('emphasis')
-      expect(tour.contentVersion).toBe(['saved-costings', 'cost-estimate', 'rate-book', 'dispatch', 'fabric-stock', 'yarn-stock', 'production', 'workers', 'daily-sheet', 'configuration', 'machines', 'payroll'].includes(tour.id) ? 'v2' : 'v1')
+      expect(tour.contentVersion).toBe(['saved-costings', 'cost-estimate', 'rate-book', 'dispatch', 'fabric-stock', 'production', 'workers', 'daily-sheet', 'configuration', 'machines', 'payroll'].includes(tour.id) ? 'v2' : 'v1')
     }
   })
 
-  it('matches every approved page benefit exactly, including the yarn consumption correction', () => {
-    const pages = { 'cost-estimate': 'cost-estimator', 'rate-book': 'rate-book', 'saved-costings': 'saved-costings', configuration: 'machine-assignments', workers: 'workers', machines: 'machines', payroll: 'payroll', production: 'production', dispatch: 'dispatches', 'fabric-stock': 'fabric-stock', 'yarn-stock': 'yarn-stock', 'daily-sheet': 'daily-sheet' }
+  it('matches every approved page benefit exactly', () => {
+    const pages = { 'cost-estimate': 'cost-estimator', 'rate-book': 'rate-book', 'saved-costings': 'saved-costings', configuration: 'machine-assignments', workers: 'workers', machines: 'machines', payroll: 'payroll', production: 'production', dispatch: 'dispatches', 'fabric-stock': 'fabric-stock', 'daily-sheet': 'daily-sheet' }
     for (const tour of supportedTours) {
       const row = readFileSync(`docs/guided-tours/pages/${pages[tour]}.md`, 'utf8').split('\n').find(line => line.startsWith('| `guide.benefit` |'))!
       const approved = row.split('|').slice(2, 5).map(value => value.trim())

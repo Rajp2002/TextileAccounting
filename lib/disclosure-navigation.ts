@@ -1,10 +1,9 @@
 import type { SubscriptionTier } from './subscription-access'
 import { Calculator, Users } from 'lucide-react'
 import { visibleOwnerNavigation, type OwnerNavigationItem } from './owner-navigation'
-import { resolveStockKind, stockDestinations } from './stock-navigation'
 
 export type NavigationDestination = OwnerNavigationItem & { href: string }
-export type DisclosureId = 'costing' | 'production' | 'stock' | 'workforce'
+export type DisclosureId = 'costing' | 'production' | 'workforce'
 export type NavigationGroup = {
     kind: 'group'; id: DisclosureId; translationKey: string;
     icon: OwnerNavigationItem['icon']; children: NavigationDestination[]
@@ -37,14 +36,6 @@ export function groupOwnerNavigation(sections: Sections, tier: SubscriptionTier)
                 ...(children.length ? [{ kind: 'group' as const, id: 'workforce' as const, translationKey: 'navigation.sections.workforce', icon: Users, children }] : []),
                 ...nodes.filter(item => item.id !== 'workers' && item.id !== 'payroll'),
             ]
-        } else if (section.id === 'production_stock') {
-            nodes = nodes.map(item => item.id !== 'stock' || item.kind !== 'link' ? item : {
-                kind: 'group', id: 'stock', translationKey: 'navigation.stock', icon: item.icon,
-                children: stockDestinations.map(destination => ({
-                    ...item, id: destination.id, href: destination.href, translationKey: destination.labelKey,
-                    active: pathname => resolveStockKind(pathname) === destination.id,
-                })),
-            })
         }
         return { ...section, nodes, showHeading: section.id !== 'costing' && section.id !== 'workforce' }
     })

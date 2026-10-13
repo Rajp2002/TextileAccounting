@@ -1,7 +1,7 @@
 import { businessDate } from '@/lib/challan-payment-terms'
 
 /**
- * Recent stock activity for the Fabric and Yarn stock pages: the movements of the last three weeks, read once on
+ * Recent stock activity for the Fabric stock page: the movements of the last three weeks, read once on
  * the server so that week totals, daily pace and trend lines never depend on which history page the client holds.
  * Every function here is pure; dates are India calendar days (IST has no daylight saving).
  */
@@ -84,16 +84,6 @@ export function groupByIndiaDay<T extends { created_at: string }>(rows: readonly
         else days.push({ date, rows: [row] })
     }
     return days
-}
-
-/** How long a balance lasts at a daily use, as the unit and count the page shows. Null when nothing is being used. */
-export function lastsFor(balance: number, perDay: number): { unit: 'underDay' | 'days' | 'weeks' | 'months'; count: number } | null {
-    if (!(perDay > 0)) return null
-    const days = Math.max(balance, 0) / perDay
-    if (days < 1) return { unit: 'underDay', count: 0 }
-    if (days < 14) return { unit: 'days', count: Math.floor(days) }
-    if (days < 112) return { unit: 'weeks', count: Math.round(days / 7) }
-    return { unit: 'months', count: Math.round(days / 30) }
 }
 
 const round = (value: number) => Math.round(value * 1e9) / 1e9

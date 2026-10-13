@@ -44,8 +44,6 @@ export const gu = {
   "assignments": "મશીન ફાળવણી",
   "stock": "સ્ટોક",
   "fabric": "કાપડ",
-  "yarn": "યાર્ન",
-  "yarnStock": "યાર્નનો સ્ટોક",
   "dispatches": "ડિસ્પેચ",
   "machines": "મશીનો",
   "workers": "કારીગરો",
@@ -220,7 +218,6 @@ export const gu = {
 },
 
   qualityStock: {
-    audit: "સ્ટોક ઓડિટ",
     pending: "બાકી",
         dispatch: "ડિસ્પેચ",
         dispatch_reversal: "ડિસ્પેચ ઉલટાવેલ",

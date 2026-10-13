@@ -9,8 +9,7 @@ const [width, height] = size.split('x').map(Number)
 const [scenarioName, scenarioQuery = ''] = scenario.split('?')
 const dispatch = scenarioName === 'dispatch'
 const fabricStock = scenarioName === 'fabric-stock'
-const yarnStock = scenarioName === 'yarn-stock'
-const stock = fabricStock || yarnStock
+const stock = fabricStock
 const production = scenarioName === 'production'
 const payroll = ['payroll', 'payroll-extra'].includes(scenarioName)
 const payrollExtra = scenarioName === 'payroll-extra'
@@ -60,10 +59,6 @@ if (dispatch) {
 if (fabricStock) {
   await page.locator('#stock-search').fill('Retained')
   await page.evaluate(() => { window.__fabricSearchNode = document.querySelector('#stock-search') })
-}
-if (yarnStock) {
-  await page.locator('#yarn-audit-date').fill('2026-09-14')
-  await page.evaluate(() => { window.__yarnDateNode = document.querySelector('#yarn-audit-date') })
 }
 if (payroll) {
   await page.locator('#base-payroll-search').fill('Retained payroll')
@@ -302,25 +297,15 @@ for (let i = 0; i < 40; i++) {
         anchors: [...document.querySelectorAll('[data-tour-anchor="dispatch.new"]')].filter(node => node.getBoundingClientRect().width && node.getBoundingClientRect().height).length,
         enabledReplicaControls: [...document.querySelectorAll('[data-tour-replica="dispatch"] button, [data-tour-replica="dispatch"] input, [data-dispatch-tour-preview="true"] button, [data-dispatch-tour-preview="true"] input')].filter(node => !node.disabled).length,
       } : null,
-      stock: document.querySelector('[data-tour-replica="fabric-stock"], [data-tour-replica="yarn-stock"], [data-harness-fabric-live], [data-harness-yarn-live]') ? {
-        replica: !!document.querySelector('[data-tour-replica="fabric-stock"], [data-tour-replica="yarn-stock"]'),
-        balance: document.querySelector('[data-fabric-tour-balance], [data-yarn-tour-balance]')?.textContent,
+      stock: document.querySelector('[data-tour-replica="fabric-stock"], [data-harness-fabric-live]') ? {
+        replica: !!document.querySelector('[data-tour-replica="fabric-stock"]'),
+        balance: document.querySelector('[data-fabric-tour-balance]')?.textContent,
         pending: !!document.querySelector('[data-tour-replica="fabric-stock"] [title]'),
         mounts: window.__fabricMounts, unmounts: window.__fabricUnmounts ?? 0,
         retainedSearch: window.__fabricSearchNode?.value,
         sameSearchNode: window.__fabricSearchNode === document.querySelector('#stock-search'),
         anchors: [...document.querySelectorAll('[data-tour-anchor="fabric.opening"]')].filter(node => node.getBoundingClientRect().width && node.getBoundingClientRect().height).length,
-        enabledReplicaControls: [...document.querySelectorAll('[data-tour-replica="fabric-stock"] :is(button,input,select,textarea), [data-tour-replica="yarn-stock"] :is(button,input,select,textarea), [data-stock-tour-preview="true"] :is(button,input,select,textarea)')].filter(node => !node.disabled).length,
-      } : null,
-      yarn: document.querySelector('[data-harness-yarn-live]') ? {
-        mounts: window.__yarnMounts, unmounts: window.__yarnUnmounts ?? 0,
-        date: window.__yarnDateNode?.value,
-        sameDateNode: window.__yarnDateNode === document.querySelector('#yarn-audit-date'),
-        anchors: [...document.querySelectorAll('[data-tour-anchor="yarn.opening"]')].filter(node => node.getBoundingClientRect().width && node.getBoundingClientRect().height).length,
-        sections: [...document.querySelectorAll('[data-tour-replica="yarn-stock"] [data-yarn-tour-section]')].map(node => node.getAttribute('data-yarn-tour-section')),
-        sampleBanners: document.querySelectorAll('[data-tour-sample-banner]').length,
-        weight: document.querySelector('[data-stock-tour-preview="true"] input[value="98"], [data-stock-tour-preview="true"] input[value="20"], [data-stock-tour-preview="true"] input[value="100"]')?.value,
-        movement: document.querySelector('[data-stock-tour="movement"]')?.textContent,
+        enabledReplicaControls: [...document.querySelectorAll('[data-tour-replica="fabric-stock"] :is(button,input,select,textarea), [data-stock-tour-preview="true"] :is(button,input,select,textarea)')].filter(node => !node.disabled).length,
       } : null,
       sampleCloseControls: [...document.querySelectorAll('[data-costing-tour-dialog="true"] button')].filter(button => /^(Close|बंद करें|બંધ કરો)$/.test(button.textContent.trim()) || /^Close /.test(button.getAttribute('aria-label') ?? '')).length,
       rail: (() => { const e = Array.from(document.querySelectorAll('aside')).find(a => /left-rail/.test(a.className) && getComputedStyle(a).position === 'fixed' && a.getBoundingClientRect().width > 0); return r(e) })(),
@@ -409,13 +394,6 @@ if (fabricStock) record.after.stock = await page.evaluate(() => ({
   sameSearchNode: window.__fabricSearchNode === document.querySelector('#stock-search'),
   liveHidden: !!document.querySelector('[data-harness-fabric-live]')?.closest('[hidden]'),
   replica: !!document.querySelector('[data-tour-replica="fabric-stock"]'),
-}))
-if (yarnStock) record.after.yarn = await page.evaluate(() => ({
-  mounts: window.__yarnMounts, unmounts: window.__yarnUnmounts ?? 0,
-  date: window.__yarnDateNode?.value,
-  sameDateNode: window.__yarnDateNode === document.querySelector('#yarn-audit-date'),
-  liveHidden: !!document.querySelector('[data-harness-yarn-live]')?.closest('[hidden]'),
-  replica: !!document.querySelector('[data-tour-replica="yarn-stock"]'),
 }))
 
 if (dailySheet) record.after.daily = await captureDailyState()
@@ -506,7 +484,7 @@ if (dispatch) {
 // GT-08/09 assertions are prepared for deferred browser verification, not a claim of a run.
 if (stock) {
   const issues = []
-  const steps = fabricStock ? ['fs-balance', 'fs-pending', 'fs-opening', 'fs-correct', 'fs-history', 'fs-handoff'] : ['ys-balance', 'ys-opening', 'ys-receipt', 'ys-link', 'ys-usage', 'ys-correct', 'ys-handoff']
+  const steps = ['fs-balance', 'fs-pending', 'fs-opening', 'fs-correct', 'fs-history', 'fs-handoff']
   const expected = record.exitAt ? steps.slice(0, record.exitAt) : steps
   if (JSON.stringify(record.steps.map(step => step.step)) !== JSON.stringify(expected)) issues.push('stock step order/count mismatch')
   const intersection = (a, b) => a && b ? Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x)) * Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y)) : 0
@@ -515,7 +493,7 @@ if (stock) {
     if (step.status !== 'ready') issues.push(`${step.step}: ${step.status}`)
     if (!step.focusInPanel) issues.push(`${step.step}: focus outside panel`)
     if (step.stock?.enabledReplicaControls) issues.push(`${step.step}: enabled business control in sample`)
-    const handoff = step.step === (fabricStock ? 'fs-handoff' : 'ys-handoff')
+    const handoff = step.step === 'fs-handoff'
     if (step.liveHidden === handoff || step.stock?.replica === handoff) issues.push(`${step.step}: live/replica visibility`)
     if (fabricStock) {
       if (step.overlapArea > 0) issues.push(`${step.step}: panel/outline overlap`)
@@ -527,27 +505,9 @@ if (stock) {
       if (step.stock?.pending !== ['fs-balance', 'fs-pending', 'fs-opening'].includes(step.step)) issues.push(`${step.step}: wrong Pending state`)
       if (step.stock?.mounts !== 1 || step.stock?.unmounts || !step.stock?.sameSearchNode || step.stock?.retainedSearch !== 'Retained') issues.push(`${step.step}: live state changed`)
     }
-    if (yarnStock) {
-      if (step.overlapArea > 0) issues.push(`${step.step}: panel/outline overlap`)
-      if (width >= 768 && intersection(step.panel, step.context)) issues.push(`${step.step}: panel/dialog overlap`)
-      if (width >= 1440 && !step.context && intersection(step.rail, step.highlight)) issues.push(`${step.step}: rail intersects target`)
-      const h = step.highlight
-      if (step.panelOffscreen || !h || h.x < 0 || h.y < 0 || h.x + h.w > width || h.y + h.h > height) issues.push(`${step.step}: panel/outline off screen`)
-      const balance = { 'ys-balance': 100, 'ys-opening': 100, 'ys-receipt': 120, 'ys-link': 120, 'ys-usage': 100, 'ys-correct': 100 }[step.step]
-      if (handoff ? step.yarn?.anchors !== 1 : parseInt(step.stock?.balance, 10) !== balance) issues.push(`${step.step}: wrong Yarn anchor or balance`)
-      const sections = ['header', 'balance', 'date', 'yarns', 'costings', 'history']
-      if (!handoff && JSON.stringify(step.yarn?.sections) !== JSON.stringify(sections)) issues.push(`${step.step}: wrong Yarn section order`)
-      if (step.yarn?.sampleBanners !== (handoff ? 0 : 1)) issues.push(`${step.step}: wrong sample disclosure count`)
-      const weight = { 'ys-opening': '100', 'ys-receipt': '20', 'ys-correct': '98' }[step.step]
-      if (weight && step.yarn?.weight !== weight) issues.push(`${step.step}: wrong sample weight`)
-      if (step.step === 'ys-usage' && !step.yarn?.movement?.includes('−20 kg')) issues.push('Yarn production deduction missing')
-      if (step.yarn?.mounts !== 1 || step.yarn?.unmounts || !step.yarn?.sameDateNode || step.yarn?.date !== '2026-09-14') issues.push(`${step.step}: Yarn live state changed`)
-    }
   }
   if (fabricStock && (record.after.stock?.liveHidden || record.after.stock?.replica || record.after.stock?.mounts !== 1 || record.after.stock?.unmounts || !record.after.stock?.sameSearchNode || record.after.stock?.retainedSearch !== 'Retained')) issues.push('live client/state not restored')
-  if (yarnStock && (record.after.yarn?.liveHidden || record.after.yarn?.replica || record.after.yarn?.mounts !== 1 || record.after.yarn?.unmounts || !record.after.yarn?.sameDateNode || record.after.yarn?.date !== '2026-09-14')) issues.push('Yarn live client/state not restored')
   if (fabricStock && (!record.exitAt ? record.after.activeAnchor !== 'fabric.opening' : !LAUNCHER_FOCUS.includes(record.after.activeControl))) issues.push('stock focus restoration failed')
-  if (yarnStock && (!record.exitAt ? record.after.activeAnchor !== 'yarn.opening' : !LAUNCHER_FOCUS.includes(record.after.activeControl))) issues.push('Yarn focus restoration failed')
   if (record.exitAt && Object.values(record.after.prefs).some(value => value.includes('"completed":true'))) issues.push('Exit recorded completion')
   if (record.after.serverCalls.some(call => call.fn !== 'recordTourEventAction')) issues.push('unexpected stock server action')
   if (record.after.navigations.length || apiRequests.length) issues.push('unexpected stock navigation/API request')

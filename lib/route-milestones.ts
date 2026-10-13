@@ -1,6 +1,6 @@
 // Local diagnostic marks only. Never include query strings, record IDs, or names.
 const ROUTES = [
-    '/owner/production/daily-sheet', '/owner/stock/yarn',
+    '/owner/production/daily-sheet',
     '/owner/settings/audit', '/owner/production', '/owner/assignments', '/owner/operations',
     '/owner/workers', '/owner/machines', '/owner/payroll', '/owner/stock', '/owner/dispatches',
     '/owner/estimator', '/owner/quotes', '/owner/rates', '/owner/settings', '/owner/billing',

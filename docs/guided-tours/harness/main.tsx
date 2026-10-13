@@ -16,12 +16,12 @@ const lang = params.get('lang') ?? 'en'
 try { localStorage.setItem('weavly_language', lang) } catch {}
 if (params.get('fresh') === '1') { try { Object.keys(localStorage).filter(k => k.startsWith('weavly:tour')).forEach(k => localStorage.removeItem(k)); sessionStorage.clear() } catch {} }
 ;(window as any).__harnessPath = params.get('path') ?? {
-  production: '/owner/production', 'daily-sheet': '/owner/production/daily-sheet', 'fabric-stock': '/owner/stock', 'yarn-stock': '/owner/stock/yarn', dispatch: '/owner/dispatches',
+  production: '/owner/production', 'daily-sheet': '/owner/production/daily-sheet', 'fabric-stock': '/owner/stock', dispatch: '/owner/dispatches',
   payroll: '/owner/payroll', 'payroll-extra': '/owner/payroll', 'payroll-records': '/owner/payroll', machines: '/owner/machines', workers: '/owner/workers', 'workers-salary': '/owner/workers', estimator: '/owner/estimator', 'free-estimator': '/free',
   rates: '/owner/rates', 'rates-populated': '/owner/rates', quotes: '/owner/quotes', offer: '/owner/quotes/offer', 'quotes-compare': '/owner/quotes', 'free-costings': '/free/costings', assignments: '/owner/assignments',
 }[scenario]
 // These fixtures use the same path-dependent translation rules as the real app.
-if (['production', 'daily-sheet', 'quotes', 'quotes-compare', 'free-costings', 'dispatch', 'fabric-stock', 'yarn-stock', 'rates', 'rates-populated', 'estimator', 'free-estimator', 'workers', 'workers-salary', 'assignments', 'machines'].includes(scenario)) history.replaceState(null, '', (window as any).__harnessPath + location.search)
+if (['production', 'daily-sheet', 'quotes', 'quotes-compare', 'free-costings', 'dispatch', 'fabric-stock', 'rates', 'rates-populated', 'estimator', 'free-estimator', 'workers', 'workers-salary', 'assignments', 'machines'].includes(scenario)) history.replaceState(null, '', (window as any).__harnessPath + location.search)
 
 const today = '2026-09-27'
 const Live = ({ label }: { label: string }) => (
@@ -125,28 +125,6 @@ async function FabricFixture() {
   const initialData = { qualities, total_meters: qualities.length ? 600 : 0, movements: [], nextCursor: null, cutover: null }
   if (params.get('showcase') === '1') { const show = await import('./showcase'); show.installShowcase(); return <Tour kind="fabric-stock" userId="u1" orgId="o1" userMetadata={{}}><FabricLiveFixture Client={Client} initialData={show.fabricBoard()} /></Tour> }
   return <Tour kind="fabric-stock" userId="u1" orgId="o1" userMetadata={{}}><FabricLiveFixture Client={Client} initialData={initialData} /></Tour>
-}
-
-// GT-09 mounts the real Yarn client with synthetic props; no live loader runs.
-function YarnLiveFixture({ Client, initialData }: any) {
-  React.useEffect(() => {
-    ;(window as any).__yarnMounts = ((window as any).__yarnMounts ?? 0) + 1
-    return () => { (window as any).__yarnUnmounts = ((window as any).__yarnUnmounts ?? 0) + 1 }
-  }, [])
-  return <div data-harness-live="true" data-harness-yarn-live><Client initialData={initialData} /></div>
-}
-async function YarnFixture() {
-  const { default: Tour } = await import('@/components/stock/StockGuidedTour')
-  const { default: Client } = await import('@/app/(dashboard)/owner/stock/YarnStockClient')
-  const populated = params.get('populated') === '1'
-  const recipe = [{ yarn_name: 'Retained yarn', yarn_key: 'retained yarn', kg_per_100m: 6, role: 'warp' }, { yarn_name: 'Retained yarn', yarn_key: 'retained yarn', kg_per_100m: 4, role: 'weft' }]
-  const costings = params.get('unlinked') === '1' ? [] : [{ id: 'tour-fixture-costing', quality_label: 'Retained fabric', quality_key: 'retained fabric', version_number: 2, saved_at: today, recipe }]
-  const initialData = { org_id: 'o1', started_at: populated ? today : null, as_of: null,
-    yarns: populated ? [{ id: 'tour-fixture-yarn', yarn_name: 'Retained yarn', yarn_key: 'retained yarn', weight_kg: 75, opening_recorded: true }] : [],
-    qualities: populated ? [{ id: 'tour-fixture-fabric', quality_label: 'Retained fabric', quality_key: 'retained fabric', meters: 200, recipe: costings.length ? recipe : null, costing_id: costings[0]?.id ?? null, version: 1 }] : [],
-    costings: populated ? costings : [], movements: [], nextCursor: null }
-  if (params.get('showcase') === '1') { const show = await import('./showcase'); show.installShowcase(); return <Tour kind="yarn-stock" userId="u1" orgId="o1" userMetadata={{}}><YarnLiveFixture Client={Client} initialData={show.yarnBoard()} /></Tour> }
-  return <Tour kind="yarn-stock" userId="u1" orgId="o1" userMetadata={{}}><YarnLiveFixture Client={Client} initialData={initialData} /></Tour>
 }
 
 // GT-11 uses the real Overview client with in-memory fixture props; no loader runs.
@@ -363,7 +341,6 @@ const scenarios: Record<string, () => Promise<React.ReactElement>> = {
   production: ProductionFixture,
   'daily-sheet': DailySheetFixture,
   'fabric-stock': FabricFixture,
-  'yarn-stock': YarnFixture,
   dispatch: DispatchFixture,
   payroll: PayrollFixture,
   'payroll-extra': PayrollFixture,

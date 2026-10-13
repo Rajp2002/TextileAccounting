@@ -26,40 +26,6 @@ export function fabricBoard() {
   return { qualities, total_meters: 1678, movements, nextCursor: null, cutover: null, activity }
 }
 
-export function yarnBoard() {
-  const yarns = [
-    { id: 'y1', yarn_name: '40 span', yarn_key: '40 span', weight_kg: 87.126112, opening_recorded: true },
-    { id: 'y2', yarn_name: 'Demo Polyester Warp 75D', yarn_key: 'demo polyester warp 75d', weight_kg: 165.644, opening_recorded: true },
-    { id: 'y3', yarn_name: 'Demo Polyester Weft 150D', yarn_key: 'demo polyester weft 150d', weight_kg: 143.931008, opening_recorded: true },
-    { id: 'y4', yarn_name: 'jari', yarn_key: 'jari', weight_kg: 11.941333333, opening_recorded: true },
-  ]
-  const d345 = [{ yarn_name: 'jari', yarn_key: 'jari', kg_per_100m: 5.866666667, role: 'warp' }, { yarn_name: '40 span', yarn_key: '40 span', kg_per_100m: 4.1888, role: 'weft' }]
-  const demo = [{ yarn_name: 'Demo Polyester Warp 75D', yarn_key: 'demo polyester warp 75d', kg_per_100m: 4.2, role: 'warp' }, { yarn_name: 'Demo Polyester Weft 150D', yarn_key: 'demo polyester weft 150d', kg_per_100m: 6.8544, role: 'weft' }]
-  const qualities = [
-    { id: 'q1', quality_label: 'D.345', quality_key: 'd.345', meters: 860, recipe: d345, costing_id: 'c1', version: 3 },
-    { id: 'q2', quality_label: 'Demo - Signature Polyester', quality_key: 'demo - signature polyester', meters: 818, recipe: demo, costing_id: 'c2', version: 1 },
-  ]
-  const costings = [
-    { id: 'c1', quality_label: 'D.345', quality_key: 'd.345', version_number: 3, saved_at: at(12, 11, 0), recipe: d345 },
-    { id: 'c2', quality_label: 'Demo - Signature Polyester', quality_key: 'demo - signature polyester', version_number: 1, saved_at: at(21, 10, 0), recipe: demo },
-  ]
-  const name: Record<string, string> = Object.fromEntries(yarns.map(y => [y.id, y.yarn_name]))
-  const use = (id: string, yarn: string, kg: number, after: number, metres: number, rate: number, daysAgo: number, h: number) =>
-    ({ id, yarn_id: yarn, kind: 'production_consumption', kg_delta: -kg, balance_after: after, reason: 'Production', challan_id: null, recipe_snapshot: { meters: metres, kg_per_100m: rate }, created_at: at(daysAgo, h, 40) })
-  const activity = [
-    use('m1', 'y4', 7.333333, 11.941333, 125, 5.866666667, 1, 18), use('m2', 'y1', 5.236, 87.126112, 125, 4.1888, 1, 18),
-    use('m3', 'y3', 6.8544, 143.931008, 100, 6.8544, 2, 19), use('m4', 'y2', 4.2, 165.644, 100, 4.2, 2, 19),
-    use('m5', 'y4', 12.32, 19.274666, 210, 5.866666667, 5, 18), use('m6', 'y1', 8.79648, 92.362112, 210, 4.1888, 5, 18),
-    use('m7', 'y3', 10.692864, 150.785408, 156, 6.8544, 6, 19), use('m8', 'y2', 6.552, 169.844, 156, 4.2, 6, 19),
-    use('m9', 'y4', 18.773333, 31.594666, 320, 5.866666667, 7, 19), use('m10', 'y1', 13.40416, 101.158592, 320, 4.1888, 7, 19),
-    { id: 'm11', yarn_id: 'y1', kind: 'receipt', kg_delta: 50, balance_after: 114.562752, reason: 'Bill 2291, Ambica Yarns', challan_id: null, recipe_snapshot: null, created_at: at(8, 10, 30) },
-    use('m12', 'y3', 12.33792, 161.478272, 180, 6.8544, 8, 19), use('m13', 'y2', 7.56, 176.396, 180, 4.2, 8, 19),
-    ...yarns.map((y, i) => ({ id: `o${i}`, yarn_id: y.id, kind: 'opening', kg_delta: { y1: 64.562752, y2: 183.956, y3: 173.816192, y4: 50.368 }[y.id]!, balance_after: { y1: 64.562752, y2: 183.956, y3: 173.816192, y4: 50.368 }[y.id]!, reason: 'Weighed in godown', challan_id: null, recipe_snapshot: null, created_at: at(20, 19, 44) })),
-  ]
-  const movements = activity.map(row => ({ ...row, yarn_name: name[row.yarn_id], created_by: null }))
-  return { org_id: 'o1', started_at: at(20, 19, 44), as_of: null, yarns, qualities, costings, movements, nextCursor: null, activity }
-}
-
 export function challans() {
   const base = { selling_rate: 25, adjustment_amount: 0, version: 1, archived_at: null, payment_terms: '' }
   return [
@@ -83,7 +49,6 @@ export function challanEvents(id: string) {
 export function installShowcase() {
   ;(window as any).__harnessFixtures = {
     getQualityStockBoard: () => ({ data: fabricBoard() }),
-    getYarnStockBoard: () => ({ data: yarnBoard() }),
     listChallans: () => ({ data: challans() }),
     getChallan: (id: string) => ({ data: challans().find(c => c.id === id), events: challanEvents(id) }),
     getCostRateUsage: () => ({ data: rateUsage(), conflicts: [] }),

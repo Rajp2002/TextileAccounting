@@ -44,8 +44,6 @@ export const hi = {
   "assignments": "मशीन आवंटन",
   "stock": "स्टॉक",
   "fabric": "कपड़ा",
-  "yarn": "धागा",
-  "yarnStock": "धागे का स्टॉक",
   "dispatches": "डिस्पैच",
   "machines": "मशीनें",
   "workers": "कारीगर",
@@ -220,7 +218,6 @@ export const hi = {
 },
 
   qualityStock: {
-    audit: "स्टॉक ऑडिट",
     pending: "बाकी",
         dispatch: "डिस्पैच",
         dispatch_reversal: "डिस्पैच वापसी",

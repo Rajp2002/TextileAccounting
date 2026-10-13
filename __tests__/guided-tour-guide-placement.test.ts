@@ -121,7 +121,6 @@ describe('Guided tour Guide placement across all sections', () => {
     it('Stock, Dispatch and Daily Sheet: the wrapped page header renders PageGuide', () => {
         for (const page of [
             'app/(dashboard)/owner/stock/QualityStockClient.tsx',
-            'app/(dashboard)/owner/stock/YarnStockClient.tsx',
             'app/(dashboard)/owner/dispatches/ChallansClient.tsx',
             'app/(dashboard)/owner/production/BaseDailyProductionSheet.tsx',
         ]) expect(header(read(page))).toContain('<PageGuide />')
