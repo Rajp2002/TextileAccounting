@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { hasBaseOperatorEligibility, isBaseOperatorAvailable, resolveBasePieceRate } from '../lib/base-operator'
+import {
+    canRecordBaseOperatorProduction, describeBaseSheetRows, hasBaseOperatorEligibility, isBaseOperatorAvailable,
+    resolveBasePieceRate, reviewBaseSheetOperators,
+} from '../lib/base-operator'
 import { calculateBaseEntryGrossPay, calculateBaseWorkerPayables, type BaseProductionWorker } from '../lib/base-production-core'
 import { buildBasePayrollReadiness } from '../lib/base-payroll-readiness'
 import { normalizeWorker } from '../app/(dashboard)/owner/production/registers/normalize'
@@ -26,10 +29,62 @@ describe('Base operator eligibility', () => {
         expect(isBaseOperatorAvailable({ ...fixed, end_date: '2026-09-10' }, 'day', '2026-09-11')).toBe(false)
         expect(isBaseOperatorAvailable({ ...fixed, is_active: false }, 'day', '2026-09-01')).toBe(false)
     })
+    it('accepts production rows the way the database guard does, active or not', () => {
+        // The guard on daily rows ignores is_active, so a saved shift stays correctable after someone leaves.
+        expect(canRecordBaseOperatorProduction({ ...fixed, is_active: false }, 'day', '2026-09-05')).toBe(true)
+        expect(canRecordBaseOperatorProduction({ ...fixed, end_date: '2026-10-11' }, 'day', '2026-10-11')).toBe(true)
+        expect(canRecordBaseOperatorProduction({ ...fixed, end_date: '2026-10-11' }, 'day', '2026-10-12')).toBe(false)
+        expect(canRecordBaseOperatorProduction(fixed, 'night', '2026-09-05')).toBe(false)
+        expect(canRecordBaseOperatorProduction(fixed, 'day', '2026-08-31')).toBe(false)
+        expect(canRecordBaseOperatorProduction({ ...fixed, operator_eligible: false }, 'day', '2026-09-05')).toBe(false)
+    })
     it('retains approval provenance when normalizing a database worker', () => {
         const worker = normalizeWorker({ ...fixed, operator_approved_by: 'owner', operator_approved_at: '2026-09-01T10:00:00Z' })
         expect(worker).toMatchObject({ operator_eligible: true, operator_effective_from: '2026-09-01', operator_approved_by: 'owner' })
         expect(normalizeWorker({ pay_type: 'fixed_monthly' }).operator_eligible).toBe(false)
+    })
+})
+
+describe('Base daily sheet operator review', () => {
+    // Gorthan's last working day was 11 Oct, but his night looms were still assigned on the 13th.
+    const gorthan = { ...fixed, id: 'gorthan', name: 'Gorthan Butani', shift_availability: 'night' as const, end_date: '2026-10-11' }
+    const ramesh = { ...fixed, id: 'ramesh', name: 'Ramesh', shift_availability: 'night' as const }
+    const workers = new Map([[gorthan.id, gorthan], [ramesh.id, ramesh]])
+
+    it('leaves out a blank row for someone who cannot work this shift, so it no longer fails the whole sheet', () => {
+        const review = reviewBaseSheetOperators([
+            { workerId: ramesh.id, status: 'entered' },
+            { workerId: gorthan.id, status: 'blank' },
+        ], workers, 'night', '2026-10-13')
+        expect([...review.omittedWorkerIds]).toEqual([gorthan.id])
+        expect(review.blockedWorkerIds).toEqual([])
+    })
+
+    it('blocks a row that carries production, zero or absence, so the sheet can name it', () => {
+        for (const status of ['entered', 'zero', 'absent'] as const) {
+            const review = reviewBaseSheetOperators([{ workerId: gorthan.id, status }], workers, 'night', '2026-10-13')
+            expect(review.blockedWorkerIds, status).toEqual([gorthan.id])
+            expect(review.omittedWorkerIds.size, status).toBe(0)
+        }
+    })
+
+    it('keeps rows the guard accepts, rows on dates they could still work, and paid rows untouched', () => {
+        const rows = [{ workerId: gorthan.id, status: 'entered' as const }, { workerId: ramesh.id, status: 'blank' as const }]
+        expect(reviewBaseSheetOperators(rows, workers, 'night', '2026-10-11')).toEqual({ omittedWorkerIds: new Set(), blockedWorkerIds: [] })
+        // A paid row is never rewritten by the database, so the guard never sees it.
+        expect(reviewBaseSheetOperators([{ workerId: gorthan.id, status: 'entered', paid: true }], workers, 'night', '2026-10-13'))
+            .toEqual({ omittedWorkerIds: new Set(), blockedWorkerIds: [] })
+    })
+
+    it('treats a worker it cannot find as unavailable', () => {
+        expect(reviewBaseSheetOperators([{ workerId: 'gone', status: 'entered' }], workers, 'night', '2026-10-13').blockedWorkerIds).toEqual(['gone'])
+    })
+
+    it('names each blocked row by its looms and operator', () => {
+        expect(describeBaseSheetRows([
+            { workerName: 'Gorthan Butani', machineLabels: ['Loom 01', 'Loom 03', 'Loom 05'] },
+            { workerName: 'Ramesh', machineLabels: [] },
+        ])).toBe('Loom 01, Loom 03, Loom 05 (Gorthan Butani); Ramesh')
     })
 })
 

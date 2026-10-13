@@ -39,6 +39,8 @@ const TODAY_KEYS = [
     'noActiveLooms',
     'noIdleLooms',
     'idleLooms',
+    'notEnteredLooms',
+    'loomNotEntered',
     'workersOnLooms',
     'workersOnLoomsNote',
     'activeQualities',
@@ -60,6 +62,7 @@ const PLACEHOLDERS: Record<string, string> = {
     otherQualities: '{meters}',
     changeVsYday: '{change}',
     idleLooms: '{count}',
+    notEnteredLooms: '{count}',
     activeSince: '{date}',
     newerCostingAvailable: '{version}',
     loomsRunningCount: '{count}',
@@ -132,6 +135,22 @@ describe('Production overview: today analytics', () => {
         expect(chart).toContain("t('production.barsAppearWhenSaved')")
         expect(chart).toContain("t('production.openDailySheet')")
         expect(chart).toContain("t('production.noLoomOutput')")
+    })
+
+    it('shows a loom with no reading as not entered, never as 0 m, and counts those looms in the band', () => {
+        const chart = read(chartPath)
+        const band = read(bandPath)
+        const client = read(clientPath)
+
+        expect(chart).toContain("entered && !row.todayRecorded ? (")
+        expect(chart).toContain("t('production.loomNotEntered')")
+        // No today bar is drawn for a loom without a reading.
+        expect(chart).toContain('{entered && row.todayRecorded && (')
+        expect(client).toContain('countBaseLoomsNotEntered(')
+        expect(client).toContain('notEnteredLooms={notEnteredLooms}')
+        expect(band).toContain("t('production.notEnteredLooms', { count: notEnteredLooms })")
+        // "None idle" only when no running loom is waiting for a reading either.
+        expect(band).toMatch(/loomGaps\.length === 0\s*\?\s*t\('production\.noIdleLooms'\)/)
     })
 
     it('flags a lagging loom with an icon and words as well as colour', () => {

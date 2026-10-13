@@ -4,7 +4,7 @@ import { usePwaRefreshGuard } from '@/hooks/use-pwa-refresh-guard'
 import { usePwaInstallBlocker } from '@/hooks/use-pwa-install-blocker'
 import { reportPwaWorkflowSuccess } from '@/lib/pwa-workflow-success'
 
-import { isBaseOperatorAvailable, resolveBasePieceRate } from '@/lib/base-operator'
+import { describeBaseSheetRows, isBaseOperatorAvailable, resolveBasePieceRate, reviewBaseSheetOperators } from '@/lib/base-operator'
 
 import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import Link from 'next/link'
@@ -122,12 +122,15 @@ type MachineReadingActions = {
     change: (context: MachineContext, value: string) => void
     keyDown: (event: ReactKeyboardEvent<HTMLInputElement>) => void
     openJobs: () => void
+    openAssignments: () => void
 }
 
 // Unchanged rows keep their input DOM and skip expensive control rerenders.
-const MachineReadingRow = memo(function MachineReadingRow({ context, index, value, state, absent, disabled, paid, firstReading, tourTarget, highlighted, actions }: {
+const MachineReadingRow = memo(function MachineReadingRow({ context, index, value, state, absent, disabled, paid, unavailable, firstReading, tourTarget, highlighted, actions }: {
     context: MachineContext; index: number; value: string
     state: ReturnType<typeof machineReadingState>; absent: boolean; disabled: boolean; paid: boolean
+    /** The loom's operator cannot work this date and shift, so a reading here cannot be saved. */
+    unavailable: boolean
     firstReading: boolean; tourTarget: 'reading' | 'pending' | undefined; highlighted: boolean
     actions: MachineReadingActions
 }) {
@@ -140,11 +143,13 @@ const MachineReadingRow = memo(function MachineReadingRow({ context, index, valu
                     <p className="truncate font-bold text-ink">{context.machineLabel}</p>
                     <p className="truncate text-xs text-muted-foreground">{context.jobLabel ?? 'Job not assigned'}</p>
                     <p className="text-xs text-body md:hidden">{context.workerName}</p>
+                    {unavailable && <p className="text-xs font-semibold text-[var(--wv-ochre-800)] md:hidden">{tx('Not available on this date and shift')}</p>}
                 </div>
             </div>
             <div className="hidden text-sm text-body md:block">
                 <span className="font-semibold text-ink">{context.workerName}</span>
                 {paid && <p className="text-xs text-muted-foreground">Paid · protected</p>}
+                {unavailable && <p className="text-xs font-semibold text-[var(--wv-ochre-800)]">{tx('Not available on this date and shift')}</p>}
             </div>
             <div className="col-start-2 row-start-1 md:col-auto md:row-auto">
                 <Input
@@ -176,6 +181,7 @@ const MachineReadingRow = memo(function MachineReadingRow({ context, index, valu
                     }} className="h-7 rounded-lg px-2 text-xs text-muted-foreground hover:text-ink">{state === 'not_running' ? 'Undo' : t('dailySheet.notRunning')}</Button>
                 )}
                 {!context.jobId && <Button variant="link" size="sm" onClick={actions.openJobs} className="h-7 px-1 text-xs font-bold text-loom hover:underline">Assign a production job</Button>}
+                {unavailable && <Button variant="link" size="sm" onClick={actions.openAssignments} className="min-h-[44px] px-1 text-xs font-bold text-loom hover:underline md:h-7 md:min-h-0">{tx('Reassign loom')}</Button>}
             </div>
         </div>
     )
@@ -548,6 +554,20 @@ export default function BaseDailyProductionSheet({
     // Operators with no machine on this shift have no reading to enter on the sheet, so a blank row for them is not missing data.
     const outstandingWorkerCount = sheetWorkers.filter((worker) => (contextsByWorker.get(worker.id) ?? []).length > 0 && getRow(worker.id).status === 'blank').length
 
+    // A loom can still be assigned to someone who cannot work this date and shift (left, not yet
+    // joined, other shift). Their blank rows are left out of the save; rows with readings are named.
+    const operatorReview = reviewBaseSheetOperators(
+        sheetWorkers.map((worker) => ({ workerId: worker.id, status: getRow(worker.id).status, paid: settledWorkerIds.has(worker.id) })),
+        workerById,
+        shift,
+        productionDate,
+    )
+    const unavailableWorkerIds = new Set([...operatorReview.omittedWorkerIds, ...operatorReview.blockedWorkerIds])
+
+    function unavailableOperatorMessage(rows: Array<{ workerName: string; machineLabels: string[] }>) {
+        return tx('Not saved. The operator on {rows} is not available on this date and shift. Reassign the loom in Machine Assignments or clear its readings. Your readings are kept.', { rows: describeBaseSheetRows(rows) })
+    }
+
     const invalidEnteredCount = sheetWorkers.filter((worker) => {
             const row = getRow(worker.id)
             if (row.status !== 'entered') return false
@@ -611,12 +631,13 @@ export default function BaseDailyProductionSheet({
     // Stable event props dispatch through the latest committed editor state.
     const readingHandlers = useRef<MachineReadingActions | null>(null)
     useLayoutEffect(() => {
-        readingHandlers.current = { change: handleMachineMetersChange, keyDown: handleMachineMetersKeyDown, openJobs: openMachineJobs }
+        readingHandlers.current = { change: handleMachineMetersChange, keyDown: handleMachineMetersKeyDown, openJobs: openMachineJobs, openAssignments: openConfiguration }
     })
     const readingActions = useMemo<MachineReadingActions>(() => ({
         change: (context, value) => readingHandlers.current?.change(context, value),
         keyDown: event => readingHandlers.current?.keyDown(event),
         openJobs: () => readingHandlers.current?.openJobs(),
+        openAssignments: () => readingHandlers.current?.openAssignments(),
     }), [])
 
     function handleStatusChange(workerId: string, value: BaseDailyProductionStatus) {
@@ -652,6 +673,13 @@ export default function BaseDailyProductionSheet({
             toast.error('Enter production or mark at least one worker zero or absent.')
             return
         }
+        if (operatorReview.blockedWorkerIds.length > 0) {
+            toast.error(unavailableOperatorMessage(operatorReview.blockedWorkerIds.map((workerId) => ({
+                workerName: workerById.get(workerId)?.name ?? 'Worker',
+                machineLabels: (contextsByWorker.get(workerId) ?? []).map((context) => context.machineLabel),
+            }))))
+            return
+        }
         if (!confirmed && (registerSummary.pending > 0 || outstandingWorkerCount > 0)) {
             setIsReviewOpen(true)
             return
@@ -665,7 +693,7 @@ export default function BaseDailyProductionSheet({
                 clientRequestId: requestId,
                 expectedUpdatedAt: currentBatch?.updated_at ?? null,
                 correctionReason: currentBatch ? correctionReason : undefined,
-                entries: sheetWorkers.map((worker) => {
+                entries: sheetWorkers.filter((worker) => !operatorReview.omittedWorkerIds.has(worker.id)).map((worker) => {
                     const row = getRow(worker.id)
                     const contexts = contextsByWorker.get(worker.id) ?? []
                     const totalMeters = getRowTotal(worker.id)
@@ -690,6 +718,11 @@ export default function BaseDailyProductionSheet({
                     }
                 }),
             })
+            const unavailableRows = (result as { unavailableRows?: Array<{ workerName: string; machineLabels: string[] }> }).unavailableRows
+            if (unavailableRows?.length) {
+                toast.error(unavailableOperatorMessage(unavailableRows))
+                return
+            }
             const error = getActionError(result)
             if (error) {
                 toast.error(error)
@@ -947,6 +980,7 @@ export default function BaseDailyProductionSheet({
                                     return (
                                         <MachineReadingRow key={context.machineId} context={context} index={index} value={value} state={state}
                                             absent={row.status === 'absent'} disabled={disabled} paid={settledWorkerIds.has(context.workerId!)}
+                                            unavailable={unavailableWorkerIds.has(context.workerId!)}
                                             firstReading={context.machineId === firstReadingMachineId}
                                             tourTarget={index === 0 ? 'reading' : context.machineId === firstPendingMachineId ? 'pending' : undefined}
                                             highlighted={context.workerId === focusedWorker || context.jobId === navigation.job} actions={readingActions} />

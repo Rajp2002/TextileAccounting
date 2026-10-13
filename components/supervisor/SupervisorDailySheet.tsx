@@ -19,7 +19,9 @@ import { baseProductionDraftKey, parseBaseProductionDraft } from '@/lib/base-pro
 import { machineReadingState, machineWorkerStatus } from '@/lib/base-machine-register'
 import type { BaseDailyProductionStatus } from '@/lib/base-production-core'
 import { SUPERVISOR_SHEET_PATH } from '@/lib/supervisor-access'
+import { describeBaseSheetRows } from '@/lib/base-operator'
 import {
+    blockedSupervisorRows,
     buildSupervisorSavePayload,
     buildSupervisorSheet,
     contextKey,
@@ -76,6 +78,7 @@ const ReadingRow = memo(function ReadingRow({ row, value, state, absent, disable
                 <p className="truncate font-bold text-ink" data-i18n-skip="true">{row.machineLabel}</p>
                 <p className="truncate text-xs text-muted-foreground" data-i18n-skip="true">{row.jobLabel ?? text('noQuality')}</p>
                 <p className="truncate text-sm text-body" data-i18n-skip="true">{row.workerName ?? text('unknownWorker')}</p>
+                {row.unavailable && <p className="text-xs font-semibold text-[var(--wv-ochre-800)]">{text('operatorUnavailable')}</p>}
             </div>
             <div>
                 <Input
@@ -245,6 +248,8 @@ export function SupervisorDailySheet({ data, date, shift, actorId }: { data: Sup
         if (isProtected) { toast.error(text('savedLocked')); return }
         if (summary.invalidCount > 0 || summary.register.invalid > 0) { toast.error(text('fixReadings')); return }
         if (summary.recordedCount === 0) { toast.error(text('enterSomething')); return }
+        const blocked = blockedSupervisorRows(sheet, rows)
+        if (blocked.length > 0) { toast.error(text('operatorUnavailableSave', { rows: describeBaseSheetRows(blocked) })); return }
         if (!confirmed && (summary.register.pending > 0 || summary.outstandingCount > 0)) { setReviewOpen(true); return }
 
         setSaving(true)

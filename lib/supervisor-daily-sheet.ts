@@ -1,6 +1,6 @@
 import Decimal from 'decimal.js'
 import { z } from 'zod'
-import { isBaseOperatorAvailable } from './base-operator'
+import { canRecordBaseOperatorProduction, isBaseOperatorAvailable, reviewBaseSheetOperators } from './base-operator'
 import { compareMachineLabels, machineReadingState, readMachineRecords, summarizeMachineRegister, type BaseMachineRecord } from './base-machine-register'
 import { calculateBaseDailyProductionSummary, type BaseDailyProductionStatus, type BaseProductionShift } from './base-production-core'
 
@@ -113,6 +113,8 @@ export type SupervisorMachineRow = {
     jobId: string | null
     jobLabel: string | null
     paid: boolean
+    /** The loom's operator cannot work this date and shift (left, not yet joined, other shift). */
+    unavailable: boolean
 }
 
 /** Same shape as the owner sheet's draft rows, so drafts use one format. */
@@ -124,6 +126,8 @@ export type SupervisorDraftRow = {
 }
 
 export type SupervisorSheet = {
+    date: string
+    shift: BaseProductionShift
     rows: SupervisorMachineRow[]
     workers: SupervisorSheetWorker[]
     rowsByWorker: Map<string, SupervisorMachineRow[]>
@@ -141,6 +145,10 @@ function positiveMeters(value: string | number | null | undefined): Decimal {
     return text && Number.isFinite(numeric) && numeric > 0 ? new Decimal(text) : new Decimal(0)
 }
 
+function asOperator(worker: SupervisorSheetWorker) {
+    return { ...worker, pay_type: worker.pay_type ?? undefined, operator_eligible: worker.operator_eligible ?? undefined }
+}
+
 export function buildSupervisorSheet(data: SupervisorSheetData, date: string, shift: BaseProductionShift): SupervisorSheet {
     const workerById = new Map(data.workers.map(worker => [worker.id, worker]))
     const jobByMachine = new Map(data.machineJobs.map(job => [job.machine_id, job]))
@@ -149,7 +157,7 @@ export function buildSupervisorSheet(data: SupervisorSheetData, date: string, sh
     const recordByMachine = new Map((data.batch?.machineRecords ?? []).map(record => [record.machine_id, record]))
     const name = (workerId: string | null) => workerId ? workerById.get(workerId)?.name ?? null : null
 
-    const rows = data.machines.map((machine): SupervisorMachineRow => {
+    const rows = data.machines.map((machine): Omit<SupervisorMachineRow, 'unavailable'> => {
         const saved = allocationByMachine.get(machine.id)
         if (saved) return {
             machineId: machine.id, machineLabel: saved.machine_label, workerId: saved.worker_id, workerName: name(saved.worker_id),
@@ -167,6 +175,9 @@ export function buildSupervisorSheet(data: SupervisorSheetData, date: string, sh
             machineId: machine.id, machineLabel: machine.label, workerId, workerName: name(workerId),
             jobId: job?.job_id ?? null, jobLabel: job?.job_label ?? null, paid: workerId ? workerById.get(workerId)?.paid ?? false : false,
         }
+    }).map((row): SupervisorMachineRow => {
+        const worker = row.workerId ? workerById.get(row.workerId) : undefined
+        return { ...row, unavailable: Boolean(row.workerId && !row.paid && !(worker && canRecordBaseOperatorProduction(asOperator(worker), shift, date))) }
     }).sort(compareMachineLabels)
 
     const rowsByWorker = new Map<string, SupervisorMachineRow[]>()
@@ -176,9 +187,8 @@ export function buildSupervisorSheet(data: SupervisorSheetData, date: string, sh
     }
 
     const savedWorkerIds = new Set([...data.entries.map(entry => entry.worker_id), ...(data.batch?.machineRecords ?? []).map(record => record.worker_id)])
-    const workers = data.workers.filter(worker => isBaseOperatorAvailable({
-        ...worker, pay_type: worker.pay_type ?? undefined, operator_eligible: worker.operator_eligible ?? undefined,
-    }, shift, date) || savedWorkerIds.has(worker.id) || rowsByWorker.has(worker.id))
+    const workers = data.workers.filter(worker => isBaseOperatorAvailable(asOperator(worker), shift, date)
+        || savedWorkerIds.has(worker.id) || rowsByWorker.has(worker.id))
 
     const entryByWorker = new Map(data.entries.map(entry => [entry.worker_id, entry]))
     const baseline = Object.fromEntries(workers.map(worker => {
@@ -208,7 +218,7 @@ export function buildSupervisorSheet(data: SupervisorSheetData, date: string, sh
         } satisfies SupervisorDraftRow]
     }))
 
-    return { rows, workers, rowsByWorker, baseline, entries: data.entries }
+    return { date, shift, rows, workers, rowsByWorker, baseline, entries: data.entries }
 }
 
 function rowTotal(sheet: SupervisorSheet, workerId: string, row: SupervisorDraftRow): Decimal {
@@ -228,9 +238,28 @@ export type SupervisorSaveEntry = {
     allocations: Array<{ machine_id: string; job_id: string; meters: number }>
 }
 
+function reviewSupervisorRows(sheet: SupervisorSheet, rows: Record<string, SupervisorDraftRow>) {
+    return reviewBaseSheetOperators(
+        sheet.workers.map(worker => ({ workerId: worker.id, status: (rows[worker.id] ?? blankRow).status, paid: worker.paid })),
+        new Map(sheet.workers.map(worker => [worker.id, asOperator(worker)])),
+        sheet.shift,
+        sheet.date,
+    )
+}
+
+/** Rows the save would be refused for, by operator and looms, so the sheet can say what to fix. */
+export function blockedSupervisorRows(sheet: SupervisorSheet, rows: Record<string, SupervisorDraftRow>) {
+    const { blockedWorkerIds } = reviewSupervisorRows(sheet, rows)
+    return blockedWorkerIds.map(workerId => ({
+        workerName: sheet.workers.find(worker => worker.id === workerId)?.name ?? '',
+        machineLabels: (sheet.rowsByWorker.get(workerId) ?? []).map(row => row.machineLabel),
+    }))
+}
+
 export function buildSupervisorSavePayload(sheet: SupervisorSheet, rows: Record<string, SupervisorDraftRow>): SupervisorSaveEntry[] {
     const notesByWorker = new Map(sheet.entries.map(entry => [entry.worker_id, entry.notes]))
-    return sheet.workers.map(worker => {
+    const { omittedWorkerIds } = reviewSupervisorRows(sheet, rows)
+    return sheet.workers.filter(worker => !omittedWorkerIds.has(worker.id)).map(worker => {
         const row = rows[worker.id] ?? blankRow
         const contexts = sheet.rowsByWorker.get(worker.id) ?? []
         const total = rowTotal(sheet, worker.id, row).toDecimalPlaces(2, Decimal.ROUND_HALF_UP).toNumber()

@@ -590,6 +590,8 @@ export const gu = {
     noActiveLooms: "હજી કોઈ સક્રિય લૂમ નથી",
     noIdleLooms: "કોઈ લૂમ ખાલી નથી",
     idleLooms: "{count} ખાલી",
+    notEnteredLooms: "{count} દાખલ નથી",
+    loomNotEntered: "દાખલ નથી",
     workersOnLooms: "લૂમ પર કારીગર",
     workersOnLoomsNote: "આજે કોઈ લૂમ પર ફાળવેલા",
     activeQualities: "ચાલુ ક્વોલિટી",

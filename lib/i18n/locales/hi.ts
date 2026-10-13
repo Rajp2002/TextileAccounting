@@ -590,6 +590,8 @@ export const hi = {
     noActiveLooms: "अभी कोई सक्रिय लूम नहीं",
     noIdleLooms: "कोई लूम खाली नहीं",
     idleLooms: "{count} खाली",
+    notEnteredLooms: "{count} दर्ज नहीं",
+    loomNotEntered: "दर्ज नहीं",
     workersOnLooms: "लूम पर कारीगर",
     workersOnLoomsNote: "आज किसी लूम पर लगे",
     activeQualities: "चालू क्वालिटी",
