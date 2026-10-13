@@ -872,9 +872,12 @@
       flex-shrink: 0;
     }
 
+    /* Rows size to each card's content, so a card is never squeezed below its height
+       (its overflow is hidden) and the list scrolls instead. */
     .payroll-fit-viewport .payroll-pay-section > .payroll-worker-scroll {
       align-content: start;
       flex: 1 1 0;
+      grid-auto-rows: max-content;
       min-height: 0;
       overflow-y: auto;
       overscroll-behavior: contain;

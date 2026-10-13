@@ -157,16 +157,16 @@ describe('calculateBaseWorkerMachineBreakdown', () => {
 })
 
 describe('payroll worker card breakdown control', () => {
-    it('keeps the Breakdown control last in the card action row and expands only that worker', () => {
+    it('opens the breakdown in a modal from the last action on each card, not inline', () => {
         const client = read('app/(dashboard)/owner/production/BaseProductionClient.tsx')
 
         const markPaid = client.indexOf("t('payroll.markPaidCard')")
-        const breakdownButton = client.indexOf("toggleBreakdown(payable.worker_id)")
-        const panel = client.indexOf('payroll-breakdown-${payable.worker_id}')
+        const breakdownButton = client.indexOf('setBreakdownWorkerId(payable.worker_id)')
         expect(markPaid).toBeGreaterThan(-1)
         expect(breakdownButton).toBeGreaterThan(markPaid)
-        expect(panel).toBeGreaterThan(breakdownButton)
-        expect(client).toContain('aria-expanded={breakdownOpen}')
+        expect(client).toContain('open={Boolean(breakdownPayable)}')
         expect(client).toContain('calculateBaseWorkerMachineBreakdown({')
+        expect(client).not.toContain('toggleBreakdown')
+        expect(client).not.toContain('aria-expanded={breakdownOpen}')
     })
 })

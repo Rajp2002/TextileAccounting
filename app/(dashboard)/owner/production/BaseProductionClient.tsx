@@ -16,7 +16,6 @@ import {
     CheckCircle2,
     Clock3,
     History,
-    ChevronDown,
     ChevronLeft,
     ChevronRight,
     Loader2,
@@ -267,14 +266,8 @@ export default function BaseProductionClient({
     const [isHistoryOpen, setIsHistoryOpen] = useState(false)
     const [payrollSearch, setPayrollSearch] = useState('')
     const [payrollFilter, setPayrollFilter] = useState('all')
-    // Each worker card's breakdown opens on its own; several can stay open at once.
-    const [openBreakdownWorkerIds, setOpenBreakdownWorkerIds] = useState<ReadonlySet<string>>(() => new Set())
-    const toggleBreakdown = (workerId: string) => setOpenBreakdownWorkerIds(current => {
-        const next = new Set(current)
-        if (next.has(workerId)) next.delete(workerId)
-        else next.add(workerId)
-        return next
-    })
+    // The worker whose breakdown modal is open, if any.
+    const [breakdownWorkerId, setBreakdownWorkerId] = useState<string | null>(null)
 
     const [openDialog, setDialog] = useState<DialogName>(null)
     const dialog: DialogName = payrollTourStep === 'pra-advance' ? 'advance' : payrollTourStep === 'pra-deduction' ? 'deduction' : openDialog
@@ -429,6 +422,18 @@ export default function BaseProductionClient({
                                 return payrollFilter === 'all' || (payrollFilter === 'ready' && readiness?.readyToSettle) || (payrollFilter === 'review' && Boolean(readiness?.issueCount)) || (payrollFilter === 'paid' && payable.status === 'paid') || (payrollFilter === 'empty' && payable.gross_pay === 0)
                             })
     const settlingReadiness = settlingWorkerId ? readinessByWorker.get(settlingWorkerId) : null
+    const breakdownPayable = periodPayables.find(payable => payable.worker_id === breakdownWorkerId) ?? null
+    const breakdownWorker = breakdownPayable ? workerById.get(breakdownPayable.worker_id) : undefined
+    const breakdown = breakdownPayable && breakdownPayable.pay_type !== 'fixed_monthly'
+        ? calculateBaseWorkerMachineBreakdown({
+            workerId: breakdownPayable.worker_id,
+            fallbackRate: breakdownWorker?.rate_per_meter ?? 0,
+            periodStart: breakdownPayable.period_start,
+            periodEnd: breakdownPayable.period_end,
+            entries: initialData.entries,
+            allocations: initialData.allocations,
+        })
+        : null
 
     useEffect(() => {
         if (tourSample) return // a tour sample is not a page view
@@ -827,17 +832,6 @@ export default function BaseProductionClient({
                                 const pendingAdvances = workerPendingItems.filter(
                                     (item) => !pendingDeductions.includes(item)
                                 )
-                                const breakdownOpen = openBreakdownWorkerIds.has(payable.worker_id)
-                                const breakdown = breakdownOpen && payable.pay_type !== 'fixed_monthly'
-                                    ? calculateBaseWorkerMachineBreakdown({
-                                        workerId: payable.worker_id,
-                                        fallbackRate: worker?.rate_per_meter ?? 0,
-                                        periodStart: payable.period_start,
-                                        periodEnd: payable.period_end,
-                                        entries: initialData.entries,
-                                        allocations: initialData.allocations,
-                                    })
-                                    : null
                                 return (
                                     <Card key={payable.worker_id} className={`gap-0 overflow-hidden rounded-2xl border border-hairline bg-surface py-0 shadow-[var(--shadow-card)] transition-all ${!worker?.is_active ? 'opacity-75' : 'hover:border-hairline-strong hover:shadow-[var(--shadow-panel)]'}`}>
                                         <CardHeader className="border-b border-hairline bg-surface-soft/30 p-4">
@@ -901,43 +895,8 @@ export default function BaseProductionClient({
                                                 <Button size="sm" variant="secondary" onClick={() => openAdvance(payable.worker_id)} disabled={!worker?.is_active} className="h-9 rounded-xl text-xs font-bold"><Plus className="h-4 w-4" /> <span data-i18n-skip="true">{t('payroll.addAdvance')}</span></Button>
                                                 <Button size="sm" variant="secondary" onClick={() => openDeduction(payable.worker_id)} disabled={!worker?.is_active} className="h-9 rounded-xl text-xs font-bold"><Minus className="h-4 w-4" /> <span data-i18n-skip="true">{t('payroll.addDeduction')}</span></Button>
                                                 {payable.status === 'unsettled' && payable.gross_pay > 0 && <Button size="sm" variant="saffron" onClick={() => { setSettlementRequestId(crypto.randomUUID()); setSettlingWorkerId(payable.worker_id) }} disabled={settlePending || Boolean(workerReadiness?.issueCount)} className="h-9 rounded-xl text-xs font-bold">{settlePending ? <Loader2 className="h-4 w-4 animate-spin" /> : <WalletCards className="h-4 w-4" />} <span data-i18n-skip="true">{workerReadiness?.issueCount ? t('payroll.reviewBeforePaying') : t('payroll.markPaidCard')}</span></Button>}
-                                                <Button size="sm" variant="outline" onClick={() => toggleBreakdown(payable.worker_id)} aria-expanded={breakdownOpen} aria-controls={`payroll-breakdown-${payable.worker_id}`} className="h-9 rounded-xl text-xs font-bold"><ChevronDown className={`h-4 w-4 transition-transform ${breakdownOpen ? 'rotate-180' : ''}`} /> {tx('Breakdown')}</Button>
+                                                <Button size="sm" variant="outline" onClick={() => setBreakdownWorkerId(payable.worker_id)} className="h-9 rounded-xl text-xs font-bold"><ReceiptText className="h-4 w-4" /> {tx('Breakdown')}</Button>
                                             </div>
-                                            {breakdownOpen && (
-                                                <div id={`payroll-breakdown-${payable.worker_id}`} className="rounded-xl border border-hairline bg-surface-soft/55 p-3 text-xs text-body">
-                                                    <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{tx('Period breakdown')}</p>
-                                                    {payable.pay_type === 'fixed_monthly' ? (
-                                                        <div className="space-y-1">
-                                                            {payable.salary_lines?.map(line => <p key={line.start}>{formatDateOnly(line.start)} – {formatDateOnly(line.end)}: {formatINR(line.monthlySalary)} × {line.days}/{line.monthDays} days = {formatINR(line.grossPay)}</p>)}
-                                                        </div>
-                                                    ) : breakdown?.rows.length ? (
-                                                        <div className="divide-y divide-hairline">
-                                                            <div className="grid grid-cols-[minmax(0,1fr)_auto_auto_auto] gap-x-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                                                                <span>{tx('Machine')}</span>
-                                                                <span className="text-right">{tx('Rate')}</span>
-                                                                <span className="text-right">{tx('Metres')}</span>
-                                                                <span className="text-right">{tx('Pay')}</span>
-                                                            </div>
-                                                            {breakdown.rows.map(row => (
-                                                                <div key={`${row.machine_label}-${row.rate_per_meter}`} className="grid grid-cols-[minmax(0,1fr)_auto_auto_auto] items-baseline gap-x-3 py-1.5 tabular-nums">
-                                                                    <span className="min-w-0 truncate font-medium text-ink">{row.machine_label || tx('Worker total (machine not recorded)')}</span>
-                                                                    <span className="text-right">{formatINR(row.rate_per_meter)}/m</span>
-                                                                    <span className="text-right">{formatMeters(row.meters)}</span>
-                                                                    <span className="text-right font-semibold text-ink">{formatINR(row.pay, { hideDecimals: true })}</span>
-                                                                </div>
-                                                            ))}
-                                                            <div className="grid grid-cols-[minmax(0,1fr)_auto_auto_auto] gap-x-3 pt-1.5 font-bold text-ink tabular-nums">
-                                                                <span>{tx('Total')}</span>
-                                                                <span />
-                                                                <span className="text-right">{formatMeters(breakdown.meters)}</span>
-                                                                <span className="text-right">{formatINR(breakdown.pay, { hideDecimals: true })}</span>
-                                                            </div>
-                                                        </div>
-                                                    ) : (
-                                                        <p>{tx('No metres recorded in this period.')}</p>
-                                                    )}
-                                                </div>
-                                            )}
                                         </CardContent>
                                     </Card>
                                 )
@@ -948,6 +907,52 @@ export default function BaseProductionClient({
                 </div>}
             </div>}
 
+
+            <Dialog open={Boolean(breakdownPayable)} onOpenChange={(open) => !open && setBreakdownWorkerId(null)} {...surface.root}>
+                <DialogContent className="max-w-lg rounded-2xl border border-hairline bg-surface p-6 shadow-2xl" {...surface.content}>
+                    {breakdownPayable && (
+                        <>
+                            <DialogHeader>
+                                <DialogTitle className="text-xl font-bold text-ink">{breakdownPayable.worker_name}</DialogTitle>
+                                <DialogDescription className="text-sm text-body">{tx('Period breakdown')} · {formatDateOnly(breakdownPayable.period_start)} – {formatDateOnly(breakdownPayable.period_end)}</DialogDescription>
+                            </DialogHeader>
+                            {breakdownPayable.pay_type === 'fixed_monthly' ? (
+                                <div className="space-y-1 text-sm text-body">
+                                    {breakdownPayable.salary_lines?.map(line => <p key={line.start}>{formatDateOnly(line.start)} – {formatDateOnly(line.end)}: {formatINR(line.monthlySalary)} × {line.days}/{line.monthDays} days = {formatINR(line.grossPay)}</p>)}
+                                </div>
+                            ) : breakdown?.rows.length ? (
+                                <div className="divide-y divide-hairline text-sm">
+                                    <div className="grid grid-cols-[minmax(0,1fr)_auto_auto_auto] gap-x-3 pb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                        <span>{tx('Machine')}</span>
+                                        <span className="text-right">{tx('Rate')}</span>
+                                        <span className="text-right">{tx('Metres')}</span>
+                                        <span className="text-right">{tx('Pay')}</span>
+                                    </div>
+                                    {breakdown.rows.map(row => (
+                                        <div key={`${row.machine_label}-${row.rate_per_meter}`} className="grid grid-cols-[minmax(0,1fr)_auto_auto_auto] items-baseline gap-x-3 py-2 tabular-nums">
+                                            <span className="min-w-0 truncate font-medium text-ink">{row.machine_label || tx('Worker total (machine not recorded)')}</span>
+                                            <span className="text-right">{formatINR(row.rate_per_meter)}/m</span>
+                                            <span className="text-right">{formatMeters(row.meters)}</span>
+                                            <span className="text-right font-semibold text-ink">{formatINR(row.pay, { hideDecimals: true })}</span>
+                                        </div>
+                                    ))}
+                                    <div className="grid grid-cols-[minmax(0,1fr)_auto_auto_auto] gap-x-3 pt-2 font-bold text-ink tabular-nums">
+                                        <span>{tx('Total')}</span>
+                                        <span />
+                                        <span className="text-right">{formatMeters(breakdown.meters)}</span>
+                                        <span className="text-right">{formatINR(breakdown.pay, { hideDecimals: true })}</span>
+                                    </div>
+                                </div>
+                            ) : (
+                                <p className="text-sm text-body">{tx('No metres recorded in this period.')}</p>
+                            )}
+                            <DialogFooter>
+                                <Button variant="outline" onClick={() => setBreakdownWorkerId(null)} className="rounded-xl border-hairline hover:bg-surface-soft font-semibold">{tx('Close')}</Button>
+                            </DialogFooter>
+                        </>
+                    )}
+                </DialogContent>
+            </Dialog>
 
             <Dialog open={dialog === 'advance'} onOpenChange={(open) => !open && closeDialog()} {...surface.root}>
                 <DialogContent className="max-w-md rounded-2xl border border-hairline bg-surface p-6 shadow-2xl" {...surface.content}>

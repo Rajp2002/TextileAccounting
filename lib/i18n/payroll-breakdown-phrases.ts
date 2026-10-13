@@ -7,6 +7,7 @@ import type { BasePlanLocalLanguage } from './base-plan-phrases'
  */
 const PHRASES: Array<[string, string, string]> = [
   ['Breakdown', 'विवरण', 'વિગત'],
+  ['Close', 'बंद करें', 'બંધ કરો'],
   ['Period breakdown', 'अवधि का विवरण', 'સમયગાળાની વિગત'],
   ['Pay', 'भुगतान', 'ચુકવણી'],
   ['Machine', 'मशीन', 'મશીન'],
