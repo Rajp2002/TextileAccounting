@@ -2,11 +2,8 @@
 
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { redirect } from 'next/navigation'
-import { requireRole } from '@/lib/auth'
-import { readAllPages } from '@/lib/paged-read'
-import { getCachedOrgPlanAccess } from '@/lib/subscription'
-import { hasOwnerArchiveAccess } from '@/lib/subscription-access'
+import { createOrgExportReader, EXPORT_PAGE_SIZE, exportRecordIds, type ExportQueryResult, type ExportRecord } from '@/lib/org-export-reads'
+import { requireRetainedArchiveOwner } from '@/lib/retained-archive-owner'
 import { UX012_DISTINCTIONS, UX012_EXPORT_LABELS, UX012_PRIORITY_HELPERS, UX012_TERMS } from '@/lib/terminology'
 import crypto from 'crypto'
 import { readOwnSupportExport } from '@/lib/support/data-rights'
@@ -31,6 +28,8 @@ const SENSITIVE_EXPORT_FIELD_NAMES = new Set([
     'whatsapp_number',
 ])
 
+const OWNER_ARCHIVE_READ_GRANT_MIGRATION = '20261013120000_owner_archive_service_role_reads.sql'
+
 const EXPORT_SCHEMA_MIGRATION_BY_DATASET: Record<string, string> = {
     legal_document_acceptances: '20260823203156_record_signup_legal_acceptance.sql',
     referral_year_credits: '20260810182342_referral_year_credits.sql',
@@ -40,6 +39,13 @@ const EXPORT_SCHEMA_MIGRATION_BY_DATASET: Record<string, string> = {
     base_production_entries: '20260829090000_base_production_core.sql',
     base_worker_advances: '20260829090000_base_production_core.sql',
     base_payroll_settlements: '20260829090000_base_production_core.sql',
+    // These five revoked every service_role privilege when they were created;
+    // the archive's service-role reads need this grant.
+    base_production_batch_revisions: OWNER_ARCHIVE_READ_GRANT_MIGRATION,
+    base_payroll_reversals: OWNER_ARCHIVE_READ_GRANT_MIGRATION,
+    base_payroll_advance_recoveries: OWNER_ARCHIVE_READ_GRANT_MIGRATION,
+    base_worker_incentives: OWNER_ARCHIVE_READ_GRANT_MIGRATION,
+    factory_supervisors: OWNER_ARCHIVE_READ_GRANT_MIGRATION,
 }
 
 const POSTGREST_SCHEMA_COMPATIBILITY_ERROR_CODES = new Set([
@@ -49,7 +55,15 @@ const POSTGREST_SCHEMA_COMPATIBILITY_ERROR_CODES = new Set([
     'PGRST205', // table not found in schema cache
 ])
 
-type ExportRecord = Record<string, unknown>
+// Deliberately left out of the archive, and named in it so "complete" is
+// checkable. Every other organization-scoped table is in the catalog.
+const EXPORT_EXCLUDED_SOURCES = [
+    { tables: ['supervisor_join_codes'], reason: 'The live code a supervisor uses to join the factory. It is an access credential, not a record.' },
+    { tables: ['estimator_costing_attestations'], reason: 'Ten-minute server checks used while a costing is saved. The saved costings are in estimator_quotes.' },
+    { tables: ['base_production_save_receipts', 'base_payroll_payment_requests'], reason: 'Request replay records. The production and payments they saved are in the production and payroll datasets.' },
+    { tables: ['free_account_subjects', 'free_monthly_usage', 'free_calculation_receipts', 'free_costing_recalculation_receipts', 'free_funnel_events'], reason: 'Free plan sign-in, allowance and replay records kept per sign-in account, not per organization. Completed Free costings are in free_saved_costings.' },
+    { tables: ['document branding logo files'], reason: 'Logo image files stay in storage. Their details are in document_branding_logo_assets.' },
+]
 
 export type OrganizationExportHistoryItem = {
     changed_at: string
@@ -159,6 +173,8 @@ function exportSchemaReadinessError(datasetKey: string, error: unknown): string 
         .toLowerCase()
     const looksLikeSchemaMismatch = POSTGREST_SCHEMA_COMPATIBILITY_ERROR_CODES.has(code)
         || /schema cache|relation .* does not exist|column .* does not exist|could not find the (table|column)/i.test(description)
+        // A table still missing its service_role read grant.
+        || (code === '42501' && EXPORT_SCHEMA_MIGRATION_BY_DATASET[datasetKey] === OWNER_ARCHIVE_READ_GRANT_MIGRATION)
     if (!looksLikeSchemaMismatch) return null
 
     const migration = EXPORT_SCHEMA_MIGRATION_BY_DATASET[datasetKey]
@@ -167,33 +183,6 @@ function exportSchemaReadinessError(datasetKey: string, error: unknown): string 
         : 'Apply the reviewed production migrations'
     console.error(`Organization export schema mismatch for ${datasetKey}. ${migrationInstruction}, then run NOTIFY pgrst, 'reload schema'.`)
     return 'Your data export is not available right now. Please try again later or contact Weavly support.'
-}
-
-/**
- * The archive stays available after paid access ends, including for a former
- * Free account whose paid plan expired. A pure Free account is sent to its
- * Free workspace, as before. This is read-only and grants nothing else.
- */
-async function requireRetainedArchiveOwner() {
-    const session = await requireRole(['owner'], { allowFreeAccount: true })
-    if (!hasOwnerArchiveAccess(await getCachedOrgPlanAccess(session.profile.org_id))) redirect('/free')
-    return session
-}
-
-const EXPORT_PAGE_SIZE = 1000
-const EXPORT_LOOKUP_BATCH = 200
-
-type ExportQueryResult = { data: ExportRecord[] | null; error: { message: string; code?: string } | null }
-
-/** The PostgREST filter methods the paged export reads use, for any table. */
-type ExportTableQuery = PromiseLike<{ data: unknown[] | null; error: { message: string; code?: string } | null }> & {
-    eq(column: string, value: unknown): ExportTableQuery
-    in(column: string, values: readonly unknown[]): ExportTableQuery
-    or(filters: string): ExportTableQuery
-    gt(column: string, value: unknown): ExportTableQuery
-    order(column: string, options: { ascending: boolean }): ExportTableQuery
-    limit(count: number): ExportTableQuery
-    range(from: number, to: number): ExportTableQuery
 }
 
 /**
@@ -223,53 +212,9 @@ export async function exportOrganizationData() {
     // client bypasses RLS.
     // LT07: every dataset is read in pages ordered by its key until an empty
     // page, so a table larger than the server's row cap is never cut short.
-    // Each read stays tenant-scoped even though the admin client bypasses RLS.
-    // Table names are catalog strings here, so the typed client cannot help;
-    // ExportTableQuery names the few filter methods these reads use.
-    const tableQuery = (table: string) => supabase.from(table).select('*') as unknown as ExportTableQuery
-    const readByKey = (
-        table: string,
-        scope: (query: ExportTableQuery) => ExportTableQuery,
-        keyColumn = 'id',
-    ): Promise<ExportQueryResult> => readAllPages<ExportRecord>(after => {
-        let query = scope(tableQuery(table))
-        if (after) query = query.gt(keyColumn, after[keyColumn] as string)
-        return query
-            .order(keyColumn, { ascending: true })
-            .limit(EXPORT_PAGE_SIZE)
-            .then(({ data, error }) => ({ data: data as ExportRecord[] | null, error }))
-    })
-    const scoped = (table: string, column = 'org_id', keyColumn = 'id') => () =>
-        readByKey(table, query => query.eq(column, orgId), keyColumn)
-
-    // whatsapp_cooldowns has only a composite key (org_id, alert_type,
-    // ref_id), so it is read in ordered offset pages. Its writers were
-    // unscheduled on 2026-10-01, so the table does not change during a read.
-    const readOrderedPages = async (table: string, orderColumns: string[]): Promise<ExportQueryResult> => {
-        const rows: ExportRecord[] = []
-        for (;;) {
-            let query = tableQuery(table).eq('org_id', orgId)
-            for (const column of orderColumns) query = query.order(column, { ascending: true })
-            const { data, error } = await query.range(rows.length, rows.length + EXPORT_PAGE_SIZE - 1)
-            if (error) return { data: null, error }
-            const page = (data ?? []) as ExportRecord[]
-            if (page.length === 0) return { data: rows, error: null }
-            rows.push(...page)
-        }
-    }
-
-    // Lookups by a parent's ids are batched so a long id list never makes
-    // one oversized request.
-    const readByParentIds = async (table: string, column: string, ids: string[]): Promise<ExportQueryResult> => {
-        const rows: ExportRecord[] = []
-        for (let start = 0; start < ids.length; start += EXPORT_LOOKUP_BATCH) {
-            const batch = ids.slice(start, start + EXPORT_LOOKUP_BATCH)
-            const result = await readByKey(table, query => query.in(column, batch))
-            if (result.error) return result
-            rows.push(...(result.data ?? []))
-        }
-        return { data: rows, error: null }
-    }
+    // The paged, tenant-scoped reads live in lib/org-export-reads.ts so the
+    // accountant CSV downloads read the same way.
+    const { readByKey, scoped, readOrderedPages, readByParentIds } = createOrgExportReader(supabase, orgId)
 
     // machine_assignments was introduced before org_id was denormalized. Use
     // the organization's machine IDs as a second boundary so legacy rows with
@@ -277,19 +222,13 @@ export async function exportOrganizationData() {
     const queryMachineAssignments = async (): Promise<ExportQueryResult> => {
         const { data: machines, error: machineQueryError } = await scoped('machines')()
         if (machineQueryError) return { data: null, error: machineQueryError }
-        const machineIds = (machines ?? [])
-            .map(machine => (machine as { id?: unknown }).id)
-            .filter((id): id is string => typeof id === 'string')
-        return readByParentIds('machine_assignments', 'machine_id', machineIds)
+        return readByParentIds('machine_assignments', 'machine_id', exportRecordIds(machines))
     }
 
     const queryReferralUsesAsReferrer = async (): Promise<ExportQueryResult> => {
         const { data: referralCodes, error: referralCodeError } = await scoped('referral_codes')()
         if (referralCodeError) return { data: null, error: referralCodeError }
-        const referralCodeIds = (referralCodes ?? [])
-            .map(code => (code as { id?: unknown }).id)
-            .filter((id): id is string => typeof id === 'string')
-        return readByParentIds('referral_uses', 'referral_code_id', referralCodeIds)
+        return readByParentIds('referral_uses', 'referral_code_id', exportRecordIds(referralCodes))
     }
 
     const datasetDefinitions = [
@@ -304,6 +243,16 @@ export async function exportOrganizationData() {
         { key: 'production_logs', query: scoped('production_logs') },
         { key: 'base_production_jobs', query: scoped('base_production_jobs') },
         { key: 'base_production_entries', query: scoped('base_production_entries') },
+        // Machine-first production, as the current daily sheet and the
+        // supervisor's metres-only sheet write it.
+        { key: 'base_production_machines', query: scoped('base_production_machines') },
+        { key: 'base_worker_machine_assignments', query: scoped('base_worker_machine_assignments') },
+        { key: 'base_machine_job_contexts', query: scoped('base_machine_job_contexts') },
+        { key: 'base_production_batches', query: scoped('base_production_batches') },
+        { key: 'base_production_batch_revisions', query: scoped('base_production_batch_revisions') },
+        { key: 'base_daily_production_entries', query: scoped('base_daily_production_entries') },
+        { key: 'base_daily_production_allocations', query: scoped('base_daily_production_allocations') },
+        { key: 'factory_supervisors', query: scoped('factory_supervisors', 'org_id', 'user_id') },
         { key: 'daily_brief_logs', query: scoped('daily_brief_logs') },
         { key: 'attendance', query: scoped('attendance') },
         { key: 'payroll_payments', query: scoped('payroll_payments') },
@@ -314,6 +263,14 @@ export async function exportOrganizationData() {
         { key: 'worker_advances', query: scoped('worker_advances') },
         { key: 'base_worker_advances', query: scoped('base_worker_advances') },
         { key: 'base_payroll_settlements', query: scoped('base_payroll_settlements') },
+        { key: 'base_payroll_settlement_lines', query: scoped('base_payroll_settlement_lines') },
+        { key: 'base_payroll_reversals', query: scoped('base_payroll_reversals', 'org_id', 'settlement_id') },
+        // Keyed by (settlement_id, advance_id); written only when a payment
+        // is recorded or reversed.
+        { key: 'base_payroll_advance_recoveries', query: () => readOrderedPages('base_payroll_advance_recoveries', ['settlement_id', 'advance_id']) },
+        { key: 'base_payroll_periods', query: scoped('base_payroll_periods') },
+        { key: 'base_payroll_cycle_configs', query: scoped('base_payroll_cycle_configs') },
+        { key: 'base_worker_incentives', query: scoped('base_worker_incentives') },
         { key: 'supervisor_float_transactions', query: scoped('supervisor_float_transactions') },
         { key: 'machine_type_pay_defaults', query: scoped('machine_type_pay_defaults') },
         { key: 'machine_operator_assignments', query: scoped('machine_operator_assignments') },
@@ -330,6 +287,9 @@ export async function exportOrganizationData() {
         // Completed Free costings kept after an upgrade or expiry.
         { key: 'free_saved_costings', query: scoped('free_saved_costings') },
         { key: 'factory_cost_profile', query: scoped('factory_cost_profile', 'factory_id') },
+        { key: 'document_branding_settings', query: scoped('document_branding_settings', 'org_id', 'org_id') },
+        // Logo details only; the image files stay in storage.
+        { key: 'document_branding_logo_assets', query: scoped('document_branding_logo_assets') },
         { key: 'cost_rate_book', query: scoped('cost_rate_book') },
         { key: 'cost_rate_history', query: scoped('cost_rate_history') },
         { key: 'market_runs', query: scoped('market_runs') },
@@ -359,6 +319,12 @@ export async function exportOrganizationData() {
         { key: 'fabric_stock_sales', query: scoped('fabric_stock_sales') },
         { key: 'fabric_stock_movements', query: scoped('fabric_stock_movements') },
         { key: 'fabric_stock_inward_drafts', query: scoped('fabric_stock_inward_drafts') },
+        { key: 'production_stock_lots', query: scoped('production_stock_lots') },
+        { key: 'delivery_challans', query: scoped('delivery_challans') },
+        { key: 'delivery_challan_events', query: scoped('delivery_challan_events') },
+        { key: 'delivery_challan_lot_allocations', query: scoped('delivery_challan_lot_allocations') },
+        { key: 'inventory_audits', query: scoped('inventory_audits') },
+        { key: 'inventory_audit_lines', query: scoped('inventory_audit_lines') },
         { key: 'notification_consents', query: scoped('notification_consents') },
         { key: 'stock_discrepancies', query: scoped('stock_discrepancies') },
         { key: 'worker_consent_artifacts', query: scoped('worker_consent_artifacts') },
@@ -370,6 +336,8 @@ export async function exportOrganizationData() {
         { key: 'organization_dpas', query: scoped('organization_dpas') },
         { key: 'breach_reports', query: scoped('breach_reports') },
         { key: 'whatsapp_delivery_log', query: scoped('whatsapp_delivery_log') },
+        // Composite key (org_id, alert_type, ref_id). Its writers were
+        // unscheduled on 2026-10-01, so the table does not change during a read.
         { key: 'whatsapp_cooldowns', query: () => readOrderedPages('whatsapp_cooldowns', ['alert_type', 'ref_id']) },
         { key: 'referral_codes', query: scoped('referral_codes') },
         { key: 'referral_uses_as_referee', query: scoped('referral_uses', 'referee_org_id') },
@@ -384,6 +352,9 @@ export async function exportOrganizationData() {
         { key: 'billing_checkout_attempts', query: scoped('billing_checkout_attempts') },
         { key: 'billing_payment_refunds', query: scoped('billing_payment_refunds') },
         { key: 'billing_invoices', query: scoped('billing_invoices') },
+        { key: 'free_account_grants', query: scoped('free_account_grants', 'org_id', 'org_id') },
+        { key: 'plan_usage_events', query: scoped('plan_usage_events') },
+        { key: 'web_vital_samples', query: () => readOrderedPages('web_vital_samples', ['metric_id', 'name']) },
         { key: 'organization_export_runs', query: scoped('organization_export_runs') },
     ]
 
@@ -450,6 +421,7 @@ export async function exportOrganizationData() {
         dataset_catalog: [...datasetDefinitions.map(({ key }) => key), ...Object.keys(publicSupport.datasets)],
         support_scope: { unit: publicSupport.scope, as_of: publicSupport.asOf, excluded: ['other requesters', 'unbound manual tickets', 'internal notes', 'private references', 'idempotency records', 'founder audit'] },
         formal_scope: { excluded: ['Weavly privacy cases', 'security incidents', 'operator notes and audit'], access: 'Case-by-case identity and authority review through the published privacy contact.' },
+        excluded_sources: EXPORT_EXCLUDED_SOURCES,
         completeness: {
             status: 'complete',
             page_size: EXPORT_PAGE_SIZE,

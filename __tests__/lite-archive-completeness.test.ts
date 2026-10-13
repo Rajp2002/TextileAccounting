@@ -114,6 +114,15 @@ beforeEach(() => {
         whatsapp_cooldowns: [
             { org_id: ORG, alert_type: 'a', ref_id: '1' }, { org_id: ORG, alert_type: 'a', ref_id: '2' }, { org_id: ORG, alert_type: 'b', ref_id: '1' },
         ],
+        base_daily_production_entries: [
+            ...Array.from({ length: 1200 }, (_, index) => ({ id: uuid(30000 + index), org_id: ORG, entry_status: 'entered' })),
+            { id: uuid(39999), org_id: OTHER, entry_status: 'entered' },
+        ],
+        base_payroll_advance_recoveries: Array.from({ length: 1100 }, (_, index) => ({ org_id: ORG, settlement_id: `s-${String(index % 7).padStart(2, '0')}`, advance_id: `a-${String(index).padStart(5, '0')}` })),
+        base_payroll_reversals: [{ org_id: ORG, settlement_id: 's-01', reason: 'Paid twice' }, { org_id: OTHER, settlement_id: 's-99', reason: 'Not ours' }],
+        factory_supervisors: [{ org_id: ORG, user_id: 'u-1', status: 'approved' }, { org_id: OTHER, user_id: 'u-2', status: 'approved' }],
+        document_branding_settings: [{ org_id: ORG, business_address: 'Sachin GIDC', phone: '9876543210' }],
+        delivery_challans: [{ id: uuid(40001), org_id: ORG, number: 'DC1', document: { customer_name: 'Shah', customer_phone: '9876500000' } }],
     }
 })
 
@@ -178,6 +187,58 @@ describe('owner archive completeness', () => {
     })
 })
 
+describe('current Base, dispatch and settings records', () => {
+    const added = [
+        'base_production_machines', 'base_worker_machine_assignments', 'base_machine_job_contexts', 'base_production_batches',
+        'base_production_batch_revisions', 'base_daily_production_entries', 'base_daily_production_allocations', 'factory_supervisors',
+        'base_payroll_settlement_lines', 'base_payroll_reversals', 'base_payroll_advance_recoveries', 'base_payroll_periods',
+        'base_payroll_cycle_configs', 'base_worker_incentives', 'document_branding_settings', 'document_branding_logo_assets',
+        'production_stock_lots', 'delivery_challans', 'delivery_challan_events', 'delivery_challan_lot_allocations',
+        'inventory_audits', 'inventory_audit_lines', 'free_account_grants', 'plan_usage_events', 'web_vital_samples',
+    ]
+
+    it('exports every table the current Base, challan, stock audit and branding screens write', async () => {
+        const payload = await exportOrganizationData() as ExportPayload
+        for (const key of added) {
+            expect(payload.dataset_catalog, key).toContain(key)
+            expect(payload.datasets[key], key).toBeDefined()
+            expect(ctx.requests.find(request => request.table === key)?.filters, key).toContain('eq:org_id')
+        }
+    })
+
+    it('reads daily production beyond the row cap for this organization only', async () => {
+        const payload = await exportOrganizationData() as ExportPayload
+        expect(payload.datasets.base_daily_production_entries).toHaveLength(1200)
+        expect(payload.datasets.base_daily_production_entries.every(row => row.org_id === ORG)).toBe(true)
+    })
+
+    it('pages tables keyed by something other than id', async () => {
+        const payload = await exportOrganizationData() as ExportPayload
+        expect(payload.datasets.base_payroll_advance_recoveries).toHaveLength(1100)
+        expect(new Set(payload.datasets.base_payroll_advance_recoveries.map(row => row.advance_id)).size).toBe(1100)
+        expect(payload.datasets.base_payroll_reversals.map(row => row.reason)).toEqual(['Paid twice'])
+        expect(payload.datasets.factory_supervisors.map(row => row.user_id)).toEqual(['u-1'])
+        expect(payload.datasets.document_branding_settings.map(row => row.business_address)).toEqual(['Sachin GIDC'])
+    })
+
+    it('redacts phone numbers in the new records, including inside challan documents', async () => {
+        const payload = await exportOrganizationData() as ExportPayload
+        expect(JSON.stringify(payload)).not.toContain('9876543210')
+        expect(JSON.stringify(payload)).not.toContain('9876500000')
+        expect(payload.datasets.delivery_challans[0].document).toMatchObject({ customer_name: 'Shah', customer_phone: '[REDACTED]' })
+    })
+
+    it('names what it leaves out, and never reads it', async () => {
+        const payload = await exportOrganizationData() as ExportPayload & { excluded_sources: { tables: string[]; reason: string }[] }
+        const excluded = payload.excluded_sources.flatMap(source => source.tables)
+        for (const table of ['supervisor_join_codes', 'estimator_costing_attestations', 'base_production_save_receipts', 'base_payroll_payment_requests']) {
+            expect(excluded).toContain(table)
+            expect(ctx.requests.some(request => request.table === table), table).toBe(false)
+        }
+        for (const source of payload.excluded_sources) expect(source.reason.length).toBeGreaterThan(20)
+    })
+})
+
 describe('retained owner access to the archive', () => {
     it('allows every cohort that ever had paid access, but not a pure Free account', () => {
         expect(hasOwnerArchiveAccess({ effectiveTier: 'free', freeAccount: true })).toBe(false)
@@ -202,7 +263,15 @@ describe('retained owner access to the archive', () => {
         expect(layout).toContain("const retainedArchive = pathname.startsWith('/owner/data-export') && hasOwnerArchiveAccess(access)")
         expect(layout.match(/requireRole\(\['owner'\], \{ allowFreeAccount: true \}\)/g)?.length).toBe(3)
         expect(page).toContain("requireRole(['owner'], { allowFreeAccount: true })")
-        expect(action.match(/requireRetainedArchiveOwner\(\)/g)?.length).toBe(3)
+        // One guard for every archive action, JSON and CSV.
+        const guard = readFileSync('lib/retained-archive-owner.ts', 'utf8')
+        const csvActions = readFileSync('app/(dashboard)/owner/data-export/csv-actions.ts', 'utf8')
+        expect(guard).toContain("requireRole(['owner'], { allowFreeAccount: true })")
+        expect(guard).toContain("if (!hasOwnerArchiveAccess(await getCachedOrgPlanAccess(session.profile.org_id))) redirect('/free')")
+        expect(action.match(/await requireRetainedArchiveOwner\(\)/g)?.length).toBe(2)
+        expect(action.match(/^export async function/gm)?.length).toBe(2)
+        expect(csvActions.match(/await requireRetainedArchiveOwner\(\)/g)?.length).toBe(1)
+        expect(csvActions.match(/^export async function/gm)?.length).toBe(1)
         expect(proxy).toContain("!pathname.startsWith('/owner/data-export')")
     })
 })

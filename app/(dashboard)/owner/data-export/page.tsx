@@ -2,6 +2,7 @@ import styles from './lite-export.module.css'
 import { getCachedOrgPlanAccess } from '@/lib/subscription'
 import { requireRole } from '@/lib/auth'
 import { OrganizationDataExportButton } from '@/components/settings/organization-data-export-button'
+import { AccountantCsvExports } from './AccountantCsvExports'
 
 export default async function OwnerDataExportPage() {
     // Reachable after paid access ends; the layout keeps pure Free accounts out.
@@ -15,6 +16,7 @@ export default async function OwnerDataExportPage() {
                     This owner-only JSON export remains available when plan access ends. It includes the current organization&apos;s operational, costing, billing, privacy, and export-history records, while redacting authentication, tracking, and other sensitive fields.
                 </p>
                 <div className="mt-6"><OrganizationDataExportButton showHistory testId="owner-data-export" /></div>
+                <AccountantCsvExports />
             </div>
         </main>
     )

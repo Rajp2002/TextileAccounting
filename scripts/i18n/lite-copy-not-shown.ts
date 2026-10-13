@@ -17,6 +17,13 @@ export const LITE_COPY_NOT_SHOWN = new Set<string>([
     "Dataset keys remain stable technical identifiers for portability; use these labels and distinctions when interpreting records.",
     "Datasets are read separately, each in pages, while the factory may keep working, so a change made during the export may or may not appear. This is not a point-in-time backup.",
     "Every dataset is read in pages ordered by its key until an empty page. Any failed page fails the export and no file is produced.",
+    // excluded_sources in the owner's JSON archive, read in the file only.
+    "Free plan sign-in, allowance and replay records kept per sign-in account, not per organization. Completed Free costings are in free_saved_costings.",
+    "Logo image files stay in storage. Their details are in document_branding_logo_assets.",
+    "Request replay records. The production and payments they saved are in the production and payroll datasets.",
+    "Ten-minute server checks used while a costing is saved. The saved costings are in estimator_quotes.",
+    "The live code a supervisor uses to join the factory. It is an access credential, not a record.",
+    "document branding logo files",
     "GST invoice feature flag",
     "Gujarat",
     "H",
