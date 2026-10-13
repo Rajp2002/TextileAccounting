@@ -116,6 +116,9 @@ import { FreeTransactionRecovery } from '@/components/estimator/FreeTransactionR
 import { FreeSavedReceipt } from '@/components/estimator/FreeSavedReceipt'
 import { FreeLeaveDialog } from '@/components/estimator/FreeLeaveDialog'
 import { UpgradeBenefitsPreview } from '@/components/estimator/UpgradeBenefitsPreview'
+import { FreeCalculateBlockedNote } from '@/components/estimator/FreeCalculateBlockedNote'
+import { getFreeCalculateBlock } from '@/lib/free-calculate-block'
+import { clearFreeEstimatorDraft, readFreeEstimatorDraft, writeFreeEstimatorDraft } from '@/lib/free-estimator-draft'
 import { useFreeLeaveGuard, type FreeLeaveReason } from '@/hooks/use-free-leave-guard'
 import { freeLeaveReason as decideFreeLeaveReason, freePageSnapshot } from '@/lib/free-leave-guard'
 import { freePreflight } from '@/lib/free-transaction'
@@ -210,6 +213,11 @@ const COSTING_SAVE_GUIDANCE_STORAGE_KEY = 'weavly-estimator-costing-save-guidanc
 function getCostingSaveGuidanceStorageKey(orgId: string, userId: string) {
     return `${COSTING_SAVE_GUIDANCE_STORAGE_KEY}:${orgId}:${userId}`
 }
+
+/** The reason Free cannot calculate, beside the page's Calculate & save button. */
+const FREE_CALCULATE_NOTE_ID = 'free-calculate-note'
+/** The same reason inside the live cost panel, which can be open at the same time. */
+const FREE_CALCULATE_LIVE_NOTE_ID = 'free-calculate-note-live'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // REDUCER
@@ -1902,12 +1910,11 @@ function CostingSaveReview({
         ...state.warpRows.map(row => `Warp ${row.label?.trim() || 'layer'} ₹${Number(row.yarnRate || 0).toFixed(2)}/kg`),
         ...state.weftRows.map(row => `Weft ${row.label?.trim() || 'layer'} ₹${Number(row.yarnRate || 0).toFixed(2)}/kg`),
     ]
+    // Commission and transport are listed above as entered amounts; they have no section switch.
     const optionalSections: Array<[keyof FactorySections, string]> = [
         ['winding', 'Winding'],
         ['processing', 'Processing'],
         ['finishing', 'Finishing'],
-        ['commission', 'Commission'],
-        ['transport', 'Transport'],
     ]
     const enabledSections = optionalSections
         .filter(([section]) => state.enabledSections[section])
@@ -1947,6 +1954,8 @@ function CostingSaveReview({
 
 function EstimatorLiveCostActions({
     freeCanCalculate,
+    renderFreeCalculateNote,
+    freeCalculateNoteId,
     savingQuote,
     savingTemplate,
     appliedTemplate,
@@ -1968,6 +1977,9 @@ function EstimatorLiveCostActions({
     onDismiss,
 }: {
     freeCanCalculate?: boolean
+    /** Free only: why Calculate is unavailable, given the panel's dismiss so its action can close the panel. */
+    renderFreeCalculateNote?: (dismiss: () => void) => React.ReactNode
+    freeCalculateNoteId?: string
     savingQuote: boolean
     savingTemplate: boolean
     appliedTemplate: EstimatorTemplate | null
@@ -2009,10 +2021,12 @@ function EstimatorLiveCostActions({
             <Button type="button" data-testid="save-costing-action" variant="default"
                 className="h-auto min-h-[44px] w-full whitespace-normal rounded-xl px-4 py-3 text-sm font-semibold"
                 disabled={saveCostingDisabled} aria-busy={savingQuote}
+                aria-describedby={freeCalculateNoteId}
                 onClick={() => runAction(onSaveCosting)}>
                 {savingQuote ? <Loader2 className="h-4 w-4 shrink-0 animate-spin" /> : <Calculator className="h-4 w-4 shrink-0" />}
                 {topCostingActionLabel}
             </Button>
+            {renderFreeCalculateNote?.(onDismiss)}
             {!hasValidCostResult && <p className="text-center text-xs leading-relaxed text-muted-foreground">{freeText(language, 'compactCreationPolicy')}</p>}
             {hasValidCostResult && <div className="flex flex-wrap justify-center gap-x-4 gap-y-1">
                 <Button type="button" variant="ghost" className="h-auto min-h-[44px] whitespace-normal text-xs" disabled={!exportReady} onClick={() => runAction(onExport)}>
@@ -3609,6 +3623,12 @@ export default function EstimatorClient({
         minClearance: 16,
     })
     const freeCanCalculate = !!freeMeter.status?.estimationEnabled && (freeMeter.completed ? freeMeter.editRemainingMs > 0 : freeMeter.status.quota.remaining > 0) && !freeMeter.busy && (!freeMeter.completed || freeMeter.stale)
+    const freeCalculateBlock = freeMode ? getFreeCalculateBlock({
+        status: freeMeter.status,
+        statusError: freeMeter.statusError,
+        hasSavedCosting: Boolean(freeMeter.completed),
+        busy: freeMeter.busy || freeMeter.pending,
+    }) : null
     const [lastSavedCosting, setLastSavedCosting] = useState<{ id: string; version: number; savedAt: string; model: ReturnType<typeof createCostingExportModel> } | null>(null)
 
     function openProductionFromCosting(costingId: string) {
@@ -3892,10 +3912,54 @@ export default function EstimatorClient({
         () => freePageSnapshot({ state, qualityLabel, warpInstruction, weftInstruction }),
         [state, qualityLabel, warpInstruction, weftInstruction],
     )
+    // Free also keeps a costing it has not calculated yet on this device, in
+    // the estimator's draft slot, so leaving the page or starting a Lite trial
+    // does not lose it (the paid estimator offers the same draft). A costing
+    // saved in this page is revised in page memory only.
+    const [freeDraftPage, setFreeDraftPage] = useState<string | null>(null)
+    const [freeDraftRestored, setFreeDraftRestored] = useState(false)
+    const freeDraftCheckedRef = useRef(false)
+    useEffect(() => {
+        if (!freeMode || freeDraftCheckedRef.current) return
+        freeDraftCheckedRef.current = true
+        if (initialFreeCosting) return
+        let restored: ReturnType<typeof readFreeEstimatorDraft> = null
+        try {
+            restored = readFreeEstimatorDraft(localStorage, orgId, userId)
+        } catch {
+            restored = null
+        }
+        if (!restored) return
+        rawDispatch({ type: 'RESTORE_DRAFT', draftState: { ...restored.state, isConfigured: true } })
+        setQualityLabel(restored.qualityLabel)
+        setDirectWeavingRateInput(getDirectWeavingRateInput(restored.state.perPickCostPaisa, restored.state.weftRows))
+        setHasUnsavedEdits(true)
+        setFreeDraftRestored(true)
+    }, [freeMode, initialFreeCosting, orgId, userId])
+    useEffect(() => {
+        if (!freeMode || !freeDraftCheckedRef.current || freeMeter.completed || !hasUnsavedEdits) return
+        let written = false
+        try {
+            written = writeFreeEstimatorDraft(localStorage, orgId, userId, { state, qualityLabel, warpInstruction, weftInstruction })
+        } catch {
+            written = false
+        }
+        setFreeDraftPage(written ? freePage : null)
+    }, [freeMode, freeMeter.completed, freePage, hasUnsavedEdits, orgId, qualityLabel, state, userId, warpInstruction, weftInstruction])
+    const discardFreeDraft = useCallback(() => {
+        try {
+            clearFreeEstimatorDraft(localStorage, orgId, userId)
+        } catch {
+            // Storage that cannot be reached holds nothing to clear.
+        }
+        setFreeDraftPage(null)
+        setFreeDraftRestored(false)
+    }, [orgId, userId])
     const freeLeaveReason: FreeLeaveReason = decideFreeLeaveReason({
         guarded: freeMode || disableAutosave,
         unresolved: freeMeter.pending || freeMeter.unreconciled.some(entry => entry.check !== 'found'),
-        hasUnsavedEdits,
+        // Inputs the device draft holds are not lost by leaving.
+        hasUnsavedEdits: hasUnsavedEdits && (!freeMode || freeDraftPage !== freePage),
         page: freePage,
         savedPage: freeMeter.completed?.page ?? null,
     })
@@ -3903,6 +3967,10 @@ export default function EstimatorClient({
     // Restored costings have no receipt; only a save confirmed in this session
     // should leave the calculator. Keep any newer edits or unresolved work here.
     const savedFreeCosting = freeMode && freeMeter.completed?.quota ? freeMeter.completed : null
+    // A confirmed save holds these inputs now; the device draft is done.
+    useEffect(() => {
+        if (savedFreeCosting) discardFreeDraft()
+    }, [savedFreeCosting, discardFreeDraft])
     const redirectedFreeCosting = useRef<typeof freeMeter.completed>(null)
     useEffect(() => {
         if (savedFreeCosting && !freeLeaveReason && redirectedFreeCosting.current !== savedFreeCosting) {
@@ -3917,6 +3985,22 @@ export default function EstimatorClient({
         setFreePlansOpen(true)
         window.requestAnimationFrame(() => document.getElementById('free-plan-comparison')?.scrollIntoView({ block: 'start' }))
     }, [])
+    const renderFreeCalculateNote = (id: string, className?: string, dismiss?: () => void) => freeCalculateBlock && (
+        <FreeCalculateBlockedNote
+            id={id}
+            className={className}
+            block={freeCalculateBlock}
+            resetsAt={freeMeter.status?.quota.resetsAt}
+            draftKept={freeDraftPage === freePage}
+            baseVisible={baseVisible}
+            liteTrialEligible={liteTrialEligible}
+            onViewPlans={() => {
+                dismiss?.()
+                openFreePlans()
+            }}
+            onRefresh={() => void freeMeter.refresh()}
+        />
+    )
 
     const applyEstimatorDraft = useCallback((checkpoint?: EstimatorDraftInput<EstimateState>) => {
         const restored = checkpoint ?? restoreDraft()
@@ -4073,7 +4157,9 @@ export default function EstimatorClient({
         ))
     }, [buildCurrentDraft, orgId, saveDraft, sourceRecordKind, state])
 
-    const requireCapacityForCurrentCosting = requiresFactoryCapacity(state, false)
+    // Free has no loom-capacity inputs and loom count cannot change a Free price
+    // (see FREE_ESTIMATE_VALIDATION_OPTIONS); Lite and Base keep their capacity gate.
+    const requireCapacityForCurrentCosting = !freeMode && requiresFactoryCapacity(state, false)
     const estimatorValidation = useMemo(
         () => validateEstimatorSnapshot(state, {
             requireTapeLength: false,
@@ -4107,6 +4193,19 @@ export default function EstimatorClient({
         }
     }, [state, freeMode, freeMeter.completed])
     const costingResult = useMemo(() => freeMode ? freeMeter.completed?.result ?? buildCostingResult(makeFreeEstimate(),totals) : buildCostingResult(state, totals), [state, totals, freeMode, freeMeter.completed])
+    // The save review lists the inputs about to be saved. Free freezes
+    // `costingResult` to the last completed calculation, or an empty default
+    // before the first one, so the review there is built from the live inputs.
+    // It shows only entered assumptions and the expense-derived overhead the
+    // monthly-expense editor already displays, never the metered price.
+    const saveReviewResult = useMemo(() => {
+        if (!freeMode) return costingResult
+        try {
+            return buildCostingResult(state, calcFullTotals(state))
+        } catch {
+            return costingResult
+        }
+    }, [costingResult, freeMode, state])
     const awaitingCalculation = freeMode && (!freeMeter.completed || freeMeter.stale)
     const costingReadiness = useMemo(
         () => getEstimatorReadiness({
@@ -4597,7 +4696,7 @@ export default function EstimatorClient({
     const handleNewQualityConfirm = () => {
         if (saveQuoteLockRef.current || unconfirmedRequestId) return
         if (freeMode && (freeMeter.pending || freeMeter.busy)) return
-        if (freeMode) { freeMeter.reset(); router.replace('/free') }
+        if (freeMode) { freeMeter.reset(); discardFreeDraft(); router.replace('/free') }
         startJourney('blank')
         setLastSavedCosting(null)
         setQualityCheckpoint(null)
@@ -6003,12 +6102,21 @@ export default function EstimatorClient({
                             <span className="font-semibold">{litePristineIncomplete ? <><span className="lite-mobile-only" data-i18n-skip="true">{liteEstimatorText(language, 'complete')}</span><span className="lite-desktop-only">{validityStatus.label}</span></> : freeIncompleteBeforeSubmit ? <><span className="free-mobile-only">{freeMobileText(language, 'complete')}</span><span className="free-desktop-only">{validityStatus.label}</span></> : validityStatus.label}</span>
                             <span className="hidden font-medium opacity-85 sm:inline">{validityStatus.description}</span>
                         </div>
+                        {freeMode && freeDraftRestored && !freeMeter.completed && (
+                            <div role="status" className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] py-1 pl-3 pr-1 text-xs font-medium leading-4 text-[var(--color-body)]">
+                                <span className="py-2">{freeText(language, 'draftRestored')}</span>
+                                <Button type="button" variant="ghost" size="sm" className="min-h-[44px] text-xs" onClick={() => setShowConfirmNewQuality(true)}>
+                                    {freeText(language, 'clear')}
+                                </Button>
+                            </div>
+                        )}
                         {freeMode && awaitingCalculation && estimatorValidation.valid && (
-                            <Button className="mt-3 h-auto min-h-11 w-full whitespace-normal" disabled={!freeCanCalculate} onClick={() => void handleSaveQuote()}>
+                            <Button className="mt-3 h-auto min-h-11 w-full whitespace-normal" disabled={!freeCanCalculate} aria-describedby={freeCalculateBlock ? FREE_CALCULATE_NOTE_ID : undefined} onClick={() => void handleSaveQuote()}>
                                 <Calculator className="mr-2 h-4 w-4 shrink-0" />
                                 {topCostingActionLabel}
                             </Button>
                         )}
+                        {freeCalculateBlock && (freeCalculateBlock !== 'checking' || estimatorValidation.valid) && renderFreeCalculateNote(FREE_CALCULATE_NOTE_ID, 'mt-3')}
                     </section>
 
                     <SheetContent
@@ -7248,6 +7356,8 @@ export default function EstimatorClient({
                 actions={(onDismiss, view) => (
                     <EstimatorLiveCostActions
                         freeCanCalculate={freeMode ? freeCanCalculate && estimatorValidation.valid && !!qualityLabel.trim() : undefined}
+                        renderFreeCalculateNote={freeCalculateBlock ? dismiss => renderFreeCalculateNote(FREE_CALCULATE_LIVE_NOTE_ID, undefined, dismiss) : undefined}
+                        freeCalculateNoteId={freeCalculateBlock ? FREE_CALCULATE_LIVE_NOTE_ID : undefined}
                         savingQuote={savingQuote}
                         savingTemplate={savingTemplate}
                         appliedTemplate={appliedTemplate}
@@ -7360,7 +7470,7 @@ export default function EstimatorClient({
                     </div>
                     <CostingSaveReview
                         state={state}
-                        result={costingResult}
+                        result={saveReviewResult}
                         fullReuse={Boolean(appliedTemplate?.latest_costing_reuse)}
                         compact
                     />
@@ -7457,7 +7567,7 @@ export default function EstimatorClient({
                     </div>
                     <CostingSaveReview
                         state={state}
-                        result={costingResult}
+                        result={saveReviewResult}
                         fullReuse={Boolean(appliedTemplate?.latest_costing_reuse)}
                         compact
                     />
@@ -7540,7 +7650,7 @@ export default function EstimatorClient({
                         </div>
                         <CostingSaveReview
                             state={state}
-                            result={costingResult}
+                            result={saveReviewResult}
                             fullReuse
                         />
                     </div>

@@ -28,6 +28,11 @@ const phrases = {
  recalculatedNoCharge:['Recalculated and saved · no costing used','ફરી ગણતરી કરીને સાચવ્યું · કોસ્ટિંગ વપરાઈ નથી','दोबारा गणना करके सहेजा गया · कोई कॉस्टिंग खर्च नहीं हुई'],
  savedRevisionHint:['Shows your last saved result. Recalculate to save changes within the 30-minute edit window.','છેલ્લું સાચવેલું પરિણામ દર્શાવે છે. 30 મિનિટની અંદર ફેરફાર સાચવવા ફરી ગણતરી કરો.','अंतिम सहेजा गया परिणाम दिखाता है। 30 मिनट के भीतर बदलाव सहेजने के लिए दोबारा गणना करें।'],
  freeCreationPolicy:['Calculate & save uses one monthly costing and saves it automatically. You can edit and recalculate that entry for 30 minutes without using another costing.','ગણતરી કરો અને સાચવો એક માસિક કોસ્ટિંગ વાપરે છે અને આપમેળે સાચવે છે. બીજી કોસ્ટિંગ વાપર્યા વિના 30 મિનિટ સુધી તે એન્ટ્રીમાં ફેરફાર અને ફરી ગણતરી કરી શકો છો.','गणना करें और सहेजें एक मासिक कॉस्टिंग खर्च करके अपने आप सहेजता है। दूसरी कॉस्टिंग खर्च किए बिना 30 मिनट तक उस प्रविष्टि में बदलाव और दोबारा गणना कर सकते हैं।'],
+ noCostingsLeft:['No free costings left this month.','આ મહિને કોઈ ફ્રી કોસ્ટિંગ બાકી નથી.','इस महीने कोई फ्री कॉस्टिंग बाकी नहीं है।'],
+ calculateAfterReset:['Calculate & save opens again when your allowance resets.','ભથ્થું રીસેટ થાય ત્યારે ગણતરી કરો અને સાચવો ફરી ખુલશે.','सीमा रीसेट होने पर गणना करें और सहेजें फिर खुलेगा।'],
+ draftKept:['Your inputs are kept on this device.','તમારી માહિતી આ ડિવાઇસ પર રાખેલ છે.','आपकी जानकारी इस डिवाइस पर रखी गई है।'],
+ draftRestored:['Your unsaved inputs from this device are back.','આ ડિવાઇસ પર રાખેલી તમારી સાચવ્યા વગરની માહિતી પાછી આવી છે.','इस डिवाइस पर रखी आपकी बिना सहेजी जानकारी वापस आ गई है।'],
+ tryLiteFree:['Try Lite free for 1 month','Lite 1 મહિનો મફત અજમાવો','Lite 1 महीने मुफ़्त आज़माएँ'],
 
  planSummary:['Choose Lite for full costing, or Base to add production logging and automatic payroll calculation.','સંપૂર્ણ કોસ્ટિંગ માટે Lite પસંદ કરો, અથવા ઉત્પાદન નોંધ અને આપમેળે પગાર ગણતરી ઉમેરવા Base પસંદ કરો.','पूरी कॉस्टिंग के लिए Lite चुनें, या उत्पादन लॉगिंग और स्वचालित वेतन गणना जोड़ने के लिए Base चुनें।'],
  planExplore:['Explore Lite and Base','Lite અને Base વિશે જાણો','Lite और Base के बारे में जानें'],

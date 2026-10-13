@@ -8,7 +8,7 @@ import { freeQuotaWindow } from './free-tier-policy'
 import { issueFreeRequest, verifyFreeRequest, bindFreeEffectiveInputs, resolveFreeSigningKeys } from './free-request-identity'
 import { calcFullTotals, buildCostingResult, COSTING_CALCULATION_VERSION } from './estimator'
 import { parseFreeEstimate, canonicalFreeInputs } from './free-estimator-input'
-import { getEstimatorReadiness, validateEstimatorSnapshot, requiresFactoryCapacity } from './estimator-validation'
+import { FREE_ESTIMATE_VALIDATION_OPTIONS, getEstimatorReadiness, validateEstimatorSnapshot } from './estimator-validation'
 import { freeEditWindow } from './free-costing-window'
 import type { SavedFreeCosting } from './free-costing-window'
 import { checkAuthRateLimit } from './rate-limit'
@@ -75,7 +75,7 @@ export async function calculateFreeSubmission(body: { estimate: unknown; request
   const rollout = await getFreeRollout()
   if (!context.paid && !rollout.estimation_enabled) throw new Error('FREE_PAUSED')
   const estimate = parseFreeEstimate(body.estimate)
-  const validation = validateEstimatorSnapshot(estimate, { requireTapeLength:false, requireCapacity:requiresFactoryCapacity(estimate) })
+  const validation = validateEstimatorSnapshot(estimate, FREE_ESTIMATE_VALIDATION_OPTIONS)
   if (validation.warnings?.length && !body.warningsAcknowledged) {
     return { outcome:'review_required' as const, warningFields:validation.warnings.map(w => w.field), needsAcknowledgement:true as const }
   }

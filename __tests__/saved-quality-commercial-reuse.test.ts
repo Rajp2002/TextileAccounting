@@ -65,11 +65,9 @@ describe('Base Saved Quality full-costing reuse', () => {
       },
     })
     expect(restored.overheadItems[0]).toMatchObject({ label: 'Rent', monthlyAmount: 620_000 })
-    expect(getEffectiveCommercialInputs(restored)).toMatchObject({
+    expect(getEffectiveCommercialInputs(restored)).toEqual({
       commissionPct: 3.5,
       transportPerM: 0.8,
-      commissionToggleMismatch: false,
-      transportToggleMismatch: false,
     })
   })
 
