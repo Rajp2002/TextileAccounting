@@ -24,6 +24,25 @@ export function isSavedCostingArchived(
   return Boolean(record.is_archived) || template?.is_active === false
 }
 
+/**
+ * Saved qualities whose costings are all archived. The default and favourites
+ * views leave them out, so an archived costing never reappears there; the
+ * Archived view still lists those costings. A quality with no costing at all
+ * is not included.
+ */
+export function savedQualityIdsWithOnlyArchivedCostings(
+  costings: ReadonlyArray<{ template_id?: string | null; is_archived?: boolean | null }>,
+): Set<string> {
+  const withActiveCosting = new Set<string>()
+  const withArchivedCosting = new Set<string>()
+  for (const costing of costings) {
+    if (!costing.template_id) continue
+    if (costing.is_archived) withArchivedCosting.add(costing.template_id)
+    else withActiveCosting.add(costing.template_id)
+  }
+  return new Set([...withArchivedCosting].filter(templateId => !withActiveCosting.has(templateId)))
+}
+
 export type SavedCostingListItem = {
   id: string
   party_name: string | null

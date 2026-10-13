@@ -64,6 +64,7 @@ import {
   orderSavedCostingsForComparison,
   buildSavedQualityRecipeState,
   filterAndSortSavedCostings,
+  savedQualityIdsWithOnlyArchivedCostings,
   getSavedCostingIdentity,
   isSavedCostingArchived,
   getSavedCostingMetrics,
@@ -1009,7 +1010,10 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
         const templateById = new Map(initialTemplates.map(template => [template.id, template]))
 
         if (!showFavoritesOnly) {
-            for (const template of initialTemplates.filter(item => (item.is_active === false) === showArchived)) {
+            // The default view never lists an archived costing, so a quality
+            // whose costings are all archived is left out with them.
+            const archivedOnlyQualityIds = showArchived ? new Set<string>() : savedQualityIdsWithOnlyArchivedCostings(quotes)
+            for (const template of initialTemplates.filter(item => (item.is_active === false) === showArchived && !archivedOnlyQualityIds.has(item.id))) {
                 const key = `template:${template.id}`
                 groups.set(key, { key, name: template.name, template, records: [], updatedAt: template.updated_at, currentRecipeCostPerM: null })
                 labelIndex.set(normalizeQualityKey(template.name), key)
