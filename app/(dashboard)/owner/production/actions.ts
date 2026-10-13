@@ -9,6 +9,7 @@ import { hasCapability } from '@/lib/subscription-access'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { DateSchema, UuidSchema, safeParse } from '@/lib/schemas'
 import { buildDeductionDescription } from '@/lib/base-bulk-adjustment'
+import { describeBaseSheetRows, reviewBaseSheetOperators } from '@/lib/base-operator'
 import {
     BASE_MACHINE_TYPE_OPTIONS, BULK_NAME_LIMIT, BULK_ROLE_LIMIT, MAX_BULK_MACHINES, MAX_BULK_WORKERS, MAX_MONTHLY_SALARY,
     findBulkNameIssues, isValidMonthlySalary, normalizeBulkName,
@@ -276,6 +277,45 @@ async function requireBaseProductionOwner() {
 function databaseError(error: { message?: string } | null | undefined, fallback: string) {
     if (error?.message) console.error(`[base-production] ${error.message}`)
     return { error: fallback }
+}
+
+// Raised by private.guard_base_piece_worker for a sheet row whose operator cannot work that date and shift.
+const OPERATOR_GUARD_MESSAGE = 'Choose an approved operator available for this date and shift.'
+
+/** The guard names no row, so find the rows it refused and the looms they hold. Null if they cannot be read. */
+async function findUnavailableSheetRows(
+    supabase: Awaited<ReturnType<typeof createServerClient>>,
+    orgId: string,
+    sheet: z.infer<typeof BaseDailyProductionSchema>,
+) {
+    const machineIds = [...new Set(sheet.entries.flatMap((entry) => entry.machineRecords?.map((record) => record.machineId) ?? []))]
+    const [workers, machines] = await Promise.all([
+        supabase.from('base_production_workers')
+            .select('id, name, pay_type, operator_eligible, operator_effective_from, is_active, shift_availability, start_date, end_date')
+            .eq('org_id', orgId)
+            .in('id', sheet.entries.map((entry) => entry.workerId)),
+        machineIds.length > 0
+            ? supabase.from('base_production_machines').select('id, name, custom_label').eq('org_id', orgId).in('id', machineIds)
+            : Promise.resolve({ data: [] as Array<{ id: string; name: string; custom_label: string | null }>, error: null }),
+    ])
+    if (workers.error || machines.error) return null
+
+    const workerById = new Map((workers.data ?? []).map((worker) => [String(worker.id), worker]))
+    const labelById = new Map((machines.data ?? []).map((machine) => [String(machine.id), String(machine.custom_label || machine.name)]))
+    // Blank rows count here too: a sheet from an older page still sends them.
+    const { omittedWorkerIds, blockedWorkerIds } = reviewBaseSheetOperators(
+        sheet.entries.map((entry) => ({ workerId: entry.workerId, status: entry.status })),
+        workerById,
+        sheet.shift,
+        sheet.productionDate,
+    )
+    const unavailable = new Set([...omittedWorkerIds, ...blockedWorkerIds])
+    return sheet.entries
+        .filter((entry) => unavailable.has(entry.workerId))
+        .map((entry) => ({
+            workerName: String(workerById.get(entry.workerId)?.name ?? 'Worker'),
+            machineLabels: (entry.machineRecords ?? []).map((record) => labelById.get(record.machineId) ?? 'Machine'),
+        }))
 }
 
 export async function createBaseProductionMachine(input: {
@@ -774,6 +814,16 @@ export async function saveBaseDailyProductionBatch(input: {
         }
         if (error.code === '23503') {
             return databaseError(error, 'The worker, machine, or job no longer matches the dated Setup. Review Setup before saving this correction; your local draft is retained.')
+        }
+        if (error.code === '22023' && error.message === OPERATOR_GUARD_MESSAGE) {
+            console.error(`[base-production] ${error.message}`)
+            const unavailableRows = await findUnavailableSheetRows(supabase, profile.org_id, parsed.data)
+            if (unavailableRows?.length) {
+                return {
+                    error: `Not saved. The operator on ${describeBaseSheetRows(unavailableRows)} is not available on this date and shift. Reassign the loom in Machine Assignments or clear its readings. Your readings are kept.`,
+                    unavailableRows,
+                }
+            }
         }
         return databaseError(error, error.message || 'The daily production sheet could not be saved. Please try again.')
     }

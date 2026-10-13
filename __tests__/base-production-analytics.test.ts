@@ -4,6 +4,7 @@ import {
     calculateBaseProductionDay,
     compareBaseProductionDays,
     buildBaseLoomOutputRows,
+    countBaseLoomsNotEntered,
     formatBaseMeters,
     getBasePreviousDate,
     metersOutsideBaseJobs,
@@ -175,6 +176,28 @@ describe('calculateBaseProductionDay', () => {
         expect(allIdle.totalMeters).toBe(0)
     })
 
+    it('knows which looms were recorded, so a loom with no reading is not read as zero', () => {
+        const record = (machine_id: string, state: 'entered' | 'pending' | 'not_running' | 'absent') => ({
+            machine_id, worker_id: 'worker-1', machine_label: machine_id, job_id: null, job_label: null, state,
+        })
+        const day = calculateBaseProductionDay({
+            date: TODAY,
+            entries: [
+                entry({ id: 'entry-1' }),
+                entry({ id: 'entry-legacy-zero', entry_status: 'zero', machine_id: 'm6', allocation_mode: 'worker_total', batch_id: null }),
+            ],
+            allocations: [allocation({ entry_id: 'entry-1', machine_id: 'm1', meters: 100 })],
+            batches: [
+                batch({ machine_records: [record('m1', 'entered'), record('m2', 'not_running'), record('m3', 'pending'), record('m4', 'absent')] }),
+                batch({ id: 'b-old', production_date: YESTERDAY, shift: 'night', machine_records: [record('m5', 'entered')] }),
+            ],
+        })
+
+        // Loom 3 is pending, and Loom 5 was recorded on another day.
+        expect([...day.recordedMachineIds].sort()).toEqual(['m1', 'm2', 'm4', 'm6'])
+        expect(day.metersByMachineId.get('m2')).toBeUndefined()
+    })
+
     it('counts a day that only has legacy entries as saved', () => {
         const day = calculateBaseProductionDay({
             date: TODAY,
@@ -210,6 +233,7 @@ describe('compareBaseProductionDays', () => {
         metersByMachineId: new Map<string, number>(),
         savedShifts: shifts,
         hasSavedSheet: shifts.day || shifts.night,
+        recordedMachineIds: new Set<string>(),
     })
 
     it('reports the change against yesterday once today covers the same shifts', () => {
@@ -296,13 +320,15 @@ describe('buildBaseLoomOutputRows', () => {
     const machine = (id: string, name: string, overrides: Record<string, unknown> = {}) => ({
         id, name, custom_label: null as string | null, is_active: true, ...overrides,
     })
-    const dayOf = (date: string, byMachine: Record<string, number>, saved = true) => ({
+    // A loom with output was recorded; `zero` lists looms recorded as not running.
+    const dayOf = (date: string, byMachine: Record<string, number>, saved = true, zero: string[] = []) => ({
         date,
         totalMeters: Object.values(byMachine).reduce((sum, meters) => sum + meters, 0),
         metersByJobId: new Map<string, number>(),
         metersByMachineId: new Map(Object.entries(byMachine)),
         savedShifts: { day: saved, night: false },
         hasSavedSheet: saved,
+        recordedMachineIds: new Set([...Object.keys(byMachine), ...zero]),
     })
     const jobs = new Map([['job-a', 'Quality A'], ['job-b', 'Quality B']])
 
@@ -396,6 +422,23 @@ describe('buildBaseLoomOutputRows', () => {
         expect(byId.m4.peerAverage).toBeNull()
     })
 
+    it('tells a loom with no reading today apart from one that ran zero', () => {
+        const rows = buildBaseLoomOutputRows({
+            machines: [machine('m1', 'Loom 1'), machine('m2', 'Loom 2'), machine('m3', 'Loom 3')],
+            runningJobIdByMachineId: new Map([['m1', 'job-a'], ['m2', 'job-a'], ['m3', 'job-a']]),
+            jobLabelById: jobs,
+            today: dayOf(TODAY, { m1: 100 }, true, ['m2']),
+            yesterday: dayOf(YESTERDAY, { m1: 100, m2: 90, m3: 80 }),
+        })
+        const byId = Object.fromEntries(rows.map(row => [row.machineId, row]))
+
+        expect(byId.m2).toMatchObject({ todayRecorded: true, todayMeters: 0, deltaPercent: -100 })
+        // Loom 3 has no reading: it is not a -100% day, and it does not drag the quality average down.
+        expect(byId.m3).toMatchObject({ todayRecorded: false, deltaPercent: null, lagging: false })
+        expect(byId.m1.peerAverage).toBe(50)
+        expect(byId.m2.lagging).toBe(true)
+    })
+
     it('never flags a loom before today is entered', () => {
         const rows = buildBaseLoomOutputRows({
             machines: [machine('m1', 'Loom 1'), machine('m2', 'Loom 2')],
@@ -406,5 +449,27 @@ describe('buildBaseLoomOutputRows', () => {
         })
 
         expect(rows.every(row => !row.lagging && row.peerAverage === null)).toBe(true)
+    })
+})
+
+describe('countBaseLoomsNotEntered', () => {
+    const machines = [
+        { id: 'm1', is_active: true }, { id: 'm2', is_active: true }, { id: 'm3', is_active: true },
+        { id: 'm4', is_active: false }, { id: 'm5', is_active: true },
+    ]
+    const running = new Map([['m1', 'job-a'], ['m2', 'job-a'], ['m3', 'job-a'], ['m4', 'job-a']])
+    const today = (recorded: string[], saved = true) => ({
+        date: TODAY, totalMeters: 0, metersByJobId: new Map<string, number>(), metersByMachineId: new Map<string, number>(),
+        savedShifts: { day: saved, night: false }, hasSavedSheet: saved, recordedMachineIds: new Set(recorded),
+    })
+
+    it('counts running looms with no reading once a sheet is saved today', () => {
+        // Loom 2 ran zero, so it was entered; inactive Loom 4 and Loom 5 with no quality are not counted.
+        expect(countBaseLoomsNotEntered({ machines, runningJobIdByMachineId: running, today: today(['m1', 'm2']) })).toBe(1)
+        expect(countBaseLoomsNotEntered({ machines, runningJobIdByMachineId: running, today: today(['m1', 'm2', 'm3']) })).toBe(0)
+    })
+
+    it('leaves the count to the day line until a sheet is saved', () => {
+        expect(countBaseLoomsNotEntered({ machines, runningJobIdByMachineId: running, today: today([], false) })).toBe(0)
     })
 })

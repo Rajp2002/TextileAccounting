@@ -4,6 +4,7 @@ import { LITE_REFINEMENT_PHRASES } from './lite-refinement-phrases'
 import { LITE_SCREEN_PHRASES } from './lite-phrases'
 import { RATE_TREND_PHRASES } from './rate-trend-phrases'
 import { SHIFT_ROTATION_PHRASES } from './shift-rotation-phrases'
+import { DAILY_SHEET_OPERATOR_PHRASES } from './daily-sheet-operator-phrases'
 
 export type BasePlanLocalLanguage = 'hi' | 'gu'
 
@@ -21,6 +22,7 @@ export const BASE_PLAN_PHRASES: Record<BasePlanLocalLanguage, Record<string, str
     ...LITE_REFINEMENT_PHRASES.hi,
     ...RATE_TREND_PHRASES.hi,
     ...SHIFT_ROTATION_PHRASES.hi,
+    ...DAILY_SHEET_OPERATOR_PHRASES.hi,
     ...BULK_ADJUSTMENT_PHRASES.hi,
     "Rate change impact": "दर बदलने का असर",
     "Uses this quality’s saved costing assumptions. Only yarn rates change in this comparison.": "इस क्वालिटी की सेव की गई लागत धारणाओं का उपयोग होता है। इस तुलना में केवल यार्न की दरें बदलती हैं।",
@@ -674,6 +676,7 @@ export const BASE_PLAN_PHRASES: Record<BasePlanLocalLanguage, Record<string, str
     ...LITE_REFINEMENT_PHRASES.gu,
     ...RATE_TREND_PHRASES.gu,
     ...SHIFT_ROTATION_PHRASES.gu,
+    ...DAILY_SHEET_OPERATOR_PHRASES.gu,
     ...BULK_ADJUSTMENT_PHRASES.gu,
     "Rate change impact": "દર બદલવાની અસર",
     "Uses this quality’s saved costing assumptions. Only yarn rates change in this comparison.": "આ ક્વોલિટીની સાચવેલી ખર્ચ ધારણાઓ વપરાય છે. આ સરખામણીમાં માત્ર યાર્નના દર બદલાય છે.",

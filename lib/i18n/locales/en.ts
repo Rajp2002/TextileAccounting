@@ -590,6 +590,8 @@ export const en = {
     noActiveLooms: "No active looms yet",
     noIdleLooms: "None idle",
     idleLooms: "{count} idle",
+    notEnteredLooms: "{count} not entered",
+    loomNotEntered: "Not entered",
     workersOnLooms: "Workers on looms",
     workersOnLoomsNote: "Assigned to a loom today",
     activeQualities: "Active qualities",

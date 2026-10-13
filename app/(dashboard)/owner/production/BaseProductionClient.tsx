@@ -57,6 +57,7 @@ import {
     buildBaseLoomOutputRows,
     calculateBaseProductionDay,
     compareBaseProductionDays,
+    countBaseLoomsNotEntered,
     getBasePreviousDate,
     metersOutsideBaseJobs,
 } from '@/lib/base-production-analytics'
@@ -388,6 +389,11 @@ export default function BaseProductionClient({
         today: todayProduction,
         yesterday: yesterdayProduction,
     }), [initialData.machines, initialData.jobs, runningJobIdByMachineId, todayProduction, yesterdayProduction])
+    const notEnteredLooms = useMemo(() => countBaseLoomsNotEntered({
+        machines: initialData.machines,
+        runningJobIdByMachineId,
+        today: todayProduction,
+    }), [initialData.machines, runningJobIdByMachineId, todayProduction])
     const retiredQualityMeters = useMemo(
         () => metersOutsideBaseJobs(todayProduction, activeJobs.map((job) => job.id)),
         [todayProduction, activeJobs],
@@ -628,6 +634,7 @@ export default function BaseProductionClient({
                     otherQualityMeters={retiredQualityMeters}
                     runningLooms={runningMachinesCount}
                     activeLooms={activeMachines.length}
+                    notEnteredLooms={notEnteredLooms}
                     workersOnLooms={assignedWorkerIds.size}
                 />
             )}

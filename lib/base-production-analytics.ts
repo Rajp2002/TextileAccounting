@@ -17,6 +17,8 @@ export type BaseProductionDay = {
     metersByMachineId: Map<string, number>
     savedShifts: { day: boolean; night: boolean }
     hasSavedSheet: boolean
+    /** Looms with a reading on the date, zero included. A loom left pending on a saved sheet is not here. */
+    recordedMachineIds: ReadonlySet<string>
 }
 
 export type BaseProductionDayComparison = {
@@ -50,11 +52,12 @@ export function calculateBaseProductionDay({
     batches,
 }: {
     date: string
-    entries: Pick<BaseProductionEntry, 'id' | 'job_id' | 'meters' | 'production_date' | 'machine_id'>[]
+    entries: Pick<BaseProductionEntry, 'id' | 'job_id' | 'meters' | 'production_date' | 'machine_id' | 'entry_status'>[]
     allocations: Pick<BaseProductionAllocation, 'entry_id' | 'job_id' | 'machine_id' | 'meters'>[]
-    batches: Pick<BaseProductionBatch, 'production_date' | 'shift'>[]
+    batches: Pick<BaseProductionBatch, 'production_date' | 'shift' | 'machine_records'>[]
 }): BaseProductionDay {
     const entryIdsOnDate = new Set<string>()
+    const recorded = new Set<string>()
     const byJob = new Map<string, Decimal>()
     const byMachine = new Map<string, Decimal>()
     let total = new Decimal(0)
@@ -72,16 +75,23 @@ export function calculateBaseProductionDay({
         entryIdsOnDate.add(entry.id)
         const meters = positiveMeters(entry.meters)
         if (entry.job_id && meters) add(entry.job_id, entry.machine_id, meters)
+        // An older single-loom row records zero or absence on its own loom.
+        if (entry.machine_id && (meters || entry.entry_status === 'zero' || entry.entry_status === 'absent')) recorded.add(entry.machine_id)
     }
     for (const allocation of allocations) {
         if (!entryIdsOnDate.has(allocation.entry_id)) continue
         const meters = positiveMeters(allocation.meters)
         if (allocation.job_id && meters) add(allocation.job_id, allocation.machine_id, meters)
+        if (meters) recorded.add(allocation.machine_id)
     }
 
     const savedShifts = { day: false, night: false }
     for (const batch of batches) {
-        if (batch.production_date === date) savedShifts[batch.shift] = true
+        if (batch.production_date !== date) continue
+        savedShifts[batch.shift] = true
+        for (const record of batch.machine_records ?? []) {
+            if (record.state !== 'pending') recorded.add(record.machine_id)
+        }
     }
 
     return {
@@ -92,6 +102,7 @@ export function calculateBaseProductionDay({
         savedShifts,
         // Legacy entries have no batch, so recorded metres also prove the day was entered.
         hasSavedSheet: savedShifts.day || savedShifts.night || total.gt(0),
+        recordedMachineIds: recorded,
     }
 }
 
@@ -145,8 +156,10 @@ export type BaseLoomOutputRow = {
     label: string
     qualityLabel: string | null
     todayMeters: number
+    /** False when today has no reading for this loom yet, so its 0 m is unknown rather than zero. */
+    todayRecorded: boolean
     yesterdayMeters: number
-    /** Change against this loom's own yesterday. Null without a saved sheet today or output yesterday. */
+    /** Change against this loom's own yesterday. Null without a reading today or output yesterday. */
     deltaPercent: number | null
     /** Average of today's metres across looms on the same quality, when there are at least two. */
     peerAverage: number | null
@@ -181,13 +194,15 @@ export function buildBaseLoomOutputRows({
             label: machine.custom_label || machine.name,
             jobId: runningJobIdByMachineId.get(machine.id) ?? null,
             todayMeters: today.metersByMachineId.get(machine.id) ?? 0,
+            todayRecorded: today.recordedMachineIds.has(machine.id),
             yesterdayMeters: yesterday.metersByMachineId.get(machine.id) ?? 0,
         }))
         .filter((loom) => loom.jobId || loom.todayMeters > 0 || loom.yesterdayMeters > 0)
 
+    // A loom with no reading yet has no output to compare, so it stays out of its quality's average.
     const peers = new Map<string, Decimal[]>()
     for (const loom of looms) {
-        if (!loom.jobId) continue
+        if (!loom.jobId || !loom.todayRecorded) continue
         peers.set(loom.jobId, [...(peers.get(loom.jobId) ?? []), new Decimal(loom.todayMeters)])
     }
 
@@ -202,16 +217,36 @@ export function buildBaseLoomOutputRows({
             label: loom.label,
             qualityLabel: loom.jobId ? jobLabelById.get(loom.jobId) ?? null : null,
             todayMeters: loom.todayMeters,
+            todayRecorded: loom.todayRecorded,
             yesterdayMeters: loom.yesterdayMeters,
-            deltaPercent: today.hasSavedSheet && loom.yesterdayMeters > 0
+            deltaPercent: loom.todayRecorded && loom.yesterdayMeters > 0
                 ? Number(new Decimal(loom.todayMeters).minus(loom.yesterdayMeters).div(loom.yesterdayMeters).times(100).toFixed(1))
                 : null,
             peerAverage,
-            lagging: peerAverage !== null && loom.todayMeters < peerAverage * BASE_LOOM_LAGGING_SHARE,
+            lagging: loom.todayRecorded && peerAverage !== null && loom.todayMeters < peerAverage * BASE_LOOM_LAGGING_SHARE,
         }
     })
 
     const rankBy = today.hasSavedSheet ? 'todayMeters' : 'yesterdayMeters'
     return rows.sort((a, b) => b[rankBy] - a[rankBy]
         || compareMachineLabels({ machineLabel: a.label, machineId: a.machineId }, { machineLabel: b.label, machineId: b.machineId }))
+}
+
+/**
+ * Running looms (active, with a quality) that have no reading today once a sheet is saved,
+ * so the overview does not call them idle-free. Before any sheet is saved the day line says so.
+ */
+export function countBaseLoomsNotEntered({
+    machines,
+    runningJobIdByMachineId,
+    today,
+}: {
+    machines: Pick<BaseProductionMachine, 'id' | 'is_active'>[]
+    runningJobIdByMachineId: ReadonlyMap<string, string>
+    today: BaseProductionDay
+}) {
+    if (!today.hasSavedSheet) return 0
+    return machines.filter((machine) => machine.is_active
+        && runningJobIdByMachineId.has(machine.id)
+        && !today.recordedMachineIds.has(machine.id)).length
 }

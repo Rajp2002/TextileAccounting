@@ -59,6 +59,7 @@ export default function BaseProductionTodayBand({
     otherQualityMeters,
     runningLooms,
     activeLooms,
+    notEnteredLooms = 0,
     workersOnLooms,
 }: {
     today: BaseProductionDay
@@ -67,11 +68,17 @@ export default function BaseProductionTodayBand({
     otherQualityMeters: number
     runningLooms: number
     activeLooms: number
+    /** Running looms with no reading today although a sheet is saved, so they are not reported as working. */
+    notEnteredLooms?: number
     workersOnLooms: number
 }) {
     const { t, language } = useTranslation()
     const entered = today.hasSavedSheet
     const idleLooms = Math.max(0, activeLooms - runningLooms)
+    const loomGaps = [
+        notEnteredLooms > 0 ? t('production.notEnteredLooms', { count: notEnteredLooms }) : null,
+        idleLooms > 0 ? t('production.idleLooms', { count: idleLooms }) : null,
+    ].filter(Boolean)
     const runningShare = activeLooms > 0 ? Math.round((runningLooms / activeLooms) * 100) : 0
 
     return (
@@ -148,9 +155,9 @@ export default function BaseProductionTodayBand({
                 </div>
                 {activeLooms === 0
                     ? t('production.noActiveLooms')
-                    : idleLooms === 0
+                    : loomGaps.length === 0
                         ? t('production.noIdleLooms')
-                        : t('production.idleLooms', { count: idleLooms })}
+                        : loomGaps.join(' · ')}
             </Fact>
 
             <Fact label={t('production.workersOnLooms')} value={workersOnLooms} className="lg:border-l lg:border-hairline">

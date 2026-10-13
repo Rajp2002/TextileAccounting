@@ -51,6 +51,8 @@ export default function BaseProductionLoomChart({
     const columns = rows.length > 1 ? [rows.slice(0, half), rows.slice(half)] : [rows]
 
     function renderRow(row: BaseLoomOutputRow) {
+        // A loom with no reading is unknown, not zero: "0 m" is only shown for a recorded zero.
+        const todayText = row.todayRecorded ? formatBaseMeters(row.todayMeters) : t('production.loomNotEntered')
         return (
             <li
                 key={row.machineId}
@@ -70,7 +72,9 @@ export default function BaseProductionLoomChart({
                 </div>
 
                 <div className="text-right sm:col-start-3 sm:row-start-1" data-i18n-skip="true">
-                    {entered ? (
+                    {entered && !row.todayRecorded ? (
+                        <p className="text-sm font-medium text-muted-foreground">{t('production.loomNotEntered')}</p>
+                    ) : entered ? (
                         <>
                             <p className="text-sm font-semibold tabular-nums text-ink">{formatBaseMeters(row.todayMeters)}</p>
                             {row.deltaPercent !== null && (
@@ -93,14 +97,14 @@ export default function BaseProductionLoomChart({
                     className="relative col-span-2 sm:col-span-1 sm:col-start-2 sm:row-start-1"
                     style={{ height: FRAME_HEIGHT }}
                     aria-hidden="true"
-                    title={`${row.label}: ${formatBaseMeters(row.todayMeters)} / ${formatBaseMeters(row.yesterdayMeters)}`}
+                    title={`${row.label}: ${todayText} / ${formatBaseMeters(row.yesterdayMeters)}`}
                 >
                     <div
                         data-bar="yesterday"
                         className={cn('absolute left-0 top-0 rounded-full', YESTERDAY_FRAME_CLASS)}
                         style={{ width: `${share(row.yesterdayMeters, max)}%`, height: FRAME_HEIGHT }}
                     />
-                    {entered && (
+                    {entered && row.todayRecorded && (
                         <div
                             data-bar="today"
                             className={cn('ui-meter-fill absolute left-0 rounded-full', row.lagging ? 'bg-[var(--wv-ochre-400)]' : 'bg-ink')}
@@ -131,7 +135,7 @@ export default function BaseProductionLoomChart({
                 </div>
 
                 <span className="sr-only">
-                    {`${row.label}: ${t('production.today')} ${formatBaseMeters(row.todayMeters)}, ${t('production.yesterday')} ${formatBaseMeters(row.yesterdayMeters)}`}
+                    {`${row.label}: ${t('production.today')} ${todayText}, ${t('production.yesterday')} ${formatBaseMeters(row.yesterdayMeters)}`}
                 </span>
             </li>
         )

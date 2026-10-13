@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+    blockedSupervisorRows,
     buildSupervisorSavePayload,
     buildSupervisorSheet,
     contextKey,
@@ -128,6 +129,30 @@ describe('buildSupervisorSavePayload', () => {
         const [first] = buildSupervisorSavePayload(sheet, sheet.baseline)
         expect(first).toMatchObject({ entry_status: 'blank', meters: null })
         expect(first.machine_records.map(record => record.state)).toEqual(['pending', 'pending'])
+    })
+})
+
+describe('a loom still assigned to someone who has left', () => {
+    // Bhavin's last working day has passed, but Loom 2 is still assigned to him.
+    const sheet = buildSupervisorSheet(parseSupervisorSheet(raw({
+        workers: [worker(ids.w1, 'Asha'), worker(ids.w2, 'Bhavin', { end_date: '2026-10-05' })],
+    })), '2026-10-07', 'day')
+    const asha = { ...sheet.baseline[ids.w1], status: 'entered' as const, machineMeters: { [contextKey({ machineId: ids.m1, jobId: ids.j1 })]: '40' } }
+
+    it('still shows the loom with his name, so the supervisor sees why it is open', () => {
+        expect(sheet.rows.find(row => row.machineId === ids.m2)).toMatchObject({ workerName: 'Bhavin', unavailable: true })
+        expect(sheet.rows.find(row => row.machineId === ids.m1)?.unavailable).toBe(false)
+    })
+
+    it('leaves his blank row out of the save, so the rest of the shift saves', () => {
+        const payload = buildSupervisorSavePayload(sheet, { ...sheet.baseline, [ids.w1]: asha })
+        expect(payload.map(entry => entry.worker_id)).toEqual([ids.w1])
+        expect(blockedSupervisorRows(sheet, { ...sheet.baseline, [ids.w1]: asha })).toEqual([])
+    })
+
+    it('names his loom when it has a reading, instead of sending it', () => {
+        const rows = { ...sheet.baseline, [ids.w1]: asha, [ids.w2]: { ...sheet.baseline[ids.w2], status: 'entered' as const, machineMeters: { [contextKey({ machineId: ids.m2, jobId: ids.j2 })]: '12' } } }
+        expect(blockedSupervisorRows(sheet, rows)).toEqual([{ workerName: 'Bhavin', machineLabels: ['Loom 2'] }])
     })
 })
 
