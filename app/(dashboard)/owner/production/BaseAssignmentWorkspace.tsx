@@ -29,6 +29,7 @@ import { Input } from '@/components/ui/input'
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
 import { groupMachinesByWorker } from '@/lib/machine-assignment-groups'
+import { compareMachineLabels } from '@/lib/base-machine-register'
 import {
     applyPendingAssignmentChanges,
     isAssignmentChangeReflected,
@@ -572,11 +573,15 @@ export default function BaseAssignmentWorkspace({
             .filter((machine) => showInactive || machine.is_active)
             .map((machine) => machine.machine_type),
     )).sort((left, right) => formatMachineType(left).localeCompare(formatMachineType(right))), [initialData.machines, showInactive])
+    // Numbered labels 1..N, then A-Z. Sorting here orders both the per-worker groups and the unassigned tail.
     const visibleMachines = useMemo(() => initialData.machines.filter((machine) => {
         if (!tourStep && focusMachineId && machine.id !== focusMachineId) return false
         if (!showInactive && !machine.is_active) return false
         return selectedMachineTypes.length === 0 || selectedMachineTypes.includes(machine.machine_type)
-    }), [initialData.machines, selectedMachineTypes, showInactive, focusMachineId, tourStep])
+    }).sort((left, right) => compareMachineLabels(
+        { machineLabel: machineLabel(left), machineId: left.id },
+        { machineLabel: machineLabel(right), machineId: right.id },
+    )), [initialData.machines, selectedMachineTypes, showInactive, focusMachineId, tourStep])
     // Machines are laid out per worker so each worker's machines sit together, beside that worker's card.
     const machineGroups = useMemo(
         () => groupMachinesByWorker(visibleWorkers, visibleMachines, new Map(placedAssignments.map((assignment) => [assignment.machine_id, assignment.worker_id]))),
