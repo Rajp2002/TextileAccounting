@@ -126,7 +126,6 @@ export const en = {
     },
     savedCostings: {
   "viewBreakdown": "View breakdown",
-  "use": "Use",
   "archived": "Archived",
   "internalEstimate": "Internal Cost Estimate",
   "customerQuotation": "Customer Quotation",

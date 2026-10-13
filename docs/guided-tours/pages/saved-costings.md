@@ -40,7 +40,7 @@ After the tour the owner can: (1) explain that a saved costing is a fixed record
 | Library = fixed snapshots; later rates do not rewrite them | `sc-library` |
 | Quality card → versions → pick a version | `sc-versions` |
 | Read cost, price, profit per metre | `sc-economics` (worked example) |
-| Use vs Duplicate (and the draft-replace question) | `sc-reuse` (+ More detail) |
+| Duplicate and the draft-replace question | `sc-reuse` (+ More detail) |
 | Internal vs customer document; sharing after PDF | `sc-export` (+ More detail) |
 | Base: Activate for Production | `sc-production` (Base only) |
 | Compare two versions | Optional walkthrough "Compare versions" |
@@ -113,9 +113,9 @@ Step id → copy key: paid `find` → `find`, `versions`, `economics`, `reuse`, 
 | `economics.title` | Read cost, price and profit | ખર્ચ, ભાવ અને નફો વાંચો | लागत, भाव और मुनाफ़ा पढ़ें |
 | `economics.body` | In sample v2, production cost is ₹{cost}/m and the selling price is ₹{price}/m, so you keep ₹{profit} on every metre. | નમૂના v2માં ઉત્પાદન ખર્ચ ₹{cost}/મીટર અને વેચાણ ભાવ ₹{price}/મીટર છે, એટલે દરેક મીટરે ₹{profit} નફો રહે છે. | नमूना v2 में उत्पादन लागत ₹{cost}/मीटर और बिक्री भाव ₹{price}/मीटर है, यानी हर मीटर पर ₹{profit} मुनाफ़ा बचता है। |
 | `economics.detail` | These numbers come from the inputs saved with v2, not from today's rates. Open the breakdown above them to see yarn, weaving and overhead separately. | આ આંકડા v2 સાથે સાચવેલા ઇનપુટમાંથી આવે છે, આજના ભાવમાંથી નહીં. યાર્ન, વીવિંગ અને ઓવરહેડ અલગ જોવા ઉપરની વિગત ખોલો. | ये आँकड़े v2 के साथ सेव इनपुट से आते हैं, आज के रेट से नहीं। धागा, बुनाई और ओवरहेड अलग देखने के लिए ऊपर का विवरण खोलें। |
-| `reuse.title` | Reuse a version or start a new quality | વર્ઝન ફરી વાપરો કે નવી ક્વોલિટી શરૂ કરો | वर्ज़न दोबारा इस्तेमाल करें या नई क्वालिटी शुरू करें |
-| `reuse.body` | {c:use} opens this version in the Cost Estimator so you can change it and save a new version. {c:duplicate} starts a separate quality from it. | {c:use} આ વર્ઝનને ખર્ચ અંદાજકમાં ખોલે છે, જેથી ફેરફાર કરી નવું વર્ઝન સાચવી શકો. {c:duplicate} તેમાંથી અલગ ક્વોલિટી શરૂ કરે છે. | {c:use} इस वर्ज़न को लागत अनुमानक में खोलता है, ताकि आप बदलाव करके नया वर्ज़न सेव कर सकें। {c:duplicate} इससे अलग क्वालिटी शुरू करता है। |
-| `reuse.detail` | If the estimator already has unsaved work, Weavly asks before replacing it. Neither button changes this saved version. | અંદાજકમાં સાચવ્યા વગરનું કામ હોય તો બદલતાં પહેલાં Weavly પૂછે છે. કોઈ બટન આ સાચવેલું વર્ઝન બદલતું નથી. | अनुमानक में बिना सेव किया काम हो तो बदलने से पहले Weavly पूछता है। कोई भी बटन इस सेव वर्ज़न को नहीं बदलता। |
+| `reuse.title` | Start a separate quality from a version | વર્ઝન પરથી અલગ ક્વોલિટી શરૂ કરો | वर्ज़न से अलग क्वालिटी शुरू करें |
+| `reuse.body` | {c:duplicate} starts a separate quality from this version. To change this quality again, open it from My Qualities in the Cost Estimator. | {c:duplicate} આ વર્ઝન પરથી અલગ ક્વોલિટી શરૂ કરે છે. આ ક્વોલિટી ફરી બદલવા માટે ખર્ચ અંદાજકમાં My Qualities માંથી ખોલો. | {c:duplicate} इस वर्ज़न से अलग क्वालिटी शुरू करता है। इस क्वालिटी को फिर बदलने के लिए लागत अनुमानक में My Qualities से खोलें। |
+| `reuse.detail` | If the estimator already has unsaved work, Weavly asks before replacing it. This saved version does not change. | અંદાજકમાં સાચવ્યા વગરનું કામ હોય તો બદલતાં પહેલાં Weavly પૂછે છે. આ સાચવેલું વર્ઝન બદલાતું નથી. | अनुमानक में बिना सेव किया काम हो तो बदलने से पहले Weavly पूछता है। यह सेव वर्ज़न नहीं बदलता। |
 | `internal.title` | Choose who will see the document | દસ્તાવેજ કોણ જોશે તે પસંદ કરો | दस्तावेज़ कौन देखेगा, यह चुनें |
 | `internal.body` | {c:internalEstimate} shows your costs and margin. {c:customerQuotation} shows only the price and your terms. | {c:internalEstimate}માં તમારો ખર્ચ અને માર્જિન દેખાય છે. {c:customerQuotation}માં ફક્ત ભાવ અને તમારી શરતો દેખાય છે. | {c:internalEstimate} में आपकी लागत और मार्जिन दिखता है। {c:customerQuotation} में सिर्फ़ भाव और आपकी शर्तें दिखती हैं। |
 | `internal.detail` | Previewing sends nothing. After you create a customer PDF you can share it from your phone. | પ્રીવ્યૂ કરવાથી કંઈ મોકલાતું નથી. ગ્રાહક PDF બનાવ્યા પછી તમે તેને ફોનમાંથી મોકલી શકો છો. | प्रीव्यू करने से कुछ नहीं भेजा जाता। ग्राहक PDF बनाने के बाद आप उसे फ़ोन से भेज सकते हैं। |
@@ -157,7 +157,6 @@ Resolver = the exact call the live control renders with (LR-02). "Add phrase" = 
 | --- | --- | --- | --- | --- | --- |
 | `viewBreakdown` | `QuotesClient.tsx:746` `tx('View breakdown')` | `tx('View breakdown')` | વિગત જુઓ | विवरण देखें | Add phrase (today: word-order fallback) |
 | `archived` | toolbar toggle `tx('Archived')` | `tx('Archived')` | આર્કાઇવ કરેલી | आर्काइव की गई | none |
-| `use` | reuse group `tx('Use')` | `tx('Use')` | વાપરો | इस्तेमाल करें | Add phrase (Hindi today "उपयोग करें"; keep if native review prefers) |
 | `duplicate` | reuse group `tx('Duplicate')` | `tx('Duplicate')` | નકલ બનાવો | कॉपी बनाएं | none |
 | `internalEstimate` | `CostingExportDialog.tsx:421` literal | wrap in `tx()`; resolver `tx('Internal Cost Estimate')` | આંતરિક ખર્ચ અંદાજ | आंतरिक लागत अनुमान | Wrap + add phrase |
 | `customerQuotation` | `CostingExportDialog.tsx:431` literal | `tx('Customer Quotation')` | ગ્રાહક ક્વોટેશન | ग्राहक कोटेशन | Wrap + add phrase |

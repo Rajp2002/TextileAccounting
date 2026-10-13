@@ -622,7 +622,7 @@ function SavedQualityLibraryView({
                             >
                                 {copy.breakdown}
                             </Button>
-                            {latest && canReuseLatest && (costNotSaved ? (
+                            {latest && canReuseLatest && costNotSaved && (
                                 <Button
                                     type="button"
                                     onClick={() => onOpen(latest)}
@@ -632,11 +632,7 @@ function SavedQualityLibraryView({
                                 >
                                     <RefreshCw className="h-4 w-4" aria-hidden="true" /> {copy.recalculate}
                                 </Button>
-                            ) : (
-                                <Button type="button" variant="outline" onClick={() => onOpen(latest)} disabled={updatingId === latest.id} className={secondaryAction}>
-                                    <ArrowRight className="h-4 w-4" aria-hidden="true" /> {t('tourControls.savedCostings.use')}
-                                </Button>
-                            ))}
+                            )}
                             {latest && canReuseLatest && !costNotSaved && !tourStep && !isSampleRecordId(group.key) && getCostingStatus(latest) === 'verified' && (
                                 <Button asChild variant="ghost" className={ghostAction}>
                                     <Link href={`/owner/quotes/offer?costing=${latest.id}`} aria-label={fillCopy(offerCopy.cardActionLabel, { name: group.name })}>
@@ -715,7 +711,6 @@ function SavedQualityLibraryView({
                                                     : 'The saved commercial totals remain available in Saved Costing history. Open this version in Cost Estimate to review its saved assumptions.')}</p>
                                             {targetRecord && !activeDetailLoading && (
                                                 <div className="mt-4 flex flex-wrap justify-center gap-2">
-                                                    {!targetRecord.is_archived && !latest.is_archived && group.template?.is_active !== false && <Button size="sm" onClick={() => onOpen(targetRecord)} className="rounded-lg bg-loom font-medium text-white hover:bg-loom-elevated hover:text-white"><ArrowRight className="h-3.5 w-3.5" /> {t('tourControls.savedCostings.use')}</Button>}
                                                     <Button variant="outline" size="sm" onClick={() => onStartFrom(targetRecord)}><Copy className="h-3.5 w-3.5" /> {tx('Duplicate')}</Button>
                                                     <Button variant="outline" size="sm" onClick={() => onExport(targetRecord)}><Download className="h-3.5 w-3.5" /> {tx('Export')}</Button>
                                                     <Button variant="outline" size="sm" onClick={() => onSaveAsNewQuality(targetRecord)}><BookmarkPlus className="h-3.5 w-3.5" /> {tx('Save as separate quality')}</Button>
@@ -755,7 +750,6 @@ function SavedQualityLibraryView({
                                                         <p className="mt-0.5 text-[13px] text-muted-foreground">{`Version ${Number(activeRecord.version_number ?? 1)} · ${formatTimestampDate(activeRecord.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}`}</p>
                                                     </div>
                                                     <div data-costing-tour="reuse" className="flex flex-wrap gap-2">
-                                                        {!activeRecord.is_archived && group.template?.is_active !== false && <Button size="sm" onClick={() => onOpen(activeRecord)} disabled={paused || updatingId === activeRecord.id} title={pausedTitle} aria-busy={updatingId === activeRecord.id} className="rounded-lg bg-loom font-medium text-white hover:bg-loom-elevated hover:text-white"><ArrowRight className="h-3.5 w-3.5" /> {t('tourControls.savedCostings.use')}</Button>}
                                                         <Button variant="outline" size="sm" onClick={() => onStartFrom(activeRecord)} disabled={paused} title={pausedTitle}><Copy className="h-3.5 w-3.5" /> {tx('Duplicate')}</Button>
                                                         <Button variant="outline" size="sm" onClick={() => onExport(activeRecord)} disabled={paused} title={pausedTitle}><Download className="h-3.5 w-3.5" /> {tx('Export')}</Button>
                                                         <Button variant="outline" size="sm" onClick={() => onSaveAsNewQuality(activeRecord)} disabled={paused} title={pausedTitle}><BookmarkPlus className="h-3.5 w-3.5" /> {tx('Save as separate quality')}</Button>

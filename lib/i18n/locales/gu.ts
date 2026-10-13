@@ -126,7 +126,6 @@ export const gu = {
     },
     savedCostings: {
   "viewBreakdown": "વિગત જુઓ",
-  "use": "વાપરો",
   "archived": "આર્કાઇવ કરેલી",
   "internalEstimate": "આંતરિક ખર્ચ અંદાજ",
   "customerQuotation": "ગ્રાહક ક્વોટેશન",

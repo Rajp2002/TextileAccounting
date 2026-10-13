@@ -126,7 +126,6 @@ export const hi = {
     },
     savedCostings: {
   "viewBreakdown": "विवरण देखें",
-  "use": "इस्तेमाल करें",
   "archived": "आर्काइव की गई",
   "internalEstimate": "आंतरिक लागत अनुमान",
   "customerQuotation": "ग्राहक कोटेशन",

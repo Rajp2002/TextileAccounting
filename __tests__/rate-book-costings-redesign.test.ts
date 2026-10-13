@@ -84,7 +84,7 @@ describe('Saved Costings catalogue', () => {
         expect(client).toContain('if (window.getSelection()?.toString()) return')
         expect(card).toContain('aria-haspopup="dialog"')
         expect(card).toContain('{copy.breakdown}')
-        expect(card).toContain("{t('tourControls.savedCostings.use')}")
+        expect(card).not.toContain("tourControls.savedCostings.use")
         expect(card).toContain("{tx('Export')}")
         expect(card).toContain('aria-pressed={Boolean(latest.is_favorite)}')
     })

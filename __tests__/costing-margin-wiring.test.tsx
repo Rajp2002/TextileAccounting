@@ -150,9 +150,9 @@ describe('margin slider wiring (source contract)', () => {
         expect(quotes).toContain('const marginBase = isOpen && activeRecord && !marginReadOnly ? buildDraftStateFromQuote(activeRecord) : null')
     })
 
-    it('holds Use, Duplicate, Export, Save as separate quality and the production link while the margin is unsaved', () => {
+    it('holds Duplicate, Export, Save as separate quality and the production link while the margin is unsaved', () => {
         const scope = quotes.slice(quotes.indexOf('<CostingMarginScope'), quotes.indexOf('</CostingMarginScope>'))
-        expect(scope).toMatch(/onClick=\{\(\) => onOpen\(activeRecord\)\} disabled=\{paused \|\| updatingId === activeRecord\.id\}/)
+        expect(scope).not.toContain('onOpen(activeRecord)')
         expect(scope).toMatch(/onClick=\{\(\) => onStartFrom\(activeRecord\)\} disabled=\{paused\}/)
         expect(scope).toMatch(/onClick=\{\(\) => onExport\(activeRecord\)\} disabled=\{paused\}/)
         expect(scope).toMatch(/onClick=\{\(\) => onSaveAsNewQuality\(activeRecord\)\} disabled=\{paused\}/)

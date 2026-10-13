@@ -84,12 +84,11 @@ describe('Saved Costings reference tour', () => {
       if (language === 'en' && key.endsWith('.body')) expect(resolved.length).toBeLessThanOrEqual(190)
     }
     const local = locales[language]
-    expect(local.tourControls.savedCostings.use).toBe(nativeControls.use)
     expect(local.tourControls.savedCostings.archived).toBe(nativeControls.archived)
     expect(Object.keys(local.tourControls.savedCostings)).toEqual(Object.keys(en.tourControls.savedCostings))
   })
   it('uses the same resolver as each live control, including the two approved scoped keys', () => {
-    expect(page).toContain("t('tourControls.savedCostings.use')")
+    expect(page).not.toContain("tourControls.savedCostings.use")
     expect(page).toContain("t('tourControls.savedCostings.archived')")
     for (const key of ['viewBreakdown', 'internalEstimate', 'customerQuotation', 'activateForProduction', 'export'] as const) {
       const label = en.tourControls.savedCostings[key]

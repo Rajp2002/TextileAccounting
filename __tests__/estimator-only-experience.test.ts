@@ -73,9 +73,8 @@ describe('Estimator-only product presentation', () => {
         expect(quotes).toContain("title={t('common.saved_costings_title')}")
         expect(quotes).toContain("t('common.search_quality_costing')")
         expect(quotes).toContain('Compare Saved Costings')
-        // Phase 3H: the library's Use action reopens a costing for a new version
-        // (the older card list with "Open and save new version" never rendered).
-        expect(quotes).toContain("onClick={() => onOpen(targetRecord)}")
+        // Reopening a saved costing lives in My Qualities; the library offers Duplicate only.
+        expect(quotes).not.toContain("tourControls.savedCostings.use")
         expect(quotes).toContain("tx('Duplicate')")
         expect(quotes).toContain('Costing loaded as a starting point')
         expect(estimator).toContain('saveEstimatorQuoteV3(saveRequest)')
