@@ -104,7 +104,59 @@ describe('rotate_base_worker_shifts', () => {
         expect(await snapshot(f)).toEqual(before)
     })
 
-    it('treats a worker who works both shifts as a blocker', async () => {
+    it('moves each loom of a Day & night worker to the other shift and keeps their setting', async () => {
+        const f = await fixture()
+        await assign(f, f.both, f.machines[0], 'day')
+        await assign(f, f.both, f.machines[1], 'night')
+
+        const result = await rotate(f, [f.both])
+        expect(result).toMatchObject({ success: true, workers_moved: 1, looms_moved: 2 })
+
+        const after = await snapshot(f)
+        expect(after.shifts[f.both]).toBe('both')
+        expect(after.open).toEqual(expect.arrayContaining([
+            { worker_id: f.both, machine_id: f.machines[0], shift: 'night' },
+            { worker_id: f.both, machine_id: f.machines[1], shift: 'day' },
+        ]))
+        expect(after.open).toHaveLength(2)
+    })
+
+    it('lets a Day & night worker who runs both shifts of one loom swap with themselves', async () => {
+        const f = await fixture()
+        await assign(f, f.both, f.machines[0], 'day')
+        await assign(f, f.both, f.machines[0], 'night')
+
+        const result = await rotate(f, [f.both])
+        expect(result).toMatchObject({ success: true, workers_moved: 1, looms_moved: 2 })
+        expect((await snapshot(f)).open).toEqual([
+            { worker_id: f.both, machine_id: f.machines[0], shift: 'day' },
+            { worker_id: f.both, machine_id: f.machines[0], shift: 'night' },
+        ])
+    })
+
+    it('reports a clash for a Day & night worker until the loom\'s other worker switches too', async () => {
+        const f = await fixture()
+        await assign(f, f.both, f.machines[0], 'day')
+        await assign(f, f.night, f.machines[0], 'night')
+        const before = await snapshot(f)
+
+        const clash = await rotate(f, [f.both])
+        expect(clash.conflict).toBe(true)
+        expect(clash.clashes).toEqual([expect.objectContaining({ worker_name: 'Mahesh', shift: 'night', held_by_worker_name: 'Suresh' })])
+        expect(await snapshot(f)).toEqual(before)
+
+        const result = await rotate(f, [f.both, f.night])
+        expect(result).toMatchObject({ success: true, workers_moved: 2, looms_moved: 2 })
+        const after = await snapshot(f)
+        expect(after.shifts[f.both]).toBe('both')
+        expect(after.shifts[f.night]).toBe('day')
+        expect(after.open).toEqual(expect.arrayContaining([
+            { worker_id: f.both, machine_id: f.machines[0], shift: 'night' },
+            { worker_id: f.night, machine_id: f.machines[0], shift: 'day' },
+        ]))
+    })
+
+    it('treats an unselected Day & night worker as a blocker', async () => {
         const f = await fixture()
         await assign(f, f.day, f.machines[1], 'day')
         await assign(f, f.both, f.machines[1], 'night')
@@ -119,6 +171,7 @@ describe('rotate_base_worker_shifts', () => {
         await assign(f, f.day, f.machines[0], 'day')
         const before = await snapshot(f)
 
+        // f.both runs no loom here, so there is nothing of theirs to switch.
         for (const blocked of [f.both, f.fixed, randomUUID()]) {
             await asUser(db, f.owner.userId, f.owner.orgId)
             const error = await pgError(db.query('SELECT public.rotate_base_worker_shifts($1::uuid[], $2::date)', [[f.day, blocked], today]))
