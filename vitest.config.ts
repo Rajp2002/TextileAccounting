@@ -8,6 +8,10 @@ export default defineConfig({
         // Keep full prebuild checks within a predictable resource budget.
         // Unbounded workers can starve timed interaction tests on large hosts.
         maxWorkers: 4,
+        // Vercel's build host can be slow enough under four busy workers that a
+        // millisecond-scale test passes the 5-second default (date-only-format,
+        // 2026-10-13). A real hang still fails; per-test timeouts still apply.
+        testTimeout: 15_000,
         exclude: [...configDefaults.exclude, '__tests__/browser-admin/**', '__tests__/browser-support-fixture/**', '__tests__/browser-founder-auth-fixture/**'],
         // `npm run build` runs `prebuild` (npm test) with NODE_ENV=production on Vercel. React ships no `act` in its
         // production build, so tests that mount roots through `act` fail there while passing locally. Pin the test
