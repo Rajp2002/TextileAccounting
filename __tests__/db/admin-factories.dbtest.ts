@@ -193,8 +193,10 @@ describe('AD03/04 real DB guarded read models and synthetic scale', () => {
         await asSuperuser(db)
         const trialId = randomUUID(), paidId = randomUUID()
         // Added to the owner org (which already holds a Free grant), so the org counts above are unchanged.
-        await db.query("INSERT INTO public.org_subscriptions(id,org_id,plan_tier,status,current_start,current_end,is_trial) VALUES($1,$2,'lite','active',now(),now()+interval '30 days',true)", [trialId, owner.orgId])
-        await db.query("INSERT INTO public.org_subscriptions(id,org_id,plan_tier,status,current_start,current_end) VALUES($1,$2,'lite','active',now()-interval '1 day',now()+interval '30 days')", [paidId, owner.orgId])
+        // created_at is set in the past: read() stamps as_of in JS milliseconds, so a row created by now()
+        // in the same millisecond would fall after as_of and be left out of the snapshot.
+        await db.query("INSERT INTO public.org_subscriptions(id,org_id,plan_tier,status,current_start,current_end,is_trial,created_at) VALUES($1,$2,'lite','active',now(),now()+interval '30 days',true,now()-interval '1 minute')", [trialId, owner.orgId])
+        await db.query("INSERT INTO public.org_subscriptions(id,org_id,plan_tier,status,current_start,current_end,created_at) VALUES($1,$2,'lite','active',now()-interval '1 day',now()+interval '30 days',now()-interval '1 minute')", [paidId, owner.orgId])
         await asServiceRole(db)
         const [factory] = (await read(owner.orgId)).rows
         expect(factory.has_free_grant).toBe(true)
