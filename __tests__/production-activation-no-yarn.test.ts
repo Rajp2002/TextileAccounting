@@ -21,6 +21,11 @@ describe('quality activation without yarn stock', () => {
         expect(actions).not.toContain('result.blocked')
     })
 
+    it('never reports success when the database says the activation did not happen', () => {
+        // Until the 20261014120000 migration is applied, the old RPC can still answer { success: false, blocked: true }.
+        expect(actions).toContain("if ((data as { success?: boolean } | null)?.success === false) return { error: 'Saved quality could not be activated for production. Please try again.' }")
+    })
+
     it('the production tour does not ask for yarn stock in any language', () => {
         const yarn = { en: /yarn/i, hi: /धाग/, gu: /યાર્ન/ } as const
         for (const language of ['en', 'hi', 'gu'] as const) {

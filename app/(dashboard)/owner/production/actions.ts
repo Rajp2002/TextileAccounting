@@ -640,6 +640,7 @@ export async function activateSavedCostingForProduction(input: { costingId: stri
     })
 
     if (error) return databaseError(error, 'Saved quality could not be activated for production. Please try again.')
+    if ((data as { success?: boolean } | null)?.success === false) return { error: 'Saved quality could not be activated for production. Please try again.' }
 
     revalidatePath('/owner/production')
     revalidatePath('/owner/quotes')
