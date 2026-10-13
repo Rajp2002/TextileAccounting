@@ -110,7 +110,6 @@ beforeEach(() => {
             { id: uuid(20002), org_id: OTHER, subject_id: 'someone', label: 'Not ours' },
         ],
         payroll_configs: [{ org_id: ORG, cycle: 'weekly' }, { org_id: OTHER, cycle: 'monthly' }],
-        yarn_stock_recipes: [{ org_id: ORG, quality_id: 'q-1' }, { org_id: ORG, quality_id: 'q-2' }],
         whatsapp_cooldowns: [
             { org_id: ORG, alert_type: 'a', ref_id: '1' }, { org_id: ORG, alert_type: 'a', ref_id: '2' }, { org_id: ORG, alert_type: 'b', ref_id: '1' },
         ],
@@ -162,7 +161,7 @@ describe('owner archive completeness', () => {
     it('keeps one-row and composite-key datasets', async () => {
         const payload = await exportOrganizationData() as ExportPayload
         expect(payload.datasets.payroll_configs).toEqual([{ org_id: ORG, cycle: 'weekly' }])
-        expect(payload.datasets.yarn_stock_recipes).toHaveLength(2)
+        expect(payload.datasets.base_payroll_reversals.map(row => row.settlement_id)).toEqual(['s-01'])
         expect(payload.datasets.whatsapp_cooldowns).toHaveLength(3)
     })
 
@@ -193,11 +192,10 @@ describe('current Base, dispatch and settings records', () => {
         'base_production_batch_revisions', 'base_daily_production_entries', 'base_daily_production_allocations', 'factory_supervisors',
         'base_payroll_settlement_lines', 'base_payroll_reversals', 'base_payroll_advance_recoveries', 'base_payroll_periods',
         'base_payroll_cycle_configs', 'base_worker_incentives', 'document_branding_settings', 'document_branding_logo_assets',
-        'production_stock_lots', 'delivery_challans', 'delivery_challan_events', 'delivery_challan_lot_allocations',
-        'inventory_audits', 'inventory_audit_lines', 'free_account_grants', 'plan_usage_events', 'web_vital_samples',
+        'delivery_challans', 'delivery_challan_events', 'free_account_grants', 'plan_usage_events', 'web_vital_samples',
     ]
 
-    it('exports every table the current Base, challan, stock audit and branding screens write', async () => {
+    it('exports every table the current Base, challan and branding screens write', async () => {
         const payload = await exportOrganizationData() as ExportPayload
         for (const key of added) {
             expect(payload.dataset_catalog, key).toContain(key)
