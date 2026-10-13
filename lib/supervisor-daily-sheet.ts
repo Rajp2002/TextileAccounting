@@ -1,7 +1,7 @@
 import Decimal from 'decimal.js'
 import { z } from 'zod'
 import { canRecordBaseOperatorProduction, isBaseOperatorAvailable, reviewBaseSheetOperators } from './base-operator'
-import { compareMachineLabels, machineReadingState, readMachineRecords, summarizeMachineRegister, type BaseMachineRecord } from './base-machine-register'
+import { compareMachineSheetOrder, machineReadingState, readMachineRecords, summarizeMachineRegister, type BaseMachineRecord } from './base-machine-register'
 import { calculateBaseDailyProductionSummary, type BaseDailyProductionStatus, type BaseProductionShift } from './base-production-core'
 
 // The supervisor's metres-only daily sheet: the payload of
@@ -178,7 +178,7 @@ export function buildSupervisorSheet(data: SupervisorSheetData, date: string, sh
     }).map((row): SupervisorMachineRow => {
         const worker = row.workerId ? workerById.get(row.workerId) : undefined
         return { ...row, unavailable: Boolean(row.workerId && !row.paid && !(worker && canRecordBaseOperatorProduction(asOperator(worker), shift, date))) }
-    }).sort(compareMachineLabels)
+    }).sort(compareMachineSheetOrder)
 
     const rowsByWorker = new Map<string, SupervisorMachineRow[]>()
     for (const row of rows) {

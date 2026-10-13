@@ -15,7 +15,7 @@ import { DAILY_SAMPLE_READINGS } from '@/lib/tours/sample-data/production'
 import { baseDailySheetHref, baseProductionHref, validBaseDate, type BaseProductionNavigation } from '@/lib/base-production-navigation'
 import { baseProductionDraftKey, parseBaseProductionDraft } from '@/lib/base-production-draft'
 import { baseProductionAuditChanges } from '@/lib/base-production-audit'
-import { buildMachineCollectionSheet, compareMachineLabels, machineReadingState, machineWorkerStatus, summarizeMachineRegister } from '@/lib/base-machine-register'
+import { buildMachineCollectionSheet, compareMachineSheetOrder, machineReadingState, machineWorkerStatus, summarizeMachineRegister } from '@/lib/base-machine-register'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { useTranslation } from '@/lib/i18n/context'
@@ -421,7 +421,7 @@ export default function BaseDailyProductionSheet({
                     rateSource: 'costing',
                 }
             })
-            .sort(compareMachineLabels)
+            .sort(compareMachineSheetOrder)
     }, [currentBatch, currentBatchEntries, initialData, jobById, productionDate, shift, workerById])
 
     const contextsByWorker = useMemo(() => {

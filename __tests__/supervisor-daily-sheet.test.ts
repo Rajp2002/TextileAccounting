@@ -58,6 +58,13 @@ describe('buildSupervisorSheet', () => {
         ])
     })
 
+    it('lists machines with a worker first, then the unassigned ones, each in natural order', () => {
+        const sheet = buildSupervisorSheet(parseSupervisorSheet(raw({
+            assignments: [{ id: ids.a1, worker_id: ids.w1, machine_id: ids.m1 }, { id: ids.a2, worker_id: ids.w2, machine_id: ids.m3 }],
+        })), '2026-10-07', 'day')
+        expect(sheet.rows.map(row => row.machineLabel)).toEqual(['Loom 1', 'Loom 10', 'Loom 2'])
+    })
+
     it('a machine with no assignment has no worker', () => {
         const sheet = buildSupervisorSheet(parseSupervisorSheet(raw()), '2026-10-07', 'day')
         expect(sheet.rows.find(row => row.machineId === ids.m3)).toMatchObject({ workerId: null, jobId: null })

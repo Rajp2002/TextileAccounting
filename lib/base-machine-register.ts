@@ -20,6 +20,12 @@ export function compareMachineLabels(a: { machineLabel: string; machineId: strin
     return a.machineLabel.localeCompare(b.machineLabel, 'en', { numeric: true, sensitivity: 'base' }) || a.machineId.localeCompare(b.machineId)
 }
 
+// Machines with a worker for the shift come first; machines still waiting for one follow.
+// Within each group the order is compareMachineLabels: numbered labels 1..N, then A-Z.
+export function compareMachineSheetOrder(a: { machineLabel: string; machineId: string; workerId: string | null }, b: { machineLabel: string; machineId: string; workerId: string | null }) {
+    return Number(Boolean(b.workerId)) - Number(Boolean(a.workerId)) || compareMachineLabels(a, b)
+}
+
 // Empty means unknown. Only an explicit zero means the machine did not run.
 export function machineReadingState(value: string | undefined, workerStatus: BaseDailyProductionStatus): BaseMachineRecord['state'] | 'invalid' {
     if (workerStatus === 'absent') return 'absent'

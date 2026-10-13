@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildMachineCollectionSheet, compareMachineLabels, machineReadingState, machineWorkerStatus, readMachineRecords, summarizeMachineRegister } from '../lib/base-machine-register'
+import { buildMachineCollectionSheet, compareMachineLabels, compareMachineSheetOrder, machineReadingState, machineWorkerStatus, readMachineRecords, summarizeMachineRegister } from '../lib/base-machine-register'
 import { parseBaseProductionDraft } from '../lib/base-production-draft'
 import { baseProductionAuditChanges } from '../lib/base-production-audit'
 
@@ -29,6 +29,18 @@ describe('machine register entry semantics', () => {
     it('sorts machines naturally and deterministically', () => {
         const machines = ['Loom 10', 'Loom 2', 'Loom 1'].map(machineLabel => ({ machineLabel, machineId: machineLabel }))
         expect(machines.sort(compareMachineLabels).map(machine => machine.machineLabel)).toEqual(['Loom 1', 'Loom 2', 'Loom 10'])
+    })
+    it('lists machines with a worker for the shift first, then numbered labels before A-Z', () => {
+        const machines = [
+            { machineLabel: 'test', machineId: 'm-test', workerId: null },
+            { machineLabel: 'ZZ Loom 42', machineId: 'm-42', workerId: null },
+            { machineLabel: 'ZZ Loom 41', machineId: 'm-41', workerId: 'w-ramesh' },
+            { machineLabel: '05', machineId: 'm-05', workerId: 'w-demo' },
+            { machineLabel: '10', machineId: 'm-10', workerId: 'w-ramu' },
+            { machineLabel: '01', machineId: 'm-01', workerId: 'w-demo' },
+            { machineLabel: '02', machineId: 'm-02', workerId: 'w-ramu' },
+        ]
+        expect(machines.sort(compareMachineSheetOrder).map(machine => machine.machineLabel)).toEqual(['01', '02', '05', '10', 'ZZ Loom 41', 'test', 'ZZ Loom 42'])
     })
     it('prints the supplied full order with blank readings and escaped factory data', () => {
         const html = buildMachineCollectionSheet({ factory: '<script>bad()</script>', date: '3 Sep 2026', shift: 'Day', machines: [{ machineLabel: 'Loom 2', workerName: 'Ramesh', jobLabel: 'Cotton' }, { machineLabel: 'Loom 10', workerName: null, jobLabel: null }] })
