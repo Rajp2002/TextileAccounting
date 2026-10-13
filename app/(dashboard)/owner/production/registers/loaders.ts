@@ -5,6 +5,7 @@ import { hasCapability } from '@/lib/subscription-access'
 import { createClient } from '@/lib/supabase/server'
 import { readCompleteBaseRows } from '@/lib/base-complete-query'
 import { normalizeWorker, normalizeMachine } from './normalize'
+import { compareMachineLabels } from '@/lib/base-machine-register'
 
 // Check capability before reading any register, independently of layout rendering.
 async function registerContext() {
@@ -137,6 +138,9 @@ export async function loadMachinesRegister(today?: string) {
             hasWorker: Boolean(assignedWorkerName),
         }
     })
+    // Postgres sorts the text `name` lexically ("10" before "2"), so order by machine number here; inactive machines stay last.
+    machines.sort((a, b) => Number(b.is_active) - Number(a.is_active)
+        || compareMachineLabels({ machineLabel: a.name, machineId: a.id }, { machineLabel: b.name, machineId: b.id }))
 
     return { orgId, machines }
 }

@@ -40,6 +40,24 @@ import { loadWorkersRegister, loadMachinesRegister } from '../app/(dashboard)/ow
    ])
    expect(fixture.eq).toHaveBeenCalledWith('org_id','tenant-one')
   })
+  it('lists machines by number rather than as text, with inactive machines after active ones', async () => {
+   // Rows arrive in the order Postgres gives a text `name` sort, where "10" and "11" come before "2".
+   const machineRows: Record<string, unknown>[] = [
+    { id: 'm-1', name: '1', machine_type: 'jacquard', custom_label: null, is_active: true, inactive_reason: null },
+    { id: 'm-10', name: '10', machine_type: 'jacquard', custom_label: null, is_active: true, inactive_reason: null },
+    { id: 'm-11', name: '11', machine_type: 'jacquard', custom_label: null, is_active: true, inactive_reason: null },
+    { id: 'm-2', name: '2', machine_type: 'jacquard', custom_label: null, is_active: true, inactive_reason: null },
+    { id: 'm-3', name: '3', machine_type: 'jacquard', custom_label: null, is_active: false, inactive_reason: 'Sold' },
+   ]
+   const original = fixture.rows
+   fixture.rows = machineRows as typeof fixture.rows
+   try {
+    const data = await loadMachinesRegister()
+    expect(data?.machines.map(machine => machine.name)).toEqual(['1', '2', '10', '11', '3'])
+   } finally {
+    fixture.rows = original
+   }
+  })
  it.each(['free','lite','none'])('denies %s before a business-data query', async tier => {
   fixture.tier = tier
   expect(await loadWorkersRegister()).toBeNull(); expect(await loadMachinesRegister()).toBeNull()
