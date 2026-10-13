@@ -75,7 +75,7 @@ describe('Sprint 0 canonical costing truth', () => {
     expect(result.totalLandedCost).toBe(34470)
   })
 
-  it('includes entered transport and commission when their toggle is stale, while warning the owner', () => {
+  it('includes entered transport and commission whatever the stored section flag says, without a warning', () => {
     const state = goldenEstimate()
     state.enabledSections = { ...state.enabledSections, commission: false, transport: false }
     const result = buildCostingResult(state, calcFullTotals(state))
@@ -83,10 +83,10 @@ describe('Sprint 0 canonical costing truth', () => {
 
     expect(result.transportPerM).toBe(1.5)
     expect(result.commissionPct).toBe(2)
-    expect(warnings.map(warning => warning.message)).toEqual(expect.arrayContaining([
-      'Transport is set to ₹1.50/m, so it will be included even though the transport section is switched off.',
-      'Commission is set to 2.00%, so it will be included even though the commission section is switched off.',
-    ]))
+    expect(result.suggestedSellingPricePerM).toBe(39.17)
+    // No screen has a commission or transport switch, so there is nothing to warn about.
+    expect(warnings.map(warning => warning.field)).not.toContain('enabledSections.commission')
+    expect(warnings.map(warning => warning.field)).not.toContain('enabledSections.transport')
   })
 
   it('uses the canonical applied rate while retaining monthly derivation provenance', () => {

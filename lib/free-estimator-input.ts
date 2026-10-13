@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import type { EstimateState } from './estimator'
-import { requiresFactoryCapacity, validateEstimatorSnapshot } from './estimator-validation'
+import { FREE_ESTIMATE_VALIDATION_OPTIONS, validateEstimatorSnapshot } from './estimator-validation'
 
 const num = z.number().finite().min(0).max(1_000_000_000)
 const nullable = num.nullable()
@@ -34,7 +34,7 @@ export function parseFreeEstimate(input: unknown): EstimateState {
   const parsed = freeEstimateSchema.safeParse(input)
   if (!parsed.success) throw new Error('FREE_INVALID_INPUT')
   const state = parsed.data as EstimateState
-  const validation = validateEstimatorSnapshot(state, { requireTapeLength:false, requireCapacity:requiresFactoryCapacity(state) })
+  const validation = validateEstimatorSnapshot(state, FREE_ESTIMATE_VALIDATION_OPTIONS)
   if (!validation.valid) throw new Error('FREE_INVALID_INPUT')
   return state
 }

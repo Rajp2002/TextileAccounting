@@ -634,19 +634,15 @@ export function getEffectiveOverheadMode(
 }
 
 /**
- * A non-zero entered commercial amount is an explicit customer-facing
- * assumption.  A stale section toggle must not silently remove it from the
- * price calculation.  The mismatch flags let the UI warn without changing
- * the owner's entered amount.
+ * Broker commission and transport are plain fields with no on/off switch on
+ * any screen: the entered amount is the assumption, and zero means none. The
+ * stored `enabledSections.commission`/`transport` flags are kept for old
+ * records only and never gate the price or ask for a warning.
  */
-export function getEffectiveCommercialInputs(estimate: Pick<EstimateState, 'enabledSections' | 'commissionPct' | 'transportPerM'>) {
-  const commissionPct = finiteNumberOrZero(estimate.commissionPct)
-  const transportPerM = finiteNumberOrZero(estimate.transportPerM)
+export function getEffectiveCommercialInputs(estimate: Pick<EstimateState, 'commissionPct' | 'transportPerM'>) {
   return {
-    commissionPct: estimate.enabledSections.commission || commissionPct > 0 ? commissionPct : 0,
-    transportPerM: estimate.enabledSections.transport || transportPerM > 0 ? transportPerM : 0,
-    commissionToggleMismatch: commissionPct > 0 && !estimate.enabledSections.commission,
-    transportToggleMismatch: transportPerM > 0 && !estimate.enabledSections.transport,
+    commissionPct: finiteNumberOrZero(estimate.commissionPct),
+    transportPerM: finiteNumberOrZero(estimate.transportPerM),
   }
 }
 

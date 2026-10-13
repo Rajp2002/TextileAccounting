@@ -2,7 +2,6 @@ import {
   allocateWeftPicks,
   getEffectiveCostingWidthCm,
   getWeftPickConvention,
-  getEffectiveCommercialInputs,
   getEffectiveOverheadMode,
   getEffectiveYarnDenier,
   LOOM_TYPE_DEFAULTS,
@@ -90,6 +89,14 @@ export function requiresFactoryCapacity(
 ): boolean {
   return productionWorkflow || getEffectiveOverheadMode(estimate) === 'monthly_expenses'
 }
+
+/**
+ * Free validates without loom capacity. Its input schema accepts manual
+ * monthly expenses only, so loom count can never change a Free price, and
+ * the Free page has no loom-capacity inputs. Monthly output, the divisor for
+ * monthly-expense overhead, stays required by the snapshot validation itself.
+ */
+export const FREE_ESTIMATE_VALIDATION_OPTIONS = { requireTapeLength: false, requireCapacity: false } as const
 
 export function getYarnDensityWarning(effectiveDenier: number): string | undefined {
   if (!Number.isFinite(effectiveDenier) || effectiveDenier <= 0) {
@@ -269,12 +276,6 @@ export function validateFactoryCostProfile(input: FactoryCostProfileInput): Esti
   }
   if (input.enabled_sections?.finishing && Number(input.default_finishing_rate_per_m) <= 0) {
     issues.push({ field: 'default_finishing_rate_per_m', message: 'Enter a finishing rate or switch Finishing off.' })
-  }
-  if (input.enabled_sections?.commission && Number(input.default_commission_pct) <= 0) {
-    issues.push({ field: 'default_commission_pct', message: 'Enter a broker commission or switch Broker commission off.' })
-  }
-  if (input.enabled_sections?.transport && Number(input.default_transport_per_m) <= 0) {
-    issues.push({ field: 'default_transport_per_m', message: 'Enter a transport charge or switch Transport off.' })
   }
   if (input.overhead_items !== undefined) {
     if (!Array.isArray(input.overhead_items)) {
@@ -525,20 +526,7 @@ export function validateEstimatorSnapshot(
   })
   addNumberIssue(issues, warnings, 'commissionPct', 'Commission %', estimate.commissionPct, { max: MAX_PERCENT, allowZero: true })
   addNumberIssue(issues, warnings, 'profitPct', 'Profit margin %', estimate.profitPct, { max: MAX_PERCENT, allowZero: true })
-  addNumberIssue(issues, warnings, 'transportPerM', 'Transport per meter', estimate.transportPerM, { max: MAX_COST_PER_M, allowZero: !sections?.transport, required: Boolean(sections?.transport) })
-  const commercialInputs = getEffectiveCommercialInputs(estimate)
-  if (commercialInputs.commissionToggleMismatch) {
-    warnings.push({
-      field: 'enabledSections.commission',
-      message: `Commission is set to ${Number(estimate.commissionPct).toFixed(2)}%, so it will be included even though the commission section is switched off.`,
-    })
-  }
-  if (commercialInputs.transportToggleMismatch) {
-    warnings.push({
-      field: 'enabledSections.transport',
-      message: `Transport is set to ₹${Number(estimate.transportPerM).toFixed(2)}/m, so it will be included even though the transport section is switched off.`,
-    })
-  }
+  addNumberIssue(issues, warnings, 'transportPerM', 'Transport per meter', estimate.transportPerM, { max: MAX_COST_PER_M, allowZero: true })
   addNumberIssue(issues, warnings, 'loomCount', 'Loom count', estimate.loomCount, { max: MAX_LOOMS, allowZero: !requireCapacity })
   addNumberIssue(issues, warnings, 'monthlyWorkingDays', 'Monthly working days', estimate.monthlyWorkingDays, { max: MAX_WORKING_DAYS })
   addNumberIssue(issues, warnings, 'avgOutputPerLoomPerDay', 'Average output per loom per day', estimate.avgOutputPerLoomPerDay, {
