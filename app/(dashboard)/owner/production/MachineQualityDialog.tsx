@@ -13,9 +13,12 @@ import { cn } from '@/lib/utils'
 import type { BaseProductionJob, BaseProductionMachine } from '@/lib/base-production-core'
 import { setBaseMachineJobContext, switchBaseMachineQuality } from './actions'
 
+// Radio value for "stop weaving". Quality ids are UUIDs, so this can never collide with one.
+const NO_QUALITY = 'none'
+
 /**
  * Picks which active quality a loom weaves. A loom with no quality gets one; a loom
- * that already weaves one is switched, and the workers assigned to it stay assigned.
+ * that already weaves one is switched or cleared, and the workers assigned to it stay assigned.
  */
 export default function MachineQualityDialog({
     machine,
@@ -52,20 +55,26 @@ export default function MachineQualityDialog({
     }
 
     const machineName = machine ? machine.custom_label || machine.name : ''
-    const unchanged = selectedJobId === null || selectedJobId === currentJobId
+    const unchanged = selectedJobId === null || selectedJobId === (currentJobId ?? NO_QUALITY)
+    const removing = selectedJobId === NO_QUALITY
 
     async function save() {
         if (!machine || !selectedJobId || unchanged || saving) return
         setSaving(true)
         try {
-            const result = currentJobId
-                ? await switchBaseMachineQuality({ machineId: machine.id, toJobId: selectedJobId, effectiveFrom: today })
-                : await setBaseMachineJobContext({ machineId: machine.id, jobId: selectedJobId, effectiveFrom: today })
+            // Clearing the quality keeps the workers on the loom; only the quality link ends.
+            const result = removing
+                ? await setBaseMachineJobContext({ machineId: machine.id, jobId: null, effectiveFrom: today })
+                : currentJobId
+                    ? await switchBaseMachineQuality({ machineId: machine.id, toJobId: selectedJobId, effectiveFrom: today })
+                    : await setBaseMachineJobContext({ machineId: machine.id, jobId: selectedJobId, effectiveFrom: today })
             if ('error' in result && result.error) {
                 toast.error(result.error)
                 return
             }
-            toast.success(tx('Quality saved for {machine}.', { machine: machineName }))
+            toast.success(removing
+                ? tx('Quality removed for {machine}.', { machine: machineName })
+                : tx('Quality saved for {machine}.', { machine: machineName }))
             onOpenChange(false)
             onSaved()
         } catch (error) {
@@ -139,6 +148,28 @@ export default function MachineQualityDialog({
                                 )
                             })}
                         </div>
+                        {currentJobId && (
+                            <label
+                                className={cn(
+                                    'flex min-h-14 cursor-pointer items-center gap-3 rounded-xl border p-3 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-loom/30',
+                                    selectedJobId === NO_QUALITY ? 'border-loom bg-loom/5' : 'border-hairline bg-surface hover:bg-surface-soft/40',
+                                )}
+                            >
+                                <input
+                                    type="radio"
+                                    name="machine-quality"
+                                    value={NO_QUALITY}
+                                    checked={selectedJobId === NO_QUALITY}
+                                    disabled={saving}
+                                    onChange={() => setSelectedJobId(NO_QUALITY)}
+                                    className="size-4 shrink-0 accent-loom"
+                                />
+                                <span className="min-w-0 flex-1">
+                                    <span className="block text-sm font-bold text-ink">{tx('No quality')}</span>
+                                    <span className="mt-0.5 block text-xs text-muted-foreground">{tx('Stop weaving on this loom. Workers stay assigned.')}</span>
+                                </span>
+                            </label>
+                        )}
                     </div>
                 )}
 
@@ -151,7 +182,7 @@ export default function MachineQualityDialog({
                             </Button>
                             <Button className="h-11 rounded-xl sm:h-10" disabled={unchanged || saving} onClick={() => void save()}>
                                 {saving ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
-                                {currentJobId ? tx('Switch quality') : tx('Assign quality')}
+                                {removing ? tx('Remove quality') : currentJobId ? tx('Switch quality') : tx('Assign quality')}
                             </Button>
                         </div>
                     </DialogFooter>
