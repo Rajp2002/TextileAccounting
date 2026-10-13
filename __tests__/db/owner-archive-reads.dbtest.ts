@@ -36,7 +36,8 @@ afterAll(async () => { await db?.end() })
 describe('owner archive reads', () => {
     it('names only tables and columns the service role can read', async () => {
         const reads = namedReads()
-        expect(reads.length).toBeGreaterThan(120)
+        // 115 after the yarn stock, stock audit and yarn & beam tables were deleted (2026-10-14).
+        expect(reads.length).toBeGreaterThan(110)
         for (const table of ['base_worker_incentives', 'factory_supervisors', 'base_payroll_advance_recoveries', 'delivery_challan_events']) {
             expect(reads.map(read => read.table)).toContain(table)
         }

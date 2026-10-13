@@ -6,6 +6,7 @@ import type { LitePhraseRow } from './types'
  * numbers, names and dates filled in at runtime.
  */
 export const ACCOUNT_PHRASES: LitePhraseRow[] = [
+    ["Loading...", "लोड हो रहा है...", "લોડ થાય છે..."],
     ["Too many deletion attempts. Try again in {0} seconds.", "बहुत बार हटाने की कोशिश हुई। {0} सेकंड बाद फिर से कोशिश करें।", "ઘણી વાર કાઢી નાખવાનો પ્રયાસ થયો. {0} સેકન્ડ પછી ફરી પ્રયાસ કરો."],
     ["Type the exact organization name and DELETE MY ACCOUNT to continue.", "आगे बढ़ने के लिए संस्था का सही नाम और DELETE MY ACCOUNT लिखें।", "આગળ વધવા માટે સંસ્થાનું ચોક્કસ નામ અને DELETE MY ACCOUNT લખો."],
     ["Account deletion could not be verified. Please try again.", "खाता हटाने की जाँच नहीं हो सकी। फिर से कोशिश करें।", "ખાતું કાઢી નાખવાની ચકાસણી થઈ શકી નહીં. ફરી પ્રયાસ કરો."],

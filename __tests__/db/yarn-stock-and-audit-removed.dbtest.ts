@@ -139,4 +139,16 @@ describe('yarn stock and stock audit removed', () => {
         const { rows } = await db.query("SELECT meters_delta::float8 AS delta FROM public.quality_stock_movements WHERE quality_id = $1 AND kind = 'audit_adjustment'", [quality!.id])
         expect(rows).toEqual([{ delta: -4 }])
     })
+    it('April yarn & beam module is gone', async () => {
+        await asSuperuser(db)
+        for (const relation of ['yarn_batches', 'yarn_lots', 'yarn_movements', 'beam_cards', 'beam_card_lots', 'order_yarn_requirements', 'yarn_lot_stock_summary', 'order_yarn_variance_summary']) {
+            const { rows: [row] } = await db.query('SELECT to_regclass($1) AS oid', [`public.${relation}`])
+            expect(row.oid, relation).toBeNull()
+        }
+        const { rows: functions } = await db.query(`SELECT proname FROM pg_proc WHERE pronamespace = 'public'::regnamespace AND proname = ANY($1)`,
+            [['link_batch_to_machine', 'settle_batch_audit', 'get_yield_alert', 'get_batch_yield_report', 'get_daily_brief_stats', 'get_kpi_yesterday', 'start_party_order_from_estimator']])
+        expect(functions).toEqual([])
+        const { rows: columns } = await db.query("SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'production_logs' AND column_name = 'yarn_batch_id'")
+        expect(columns).toEqual([])
+    })
 })

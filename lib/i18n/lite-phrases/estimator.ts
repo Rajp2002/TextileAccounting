@@ -6,6 +6,7 @@ import type { LitePhraseRow } from './types'
  * numbers, names and dates filled in at runtime.
  */
 export const ESTIMATOR_PHRASES: LitePhraseRow[] = [
+    ["Yarn", "धागा", "યાર્ન"],
     ["Auto-filled · Verify", "अपने-आप भरा · जाँचें", "આપોઆપ ભર્યું · તપાસો"],
     ["Denier — REQUIRED", "डेनियर — ज़रूरी", "ડેનિયર — જરૂરી"],
     ["e.g. 75", "जैसे 75", "દા.ત. 75"],

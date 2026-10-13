@@ -70,42 +70,6 @@ export function getAuditSummary(log: AuditLogEntry): string {
       if (action === 'DELETE') return 'Machine removed'
       break
 
-    case 'yarn_batches':
-      if (action === 'INSERT') return 'New yarn batch added'
-      if (action === 'UPDATE') return 'Yarn batch updated'
-      if (action === 'DELETE') return 'Yarn batch removed'
-      break
-
-    case 'yarn_lots':
-      if (action === 'INSERT') return 'New yarn lot added'
-      if (action === 'UPDATE') return 'Yarn lot updated'
-      if (action === 'DELETE') return 'Yarn lot removed'
-      break
-
-    case 'yarn_movements':
-      if (action === 'INSERT') return 'Yarn movement recorded'
-      if (action === 'UPDATE') return 'Yarn movement updated'
-      if (action === 'DELETE') return 'Yarn movement removed'
-      break
-
-    case 'beam_cards':
-      if (action === 'INSERT') return 'Beam card created'
-      if (action === 'UPDATE') return 'Beam card updated'
-      if (action === 'DELETE') return 'Beam card removed'
-      break
-
-    case 'beam_card_lots':
-      if (action === 'INSERT') return 'Yarn linked to beam'
-      if (action === 'UPDATE') return 'Beam yarn usage updated'
-      if (action === 'DELETE') return 'Beam yarn usage removed'
-      break
-
-    case 'order_yarn_requirements':
-      if (action === 'INSERT') return 'Order yarn target created'
-      if (action === 'UPDATE') return 'Order yarn target updated'
-      if (action === 'DELETE') return 'Order yarn target removed'
-      break
-
     case 'qualities':
       if (action === 'INSERT') return 'New fabric quality defined'
       if (action === 'UPDATE') return 'Quality details updated'

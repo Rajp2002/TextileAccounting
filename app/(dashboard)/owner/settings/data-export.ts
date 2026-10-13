@@ -276,12 +276,6 @@ export async function exportOrganizationData() {
         { key: 'machine_operator_assignments', query: scoped('machine_operator_assignments') },
         { key: 'orders', query: scoped('orders') },
         { key: 'qualities', query: scoped('qualities') },
-        { key: 'yarn_batches', query: scoped('yarn_batches') },
-        { key: 'yarn_lots', query: scoped('yarn_lots') },
-        { key: 'yarn_movements', query: scoped('yarn_movements') },
-        { key: 'beam_cards', query: scoped('beam_cards') },
-        { key: 'beam_card_lots', query: scoped('beam_card_lots') },
-        { key: 'order_yarn_requirements', query: scoped('order_yarn_requirements') },
         { key: 'estimator_templates', query: scoped('estimator_templates') },
         { key: 'estimator_quotes', query: scoped('estimator_quotes') },
         // Completed Free costings kept after an upgrade or expiry.
