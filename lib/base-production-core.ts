@@ -671,8 +671,13 @@ export function calculateBaseWorkerMachineBreakdown({
         }
     }
 
+    // Machines in number order (Loom 2 before Loom 10); legacy worker totals last; lines with
+    // no metres and no pay say nothing, so they are left out.
     const rows = [...groups.values()]
-        .sort((a, b) => a.machine_label.localeCompare(b.machine_label) || a.rate.comparedTo(b.rate))
+        .filter((group) => !group.meters.isZero() || !group.pay.isZero())
+        .sort((a, b) => Number(!a.machine_label) - Number(!b.machine_label)
+            || a.machine_label.localeCompare(b.machine_label, undefined, { numeric: true, sensitivity: 'base' })
+            || a.rate.comparedTo(b.rate))
         .map((group) => ({
             machine_label: group.machine_label,
             rate_per_meter: toRoundedNumber(group.rate),

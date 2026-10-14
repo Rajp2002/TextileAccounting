@@ -88,6 +88,7 @@ import BaseProductionTodayBand from './BaseProductionTodayBand'
 import BaseDailyProductionSheet from './BaseDailyProductionSheet'
 import BasePayrollReadinessPanel from './BasePayrollReadinessPanel'
 import BaseWorkerIncentives from './BaseWorkerIncentives'
+import BaseWorkerPayBreakdownDialog from './BaseWorkerPayBreakdownDialog'
 import type { BaseProductionInitialData } from './loaders'
 
 // App Router's dynamic loader only supplies a loading fallback: rejected imports
@@ -908,51 +909,13 @@ export default function BaseProductionClient({
             </div>}
 
 
-            <Dialog open={Boolean(breakdownPayable)} onOpenChange={(open) => !open && setBreakdownWorkerId(null)} {...surface.root}>
-                <DialogContent className="max-w-lg rounded-2xl border border-hairline bg-surface p-6 shadow-2xl" {...surface.content}>
-                    {breakdownPayable && (
-                        <>
-                            <DialogHeader>
-                                <DialogTitle className="text-xl font-bold text-ink">{breakdownPayable.worker_name}</DialogTitle>
-                                <DialogDescription className="text-sm text-body">{tx('Period breakdown')} · {formatDateOnly(breakdownPayable.period_start)} – {formatDateOnly(breakdownPayable.period_end)}</DialogDescription>
-                            </DialogHeader>
-                            {breakdownPayable.pay_type === 'fixed_monthly' ? (
-                                <div className="space-y-1 text-sm text-body">
-                                    {breakdownPayable.salary_lines?.map(line => <p key={line.start}>{formatDateOnly(line.start)} – {formatDateOnly(line.end)}: {formatINR(line.monthlySalary)} × {line.days}/{line.monthDays} days = {formatINR(line.grossPay)}</p>)}
-                                </div>
-                            ) : breakdown?.rows.length ? (
-                                <div className="divide-y divide-hairline text-sm">
-                                    <div className="grid grid-cols-[minmax(0,1fr)_auto_auto_auto] gap-x-3 pb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                                        <span>{tx('Machine')}</span>
-                                        <span className="text-right">{tx('Rate')}</span>
-                                        <span className="text-right">{tx('Metres')}</span>
-                                        <span className="text-right">{tx('Pay')}</span>
-                                    </div>
-                                    {breakdown.rows.map(row => (
-                                        <div key={`${row.machine_label}-${row.rate_per_meter}`} className="grid grid-cols-[minmax(0,1fr)_auto_auto_auto] items-baseline gap-x-3 py-2 tabular-nums">
-                                            <span className="min-w-0 truncate font-medium text-ink">{row.machine_label || tx('Worker total (machine not recorded)')}</span>
-                                            <span className="text-right">{formatINR(row.rate_per_meter)}/m</span>
-                                            <span className="text-right">{formatMeters(row.meters)}</span>
-                                            <span className="text-right font-semibold text-ink">{formatINR(row.pay, { hideDecimals: true })}</span>
-                                        </div>
-                                    ))}
-                                    <div className="grid grid-cols-[minmax(0,1fr)_auto_auto_auto] gap-x-3 pt-2 font-bold text-ink tabular-nums">
-                                        <span>{tx('Total')}</span>
-                                        <span />
-                                        <span className="text-right">{formatMeters(breakdown.meters)}</span>
-                                        <span className="text-right">{formatINR(breakdown.pay, { hideDecimals: true })}</span>
-                                    </div>
-                                </div>
-                            ) : (
-                                <p className="text-sm text-body">{tx('No metres recorded in this period.')}</p>
-                            )}
-                            <DialogFooter>
-                                <Button variant="outline" onClick={() => setBreakdownWorkerId(null)} className="rounded-xl border-hairline hover:bg-surface-soft font-semibold">{tx('Close')}</Button>
-                            </DialogFooter>
-                        </>
-                    )}
-                </DialogContent>
-            </Dialog>
+            <BaseWorkerPayBreakdownDialog
+                payable={breakdownPayable}
+                worker={breakdownWorker}
+                breakdown={breakdown}
+                onClose={() => setBreakdownWorkerId(null)}
+                surface={surface}
+            />
 
             <Dialog open={dialog === 'advance'} onOpenChange={(open) => !open && closeDialog()} {...surface.root}>
                 <DialogContent className="max-w-md rounded-2xl border border-hairline bg-surface p-6 shadow-2xl" {...surface.content}>

@@ -102,9 +102,9 @@ describe('calculateBaseWorkerMachineBreakdown', () => {
         })
 
         expect(breakdown.rows).toEqual([
-            { machine_label: '', rate_per_meter: 4, meters: 50, pay: 200 },
             { machine_label: 'Rapier #1', rate_per_meter: 2.5, meters: 260, pay: 650 },
             { machine_label: 'Rapier #4', rate_per_meter: 3, meters: 160, pay: 480 },
+            { machine_label: '', rate_per_meter: 4, meters: 50, pay: 200 },
         ])
         expect(breakdown.meters).toBe(470)
         expect(breakdown.pay).toBe(1330)
@@ -154,6 +154,23 @@ describe('calculateBaseWorkerMachineBreakdown', () => {
         })
         expect(empty).toEqual({ rows: [], meters: 0, pay: 0 })
     })
+
+    it('orders looms by number and drops lines with no metres and no pay', () => {
+        const breakdown = calculateBaseWorkerMachineBreakdown({
+            workerId: 'worker-1',
+            fallbackRate: worker.rate_per_meter,
+            periodStart: '2026-08-01',
+            periodEnd: '2026-08-31',
+            entries: [dailyMachineEntry, { ...legacyTotalEntry, meters: 0 }],
+            allocations: [
+                allocation({ id: 'b-1', meters: 60, worker_rate_snapshot: 8.25, machine_label: 'Loom 10' }),
+                allocation({ id: 'b-2', meters: 126.5, worker_rate_snapshot: 8.25, machine_id: 'machine-2', machine_label: 'Loom 9' }),
+            ],
+        })
+
+        expect(breakdown.rows.map(row => row.machine_label)).toEqual(['Loom 9', 'Loom 10'])
+        expect(breakdown.meters).toBe(186.5)
+    })
 })
 
 describe('payroll worker card breakdown control', () => {
@@ -164,9 +181,24 @@ describe('payroll worker card breakdown control', () => {
         const breakdownButton = client.indexOf('setBreakdownWorkerId(payable.worker_id)')
         expect(markPaid).toBeGreaterThan(-1)
         expect(breakdownButton).toBeGreaterThan(markPaid)
-        expect(client).toContain('open={Boolean(breakdownPayable)}')
+        expect(client).toContain('<BaseWorkerPayBreakdownDialog')
+        expect(client).toContain('payable={breakdownPayable}')
         expect(client).toContain('calculateBaseWorkerMachineBreakdown({')
         expect(client).not.toContain('toggleBreakdown')
         expect(client).not.toContain('aria-expanded={breakdownOpen}')
+    })
+
+    it('shows net pay and how it is reached beside the metres by machine', () => {
+        const dialog = read('app/(dashboard)/owner/production/BaseWorkerPayBreakdownDialog.tsx')
+
+        expect(dialog).toContain('open={Boolean(payable)}')
+        expect(dialog).toContain("sm:max-w-4xl")
+        expect(dialog).toContain("tx('Net pay')")
+        expect(dialog).toContain("tx('Gross pay')")
+        expect(dialog).toContain("tx('Advance recovery')")
+        expect(dialog).toContain("tx('Metres by machine')")
+        expect(dialog).toContain("tx('Salary by month')")
+        // Net pay comes first in reading order, so phones show it before the machine list.
+        expect(dialog.indexOf('<PaySummary payable={payable} />')).toBeLessThan(dialog.indexOf('<MachineTable breakdown={breakdown} />'))
     })
 })
