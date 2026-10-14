@@ -12,7 +12,7 @@
         "costDeltaPct": 0,
         "profitDelta": -3991.4054647230314
       },
-      "sha256": "06a50abc220c55ec0171e7a480bf5744e0b946f6f0934ab16103752ebe7a94a2"
+      "sha256": "d9214fb793b81ed343d1fde0b815d2d9102f58860bdc14871b6fc29d2598e5e7"
     },
     "noQuantity": {
       "scenario": {
@@ -25,7 +25,7 @@
         "costDeltaPct": 0,
         "profitDelta": 0
       },
-      "sha256": "9a056397842d2d711211e09c6e169c606f10627e1d4500d8392df111c2795252"
+      "sha256": "1bcfacdff6ef39846a135047e4ff144e1ed51613cfa34700ba46fb2b946a8125"
     },
     "zeroQuantity": {
       "scenario": {
@@ -38,7 +38,7 @@
         "costDeltaPct": 0,
         "profitDelta": 0
       },
-      "sha256": "5e2df6488ef747d995ea75b92609b4be27361843cc47745f8d6a6032f0fbc636"
+      "sha256": "88046e7bb49e80667ee3e6ab58d21fe73fd450c4d0049f390e7a885f8cf609a1"
     },
     "zeroRates": {
       "scenario": {
@@ -51,7 +51,7 @@
         "costDeltaPct": 0,
         "profitDelta": -2976.5597667638485
       },
-      "sha256": "abeb307bbc4ac92ae22a917b651903819667f3032632d158bd7feb2e3e2fc8e8"
+      "sha256": "d1cbfdf8012ebf13700065225c4afe295209e0adf444e0f2838feda547e844ce"
     },
     "missingOverhead": {
       "scenario": {
@@ -64,7 +64,7 @@
         "costDeltaPct": 0,
         "profitDelta": -3725.5162518950433
       },
-      "sha256": "6613942fc32d44750c53b4f06db45dd5f14982f4d603561ebe4c6921fead5b32"
+      "sha256": "acc33bfc005dc0866dbf929dc1316d44f21b9cf4653d1f2446a305145befa9c0"
     },
     "zeroOverhead": {
       "scenario": {
@@ -77,7 +77,7 @@
         "costDeltaPct": 0,
         "profitDelta": -3641.5512373177853
       },
-      "sha256": "3bbd6c5b0b7c4c9eeff4fe55fce6369d68e39f248d4b7bcdba8fa1c2f05e35c8"
+      "sha256": "34cb546c94957c6b4446cbc0dd4c45597991127289e95043640fd0905d04e86a"
     },
     "monthlyOverhead": {
       "scenario": {
@@ -90,7 +90,7 @@
         "costDeltaPct": 0,
         "profitDelta": -3725.5162518950433
       },
-      "sha256": "c9a79d5cdc8dbd2aff7afe022970dac073e3613e78593c415052644b3c7c536c"
+      "sha256": "4c14f1d445633657199b31d8872fd5b0ebaedba334ed2c6eff8380708231d1d2"
     },
     "disabledCommercials": {
       "scenario": {
@@ -103,7 +103,7 @@
         "costDeltaPct": 0,
         "profitDelta": -3991.4054647230314
       },
-      "sha256": "2cb127a2eb4fbf89c4bcce4bb88d2eb82b7f28ea6bbc56bf09a78bec41afc1ab"
+      "sha256": "cb67a4598d0b92d47c5960770cdd414a2723d2bc2b37a754e1e9e3cd88bd3be9"
     },
     "invalidMargin": {
       "scenario": {
@@ -116,7 +116,7 @@
         "costDeltaPct": 0,
         "profitDelta": 0
       },
-      "sha256": "d03401e3da839c33bb7a595c39638e853e99800b736568c867bfdd93134caa7d"
+      "sha256": "0313634713987a180549f41d925bdaf883068908060d3e4717950119c3ad0035"
     },
     "invalidCommission": {
       "scenario": {
@@ -129,7 +129,7 @@
         "costDeltaPct": 0,
         "profitDelta": 0
       },
-      "sha256": "f6ab64d276a7caae3d753a2765f68f0aa8a0115bc85bb5864c5f6300a2a665a8"
+      "sha256": "a497dd655b8f7b8d87dcf1be56fb5f9b617d53b67a4d53e02e37ae32a51cf196"
     },
     "missingWidth": {
       "scenario": {
@@ -142,7 +142,7 @@
         "costDeltaPct": 0,
         "profitDelta": -3431.1557667638485
       },
-      "sha256": "5df2ffae3c5d781f108a061bfae4ff8cb5580e0dd400fb03be9941b92887329d"
+      "sha256": "aca193e4e0aa375d649eeec294943aa38b956731a9becf28e5ee252411c50cfb"
     },
     "tinyQuantity": {
       "scenario": {
@@ -155,7 +155,7 @@
         "costDeltaPct": 0,
         "profitDelta": -2.852248866626e-06
       },
-      "sha256": "fa588afc8512a21b99bd1bd797252a745893e27ddf9d6c7d79e5b3fc7afa3079"
+      "sha256": "2bf6487c9f99926883fc48625dfaa1c34ff10d046f5a875317dd7aca44ecf092"
     },
     "manualConsumption": {
       "scenario": {
@@ -168,7 +168,7 @@
         "costDeltaPct": 0,
         "profitDelta": -3940.338929008745
       },
-      "sha256": "ed8f0ef62f1fca017b2952f6e4cb25e8b29a4292db6df1cc26b5882ed4101c84"
+      "sha256": "527be1bd43db5b6d7f19c4dd856720ea783771ec21c83e74f4e8a0a3be1f3f7e"
     },
     "cottonCount": {
       "scenario": {
@@ -181,7 +181,7 @@
         "costDeltaPct": 0,
         "profitDelta": -4339.52632186589
       },
-      "sha256": "cdc22ece253c4450590cdb54a21303d13652a93628aa25368ff55e99ddbfe3f9"
+      "sha256": "d6fd2ee170700dd63b58aa07396cda3002643e814d5c5be70a53dc6abc14ee7d"
     },
     "changedRate": {
       "scenario": {
@@ -194,7 +194,7 @@
         "costDeltaPct": 0,
         "profitDelta": -4568.830104723035
       },
-      "sha256": "a43e8f497d81040811dde40e7f22e5c0ba3f5469e54cbb408707e5cd86dc3e0b"
+      "sha256": "283f50c451622a33a109d8686fd1029aa2853a9e361d350b0416eac8789faa8d"
     },
     "maximumRows": {
       "scenario": {
@@ -207,7 +207,7 @@
         "costDeltaPct": 0,
         "profitDelta": -75389.28564431496
       },
-      "sha256": "bb8bbe7bad1b9afa368350d498e3bd9bf73da185c232cbbae599229ec3b32b82"
+      "sha256": "94fb5bdf2b9b05951a436c16cf392bb398b60eb86c65beff85fa9f78bb58b71a"
     }
   }
 }

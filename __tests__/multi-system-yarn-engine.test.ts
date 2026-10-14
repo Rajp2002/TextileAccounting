@@ -4,6 +4,7 @@ import {
     buildCostingResult,
     calcFullTotals,
     getTotalWeftPicks,
+    getWeftFormulaLengthM,
     getWeftPickConvention,
     type EstimateState,
 } from '@/lib/estimator'
@@ -217,5 +218,78 @@ describe('Test G: validation before a reliable estimate', () => {
         const state = doubleLayer()
         state.weftRows = state.weftRows.map((row, index) => index === 1 ? { ...row, crimpPct: 80 } : row)
         expect(issuesFor(state).map(issue => issue.field)).toContain('weftRows.1.crimpPct')
+    })
+})
+
+// Surat double-weft rule (owner, 2026-10-14), checked against a weighed
+// fabric: 30 kota + 110 ATY + jari warp, 56 PPI shared 2:4 kota:ATY at 48".
+// Per weft: total PPI × width × denier × (100 / N) / 9,000,000 ÷ max ratio × ratio
+//   kota 56 × 48 × 33  × 50 / 9e6 ÷ 4 × 2 = 0.2464
+//   ATY  56 × 48 × 115 × 50 / 9e6 ÷ 4 × 4 = 1.71733…
+// Warp 4.64662… + weft 1.96373… = 6.61036 kg/100m (the fabric weighs 6.6).
+describe('shared-ratio weft weight (Surat double-weft rule)', () => {
+    const width = 48 * 2.54
+
+    function kotaAty(ratios: [number, number], overrides: Partial<EstimateState> = {}): EstimateState {
+        const allocation = allocateWeftPicks(56, ratios)
+        if (!allocation.ok) throw new Error('allocation failed')
+        return f1State({
+            ...plain,
+            perPickCostPaisa: 0.16,
+            warpRows: [
+                warpRow({ id: 'kota-warp', calcDenier: 33, beamEnds: 1692, yarnRate: 197, gstPct: 0 }),
+                warpRow({ id: 'aty-warp', calcDenier: 115, beamEnds: 2256, yarnRate: 195, gstPct: 0 }),
+                warpRow({ id: 'jari-warp', calcDenier: 155, beamEnds: 664, yarnRate: 360, gstPct: 0 }),
+            ],
+            weftRows: [
+                weftRow({ id: 'kota-weft', calcDenier: 33, picks: allocation.picks[0], effectiveCostingWidthCm: width, yarnRate: 197, gstPct: 0, pickRatio: ratios[0] }),
+                weftRow({ id: 'aty-weft', calcDenier: 115, picks: allocation.picks[1], effectiveCostingWidthCm: width, yarnRate: 195, gstPct: 0, pickRatio: ratios[1] }),
+            ],
+            ...overrides,
+        })
+    }
+
+    it('weighs the 2:4 kota/ATY quality at the weighed 6.6 kg per 100m', () => {
+        const totals = totalsFor(kotaAty([2, 4]))
+        expect(totals.weftRows.map(row => row.formulaLengthM)).toEqual([75, 75])
+        expect(totals.weftRows[0].baseKgPer100mUsed).toBeCloseTo(0.2464, 10)
+        expect(totals.weftRows[1].baseKgPer100mUsed).toBeCloseTo(56 * 48 * 115 * 50 / 9_000_000, 10)
+        const total = [...totals.warpRows, ...totals.weftRows].reduce((sum, row) => sum + row.kgPer100m, 0)
+        expect(total).toBeCloseTo(6.610356, 6)
+    })
+
+    it('adds the row waste on top of the rule', () => {
+        const totals = totalsFor(kotaAty([2, 4], { yarnShortagePct: 10 }))
+        const total = [...totals.warpRows, ...totals.weftRows].reduce((sum, row) => sum + row.kgPer100m, 0)
+        expect(total).toBeCloseTo(6.610356 * 1.1, 5)
+    })
+
+    it('keeps the weave cost on the full 56 PPI', () => {
+        expect(totalsFor(kotaAty([2, 4])).weaveCostPerM).toBeCloseTo(56 * 0.16, 12)
+    })
+
+    it('depends only on the ratio proportions, and swaps with them', () => {
+        const half = totalsFor(kotaAty([1, 2]))
+        const full = totalsFor(kotaAty([2, 4]))
+        expect(half.weftRows.map(row => row.baseKgPer100mUsed)).toEqual(full.weftRows.map(row => row.baseKgPer100mUsed))
+        const swapped = totalsFor(kotaAty([4, 2]))
+        expect(swapped.weftRows[0].baseKgPer100mUsed).toBeCloseTo(56 * 48 * 33 * 50 / 9_000_000, 10)
+        expect(swapped.weftRows[1].baseKgPer100mUsed).toBeCloseTo(56 * 48 * 115 * 50 / 9_000_000 / 2, 10)
+    })
+
+    it('leaves equal ratios, typed picks and a single weft on the full 100m', () => {
+        expect(getWeftFormulaLengthM([{ pickRatio: 1 }, { pickRatio: 1 }])).toBe(100)
+        expect(getWeftFormulaLengthM([{ pickRatio: 3 }, { pickRatio: 3 }, { pickRatio: 3 }])).toBe(100)
+        expect(getWeftFormulaLengthM([{ pickRatio: null }, { pickRatio: null }])).toBe(100)
+        expect(getWeftFormulaLengthM([{}, {}])).toBe(100)
+        expect(getWeftFormulaLengthM([{ pickRatio: 2 }])).toBe(100)
+        const typed = kotaAty([2, 4])
+        typed.weftRows = typed.weftRows.map(row => ({ ...row, pickRatio: null }))
+        expect(totalsFor(typed).weftRows.map(row => row.formulaLengthM)).toEqual([100, 100])
+    })
+
+    it('extends to three wefts: 100 / N, ÷ the largest ratio, × each ratio', () => {
+        // 1:2:3 → 100 × 6 / (3 × 3) metres over the shared picks.
+        expect(getWeftFormulaLengthM([{ pickRatio: 1 }, { pickRatio: 2 }, { pickRatio: 3 }])).toBeCloseTo(200 / 3, 12)
     })
 })

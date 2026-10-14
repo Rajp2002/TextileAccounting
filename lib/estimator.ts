@@ -97,7 +97,9 @@ Decimal.set({ precision: 20, rounding: Decimal.ROUND_HALF_UP })
 // v4 (2026-10): every weft row is its own yarn system carrying that system's
 // picks; rows are no longer given an equal 100/N share of the fabric length.
 // Warp and weft rows may also carry their own crimp allowance.
-export const COSTING_CALCULATION_VERSION = 'estimator_v4_2026_10'
+// v5 (2026-10-14): weft systems sharing a total PPI by an unequal ratio are
+// weighed by the Surat double-weft rule (see getWeftFormulaLengthM).
+export const COSTING_CALCULATION_VERSION = 'estimator_v5_2026_10'
 export const COSTING_ROUNDING_POLICY = 'INR_HALF_UP_2'
 
 export type CostingReconciliationStatus =
@@ -199,6 +201,27 @@ export function allocateWeftPicks(totalPicks: number, ratios: readonly number[])
     picks.push(share.toNumber())
   })
   return { ok: true, picks, totalPicks: total }
+}
+
+/**
+ * Fabric length (metres per 100m run) each weft system's yarn is weighed over.
+ *
+ * Weft systems that share a fabric's total PPI by ratio follow the Surat
+ * double-weft rule, checked against a weighed fabric (owner, 2026-10-14):
+ *   kg = totalPicks × width × denier × (100 / N) / 9,000,000 ÷ maxRatio × ratio
+ * With the row's share picks = totalPicks × ratio / ratioSum this is the
+ * ordinary weft formula over 100 × ratioSum / (N × maxRatio) metres: 75m at
+ * 2:4, and the full 100m whenever the ratios are equal. Picks typed per
+ * system, and a single weft, are weighed over the full 100m. Weave cost and
+ * weaver wage keep the full total PPI either way.
+ */
+export function getWeftFormulaLengthM(rows: ReadonlyArray<Pick<WeftRow, 'pickRatio'>>): number {
+  if (rows.length <= 1 || getWeftPickConvention(rows) !== 'total_ratio') return 100
+  const ratios = rows.map(row => Number(row.pickRatio))
+  // Validation blocks an invalid ratio; until then weigh the picks as typed.
+  if (ratios.some(ratio => !Number.isFinite(ratio) || ratio <= 0)) return 100
+  const ratioSum = ratios.reduce((sum, ratio) => sum.plus(ratio), new Decimal(0))
+  return new Decimal(100).times(ratioSum).div(new Decimal(rows.length).times(Decimal.max(...ratios))).toNumber()
 }
 
 export function getEffectiveYarnDenier(
@@ -1647,9 +1670,9 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
 
   // ── Layer 2: Weft Yarn (own crimp + waste; the warp crimp does not apply) ─
   // Every weft row is an independent yarn system whose picks are its own
-  // PPI, so each consumes yarn over the full 100m run. A pick ratio only
-  // decides how many picks a system gets; it never splits the fabric length.
-  const weftFormulaLengthM = 100
+  // PPI. Typed picks are weighed over the full 100m run; a total PPI shared by
+  // an unequal ratio follows the Surat double-weft rule.
+  const weftFormulaLengthM = getWeftFormulaLengthM(estimate.weftRows)
   const weftRows: WeftRowResult[] = estimate.weftRows.map(r => {
     const mode: YarnCalculationMode = r.calculationMode === 'manual' ? 'manual' : 'formula'
     const effectiveCostingWidthCm = getEffectiveCostingWidthCm(r)

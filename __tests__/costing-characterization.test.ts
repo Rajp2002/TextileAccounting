@@ -51,7 +51,7 @@ describe('costing engine characterization (Package 1A)', () => {
         expect(snapshot.snapshotSchemaVersion).toBe(2)
         expect(snapshot.calculationVersion).toBe(COSTING_CALCULATION_VERSION)
         expect(snapshot.roundingPolicy).toBe(COSTING_ROUNDING_POLICY)
-        expect(COSTING_CALCULATION_VERSION).toBe('estimator_v4_2026_10')
+        expect(COSTING_CALCULATION_VERSION).toBe('estimator_v5_2026_10')
         expect(COSTING_ROUNDING_POLICY).toBe('INR_HALF_UP_2')
     })
 

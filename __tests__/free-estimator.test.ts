@@ -26,6 +26,12 @@ describe('Free engine boundary',()=>{
   expect(canonicalFreeInputs(a)).toEqual(canonicalFreeInputs(b));b.warpRows[0].yarnRate+=1
   expect(canonicalFreeInputs(a)).not.toEqual(canonicalFreeInputs(b))
  })
+ it('binds a shared weft ratio by its proportions, since it weighs the weft',()=>{
+  const withRatio=(ratios:(number|null)[])=>{const s=makeFreeDemo();s.weftRows=ratios.map((pickRatio,index)=>({...s.weftRows[0],id:`w${index}`,picks:28,pickRatio}));return s}
+  expect(canonicalFreeInputs(withRatio([2,4]))).toEqual(canonicalFreeInputs(withRatio([1,2])))
+  expect(canonicalFreeInputs(withRatio([2,4]))).not.toEqual(canonicalFreeInputs(withRatio([1,1])))
+  expect(canonicalFreeInputs(withRatio([2,4]))).not.toEqual(canonicalFreeInputs(withRatio([null,null])))
+ })
  it('keeps units and rounding through the same formula engine',()=>{
   const a=makeFreeEstimate();a.warpRows[0]={...a.warpRows[0],calcDenier:100,beamEnds:4000,yarnRate:200};a.weftRows[0]={...a.weftRows[0],calcDenier:150,picks:60,reedSpace:150,yarnRate:230};a.perPickCostPaisa=.16;a.overheadOverridePerM=21.5;a.profitPct=20;a.orderQuantityM=1000
   const b=parseFreeEstimate(a);expect(calcFullTotals(b)).toEqual(calcFullTotals(a))
