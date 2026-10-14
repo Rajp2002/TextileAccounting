@@ -6,6 +6,12 @@ describe('Phase 1 route archive gate', () => {
         expect(isPhase1ArchivedRoute('/admin')).toBe(true)
         expect(isPhase1ArchivedRoute('/admin/users')).toBe(true)
         expect(isPhase1ArchivedRoute('/owner/settings/audit')).toBe(true)
+        // The Stock Audit was deleted on 2026-10-14; old links land on the archived page.
+        expect(isPhase1ArchivedRoute('/owner/stock/audit')).toBe(true)
+        expect(isPhase1ArchivedRoute('/owner/stock/audit/2026-10-01')).toBe(true)
+        // Yarn Stock was deleted on 2026-10-14 too.
+        expect(isPhase1ArchivedRoute('/owner/stock/yarn')).toBe(true)
+        expect(isPhase1ArchivedRoute('/owner/stock/yarn/123')).toBe(true)
     })
 
     it('leaves Phase 1 routes active', () => {

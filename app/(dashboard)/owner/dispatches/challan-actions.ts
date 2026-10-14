@@ -111,6 +111,5 @@ export async function mutateChallan(input: ChallanMutation) {
         }
     revalidatePath('/owner/dispatches')
     revalidatePath('/owner/stock')
-    revalidatePath('/owner/stock/yarn')
     return { success: true, id: data.id as string }
 }

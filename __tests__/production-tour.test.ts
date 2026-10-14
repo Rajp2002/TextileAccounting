@@ -20,7 +20,7 @@ describe('Production Overview tour', () => {
         expect(productionTourSpecs.map(step => step.kind)).toEqual(['sample', 'sample', 'sample', 'sample', 'handoff'])
         expect(productionTourSpecs.filter(step => step.context).map(step => step.id)).toEqual(['pd-activate', 'pd-looms'])
         expect(productionTourSpecs.filter(step => step.context).every(step => step.context === '[data-tour-surface="true"]')).toBe(true)
-        expect(productionTourSpecs.filter(step => step.detail).map(step => step.id)).toEqual(['pd-prereq', 'pd-activate'])
+        expect(productionTourSpecs.filter(step => step.detail).map(step => step.id)).toEqual(['pd-prereq'])
         expect(productionTourSpecs.map(step => step.anchor)).toEqual(['overview', 'qualities', 'activate', 'allocate'].map(field => `[data-production-tour="${field}"]`).concat('[data-tour-anchor="production.activate"]'))
         expect(productionTourSelector('pd-prereq')).toBe('[data-production-tour="qualities"]')
     })
@@ -47,8 +47,9 @@ describe('Production Overview tour', () => {
                 expect(Object.values(rendered).join(' ').replaceAll('Weavly', '')).not.toMatch(/[A-Za-z]{2,}/)
             }
         }
-        expect(copy.prereq.body).toContain({ en: 'stock of every yarn', gu: 'દરેક યાર્નનો સ્ટોક', hi: 'हर धागे का स्टॉक' }[language])
-        expect(copy.activate.detail).toBeTruthy()
+        // Yarn Stock was deleted (2026-10-14): a quality needs no yarn stock to start.
+        expect(copy.prereq.body).not.toMatch({ en: /yarn/i, gu: /યાર્ન/, hi: /धाग/ }[language])
+        expect(copy.activate.detail).toBeUndefined()
         expect(productionStepCopy(language, 'pd-activate', controls).body).toContain(controls.activateQuality)
         expect(productionStepCopy(language, 'pd-looms', controls).body).toContain(controls.assignLooms)
         expect(productionStepCopy(language, 'pd-handoff', controls).body).toContain(controls.activateQuality)

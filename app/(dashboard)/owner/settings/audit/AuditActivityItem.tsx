@@ -46,7 +46,7 @@ export default function AuditActivityItem({ log, isLast, liteMobile = false }: A
     const t = log.table_name
     if (['attendance', 'workers', 'fixed_workers', 'payroll_settlements', 'worker_advances', 'payroll_configs'].includes(t)) return 'hr_payroll'
     if (['production_logs', 'machines', 'machine_assignments', 'orders'].includes(t)) return 'production'
-    if (['yarn_batches', 'yarn_lots', 'yarn_movements', 'beam_cards', 'beam_card_lots', 'order_yarn_requirements', 'qualities'].includes(t)) return 'inventory'
+    if (['qualities'].includes(t)) return 'inventory'
     if (['factory_cost_profile', 'estimator_templates', 'estimator_quotes'].includes(t)) return 'estimator'
     return 'settings_security'
   })()

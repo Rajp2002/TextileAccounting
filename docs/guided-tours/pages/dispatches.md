@@ -13,7 +13,7 @@ Shared rules: [`GUIDED_TOURS_REFINEMENT_PLAN.md`](../../GUIDED_TOURS_REFINEMENT_
 | Anchors today | Replica only: `[data-dispatch-tour="<step>"]`. None on the live page. |
 | Prerequisites for real use | Fabric stock for the quality (saved production or opening stock). Customer details are typed per dispatch (no party master). |
 | Consequential actions | Save draft (no stock change), Confirm dispatch has left (deducts fabric metres), Received as sent / Record receipt, Record payment, adjustments, refunds, Reverse erroneous dispatch, Reverse entry. |
-| Business rule (current migrations) | Confirm deducts **fabric** metres only; yarn is deducted when production is saved (`20260920000000_unified_inventory_audit_architecture.sql:446`; latest `mutate_delivery_challan` in `20260926132412…sql` never touches yarn). Owner confirmed on 2026-09-27 that production deducts yarn (U-04). |
+| Business rule (current migrations) | Confirm deducts **fabric** metres only. Yarn stock was deleted on 2026-10-14 (`20261014120000_remove_yarn_stock_and_stock_audit.sql`), so nothing deducts yarn. |
 
 ## B. Diagnosis
 
@@ -92,7 +92,7 @@ Keys in `lib/i18n/dispatch-tutorial.ts` (rewritten; `dispatchTourHelp` and all h
 | `draft.title` | Save a draft first | પહેલાં ડ્રાફ્ટ સાચવો | पहले ड्राफ्ट सेव करें |
 | `draft.body` | {c:saveDraft} keeps the challan without touching stock, so you can check it before the goods leave. | {c:saveDraft} સ્ટોકને અડ્યા વગર ચલણ રાખે છે, જેથી માલ નીકળે તે પહેલાં તપાસી શકો. | {c:saveDraft} स्टॉक को छुए बिना चालान रखता है, ताकि माल निकलने से पहले जाँच सकें। |
 | `confirm.title` | Confirm when the goods leave | માલ નીકળે ત્યારે ખાતરી કરો | माल निकले तब पुष्टि करें |
-| `confirm.body` | {c:confirmLeft} locks the challan and takes 100 m out of fabric stock. Yarn was already counted when the fabric was produced. | {c:confirmLeft} ચલણ લૉક કરે છે અને કાપડના સ્ટોકમાંથી 100 મીટર ઘટાડે છે. યાર્ન તો કાપડ બન્યું ત્યારે જ ગણાઈ ગયું હતું. | {c:confirmLeft} चालान लॉक करता है और कपड़े के स्टॉक से 100 मीटर घटाता है। धागा तो कपड़ा बनते समय ही गिना जा चुका है। |
+| `confirm.body` | {c:confirmLeft} locks the challan and takes 100 m out of fabric stock. | {c:confirmLeft} ચલણ લૉક કરે છે અને કાપડના સ્ટોકમાંથી 100 મીટર ઘટાડે છે. | {c:confirmLeft} चालान लॉक करता है और कपड़े के स्टॉक से 100 मीटर घटाता है। |
 | `confirm.detail` | {c:print} opens the challan to print or save as PDF. A dispatch confirmed by mistake can be reversed while no money is recorded against it. | {c:print} ચલણને છાપવા કે PDF તરીકે સાચવવા ખોલે છે. ભૂલથી ખાતરી કરેલો ડિસ્પેચ, તેની સામે પૈસા ન નોંધાયા હોય ત્યાં સુધી ઉલટાવી શકાય. | {c:print} चालान को छापने या PDF सेव करने के लिए खोलता है। गलती से पुष्टि किया डिस्पैच, जब तक उस पर पैसा दर्ज न हो, वापस किया जा सकता है। |
 | `receipt.title` | Record what the customer accepted | ગ્રાહકે શું સ્વીકાર્યું તે નોંધો | ग्राहक ने क्या स्वीकारा, यह दर्ज करें |
 | `receipt.body` | If everything arrived, use {c:receivedAsSent}. Otherwise record the metres accepted, here 98 of 100 m. | બધું પહોંચ્યું હોય તો {c:receivedAsSent} વાપરો. નહીં તો સ્વીકારેલા મીટર નોંધો, અહીં 100 માંથી 98. | सब पहुँचा हो तो {c:receivedAsSent} इस्तेमाल करें। नहीं तो स्वीकारे गए मीटर दर्ज करें, यहाँ 100 में से 98। |

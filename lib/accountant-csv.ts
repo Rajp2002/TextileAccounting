@@ -5,7 +5,7 @@ import { getSavedCostingMetrics, type SavedCostingListItem } from './saved-costi
 import { formatToSurat } from './time'
 
 // Spreadsheet downloads for the owner's munim or accountant: one flat table
-// per file, English headers like the payroll, yarn and stock audit CSVs, a
+// per file, English headers like the payroll CSVs, a
 // UTF-8 byte-order mark so Excel reads Gujarati and Hindi names, money and
 // metres as plain numbers, and dates in Surat time.
 

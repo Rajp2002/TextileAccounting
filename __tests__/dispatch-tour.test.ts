@@ -52,10 +52,10 @@ describe('Dispatch tour', () => {
         expect(copy.guide.benefit).toBe(tourInvitationCopy[language].benefits.dispatch)
         expect(tourInvitationCopy[language].tourNames.dispatch).toBeTruthy()
     })
-    it('explains fabric-only confirmation and removes the erroneous yarn/help claims in all languages', () => {
-        expect(dispatchTutorialCopy.en.confirm.body).toContain('takes 100 m out of fabric stock. Yarn was already counted when the fabric was produced.')
-        expect(dispatchTutorialCopy.gu.confirm.body).toContain('કાપડના સ્ટોકમાંથી 100 મીટર ઘટાડે છે. યાર્ન તો કાપડ બન્યું ત્યારે જ ગણાઈ ગયું હતું.')
-        expect(dispatchTutorialCopy.hi.confirm.body).toContain('कपड़े के स्टॉक से 100 मीटर घटाता है। धागा तो कपड़ा बनते समय ही गिना जा चुका है।')
+    it('explains fabric-only confirmation and makes no yarn or help claims in any language', () => {
+        expect(dispatchTutorialCopy.en.confirm.body).toBe('{c:confirmLeft} locks the challan and takes 100 m out of fabric stock.')
+        expect(dispatchTutorialCopy.gu.confirm.body).toBe('{c:confirmLeft} ચલણ લૉક કરે છે અને કાપડના સ્ટોકમાંથી 100 મીટર ઘટાડે છે.')
+        expect(dispatchTutorialCopy.hi.confirm.body).toBe('{c:confirmLeft} चालान लॉक करता है और कपड़े के स्टॉक से 100 मीटर घटाता है।')
         const source = read('lib/i18n/dispatch-tutorial.ts')
         expect(source).not.toMatch(/linked costing weights|production itself does not deduct yarn|10 kg|10 કિગ્રા|10 किलो|Earlier dispatch records|dispatchTourHelp|moreHelp|legacy/)
         expect(read('lib/dispatch-tour.ts')).not.toMatch(/dispatchTourHelp|dispatchTourSection|yarnKgPer100|yarnDeduction/)

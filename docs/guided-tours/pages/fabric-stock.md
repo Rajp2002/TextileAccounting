@@ -12,7 +12,7 @@ Shared rules: [`GUIDED_TOURS_REFINEMENT_PLAN.md`](../../GUIDED_TOURS_REFINEMENT_
 | Tour today | `components/stock/StockGuidedTour.tsx` (hides the live page), `FabricStockTourPreview.tsx`, `components/tours/StockTutorial.tsx`, steps `fabricStockTourSteps` in `lib/stock-tour.ts`, copy `lib/i18n/stock-tutorial.ts`, numbers `fabricStockExample`. |
 | Also wrapped (wrongly) | `/owner/stock/audit` renders the same Fabric tour (`app/(dashboard)/owner/stock/audit/page.tsx:16-19`). Removed by GT-08 (D-11). |
 | Live controls | Header: "Audit Inventory" link (hard-coded, ~129), Refresh, Opening stock (~138); quality cards: Opening stock / Correct balance / Movement history (~224-255). Labels through `t('qualityStock.*')` (root is `data-i18n-skip`). |
-| Rule | Saved production adds metres; confirming a dispatch removes them; opening stock is added once; a correction sets the counted total. Routine counts use Correct balance; the Stock audit is the full dated record (owner rule D-20, 2026-09-27). |
+| Rule | Saved production adds metres; confirming a dispatch removes them; opening stock is added once; a correction sets the counted total. Every count uses Correct balance; the Stock audit was deleted on 2026-10-14. |
 
 ## B. Diagnosis
 
@@ -73,7 +73,7 @@ Keys in `lib/i18n/stock-tutorial.ts` (fabric section rewritten; `fabricStockTuto
 | `opening.body` | {c:openingStock} adds the counted metres to what production already recorded: 100 + 500 = 600 m. Add a note such as your count date. | {c:openingStock} ગણેલા મીટર ઉત્પાદનમાં નોંધાયેલા મીટરમાં ઉમેરે છે: 100 + 500 = 600 મીટર. ગણતરીની તારીખ જેવી નોંધ લખો. | {c:openingStock} गिने हुए मीटर उत्पादन में दर्ज मीटर में जोड़ता है: 100 + 500 = 600 मीटर। गिनती की तारीख जैसा नोट लिखें। |
 | `correct.title` | After a count, enter the counted total | ગણતરી પછી ગણેલો કુલ જથ્થો લખો | गिनती के बाद गिना हुआ कुल लिखें |
 | `correct.body` | {c:correctBalance} replaces the balance with what you counted. Enter 590, not −10; Weavly records the −10 m difference. | {c:correctBalance} બેલેન્સને ગણેલા જથ્થાથી બદલે છે. 590 લખો, −10 નહીં; Weavly −10 મીટરનો ફરક નોંધે છે. | {c:correctBalance} बैलेंस को गिनी हुई मात्रा से बदलता है। 590 लिखें, −10 नहीं; Weavly −10 मीटर का फ़र्क दर्ज करता है। |
-| `correct.detail` | Use this for your regular counts. For a full dated audit of all fabric and yarn, kept as a record, use {c:auditInventory} at the top of the page. | નિયમિત ગણતરી માટે આ જ વાપરો. બધા કાપડ અને યાર્નનું તારીખ સાથેનું પૂરું ઓડિટ રેકોર્ડ તરીકે રાખવા, પેજની ઉપર {c:auditInventory} વાપરો. | नियमित गिनती के लिए यही इस्तेमाल करें। सारे कपड़े और धागे का तारीख के साथ पूरा ऑडिट रिकॉर्ड के रूप में रखने के लिए पेज के ऊपर {c:auditInventory} इस्तेमाल करें। |
+| `correct.detail` | Use this for every count. Weavly keeps the difference in the stock history. | દરેક ગણતરી માટે આ જ વાપરો. Weavly ફરક સ્ટોકના ઇતિહાસમાં રાખે છે. | हर गिनती के लिए यही इस्तेमाल करें। Weavly फ़र्क स्टॉक के इतिहास में रखता है। |
 | `history.title` | Trace every change | દરેક ફેરફાર તપાસો | हर बदलाव देखें |
 | `history.body` | {c:movementHistory} lists each production, dispatch, opening and correction with the balance after it. | {c:movementHistory}માં દરેક ઉત્પાદન, ડિસ્પેચ, શરૂઆતનો સ્ટોક અને સુધારો, પછીના બેલેન્સ સાથે દેખાય છે. | {c:movementHistory} में हर उत्पादन, डिस्पैच, शुरुआती स्टॉक और सुधार, उसके बाद के बैलेंस के साथ दिखता है। |
 | `history.detail` | If a shift was saved on another device, choose {c:refresh} to see it. | બીજા ઉપકરણ પર શિફ્ટ સાચવી હોય તો જોવા {c:refresh} પસંદ કરો. | किसी दूसरे डिवाइस पर शिफ्ट सेव हुई हो तो देखने के लिए {c:refresh} चुनें। |
@@ -90,7 +90,6 @@ Keys in `lib/i18n/stock-tutorial.ts` (fabric section rewritten; `fabricStockTuto
 | `correctBalance` | `t('qualityStock.correct')` | સ્ટોક સુધારો | स्टॉक सुधारें | none |
 | `movementHistory` | `t('qualityStock.history')` | existing value | existing value | none |
 | `refresh` | `t('qualityStock.refresh')` | રિફ્રેશ કરો | रीफ़्रेश करें | none |
-| `auditInventory` | hard-coded "Audit Inventory" (~131) | સ્ટોક ઓડિટ | स्टॉक ऑडिट | Add key `qualityStock.audit` and use it in both stock pages' buttons |
 
 ## G. State variants
 

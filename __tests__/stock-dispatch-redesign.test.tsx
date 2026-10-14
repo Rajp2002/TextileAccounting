@@ -6,11 +6,9 @@ import { RecentMovementsSection } from '@/components/stock/stock-presentation'
 import { en } from '@/lib/i18n/locales/en'
 import { hi } from '@/lib/i18n/locales/hi'
 import { gu } from '@/lib/i18n/locales/gu'
-import { yarnStockText } from '@/lib/i18n/yarn-stock'
 
 const read = (file: string) => readFileSync(file, 'utf8')
 const fabric = read('app/(dashboard)/owner/stock/QualityStockClient.tsx')
-const yarn = read('app/(dashboard)/owner/stock/YarnStockClient.tsx')
 const challans = read('app/(dashboard)/owner/dispatches/ChallansClient.tsx')
 const detail = read('app/(dashboard)/owner/dispatches/DispatchDetailDialog.tsx')
 
@@ -31,27 +29,8 @@ describe('Fabric stock', () => {
         expect(challans).toContain("window.history.replaceState(null, '', window.location.pathname)")
         expect(challans).toContain('setDraft({ ...blank(), quality_id: qualityId })')
     })
-})
-
-describe('Yarn stock', () => {
-    it('leads with the yarn that runs out first and says how long each lasts', () => {
-        expect(yarn).toContain('const yarns = activity ? [...ranked].sort((a, b) => (daysLeft(a) - daysLeft(b)) || Number(b.weight_kg) - Number(a.weight_kg)) : ranked')
-        expect(yarn).toContain('lastsFor(Number(yarn.weight_kg), perDay(yarn.id))')
-        expect(yarn).toContain('yarnFeeds(yarn.yarn_key, data.qualities)')
-        // A dated audit view describes the past, so it drops today's pace and trends.
-        expect(yarn).toContain('const activity = current ? data.activity : undefined')
-    })
-
-    it('reads weights to two decimals but keeps full precision for entry and export', () => {
-        expect(yarn).toContain("const kg2 = (n: number) => Number(n).toLocaleString(`${language}-IN`, { minimumFractionDigits: 2, maximumFractionDigits: 2 })")
-        expect(yarn).toContain("weight_kg ?? '')")
-        expect(yarn).not.toMatch(/\{kg\(totalYarnKg/)
-    })
 
     it('has every new label in all three languages', () => {
-        for (const key of ['intro', 'lastsDays', 'lastsWeeks', 'perDay', 'notInRecipe', 'recent', 'fullHistory', 'yarnCountOne'] as const) {
-            for (const language of ['en', 'hi', 'gu'] as const) expect(yarnStockText[language][key], `${language} ${key}`).toBeTruthy()
-        }
         for (const locale of [en, hi, gu]) for (const key of ['intro', 'onHand', 'woven', 'dispatchAction', 'recent', 'qualityCountOne'] as const) {
             expect((locale.qualityStock as Record<string, string>)[key], key).toBeTruthy()
         }
@@ -65,13 +44,9 @@ describe('Recent movements', () => {
         </RecentMovementsSection>,
     )
 
-    it('starts folded on both stock pages and opens from its header', () => {
-        for (const page of [fabric, yarn]) {
-            expect(page).toContain('const [recentOpen, setRecentOpen] = useState(false)')
-            expect(page).toContain('onToggle={() => setRecentOpen(value => !value)}')
-        }
-        // The yarn tour's usage step points at a movement row, so that step opens the section.
-        expect(yarn).toContain("open={recentOpen || tourStep === 'ys-usage'}")
+    it('starts folded on the stock page and opens from its header', () => {
+        expect(fabric).toContain('const [recentOpen, setRecentOpen] = useState(false)')
+        expect(fabric).toContain('onToggle={() => setRecentOpen(value => !value)}')
         const closed = section(false)
         expect(closed).toContain('aria-expanded="false"')
         expect(closed).toContain('Full history')

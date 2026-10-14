@@ -10,7 +10,7 @@ import { payrollTutorialCopy } from '../lib/i18n/payroll-tutorial'
 import { productionTutorialCopy } from '../lib/i18n/production-tutorial'
 import { rateBookTutorialCopy } from '../lib/i18n/rate-book-tutorial'
 import { savedCostingsTutorialCopy } from '../lib/i18n/saved-costings-tutorial'
-import { fabricStockTutorialCopy, yarnStockTutorialCopy } from '../lib/i18n/stock-tutorial'
+import { fabricStockTutorialCopy } from '../lib/i18n/stock-tutorial'
 import { workersTutorialCopy } from '../lib/i18n/workers-tutorial'
 
 // GT-17 consistency review, made executable. It reads every tour's step copy (title, body, detail) in all three
@@ -22,7 +22,7 @@ type Lang = 'en' | 'gu' | 'hi'
 const LANGS: Lang[] = ['en', 'gu', 'hi']
 const TOURS: Record<string, Record<string, unknown>> = {
     'Cost Estimator': costEstimateTutorialCopy, 'Saved Costings': savedCostingsTutorialCopy, 'Yarn Rate Book': rateBookTutorialCopy,
-    Dispatches: dispatchTutorialCopy, 'Fabric Stock': fabricStockTutorialCopy, 'Yarn Stock': yarnStockTutorialCopy, Payroll: payrollTutorialCopy,
+    Dispatches: dispatchTutorialCopy, 'Fabric Stock': fabricStockTutorialCopy, Payroll: payrollTutorialCopy,
     Production: productionTutorialCopy, 'Daily Sheet': dailySheetTutorialCopy, Machines: machinesTutorialCopy, Workers: workersTutorialCopy,
     'Machine Assignments': configurationTutorialCopy,
 }
@@ -55,9 +55,7 @@ const all = Object.entries(TOURS).map(([tour, copy]) => ({ tour, entries: entrie
 // review would have to rule on; none is rewritten to satisfy a check. A new violation fails the test, and an entry
 // that stops being a violation fails it too, so this list cannot go stale.
 const ACCEPTED: Record<string, string> = {
-    'Yarn Stock correct.detail': 'Conservative-measure artifact: with real control labels the text resolves to about 223 characters (limit 260).',
     'Yarn Rate Book handoff.empty.title hi': 'Approved page-spec title, 21 characters in English and 36 in Hindi (1.71x, DR-34 allows 1.60x); fits the panel at 1280x800.',
-    'Yarn Stock balance.title hi': 'Approved page-spec title, 20 characters in English and 34 in Hindi (1.70x, DR-34 allows 1.60x); fits the panel at 1280x800.',
     'Payroll calculation.salary.body gu': 'Owner-approved Payroll calculation-help string (GT-10 exception): two sentences in Gujarati, one in English.',
     'Payroll calculation.salary.body hi': 'Owner-approved Payroll calculation-help string (GT-10 exception): two sentences in Hindi, one in English.',
     'Payroll calculation.recovery.body gu': 'Owner-approved Payroll calculation-help string (GT-10 exception): two sentences in Gujarati, one in English.',
@@ -71,7 +69,7 @@ const accepted = (violations: { id: string; message: string }[], scope: (id: str
 
 describe('GT-17 cross-tour consistency review', () => {
     it('covers every tour with step copy in all three languages', () => {
-        expect(all).toHaveLength(12)
+        expect(all).toHaveLength(11)
         for (const { tour, entries: rows } of all) {
             expect(rows.length, `${tour} has step copy`).toBeGreaterThan(0)
             for (const row of rows) for (const lang of LANGS) expect(row.text[lang].trim().length, `${tour} ${row.key} ${lang}`).toBeGreaterThan(0)
@@ -145,5 +143,13 @@ describe('GT-17 cross-tour consistency review', () => {
     it('ends every tour on a live handoff (DR-33)', () => {
         const tourLibs = ['estimator-tour', 'saved-costings-tour', 'rate-book-tour', 'dispatch-tour', 'stock-tour', 'payroll-tour', 'production-tour', 'daily-sheet-tour', 'machines-tour', 'workers-tour', 'configuration-tour']
         for (const lib of tourLibs) expect(readFileSync(`lib/${lib}.ts`, 'utf8'), lib).toMatch(/kind:\s*['"]handoff['"]|'handoff'/)
+    })
+})
+
+describe('deleted tours', () => {
+    it('has no Yarn Stock tour (the feature was deleted on 2026-10-14)', async () => {
+        const { supportedTours, tourRegistry } = await import('../lib/tours/tour-registry')
+        expect(supportedTours).not.toContain('yarn-stock')
+        expect(Object.keys(tourRegistry)).not.toContain('yarn-stock')
     })
 })

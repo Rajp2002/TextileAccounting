@@ -10,7 +10,7 @@ import { parseSidebarPreference, SIDEBAR_PREFERENCE_COOKIE } from '../../../lib/
 const sidebarPreference = parseSidebarPreference(document.cookie.split('; ').find(entry => entry.startsWith(`${SIDEBAR_PREFERENCE_COOKIE}=`))?.split('=')[1])
 function Page(){
  const pathname=usePathname();const {t}=useTranslation()
- const key=({'/owner/stock':'qualityStock.title','/owner/stock/yarn':'navigation.yarnStock','/owner/estimator':'navigation.estimate','/owner/rates':'navigation.rates','/owner/quotes':'navigation.costings','/owner/workers':'navigation.workers','/owner/payroll':'navigation.payroll','/free':'navigation.estimate','/free/costings':'navigation.costings'} as Record<string,string>)[pathname]
+ const key=({'/owner/stock':'qualityStock.title','/owner/estimator':'navigation.estimate','/owner/rates':'navigation.rates','/owner/quotes':'navigation.costings','/owner/workers':'navigation.workers','/owner/payroll':'navigation.payroll','/free':'navigation.estimate','/free/costings':'navigation.costings'} as Record<string,string>)[pathname]
  return <><h1 className="text-3xl font-semibold">{key?t(key):pathname}</h1><p>Navigation-only fixture. Business content is not loaded.</p><label>Unsaved draft<input className="block border p-2" placeholder="Type a draft" /></label><p>Committed route: {pathname}</p></>
 }
 function Fixture(){

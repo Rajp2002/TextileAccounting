@@ -4,8 +4,8 @@ import { cn } from '@/lib/utils'
 import { trailPath, type TrendPoint } from '@/lib/stock-activity'
 
 /**
- * Shared presentation for the Fabric and Yarn stock pages: one colour per item, the composition bar, the trend line
- * and the day-by-day movement list. Domain behaviour (labels, actions, what a movement means) stays in each page.
+ * Presentation for the Fabric stock page: one colour per item, the composition bar, the trend line and the
+ * day-by-day movement list. Domain behaviour (labels, actions, what a movement means) stays in the page.
  */
 
 /** Chart colours for the largest items, in order; everything else shares the muted colour. */

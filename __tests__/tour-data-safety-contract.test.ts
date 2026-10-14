@@ -69,7 +69,7 @@ const tourFiles = [
     'lib/rate-book-tour.ts',
     'lib/i18n/rate-book-tutorial.ts',
 ]
-const forbidden = ['freeMeter', '/api/free/calculate', 'complete_free_saved_costing', 'saveEstimatorQuoteV3', 'saveBaseDailyProductionBatch', 'mutateYarnStock', 'mutate_delivery_challan', 'settleBaseWorkerPayroll']
+const forbidden = ['freeMeter', '/api/free/calculate', 'complete_free_saved_costing', 'saveEstimatorQuoteV3', 'saveBaseDailyProductionBatch', 'mutate_delivery_challan', 'settleBaseWorkerPayroll']
 
 describe('Tour data-safety contract', () => {
     it('lists every shared tour library file explicitly', () => {
@@ -97,12 +97,10 @@ describe('Tour data-safety contract', () => {
         expect(production).toContain("if (tourSample) return // a tour sample is not a page view")
         const dispatch = readFileSync('app/(dashboard)/owner/dispatches/ChallansClient.tsx', 'utf8')
         expect(dispatch).toContain("if (tourSample) return // a tour sample never reads the real page's pending request")
-        const yarn = readFileSync('app/(dashboard)/owner/stock/YarnStockClient.tsx', 'utf8')
-        expect(yarn).toContain("if (tourSample) return // a tour sample never reads the real page's pending request")
         const fabric = readFileSync('app/(dashboard)/owner/stock/QualityStockClient.tsx', 'utf8')
         expect(fabric).toContain('if (tourSample) return // a tour sample has nothing to refresh')
         const wrapper = readFileSync('components/stock/StockGuidedTour.tsx', 'utf8')
-        expect(wrapper).toContain("'fs-handoff' : 'ys-handoff'")
+        expect(wrapper).toContain('handoffStepId="fs-handoff"')
         expect(wrapper).toContain('<div className="stock-workspace-shell">{children}</div>')
         // Sample surfaces are non-modal with no outside dismissal, so the tour card stays usable and nothing can be submitted by accident.
         const surface = readFileSync('lib/tours/sample-surface.ts', 'utf8')

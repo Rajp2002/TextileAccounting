@@ -5,7 +5,7 @@ import { productionTourSpecs } from '@/lib/production-tour'
 import { dailySheetTourSpecs } from '@/lib/daily-sheet-tour'
 import { payrollHelpSpecs, payrollTourSpecs } from '@/lib/payroll-tour'
 import { dispatchTourSpecs } from '@/lib/dispatch-tour'
-import { fabricStockTourSpecs, yarnStockTourSpecs } from '@/lib/stock-tour'
+import { fabricStockTourSpecs } from '@/lib/stock-tour'
 import { rateBookTourSpecs } from '@/lib/rate-book-tour'
 
 /**
@@ -75,7 +75,7 @@ describe('Guided tours teach the real page, never a lookalike', () => {
         const tours: Record<string, readonly { id: string; anchor: string }[]> = {
             Production: productionTourSpecs, 'Daily Sheet (with data)': dailySheetTourSpecs(false), 'Daily Sheet (empty)': dailySheetTourSpecs(true),
             'Payroll core': payrollTourSpecs, 'Payroll help': payrollHelpSpecs, Dispatch: dispatchTourSpecs,
-            'Fabric Stock': fabricStockTourSpecs, 'Yarn Stock': yarnStockTourSpecs,
+            'Fabric Stock': fabricStockTourSpecs,
             'Rate Book (with rates)': rateBookTourSpecs(false, true), 'Rate Book (empty)': rateBookTourSpecs(true, false),
         }
         for (const [name, specs] of Object.entries(tours)) {

@@ -5,7 +5,7 @@ export const configurationHelpTopics = ['find', 'picker', 'drag', 'replace', 're
 
 type Copy = {
     sample: string; worker: string; machine: string; inactiveMachine: string
-    // Still consumed by the legacy machine, payroll and yarn-stock tours.
+    // Still consumed by the legacy machine and payroll tours.
     back: string; next: string; finish: string; skip: string; progress: string
     undoLabel: string; savedLabel: string; dayShiftLabel: string; dailySheetLabel: string
     helpLabel: string; helpIntro: string

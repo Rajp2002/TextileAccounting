@@ -49,9 +49,7 @@ import {
     bulkAssignMachinesToQuality,
     deactivateQualityProduction,
     setBaseMachineJobContext,
-    validateQualityActivationYarnAction,
 } from './actions'
-import { mutateYarnStock } from '../stock/yarn-actions'
 import type {
     BaseProductionCosting,
     BaseProductionJob,
@@ -202,119 +200,24 @@ export default function BaseActiveQualities({
         )
     }, [costings, costingSearch])
 
-    type YarnRequirementItem = {
-        yarn_id: string | null
-        yarn_name: string
-        yarn_key: string
-        role: string
-        kg_per_100m: number
-        current_stock_kg: number
-        status: 'available' | 'zero_stock' | 'missing'
-    }
-
-    const [yarnGateModal, setYarnGateModal] = useState<{
-        costingId: string
-        qualityLabel: string
-        yarns: YarnRequirementItem[]
-    } | null>(null)
-
-    const [inlineAddYarn, setInlineAddYarn] = useState<{
-        yarnName: string
-        weightKg: string
-        reason: string
-        saving: boolean
-    } | null>(null)
-
-    // Activate handler with Rule 1 Activation Gate check
     async function handleActivateCosting(costingId: string) {
         if (pendingAction) return
         setPendingAction(`activate-${costingId}`)
 
         try {
-            // Check required yarn stock first
-            const check = await validateQualityActivationYarnAction({ costingId })
-            if ('validation' in check && check.validation) {
-                if (!check.validation.can_activate) {
-                    setYarnGateModal({
-                        costingId,
-                        qualityLabel: check.validation.quality_label,
-                        yarns: check.validation.yarns,
-                    })
-                    return
-                }
-            }
-
             const result = await activateSavedCostingForProduction({ costingId })
             if ('error' in result && result.error) {
                 toast.error(result.error)
                 return
             }
 
-            if ('blocked' in result && result.blocked) {
-                const val = (result as { validation?: { quality_label?: string; yarns?: YarnRequirementItem[] } }).validation
-                setYarnGateModal({
-                    costingId,
-                    qualityLabel: val?.quality_label ?? 'Quality',
-                    yarns: val?.yarns ?? [],
-                })
-                return
-            }
-
             toast.success('Quality activated for production.')
             onOpenActivateModalChange?.(false)
-            setYarnGateModal(null)
             router.refresh()
         } catch (error) {
             toast.error(error instanceof Error ? error.message : 'Could not activate quality.')
         } finally {
             setPendingAction(null)
-        }
-    }
-
-    async function handleSaveInlineYarn() {
-        if (!inlineAddYarn || !yarnGateModal) return
-        const kg = Number(inlineAddYarn.weightKg)
-        if (isNaN(kg) || kg <= 0) {
-            toast.error('Enter a valid positive quantity in kg.')
-            return
-        }
-
-        setInlineAddYarn(prev => prev ? { ...prev, saving: true } : null)
-        try {
-            const res = await mutateYarnStock({
-                action: 'receipt',
-                requestId: crypto.randomUUID(),
-                payload: {
-                    yarn_name: inlineAddYarn.yarnName,
-                    weight_kg: kg,
-                    reason: inlineAddYarn.reason.trim() || `Added for Quality "${yarnGateModal.qualityLabel}" activation`,
-                }
-            })
-
-            if ('error' in res && res.error) {
-                toast.error(res.error)
-                setInlineAddYarn(prev => prev ? { ...prev, saving: false } : null)
-                return
-            }
-
-            toast.success(`Added ${kg} kg for ${inlineAddYarn.yarnName}`)
-            setInlineAddYarn(null)
-
-            // Re-run validation automatically
-            const check = await validateQualityActivationYarnAction({ costingId: yarnGateModal.costingId })
-            if ('validation' in check && check.validation) {
-                setYarnGateModal({
-                    costingId: yarnGateModal.costingId,
-                    qualityLabel: check.validation.quality_label,
-                    yarns: check.validation.yarns,
-                })
-                if (check.validation.can_activate) {
-                    toast.success('All required yarns are now available! Ready to activate.')
-                }
-            }
-        } catch (err) {
-            toast.error(err instanceof Error ? err.message : 'Failed to add yarn stock.')
-            setInlineAddYarn(prev => prev ? { ...prev, saving: false } : null)
         }
     }
 
@@ -833,173 +736,6 @@ export default function BaseActiveQualities({
                             className="rounded-xl font-bold"
                         >
                             {pendingAction ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Deactivate Quality'}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            {/* Modal: Rule 1 Quality Activation Gate - Yarn Required Before Production */}
-            <Dialog open={yarnGateModal !== null} onOpenChange={(open) => !open && setYarnGateModal(null)}>
-                <DialogContent className="max-w-lg rounded-2xl p-0 overflow-hidden">
-                    <DialogHeader className="p-5 pb-3 border-b border-hairline bg-[var(--wv-ochre-50)]/50">
-                        <div className="flex items-center gap-2">
-                            <AlertCircle className="h-5 w-5 text-[var(--wv-ochre-700)] shrink-0" />
-                            <DialogTitle className="text-base font-bold text-ink">
-                                Yarn required before production
-                            </DialogTitle>
-                        </div>
-                        <DialogDescription className="text-xs text-muted-foreground pt-1">
-                            &ldquo;{yarnGateModal?.qualityLabel}&rdquo; requires yarn that is not currently available in Yarn Stock. Every required yarn must have positive stock before activation.
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <div className="p-5 space-y-4">
-                        <div className="rounded-xl border border-hairline overflow-hidden">
-                            <table className="w-full text-left text-xs">
-                                <thead className="bg-surface-soft/60 border-b border-hairline text-muted-foreground font-semibold">
-                                    <tr>
-                                        <th className="p-2.5">Yarn</th>
-                                        <th className="p-2.5 text-right">Requirement</th>
-                                        <th className="p-2.5 text-right">Current Stock</th>
-                                        <th className="p-2.5 text-right">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-hairline">
-                                    {yarnGateModal?.yarns.map((item) => {
-                                        const isAvailable = item.status === 'available'
-                                        return (
-                                            <tr key={item.yarn_key} className="hover:bg-surface-soft/20">
-                                                <td className="p-2.5">
-                                                    <p className="font-bold text-ink">{item.yarn_name}</p>
-                                                    <span className="text-[10px] text-muted-foreground capitalize">{item.role}</span>
-                                                </td>
-                                                <td className="p-2.5 text-right tabular-nums font-medium text-ink">
-                                                    {item.kg_per_100m.toFixed(2)} kg / 100m
-                                                </td>
-                                                <td className="p-2.5 text-right tabular-nums">
-                                                    {isAvailable ? (
-                                                        <span className="font-semibold text-[var(--wv-moss-700)]">{item.current_stock_kg.toFixed(2)} kg</span>
-                                                    ) : item.status === 'zero_stock' ? (
-                                                        <span className="font-medium text-[var(--wv-ochre-700)]">0 kg</span>
-                                                    ) : (
-                                                        <span className="text-muted-foreground italic">None</span>
-                                                    )}
-                                                </td>
-                                                <td className="p-2.5 text-right">
-                                                    {isAvailable ? (
-                                                        <Badge variant="outline" className="text-[var(--wv-moss-700)] border-[var(--wv-moss-200)] bg-[var(--wv-moss-50)] text-[10px] font-semibold">
-                                                            <CheckCircle2 className="mr-1 h-3 w-3" /> Available
-                                                        </Badge>
-                                                    ) : (
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={() => setInlineAddYarn({
-                                                                yarnName: item.yarn_name,
-                                                                weightKg: '',
-                                                                reason: '',
-                                                                saving: false
-                                                            })}
-                                                            className="h-7 px-2.5 text-[11px] font-bold text-loom border-loom/40 hover:bg-loom/10"
-                                                        >
-                                                            <Plus className="mr-1 h-3 w-3" /> Add Stock
-                                                        </Button>
-                                                    )}
-                                                </td>
-                                            </tr>
-                                        )
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {yarnGateModal?.yarns.every(y => y.status === 'available') ? (
-                            <p className="text-xs text-[var(--wv-moss-800)] bg-[var(--wv-moss-50)] p-2.5 rounded-lg border border-[var(--wv-moss-200)] flex items-center gap-2">
-                                <CheckCircle2 className="h-4 w-4 text-[var(--wv-moss-600)] shrink-0" />
-                                All required yarns are now available! You can proceed to activate this quality.
-                            </p>
-                        ) : (
-                            <p className="text-xs text-muted-foreground">
-                                Click <strong>Add Stock</strong> to record loose yarn currently available in your factory. Activating a quality does not consume yarn.
-                            </p>
-                        )}
-                    </div>
-
-                    <DialogFooter className="p-4 border-t border-hairline bg-surface-soft/20 flex justify-end gap-2">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setYarnGateModal(null)}
-                            className="rounded-xl"
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            size="sm"
-                            disabled={!yarnGateModal?.yarns.every(y => y.status === 'available') || pendingAction !== null}
-                            onClick={() => yarnGateModal && handleActivateCosting(yarnGateModal.costingId)}
-                            className="h-9 px-4 rounded-xl bg-loom text-white font-bold shadow-xs hover:bg-loom-elevated disabled:opacity-50"
-                        >
-                            {pendingAction ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Activate Quality'}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            {/* Modal: Inline Add Yarn Stock */}
-            <Dialog open={inlineAddYarn !== null} onOpenChange={(open) => !open && setInlineAddYarn(null)}>
-                <DialogContent className="max-w-sm rounded-2xl p-5">
-                    <DialogHeader>
-                        <DialogTitle className="text-base font-bold text-ink">
-                            Add Yarn Stock: {inlineAddYarn?.yarnName}
-                        </DialogTitle>
-                        <DialogDescription className="text-xs text-muted-foreground pt-1">
-                            Record raw/loose yarn physically received or on-hand in your factory.
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <div className="space-y-3 py-2">
-                        <div>
-                            <label className="text-xs font-semibold text-ink">Quantity in kg *</label>
-                            <Input
-                                type="number"
-                                step="0.001"
-                                min="0.001"
-                                placeholder="e.g. 50.0"
-                                value={inlineAddYarn?.weightKg ?? ''}
-                                onChange={(e) => setInlineAddYarn(prev => prev ? { ...prev, weightKg: e.target.value } : null)}
-                                className="mt-1 h-9 rounded-lg"
-                                autoFocus
-                            />
-                        </div>
-                        <div>
-                            <label className="text-xs font-semibold text-ink">Reference or Reason (optional)</label>
-                            <Input
-                                placeholder={`Added for ${yarnGateModal?.qualityLabel ?? 'quality'} activation`}
-                                value={inlineAddYarn?.reason ?? ''}
-                                onChange={(e) => setInlineAddYarn(prev => prev ? { ...prev, reason: e.target.value } : null)}
-                                className="mt-1 h-9 rounded-lg text-xs"
-                            />
-                        </div>
-                    </div>
-
-                    <DialogFooter className="mt-4 flex justify-end gap-2">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setInlineAddYarn(null)}
-                            disabled={inlineAddYarn?.saving}
-                            className="rounded-xl"
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            size="sm"
-                            disabled={inlineAddYarn?.saving || !inlineAddYarn?.weightKg}
-                            onClick={handleSaveInlineYarn}
-                            className="rounded-xl font-bold bg-loom text-white shadow-xs hover:bg-loom-elevated"
-                        >
-                            {inlineAddYarn?.saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save Yarn Stock'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

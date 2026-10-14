@@ -11,6 +11,10 @@ The current subscription plans are **Free, Lite, and Base**. The active product 
 
 Plan prices and checkout eligibility are defined in [`lib/billing-constants.ts`](../../lib/billing-constants.ts) and [`lib/billing-lifecycle.ts`](../../lib/billing-lifecycle.ts). The retirement migration is [`20260924085030_retire_full_suite_tier.sql`](../../supabase/migrations/20260924085030_retire_full_suite_tier.sql).
 
+## Removed features
+
+Yarn Stock, the Stock (Inventory) Audit and the older March/April yarn & beam inventory module were deleted on 2026-10-14, data included: [plan](../superpowers/plans/2026-10-14-remove-yarn-stock.md), migrations `20261014120000_remove_yarn_stock_and_stock_audit.sql` and `20261014120100_remove_yarn_beam_module.sql`. `/owner/stock/yarn` and `/owner/stock/audit` redirect to `/feature-archived`. Stock tracks fabric metres only.
+
 ## Base visibility and Lite trial
 
 New accounts see only Free and Lite while `BASE_PLAN_OPEN_TO_NEW_ACCOUNTS` is `false` in [`lib/base-plan-visibility.ts`](../../lib/base-plan-visibility.ts). New owners get a one-month Lite trial, stored as an `is_trial` row in `org_subscriptions`. Design: [spec](../superpowers/specs/2026-10-11-base-suppression-and-lite-trial-design.md). Migrations: `20261011120000_base_suppression_and_lite_trial.sql`, `20261011120100_admin_snapshot_trial_flag.sql`.

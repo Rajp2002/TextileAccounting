@@ -45,9 +45,9 @@ REDUCED_MOTION=1 node run-tour.mjs <scenario> en 1024x768      # reduced-motion 
 node probe-labels.mjs                                          # writes labels-out.json
 ```
 
-Add `&showcase=1` to `fabric-stock`, `yarn-stock` or `dispatch` to see the page with a populated factory instead of the tour sample: `showcase.ts` holds two qualities, four yarns with three weeks of activity, and four challans, and answers those pages' server actions (any stub whose name is in `window.__harnessFixtures` returns that fixture). Use it for visual checks of the stock and dispatch pages, not for tours. `rates&showcase=1` (add `&due=1` for two overdue prices and one unconfirmed yarn) and `quotes&showcase=1` show the Rate Book and Saved Costings with the nine yarns and four qualities of the owner's test factory. `offer` shows Check an offer with four saved qualities (one that needs a recalculation); add `&costing=c1` (or `c2`, `c3`, `c4`) to start from one, `&empty=1` or `&error=1` for those states, and `&delay=<ms>` to slow the costing read. The harness serves the repo's `public/` folder, so the logo's thread and spool (a background image in the navy panel) show.
+Add `&showcase=1` to `fabric-stock` or `dispatch` to see the page with a populated factory instead of the tour sample: `showcase.ts` holds two qualities with three weeks of activity, and four challans, and answers those pages' server actions (any stub whose name is in `window.__harnessFixtures` returns that fixture). Use it for visual checks of the stock and dispatch pages, not for tours. `rates&showcase=1` (add `&due=1` for two overdue prices and one unconfirmed yarn) and `quotes&showcase=1` show the Rate Book and Saved Costings with the nine yarns and four qualities of the owner's test factory. `offer` shows Check an offer with four saved qualities (one that needs a recalculation); add `&costing=c1` (or `c2`, `c3`, `c4`) to start from one, `&empty=1` or `&error=1` for those states, and `&delay=<ms>` to slow the costing read. The harness serves the repo's `public/` folder, so the logo's thread and spool (a background image in the navy panel) show.
 
-Scenarios in `main.tsx` today: `foundation`, `production` (add `&populated=1` for one loom, or `&populated=rich` for two qualities on six looms with today's and yesterday's metres), `fabric-stock`, `yarn-stock`, `dispatch`, `payroll`, `payroll-records` (several months of settled payments; add `&empty=1` for none), `machines`, `workers`, `workers-salary`, `assignments`, `estimator`, `free-estimator`, `rates`, `quotes`, `quotes-compare`, `offer`, `free-costings`, `labels`.
+Scenarios in `main.tsx` today: `foundation`, `production` (add `&populated=1` for one loom, or `&populated=rich` for two qualities on six looms with today's and yesterday's metres), `fabric-stock`, `dispatch`, `payroll`, `payroll-records` (several months of settled payments; add `&empty=1` for none), `machines`, `workers`, `workers-salary`, `assignments`, `estimator`, `free-estimator`, `rates`, `quotes`, `quotes-compare`, `offer`, `free-costings`, `labels`.
 
 The one `404` console error in every run is the missing favicon; ignore it.
 
@@ -134,7 +134,6 @@ Required deferred cases (all **UNVERIFIED** until actually run and screenshots r
 - `fabric-stock en 1024x768` — FS-5 panel/outline overlap regression.
 - `fabric-stock gu 390x844` — compact sheet, scrolling and handoff.
 - `REDUCED_MOTION=1` with `fabric-stock en 1440x900` — no smooth tour scrolling.
-- Yarn compatibility is now covered by the seven-step GT-09 matrix below; Fabric scenarios and assertions remain unchanged.
 
 Also deferred: populated/all-opening Fabric variants, `EXIT_AT=3` for Escape restoration, Back transitions, detail expand/collapse, replay, open opening/correction/history dialog launch blocking, uncertain-save preservation, audit-page layout inspection, native-language review, owner QA and separate review. Run commands only through the isolation wrapper as above. `EXIT_AT` now also supports either stock tour. Browser fixtures/assertions being present does not verify these scenarios.
 
@@ -160,20 +159,6 @@ The runner checks the six approved steps, repeated pay-path toggles, readiness, 
 
 No GT-14 browser/server run or screenshot is claimed by this implementation. All scenarios above, owner QA, native-language and independent reviewer acceptance remain **UNVERIFIED**.
 
-
-### GT-09 Yarn Stock (browser runs deferred)
-
-`yarn-stock` mounts the real `YarnStockClient` with a synthetic empty board. `yarn-stock?populated=1` supplies one yarn/fabric/costing; append `&unlinked=1` for missing costing links. All server modules remain recording stubs. The runner types an unsubmitted audit date, retains its DOM reference, and checks seven-step order, 100 → 120 → 100 kg balances, sample weights 100/20/98, production −20 kg, disabled sample controls, live section order, one sample banner, shared runtime geometry, same mounted client/date, live Opening weight handoff and Done focus, preference-only actions and no API/navigation. The date is not applied and no stock operation is invoked.
-
-Required scenarios, each **UNVERIFIED**:
-
-- `yarn-stock en 1440x900`: seven steps, no rail paint, live handoff and focus.
-- `yarn-stock hi 1280x800`: long native copy and no panel/dialog/outline overlap.
-- `yarn-stock en 1024x768`: YS-3 overlap regression.
-- `yarn-stock gu 390x844`: compact panel, scrolling, dialogs and handoff.
-- `REDUCED_MOTION=1` with `yarn-stock en 1440x900`: no smooth tour scrolling.
-
-Also deferred: repeat with populated/unlinked data; use `EXIT_AT=2` and `EXIT_AT=6` for Escape at sample dialogs; inspect More detail on balance/usage/correction, Back/detail reset, replay, keyboard/focus trap, scroll restoration and screenshot rail paint. Verify launcher blocking under a real uncertain-save modal and disabled Opening weight fallback separately in the later authorized verification session. No harness was executed by GT-09 implementation; syntax checks do not verify any scenario, native-language quality, real-device behavior or owner/reviewer acceptance.
 
 ## GT-12 Daily Sheet prepared scenarios — execution deferred
 

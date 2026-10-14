@@ -10,8 +10,8 @@ Shared rules: [`GUIDED_TOURS_REFINEMENT_PLAN.md`](../../GUIDED_TOURS_REFINEMENT_
 | Route | `/owner/production` (sidebar "Overview") → `BaseProductionClient` (jobs view) inside `ProductionGuidedTour` |
 | Entitlement | `production_management` (Base). Owner role. |
 | Tour today | `components/production/ProductionGuidedTour.tsx` (left rail: guide + "Setup, history & corrections"; hides the live page), `ProductionTourPreview.tsx`, `components/tours/ProductionTutorial.tsx`, `lib/production-tour.ts` (12-step core covering Overview **and** Daily Sheet + 11-step details track), `lib/i18n/production-tutorial.ts`, `productionTourExample`. |
-| Live controls | Right rail "Activate Quality" (`BaseProductionClient.tsx:433-442`); `BaseActiveQualities`: Activate Quality dialog, "Yarn required before production" gate with Add Stock, Assign Looms dialog, ⋮ Quality actions (View in Costings, Production History, Deactivate) (the `BaseMachineBoard` that used to follow it was removed on 2026-10-08). |
-| Prerequisites | A saved costing (not archived); **stock above 0 kg for every yarn in its recipe** (`validate_quality_activation_yarn`); active machines; active piece-rate workers. |
+| Live controls | Right rail "Activate Quality" (`BaseProductionClient.tsx:433-442`); `BaseActiveQualities`: Activate Quality dialog, Assign Looms dialog, ⋮ Quality actions (View in Costings, Production History, Deactivate) (the `BaseMachineBoard` that used to follow it was removed on 2026-10-08). |
+| Prerequisites | A saved costing (not archived); active machines; active piece-rate workers. Yarn stock and its activation gate were deleted on 2026-10-14. |
 
 ## B. Diagnosis
 
@@ -26,13 +26,13 @@ Shared rules: [`GUIDED_TOURS_REFINEMENT_PLAN.md`](../../GUIDED_TOURS_REFINEMENT_
 
 ## C. Learning outcomes and coverage
 
-After the tour the owner can: (1) explain how a saved costing becomes a running quality whose metres feed stock and wages; (2) list the four prerequisites including yarn stock; (3) activate a quality with its wage; (4) assign looms; (5) start with the real "Activate Quality".
+After the tour the owner can: (1) explain how a saved costing becomes a running quality whose metres feed stock and wages; (2) list the three prerequisites; (3) activate a quality with its wage; (4) assign looms; (5) start with the real "Activate Quality".
 
 | Requirement | Destination |
 | --- | --- |
 | Purpose: costing → looms → daily metres → stock and wages | `pd-overview` |
-| Prerequisites: saved costing, yarn stock, machines, workers | `pd-prereq` (+ detail: where to add each) |
-| Activate Quality: version + weaver wage | `pd-activate` (+ detail: yarn gate, Add Stock) |
+| Prerequisites: saved costing, machines, workers | `pd-prereq` (+ detail: where to add each) |
+| Activate Quality: version + weaver wage | `pd-activate` |
 | Assign Looms | `pd-looms` |
 | Recording metres | Daily Sheet tour (`pd-handoff` names it) |
 | History, corrections, print | Daily Sheet tour |
@@ -48,7 +48,7 @@ Sample (`productionTourExample`): wage ₹2/m, quality "Sample fabric · v2", lo
 | # | Step id | Preset | Anchor | Surface |
 | --- | --- | --- | --- | --- |
 | 1 | `pd-overview` (was `overview`) | PS-SAMPLE | `[data-production-tour="overview"]` | overview |
-| 2 | `pd-prereq` (was `prerequisites`) | PS-SAMPLE | `[data-production-tour="prerequisites"]` | overview, a checklist card: Saved costing, Yarn stock, Machines, Workers |
+| 2 | `pd-prereq` (was `prerequisites`) | PS-SAMPLE | `[data-production-tour="prerequisites"]` | overview, a checklist card: Saved costing, Machines, Workers |
 | 3 | `pd-activate` (was `activate`) | PS-SAMPLE-DIALOG | `[data-production-tour="activate"]` / `[data-production-tour-preview="true"]` | Activate Quality dialog |
 | 4 | `pd-looms` (was `allocate`) | PS-SAMPLE-DIALOG | `[data-production-tour="allocate"]` / same | Assign Looms dialog |
 | 5 | `pd-handoff` | PS-HANDOFF | `[data-tour-anchor="production.activate"]` *(proposed on the right-rail Activate Quality and on its inline counterpart below 1280px)* | live |
@@ -61,12 +61,11 @@ Keys in `lib/i18n/production-tutorial.ts` (rewritten; Daily Sheet and details ke
 | --- | --- | --- | --- |
 | `overview.title` | From costing to daily production | કોસ્ટિંગથી રોજિંદા ઉત્પાદન સુધી | कॉस्टिंग से रोज़ के उत्पादन तक |
 | `overview.body` | Here a saved costing becomes a quality running on your looms. Metres recorded each shift then add fabric stock and worker pay. | અહીં સાચવેલી કોસ્ટિંગ તમારા લૂમ પર ચાલતી ક્વોલિટી બને છે. પછી દરેક શિફ્ટમાં નોંધાયેલા મીટર કાપડનો સ્ટોક અને કારીગરનો પગાર ઉમેરે છે. | यहाँ सेव की गई कॉस्टिंग आपके लूम पर चलती क्वालिटी बनती है। फिर हर शिफ्ट में दर्ज मीटर कपड़े का स्टॉक और कारीगर का वेतन जोड़ते हैं। |
-| `prereq.title` | Four things must exist first | પહેલાં આ ચાર વસ્તુ જોઈએ | पहले ये चार चीज़ें चाहिए |
-| `prereq.body` | A saved costing, stock of every yarn in it, your machines, and your workers. A quality cannot start while any of its yarns has no stock. | સાચવેલી કોસ્ટિંગ, તેમાંના દરેક યાર્નનો સ્ટોક, તમારાં મશીનો અને તમારા કારીગરો. કોઈ યાર્નનો સ્ટોક ન હોય ત્યાં સુધી ક્વોલિટી શરૂ ન થાય. | सेव की गई कॉस्टिंग, उसके हर धागे का स्टॉक, आपकी मशीनें और आपके कारीगर। किसी धागे का स्टॉक न हो तो क्वालिटी शुरू नहीं होती। |
-| `prereq.detail` | Costings come from the Cost Estimator, yarn from Yarn Stock, and machines and workers from their own pages. | કોસ્ટિંગ ખર્ચ અંદાજકમાંથી, યાર્ન યાર્નના સ્ટોકમાંથી, અને મશીનો તથા કારીગરો તેમના પોતાના પેજમાંથી આવે છે. | कॉस्टिंग लागत अनुमानक से, धागा धागे के स्टॉक से, और मशीनें व कारीगर अपने-अपने पेज से आते हैं। |
+| `prereq.title` | Three things must exist first | પહેલાં આ ત્રણ વસ્તુ જોઈએ | पहले ये तीन चीज़ें चाहिए |
+| `prereq.body` | A saved costing, your machines, and your workers. | સાચવેલી કોસ્ટિંગ, તમારાં મશીનો અને તમારા કારીગરો. | सेव की गई कॉस्टिंग, आपकी मशीनें और आपके कारीगर। |
+| `prereq.detail` | Costings come from the Cost Estimator, and machines and workers from their own pages. | કોસ્ટિંગ ખર્ચ અંદાજકમાંથી, અને મશીનો તથા કારીગરો તેમના પોતાના પેજમાંથી આવે છે. | कॉस्टिंग लागत अनुमानक से, और मशीनें व कारीगर अपने-अपने पेज से आते हैं। |
 | `activate.title` | Activate a quality with its wage | મજૂરી સાથે ક્વોલિટી ચાલુ કરો | मजदूरी के साथ क्वालिटी चालू करें |
 | `activate.body` | {c:activateQuality} picks a saved costing version and the weaver wage per metre, here ₹2/m. The wage is what workers earn on this quality. | {c:activateQuality} સાચવેલી કોસ્ટિંગનું વર્ઝન અને મીટરદીઠ મજૂરી પસંદ કરે છે, અહીં ₹2/મીટર. આ ક્વોલિટી પર કારીગરો આ મજૂરી કમાય છે. | {c:activateQuality} सेव कॉस्टिंग का वर्ज़न और प्रति मीटर मजदूरी चुनता है, यहाँ ₹2/मीटर। इस क्वालिटी पर कारीगर यही मजदूरी कमाते हैं। |
-| `activate.detail` | If a yarn has no stock, Weavly asks you to add it before the quality can start. | કોઈ યાર્નનો સ્ટોક ન હોય તો ક્વોલિટી શરૂ થાય તે પહેલાં Weavly તે ઉમેરવાનું કહે છે. | किसी धागे का स्टॉक न हो तो क्वालिटी शुरू होने से पहले Weavly उसे जोड़ने को कहता है। |
 | `looms.title` | Put the quality on looms | ક્વોલિટીને લૂમ પર મૂકો | क्वालिटी को लूम पर लगाएँ |
 | `looms.body` | {c:assignLooms} ticks the looms that will weave it. A loom weaves one quality at a time. | {c:assignLooms} તેને વણનારા લૂમ પર ટિક કરે છે. એક લૂમ એક વખતે એક જ ક્વોલિટી વણે છે. | {c:assignLooms} उसे बुनने वाले लूम पर टिक करता है। एक लूम एक बार में एक ही क्वालिटी बुनता है। |
 | `handoff.title` | Start your first quality | તમારી પહેલી ક્વોલિટી શરૂ કરો | अपनी पहली क्वालिटी शुरू करें |
@@ -106,4 +105,4 @@ Terminology evidence: [GujaratiLexicon, manage](https://www.gujaratilexicon.com/
 
 ## H. Comprehension check
 
-"You saved a costing for a new crepe yesterday and want two looms to start it tonight. What must be true before you can, and what do you press, in which order?" Expected: yarn stock exists for its yarns; Activate Quality (version + wage) → Assign Looms (two looms) → record metres on the Daily Sheet.
+"You saved a costing for a new crepe yesterday and want two looms to start it tonight. What must be true before you can, and what do you press, in which order?" Expected: Activate Quality (version + wage) → Assign Looms (two looms) → record metres on the Daily Sheet.

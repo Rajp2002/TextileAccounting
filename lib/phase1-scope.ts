@@ -1,6 +1,8 @@
 export const PHASE_1_ARCHIVED_ROUTES = [
     '/admin',
     '/owner/settings/audit',
+    '/owner/stock/audit',
+    '/owner/stock/yarn',
     '/track',
 ] as const
 

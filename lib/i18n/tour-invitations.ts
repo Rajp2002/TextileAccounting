@@ -24,7 +24,6 @@ export const tourInvitationCopy: Record<Language, TourInvitationCopy> = {
         error: 'Tour temporarily unavailable. Try again.',
         benefits: {
             "dispatch": "Learn to send fabric, record what arrived and track payment.",
-            "yarn-stock": "Learn to record yarn, link it to costings and follow what production uses.",
             "fabric-stock": "Learn to record opening fabric, correct a count and trace changes.",
             "production": "See how to put a saved costing on your looms and get ready to record production.",
             "payroll": "See how to check earnings, record payments and close a pay period.",
@@ -39,7 +38,6 @@ export const tourInvitationCopy: Record<Language, TourInvitationCopy> = {
         tourNames: {
             'daily-sheet': 'Daily Sheet',
             dispatch: 'Dispatch',
-            'yarn-stock': 'Yarn Stock',
             'fabric-stock': 'Fabric Stock',
             production: 'Production',
             payroll: 'Payroll',
@@ -61,7 +59,6 @@ export const tourInvitationCopy: Record<Language, TourInvitationCopy> = {
         error: 'ટૂર અસ્થાયી રૂપે અનુપલબ્ધ છે. ફરી પ્રયાસ કરો.',
         benefits: {
             "dispatch": "કાપડ મોકલવું, શું પહોંચ્યું તે નોંધવું અને ચુકવણી તપાસવી શીખો.",
-            "yarn-stock": "યાર્ન નોંધવું, કોસ્ટિંગ સાથે જોડવું અને ઉત્પાદનમાં વપરાશ જોવો શીખો.",
             "fabric-stock": "શરૂઆતનું કાપડ નોંધવું, ગણતરી સુધારવી અને ફેરફાર તપાસવા શીખો.",
             "production": "સાચવેલી કોસ્ટિંગને લૂમ પર મૂકવી અને ઉત્પાદન નોંધવાની તૈયારી કેવી રીતે કરવી તે જુઓ.",
             "payroll": "કમાણી તપાસવી, ચુકવણી નોંધવી અને પગાર સમયગાળો બંધ કરવો કેવી રીતે તે જુઓ.",
@@ -76,7 +73,6 @@ export const tourInvitationCopy: Record<Language, TourInvitationCopy> = {
         tourNames: {
             'daily-sheet': 'દૈનિક શીટ',
             dispatch: 'ડિસ્પેચ',
-            'yarn-stock': 'યાર્ન સ્ટોક',
             'fabric-stock': 'કાપડનો સ્ટોક',
             production: 'ઉત્પાદન',
             payroll: 'પેરોલ',
@@ -98,7 +94,6 @@ export const tourInvitationCopy: Record<Language, TourInvitationCopy> = {
         error: 'टूर अस्थायी रूप से अनुपलब्ध है। पुन: प्रयास करें।',
         benefits: {
             "dispatch": "कपड़ा भेजना, क्या पहुँचा यह दर्ज करना और भुगतान देखना सीखें।",
-            "yarn-stock": "धागा दर्ज करना, कॉस्टिंग से जोड़ना और उत्पादन में खपत देखना सीखें।",
             "fabric-stock": "शुरुआती कपड़ा दर्ज करना, गिनती सुधारना और बदलाव देखना सीखें।",
             "production": "सेव कॉस्टिंग को लूम पर लगाना और उत्पादन दर्ज करने की तैयारी करना देखें।",
             "payroll": "कमाई जाँचना, भुगतान दर्ज करना और वेतन अवधि बंद करना देखें।",
@@ -113,7 +108,6 @@ export const tourInvitationCopy: Record<Language, TourInvitationCopy> = {
         tourNames: {
             'daily-sheet': 'दैनिक शीट',
             dispatch: 'डिस्पैच',
-            'yarn-stock': 'धागे का स्टॉक',
             'fabric-stock': 'कपड़े का स्टॉक',
             production: 'उत्पादन',
             payroll: 'पेरोल',

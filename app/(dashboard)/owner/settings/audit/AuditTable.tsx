@@ -56,7 +56,7 @@ const CATEGORIES: Record<CategoryKey, CategoryConfig> = {
     },
     inventory: {
         label: 'Inventory & Qualities',
-        tables: ['yarn_batches', 'yarn_lots', 'yarn_movements', 'beam_cards', 'beam_card_lots', 'order_yarn_requirements', 'qualities'],
+        tables: ['qualities'],
         color: 'text-[var(--wv-status-warning-fg)]',
         bgColor: 'bg-[var(--wv-status-warning-bg)]',
         borderColor: 'border-[var(--wv-status-warning-border)]',

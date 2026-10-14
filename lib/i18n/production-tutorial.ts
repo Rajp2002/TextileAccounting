@@ -17,14 +17,13 @@ export const productionTutorialCopy: Record<Language, ProductionCopy> = {
             "body": "Here a saved costing becomes a quality running on your looms. Metres recorded each shift then add fabric stock and worker pay."
         },
         "prereq": {
-            "title": "Four things must exist first",
-            "body": "A saved costing, stock of every yarn in it, your machines, and your workers. A quality cannot start while any of its yarns has no stock.",
-            "detail": "Costings come from the Cost Estimator, yarn from Yarn Stock, and machines and workers from their own pages."
+            "title": "Three things must exist first",
+            "body": "A saved costing, your machines, and your workers.",
+            "detail": "Costings come from the Cost Estimator, and machines and workers from their own pages."
         },
         "activate": {
             "title": "Activate a quality with its wage",
-            "body": "{c:activateQuality} picks a saved costing version and the weaver wage per metre, here ₹2/m. The wage is what workers earn on this quality.",
-            "detail": "If a yarn has no stock, Weavly asks you to add it before the quality can start."
+            "body": "{c:activateQuality} picks a saved costing version and the weaver wage per metre, here ₹2/m. The wage is what workers earn on this quality."
         },
         "looms": {
             "title": "Put the quality on looms",
@@ -44,14 +43,13 @@ export const productionTutorialCopy: Record<Language, ProductionCopy> = {
             "body": "અહીં સાચવેલી કોસ્ટિંગ તમારા લૂમ પર ચાલતી ક્વોલિટી બને છે. પછી દરેક શિફ્ટમાં નોંધાયેલા મીટર કાપડનો સ્ટોક અને કારીગરનો પગાર ઉમેરે છે."
         },
         "prereq": {
-            "title": "પહેલાં આ ચાર વસ્તુ જોઈએ",
-            "body": "સાચવેલી કોસ્ટિંગ, તેમાંના દરેક યાર્નનો સ્ટોક, તમારાં મશીનો અને તમારા કારીગરો. કોઈ યાર્નનો સ્ટોક ન હોય ત્યાં સુધી ક્વોલિટી શરૂ ન થાય.",
-            "detail": "કોસ્ટિંગ ખર્ચ અંદાજકમાંથી, યાર્ન યાર્નના સ્ટોકમાંથી, અને મશીનો તથા કારીગરો તેમના પોતાના પેજમાંથી આવે છે."
+            "title": "પહેલાં આ ત્રણ વસ્તુ જોઈએ",
+            "body": "સાચવેલી કોસ્ટિંગ, તમારાં મશીનો અને તમારા કારીગરો.",
+            "detail": "કોસ્ટિંગ ખર્ચ અંદાજકમાંથી, અને મશીનો તથા કારીગરો તેમના પોતાના પેજમાંથી આવે છે."
         },
         "activate": {
             "title": "મજૂરી સાથે ક્વોલિટી ચાલુ કરો",
-            "body": "{c:activateQuality} સાચવેલી કોસ્ટિંગનું વર્ઝન અને મીટરદીઠ મજૂરી પસંદ કરે છે, અહીં ₹2/મીટર. આ ક્વોલિટી પર કારીગરો આ મજૂરી કમાય છે.",
-            "detail": "કોઈ યાર્નનો સ્ટોક ન હોય તો ક્વોલિટી શરૂ થાય તે પહેલાં Weavly તે ઉમેરવાનું કહે છે."
+            "body": "{c:activateQuality} સાચવેલી કોસ્ટિંગનું વર્ઝન અને મીટરદીઠ મજૂરી પસંદ કરે છે, અહીં ₹2/મીટર. આ ક્વોલિટી પર કારીગરો આ મજૂરી કમાય છે."
         },
         "looms": {
             "title": "ક્વોલિટીને લૂમ પર મૂકો",
@@ -71,14 +69,13 @@ export const productionTutorialCopy: Record<Language, ProductionCopy> = {
             "body": "यहाँ सेव की गई कॉस्टिंग आपके लूम पर चलती क्वालिटी बनती है। फिर हर शिफ्ट में दर्ज मीटर कपड़े का स्टॉक और कारीगर का वेतन जोड़ते हैं।"
         },
         "prereq": {
-            "title": "पहले ये चार चीज़ें चाहिए",
-            "body": "सेव की गई कॉस्टिंग, उसके हर धागे का स्टॉक, आपकी मशीनें और आपके कारीगर। किसी धागे का स्टॉक न हो तो क्वालिटी शुरू नहीं होती।",
-            "detail": "कॉस्टिंग लागत अनुमानक से, धागा धागे के स्टॉक से, और मशीनें व कारीगर अपने-अपने पेज से आते हैं।"
+            "title": "पहले ये तीन चीज़ें चाहिए",
+            "body": "सेव की गई कॉस्टिंग, आपकी मशीनें और आपके कारीगर।",
+            "detail": "कॉस्टिंग लागत अनुमानक से, और मशीनें व कारीगर अपने-अपने पेज से आते हैं।"
         },
         "activate": {
             "title": "मजदूरी के साथ क्वालिटी चालू करें",
-            "body": "{c:activateQuality} सेव कॉस्टिंग का वर्ज़न और प्रति मीटर मजदूरी चुनता है, यहाँ ₹2/मीटर। इस क्वालिटी पर कारीगर यही मजदूरी कमाते हैं।",
-            "detail": "किसी धागे का स्टॉक न हो तो क्वालिटी शुरू होने से पहले Weavly उसे जोड़ने को कहता है।"
+            "body": "{c:activateQuality} सेव कॉस्टिंग का वर्ज़न और प्रति मीटर मजदूरी चुनता है, यहाँ ₹2/मीटर। इस क्वालिटी पर कारीगर यही मजदूरी कमाते हैं।"
         },
         "looms": {
             "title": "क्वालिटी को लूम पर लगाएँ",

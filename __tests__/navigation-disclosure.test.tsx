@@ -10,8 +10,8 @@ vi.mock('../lib/i18n/context',()=>({useTranslation:()=>({t:(key:string)=>key})})
 const groups = groupOwnerNavigation(visibleOwnerNavigation({tier:'base',productionMode:'market_run'}),'base').flatMap(s=>s.nodes).filter(n=>n.kind==='group')
 const noop=()=>{}
 const render = (index:number, expanded:boolean) => renderToStaticMarkup(createElement(NavigationDisclosure, {group:groups[index],expanded,onToggle:noop,onCollapse:noop,onNavigate:noop}))
-describe('disclosure semantics shared by all four groups',()=>{
- it.each([0,1,2,3])('uses a native button and hidden nested list for group %s',index=>{
+describe('disclosure semantics shared by all three groups',()=>{
+ it.each([0,1,2])('uses a native button and hidden nested list for group %s',index=>{
   const html=render(index,false)
   expect(html).toContain('type="button"')
   expect(html).toContain('aria-expanded="false"')
@@ -20,22 +20,22 @@ describe('disclosure semantics shared by all four groups',()=>{
   const control=html.match(/aria-controls="([^"]+)"/)![1]
   expect(html).toContain(`<ul id="${control}"`)
  })
- it.each([0,1,2,3])('exposes normal links only when expanded for group %s',index=>{
+ it.each([0,1,2])('exposes normal links only when expanded for group %s',index=>{
   const html=render(index,true)
   expect(html).toContain('aria-expanded="true"')
   expect(html).not.toContain('hidden=""')
   for(const child of groups[index].children)expect(html).toContain(`href="${child.href}"`)
  })
  it('keeps active parent styling while collapsed and distinguishes exact pages from details',()=>{
-  location.pathname='/owner/stock/yarn'
+  location.pathname='/owner/workers'
   expect(render(2,false)).toContain('bg-[var(--wv-neel-700)]')
   expect(render(2,true)).toContain('aria-current="page"')
-  location.pathname='/owner/stock/yarn/example'
+  location.pathname='/owner/workers/example'
   const html=render(2,true)
   expect(html).toContain('aria-current="location"')
   expect(html).not.toContain('aria-current="page"')
  })
- it.each([0,1,2,3])('includes disclosure chevron and animated wrapper structure for group %s',index=>{
+ it.each([0,1,2])('includes disclosure chevron and animated wrapper structure for group %s',index=>{
   const closed = render(index, false)
   expect(closed).toContain('nav-chevron')
   expect(closed).toContain('submenu-wrapper')
@@ -52,12 +52,12 @@ describe('disclosure semantics shared by all four groups',()=>{
  })
  it('does not apply active styling to an expanded group when viewing another module',()=>{
   location.pathname='/owner/payroll'
-  // Group 0 is costing, Group 1 is production, Group 2 is stock, Group 3 is workforce
+  // Group 0 is costing, Group 1 is production, Group 2 is workforce (Stock is a plain link)
   // Viewing payroll means workforce is active, costing is not
   const costingOpen = render(0, true)
   expect(costingOpen).not.toContain('bg-[var(--wv-neel-700)]')
   expect(costingOpen).toContain('aria-expanded="true"')
-  const workforceCollapsed = render(3, false)
+  const workforceCollapsed = render(2, false)
   expect(workforceCollapsed).toContain('bg-[var(--wv-neel-700)]')
  })
 })

@@ -15,7 +15,6 @@ import {
     SlidersHorizontal,
     Filter,
     AlertCircle,
-    ClipboardCheck,
     Plus,
     X,
 } from 'lucide-react'
@@ -160,12 +159,6 @@ export default function QualityStockClient({ initialData }: { initialData: Quali
                 description={tx('intro')}
                 actions={<>
                     <PageGuide />
-                    <Button asChild variant="outline" className={secondaryAction}>
-                        <Link href="/owner/stock/audit">
-                            <ClipboardCheck className="h-4 w-4" aria-hidden="true" />
-                            {tx('audit')}
-                        </Link>
-                    </Button>
                     <Button data-tour-anchor="fabric.opening" onClick={() => open('opening')} className={railPrimaryAction}>
                         <Plus className="h-4 w-4" aria-hidden="true" />
                         {tx('opening')}
