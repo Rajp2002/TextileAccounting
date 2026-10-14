@@ -25,7 +25,7 @@ function worker(id: string, name: string, shift: BaseProductionWorkerWithOperati
     return { id, name, rate_per_meter: 0, shift_availability: shift, is_active: true, pay_type: 'piece_rate', ...extra }
 }
 const loom = (workerId: string, machineId: string, shift: 'day' | 'night'): RotationAssignment => ({ worker_id: workerId, machine_id: machineId, shift })
-const machineNames = { m1: 'Loom 1', m2: 'Loom 2' }
+const machineNames = { m1: 'Loom 1', m2: 'Loom 2', m3: 'Loom 3' }
 
 function render(workers: BaseProductionWorkerWithOperational[], assignments: RotationAssignment[]) {
     return renderToStaticMarkup(<SwitchShiftsPanel workers={workers} assignments={assignments} machineNames={machineNames} onClose={() => {}} />)
@@ -55,6 +55,21 @@ describe('SwitchShiftsPanel', () => {
         expect(html).not.toMatch(/<button[^>]*\sdisabled=""[^>]*>[^<]*Switch 2 workers/)
     })
 
+    it('lists Day & night workers who run a loom under where their looms are now', () => {
+        const html = render(
+            [worker('a', 'Ramesh', 'day'), worker('c', 'Mahesh', 'both'), worker('f', 'Kishan', 'both'), worker('g', 'Jignesh', 'both')],
+            [loom('a', 'm1', 'day'), loom('c', 'm2', 'day'), loom('f', 'm2', 'night'), loom('f', 'm3', 'day')],
+        )
+        expect(html).not.toContain('Jignesh')
+        expect(html.match(/type="checkbox"/g)).toHaveLength(3)
+        const dayGroup = html.slice(html.indexOf('Day → Night'), html.indexOf('Day ⇄ Night'))
+        expect(dayGroup).toContain('Ramesh')
+        expect(dayGroup).toContain('Mahesh')
+        expect(html).not.toContain('Night → Day')
+        expect(html.slice(html.indexOf('Day ⇄ Night'))).toContain('Kishan')
+        expect(html).toContain('Switch 3 workers')
+    })
+
     it('makes every row a 44px touch target and names the checkbox by its worker', () => {
         const html = render(workers, [])
         expect(html).toContain('min-h-[44px]')
@@ -63,22 +78,22 @@ describe('SwitchShiftsPanel', () => {
 
     it('blocks confirming when a switching worker would land on a loom shift someone else keeps', () => {
         const html = render(
-            [worker('a', 'Ramesh', 'day'), worker('c', 'Mahesh', 'both')],
-            [loom('a', 'm1', 'day'), loom('c', 'm1', 'night')],
+            [worker('a', 'Ramesh', 'day'), worker('d', 'Hari', 'night', { pay_type: 'fixed_monthly' })],
+            [loom('a', 'm1', 'day'), loom('d', 'm1', 'night')],
         )
-        expect(html).toContain('Loom 1 (Night shift) is held by Mahesh, who is not switching.')
+        expect(html).toContain('Loom 1 (Night shift) is held by Hari, who is not switching.')
         expect(html).toMatch(/<button[^>]*\sdisabled=""[^>]*>[^<]*Switch 1 worker/)
     })
 
     it('says so when there is nobody to switch, without a confirm button', () => {
         const html = render([worker('c', 'Mahesh', 'both')], [])
-        expect(html).toContain('No piece-rate workers on a single shift to switch.')
+        expect(html).toContain('No piece-rate workers to switch.')
         expect(html).not.toContain('type="checkbox"')
         expect(html).not.toContain('Switch 0 workers')
     })
 
     it('always explains who is left out', () => {
-        expect(render(workers, [])).toContain('Workers set to Day &amp; night and fixed-salary staff are not included.')
+        expect(render(workers, [])).toContain('Fixed-salary staff and Day &amp; night workers with no loom are not included.')
     })
 })
 

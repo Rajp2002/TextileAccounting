@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { groupMachinesByWorker } from '../lib/machine-assignment-groups'
+import { compareMachineLabels } from '../lib/base-machine-register'
 
 const worker = (id: string) => ({ id })
 const machine = (id: string) => ({ id })
@@ -74,5 +75,26 @@ describe('groupMachinesByWorker', () => {
         expect(ids(placedWorkers).sort()).toEqual(['a', 'b', 'c'])
 
         expect(groupMachinesByWorker([], [], new Map())).toEqual({ rows: [], idleWorkers: [], ungrouped: [] })
+    })
+
+    it('board order: each worker group, then unassigned machines, both numbered 1..N then A-Z', () => {
+        // Loader order is by name, so '10' sits before '2' and 'Spare' before '3'.
+        const labelled = [
+            { id: 'm10', machineLabel: '10' },
+            { id: 'mSpare', machineLabel: 'Spare' },
+            { id: 'm2', machineLabel: '2' },
+            { id: 'm5', machineLabel: '5' },
+            { id: 'mAlpha', machineLabel: 'Alpha' },
+            { id: 'm1', machineLabel: '1' },
+        ]
+        const sorted = [...labelled].sort((a, b) => compareMachineLabels({ machineLabel: a.machineLabel, machineId: a.id }, { machineLabel: b.machineLabel, machineId: b.id }))
+        const result = groupMachinesByWorker(
+            [worker('ramu')],
+            sorted,
+            new Map([['m5', 'ramu'], ['m10', 'ramu']]),
+        )
+
+        expect(ids(result.rows[0].machines)).toEqual(['m5', 'm10'])
+        expect(ids(result.ungrouped)).toEqual(['m1', 'm2', 'mAlpha', 'mSpare'])
     })
 })
